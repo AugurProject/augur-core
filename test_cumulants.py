@@ -6,11 +6,38 @@ Cumulant tensors and statistics.  Semi-compatible with Serpent.
 """
 from __future__ import division
 import numpy as np
+from sklearn.decomposition import FastICA, PCA
 import cumulants
 
 np.set_printoptions(linewidth=500)
 
 tolerance = 1e-5
+
+def calibrate(reports):
+    reps = np.array(reports)
+    covmat = np.cov(reps.T, bias=1)
+    svd_results = np.linalg.svd(covmat)
+
+    # First loading
+    L = svd_results[0].T[0]
+
+    # First score
+    centers = reps - np.mean(reps, 0)
+    S = np.dot(centers, svd_results[0]).T[0]
+
+    # Unweighted
+    covmat = np.dot(centers.T, centers) / num_voters
+
+    # PCA
+    pca = PCA(n_components=3)
+    pc = pca.fit_transform(reports)
+    comps = pca.components_
+
+    # Reconstruct signals, get estimated mixing matrix
+    ica = FastICA(n_components=3)
+    S_ = ica.fit_transform(reports)
+    A_ = ica.mixing_
+
 
 def test_cumulants():
     unbias = 0
@@ -117,4 +144,13 @@ def test_cumulants():
     assert((np.array(cokurt_result) - expected_cokurt < tolerance).all())
 
 if __name__ == "__main__":
+    reports = [[1, 1, 0, 0],
+               [1, 0, 0, 0],
+               [1, 1, 0, 0],
+               [1, 1, 1, 0],
+               [0, 0, 1, 1],
+               [0, 0, 1, 1]]
+    num_voters = len(reports)
+    num_events = len(reports[0])
+    calibrate(reports)
     test_cumulants()
