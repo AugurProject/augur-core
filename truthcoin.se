@@ -1,0 +1,463 @@
+# parsers to get this data from the ethereum blockchain at some point
+
+### HOW TO DO MULTIDIMEN ARRAYS
+    #x = array(W)
+    #i = 0
+    #while i < W:
+    #   x[i] = array( H )
+    #    i += 1
+
+# includes
+extern fp = [new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
+FixedPoint = create('fixedpoint.se')
+
+
+BRANCH = 0
+EVENT = 1
+MARKET = 2
+
+# for a market, creationFee is same as initial liquidity
+data Info[](typecode, description[], creator, creationFee)
+
+# currentVotePeriod is where we are in the eventsExpDates, lastPeriodEnd is the last voting period block number
+data Branches[](eventsExpDates[](numberEvents, events[]), currentVotePeriod, markets[], marketCount, reputation[], periodLength, lastPeriodEnd)
+
+data Events[](branch, expirationDate)
+
+# key for participants[tx.origin].event[] is eventID, but events[] are 0 indexed
+data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](event[](shares[2])), lossLimit, tradingFee, numberEvents)
+
+data cashcoin_balances[]
+
+
+
+def init():
+    # test initial funds
+    # I'm rich, 
+    cashcoin_balances[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826] = 1000000
+
+
+### Random notes / knowledge / stuff:
+    # if transferring votecoin everywhere worst case soln. is vesting of votecoins after a transfer 
+    # bitcoin, usd cashcoin
+    # all money is stored in contract address in actuality, but it's measured according to certain variables
+    # that are updated by function calls / transactions / messages
+
+### Version 2.0:
+    # Scalar event where people update what type of share they bought using a thing 
+    # in an array where index is their scalar x and value
+    # is the share updated number of shares bought. 
+    
+    # decentralized sidechain market to buy/sell votecoin?
+
+    
+    # how do we make this code updatable
+    # how do we scale / what if a ton of events, markets, etc.
+    
+    # add multiple events into markets buy / sell feature
+    # real branching / subbranching
+    # api voting option
+    
+    # people can currently send votecoin to any branch, "Houston, we have a problem!"
+
+    # need to replace all fees w/ cashcoin fees, i think, actually have no idea, depends how counterparty does this lolol
+
+    ## Voters need to know when expiring events are coming up in the market
+    ## 0 - 11 will be "expiring x+1 months from now"
+    ## events are 0 indexed up to n-1 so we can iterate through them, users won't know all the eventIDs automatically, so stored in the value
+                                                                      #^^^^^ Each branch has a normal indexed array of event IDs
+                                                                      # You can find all the soon-to-expire events by iterating through
+                                                                      # Branches[branchID].events and looking at the expirationDates
+
+    #data EventsExpDates[](numberEvents, events[])
+    # used so voters can vote on things ^ may need a ballot max size b/c cost so need a systematic way to do voting
+
+
+### To do: fuck bitches - I did not add this, but I suggest we solicit Jeremy's help here
+    # voting consensus shit 
+    # ^ People can use vote fun. to submit reports
+    # Report matrix has ballots and votes
+    # A ballot would be all events expiring around same date
+    
+    # do redeem tx
+    
+    # this has no error correction lolol, needs it 
+    # ^ what if people pass functions incorrect values, need to detect that junk and return 0
+    
+    # new lmsr and new icd
+    
+### Actual code begins
+
+def send_reputation(recver, value, type, branch):
+    sender = tx.origin
+    sender_balance = self.Branches[branch].reputation[sender]
+    if(sender_balance >= value):
+        self.Branches[branch].reputation[sender] -= value
+        self.Branches[branch].reputation[recver] += value
+        return(1)
+    else:
+        return(0)
+            
+def get_rep_balance(branch):
+    return(self.Branches[branch].reputation[tx.origin])
+
+# to is the address on the new branch you want to send to
+def send_rep_newbranch(to, value, oldBranch, newBranch):
+        # if no branch created (defined as a nonzero period)
+        if(!self.Branches[oldBranch].periodLength | !self.Branches[newBranch].periodLength | value<=0):
+            return(0)
+        else:
+            from = tx.origin
+            fromvalue = self.Branches[oldBranch].reputation[from]
+            if(fromvalue >= value):
+                self.Branches[fromBranch].reputation[from] -= value
+                self.Branches[toBranch].reputation[to] += value
+                return(1)
+            else:
+                return(0)
+
+# period length is given in blocks
+def make_branch(branchName:s, description:s, periodLength):
+    # give fee to first market created on new branch
+    branchCharacteristics = array(9)
+    branchCharacteristics[0] = branchName
+    branchCharacteristics[1] = description
+    branchCharacteristics[2] = periodLength
+    # event and market counts both 0
+    branchCharacteristics[3] = 0
+    branchCharacteristics[4] = 0
+    branchCharacteristics[5] = periodLength
+    branchCharacteristics[6] = tx.origin
+    branchCharacteristics[7] = msg.value
+    branchCharacteristics[8] = BRANCH
+
+    branchID = sha256(eventCharacteristics, 9)
+    # people can check that these characteristics hash to the ID if they want
+    # people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
+
+    if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator):
+        self.Branches[branchID].eventCount = 0
+        self.Branches[branchID].marketCount = 0
+        self.Branches[branchID].periodLength = periodLength
+        self.Info[branchID].typecode = BRANCH
+        self.Info[branchID].description[] = description
+        self.Info[branchID].creator = tx.origin
+        self.Info[branchID].creationFee = msg.value
+        return(1)
+    else:
+        return(0)
+        
+def get_cash_balance():
+    return(self.cashcoin_balances[tx.origin])
+    
+def send_cashcoin(recver, value):
+    sender = tx.origin
+    sender_balance = self.cashcoin_balances[sender]
+    if(sender_balance >= value):
+        self.cashcoin_balances[sender] -= value
+        self.cashcoin_balances[recver] += value
+        return(1)
+    else:
+        return(0)
+        
+def create_event(branch, description:s, expDate):
+    if(self.Info[branch].creator and self.Branches[branch].periodLength and description!=0 and expDate>block.number):
+        eventCharacteristics = array(6)
+        eventCharacteristics[0] = description
+        eventCharacteristics[1] = EVENT
+        eventCharacteristics[2] = branch
+        eventCharacteristics[3] = expDate
+        eventCharacteristics[4] = tx.origin
+        eventCharacteristics[5] = msg.value
+    
+        eventID = sha256(eventCharacteristics, 6)
+    else:
+        return(0)
+
+    #should be greater than 0.01 bitcoin, using 10 whatevers to test
+    if (msg.value >= 10 and !self.Info[eventID].creator and !self.Events[eventID].branch):
+        self.Info[eventID].typecode = EVENT
+        self.Info[eventID].description[] = description
+        self.Info[eventID].creator = tx.origin
+        self.Info[eventID].creationFee = msg.value
+
+        self.Events[eventID].branch = branch
+        self.Events[eventID].expirationDate = expDate
+        
+        # add the event to the branch
+        # see when it expires, compare that to currentvotingperiod number and last voting period and add it in to the proper spot
+        eventCount = self.Branches[branch].eventCount
+        self.Branches[branch].events[eventCount] = eventID
+        self.Branches[branch].eventCount += 1
+        return(1)
+    else:
+        return(0)
+
+def create_market(branch, description:s, lossLimit, tradingFee, events:a):
+    # what happens if number of Events isn't the same length as eventList?
+    # market could mature when last event expires/matures
+    # shares can't be bought sold except for the redemption tx after expired
+    
+    # check l log n stuff for liquidity
+    if(numberEvents > 200 or funding<(lossLimit*FixedPoint.log(arglen(events), as=fp)) or self.cashcoin_balances[tx.origin]<funding):
+        return(0)
+    if(!self.Info[branch].creator or !self.Branches[branch].periodLength):
+        return(0)
+
+    # formation of marketID (hash)
+    marketCharacteristics = array(9)
+    marketCharacteristics[0] = branch
+    marketCharacteristics[1] = tradingFee
+    marketCharacteristics[2] = MARKET
+    marketCharacteristics[3] = tx.origin
+    # this is just what's provided by market maker, pre event creation fees addition
+    marketCharacteristics[4] = msg.value
+    marketCharacteristics[5] = lossLimit
+        # need to USE PROPER MULTIDIMEN ARRAY SYNTAX HERE!!!
+    marketCharacteristics[6] = eventList
+    marketCharacteristics[7] = arglen(events)
+    marketCharacteristics[8] = description
+
+    marketID = sha256(marketCharacteristics, 9)
+
+    # add event list to the market along with those event fees
+    i = 0
+    bal = 0
+    while i<arglen(events):
+        eventID = events[i]
+        if(!self.Info[eventID].creator or !self.Events[eventID].expirationDate or self.Events[eventID].branch!=branch):
+            return(0)
+        bal += self.Info[eventID].creationFee
+        # set to 0 now so no one else can spend it
+        self.Info[eventID].creationFee = 0
+        # initialize market events array with eventIDs from the eventList
+        self.Markets[marketID].events[i].eventID = eventID
+        # then need to set each respective event's number of share bought to 0
+        self.Markets[marketID].events[i].sharesPurchased[0] = 0
+        self.Markets[marketID].events[i].sharesPurchased[1] = 0
+        i+=1
+
+    # bal now contains event creation fees and the market's funding
+    # so event creation fees are essentially added to initial liquidity
+    bal += msg.value
+    
+    # creator of the first market in a branch gets the branch's creation fee
+    if(self.Branches[branch].marketCount==0):
+        bal += self.Info[branch].creationFee
+        # set to 0 now so no one else can spend it
+        self.Info[branch].creationFee = 0
+        
+    self.Info[marketID].typecode = MARKET
+    self.Info[marketID].description[] = description
+    self.Info[marketID].creator = tx.origin
+    # this is all the market's liquidity & fees in one
+    self.Info[marketID].creationFee = bal
+    
+    self.cashcoin_balances[marketID] = bal
+    
+    self.Markets[marketID].lossLimit = lossLimit
+    self.Markets[marketID].tradingFee = tradingFee
+    self.Markets[marketID].numberEvents = numberEvents
+    self.Markets[marketID].branch = branch
+
+    # add the market to the branch
+    marketCount = self.Branches[branch].marketCount
+    self.Branches[branch].markets[marketCount] = marketID
+    self.Branches[branch].marketCount += 1
+    return(1)
+
+def lmsr(shares1, shares2, lossLimit):
+    # *** LOGARITHMIC MARKET SCORING RULE ***
+    #(like a regular market scoring rule, except it uses logarithms)
+    weight1 = FixedPoint.exp(FixedPoint.div(shares1, lossLimit, as=fp), as=fp)
+    weight2 = FixedPoint.exp(FixedPoint.div(shares2, lossLimit, as=fp), as=fp)
+    logpf = FixedPoint.log(weight1 + weight2, as=fp)
+    cost = FixedPoint.mul(lossLimit, logpf, as=fp)
+    return(cost)
+
+# currently this only works for binary single event outcomes
+def buy_shares(branch, event, market, outcome, amount, fee):
+    # When buy check that event hasn't expired
+    
+    # MAKE SURE USER HAS ENOUGH MONEY!!!
+    
+    if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee):
+        return(0)
+    
+    # NEED TO DETERMINE HOW TO HANDLE FEES for everything DUE TO NEW LMSR STRUCTURE STUFF after new market maker implemented
+    # pay half of trading fee to market creator via sending to market.creator
+    # other half goes to votecoin holders!!!!OO!O!O!O!O! - store in a market fee pool
+    self.cashcoin_balances[tx.origin] = self.cashcoin_balances[tx.origin] - fee
+    self.cashcoin_balances[self.Info[market].creator] = self.cashcoin_balances[self.Info[market].creator] + fee/2
+    # find the right event index
+    i = 0
+    while (i<self.Markets[market].numberEvents):
+        if(self.Markets[market].events[i].eventID == event):
+            break
+        else:
+            i+=1
+    # for the first trade oldcost shares bought will be at 0
+    oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[1], self.Markets[market].events[i].sharesPurchased[0], self.Markets[market].lossLimit)
+    # if buying outcome 1
+    if outcome:
+        self.Markets[market].events[i].sharesPurchased[1] += amount
+    # outcome is no
+    else:
+        self.Markets[market].events[i].sharesPurchased[0] += amount
+    
+    newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[1], self.Markets[market].events[i].sharesPurchased[0], self.Markets[market].lossLimit) 
+    pricePerShare = newCost - oldCost
+
+    # send bitcoin from user acc. to event address/account
+    self.cashcoin_balances[tx.origin] -= pricePerShare*amount
+    self.cashcoin_balances[market] += pricePerShare*amount
+    
+    # send shares of the event to user address
+    if outcome:
+        # if user didn't have enough money, revert
+        if(self.cashcoin_balances[tx.origin]<amount):
+            self.Markets[market].events[i].sharesPurchased[1] -= amount
+            #send bitcoin back
+            self.cashcoin_balances[market] -= priceToPayPerShare*amount
+            self.cashcoin_balances[tx.origin] += priceToPayPerShare*amount
+            return(0)
+        else:
+            self.Markets[market].participants[tx.origin].event[event].shares[1] += amount
+            return(1)
+    else:
+        # if user didn't have enough money, revert
+        if(self.cashcoin_balances[tx.origin]<amount):
+            self.Markets[market].events[i].sharesPurchased[0] -= amount
+            #send bitcoin back
+            self.cashcoin_balances[market] -= priceToPayPerShare*amount
+            self.cashcoin_balances[tx.origin] += priceToPayPerShare*amount
+            return(0)
+        else:
+            self.Markets[market].participants[tx.origin].event[event].shares[0] += amount
+            return(1)
+
+#amount is amount of shares to buy
+def sell_shares(buy, branch, event, market, outcome, amount, fee):
+    # When sell check that event hasn't expired
+    if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee):
+        return(0)
+        
+    # NEED TO DETERMINE HOW TO HANDLE FEES for everything DUE TO NEW LMSR STRUCTURE STUFF after new market maker implemented
+    # pay half of trading fee to market creator via sending to market.creator
+    # other half goes to votecoin holders!!!!OO!O!O!O!O! - store in a market fee pool
+    self.cashcoin_balances[tx.origin] = self.cashcoin_balances[tx.origin] - fee
+    self.cashcoin_balances[self.Info[market].creator] = self.cashcoin_balances[self.Info[market].creator] + fee/2
+    # find the right event index
+    i = 0
+    while (i<self.Markets[market].numberEvents):
+        if(self.Markets[market].events[i].eventID == event):
+            break
+        else:
+            i+=1
+    # for the first trade oldcost shares bought will be at 0
+    oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[1], self.Markets[market].events[i].sharesPurchased[0], self.Markets[market].lossLimit)
+    
+    # send unspent shares from the user to the event
+    if outcome:
+        self.Markets[market].events[i].sharesPurchased[1] -= amount
+    # outcome is no
+    else:
+        self.Markets[market].events[i].sharesPurchased[0] -= amount
+    
+    newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[1], self.Markets[market].events[i].sharesPurchased[0], self.Markets[market].lossLimit)
+    priceToPayPerShare = oldCost - newCost
+
+    # send bitcoin from the market to the user acc.
+    self.cashcoin_balances[market] -= priceToPayPerShare*amount
+    self.cashcoin_balances[tx.origin] += priceToPayPerShare*amount
+
+    # remove shares from the user's account
+    if outcome:
+        # if user actually doesn't have the shares, revert
+        if(self.Markets[market].participants[tx.origin].event[event].shares[1]<amount):
+            self.Markets[market].events[i].sharesPurchased[1] += amount
+            #send bitcoin back
+            self.cashcoin_balances[market] += priceToPayPerShare*amount
+            self.cashcoin_balances[tx.origin] -= priceToPayPerShare*amount
+            return(0)
+        else:
+            self.Markets[market].participants[tx.origin].event[event].shares[1] -= amount
+            return(1)
+    else:
+        # if user actually doesn't have the shares, revert
+        if(self.Markets[market].participants[tx.origin].event[event].shares[0]<amount):
+            self.Markets[market].events[i].sharesPurchased[0] += amount
+            # send bitcoin back
+            self.cashcoin_balances[market] += priceToPayPerShare*amount
+            self.cashcoin_balances[tx.origin] -= priceToPayPerShare*amount
+            return(0)
+        else:
+            self.Markets[market].participants[tx.origin].event[event].shares[0] -= amount
+            return(1)
+
+def queryShareCost():
+    return(1)
+    # do shit
+    #branch token transfer vesting?
+
+#check if the eventID is in the current voting period pointed to by the branchID's currentVotePeriod 
+def in(branchID, eventID):
+    i = 0
+    while i < self.Branches[branchID].EventsExpDates[self.Branches[branchID].
+
+#make sure people can change their vote during the voting period
+def vote(branchID, report:a):
+    # make sure the branch exists
+    if self.Branches[branchID] == 0:
+        return(0)
+    if self.Branches[branchID].lastPeriodEnd + self.Branches[branchID].periodLength > block.number:
+        return(0)
+    reputation = self.Branches[branch].reputation[tx.origin]
+    
+    
+    i = 0
+    while i < arglen(report):
+        
+    
+    # first we scale the report by the reputation the voter has
+    i = 0
+    while i < arglen(report):
+        if report[i] > 1:
+            return(0) # people should not have votes greater than 1! they need to be in (0, 1)
+        report[i] *= reputation
+        
+    
+    # need to update stuff for quorem -- store this in a vote junk data struct
+    # and store the report and the rep value there
+    # do a vote
+    return(1)
+
+# returns whether a quorem has a matured event and whether 
+# the number of required reports are met as a tuple (matured, met)
+def check_quorum(eventExpirationBlock, numReported, reportsReq):
+    if (block.number >= eventExpirationBlock):
+        matured = true
+    else:
+        matured = false
+    if (numReported >= reportsReq):
+        met = true
+    else:
+        met = false
+    return([matured, met], 2)
+
+def redeem():
+    # event must be expired/mature to do svd which could occur in a redeem tx or separately
+    # will need to loop through eventid holders in mkt and distribute coins
+    # X Bitcoin in market /qi is the price per share once a market is closed
+    # remember to give back part of the init. liquidity
+    # and tx fees
+    if(check_quorum):
+        # do stuff
+        return(1)
+    else:
+        # woah
+        # from 1.0:
+        # suicide(addr) - destroys the contract, sending all ether to the given address
+        # don't try suicide nobody's worth it, don't try suicide
+        suicide(0)
+        return(0)
