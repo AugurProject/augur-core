@@ -6,10 +6,20 @@ Cumulant tensors and statistics.  Semi-compatible with Serpent.
 """
 from __future__ import division
 import numpy as np
+import pandas as pd
+import matplotlib
+import matplotlib.pyplot as plt
+from scipy import signal
 from sklearn.decomposition import FastICA, PCA
 import cumulants
 
+pd.set_option("display.max_rows", 25)
+pd.set_option("display.width", 1000)
+pd.options.display.mpl_style = "default"
 np.set_printoptions(linewidth=500)
+
+if matplotlib.is_interactive():
+    plt.ioff()
 
 tolerance = 1e-5
 
@@ -33,11 +43,98 @@ def calibrate(reports):
     pc = pca.fit_transform(reports)
     comps = pca.components_
 
-    # Reconstruct signals, get estimated mixing matrix
-    ica = FastICA(n_components=3)
-    S_ = ica.fit_transform(reports)
-    A_ = ica.mixing_
+def test_reports():
+    # Mixing matrix
+    A = np.array([[ 1. ,  1. ,  1. ],
+                  [ 0.5,  2. ,  1. ],
+                  [ 1.5,  1. ,  2. ]])
 
+    # Observations
+    X = np.array([[-0.74486315, -0.91401507, -1.81570038],
+                  [ 0.03932519,  1.06492993, -1.58715033],
+                  [-0.40766041,  0.39786915, -1.90998106],
+                  [ 0.03378855,  0.96729768, -1.01487154],
+                  [-0.1791563 ,  0.69517577, -1.49117203],
+                  [-0.21862343,  0.97899468, -1.78466729],
+                  [-1.42994489, -0.69517222, -3.74990271],
+                  [-0.37958269,  0.63853667, -2.03932666],
+                  [-0.09768426,  0.23365333, -1.25356991],
+                  [ 0.28911204,  1.54498045, -0.7261127 ]])
+
+    H = PCA().fit_transform(X)
+    S_ = FastICA(n_components=3).fit_transform(X)
+
+def weighted_cov(reports):
+    # Compute the weighted mean (of all voters) for each decision
+    weighted_mean = ma.average(reports,
+                               axis=0,
+                               weights=rep_coins.squeeze())
+
+    # Each vote's difference from the mean of its decision (column)
+    mean_deviation = np.matrix(reports - weighted_mean)
+
+    # Compute the unbiased weighted population covariance
+    # (for uniform weights, equal to np.cov(reports.T, bias=1))
+    covariance_matrix = 1/float(np.sum(rep_coins)-1) * ma.multiply(mean_deviation, rep_coins).T.dot(mean_deviation)
+
+    return covariance_matrix, mean_deviation
+
+def weighted_PCA(reports):
+    covariance_matrix, mean_deviation = weighted_cov(reports)
+    U = np.linalg.svd(covariance_matrix)[0]
+    first_loading = U.T[0]
+    first_score = np.dot(mean_deviation, U).T[0]
+    return first_loading, first_score
+
+def test_ICA():
+    np.random.seed(0)
+    n_samples = 2000
+    time = np.linspace(0, 8, n_samples)
+
+    s1 = np.sin(2 * time)  # Signal 1 : sinusoidal signal
+    s2 = np.sign(np.sin(3 * time))  # Signal 2 : square signal
+    s3 = signal.sawtooth(2 * np.pi * time)  # Signal 3: saw tooth signal
+
+    S = np.c_[s1, s2, s3]
+    S += 0.2 * np.random.normal(size=S.shape)  # Add noise
+
+    S /= S.std(axis=0)  # Standardize data
+    # Mix data
+    A = np.array([[1, 1, 1], [0.5, 2, 1.0], [1.5, 1.0, 2.0]])  # Mixing matrix
+    X = np.dot(S, A.T)  # Generate observations
+
+    # Compute ICA
+    ica = FastICA(n_components=3)
+    S_ = ica.fit_transform(X)  # Reconstruct signals
+    A_ = ica.mixing_  # Get estimated mixing matrix
+
+    # We can "prove" that the ICA model applies by reverting the unmixing.
+    assert np.allclose(X, np.dot(S_, A_.T) + ica.mean_)
+
+    # For comparison, compute PCA
+    pca = PCA(n_components=3)
+    H = pca.fit_transform(X)  # Reconstruct signals based on orthogonal components
+
+    return X, S, S_, H
+
+def plot_PCA_ICA(X, S, S_, H):
+    plt.figure()
+
+    models = [X, S, S_, H]
+    names = ['Observations (mixed signal)',
+             'True Sources',
+             'ICA recovered signals', 
+             'PCA recovered signals']
+    colors = ['red', 'steelblue', 'orange']
+
+    for ii, (model, name) in enumerate(zip(models, names), 1):
+        plt.subplot(4, 1, ii)
+        plt.title(name)
+        for sig, color in zip(model.T, colors):
+            plt.plot(sig, color=color)
+
+    plt.subplots_adjust(0.09, 0.04, 0.94, 0.94, 0.26, 0.46)
+    plt.show()
 
 def test_cumulants():
     unbias = 0
@@ -154,3 +251,5 @@ if __name__ == "__main__":
     num_events = len(reports[0])
     calibrate(reports)
     test_cumulants()
+    X, S, S_, H = test_ICA()
+    # plot_PCA_ICA(X, S, S_, H)

@@ -45,6 +45,45 @@ def dot(u, v, size):
         i += 1
     return(prod)
 
+def transpose(a):
+    m = len(a)
+    n = len(a[0])
+    at = []
+    for i in range(n):
+        at.append([zero] * m)
+    for i in range(m):
+        for j in range(n):
+            at[j][i] = a[i][j]
+    return at
+
+def matrixmultiply(a, b, am, bm, an, bn):
+    # am = len(a)
+    # bm = len(b)
+    # an = len(a[0])
+    # bn = len(b[0])
+    cm = am
+    cn = bn
+    if bn == 1:
+        c[cm]
+        # c = [zero] * cm
+    else:
+        c = []
+        i = 0
+        while i < cm:
+            c[i][cn]
+            i += 1
+        # for k in range(cm):
+        #     c.append([zero] * cn)
+    for i in range(cm):
+        for j in range(cn):
+            for k in range(an):
+                if bn == 1:
+                    c[i] += a[i][k] * b[k]
+                else:
+                    c[i][j] += a[i][k] * b[k][j]
+    return c
+
+
 def cov(data, rows, cols, unbias):
     # Covariance matrix (second cumulant).
     #
