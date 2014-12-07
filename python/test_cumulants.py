@@ -153,7 +153,7 @@ def test_dot():
         for j in range(num_signals):
             expected_product = np.dot(data[:,i], data[:,j])
             actual_product = cumulants.dot(data[:,i], data[:,j], num_samples)
-            assert(actual_product - expected_product < 1e-15)
+            assert(actual_product - expected_product < 1e-12)
 
 def test_outer():
     num_signals = 10     # columns
@@ -163,7 +163,7 @@ def test_outer():
         for j in range(num_signals):
             expected_product = np.outer(data[:,i], data[:,j])
             actual_product = cumulants.outer(data[:,i], data[:,j], num_samples)
-            assert((actual_product - expected_product < 1e-15).all())
+            assert((actual_product - expected_product < 1e-12).all())
 
 def test_transpose():
     num_rows = 10
@@ -171,7 +171,7 @@ def test_transpose():
     data = np.random.randn(num_rows, num_cols)
     assert((cumulants.transpose(data, num_rows, num_cols) == data.T).all())
 
-def test_multiply():
+def test_matrix_multiply():
     pass
 
 def test_kron():
@@ -302,7 +302,7 @@ if __name__ == "__main__":
     test_dot()
     test_outer()
     test_transpose()
-    test_multiply()
+    test_matrix_multiply()
     test_kron()
     test_cumulants()
     X, S, S_, H = test_ICA()

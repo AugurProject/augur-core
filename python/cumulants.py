@@ -89,7 +89,7 @@ def transpose(a, m, n):
         i += 1
     return(at)
 
-def multiply(a, b, am, bm, an, bn):
+def matrix_multiply(a, b, am, bm, an, bn):
     # am: # rows in a
     # bm: # rows in b
     # an: # columns in a
@@ -268,9 +268,9 @@ def cokurt(data, rows, cols, unbias):
     return(tensor)
 
 def coskewness(data, w):
-    S = multiply(multiply(transpose(w), coskew(data)), kron(w, w))
+    S = matrix_multiply(matrix_multiply(transpose(w), coskew(data)), kron(w, w))
     return(S)
 
 def cokurtosis(data, w):
-    S = multiply(multiply(transpose(w), cokurt(data)), kron(kron(w, w), w))
+    S = matrix_multiply(matrix_multiply(transpose(w), cokurt(data)), kron(kron(w, w), w))
     return(S)
