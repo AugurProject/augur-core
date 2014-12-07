@@ -5,16 +5,22 @@ Cumulant tensors and statistics.  Semi-compatible with Serpent.
 
 """
 from __future__ import division
-import array as arr
 
-def array(size, typecode='f'):
-    # Emulates Serpent arrays.
+def array(size):
+    # Emulates Serpent arrays.  Multidimensional arrays have the following
+    # syntax in Serpent:
+    #
+    #     x = array(W)
+    #     i = 0
+    #     while i < W:
+    #         x[i] = array(H)
+    #         i += 1
     #
     # Args:
     #   size (int): number of elements in the array
     #   typecode (char): data type the array will hold (default: float)
     #
-    a = arr.array(typecode, (0,)*size)
+    a = [0] * size
     return(a)
 
 def mean(u, size):
@@ -50,7 +56,7 @@ def dot(u, v, size):
 def transpose(a, m, n):
     # m: # rows in a
     # n: # colunms in a
-    at = [[]] * n
+    at = array(n)
     i = 0
     while i < n:
         at[i] = array(m)
@@ -71,10 +77,8 @@ def matrix_multiply(a, b, am, bm, an, bn):
     # bn: # columns in b
     cm = am
     cn = bn
-    if bn == 1:
-        c = array(cm)
-    else:
-        c = []
+    c = array(cm)
+    if bn > 1:
         i = 0
         while i < cm:
             c[i] = array(cn)
@@ -103,7 +107,7 @@ def cov(data, rows, cols, unbias):
     #   rows: number of rows (samples per signal) in the data matrix
     #   cols: number of columns (signals) in the data matrix
     #
-    tensor = [[]] * cols 
+    tensor = array(cols)
     i = 0
     while i < cols:
         j = 0
@@ -138,10 +142,10 @@ def coskew(data, rows, cols, unbias):
     #   rows: number of rows (samples per signal) in the data matrix
     #   cols: number of columns (signals) in the data matrix
     #
-    tensor = [[]] * cols
+    tensor = array(cols)
     k = 0
     while k < cols:
-        face = [[]] * cols
+        face = array(cols)
         i = 0
         while i < cols:
             j = 0
@@ -182,13 +186,13 @@ def cokurt(data, rows, cols, unbias):
     #   rows: number of rows (samples per signal) in the data matrix
     #   cols: number of columns (signals) in the data matrix
     #
-    tensor = [[]] * cols
+    tensor = array(cols)
     l = 0
     while l < cols:
-        block = [[]] * cols
+        block = array(cols)
         k = 0
         while k < cols:
-            face = [[]] * cols
+            face = array(cols)
             i = 0
             while i < cols:
                 j = 0
