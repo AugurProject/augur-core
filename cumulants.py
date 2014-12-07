@@ -266,3 +266,11 @@ def cokurt(data, rows, cols, unbias):
             k += 1
         l += 1
     return(tensor)
+
+def coskewness(data, w):
+    S = multiply(multiply(transpose(w), coskew(data)), kron(w, w))
+    return(S)
+
+def cokurtosis(data, w):
+    S = multiply(multiply(transpose(w), cokurt(data)), kron(kron(w, w), w))
+    return(S)
