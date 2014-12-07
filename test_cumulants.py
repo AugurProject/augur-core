@@ -155,32 +155,61 @@ def test_dot():
             actual_product = cumulants.dot(data[:,i], data[:,j], num_samples)
             assert(actual_product - expected_product < 1e-15)
 
+def test_outer():
+    num_signals = 10     # columns
+    num_samples = 50     # rows
+    data = np.random.randn(num_samples, num_signals)
+    for i in range(num_signals):
+        for j in range(num_signals):
+            expected_product = np.outer(data[:,i], data[:,j])
+            actual_product = cumulants.outer(data[:,i], data[:,j], num_samples)
+            assert((actual_product - expected_product < 1e-15).all())
+
+def test_transpose():
+    num_rows = 10
+    num_cols = 50
+    data = np.random.randn(num_rows, num_cols)
+    assert((cumulants.transpose(data, num_rows, num_cols) == data.T).all())
+
+def test_multiply():
+    pass
+
+def test_kron():
+    num_signals = 10     # columns
+    num_samples = 50     # rows
+    data = np.random.randn(num_samples, num_signals)
+    for i in range(num_signals):
+        for j in range(num_signals):
+            expected_product = np.kron(data[:,i], data[:,j])
+            actual_product = cumulants.kron(data[:,i], data[:,j], num_samples)
+            assert((actual_product - expected_product < 1e-15).all())
+
 def test_cumulants():
     unbias = 0
-    data = [[ 0.837698,   0.49452,  2.54352 ],
-            [-0.294096,  -0.39636,  0.728619],
-            [-1.62089 ,  -0.44919,  1.20592 ],
-            [-1.06458 ,  -0.68214, -1.12841 ],
-            [ 2.14341 ,   0.7309 ,  0.644968],
-            [-0.284139,  -1.133  ,  1.98615 ],
-            [ 1.19879 ,   2.55633, -0.526461],
-            [-0.032277,   0.11701, -0.249265],
-            [-1.02516 ,  -0.44665,  2.50556 ],
-            [-0.515272,  -0.578  ,  0.515139],
-            [ 0.259474,  -1.24193,  0.105051],
-            [ 0.178546,  -0.80547, -0.016838],
-            [-0.607696,  -0.21319, -1.40657 ],
-            [ 0.372248,   0.93341, -0.667086],
-            [-0.099814,   0.52698, -0.253867],
-            [ 0.743166,  -0.79375,  2.11131 ],
-            [ 0.109262,  -1.28021, -0.415184],
-            [ 0.499346,  -0.95897, -2.24336 ],
-            [-0.191825,  -0.59756, -0.63292 ],
-            [-1.98255 ,  -1.5936 , -0.935766],
-            [-0.317612,   1.33143, -0.46866 ],
-            [ 0.666652,  -0.81507,  0.370959],
-            [-0.761136,   0.10966, -0.997161],
-            [-1.09972 ,   0.28247, -0.846566]]
+    data = [[ 0.837698,  0.49452,  2.54352 ],
+            [-0.294096, -0.39636,  0.728619],
+            [-1.62089 , -0.44919,  1.20592 ],
+            [-1.06458 , -0.68214, -1.12841 ],
+            [ 2.14341 ,  0.7309 ,  0.644968],
+            [-0.284139, -1.133  ,  1.98615 ],
+            [ 1.19879 ,  2.55633, -0.526461],
+            [-0.032277,  0.11701, -0.249265],
+            [-1.02516 , -0.44665,  2.50556 ],
+            [-0.515272, -0.578  ,  0.515139],
+            [ 0.259474, -1.24193,  0.105051],
+            [ 0.178546, -0.80547, -0.016838],
+            [-0.607696, -0.21319, -1.40657 ],
+            [ 0.372248,  0.93341, -0.667086],
+            [-0.099814,  0.52698, -0.253867],
+            [ 0.743166, -0.79375,  2.11131 ],
+            [ 0.109262, -1.28021, -0.415184],
+            [ 0.499346, -0.95897, -2.24336 ],
+            [-0.191825, -0.59756, -0.63292 ],
+            [-1.98255 , -1.5936 , -0.935766],
+            [-0.317612,  1.33143, -0.46866 ],
+            [ 0.666652, -0.81507,  0.370959],
+            [-0.761136,  0.10966, -0.997161],
+            [-1.09972 ,  0.28247, -0.846566]]
     rows = len(data)
     cols = len(data[0])
     
@@ -271,6 +300,10 @@ if __name__ == "__main__":
     calibrate(reports)
     test_mean()
     test_dot()
+    test_outer()
+    test_transpose()
+    test_multiply()
+    test_kron()
     test_cumulants()
     X, S, S_, H = test_ICA()
     # plot_PCA_ICA(X, S, S_, H)

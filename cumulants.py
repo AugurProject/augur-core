@@ -39,7 +39,7 @@ def mean(u, size):
     return(m)
 
 def dot(u, v, size):
-    # Calculates the dot (inner) product.
+    # Calculates the dot (inner) product of vectors.
     #
     # Args:
     #   u: numeric array (vector)
@@ -50,6 +50,25 @@ def dot(u, v, size):
     i = 0
     while i < size:
         prod += u[i] * v[i]
+        i += 1
+    return(prod)
+
+def outer(u, v, size):
+    # Calculates the outer product of vectors.
+    #
+    # Args:
+    #   u: numeric array (vector)
+    #   v: numeric array (vector)
+    #   size (int): number of elements in u
+    #
+    prod = array(size)
+    i = 0
+    while i < size:
+        prod[i] = array(size)
+        j = 0
+        while j < size:
+            prod[i][j] += u[i] * v[j]
+            j += 1
         i += 1
     return(prod)
 
@@ -70,7 +89,7 @@ def transpose(a, m, n):
         i += 1
     return(at)
 
-def matrix_multiply(a, b, am, bm, an, bn):
+def multiply(a, b, am, bm, an, bn):
     # am: # rows in a
     # bm: # rows in b
     # an: # columns in a
@@ -98,6 +117,23 @@ def matrix_multiply(a, b, am, bm, an, bn):
         i += 1
     return(c)
 
+def kron(u, v, size):
+    # Calculates the Kronecker product.
+    #
+    # Args:
+    #   u: numeric array (vector)
+    #   v: numeric array (vector)
+    #   size (int): number of elements in u
+    #
+    prod = array(size**2)
+    i = 0
+    while i < size:
+        j = 0
+        while j < size:
+            prod[size*i + j] += u[i] * v[j]
+            j += 1
+        i += 1
+    return(prod)
 
 def cov(data, rows, cols, unbias):
     # Covariance matrix (second cumulant).
