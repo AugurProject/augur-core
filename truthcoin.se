@@ -1,16 +1,6 @@
-# parsers to get this data from the ethereum blockchain at some point
-
-### HOW TO DO MULTIDIMEN ARRAYS
-    #x = array(W)
-    #i = 0
-    #while i < W:
-    #   x[i] = array( H )
-    #    i += 1
-
 # includes
 extern fp = [new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
 FixedPoint = create('fixedpoint.se')
-
 
 BRANCH = 0
 EVENT = 1
@@ -20,71 +10,40 @@ MARKET = 2
 data Info[](typecode, description[], creator, creationFee)
 
 # currentVotePeriod is where we are in the eventsExpDates, lastPeriodEnd is the last voting period block number
-data Branches[](eventsExpDates[](numberEvents, events[]), currentVotePeriod, markets[], marketCount, reputation[], periodLength, lastPeriodEnd)
+data Branches[](eventsExpDates[](numberEvents, events[], numberReported, totalRepReported, reporters[](reports[], reputation, repAddress)), currentVotePeriod, markets[], marketCount, reputation[], periodLength, lastPeriodEnd)
 
 data Events[](branch, expirationDate)
 
-# key for participants[tx.origin].event[] is eventID, but events[] are 0 indexed
-data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](event[](shares[2])), lossLimit, tradingFee, numberEvents)
+data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](participantID, event[](shares[2])), lossLimit, tradingFee, numberEvents, currentParticipant)
 
 data cashcoin_balances[]
 
-
-
 def init():
     # test initial funds
-    # I'm rich, 
     cashcoin_balances[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826] = 1000000
-
-
-### Random notes / knowledge / stuff:
-    # if transferring votecoin everywhere worst case soln. is vesting of votecoins after a transfer 
-    # bitcoin, usd cashcoin
-    # all money is stored in contract address in actuality, but it's measured according to certain variables
-    # that are updated by function calls / transactions / messages
+    Branches[1010101].reputation["chris and joey's rep"] = 47
 
 ### Version 2.0:
+    # blockchain explorer to get / examine data or make rpc api calls to the contract to get it
     # Scalar event where people update what type of share they bought using a thing 
     # in an array where index is their scalar x and value
-    # is the share updated number of shares bought. 
-    
-    # decentralized sidechain market to buy/sell votecoin?
-
-    
+    # is the share updated number of shares bought
     # how do we make this code updatable
     # how do we scale / what if a ton of events, markets, etc.
-    
     # add multiple events into markets buy / sell feature
-    # real branching / subbranching
     # api voting option
-    
+    # if current vote period is == 0 then we looped past 2^256 --- set values in array to 0 at that point
+    # may need a ballot max size b/c cost so need a systematic way to do voting (e.g. vote on first xxx events, then next set are another ballot)
+    # randomized voter selection? - first x events expiring vote on in one ballot - random selection, then anothe ballot
+    # new market maker
+
+### To do:
+    # make sure this follows paul's whitepaper well
+    # real branching / subbranching
     # people can currently send votecoin to any branch, "Houston, we have a problem!"
-
-    # need to replace all fees w/ cashcoin fees, i think, actually have no idea, depends how counterparty does this lolol
-
-    ## Voters need to know when expiring events are coming up in the market
-    ## 0 - 11 will be "expiring x+1 months from now"
-    ## events are 0 indexed up to n-1 so we can iterate through them, users won't know all the eventIDs automatically, so stored in the value
-                                                                      #^^^^^ Each branch has a normal indexed array of event IDs
-                                                                      # You can find all the soon-to-expire events by iterating through
-                                                                      # Branches[branchID].events and looking at the expirationDates
-
-    #data EventsExpDates[](numberEvents, events[])
-    # used so voters can vote on things ^ may need a ballot max size b/c cost so need a systematic way to do voting
-
-
-### To do: fuck bitches - I did not add this, but I suggest we solicit Jeremy's help here
-    # voting consensus shit 
-    # ^ People can use vote fun. to submit reports
-    # Report matrix has ballots and votes
-    # A ballot would be all events expiring around same date
-    
-    # do redeem tx
-    
-    # this has no error correction lolol, needs it 
-    # ^ what if people pass functions incorrect values, need to detect that junk and return 0
-    
-    # new lmsr and new icd
+    # voting consensus & redeem tx
+    # contract should send msg.values around, not cashcoin -- i'll (joey) fix this
+    # what if people pass functions incorrect values, need to detect that junk and return 0
     
 ### Actual code begins
 
@@ -118,7 +77,9 @@ def send_rep_newbranch(to, value, oldBranch, newBranch):
 
 # period length is given in blocks
 def make_branch(branchName:s, description:s, periodLength):
-    # give fee to first market created on new branch
+    # add current vote period initializations, etc to this creation as well as last period end
+    # as well as eventsExpDates[](numberEvents, events[]) to 0  
+    # give fee to first mark etto  created on new branch
     branchCharacteristics = array(9)
     branchCharacteristics[0] = branchName
     branchCharacteristics[1] = description
@@ -131,9 +92,9 @@ def make_branch(branchName:s, description:s, periodLength):
     branchCharacteristics[7] = msg.value
     branchCharacteristics[8] = BRANCH
 
-    branchID = sha256(eventCharacteristics, 9)
     # people can check that these characteristics hash to the ID if they want
     # people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
+    branchID = sha256(eventCharacteristics, 9)
 
     if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator):
         self.Branches[branchID].eventCount = 0
@@ -186,9 +147,17 @@ def create_event(branch, description:s, expDate):
         
         # add the event to the branch
         # see when it expires, compare that to currentvotingperiod number and last voting period and add it in to the proper spot
-        eventCount = self.Branches[branch].eventCount
-        self.Branches[branch].events[eventCount] = eventID
-        self.Branches[branch].eventCount += 1
+        
+        # data Branches[](eventsExpDates[](numberEvents, events[])
+        
+        #403200 is number of blocks == 8 weeks
+        # 0 means it expires in the next period
+        periodsInFuture = (expDate - self.Branches[branch].lastPeriodEnd) / 403200
+        
+        currentPeriod = self.Branches[branch].currentVotePeriod
+        
+        self.Branches[branch].eventsExpDates[(periodsInFuture+currentPeriod)].events[self.Branches[branch].eventsExpDates[(periodsInFuture+currentPeriod)].numberEvents] = eventID
+        self.Branches[branch].eventsExpDates[periodsInFuture].numberEvents += 1
         return(1)
     else:
         return(0)
@@ -266,12 +235,17 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
     self.Branches[branch].marketCount += 1
     return(1)
 
-def lmsr(shares1, shares2, lossLimit):
+def lmsr(shares:a, lossLimit):
     # *** LOGARITHMIC MARKET SCORING RULE ***
     #(like a regular market scoring rule, except it uses logarithms)
-    weight1 = FixedPoint.exp(FixedPoint.div(shares1, lossLimit, as=fp), as=fp)
-    weight2 = FixedPoint.exp(FixedPoint.div(shares2, lossLimit, as=fp), as=fp)
-    logpf = FixedPoint.log(weight1 + weight2, as=fp)
+    # this need sto be updated with Abe's stuff!
+    stop = arglen(shares)
+    i = 0
+    res = 0
+    while i < stop:
+        res += FixedPoint.exp(FixedPoint.div(shares[i], lossLimit, as=fp), as=fp)
+        i += 1
+    logpf = FixedPoint.log(res, as=fp)
     cost = FixedPoint.mul(lossLimit, logpf, as=fp)
     return(cost)
 
@@ -296,6 +270,8 @@ def buy_shares(branch, event, market, outcome, amount, fee):
             break
         else:
             i+=1
+    if(i==self.Markets[market].numberEvents):
+        return(0)
     # for the first trade oldcost shares bought will be at 0
     oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[1], self.Markets[market].events[i].sharesPurchased[0], self.Markets[market].lossLimit)
     # if buying outcome 1
@@ -312,6 +288,8 @@ def buy_shares(branch, event, market, outcome, amount, fee):
     self.cashcoin_balances[tx.origin] -= pricePerShare*amount
     self.cashcoin_balances[market] += pricePerShare*amount
     
+    participantNumber = self.Markets[market].currentParticipant
+    
     # send shares of the event to user address
     if outcome:
         # if user didn't have enough money, revert
@@ -322,8 +300,10 @@ def buy_shares(branch, event, market, outcome, amount, fee):
             self.cashcoin_balances[tx.origin] += priceToPayPerShare*amount
             return(0)
         else:
-            self.Markets[market].participants[tx.origin].event[event].shares[1] += amount
-            return(1)
+            self.Markets[market].participants[participantNumber].participantID = tx.origin
+            self.Markets[market].participants[participantNumber].event[event].shares[1] += amount
+            self.Markets[market].currentParticipant += 1
+            return(participantNumber)
     else:
         # if user didn't have enough money, revert
         if(self.cashcoin_balances[tx.origin]<amount):
@@ -332,14 +312,18 @@ def buy_shares(branch, event, market, outcome, amount, fee):
             self.cashcoin_balances[market] -= priceToPayPerShare*amount
             self.cashcoin_balances[tx.origin] += priceToPayPerShare*amount
             return(0)
-        else:
-            self.Markets[market].participants[tx.origin].event[event].shares[0] += amount
-            return(1)
+        else:            
+            self.Markets[market].participants[participantNumber].participantID = tx.origin
+            self.Markets[market].participants[participantNumber].event[event].shares[0] += amount
+            self.Markets[market].currentParticipant += 1
+            return(participantNumber)
 
 #amount is amount of shares to buy
-def sell_shares(buy, branch, event, market, outcome, amount, fee):
+def sell_shares(buy, branch, event, market, outcome, amount, fee, participantNumber):
     # When sell check that event hasn't expired
     if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee):
+        return(0)
+    if(self.Markets[market].participants[participantNumber].participantID != tx.origin):
         return(0)
         
     # NEED TO DETERMINE HOW TO HANDLE FEES for everything DUE TO NEW LMSR STRUCTURE STUFF after new market maker implemented
@@ -374,31 +358,29 @@ def sell_shares(buy, branch, event, market, outcome, amount, fee):
     # remove shares from the user's account
     if outcome:
         # if user actually doesn't have the shares, revert
-        if(self.Markets[market].participants[tx.origin].event[event].shares[1]<amount):
+        if(self.Markets[market].participants[participantNumber].event[event].shares[1]<amount):
             self.Markets[market].events[i].sharesPurchased[1] += amount
             #send bitcoin back
             self.cashcoin_balances[market] += priceToPayPerShare*amount
             self.cashcoin_balances[tx.origin] -= priceToPayPerShare*amount
             return(0)
         else:
-            self.Markets[market].participants[tx.origin].event[event].shares[1] -= amount
+            self.Markets[market].participants[participantNumber].event[event].shares[1] -= amount
             return(1)
     else:
         # if user actually doesn't have the shares, revert
-        if(self.Markets[market].participants[tx.origin].event[event].shares[0]<amount):
+        if(self.Markets[market].participants[participantNumber].event[event].shares[0]<amount):
             self.Markets[market].events[i].sharesPurchased[0] += amount
             # send bitcoin back
             self.cashcoin_balances[market] += priceToPayPerShare*amount
             self.cashcoin_balances[tx.origin] -= priceToPayPerShare*amount
             return(0)
         else:
-            self.Markets[market].participants[tx.origin].event[event].shares[0] -= amount
+            self.Markets[market].participants[participantNumber].event[event].shares[0] -= amount
             return(1)
 
 def queryShareCost():
     return(1)
-    # do shit
-    #branch token transfer vesting?
 
 #check if the eventID is in the current voting period pointed to by the branchID's currentVotePeriod 
 def in(branchID, eventID):
@@ -408,12 +390,11 @@ def in(branchID, eventID):
 #make sure people can change their vote during the voting period
 def vote(branchID, report:a):
     # make sure the branch exists
-    if self.Branches[branchID] == 0:
+    if self.Branches[branchID].lastPeriodEnd == 0:
         return(0)
     if self.Branches[branchID].lastPeriodEnd + self.Branches[branchID].periodLength > block.number:
         return(0)
     reputation = self.Branches[branch].reputation[tx.origin]
-    
     
     i = 0
     while i < arglen(report):
@@ -424,28 +405,42 @@ def vote(branchID, report:a):
     while i < arglen(report):
         if report[i] > 1:
             return(0) # people should not have votes greater than 1! they need to be in (0, 1)
-        report[i] *= reputation
         
     
-    # need to update stuff for quorem -- store this in a vote junk data struct
-    # and store the report and the rep value there
-    # do a vote
+    # need to update stuff for quorem
+    # and store the report and the rep value
+    numReported = self.Branches[branchID].EventsExpDates[self.Branches[branchID].currentVotePeriod].numberReported
+    self.Branches[branchID].EventsExpDates[self.Branches[branchID].currentVotePeriod].reporters[numReported].reports[] = report
+    self.Branches[branchID].EventsExpDates[self.Branches[branchID].currentVotePeriod].reporters[numReported].repAddress = tx.origin
+    self.Branches[branchID].EventsExpDates[self.Branches[branchID].currentVotePeriod].reporters[numReported].reputation = reputation
+    # not sure number reported is useful for anything
+    self.Branches[branchID].EventsExpDates[self.Branches[branchID].currentVotePeriod].numberReported += 1
+    self.Branches[branchID].EventsExpDates[self.Branches[branchID].currentVotePeriod].totalRepReported += reputation
     return(1)
 
 # returns whether a quorem has a matured event and whether 
 # the number of required reports are met as a tuple (matured, met)
-def check_quorum(eventExpirationBlock, numReported, reportsReq):
+def check_quorum(branch, eventExpirationBlock, repReported, repReq):
     if (block.number >= eventExpirationBlock):
         matured = true
     else:
         matured = false
-    if (numReported >= reportsReq):
+    currentVotePeriod = self.Branches[branchID].currentVotePeriod
+    if (self.Branches[branch].eventsExpDates[currentVotePeriod].totalRepReported >= repReq):
         met = true
     else:
         met = false
-    return([matured, met], 2)
-
+    if(met and matured):
+        return(1)
+    else:
+        return(0)
+        
 def redeem():
+    # add 403200 is number of blocks == 8 weeks to lastperiodend and update it
+    # and add 1 to the current vote period
+    
+    # check quorem for events we're voting on 
+    # perhaps give the redeemer some fees to cover svd costs
     # event must be expired/mature to do svd which could occur in a redeem tx or separately
     # will need to loop through eventid holders in mkt and distribute coins
     # X Bitcoin in market /qi is the price per share once a market is closed
