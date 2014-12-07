@@ -25,8 +25,10 @@ def mean(u, size):
     #   size (int): number of elements in u
     #
     m = 0
+    i = 0
     while i < size:
         m += u[i]
+        i += 1
     m /= size
     return(m)
 
@@ -65,7 +67,7 @@ def transpose(a, m, n):
 def matrix_multiply(a, b, am, bm, an, bn):
     # am: # rows in a
     # bm: # rows in b
-    # an: # colunms in a
+    # an: # columns in a
     # bn: # columns in b
     cm = am
     cn = bn

@@ -136,6 +136,25 @@ def plot_PCA_ICA(X, S, S_, H):
     plt.subplots_adjust(0.09, 0.04, 0.94, 0.94, 0.26, 0.46)
     plt.show()
 
+def test_mean():
+    num_signals = 25     # columns
+    num_samples = 500    # rows
+    data = np.random.randn(num_samples, num_signals)
+    expected_mean = np.mean(data, 0)
+    for i in range(num_signals):
+        actual_mean = cumulants.mean(data[:,i], num_samples)
+        assert(actual_mean - expected_mean[i] < 1e-15)
+
+def test_dot():
+    num_signals = 25     # columns
+    num_samples = 500    # rows
+    data = np.random.randn(num_samples, num_signals)
+    for i in range(num_signals):
+        for j in range(num_signals):
+            expected_product = np.dot(data[:,i], data[:,j])
+            actual_product = cumulants.dot(data[:,i], data[:,j], num_samples)
+            assert(actual_product - expected_product < 1e-15)
+
 def test_cumulants():
     unbias = 0
     data = [[ 0.837698,   0.49452,  2.54352 ],
@@ -250,6 +269,8 @@ if __name__ == "__main__":
     num_voters = len(reports)
     num_events = len(reports[0])
     calibrate(reports)
+    test_mean()
+    test_dot()
     test_cumulants()
     X, S, S_, H = test_ICA()
     # plot_PCA_ICA(X, S, S_, H)
