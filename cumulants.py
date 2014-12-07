@@ -45,43 +45,52 @@ def dot(u, v, size):
         i += 1
     return(prod)
 
-def transpose(a):
-    m = len(a)
-    n = len(a[0])
-    at = []
-    for i in range(n):
-        at.append([zero] * m)
-    for i in range(m):
-        for j in range(n):
+def transpose(a, m, n):
+    # m: # rows in a
+    # n: # colunms in a
+    at = [[]] * n
+    i = 0
+    while i < n:
+        at[i] = array(m)
+        i += 1
+    i = 0
+    while i < m:
+        j = 0
+        while j < n:
             at[j][i] = a[i][j]
-    return at
+            j += 1
+        i += 1
+    return(at)
 
-def matrixmultiply(a, b, am, bm, an, bn):
-    # am = len(a)
-    # bm = len(b)
-    # an = len(a[0])
-    # bn = len(b[0])
+def matrix_multiply(a, b, am, bm, an, bn):
+    # am: # rows in a
+    # bm: # rows in b
+    # an: # colunms in a
+    # bn: # columns in b
     cm = am
     cn = bn
     if bn == 1:
-        c[cm]
-        # c = [zero] * cm
+        c = array(cm)
     else:
         c = []
         i = 0
         while i < cm:
-            c[i][cn]
+            c[i] = array(cn)
             i += 1
-        # for k in range(cm):
-        #     c.append([zero] * cn)
-    for i in range(cm):
-        for j in range(cn):
-            for k in range(an):
+    i = 0
+    while i < cm:
+        j = 0
+        while j < cn:
+            k = 0
+            while k < an:
                 if bn == 1:
                     c[i] += a[i][k] * b[k]
                 else:
                     c[i][j] += a[i][k] * b[k][j]
-    return c
+                k += 1
+            j += 1
+        i += 1
+    return(c)
 
 
 def cov(data, rows, cols, unbias):
@@ -117,7 +126,7 @@ def cov(data, rows, cols, unbias):
             tensor[i][j] = u / (rows - unbias)
             j += 1
         i += 1
-    return tensor
+    return(tensor)
 
 def coskew(data, rows, cols, unbias):
     # Block-unfolded third cumulant tensor.
@@ -161,7 +170,7 @@ def coskew(data, rows, cols, unbias):
             tensor[k] = face
             i += 1
         k += 1
-    return tensor
+    return(tensor)
 
 def cokurt(data, rows, cols, unbias):
     # Block-unfolded fourth cumulant tensor.
@@ -214,4 +223,4 @@ def cokurt(data, rows, cols, unbias):
             tensor[l] = block
             k += 1
         l += 1
-    return tensor
+    return(tensor)
