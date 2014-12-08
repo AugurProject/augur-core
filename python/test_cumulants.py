@@ -64,9 +64,11 @@ def test_reports():
     H = PCA().fit_transform(X)
     S_ = FastICA(n_components=3).fit_transform(X)
 
-def weighted_cov(reports):
+def weighted_cov(reports, reputation):
+    rep_coins = (np.abs(np.copy(reputation)) * 10**6).astype(int)
+
     # Compute the weighted mean (of all voters) for each decision
-    weighted_mean = ma.average(reports,
+    weighted_mean = np.ma.average(reports,
                                axis=0,
                                weights=rep_coins.squeeze())
 
@@ -75,7 +77,7 @@ def weighted_cov(reports):
 
     # Compute the unbiased weighted population covariance
     # (for uniform weights, equal to np.cov(reports.T, bias=1))
-    covariance_matrix = 1/float(np.sum(rep_coins)-1) * ma.multiply(mean_deviation, rep_coins).T.dot(mean_deviation)
+    covariance_matrix = 1/float(np.sum(rep_coins)-1) * np.ma.multiply(mean_deviation, rep_coins).T.dot(mean_deviation)
 
     return covariance_matrix, mean_deviation
 

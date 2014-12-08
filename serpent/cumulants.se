@@ -1,4 +1,4 @@
-extern fp = [new, mul, div, fracpart, intpart, exp, log, pow, sqrt]
+extern fp: [new, mul, div, fracpart, intpart, exp, log, pow, sqrt]
 FixedPoint = create('fixedpoint.se')
 
 def mean(u:a, size):
