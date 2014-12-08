@@ -3,23 +3,23 @@
 from __future__ import division
 import numpy as np
 try:
-    import colorama
+    from colorama import Fore, Style, init
 except ImportError:
     pass
 from pyethereum import tester
 
-colorama.init()
 np.set_printoptions(linewidth=500)
 tolerance = 1e-12
+init()
 
 def BR(string): # bright red
     return "\033[1;31m" + str(string) + "\033[0m"
 
 def BB(string): # bright blue
-    return colorama.Fore.BLUE + colorama.Style.BRIGHT + str(string) + colorama.Style.RESET_ALL
+    return Fore.BLUE + Style.BRIGHT + str(string) + Style.RESET_ALL
 
 def BG(string): # bright green
-    return colorama.Fore.GREEN + colorama.Style.BRIGHT + str(string) + colorama.Style.RESET_ALL
+    return Fore.GREEN + Style.BRIGHT + str(string) + Style.RESET_ALL
 
 def blocky(*strings, **kwds):
     colored = kwds.get("colored", True)
@@ -63,7 +63,7 @@ def main():
     global s, c
     print BR("Forming new test genesis block")
     s = tester.state()
-    FILENAME = "cumulants.se"
+    FILENAME = "linalg.se"
     print BR("Compiling " + FILENAME)
     c = s.contract(FILENAME)
     print BR("Testing " + FILENAME)
