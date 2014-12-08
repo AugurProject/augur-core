@@ -1,4 +1,4 @@
-extern fp: [new, mul, div, fracpart, intpart, exp, log, pow, sqrt]
+extern fixedpoint: [new, mul, div, fracpart, intpart, exp, log, pow, sqrt]
 FixedPoint = create("fixedpoint.se")
 
 def mean(u:a, size):
@@ -13,8 +13,10 @@ def mean(u:a, size):
     while i < size:
         m = m + u[i]
         i = i + 1
-    m /= size
-    return(m)
+    fp = FixedPoint.div(m, size)
+    frac = FixedPoint.fracpart(fp)
+    intp = FixedPoint.intpart(fp)
+    return(frac)
 
 def dot(u:a, v:a, size):
     # [1] Calculates the dot (inner) product of vectors.
@@ -31,7 +33,7 @@ def dot(u:a, v:a, size):
         i += 1
     return(prod)
 
-def outer(u:a, v:a, size):
+def outer(u:a, v, size):
     # [2] Calculates the outer product of vectors.
     #
     # Args:
@@ -50,68 +52,67 @@ def outer(u:a, v:a, size):
         i += 1
     return(prod)
 
-def transpose(a:a, m, n):
-    # [3]
-    # m: # rows in a
-    # n: # colunms in a
-    at = array(n)
-    i = 0
-    while i < n:
-        at[i] = array(m)
-        i += 1
-    i = 0
-    while i < m:
-        j = 0
-        while j < n:
-            at[j][i] = a[i][j]
-            j += 1
-        i += 1
-    return(at)
+# def transpose(a:a, m, n):
+#     # [3]
+#     # m: # rows in a
+#     # n: # colunms in a
+#     at = array(n)
+#     i = 0
+#     while i < n:
+#         at[i] = array(m)
+#         i += 1
+#     i = 0
+#     while i < m:
+#         j = 0
+#         while j < n:
+#             at[j][i] = a[i][j]
+#             j += 1
+#         i += 1
+#     return(at)
 
-def mult(a:a, b:a, am, bm, an, bn):
-    # [4]
-    # am: # rows in a
-    # bm: # rows in b
-    # an: # columns in a
-    # bn: # columns in b
-    cm = am
-    cn = bn
-    c = array(cm)
-    if bn > 1:
-        i = 0
-        while i < cm:
-            c[i] = array(cn)
-            i += 1
-    i = 0
-    while i < cm:
-        j = 0
-        while j < cn:
-            k = 0
-            while k < an:
-                if bn == 1:
-                    c[i] += a[i][k] * b[k]
-                else:
-                    c[i][j] += a[i][k] * b[k][j]
-                k += 1
-            j += 1
-        i += 1
-    return(c)
+# def mult(a:a, b:a, am, bm, an, bn):
+#     # [4] Matrix multiplication
+#     # am: # rows in a
+#     # bm: # rows in b
+#     # an: # columns in a
+#     # bn: # columns in b
+#     cm = am
+#     cn = bn
+#     c = array(cm)
+#     if bn > 1:
+#         i = 0
+#         while i < cm:
+#             c[i] = array(cn)
+#             i += 1
+#     i = 0
+#     while i < cm:
+#         j = 0
+#         while j < cn:
+#             k = 0
+#             while k < an:
+#                 if bn == 1:
+#                     c[i] += a[i][k] * b[k]
+#                 else:
+#                     c[i][j] += a[i][k] * b[k][j]
+#                 k += 1
+#             j += 1
+#         i += 1
+#     return(c)
 
-def kron(u:a, v:a, size):
-    # [5]
-    # Calculates the Kronecker product.
-    #
-    # Args:
-    #   u: numeric array (vector)
-    #   v: numeric array (vector)
-    #   size (int): number of elements in u
-    #
-    prod = array(size**2)
-    i = 0
-    while i < size:
-        j = 0
-        while j < size:
-            prod[size*i + j] += u[i] * v[j]
-            j += 1
-        i += 1
-    return(prod)
+# def kron(u:a, v:a, size):
+#     # [5] Calculates the Kronecker product.
+#     #
+#     # Args:
+#     #   u: numeric array (vector)
+#     #   v: numeric array (vector)
+#     #   size (int): number of elements in u
+#     #
+#     prod = array(size**2)
+#     i = 0
+#     while i < size:
+#         j = 0
+#         while j < size:
+#             prod[size*i + j] += u[i] * v[j]
+#             j += 1
+#         i += 1
+#     return(prod)
