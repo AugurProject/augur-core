@@ -1,4 +1,7 @@
-def mean(u, size):
+extern fp = [new, mul, div, fracpart, intpart, exp, log, pow, sqrt]
+FixedPoint = create('fixedpoint.se')
+
+def mean(u:a, size):
     # [0] Calculates the arithmetic mean.
     #
     # Args:
@@ -8,12 +11,12 @@ def mean(u, size):
     m = 0
     i = 0
     while i < size:
-        m += u[i]
-        i += 1
+        m = m + u[i]
+        i = i + 1
     m /= size
     return(m)
 
-def dot(u, v, size):
+def dot(u:a, v:a, size):
     # [1] Calculates the dot (inner) product of vectors.
     #
     # Args:
@@ -28,7 +31,7 @@ def dot(u, v, size):
         i += 1
     return(prod)
 
-def outer(u, v, size):
+def outer(u:a, v:a, size):
     # [2] Calculates the outer product of vectors.
     #
     # Args:
@@ -47,7 +50,7 @@ def outer(u, v, size):
         i += 1
     return(prod)
 
-def transpose(a, m, n):
+def transpose(a:a, m, n):
     # [3]
     # m: # rows in a
     # n: # colunms in a
@@ -65,7 +68,7 @@ def transpose(a, m, n):
         i += 1
     return(at)
 
-def matrix_multiply(a, b, am, bm, an, bn):
+def mult(a:a, b:a, am, bm, an, bn):
     # [4]
     # am: # rows in a
     # bm: # rows in b
@@ -94,7 +97,7 @@ def matrix_multiply(a, b, am, bm, an, bn):
         i += 1
     return(c)
 
-def kron(u, v, size):
+def kron(u:a, v:a, size):
     # [5]
     # Calculates the Kronecker product.
     #
@@ -113,7 +116,7 @@ def kron(u, v, size):
         i += 1
     return(prod)
 
-def cov(data, rows, cols, unbias):
+def cov(data:a, rows, cols, unbias):
     # [6] Covariance matrix (second cumulant).
     #
     # Args:
@@ -148,7 +151,7 @@ def cov(data, rows, cols, unbias):
         i += 1
     return(tensor)
 
-def coskew(data, rows, cols, unbias):
+def coskew(data:a, rows, cols, unbias):
     # [7] Block-unfolded third cumulant tensor.
     #
     # Args:
@@ -192,7 +195,7 @@ def coskew(data, rows, cols, unbias):
         k += 1
     return(tensor)
 
-def cokurt(data, rows, cols, unbias):
+def cokurt(data:a, rows, cols, unbias):
     # [8] Block-unfolded fourth cumulant tensor.
     #
     # Args:
