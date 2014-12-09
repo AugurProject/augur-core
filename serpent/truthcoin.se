@@ -1,5 +1,5 @@
 # includes
-extern fp = [new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
+extern fp:[new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
 FixedPoint = create('fixedpoint.se')
 
 BRANCH = 0
@@ -10,63 +10,110 @@ MARKET = 2
 data Info[](typecode, description[], creator, creationFee)
 
 # currentVotePeriod is where we are in the eventsExpDates, lastPeriodEnd is the last voting period block number
-data Branches[](eventsExpDates[](numberEvents, events[], numberReported, totalRepReported, reporters[](reports[], reputation, repAddress)), currentVotePeriod, markets[], marketCount, reputation[], periodLength, lastPeriodEnd)
+# when sending rep check if it's in the same branch or a child branch of the branch sending from
+# but what prevents me from adding a parent branch as a child branch
+# keep track of parent branches, make so cant add as a child branch
+# how do we keep track of parent branches?
+# take the branch that we add it to as a subbranch, and add it and any of its parentbranches to the new child branch
+data Branches[](currentVotePeriod, markets[], marketCount, periodLength, lastPeriodEnd, parent)
 
 data Events[](branch, expirationDate)
+
+# index is branchID
+# reporter index is the rep. address
+# we 0 index reputation so can walk thru for consensus
+data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
 
 data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](participantID, event[](shares[2])), lossLimit, tradingFee, numberEvents, currentParticipant)
 
 data cashcoin_balances[]
 
+data repRequired = 447
+
 def init():
     # test initial funds
     cashcoin_balances[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826] = 1000000
-    Branches[1010101].reputation["chris and joey's rep"] = 47
+    self.Reporting[1010101].repIDtoIndex["chris and joey's rep"] = 0
+    self.Reporting[1010101].reputation[0].repValue = 47
+    self.Reporting[1010101].reputation[0].reporterID = "chris and joey's rep"
 
 ### Version 2.0:
     # blockchain explorer to get / examine data or make rpc api calls to the contract to get it
-    # Scalar event where people update what type of share they bought using a thing 
+    # local contract calls don't cost gas
+    # Scalar event where people update what type of share they bought using a thing
     # in an array where index is their scalar x and value
     # is the share updated number of shares bought
     # how do we make this code updatable
     # how do we scale / what if a ton of events, markets, etc.
-    # add multiple events into markets buy / sell feature
     # api voting option
+    # seigniorage
     # if current vote period is == 0 then we looped past 2^256 --- set values in array to 0 at that point
     # may need a ballot max size b/c cost so need a systematic way to do voting (e.g. vote on first xxx events, then next set are another ballot)
-    # randomized voter selection? - first x events expiring vote on in one ballot - random selection, then anothe ballot
+    # randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot
     # new market maker
 
 ### To do:
     # make sure this follows paul's whitepaper well
+    # add multiple events into markets buy / sell feature
+    # scalars
     # real branching / subbranching
     # people can currently send votecoin to any branch, "Houston, we have a problem!"
     # voting consensus & redeem tx
     # contract should send msg.values around, not cashcoin -- i'll (joey) fix this
     # what if people pass functions incorrect values, need to detect that junk and return 0
-    
+
 ### Actual code begins
 
-def send_reputation(recver, value, type, branch):
+def send_reputation(recver, value, branch):
     sender = tx.origin
-    sender_balance = self.Branches[branch].reputation[sender]
+    # if the sender's rep. account doesn't exist, make one
+    if(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[sender]].reporterID!=tx.origin):
+            self.Reporting[branch].numberReporters += 1
+            reporterIndex = self.Reporting[branch].numberReporters
+            self.Reporting[branch].repIDtoIndex[tx.origin] = reporterIndex
+            self.Reporting[branch].reputation[reporterIndex].repValue = 0
+            self.Reporting[branch].reputation[reporterIndex].reporterID = tx.origin
+            return("Your reputation account was just created, earn some rep. before you can send to others")
+
+    if(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[recver]].reporterID!=recver):
+        return("Receiving address doesn't exist")
+        
+    sender_balance = self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[sender]].repValue
     if(sender_balance >= value):
-        self.Branches[branch].reputation[sender] -= value
-        self.Branches[branch].reputation[recver] += value
+        self.Reporting[branch].reputation[repIDtoIndex[sender]].repValue -= value
+        self.Reporting[branch].reputation[repIDtoIndex[recver]].repValue += value
         return(1)
     else:
         return(0)
-            
-def get_rep_balance(branch):
-    return(self.Branches[branch].reputation[tx.origin])
+        
+        
+def get_rep_balance(branch, address):
+    return(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[address]].repValue)
+    
 
-# to is the address on the new branch you want to send to
+
+
+# when sending rep check if it's in the same branch or a child branch of the branch sending from
+# but what prevents me from adding a parent branch as a child branch
+# keep track of parent branches, make so cant add as a child branch
+# how do we keep track of parent branches?
+# take the branch that we add it to as a subbranch, and add it and any of its parentbranches to the new child branch
+
+# update w/ stuff from above funct.
+
 def send_rep_newbranch(to, value, oldBranch, newBranch):
         # if no branch created (defined as a nonzero period)
+        tempID = Branches[newBranch].parent
+        while tempID != oldBranch and tempID != 0 and Branches[tempID].periodLength != 0:
+            tempID = Branches[tempID].parent
+        if tempID != oldBranch:
+            return(0)
+            
         if(!self.Branches[oldBranch].periodLength | !self.Branches[newBranch].periodLength | value<=0):
             return(0)
         else:
             from = tx.origin
+            
             fromvalue = self.Branches[oldBranch].reputation[from]
             if(fromvalue >= value):
                 self.Branches[fromBranch].reputation[from] -= value
@@ -76,7 +123,7 @@ def send_rep_newbranch(to, value, oldBranch, newBranch):
                 return(0)
 
 # period length is given in blocks
-def make_branch(branchName:s, description:s, periodLength):
+def make_subbranch(branchName:s, description:s, periodLength, parent):
     # add current vote period initializations, etc to this creation as well as last period end
     # as well as eventsExpDates[](numberEvents, events[]) to 0  
     # give fee to first mark etto  created on new branch
@@ -91,6 +138,8 @@ def make_branch(branchName:s, description:s, periodLength):
     branchCharacteristics[6] = tx.origin
     branchCharacteristics[7] = msg.value
     branchCharacteristics[8] = BRANCH
+    
+    #initialize number reporters to 0 so we start at 0 
 
     # people can check that these characteristics hash to the ID if they want
     # people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
@@ -100,10 +149,15 @@ def make_branch(branchName:s, description:s, periodLength):
         self.Branches[branchID].eventCount = 0
         self.Branches[branchID].marketCount = 0
         self.Branches[branchID].periodLength = periodLength
+        
+        self.Branches[branchID].parent = parent
         self.Info[branchID].typecode = BRANCH
         self.Info[branchID].description[] = description
         self.Info[branchID].creator = tx.origin
         self.Info[branchID].creationFee = msg.value
+        # add this branch to parent subbranch
+        self.Branches[parent].subBranches[numbersubBranches] = branchID
+        self.Branches[parent].numbersubBranches += 1
         return(1)
     else:
         return(0)
@@ -156,8 +210,8 @@ def create_event(branch, description:s, expDate):
         
         currentPeriod = self.Branches[branch].currentVotePeriod
         
-        self.Branches[branch].eventsExpDates[(periodsInFuture+currentPeriod)].events[self.Branches[branch].eventsExpDates[(periodsInFuture+currentPeriod)].numberEvents] = eventID
-        self.Branches[branch].eventsExpDates[periodsInFuture].numberEvents += 1
+        self.Reporting[branch].eventsExpDates[(periodsInFuture+currentPeriod)].events[self.Reporting[branch].eventsExpDates[(periodsInFuture+currentPeriod)].numberEvents] = eventID
+        self.Reporting[branch].eventsExpDates[periodsInFuture].numberEvents += 1
         return(1)
     else:
         return(0)
@@ -235,6 +289,7 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
     self.Branches[branch].marketCount += 1
     return(1)
 
+# MAKE THIS A MACRO!
 def lmsr(shares:a, lossLimit):
     # *** LOGARITHMIC MARKET SCORING RULE ***
     #(like a regular market scoring rule, except it uses logarithms)
@@ -251,16 +306,12 @@ def lmsr(shares:a, lossLimit):
 
 # currently this only works for binary single event outcomes
 def buy_shares(branch, event, market, outcome, amount, fee):
-    # When buy check that event hasn't expired
-    
-    # MAKE SURE USER HAS ENOUGH MONEY!!!
-    
     if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee):
         return(0)
     
     # NEED TO DETERMINE HOW TO HANDLE FEES for everything DUE TO NEW LMSR STRUCTURE STUFF after new market maker implemented
     # pay half of trading fee to market creator via sending to market.creator
-    # other half goes to votecoin holders!!!!OO!O!O!O!O! - store in a market fee pool
+    # other half goes to votecoin holders! - store in a market fee pool
     self.cashcoin_balances[tx.origin] = self.cashcoin_balances[tx.origin] - fee
     self.cashcoin_balances[self.Info[market].creator] = self.cashcoin_balances[self.Info[market].creator] + fee/2
     # find the right event index
@@ -273,7 +324,7 @@ def buy_shares(branch, event, market, outcome, amount, fee):
     if(i==self.Markets[market].numberEvents):
         return(0)
     # for the first trade oldcost shares bought will be at 0
-    oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[1], self.Markets[market].events[i].sharesPurchased[0], self.Markets[market].lossLimit)
+    oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
     # if buying outcome 1
     if outcome:
         self.Markets[market].events[i].sharesPurchased[1] += amount
@@ -281,7 +332,7 @@ def buy_shares(branch, event, market, outcome, amount, fee):
     else:
         self.Markets[market].events[i].sharesPurchased[0] += amount
     
-    newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[1], self.Markets[market].events[i].sharesPurchased[0], self.Markets[market].lossLimit) 
+    newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit) 
     pricePerShare = newCost - oldCost
 
     # send bitcoin from user acc. to event address/account
@@ -328,7 +379,7 @@ def sell_shares(buy, branch, event, market, outcome, amount, fee, participantNum
         
     # NEED TO DETERMINE HOW TO HANDLE FEES for everything DUE TO NEW LMSR STRUCTURE STUFF after new market maker implemented
     # pay half of trading fee to market creator via sending to market.creator
-    # other half goes to votecoin holders!!!!OO!O!O!O!O! - store in a market fee pool
+    # other half goes to votecoin holders! - store in a market fee pool
     self.cashcoin_balances[tx.origin] = self.cashcoin_balances[tx.origin] - fee
     self.cashcoin_balances[self.Info[market].creator] = self.cashcoin_balances[self.Info[market].creator] + fee/2
     # find the right event index
@@ -339,7 +390,7 @@ def sell_shares(buy, branch, event, market, outcome, amount, fee, participantNum
         else:
             i+=1
     # for the first trade oldcost shares bought will be at 0
-    oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[1], self.Markets[market].events[i].sharesPurchased[0], self.Markets[market].lossLimit)
+    oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
     
     # send unspent shares from the user to the event
     if outcome:
@@ -348,7 +399,7 @@ def sell_shares(buy, branch, event, market, outcome, amount, fee, participantNum
     else:
         self.Markets[market].events[i].sharesPurchased[0] -= amount
     
-    newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[1], self.Markets[market].events[i].sharesPurchased[0], self.Markets[market].lossLimit)
+    newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
     priceToPayPerShare = oldCost - newCost
 
     # send bitcoin from the market to the user acc.
@@ -390,43 +441,38 @@ def in(branchID, eventID):
 #make sure people can change their vote during the voting period
 def vote(branchID, report:a):
     # make sure the branch exists
+    repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
     if self.Branches[branchID].lastPeriodEnd == 0:
         return(0)
     if self.Branches[branchID].lastPeriodEnd + self.Branches[branchID].periodLength > block.number:
         return(0)
-    reputation = self.Branches[branch].reputation[tx.origin]
-    
-    i = 0
-    while i < arglen(report):
-        
-    
+    if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin):
+        return(0)
+    reputation = self.Reporting[branch].reputation[repIndex].repValue
+
     # first we scale the report by the reputation the voter has
     i = 0
     while i < arglen(report):
         if report[i] > 1:
             return(0) # people should not have votes greater than 1! they need to be in (0, 1)
-        
-    
+
+
     # need to update stuff for quorem
     # and store the report and the rep value
-    numReported = self.Branches[branchID].EventsExpDates[self.Branches[branchID].currentVotePeriod].numberReported
-    self.Branches[branchID].EventsExpDates[self.Branches[branchID].currentVotePeriod].reporters[numReported].reports[] = report
-    self.Branches[branchID].EventsExpDates[self.Branches[branchID].currentVotePeriod].reporters[numReported].repAddress = tx.origin
-    self.Branches[branchID].EventsExpDates[self.Branches[branchID].currentVotePeriod].reporters[numReported].reputation = reputation
-    # not sure number reported is useful for anything
-    self.Branches[branchID].EventsExpDates[self.Branches[branchID].currentVotePeriod].numberReported += 1
-    self.Branches[branchID].EventsExpDates[self.Branches[branchID].currentVotePeriod].totalRepReported += reputation
+    self.Reporting[branchID].eventsExpDates[self.Branches[branchID].currentVotePeriod].reporters[tx.origin] = report
+    self.Reporting[branchID].eventsExpDates[self.Branches[branchID].currentVotePeriod].totalRepReported += self.Reporting[branchID].reputation[repIndex].repValue
     return(1)
 
-# returns whether a quorem has a matured event and whether 
+# returns whether a quorem has a matured event and whether
 # the number of required reports are met as a tuple (matured, met)
-def check_quorum(branch, eventExpirationBlock, repReported, repReq):
+# MAKE THIS A MACRO!
+def check_quorum(branch, eventExpirationBlock):
     if (block.number >= eventExpirationBlock):
         matured = true
     else:
         matured = false
     currentVotePeriod = self.Branches[branchID].currentVotePeriod
-    if (self.Branches[branch].eventsExpDates[currentVotePeriod].totalRepReported >= repReq):
+    if (self.Reporting[branch].eventsExpDates[currentVotePeriod].totalRepReported >= repRequired):
         met = true
     else:
         met = false
@@ -438,13 +484,16 @@ def check_quorum(branch, eventExpirationBlock, repReported, repReq):
 def redeem():
     # add 403200 is number of blocks == 8 weeks to lastperiodend and update it
     # and add 1 to the current vote period
-    
     # check quorem for events we're voting on 
     # perhaps give the redeemer some fees to cover svd costs
     # event must be expired/mature to do svd which could occur in a redeem tx or separately
     # will need to loop through eventid holders in mkt and distribute coins
     # X Bitcoin in market /qi is the price per share once a market is closed
     # remember to give back part of the init. liquidity
+    
+    
+    # loop through reputation and check if in reporters, if so use their report, if not use the fillin / not reported report
+    # and get the repvalue from reputation
     # and tx fees
     if(check_quorum):
         # do stuff
