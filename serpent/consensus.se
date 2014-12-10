@@ -1,0 +1,356 @@
+# NICE FLOATING POINT NUMBERS YOU'VE GOT HERE
+# WOULD BE A SHAME IF ANYTHING WERE TO HAPPEN TO THEM
+CATCH_TOLERANCE = 0.1
+CATCH_HI = 0.5 * (1 - CATCH_TOLERANCE)
+CATCH_LO = 0.5 * (1 + CATCH_TOLERANCE) 
+HALF = 0.5
+ALPHA = 0.1
+MAX_ROW = 5000
+TOTAL_REP = 20
+COINS = 10^6
+
+data reputation[]
+data votes[]
+data event_bounds[](scaled, minimum, maximum)
+
+def init():
+    self.votes = None
+    self.event_bounds = None
+    self.reputation = [2, 10, 4, 2, 7]
+    self.total_rep = 20
+    self.rep_coins = (self.reputation * COINS).astype(int)
+
+# Sum elements of array
+macro array_sum($a:$asz)
+    $s = 0
+    $i = 0
+    while $i < $asz:
+        $s += $a[$i]
+        $i += 1
+    $s
+
+# Proportional distances from zero
+macro get_weight($a:$asz):
+    $total = 0
+    $i = 0
+    while $i < $asz:
+        $total += $a[$i]
+        $i += 1
+    $wt = 0
+    if $total == 0:
+        $i = 0
+        while $i < $asz:
+            $wt[$i] += 1
+            $i += 1
+    $total = 0
+    $i = 0
+    while $i < $asz:
+        $total += $a[$i]
+        $i += 1
+    $i = 0
+    $b = array($asz)
+    while $i < $asz:
+        # only fractional part is needed
+        $b[$i] = $a[$i] * 2^64 / $total
+        $i += 1
+    $b
+
+# Bins values to 0, .5, and 1
+macro catch($x):
+    if $x < CATCH_LO:
+        $caught = 0
+    elif $x > CATCH_HI:
+        $caught = 1
+    else:
+        $caught = HALF
+    $caught
+
+# Calculates the outer product of vectors.
+macro outer_product($u:$usz, $v:$vsz):
+    $p = array($usz)
+    $i = 0
+    while $i < $usz:
+        $p[$i] = array($usz)
+        $j = 0
+        while $j < $usz:
+            $p[$i][$j] += $u[$i] * $v[$j]
+            $j += 1
+        $i += 1
+    $p
+
+macro kron($u:$usz, $v:$vsz):
+    $prod = array(size^2)
+    $i = 0
+    while $i < $usz:
+        $j = 0
+        while $j < $vsz:
+            $prod[$usz*$i + $j] += $u[$i] * $v[$j]
+            $j += 1
+        $i += 1
+    $prod
+
+# TODO
+
+# macro multiply(a:a, b:a, am, bm, an, bn):
+#     cm = am
+#     cn = bn
+#     c = array(cm)
+#     if bn > 1:
+#         i = 0
+#         while i < cm:
+#             c[i] = array(cn)
+#             i += 1
+#     i = 0
+#     while i < cm:
+#         j = 0
+#         while j < cn:
+#             k = 0
+#             while k < an:
+#                 if bn == 1:
+#                     c[i] += a[i][k] * b[k]
+#                 else:
+#                     c[i][j] += a[i][k] * b[k][j]
+#                 k += 1
+#             j += 1
+#         i += 1
+#     return(c)
+
+# macro transpose($a:$asz):
+#     # [3] Swaps rows and columns of a matrix.
+#     # m: # rows in a
+#     # n: # colunms in a
+#     $at = array($asz)
+#     $i = 0
+#     while $i < $asz:
+#         at[i] = array(m)
+#         i += 1
+#     i = 0
+#     while i < m:
+#         j = 0
+#         while j < n:
+#             at[j][i] = a[i][j]
+#             j += 1
+#         i += 1
+#     return(at)
+
+# macro diag($a:$asz):
+
+# macro isnan($a:$asz):
+
+# macro mask($a:$asz):
+
+# macro any($a:$asz):
+
+def mean(u:a):
+    total = 0
+    i = 0
+    size = arglen(u)
+    while i < size:
+        total += u[i]
+        i += 1
+    return([total / size, total * 2^64 / size], 2)
+
+def dot(u:a, v:a):
+    prod = 0
+    i = 0
+    while i < size:
+        prod += u[i] * v[i]
+        i += 1
+    return(prod)
+
+# Linear time deterministic PCA
+def emwpca(data:a, weights:a):
+    num_obs = arglen(weights)
+    num_params = arglen(data) / arglen(weights)
+
+    weighted_means = array(num_params)
+    total_weight = 0
+    i = 0
+    while i < num_obs:
+        j = 0
+        while j < num_params:
+            weighted_means[j] += weights[i] * data[i * num_params + j]
+            j += 1
+        total_weight += weights[i]
+        i += 1
+
+    j = 0
+    while j < num_params:
+        weighted_means[j] /= total_weight
+        j += 1
+
+    weighted_centered_data = array(arglen(data))
+    i = 0
+    while i < arglen(data):
+        weighted_centered_data[i] = data[i] - weighted_means[i % num_params]
+        i += 1
+
+    # initialize the loading vector
+    loading_vector = array(num_params)
+    loading_vector[0] = 0x10000000000000000
+
+    i = 0
+    # for j in xrange(ITERATIONS_CAP):
+    while i < 25:
+        # s = numpy.zeros(num_params)
+        s = array(num_params)
+        # for wcdatum, weight in zip(weighted_centered_data, weights):
+        j = 0
+        while j < num_obs:
+            # s -= wcdatum.dot(loadings[i]) * wcdatum * weight
+            d_dot_lv = 0
+            k = 0
+            while k < num_params:
+                d_dot_lv += weighted_centered_data[j * num_params + k] * loading_vector[k]
+                k += 1
+            d_dot_lv /= 0x10000000000000000
+            k = 0
+            while k < num_params:
+                s[k] -= d_dot_lv * weighted_centered_data[j * num_params + k] * weights[j]
+                k += 1
+            j += 1
+        # loading_vector = normalize(s)
+        # (first rejig s to account for double fixed multiplication in loop)
+        j = 0
+        while j < num_params:
+            s[j] /= 0x100000000000000000000000000000000
+            j += 1
+        # QQ
+        s_dot_s = 0
+        j = 0
+        while j < num_params:
+            s_dot_s += s[j] * s[j]
+            j += 1
+        s_dot_s /= 0x10000000000000000
+        # QQ!!!!
+        norm_s = s_dot_s / 2
+        j = 0
+        while j < 11:
+            norm_s = (norm_s + s_dot_s*0x10000000000000000/norm_s) / 2
+            j += 1
+        # fuggin assign
+        j = 0
+        while j < num_params:
+            loading_vector[j] = s[j]*0x10000000000000000/norm_s
+            j += 1
+
+        i += 1
+
+    return(loading_vector, num_params)
+
+# TOO MUCH NUMPY, HEAD ASPLODE
+def consensus():
+    # Use exisiting data and reputations to fill missing observations.
+    # Essentially a weighted average using all availiable non-NA data.
+    # How much should slackers who arent voting suffer? I decided this would
+    # depend on the global percentage of slacking.
+    #
+    # In case no Missing values, Mnew and votes_na will be the same.
+    if any(mask(votes_na)):
+        outcomes_raw = array(num_events)
+        i = 0
+        while i < num_events:
+
+            # The Reputation of the rows (players) who DID provide
+            # judgements, rescaled to sum to 1.
+            active_players_rep = self.reputation[-mask(votes[:,i])]
+
+            # Set missing values to 0
+            nans = isnan(active_players_rep)
+            active_players_rep[nans] = 0
+
+            # Normalize
+            active_players_rep /= array_sum(active_players_rep)
+
+            # The relevant Event with NAs removed.
+            # ("What these players had to say about the Events
+            # they DID judge?")
+            active_events = votes[-mask(votes[:,i]), i]
+
+            # Current best-guess for this Binary Event (weighted average)
+            outcomes_raw[i] = multiply(active_events, active_players_rep)
+            i += 1
+
+        outcomes_raw = transpose(outcomes_raw)
+        na_mat = mask(votes_na)  # Slice of the matrix which needs to be edited.
+        votes_filled[na_mat] = 0  # Erase the NA's
+        NAsToFill = multiply(na_mat, diag(outcomes_raw))
+        votes_filled += NAsToFill
+        i = 0
+        while i < num_voters:
+            j = 0
+            while j < num_events:
+                votes_filled[i][j] = catch(votes_filled[i][j])
+                j += 1
+            i += 1
+
+    # Calculate new reputations using Sztorc consensus.
+    scores = self.emwpca(votes_filled:num_voters)
+
+    # Which of the two possible 'new' reputation vectors had more opinion in common
+    # with the original 'old' reputation.
+    set1 = scores + abs(min(scores))
+    set2 = scores - max(scores)
+    old = multiply(transpose(self.rep_coins), votes_filled)
+    new1 = multiply(get_weight(set1), votes_filled)
+    new2 = multiply(get_weight(set2), votes_filled)
+
+    # Difference in sum of squared errors. If > 0, then new1 had higher
+    # errors (use new2); conversely if < 0, then use new1.
+    ref_ind = sum((new1 - old)^2) - sum((new2 - old)^2)
+    if ref_ind <= 0:
+        adj_prin_comp = set1
+    if ref_ind > 0:
+        adj_prin_comp = set2
+  
+    # Set this to uniform if you want a passive diffusion toward equality
+    # when people cooperate.  Instead diffuses towards previous reputation.
+    # (Smoothing does this anyway!)
+    #
+    # Note: reputation/mean(reputation) is a correction ensuring Reputation is
+    # additive. Therefore, nothing can be gained by splitting/combining
+    # Reputation into single/multiple accounts.
+    row_reward_weighted = self.reputation
+    if max(abs(adj_prin_comp)) != 0:
+        # Overwrite the inital declaration IFF there wasn't perfect consensus.
+        row_reward_weighted = get_weight(adj_prin_comp * transpose(self.reputation / self.mean(self.reputation)))
+
+          
+    # Freshly-Calculated Reward (Reputation) - Exponential Smoothing
+    # New Reward: row_reward_weighted
+    # Old Reward: reputation
+    smooth_rep = ALPHA*row_reward_weighted + (1 - ALPHA)*transpose(self.reputation)
+
+    outcomes_raw = multiply(smooth_rep, votes_filled)
+    outcome_final = array(num_events)
+    i = 0
+    while i < num_events:
+        outcome_final[i] = catch(outcomes_raw[i])
+        i += 1
+
+    # .5 is obviously undesireable, this function travels from 0 to 1
+    # with a minimum at .5
+    certainty = abs(2 * (outcomes_raw - 0.5))
+    # Grading Authors on a curve.
+    consensus_reward = get_weight(certainty)
+    # How well did beliefs converge?
+    avg_certainty = self.mean(certainty)
+
+    # Participation: information about missing values
+    na_mat = self.votes * 0
+    na_mat_mask = mask(na_mat)
+    na_mat[na_mat_mask] = 1  # missing-value indicator matrix
+    # Participation within events (columns)
+    participation_columns = 1 - multiply(smooth_rep, na_mat)
+    # Participation within agents (Rows)
+    participation_rows = 1 - na_mat.sum(axis=1) / na_mat.shape[1]
+    # General participation
+    percent_na = 1 - mean(participation_columns)
+
+    # Combine information
+    na_bonus_rows = get_weight(participation_rows)
+    row_bonus = na_bonus_rows * percent_na + smooth_rep * (1 - percent_na)
+    na_bonus_columns = get_weight(participation_columns)
+    col_bonus = na_bonus_columns * percent_na + consensus_reward * (1 - percent_na)
+
+    return(row_bonus, num_voters)

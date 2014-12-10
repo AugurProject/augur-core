@@ -78,8 +78,7 @@ def test_outer():
     funid = 2
     print BB("  function:"), BG(funid), "outer"
     result = s.send(tester.k0, c, 0, funid=funid, abi=[])
-    print result
-    # assert((actual_product - expected_product < 1e-12).all())
+    print map(fracpart, result)
 
 def test_transpose():
     funid = 3
@@ -125,7 +124,7 @@ def main():
     global s, c, FILENAME
     print BR("Forming new test genesis block")
     s = tester.state()
-    FILENAME = "linalg.se"
+    FILENAME = "tests.se"
     print BR("Compiling " + FILENAME)
     c = s.contract(FILENAME)
     # print BR("Testing " + FILENAME)
@@ -134,7 +133,7 @@ def main():
     # u = [1, 4, 4, 2]
     # test_file(u, filename=FILENAME, funid=0, function="mean")
     test_mean()
-    test_dot()
+    # test_dot()
     test_outer()
     # test_transpose()
     # test_multiply()

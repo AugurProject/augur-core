@@ -1,0 +1,30 @@
+def test_outer():
+    # [2] Calculates the outer product of vectors.
+    #
+    u = array(3)
+    u[0] = 2
+    u[1] = 5
+    u[2] = 7
+    v = array(3)
+    v[0] = 6
+    v[1] = 2
+    v[2] = 3
+    expected = [[12,  4,  6], [30, 10, 15], [42, 14, 21]]
+    size = 3
+    actual = outer_product(u:3)
+    if expected == actual:
+        return(1)
+    else:
+        return(0)
+
+macro outer_product($u:$usz):
+    $p = array($usz)
+    $i = 0
+    while $i < $usz:
+        $p[i] = array($usz)
+        $j = 0
+        while $j < $usz:
+            $p[$i][$j] += $u[$i] * $v[$j]
+            $j += 1
+        $i += 1
+    $p
