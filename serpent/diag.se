@@ -1,0 +1,5 @@
+macro diag($a:$asz):
+    pass
+
+def test_diag():
+    pass

@@ -1,0 +1,5 @@
+macro any($a:$asz):
+    pass
+
+def test_any():
+    pass

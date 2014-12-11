@@ -1,0 +1,5 @@
+macro mask($a:$asz):
+    pass
+
+def test_mask():
+    pass

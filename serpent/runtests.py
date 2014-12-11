@@ -89,19 +89,39 @@ def test_kron():
     c = s.contract("kron.se")
     print BB("  macro:"), BG("kron")
     result = s.send(tester.k0, c, 0, funid=0, abi=[])
-    assert(result == [1])    
+    assert(result == [1])
 
 def test_diag():
-    pass
+    filename = "diag.se"
+    print BB("Testing contract:"), BG(filename)
+    c = s.contract("diag.se")
+    print BB("  macro:"), BG("diag")
+    result = s.send(tester.k0, c, 0, funid=0, abi=[])
+    # assert(result == [1])
 
 def test_isnan():
-    pass
+    filename = "isnan.se"
+    print BB("Testing contract:"), BG(filename)
+    c = s.contract("isnan.se")
+    print BB("  macro:"), BG("isnan")
+    result = s.send(tester.k0, c, 0, funid=0, abi=[])
+    # assert(result == [1])
 
 def test_mask():
-    pass
+    filename = "mask.se"
+    print BB("Testing contract:"), BG(filename)
+    c = s.contract("mask.se")
+    print BB("  macro:"), BG("mask")
+    result = s.send(tester.k0, c, 0, funid=0, abi=[])
+    # assert(result == [1])
 
 def test_any():
-    pass
+    filename = "any.se"
+    print BB("Testing contract:"), BG(filename)
+    c = s.contract("any.se")
+    print BB("  macro:"), BG("any")
+    result = s.send(tester.k0, c, 0, funid=0, abi=[])
+    # assert(result == [1])
 
 def main():
     global s, c, FILENAME
