@@ -62,9 +62,12 @@ def test_dot():
             assert(actual_product - expected_product < tolerance)
 
 def test_outer():
-    funid = 2
+    filename = "outer.se"
+    print BB("Testing contract:"), BG(filename)
+    c = s.contract("outer.se")
     print BB("  macro:"), BG("outer")
-    result = s.send(tester.k0, c, 0, funid=funid, abi=[])
+    result = s.send(tester.k0, c, 0, funid=0, abi=[])
+    assert(result == [1])
     # print map(fracpart, result)
 
 def test_transpose():

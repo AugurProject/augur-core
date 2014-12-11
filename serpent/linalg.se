@@ -22,6 +22,7 @@ def dot(u:a, v:a):
         i += 1
     return(prod)
 
+# Dot product of vectors
 macro dot_product($a, $b, $len):
     with i = 0:
         with tot = 0:
@@ -51,6 +52,51 @@ def test_outer():
         i += 1
     return(match)
 
+# Sum elements of array
+macro array_sum($a:$asz)
+    $s = 0
+    $i = 0
+    while $i < $asz:
+        $s += $a[$i]
+        $i += 1
+    $s
+
+# Proportional distances from zero
+macro get_weight($a:$asz):
+    $total = 0
+    $i = 0
+    while $i < $asz:
+        $total += $a[$i]
+        $i += 1
+    $wt = 0
+    if $total == 0:
+        $i = 0
+        while $i < $asz:
+            $wt[$i] += 1
+            $i += 1
+    $total = 0
+    $i = 0
+    while $i < $asz:
+        $total += $a[$i]
+        $i += 1
+    $i = 0
+    $b = array($asz)
+    while $i < $asz:
+        # only fractional part is needed
+        $b[$i] = $a[$i] * 2^64 / $total
+        $i += 1
+    $b
+
+# Bins values to 0, .5, and 1
+macro catch($x):
+    if $x < CATCH_LO:
+        $caught = 0
+    elif $x > CATCH_HI:
+        $caught = 1
+    else:
+        $caught = HALF
+    $caught
+
 # Calculates the outer product of vectors.
 macro outer_product($u:$usz, $v:$vsz):
     $p = array($usz)
@@ -64,76 +110,106 @@ macro outer_product($u:$usz, $v:$vsz):
         $i += 1
     $p
 
-# Sum elements of array
-macro array_sum($a:$asz):
-    $s = 0
+# Vector Kronecker product
+macro kron($a:$asz, $b:$bsz):
+    $prod = array($asz * $bsz)
     $i = 0
     while $i < $asz:
-        $s += $a[$i]
+        $j = 0
+        while $j < $bsz:
+            $prod[$j + $bsz*$i] = $a[$i] * $b[$j]
+            $j += 1
         $i += 1
-    $s
+    $prod
 
-# macro transpose($a:$asz):
-#     # [3] Swaps rows and columns of a matrix.
-#     # m: # rows in a
-#     # n: # colunms in a
-#     $at = array($asz)
-#     $i = 0
-#     while $i < $asz:
-#         at[i] = array(m)
-#         i += 1
-#     i = 0
-#     while i < m:
-#         j = 0
-#         while j < n:
-#             at[j][i] = a[i][j]
-#             j += 1
-#         i += 1
-#     return(at)
-
-def multiply(a:a, b:a, am, bm, an, bn):
-    # [4] Matrix multiplication
-    # am: # rows in a
-    # bm: # rows in b
-    # an: # columns in a
-    # bn: # columns in b
-    cm = am
-    cn = bn
-    c = array(cm)
-    if bn > 1:
-        i = 0
-        while i < cm:
-            c[i] = array(cn)
-            i += 1
-    i = 0
-    while i < cm:
-        j = 0
-        while j < cn:
-            k = 0
-            while k < an:
-                if bn == 1:
-                    c[i] += a[i][k] * b[k]
+# Matrix multiplication, inputs are flattened (vectorized) matrices
+macro multiply($aflat:$asz, $arows, $acols, $bflat:$bsz, $brows, $bcols):
+    $a = array($arows)
+    $i = 0
+    while $i < $arows:
+        $a[$i] = array($acols)
+        $j = 0
+        while $j < $acols:
+            $a[$i][$j] = $aflat[$j + $i*$acols]
+            $j += 1
+        $i += 1
+    $b = array($brows)
+    $i = 0
+    while $i < $brows:
+        $b[$i] = array($bcols)
+        $j = 0
+        while $j < $bcols:
+            $b[$i][$j] = $bflat[$j + $i*$bcols]
+            $j += 1
+        $i += 1
+    $cn = $arows
+    $cm = $bcols
+    $c = array($cn)
+    if $bcols > 1:
+        $i = 0
+        while $i < $cn:
+            $c[$i] = array($cm)
+            $i += 1
+    $i = 0
+    while $i < $cn:
+        $j = 0
+        while $j < $cm:
+            $k = 0
+            while $k < $acols:
+                if $bcols == 1:
+                    $c[$i] += $a[$i][$k] * $b[$k]
                 else:
-                    c[i][j] += a[i][k] * b[k][j]
-                k += 1
-            j += 1
-        i += 1
-    return(c)
+                    $c[$i][$j] += $a[$i][$k] * $b[$k][$j]
+                $k += 1
+            $j += 1
+        $i += 1
+    $c
 
-def kron(u:a, v:a, size):
-    # [5] Calculates the Kronecker product.
-    #
-    # Args:
-    #   u: numeric array (vector)
-    #   v: numeric array (vector)
-    #   size (int): number of elements in u
-    #
-    prod = array(size**2)
-    i = 0
-    while i < size:
-        j = 0
-        while j < size:
-            prod[size*i + j] += u[i] * v[j]
-            j += 1
-        i += 1
-    return(prod)
+# Swap the rows and columns of a matrix
+macro transpose($aflat:$asz, $arows, $acols):
+    $a = array($arows)
+    $i = 0
+    while $i < $arows:
+        $a[$i] = array($acols)
+        $j = 0
+        while $j < $acols:
+            $a[$i][$j] = $aflat[$j + $i*$acols]
+            $j += 1
+        $i += 1
+    $at = array($acols)
+    $i = 0
+    while $i < $asz:
+        $at[$i] = array($arows)
+        $i += 1
+    $i = 0
+    while $i < $acols:
+        $j = 0
+        while $j < $arows:
+            $at[$i][$j] = $a[$j][$i]
+            $j += 1
+        $i += 1
+    $at
+
+# Convert vector to diagonal matrix
+macro diag($a:$asz):
+    $d = array($asz)
+    $i = 0
+    while $i < $asz:
+        $d[$i] = array($asz)
+        $j = 0
+        while $j < $asz:
+            if $i == $j:
+                $d[$i][$j] = $a[$i]
+            else:
+                $d[$i][$j] = 0
+            $j += 1
+        $i += 1
+    $d
+
+# TODO
+
+# macro isnan($a:$asz):
+
+# macro mask($a:$asz):
+
+# macro any($a:$asz):

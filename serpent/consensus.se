@@ -172,13 +172,14 @@ macro diag($a:$asz):
         $i += 1
     $d
 
-# TODO
-
-# macro isnan($a:$asz):
-
-# macro mask($a:$asz):
-
-# macro any($a:$asz):
+# Dot product of vectors
+macro dot_product($a, $b, $len):
+    with i = 0:
+        with tot = 0:
+            while i < $len:
+                tot += $a[i] * $b[i]
+                i += 1
+            tot
 
 def mean(u:a):
     total = 0
@@ -189,14 +190,13 @@ def mean(u:a):
         i += 1
     return([total / size, total * 2^64 / size], 2)
 
-# Dot product of vectors
-macro dot_product($a, $b, $len):
-    with i = 0:
-        with tot = 0:
-            while i < $len:
-                tot += $a[i] * $b[i]
-                i += 1
-            tot
+# TODO
+
+# macro isnan($a:$asz):
+
+# macro mask($a:$asz):
+
+# macro any($a:$asz):
 
 # Linear time deterministic PCA
 def emwpca(data:a, weights:a):
