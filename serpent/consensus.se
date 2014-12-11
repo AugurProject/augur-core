@@ -76,6 +76,7 @@ macro outer_product($u:$usz, $v:$vsz):
         $i += 1
     $p
 
+# Kronecker product ("flattened" tensor product)
 macro kron($u:$usz, $v:$vsz):
     $prod = array(size * size)
     $i = 0
@@ -87,6 +88,7 @@ macro kron($u:$usz, $v:$vsz):
         $i += 1
     $prod
 
+# Matrix multiplication, inputs are flattened (vectorized) matrices
 macro multiply($aflat:$asz, $an, $am, $bflat:$bsz, $bn, $bm):
     $a = array($an)
     $i = 0
