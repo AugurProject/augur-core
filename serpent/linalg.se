@@ -22,6 +22,14 @@ def dot(u:a, v:a):
         i += 1
     return(prod)
 
+macro dot_product($a, $b, $len):
+    with i = 0:
+        with tot = 0:
+            while i < $len:
+                tot += $a[i] * $b[i]
+                i += 1
+            tot
+
 def test_outer():
     # [2] 
     u = [2, 5, 7]

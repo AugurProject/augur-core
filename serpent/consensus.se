@@ -131,25 +131,31 @@ macro multiply($aflat:$asz, $arows, $acols, $bflat:$bsz, $brows, $bcols):
         $i += 1
     $c
 
-# TODO
+macro transpose($aflat:$asz, $arows, $acols):
+    $a = array($arows)
+    $i = 0
+    while $i < $arows:
+        $a[$i] = array($acols)
+        $j = 0
+        while $j < $acols:
+            $a[$i][$j] = $aflat[$j + $i*$acols]
+            $j += 1
+        $i += 1
+    $at = array($acols)
+    $i = 0
+    while $i < $asz:
+        $at[$i] = array($arows)
+        $i += 1
+    $i = 0
+    while $i < $acols:
+        $j = 0
+        while $j < $arows:
+            $at[$i][$j] = $a[$j][$i]
+            $j += 1
+        $i += 1
+    $at
 
-# macro transpose($a:$asz):
-#     # [3] Swaps rows and columns of a matrix.
-#     # m: # rows in a
-#     # n: # colunms in a
-#     $at = array($asz)
-#     $i = 0
-#     while $i < $asz:
-#         at[i] = array(m)
-#         i += 1
-#     i = 0
-#     while i < m:
-#         j = 0
-#         while j < n:
-#             at[j][i] = a[i][j]
-#             j += 1
-#         i += 1
-#     return(at)
+# TODO
 
 # macro diag($a:$asz):
 
