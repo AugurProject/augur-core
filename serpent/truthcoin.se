@@ -37,6 +37,8 @@ data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](par
 
 data cashcoin_balances[2^160]
 
+data repRequired = 447
+
 def init():
     # test initial funds
     cashcoin_balances[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826] = 1000000
