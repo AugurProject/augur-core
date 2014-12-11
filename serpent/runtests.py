@@ -97,7 +97,7 @@ def test_diag():
     c = s.contract("diag.se")
     print BB("  macro:"), BG("diag")
     result = s.send(tester.k0, c, 0, funid=0, abi=[])
-    # assert(result == [1])
+    assert(result == [1])
 
 def test_isnan():
     filename = "isnan.se"
