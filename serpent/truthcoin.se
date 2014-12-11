@@ -6,39 +6,63 @@ BRANCH = 0
 EVENT = 1
 MARKET = 2
 
-# for a market, creationFee is same as initial liquidity
+# Every entity in our contract has similar metadata.
+# Instead of putting it in each entity, we put all the
+# metadata here.
+# Info's index is the hash of the item we're getting info on
 data Info[](typecode, description[], creator, creationFee)
 
-# currentVotePeriod is where we are in the eventsExpDates, lastPeriodEnd is the last voting period block number
-data Branches[](currentVotePeriod, markets[], marketCount, periodLength, lastPeriodEnd, parent)
+# CurrentVotePeriod is the current index in eventsExpDates
+# LastPeriodEnd is the last voting period's block number
+# Parent is the branch's parent branch.
+# Branches' index is the hash of the branch (aka branchID)
+# RepRequired is the amount of reputation required to reach quorem
+data Branches[](currentVotePeriod, markets[], marketCount, periodLength, lastPeriodEnd, parent, repRequired)
 
+# Events' index is the eventID
 data Events[](branch, expirationDate)
 
-# index is branchID
-# reporter index is the rep. address
-# we 0 index reputation so can walk thru for consensus
+# Reporting index is the branchID
+# Reporters index is the rep. address
+# We 0 index reputation so can walk thru for consensus
+# EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
+# RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
 
+# Markets' index is the marketID
+# Events is a 0 indexed array of events in the market
+# Sharespurchased keeps track of the number of shares purchased for each outcome
+# Participants is a 0 indexed array of participants, their cashIDs, and the shares in each outcome they've purchased of an event
 data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](participantID, event[](shares[2])), lossLimit, tradingFee, numberEvents, currentParticipant)
 
-data cashcoin_balances[] # If this is an address map, feel free to give it a size of 2^160; this increases efficiency
-                         # because the access compiles to an addition instead of sha3'ing the index to get the storage
-                         # index
-
-data repRequired = 447
+data cashcoin_balances[2^160]
 
 def init():
     # test initial funds
     cashcoin_balances[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826] = 1000000
-    self.Reporting[1010101].repIDtoIndex["chris and joey's rep"] = 0 # will break given how serpent currently does strings; I'll probably
+    self.Reporting[1010101].repIDtoIndex[42] = 0                     # a string index will break given how serpent currently does strings; I'll (Vitalik) probably
                                                                      # update serpent to make strings eval to integers again in normal
                                                                      # cases, and add a specific "long string" mechanism, eg.
                                                                      # text("1284721864982164124124asfbqiuwfuqwfuq2fu12bufb12ufb12t")
     self.Reporting[1010101].reputation[0].repValue = 47
-    self.Reporting[1010101].reputation[0].reporterID = "chris and joey's rep"
+    self.Reporting[1010101].reputation[0].reporterID = 42
+    # number of reporters is 0 indexed
+    self.Reporting[1010101].numberReporters = 0
+    self.Info[1010101].typecode = 0
+    self.Info[1010101].description[] = "initial branch"
+    self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
+    self.Info[1010101].creationFee = 10
+    self.Branches[1010101].currentVotePeriod = 0
+    self.Branches[1010101].marketCount = 0
+    self.Branches[1010101].periodLength = 403200
+    self.Branches[1010101].lastPeriodEnd = block.number
+    self.Branches[1010101].parent = 0
+    self.Branches[1010101].repRequired = 14000000
+
 
 ### Version 2.0:
     # blockchain explorer to get / examine data or make rpc api calls to the contract to get it
+    # check for branch collisions
     # local contract calls don't cost gas
     # Scalar event where people update what type of share they bought using a thing
     # in an array where index is their scalar x and value
@@ -59,8 +83,11 @@ def init():
     # make sure this follows paul's whitepaper well
     # contract should send msg.values around, not cashcoin -- i'll (joey) fix this
     # what if people pass functions incorrect values, need to detect that junk and return 0
+    # fast voting cycle first few days to get the 60% problem away from a branch, e.g. what if not enough people vote 60% of votes -- need to get the cycle length parameters right
+    # we had planned allowing people to send coins selectively to branches
     # polish functions to be completely consistent w/ data structure additions
     # make period length a var
+    # branching the way whitepaper does it (distribute rep to the holders from first branch)
 
 ### Urgent todo:
     # add multiple events into markets buy / sell feature
@@ -68,108 +95,11 @@ def init():
 
 ### Actual code begins
 
-def send_reputation(recver, value, branch):
-    sender = tx.origin
-    # if the sender's rep. account doesn't exist, make one
-    if(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[sender]].reporterID!=tx.origin):
-            self.Reporting[branch].numberReporters += 1
-            reporterIndex = self.Reporting[branch].numberReporters
-            self.Reporting[branch].repIDtoIndex[tx.origin] = reporterIndex
-            self.Reporting[branch].reputation[reporterIndex].repValue = 0
-            self.Reporting[branch].reputation[reporterIndex].reporterID = tx.origin
-            return("Your reputation account was just created, earn some rep. before you can send to others")
-
-    if(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[recver]].reporterID!=recver):
-        return("Receiving address doesn't exist")
-        
-    sender_balance = self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[sender]].repValue
-    if(sender_balance >= value):
-        self.Reporting[branch].reputation[repIDtoIndex[sender]].repValue -= value
-        self.Reporting[branch].reputation[repIDtoIndex[recver]].repValue += value
-        return(1)
-    else:
-        return(0)
-        
-        
-def get_rep_balance(branch, address):
-    return(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[address]].repValue)
-    
-def send_rep_diffbranch(recver, value, oldBranch, newBranch):
-    
-        # if no branch exists (defined as a nonzero period)
-        if(!self.Branches[oldBranch].periodLength | !self.Branches[newBranch].periodLength | value<=0):
-            return(0)
-        
-        sender = tx.origin
-        # if the sender's rep. account doesn't exist, make one
-        if(self.Reporting[oldBranch].reputation[self.Reporting[oldBranch].repIDtoIndex[sender]].reporterID!=tx.origin):
-                self.Reporting[oldBranch].numberReporters += 1
-                reporterIndex = self.Reporting[oldBranch].numberReporters
-                self.Reporting[oldBranch].repIDtoIndex[tx.origin] = reporterIndex
-                self.Reporting[oldBranch].reputation[reporterIndex].repValue = 0
-                self.Reporting[oldBranch].reputation[reporterIndex].reporterID = tx.origin
-                return("Your reputation account was just created, earn some rep. before you can send to others")
-                
-        if(self.Reporting[newBranch].reputation[self.Reporting[newBranch].repIDtoIndex[recver]].reporterID!=recver):
-            return("Receiving address doesn't exist")
-    
-        # check branch is a subbranch
-        tempID = Branches[newBranch].parent
-        while tempID != oldBranch and tempID != 0 and Branches[tempID].periodLength != 0:
-            tempID = Branches[tempID].parent
-            
-        if tempID != oldBranch:
-            return(0)
-        else:
-            sender_balance = self.Reporting[oldBranch].reputation[self.Reporting[oldBranch].repIDtoIndex[sender]].repValue
-            if(sender_balance >= value):
-                self.Reporting[oldBranch].reputation[repIDtoIndex[sender]].repValue -= value
-                self.Reporting[newBranch].reputation[repIDtoIndex[recver]].repValue += value
-                return(1)
-            else:
-                return(0)
-
-# period length is given in blocks
-def make_subbranch(branchName:s, description:s, periodLength, parent):
-    # add current vote period initializations, etc to this creation as well as last period end
-    # as well as eventsExpDates[](numberEvents, events[]) to 0  
-    # give fee to first mark etto  created on new branch
-    branchCharacteristics = array(9)
-    branchCharacteristics[0] = branchName
-    branchCharacteristics[1] = description
-    branchCharacteristics[2] = periodLength
-    # event and market counts both 0
-    branchCharacteristics[3] = 0
-    branchCharacteristics[4] = 0
-    branchCharacteristics[5] = periodLength
-    branchCharacteristics[6] = tx.origin
-    branchCharacteristics[7] = msg.value
-    branchCharacteristics[8] = BRANCH
-    
-    #initialize number reporters to 0 so we start at 0 
-    # make period length as long as not 0
-
-    # people can check that these characteristics hash to the ID if they want
-    # people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
-    branchID = sha256(eventCharacteristics, 9)
-
-    if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator):
-        self.Branches[branchID].eventCount = 0
-        self.Branches[branchID].marketCount = 0
-        self.Branches[branchID].periodLength = periodLength
-        
-        self.Branches[branchID].parent = parent
-        self.Info[branchID].typecode = BRANCH
-        self.Info[branchID].description[] = description
-        self.Info[branchID].creator = tx.origin
-        self.Info[branchID].creationFee = msg.value
-        return(1)
-    else:
-        return(0)
-        
 def get_cash_balance():
     return(self.cashcoin_balances[tx.origin])
-    
+
+# we should have the UI check that the receiver add. is valid 
+# ^^^ nah, let people send money to bad addresses if they want, so they can do proof of burn! ~chris
 def send_cashcoin(recver, value):
     sender = tx.origin
     sender_balance = self.cashcoin_balances[sender]
@@ -179,8 +109,125 @@ def send_cashcoin(recver, value):
         return(1)
     else:
         return(0)
+
+def send_reputation(recver, value, branch):
+    if(self.send_cashcoin(branch, 10)):
+        sender = tx.origin
+        senderIndex = self.Reporting[branch].repIDtoIndex[sender]
+        receiverIndex = self.Reporting[branch].repIDtoIndex[recver]
+        # if the sender's rep. account doesn't exist, make one
+        if(self.Reporting[branch].reputation[senderIndex].reporterID!=tx.origin):
+                self.Reporting[branch].numberReporters += 1
+                reporterIndex = self.Reporting[branch].numberReporters
+                self.Reporting[branch].repIDtoIndex[tx.origin] = reporterIndex
+                self.Reporting[branch].reputation[reporterIndex].repValue = 0
+                self.Reporting[branch].reputation[reporterIndex].reporterID = tx.origin
+                return("Your reputation account was just created, earn some rep. before you can send to others")
+                
+        if(self.Reporting[branch].reputation[receiverIndex].reporterID!=recver):
+            return("Receiving address doesn't exist")
+            
+        sender_balance = self.Reporting[branch].reputation[senderIndex].repValue
+        if(sender_balance >= value):
+            self.Reporting[branch].reputation[senderIndex].repValue -= value
+            self.Reporting[branch].reputation[receiverIndex].repValue += value
+            return(1)
+        else:
+            return(0)
+    else:
+        return(0)
+        
+def get_rep_balance(branch, address):
+    return(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[address]].repValue)
+    
+def send_rep_diffbranch(recver, value, oldBranch, newBranch):
+        # check branch is a subbranch
+        tempID = Branches[newBranch].parent
+        while tempID != oldBranch and tempID != 0 and Branches[tempID].periodLength != 0:
+            tempID = Branches[tempID].parent
+                
+        if tempID != oldBranch:
+            return(0)
+        if(self.send_cashcoin(branch, 10)):
+            # if no branch exists (defined as a nonzero period)
+            if(!self.Branches[oldBranch].periodLength | !self.Branches[newBranch].periodLength | value<=0):
+                return(0)
+            sender = tx.origin
+            senderIndex = self.Reporting[oldBranch].repIDtoIndex[sender]
+            receiverIndex = self.Reporting[newBranch].repIDtoIndex[recver]
+            # if the sender's rep. account doesn't exist, make one
+            if(self.Reporting[oldBranch].reputation[senderIndex].reporterID!=tx.origin):
+                    self.Reporting[oldBranch].numberReporters += 1
+                    reporterIndex = self.Reporting[oldBranch].numberReporters
+                    self.Reporting[oldBranch].repIDtoIndex[tx.origin] = reporterIndex
+                    self.Reporting[oldBranch].reputation[reporterIndex].repValue = 0
+                    self.Reporting[oldBranch].reputation[reporterIndex].reporterID = tx.origin
+                    return("Your reputation account was just created, earn some rep. before you can send to others")
+        
+            if(self.Reporting[newBranch].reputation[receiverIndex].reporterID!=recver):
+                self.Reporting[newBranch].numberReporters += 1
+                reporterIndex = self.Reporting[newBranch].numberReporters
+                self.Reporting[newBranch].repIDtoIndex[tx.origin] = reporterIndex
+                self.Reporting[newBranch].reputation[reporterIndex].repValue = 0
+                self.Reporting[newBranch].reputation[reporterIndex].reporterID = recver
+                return("Receiving address doesn't exist on sub branch, just made one on it")
+                
+            else:
+                sender_balance = self.Reporting[oldBranch].reputation[senderIndex].repValue
+                if(sender_balance >= value):
+                    self.Reporting[oldBranch].reputation[senderIndex].repValue -= value
+                    self.Reporting[newBranch].reputation[receiverIndex].repValue += value
+                    return(1)
+                else:
+                    return(0)
+        else:
+            return(0)
+
+# period length is given in blocks
+def make_subbranch(branchName:s, description:s, periodLength, parent, repRequired):
+    # add current vote period initializations, etc to this creation as well as last period end
+    branchCharacteristics = array(9)
+    branchCharacteristics[0] = branchName
+    branchCharacteristics[1] = description
+    branchCharacteristics[2] = periodLength
+    branchCharacteristics[3] = parent
+    branchCharacteristics[4] = repRequired
+    branchCharacteristics[5] = periodLength
+    branchCharacteristics[6] = tx.origin
+    branchCharacteristics[7] = msg.value
+    branchCharacteristics[8] = BRANCH
+    branchCharacteristics[9] = 
+
+
+    # initialize number reporters to 0 so we start at 0 
+    # make period length as long as not 0
+
+    # people can check that these characteristics hash to the ID if they want
+    # people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
+    branchID = sha256(eventCharacteristics, 9)
+
+    if(self.send_cashcoin(branchID, 47):
+        if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator):
+            self.Branches[branchID].eventCount = 0
+            self.Branches[branchID].marketCount = 0
+            self.Branches[branchID].periodLength = periodLength
+            self.Branches[branchID].currentVotePeriod = 0
+            self.Branches[branchID].lastPeriodEnd = block.number
+            self.Branches[branchID].repRequired = repRequired
+            self.Branches[branchID].parent = parent
+            
+            self.Info[branchID].typecode = BRANCH
+            self.Info[branchID].description[] = description
+            self.Info[branchID].creator = tx.origin
+            self.Info[branchID].creationFee = msg.value
+            return(1)
+        else:
+            return(0)
+    else:
+        return(0)
         
 def create_event(branch, description:s, expDate, fee):
+     # give fee to first market to be created on new branch
     if(self.Info[branch].creator and self.Branches[branch].periodLength and description!=0 and expDate>block.number):
         eventCharacteristics = array(6)
         eventCharacteristics[0] = description
@@ -444,11 +491,12 @@ def in(branchID, eventID):
     while i < self.Branches[branchID].EventsExpDates[self.Branches[branchID].
 
 #make sure people can change their vote during the voting period
-def vote(branchID, report:a):
+def send_report(branchID, report:a):
     # make sure the branch exists
     repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
     if self.Branches[branchID].lastPeriodEnd == 0:
         return(0)
+    # check if voting period not over
     if self.Branches[branchID].lastPeriodEnd + self.Branches[branchID].periodLength > block.number:
         return(0)
     if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin):
@@ -499,7 +547,9 @@ def redeem():
     # X Bitcoin in market /qi is the price per share once a market is closed
     # remember to give back part of the init. liquidity
     
-    
+    # also give back creation fees paid by anything inc. branch creators in rbcr to the cash addresses
+    # held by rep. holders
+
     # loop through reputation and check if in reporters, if so use their report, if not use the fillin / not reported report
     # and get the repvalue from reputation
     # and tx fees

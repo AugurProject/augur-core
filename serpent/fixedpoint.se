@@ -117,12 +117,15 @@ def pow(b, e):
     result = self.exp(e*self.log(b)/0x10000000000000000)
     return([result, start_gas - tx.gas], 2)
 
-def sqrt(n):
-    start_gas = tx.gas
-    guess = n/2
+macro sqrt(fixed($n)):
+    guess = fixed($n/2)
     i = 0
     while i < 11:
-        guess = (guess + n*0x10000000000000000/guess)/2
+        guess = (guess + $n/guess)/2
         i += 1
+    guess
 
-    return([guess, start_gas - tx.gas], 2)
+def sqrtf(n):
+    start_gas = tx.gas
+    res = sqrt(n)
+    return([res, start_gas - tx.gas], 2)
