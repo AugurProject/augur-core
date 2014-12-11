@@ -78,7 +78,7 @@ def test_outer():
     funid = 2
     print BB("  function:"), BG(funid), "outer"
     result = s.send(tester.k0, c, 0, funid=funid, abi=[])
-    print map(fracpart, result)
+    # print map(fracpart, result)
 
 def test_transpose():
     funid = 3
@@ -89,24 +89,13 @@ def test_transpose():
     # assert((cumulants.transpose(data, num_rows, num_cols) == data.T).all())
 
 def test_multiply():
-    funid = 4
-    print BB("  function:"), BG(funid), "multiply"
-    for i in range(2, 10):
-        
-        # square matrices
-        A = np.matrix(np.random.randn(i, i))
-        B = np.matrix(np.random.randn(i, i))
-        expected_product = A * B
-        actual_product = cumulants.matrix_multiply(A.tolist(), B.tolist())
-        assert((actual_product - expected_product < 1e-12).all())
-        
-        # rectangular matrices
-        j = np.random.randint(1, 10, 1)[0]
-        A = np.matrix(np.random.randn(i, j))
-        B = np.matrix(np.random.randn(j, i))
-        expected_product = A * B
-        actual_product = cumulants.matrix_multiply(A.tolist(), B.tolist())
-        assert((actual_product - expected_product < 1e-12).all())
+    filename = "multiply.se"
+    print BB("Testing contract:"), BG(filename)
+    c = s.contract("multiply.se")
+    print BB("  function:"), BG(0), "multiply"
+    result = s.send(tester.k0, c, 0, funid=0, abi=[])
+    # print map(fracpart, result)
+    print(result)
 
 def test_kron():
     funid = 5
@@ -136,7 +125,7 @@ def main():
     # test_dot()
     test_outer()
     # test_transpose()
-    # test_multiply()
+    test_multiply()
     # test_kron()
 
 if __name__ == "__main__":

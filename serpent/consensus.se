@@ -77,7 +77,7 @@ macro outer_product($u:$usz, $v:$vsz):
     $p
 
 macro kron($u:$usz, $v:$vsz):
-    $prod = array(size^2)
+    $prod = array(size * size)
     $i = 0
     while $i < $usz:
         $j = 0
@@ -87,31 +87,76 @@ macro kron($u:$usz, $v:$vsz):
         $i += 1
     $prod
 
-# TODO
+macro multiply($aflat:$asz, $an, $am, $bflat:$bsz, $bn, $bm):
+    $a = array($an)
+    $i = 0
+    while $i < $an:
+        $a[$i] = array($am)
+        $j = 0
+        while $j < $am:
+            $a[$i][$j] = $aflat[$j + $i*$am]
+            $j += 1
+        $i += 1
+    $b = array($bn)
+    $i = 0
+    while $i < $bn:
+        $b[$i] = array($bm)
+        $j = 0
+        while $j < $bm:
+            $b[$i][$j] = $bflat[$j + $i*$bm]
+            $j += 1
+        $i += 1
+    $cn = $an
+    $cm = $bm
+    $c = array($cn)
+    if $bm > 1:
+        $i = 0
+        while $i < $cn:
+            $c[$i] = array($cm)
+            $i += 1
+    $i = 0
+    while $i < $cn:
+        $j = 0
+        while $j < $cm:
+            $k = 0
+            while $k < $am:
+                if $bm == 1:
+                    $c[$i] += $a[$i][$k] * $b[$k]
+                else:
+                    $c[$i][$j] += $a[$i][$k] * $b[$k][$j]
+                $k += 1
+            $j += 1
+        $i += 1
+    $c
 
-# macro multiply(a:a, b:a, am, bm, an, bn):
-#     cm = am
-#     cn = bn
-#     c = array(cm)
-#     if bn > 1:
-#         i = 0
-#         while i < cm:
-#             c[i] = array(cn)
-#             i += 1
-#     i = 0
-#     while i < cm:
-#         j = 0
-#         while j < cn:
-#             k = 0
-#             while k < an:
-#                 if bn == 1:
-#                     c[i] += a[i][k] * b[k]
-#                 else:
-#                     c[i][j] += a[i][k] * b[k][j]
-#                 k += 1
-#             j += 1
-#         i += 1
-#     return(c)
+def test_multiply():
+    a = [[1, 4], [2, 5], [3, 6]]
+    an = 3
+    am = 2
+    aflat = array(an * am)
+    i = 0
+    while i < an:
+        j = 0
+        while j < am:
+            aflat[j + i*am] = a[i][j]
+            j += 1
+        i += 1
+    b = [[1, 2, 3], [4, 5, 6]]
+    bn = 2
+    bm = 3
+    bflat = array(bn * bm)
+    i = 0
+    while i < bn:
+        j = 0
+        while j < bm:
+            bflat[j + i*bm] = b[i][j]
+            j += 1
+        i += 1
+    expected = [[17, 22, 27], [22, 29, 36], [27, 36, 45]]
+    actual = multiply(aflat:(an*am), an, am, bflat:(bn*bm), bn, bm)
+    return(actual[0], an)
+
+# TODO
 
 # macro transpose($a:$asz):
 #     # [3] Swaps rows and columns of a matrix.
