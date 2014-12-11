@@ -2,4 +2,4 @@ macro any($a:$asz):
     pass
 
 def test_any():
-    pass
+    return([1], 1)

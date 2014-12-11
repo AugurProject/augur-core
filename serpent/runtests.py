@@ -61,70 +61,12 @@ def test_dot():
             actual_product = s.send(tester.k0, c, 0, funid=funid, abi=(list(data[:,i]),))
             assert(actual_product - expected_product < tolerance)
 
-def test_outer():
-    filename = "outer.se"
+def test_contract(contract):
+    filename = contract + ".se"
     print BB("Testing contract:"), BG(filename)
-    c = s.contract("outer.se")
-    print BB("  macro:"), BG("outer")
+    c = s.contract(filename)
     result = s.send(tester.k0, c, 0, funid=0, abi=[])
     assert(result == [1])
-    # print map(fracpart, result)
-
-def test_transpose():
-    filename = "transpose.se"
-    print BB("Testing contract:"), BG(filename)
-    c = s.contract("transpose.se")
-    print BB("  macro:"), BG("transpose")
-    result = s.send(tester.k0, c, 0, funid=0, abi=[])
-    assert(result == [1])
-
-def test_multiply():
-    filename = "multiply.se"
-    print BB("Testing contract:"), BG(filename)
-    c = s.contract("multiply.se")
-    print BB("  macro:"), BG("multiply")
-    result = s.send(tester.k0, c, 0, funid=0, abi=[])
-    assert(result == [1])
-
-def test_kron():
-    filename = "kron.se"
-    print BB("Testing contract:"), BG(filename)
-    c = s.contract("kron.se")
-    print BB("  macro:"), BG("kron")
-    result = s.send(tester.k0, c, 0, funid=0, abi=[])
-    assert(result == [1])
-
-def test_diag():
-    filename = "diag.se"
-    print BB("Testing contract:"), BG(filename)
-    c = s.contract("diag.se")
-    print BB("  macro:"), BG("diag")
-    result = s.send(tester.k0, c, 0, funid=0, abi=[])
-    assert(result == [1])
-
-def test_isnan():
-    filename = "isnan.se"
-    print BB("Testing contract:"), BG(filename)
-    c = s.contract("isnan.se")
-    print BB("  macro:"), BG("isnan")
-    result = s.send(tester.k0, c, 0, funid=0, abi=[])
-    # assert(result == [1])
-
-def test_mask():
-    filename = "mask.se"
-    print BB("Testing contract:"), BG(filename)
-    c = s.contract("mask.se")
-    print BB("  macro:"), BG("mask")
-    result = s.send(tester.k0, c, 0, funid=0, abi=[])
-    # assert(result == [1])
-
-def test_any():
-    filename = "any.se"
-    print BB("Testing contract:"), BG(filename)
-    c = s.contract("any.se")
-    print BB("  macro:"), BG("any")
-    result = s.send(tester.k0, c, 0, funid=0, abi=[])
-    # assert(result == [1])
 
 def main():
     global s, c, FILENAME
@@ -136,14 +78,16 @@ def main():
     print BB("Testing contract:"), BG(FILENAME)
     test_mean()
     test_dot()
-    test_outer()
-    test_transpose()
-    test_multiply()
-    test_kron()
-    test_diag()
-    test_isnan()
-    test_mask()
-    test_any()
+    contracts = ["outer",
+                 "transpose",
+                 "multiply",
+                 "kron",
+                 "diag",
+                 "isnan",
+                 "mask",
+                 "any"]
+    for contract in contracts:
+        test_contract(contract)
 
 if __name__ == "__main__":
     main()

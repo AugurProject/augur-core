@@ -2,4 +2,4 @@ macro mask($a:$asz):
     pass
 
 def test_mask():
-    pass
+    return([1], 1)
