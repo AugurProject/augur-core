@@ -76,14 +76,14 @@ macro outer_product($u:$usz, $v:$vsz):
         $i += 1
     $p
 
-# Kronecker product ("flattened" tensor product)
-macro kron($u:$usz, $v:$vsz):
-    $prod = array(size * size)
+# Vector Kronecker product
+macro kron($a:$asz, $b:$bsz):
+    $prod = array($asz * $bsz)
     $i = 0
-    while $i < $usz:
+    while $i < $asz:
         $j = 0
-        while $j < $vsz:
-            $prod[$usz*$i + $j] += $u[$i] * $v[$j]
+        while $j < $bsz:
+            $prod[$j + $bsz*$i] = $a[$i] * $b[$j]
             $j += 1
         $i += 1
     $prod
@@ -131,6 +131,7 @@ macro multiply($aflat:$asz, $arows, $acols, $bflat:$bsz, $brows, $bcols):
         $i += 1
     $c
 
+# Swap the rows and columns of a matrix
 macro transpose($aflat:$asz, $arows, $acols):
     $a = array($arows)
     $i = 0

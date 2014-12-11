@@ -38,19 +38,6 @@ def blocky(*strings, **kwds):
 def fracpart(x):
     return float(x & (2**64 - 1)) / 2**64
 
-def test_file(*abi, **kwds):
-    print BB("  contract:"), BG(kwds["filename"])
-    print BB("  function:"), BG(kwds["funid"]), kwds["function"]
-    print BB("  input:   "), abi
-    # state = kwds.get("state", None)
-    # if state is None:
-    #     state = tester.state()
-    filename = kwds.get("filename", None)
-    if filename is not None:
-        contract_address = s.contract(filename)
-        result = s.send(tester.k0, contract_address, 0,  funid=kwds["funid"], abi=abi)
-        print BB("  output:  "), result[0], fracpart(result[1])
-
 def test_mean():
     print BB("  function:"), BG(0), "mean"
     num_signals = 25      # columns
@@ -65,8 +52,8 @@ def test_mean():
 def test_dot():
     funid = 1
     print BB("  function:"), BG(funid), "dot"
-    num_signals = 25    # columns
-    num_samples = 10    # rows
+    num_signals = 7    # columns
+    num_samples = 5    # rows
     data = (np.random.rand(num_samples, num_signals) * 10).astype(int)
     for i in range(num_signals):
         for j in range(num_signals):
@@ -76,7 +63,7 @@ def test_dot():
 
 def test_outer():
     funid = 2
-    print BB("  function:"), BG(funid), "outer"
+    print BB("  macro:"), BG("outer")
     result = s.send(tester.k0, c, 0, funid=funid, abi=[])
     # print map(fracpart, result)
 
@@ -84,29 +71,37 @@ def test_transpose():
     filename = "transpose.se"
     print BB("Testing contract:"), BG(filename)
     c = s.contract("transpose.se")
-    print BB("  function:"), BG(0), "transpose"
+    print BB("  macro:"), BG("transpose")
     result = s.send(tester.k0, c, 0, funid=0, abi=[])
-    print(result)
+    assert(result == [1])
 
 def test_multiply():
     filename = "multiply.se"
     print BB("Testing contract:"), BG(filename)
     c = s.contract("multiply.se")
-    print BB("  function:"), BG(0), "multiply"
+    print BB("  macro:"), BG("multiply")
     result = s.send(tester.k0, c, 0, funid=0, abi=[])
     assert(result == [1])
 
 def test_kron():
-    funid = 5
-    print BB("  function:"), BG(funid), "kron"
-    num_signals = 10     # columns
-    num_samples = 50     # rows
-    data = np.random.randn(num_samples, num_signals)
-    for i in range(num_signals):
-        for j in range(num_signals):
-            expected_product = np.kron(data[:,i], data[:,j])
-            actual_product = cumulants.kron(data[:,i], data[:,j], num_samples)
-            assert((actual_product - expected_product < 1e-15).all())
+    filename = "kron.se"
+    print BB("Testing contract:"), BG(filename)
+    c = s.contract("kron.se")
+    print BB("  macro:"), BG("kron")
+    result = s.send(tester.k0, c, 0, funid=0, abi=[])
+    assert(result == [1])    
+
+def test_diag():
+    pass
+
+def test_isnan():
+    pass
+
+def test_mask():
+    pass
+
+def test_any():
+    pass
 
 def main():
     global s, c, FILENAME
@@ -115,17 +110,17 @@ def main():
     FILENAME = "tests.se"
     print BR("Compiling " + FILENAME)
     c = s.contract(FILENAME)
-    # print BR("Testing " + FILENAME)
     print BB("Testing contract:"), BG(FILENAME)
-    # mean
-    # u = [1, 4, 4, 2]
-    # test_file(u, filename=FILENAME, funid=0, function="mean")
     test_mean()
-    # test_dot()
+    test_dot()
     test_outer()
     test_transpose()
     test_multiply()
-    # test_kron()
+    test_kron()
+    test_diag()
+    test_isnan()
+    test_mask()
+    test_any()
 
 if __name__ == "__main__":
     main()
