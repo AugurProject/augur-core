@@ -156,9 +156,23 @@ macro transpose($aflat:$asz, $arows, $acols):
         $i += 1
     $at
 
-# TODO
+# Convert vector to diagonal matrix
+macro diag($a:$asz):
+    $d = array($asz)
+    $i = 0
+    while $i < $asz:
+        $d[$i] = array($asz)
+        $j = 0
+        while $j < $asz:
+            if $i == $j:
+                $d[$i][$j] = $a[$i]
+            else:
+                $d[$i][$j] = 0
+            $j += 1
+        $i += 1
+    $d
 
-# macro diag($a:$asz):
+# TODO
 
 # macro isnan($a:$asz):
 
