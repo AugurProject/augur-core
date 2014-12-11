@@ -89,29 +89,29 @@ macro kron($u:$usz, $v:$vsz):
     $prod
 
 # Matrix multiplication, inputs are flattened (vectorized) matrices
-macro multiply($aflat:$asz, $an, $am, $bflat:$bsz, $bn, $bm):
-    $a = array($an)
+macro multiply($aflat:$asz, $arows, $acols, $bflat:$bsz, $brows, $bcols):
+    $a = array($arows)
     $i = 0
-    while $i < $an:
-        $a[$i] = array($am)
+    while $i < $arows:
+        $a[$i] = array($acols)
         $j = 0
-        while $j < $am:
-            $a[$i][$j] = $aflat[$j + $i*$am]
+        while $j < $acols:
+            $a[$i][$j] = $aflat[$j + $i*$acols]
             $j += 1
         $i += 1
-    $b = array($bn)
+    $b = array($brows)
     $i = 0
-    while $i < $bn:
-        $b[$i] = array($bm)
+    while $i < $brows:
+        $b[$i] = array($bcols)
         $j = 0
-        while $j < $bm:
-            $b[$i][$j] = $bflat[$j + $i*$bm]
+        while $j < $bcols:
+            $b[$i][$j] = $bflat[$j + $i*$bcols]
             $j += 1
         $i += 1
-    $cn = $an
-    $cm = $bm
+    $cn = $arows
+    $cm = $bcols
     $c = array($cn)
-    if $bm > 1:
+    if $bcols > 1:
         $i = 0
         while $i < $cn:
             $c[$i] = array($cm)
@@ -121,8 +121,8 @@ macro multiply($aflat:$asz, $an, $am, $bflat:$bsz, $bn, $bm):
         $j = 0
         while $j < $cm:
             $k = 0
-            while $k < $am:
-                if $bm == 1:
+            while $k < $acols:
+                if $bcols == 1:
                     $c[$i] += $a[$i][$k] * $b[$k]
                 else:
                     $c[$i][$j] += $a[$i][$k] * $b[$k][$j]
@@ -130,33 +130,6 @@ macro multiply($aflat:$asz, $an, $am, $bflat:$bsz, $bn, $bm):
             $j += 1
         $i += 1
     $c
-
-def test_multiply():
-    a = [[1, 4], [2, 5], [3, 6]]
-    an = 3
-    am = 2
-    aflat = array(an * am)
-    i = 0
-    while i < an:
-        j = 0
-        while j < am:
-            aflat[j + i*am] = a[i][j]
-            j += 1
-        i += 1
-    b = [[1, 2, 3], [4, 5, 6]]
-    bn = 2
-    bm = 3
-    bflat = array(bn * bm)
-    i = 0
-    while i < bn:
-        j = 0
-        while j < bm:
-            bflat[j + i*bm] = b[i][j]
-            j += 1
-        i += 1
-    expected = [[17, 22, 27], [22, 29, 36], [27, 36, 45]]
-    actual = multiply(aflat:(an*am), an, am, bflat:(bn*bm), bn, bm)
-    return(actual[0], an)
 
 # TODO
 

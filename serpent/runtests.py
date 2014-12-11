@@ -81,12 +81,12 @@ def test_outer():
     # print map(fracpart, result)
 
 def test_transpose():
-    funid = 3
-    print BB("  function:"), BG(funid), "transpose"
-    num_rows = 10
-    num_cols = 50
-    data = np.random.randn(num_rows, num_cols)
-    # assert((cumulants.transpose(data, num_rows, num_cols) == data.T).all())
+    filename = "transpose.se"
+    print BB("Testing contract:"), BG(filename)
+    c = s.contract("transpose.se")
+    print BB("  function:"), BG(0), "transpose"
+    result = s.send(tester.k0, c, 0, funid=0, abi=[])
+    print(result)
 
 def test_multiply():
     filename = "multiply.se"
@@ -94,8 +94,7 @@ def test_multiply():
     c = s.contract("multiply.se")
     print BB("  function:"), BG(0), "multiply"
     result = s.send(tester.k0, c, 0, funid=0, abi=[])
-    # print map(fracpart, result)
-    print(result)
+    assert(result == [1])
 
 def test_kron():
     funid = 5
@@ -124,7 +123,7 @@ def main():
     test_mean()
     # test_dot()
     test_outer()
-    # test_transpose()
+    test_transpose()
     test_multiply()
     # test_kron()
 

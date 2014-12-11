@@ -65,4 +65,12 @@ def test_multiply():
         i += 1
     expected = [[17, 22, 27], [22, 29, 36], [27, 36, 45]]
     actual = multiply(aflat:(arows*acols), arows, acols, bflat:(brows*bcols), brows, bcols)
-    return(actual[0], 3)
+    i = 0
+    while i < arows:
+        j = 0
+        while j < bcols:
+            if expected[i][j] != actual[i][j]:
+                return(0)
+            j += 1
+        i += 1
+    return(1)
