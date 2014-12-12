@@ -1,5 +1,22 @@
 macro isnan($a:$asz):
-    pass
+    with amask = array($asz):
+        with i = 0:
+            while i < $asz:
+                if $a[i] == None:
+                    amask[i] = 1
+                else:
+                    amask[i] = 0
+                i += 1
+            amask
 
 def test_isnan():
+    a = [5, 1, None, 4, 2]
+    asz = 5
+    amask = isnan(a:asz)
+    expected = [0, 0, 1, 0, 0]
+    i = 0
+    while i < asz:
+        if amask[i] != expected[i]:
+            return(0)
+        i += 1
     return(1)
