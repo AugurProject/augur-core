@@ -15,8 +15,8 @@ def init():
     self.votes = None
     self.event_bounds = None
     self.reputation = [2, 10, 4, 2, 7]
-    self.total_rep = 20
-    self.rep_coins = (self.reputation * COINS).astype(int)
+    self.total_rep = 24
+    self.rep_coins = self.reputation * COINS
 
 # Sum elements of array
 macro array_sum($a:$asz)
@@ -331,7 +331,7 @@ def consensus():
     # with the original 'old' reputation.
     set1 = scores + abs(min(scores))
     set2 = scores - max(scores)
-    old = multiply(transpose(self.rep_coins), votes_filled)
+    old = multiply(transpose(self.reputation), votes_filled)
     new1 = multiply(get_weight(set1), votes_filled)
     new2 = multiply(get_weight(set2), votes_filled)
 

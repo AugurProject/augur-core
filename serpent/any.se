@@ -1,5 +1,18 @@
 macro any($a:$asz):
-    pass
+    $i = 0
+    $result = 0
+    while $i < $asz:
+        if $a[$i] != 0:
+            $result = 1
+            break
+        $i += 1
+    $result
 
 def test_any():
-    return([1], 1)
+    a = [0, 0, 0, 0, 0]
+    asz = 5
+    b = [0, 1, 1, 0, 0]
+    bsz = 5
+    if not any(a:asz) and any(b:bsz):
+        return(1)
+    return(0)
