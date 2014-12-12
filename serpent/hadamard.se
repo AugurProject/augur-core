@@ -1,4 +1,4 @@
-macro multiply($aflat:$asz, $arows, $acols, $bflat:$bsz, $brows, $bcols):
+macro hadamard($aflat:$asz, $arows, $acols, $bflat:$bsz, $brows, $bcols):
     with a = array($arows):
         with i = 0:
             while i < $arows:
@@ -20,29 +20,27 @@ macro multiply($aflat:$asz, $arows, $acols, $bflat:$bsz, $brows, $bcols):
             with c = array($arows):
                 if $bcols > 1:
                     with i = 0:
-                        while i < $arows:
+                        while i < $bcols:
                             c[i] = array($bcols)
                             i += 1
                 with i = 0:
                     while i < $arows:
-                        with j = 0:
-                            while j < $bcols:
-                                with k = 0:
-                                    while k < $acols:
-                                        if $bcols == 1:
-                                            c[i] += a[i][k] * b[k]
-                                        else:
-                                            c[i][j] += a[i][k] * b[k][j]
-                                        k += 1
-                                j += 1
+                        if $bcols == 1 and $acols == 1:
+                            c[i] = a[i] * b[i]
+                        else:
+                            with j = 0:
+                                while j < $bcols:
+                                    c[i][j] += a[i][j] * b[i][j]
+                                    j += 1
                         i += 1
                 c
 
-def test_multiply():
+def test_hadamard():
     a = [[1, 4], [2, 5], [3, 6]]
     arows = 3
     acols = 2
-    aflat = array(arows * acols)
+    asz = arows * acols
+    aflat = array(asz)
     i = 0
     while i < arows:
         j = 0
@@ -50,10 +48,11 @@ def test_multiply():
             aflat[j + i*acols] = a[i][j]
             j += 1
         i += 1
-    b = [[1, 2, 3], [4, 5, 6]]
+    b = [[1, 2], [3, 4], [5, 6]]
     brows = 2
     bcols = 3
-    bflat = array(brows * bcols)
+    bsz = brows * bcols
+    bflat = array(bsz)
     i = 0
     while i < brows:
         j = 0
@@ -61,10 +60,10 @@ def test_multiply():
             bflat[j + i*bcols] = b[i][j]
             j += 1
         i += 1
-    expected = [[17, 22, 27], [22, 29, 36], [27, 36, 45]]
-    actual = multiply(aflat:(arows*acols), arows, acols, bflat:(brows*bcols), brows, bcols)
+    expected = [[1, 8], [6, 20], [15, 36]]
+    actual = hadamard(aflat:asz, arows, acols, bflat:bsz, brows, bcols)
     i = 0
-    while i < arows:
+    while i < acols:
         j = 0
         while j < bcols:
             if expected[i][j] != actual[i][j]:

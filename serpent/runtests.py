@@ -66,7 +66,10 @@ def test_contract(contract):
     print BB("Testing contract:"), BG(filename)
     c = s.contract(filename)
     result = s.send(tester.k0, c, 0, funid=0, abi=[])
-    assert(result == [1])
+    try:
+        assert(result == [1])
+    except:
+        print(result)
 
 def main():
     global s, c, FILENAME
@@ -85,7 +88,8 @@ def main():
                  "diag",
                  "isnan",
                  "mask",
-                 "any"]
+                 "any",
+                 "hadamard"]
     for contract in contracts:
         test_contract(contract)
 

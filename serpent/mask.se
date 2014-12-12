@@ -1,8 +1,13 @@
-macro mask($a:$asz, $hide):
-    $i = 0
-    while $i < $asz:
-        $i += 1
-    $amask
+macro mask($a:$asz, $target):
+    with amask = array($asz):
+        with i = 0:
+            while i < $asz:
+                if $a[i] == $target:
+                    amask[i] = 1
+                else:
+                    amask[i] = 0
+                i += 1
+            amask
 
 def test_mask():
     a = [5, 1, 1, 0, 2]
