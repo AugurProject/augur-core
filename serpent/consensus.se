@@ -9,11 +9,13 @@ COINS = 10^6
 
 data reputation[]
 data votes[]
-data event_bounds[](scaled, minimum, maximum)
+data num_events
+data num_voters
 
 def init():
-    self.votes = None
-    self.event_bounds = None
+    self.votes = [[1, 1, 0, 0], [1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0], [0, 0, 1, 1], [0, 0, 1, 1]]
+    self.num_events = 4
+    self.num_voters = 6
     self.reputation = [2, 10, 4, 2, 7]
     self.total_rep = 24
     self.rep_coins = self.reputation * COINS
@@ -342,13 +344,13 @@ def consensus(votes, num_voters, num_events):
     # depend on the global percentage of slacking.
     #
     # In case no Missing values, Mnew and votes will be the same.
-    v_size = num_voters * num_events
+    v_size = self.num_voters * self.num_events
     votes_flat = array(v_size)
     i = 0
     while i < num_voters:
         j = 0
         while j < num_events:
-            votes_flat[j + i*num_events] = a[i][j]
+            votes_flat[j + i*num_events] = self.votes[i][j]
             j += 1
         i += 1
     if any(mask(votes_flat)):
