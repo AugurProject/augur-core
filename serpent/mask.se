@@ -11,6 +11,12 @@ macro mask($a:$asz, $target):
 
 def test_mask():
     a = [5, 1, 1, 0, 2]
-    amask = mask(a:5, 0)
-
+    asz = 5
+    amask = mask(a:asz, 0)
+    expected = [0, 0, 0, 1, 0]
+    i = 0
+    while i < asz:
+        if amask[i] != expected[i]:
+            return(0)
+        i += 1
     return(1)
