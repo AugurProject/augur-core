@@ -1,4 +1,4 @@
-# Calculates the arithmetic mean.
+# Arithmetic mean of an array
 def mean(u:a):
     # [0]
     total = 0
@@ -10,22 +10,13 @@ def mean(u:a):
     return([total / size, total * 2^64 / size], 2)
 
 # Dot (inner) product of vectors.
-macro dot_product($a, $b, $len):
+macro dot($a, $b, $len):
     with i = 0:
-        with tot = 0:
+        with prod = 0:
             while i < $len:
-                tot += $a[i] * $b[i]
+                prod += $a[i] * $b[i]
                 i += 1
-            tot
-
-def dot(u:a, v:a):
-    # [1]
-    prod = 0
-    i = 0
-    while i < size:
-        prod += u[i] * v[i]
-        i += 1
-    return(prod)
+            prod
 
 # Sum elements of array
 macro array_sum($a:$asz)
