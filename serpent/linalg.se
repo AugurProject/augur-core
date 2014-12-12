@@ -37,42 +37,6 @@ macro array_sum($a:$asz)
         $i += 1
     $s
 
-# Proportional distances from zero
-macro get_weight($a:$asz):
-    $total = 0
-    $i = 0
-    while $i < $asz:
-        $total += $a[$i]
-        $i += 1
-    $wt = 0
-    if $total == 0:
-        $i = 0
-        while $i < $asz:
-            $wt[$i] += 1
-            $i += 1
-    $total = 0
-    $i = 0
-    while $i < $asz:
-        $total += $a[$i]
-        $i += 1
-    $i = 0
-    $b = array($asz)
-    while $i < $asz:
-        # only fractional part is needed
-        $b[$i] = $a[$i] * 2^64 / $total
-        $i += 1
-    $b
-
-# Bins values to 0, .5, and 1
-macro catch($x):
-    if $x < CATCH_LO:
-        $caught = 0
-    elif $x > CATCH_HI:
-        $caught = 1
-    else:
-        $caught = HALF
-    $caught
-
 # Calculates the outer product of vectors.
 macro outer_product($u:$usz, $v:$vsz):
     with p = array($usz):
