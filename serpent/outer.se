@@ -1,14 +1,14 @@
 macro outer_product($u:$usz, $v:$vsz):
-    $p = array($usz)
-    $i = 0
-    while $i < $usz:
-        $p[$i] = array($usz)
-        $j = 0
-        while $j < $usz:
-            $p[$i][$j] += $u[$i] * $v[$j]
-            $j += 1
-        $i += 1
-    $p
+    with p = array($usz):
+        with i = 0:
+            while i < $usz:
+                p[i] = array($usz)
+                with j = 0:
+                    while j < $usz:
+                        p[i][j] += $u[i] * $v[j]
+                        j += 1
+                i += 1
+            p
 
 def test_outer():
     u = [2, 5, 7]

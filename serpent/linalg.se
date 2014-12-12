@@ -75,112 +75,110 @@ macro catch($x):
 
 # Calculates the outer product of vectors.
 macro outer_product($u:$usz, $v:$vsz):
-    $p = array($usz)
-    $i = 0
-    while $i < $usz:
-        $p[$i] = array($usz)
-        $j = 0
-        while $j < $usz:
-            $p[$i][$j] += $u[$i] * $v[$j]
-            $j += 1
-        $i += 1
-    $p
+    with p = array($usz):
+        with i = 0:
+            while i < $usz:
+                p[i] = array($usz)
+                with j = 0:
+                    while j < $usz:
+                        p[i][j] += $u[i] * $v[j]
+                        j += 1
+                i += 1
+            p
 
 # Vector Kronecker product
 macro kron($a:$asz, $b:$bsz):
-    $prod = array($asz * $bsz)
-    $i = 0
-    while $i < $asz:
-        $j = 0
-        while $j < $bsz:
-            $prod[$j + $bsz*$i] = $a[$i] * $b[$j]
-            $j += 1
-        $i += 1
-    $prod
+    with prod = array($asz * $bsz):
+        with i = 0:
+            while i < $asz:
+                with j = 0:
+                    while j < $bsz:
+                        prod[j + $bsz*i] = $a[i] * $b[j]
+                        j += 1
+                i += 1
+        prod
 
 # Matrix multiplication, inputs are flattened (vectorized) matrices
 macro multiply($aflat:$asz, $arows, $acols, $bflat:$bsz, $brows, $bcols):
-    $a = array($arows)
-    $i = 0
-    while $i < $arows:
-        $a[$i] = array($acols)
-        $j = 0
-        while $j < $acols:
-            $a[$i][$j] = $aflat[$j + $i*$acols]
-            $j += 1
-        $i += 1
-    $b = array($brows)
-    $i = 0
-    while $i < $brows:
-        $b[$i] = array($bcols)
-        $j = 0
-        while $j < $bcols:
-            $b[$i][$j] = $bflat[$j + $i*$bcols]
-            $j += 1
-        $i += 1
-    $cn = $arows
-    $cm = $bcols
-    $c = array($cn)
-    if $bcols > 1:
-        $i = 0
-        while $i < $cn:
-            $c[$i] = array($cm)
-            $i += 1
-    $i = 0
-    while $i < $cn:
-        $j = 0
-        while $j < $cm:
-            $k = 0
-            while $k < $acols:
-                if $bcols == 1:
-                    $c[$i] += $a[$i][$k] * $b[$k]
-                else:
-                    $c[$i][$j] += $a[$i][$k] * $b[$k][$j]
-                $k += 1
-            $j += 1
-        $i += 1
-    $c
+    with a = array($arows):
+        with i = 0:
+            while i < $arows:
+                a[i] = array($acols)
+                with j = 0:
+                    while j < $acols:
+                        a[i][j] = $aflat[j + i*$acols]
+                        j += 1
+                i += 1
+        with b = array($brows):
+            with i = 0:
+                while i < $brows:
+                    b[i] = array($bcols)
+                    with j = 0:
+                        while j < $bcols:
+                            b[i][j] = $bflat[j + i*$bcols]
+                            j += 1
+                    i += 1
+        with c = array($arows):
+            if $bcols > 1:
+                with i = 0:
+                    while i < $arows:
+                        c[i] = array($bcols)
+                        i += 1
+            with i = 0:
+                while i < $arows:
+                    with j = 0:
+                        while j < $bcols:
+                            with k = 0:
+                                while k < $acols:
+                                    if $bcols == 1:
+                                        c[i] += a[i][k] * b[k]
+                                    else:
+                                        c[i][j] += a[i][k] * b[k][j]
+                                    k += 1
+                            j += 1
+                    i += 1
+                c
 
 # Swap the rows and columns of a matrix
 macro transpose($aflat:$asz, $arows, $acols):
-    $a = array($arows)
-    $i = 0
-    while $i < $arows:
-        $a[$i] = array($acols)
-        $j = 0
-        while $j < $acols:
-            $a[$i][$j] = $aflat[$j + $i*$acols]
-            $j += 1
-        $i += 1
-    $at = array($acols)
-    $i = 0
-    while $i < $asz:
-        $at[$i] = array($arows)
-        $i += 1
-    $i = 0
-    while $i < $acols:
-        $j = 0
-        while $j < $arows:
-            $at[$i][$j] = $a[$j][$i]
-            $j += 1
-        $i += 1
-    $at
+    with a = array($arows):
+        with i = 0:
+            while i < $arows:
+                a[i] = array($acols)
+                with j = 0:
+                    while j < $acols:
+                        a[i][j] = $aflat[j + i*$acols]
+                        j += 1
+                i += 1
+        with at = array($acols):
+            with i = 0:
+                while i < $asz:
+                    at[i] = array($arows)
+                    i += 1
+            with i = 0:
+                while i < $acols:
+                    with j = 0:
+                        while j < $arows:
+                            at[i][j] = a[j][i]
+                            j += 1
+                    i += 1
+            at
 
 # Convert vector to diagonal matrix
 macro diag($a:$asz):
-    $d = array($asz)
-    $i = 0
-    while $i < $asz:
-        $d[$i] = array($asz)
-        $j = 0
-        while $j < $asz:
-            if $i == $j:
-                $d[$i][$j] = $a[$i]
-            else:
-                $d[$i][$j] = 0
-            $j += 1
-        $i += 1
-    $d
+    with d = array($asz):
+        with i = 0:
+            while i < $asz:
+                d[i] = array($asz)
+                with j = 0:
+                    while j < $asz:
+                        if i == j:
+                            d[i][j] = $a[i]
+                        else:
+                            d[i][j] = 0
+                        j += 1
+                i += 1
+        d
 
 # TODO
 
@@ -188,4 +186,13 @@ macro diag($a:$asz):
 
 # macro mask($a:$asz):
 
-# macro any($a:$asz):
+macro any($a:$asz):
+    with result = 0:
+        with i = 0: 
+            while i < $asz:
+                if $a[i] != 0:
+                    result = 1
+                    break
+                i += 1
+            result
+

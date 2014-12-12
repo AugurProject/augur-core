@@ -1,13 +1,13 @@
 macro kron($a:$asz, $b:$bsz):
-    $prod = array($asz * $bsz)
-    $i = 0
-    while $i < $asz:
-        $j = 0
-        while $j < $bsz:
-            $prod[$j + $bsz*$i] = $a[$i] * $b[$j]
-            $j += 1
-        $i += 1
-    $prod
+    with prod = array($asz * $bsz):
+        with i = 0:
+            while i < $asz:
+                with j = 0:
+                    while j < $bsz:
+                        prod[j + $bsz*i] = $a[i] * $b[j]
+                        j += 1
+                i += 1
+        prod
 
 def test_kron():
     a = [1, 2]

@@ -1,26 +1,26 @@
 macro transpose($aflat:$asz, $arows, $acols):
-    $a = array($arows)
-    $i = 0
-    while $i < $arows:
-        $a[$i] = array($acols)
-        $j = 0
-        while $j < $acols:
-            $a[$i][$j] = $aflat[$j + $i*$acols]
-            $j += 1
-        $i += 1
-    $at = array($acols)
-    $i = 0
-    while $i < $asz:
-        $at[$i] = array($arows)
-        $i += 1
-    $i = 0
-    while $i < $acols:
-        $j = 0
-        while $j < $arows:
-            $at[$i][$j] = $a[$j][$i]
-            $j += 1
-        $i += 1
-    $at
+    with a = array($arows):
+        with i = 0:
+            while i < $arows:
+                a[i] = array($acols)
+                with j = 0:
+                    while j < $acols:
+                        a[i][j] = $aflat[j + i*$acols]
+                        j += 1
+                i += 1
+        with at = array($acols):
+            with i = 0:
+                while i < $asz:
+                    at[i] = array($arows)
+                    i += 1
+            with i = 0:
+                while i < $acols:
+                    with j = 0:
+                        while j < $arows:
+                            at[i][j] = a[j][i]
+                            j += 1
+                    i += 1
+            at
 
 def test_transpose():
     a = [[1, 4], [2, 5], [3, 6]]

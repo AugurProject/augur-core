@@ -2,4 +2,4 @@ macro isnan($a:$asz):
     pass
 
 def test_isnan():
-    return([1], 1)
+    return(1)
