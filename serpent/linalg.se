@@ -9,7 +9,15 @@ def mean(u:a):
         i += 1
     return([total / size, total * 2^64 / size], 2)
 
-# Calculates the dot (inner) product of vectors.
+# Dot (inner) product of vectors.
+macro dot_product($a, $b, $len):
+    with i = 0:
+        with tot = 0:
+            while i < $len:
+                tot += $a[i] * $b[i]
+                i += 1
+            tot
+
 def dot(u:a, v:a):
     # [1]
     prod = 0
@@ -18,15 +26,6 @@ def dot(u:a, v:a):
         prod += u[i] * v[i]
         i += 1
     return(prod)
-
-# Dot product of vectors
-macro dot_product($a, $b, $len):
-    with i = 0:
-        with tot = 0:
-            while i < $len:
-                tot += $a[i] * $b[i]
-                i += 1
-            tot
 
 # Sum elements of array
 macro array_sum($a:$asz)

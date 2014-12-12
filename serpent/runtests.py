@@ -49,27 +49,31 @@ def test_mean():
         actual_mean = result[0] + fracpart(result[1])
         assert(actual_mean - expected_mean[i] < tolerance)
 
-def test_dot():
-    funid = 1
-    print BB("  function:"), BG(funid), "dot"
-    num_signals = 7    # columns
-    num_samples = 5    # rows
-    data = (np.random.rand(num_samples, num_signals) * 10).astype(int)
-    for i in range(num_signals):
-        for j in range(num_signals):
-            expected_product = np.dot(data[:,i], data[:,j])
-            actual_product = s.send(tester.k0, c, 0, funid=funid, abi=(list(data[:,i]),))
-            assert(actual_product - expected_product < tolerance)
-
 def test_contract(contract):
-    filename = contract + ".se"
-    print BB("Testing contract:"), BG(filename)
-    c = s.contract(filename)
-    result = s.send(tester.k0, c, 0, funid=0, abi=[])
-    try:
-        assert(result == [1])
-    except:
-        print(result)
+    if contract == "dot":
+        filename = contract + ".se"
+        print BB("Testing contract:"), BG(filename)
+        c = s.contract(filename)
+        num_signals = 7    # columns
+        num_samples = 5    # rows
+        data = (np.random.rand(num_samples, num_signals) * 10).astype(int)
+        for i in range(num_signals):
+            for j in range(num_signals):
+                expected = np.dot(data[:,i], data[:,j])
+                actual = s.send(tester.k0, c, 0, funid=0, abi=(list(data[:,i]),))
+                try:
+                    assert(actual - expected < tolerance)
+                except:
+                    print(actual)
+    else:
+        filename = contract + ".se"
+        print BB("Testing contract:"), BG(filename)
+        c = s.contract(filename)
+        result = s.send(tester.k0, c, 0, funid=0, abi=[])
+        try:
+            assert(result == [1])
+        except:
+            print(result)
 
 def main():
     global s, c, FILENAME
@@ -80,8 +84,8 @@ def main():
     c = s.contract(FILENAME)
     print BB("Testing contract:"), BG(FILENAME)
     test_mean()
-    test_dot()
-    contracts = ["outer",
+    contracts = ["dot",
+                 "outer",
                  "transpose",
                  "multiply",
                  "kron",
