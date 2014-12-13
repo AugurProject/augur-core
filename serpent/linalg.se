@@ -1,13 +1,11 @@
 # Arithmetic mean of an array
-def mean(u:a):
-    # [0]
-    total = 0
-    i = 0
-    size = arglen(u)
-    while i < size:
-        total += u[i]
-        i += 1
-    return([total / size, total * 2^64 / size], 2)
+macro mean($a:$asz):
+    with total = 0:
+        with i = 0:
+            while i < $asz:
+                total += $a[i]
+                i += 1
+        total * 2^64 / i
 
 # Dot (inner) product of vectors.
 macro dot($a, $b, $len):

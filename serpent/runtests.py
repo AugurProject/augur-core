@@ -38,23 +38,15 @@ def blocky(*strings, **kwds):
 def fracpart(x):
     return float(x & (2**64 - 1)) / 2**64
 
-def test_mean():
-    print BB("  function:"), BG(0), "mean"
-    num_signals = 25      # columns
-    num_samples = 10      # rows
-    data = (np.random.rand(num_samples, num_signals) * 10).astype(int)
-    expected_mean = np.mean(data, 0)
-    for i in range(num_signals):
-        result = s.send(tester.k0, c, 0, funid=0, abi=(list(data[:,i]),))
-        actual_mean = result[0] + fracpart(result[1])
-        assert(actual_mean - expected_mean[i] < tolerance)
+def convert(x):
+    return + float(x / 2**64) + float(x & (2**64 - 1)) / 2**64
 
 def test_contract(contract):
+    filename = contract + ".se"
     if contract == "dot":
-        filename = contract + ".se"
         print BB("Testing contract:"), BG(filename)
         c = s.contract(filename)
-        num_signals = 7    # columns
+        num_signals = 10   # columns
         num_samples = 5    # rows
         data = (np.random.rand(num_samples, num_signals) * 10).astype(int)
         for i in range(num_signals):
@@ -65,8 +57,21 @@ def test_contract(contract):
                     assert(actual - expected < tolerance)
                 except:
                     print(actual)
+    elif contract == "mean":
+        print BB("Testing contract:"), BG(filename)
+        c = s.contract(filename)
+        num_signals = 10      # columns
+        num_samples = 5       # rows
+        data = (np.random.rand(num_samples, num_signals) * 10).astype(int)
+        expected = np.mean(data, 0)
+        for i in range(num_signals):
+            result = s.send(tester.k0, c, 0, funid=0, abi=(list(data[:,i]),))
+            actual = convert(result[0])
+            try:
+                assert(actual - expected[i] < tolerance)
+            except:
+                print(actual)
     else:
-        filename = contract + ".se"
         print BB("Testing contract:"), BG(filename)
         c = s.contract(filename)
         result = s.send(tester.k0, c, 0, funid=0, abi=[])
@@ -76,26 +81,25 @@ def test_contract(contract):
             print(result)
 
 def main():
-    global s, c, FILENAME
+    global s, FILENAME
     print BR("Forming new test genesis block")
     s = tester.state()
-    FILENAME = "tests.se"
-    print BR("Compiling " + FILENAME)
-    c = s.contract(FILENAME)
-    print BB("Testing contract:"), BG(FILENAME)
-    test_mean()
-    contracts = ["sum",
-                 # "outer",
-                 # "dot",
-                 # "transpose",
-                 # "multiply",
-                 # "kron",
-                 # "diag",
-                 # "isnan",
-                 # "mask",
-                 # "any",
-                 # "hadamard",
-                 "interpolate"]
+    contracts = [
+        "sum",
+        "mean",
+        "outer",
+        "dot",
+        "transpose",
+        "multiply",
+        "kron",
+        "diag",
+        "isnan",
+        "mask",
+        "any",
+        "hadamard",
+        "interpolate",
+        "normalize",
+    ]
     for contract in contracts:
         test_contract(contract)
 

@@ -27,6 +27,15 @@ macro mask($a:$asz, $target):
                 i += 1
             amask
 
+# Normalizes array so elements sum to 1, inputs are array and mask
+macro normalize($a:$asz, $m:$msz):
+    with anorm = array($asz):
+        with i = 0:
+            while i < $asz:
+                anorm[i] = $a[i]
+                i += 1
+        anorm
+
 macro interpolate($aflat:$asz, $arows, $acols):
     with outcomes_raw = array($acols):
         with i = 0:
