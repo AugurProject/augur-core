@@ -1,2 +1,2 @@
-serpent-core
-------------
+augur-serpent
+-------------
