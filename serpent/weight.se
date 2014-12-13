@@ -13,8 +13,7 @@ macro get_weight($a:$asz):
         with i = 0:
             with b = array($asz):
                 while i < $asz:
-                    # only fractional part is needed
-                    b[i] = $a[i] * 2^64 / total
+                    b[i] = $a[i] * 0x10000000000000000 / total
                 i += 1
             b
 

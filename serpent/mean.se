@@ -5,7 +5,7 @@ macro mean($a:$asz):
             while i < $asz:
                 total += $a[i]
                 i += 1
-        total * 2^64 / i
+        total * 0x10000000000000000 / i
 
 def test_mean(a:a):
     asz = arglen(a)

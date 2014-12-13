@@ -27,7 +27,7 @@ macro mean($a:$asz):
             while i < $asz:
                 total += $a[i]
                 i += 1
-        total * 2^64 / i
+        total * 0x10000000000000000 / i
 
 # Dot (inner) product of vectors.
 macro dot($a, $b, $len):
@@ -46,6 +46,22 @@ macro sum($a:$asz):
                 total += $a[i]
                 i += 1
         total
+
+# Normalize array (elements sum to 1)
+macro normalize($a:$asz):
+    with anorm = array($asz):
+        with total = 0:
+            with i = 0:
+                while i < $asz:
+                    if $a[i] != None:
+                        total += $a[i]
+                    i += 1
+            with i = 0:
+                while i < $asz:
+                    if $a[i] != None:
+                        anorm[i] = $a[i] * 0x10000000000000000 / total
+                    i += 1
+            anorm
 
 # Calculates the outer product of vectors.
 macro outer_product($u:$usz, $v:$vsz):
@@ -240,7 +256,7 @@ macro get_weight($a:$asz):
             with b = array($asz):
                 while i < $asz:
                     # only fractional part is needed
-                    b[i] = $a[i] * 2^64 / total
+                    b[i] = $a[i] * 0x10000000000000000 / total
                 i += 1
             b
 

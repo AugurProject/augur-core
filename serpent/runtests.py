@@ -38,8 +38,8 @@ def blocky(*strings, **kwds):
 def fracpart(x):
     return float(x & (2**64 - 1)) / 2**64
 
-def convert(x):
-    return + float(x / 2**64) + float(x & (2**64 - 1)) / 2**64
+def unfix(x):
+    return x / 0x10000000000000000
 
 def test_contract(contract):
     filename = contract + ".se"
@@ -66,7 +66,7 @@ def test_contract(contract):
         expected = np.mean(data, 0)
         for i in range(num_signals):
             result = s.send(tester.k0, c, 0, funid=0, abi=(list(data[:,i]),))
-            actual = convert(result[0])
+            actual = unfix(result[0])
             try:
                 assert(actual - expected[i] < tolerance)
             except:
@@ -78,7 +78,12 @@ def test_contract(contract):
         try:
             assert(result == [1])
         except:
-            print(result)
+            try:
+                assert(map(unfix, result) == [1])
+            except:
+                print "result:   ", result
+                print "base 16:  ", map(hex, result)
+                print "base 2^64:", map(unfix, result)
 
 def main():
     global s, FILENAME
