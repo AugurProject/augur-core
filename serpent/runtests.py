@@ -90,19 +90,19 @@ def main():
     print BR("Forming new test genesis block")
     s = tester.state()
     contracts = [
-        "sum",
-        "mean",
-        "normalize",
-        "dot",
-        "outer",
-        "multiply",
-        "kron",
-        "hadamard",
-        "transpose",
-        "diag",
-        "isnan",
-        "mask",
-        "any",
+        # "sum",
+        # "mean",
+        # "normalize",
+        # "dot",
+        # "outer",
+        # "multiply",
+        # "kron",
+        # "hadamard",
+        # "transpose",
+        # "diag",
+        # "isnan",
+        # "mask",
+        # "any",
         "interpolate",
     ]
     for contract in contracts:

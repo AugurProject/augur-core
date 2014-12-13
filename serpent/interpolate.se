@@ -16,6 +16,18 @@ macro any($a:$asz):
                 i += 1
             result
 
+# Missing entries marked with -1
+macro isnan($a:$asz):
+    with amask = array($asz):
+        with i = 0:
+            while i < $asz:
+                if $a[i] == -1:
+                    amask[i] = 1
+                else:
+                    amask[i] = 0
+                i += 1
+            amask
+
 macro mask($a:$asz, $target):
     with amask = array($asz):
         with i = 0:
@@ -43,22 +55,10 @@ macro normalize($a:$asz):
                     i += 1
             anorm
 
-macro isnan($a:$asz):
-    with amask = array($asz):
-        with i = 0:
-            while i < $asz:
-                if $a[i] == None:
-                    amask[i] = 1
-                else:
-                    amask[i] = 0
-                i += 1
-            amask
-
 macro interpolate($aflat:$asz, $arows, $acols):
-    with aintr = array($acols):
+    with afill = array($acols):
         with i = 0:
             while i < $acols:
-
                 # # The Reputation of the rows (players) who DID provide
                 # # judgements, rescaled to sum to 1.
                 # active_players_rep = self.reputation[-mask(votes[:,i])]
@@ -76,16 +76,16 @@ macro interpolate($aflat:$asz, $arows, $acols):
                 # active_events = votes[-mask(votes[:,i]), i]
 
                 # # Current best-guess for this Binary Event (weighted average)
-                # outcomes_raw[i] = multiply(active_events, active_players_rep)
+                # afill[i] = multiply(active_events, active_players_rep)
                 i += 1
 
-        # outcomes_raw = transpose(outcomes_raw)
+        # afill = transpose(afill)
         $aflat
 
 def test_interpolate():
     num_voters = 6
     num_events = 4
-    votes = [[1, 1, 0, 0], [1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0], [0, 0, 1, 1], [0, 0, 1, 1]]
+    votes = [[1, 1, 0, -1], [1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0], [-1, 0, 1, 1], [0, 0, 1, 1]]
     reputation = [2, 10, 4, 2, 7, 1]
     total_rep = sum(reputation:num_voters)
     v_size = num_voters * num_events
@@ -101,6 +101,6 @@ def test_interpolate():
     missing_entries = any(votes_mask:v_size)
     if missing_entries:
         votes_filled = interpolate(votes:v_size, num_voters, num_events)
-        return(votes_mask, num_events)
+        return(votes_mask, v_size)
     else:
         return(votes_flat, v_size)
