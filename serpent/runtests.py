@@ -92,18 +92,18 @@ def main():
     contracts = [
         "sum",
         "mean",
-        "outer",
+        "normalize",
         "dot",
-        "transpose",
+        "outer",
         "multiply",
         "kron",
+        "hadamard",
+        "transpose",
         "diag",
         "isnan",
         "mask",
         "any",
-        "hadamard",
         "interpolate",
-        "normalize",
     ]
     for contract in contracts:
         test_contract(contract)

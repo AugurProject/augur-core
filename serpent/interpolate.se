@@ -43,8 +43,19 @@ macro normalize($a:$asz):
                     i += 1
             anorm
 
+macro isnan($a:$asz):
+    with amask = array($asz):
+        with i = 0:
+            while i < $asz:
+                if $a[i] == None:
+                    amask[i] = 1
+                else:
+                    amask[i] = 0
+                i += 1
+            amask
+
 macro interpolate($aflat:$asz, $arows, $acols):
-    with outcomes_raw = array($acols):
+    with aintr = array($acols):
         with i = 0:
             while i < $acols:
 
@@ -86,7 +97,7 @@ def test_interpolate():
             votes_flat[j + i*num_events] = votes[i][j]
             j += 1
         i += 1
-    votes_mask = mask(votes_flat:v_size, 0)
+    votes_mask = isnan(votes_flat:v_size)
     missing_entries = any(votes_mask:v_size)
     if missing_entries:
         votes_filled = interpolate(votes:v_size, num_voters, num_events)
