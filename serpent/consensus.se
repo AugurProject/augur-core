@@ -16,7 +16,7 @@ def init():
     self.votes = [[1, 1, 0, 0], [1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0], [0, 0, 1, 1], [0, 0, 1, 1]]
     self.num_events = 4
     self.num_voters = 6
-    self.reputation = [2, 10, 4, 2, 7]
+    self.reputation = [2, 10, 4, 2, 7, 1]
     self.total_rep = 24
     self.rep_coins = self.reputation * COINS
 
@@ -30,13 +30,13 @@ macro dot($a, $b, $len):
             prod
 
 # Sum elements of array
-macro array_sum($a:$asz)
-    $s = 0
-    $i = 0
-    while $i < $asz:
-        $s += $a[$i]
-        $i += 1
-    $s
+macro sum($a:$asz):
+    with total = 0:
+        with i = 0:
+            while i < $asz:
+                total += $a[i]
+                i += 1
+        total
 
 # Calculates the outer product of vectors.
 macro outer_product($u:$usz, $v:$vsz):
@@ -339,11 +339,7 @@ def emwpca(data:a, weights:a):
 
 def consensus(votes, num_voters, num_events):
     # Use exisiting data and reputations to fill missing observations.
-    # Essentially a weighted average using all availiable non-NA data.
-    # How much should slackers who arent voting suffer? I decided this would
-    # depend on the global percentage of slacking.
-    #
-    # In case no Missing values, Mnew and votes will be the same.
+    # Weighted average using all non-missing data.
     v_size = self.num_voters * self.num_events
     votes_flat = array(v_size)
     i = 0

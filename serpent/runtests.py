@@ -84,16 +84,18 @@ def main():
     c = s.contract(FILENAME)
     print BB("Testing contract:"), BG(FILENAME)
     test_mean()
-    contracts = ["dot",
-                 "outer",
-                 "transpose",
-                 "multiply",
-                 "kron",
-                 "diag",
-                 "isnan",
-                 "mask",
-                 "any",
-                 "hadamard"]
+    contracts = ["sum",
+                 # "outer",
+                 # "dot",
+                 # "transpose",
+                 # "multiply",
+                 # "kron",
+                 # "diag",
+                 # "isnan",
+                 # "mask",
+                 # "any",
+                 # "hadamard",
+                 "interpolate"]
     for contract in contracts:
         test_contract(contract)
 

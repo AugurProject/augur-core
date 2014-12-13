@@ -1,0 +1,79 @@
+macro sum($a:$asz):
+    with total = 0:
+        with i = 0:
+            while i < $asz:
+                total += $a[i]
+                i += 1
+        total
+
+macro any($a:$asz):
+    with result = 0:
+        with i = 0: 
+            while i < $asz:
+                if $a[i] != 0:
+                    result = 1
+                    break
+                i += 1
+            result
+
+macro mask($a:$asz, $target):
+    with amask = array($asz):
+        with i = 0:
+            while i < $asz:
+                if $a[i] == $target:
+                    amask[i] = 1
+                else:
+                    amask[i] = 0
+                i += 1
+            amask
+
+macro interpolate($aflat:$asz, $arows, $acols):
+    with outcomes_raw = array($acols):
+        with i = 0:
+            while i < $acols:
+
+                # # The Reputation of the rows (players) who DID provide
+                # # judgements, rescaled to sum to 1.
+                # active_players_rep = self.reputation[-mask(votes[:,i])]
+
+                # # Set missing values to 0
+                # missing_values = isnan(active_players_rep)
+                # active_players_rep[missing_values] = 0
+
+                # # Normalize
+                # active_players_rep /= array_sum(active_players_rep)
+
+                # # The relevant Event with NAs removed.
+                # # ("What these players had to say about the Events
+                # # they DID judge?")
+                # active_events = votes[-mask(votes[:,i]), i]
+
+                # # Current best-guess for this Binary Event (weighted average)
+                # outcomes_raw[i] = multiply(active_events, active_players_rep)
+                i += 1
+
+        # outcomes_raw = transpose(outcomes_raw)
+        $aflat
+
+def test_interpolate():
+    num_voters = 6
+    num_events = 4
+    votes = [[1, 1, 0, 0], [1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0], [0, 0, 1, 1], [0, 0, 1, 1]]
+    reputation = [2, 10, 4, 2, 7, 1]
+    total_rep = sum(reputation:num_voters)
+    v_size = num_voters * num_events
+    votes_flat = array(v_size)
+    i = 0
+    while i < num_voters:
+        j = 0
+        while j < num_events:
+            votes_flat[j + i*num_events] = votes[i][j]
+            j += 1
+        i += 1
+    votes_mask = mask(votes_flat:v_size, 0)
+    missing_entries = any(votes_mask:v_size)
+    if missing_entries:
+        votes_filled = interpolate(votes:v_size, num_voters, num_events)
+        return(votes_mask, num_events)
+    else:
+        return(votes_flat, v_size)

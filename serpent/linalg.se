@@ -19,13 +19,13 @@ macro dot($a, $b, $len):
             prod
 
 # Sum elements of array
-macro array_sum($a:$asz)
-    $s = 0
-    $i = 0
-    while $i < $asz:
-        $s += $a[$i]
-        $i += 1
-    $s
+macro sum($a:$asz):
+    with total = 0:
+        with i = 0:
+            while i < $asz:
+                total += $a[i]
+                i += 1
+        total
 
 # Calculates the outer product of vectors.
 macro outer_product($u:$usz, $v:$vsz):
