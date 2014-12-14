@@ -279,10 +279,10 @@ def consensus():
 
     # use exisiting data and reputations to fill missing observations
     # (weighted average using all non-missing data)
-    votes_mask = array(num_rows)
+    votes_mask = array(num_voters)
     missing_values = 0
     with i = 0:
-        while i < num_rows:
+        while i < num_voters:
             votes_mask[i] = array(num_events)
             with j = 0:
                 while j < num_events:
@@ -354,13 +354,9 @@ def consensus():
         diag_outcomes = diag(outcomes_raw:num_events)
 
         to_fill = array(num_voters)
-        if num_events > 1:
-            with i = 0:
-                while i < num_voters:
-                    to_fill[i] = array(num_events)
-                    i += 1
         with i = 0:
             while i < num_voters:
+                to_fill[i] = array(num_events)
                 with j = 0:
                     while j < num_events:
                         with k = 0:
@@ -370,21 +366,12 @@ def consensus():
                                 else:
                                     to_fill[i][j] += votes_mask[i][k] * diag_outcomes[k][j]
                                 k += 1
+                        votes_filled[i][j] += catch(to_fill[i][j])
                         j += 1
                 i += 1
 
-
-        votes_filled_flat = array(v_size)
-        i = 0
-        while i < num_voters:
-            j = 0
-            while j < num_events:
-                votes_filled[i][j] += catch(to_fill[i][j])
-                # votes_filled_flat[j + i*num_events] = votes_filled[i][j]
-                j += 1
-            i += 1
-
     # weighted pca: project votes onto principal component to update rep
+    v_size = num_voters * num_events
     data = array(v_size)
     i = 0
     while i < num_voters:
@@ -396,11 +383,9 @@ def consensus():
 
     weights = fp_reputation
 
-    num_obs = v_size
-    num_params = num_voters
-    # num_obs = 6
-    # num_params = 3
-
+    num_obs = num_voters
+    num_params = num_events
+    
     weighted_means = array(num_params)
     total_weight = 0
     i = 0
@@ -428,15 +413,10 @@ def consensus():
     loading_vector[0] = 0x10000000000000000
 
     i = 0
-    # for j in xrange(ITERATIONS_CAP):
-    # while i < 25:
-    while i < 25:
-        # s = numpy.zeros(num_params)
+    while i < 15:
         s = array(num_params)
-        # for wcdatum, weight in zip(weighted_centered_data, weights):
         j = 0
         while j < num_obs:
-            # s -= wcdatum.dot(loadings[i]) * wcdatum * weight
             d_dot_lv = 0
             k = 0
             while k < num_params:
@@ -475,12 +455,12 @@ def consensus():
 
         i += 1
 
-    # scores = dot(loading_vector)
-
-    # return(votes_filled_flat, v_size)
+    # return(votes_filled[0], num_events)
     # return(fp_reputation, num_voters)
-    # return(loading_vector, num_events)
-    return([startgas, tx.gas, block.gaslimit], 3)
+    # return(votes_mask[0], num_events)
+    # return(data, v_size)
+    return(loading_vector, num_events)
+    # return([startgas, tx.gas], 2)
 
     # # Which of the two possible 'new' reputation vectors had more opinion in common
     # # with the original 'old' reputation.
