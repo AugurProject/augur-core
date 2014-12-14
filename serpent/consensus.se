@@ -1,11 +1,10 @@
-CATCH_TOLERANCE = 0.1
-CATCH_HI = 0.5 * (1 - CATCH_TOLERANCE)
-CATCH_LO = 0.5 * (1 + CATCH_TOLERANCE) 
-HALF = 0.5
-ALPHA = 0.1
+CATCH_TOLERANCE = 0x10000000000000000 * 0.1
+CATCH_HI = 0x10000000000000000 * 0.5 * (1 - CATCH_TOLERANCE)
+CATCH_LO = 0x10000000000000000 * 0.5 * (1 + CATCH_TOLERANCE) 
+HALF = 0x10000000000000000 * 0.5
+ALPHA = 0x10000000000000000 * 0.1
 MAX_ROW = 5000
-TOTAL_REP = 20
-COINS = 10^6
+COIN = 10^6
 
 data reputation[]
 data votes[]
@@ -18,7 +17,7 @@ def init():
     self.num_voters = 6
     self.reputation = [2, 10, 4, 2, 7, 1]
     self.total_rep = 24
-    self.rep_coins = self.reputation * COINS
+    self.rep_coins = self.reputation * COIN
 
 # Arithmetic mean of an array
 macro mean($a:$asz):
