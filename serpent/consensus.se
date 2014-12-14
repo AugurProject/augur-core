@@ -240,8 +240,8 @@ macro get_weight($a:$asz):
 
 # Bins values to 0, .5, and 1
 macro catch($x):
-    with catch_lo = 0x10000000000000000 / 2 * (0x10000000000000000 - 0x1999999999999999) / 0x10000000000000000:
-        with catch_hi = 0x10000000000000000 / 2 * (0x10000000000000000 + 0x1999999999999999) / 0x10000000000000000:
+    with catch_lo = (0x10000000000000000 - 0x1999999999999999) / 2:
+        with catch_hi = (0x10000000000000000 + 0x1999999999999999) / 2:
             if $x < catch_lo:
                 caught = 0x0
             elif $x > catch_hi:
@@ -468,13 +468,13 @@ def consensus():
         # return(votes_filled[0], num_events)
         # return(votes_filled_flat, v_size)
         # return(votes_mask, v_size)
-        # return(to_fill[0], num_events)
+        return(to_fill[0], num_events)
         # return(diag_outcomes_flat, events_squared)
 
     # Calculate new reputations using Sztorc consensus.
-    scores = self.emwpca(votes_filled_flat:v_size, fp_reputation:num_voters)
+    # scores = self.emwpca(votes_filled_flat:v_size, fp_reputation:num_voters)
 
-    return(scores, num_voters)
+    # return(scores, num_voters)
 
     # # Which of the two possible 'new' reputation vectors had more opinion in common
     # # with the original 'old' reputation.
