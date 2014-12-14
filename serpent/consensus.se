@@ -250,48 +250,23 @@ macro catch($x):
                 caught = 0x8000000000000000
             caught
 
-def consensus():
+def consensus(votes:a, reputation:a):
     startgas = tx.gas
-    num_voters = 6
-    num_events = 4
-    votes = [[10, 10, 0, -1], [10, 0, 0, 0], [10, 10, 0, 0], [10, 10, 10, 0], [-1, 0, 10, 10], [0, 0, 10, 10]]
-    reputation = [2, 10, 4, 2, 7, 1]
-
-    # fixed-point conversion
-    fp_votes = array(num_voters)
-    fp_reputation = array(num_voters)
-    i = 0
-    while i < num_voters:
-        fp_votes[i] = array(num_events)
-        fp_reputation[i] = reputation[i] * 0x10000000000000000
-        j = 0
-        while j < num_events:
-            if votes[i][j] == 10:
-                fp_votes[i][j] = 0x10000000000000000
-            elif votes[i][j] == 5: # 0.5
-                fp_votes[i][j] = 0x8000000000000000
-            elif votes[i][j] == 0:
-                fp_votes[i][j] = 0x0
-            else: # -1 (missing)
-                fp_votes[i][j] = -1
-            j += 1
-        i += 1
+    num_voters = arglen(reputation)
+    v_size = arglen(votes)
+    num_events = v_size / num_voters
 
     # use exisiting data and reputations to fill missing observations
     # (weighted average using all non-missing data)
-    votes_mask = array(num_voters)
+    votes_mask = array(v_size)
     missing_values = 0
     with i = 0:
-        while i < num_voters:
-            votes_mask[i] = array(num_events)
-            with j = 0:
-                while j < num_events:
-                    if votes[i][j] == -1:
-                        votes_mask[i][j] = 1
-                        missing_values = 1
-                    else:
-                        votes_mask[i][j] = 0
-                    j += 1
+        while i < v_size:
+            if votes[i] == -0x10000000000000000:
+                votes_mask[i] = 1
+                missing_values += 1
+            else:
+                votes_mask[i] = 0
             i += 1
 
     if missing_values:
@@ -304,7 +279,7 @@ def consensus():
             total_active_rep = 0
             i = 0
             while i < num_voters:
-                if votes[i][j] != -1:
+                if votes[i*num_events + j] != -1:
                     total_active_rep += reputation[i]
                 i += 1
 
@@ -312,8 +287,8 @@ def consensus():
             active_players_rep = array(num_voters)
             i = 0
             while i < num_voters:
-                if votes[i][j] != -1:
-                    active_players_rep[i] = fp_reputation[i] / total_active_rep
+                if votes[i*num_events + j] != -1:
+                    active_players_rep[i] = reputation[i] / total_active_rep
                 else:
                     # set missing values to 0
                     active_players_rep[i] = 0
@@ -323,8 +298,8 @@ def consensus():
             active_events = array(num_voters)
             i = 0
             while i < num_voters:
-                if votes[i][j] != -1:
-                    active_events[i] = fp_votes[i][j]
+                if votes[i*num_events + j] != -1:
+                    active_events[i] = votes[i*num_events + j]
                 else:
                     active_events[i] = 0
                 i += 1
@@ -344,10 +319,10 @@ def consensus():
             votes_filled[i] = array(num_events)
             j = 0
             while j < num_events:
-                if votes[i][j] == -1:
+                if votes[i*num_events + j] == -1:
                     votes_filled[i][j] = 0
                 else:
-                    votes_filled[i][j] = fp_votes[i][j]
+                    votes_filled[i][j] = votes[i*num_events + j]
                 j += 1
             i += 1
 
@@ -361,10 +336,7 @@ def consensus():
                     while j < num_events:
                         with k = 0:
                             while k < num_events:
-                                if num_events == 1:
-                                    to_fill[i] += votes_mask[i][k] * diag_outcomes[k]
-                                else:
-                                    to_fill[i][j] += votes_mask[i][k] * diag_outcomes[k][j]
+                                to_fill[i][j] += votes_mask[i*num_events + k] * diag_outcomes[k][j]
                                 k += 1
                         votes_filled[i][j] += catch(to_fill[i][j])
                         j += 1
@@ -381,63 +353,58 @@ def consensus():
             j += 1
         i += 1
 
-    weights = fp_reputation
-
-    num_obs = num_voters
-    num_params = num_events
-    
-    weighted_means = array(num_params)
+    weighted_means = array(num_events)
     total_weight = 0
     i = 0
-    while i < num_obs:
+    while i < num_voters:
         j = 0
-        while j < num_params:
-            weighted_means[j] += weights[i] * data[i * num_params + j]
+        while j < num_events:
+            weighted_means[j] += reputation[i] * data[i * num_events + j]
             j += 1
-        total_weight += weights[i]
+        total_weight += reputation[i]
         i += 1
 
     j = 0
-    while j < num_params:
+    while j < num_events:
         weighted_means[j] /= total_weight
         j += 1
 
     weighted_centered_data = array(v_size)
     i = 0
     while i < v_size:
-        weighted_centered_data[i] = data[i] - weighted_means[i % num_params]
+        weighted_centered_data[i] = data[i] - weighted_means[i % num_events]
         i += 1
 
     # initialize the loading vector
-    loading_vector = array(num_params)
+    loading_vector = array(num_events)
     loading_vector[0] = 0x10000000000000000
 
     i = 0
     while i < 15:
-        s = array(num_params)
+        s = array(num_events)
         j = 0
-        while j < num_obs:
+        while j < num_voters:
             d_dot_lv = 0
             k = 0
-            while k < num_params:
-                d_dot_lv += weighted_centered_data[j * num_params + k] * loading_vector[k]
+            while k < num_events:
+                d_dot_lv += weighted_centered_data[j * num_events + k] * loading_vector[k]
                 k += 1
             d_dot_lv /= 0x10000000000000000
             k = 0
-            while k < num_params:
-                s[k] -= d_dot_lv * weighted_centered_data[j * num_params + k] * weights[j]
+            while k < num_events:
+                s[k] -= d_dot_lv * weighted_centered_data[j * num_events + k] * reputation[j]
                 k += 1
             j += 1
         # loading_vector = normalize(s)
         # (first rejig s to account for double fixed multiplication in loop)
         j = 0
-        while j < num_params:
+        while j < num_events:
             s[j] /= 0x100000000000000000000000000000000
             j += 1
         # QQ
         s_dot_s = 0
         j = 0
-        while j < num_params:
+        while j < num_events:
             s_dot_s += s[j] * s[j]
             j += 1
         s_dot_s /= 0x10000000000000000
@@ -449,15 +416,16 @@ def consensus():
             j += 1
         # fuggin assign
         j = 0
-        while j < num_params:
+        while j < num_events:
             loading_vector[j] = s[j]*0x10000000000000000/norm_s
             j += 1
 
         i += 1
 
+    # return(votes, v_size)
     # return(votes_filled[0], num_events)
-    # return(fp_reputation, num_voters)
-    # return(votes_mask[0], num_events)
+    # return(reputation, num_voters)
+    # return(votes_mask, v_size)
     # return(data, v_size)
     return(loading_vector, num_events)
     # return([startgas, tx.gas], 2)

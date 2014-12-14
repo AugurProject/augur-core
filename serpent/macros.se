@@ -240,14 +240,15 @@ macro get_weight($a:$asz):
 
 # Bins values to 0, .5, and 1
 macro catch($x):
-    with caught = 0:
-        if $x < CATCH_LO:
-            caught = 0
-        elif $x > CATCH_HI:
-            caught = 1
-        else:
-            caught = HALF
-        caught
+    with catch_lo = (0x10000000000000000 - 0x1999999999999999) / 2:
+        with catch_hi = (0x10000000000000000 + 0x1999999999999999) / 2:
+            if $x < catch_lo:
+                caught = 0x0
+            elif $x > catch_hi:
+                caught = 0x10000000000000000
+            else:
+                caught = 0x8000000000000000
+            caught
 
 macro interpolate($votes_flat, $num_voters, $num_events, $reputation):
     votes = array($num_voters)
