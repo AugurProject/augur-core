@@ -141,25 +141,25 @@ macro multiply($aflat:$asz, $arows, $acols, $bflat:$bsz, $brows, $bcols):
                             b[i][j] = $bflat[j + i*$bcols]
                             j += 1
                     i += 1
-        with c = array($arows):
-            if $bcols > 1:
+            with c = array($arows):
+                if $bcols > 1:
+                    with i = 0:
+                        while i < $arows:
+                            c[i] = array($bcols)
+                            i += 1
                 with i = 0:
                     while i < $arows:
-                        c[i] = array($bcols)
+                        with j = 0:
+                            while j < $bcols:
+                                with k = 0:
+                                    while k < $acols:
+                                        if $bcols == 1:
+                                            c[i] += a[i][k] * b[k]
+                                        else:
+                                            c[i][j] += a[i][k] * b[k][j]
+                                        k += 1
+                                j += 1
                         i += 1
-            with i = 0:
-                while i < $arows:
-                    with j = 0:
-                        while j < $bcols:
-                            with k = 0:
-                                while k < $acols:
-                                    if $bcols == 1:
-                                        c[i] += a[i][k] * b[k]
-                                    else:
-                                        c[i][j] += a[i][k] * b[k][j]
-                                    k += 1
-                            j += 1
-                    i += 1
                 c
 
 # Swap the rows and columns of a matrix
@@ -295,8 +295,8 @@ macro get_weight($a:$asz):
 
 # Bins values to 0, .5, and 1
 macro catch($x):
-    with catch_lo = 0x10000000000000000 * 0x8000000000000000 * (0x10000000000000000 - 0x1999999999999999):
-        with catch_hi = 0x10000000000000000 * 0x8000000000000000 * (0x10000000000000000 + 0x1999999999999999):
+    with catch_lo = 0x10000000000000000 / 2 * (0x10000000000000000 - 0x1999999999999999) / 0x10000000000000000:
+        with catch_hi = 0x10000000000000000 / 2 * (0x10000000000000000 + 0x1999999999999999) / 0x10000000000000000:
             if $x < catch_lo:
                 caught = 0x0
             elif $x > catch_hi:
@@ -476,7 +476,7 @@ def consensus():
                 if votes[i][j] == -1:
                     votes_filled[i][j] = 0
                 else:
-                    votes_filled[i][j] = votes[i][j]
+                    votes_filled[i][j] = fp_votes[i][j]
                 j += 1
             i += 1
 
@@ -518,9 +518,10 @@ def consensus():
                 j += 1
             i += 1
 
-        # return(votes_mask[2] * diag_outcomes_flat[events_squared-1] + votes_mask[3] * diag_outcomes_flat[events_squared-1])
+        return(votes_filled[0], num_events)
+        # return(votes_filled_flat, v_size)
         # return(votes_mask, v_size)
-        return(to_fill[2], num_events)
+        # return(to_fill[0], num_events)
         # return(diag_outcomes_flat, events_squared)
 
     # Calculate new reputations using Sztorc consensus.
