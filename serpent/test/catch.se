@@ -1,0 +1,14 @@
+macro catch($x):
+    with catch_lo = 0x10000000000000000 / 2 * (0x10000000000000000 - 0x1999999999999999) / 0x10000000000000000:
+        with catch_hi = 0x10000000000000000 / 2 * (0x10000000000000000 + 0x1999999999999999) / 0x10000000000000000:
+            if $x < catch_lo:
+                caught = 0x0
+            elif $x > catch_hi:
+                caught = 0x10000000000000000
+            else:
+                caught = 0x8000000000000000
+            caught
+
+def test_catch():
+    result = catch(0x10000000000000000 * 9/10)
+    return(result)
