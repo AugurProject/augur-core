@@ -77,6 +77,17 @@ def test_contract(contract):
             assert((np.asarray(actual) - np.asarray(expected) < tolerance).all())
         except:
             print(actual)
+    elif contract == "../consensus":
+        result = s.send(tester.k0, c, 0, funid=1, abi=[])
+        try:
+            assert(result == [1])
+        except:
+            try:
+                assert(map(unfix, result) == [1])
+            except:
+                print "result:   ", result
+                print "base 16:  ", map(hex, result)
+                print "base 2^64:", map(unfix, result)
     else:
         result = s.send(tester.k0, c, 0, funid=0, abi=[])
         try:
@@ -93,21 +104,22 @@ def main():
     global s
     print BR("Forming new test genesis block")
     s = tester.state()
+    # tester.set_logging_level(2)
     contracts = [
-        "sum",
-        "mean",
-        "normalize",
-        "dot",
-        "outer",
-        "multiply",
-        "kron",
-        "hadamard",
-        "transpose",
-        "diag",
-        "isnan",
-        "mask",
-        "any",
-        "interpolate",
+        # "sum",
+        # "mean",
+        # "normalize",
+        # "dot",
+        # "outer",
+        # "multiply",
+        # "kron",
+        # "hadamard",
+        # "transpose",
+        # "diag",
+        # "isnan",
+        # "mask",
+        # "any",
+        # "interpolate",
         "../consensus",
     ]
     for contract in contracts:
