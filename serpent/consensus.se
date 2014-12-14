@@ -1,3 +1,6 @@
+extern fp:[new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
+FixedPoint = create('fixedpoint.se')
+
 CATCH_TOLERANCE = 0x10000000000000000 * 0.1
 CATCH_HI = 0x10000000000000000 * 0.5 * (1 - CATCH_TOLERANCE)
 CATCH_LO = 0x10000000000000000 * 0.5 * (1 + CATCH_TOLERANCE) 
@@ -7,12 +10,17 @@ MAX_ROW = 5000
 COIN = 10^6
 
 data reputation[]
-data votes[]
+data votes[][]
 data num_events
 data num_voters
 
 def init():
-    self.votes = [[1, 1, 0, 0], [1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0], [0, 0, 1, 1], [0, 0, 1, 1]]
+    self.votes[0] = [1, 1, 0, 0]
+    self.votes[1] = [1, 0, 0, 0]
+    self.votes[2] = [1, 1, 0, 0]
+    self.votes[3] = [1, 1, 1, 0]
+    self.votes[4] = [0, 0, 1, 1]
+    self.votes[5] = [0, 0, 1, 1]
     self.num_events = 4
     self.num_voters = 6
     self.reputation = [2, 10, 4, 2, 7, 1]
@@ -351,63 +359,7 @@ def emwpca(data:a, weights:a):
 
     return(loading_vector, num_params)
 
-macro interpolate($votes_flat, $num_voters, $num_events, $reputation):
-    votes = array($num_voters)
-    with i = 0:
-        while i < $num_voters:
-            votes[i] = array($num_events)
-            with j = 0:
-                while j < $num_events:
-                    votes[i][j] = $votes_flat[j + i*$num_events]
-                    j += 1
-            i += 1
-    event_outcomes_raw = array($num_events)
-    j = 0
-    while j < $num_events:
-        # reputation of the users who voted, rescaled to sum to 1
-        total_active_rep = 0
-        i = 0
-        while i < $num_voters:
-            if votes[i][j] != -1:
-                total_active_rep += $reputation[i]
-            i += 1
-
-        # normalize
-        active_players_rep = array($num_voters)
-        i = 0
-        while i < $num_voters:
-            if votes[i][j] != -1:
-                active_players_rep[i] = $reputation[i] * 0x10000000000000000 / total_active_rep
-            else:
-                # set missing values to 0
-                active_players_rep[i] = 0
-            i += 1
-
-        # # current event with missing entries removed
-        active_events = array($num_voters)
-        i = 0
-        while i < $num_voters:
-            if votes[i][j] != -1:
-                active_events[i] = votes[i][j]
-            else:
-                active_events[i] = 0
-            i += 1
-
-        # current best-guess for this event's outcome is a weighted sum
-        # (votes weighted by reputation)
-        i = 0
-        event_outcomes_raw[j] = 0
-        while i < $num_voters:
-            event_outcomes_raw[j] += active_players_rep[i] * active_events[i]
-            i += 1
-        
-        j += 1
-
-    event_outcomes_raw
-
 def consensus(votes, num_voters, num_events):
-    # Use exisiting data and reputations to fill missing observations.
-    # Weighted average using all non-missing data.
     v_size = self.num_voters * self.num_events
     votes_flat = array(v_size)
     i = 0
@@ -417,88 +369,133 @@ def consensus(votes, num_voters, num_events):
             votes_flat[j + i*num_events] = self.votes[i][j]
             j += 1
         i += 1
+
+    # Use exisiting data and reputations to fill missing observations.
+    # Weighted average using all non-missing data.
     if any(isnan(votes_flat:v_size):v_size):
-        outcomes_raw = interpolate(votes_flat, self.num_voters, self.num_events, self.reputation)
+        outcomes_raw = array(self.num_events)
+        j = 0
+        while j < self.num_events:
 
-        na_mat = mask(votes)  # Slice of the matrix which needs to be edited.
-        votes_filled[na_mat] = 0  # Erase the NA's
-        NAsToFill = multiply(na_mat, diag(outcomes_raw))
-        votes_filled += NAsToFill
-        i = 0
-        while i < num_voters:
-            j = 0
-            while j < num_events:
-                votes_filled[i][j] = catch(votes_filled[i][j])
-                j += 1
-            i += 1
+            # reputation of the users who voted, rescaled to sum to 1
+            total_active_rep = 0
+            i = 0
+            while i < $num_voters:
+                if self.votes[i][j] != -1:
+                    total_active_rep += $reputation[i]
+                i += 1
 
-    # Calculate new reputations using Sztorc consensus.
-    scores = self.emwpca(votes_filled:num_voters)
+            # normalize
+            active_players_rep = array(self.num_voters)
+            i = 0
+            while i < self.num_voters:
+                if self.votes[i][j] != -1:
+                    active_players_rep[i] = $reputation[i] * 0x10000000000000000 / total_active_rep
+                else:
+                    # set missing values to 0
+                    active_players_rep[i] = 0
+                i += 1
 
-    # Which of the two possible 'new' reputation vectors had more opinion in common
-    # with the original 'old' reputation.
-    set1 = scores + abs(min(scores))
-    set2 = scores - max(scores)
-    old = multiply(transpose(self.reputation), votes_filled)
-    new1 = multiply(get_weight(set1), votes_filled)
-    new2 = multiply(get_weight(set2), votes_filled)
+            # # current event with missing entries removed
+            active_events = array(self.num_voters)
+            i = 0
+            while i < self.num_voters:
+                if self.votes[i][j] != -1:
+                    active_events[i] = self.votes[i][j]
+                else:
+                    active_events[i] = 0
+                i += 1
 
-    # Difference in sum of squared errors. If > 0, then new1 had higher
-    # errors (use new2); conversely if < 0, then use new1.
-    ref_ind = sum((new1 - old)^2) - sum((new2 - old)^2)
-    if ref_ind <= 0:
-        adj_prin_comp = set1
-    if ref_ind > 0:
-        adj_prin_comp = set2
+            # current best-guess for this event's outcome is a weighted sum
+            # (votes weighted by reputation)
+            i = 0
+            outcomes_raw[j] = 0
+            while i < self.num_voters:
+                outcomes_raw[j] += active_players_rep[i] * active_events[i]
+                i += 1
+            
+            j += 1
+
+        na_mat = mask(self.votes)  # Slice of the matrix which needs to be edited.
+
+    return(outcomes_raw[0], self.num_events)
+    #     votes_filled[na_mat] = 0  # Erase the NA's
+    #     NAsToFill = multiply(na_mat, diag(outcomes_raw))
+    #     votes_filled += NAsToFill
+    #     i = 0
+    #     while i < num_voters:
+    #         j = 0
+    #         while j < num_events:
+    #             votes_filled[i][j] = catch(votes_filled[i][j])
+    #             j += 1
+    #         i += 1
+
+    # # Calculate new reputations using Sztorc consensus.
+    # scores = self.emwpca(votes_filled:num_voters, self.reputation:num_voters)
+
+    # # Which of the two possible 'new' reputation vectors had more opinion in common
+    # # with the original 'old' reputation.
+    # set1 = scores + abs(min(scores))
+    # set2 = scores - max(scores)
+    # old = multiply(transpose(self.reputation), votes_filled)
+    # new1 = multiply(get_weight(set1), votes_filled)
+    # new2 = multiply(get_weight(set2), votes_filled)
+
+    # # Difference in sum of squared errors. If > 0, then new1 had higher
+    # # errors (use new2); conversely if < 0, then use new1.
+    # ref_ind = sum((new1 - old)^2) - sum((new2 - old)^2)
+    # if ref_ind <= 0:
+    #     adj_prin_comp = set1
+    # if ref_ind > 0:
+    #     adj_prin_comp = set2
   
-    # Set this to uniform if you want a passive diffusion toward equality
-    # when people cooperate.  Instead diffuses towards previous reputation.
-    # (Smoothing does this anyway!)
-    #
-    # Note: reputation/mean(reputation) is a correction ensuring Reputation is
-    # additive. Therefore, nothing can be gained by splitting/combining
-    # Reputation into single/multiple accounts.
-    row_reward_weighted = self.reputation
-    if max(abs(adj_prin_comp)) != 0:
-        # Overwrite the inital declaration IFF there wasn't perfect consensus.
-        row_reward_weighted = get_weight(adj_prin_comp * transpose(self.reputation / self.mean(self.reputation)))
+    # # Set this to uniform if you want a passive diffusion toward equality
+    # # when people cooperate.  Instead diffuses towards previous reputation.
+    # # (Smoothing does this anyway!)
+    # #
+    # # Note: reputation/mean(reputation) is a correction ensuring Reputation is
+    # # additive. Therefore, nothing can be gained by splitting/combining
+    # # Reputation into single/multiple accounts.
+    # row_reward_weighted = self.reputation
+    # if max(abs(adj_prin_comp)) != 0:
+    #     # Overwrite the inital declaration IFF there wasn't perfect consensus.
+    #     row_reward_weighted = get_weight(adj_prin_comp * transpose(self.reputation / self.mean(self.reputation)))
 
-          
-    # Freshly-Calculated Reward (Reputation) - Exponential Smoothing
-    # New Reward: row_reward_weighted
-    # Old Reward: reputation
-    smooth_rep = ALPHA*row_reward_weighted + (1 - ALPHA)*transpose(self.reputation)
+    # # Freshly-Calculated Reward (Reputation) - Exponential Smoothing
+    # # New Reward: row_reward_weighted
+    # # Old Reward: reputation
+    # smooth_rep = ALPHA*row_reward_weighted + (1 - ALPHA)*transpose(self.reputation)
 
-    outcomes_raw = multiply(smooth_rep, votes_filled)
-    outcome_final = array(num_events)
-    i = 0
-    while i < num_events:
-        outcome_final[i] = catch(outcomes_raw[i])
-        i += 1
+    # outcomes_raw = multiply(smooth_rep, votes_filled)
+    # outcome_final = array(num_events)
+    # i = 0
+    # while i < num_events:
+    #     outcome_final[i] = catch(outcomes_raw[i])
+    #     i += 1
 
-    # .5 is obviously undesireable, this function travels from 0 to 1
-    # with a minimum at .5
-    certainty = abs(2 * (outcomes_raw - 0.5))
-    # Grading Authors on a curve.
-    consensus_reward = get_weight(certainty)
-    # How well did beliefs converge?
-    avg_certainty = self.mean(certainty)
+    # # .5 is obviously undesireable, this function travels from 0 to 1
+    # # with a minimum at .5
+    # certainty = abs(2 * (outcomes_raw - 0.5))
+    # # Grading Authors on a curve.
+    # consensus_reward = get_weight(certainty)
+    # # How well did beliefs converge?
+    # avg_certainty = self.mean(certainty)
 
-    # Participation: information about missing values
-    na_mat = self.votes * 0
-    na_mat_mask = mask(na_mat)
-    na_mat[na_mat_mask] = 1  # missing-value indicator matrix
-    # Participation within events (columns)
-    participation_columns = 1 - multiply(smooth_rep, na_mat)
-    # Participation within agents (Rows)
-    participation_rows = 1 - na_mat.sum(axis=1) / na_mat.shape[1]
-    # General participation
-    percent_na = 1 - mean(participation_columns)
+    # # Participation: information about missing values
+    # na_mat = self.votes * 0
+    # na_mat_mask = mask(na_mat)
+    # na_mat[na_mat_mask] = 1  # missing-value indicator matrix
+    # # Participation within events (columns)
+    # participation_columns = 1 - multiply(smooth_rep, na_mat)
+    # # Participation within agents (Rows)
+    # participation_rows = 1 - na_mat.sum(axis=1) / na_mat.shape[1]
+    # # General participation
+    # percent_na = 1 - mean(participation_columns)
 
-    # Combine information
-    na_bonus_rows = get_weight(participation_rows)
-    row_bonus = na_bonus_rows * percent_na + smooth_rep * (1 - percent_na)
-    na_bonus_columns = get_weight(participation_columns)
-    col_bonus = na_bonus_columns * percent_na + consensus_reward * (1 - percent_na)
+    # # Combine information
+    # na_bonus_rows = get_weight(participation_rows)
+    # row_bonus = na_bonus_rows * percent_na + smooth_rep * (1 - percent_na)
+    # na_bonus_columns = get_weight(participation_columns)
+    # col_bonus = na_bonus_columns * percent_na + consensus_reward * (1 - percent_na)
 
-    return(row_bonus, num_voters)
+    # return(row_bonus, num_voters)

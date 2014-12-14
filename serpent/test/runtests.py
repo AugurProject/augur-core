@@ -90,7 +90,7 @@ def test_contract(contract):
                 print "base 2^64:", map(unfix, result)
 
 def main():
-    global s, FILENAME
+    global s
     print BR("Forming new test genesis block")
     s = tester.state()
     contracts = [
@@ -108,6 +108,7 @@ def main():
         "mask",
         "any",
         "interpolate",
+        "../consensus",
     ]
     for contract in contracts:
         test_contract(contract)
