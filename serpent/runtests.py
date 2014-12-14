@@ -43,9 +43,9 @@ def unfix(x):
 
 def test_contract(contract):
     filename = contract + ".se"
+    print BB("Testing contract:"), BG(filename)
+    c = s.contract(filename)
     if contract == "dot":
-        print BB("Testing contract:"), BG(filename)
-        c = s.contract(filename)
         num_signals = 10   # columns
         num_samples = 5    # rows
         data = (np.random.rand(num_samples, num_signals) * 10).astype(int)
@@ -58,8 +58,6 @@ def test_contract(contract):
                 except:
                     print(actual)
     elif contract == "mean":
-        print BB("Testing contract:"), BG(filename)
-        c = s.contract(filename)
         num_signals = 10      # columns
         num_samples = 5       # rows
         data = (np.random.rand(num_samples, num_signals) * 10).astype(int)
@@ -71,9 +69,12 @@ def test_contract(contract):
                 assert(actual - expected[i] < tolerance)
             except:
                 print(actual)
+    elif contract == "interpolate":
+        num_rows = 6
+        for row in range(num_rows):
+            result = s.send(tester.k0, c, 0, funid=0, abi=[row])
+            print result
     else:
-        print BB("Testing contract:"), BG(filename)
-        c = s.contract(filename)
         result = s.send(tester.k0, c, 0, funid=0, abi=[])
         try:
             assert(result == [1])
@@ -90,19 +91,19 @@ def main():
     print BR("Forming new test genesis block")
     s = tester.state()
     contracts = [
-        # "sum",
-        # "mean",
-        # "normalize",
-        # "dot",
-        # "outer",
-        # "multiply",
-        # "kron",
-        # "hadamard",
-        # "transpose",
-        # "diag",
-        # "isnan",
-        # "mask",
-        # "any",
+        "sum",
+        "mean",
+        "normalize",
+        "dot",
+        "outer",
+        "multiply",
+        "kron",
+        "hadamard",
+        "transpose",
+        "diag",
+        "isnan",
+        "mask",
+        "any",
         "interpolate",
     ]
     for contract in contracts:
