@@ -6,7 +6,7 @@ try:
     from colorama import Fore, Style, init
 except ImportError:
     pass
-from pyethereum import tester
+from pyethereum import tester as t
 
 np.set_printoptions(linewidth=500)
 tolerance = 1e-12
@@ -52,7 +52,7 @@ def test_contract(contract):
         for i in range(num_signals):
             for j in range(num_signals):
                 expected = np.dot(data[:,i], data[:,j])
-                actual = s.send(tester.k0, c, 0, funid=0, abi=(list(data[:,i]),))
+                actual = s.send(t.k0, c, 0, funid=0, abi=(list(data[:,i]),))
                 try:
                     assert(actual - expected < tolerance)
                 except:
@@ -63,14 +63,14 @@ def test_contract(contract):
         data = (np.random.rand(num_samples, num_signals) * 10).astype(int)
         expected = np.mean(data, 0)
         for i in range(num_signals):
-            result = s.send(tester.k0, c, 0, funid=0, abi=(list(data[:,i]),))
+            result = s.send(t.k0, c, 0, funid=0, abi=(list(data[:,i]),))
             actual = unfix(result[0])
             try:
                 assert(actual - expected[i] < tolerance)
             except:
                 print(actual)
     elif contract == "interpolate":
-        result = s.send(tester.k0, c, 0, funid=0, abi=[])
+        result = s.send(t.k0, c, 0, funid=0, abi=[])
         actual = map(unfix, result)
         expected = [0.94736842105263164, 0.30769230769230776, 0.38461538461538469, 0.33333333333333337]
         try:
@@ -78,7 +78,7 @@ def test_contract(contract):
         except:
             print(actual)
     elif contract == "../consensus":
-        result = s.send(tester.k0, c, 0, funid=0, abi=[])
+        result = s.send(t.k0, c, 0, funid=0, abi=[])
         try:
             assert(result == [1])
         except:
@@ -89,7 +89,7 @@ def test_contract(contract):
                 print "base 16:  ", map(hex, result)
                 print "base 2^64:", map(unfix, result)
     else:
-        result = s.send(tester.k0, c, 0, funid=0, abi=[])
+        result = s.send(t.k0, c, 0, funid=0, abi=[])
         try:
             assert(result == [1])
         except:
@@ -103,8 +103,8 @@ def test_contract(contract):
 def main():
     global s
     print BR("Forming new test genesis block")
-    s = tester.state()
-    # tester.set_logging_level(2) # this doesn't work :(
+    s = t.state()
+    # t.set_logging_level(2)
     contracts = [
         # "sum",
         # "mean",

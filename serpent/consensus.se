@@ -251,6 +251,7 @@ macro catch($x):
             caught
 
 def consensus():
+    startgas = tx.gas
     num_voters = 6
     num_events = 4
     votes = [[10, 10, 0, -1], [10, 0, 0, 0], [10, 10, 0, 0], [10, 10, 10, 0], [-1, 0, 10, 10], [0, 0, 10, 10]]
@@ -276,21 +277,24 @@ def consensus():
             j += 1
         i += 1
 
-    # flatten votes matrix
-    v_size = num_voters * num_events
-    votes_flat = array(v_size)
-    i = 0
-    while i < num_voters:
-        j = 0
-        while j < num_events:
-            votes_flat[j + i*num_events] = fp_votes[i][j]
-            j += 1
-        i += 1
-
     # use exisiting data and reputations to fill missing observations
     # (weighted average using all non-missing data)
-    votes_mask = isnan(votes_flat:v_size)
-    if any(votes_mask:v_size):
+    votes_mask = array(num_rows)
+    missing_values = 0
+    with i = 0:
+        while i < num_rows:
+            votes_mask[i] = array(num_events)
+            with j = 0:
+                while j < num_events:
+                    if votes[i][j] == -1:
+                        votes_mask[i][j] = 1
+                        missing_values = 1
+                    else:
+                        votes_mask[i][j] = 0
+                    j += 1
+            i += 1
+
+    if missing_values:
         votes_filled = array(num_voters)
         outcomes_raw = array(num_events)
         j = 0
@@ -348,49 +352,54 @@ def consensus():
             i += 1
 
         diag_outcomes = diag(outcomes_raw:num_events)
-        events_squared = num_events^2
-        diag_outcomes_flat = array(events_squared)
-        i = 0
-        while i < num_events:
-            j = 0
-            while j < num_events:
-                diag_outcomes_flat[j + i*num_events] = diag_outcomes[i][j]
-                j += 1
-            i += 1
 
-        to_fill = multiply(votes_mask:v_size, num_voters, num_events, diag_outcomes_flat:events_squared, num_events, num_events)
+        to_fill = array(num_voters)
+        if num_events > 1:
+            with i = 0:
+                while i < num_voters:
+                    to_fill[i] = array(num_events)
+                    i += 1
+        with i = 0:
+            while i < num_voters:
+                with j = 0:
+                    while j < num_events:
+                        with k = 0:
+                            while k < num_events:
+                                if num_events == 1:
+                                    to_fill[i] += votes_mask[i][k] * diag_outcomes[k]
+                                else:
+                                    to_fill[i][j] += votes_mask[i][k] * diag_outcomes[k][j]
+                                k += 1
+                        j += 1
+                i += 1
 
-        i = 0
-        while i < num_voters:
-            j = 0
-            while j < num_events:
-                votes_filled[i][j] += to_fill[i][j]
-                j += 1
-            i += 1
-
-        i = 0
-        while i < num_voters:
-            j = 0
-            while j < num_events:
-                votes_filled[i][j] = catch(votes_filled[i][j])
-                j += 1
-            i += 1
 
         votes_filled_flat = array(v_size)
         i = 0
         while i < num_voters:
             j = 0
             while j < num_events:
-                votes_filled_flat[j + i*num_events] = votes_filled[i][j]
+                votes_filled[i][j] += catch(to_fill[i][j])
+                # votes_filled_flat[j + i*num_events] = votes_filled[i][j]
                 j += 1
             i += 1
 
     # weighted pca: project votes onto principal component to update rep
-    data = votes_filled_flat
+    data = array(v_size)
+    i = 0
+    while i < num_voters:
+        j = 0
+        while j < num_events:
+            data[j + i*num_events] = votes_filled[i][j]
+            j += 1
+        i += 1
+
     weights = fp_reputation
 
-    num_obs = 3
-    num_params = 2
+    num_obs = v_size
+    num_params = num_voters
+    # num_obs = 6
+    # num_params = 3
 
     weighted_means = array(num_params)
     total_weight = 0
@@ -408,9 +417,9 @@ def consensus():
         weighted_means[j] /= total_weight
         j += 1
 
-    weighted_centered_data = array(6)
+    weighted_centered_data = array(v_size)
     i = 0
-    while i < 6:
+    while i < v_size:
         weighted_centered_data[i] = data[i] - weighted_means[i % num_params]
         i += 1
 
@@ -420,6 +429,7 @@ def consensus():
 
     i = 0
     # for j in xrange(ITERATIONS_CAP):
+    # while i < 25:
     while i < 25:
         # s = numpy.zeros(num_params)
         s = array(num_params)
@@ -465,9 +475,12 @@ def consensus():
 
         i += 1
 
-    scores = loading_vector
+    # scores = dot(loading_vector)
 
-    return(scores, 2)
+    # return(votes_filled_flat, v_size)
+    # return(fp_reputation, num_voters)
+    # return(loading_vector, num_events)
+    return([startgas, tx.gas, block.gaslimit], 3)
 
     # # Which of the two possible 'new' reputation vectors had more opinion in common
     # # with the original 'old' reputation.
