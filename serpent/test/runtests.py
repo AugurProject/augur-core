@@ -70,10 +70,13 @@ def test_contract(contract):
             except:
                 print(actual)
     elif contract == "interpolate":
-        num_rows = 6
-        for row in range(num_rows):
-            result = s.send(tester.k0, c, 0, funid=0, abi=[row])
-            print result
+        result = s.send(tester.k0, c, 0, funid=0, abi=[])
+        actual = map(unfix, result)
+        expected = [0.94736842105263164, 0.30769230769230776, 0.38461538461538469, 0.33333333333333337]
+        try:
+            assert((np.asarray(actual) - np.asarray(expected) < tolerance).all())
+        except:
+            print(actual)
     else:
         result = s.send(tester.k0, c, 0, funid=0, abi=[])
         try:
@@ -87,7 +90,7 @@ def test_contract(contract):
                 print "base 2^64:", map(unfix, result)
 
 def main():
-    global s, FILENAME
+    global s
     print BR("Forming new test genesis block")
     s = tester.state()
     contracts = [
@@ -105,6 +108,7 @@ def main():
         "mask",
         "any",
         "interpolate",
+        "../consensus",
     ]
     for contract in contracts:
         test_contract(contract)
