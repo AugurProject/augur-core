@@ -115,6 +115,12 @@ def test_emwpca():
     data = numpy.random.rand(*shape)
     weights = numpy.random.rand(shape[0])
 
+    print data
+    print weights
+
+    print nparray2fixedlist(data.flatten())
+    print nparray2fixedlist(weights)
+
     print emwpca(data, weights, 1)[0]
     print fixedlist2nparray(s.send(t.k0, c, 0, funid=0, abi=[ nparray2fixedlist(data.flatten()), nparray2fixedlist(weights) ]))
 

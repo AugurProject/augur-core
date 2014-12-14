@@ -250,86 +250,6 @@ macro catch($x):
                 caught = 0x8000000000000000
             caught
 
-# Linear time deterministic PCA
-def emwpca(data:a, weights:a):
-    num_obs = arglen(weights)
-    num_params = arglen(data) / arglen(weights)
-
-    weighted_means = array(num_params)
-    total_weight = 0
-    i = 0
-    while i < num_obs:
-        j = 0
-        while j < num_params:
-            weighted_means[j] += weights[i] * data[i * num_params + j]
-            j += 1
-        total_weight += weights[i]
-        i += 1
-
-    j = 0
-    while j < num_params:
-        weighted_means[j] /= total_weight
-        j += 1
-
-    weighted_centered_data = array(arglen(data))
-    i = 0
-    while i < arglen(data):
-        weighted_centered_data[i] = data[i] - weighted_means[i % num_params]
-        i += 1
-
-    # initialize the loading vector
-    loading_vector = array(num_params)
-    loading_vector[0] = 0x10000000000000000
-
-    i = 0
-    # for j in xrange(ITERATIONS_CAP):
-    while i < 25:
-        # s = numpy.zeros(num_params)
-        s = array(num_params)
-        # for wcdatum, weight in zip(weighted_centered_data, weights):
-        j = 0
-        while j < num_obs:
-            # s -= wcdatum.dot(loadings[i]) * wcdatum * weight
-            d_dot_lv = 0
-            k = 0
-            while k < num_params:
-                d_dot_lv += weighted_centered_data[j * num_params + k] * loading_vector[k]
-                k += 1
-            d_dot_lv /= 0x10000000000000000
-            k = 0
-            while k < num_params:
-                s[k] -= d_dot_lv * weighted_centered_data[j * num_params + k] * weights[j]
-                k += 1
-            j += 1
-        # loading_vector = normalize(s)
-        # (first rejig s to account for double fixed multiplication in loop)
-        j = 0
-        while j < num_params:
-            s[j] /= 0x100000000000000000000000000000000
-            j += 1
-        # QQ
-        s_dot_s = 0
-        j = 0
-        while j < num_params:
-            s_dot_s += s[j] * s[j]
-            j += 1
-        s_dot_s /= 0x10000000000000000
-        # QQ!!!!
-        norm_s = s_dot_s / 2
-        j = 0
-        while j < 11:
-            norm_s = (norm_s + s_dot_s*0x10000000000000000/norm_s) / 2
-            j += 1
-        # fuggin assign
-        j = 0
-        while j < num_params:
-            loading_vector[j] = s[j]*0x10000000000000000/norm_s
-            j += 1
-
-        i += 1
-
-    return(loading_vector, num_params)
-
 def consensus():
     num_voters = 6
     num_events = 4
@@ -465,16 +385,89 @@ def consensus():
                 j += 1
             i += 1
 
-        # return(votes_filled[0], num_events)
-        # return(votes_filled_flat, v_size)
-        # return(votes_mask, v_size)
-        return(to_fill[0], num_events)
-        # return(diag_outcomes_flat, events_squared)
+    # weighted pca: project votes onto principal component to update rep
+    data = votes_filled_flat
+    weights = fp_reputation
 
-    # Calculate new reputations using Sztorc consensus.
-    # scores = self.emwpca(votes_filled_flat:v_size, fp_reputation:num_voters)
+    num_obs = 3
+    num_params = 2
 
-    # return(scores, num_voters)
+    weighted_means = array(num_params)
+    total_weight = 0
+    i = 0
+    while i < num_obs:
+        j = 0
+        while j < num_params:
+            weighted_means[j] += weights[i] * data[i * num_params + j]
+            j += 1
+        total_weight += weights[i]
+        i += 1
+
+    j = 0
+    while j < num_params:
+        weighted_means[j] /= total_weight
+        j += 1
+
+    weighted_centered_data = array(6)
+    i = 0
+    while i < 6:
+        weighted_centered_data[i] = data[i] - weighted_means[i % num_params]
+        i += 1
+
+    # initialize the loading vector
+    loading_vector = array(num_params)
+    loading_vector[0] = 0x10000000000000000
+
+    i = 0
+    # for j in xrange(ITERATIONS_CAP):
+    while i < 25:
+        # s = numpy.zeros(num_params)
+        s = array(num_params)
+        # for wcdatum, weight in zip(weighted_centered_data, weights):
+        j = 0
+        while j < num_obs:
+            # s -= wcdatum.dot(loadings[i]) * wcdatum * weight
+            d_dot_lv = 0
+            k = 0
+            while k < num_params:
+                d_dot_lv += weighted_centered_data[j * num_params + k] * loading_vector[k]
+                k += 1
+            d_dot_lv /= 0x10000000000000000
+            k = 0
+            while k < num_params:
+                s[k] -= d_dot_lv * weighted_centered_data[j * num_params + k] * weights[j]
+                k += 1
+            j += 1
+        # loading_vector = normalize(s)
+        # (first rejig s to account for double fixed multiplication in loop)
+        j = 0
+        while j < num_params:
+            s[j] /= 0x100000000000000000000000000000000
+            j += 1
+        # QQ
+        s_dot_s = 0
+        j = 0
+        while j < num_params:
+            s_dot_s += s[j] * s[j]
+            j += 1
+        s_dot_s /= 0x10000000000000000
+        # QQ!!!!
+        norm_s = s_dot_s / 2
+        j = 0
+        while j < 11:
+            norm_s = (norm_s + s_dot_s*0x10000000000000000/norm_s) / 2
+            j += 1
+        # fuggin assign
+        j = 0
+        while j < num_params:
+            loading_vector[j] = s[j]*0x10000000000000000/norm_s
+            j += 1
+
+        i += 1
+
+    scores = loading_vector
+
+    return(scores, 2)
 
     # # Which of the two possible 'new' reputation vectors had more opinion in common
     # # with the original 'old' reputation.
@@ -495,10 +488,6 @@ def consensus():
     # # Set this to uniform if you want a passive diffusion toward equality
     # # when people cooperate.  Instead diffuses towards previous reputation.
     # # (Smoothing does this anyway!)
-    # #
-    # # Note: reputation/mean(reputation) is a correction ensuring Reputation is
-    # # additive. Therefore, nothing can be gained by splitting/combining
-    # # Reputation into single/multiple accounts.
     # row_reward_weighted = self.reputation
     # if max(abs(adj_prin_comp)) != 0:
     #     # Overwrite the inital declaration IFF there wasn't perfect consensus.

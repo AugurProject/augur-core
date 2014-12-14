@@ -78,7 +78,7 @@ def test_contract(contract):
         except:
             print(actual)
     elif contract == "../consensus":
-        result = s.send(tester.k0, c, 0, funid=1, abi=[])
+        result = s.send(tester.k0, c, 0, funid=0, abi=[])
         try:
             assert(result == [1])
         except:
@@ -104,23 +104,23 @@ def main():
     global s
     print BR("Forming new test genesis block")
     s = tester.state()
-    # tester.set_logging_level(2)
+    # tester.set_logging_level(2) # this doesn't work :(
     contracts = [
-        "sum",
-        "mean",
-        "normalize",
-        "dot",
-        "outer",
-        "multiply",
-        "kron",
-        "hadamard",
-        "transpose",
-        "diag",
-        "isnan",
-        "mask",
-        "any",
-        "catch",
-        "interpolate",
+        # "sum",
+        # "mean",
+        # "normalize",
+        # "dot",
+        # "outer",
+        # "multiply",
+        # "kron",
+        # "hadamard",
+        # "transpose",
+        # "diag",
+        # "isnan",
+        # "mask",
+        # "any",
+        # "catch",
+        # "interpolate",
         "../consensus",
     ]
     for contract in contracts:
