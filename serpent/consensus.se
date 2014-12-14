@@ -393,9 +393,11 @@ def consensus():
 
     # fixed-point conversion
     fp_votes = array(num_voters)
+    fp_reputation = array(num_voters)
     i = 0
     while i < num_voters:
         fp_votes[i] = array(num_events)
+        fp_reputation[i] = reputation[i] * 0x10000000000000000
         j = 0
         while j < num_events:
             if votes[i][j] == 10:
@@ -442,7 +444,7 @@ def consensus():
             i = 0
             while i < num_voters:
                 if votes[i][j] != -1:
-                    active_players_rep[i] = reputation[i] * 0x10000000000000000 / total_active_rep
+                    active_players_rep[i] = fp_reputation[i] / total_active_rep
                 else:
                     # set missing values to 0
                     active_players_rep[i] = 0
@@ -518,14 +520,16 @@ def consensus():
                 j += 1
             i += 1
 
-        return(votes_filled[0], num_events)
+        # return(votes_filled[0], num_events)
         # return(votes_filled_flat, v_size)
         # return(votes_mask, v_size)
         # return(to_fill[0], num_events)
         # return(diag_outcomes_flat, events_squared)
 
     # Calculate new reputations using Sztorc consensus.
-    # scores = self.emwpca(votes_filled_flat:v_size, reputation:num_voters)
+    scores = self.emwpca(votes_filled_flat:v_size, fp_reputation:num_voters)
+
+    return(scores, num_voters)
 
     # # Which of the two possible 'new' reputation vectors had more opinion in common
     # # with the original 'old' reputation.
