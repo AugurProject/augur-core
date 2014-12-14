@@ -12,13 +12,11 @@ macro normalize($a:$asz):
         with total = 0:
             with i = 0:
                 while i < $asz:
-                    if $a[i] != None:
-                        total += $a[i]
+                    total += $a[i]
                     i += 1
             with i = 0:
                 while i < $asz:
-                    if $a[i] != None:
-                        anorm[i] = $a[i] * 0x10000000000000000 / total
+                    anorm[i] = $a[i] * 0x10000000000000000 / total
                     i += 1
             anorm
 

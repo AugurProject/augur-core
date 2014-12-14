@@ -55,32 +55,56 @@ macro normalize($a:$asz):
                     i += 1
             anorm
 
-macro interpolate($aflat:$asz, $arows, $acols):
-    with afill = array($acols):
-        with i = 0:
-            while i < $acols:
-                # # The Reputation of the rows (players) who DID provide
-                # # judgements, rescaled to sum to 1.
-                # active_players_rep = self.reputation[-mask(votes[:,i])]
+macro interpolate($aflat:$asz, $arows, $acols, $reputation):
+    votes = array($arows)
+    with i = 0:
+        while i < $arows:
+            votes[i] = array($acols)
+            with j = 0:
+                while j < $acols:
+                    votes[i][j] = $aflat[j + i*$acols]
+                    j += 1
+            i += 1
+    votes_filled = array($acols)
+    i = 0
+    while j < $acols:
+        # reputation of the users who voted, rescaled to sum to 1
+        active_players_rep = array($arows)
+        total_active_rep = 0
+        i = 0
+        while i < $arows:
+            if votes[i][j] != -1:
+                total_active_rep += $reputation[i]
+            i += 1
+        i = 0
+        # normalize
+        while i < $arows:
+            if votes[i][j] != -1:
+                active_players_rep[i] = $reputation[i] * 0x10000000000000000 / total_active_rep
+            else:
+                # set missing values to 0
+                active_players_rep[i] = 0
+            i += 1
+        j += 1
 
-                # # Set missing values to 0
-                # missing_values = isnan(active_players_rep)
-                # active_players_rep[missing_values] = 0
+        # # Set missing values to 0
+        # missing_values = isnan(active_players_rep)
+        # active_players_rep[missing_values] = 0
 
-                # # Normalize
-                # active_players_rep /= array_sum(active_players_rep)
+        # # Normalize
+        # active_players_rep /= array_sum(active_players_rep)
 
-                # # The relevant Event with NAs removed.
-                # # ("What these players had to say about the Events
-                # # they DID judge?")
-                # active_events = votes[-mask(votes[:,i]), i]
+        # # The relevant Event with NAs removed.
+        # # ("What these players had to say about the Events
+        # # they DID judge?")
+        # active_events = votes[-mask(votes[:,i]), i]
 
-                # # Current best-guess for this Binary Event (weighted average)
-                # afill[i] = multiply(active_events, active_players_rep)
-                i += 1
+        # # Current best-guess for this Binary Event (weighted average)
+        # votes_filled[i] = multiply(active_events, active_players_rep)
+        i += 1
 
-        # afill = transpose(afill)
-        $aflat
+    # votes_filled = transpose(votes_filled)
+    votes_filled
 
 def test_interpolate():
     num_voters = 6
@@ -100,7 +124,7 @@ def test_interpolate():
     votes_mask = isnan(votes_flat:v_size)
     missing_entries = any(votes_mask:v_size)
     if missing_entries:
-        votes_filled = interpolate(votes:v_size, num_voters, num_events)
+        votes_filled = interpolate(votes:v_size, num_voters, num_events, reputation)
         return(votes_mask, v_size)
     else:
         return(votes_flat, v_size)
