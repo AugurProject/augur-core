@@ -1,3 +1,24 @@
+# This software (Augur) allows buying and selling event options in ethereum
+# Copyright (C)  2014 Chris Calderon, Joey Krug, Alan Lu, Jack Peterson
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joeykrug@gmail.com
+
 # includes
 extern fp:[new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
 FixedPoint = create('fixedpoint.se')
@@ -127,6 +148,14 @@ def get_rep_balance(branch, address):
     return(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[address]].repValue)
     
 def send_rep_diffbranch(recver, value, oldBranch, newBranch):
+        # check branch is a subbranch
+        tempID = Branches[newBranch].parent
+        while tempID != oldBranch and tempID != 0 and Branches[tempID].periodLength != 0:
+            tempID = Branches[tempID].parent
+
+        if tempID != oldBranch:
+            return(0)
+
         # if no branch exists (defined as a nonzero period)
         if(!self.Branches[oldBranch].periodLength | !self.Branches[newBranch].periodLength | value<=0 | !self.send_cashcoin(oldBranch, 10)):
             return(0)
@@ -143,15 +172,13 @@ def send_rep_diffbranch(recver, value, oldBranch, newBranch):
                 return("Your reputation account was just created, earn some rep. before you can send to others")
 
         if(self.Reporting[newBranch].reputation[receiverIndex].reporterID!=recver):
-            return("Receiving address doesn't exist")
-
-        # check branch is a subbranch
-        tempID = Branches[newBranch].parent
-        while tempID != oldBranch and tempID != 0 and Branches[tempID].periodLength != 0:
-            tempID = Branches[tempID].parent
-
-        if tempID != oldBranch:
-            return(0)
+            self.Reporting[newBranch].numberReporters += 1
+            reporterIndex = self.Reporting[newBranch].numberReporters
+            self.Reporting[newBranch].repIDtoIndex[tx.origin] = reporterIndex
+            self.Reporting[newBranch].reputation[reporterIndex].repValue = 0
+            self.Reporting[newBranch].reputation[reporterIndex].reporterID = recver
+            return("Receiving address doesn't exist on sub branch, just made one on it")
+      
         else:
             sender_balance = self.Reporting[oldBranch].reputation[senderIndex].repValue
             if(sender_balance >= value):
@@ -205,7 +232,6 @@ def create_event(branch, description:s, expDate):
     else:
         return(0)
 
-    #should be greater than 0.01 bitcoin, using 10 whatevers to test
     if (!self.Info[eventID].creator and !self.Events[eventID].branch and self.send_cashcoin(branch, 42)):
         self.Info[eventID].typecode = EVENT
         self.Info[eventID].description[] = description
@@ -227,6 +253,7 @@ def create_event(branch, description:s, expDate):
         return(0)
 
 # lossLimit is a fixedpoint syntax number
+# give this function another once over
 def create_market(branch, description:s, lossLimit, tradingFee, events:a):
     # check that events have same exp. dates
     x = 0
@@ -283,6 +310,7 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
     else:
         return(0)
 
+# make this a macro
 def lmsr(shares:a, lossLimit):
     # *** LOGARITHMIC MARKET SCORING RULE ***
     #(like a regular market scoring rule, except it uses logarithms)
@@ -417,31 +445,38 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
 def queryShareCost():
     return(1)
 
-# Need to fix this stuff (functions below haven't been updated yet)
-#check if the eventID is in the current voting period pointed to by the branchID's currentVotePeriod 
-def in(branchID, eventID):
+#check if the eventID is in the currentvotingperiod - 1 pointed to by the branchID's currentVotePeriod 
+def inPeriod(branchID, eventID):
+    if(currentVotePeriod==0):
+        return(0)
+    actualVotePeriod = (self.Branches[branchID].currentVotePeriod - 1)
     i = 0
-    while i < self.Branches[branchID].EventsExpDates[self.Branches[branchID].
+    while i < self.Reporting[branchID].EventsExpDates[actualVotePeriod].numberEvents:
+        if(eventID==self.Reporting[branchID].eventsExpDates[actualVotePeriod].events[i]):
+            return(1)
+        i += 1
+    return(0)
 
 #make sure people can change their vote during the voting period
-def vote(branchID, report:a):
+# a no vote is 0, a yes vote is 2^64 and a can't determine vote is 2^63
+def vote(branch, report:a):
     # make sure the branch exists
     repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
-    if self.Branches[branchID].lastPeriodEnd == 0:
-        return(0)
-    if self.Branches[branchID].lastPeriodEnd + self.Branches[branchID].periodLength > block.number:
-        return(0)
-    if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin):
+    # if it hasn't been at least 1 period after last voting period they (events) haven't expired yet
+    # if it's greater than 2 periods then there can be no more voting for that 
+    if (self.Branches[branch].lastPeriodEnd == 0 | (self.Branches[branch].lastPeriodEnd + self.Branches[branch].periodLength) < block.number | self.Reporting[branch].reputation[repIndex].reporterID != tx.origin | (self.Branches[branch].lastPeriodEnd + 2*self.Branches[branch].periodLength) > block.number):
         return(0)
     reputation = self.Reporting[branch].reputation[repIndex].repValue
 
-    # first we scale the report by the reputation the voter has
     i = 0
     while i < arglen(report):
-        if report[i] > 1:
+        if report[i] > 2^64:
             return(0) # people should not have votes greater than 1! they need to be in (0, 1)
         else:
-            # CHECK IF IN CUR VOTING PERIOD
+            if(!inPeriod(branch, report[i])):
+                return(0)
+        i += 2
+
     # need to update stuff for quorem
     # and store the report and the rep value
     self.Reporting[branchID].eventsExpDates[self.Branches[branchID].currentVotePeriod].reporters[tx.origin] = report
@@ -479,8 +514,10 @@ def redeem():
     # distribute event fees in rbcr - ditto for any other excess fees in the branch
     # defined as branch's cashcoin balance ^
     
+    # update last period end
     
     # loop through reputation and check if in reporters, if so use their report, if not use the fillin / not reported report
+    # check what events the reporter reported on ... if not all reported fill those events in with No report
     # and get the repvalue from reputation
     # and tx fees
     if(check_quorum):
