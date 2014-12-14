@@ -218,3 +218,87 @@ macro hadamard($aflat:$asz, $arows, $acols, $bflat:$bsz, $brows, $bcols):
                                     j += 1
                         i += 1
                 c
+
+# Proportional distances from zero
+macro get_weight($a:$asz):
+    with total = 0:
+        with i = 0:
+            while i < $asz:
+                total += $a[i]
+                i += 1
+    with total = 0:
+        with i = 0:
+            while i < $asz:
+                total += $a[i]
+                i += 1
+        with i = 0:
+            with b = array($asz):
+                while i < $asz:
+                    b[i] = $a[i] * 0x10000000000000000 / total
+                i += 1
+            b
+
+# Bins values to 0, .5, and 1
+macro catch($x):
+    with caught = 0:
+        if $x < CATCH_LO:
+            caught = 0
+        elif $x > CATCH_HI:
+            caught = 1
+        else:
+            caught = HALF
+        caught
+
+macro interpolate($votes_flat, $num_voters, $num_events, $reputation):
+    votes = array($num_voters)
+    with i = 0:
+        while i < $num_voters:
+            votes[i] = array($num_events)
+            with j = 0:
+                while j < $num_events:
+                    votes[i][j] = $votes_flat[j + i*$num_events]
+                    j += 1
+            i += 1
+    event_outcomes_raw = array($num_events)
+    j = 0
+    while j < $num_events:
+        # reputation of the users who voted, rescaled to sum to 1
+        total_active_rep = 0
+        i = 0
+        while i < $num_voters:
+            if votes[i][j] != -1:
+                total_active_rep += $reputation[i]
+            i += 1
+
+        # normalize
+        active_players_rep = array($num_voters)
+        i = 0
+        while i < $num_voters:
+            if votes[i][j] != -1:
+                active_players_rep[i] = $reputation[i] * 0x10000000000000000 / total_active_rep
+            else:
+                # set missing values to 0
+                active_players_rep[i] = 0
+            i += 1
+
+        # # current event with missing entries removed
+        active_events = array($num_voters)
+        i = 0
+        while i < $num_voters:
+            if votes[i][j] != -1:
+                active_events[i] = votes[i][j]
+            else:
+                active_events[i] = 0
+            i += 1
+
+        # current best-guess for this event's outcome is a weighted sum
+        # (votes weighted by reputation)
+        i = 0
+        event_outcomes_raw[j] = 0
+        while i < $num_voters:
+            event_outcomes_raw[j] += active_players_rep[i] * active_events[i]
+            i += 1
+        
+        j += 1
+
+    event_outcomes_raw
