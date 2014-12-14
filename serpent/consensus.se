@@ -352,6 +352,60 @@ def emwpca(data:a, weights:a):
 
     return(loading_vector, num_params)
 
+macro interpolate($votes_flat, $num_voters, $num_events, $reputation):
+    votes = array($num_voters)
+    with i = 0:
+        while i < $num_voters:
+            votes[i] = array($num_events)
+            with j = 0:
+                while j < $num_events:
+                    votes[i][j] = $votes_flat[j + i*$num_events]
+                    j += 1
+            i += 1
+    event_outcomes_raw = array($num_events)
+    j = 0
+    while j < $num_events:
+        # reputation of the users who voted, rescaled to sum to 1
+        total_active_rep = 0
+        i = 0
+        while i < $num_voters:
+            if votes[i][j] != -1:
+                total_active_rep += $reputation[i]
+            i += 1
+
+        # normalize
+        active_players_rep = array($num_voters)
+        i = 0
+        while i < $num_voters:
+            if votes[i][j] != -1:
+                active_players_rep[i] = $reputation[i] * 0x10000000000000000 / total_active_rep
+            else:
+                # set missing values to 0
+                active_players_rep[i] = 0
+            i += 1
+
+        # # current event with missing entries removed
+        active_events = array($num_voters)
+        i = 0
+        while i < $num_voters:
+            if votes[i][j] != -1:
+                active_events[i] = votes[i][j]
+            else:
+                active_events[i] = 0
+            i += 1
+
+        # current best-guess for this event's outcome is a weighted sum
+        # (votes weighted by reputation)
+        i = 0
+        event_outcomes_raw[j] = 0
+        while i < $num_voters:
+            event_outcomes_raw[j] += active_players_rep[i] * active_events[i]
+            i += 1
+        
+        j += 1
+
+    event_outcomes_raw
+
 def consensus(votes, num_voters, num_events):
     # Use exisiting data and reputations to fill missing observations.
     # Weighted average using all non-missing data.
@@ -364,32 +418,9 @@ def consensus(votes, num_voters, num_events):
             votes_flat[j + i*num_events] = self.votes[i][j]
             j += 1
         i += 1
-    if any(mask(votes_flat)):
-        outcomes_raw = array(num_events)
-        i = 0
-        while i < num_events:
+    if any(isnan(votes_flat:v_size):v_size):
+        outcomes_raw = interpolate(votes_flat, self.num_voters, self.num_events, self.reputation)
 
-            # The Reputation of the rows (players) who DID provide
-            # judgements, rescaled to sum to 1.
-            active_players_rep = self.reputation[-mask(votes[:,i])]
-
-            # Set missing values to 0
-            missing_values = isnan(active_players_rep)
-            active_players_rep[missing_values] = 0
-
-            # Normalize
-            active_players_rep /= array_sum(active_players_rep)
-
-            # The relevant Event with NAs removed.
-            # ("What these players had to say about the Events
-            # they DID judge?")
-            active_events = votes[-mask(votes[:,i]), i]
-
-            # Current best-guess for this Binary Event (weighted average)
-            outcomes_raw[i] = multiply(active_events, active_players_rep)
-            i += 1
-
-        outcomes_raw = transpose(outcomes_raw)
         na_mat = mask(votes)  # Slice of the matrix which needs to be edited.
         votes_filled[na_mat] = 0  # Erase the NA's
         NAsToFill = multiply(na_mat, diag(outcomes_raw))
