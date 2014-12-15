@@ -474,15 +474,28 @@ def consensus(votes:a, reputation:a):
             k += 1
         i += 1
 
-    return([startgas, tx.gas], 2)
-
-    # # Difference in sum of squared errors. If > 0, then new1 had higher
-    # # errors (use new2); conversely if < 0, then use new1.
+    # Difference in sum of squared errors. If > 0, then new1 had higher
+    # errors (use new2); conversely if < 0, then use new1.
     # ref_ind = sum((new1 - old)^2) - sum((new2 - old)^2)
     # if ref_ind <= 0:
     #     adj_prin_comp = set1
     # if ref_ind > 0:
     #     adj_prin_comp = set2
+    sse1 = 0
+    sse2 = 0
+    i = 0
+    while i < num_events:
+        sse1 += (new1[i] - old[i])^2
+        sse2 += (new2[i] - old[i])^2
+        i += 1
+    ref_ind = sse1 - sse2
+    if ref_ind <= 0:
+        adj_prin_comp = set1
+    else:
+        adj_prin_comp = set2
+
+    # return(adj_prin_comp, num_voters)
+    return([startgas, tx.gas], 2)
   
     # # Set this to uniform if you want a passive diffusion toward equality
     # # when people cooperate.  Instead diffuses towards previous reputation.

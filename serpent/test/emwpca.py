@@ -139,52 +139,54 @@ def test_emwpca():
     print nparray2fixedlist(data.flatten())
     print nparray2fixedlist(weights)
 
-    loading = emwpca(data, weights, 1)[0]
     weighted_centered_data = data - np.average(data, axis=0, weights=weights)
-
     # print
     # print "WEIGHTED CENTERED DATA"
     # print weighted_centered_data
 
+    loading = emwpca(data, weights, 1)[0]
     # print
     # print "LOADINGS"
     # print loading
+
     print fixedlist2nparray(s.send(t.k0, c, 0, funid=0, abi=[ nparray2fixedlist(data.flatten()), nparray2fixedlist(weights) ]))
 
     scores = np.dot(weighted_centered_data, loading)
-
     # print
     # print "SCORES"
     # print scores
 
     set1 = scores + abs(min(scores))
     set2 = scores - max(scores)
-
-    print
-    print "set1:", set1
-    print "set2:", set2
+    # print
+    # print "set1:", set1
+    # print "set2:", set2
 
     old = np.dot(weights, data)
-
-    print
-    print "old: ", old
-
-    # wset1 = map(hex, map(long, get_weight(set1) * 0x10000000000000000))
-    # wset2 = map(hex, map(long, get_weight(set2) * 0x10000000000000000))
+    # print
+    # print "old: ", old
 
     wset1 = get_weight(set1)
     wset2 = get_weight(set2)
-
-    print
-    print "wset1:", wset1
-    print "wset2:", wset2
+    # wset1 = map(hex, map(long, wset1 * 0x10000000000000000))
+    # wset2 = map(hex, map(long, wset2 * 0x10000000000000000))
+    # print
+    # print "wset1:", wset1
+    # print "wset2:", wset2
 
     new1 = np.dot(wset1, data)
     new2 = np.dot(wset2, data)
+    # print
+    # print "new1:", new1
+    # print "new2:", new2
 
-    print
-    print "new1:", new1
-    print "new2:", new2
+    ref_ind = np.sum((new1 - old)**2) - np.sum((new2 - old)**2)
+    if ref_ind <= 0:
+        adj_prin_comp = set1
+    if ref_ind > 0:
+        adj_prin_comp = set2
+    # print
+    # print "adj_prin_comp:", adj_prin_comp
 
 if __name__ == '__main__':
     test_emwpca()
