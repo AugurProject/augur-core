@@ -1,6 +1,8 @@
 from pyethereum import tester as t
 import math, numpy
 
+numpy.set_printoptions(linewidth=500)
+
 contract_code = """
 def emwpca(data:a, weights:a):
     num_obs = arglen(weights)
@@ -112,8 +114,16 @@ def test_emwpca():
 
     numpy.random.seed(0)
     shape = (3, 2)
-    data = numpy.random.rand(*shape)
-    weights = numpy.random.rand(shape[0])
+    # data = numpy.random.rand(*shape)
+    # weights = numpy.random.rand(shape[0])
+
+    data = numpy.array([[10, 10,  0,  1],
+                        [10,  0,  0,  0],
+                        [10, 10,  0,  0],
+                        [10, 10, 10,  0],
+                        [ 1,  0, 10, 10],
+                        [ 0,  0, 10, 10]])
+    weights = numpy.array([2, 10, 4, 2, 7, 1])
 
     print data
     print weights
@@ -121,8 +131,16 @@ def test_emwpca():
     print nparray2fixedlist(data.flatten())
     print nparray2fixedlist(weights)
 
-    print emwpca(data, weights, 1)[0]
+    loading = emwpca(data, weights, 1)[0]
+
+    print
+    print "LOADINGS"
+    print loading
     print fixedlist2nparray(s.send(t.k0, c, 0, funid=0, abi=[ nparray2fixedlist(data.flatten()), nparray2fixedlist(weights) ]))
+    
+    print
+    print "SCORES"
+    print numpy.dot(data - numpy.average(data, axis=0, weights=weights), loading)
 
 if __name__ == '__main__':
     test_emwpca()

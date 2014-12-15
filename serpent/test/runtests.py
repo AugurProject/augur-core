@@ -81,11 +81,17 @@ def test_contract(contract):
         except:
             print(actual)
     elif contract == "../consensus":
-        votes = np.array([[10, 10, 0, -1],
+        # votes = np.array([[10, 10, 0, -1],
+        #                   [10, 0, 0, 0],
+        #                   [10, 10, 0, 0],
+        #                   [10, 10, 10, 0],
+        #                   [-1, 0, 10, 10],
+        #                   [0, 0, 10, 10]])
+        votes = np.array([[10, 10, 0, 1],
                           [10, 0, 0, 0],
                           [10, 10, 0, 0],
                           [10, 10, 10, 0],
-                          [-1, 0, 10, 10],
+                          [1, 0, 10, 10],
                           [0, 0, 10, 10]])
         reputation = [2, 10, 4, 2, 7, 1]
         result = s.send(t.k0, c, 0, funid=0, abi=[map(fix, votes.flatten()), map(fix, reputation)])

@@ -1,3 +1,6 @@
+# extern pca: [emwpca]
+# PCA = create("emwpca.se")
+
 # Arithmetic mean of an array
 macro mean($a:$asz):
     with total = 0:
@@ -338,9 +341,10 @@ def consensus(votes:a, reputation:a):
                 j += 1
             i += 1
 
-    # weighted pca: project votes onto principal component to update rep
-    v_size = num_voters * num_events
+    else:
+        votes_filled = votes
 
+    # weighted pca: project votes onto principal component
     weighted_means = array(num_events)
     total_weight = 0
     i = 0
@@ -369,7 +373,7 @@ def consensus(votes:a, reputation:a):
 
     i = 0
     # careful, setting this to 25 causes tx gas to run out!
-    while i < 10:
+    while i < 15:
         s = array(num_events)
         j = 0
         while j < num_voters:
@@ -415,11 +419,22 @@ def consensus(votes:a, reputation:a):
     # return(votes_filled, v_size)
     # return(reputation, num_voters)
     # return(votes_mask, v_size)
-    return(loading_vector, num_events)
     # return([startgas, tx.gas], 2)
+    # return(loading_vector, num_events)
 
-    # # Which of the two possible 'new' reputation vectors had more opinion in common
-    # # with the original 'old' reputation.
+    scores = array(num_voters)
+    i = 0
+    while i < num_voters:
+        k = 0
+        while k < num_events:
+            scores[i] += weighted_centered_data[i*num_events + k] / 0x10000000000000000 * loading_vector[k]
+            k += 1
+        i += 1
+
+    return(scores, num_voters)
+
+    # Which of the two possible 'new' reputation vectors had more opinion in common
+    # with the original 'old' reputation.
     # set1 = scores + abs(min(scores))
     # set2 = scores - max(scores)
     # old = multiply(transpose(self.reputation), votes_filled)
