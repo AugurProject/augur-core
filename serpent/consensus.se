@@ -579,11 +579,18 @@ def consensus(votes:a, reputation:a):
         i += 1
     participation = 0x10000000000000000 - total / num_events
 
-    # # Combine information
-    # na_bonus_rows = get_weight(participation_voters)
-    # row_bonus = na_bonus_rows * participation + smooth_rep * (1 - participation)
-    # na_bonus_columns = get_weight(participation_events)
-    # col_bonus = na_bonus_columns * participation + consensus_reward * (1 - participation)
+    # Bringing it all together!
+    na_bonus_voters = get_weight(participation_voters:num_voters)
+    na_bonus_events = get_weight(participation_events:num_events)
+    voter_bonus = array(num_voters)
+    i = 0
+    while i < num_voters:
+        voter_bonus[i] = (na_bonus_voters[i]*participation + smooth_rep[i]*(0x10000000000000000 - participation)) / 0x10000000000000000
+        i += 1
+    event_bonus = array(num_events)
+    i = 0
+    while i < num_events:
+        event_bonus[i] = (na_bonus_events[i]*participation + consensus_reward[i]*(0x10000000000000000 - participation)) / 0x10000000000000000
+        i += 1
 
-    # return(row_bonus, num_voters)
-    return([startgas, tx.gas], 2)
+    return(voter_bonus, num_voters)
