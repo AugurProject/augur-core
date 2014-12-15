@@ -526,14 +526,18 @@ def consensus(votes:a, reputation:a):
         smooth_rep[i] = row_reward_weighted[i]/5 + rep_weights[i]*4/5
         i += 1
 
-    return([startgas, tx.gas], 2)
+    outcomes_raw = array(num_events)
+    outcomes_final = array(num_events)
+    i = 0
+    while i < num_events:
+        k = 0
+        while k < num_voters:
+            outcomes_raw[i] += smooth_rep[k] * votes_filled[k*num_events + i] / 0x10000000000000000 / 10
+            k += 1
+        outcomes_final[i] = catch(outcomes_raw[i])
+        i += 1
 
-    # outcomes_raw = multiply(smooth_rep, votes_filled)
-    # outcome_final = array(num_events)
-    # i = 0
-    # while i < num_events:
-    #     outcome_final[i] = catch(outcomes_raw[i])
-    #     i += 1
+    return([startgas, tx.gas], 2)
 
     # # .5 is obviously undesireable, this function travels from 0 to 1
     # # with a minimum at .5
