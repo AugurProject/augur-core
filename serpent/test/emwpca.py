@@ -201,10 +201,19 @@ def test_emwpca():
     # print "smooth_rep:", smooth_rep
 
     event_outcomes_raw = np.dot(smooth_rep, data).squeeze() / 10
-    # print "event_outcomes_raw:", event_outcomes_raw
+    print "event_outcomes_raw:", event_outcomes_raw
 
     event_outcomes_final = np.array(map(catch, event_outcomes_raw))
     # print "event_outcomes_final:", event_outcomes_final
+
+    certainty = abs(2*event_outcomes_raw - 1)
+    print "certainty:", certainty
+
+    consensus_reward = get_weight(certainty)
+    print "consensus_reward:", consensus_reward
+
+    avg_certainty = np.mean(certainty)
+    print "avg_certainty:", avg_certainty
 
 if __name__ == '__main__':
     test_emwpca()

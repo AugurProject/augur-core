@@ -1,8 +1,16 @@
+# Absolute value
+macro abs($x):
+    with absval = $x:
+        if $x < 0:
+            absval = -$x
+        absval
+
 # Proportional distance from zero, inputs are fixed point
 macro get_weight($a:$asz):
     with total = 0:
         with i = 0:
             while i < $asz:
+                $a[i] = abs($a[i])
                 total += $a[i]
                 i += 1
         with wt = array($asz):

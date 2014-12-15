@@ -227,6 +227,7 @@ macro get_weight($a:$asz):
     with total = 0:
         with i = 0:
             while i < $asz:
+                $a[i] = abs($a[i])
                 total += $a[i]
                 i += 1
         with wt = array($asz):
@@ -501,8 +502,8 @@ def consensus(votes:a, reputation:a):
     # Set this to uniform if you want a passive diffusion toward equality
     # when people cooperate.  Instead diffuses towards previous reputation.
     rep_weights = get_weight(reputation:num_voters)
-    i = 0
     row_reward_weighted = array(num_voters)
+    i = 0
     while i < num_voters:
         row_reward_weighted[i] = rep_weights[i]
         i += 1
@@ -537,15 +538,19 @@ def consensus(votes:a, reputation:a):
         outcomes_final[i] = catch(outcomes_raw[i])
         i += 1
 
-    return([startgas, tx.gas], 2)
-
-    # # .5 is obviously undesireable, this function travels from 0 to 1
-    # # with a minimum at .5
+    # Smoothing function travels from 0 to 1 with a minimum at .5
     # certainty = abs(2 * (outcomes_raw - 0.5))
-    # # Grading Authors on a curve.
     # consensus_reward = get_weight(certainty)
-    # # How well did beliefs converge?
     # avg_certainty = self.mean(certainty)
+    certainty = array(num_events)
+    i = 0
+    while i < num_events:
+        certainty[i] = 2*outcomes_raw[i] - 0x10000000000000000
+        i += 1
+    consensus_reward = get_weight(certainty:num_events)
+    avg_certainty = mean(certainty:num_events)
+
+    return([startgas, tx.gas], 2)
 
     # # Participation: information about missing values
     # na_mat = self.votes * 0
