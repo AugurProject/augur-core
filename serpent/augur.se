@@ -346,14 +346,15 @@ def buy_shares(branch, event, market, outcome, amount, fee):
         return(0)
 
     # for the first trade's oldcost shares bought will be at 0
-    oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
+    # only 2 outcomes poss. for now
+    oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[]:2, self.Markets[market].lossLimit)
     # if buying outcome 1
     if outcome:
         self.Markets[market].events[i].sharesPurchased[1] += amount
     # outcome is no
     else:
         self.Markets[market].events[i].sharesPurchased[0] += amount
-    newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit) 
+    newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[]:2, self.Markets[market].lossLimit) 
     pricePerShare = newCost - oldCost
     participantNumber = self.Markets[market].currentParticipant
     
@@ -409,14 +410,14 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
         return(0)
 
     # for the first trade oldcost shares bought will be at 0
-    oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
+    oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[]:2, self.Markets[market].lossLimit)
     # send unspent shares from the user to the event
     if outcome:
         self.Markets[market].events[i].sharesPurchased[1] -= amount
     # outcome is no
     else:
         self.Markets[market].events[i].sharesPurchased[0] -= amount
-    newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
+    newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[]:2, self.Markets[market].lossLimit)
     priceToPayPerShare = oldCost - newCost
     # remove shares from the user's account
     if outcome:
