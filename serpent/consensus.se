@@ -1,14 +1,14 @@
 # extern pca: [emwpca]
 # PCA = create("emwpca.se")
 
-# Arithmetic mean of an array
+# Arithmetic mean of an array, takes fixed-point inputs
 macro mean($a:$asz):
     with total = 0:
         with i = 0:
             while i < $asz:
                 total += $a[i]
                 i += 1
-        total * 0x10000000000000000 / i
+        total / $asz
 
 # Dot (inner) product of vectors.
 macro dot($a, $b, $len):
@@ -255,6 +255,15 @@ macro abs($x):
             absval = -$x
         absval
 
+# Absolute value of all array elements
+macro array_abs($a:$asz):
+    with absval = array($asz):
+        with i = 0:
+            while i < $asz:
+                absval[i] = abs($a[i])
+                i += 1
+        absval
+
 # Minimum value of array
 macro minimum($a:$asz):
     with minval = $a[0]:
@@ -476,11 +485,6 @@ def consensus(votes:a, reputation:a):
 
     # Difference in sum of squared errors. If > 0, then new1 had higher
     # errors (use new2); conversely if < 0, then use new1.
-    # ref_ind = sum((new1 - old)^2) - sum((new2 - old)^2)
-    # if ref_ind <= 0:
-    #     adj_prin_comp = set1
-    # if ref_ind > 0:
-    #     adj_prin_comp = set2
     sse1 = 0
     sse2 = 0
     i = 0
@@ -493,17 +497,21 @@ def consensus(votes:a, reputation:a):
         adj_prin_comp = set1
     else:
         adj_prin_comp = set2
-
-    # return(adj_prin_comp, num_voters)
-    return([startgas, tx.gas], 2)
   
-    # # Set this to uniform if you want a passive diffusion toward equality
-    # # when people cooperate.  Instead diffuses towards previous reputation.
-    # # (Smoothing does this anyway!)
-    # row_reward_weighted = self.reputation
-    # if max(abs(adj_prin_comp)) != 0:
-    #     # Overwrite the inital declaration IFF there wasn't perfect consensus.
-    #     row_reward_weighted = get_weight(adj_prin_comp * transpose(self.reputation / self.mean(self.reputation)))
+    # Set this to uniform if you want a passive diffusion toward equality
+    # when people cooperate.  Instead diffuses towards previous reputation.
+    row_reward_weighted = get_weight(reputation:num_voters)
+    mean_weight = mean(row_reward_weighted:num_voters)
+
+    # Overwrite the inital declaration IFF there wasn't perfect consensus.
+    if maximum(array_abs(adj_prin_comp:num_voters):num_voters) != 0:
+        i = 0
+        while i < num_voters:
+            row_reward_weighted[i] = adj_prin_comp[i] * row_reward_weighted[i] / mean_weight
+            i += 1
+        row_reward_weighted = get_weight(row_reward_weighted:num_voters)
+
+    return([startgas, tx.gas], 2)
 
     # # Freshly-Calculated Reward (Reputation) - Exponential Smoothing
     # # New Reward: row_reward_weighted

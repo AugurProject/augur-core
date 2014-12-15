@@ -1,3 +1,4 @@
+from __future__ import division
 from pyethereum import tester as t
 import math
 import numpy as np
@@ -186,7 +187,13 @@ def test_emwpca():
     if ref_ind > 0:
         adj_prin_comp = set2
     # print
-    # print "adj_prin_comp:", adj_prin_comp
+    print "adj_prin_comp:", adj_prin_comp
+
+    row_reward_weighted = get_weight(weights)
+    if max(abs(adj_prin_comp)) != 0:
+        row_reward_weighted = get_weight(adj_prin_comp * (weights / np.mean(weights)).T)
+    print
+    print "row_reward_weighted:", row_reward_weighted
 
 if __name__ == '__main__':
     test_emwpca()

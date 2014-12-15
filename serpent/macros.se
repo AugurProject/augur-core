@@ -5,7 +5,7 @@ macro mean($a:$asz):
             while i < $asz:
                 total += $a[i]
                 i += 1
-        total * 0x10000000000000000 / i
+        total * 0x10000000000000000 / $asz
 
 # Dot (inner) product of vectors.
 macro dot($a, $b, $len):
