@@ -1,6 +1,6 @@
 # 192.64 fixed point
 
-type fixed: [one] # I think you actually don't want that - V
+type fixed: []
 
 one = 2^64
 
@@ -117,15 +117,15 @@ def pow(b, e):
     result = self.exp(e*self.log(b)/0x10000000000000000)
     return([result, start_gas - tx.gas], 2)
 
-macro sqrt(fixed($n)):
-    guess = fixed($n/2)
+macro sqrt(fixed($x)):
+    guess = fixed($x/2)
     i = 0
     while i < 11:
-        guess = (guess + $n/guess)/2
+        guess = (guess + $x/guess)/2
         i += 1
     guess
 
-def sqrtf(n):
+def sqrtf(x):
     start_gas = tx.gas
-    res = sqrt(n)
+    res = sqrt(x)
     return([res, start_gas - tx.gas], 2)
