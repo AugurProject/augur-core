@@ -1,6 +1,3 @@
-# extern pca: [emwpca]
-# PCA = create("emwpca.se")
-
 # Arithmetic mean of an array, takes fixed-point inputs
 macro mean($a:$asz):
     with total = 0:
@@ -457,8 +454,6 @@ def consensus(votes:a, reputation:a):
 
     # Which of the two possible 'new' reputation vectors had more opinion in common
     # with the original 'old' reputation.
-    # new1 = multiply(get_weight(set1), votes_filled)
-    # new2 = multiply(get_weight(set2), votes_filled)
     set1 = array(num_voters)
     set2 = array(num_voters)
     i = 0
