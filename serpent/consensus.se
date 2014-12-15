@@ -539,9 +539,6 @@ def consensus(votes:a, reputation:a):
         i += 1
 
     # Smoothing function travels from 0 to 1 with a minimum at .5
-    # certainty = abs(2 * (outcomes_raw - 0.5))
-    # consensus_reward = get_weight(certainty)
-    # avg_certainty = self.mean(certainty)
     certainty = array(num_events)
     i = 0
     while i < num_events:
@@ -550,23 +547,43 @@ def consensus(votes:a, reputation:a):
     consensus_reward = get_weight(certainty:num_events)
     avg_certainty = mean(certainty:num_events)
 
-    return([startgas, tx.gas], 2)
-
-    # # Participation: information about missing values
-    # na_mat = self.votes * 0
-    # na_mat_mask = mask(na_mat)
-    # na_mat[na_mat_mask] = 1  # missing-value indicator matrix
-    # # Participation within events (columns)
-    # participation_columns = 1 - multiply(smooth_rep, na_mat)
-    # # Participation within agents (Rows)
-    # participation_rows = 1 - na_mat.sum(axis=1) / na_mat.shape[1]
-    # # General participation
-    # percent_na = 1 - mean(participation_columns)
+    # Event participation (within columns): proportion of reputation
+    # that answered each event
+    participation_events = array(num_events)
+    i = 0
+    while i < num_events:
+        k = 0
+        while k < num_voters:
+            participation_events[i] += smooth_rep[k] * votes_mask[k*num_events + i]
+            k += 1
+        participation_events[i] = 0x10000000000000000 - participation_events[i]
+        i += 1
+    
+    # Voter participation (within rows): all events treated equally
+    participation_voters = array(num_voters)
+    i = 0
+    while i < num_voters:
+        total = 0
+        j = 0
+        while j < num_events:
+            total += votes_mask[i*num_events + j]
+            j += 1
+        participation_voters[i] = 0x10000000000000000 - total * 0x10000000000000000 / num_events
+        i += 1
+    
+    # General participation
+    total = 0
+    i = 0
+    while i < num_events:
+        total += participation_events[i]
+        i += 1
+    participation = 0x10000000000000000 - total / num_events
 
     # # Combine information
-    # na_bonus_rows = get_weight(participation_rows)
-    # row_bonus = na_bonus_rows * percent_na + smooth_rep * (1 - percent_na)
-    # na_bonus_columns = get_weight(participation_columns)
-    # col_bonus = na_bonus_columns * percent_na + consensus_reward * (1 - percent_na)
+    # na_bonus_rows = get_weight(participation_voters)
+    # row_bonus = na_bonus_rows * participation + smooth_rep * (1 - participation)
+    # na_bonus_columns = get_weight(participation_events)
+    # col_bonus = na_bonus_columns * participation + consensus_reward * (1 - participation)
 
     # return(row_bonus, num_voters)
+    return([startgas, tx.gas], 2)

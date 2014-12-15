@@ -201,19 +201,44 @@ def test_emwpca():
     # print "smooth_rep:", smooth_rep
 
     event_outcomes_raw = np.dot(smooth_rep, data).squeeze() / 10
-    print "event_outcomes_raw:", event_outcomes_raw
+    # print "event_outcomes_raw:", event_outcomes_raw
 
     event_outcomes_final = np.array(map(catch, event_outcomes_raw))
     # print "event_outcomes_final:", event_outcomes_final
 
     certainty = abs(2*event_outcomes_raw - 1)
-    print "certainty:", certainty
+    # print "certainty:", certainty
 
     consensus_reward = get_weight(certainty)
-    print "consensus_reward:", consensus_reward
+    # print "consensus_reward:", consensus_reward
 
     avg_certainty = np.mean(certainty)
-    print "avg_certainty:", avg_certainty
+    # print "avg_certainty:", avg_certainty
+
+    data = data.astype(float)
+    data[0,3] = np.nan
+    data[4,0] = np.nan
+    data_mask = np.ma.masked_array(data, np.isnan(data))
+    na_mat = data_mask * 0
+    na_mat[na_mat.mask] = 1  # indicator matrix for missing
+    print "na_mat:"
+    print na_mat
+
+    # Participation Within Events (Columns)
+    # % of reputation that answered each Event
+    participation_columns = 1 - np.dot(smooth_rep, na_mat)
+    print np.dot(smooth_rep, na_mat)
+    print "participation_columns:", participation_columns
+
+    # Participation Within Agents (Rows)
+    # Many options
+    # 1- Democracy Option - all Events treated equally.
+    participation_rows = 1 - na_mat.sum(axis=1) / na_mat.shape[1]
+    print "participation_rows:", participation_rows
+
+    # General Participation
+    percent_na = 1 - np.mean(participation_columns)
+    print "percent_na:", percent_na
 
 if __name__ == '__main__':
     test_emwpca()
