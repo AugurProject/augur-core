@@ -136,6 +136,7 @@ def main():
         # "mask",
         # "any",
         # "catch",
+        # "get_weight",
         # "interpolate",
         "../consensus",
     ]

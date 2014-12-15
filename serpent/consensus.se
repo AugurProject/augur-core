@@ -222,24 +222,19 @@ macro hadamard($aflat:$asz, $arows, $acols, $bflat:$bsz, $brows, $bcols):
                         i += 1
                 c
 
-# Proportional distances from zero
+# Proportional distance from zero, inputs are fixed point
 macro get_weight($a:$asz):
     with total = 0:
         with i = 0:
             while i < $asz:
                 total += $a[i]
                 i += 1
-    with total = 0:
-        with i = 0:
-            while i < $asz:
-                total += $a[i]
-                i += 1
-        with i = 0:
-            with b = array($asz):
+        with wt = array($asz):
+            with i = 0:
                 while i < $asz:
-                    b[i] = $a[i] * 0x10000000000000000 / total
-                i += 1
-            b
+                    wt[i] = $a[i] * 0x10000000000000000 / total
+                    i += 1
+            wt
 
 # Bins values to 0, .5, and 1
 macro catch($x):
@@ -286,8 +281,8 @@ def consensus(votes:a, reputation:a):
     v_size = arglen(votes)
     num_events = v_size / num_voters
 
-    # use exisiting data and reputations to fill missing observations
-    # (weighted average using all non-missing data)
+    # use existing data and reputations to fill missing observations
+    # (weighted average over all non-missing data)
     votes_mask = array(v_size)
     missing_values = 0
     with i = 0:
@@ -300,7 +295,6 @@ def consensus(votes:a, reputation:a):
             i += 1
 
     if missing_values:
-        # votes_filled = array(num_voters)
         votes_filled = array(v_size)
         outcomes_raw = array(num_events)
         j = 0
@@ -442,12 +436,6 @@ def consensus(votes:a, reputation:a):
 
         i += 1
 
-    # return(votes, v_size)
-    # return(votes_filled, v_size)
-    # return(reputation, num_voters)
-    # return(votes_mask, v_size)    
-    # return(loading_vector, num_events)
-
     scores = array(num_voters)
     i = 0
     while i < num_voters:
@@ -457,23 +445,33 @@ def consensus(votes:a, reputation:a):
             k += 1
         i += 1
 
-    # return(scores, num_voters)
-    # return(weighted_centered_data, v_size)
-
     # Which of the two possible 'new' reputation vectors had more opinion in common
     # with the original 'old' reputation.
-    # set1 = scores + abs(min(scores))
-    # set2 = scores - max(scores)
-    # old = multiply(transpose(self.reputation), votes_filled)
     # new1 = multiply(get_weight(set1), votes_filled)
     # new2 = multiply(get_weight(set2), votes_filled)
-
     set1 = array(num_voters)
     set2 = array(num_voters)
     i = 0
     while i < num_voters:
         set1[i] = scores[i] + abs(minimum(scores:num_voters))
         set2[i] = scores[i] - maximum(scores:num_voters)
+        i += 1
+
+    wset1 = get_weight(set1:num_voters)
+    wset2 = get_weight(set2:num_voters)
+
+    old = array(num_events)
+    new1 = array(num_events)
+    new2 = array(num_events)
+    i = 0
+    while i < num_events:
+        k = 0
+        while k < num_voters:
+            pos = k*num_events + i
+            old[i] += reputation[k] * votes_filled[pos] / 0x10000000000000000
+            new1[i] += wset1[k] * votes_filled[pos] / 0x10000000000000000
+            new2[i] += wset2[k] * votes_filled[pos] / 0x10000000000000000
+            k += 1
         i += 1
 
     return([startgas, tx.gas], 2)
