@@ -427,11 +427,12 @@ def consensus(votes:a, reputation:a):
     while i < num_voters:
         k = 0
         while k < num_events:
-            scores[i] += weighted_centered_data[i*num_events + k] / 0x10000000000000000 * loading_vector[k]
+            scores[i] += weighted_centered_data[i*num_events + k] * loading_vector[k] / 0x10000000000000000
             k += 1
         i += 1
 
     return(scores, num_voters)
+    # return(weighted_centered_data, v_size)
 
     # Which of the two possible 'new' reputation vectors had more opinion in common
     # with the original 'old' reputation.

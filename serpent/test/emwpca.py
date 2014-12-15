@@ -138,9 +138,15 @@ def test_emwpca():
     print loading
     print fixedlist2nparray(s.send(t.k0, c, 0, funid=0, abi=[ nparray2fixedlist(data.flatten()), nparray2fixedlist(weights) ]))
     
+    weighted_centered_data = data - numpy.average(data, axis=0, weights=weights)
+
     print
     print "SCORES"
-    print numpy.dot(data - numpy.average(data, axis=0, weights=weights), loading)
+    print numpy.dot(weighted_centered_data, loading)
+
+    print
+    print "WEIGHTED CENTERED DATA"
+    print weighted_centered_data
 
 if __name__ == '__main__':
     test_emwpca()
