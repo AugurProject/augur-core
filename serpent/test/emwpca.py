@@ -117,11 +117,11 @@ def test_emwpca():
     # data = numpy.random.rand(*shape)
     # weights = numpy.random.rand(shape[0])
 
-    data = numpy.array([[10, 10,  0,  1],
+    data = numpy.array([[10, 10,  0, 10],
                         [10,  0,  0,  0],
                         [10, 10,  0,  0],
                         [10, 10, 10,  0],
-                        [ 1,  0, 10, 10],
+                        [10,  0, 10, 10],
                         [ 0,  0, 10, 10]])
     weights = numpy.array([2, 10, 4, 2, 7, 1])
 
@@ -144,9 +144,9 @@ def test_emwpca():
     print "SCORES"
     print numpy.dot(weighted_centered_data, loading)
 
-    print
-    print "WEIGHTED CENTERED DATA"
-    print weighted_centered_data
+    # print
+    # print "WEIGHTED CENTERED DATA"
+    # print weighted_centered_data
 
 if __name__ == '__main__':
     test_emwpca()
