@@ -270,7 +270,8 @@ def consensus(votes:a, reputation:a):
             i += 1
 
     if missing_values:
-        votes_filled = array(num_voters)
+        # votes_filled = array(num_voters)
+        votes_filled = array(v_size)
         outcomes_raw = array(num_events)
         j = 0
         while j < num_events:
@@ -315,43 +316,30 @@ def consensus(votes:a, reputation:a):
             j += 1
 
         i = 0
-        while i < num_voters:
-            votes_filled[i] = array(num_events)
-            j = 0
-            while j < num_events:
-                if votes[i*num_events + j] == -1:
-                    votes_filled[i][j] = 0
-                else:
-                    votes_filled[i][j] = votes[i*num_events + j]
-                j += 1
+        while i < v_size:
+            if votes[i] == -1:
+                votes_filled[i] = 0
+            else:
+                votes_filled[i] = votes[i]
             i += 1
 
         diag_outcomes = diag(outcomes_raw:num_events)
 
-        to_fill = array(num_voters)
-        with i = 0:
-            while i < num_voters:
-                to_fill[i] = array(num_events)
-                with j = 0:
-                    while j < num_events:
-                        with k = 0:
-                            while k < num_events:
-                                to_fill[i][j] += votes_mask[i*num_events + k] * diag_outcomes[k][j]
-                                k += 1
-                        votes_filled[i][j] += catch(to_fill[i][j])
-                        j += 1
-                i += 1
+        to_fill = array(v_size)
+        while i < num_voters:
+            j = 0
+            while j < num_events:
+                k = 0
+                while k < num_events:
+                    pos = i*num_events + j
+                    to_fill[pos] += votes_mask[i*num_events + k] * diag_outcomes[k][j]
+                    k += 1
+                votes_filled[pos] += catch(to_fill[pos])
+                j += 1
+            i += 1
 
     # weighted pca: project votes onto principal component to update rep
     v_size = num_voters * num_events
-    data = array(v_size)
-    i = 0
-    while i < num_voters:
-        j = 0
-        while j < num_events:
-            data[j + i*num_events] = votes_filled[i][j]
-            j += 1
-        i += 1
 
     weighted_means = array(num_events)
     total_weight = 0
@@ -359,7 +347,7 @@ def consensus(votes:a, reputation:a):
     while i < num_voters:
         j = 0
         while j < num_events:
-            weighted_means[j] += reputation[i] * data[i * num_events + j]
+            weighted_means[j] += reputation[i] * votes_filled[i * num_events + j]
             j += 1
         total_weight += reputation[i]
         i += 1
@@ -372,7 +360,7 @@ def consensus(votes:a, reputation:a):
     weighted_centered_data = array(v_size)
     i = 0
     while i < v_size:
-        weighted_centered_data[i] = data[i] - weighted_means[i % num_events]
+        weighted_centered_data[i] = votes_filled[i] - weighted_means[i % num_events]
         i += 1
 
     # initialize the loading vector
@@ -380,7 +368,8 @@ def consensus(votes:a, reputation:a):
     loading_vector[0] = 0x10000000000000000
 
     i = 0
-    while i < 15:
+    # careful, setting this to 25 causes tx gas to run out!
+    while i < 10:
         s = array(num_events)
         j = 0
         while j < num_voters:
@@ -423,10 +412,9 @@ def consensus(votes:a, reputation:a):
         i += 1
 
     # return(votes, v_size)
-    # return(votes_filled[0], num_events)
+    # return(votes_filled, v_size)
     # return(reputation, num_voters)
     # return(votes_mask, v_size)
-    # return(data, v_size)
     return(loading_vector, num_events)
     # return([startgas, tx.gas], 2)
 
