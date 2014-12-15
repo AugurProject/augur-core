@@ -500,7 +500,12 @@ def consensus(votes:a, reputation:a):
   
     # Set this to uniform if you want a passive diffusion toward equality
     # when people cooperate.  Instead diffuses towards previous reputation.
-    row_reward_weighted = get_weight(reputation:num_voters)
+    rep_weights = get_weight(reputation:num_voters)
+    i = 0
+    row_reward_weighted = array(num_voters)
+    while i < num_voters:
+        row_reward_weighted[i] = rep_weights[i]
+        i += 1
     mean_weight = mean(row_reward_weighted:num_voters)
 
     # Overwrite the inital declaration IFF there wasn't perfect consensus.
@@ -511,12 +516,17 @@ def consensus(votes:a, reputation:a):
             i += 1
         row_reward_weighted = get_weight(row_reward_weighted:num_voters)
 
-    return([startgas, tx.gas], 2)
+    # Freshly-calculated reward (in reputation) using exponential smoothing
+    # New Reward: row_reward_weighted
+    # Old Reward: rep_weights
+    # (0.2 is the adjustable parameter "alpha", hard-coding it for now)
+    smooth_rep = array(num_voters)
+    i = 0
+    while i < num_voters:
+        smooth_rep[i] = row_reward_weighted[i]/5 + rep_weights[i]*4/5
+        i += 1
 
-    # # Freshly-Calculated Reward (Reputation) - Exponential Smoothing
-    # # New Reward: row_reward_weighted
-    # # Old Reward: reputation
-    # smooth_rep = ALPHA*row_reward_weighted + (1 - ALPHA)*transpose(self.reputation)
+    return([startgas, tx.gas], 2)
 
     # outcomes_raw = multiply(smooth_rep, votes_filled)
     # outcome_final = array(num_events)

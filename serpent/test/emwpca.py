@@ -134,11 +134,10 @@ def test_emwpca():
                      [ 0,  0, 10, 10]])
     weights = np.array([2, 10, 4, 2, 7, 1])
 
-    print data
-    print weights
-
-    print nparray2fixedlist(data.flatten())
-    print nparray2fixedlist(weights)
+    # print data
+    # print weights
+    # print nparray2fixedlist(data.flatten())
+    # print nparray2fixedlist(weights)
 
     weighted_centered_data = data - np.average(data, axis=0, weights=weights)
     # print
@@ -150,7 +149,7 @@ def test_emwpca():
     # print "LOADINGS"
     # print loading
 
-    print fixedlist2nparray(s.send(t.k0, c, 0, funid=0, abi=[ nparray2fixedlist(data.flatten()), nparray2fixedlist(weights) ]))
+    # print fixedlist2nparray(s.send(t.k0, c, 0, funid=0, abi=[ nparray2fixedlist(data.flatten()), nparray2fixedlist(weights) ]))
 
     scores = np.dot(weighted_centered_data, loading)
     # print
@@ -186,14 +185,16 @@ def test_emwpca():
         adj_prin_comp = set1
     if ref_ind > 0:
         adj_prin_comp = set2
-    # print
     print "adj_prin_comp:", adj_prin_comp
 
     row_reward_weighted = get_weight(weights)
     if max(abs(adj_prin_comp)) != 0:
         row_reward_weighted = get_weight(adj_prin_comp * (weights / np.mean(weights)).T)
-    print
     print "row_reward_weighted:", row_reward_weighted
+
+    alpha = 0.2
+    smooth_rep = alpha*row_reward_weighted + (1-alpha)*get_weight(weights).T
+    print "smooth_rep:", smooth_rep
 
 if __name__ == '__main__':
     test_emwpca()
