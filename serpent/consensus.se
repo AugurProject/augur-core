@@ -7,15 +7,6 @@ macro mean($a:$asz):
                 i += 1
         total / $asz
 
-# Dot (inner) product of vectors.
-macro dot($a, $b, $len):
-    with i = 0:
-        with prod = 0:
-            while i < $len:
-                prod += $a[i] * $b[i]
-                i += 1
-            prod
-
 # Sum elements of array
 macro sum($a:$asz):
     with total = 0:
@@ -24,113 +15,6 @@ macro sum($a:$asz):
                 total += $a[i]
                 i += 1
         total
-
-# Normalize array (elements sum to 1)
-macro normalize($a:$asz):
-    with anorm = array($asz):
-        with total = 0:
-            with i = 0:
-                while i < $asz:
-                    if $a[i] != None:
-                        total += $a[i]
-                    i += 1
-            with i = 0:
-                while i < $asz:
-                    if $a[i] != None:
-                        anorm[i] = $a[i] * 0x10000000000000000 / total
-                    i += 1
-            anorm
-
-# Calculates the outer product of vectors.
-macro outer_product($u:$usz, $v:$vsz):
-    with p = array($usz):
-        with i = 0:
-            while i < $usz:
-                p[i] = array($usz)
-                with j = 0:
-                    while j < $usz:
-                        p[i][j] += $u[i] * $v[j]
-                        j += 1
-                i += 1
-            p
-
-# Vector Kronecker product
-macro kron($a:$asz, $b:$bsz):
-    with prod = array($asz * $bsz):
-        with i = 0:
-            while i < $asz:
-                with j = 0:
-                    while j < $bsz:
-                        prod[j + $bsz*i] = $a[i] * $b[j]
-                        j += 1
-                i += 1
-        prod
-
-# Matrix multiplication, inputs are flattened (vectorized) matrices
-macro multiply($aflat:$asz, $arows, $acols, $bflat:$bsz, $brows, $bcols):
-    with a = array($arows):
-        with i = 0:
-            while i < $arows:
-                a[i] = array($acols)
-                with j = 0:
-                    while j < $acols:
-                        a[i][j] = $aflat[j + i*$acols]
-                        j += 1
-                i += 1
-        with b = array($brows):
-            with i = 0:
-                while i < $brows:
-                    b[i] = array($bcols)
-                    with j = 0:
-                        while j < $bcols:
-                            b[i][j] = $bflat[j + i*$bcols]
-                            j += 1
-                    i += 1
-            with c = array($arows):
-                if $bcols > 1:
-                    with i = 0:
-                        while i < $arows:
-                            c[i] = array($bcols)
-                            i += 1
-                with i = 0:
-                    while i < $arows:
-                        with j = 0:
-                            while j < $bcols:
-                                with k = 0:
-                                    while k < $acols:
-                                        if $bcols == 1:
-                                            c[i] += a[i][k] * b[k]
-                                        else:
-                                            c[i][j] += a[i][k] * b[k][j]
-                                        k += 1
-                                j += 1
-                        i += 1
-                c
-
-# Swap the rows and columns of a matrix
-macro transpose($aflat:$asz, $arows, $acols):
-    with a = array($arows):
-        with i = 0:
-            while i < $arows:
-                a[i] = array($acols)
-                with j = 0:
-                    while j < $acols:
-                        a[i][j] = $aflat[j + i*$acols]
-                        j += 1
-                i += 1
-        with at = array($acols):
-            with i = 0:
-                while i < $asz:
-                    at[i] = array($arows)
-                    i += 1
-            with i = 0:
-                while i < $acols:
-                    with j = 0:
-                        while j < $arows:
-                            at[i][j] = a[j][i]
-                            j += 1
-                    i += 1
-            at
 
 # Convert vector to diagonal matrix
 macro diag($a:$asz):
@@ -147,77 +31,6 @@ macro diag($a:$asz):
                         j += 1
                 i += 1
         d
-
-# Missing entries marked with -1
-macro isnan($a:$asz):
-    with amask = array($asz):
-        with i = 0:
-            while i < $asz:
-                if $a[i] == -1:
-                    amask[i] = 1
-                else:
-                    amask[i] = 0
-                i += 1
-            amask
-
-macro mask($a:$asz, $target):
-    with amask = array($asz):
-        with i = 0:
-            while i < $asz:
-                if $a[i] == $target:
-                    amask[i] = 1
-                else:
-                    amask[i] = 0
-                i += 1
-            amask
-
-macro any($a:$asz):
-    with result = 0:
-        with i = 0: 
-            while i < $asz:
-                if $a[i] != 0:
-                    result = 1
-                    break
-                i += 1
-            result
-
-# Hadamard (elementwise) product, inputs are flattened (vectorized) matrices
-macro hadamard($aflat:$asz, $arows, $acols, $bflat:$bsz, $brows, $bcols):
-    with a = array($arows):
-        with i = 0:
-            while i < $arows:
-                a[i] = array($acols)
-                with j = 0:
-                    while j < $acols:
-                        a[i][j] = $aflat[j + i*$acols]
-                        j += 1
-                i += 1
-        with b = array($brows):
-            with i = 0:
-                while i < $brows:
-                    b[i] = array($bcols)
-                    with j = 0:
-                        while j < $bcols:
-                            b[i][j] = $bflat[j + i*$bcols]
-                            j += 1
-                    i += 1
-            with c = array($arows):
-                if $bcols > 1:
-                    with i = 0:
-                        while i < $bcols:
-                            c[i] = array($bcols)
-                            i += 1
-                with i = 0:
-                    while i < $arows:
-                        if $bcols == 1 and $acols == 1:
-                            c[i] = a[i] * b[i]
-                        else:
-                            with j = 0:
-                                while j < $bcols:
-                                    c[i][j] += a[i][j] * b[i][j]
-                                    j += 1
-                        i += 1
-                c
 
 # Proportional distance from zero, inputs are fixed point
 macro get_weight($a:$asz):
@@ -588,4 +401,8 @@ def consensus(votes:a, reputation:a):
         event_bonus[i] = (na_bonus_events[i]*participation + consensus_reward[i]*(0x10000000000000000 - participation)) / 0x10000000000000000
         i += 1
 
-    return(voter_bonus, num_voters)
+    # return(sum(event_bonus:num_events))
+    # return(voter_bonus, num_voters)
+    return(event_bonus, num_events)
+    # return(outcomes_raw, num_events)
+    # return(outcomes_final, num_events)
