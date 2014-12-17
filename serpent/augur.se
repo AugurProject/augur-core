@@ -43,20 +43,20 @@ data Info[](typecode, description[], creator, creationFee)
 data Branches[](currentVotePeriod, markets[], marketCount, periodLength, parent, repRequired)
 
 # Events' index is the eventID
-data Events[](branch, expirationDate)
+data Events[](branch, expirationDate, outcome)
 
 # Reporting index is the branchID
 # Reporters index is the rep. address
 # We 0 index reputation so can walk thru for consensus
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
-data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
+data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market
 # Sharespurchased keeps track of the number of shares purchased for each outcome
 # Participants is a 0 indexed array of participants, their cashIDs, and the shares in each outcome they've purchased of an event
-data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](participantID, event[](shares[2])), lossLimit, tradingFee, numberEvents, currentParticipant, outcome, winningEvent)
+data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](participantID, event[](shares[2])), lossLimit, tradingFee, numberEvents, currentParticipant, winningEvent)
 
 data cashcoin_balances[2^160]
 
@@ -85,6 +85,7 @@ data cashcoin_balances[2^160]
     # make so eventsexpdates currentindex -1 is the stuff we actually vote on in redeem tx
     # fast voting cycle first few days to get the 60% problem away from a branch, e.g. what if not enough people vote  60% of votes -- need to get the cycle length parameters right
     # make transaction fee a percent of trade if doing lmsr and not Abe's
+    # fix any and fix vote
 
 ### Urgent todo:
     # voting consensus & redeem tx
@@ -276,7 +277,7 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
     marketCharacteristics[2] = tx.origin
     marketCharacteristics[3] = initialLiquidity
     marketCharacteristics[4] = branch
-    marketCharacteristics[5] = eventList
+    marketCharacteristics[5] = events
     marketCharacteristics[6] = arglen(events)
     marketCharacteristics[7] = lossLimit
     marketCharacteristics[8] = tradingFee
@@ -465,7 +466,7 @@ def inPeriod(branchID, eventID):
     return(0)
 
 #make sure people can change their vote during the voting period
-# a no vote is -1, a yes vote is 1 and a can't determine vote is 0
+# a no vote is -2^64, a yes vote is 2^64 and a can't determine vote is 2^63 (a empty ballot is 0)
 def vote(branch, report:a):
     # make sure the branch exists
     repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
@@ -474,11 +475,21 @@ def vote(branch, report:a):
     # then there can be no more voting for that voting period
     # (reasoning being: >1 period past means all the events in that period have expired)
     # (>2 periods past mean the events have exp. & people have had 1 full period to vote)
+    # currently requires events to expire to vote
     currentPeriod = block.number / self.Branches[branch].periodLength
-    if (self.Branches[branch].lastPeriodEnd == 0 | self.Reporting[branch].reputation[repIndex].reporterID != tx.origin | currentPeriod > (self.Branches[branch].currentVotePeriod+2)):
+    if (self.Branches[branch].lastPeriodEnd == 0 | self.Reporting[branch].reputation[repIndex].reporterID != tx.origin | currentPeriod > (self.Branches[branch].currentVotePeriod+2) | currentPeriod < (self.Branches[branch.currentVotePeriod+1])):
         return(0)
 
     reputation = self.Reporting[branch].reputation[repIndex].repValue
+
+# need report length to be same as number of items in the current eventexpdates voting period #events!!!!!!!!!!!!!!
+# and should be the same events as in that array (inPeriod)
+# check what events the reporters did report on ... if not all reported fill those events in with No report
+# ^ (defined by all in period and same length as said above)
+# also make sure vote values are valid     # a no vote is -2^64, a yes vote is 2^64 and a can't determine vote is 2^63 (a empty ballot is 0)
+# ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents and loop through the events[] array from 0 to numberEvents -1 for the votes list / order
+# atm voters who do vote are req. to vote on all things in their respective ballots
+
 
     i = 0
     while i < arglen(report):
@@ -491,7 +502,9 @@ def vote(branch, report:a):
 
     # need to update stuff for quorem
     # and store the report and the rep value
-    self.Reporting[branchID].eventsExpDates[self.Branches[branchID].currentVotePeriod].reporters[tx.origin] = report
+    while i < arglen(report):
+        self.Reporting[branchID].eventsExpDates[0].reporters[tx.origin][i] = report[i]
+        i+=1
     self.Reporting[branchID].eventsExpDates[self.Branches[branchID].currentVotePeriod].totalRepReported += self.Reporting[branchID].reputation[repIndex].repValue
     return(1)
 
@@ -518,29 +531,58 @@ def check_quorum(branch):
         return(0)
         
 # perhaps give the redeemer some fees to cover svd costs
+# 25% of fees already distributed to market creators
+# so 2/3 of remaining fees to voters = 50%
+# and 1/3 of remaining fees to event creators = 25%
 def any(branch):
     if(!self.check_quorem(branch)):
         return("quorem not satisfied yet")
+    currentVotePeriod = self.Branches[branchID].currentVotePeriod
+    # loop through reputation and check if in reporters, if so use their report, if not use the fillin / not reported report
+    # use this to make a giant array of votes to pass to self.consensus
+    # want to pass votes for each 0 indexed event in order (so we get votes from an actual reporter)
+    # (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
+    reputation = array(self.Reporting[branch].numberReporters-1)
+    votes = array(self.Reporting[branch].numberReporters-1)
+    i = 0
+    while i < self.Reporting[branch].numberReporters:
+        # checks to see if each reporter actually voted on any events
+        reporterID = self.Reporting[branch].reputation[i].reporterID
+        reputation[i] = self.Reporting[branch].reputation[i].repValue
+        # if they didn't vote (checking event 0)
+        if(self.Reporting[branch].eventsExpDates[currentVotePeriod].reporters[reporterID][0] == 0):
+            # all votes are 0 for this reporter because they didn't vote
+            votes[i] = array(self.Reporting[branch].eventsExpDates.numberEvents-1)
+        # the reporter did report on events
+        else:
+            votes[i] = array(self.Reporting[branch].eventsExpDates.numberEvents-1)
+            numberEvents = self.Reporting[branch].eventsExpDates[currentvotePeriod].numberEvents
+            x = 0
+            while x < numberEvents:
+                votes[i][x] = self.Reporting[branchID].eventsExpDates[currentVotePeriod].reporters[reporterID][x]
+                # if we end up including eventIDs still in this array we do x += 2
+                x += 1
+        i += 1
 
-    self.consensus(votes:a, reputation:a)
-    # for redeem, you need outcomes_final, voter_bonus, and event_bonus
+    # how to get return value from this?
+    self.consensus(votes:self.Reporting[branch].numberReporters-1, reputation:self.Reporting[branch].numberReporters-1)
 
+    # get event ID for each event by taking the x index in the votes arrays - shoving it in reporting.events[]
+    # and getting the cooresponding ID
+    # then take outcomes_final and set each event outcome to -1 if false or 1 if true
 
+    # will need to loop through eventid holders and distribute 25% coins using the event_bonus to determine how much
+    # of the 25% each get
     self.cashcoin_balances[branch]
 
+    # will need to loop through rep holders and distribute 50% of branch fees to voters' cashcoin addresses
+    # will also need to take voter_bonus and redistribute reputation in the Reporting structure accordingly
 
-    self.Branches[branch].currentVotePeriod += 1     
-    # loop through reputation and check if in reporters, if so use their report, if not use the fillin / not reported report
-    # check what events the reporters did report on ... if not all reported fill those events in with No report
-    # and get the repvalue from reputation
-    # 50% of branch fees to voters
+    self.Branches[branch].currentVotePeriod += 1
 
 
-    # will need to loop through eventid holders and distribute 25% coins
-    # set market outcome to -1 if false or 1 if true
-    # set winning event index to winningEvent
-
-
+# loop through events in the market, get their outcomes and use those to determine the winning events!!!
+# fix this ^
 def close_market(branch, market):
     currentPeriod = block.number / self.Branches[branch].periodLength
     eventVotePeriod = self.Events[self.Markets[market].events[numberEvents-1].eventID].expirationDate / self.Branches[branch].periodLength
@@ -565,7 +607,7 @@ def close_market(branch, market):
         pricePerShare = FixedPoint.div(self.cashcoin_balances[market], winningShares, as=fp)
 
         # distribute cashcoin to the people who won money by holding winning shares
-        int i = 0
+        i = 0
         while i <= self.Markets[market].currentParticipant:
             sharesOwned = self.Markets[market].participants[i].event[winningEvent].shares[winningSharesIndex]
             participant = self.Markets[market].participants[i].participantID
