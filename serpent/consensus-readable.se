@@ -1,0 +1,415 @@
+# Arithmetic mean of an array, takes fixed-point inputs
+macro mean($a:$asz):
+    with total = 0:
+        with i = 0:
+            while i < $asz:
+                total += $a[i]
+                i += 1
+        total / $asz
+
+# Sum elements of array
+macro sum($a:$asz):
+    with total = 0:
+        with i = 0:
+            while i < $asz:
+                total += $a[i]
+                i += 1
+        total
+
+# Proportional distance from zero, inputs are fixed point
+macro get_weight($a:$asz):
+    with total = 0:
+        with i = 0:
+            while i < $asz:
+                $a[i] = abs($a[i])
+                total += $a[i]
+                i += 1
+        with wt = array($asz):
+            with i = 0:
+                while i < $asz:
+                    wt[i] = $a[i] * 2^64 / total
+                    i += 1
+            wt
+
+# Bins values to 0, .5, and 1
+macro catch($x):
+    with catch_lo = (2^64 - 0x1999999999999999) / 2:
+        with catch_hi = (2^64 + 0x1999999999999999) / 2:
+            if $x < catch_lo:
+                caught = 0x0
+            elif $x > catch_hi:
+                caught = 2^64
+            else:
+                caught = 2^63
+            caught
+
+# Absolute value
+macro abs($x):
+    with absval = $x:
+        if $x < 0:
+            absval = -$x
+        absval
+
+# Absolute value of all array elements
+macro array_abs($a:$asz):
+    with absval = array($asz):
+        with i = 0:
+            while i < $asz:
+                absval[i] = abs($a[i])
+                i += 1
+        absval
+
+# Minimum value of array
+macro minimum($a:$asz):
+    with minval = $a[0]:
+        with i = 1:
+            while i < $asz:
+                if $a[i] < minval:
+                    minval = $a[i]
+                i += 1
+        minval
+
+# Maximum value of array
+macro maximum($a:$asz):
+    with maxval = $a[0]:
+        with i = 1:
+            while i < $asz:
+                if $a[i] > maxval:
+                    maxval = $a[i]
+                i += 1
+        maxval
+
+macro fixed_multiply($x, $y):
+    $x * $y / 2^64
+
+macro fixed_divide($x, $y):
+    $x * 2^64 / $y
+
+def consensus(votes:a, reputation:a):
+    ONE = 2^64
+    TRUE = ONE
+    FALSE = -ONE
+    INDETERMINATE = 2^63  # 0.5
+    NO_RESPONSE = 0       # 0
+
+    startgas = tx.gas
+    num_voters = arglen(reputation)
+    v_size = arglen(votes)
+    num_events = v_size / num_voters
+
+    # use existing data and reputations to fill missing observations
+    # (weighted average over all non-missing data)
+    votes_mask = array(v_size)
+    missing_values = 0
+    with i = 0:
+        while i < v_size:
+            if votes[i] == NO_RESPONSE:
+                votes_mask[i] = ONE
+                missing_values += 1
+            else:
+                votes_mask[i] = 0
+            i += 1
+
+    if missing_values:
+        votes_filled = array(v_size)
+        outcomes_raw = array(num_events)
+        j = 0
+        while j < num_events:
+
+            # reputation of the users who voted, rescaled to sum to 1
+            total_active_rep = 0
+            present = array(num_voters)
+            i = 0
+            while i < num_voters:
+                if votes[i*num_events + j] != NO_RESPONSE:
+                    total_active_rep += reputation[i]
+                    present[i] = 1
+                i += 1
+            num_present = sum(present:num_voters)
+            active_rep = array(num_present)
+            i = 0
+            m = 0
+            while i < num_voters:
+                if present[i]:
+                    active_rep[i - m] = fixed_divide(reputation[i], total_active_rep)
+                else:
+                    m += 1
+                i += 1
+
+            # current best-guess for this event's outcome is a weighted sum
+            # (votes weighted by reputation)
+            active_events = array(num_present)
+            i = 0
+            m = 0
+            while i < num_voters:
+                if present[i]:
+                    active_events[i - m] = votes[i*num_events + j]
+                    outcomes_raw[j] += fixed_multiply(active_rep[i - m], active_events[i - m])
+                else:
+                    m += 1
+                i += 1
+
+            j += 1
+
+        to_fill = array(v_size)
+        i = 0
+        while i < num_voters:
+            j = 0
+            while j < num_events:
+                pos = i*num_events + j
+                to_fill[pos] += fixed_multiply(votes_mask[pos], outcomes_raw[j])
+                votes_filled[pos] = votes[i] + catch(to_fill[pos])
+                j += 1
+            i += 1
+
+        # return(num_present)
+        # return(outcomes_raw, num_events)
+        # return(active_rep, num_present)
+        # return(active_events, num_present)
+        # return(to_fill, v_size)
+
+    else:
+        votes_filled = votes
+
+    # weighted pca: project votes onto principal component
+    weighted_means = array(num_events)
+    total_weight = 0
+    i = 0
+    while i < num_voters:
+        j = 0
+        while j < num_events:
+            weighted_means[j] += reputation[i] * votes_filled[i * num_events + j]
+            j += 1
+        total_weight += reputation[i]
+        i += 1
+
+    j = 0
+    while j < num_events:
+        weighted_means[j] /= total_weight
+        j += 1
+
+    weighted_centered_data = array(v_size)
+    i = 0
+    while i < v_size:
+        weighted_centered_data[i] = votes_filled[i] - weighted_means[i % num_events]
+        i += 1
+
+    # initialize the loading vector
+    loading_vector = array(num_events)
+    loading_vector[0] = ONE
+
+    i = 0
+    # careful, setting this to 25 causes tx gas to run out!
+    while i < 15:
+        s = array(num_events)
+        j = 0
+        while j < num_voters:
+            d_dot_lv = 0
+            k = 0
+            while k < num_events:
+                d_dot_lv += weighted_centered_data[j * num_events + k] * loading_vector[k]
+                k += 1
+            d_dot_lv /= ONE
+            k = 0
+            while k < num_events:
+                s[k] -= d_dot_lv * weighted_centered_data[j * num_events + k] * reputation[j]
+                k += 1
+            j += 1
+        # loading_vector = normalize(s)
+        # (first rejig s to account for double fixed multiplication in loop)
+        j = 0
+        while j < num_events:
+            s[j] /= 2^128
+            j += 1
+        # QQ
+        s_dot_s = 0
+        j = 0
+        while j < num_events:
+            s_dot_s += s[j] * s[j]
+            j += 1
+        s_dot_s /= ONE
+        # QQ!!!!
+        norm_s = s_dot_s / 2
+        j = 0
+        while j < 11:
+            norm_s = (norm_s + s_dot_s*ONE/norm_s) / 2
+            j += 1
+        # fuggin assign
+        j = 0
+        while j < num_events:
+            loading_vector[j] = s[j]*ONE/norm_s
+            j += 1
+
+        i += 1
+
+    scores = array(num_voters)
+    i = 0
+    while i < num_voters:
+        k = 0
+        while k < num_events:
+            scores[i] += weighted_centered_data[i*num_events + k] * loading_vector[k] / ONE
+            k += 1
+        i += 1
+
+    # return(scores, num_voters)
+
+    # Which of the two possible 'new' reputation vectors had more opinion in common
+    # with the original 'old' reputation.
+    set1 = array(num_voters)
+    set2 = array(num_voters)
+    i = 0
+    while i < num_voters:
+        set1[i] = scores[i] + abs(minimum(scores:num_voters))
+        set2[i] = scores[i] - maximum(scores:num_voters)
+        i += 1
+
+    # return(set1, num_voters)
+    # return(set2, num_voters)
+
+    wset1 = get_weight(set1:num_voters)
+    wset2 = get_weight(set2:num_voters)
+
+    old = array(num_events)
+    new1 = array(num_events)
+    new2 = array(num_events)
+    i = 0
+    while i < num_events:
+        k = 0
+        while k < num_voters:
+            pos = k*num_events + i
+            old[i] += reputation[k] * votes_filled[pos] / ONE
+            new1[i] += wset1[k] * votes_filled[pos] / ONE
+            new2[i] += wset2[k] * votes_filled[pos] / ONE
+            k += 1
+        i += 1
+
+    # return(old, num_events)
+    # return(new1, num_events)
+    # return(new2, num_events)
+
+    # Difference in sum of squared errors. If > 0, then new1 had higher
+    # errors (use new2); conversely if < 0, then use new1.
+    sse1 = 0
+    sse2 = 0
+    i = 0
+    while i < num_events:
+        sse1 += (new1[i] - old[i])^2 / ONE
+        sse2 += (new2[i] - old[i])^2 / ONE
+        i += 1
+    ref_ind = sse1 - sse2
+    if ref_ind <= 0:
+        adj_prin_comp = set1
+    else:
+        adj_prin_comp = set2
+
+    # return(adj_prin_comp, num_voters)
+
+    # Set this to uniform if you want a passive diffusion toward equality
+    # when people cooperate.  Instead diffuses towards previous reputation.
+    rep_weights = get_weight(reputation:num_voters)
+    row_reward_weighted = array(num_voters)
+    i = 0
+    while i < num_voters:
+        row_reward_weighted[i] = rep_weights[i]
+        i += 1
+    mean_weight = mean(row_reward_weighted:num_voters)
+
+    # Overwrite the inital declaration IFF there wasn't perfect consensus.
+    if maximum(array_abs(adj_prin_comp:num_voters):num_voters) != 0:
+        i = 0
+        while i < num_voters:
+            row_reward_weighted[i] = adj_prin_comp[i] * row_reward_weighted[i] / mean_weight
+            i += 1
+        row_reward_weighted = get_weight(row_reward_weighted:num_voters)
+
+    # Freshly-calculated reward (in reputation) using exponential smoothing
+    # New Reward: row_reward_weighted
+    # Old Reward: rep_weights
+    # (0.2 is the adjustable parameter "alpha", hard-coding it for now)
+    smooth_rep = array(num_voters)
+    i = 0
+    while i < num_voters:
+        smooth_rep[i] = row_reward_weighted[i]/5 + rep_weights[i]*4/5
+        i += 1
+
+    # return(smooth_rep, num_voters)
+
+    outcomes_raw = array(num_events)
+    outcomes_final = array(num_events)
+    i = 0
+    while i < num_events:
+        k = 0
+        while k < num_voters:
+            outcomes_raw[i] += smooth_rep[k] * votes_filled[k*num_events + i] / ONE
+            k += 1
+        outcomes_final[i] = catch(outcomes_raw[i])
+        i += 1
+
+    # return(outcomes_raw, num_events)
+
+    # Smoothing function travels from 0 to 1 with a minimum at .5
+    certainty = array(num_events)
+    i = 0
+    while i < num_events:
+        certainty[i] = 2*outcomes_raw[i] - ONE
+        i += 1
+    consensus_reward = get_weight(certainty:num_events)
+    avg_certainty = mean(certainty:num_events)
+
+    # return(outcomes_raw, num_events)
+    # return(certainty, num_events)
+
+    # Event participation (within columns): proportion of reputation
+    # that answered each event
+    participation_events = array(num_events)
+    i = 0
+    while i < num_events:
+        k = 0
+        while k < num_voters:
+            participation_events[i] += smooth_rep[k] * votes_mask[k*num_events + i]
+            k += 1
+        participation_events[i] = ONE - participation_events[i]
+        i += 1
+    
+    # return(participation_events, num_events)
+
+    # Voter participation (within rows): all events treated equally
+    participation_voters = array(num_voters)
+    i = 0
+    while i < num_voters:
+        total = 0
+        j = 0
+        while j < num_events:
+            total += votes_mask[i*num_events + j]
+            j += 1
+        participation_voters[i] = ONE - total * ONE / num_events
+        i += 1
+    
+    # General participation
+    total = 0
+    i = 0
+    while i < num_events:
+        total += participation_events[i]
+        i += 1
+    participation = ONE - total / num_events
+
+    # Bringing it all together!
+    na_bonus_voters = get_weight(participation_voters:num_voters)
+    na_bonus_events = get_weight(participation_events:num_events)
+    voter_bonus = array(num_voters)
+    i = 0
+    while i < num_voters:
+        voter_bonus[i] = (na_bonus_voters[i]*participation + smooth_rep[i]*(ONE - participation)) / ONE^2
+        i += 1
+    event_bonus = array(num_events)
+    i = 0
+    while i < num_events:
+        event_bonus[i] = (na_bonus_events[i]*participation + consensus_reward[i]*(ONE - participation)) / ONE^2
+        i += 1
+
+    # return(sum(event_bonus:num_events))
+    # return(voter_bonus, num_voters)
+    # return(event_bonus, num_events)
+    # return(outcomes_raw, num_events)
+    # return(outcomes_final, num_events)
+    return([startgas, tx.gas], 2)
