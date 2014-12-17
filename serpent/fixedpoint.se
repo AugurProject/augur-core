@@ -1,31 +1,4 @@
 # 192.64 fixed point
-<<<<<<< HEAD
-=======
-
-type fixed: []
-
-one = 2^64
-
-macro fixify($n):
-    fixed($n * one)
-
-macro fixify2($i, $f):
-    fixed($i * one | ($f & 0xffffffffffffffff))
-
-macro fixed($a) * fixed($b):
-    fixed(div(mul($a, $b), one))
-
-macro fixed($a) / fixed($b):
-    fixed(div(mul($a, one), $b))
-
-macro fracpart(fixed($n)):
-    $n&0xffffffffffffffff # If you're putting one as a constant, might as well replace this with "one - 1"; the compiler does arithmetic
-                          # optimizations at compile time so it won't cost extra gas
-
-macro intpart(fixed($n)):
-    $n/one
-
->>>>>>> 0fd7c6e87c59fb5221560c03dd9cecb252d801e4
 # http://www.ti.com/lit/an/spra619/spra619.pdf
 # >>> from mpmath import *
 # >>> mp.dps = 128
@@ -114,34 +87,16 @@ def log(x):
 
     return([twice_n * 2^63 - f, start_gas - tx.gas], 2)
 
-def sqrtf(n):
+def sqrt(n):
     start_gas = tx.gas
-<<<<<<< HEAD
     guess = n/2
     i = 0
     while i < 11:
         guess = (guess + n * 2^64 / guess)/2
-=======
-    result = self.exp(e*self.log(b)/0x10000000000000000)
-    return([result, start_gas - tx.gas], 2)
-
-macro sqrt(fixed($x)):
-    guess = fixed($x/2)
-    i = 0
-    while i < 11:
-        guess = (guess + $x/guess)/2
->>>>>>> 0fd7c6e87c59fb5221560c03dd9cecb252d801e4
         i += 1
     return([guess, start_gas - tx.gas], 2)
 
-<<<<<<< HEAD
 def pow(b, e):
     start_gas = tx.gas
     result = self.exp(e*self.log(b)/2^64)
     return([result, start_gas - tx.gas], 2)
-=======
-def sqrtf(x):
-    start_gas = tx.gas
-    res = sqrt(x)
-    return([res, start_gas - tx.gas], 2)
->>>>>>> 0fd7c6e87c59fb5221560c03dd9cecb252d801e4

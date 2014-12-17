@@ -16,16 +16,6 @@ macro sum($a:$asz):
                 i += 1
         total
 
-# Convert vector to diagonal matrix
-macro diag($a:$asz):
-    with d = array($asz):
-        with i = 0:
-            while i < $asz:
-                d[i] = array($asz)
-                d[i][i] = $a[i]
-                i += 1
-        d
-
 # Proportional distance from zero, inputs are fixed point
 macro get_weight($a:$asz):
     with total = 0:
@@ -37,20 +27,20 @@ macro get_weight($a:$asz):
         with wt = array($asz):
             with i = 0:
                 while i < $asz:
-                    wt[i] = $a[i] * 0x10000000000000000 / total
+                    wt[i] = $a[i] * 2^64 / total
                     i += 1
             wt
 
 # Bins values to 0, .5, and 1
 macro catch($x):
-    with catch_lo = (0x10000000000000000 - 0x1999999999999999) / 2:
-        with catch_hi = (0x10000000000000000 + 0x1999999999999999) / 2:
+    with catch_lo = (2^64 - 0x1999999999999999) / 2:
+        with catch_hi = (2^64 + 0x1999999999999999) / 2:
             if $x < catch_lo:
                 caught = 0x0
             elif $x > catch_hi:
-                caught = 0x10000000000000000
+                caught = 2^64
             else:
-                caught = 0x8000000000000000
+                caught = 2^63
             caught
 
 # Absolute value
@@ -89,7 +79,19 @@ macro maximum($a:$asz):
                 i += 1
         maxval
 
+macro fixed_multiply($x, $y):
+    $x * $y / 2^64
+
+macro fixed_divide($x, $y):
+    $x * 2^64 / $y
+
 def consensus(votes:a, reputation:a):
+    ONE = 2^64
+    TRUE = ONE
+    FALSE = -ONE
+    INDETERMINATE = 2^63  # 0.5
+    NO_RESPONSE = 0       # 0
+
     startgas = tx.gas
     num_voters = arglen(reputation)
     v_size = arglen(votes)
@@ -101,8 +103,8 @@ def consensus(votes:a, reputation:a):
         with missing_values = 0:
             with i = 0:
                 while i < v_size:
-                    if votes[i] == -0x10000000000000000:
-                        votes_mask[i] = 1
+                    if votes[i] == NO_RESPONSE:
+                        votes_mask[i] = ONE
                         missing_values += 1
                     else:
                         votes_mask[i] = 0
@@ -110,298 +112,297 @@ def consensus(votes:a, reputation:a):
 
             with votes_filled = array(v_size):
                 if missing_values:
-                    with outcomes_raw = array(num_events):
-                        with j = 0:
-                            while j < num_events:
+                    outcomes_raw = array(num_events)
+                    with j = 0:
+                        while j < num_events:
+                            with present = array(num_voters):
 
                                 # reputation of the users who voted, rescaled to sum to 1
-                                total_active_rep = 0
-                                with i = 0:
-                                    while i < num_voters:
-                                        if votes[i*num_events + j] != -1:
-                                            total_active_rep += reputation[i]
-                                        i += 1
-
-                                # normalize
-                                active_players_rep = array(num_voters)
-                                with i = 0:
-                                    while i < num_voters:
-                                        if votes[i*num_events + j] != -1:
-                                            active_players_rep[i] = reputation[i] / total_active_rep
-                                        else:
-                                            # set missing values to 0
-                                            active_players_rep[i] = 0
-                                        i += 1
-
-                                # current event with missing entries removed
-                                active_events = array(num_voters)
-                                with i = 0:
-                                    while i < num_voters:
-                                        if votes[i*num_events + j] != -1:
-                                            active_events[i] = votes[i*num_events + j]
-                                        else:
-                                            active_events[i] = 0
-                                        i += 1
+                                with total_active_rep = 0:
+                                    with i = 0:
+                                        while i < num_voters:
+                                            if votes[i*num_events + j] != NO_RESPONSE:
+                                                total_active_rep += reputation[i]
+                                                present[i] = 1
+                                            i += 1
+                                        num_present = sum(present:num_voters)
+                                        active_rep = array(num_present)
+                                        i = 0
+                                        m = 0
+                                        while i < num_voters:
+                                            if present[i]:
+                                                active_rep[i - m] = fixed_divide(reputation[i], total_active_rep)
+                                            else:
+                                                m += 1
+                                            i += 1
 
                                 # current best-guess for this event's outcome is a weighted sum
                                 # (votes weighted by reputation)
+                                active_events = array(num_present)
                                 with i = 0:
-                                    outcomes_raw[j] = 0
-                                    while i < num_voters:
-                                        outcomes_raw[j] += active_players_rep[i] * active_events[i] / 0x10000000000000000
-                                        i += 1
-                                
-                                j += 1
+                                    with m = 0:
+                                        while i < num_voters:
+                                            if present[i]:
+                                                active_events[i - m] = votes[i*num_events + j]
+                                                outcomes_raw[j] += fixed_multiply(active_rep[i - m], active_events[i - m])
+                                            else:
+                                                m += 1
+                                            i += 1
 
-                        i = 0
-                        while i < v_size:
-                            if votes[i] == -1:
-                                votes_filled[i] = 0
-                            else:
-                                votes_filled[i] = votes[i]
-                            i += 1
+                            j += 1
 
-                        with diag_outcomes = diag(outcomes_raw:num_events):
-
-                            to_fill = array(v_size)
-
+                    with to_fill = array(v_size):
+                        with i = 0:
                             while i < num_voters:
-                                j = 0
-                                while j < num_events:
-                                    k = 0
-                                    pos = i*num_events + j
-                                    while k < num_events:
-                                        to_fill[pos] += votes_mask[i*num_events + k] * diag_outcomes[k][j]
-                                        k += 1
-                                    votes_filled[pos] += catch(to_fill[pos])
-                                    j += 1
-                                i += 1
+                                with j = 0:
+                                    while j < num_events:
+                                        with pos = i*num_events + j:
+                                            to_fill[pos] += fixed_multiply(votes_mask[pos], outcomes_raw[j])
+                                            votes_filled[pos] = votes[i] + catch(to_fill[pos])
+                                        j += 1
+                                    i += 1
+
+                    # return(num_present)
+                    # return(outcomes_raw, num_events)
+                    # return(active_rep, num_present)
+                    # return(active_events, num_present)
 
                 else:
                     votes_filled = votes
 
-                # return(to_fill, v_size)
-
                 # weighted pca: project votes onto principal component
-                weighted_means = array(num_events)
-                total_weight = 0
-                i = 0
-                while i < num_voters:
-                    j = 0
-                    while j < num_events:
-                        weighted_means[j] += reputation[i] * votes_filled[i * num_events + j]
-                        j += 1
-                    total_weight += reputation[i]
-                    i += 1
+                with weighted_means = array(num_events):
+                    with total_weight = 0:
+                        with i = 0:
+                            while i < num_voters:
+                                with j = 0:
+                                    while j < num_events:
+                                        weighted_means[j] += reputation[i] * votes_filled[i * num_events + j]
+                                        j += 1
+                                total_weight += reputation[i]
+                                i += 1
 
-                j = 0
-                while j < num_events:
-                    weighted_means[j] /= total_weight
-                    j += 1
+                            with j = 0:
+                                while j < num_events:
+                                    weighted_means[j] /= total_weight
+                                    j += 1
 
-                weighted_centered_data = array(v_size)
-                i = 0
-                while i < v_size:
-                    weighted_centered_data[i] = votes_filled[i] - weighted_means[i % num_events]
-                    i += 1
+                            weighted_centered_data = array(v_size)
+                            with i = 0:
+                                while i < v_size:
+                                    weighted_centered_data[i] = votes_filled[i] - weighted_means[i % num_events]
+                                    i += 1
 
-                # initialize the loading vector
-                loading_vector = array(num_events)
-                loading_vector[0] = 0x10000000000000000
+                # initialize the scores and loading vectors
+                with old = array(num_events):
+                    with new1 = array(num_events):
+                        with new2 = array(num_events):
+                            with scores = array(num_voters):
+                                with loading_vector = array(num_events):
+                                    loading_vector[0] = ONE
+                                    with i = 0:
+                                        # careful, setting this to 25 causes tx gas to run out!
+                                        while i < 5:
+                                            with s = array(num_events):
+                                                with j = 0:
+                                                    while j < num_voters:
+                                                        with d_dot_lv = 0:
+                                                            with k = 0:
+                                                                while k < num_events:
+                                                                    d_dot_lv += weighted_centered_data[j * num_events + k] * loading_vector[k]
+                                                                    k += 1
+                                                                d_dot_lv /= ONE
+                                                            with k = 0:
+                                                                while k < num_events:
+                                                                    s[k] -= d_dot_lv * weighted_centered_data[j * num_events + k] * reputation[j]
+                                                                    k += 1
+                                                        j += 1
+                                                    # loading_vector = normalize(s)
+                                                    # (first rejig s to account for double fixed multiplication in loop)
+                                                    with j = 0:
+                                                        while j < num_events:
+                                                            s[j] /= 2^128
+                                                            j += 1
+                                                    # QQ
+                                                    with s_dot_s = 0:
+                                                        with j = 0:
+                                                            while j < num_events:
+                                                                s_dot_s += s[j] * s[j]
+                                                                j += 1
+                                                        s_dot_s /= ONE
+                                                        # QQ!!!!
+                                                        norm_s = s_dot_s / 2
+                                                        with j = 0:
+                                                            while j < 11:
+                                                                norm_s = (norm_s + s_dot_s*ONE/norm_s) / 2
+                                                                j += 1
+                                                    # fuggin assign
+                                                    with j = 0:
+                                                        while j < num_events:
+                                                            loading_vector[j] = s[j]*ONE/norm_s
+                                                            j += 1
 
-                i = 0
-                # careful, setting this to 25 causes tx gas to run out!
-                while i < 15:
-                    s = array(num_events)
-                    j = 0
-                    while j < num_voters:
-                        d_dot_lv = 0
-                        k = 0
-                        while k < num_events:
-                            d_dot_lv += weighted_centered_data[j * num_events + k] * loading_vector[k]
-                            k += 1
-                        d_dot_lv /= 0x10000000000000000
-                        k = 0
-                        while k < num_events:
-                            s[k] -= d_dot_lv * weighted_centered_data[j * num_events + k] * reputation[j]
-                            k += 1
-                        j += 1
-                    # loading_vector = normalize(s)
-                    # (first rejig s to account for double fixed multiplication in loop)
-                    j = 0
-                    while j < num_events:
-                        s[j] /= 0x100000000000000000000000000000000
-                        j += 1
-                    # QQ
-                    s_dot_s = 0
-                    j = 0
-                    while j < num_events:
-                        s_dot_s += s[j] * s[j]
-                        j += 1
-                    s_dot_s /= 0x10000000000000000
-                    # QQ!!!!
-                    norm_s = s_dot_s / 2
-                    j = 0
-                    while j < 11:
-                        norm_s = (norm_s + s_dot_s*0x10000000000000000/norm_s) / 2
-                        j += 1
-                    # fuggin assign
-                    j = 0
-                    while j < num_events:
-                        loading_vector[j] = s[j]*0x10000000000000000/norm_s
-                        j += 1
+                                                    i += 1
+                                    with i = 0:
+                                        while i < num_voters:
+                                            with k = 0:
+                                                while k < num_events:
+                                                    scores[i] += weighted_centered_data[i*num_events + k] * loading_vector[k] / ONE
+                                                    k += 1
+                                            i += 1
 
-                    i += 1
+                                # Which of the two possible 'new' reputation vectors had more opinion in common
+                                # with the original 'old' reputation.
+                                with set1 = array(num_voters):
+                                    with set2 = array(num_voters):
+                                        with i = 0:
+                                            while i < num_voters:
+                                                set1[i] = scores[i] + abs(minimum(scores:num_voters))
+                                                set2[i] = scores[i] - maximum(scores:num_voters)
+                                                i += 1
 
-                scores = array(num_voters)
-                i = 0
-                while i < num_voters:
-                    k = 0
-                    while k < num_events:
-                        scores[i] += weighted_centered_data[i*num_events + k] * loading_vector[k] / 0x10000000000000000
-                        k += 1
-                    i += 1
+                                        # return(set1, num_voters)
+                                        # return(set2, num_voters)
 
-                # Which of the two possible 'new' reputation vectors had more opinion in common
-                # with the original 'old' reputation.
-                set1 = array(num_voters)
-                set2 = array(num_voters)
-                i = 0
-                while i < num_voters:
-                    set1[i] = scores[i] + abs(minimum(scores:num_voters))
-                    set2[i] = scores[i] - maximum(scores:num_voters)
-                    i += 1
+                                        with wset1 = get_weight(set1:num_voters):
+                                            with wset2 = get_weight(set2:num_voters):
+                                                with i = 0:
+                                                    while i < num_events:
+                                                        with k = 0:
+                                                            while k < num_voters:
+                                                                with pos = k*num_events + i:
+                                                                    old[i] += fixed_multiply(reputation[k], votes_filled[pos])
+                                                                    new1[i] += fixed_multiply(wset1[k], votes_filled[pos])
+                                                                    new2[i] += fixed_multiply(wset2[k], votes_filled[pos])
+                                                                k += 1
+                                                        i += 1
 
-                wset1 = get_weight(set1:num_voters)
-                wset2 = get_weight(set2:num_voters)
+                                        # return(old, num_events)
+                                        # return(new1, num_events)
+                                        # return(new2, num_events)
 
-                old = array(num_events)
-                new1 = array(num_events)
-                new2 = array(num_events)
-                i = 0
-                while i < num_events:
-                    k = 0
-                    while k < num_voters:
-                        pos = k*num_events + i
-                        old[i] += reputation[k] * votes_filled[pos] / 0x10000000000000000
-                        new1[i] += wset1[k] * votes_filled[pos] / 0x10000000000000000
-                        new2[i] += wset2[k] * votes_filled[pos] / 0x10000000000000000
-                        k += 1
-                    i += 1
+                                        # Difference in sum of squared errors. If > 0, then new1 had higher
+                                        # errors (use new2); conversely if < 0, then use new1.
+                                        with sse1 = 0:
+                                            with sse2 = 0:
+                                                with i = 0:
+                                                    while i < num_events:
+                                                        sse1 += fixed_multiply(new1[i] - old[i], new1[i] - old[i])
+                                                        sse2 += fixed_multiply(new2[i] - old[i], new2[i] - old[i])
+                                                        i += 1
+                                                with ref_ind = sse1 - sse2:
+                                                    if ref_ind <= 0:
+                                                        adj_prin_comp = set1
+                                                    else:
+                                                        adj_prin_comp = set2
 
-                # Difference in sum of squared errors. If > 0, then new1 had higher
-                # errors (use new2); conversely if < 0, then use new1.
-                sse1 = 0
-                sse2 = 0
-                i = 0
-                while i < num_events:
-                    sse1 += (new1[i] - old[i])^2
-                    sse2 += (new2[i] - old[i])^2
-                    i += 1
-                ref_ind = sse1 - sse2
-                if ref_ind <= 0:
-                    adj_prin_comp = set1
-                else:
-                    adj_prin_comp = set2
-              
+                                            # return(adj_prin_comp, num_voters)
+
                 # Set this to uniform if you want a passive diffusion toward equality
                 # when people cooperate.  Instead diffuses towards previous reputation.
-                rep_weights = get_weight(reputation:num_voters)
-                row_reward_weighted = array(num_voters)
-                i = 0
-                while i < num_voters:
-                    row_reward_weighted[i] = rep_weights[i]
-                    i += 1
-                mean_weight = mean(row_reward_weighted:num_voters)
+                with outcomes_final = array(num_events):
+                    with rep_weights = get_weight(reputation:num_voters):
+                        with row_reward_weighted = array(num_voters):
+                            with i = 0:
+                                while i < num_voters:
+                                    row_reward_weighted[i] = rep_weights[i]
+                                    i += 1
 
-                # Overwrite the inital declaration IFF there wasn't perfect consensus.
-                if maximum(array_abs(adj_prin_comp:num_voters):num_voters) != 0:
-                    i = 0
-                    while i < num_voters:
-                        row_reward_weighted[i] = adj_prin_comp[i] * row_reward_weighted[i] / mean_weight
-                        i += 1
-                    row_reward_weighted = get_weight(row_reward_weighted:num_voters)
+                            # Overwrite the inital declaration IFF there wasn't perfect consensus.
+                            if maximum(array_abs(adj_prin_comp:num_voters):num_voters) != 0:
+                                with mean_weight = mean(row_reward_weighted:num_voters):
+                                    with i = 0:
+                                        while i < num_voters:
+                                            row_reward_weighted[i] = adj_prin_comp[i] * row_reward_weighted[i] / mean_weight
+                                            i += 1
+                                row_reward_weighted = get_weight(row_reward_weighted:num_voters)
 
-                # Freshly-calculated reward (in reputation) using exponential smoothing
-                # New Reward: row_reward_weighted
-                # Old Reward: rep_weights
-                # (0.2 is the adjustable parameter "alpha", hard-coding it for now)
-                smooth_rep = array(num_voters)
-                i = 0
-                while i < num_voters:
-                    smooth_rep[i] = row_reward_weighted[i]/5 + rep_weights[i]*4/5
-                    i += 1
+                            # Freshly-calculated reward (in reputation) using exponential smoothing
+                            # New Reward: row_reward_weighted
+                            # Old Reward: rep_weights
+                            # (0.2 is the adjustable parameter "alpha", hard-coding it for now)
+                            with smooth_rep = array(num_voters):
+                                with i = 0:
+                                    while i < num_voters:
+                                        smooth_rep[i] = row_reward_weighted[i]/5 + rep_weights[i]*4/5
+                                        i += 1
 
-                outcomes_raw = array(num_events)
-                outcomes_final = array(num_events)
-                i = 0
-                while i < num_events:
-                    k = 0
-                    while k < num_voters:
-                        outcomes_raw[i] += smooth_rep[k] * votes_filled[k*num_events + i] / 0x10000000000000000 / 10
-                        k += 1
-                    outcomes_final[i] = catch(outcomes_raw[i])
-                    i += 1
+                                # return(smooth_rep, num_voters)
 
-                # Smoothing function travels from 0 to 1 with a minimum at .5
-                certainty = array(num_events)
-                i = 0
-                while i < num_events:
-                    certainty[i] = 2*outcomes_raw[i] - 0x10000000000000000
-                    i += 1
-                consensus_reward = get_weight(certainty:num_events)
-                avg_certainty = mean(certainty:num_events)
+                                with outcomes_raw = array(num_events):
+                                    with i = 0:
+                                        while i < num_events:
+                                            with k = 0:
+                                                while k < num_voters:
+                                                    outcomes_raw[i] += fixed_multiply(smooth_rep[k], votes_filled[k*num_events + i])
+                                                    k += 1
+                                                outcomes_final[i] = catch(outcomes_raw[i])
+                                                i += 1
 
-                # Event participation (within columns): proportion of reputation
-                # that answered each event
-                participation_events = array(num_events)
-                i = 0
-                while i < num_events:
-                    k = 0
-                    while k < num_voters:
-                        participation_events[i] += smooth_rep[k] * votes_mask[k*num_events + i]
-                        k += 1
-                    participation_events[i] = 0x10000000000000000 - participation_events[i]
-                    i += 1
-                
-                # Voter participation (within rows): all events treated equally
-                participation_voters = array(num_voters)
-                i = 0
-                while i < num_voters:
-                    total = 0
-                    j = 0
-                    while j < num_events:
-                        total += votes_mask[i*num_events + j]
-                        j += 1
-                    participation_voters[i] = 0x10000000000000000 - total * 0x10000000000000000 / num_events
-                    i += 1
-                
-                # General participation
-                total = 0
-                i = 0
-                while i < num_events:
-                    total += participation_events[i]
-                    i += 1
-                participation = 0x10000000000000000 - total / num_events
+                                    # return(outcomes_raw, num_events)
 
-                # Bringing it all together!
-                na_bonus_voters = get_weight(participation_voters:num_voters)
-                na_bonus_events = get_weight(participation_events:num_events)
-                voter_bonus = array(num_voters)
-                i = 0
-                while i < num_voters:
-                    voter_bonus[i] = (na_bonus_voters[i]*participation + smooth_rep[i]*(0x10000000000000000 - participation)) / 0x10000000000000000
-                    i += 1
-                event_bonus = array(num_events)
-                i = 0
-                while i < num_events:
-                    event_bonus[i] = (na_bonus_events[i]*participation + consensus_reward[i]*(0x10000000000000000 - participation)) / 0x10000000000000000
-                    i += 1
+                                    # Smoothing function travels from 0 to 1 with a minimum at .5
+                                    with certainty = array(num_events):
+                                        with i = 0:
+                                            while i < num_events:
+                                                certainty[i] = 2*outcomes_raw[i] - ONE
+                                                i += 1
+                                        consensus_reward = get_weight(certainty:num_events)
 
-                # return(sum(event_bonus:num_events))
-                # return(voter_bonus, num_voters)
-                # return(event_bonus, num_events)
-                # return(outcomes_raw, num_events)
-                # return(outcomes_final, num_events)
-                return([startgas, tx.gas], 2)
-                # return(votes_filled, v_size)
+                                        # return(outcomes_raw, num_events)
+                                        # return(certainty, num_events)
+
+                                # Event participation (within columns): proportion of reputation
+                                # that answered each event
+                                with participation_events = array(num_events):
+                                    with i = 0:
+                                        while i < num_events:
+                                            with k = 0:
+                                                while k < num_voters:
+                                                    participation_events[i] += smooth_rep[k] * votes_mask[k*num_events + i]
+                                                    k += 1
+                                            participation_events[i] = ONE - participation_events[i]
+                                            i += 1
+                                    
+                                    # return(participation_events, num_events)
+                                    
+                                    # Voter participation (within rows): all events treated equally
+                                    with participation_voters = array(num_voters):
+                                        with i = 0:
+                                            while i < num_voters:
+                                                with total = 0:
+                                                    with j = 0:
+                                                        while j < num_events:
+                                                            total += votes_mask[i*num_events + j]
+                                                            j += 1
+                                                        participation_voters[i] = ONE - total * ONE / num_events
+                                                i += 1
+                                            
+                                            # General participation
+                                            with total = 0:
+                                                with i = 0:
+                                                    while i < num_events:
+                                                        total += participation_events[i]
+                                                        i += 1
+                                                with participation = ONE - total / num_events:
+
+                                                    # Bringing it all together!
+                                                    with voter_bonus = array(num_voters):
+                                                        with na_bonus_voters = get_weight(participation_voters:num_voters):    
+                                                            with i = 0:
+                                                                while i < num_voters:
+                                                                    voter_bonus[i] = (na_bonus_voters[i]*participation + smooth_rep[i]*(ONE - participation)) / ONE
+                                                                    i += 1
+                                                        with event_bonus = array(num_events):
+                                                            with na_bonus_events = get_weight(participation_events:num_events):    
+                                                                with i = 0:
+                                                                    while i < num_events:
+                                                                        event_bonus[i] = (na_bonus_events[i]*participation + consensus_reward[i]*(ONE - participation)) / ONE
+                                                                        i += 1
+
+                                                                # return(sum(event_bonus:num_events))
+                                                                # return(voter_bonus, num_voters)
+                                                                # return(event_bonus, num_events)
+                                                                # return(outcomes_raw, num_events)
+                                                                # return(outcomes_final, num_events)
+                                                                return([startgas, tx.gas], 2)

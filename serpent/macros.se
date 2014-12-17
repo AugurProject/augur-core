@@ -265,3 +265,9 @@ macro catch($x):
             else:
                 caught = 0x8000000000000000
             caught
+
+macro fixed_multiply($x, $y):
+    $x * $y / 2^64
+
+macro fixed_divide($x, $y):
+    $x * 2^64 / $y
