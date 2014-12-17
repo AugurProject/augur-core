@@ -138,13 +138,7 @@ macro diag($a:$asz):
         with i = 0:
             while i < $asz:
                 d[i] = array($asz)
-                with j = 0:
-                    while j < $asz:
-                        if i == j:
-                            d[i][j] = $a[i]
-                        else:
-                            d[i][j] = 0
-                        j += 1
+                d[i][i] = $a[i]
                 i += 1
         d
 
