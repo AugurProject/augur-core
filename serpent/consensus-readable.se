@@ -158,7 +158,7 @@ def consensus(votes:a, reputation:a):
             while j < num_events:
                 pos = i*num_events + j
                 to_fill[pos] += fixed_multiply(votes_mask[pos], outcomes_raw[j])
-                votes_filled[pos] = votes[i] + catch(to_fill[pos])
+                votes_filled[pos] = catch(votes[pos] + to_fill[pos])
                 j += 1
             i += 1
 
@@ -166,7 +166,9 @@ def consensus(votes:a, reputation:a):
         # return(outcomes_raw, num_events)
         # return(active_rep, num_present)
         # return(active_events, num_present)
+        # return(caught, v_size)
         # return(to_fill, v_size)
+        # return(votes_filled, v_size)
 
     else:
         votes_filled = votes
@@ -194,13 +196,15 @@ def consensus(votes:a, reputation:a):
         weighted_centered_data[i] = votes_filled[i] - weighted_means[i % num_events]
         i += 1
 
+    return(weighted_centered_data, v_size)
+
     # initialize the loading vector
     loading_vector = array(num_events)
     loading_vector[0] = ONE
 
     i = 0
     # careful, setting this to 25 causes tx gas to run out!
-    while i < 15:
+    while i < 5:
         s = array(num_events)
         j = 0
         while j < num_voters:
@@ -405,11 +409,12 @@ def consensus(votes:a, reputation:a):
         author_bonus[i] = (na_bonus_events[i]*participation + consensus_reward[i]*(ONE - participation)) / ONE
         i += 1
 
+    return(adj_prin_comp, num_events)
     # return(participation_events, num_events)
     # return(participation_voters, num_voters)
     # return(sum(author_bonus:num_events))
     # return(voter_bonus, num_voters)
     # return(author_bonus, num_events)
     # return(outcomes_raw, num_events)
-    return(outcomes_final, num_events)
+    # return(outcomes_final, num_events)
     return([startgas, tx.gas], 2)

@@ -154,7 +154,7 @@ def main():
         # "interpolate",
         # "fixedpoint",
         "../consensus",
-        # "../consensus-readable",
+        "../consensus-readable",
     ]
     for contract in contracts:
         test_contract(contract)
