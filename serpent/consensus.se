@@ -85,7 +85,7 @@ macro fixed_multiply($x, $y):
 macro fixed_divide($x, $y):
     $x * 2^64 / $y
 
-def consensus(votes:a, reputation:a):
+def consensus(votes:a, reputation:a, returns, max_iterations):
     ONE = 2^64
     TRUE = ONE
     FALSE = -ONE
@@ -125,29 +125,29 @@ def consensus(votes:a, reputation:a):
                                                     total_active_rep += reputation[i]
                                                     present[i] = 1
                                                 i += 1
-                                            num_present = sum(present:num_voters)
-                                            active_rep = array(num_present)
-                                            i = 0
-                                            m = 0
-                                            while i < num_voters:
-                                                if present[i]:
-                                                    active_rep[i - m] = fixed_divide(reputation[i], total_active_rep)
-                                                else:
-                                                    m += 1
-                                                i += 1
+                                            with num_present = sum(present:num_voters):
+                                                with active_rep = array(num_present):
+                                                    with i = 0:
+                                                        with m = 0:
+                                                            while i < num_voters:
+                                                                if present[i]:
+                                                                    active_rep[i - m] = fixed_divide(reputation[i], total_active_rep)
+                                                                else:
+                                                                    m += 1
+                                                                i += 1
 
-                                    # current best-guess for this event's outcome is a weighted sum
-                                    # (votes weighted by reputation)
-                                    active_events = array(num_present)
-                                    with i = 0:
-                                        with m = 0:
-                                            while i < num_voters:
-                                                if present[i]:
-                                                    active_events[i - m] = votes[i*num_events + j]
-                                                    outcomes_raw[j] += fixed_multiply(active_rep[i - m], active_events[i - m])
-                                                else:
-                                                    m += 1
-                                                i += 1
+                                                    # current best-guess for this event's outcome is a weighted sum
+                                                    # (votes weighted by reputation)
+                                                    with active_events = array(num_present):
+                                                        with i = 0:
+                                                            with m = 0:
+                                                                while i < num_voters:
+                                                                    if present[i]:
+                                                                        active_events[i - m] = votes[i*num_events + j]
+                                                                        outcomes_raw[j] += fixed_multiply(active_rep[i - m], active_events[i - m])
+                                                                    else:
+                                                                        m += 1
+                                                                    i += 1
 
                                 j += 1
 
@@ -203,7 +203,7 @@ def consensus(votes:a, reputation:a):
                                     loading_vector[0] = ONE
                                     with i = 0:
                                         # careful, setting this to 25 causes tx gas to run out!
-                                        while i < 10:
+                                        while i < max_iterations:
                                             with s = array(num_events):
                                                 with j = 0:
                                                     while j < num_voters:
@@ -253,7 +253,7 @@ def consensus(votes:a, reputation:a):
                                             i += 1
 
                                     # return(loading_vector, num_events)
-                                    return(scores, num_voters)
+                                    # return(scores, num_voters)
 
                                 # Which of the two possible 'new' reputation vectors had more opinion in common
                                 # with the original 'old' reputation.
@@ -365,7 +365,7 @@ def consensus(votes:a, reputation:a):
                                                     k += 1
                                             participation_events[i] = ONE - participation_events[i]
                                             i += 1
-                                                                       
+
                                     # Voter participation (within rows): all events treated equally
                                     with participation_voters = array(num_voters):
                                         with i = 0:
@@ -377,7 +377,7 @@ def consensus(votes:a, reputation:a):
                                                             j += 1
                                                         participation_voters[i] = ONE - total / num_events
                                                 i += 1
-                                            
+
                                             # General participation
                                             with total = 0:
                                                 with i = 0:
@@ -400,11 +400,16 @@ def consensus(votes:a, reputation:a):
                                                                         author_bonus[i] = fixed_multiply(na_bonus_events[i], participation) + fixed_multiply(consensus_reward[i], ONE - participation)
                                                                         i += 1
 
-                                                                return(adj_prin_comp, num_events)
+                                                                # return(adj_prin_comp, num_events)
                                                                 # return(participation_events, num_events)
                                                                 # return(participation_voters, num_voters)
                                                                 # return(sum(author_bonus:num_events))
                                                                 # return(voter_bonus, num_voters)
                                                                 # return(author_bonus, num_events)
                                                                 # return(outcomes_final, num_events)
-                                                                return([startgas, tx.gas], 2)
+                                                                if returns == 0:
+                                                                    return([startgas, tx.gas], 2)
+                                                                elif returns == 1:
+                                                                    return(voter_bonus, num_voters)
+                                                                elif returns == 2:
+                                                                    return(author_bonus, num_events)

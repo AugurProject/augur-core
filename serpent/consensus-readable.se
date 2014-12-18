@@ -256,7 +256,7 @@ def consensus(votes:a, reputation:a):
         i += 1
 
     # return(loading_vector, num_events)
-    return(scores, num_voters)
+    # return(scores, num_voters)
 
     # Which of the two possible 'new' reputation vectors had more opinion in common
     # with the original 'old' reputation.
@@ -410,7 +410,7 @@ def consensus(votes:a, reputation:a):
         author_bonus[i] = (na_bonus_events[i]*participation + consensus_reward[i]*(ONE - participation)) / ONE
         i += 1
 
-    return(adj_prin_comp, num_events)
+    # return(adj_prin_comp, num_events)
     # return(participation_events, num_events)
     # return(participation_voters, num_voters)
     # return(sum(author_bonus:num_events))

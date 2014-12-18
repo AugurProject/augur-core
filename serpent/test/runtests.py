@@ -9,7 +9,10 @@ except ImportError:
     pass
 from pyethereum import tester as t
 
-np.set_printoptions(linewidth=500)
+np.set_printoptions(linewidth=500,
+                    precision=5,
+                    suppress=True,
+                    formatter={"float": "{: 0.3f}".format})
 tolerance = 1e-12
 init()
 
@@ -96,32 +99,37 @@ def test_contract(contract):
         #                   [10,  0, 10, 10],
         #                   [ 0,  0, 10, 10]])
         # new: true=1, false=-1, indeterminate=0.5, no response=0
-        # votes = np.array([[  1,  1, -1,  0],
-        #                   [  1, -1, -1, -1],
-        #                   [  1,  1, -1, -1],
-        #                   [  1,  1,  1, -1],
-        #                   [  0, -1,  1,  1],
-        #                   [ -1, -1,  1,  1]])
-        votes = np.array([[  1,  1, -1,  1],
+        votes = np.array([[  1,  1, -1,  0],
                           [  1, -1, -1, -1],
                           [  1,  1, -1, -1],
                           [  1,  1,  1, -1],
-                          [  1, -1,  1,  1],
+                          [  0, -1,  1,  1],
                           [ -1, -1,  1,  1]])
+        # votes = np.array([[  1,  1, -1,  1],
+        #                   [  1, -1, -1, -1],
+        #                   [  1,  1, -1, -1],
+        #                   [  1,  1,  1, -1],
+        #                   [  1, -1,  1,  1],
+        #                   [ -1, -1,  1,  1]])
         reputation = [2, 10, 4, 2, 7, 1]
-        result = s.send(t.k0, c, 0, funid=0, abi=[map(fix, votes.flatten()), map(fix, reputation)])
+        result = s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), 0, 5])
         try:
             assert(result == [1])
         except:
             try:
                 assert(map(unfix, result) == [1])
             except:
-                print "result:   "
-                pprint(result)
-                print "base 16:  "
-                pprint(map(hex, result))
-                print "base 2^64:"
-                pprint(map(unfix, result))
+                if len(result) < 4:
+                    print "result:   ", result
+                    print "base 16:  ", map(hex, result)
+                    print "base 2^64:", map(unfix, result)
+                else:
+                    print "result:   "
+                    pprint(result)
+                    print "base 16:  "
+                    pprint(map(hex, result))
+                    print "base 2^64:"
+                    pprint(map(unfix, result))
     else:
         result = s.send(t.k0, c, 0, funid=0, abi=[])
         try:
