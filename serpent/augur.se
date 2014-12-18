@@ -565,13 +565,24 @@ def any(branch):
                 x += 1
         i += 1
 
-     # how to get return value from this?
-     #  concatenate them like:
-     #[outcome_final author_bonus voter_bonus]
-     # outcomes_final event_bonus voter_bonus
+    # populate returned arrays
+    megaArray = self.consensus(votes:self.Reporting[branch].numberReporters-1, reputation:self.Reporting[branch].numberReporters-1)
+    outcomes_final = array(numberEvents)
+    event_bonus = array(numberEvents)
+    voter_bonus = array(numReporters)
+    a = 0
+    while a < numberEvents:
+        outcomes_final[a] = megaArray[a]
+        a+=1
+    b = numberEvents
+    while b < (2*numberEvents):
+        event_bonus[b] = megaArray[b]
+        b+=1
+    c = (2*numberEvents)
+    while c < numReporters:
+        voter_bonus[c] = megaArray[c]
+        c+=1
 
-#and you break it apart like 0:num_events-1 = outcome_final, num_events:2*num_events-1 = author_bonus, & the rest = voter_bonus
-    self.consensus(votes:self.Reporting[branch].numberReporters-1, reputation:self.Reporting[branch].numberReporters-1)
 
     # get event ID for each event by taking the x index in the votes arrays - shoving it in reporting.events[]
     # and getting the cooresponding ID
@@ -583,13 +594,13 @@ def any(branch):
             self.Events[eventID].outcome = -1
         elif(outcomes_final[n]==1):
             self.Events[eventID].outcome = 1
-        # will need to loop through eventid holders and distribute 25% coins using the event_bonus to determine how much
+        # need to loop through eventid holders and distribute 25% coins using the event_bonus to determine how much
         # of the 25% each get
         self.cashcoin_balances[self.Info[eventID].creator] += event_bonus[n] * self.cashcoin_balances[branch] / 3
         self.cashcoin_balances[branch] -= event_bonus[n] * self.cashcoin_balances[branch] / 3
 
-    # will need to loop through rep holders and distribute 50% of branch fees to voters' cashcoin addresses
-    # will also need to take voter_bonus and redistribute reputation in the Reporting structure accordingly
+    # eed to loop through rep holders and distribute 50% of branch fees to voters' cashcoin addresses
+    # also need to take voter_bonus and redistribute reputation in the Reporting structure accordingly
     z = 0
     while z < numReporters:
         self.Reporting[branch].reputation[z].repValue += voter_bonus[z]*21000000
