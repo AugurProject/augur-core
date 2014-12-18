@@ -359,7 +359,7 @@ def consensus(votes:a, reputation:a):
                                         while i < num_events:
                                             with k = 0:
                                                 while k < num_voters:
-                                                    participation_events[i] += smooth_rep[k] * votes_mask[k*num_events + i]
+                                                    participation_events[i] += fixed_multiply(smooth_rep[k] votes_mask[k*num_events + i])
                                                     k += 1
                                             participation_events[i] = ONE - participation_events[i]
                                             i += 1
@@ -402,7 +402,7 @@ def consensus(votes:a, reputation:a):
 
                                                                 # return(sum(event_bonus:num_events))
                                                                 # return(voter_bonus, num_voters)
-                                                                # return(event_bonus, num_events)
+                                                                return(event_bonus, num_events)
                                                                 # return(outcomes_raw, num_events)
                                                                 # return(outcomes_final, num_events)
-                                                                return([startgas, tx.gas], 2)
+                                                                # return([startgas, tx.gas], 2)
