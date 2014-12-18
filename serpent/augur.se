@@ -50,13 +50,14 @@ data Events[](branch, expirationDate, outcome)
 # We 0 index reputation so can walk thru for consensus
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
+# Events is 0 indexed as well
 data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market
 # Sharespurchased keeps track of the number of shares purchased for each outcome
 # Participants is a 0 indexed array of participants, their cashIDs, and the shares in each outcome they've purchased of an event
-data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](participantID, event[](shares[2])), lossLimit, tradingFee, numberEvents, currentParticipant, winningEvent)
+data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](participantID, event[](shares[2])), lossLimit, tradingFee, numberEvents, currentParticipant)
 
 data cashcoin_balances[2^160]
 
@@ -86,6 +87,7 @@ data cashcoin_balances[2^160]
     # fast voting cycle first few days to get the 60% problem away from a branch, e.g. what if not enough people vote  60% of votes -- need to get the cycle length parameters right
     # make transaction fee a percent of trade if doing lmsr and not Abe's
     # fix any and fix vote
+    # ui functions
 
 ### Urgent todo:
     # voting consensus & redeem tx
@@ -465,11 +467,20 @@ def inPeriod(branchID, eventID):
         i += 1
     return(0)
 
-#make sure people can change their vote during the voting period
+# make sure people can change their vote during the voting period
 # a no vote is -2^64, a yes vote is 2^64 and a can't determine vote is 2^63 (a empty ballot is 0)
+# atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
+# ui should handle this ^
+# need report length to be same as number of items in the current eventexpdates voting period events!
+# ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[futurePeriod].
+# numberEvents and loop through the events[] array from 0 to numberEvents -1 for the votes list / order
+# UI will need a function to get the items in that array above so it can make a report!
 def vote(branch, report:a):
     # make sure the branch exists
     repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
+
+    if(arglen(report)!=self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].numberEvents):
+        return(0)
 
     # if current period is more than 2 periods past the vote period
     # then there can be no more voting for that voting period
@@ -482,30 +493,21 @@ def vote(branch, report:a):
 
     reputation = self.Reporting[branch].reputation[repIndex].repValue
 
-# need report length to be same as number of items in the current eventexpdates voting period #events!!!!!!!!!!!!!!
-# and should be the same events as in that array (inPeriod)
-# check what events the reporters did report on ... if not all reported fill those events in with No report
-# ^ (defined by all in period and same length as said above)
-# also make sure vote values are valid     # a no vote is -2^64, a yes vote is 2^64 and a can't determine vote is 2^63 (a empty ballot is 0)
-# ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents and loop through the events[] array from 0 to numberEvents -1 for the votes list / order
-# atm voters who do vote are req. to vote on all things in their respective ballots
-
-
     i = 0
     while i < arglen(report):
-        if report[i] > 2^64:
-            return(0) # people should not have votes greater than 1! they need to be in (0, 1)
+        if (report[i] != 2^64 | report[i] != -2^64 | report[i] != 0 | report[i] != 2^63):
+            return(0) # make sure vote values are valid
         else:
             if(!inPeriod(branch, report[i])):
                 return(0)
-        i += 2
+        i += 1
 
     # need to update stuff for quorem
     # and store the report and the rep value
     while i < arglen(report):
         self.Reporting[branchID].eventsExpDates[0].reporters[tx.origin][i] = report[i]
         i+=1
-    self.Reporting[branchID].eventsExpDates[self.Branches[branchID].currentVotePeriod].totalRepReported += self.Reporting[branchID].reputation[repIndex].repValue
+    self.Reporting[branchID].eventsExpDates[self.Branches[branchID].currentVotePeriod].totalRepReported += reputation
     return(1)
 
 
@@ -561,7 +563,6 @@ def any(branch):
             x = 0
             while x < numberEvents:
                 votes[i][x] = self.Reporting[branchID].eventsExpDates[currentVotePeriod].reporters[reporterID][x]
-                # if we end up including eventIDs still in this array we do x += 2
                 x += 1
         i += 1
 
@@ -582,7 +583,6 @@ def any(branch):
     while c < numReporters:
         voter_bonus[c] = megaArray[c]
         c+=1
-
 
     # get event ID for each event by taking the x index in the votes arrays - shoving it in reporting.events[]
     # and getting the cooresponding ID
