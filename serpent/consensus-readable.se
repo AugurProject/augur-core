@@ -382,7 +382,7 @@ def consensus(votes:a, reputation:a):
         while j < num_events:
             total += votes_mask[i*num_events + j]
             j += 1
-        participation_voters[i] = ONE - total * ONE / num_events
+        participation_voters[i] = ONE - total / num_events
         i += 1
     
     # General participation
@@ -407,9 +407,11 @@ def consensus(votes:a, reputation:a):
         event_bonus[i] = (na_bonus_events[i]*participation + consensus_reward[i]*(ONE - participation)) / ONE
         i += 1
 
+    # return(participation_events, num_events)
+    return(participation_voters, num_voters)
     # return(sum(event_bonus:num_events))
     # return(voter_bonus, num_voters)
-    return(event_bonus, num_events)
+    # return(event_bonus, num_events)
     # return(outcomes_raw, num_events)
     # return(outcomes_final, num_events)
-    # return([startgas, tx.gas], 2)
+    return([startgas, tx.gas], 2)
