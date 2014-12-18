@@ -370,8 +370,6 @@ def consensus(votes:a, reputation:a):
             k += 1
         participation_events[i] = ONE - participation_events[i]
         i += 1
-    
-    # return(participation_events, num_events)
 
     # Voter participation (within rows): all events treated equally
     participation_voters = array(num_voters)
@@ -408,10 +406,10 @@ def consensus(votes:a, reputation:a):
         i += 1
 
     # return(participation_events, num_events)
-    return(participation_voters, num_voters)
+    # return(participation_voters, num_voters)
     # return(sum(event_bonus:num_events))
     # return(voter_bonus, num_voters)
     # return(event_bonus, num_events)
     # return(outcomes_raw, num_events)
-    # return(outcomes_final, num_events)
+    return(outcomes_final, num_events)
     return([startgas, tx.gas], 2)
