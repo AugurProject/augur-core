@@ -375,7 +375,7 @@ def consensus(votes:a, reputation:a):
                                                         while j < num_events:
                                                             total += votes_mask[i*num_events + j]
                                                             j += 1
-                                                        participation_voters[i] = ONE - total * ONE / num_events
+                                                        participation_voters[i] = fixed_divide(ONE - total, num_events)
                                                 i += 1
                                             
                                             # General participation
@@ -391,13 +391,13 @@ def consensus(votes:a, reputation:a):
                                                         with na_bonus_voters = get_weight(participation_voters:num_voters):    
                                                             with i = 0:
                                                                 while i < num_voters:
-                                                                    voter_bonus[i] = (na_bonus_voters[i]*participation + smooth_rep[i]*(ONE - participation)) / ONE
+                                                                    voter_bonus[i] = fixed_multiply(na_bonus_voters[i], participation) + fixed_multiply(smooth_rep[i], (ONE - participation))
                                                                     i += 1
                                                         with event_bonus = array(num_events):
                                                             with na_bonus_events = get_weight(participation_events:num_events):    
                                                                 with i = 0:
                                                                     while i < num_events:
-                                                                        event_bonus[i] = (na_bonus_events[i]*participation + consensus_reward[i]*(ONE - participation)) / ONE
+                                                                        event_bonus[i] = fixed_multiply(na_bonus_events[i], participation) + fixed_multiply(consensus_reward[i], (ONE - participation))
                                                                         i += 1
 
                                                                 # return(sum(event_bonus:num_events))
