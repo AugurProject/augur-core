@@ -544,8 +544,10 @@ def any(branch):
     # (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
     reputation = array(self.Reporting[branch].numberReporters-1)
     votes = array(self.Reporting[branch].numberReporters-1)
+    numberEvents = self.Reporting[branch].eventsExpDates[currentvotePeriod].numberEvents
+    numReporters = self.Reporting[branch].numberReporters
     i = 0
-    while i < self.Reporting[branch].numberReporters:
+    while i < numReporters:
         # checks to see if each reporter actually voted on any events
         reporterID = self.Reporting[branch].reputation[i].reporterID
         reputation[i] = self.Reporting[branch].reputation[i].repValue
@@ -556,7 +558,6 @@ def any(branch):
         # the reporter did report on events
         else:
             votes[i] = array(self.Reporting[branch].eventsExpDates.numberEvents-1)
-            numberEvents = self.Reporting[branch].eventsExpDates[currentvotePeriod].numberEvents
             x = 0
             while x < numberEvents:
                 votes[i][x] = self.Reporting[branchID].eventsExpDates[currentVotePeriod].reporters[reporterID][x]
@@ -564,24 +565,42 @@ def any(branch):
                 x += 1
         i += 1
 
-    # how to get return value from this?
+     # how to get return value from this?
+     #  concatenate them like:
+     #[outcome_final author_bonus voter_bonus]
+     # outcomes_final event_bonus voter_bonus
+
+#and you break it apart like 0:num_events-1 = outcome_final, num_events:2*num_events-1 = author_bonus, & the rest = voter_bonus
     self.consensus(votes:self.Reporting[branch].numberReporters-1, reputation:self.Reporting[branch].numberReporters-1)
 
     # get event ID for each event by taking the x index in the votes arrays - shoving it in reporting.events[]
     # and getting the cooresponding ID
-    # then take outcomes_final and set each event outcome to -1 if false or 1 if true
-
-    # will need to loop through eventid holders and distribute 25% coins using the event_bonus to determine how much
-    # of the 25% each get
-    self.cashcoin_balances[branch]
+    n = 0
+    while n < numberEvents:
+        eventID = self.Reporting[branch].eventsExpDates[currentVotePeriod].events[n]
+        # then take outcomes_final and set each event outcome to -1 if false or 1 if true
+        if(outcomes_final[n]==-1):
+            self.Events[eventID].outcome = -1
+        elif(outcomes_final[n]==1):
+            self.Events[eventID].outcome = 1
+        # will need to loop through eventid holders and distribute 25% coins using the event_bonus to determine how much
+        # of the 25% each get
+        self.cashcoin_balances[self.Info[eventID].creator] += event_bonus[n] * self.cashcoin_balances[branch] / 3
+        self.cashcoin_balances[branch] -= event_bonus[n] * self.cashcoin_balances[branch] / 3
 
     # will need to loop through rep holders and distribute 50% of branch fees to voters' cashcoin addresses
     # will also need to take voter_bonus and redistribute reputation in the Reporting structure accordingly
+    z = 0
+    while z < numReporters:
+        self.Reporting[branch].reputation[z].repValue += voter_bonus[z]*21000000
+        self.cashcoin_balances[self.Reporting[branch].reputation[z].reporterID] += (2/3)*self.cashcoin_balances[branch] / numReporters
+        self.cashcoin_balances[branch] -= (2/3)*self.cashcoin_balances[branch] / numReporters
 
     self.Branches[branch].currentVotePeriod += 1
 
 
 # loop through events in the market, get their outcomes and use those to determine the winning events!!!
+# distribute coins among winning events
 # fix this ^
 def close_market(branch, market):
     currentPeriod = block.number / self.Branches[branch].periodLength
