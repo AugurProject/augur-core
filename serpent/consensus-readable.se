@@ -399,17 +399,17 @@ def consensus(votes:a, reputation:a):
     while i < num_voters:
         voter_bonus[i] = (na_bonus_voters[i]*participation + smooth_rep[i]*(ONE - participation)) / ONE
         i += 1
-    event_bonus = array(num_events)
+    author_bonus = array(num_events)
     i = 0
     while i < num_events:
-        event_bonus[i] = (na_bonus_events[i]*participation + consensus_reward[i]*(ONE - participation)) / ONE
+        author_bonus[i] = (na_bonus_events[i]*participation + consensus_reward[i]*(ONE - participation)) / ONE
         i += 1
 
     # return(participation_events, num_events)
     # return(participation_voters, num_voters)
-    # return(sum(event_bonus:num_events))
+    # return(sum(author_bonus:num_events))
     # return(voter_bonus, num_voters)
-    # return(event_bonus, num_events)
+    # return(author_bonus, num_events)
     # return(outcomes_raw, num_events)
     return(outcomes_final, num_events)
     return([startgas, tx.gas], 2)
