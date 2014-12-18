@@ -203,7 +203,7 @@ def consensus(votes:a, reputation:a):
                                     loading_vector[0] = ONE
                                     with i = 0:
                                         # careful, setting this to 25 causes tx gas to run out!
-                                        while i < 5:
+                                        while i < 10:
                                             with s = array(num_events):
                                                 with j = 0:
                                                     while j < num_voters:
@@ -248,9 +248,12 @@ def consensus(votes:a, reputation:a):
                                         while i < num_voters:
                                             with k = 0:
                                                 while k < num_events:
-                                                    scores[i] += weighted_centered_data[i*num_events + k] * loading_vector[k] / ONE
+                                                    scores[i] += fixed_multiply(weighted_centered_data[i*num_events + k], loading_vector[k])
                                                     k += 1
                                             i += 1
+
+                                    # return(loading_vector, num_events)
+                                    return(scores, num_voters)
 
                                 # Which of the two possible 'new' reputation vectors had more opinion in common
                                 # with the original 'old' reputation.
@@ -296,8 +299,6 @@ def consensus(votes:a, reputation:a):
                                                         adj_prin_comp = set1
                                                     else:
                                                         adj_prin_comp = set2
-
-                                            # return(adj_prin_comp, num_voters)
 
                 # Set this to uniform if you want a passive diffusion toward equality
                 # when people cooperate.  Instead diffuses towards previous reputation.

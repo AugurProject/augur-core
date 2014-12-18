@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import division
+from pprint import pprint
 import numpy as np
 try:
     from colorama import Fore, Style, init
@@ -95,18 +96,18 @@ def test_contract(contract):
         #                   [10,  0, 10, 10],
         #                   [ 0,  0, 10, 10]])
         # new: true=1, false=-1, indeterminate=0.5, no response=0
-        votes = np.array([[  1,  1, -1,  0],
-                          [  1, -1, -1, -1],
-                          [  1,  1, -1, -1],
-                          [  1,  1,  1, -1],
-                          [  0, -1,  1,  1],
-                          [ -1, -1,  1,  1]])
-        # votes = np.array([[  1,  1, -1,  1],
+        # votes = np.array([[  1,  1, -1,  0],
         #                   [  1, -1, -1, -1],
         #                   [  1,  1, -1, -1],
         #                   [  1,  1,  1, -1],
-        #                   [  1, -1,  1,  1],
+        #                   [  0, -1,  1,  1],
         #                   [ -1, -1,  1,  1]])
+        votes = np.array([[  1,  1, -1,  1],
+                          [  1, -1, -1, -1],
+                          [  1,  1, -1, -1],
+                          [  1,  1,  1, -1],
+                          [  1, -1,  1,  1],
+                          [ -1, -1,  1,  1]])
         reputation = [2, 10, 4, 2, 7, 1]
         result = s.send(t.k0, c, 0, funid=0, abi=[map(fix, votes.flatten()), map(fix, reputation)])
         try:
@@ -115,9 +116,12 @@ def test_contract(contract):
             try:
                 assert(map(unfix, result) == [1])
             except:
-                print "result:   ", result
-                print "base 16:  ", map(hex, result)
-                print "base 2^64:", map(unfix, result)
+                print "result:   "
+                pprint(result)
+                print "base 16:  "
+                pprint(map(hex, result))
+                print "base 2^64:"
+                pprint(map(unfix, result))
     else:
         result = s.send(t.k0, c, 0, funid=0, abi=[])
         try:

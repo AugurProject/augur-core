@@ -134,12 +134,12 @@ def test_emwpca():
     # data = np.random.rand(*shape)
     # weights = np.random.rand(shape[0])
 
-    data = np.array([[10, 10,  0, 10],
-                     [10,  0,  0,  0],
-                     [10, 10,  0,  0],
-                     [10, 10, 10,  0],
-                     [10,  0, 10, 10],
-                     [ 0,  0, 10, 10]])
+    data = np.array([[  1,  1, -1,  1],
+                     [  1, -1, -1, -1],
+                     [  1,  1, -1, -1],
+                     [  1,  1,  1, -1],
+                     [  1, -1,  1,  1],
+                     [ -1, -1,  1,  1]])
     weights = np.array([2, 10, 4, 2, 7, 1])
 
     # print data
@@ -155,9 +155,8 @@ def test_emwpca():
     loading = emwpca(data, weights, 1)[0]
     print
     print "LOADINGS"
+    print fixedlist2nparray(s.send(t.k0, c, 0, funid=0, abi=[ nparray2fixedlist(data.flatten()), nparray2fixedlist(weights) ]))
     print loading
-
-    # print fixedlist2nparray(s.send(t.k0, c, 0, funid=0, abi=[ nparray2fixedlist(data.flatten()), nparray2fixedlist(weights) ]))
 
     scores = np.dot(weighted_centered_data, loading)
     print
@@ -179,72 +178,72 @@ def test_emwpca():
     print "wset1:", wset1
     print "wset2:", wset2
 
-    new1 = np.dot(wset1, data)
-    new2 = np.dot(wset2, data)
-    print "new1:", new1
-    print "new2:", new2
+    # new1 = np.dot(wset1, data)
+    # new2 = np.dot(wset2, data)
+    # print "new1:", new1
+    # print "new2:", new2
 
-    ref_ind = np.sum((new1 - old)**2) - np.sum((new2 - old)**2)
-    if ref_ind <= 0:
-        adj_prin_comp = set1
-    if ref_ind > 0:
-        adj_prin_comp = set2
-    print "adj_prin_comp:", adj_prin_comp
+    # ref_ind = np.sum((new1 - old)**2) - np.sum((new2 - old)**2)
+    # if ref_ind <= 0:
+    #     adj_prin_comp = set1
+    # if ref_ind > 0:
+    #     adj_prin_comp = set2
+    # print "adj_prin_comp:", adj_prin_comp
 
-    row_reward_weighted = get_weight(weights)
-    if max(abs(adj_prin_comp)) != 0:
-        row_reward_weighted = get_weight(adj_prin_comp * (weights / np.mean(weights)).T)
-    print "row_reward_weighted:", row_reward_weighted
+    # row_reward_weighted = get_weight(weights)
+    # if max(abs(adj_prin_comp)) != 0:
+    #     row_reward_weighted = get_weight(adj_prin_comp * (weights / np.mean(weights)).T)
+    # print "row_reward_weighted:", row_reward_weighted
 
-    alpha = 0.2
-    smooth_rep = alpha*row_reward_weighted + (1-alpha)*get_weight(weights).T
-    print "smooth_rep:", smooth_rep
+    # alpha = 0.2
+    # smooth_rep = alpha*row_reward_weighted + (1-alpha)*get_weight(weights).T
+    # print "smooth_rep:", smooth_rep
 
-    event_outcomes_raw = np.dot(smooth_rep, data).squeeze() / 10
-    print "event_outcomes_raw:", event_outcomes_raw
+    # event_outcomes_raw = np.dot(smooth_rep, data).squeeze() / 10
+    # print "event_outcomes_raw:", event_outcomes_raw
 
-    event_outcomes_final = np.array(map(catch, event_outcomes_raw))
-    print "event_outcomes_final:", event_outcomes_final
+    # event_outcomes_final = np.array(map(catch, event_outcomes_raw))
+    # print "event_outcomes_final:", event_outcomes_final
 
-    certainty = abs(2*event_outcomes_raw - 1)
-    print "certainty:", certainty
+    # certainty = abs(2*event_outcomes_raw - 1)
+    # print "certainty:", certainty
 
-    consensus_reward = get_weight(certainty)
-    print "consensus_reward:", consensus_reward
+    # consensus_reward = get_weight(certainty)
+    # print "consensus_reward:", consensus_reward
 
-    avg_certainty = np.mean(certainty)
-    print "avg_certainty:", avg_certainty
+    # avg_certainty = np.mean(certainty)
+    # print "avg_certainty:", avg_certainty
 
-    data = data.astype(float)
-    # data[0,3] = np.nan
-    # data[4,0] = np.nan
-    data_mask = np.ma.masked_array(data, np.isnan(data))
-    na_mat = data_mask * 0
-    na_mat[na_mat.mask] = 1  # indicator matrix for missing
-    # print "na_mat:"
-    # print na_mat
+    # data = data.astype(float)
+    # # data[0,3] = np.nan
+    # # data[4,0] = np.nan
+    # data_mask = np.ma.masked_array(data, np.isnan(data))
+    # na_mat = data_mask * 0
+    # na_mat[na_mat.mask] = 1  # indicator matrix for missing
+    # # print "na_mat:"
+    # # print na_mat
 
-    participation_events = 1 - np.dot(smooth_rep, na_mat)
-    print "participation_events:", participation_events
+    # participation_events = 1 - np.dot(smooth_rep, na_mat)
+    # print "participation_events:", participation_events
 
-    participation_voters = 1 - na_mat.sum(axis=1) / na_mat.shape[1]
-    print "participation_voters:", participation_voters
+    # participation_voters = 1 - na_mat.sum(axis=1) / na_mat.shape[1]
+    # print "participation_voters:", participation_voters
 
-    participation = 1 - np.mean(participation_events)
-    print "participation:", participation
+    # participation = 1 - np.mean(participation_events)
+    # print "participation:", participation
 
-    na_bonus_voters = get_weight(participation_voters)
-    print "na_bonus_voters:", na_bonus_voters
+    # na_bonus_voters = get_weight(participation_voters)
+    # print "na_bonus_voters:", na_bonus_voters
 
-    voter_bonus = na_bonus_voters * participation + smooth_rep * (1 - participation)
-    print "voter_bonus:    ", voter_bonus
+    # voter_bonus = na_bonus_voters * participation + smooth_rep * (1 - participation)
+    # print "voter_bonus:    ", voter_bonus
 
-    na_bonus_events = get_weight(participation_events)
-    print "na_bonus_events:", na_bonus_events
+    # na_bonus_events = get_weight(participation_events)
+    # print "na_bonus_events:", na_bonus_events
 
-    event_bonus = na_bonus_events * participation + consensus_reward * (1 - participation)
-    print "event_bonus:    ", event_bonus
-    print consensus_reward
+    # event_bonus = na_bonus_events * participation + consensus_reward * (1 - participation)
+    # print "event_bonus:    ", event_bonus
+    # print consensus_reward
 
 if __name__ == '__main__':
     test_emwpca()

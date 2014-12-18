@@ -17,9 +17,23 @@ def main():
     c = s.contract('emwpca.se')
     print s.send(t.k0, c, 0, funid=1, abi=[1234])
 
-    data = np.random.rand(3, 3)
-    weights = np.random.rand(3)
+    # data = np.random.rand(3, 3)
+    # weights = np.random.rand(3)
     # weights = np.ones(40)
+
+    data = np.array([[  1,  1, -1,  1],
+                     [  1, -1, -1, -1],
+                     [  1,  1, -1, -1],
+                     [  1,  1,  1, -1],
+                     [  1, -1,  1,  1],
+                     [ -1, -1,  1,  1]])
+    # data = np.array([[  1,  1, -1,  0],
+    #                  [  1, -1, -1, -1],
+    #                  [  1,  1, -1, -1],
+    #                  [  1,  1,  1, -1],
+    #                  [  0, -1,  1,  1],
+    #                  [ -1, -1,  1,  1]])
+    weights = np.array([2, 10, 4, 2, 7, 1])
 
     print '=== INPUTS ==='
     print data
@@ -77,11 +91,12 @@ def main():
 
     # iterative computation of principal components
     print '=== FROM ITERATIVE ALGO ==='
-    loadings = emwpca(data, weights, 2)
+    num_loadings = 1
+    loadings = emwpca(data, weights, num_loadings)
 
     print loadings
     print 'basis error in degrees:', [ math.degrees(math.acos(np.clip(w_cov_svd_rsv[i].dot(loadings[i]), -1, 1)))
-        for i in xrange(2) ]
+        for i in xrange(num_loadings) ]
 
 def emwpca(data, weights, num_loadings):
     num_params = data.shape[1]
@@ -91,7 +106,7 @@ def emwpca(data, weights, num_loadings):
     loadings[0] = 1.
     loadings = np.tile(loadings, (num_loadings, 1))
     for i in xrange(num_loadings):
-        for j in xrange(25):
+        for j in xrange(5):
             s = np.zeros(num_params)
             for datum, weight in zip(weighted_centered_data, weights):
                 s -= datum.dot(loadings[i]) * datum * weight
