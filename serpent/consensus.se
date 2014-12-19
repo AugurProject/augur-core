@@ -252,6 +252,16 @@ def consensus(votes:a, reputation:a, returns, max_iterations):
                                                     k += 1
                                             i += 1
 
+                                    # PCA results are unique up to their sign,
+                                    # for consistency, if the leading entry in the
+                                    # loading vector is negative, multiply the
+                                    # vector by -1
+                                    if loading_vector[0] < 0:
+                                        with i = 0:
+                                            while i < num_events:
+                                                loading_vector[i] = -loading_vector[i]
+                                                i += 1
+
                                     # return(loading_vector, num_events)
                                     # return(scores, num_voters)
 
