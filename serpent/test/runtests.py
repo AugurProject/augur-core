@@ -9,10 +9,10 @@ except ImportError:
     pass
 from pyethereum import tester as t
 
-np.set_printoptions(linewidth=500,
-                    precision=5,
-                    suppress=True,
-                    formatter={"float": "{: 0.3f}".format})
+np.set_printoptions(linewidth=500)
+                    # precision=5,
+                    # suppress=True,
+                    # formatter={"float": "{: 0.3f}".format})
 tolerance = 1e-12
 init()
 
@@ -86,31 +86,31 @@ def test_contract(contract):
             print(actual)
     elif contract in ("../consensus", "../consensus-readable"):
         # old: true=10, false=0, indeterminate=5, no response=-1
-        # votes = np.array([[10, 10,  0, -1],
-        #                   [10,  0,  0,  0],
-        #                   [10, 10,  0,  0],
-        #                   [10, 10, 10,  0],
-        #                   [-1,  0, 10, 10],
-        #                   [ 0,  0, 10, 10]])
-        # votes = np.array([[10, 10,  0, 10],
-        #                   [10,  0,  0,  0],
-        #                   [10, 10,  0,  0],
-        #                   [10, 10, 10,  0],
-        #                   [10,  0, 10, 10],
-        #                   [ 0,  0, 10, 10]])
+        # reports = np.array([[10, 10,  0, -1],
+        #                     [10,  0,  0,  0],
+        #                     [10, 10,  0,  0],
+        #                     [10, 10, 10,  0],
+        #                     [-1,  0, 10, 10],
+        #                     [ 0,  0, 10, 10]])
+        # reports = np.array([[10, 10,  0, 10],
+        #                     [10,  0,  0,  0],
+        #                     [10, 10,  0,  0],
+        #                     [10, 10, 10,  0],
+        #                     [10,  0, 10, 10],
+        #                     [ 0,  0, 10, 10]])
         # new: true=1, false=-1, indeterminate=0.5, no response=0
-        votes = np.array([[  1,  1, -1,  0],
-                          [  1, -1, -1, -1],
-                          [  1,  1, -1, -1],
-                          [  1,  1,  1, -1],
-                          [  0, -1,  1,  1],
-                          [ -1, -1,  1,  1]])
-        # votes = np.array([[  1,  1, -1,  1],
-        #                   [  1, -1, -1, -1],
-        #                   [  1,  1, -1, -1],
-        #                   [  1,  1,  1, -1],
-        #                   [  1, -1,  1,  1],
-        #                   [ -1, -1,  1,  1]])
+        reports = np.array([[  1,  1, -1,  0],
+                            [  1, -1, -1, -1],
+                            [  1,  1, -1, -1],
+                            [  1,  1,  1, -1],
+                            [  0, -1,  1,  1],
+                            [ -1, -1,  1,  1]])
+        # reports = np.array([[  1,  1, -1,  1],
+        #                     [  1, -1, -1, -1],
+        #                     [  1,  1, -1, -1],
+        #                     [  1,  1,  1, -1],
+        #                     [  1, -1,  1,  1],
+        #                     [ -1, -1,  1,  1]])
         reputation = [2, 10, 4, 2, 7, 1]
         result = s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), 0, 5])
         try:
@@ -148,25 +148,25 @@ def main():
     s = t.state()
     # t.set_logging_level(2)
     contracts = [
-        # "sum",
-        # "mean",
-        # "normalize",
-        # "dot",
-        # "outer",
-        # "multiply",
-        # "kron",
-        # "hadamard",
-        # "transpose",
-        # "diag",
-        # "isnan",
-        # "mask",
-        # "any",
-        # "catch",
-        # "get_weight",
-        # "interpolate",
-        # "fixedpoint",
+        "sum",
+        "mean",
+        "normalize",
+        "dot",
+        "outer",
+        "multiply",
+        "kron",
+        "hadamard",
+        "transpose",
+        "diag",
+        "isnan",
+        "mask",
+        "any",
+        "catch",
+        "get_weight",
+        "interpolate",
+        "fixedpoint",
         "../consensus",
-        "../consensus-readable",
+        # "../consensus-readable",
     ]
     for contract in contracts:
         test_contract(contract)

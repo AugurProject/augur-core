@@ -16,16 +16,14 @@ from pyconsensus import Oracle
 pd.set_option("display.max_rows", 25)
 pd.set_option("display.width", 1000)
 pd.options.display.mpl_style = "default"
-np.set_printoptions(linewidth=500,
-                    precision=5,
-                    suppress=True,
-                    formatter={"float": "{: 0.3f}".format})
-
-if matplotlib.is_interactive():
-    plt.ioff()
-
+np.set_printoptions(linewidth=500)
+                    # precision=5,
+                    # suppress=True,
+                    # formatter={"float": "{: 0.3f}".format})
 tolerance = 1e-12
 init()
+if matplotlib.is_interactive():
+    plt.ioff()
 
 def BR(string): # bright red
     return "\033[1;31m" + str(string) + "\033[0m"
@@ -56,7 +54,7 @@ def fix(x):
 def unfix(x):
     return x / 0x10000000000000000
 
-def characterize(contract):
+def profile(contract):
     filename = contract + ".se"
     print BB("Contract:"), BG(filename)
 
@@ -64,14 +62,14 @@ def characterize(contract):
     np.random.seed(0)
 
     print BR("Events fixed, varying reporters")
+    s = t.state()
+    c = s.contract(filename)
     reporters_gas_used = []
     sizes = range(2, MAX_SIZE+1)
     reporters_sizes_used = []
     reporters_errors = []
     num_events = 4
     for k in sizes:
-        s = t.state()
-        c = s.contract(filename)
         print(str(k) + 'x' + str(num_events))
         reports = np.random.randint(-1, 2, (k, num_events))
         reputation = np.random.randint(1, 100, k)
@@ -84,13 +82,13 @@ def characterize(contract):
             break
 
     print BR("Reporters fixed, varying events")
+    s = t.state()
+    c = s.contract(filename)
     sizes = range(2, MAX_SIZE+1)
     events_gas_used = []
     events_sizes_used = []
     num_reporters = 4
     for k in sizes:
-        s = t.state()
-        c = s.contract(filename)
         print(str(num_reporters) + 'x' + str(k))
         reports = np.random.randint(-1, 2, (num_reporters, k))
         reputation = np.random.randint(1, 100, num_reporters)
@@ -105,7 +103,7 @@ def characterize(contract):
     print BR("Reporters and events fixed, varying PCA iterations")
     num_reporters = 6
     num_events = 4
-    pca_iter_sizes = range(1, 21)
+    pca_iter_sizes = range(1, 31)
     voter_bonus_rmsd = []
     author_bonus_rmsd = []
     pca_iter_sizes_used = []
@@ -156,7 +154,7 @@ def characterize(contract):
     plt.show()
 
 def main():
-    characterize("../consensus")
+    profile("../consensus")
 
 if __name__ == "__main__":
     main()
