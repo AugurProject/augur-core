@@ -20,9 +20,9 @@
 # Any questions please contact joeykrug@gmail.com
 
 # includes
-extern fp:[new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
-FixedPoint = create('fixedpoint.se')
-
+#extern fp:[new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
+#FixedPoint = create('fixedpoint.se')
+inset('fixedpoint.se')
 inset('consensus.se')
 
 BRANCH = 0
@@ -273,7 +273,8 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
             return(0)
         x+=1
 
-    initialLiquidity = lossLimit*FixedPoint.log(arglen(events), as=fp)
+    # gotta remember to divide by 2^64 when multiplying fixed point numbers
+    initialLiquidity = lossLimit*self.log(arglen(events)) / 2^64
     if(arglen(events) > 200 or self.cashcoin_balances[tx.origin]<initialLiquidity or !self.Branches[branch].periodLength or description=0 or !lossLimit or !tradingFee):
         return(0)
     # formation of marketID (hash)
@@ -321,20 +322,37 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
     else:
         return(0)
 
+# alpha is equal to v/(n*log(n)) where v is the max percent commission,
+# and n is the number of outcomes people can trade. Alpha is set when
+# a market is created.
+macro abe_msr($shares:$numShares, $alpha):
+    with Bq = 0:
+        with i = 0:
+            while i < $numShares:
+                Bq += $shares[i]
+                i += 1
+            Bq = Bq * $alpha / 2^64
+        with sum_of_exps = 0:
+            with i = 0:
+                while i < $numShares:
+                    sum_of_exps += self.exp($shares[i]) * 2^64 / Bq
+                    i += 1
+            Bq * self.log(sum_of_exps) / 2^64
+
 # make this a macro
-def lmsr(shares:a, lossLimit):
-    # *** LOGARITHMIC MARKET SCORING RULE ***
-    #(like a regular market scoring rule, except it uses logarithms)
-    # this need sto be updated with Abe's stuff!
-    stop = arglen(shares)
-    i = 0
-    res = 0
-    while i < stop:
-        res += FixedPoint.exp(FixedPoint.div(shares[i], lossLimit, as=fp), as=fp)
-        i += 1
-    logpf = FixedPoint.log(res, as=fp)
-    cost = FixedPoint.mul(lossLimit, logpf, as=fp)
-    return(cost)
+#def lmsr(shares:a, lossLimit):
+#    # *** LOGARITHMIC MARKET SCORING RULE ***
+#    #(like a regular market scoring rule, except it uses logarithms)
+#    # this need sto be updated with Abe's stuff!
+#    stop = arglen(shares)
+#    i = 0
+#    res = 0
+#    while i < stop:
+#        res += FixedPoint.exp(FixedPoint.div(shares[i], lossLimit, as=fp), as=fp)
+#        i += 1
+#    logpf = FixedPoint.log(res, as=fp)
+#    cost = FixedPoint.mul(lossLimit, logpf, as=fp)
+#    return(cost)
 
 def buy_shares(branch, event, market, outcome, amount, fee):
     if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee):
@@ -654,14 +672,14 @@ def close_market(branch, market):
         elif(winningOutcome==0):
             return("outcome hasn't been decided yet")
         # X cashcoin in market /qi is the price per winning share once a market is closed
-        pricePerShare = FixedPoint.div(self.cashcoin_balances[market], winningShares, as=fp)
+        pricePerShare = self.cashcoin_balances[market] * 2^64 / winningShares
 
         # distribute cashcoin to the people who won money by holding winning shares
         i = 0
         while i <= self.Markets[market].currentParticipant:
             sharesOwned = self.Markets[market].participants[i].event[winningEvent].shares[winningSharesIndex]
             participant = self.Markets[market].participants[i].participantID
-            moneyWon = FixedPoint.mul(pricePerShare, sharesOwned, as=fp)
+            moneyWon = pricePerShare * sharesOwned / 2^64
             self.cashcoin_balances[market] -= moneyWon
             self.cashcoin_balances[participant] += moneyWon
 
