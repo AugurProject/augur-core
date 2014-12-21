@@ -83,7 +83,6 @@ data cashcoin_balances[2^160]
 ### To do:
     # make sure this follows paul's whitepaper well
     # proper mult. div (perhaps store all cashcoin balances as fixed)
-    # fix branching so initial rep is copied
     # add a branch initial rbcr rapid period to start w/
     # make so eventsexpdates currentindex -1 is the stuff we actually vote on in redeem tx
     # fast voting cycle first few days to get the 60% problem away from a branch, e.g. what if not enough people vote
@@ -223,6 +222,11 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
         self.Branches[branchID].parent = parent
         self.Branches[branchID].repRequired = repRequired
         self.Branches[branchID].currentVotePeriod = block.number / periodLength
+        i = 0
+        while i < self.Reporting[parent].numberReporters:
+            self.Reporting[branchID].reputation[i].reporterID = self.Reporting[parent].reputation[i].reporterID
+            self.Reporting[branchID].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
+            i+=1
         return(1)
     else:
         return(0)
