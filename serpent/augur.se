@@ -561,7 +561,7 @@ def check_quorum(branch):
 # 25% of fees already distributed to market creators
 # so 2/3 of remaining fees to voters = 50%
 # and 1/3 of remaining fees to event creators = 25%
-def any(branch):
+def redeem(branch):
     if(!self.check_quorem(branch)):
         return("quorem not satisfied yet")
     currentVotePeriod = self.Branches[branchID].currentVotePeriod
