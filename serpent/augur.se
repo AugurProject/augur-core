@@ -61,6 +61,16 @@ data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](par
 
 data cashcoin_balances[2^160]
 
+### Version 0.4:
+    # make code updatable 
+    # seigniorage coin
+
+### Version 0.3:
+    # make sure this follows paul's whitepaper well
+    # how do we scale / what if a ton of events, markets, etc.
+    # api voting option
+    # may need a ballot max size b/c cost so need a systematic way to do voting (e.g. vote on first xxx events, then next set are another ballot)
+    # randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot
 
 ### Version 0.2:
     # blockchain explorer to get / examine data or make rpc api calls to the contract to get it
@@ -68,27 +78,21 @@ data cashcoin_balances[2^160]
     # Scalar event where people update what type of share they bought using a thing
     # in an array where index is their scalar x and value
     # is the share updated number of shares bought
-    # how do we make this code updatable
-    # how do we scale / what if a ton of events, markets, etc.
-    # api voting option
-    # seigniorage
-    # update data structure to have reporting have markets instead of events poss.
+    # update data structure to have reporting have markets instead of events possibly.
     # if current vote period is == 0 then we looped past 2^256 --- set values in array to 0 at that point
-    # may need a ballot max size b/c cost so need a systematic way to do voting (e.g. vote on first xxx events, then next set are another ballot)
-    # randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot
     # new market maker
     # make sure events voting periods are properly setup
-    # make transaction fee a percent of trade if doing lmsr and not Abe's
     # ui functions
+    # hash first frontrunning prevention mechanism
+    # salt hash vote mechanism
 
 ### To do:
-    # make sure this follows paul's whitepaper well
     # proper mult. div (perhaps store all cashcoin balances as fixed)
     # add a branch initial rbcr rapid period to start w/
     # make so eventsexpdates currentindex -1 is the stuff we actually vote on in redeem tx
     # fast voting cycle first few days to get the 60% problem away from a branch, e.g. what if not enough people vote
     # 60% of votes -- need to get the cycle length parameters right
-    # change strings to text("banananaan")
+
 
 def init():
     # test initial funds
