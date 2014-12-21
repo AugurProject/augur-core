@@ -137,10 +137,10 @@ def send_reputation(branch, recver, value):
             self.Reporting[branch].repIDtoIndex[tx.origin] = reporterIndex
             self.Reporting[branch].reputation[reporterIndex].repValue = 0
             self.Reporting[branch].reputation[reporterIndex].reporterID = tx.origin
-            return("Your reputation account was just created, earn some rep. before you can send to others")
+            return(text("Your reputation account was just created, earn some rep. before you can send to others")
 
     if(self.Reporting[branch].reputation[receiverIndex].reporterID!=recver):
-        return("Receiving address doesn't exist")
+        return(text("Receiving address doesn't exist"))
         
     sender_balance = self.Reporting[branch].reputation[senderIndex].repValue
     if(sender_balance >= value):
@@ -175,7 +175,7 @@ def send_rep_diffbranch(oldBranch, recver, value, newBranch):
                 self.Reporting[oldBranch].repIDtoIndex[tx.origin] = reporterIndex
                 self.Reporting[oldBranch].reputation[reporterIndex].repValue = 0
                 self.Reporting[oldBranch].reputation[reporterIndex].reporterID = tx.origin
-                return("Your reputation account was just created, earn some rep. before you can send to others")
+                return(text("Your reputation account was just created, earn some rep. before you can send to others"))
 
         if(self.Reporting[newBranch].reputation[receiverIndex].reporterID!=recver):
             self.Reporting[newBranch].numberReporters += 1
@@ -183,7 +183,7 @@ def send_rep_diffbranch(oldBranch, recver, value, newBranch):
             self.Reporting[newBranch].repIDtoIndex[tx.origin] = reporterIndex
             self.Reporting[newBranch].reputation[reporterIndex].repValue = 0
             self.Reporting[newBranch].reputation[reporterIndex].reporterID = recver
-            return("Receiving address doesn't exist on sub branch, just made one on it")
+            return(text("Receiving address doesn't exist on sub branch, just made one on it"))
       
         else:
             sender_balance = self.Reporting[oldBranch].reputation[senderIndex].repValue
@@ -669,7 +669,7 @@ def close_market(branch, market):
             winningShares = self.Markets[market].events[winningEvent].sharesPurchased[0]
             winningSharesIndex = 0
         elif(winningOutcome==0):
-            return("outcome hasn't been decided yet")
+            return(text("outcome hasn't been decided yet"))
         # X cashcoin in market /qi is the price per winning share once a market is closed
         pricePerShare = self.cashcoin_balances[market] * 2^64 / winningShares
 
