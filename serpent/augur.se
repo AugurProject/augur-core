@@ -62,7 +62,7 @@ data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](par
 data cashcoin_balances[2^160]
 
 
-### Version 2.0:
+### Version 0.2:
     # blockchain explorer to get / examine data or make rpc api calls to the contract to get it
     # local contract calls don't cost gas
     # Scalar event where people update what type of share they bought using a thing
@@ -78,7 +78,8 @@ data cashcoin_balances[2^160]
     # randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot
     # new market maker
     # make sure events voting periods are properly setup
-
+    # make transaction fee a percent of trade if doing lmsr and not Abe's
+    # ui functions
 
 ### To do:
     # make sure this follows paul's whitepaper well
@@ -87,9 +88,8 @@ data cashcoin_balances[2^160]
     # make so eventsexpdates currentindex -1 is the stuff we actually vote on in redeem tx
     # fast voting cycle first few days to get the 60% problem away from a branch, e.g. what if not enough people vote
     # 60% of votes -- need to get the cycle length parameters right
-    # make transaction fee a percent of trade if doing lmsr and not Abe's
-    # fix any and fix vote
-    # ui functions
+    # change arglen of arrays to just len
+    # change strings to text("banananaan")
 
 def init():
     # test initial funds
@@ -113,7 +113,8 @@ def init():
 
 def get_cash_balance(address):
     return(self.cashcoin_balances[address])
-    
+
+# should send values as fixed point (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
 def send_cashcoin(recver, value):
     sender = tx.origin
     sender_balance = self.cashcoin_balances[sender]
