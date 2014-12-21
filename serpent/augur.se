@@ -88,7 +88,6 @@ data cashcoin_balances[2^160]
     # make so eventsexpdates currentindex -1 is the stuff we actually vote on in redeem tx
     # fast voting cycle first few days to get the 60% problem away from a branch, e.g. what if not enough people vote
     # 60% of votes -- need to get the cycle length parameters right
-    # change arglen of arrays to just len
     # change strings to text("banananaan")
 
 def init():
@@ -269,14 +268,14 @@ def create_event(branch, description:s, expDate):
 def create_market(branch, description:s, lossLimit, tradingFee, events:a):
     # check that events have same exp. dates
     x = 0
-    while x < arglen(events):
-        if(self.Events[events[i]].expirationDate != self.Events[events[i+1]].expirationDate and (i+1)!=arglen(events)):
+    while x < len(events):
+        if(self.Events[events[i]].expirationDate != self.Events[events[i+1]].expirationDate and (i+1)!=len(events)):
             return(0)
         x+=1
 
     # gotta remember to divide by 2^64 when multiplying fixed point numbers
-    initialLiquidity = lossLimit*self.log(arglen(events)) / 2^64
-    if(arglen(events) > 200 or self.cashcoin_balances[tx.origin]<initialLiquidity or !self.Branches[branch].periodLength or description=0 or !lossLimit or !tradingFee):
+    initialLiquidity = lossLimit*self.log(len(events)) / 2^64
+    if(len(events) > 200 or self.cashcoin_balances[tx.origin]<initialLiquidity or !self.Branches[branch].periodLength or description=0 or !lossLimit or !tradingFee):
         return(0)
     # formation of marketID (hash)
     marketCharacteristics = array(9)
@@ -286,7 +285,7 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
     marketCharacteristics[3] = initialLiquidity
     marketCharacteristics[4] = branch
     marketCharacteristics[5] = events
-    marketCharacteristics[6] = arglen(events)
+    marketCharacteristics[6] = len(events)
     marketCharacteristics[7] = lossLimit
     marketCharacteristics[8] = tradingFee
     marketID = sha256(marketCharacteristics, 9)
@@ -294,7 +293,7 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
     if(self.send_cashcoin(marketID, initialLiquidity)):
         # add event list to the market
         i = 0
-        while i<arglen(events):
+        while i<len(events):
             eventID = events[i]
             if(!self.Info[eventID].creator or self.Events[eventID].branch!=branch):
                 return(0)
@@ -340,12 +339,11 @@ macro abe_msr($shares:$numShares, $alpha):
                     i += 1
             Bq * self.log(sum_of_exps) / 2^64
 
-# make this a macro
 #def lmsr(shares:a, lossLimit):
 #    # *** LOGARITHMIC MARKET SCORING RULE ***
 #    #(like a regular market scoring rule, except it uses logarithms)
 #    # this need sto be updated with Abe's stuff!
-#    stop = arglen(shares)
+#    stop = len(shares)
 #    i = 0
 #    res = 0
 #    while i < stop:
@@ -502,7 +500,7 @@ def vote(branch, report:a):
     # make sure the branch exists
     repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
 
-    if(arglen(report)!=self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].numberEvents):
+    if(len(report)!=self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].numberEvents):
         return(0)
 
     # if current period is more than 2 periods past the vote period
@@ -517,7 +515,7 @@ def vote(branch, report:a):
     reputation = self.Reporting[branch].reputation[repIndex].repValue
 
     i = 0
-    while i < arglen(report):
+    while i < len(report):
         if (report[i] != 2^64 | report[i] != -2^64 | report[i] != 0 | report[i] != 2^63):
             return(0) # make sure vote values are valid
         else:
@@ -527,7 +525,7 @@ def vote(branch, report:a):
 
     # need to update stuff for quorem
     # and store the report and the rep value
-    while i < arglen(report):
+    while i < len(report):
         self.Reporting[branchID].eventsExpDates[0].reporters[tx.origin][i] = report[i]
         i+=1
     self.Reporting[branchID].eventsExpDates[self.Branches[branchID].currentVotePeriod].totalRepReported += reputation
