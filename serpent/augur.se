@@ -94,7 +94,6 @@ data cashcoin_balances[2^160]
     # any parameters why not - func. should pay for rbcr?
     # reward whoever does redeem and close market
     # fix stuff for new msr
-    # consensus as a macro
 
 def init():
     # test initial funds
@@ -531,29 +530,29 @@ def redeem(branch):
     # want to pass votes for each 0 indexed event in order (so we get votes from an actual reporter)
     # (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
     reputation = array(self.Reporting[branch].numberReporters-1)
-    votes = array(self.Reporting[branch].numberReporters-1)
+    #votes = array(self.Reporting[branch].numberReporters-1)
     numberEvents = self.Reporting[branch].eventsExpDates[currentvotePeriod].numberEvents
     numReporters = self.Reporting[branch].numberReporters
+    votes = array(numReporters * numberEvents)
+
     i = 0
     while i < numReporters:
         # checks to see if each reporter actually voted on any events
         reporterID = self.Reporting[branch].reputation[i].reporterID
         reputation[i] = self.Reporting[branch].reputation[i].repValue
-        # if they didn't vote (checking event 0)
-        if(self.Reporting[branch].eventsExpDates[currentVotePeriod].reporters[reporterID][0] == 0):
-            # all votes are 0 for this reporter because they didn't vote
-            votes[i] = array(self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents-1)
-        # the reporter did report on events
-        else:
-            votes[i] = array(self.Reporting[branch].eventsExpDates.numberEvents[currentVotePeriod]-1)
+
+        # if they didn't vote do nothing (these values will be 0 by default due to Serpent array styles)
+
+        # else if the reporter did report on events (check if they voted on first event)
+        if(self.Reporting[branch].eventsExpDates[currentVotePeriod].reporters[reporterID][0] != 0):
             x = 0
             while x < numberEvents:
-                votes[i][x] = self.Reporting[branch].eventsExpDates[currentVotePeriod].reporters[reporterID][x]
+                votes[x + i*numberEvents] = self.Reporting[branch].eventsExpDates[currentVotePeriod].reporters[reporterID][x]
                 x += 1
         i += 1
 
     # populate returned arrays
-    megaArray = self.consensus(votes:(self.Reporting[branch].numberReporters-1), reputation:(self.Reporting[branch].numberReporters-1))
+    megaArray = self.consensus(votes:len(votes), reputation:len(reputation))
     outcomes_final = array(numberEvents)
     event_bonus = array(numberEvents)
     voter_bonus = array(numReporters)
