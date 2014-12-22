@@ -85,7 +85,7 @@ macro fixed_multiply($x, $y):
 macro fixed_divide($x, $y):
     $x * 2^64 / $y
 
-def consensus(votes:a, reputation:a, returns, max_iterations):
+def consensus(votes:a, reputation:a, max_iterations):
     ONE = 2^64
     TRUE = ONE
     FALSE = -ONE
@@ -232,16 +232,16 @@ def consensus(votes:a, reputation:a, returns, max_iterations):
                                                                 j += 1
                                                         s_dot_s /= ONE
                                                         # QQ!!!!
-                                                        norm_s = s_dot_s / 2
-                                                        with j = 0:
-                                                            while j < 11:
-                                                                norm_s = (norm_s + s_dot_s*ONE/norm_s) / 2
-                                                                j += 1
-                                                    # fuggin assign
-                                                    with j = 0:
-                                                        while j < num_events:
-                                                            loading_vector[j] = s[j]*ONE/norm_s
-                                                            j += 1
+                                                        with norm_s = s_dot_s / 2:
+                                                            with j = 0:
+                                                                while j < 11:
+                                                                    norm_s = (norm_s + s_dot_s*ONE/norm_s) / 2
+                                                                    j += 1
+                                                            # fuggin assign
+                                                            with j = 0:
+                                                                while j < num_events:
+                                                                    loading_vector[j] = s[j]*ONE/norm_s
+                                                                    j += 1
 
                                                     i += 1
                                     with i = 0:
@@ -414,12 +414,20 @@ def consensus(votes:a, reputation:a, returns, max_iterations):
                                                                 # return(participation_events, num_events)
                                                                 # return(participation_voters, num_voters)
                                                                 # return(sum(author_bonus:num_events))
-                                                                # return(voter_bonus, num_voters)
-                                                                # return(author_bonus, num_events)
-                                                                # return(outcomes_final, num_events)
-                                                                if returns == 0:
-                                                                    return([startgas, tx.gas], 2)
-                                                                elif returns == 1:
-                                                                    return(voter_bonus, num_voters)
-                                                                elif returns == 2:
-                                                                    return(author_bonus, num_events)
+                                                                # if returns == 0:
+                                                                #     return([startgas, tx.gas], 2)
+                                                                retval = array(2*num_events + num_voters)
+                                                                i = 0
+                                                                while i < num_events:
+                                                                    retval[i] = outcomes_final[i]
+                                                                    i += 1
+                                                                i = 0
+                                                                while i < num_events:
+                                                                    retval[num_events + i] = author_bonus[i]
+                                                                    i += 1
+                                                                i = 0
+                                                                while i < num_voters:
+                                                                    retval[2*num_events + i] = voter_bonus[i]
+                                                                    i += 1
+                                                                return(retval, 2*num_events + num_voters)
+

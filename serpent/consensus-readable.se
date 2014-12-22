@@ -85,7 +85,7 @@ macro fixed_multiply($x, $y):
 macro fixed_divide($x, $y):
     $x * 2^64 / $y
 
-def consensus(votes:a, reputation:a):
+def consensus(votes:a, reputation:a, max_iterations):
     ONE = 2^64
     TRUE = ONE
     FALSE = -ONE
@@ -414,8 +414,20 @@ def consensus(votes:a, reputation:a):
     # return(participation_events, num_events)
     # return(participation_voters, num_voters)
     # return(sum(author_bonus:num_events))
-    # return(voter_bonus, num_voters)
-    # return(author_bonus, num_events)
     # return(outcomes_raw, num_events)
-    # return(outcomes_final, num_events)
-    return([startgas, tx.gas], 2)
+    retval = array(2*num_events + num_voters)
+    i = 0
+    while i < num_events:
+        retval[i] = outcomes_final[i]
+        i += 1
+    i = 0
+    while i < num_events:
+        retval[num_events + i] = author_bonus[i]
+        i += 1
+    i = 0
+    while i < num_voters:
+        retval[2*num_events + i] = voter_bonus[i]
+        i += 1
+    # if returns == 0:
+    #     return([startgas, tx.gas], 2)
+    return(retval, 2*num_events + num_voters)

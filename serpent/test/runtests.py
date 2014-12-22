@@ -39,9 +39,6 @@ def blocky(*strings, **kwds):
         lines = BR(lines)
     return lines
 
-def fracpart(x):
-    return float(x & (2**64 - 1)) / 2**64
-
 def fix(x):
     return int(x * 0x10000000000000000)
 
@@ -112,24 +109,24 @@ def test_contract(contract):
         #                     [  1, -1,  1,  1],
         #                     [ -1, -1,  1,  1]])
         reputation = [2, 10, 4, 2, 7, 1]
-        result = s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), 0, 5])
+        result = s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), 5])
         try:
             assert(result == [1])
         except:
             try:
                 assert(map(unfix, result) == [1])
             except:
-                if len(result) < 4:
-                    print "result:   ", result
-                    print "base 16:  ", map(hex, result)
-                    print "base 2^64:", map(unfix, result)
-                else:
-                    print "result:   "
-                    pprint(result)
-                    print "base 16:  "
-                    pprint(map(hex, result))
-                    print "base 2^64:"
-                    pprint(map(unfix, result))
+                # if len(result) < 4:
+                print "result:   ", result
+                print "base 16:  ", map(hex, result)
+                print "base 2^64:", map(unfix, result)
+                # else:
+                #     print "result:   "
+                #     pprint(result)
+                #     print "base 16:  "
+                #     pprint(map(hex, result))
+                #     print "base 2^64:"
+                #     pprint(map(unfix, result))
     else:
         result = s.send(t.k0, c, 0, funid=0, abi=[])
         try:
@@ -146,27 +143,26 @@ def main():
     global s
     print BR("Forming new test genesis block")
     s = t.state()
-    # t.set_logging_level(2)
     contracts = [
-        "sum",
-        "mean",
-        "normalize",
-        "dot",
-        "outer",
-        "multiply",
-        "kron",
-        "hadamard",
-        "transpose",
-        "diag",
-        "isnan",
-        "mask",
-        "any",
-        "catch",
-        "get_weight",
-        "interpolate",
-        "fixedpoint",
+        # "sum",
+        # "mean",
+        # "normalize",
+        # "dot",
+        # "outer",
+        # "multiply",
+        # "kron",
+        # "hadamard",
+        # "transpose",
+        # "diag",
+        # "isnan",
+        # "mask",
+        # "any",
+        # "catch",
+        # "get_weight",
+        # "interpolate",
+        # "fixedpoint",
         "../consensus",
-        # "../consensus-readable",
+        "../consensus-readable",
     ]
     for contract in contracts:
         test_contract(contract)
