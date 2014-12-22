@@ -116,17 +116,17 @@ def test_contract(contract):
             try:
                 assert(map(unfix, result) == [1])
             except:
-                # if len(result) < 4:
-                print "result:   ", result
-                print "base 16:  ", map(hex, result)
-                print "base 2^64:", map(unfix, result)
-                # else:
-                #     print "result:   "
-                #     pprint(result)
-                #     print "base 16:  "
-                #     pprint(map(hex, result))
-                #     print "base 2^64:"
-                #     pprint(map(unfix, result))
+                if len(result) < 4:
+                    print "result:   ", result
+                    print "base 16:  ", map(hex, result)
+                    print "base 2^64:", map(unfix, result)
+                else:
+                    print "result:   "
+                    pprint(result)
+                    print "base 16:  "
+                    pprint(map(hex, result))
+                    print "base 2^64:"
+                    pprint(map(unfix, result))
     else:
         result = s.send(t.k0, c, 0, funid=0, abi=[])
         try:
