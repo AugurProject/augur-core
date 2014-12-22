@@ -39,43 +39,43 @@ macro multiply($aflat:$asz, $arows, $acols, $bflat:$bsz, $brows, $bcols):
                 c
 
 def test_multiply():
-    a = [[1, 4], [2, 5], [3, 6]]
     # a = [[0, 0, 0, 1], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]]
-    arows = 3
-    acols = 2
     # arows = 6
     # acols = 4
-    aflat = array(arows * acols)
-    i = 0
-    while i < arows:
-        j = 0
-        while j < acols:
-            aflat[j + i*acols] = a[i][j]
-            j += 1
-        i += 1
-    b = [[1, 2, 3], [4, 5, 6]]
     # b = [[17475862806672206791, 0, 0, 0], [0, 5675921253449092804, 0, 0], [0, 0, 7094901566811366005, 0], [0, 0, 0, 6148914691236517204]]
-    brows = 2
-    bcols = 3
     # brows = 4
     # bcols = 4
-    bflat = array(brows * bcols)
-    i = 0
-    while i < brows:
-        j = 0
-        while j < bcols:
-            bflat[j + i*bcols] = b[i][j]
-            j += 1
-        i += 1
-    expected = [[17, 22, 27], [22, 29, 36], [27, 36, 45]]
-    # expected = [[0, 0, 0, 0x5555555555555400], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0xf286bca1af286800, 0, 0, 0], [0, 0, 0, 0]]
-    actual = multiply(aflat:(arows*acols), arows, acols, bflat:(brows*bcols), brows, bcols)
-    i = 0
-    while i < arows:
-        j = 0
-        while j < bcols:
-            if expected[i][j] != actual[i][j]:
-                return(0)
-            j += 1
-        i += 1
-    return(1)
+    a = [[1, 4], [2, 5], [3, 6]]
+    arows = 3
+    acols = 2
+    b = [[1, 2, 3], [4, 5, 6]]
+    brows = 2
+    bcols = 3
+    with aflat = array(arows * acols):
+        with i = 0:
+            while i < arows:
+                with j = 0:
+                    while j < acols:
+                        aflat[j + i*acols] = a[i][j]
+                        j += 1
+                    i += 1
+        with bflat = array(brows * bcols):
+            with i = 0:
+                while i < brows:
+                    with j = 0:
+                        while j < bcols:
+                            bflat[j + i*bcols] = b[i][j]
+                            j += 1
+                        i += 1
+            with expected = [[17, 22, 27], [22, 29, 36], [27, 36, 45]]:
+                # expected = [[0, 0, 0, 0x5555555555555400], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0xf286bca1af286800, 0, 0, 0], [0, 0, 0, 0]]
+                with actual = multiply(aflat:(arows*acols), arows, acols, bflat:(brows*bcols), brows, bcols):
+                    with i = 0:
+                        while i < arows:
+                            with j = 0:
+                                while j < bcols:
+                                    if expected[i][j] != actual[i][j]:
+                                        return(0)
+                                    j += 1
+                                i += 1
+                        return(1)
