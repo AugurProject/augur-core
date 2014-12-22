@@ -36,7 +36,6 @@ MARKET = 2
 data Info[](typecode, description[], creator, creationFee)
 
 # CurrentVotePeriod is the current index in eventsExpDates
-# LastPeriodEnd is the last voting period's block number
 # Parent is the branch's parent branch.
 # Branches' index is the hash of the branch (aka branchID)
 # RepRequired is the amount of reputation required to reach quorem
@@ -92,7 +91,10 @@ data cashcoin_balances[2^160]
     # make so eventsexpdates currentindex -1 is the stuff we actually vote on in redeem tx
     # fast voting cycle first few days to get the 60% problem away from a branch, e.g. what if not enough people vote
     # 60% of votes -- need to get the cycle length parameters right
-
+    # any parameters why not - func. should pay for rbcr?
+    # reward whoever does redeem and close market
+    # fix stuff for new msr
+    # consensus as a macro
 
 def init():
     # test initial funds
@@ -109,7 +111,6 @@ def init():
     self.Branches[1010101].currentVotePeriod = block.number / 403200
     self.Branches[1010101].marketCount = 0
     self.Branches[1010101].periodLength = 403200
-    self.Branches[1010101].lastPeriodEnd = block.number
     self.Branches[1010101].parent = 0
     self.Branches[1010101].repRequired = 14000000
 
@@ -141,7 +142,7 @@ def send_reputation(branch, recver, value):
             self.Reporting[branch].repIDtoIndex[tx.origin] = reporterIndex
             self.Reporting[branch].reputation[reporterIndex].repValue = 0
             self.Reporting[branch].reputation[reporterIndex].reporterID = tx.origin
-            return(text("Your reputation account was just created, earn some rep. before you can send to others")
+            return(text("Your reputation account was just created, earn some rep. before you can send to others"))
 
     if(self.Reporting[branch].reputation[receiverIndex].reporterID!=recver):
         return(text("Receiving address doesn't exist"))
@@ -156,52 +157,12 @@ def send_reputation(branch, recver, value):
         
 def get_rep_balance(branch, address):
     return(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[address]].repValue)
-    
-def send_rep_diffbranch(oldBranch, recver, value, newBranch):
-        # check branch is a subbranch
-        tempID = Branches[newBranch].parent
-        while tempID != oldBranch and tempID != 0 and Branches[tempID].periodLength != 0:
-            tempID = Branches[tempID].parent
 
-        if tempID != oldBranch:
-            return(0)
-
-        # if no branch exists (defined as a nonzero period)
-        if(!self.Branches[oldBranch].periodLength | !self.Branches[newBranch].periodLength | value<=0 | !self.send_cashcoin(oldBranch, 10)):
-            return(0)
-        sender = tx.origin
-        senderIndex = self.Reporting[oldBranch].repIDtoIndex[sender]
-        receiverIndex = self.Reporting[newBranch].repIDtoIndex[recver]
-        # if the sender's rep. account doesn't exist, make one
-        if(self.Reporting[oldBranch].reputation[senderIndex].reporterID!=tx.origin):
-                self.Reporting[oldBranch].numberReporters += 1
-                reporterIndex = self.Reporting[oldBranch].numberReporters
-                self.Reporting[oldBranch].repIDtoIndex[tx.origin] = reporterIndex
-                self.Reporting[oldBranch].reputation[reporterIndex].repValue = 0
-                self.Reporting[oldBranch].reputation[reporterIndex].reporterID = tx.origin
-                return(text("Your reputation account was just created, earn some rep. before you can send to others"))
-
-        if(self.Reporting[newBranch].reputation[receiverIndex].reporterID!=recver):
-            self.Reporting[newBranch].numberReporters += 1
-            reporterIndex = self.Reporting[newBranch].numberReporters
-            self.Reporting[newBranch].repIDtoIndex[tx.origin] = reporterIndex
-            self.Reporting[newBranch].reputation[reporterIndex].repValue = 0
-            self.Reporting[newBranch].reputation[reporterIndex].reporterID = recver
-            return(text("Receiving address doesn't exist on sub branch, just made one on it"))
-      
-        else:
-            sender_balance = self.Reporting[oldBranch].reputation[senderIndex].repValue
-            if(sender_balance >= value):
-                self.Reporting[oldBranch].reputation[senderIndex].repValue -= value
-                self.Reporting[newBranch].reputation[receiverIndex].repValue += value
-                return(1)
-            else:
-                return(0)
 
 # period length is given in blocks
 # description format is branchName:description
 def make_subbranch(description:s, periodLength, parent, repRequired):
-    if(!periodLength or !self.Branches[parent].periodLength or !repRequired or description=0):
+    if(periodLength<=0 or !self.Branches[parent].periodLength or !repRequired or description=0):
         return(0)
     branchCharacteristics = array(8)
     branchCharacteristics[0] = BRANCH
@@ -222,7 +183,6 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
         self.Info[branchID].creator = tx.origin
         self.Info[branchID].creationFee = 47
         self.Branches[branchID].periodLength = periodLength
-        self.Branches[branchID].lastPeriodEnd = block.number
         self.Branches[branchID].parent = parent
         self.Branches[branchID].repRequired = repRequired
         self.Branches[branchID].currentVotePeriod = block.number / periodLength
@@ -272,14 +232,15 @@ def create_event(branch, description:s, expDate):
 def create_market(branch, description:s, lossLimit, tradingFee, events:a):
     # check that events have same exp. dates
     x = 0
-    while x < len(events):
-        if(self.Events[events[i]].expirationDate != self.Events[events[i+1]].expirationDate and (i+1)!=len(events)):
+    numEvents = len(events)
+    while x < numEvents:
+        if(self.Events[events[i]].expirationDate != self.Events[events[i+1]].expirationDate and (i+1)!=numEvents):
             return(0)
         x+=1
 
     # gotta remember to divide by 2^64 when multiplying fixed point numbers
-    initialLiquidity = lossLimit*self.log(len(events)) / 2^64
-    if(len(events) > 200 or self.cashcoin_balances[tx.origin]<initialLiquidity or !self.Branches[branch].periodLength or description=0 or !lossLimit or !tradingFee):
+    initialLiquidity = lossLimit*self.log(numEvents) / 2^64
+    if(numEvents > 200 or self.cashcoin_balances[tx.origin]<initialLiquidity or !self.Branches[branch].periodLength or description=0 or !lossLimit or !tradingFee):
         return(0)
     # formation of marketID (hash)
     marketCharacteristics = array(9)
@@ -289,7 +250,7 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
     marketCharacteristics[3] = initialLiquidity
     marketCharacteristics[4] = branch
     marketCharacteristics[5] = events
-    marketCharacteristics[6] = len(events)
+    marketCharacteristics[6] = numEvents
     marketCharacteristics[7] = lossLimit
     marketCharacteristics[8] = tradingFee
     marketID = sha256(marketCharacteristics, 9)
@@ -297,7 +258,7 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
     if(self.send_cashcoin(marketID, initialLiquidity)):
         # add event list to the market
         i = 0
-        while i<len(events):
+        while i<numEvents:
             eventID = events[i]
             if(!self.Info[eventID].creator or self.Events[eventID].branch!=branch):
                 return(0)
@@ -513,7 +474,7 @@ def vote(branch, report:a):
     # (>2 periods past mean the events have exp. & people have had 1 full period to vote)
     # currently requires events to expire to vote
     currentPeriod = block.number / self.Branches[branch].periodLength
-    if (self.Branches[branch].lastPeriodEnd == 0 | self.Reporting[branch].reputation[repIndex].reporterID != tx.origin | currentPeriod > (self.Branches[branch].currentVotePeriod+2) | currentPeriod < (self.Branches[branch.currentVotePeriod+1])):
+    if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin | currentPeriod > (self.Branches[branch].currentVotePeriod+2) | currentPeriod < (self.Branches[branch].currentVotePeriod+1)):
         return(0)
 
     reputation = self.Reporting[branch].reputation[repIndex].repValue
@@ -523,7 +484,7 @@ def vote(branch, report:a):
         if (report[i] != 2^64 | report[i] != -2^64 | report[i] != 0 | report[i] != 2^63):
             return(0) # make sure vote values are valid
         else:
-            if(!inPeriod(branch, report[i])):
+            if(!self.inPeriod(branch, report[i])):
                 return(0)
         i += 1
 
@@ -562,7 +523,7 @@ def check_quorum(branch):
 # so 2/3 of remaining fees to voters = 50%
 # and 1/3 of remaining fees to event creators = 25%
 def redeem(branch):
-    if(!self.check_quorem(branch)):
+    if(!self.check_quorum(branch)):
         return("quorem not satisfied yet")
     currentVotePeriod = self.Branches[branchID].currentVotePeriod
     # loop through reputation and check if in reporters, if so use their report, if not use the fillin / not reported report
@@ -581,18 +542,18 @@ def redeem(branch):
         # if they didn't vote (checking event 0)
         if(self.Reporting[branch].eventsExpDates[currentVotePeriod].reporters[reporterID][0] == 0):
             # all votes are 0 for this reporter because they didn't vote
-            votes[i] = array(self.Reporting[branch].eventsExpDates.numberEvents-1)
+            votes[i] = array(self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents-1)
         # the reporter did report on events
         else:
-            votes[i] = array(self.Reporting[branch].eventsExpDates.numberEvents-1)
+            votes[i] = array(self.Reporting[branch].eventsExpDates.numberEvents[currentVotePeriod]-1)
             x = 0
             while x < numberEvents:
-                votes[i][x] = self.Reporting[branchID].eventsExpDates[currentVotePeriod].reporters[reporterID][x]
+                votes[i][x] = self.Reporting[branch].eventsExpDates[currentVotePeriod].reporters[reporterID][x]
                 x += 1
         i += 1
 
     # populate returned arrays
-    megaArray = self.consensus(votes:self.Reporting[branch].numberReporters-1, reputation:self.Reporting[branch].numberReporters-1)
+    megaArray = self.consensus(votes:(self.Reporting[branch].numberReporters-1), reputation:(self.Reporting[branch].numberReporters-1))
     outcomes_final = array(numberEvents)
     event_bonus = array(numberEvents)
     voter_bonus = array(numReporters)
@@ -664,7 +625,7 @@ def close_market(branch, market):
 
         winningEvent = self.Markets[market].winningEvents[e]
         winningShares = 0
-        winningOutcome = self.Markets[market].outcome
+        winningOutcome = self.Events[winningEvent].outcome
         winningSharesIndex = 0
         if(winningOutcome==1):
             winningShares = self.Markets[market].events[winningEvent].sharesPurchased[1]
@@ -688,3 +649,4 @@ def close_market(branch, market):
 
 
 # check lastvote period block
+
