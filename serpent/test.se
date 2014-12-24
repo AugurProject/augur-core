@@ -1,0 +1,60 @@
+data Info[](typecode, description[], creator, creationFee)
+data Branches[](currentVotePeriod, markets[], marketCount, periodLength, parent, repRequired)
+data Events[](branch, expirationDate, outcome)
+data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
+data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](participantID, event[](shares[2])), lossLimit, tradingFee, numberEvents, currentParticipant, winningEvents[])
+data cashcoin_balances[2^160]
+
+def create_market(branch, description:s, lossLimit, tradingFee, events:a):
+    # check that events have same exp. dates
+    x = 0
+    numEvents = len(events)
+    while x < numEvents:
+        if(self.Events[events[i]].expirationDate != self.Events[events[i+1]].ex$
+            return(0)
+        x+=1
+
+    # gotta remember to divide by 2^64 when multiplying fixed point numbers
+    initialLiquidity = lossLimit / 2^64
+    if(numEvents > 200 or self.cashcoin_balances[tx.origin]<initialLiquidity or$
+        return(0)
+    # formation of marketID (hash)
+    marketCharacteristics = array(9)
+    marketCharacteristics[0] = MARKET
+    marketCharacteristics[1] = description
+    marketCharacteristics[2] = tx.origin
+	marketCharacteristics[3] = initialLiquidity
+    marketCharacteristics[4] = branch
+    marketCharacteristics[5] = events
+    marketCharacteristics[6] = numEvents
+    marketCharacteristics[7] = lossLimit
+    marketCharacteristics[8] = tradingFee
+    marketID = sha256(marketCharacteristics, 9)
+
+    if(1):
+        # add event list to the market
+         i = 0
+        while i<numEvents:
+            eventID = events[i]
+            if(!self.Info[eventID].creator or self.Events[eventID].branch!=bran$
+                return(0)
+            # initialize market events array with eventIDs from the eventList
+            self.Markets[marketID].events[i].eventID = eventID
+            i+=1   # creator of the first market in a branch gets the branch's creation fee
+        if(self.Branches[branch].marketCount==0):
+            self.Info[marketID].typecode = MARKET
+            self.Info[marketID].description[] = description
+            self.Info[marketID].creator = tx.origin
+            self.Info[marketID].creationFee = initialLiquidity
+            self.cashcoin_balances[marketID] = initialLiquidity
+            self.Markets[marketID].lossLimit = lossLimit
+            self.Markets[marketID].tradingFee = tradingFee
+            self.Markets[marketID].numberEvents = numberEvents
+            self.Markets[marketID].branch = branch # add the market to the branch
+            marketCount = self.Branches[branch].marketCount
+            self.Branches[branch].markets[marketCount] = marketID
+            self.Branches[branch].marketCount += 1
+            return(1)
+        else:
+            return(0)
+
