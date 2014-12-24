@@ -303,19 +303,19 @@ macro abe_msr($shares:$numShares, $alpha):
                     i += 1
             Bq * self.log(sum_of_exps) / 2^64
 
-#def lmsr(shares:a, lossLimit):
-#    # *** LOGARITHMIC MARKET SCORING RULE ***
-#    #(like a regular market scoring rule, except it uses logarithms)
-#    # this need sto be updated with Abe's stuff!
-#    stop = len(shares)
-#    i = 0
-#    res = 0
-#    while i < stop:
-#        res += FixedPoint.exp(FixedPoint.div(shares[i], lossLimit, as=fp), as=fp)
-#        i += 1
-#    logpf = FixedPoint.log(res, as=fp)
-#    cost = FixedPoint.mul(lossLimit, logpf, as=fp)
-#    return(cost)
+def lmsr(shares:a, lossLimit):
+    # *** LOGARITHMIC MARKET SCORING RULE ***
+    #(like a regular market scoring rule, except it uses logarithms)
+    # this need sto be updated with Abe's stuff!
+    stop = len(shares)
+    i = 0
+    res = 0
+    while i < stop:
+        res += self.exp(shares[i]/lossLimit)
+        i += 1
+    logpf = self.log(res)
+    cost = lossLimit * logpf
+    return(cost)
 
 def buy_shares(branch, event, market, outcome, amount, fee):
     if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee):

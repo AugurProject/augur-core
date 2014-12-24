@@ -93,8 +93,8 @@ def consensus(votes:a, reputation:a, max_iterations):
     NO_RESPONSE = 0       # 0
 
     startgas = tx.gas
-    num_voters = arglen(reputation)
-    v_size = arglen(votes)
+    num_voters = len(reputation)
+    v_size = len(votes)
     num_events = v_size / num_voters
 
     # use existing data and reputations to fill missing observations
