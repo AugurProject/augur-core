@@ -1,4 +1,4 @@
-macro multiply($aflat:$asz, $arows, $acols, $bflat:$bsz, $brows, $bcols):
+macro multiply($aflat, $arows, $acols, $bflat, $brows, $bcols):
     with a = array($arows):
         with i = 0:
             while i < $arows:
@@ -69,7 +69,7 @@ def test_multiply():
                         i += 1
             with expected = [[17, 22, 27], [22, 29, 36], [27, 36, 45]]:
                 # expected = [[0, 0, 0, 0x5555555555555400], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0xf286bca1af286800, 0, 0, 0], [0, 0, 0, 0]]
-                with actual = multiply(aflat:(arows*acols), arows, acols, bflat:(brows*bcols), brows, bcols):
+                with actual = multiply(aflat, arows, acols, bflat, brows, bcols):
                     with i = 0:
                         while i < arows:
                             with j = 0:

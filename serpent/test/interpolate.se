@@ -1,4 +1,4 @@
-macro any($a:$asz):
+macro any($a, $asz):
     with result = 0:
         with i = 0: 
             while i < $asz:
@@ -9,7 +9,7 @@ macro any($a:$asz):
             result
 
 # Missing entries marked with -1
-macro isnan($a:$asz):
+macro isnan($a, $asz):
     with amask = array($asz):
         with i = 0:
             while i < $asz:
@@ -88,7 +88,7 @@ def test_interpolate():
             votes_flat[j + i*num_events] = votes[i][j]
             j += 1
         i += 1
-    if any(isnan(votes_flat:v_size):v_size):
+    if any(isnan(votes_flat, v_size), v_size):
         event_outcomes_raw = interpolate(votes_flat, num_voters, num_events, reputation)
         return(event_outcomes_raw, num_events)
     else:

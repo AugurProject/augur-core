@@ -6,7 +6,7 @@ macro abs($x):
         absval
 
 # Proportional distance from zero, inputs are fixed point
-macro get_weight($a:$asz):
+macro get_weight($a, $asz):
     with total = 0:
         with i = 0:
             while i < $asz:
@@ -23,7 +23,7 @@ macro get_weight($a:$asz):
 def test_get_weight():
     a = [0x6bfdb64983868c2cf, 0x2cbf68c27334b7c45, 0x0, 0x6bfdb64983868c2cf, 0x104bad5557a41d01e3, 0x113949cd7b43060896]
     asz = 6
-    result = get_weight(a:asz)
+    result = get_weight(a, asz)
     # expected = [0.13549025, 0.05614206, 0.,      0.13549025,  0.32712256,  0.34575488]
     expected = [0x22af7af05ec7363e, 0xe5f580440285cf4, 0x0, 0x22af7af05ec7363e, 0x53be4de4fdb6c971, 0x5883643604926d1d]
     i = 0

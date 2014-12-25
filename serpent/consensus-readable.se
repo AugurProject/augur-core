@@ -1,5 +1,5 @@
 # Arithmetic mean of an array, takes fixed-point inputs
-macro mean($a:$asz):
+macro mean($a, $asz):
     with total = 0:
         with i = 0:
             while i < $asz:
@@ -8,7 +8,7 @@ macro mean($a:$asz):
         total / $asz
 
 # Sum elements of array
-macro sum($a:$asz):
+macro sum($a, $asz):
     with total = 0:
         with i = 0:
             while i < $asz:
@@ -17,7 +17,7 @@ macro sum($a:$asz):
         total
 
 # Proportional distance from zero, inputs are fixed point
-macro get_weight($a:$asz):
+macro get_weight($a, $asz):
     with total = 0:
         with i = 0:
             while i < $asz:
@@ -51,7 +51,7 @@ macro abs($x):
         absval
 
 # Absolute value of all array elements
-macro array_abs($a:$asz):
+macro array_abs($a, $asz):
     with absval = array($asz):
         with i = 0:
             while i < $asz:
@@ -60,7 +60,7 @@ macro array_abs($a:$asz):
         absval
 
 # Minimum value of array
-macro minimum($a:$asz):
+macro minimum($a, $asz):
     with minval = $a[0]:
         with i = 1:
             while i < $asz:
@@ -70,7 +70,7 @@ macro minimum($a:$asz):
         minval
 
 # Maximum value of array
-macro maximum($a:$asz):
+macro maximum($a, $asz):
     with maxval = $a[0]:
         with i = 1:
             while i < $asz:
@@ -93,8 +93,8 @@ def consensus(votes:a, reputation:a, max_iterations):
     NO_RESPONSE = 0       # 0
 
     startgas = tx.gas
-    num_voters = arglen(reputation)
-    v_size = arglen(votes)
+    num_voters = len(reputation)
+    v_size = len(votes)
     num_events = v_size / num_voters
 
     # use existing data and reputations to fill missing observations
@@ -125,7 +125,7 @@ def consensus(votes:a, reputation:a, max_iterations):
                     total_active_rep += reputation[i]
                     present[i] = 1
                 i += 1
-            num_present = sum(present:num_voters)
+            num_present = sum(present, num_voters)
             active_rep = array(num_present)
             i = 0
             m = 0
@@ -264,15 +264,15 @@ def consensus(votes:a, reputation:a, max_iterations):
     set2 = array(num_voters)
     i = 0
     while i < num_voters:
-        set1[i] = scores[i] + abs(minimum(scores:num_voters))
-        set2[i] = scores[i] - maximum(scores:num_voters)
+        set1[i] = scores[i] + abs(minimum(scores, num_voters))
+        set2[i] = scores[i] - maximum(scores, num_voters)
         i += 1
 
     # return(set1, num_voters)
     # return(set2, num_voters)
 
-    wset1 = get_weight(set1:num_voters)
-    wset2 = get_weight(set2:num_voters)
+    wset1 = get_weight(set1, num_voters)
+    wset2 = get_weight(set2, num_voters)
 
     old = array(num_events)
     new1 = array(num_events)
@@ -311,21 +311,21 @@ def consensus(votes:a, reputation:a, max_iterations):
 
     # Set this to uniform if you want a passive diffusion toward equality
     # when people cooperate.  Instead diffuses towards previous reputation.
-    rep_weights = get_weight(reputation:num_voters)
+    rep_weights = get_weight(reputation, num_voters)
     row_reward_weighted = array(num_voters)
     i = 0
     while i < num_voters:
         row_reward_weighted[i] = rep_weights[i]
         i += 1
-    mean_weight = mean(row_reward_weighted:num_voters)
+    mean_weight = mean(row_reward_weighted, num_voters)
 
     # Overwrite the inital declaration IFF there wasn't perfect consensus.
-    if maximum(array_abs(adj_prin_comp:num_voters):num_voters) != 0:
+    if maximum(array_abs(adj_prin_comp, num_voters), num_voters) != 0:
         i = 0
         while i < num_voters:
             row_reward_weighted[i] = adj_prin_comp[i] * row_reward_weighted[i] / mean_weight
             i += 1
-        row_reward_weighted = get_weight(row_reward_weighted:num_voters)
+        row_reward_weighted = get_weight(row_reward_weighted, num_voters)
 
     # Freshly-calculated reward (in reputation) using exponential smoothing
     # New Reward: row_reward_weighted
@@ -358,8 +358,8 @@ def consensus(votes:a, reputation:a, max_iterations):
     while i < num_events:
         certainty[i] = 2*outcomes_raw[i] - ONE
         i += 1
-    consensus_reward = get_weight(certainty:num_events)
-    avg_certainty = mean(certainty:num_events)
+    consensus_reward = get_weight(certainty, num_events)
+    avg_certainty = mean(certainty, num_events)
 
     # return(outcomes_raw, num_events)
     # return(certainty, num_events)
@@ -397,8 +397,8 @@ def consensus(votes:a, reputation:a, max_iterations):
     participation = ONE - total / num_events
 
     # Bringing it all together!
-    na_bonus_voters = get_weight(participation_voters:num_voters)
-    na_bonus_events = get_weight(participation_events:num_events)
+    na_bonus_voters = get_weight(participation_voters, num_voters)
+    na_bonus_events = get_weight(participation_events, num_events)
     voter_bonus = array(num_voters)
     i = 0
     while i < num_voters:

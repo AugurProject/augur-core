@@ -1,4 +1,4 @@
-macro mask($a:$asz, $target):
+macro mask($a, $asz, $target):
     with amask = array($asz):
         with i = 0:
             while i < $asz:
@@ -12,7 +12,7 @@ macro mask($a:$asz, $target):
 def test_mask():
     a = [5, 1, 1, 0, 2]
     asz = 5
-    amask = mask(a:asz, 0)
+    amask = mask(a, asz, 0)
     expected = [0, 0, 0, 1, 0]
     i = 0
     while i < asz:
