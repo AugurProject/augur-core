@@ -94,6 +94,7 @@ data cashcoin_balances[2^160]
 	# any parameters why not - func. should pay for rbcr?
 	# reward whoever does redeem and close market
 	# fix stuff for new msr
+	# one syntax error left surrounding msr
 	# don't need number of x. in arrays data structures now because arrays already have size as a prop. now
 
 def init():
@@ -316,7 +317,7 @@ def lmsr(shares:a, lossLimit):
 		i += 1
 	logpf = self.log(res)
 	cost = lossLimit * logpf
-	return(cost)
+	return(1)
 
 def buy_shares(branch, event, market, outcome, amount, fee):
 	if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee):
