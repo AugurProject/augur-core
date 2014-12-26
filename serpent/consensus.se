@@ -429,5 +429,7 @@ def consensus(votes:a, reputation:a, max_iterations):
                                                                 while i < num_voters:
                                                                     retval[2*num_events + i] = voter_bonus[i]
                                                                     i += 1
-                                                                return(retval, 2*num_events + num_voters)
+                                                                retval[2*num_events + num_voters] = start_gas
+                                                                retval[2*num_events + num_voters + 1] = tx.gas
+                                                                return(retval, 2*num_events + num_voters + 2)
 

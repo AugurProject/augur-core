@@ -74,8 +74,8 @@ def profile(contract):
         reports = np.random.randint(-1, 2, (k, num_events))
         reputation = np.random.randint(1, 100, k)
         try:
-            gas_used = s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), 0, 5])
-            reporters_gas_used.append(gas_used[0] - gas_used[1])
+            gas_used = s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), 5])
+            reporters_gas_used.append(gas_used[-2] - gas_used[-1])
             reporters_sizes_used.append(k)
         except Exception as exc:
             print(exc)
@@ -93,8 +93,8 @@ def profile(contract):
         reports = np.random.randint(-1, 2, (num_reporters, k))
         reputation = np.random.randint(1, 100, num_reporters)
         try:
-            result = s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), 0, 5])
-            events_gas_used.append(result[0] - result[1])
+            gas_used = s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), 5])
+            events_gas_used.append(gas_used[-2] - gas_used[-1])
             events_sizes_used.append(k)
         except Exception as exc:
             print(exc)
@@ -114,8 +114,10 @@ def profile(contract):
         reports = np.random.randint(-1, 2, (num_reporters, num_events))
         reputation = np.random.randint(1, 100, num_reporters)
         try:
-            voter_bonus = np.array(map(unfix, s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), 1, k])))
-            author_bonus = np.array(map(unfix, s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), 2, k])))
+            retval = np.array(map(unfix, s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), k])))
+            outcome_final = retval[0:num_events]
+            author_bonus = retval[num_events:(2*num_events)]
+            voter_bonus = retval[(2*num_events):-2]
             # compare to pyconsensus results
             outcome = Oracle(votes=reports, reputation=reputation).consensus()
             voter_bonus_rmsd.append(np.mean((voter_bonus - np.array(outcome["agents"]["voter_bonus"]))**2))
