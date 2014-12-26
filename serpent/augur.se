@@ -94,6 +94,7 @@ data cashcoin_balances[2^160]
 	# any parameters why not - func. should pay for rbcr?
 	# reward whoever does redeem and close market
 	# fix stuff for new msr
+	# don't need number of x. in arrays data structures now because arrays already have size as a prop. now
 
 def init():
 	# test initial funds
@@ -161,7 +162,7 @@ def get_rep_balance(branch, address):
 # period length is given in blocks
 # description format is branchName:description
 def make_subbranch(description:s, periodLength, parent, repRequired):
-	if(periodLength<=0 or !self.Branches[parent].periodLength or !repRequired or description=0):
+	if(periodLength<=0 or !self.Branches[parent].periodLength or !repRequired or description==0):
 		return(0)
 	branchCharacteristics = array(8)
 	branchCharacteristics[0] = BRANCH
@@ -340,14 +341,14 @@ def buy_shares(branch, event, market, outcome, amount, fee):
 
 	# for the first trade's oldcost shares bought will be at 0
 	# only 2 outcomes poss. for now
-	oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[]:2, self.Markets[market].lossLimit)
+	oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
 	# if buying outcome 1
 	if outcome:
 		self.Markets[market].events[i].sharesPurchased[1] += amount
 	# outcome is no
 	else:
 		self.Markets[market].events[i].sharesPurchased[0] += amount
-	newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[]:2, self.Markets[market].lossLimit) 
+	newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit) 
 	pricePerShare = newCost - oldCost
 	participantNumber = self.Markets[market].currentParticipant
 	
@@ -406,14 +407,14 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
 		return(0)
 
 	# for the first trade oldcost shares bought will be at 0
-	oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[]:2, self.Markets[market].lossLimit)
+	oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
 	# send unspent shares from the user to the event
 	if outcome:
 		self.Markets[market].events[i].sharesPurchased[1] -= amount
 	# outcome is no
 	else:
 		self.Markets[market].events[i].sharesPurchased[0] -= amount
-	newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[]:2, self.Markets[market].lossLimit)
+	newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
 	priceToPayPerShare = oldCost - newCost
 	# remove shares from the user's account
 	if outcome:
@@ -552,7 +553,7 @@ def redeem(branch):
 		i += 1
 
 	# populate returned arrays
-	megaArray = self.consensus(votes:len(votes), reputation:len(reputation))
+	megaArray = self.consensus(votes, reputation)
 	outcomes_final = array(numberEvents)
 	event_bonus = array(numberEvents)
 	voter_bonus = array(numReporters)
@@ -645,7 +646,4 @@ def close_market(branch, market):
 			moneyWon = pricePerShare * sharesOwned / 2^64
 			self.cashcoin_balances[market] -= moneyWon
 			self.cashcoin_balances[participant] += moneyWon
-
-
 # check lastvote period block
-
