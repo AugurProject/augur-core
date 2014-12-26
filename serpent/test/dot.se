@@ -8,6 +8,6 @@ macro dot($a, $b, $len):
             prod
 
 def test_dot(u:a, v:a):
-    usz = arglen(u)
-    vsz = arglen(v)
+    usz = len(u)
+    vsz = len(v)
     return(dot(u, v, usz))

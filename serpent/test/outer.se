@@ -1,4 +1,4 @@
-macro outer_product($u:$usz, $v:$vsz):
+macro outer_product($u, $usz, $v, $vsz):
     with p = array($usz):
         with i = 0:
             while i < $usz:
@@ -18,7 +18,7 @@ def test_outer():
     expected[0] = [12, 4, 6]
     expected[1] = [30, 10, 15]
     expected[2] = [42, 14, 21]
-    actual = outer_product(u:size, v:size)
+    actual = outer_product(u, size, v, size)
     match = 1
     i = 0
     while i < size:

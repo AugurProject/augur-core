@@ -1,5 +1,5 @@
 # Missing entries marked with -1
-macro isnan($a:$asz):
+macro isnan($a, $asz):
     with amask = array($asz):
         with i = 0:
             while i < $asz:
@@ -13,7 +13,7 @@ macro isnan($a:$asz):
 def test_isnan():
     a = [5, 1, -1, 4, 0]
     asz = 5
-    amask = isnan(a:asz)
+    amask = isnan(a, asz)
     expected = [0, 0, 1, 0, 0]
     i = 0
     while i < asz:

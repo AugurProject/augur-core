@@ -1,4 +1,4 @@
-macro kron($a:$asz, $b:$bsz):
+macro kron($a, $asz, $b, $bsz):
     with prod = array($asz * $bsz):
         with i = 0:
             while i < $asz:
@@ -13,7 +13,7 @@ def test_kron():
     a = [1, 2]
     b = [4, 5, 6]
     expected = [4, 5, 6, 8, 10, 12]
-    actual = kron(a:2, b:3)
+    actual = kron(a, 2, b, 3)
     i = 0
     while i < 6:
         if expected[i] != actual[i]:

@@ -1,4 +1,4 @@
-macro sum($a:$asz):
+macro sum($a, $asz):
     with total = 0:
         with i = 0:
             while i < $asz:
@@ -7,7 +7,7 @@ macro sum($a:$asz):
         total
 
 # Normalize array (elements sum to 1)
-macro normalize($a:$asz):
+macro normalize($a, $asz):
     with anorm = array($asz):
         with total = 0:
             with i = 0:
@@ -23,5 +23,5 @@ macro normalize($a:$asz):
 def test_normalize():
     a = [2, 10, 4, 2, 7, 1]
     asz = 6
-    anorm = normalize(a:asz)
-    return(sum(anorm:asz))
+    anorm = normalize(a, asz)
+    return(sum(anorm, asz))
