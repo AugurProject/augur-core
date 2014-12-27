@@ -80,10 +80,13 @@ data cashcoin_balances[2^160]
 	# update data structure to have reporting have markets instead of events possibly.
 	# if current vote period is == 0 then we looped past 2^256 --- set values in array to 0 at that point
 	# new market maker
+	# api voting
+	# hashed votes
 	# make sure events voting periods are properly setup
 	# ui functions
 	# hash first frontrunning prevention mechanism
 	# salt hash vote mechanism
+	# add support for categorical and scalar and multidimensional events
 
 ### To do:
 	# proper mult. div (perhaps store all cashcoin balances as fixed)
@@ -96,6 +99,7 @@ data cashcoin_balances[2^160]
 	# fix stuff for new msr
 	# one syntax error left surrounding msr
 	# don't need number of x. in arrays data structures now because arrays already have size as a prop. now
+	# account initialization function
 
 def init():
 	# test initial funds
@@ -158,7 +162,6 @@ def send_reputation(branch, recver, value):
 		
 def get_rep_balance(branch, address):
 	return(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[address]].repValue)
-
 
 # period length is given in blocks
 # description format is branchName:description
@@ -605,8 +608,8 @@ def close_market(branch, market):
 	eventVotePeriod = self.Events[self.Markets[market].events[numberEvents-1].eventID].expirationDate / self.Branches[branch].periodLength
 	if(currentPeriod > (eventVotePeriod+2) && self.Reporting[branch].eventsExpDates[currentPeriod].totalRepReported >= self.Branches[branch].repRequired):
 		# give back initial liquidity
-		self.cashcoin_balances[market] -= self.Info[market].creationFee
-		self.cashcoin_balances[self.Info[market].creator] += self.Info[market].creationFee
+		#self.cashcoin_balances[market] -= self.Info[market].creationFee
+		#self.cashcoin_balances[self.Info[market].creator] += self.Info[market].creationFee
 		# get # of shares of winning outcome
 
 		# loop through events in the market, get their outcomes and use those to determine the winning events!
@@ -620,9 +623,9 @@ def close_market(branch, market):
 
 		winningShares = 0
 		# number of winning events is equivalent to e
-	 #   a = 0
-	 #   while a < e:
-	 #       self.Markets[market].events[self.Markets[market].winningEvents[e]].shares
+	 	#   a = 0
+	 	#   while a < e:
+	 	#   self.Markets[market].events[self.Markets[market].winningEvents[e]].shares
 
 		winningEvent = self.Markets[market].winningEvents[e]
 		winningShares = 0
@@ -637,7 +640,10 @@ def close_market(branch, market):
 		elif(winningOutcome==0):
 			return(text("outcome hasn't been decided yet"))
 		# X cashcoin in market /qi is the price per winning share once a market is closed
-		pricePerShare = self.cashcoin_balances[market] * 2^64 / winningShares
+		#pricePerShare = self.cashcoin_balances[market] * 2^64 / winningShares
+
+		# winning price is $1 / share
+		pricePerShare = 2^64
 
 		# distribute cashcoin to the people who won money by holding winning shares
 		i = 0
@@ -647,4 +653,12 @@ def close_market(branch, market):
 			moneyWon = pricePerShare * sharesOwned / 2^64
 			self.cashcoin_balances[market] -= moneyWon
 			self.cashcoin_balances[participant] += moneyWon
+
+		# give back initial liquidity
+		self.cashcoin_balances[self.Info[market].creator] += self.cashcoin_balances[market]
+		self.cashcoin_balances[market] -= self.cashcoin_balances[market]
 # check lastvote period block
+
+
+
+
