@@ -299,12 +299,13 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
 # make sure fixed point stuff is right here
 macro ls_lmsr($shares, $alpha):
 	with $Bq = $alpha*sum($shares):
-		with $sum_exp = 0:
-			with $i = 0:
-				while $i < $numShares:
-					$sum_exp += self.exp($shares[$i]*2^128/$Bq)
-					$i += 1
-				fixed_multiply($Bq, $sum_exp)
+		with $l = len($shares):
+			with $sum_exp = 0:
+				with $i = 0:
+					while $i < $l:
+						$sum_exp += self.exp($shares[$i]*2^128/$Bq)
+						$i += 1
+					fixed_multiply($Bq, self.log($sum_exp))
 
 def lmsr(shares:a, lossLimit):
 	# *** LOGARITHMIC MARKET SCORING RULE ***
