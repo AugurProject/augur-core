@@ -50,57 +50,57 @@ data Events[](branch, expirationDate, outcome)
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
-data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
+data Reporting[](eventsExpDates[](events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market
 # Sharespurchased keeps track of the number of shares purchased for each outcome
 # Participants is a 0 indexed array of participants, their cashIDs, and the shares in each outcome they've purchased of an event
-data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](participantID, event[](shares[2])), lossLimit, tradingFee, numberEvents, currentParticipant, winningEvents[])
+data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](participantID, event[](shares[2])), lossLimit, tradingFee, currentParticipant, winningEvents[], alpha)
 
 data cashcoin_balances[2^160]
 
 ### Version 0.4:
 	# make code updatable 
 	# seigniorage coin
+	# api voting
+	# blockchain explorer to get / examine data or make rpc api calls to the contract to get it
+			# local contract calls don't cost gas
 
 ### Version 0.3:
 	# make sure this follows paul's whitepaper well
+	# reward whoever does redeem and close market according to cost
 	# how do we scale / what if a ton of events, markets, etc.
 	# api voting option
 	# may need a ballot max size b/c cost so need a systematic way to do voting (e.g. vote on first xxx events, then next set are another ballot)
 	# randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot
+	# fast voting cycle first few days to get the 60% problem away from a branch, e.g. what if not enough people vote
+	# 60% of votes -- need to get the cycle length parameters right
+	# rapid rbcr anytime
+	# profit msr
 
 ### Version 0.2:
-	# blockchain explorer to get / examine data or make rpc api calls to the contract to get it
-	# local contract calls don't cost gas
 	# Scalar event where people update what type of share they bought using a thing
 	# in an array where index is their scalar x and value
 	# is the share updated number of shares bought
 	# update data structure to have reporting have markets instead of events possibly.
 	# if current vote period is == 0 then we looped past 2^256 --- set values in array to 0 at that point
-	# new market maker
-	# api voting
-	# hashed votes
+	# zeroing of array values
 	# make sure events voting periods are properly setup
 	# ui functions
 	# hash first frontrunning prevention mechanism
 	# salt hash vote mechanism
+	# add a branch initial rbcr rapid period to start w/
 	# add support for categorical and scalar and multidimensional events
+	# should make an API function for this (make ballot)!!!
+	# can't determine vote scenario
 
 ### To do:
-	# proper mult. div (perhaps store all cashcoin balances as fixed)
-	# add a branch initial rbcr rapid period to start w/
 	# make so eventsexpdates currentindex -1 is the stuff we actually vote on in redeem tx
-	# fast voting cycle first few days to get the 60% problem away from a branch, e.g. what if not enough people vote
-	# 60% of votes -- need to get the cycle length parameters right
-	# any parameters why not - func. should pay for rbcr?
-	# reward whoever does redeem and close market
-	# fix stuff for new msr
-	# rapid rbcr anytime
-	# one syntax error left surrounding msr
 	# don't need number of x. in arrays data structures now because arrays already have size as a prop. now
-	# account initialization function
+	# check lastvote period block
+	# put this on github
+	# fix macros numevents
 
 def init():
 	# test initial funds
@@ -226,15 +226,15 @@ def create_event(branch, description:s, expDate):
 		#403200 is number of blocks == 8 weeks
 		# 0 means it expires in the next period
 		futurePeriod = expDate / self.Branches[branch].periodLength
-		self.Reporting[branch].eventsExpDates[futurePeriod].events[self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents] = eventID
-		self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents += 1
+		self.Reporting[branch].eventsExpDates[futurePeriod].events[len(self.Reporting[branch].eventsExpDates[].events[])] = eventID
 		return(1)
 	else:
 		return(0)
 
-# lossLimit is a fixedpoint syntax number (so a losslimit of 1 is 2^64)
+# lossLimit is a fixedpoint syntax number (so a losslimit of 1 is 2^64) (0 if not using lmsr)
+# ditto for alpha
 # tradingFee is a fixedpoint number as well
-def create_market(branch, description:s, lossLimit, tradingFee, events:a):
+def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a):
 	# check that events have same exp. dates
 	x = 0
 	numEvents = len(events)
@@ -246,10 +246,10 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
 	# initialLiquidity is a fixedpoint number
 	# divide by 2^64 to stay in fixedpoint
 	initialLiquidity = lossLimit*self.log(numEvents*2^64)/2^64
-	if(numEvents > 200 or self.cashcoin_balances[tx.origin]<initialLiquidity or !self.Branches[branch].periodLength or description==0 or !lossLimit or !tradingFee):
+	if(numEvents > 200 or self.cashcoin_balances[tx.origin]<initialLiquidity or !self.Branches[branch].periodLength or description==0 or !lossLimit or !tradingFee or !alpha):
 		return(0)
 	# formation of marketID (hash)
-	marketCharacteristics = array(9)
+	marketCharacteristics = array(10)
 	marketCharacteristics[0] = MARKET
 	marketCharacteristics[1] = description
 	marketCharacteristics[2] = tx.origin
@@ -259,7 +259,8 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
 	marketCharacteristics[6] = numEvents
 	marketCharacteristics[7] = lossLimit
 	marketCharacteristics[8] = tradingFee
-	marketID = sha256(marketCharacteristics, 9)
+	marketCharacteristics[9] = alpha
+	marketID = sha256(marketCharacteristics, 10)
 
 	if(self.send_cashcoin(marketID, initialLiquidity)):
 		# add event list to the market
@@ -283,8 +284,8 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
 		self.cashcoin_balances[marketID] = initialLiquidity
 		self.Markets[marketID].lossLimit = lossLimit
 		self.Markets[marketID].tradingFee = tradingFee
-		self.Markets[marketID].numberEvents = numberEvents
 		self.Markets[marketID].branch = branch
+		self.Markets[marketID].alpha = alpha
 		# add the market to the branch
 		marketCount = self.Branches[branch].marketCount
 		self.Branches[branch].markets[marketCount] = marketID
@@ -297,27 +298,25 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
 # and n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
 # make sure fixed point stuff is right here
-macro ls_lmsr($shares:$numShares, $alpha):
+macro ls_lmsr($marketID, $eventID, $alpha):
 	$Bq = $alpha * sum($shares:$numShares)
 	$sum_of_exps = 0
 	$i = 0
-	while $i < $numShares:
-		$sum_of_exps += self.exp($shares[i]*2^128/$Bq)
+	while $i < len(self.Markets[$marketID].events[$eventID].sharesPurchased[]):
+		$sum_of_exps += self.exp(self.Markets[$marketID].events[$eventID].sharesPurchased[$i]*2^128/$Bq)
 		$i += 1
-	fixed_multiply($Bq, $sum_of_exps)
+	fixed_multiply($Bq, self.log($sum_exp))
 
-def lmsr(shares:a, lossLimit):
+macro lmsr($marketID, $eventID, $lossLimit):
 	# *** LOGARITHMIC MARKET SCORING RULE ***
 	#(like a regular market scoring rule, except it uses logarithms)
-	stop = len(shares)
-	i = 0
-	res = 0
-	while i < stop:
-		res += self.exp(shares[i]*2^128 / lossLimit)
-		i += 1
-	logpf = self.log(res)
-	cost = lossLimit * logpf / 2^64
-	return(cost)
+	$i = 0
+	$res = 0
+	while $i < len(self.Markets[$marketID].events[$eventID].sharesPurchased[]):
+		$res += self.exp(self.Markets[$marketID].events[$eventID].sharesPurchased[$i]*2^128 / $lossLimit)
+		$i += 1
+	$logpf = self.log($res)
+	cost = $lossLimit * $logpf / 2^64
 
 # fee should be in fixed point
 # amount of shares should be an integer
@@ -333,25 +332,42 @@ def buy_shares(branch, event, market, outcome, amount, fee):
 	
 	# find the right event index
 	i = 0
-	while (i<self.Markets[market].numberEvents):
+	while (i<len(self.Markets[market].events)):
 		if(self.Markets[market].events[i].eventID == event):
 			break
 		else:
 			i+=1
 	# event doesn't exist in index
-	if(i==self.Markets[market].numberEvents):
+	if(i==len(self.Markets[market].events[]):
 		return(0)
-
-	# for the first trade's oldcost shares bought will be at 0
-	# only 2 outcomes poss. for now
-	oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
-	# if buying outcome 1
-	if outcome:
-		self.Markets[market].events[i].sharesPurchased[1] += amount
-	# outcome is no
+	oldCost = 0
+	newCost = 0
+	# using ls-lmsr
+	if(self.Markets[market].alpha):
+		# for the first trade's oldcost shares bought will be at 0
+		# only 2 outcomes poss. for now
+		oldCost = ls_lmsr(market)
+		# if buying outcome 1
+		if outcome:
+			self.Markets[market].events[i].sharesPurchased[1] += amount
+		# outcome is no
+		else:
+			self.Markets[market].events[i].sharesPurchased[0] += amount
+		newCost = ls_lmsr(market) 
+	# regular lmsr
 	else:
-		self.Markets[market].events[i].sharesPurchased[0] += amount
-	newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit) 
+		if(self.Markets[market].lossLimit):
+			# for the first trade's oldcost shares bought will be at 0
+			# only 2 outcomes poss. for now
+			oldCost = lmsr(market)
+			# if buying outcome 1
+			if outcome:
+				self.Markets[market].events[i].sharesPurchased[1] += amount
+			# outcome is no
+			else:
+				self.Markets[market].events[i].sharesPurchased[0] += amount
+			newCost = lmsr(market) 
+
 	# these prices are in fixed point
 	pricePerShare = newCost - oldCost
 	participantNumber = self.Markets[market].currentParticipant
@@ -402,24 +418,40 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
 
 	# find the right event index
 	i = 0
-	while (i<self.Markets[market].numberEvents):
+	while (i<len(self.Markets[market].events[])):
 		if(self.Markets[market].events[i].eventID == event):
 			break
 		else:
 			i+=1
 	# event doesn't exist in index
-	if(i==self.Markets[market].numberEvents):
+	if(i==len(self.Markets[market].events[])):
 		return(0)
 
 	# for the first trade oldcost shares bought will be at 0
-	oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
-	# send unspent shares from the user to the event
-	if outcome:
-		self.Markets[market].events[i].sharesPurchased[1] -= amount
-	# outcome is no
+	oldCost = 0
+	newCost = 0
+	# using ls-lmsr
+	if(self.Markets[market].alpha):
+		oldCost = ls_lmsr(market)
+		# send unspent shares from the user to the event
+		if outcome:
+			self.Markets[market].events[i].sharesPurchased[1] -= amount
+		# outcome is no
+		else:
+			self.Markets[market].events[i].sharesPurchased[0] -= amount
+		newCost = ls_lmsr(market)
+	# using lmsr
 	else:
-		self.Markets[market].events[i].sharesPurchased[0] -= amount
-	newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
+		if(self.Markets[market].lossLimit):
+			oldCost = lmsr(market)
+			# send unspent shares from the user to the event
+			if outcome:
+				self.Markets[market].events[i].sharesPurchased[1] -= amount
+			# outcome is no
+			else:
+				self.Markets[market].events[i].sharesPurchased[0] -= amount
+			newCost = ls_lmsr(market)
+
 	# these prices are in fixed point
 	priceToPayPerShare = oldCost - newCost
 	# remove shares from the user's account
@@ -453,25 +485,24 @@ def queryShareCost():
 def inPeriod(branchID, eventID):
 	votePeriod = self.Branches[branchID].currentVotePeriod
 	i = 0
-	while i < self.Reporting[branchID].eventsExpDates[votePeriod].numberEvents:
+	while i < len(self.Reporting[branchID].eventsExpDates[votePeriod].events):
 		if(eventID==self.Reporting[branchID].eventsExpDates[votePeriod].events[i]):
 			return(1)
 		i += 1
 	return(0)
 
-# make sure people can change their vote during the voting period
 # a no vote is -2^64, a yes vote is 2^64 and a can't determine vote is 2^63 (a empty ballot is 0)
 # atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
 # ui should handle this ^
-# need report length to be same as number of items in the current eventexpdates voting period events!
-# ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[futurePeriod].
-# numberEvents and loop through the events[] array from 0 to numberEvents -1 for the votes list / order
+# ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents
+# and loop through the events[] array from 0 to numberEvents -1 for the votes list / order
+# should make an API function for this (make ballot)!!!
 # UI will need a function to get the items in that array above so it can make a report!
 def vote(branch, report:a):
 	# make sure the branch exists
 	repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
-
-	if(len(report)!=self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].numberEvents):
+	# need report length to be same as number of items in the current eventexpdates voting period events!
+	if(len(report)!=len(self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].events[])):
 		return(0)
 
 	# if current period is more than 2 periods past the vote period
@@ -538,7 +569,7 @@ def redeem(branch):
 	# (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
 	reputation = array(self.Reporting[branch].numberReporters-1)
 	#votes = array(self.Reporting[branch].numberReporters-1)
-	numberEvents = self.Reporting[branch].eventsExpDates[currentvotePeriod].numberEvents
+	numberEvents = len(self.Reporting[branch].eventsExpDates[currentvotePeriod].events[])
 	numReporters = self.Reporting[branch].numberReporters
 	votes = array(numReporters * numberEvents)
 
@@ -588,17 +619,17 @@ def redeem(branch):
 			self.Events[eventID].outcome = 1
 		# need to loop through eventid holders and distribute 25% coins using the event_bonus to determine how much
 		# of the 25% each get
-		self.cashcoin_balances[self.Info[eventID].creator] += event_bonus[n] * self.cashcoin_balances[branch] / 3
-		self.cashcoin_balances[branch] -= event_bonus[n] * self.cashcoin_balances[branch] / 3
+		self.cashcoin_balances[self.Info[eventID].creator] += fixed_multiply(event_bonus[n], self.cashcoin_balances[branch]) / 3
+		self.cashcoin_balances[branch] -= fixed_multiply(event_bonus[n], self.cashcoin_balances[branch]) / 3
 
-	# eed to loop through rep holders and distribute 50% of branch fees to voters' cashcoin addresses
+	# need to loop through rep holders and distribute 50% of branch fees to voters' cashcoin addresses 
+	# (use 2/3 because 25% was distributed in market creation)
 	# also need to take voter_bonus and redistribute reputation in the Reporting structure accordingly
 	z = 0
 	while z < numReporters:
-		self.Reporting[branch].reputation[z].repValue += voter_bonus[z]*21000000
-		self.cashcoin_balances[self.Reporting[branch].reputation[z].reporterID] += (2/3)*self.cashcoin_balances[branch] / numReporters
-		self.cashcoin_balances[branch] -= (2/3)*self.cashcoin_balances[branch] / numReporters
-
+		self.Reporting[branch].reputation[z].repValue += (voter_bonus[z]*21000000)/2^64
+		self.cashcoin_balances[self.Reporting[branch].reputation[z].reporterID] += 2*self.cashcoin_balances[branch] / (3*numReporters)
+		self.cashcoin_balances[branch] -= 2*self.cashcoin_balances[branch] / (3*numReporters)
 	self.Branches[branch].currentVotePeriod += 1
 
 
@@ -607,6 +638,7 @@ def redeem(branch):
 # only works for inTrade style predictions at the moment
 def close_market(branch, market):
 	currentPeriod = block.number / self.Branches[branch].periodLength
+	numberEvents = len(self.Markets[market].events[])
 	eventVotePeriod = self.Events[self.Markets[market].events[numberEvents-1].eventID].expirationDate / self.Branches[branch].periodLength
 	if(currentPeriod > (eventVotePeriod+2) && self.Reporting[branch].eventsExpDates[currentPeriod].totalRepReported >= self.Branches[branch].repRequired):
 		# give back initial liquidity
@@ -617,7 +649,7 @@ def close_market(branch, market):
 		# loop through events in the market, get their outcomes and use those to determine the winning events!
 		n = 0
 		e = 0
-		while n < self.Markets[market].numberEvents:
+		while n < numberEvents:
 			if(self.Events[self.Markets[market].events[n].eventID].outcome):
 				self.Markets[market].winningEvents[e] = self.Markets[market].events[n].eventID
 				e+=1
@@ -641,26 +673,17 @@ def close_market(branch, market):
 			winningSharesIndex = 0
 		elif(winningOutcome==0):
 			return(text("outcome hasn't been decided yet"))
-		# X cashcoin in market /qi is the price per winning share once a market is closed
-		#pricePerShare = self.cashcoin_balances[market] * 2^64 / winningShares
-
-		# winning price is $1 / share
-		pricePerShare = 2^64
-
 		# distribute cashcoin to the people who won money by holding winning shares
 		i = 0
 		while i <= self.Markets[market].currentParticipant:
 			sharesOwned = self.Markets[market].participants[i].event[winningEvent].shares[winningSharesIndex]
 			participant = self.Markets[market].participants[i].participantID
-			moneyWon = pricePerShare * sharesOwned / 2^64
-			self.cashcoin_balances[market] -= moneyWon
-			self.cashcoin_balances[participant] += moneyWon
+			# winning price is $1 / share
+			# pricePerShare = 2^64
+			#moneyWon = sharesOwned*pricePerShare
+			self.cashcoin_balances[market] -= sharesOwned*2^64
+			self.cashcoin_balances[participant] += sharesOwned*2^64
 
-		# give back initial liquidity
+		# give back initial liquidity (or as much of it is left)
 		self.cashcoin_balances[self.Info[market].creator] += self.cashcoin_balances[market]
 		self.cashcoin_balances[market] -= self.cashcoin_balances[market]
-# check lastvote period block
-
-
-
-
