@@ -36,10 +36,12 @@ MARKET = 2
 data Info[](typecode, description[], creator, creationFee)
 
 # CurrentVotePeriod is the current index in eventsExpDates
-# Parent is the branch's parent branch.
 # Branches' index is the hash of the branch (aka branchID)
 # RepRequired is the amount of reputation required to reach quorem
-data Branches[](currentVotePeriod, markets[], marketCount, periodLength, parent, repRequired)
+# markets[] is a 0 index array of market hashes (a.k.a. marketID)
+# currentVotePeriod is a nonce that tells us which bucket of events up to be
+# voted on in the upcoming vote period
+data Branches[](currentVotePeriod, markets[], marketCount, periodLength, repRequired)
 
 # Events' index is the eventID
 data Events[](branch, expirationDate, outcome)
@@ -235,13 +237,16 @@ def create_event(branch, description:s, expDate):
 # lossLimit is a fixedpoint syntax number (so a losslimit of 1 is 2^64)
 # tradingFee is a fixedpoint number as well
 def create_market(branch, description:s, lossLimit, tradingFee, events:a):
-	# check that events have same exp. dates
-	x = 0
+	# check that events have same exp. dates and branch
+	i = 0
 	numEvents = len(events)
-	while x < numEvents:
-		if(self.Events[events[i]].expirationDate != self.Events[events[i+1]].expirationDate and (i+1)!=numEvents):
+	expDate = self.Events[events[0]].expirationDate
+	while i < numEvents:
+		event = events[i]
+		if self.Events[event].expirationDate != expDate:
 			return(0)
-		x+=1
+		if self.Events[event].branch != branch:
+			return(0)
 
 	# initialLiquidity is a fixedpoint number
 	# divide by 2^64 to stay in fixedpoint
@@ -297,28 +302,41 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
 # and n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
 # make sure fixed point stuff is right here
-macro ls_lmsr($shares, $alpha):
-	with $Bq = $alpha*sum($shares):
-		with $l = len($shares):
-			with $sum_exp = 0:
-				with $i = 0:
-					while $i < $l:
-						$sum_exp += self.exp($shares[$i]*2^128/$Bq)
-						$i += 1
-					fixed_multiply($Bq, self.log($sum_exp))
+macro ls_lmsr($marketID):
+	with $Bq = 0:
+		with $l = self.Markets[$marketID].numberEvents:
+			with $i = 0:
+				while $i < $l:
+					$Bq += self.Markets[$marketID].events[$i].shares[0]
+					$Bq += self.Markets[$marketID].events[$i].shares[1]
+					$i += 1
+				$Bq *= self.Markets[$marketID].alpha
+				$i = 0
+				with $sum_exp = 0:
+					with $a = 0:
+						with $b = 0:
+							while $i < $l:
+								$a = self.Markets[$marketID].events[$i].shares[0]
+								$b = self.Markets[$marketID].events[$i].shares[1]
+								$sum_exp += self.exp($a*2^64/$Bq)
+								$sum_exp += self.exp($b*2^64/$Bq)
+								$i += 1
+							$Bq*self.log($sum_exp)/2^64
 
-def lmsr(shares:a, lossLimit):
-	# *** LOGARITHMIC MARKET SCORING RULE ***
-	#(like a regular market scoring rule, except it uses logarithms)
-	stop = len(shares)
-	i = 0
-	res = 0
-	while i < stop:
-		res += self.exp(shares[i]*2^128 / lossLimit)
-		i += 1
-	logpf = self.log(res)
-	cost = lossLimit * logpf / 2^64
-	return(cost)
+macro lmsr($marketID):
+	with $sum_exp = 0:
+		with $B = self.Markets[$marketID].lossLimit:
+			with $l = self.Markets[$marketID].numberEvents:
+				with $i = 0:
+					with $a = 0:
+						with $b = 0:
+							while $i < $l:
+								$a = self.Markets[$marketID].events[$i].shares[0] 
+								$b = self.Markets[$marketID].events[$i].shares[1]
+								$sum_exp += self.exp($a*2^64/$B)
+								$sum_exp += self.exp($b*2^64/$B)
+								$i += 1
+							$B*self.log($sum_exp)/2^64
 
 # fee should be in fixed point
 # amount of shares should be an integer
@@ -345,14 +363,14 @@ def buy_shares(branch, event, market, outcome, amount, fee):
 
 	# for the first trade's oldcost shares bought will be at 0
 	# only 2 outcomes poss. for now
-	oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
+	oldCost = lmsr(market)
 	# if buying outcome 1
 	if outcome:
 		self.Markets[market].events[i].sharesPurchased[1] += amount
 	# outcome is no
 	else:
 		self.Markets[market].events[i].sharesPurchased[0] += amount
-	newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit) 
+	newCost = self.lmsr(market) 
 	# these prices are in fixed point
 	pricePerShare = newCost - oldCost
 	participantNumber = self.Markets[market].currentParticipant
@@ -413,14 +431,14 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
 		return(0)
 
 	# for the first trade oldcost shares bought will be at 0
-	oldCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
+	oldCost = lmsr(market)
 	# send unspent shares from the user to the event
 	if outcome:
 		self.Markets[market].events[i].sharesPurchased[1] -= amount
 	# outcome is no
 	else:
 		self.Markets[market].events[i].sharesPurchased[0] -= amount
-	newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
+	newCost = lmsr(market)
 	# these prices are in fixed point
 	priceToPayPerShare = oldCost - newCost
 	# remove shares from the user's account
