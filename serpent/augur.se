@@ -97,16 +97,17 @@ data cashcoin_balances[2^160]
 	# any parameters why not - func. should pay for rbcr?
 	# reward whoever does redeem and close market
 	# fix stuff for new msr
+	# rapid rbcr anytime
 	# one syntax error left surrounding msr
 	# don't need number of x. in arrays data structures now because arrays already have size as a prop. now
 	# account initialization function
 
 def init():
 	# test initial funds
-	cashcoin_balances[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826] = 1000000
-	self.Reporting[1010101].repIDtoIndex["chris and joey's rep"] = 0
+	cashcoin_balances[tx.origin] = 1000000*2^64
+	self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
 	self.Reporting[1010101].reputation[0].repValue = 47
-	self.Reporting[1010101].reputation[0].reporterID = "chris and joey's rep"
+	self.Reporting[1010101].reputation[0].reporterID = tx.origin
 	# number of reporters is 0 indexed
 	self.Reporting[1010101].numberReporters = 0
 	self.Info[1010101].typecode = 0
@@ -123,7 +124,7 @@ def init():
 def get_cash_balance(address):
 	return(self.cashcoin_balances[address])
 
-# should send values as fixed point (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
+# should send values as fixed point in UI (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
 def send_cashcoin(recver, value):
 	sender = tx.origin
 	sender_balance = self.cashcoin_balances[sender]
@@ -135,7 +136,7 @@ def send_cashcoin(recver, value):
 		return(0)
 
 def send_reputation(branch, recver, value):
-	if(value<=0 or !self.send_cashcoin(branch, 5)):
+	if(value<=0 or !self.send_cashcoin(branch, 5*2^64)):
 		return(0)
 	sender = tx.origin
 	senderIndex = self.Reporting[oldBranch].repIDtoIndex[sender]
@@ -172,7 +173,7 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
 	branchCharacteristics[0] = BRANCH
 	branchCharacteristics[1] = description
 	branchCharacteristics[2] = tx.origin
-	branchCharacteristics[3] = 47
+	branchCharacteristics[3] = 47*2^64
 	branchCharacteristics[4] = periodLength
 	branchCharacteristics[5] = block.number
 	branchCharacteristics[6] = parent
@@ -181,11 +182,11 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
 	# people can check that these characteristics hash to the ID if they want
 	# people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
 	branchID = sha256(eventCharacteristics, 8)
-	if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator and self.send_cashcoin(branchID, 47)):
+	if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator and self.send_cashcoin(branchID, 47*2^64)):
 		self.Info[branchID].typecode = BRANCH
 		self.Info[branchID].description[] = description
 		self.Info[branchID].creator = tx.origin
-		self.Info[branchID].creationFee = 47
+		self.Info[branchID].creationFee = 47*2^64
 		self.Branches[branchID].periodLength = periodLength
 		self.Branches[branchID].parent = parent
 		self.Branches[branchID].repRequired = repRequired
@@ -207,16 +208,16 @@ def create_event(branch, description:s, expDate):
 		eventCharacteristics[2] = branch
 		eventCharacteristics[3] = expDate
 		eventCharacteristics[4] = tx.origin
-		eventCharacteristics[5] = 42
+		eventCharacteristics[5] = 42*2^64
 		eventID = sha256(eventCharacteristics, 6)
 	else:
 		return(0)
 
-	if (!self.Info[eventID].creator and !self.Events[eventID].branch and self.send_cashcoin(branch, 42)):
+	if (!self.Info[eventID].creator and !self.Events[eventID].branch and self.send_cashcoin(branch, 42*2^64)):
 		self.Info[eventID].typecode = EVENT
 		self.Info[eventID].description[] = description
 		self.Info[eventID].creator = tx.origin
-		self.Info[eventID].creationFee = 42
+		self.Info[eventID].creationFee = 42*2^64
 		self.Events[eventID].branch = branch
 		self.Events[eventID].expirationDate = expDate
 		
@@ -231,8 +232,8 @@ def create_event(branch, description:s, expDate):
 	else:
 		return(0)
 
-# lossLimit is a fixedpoint syntax number
-# give this function another once over
+# lossLimit is a fixedpoint syntax number (so a losslimit of 1 is 2^64)
+# tradingFee is a fixedpoint number as well
 def create_market(branch, description:s, lossLimit, tradingFee, events:a):
 	# check that events have same exp. dates
 	x = 0
@@ -242,8 +243,9 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
 			return(0)
 		x+=1
 
-	# gotta remember to divide by 2^64 when multiplying fixed point numbers
-	initialLiquidity = lossLimit*self.log(numEvents) / 2^64
+	# initialLiquidity is a fixedpoint number
+	# divide by 2^64 to stay in fixedpoint
+	initialLiquidity = lossLimit*self.log(numEvents*2^64)/2^64
 	if(numEvents > 200 or self.cashcoin_balances[tx.origin]<initialLiquidity or !self.Branches[branch].periodLength or description==0 or !lossLimit or !tradingFee):
 		return(0)
 	# formation of marketID (hash)
@@ -294,34 +296,31 @@ def create_market(branch, description:s, lossLimit, tradingFee, events:a):
 # alpha is equal to v/(n*log(n)) where v is the max percent commission,
 # and n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
-macro abe_msr($shares:$numShares, $alpha):
-	with Bq = 0:
-		with i = 0:
-			while i < $numShares:
-				Bq += $shares[i]
-				i += 1
-			Bq = Bq * $alpha / 2^64
-		with sum_of_exps = 0:
-			with i = 0:
-				while i < $numShares:
-					sum_of_exps += self.exp($shares[i]) * 2^64 / Bq
-					i += 1
-			Bq * self.log(sum_of_exps) / 2^64
+# make sure fixed point stuff is right here
+macro ls_lmsr($shares:$numShares, $alpha):
+	$Bq = $alpha * sum($shares:$numShares)
+	$sum_of_exps = 0
+	$i = 0
+	while $i < $numShares:
+		$sum_of_exps += self.exp($shares[i]*2^128/$Bq)
+		$i += 1
+	fixed_multiply($Bq, $sum_of_exps)
 
 def lmsr(shares:a, lossLimit):
 	# *** LOGARITHMIC MARKET SCORING RULE ***
 	#(like a regular market scoring rule, except it uses logarithms)
-	# this need sto be updated with Abe's stuff!
 	stop = len(shares)
 	i = 0
 	res = 0
 	while i < stop:
-		res += self.exp(shares[i]/lossLimit)
+		res += self.exp(shares[i]*2^128 / lossLimit)
 		i += 1
 	logpf = self.log(res)
-	cost = lossLimit * logpf
-	return(1)
+	cost = lossLimit * logpf / 2^64
+	return(cost)
 
+# fee should be in fixed point
+# amount of shares should be an integer
 def buy_shares(branch, event, market, outcome, amount, fee):
 	if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee):
 		return(0)
@@ -353,6 +352,7 @@ def buy_shares(branch, event, market, outcome, amount, fee):
 	else:
 		self.Markets[market].events[i].sharesPurchased[0] += amount
 	newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit) 
+	# these prices are in fixed point
 	pricePerShare = newCost - oldCost
 	participantNumber = self.Markets[market].currentParticipant
 	
@@ -387,6 +387,7 @@ def buy_shares(branch, event, market, outcome, amount, fee):
 
 # amount is amount of shares to buy
 # instead of inputting particip. num could just loop through array if dont have it
+# fee should be fixed point
 def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
 	# When sell check that event hasn't expired
 	if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee or self.Markets[market].participants[participantNumber].participantID != tx.origin or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee):
@@ -419,6 +420,7 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
 	else:
 		self.Markets[market].events[i].sharesPurchased[0] -= amount
 	newCost = self.lmsr(self.Markets[market].events[i].sharesPurchased[], self.Markets[market].lossLimit)
+	# these prices are in fixed point
 	priceToPayPerShare = oldCost - newCost
 	# remove shares from the user's account
 	if outcome:
