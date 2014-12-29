@@ -305,7 +305,7 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 # make sure fixed point stuff is right here
 macro ls_lmsr($marketID):
 	with $Bq = 0:
-		with $l = self.Markets[$marketID].numberEvents:
+		with $l = len(self.Markets[$marketID].events[]):
 			with $i = 0:
 				while $i < $l:
 					$Bq += self.Markets[$marketID].events[$i].shares[0]
@@ -327,7 +327,7 @@ macro ls_lmsr($marketID):
 macro lmsr($marketID):
 	with $sum_exp = 0:
 		with $B = self.Markets[$marketID].lossLimit:
-			with $l = self.Markets[$marketID].numberEvents:
+			with $l = len(self.Markets[$marketID].events[]):
 				with $i = 0:
 					with $a = 0:
 						with $b = 0:
