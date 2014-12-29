@@ -36,10 +36,12 @@ MARKET = 2
 data Info[](typecode, description[], creator, creationFee)
 
 # CurrentVotePeriod is the current index in eventsExpDates
-# Parent is the branch's parent branch.
 # Branches' index is the hash of the branch (aka branchID)
 # RepRequired is the amount of reputation required to reach quorem
-data Branches[](currentVotePeriod, markets[], marketCount, periodLength, parent, repRequired)
+# markets[] is a 0 index array of market hashes (a.k.a. marketID)
+# currentVotePeriod is a nonce that tells us which bucket of events up to be
+# voted on in the upcoming vote period
+data Branches[](currentVotePeriod, markets[], marketCount, periodLength, repRequired)
 
 # Events' index is the eventID
 data Events[](branch, expirationDate, outcome)
@@ -235,13 +237,16 @@ def create_event(branch, description:s, expDate):
 # ditto for alpha
 # tradingFee is a fixedpoint number as well
 def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a):
-	# check that events have same exp. dates
-	x = 0
+	# check that events have same exp. dates and branch
+	i = 0
 	numEvents = len(events)
-	while x < numEvents:
-		if(self.Events[events[i]].expirationDate != self.Events[events[i+1]].expirationDate and (i+1)!=numEvents):
+	expDate = self.Events[events[0]].expirationDate
+	while i < numEvents:
+		event = events[i]
+		if self.Events[event].expirationDate != expDate:
 			return(0)
-		x+=1
+		if self.Events[event].branch != branch:
+			return(0)
 
 	# initialLiquidity is a fixedpoint number
 	# divide by 2^64 to stay in fixedpoint
@@ -298,25 +303,41 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 # and n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
 # make sure fixed point stuff is right here
-macro ls_lmsr($marketID, $eventID, $alpha):
-	$Bq = $alpha * sum($shares:$numShares)
-	$sum_of_exps = 0
-	$i = 0
-	while $i < len(self.Markets[$marketID].events[$eventID].sharesPurchased[]):
-		$sum_of_exps += self.exp(self.Markets[$marketID].events[$eventID].sharesPurchased[$i]*2^128/$Bq)
-		$i += 1
-	fixed_multiply($Bq, self.log($sum_exp))
+macro ls_lmsr($marketID):
+	with $Bq = 0:
+		with $l = self.Markets[$marketID].numberEvents:
+			with $i = 0:
+				while $i < $l:
+					$Bq += self.Markets[$marketID].events[$i].shares[0]
+					$Bq += self.Markets[$marketID].events[$i].shares[1]
+					$i += 1
+				$Bq *= self.Markets[$marketID].alpha
+				$i = 0
+				with $sum_exp = 0:
+					with $a = 0:
+						with $b = 0:
+							while $i < $l:
+								$a = self.Markets[$marketID].events[$i].shares[0]
+								$b = self.Markets[$marketID].events[$i].shares[1]
+								$sum_exp += self.exp($a*2^64/$Bq)
+								$sum_exp += self.exp($b*2^64/$Bq)
+								$i += 1
+							$Bq*self.log($sum_exp)/2^64
 
-macro lmsr($marketID, $eventID, $lossLimit):
-	# *** LOGARITHMIC MARKET SCORING RULE ***
-	#(like a regular market scoring rule, except it uses logarithms)
-	$i = 0
-	$res = 0
-	while $i < len(self.Markets[$marketID].events[$eventID].sharesPurchased[]):
-		$res += self.exp(self.Markets[$marketID].events[$eventID].sharesPurchased[$i]*2^128 / $lossLimit)
-		$i += 1
-	$logpf = self.log($res)
-	cost = $lossLimit * $logpf / 2^64
+macro lmsr($marketID):
+	with $sum_exp = 0:
+		with $B = self.Markets[$marketID].lossLimit:
+			with $l = self.Markets[$marketID].numberEvents:
+				with $i = 0:
+					with $a = 0:
+						with $b = 0:
+							while $i < $l:
+								$a = self.Markets[$marketID].events[$i].shares[0] 
+								$b = self.Markets[$marketID].events[$i].shares[1]
+								$sum_exp += self.exp($a*2^64/$B)
+								$sum_exp += self.exp($b*2^64/$B)
+								$i += 1
+							$B*self.log($sum_exp)/2^64
 
 # fee should be in fixed point
 # amount of shares should be an integer
