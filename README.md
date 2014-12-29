@@ -27,6 +27,7 @@ augur-serpent
 	# if current vote period is == 0 then we looped past 2^256 --- set values in array to 0 at that point
 	# zeroing of array values
 	# make sure events voting periods are properly setup
+	# make sure eventsexpdates currentindex -1 is the stuff we actually vote on in redeem tx
 	# ui functions
 	# hash first frontrunning prevention mechanism
 	# salt hash vote mechanism
@@ -36,7 +37,4 @@ augur-serpent
 	# can't determine vote scenario
 
 ### To do:
-	# make so eventsexpdates currentindex -1 is the stuff we actually vote on in redeem tx
 	# don't need number of x. in arrays data structures now because arrays already have size as a prop. now
-	# check lastvote period block
-	# fix macros numevents
