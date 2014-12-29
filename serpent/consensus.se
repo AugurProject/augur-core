@@ -8,13 +8,14 @@ macro mean($a, $asz):
         total / $asz
 
 # Sum elements of array
-macro sum($a, $asz):
-    with total = 0:
-        with i = 0:
-            while i < $asz:
-                total += $a[i]
-                i += 1
-        total
+macro sum($a):
+    with $asz = len($a):
+        with $total = 0:
+            with $i = 0:
+                while $i < $asz:
+                    $total += $a[$i]
+                    $i += 1
+                $total
 
 # Proportional distance from zero, inputs are fixed point
 macro get_weight($a, $asz):
@@ -125,7 +126,7 @@ def consensus(votes:a, reputation:a, max_iterations):
                                                     total_active_rep += reputation[i]
                                                     present[i] = 1
                                                 i += 1
-                                            with num_present = sum(present, num_voters):
+                                            with num_present = sum(present):
                                                 with active_rep = array(num_present):
                                                     with i = 0:
                                                         with m = 0:
