@@ -38,6 +38,7 @@ data Reporting[](eventsExpDates[](events[], totalRepReported, reporters[][]), re
 data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[2])), lossLimit, tradingFee, currentParticipant, winningEvents[], alpha)
 
 data cashcoin_balances[2^160]
+data bananas[]
 
 def tests():
 	x = self.testCashBal()
@@ -197,7 +198,7 @@ def create_event(branch, description:s, expDate):
 	else:
 		return(0)
 
-	if(!self.Info[eventID].creator and !self.Events[eventID].branch and self.send_cashcoin(branch, 42*2^64)):
+	if (!self.Info[eventID].creator and !self.Events[eventID].branch and self.send_cashcoin(branch, 42*2^64)):
 		self.Info[eventID].typecode = EVENT
 		self.Info[eventID].description[] = description
 		self.Info[eventID].creator = tx.origin
@@ -210,7 +211,7 @@ def create_event(branch, description:s, expDate):
 		#403200 is number of blocks == 8 weeks
 		# 0 means it expires in the next period
 		futurePeriod = expDate / self.Branches[branch].periodLength
-		self.Reporting[branch].eventsExpDates[futurePeriod].events[len(self.Reporting[branch].eventsExpDates[].events[])] = eventID
-		return(1)
+		self.Reporting[branch].eventsExpDates[futurePeriod].events[len(self.Reporting[branch].eventsExpDates[futurePeriod].events[])] = eventID
+		return(eventID)
 	else:
 		return(0)

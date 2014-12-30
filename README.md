@@ -38,5 +38,4 @@ augur-serpent
 	# can't determine vote scenario
 
 ### To do:
-	# fix strings w/ Chris's methods
-	# things should return their IDs instead of a 1
+	# len doesn't actually work on data arrays it turns out...
