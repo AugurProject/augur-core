@@ -1,7 +1,0 @@
-data Reporting[](eventsExpDates[](events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
-def wow():
-	self.Reporting[10101].reporters[0][0] = 2
-	self.Reporting[10101].reporters[0][1] = 2
-	self.Reporting[10101].reporters[0][2] = 2
-	self.Reporting[10101].reporters[1][0] = 2
-	return(len(self.Reporting[10101].reporters[][]))
