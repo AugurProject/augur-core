@@ -57,8 +57,9 @@ data Reporting[](eventsExpDates[](events[], totalRepReported, reporters[][]), re
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market
 # Sharespurchased keeps track of the number of shares purchased for each outcome
-# Participants is a 0 indexed array of participants, their cashIDs, and the shares in each outcome they've purchased of an event
-data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](participantID, event[](shares[2])), lossLimit, tradingFee, currentParticipant, winningEvents[], alpha)
+# Participants is a 0 indexed array of participants, their cashIDs, and the shares in each outcome they've purchased of an event (events' indexes are actual event IDs)
+# sharesPurchased is 0 indexed (0 is outcome 0, 1 is outcome 1, 2 is outcome 2 (notice we're on a new event here if they're binary))
+data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[2])), lossLimit, tradingFee, currentParticipant, winningEvents[], alpha)
 
 data cashcoin_balances[2^160]
 
@@ -77,7 +78,6 @@ def init():
 	self.Branches[1010101].currentVotePeriod = block.number / 403200
 	self.Branches[1010101].marketCount = 0
 	self.Branches[1010101].periodLength = 403200
-	self.Branches[1010101].parent = 0
 	self.Branches[1010101].repRequired = 14000000
 
 
@@ -148,7 +148,6 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
 		self.Info[branchID].creator = tx.origin
 		self.Info[branchID].creationFee = 47*2^64
 		self.Branches[branchID].periodLength = periodLength
-		self.Branches[branchID].parent = parent
 		self.Branches[branchID].repRequired = repRequired
 		self.Branches[branchID].currentVotePeriod = block.number / periodLength
 		i = 0
@@ -233,7 +232,7 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 			if(!self.Info[eventID].creator or self.Events[eventID].branch!=branch):
 				return(0)
 			# initialize market events array with eventIDs from the eventList
-			self.Markets[marketID].events[i].eventID = eventID
+			self.Markets[marketID].events[i] = eventID
 			i+=1
 
 		# creator of the first market in a branch gets the branch's creation fee
@@ -311,13 +310,13 @@ def buy_shares(branch, event, market, outcome, amount, fee):
 	
 	# find the right event index
 	i = 0
-	while (i<len(self.Markets[market].events)):
-		if(self.Markets[market].events[i].eventID == event):
+	while (i<len(self.Markets[market].events[])):
+		if(self.Markets[market].events[i] == event):
 			break
 		else:
 			i+=1
 	# event doesn't exist in index
-	if(i==len(self.Markets[market].events[]):
+	if(i==len(self.Markets[market].events[])):
 		return(0)
 	oldCost = 0
 	newCost = 0
@@ -328,10 +327,10 @@ def buy_shares(branch, event, market, outcome, amount, fee):
 		oldCost = ls_lmsr(market)
 		# if buying outcome 1
 		if outcome:
-			self.Markets[market].events[i].sharesPurchased[1] += amount
+			self.Markets[market].sharesPurchased[i*2+1] += amount
 		# outcome is no
 		else:
-			self.Markets[market].events[i].sharesPurchased[0] += amount
+			self.Markets[market].sharesPurchased[i*2] += amount
 		newCost = ls_lmsr(market) 
 	# regular lmsr
 	else:
@@ -341,10 +340,10 @@ def buy_shares(branch, event, market, outcome, amount, fee):
 			oldCost = lmsr(market)
 			# if buying outcome 1
 			if outcome:
-				self.Markets[market].events[i].sharesPurchased[1] += amount
+				self.Markets[market].sharesPurchased[i*2+1] += amount
 			# outcome is no
 			else:
-				self.Markets[market].events[i].sharesPurchased[0] += amount
+				self.Markets[market].sharesPurchased[i*2] += amount
 			newCost = lmsr(market) 
 
 	# these prices are in fixed point
@@ -355,7 +354,7 @@ def buy_shares(branch, event, market, outcome, amount, fee):
 	if outcome:
 		# if user doesn't have enough money, revert
 		if(self.cashcoin_balances[tx.origin]<amount*pricePerShare):
-			self.Markets[market].events[i].sharesPurchased[1] -= amount
+			self.Markets[market].sharesPurchased[i*2+1] -= amount
 			return(0)
 		else:
 			# send ether from user acc. to market address/account
@@ -369,7 +368,7 @@ def buy_shares(branch, event, market, outcome, amount, fee):
 	else:
 		# if user doesn't have enough money, revert
 		if(self.cashcoin_balances[tx.origin]<amount*pricePerShare):
-			self.Markets[market].events[i].sharesPurchased[0] -= amount
+			self.Markets[market].sharesPurchased[i*2] -= amount
 			return(0)
 		else:
 			# send ether from user acc. to market address/account
@@ -398,7 +397,7 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
 	# find the right event index
 	i = 0
 	while (i<len(self.Markets[market].events[])):
-		if(self.Markets[market].events[i].eventID == event):
+		if(self.Markets[market].events[i] == event):
 			break
 		else:
 			i+=1
@@ -414,10 +413,10 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
 		oldCost = ls_lmsr(market)
 		# send unspent shares from the user to the event
 		if outcome:
-			self.Markets[market].events[i].sharesPurchased[1] -= amount
+			self.Markets[market].sharesPurchased[i*2+1] -= amount
 		# outcome is no
 		else:
-			self.Markets[market].events[i].sharesPurchased[0] -= amount
+			self.Markets[market].events[i].sharesPurchased[i*2] -= amount
 		newCost = ls_lmsr(market)
 	# using lmsr
 	else:
@@ -425,10 +424,10 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
 			oldCost = lmsr(market)
 			# send unspent shares from the user to the event
 			if outcome:
-				self.Markets[market].events[i].sharesPurchased[1] -= amount
+				self.Markets[market].events[i].sharesPurchased[i*2+1] -= amount
 			# outcome is no
 			else:
-				self.Markets[market].events[i].sharesPurchased[0] -= amount
+				self.Markets[market].events[i].sharesPurchased[i*2] -= amount
 			newCost = ls_lmsr(market)
 
 	# these prices are in fixed point
@@ -437,7 +436,7 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
 	if outcome:
 		# if user actually doesn't have the shares, revert
 		if(self.Markets[market].participants[participantNumber].event[event].shares[1]<amount):
-			self.Markets[market].events[i].sharesPurchased[1] += amount
+			self.Markets[market].sharesPurchased[i*2+1] += amount
 			return(0)
 		else:
 			# send bitcoin from the market to the user acc.
@@ -448,7 +447,7 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
 	else:
 		# if user actually doesn't have the shares, revert
 		if(self.Markets[market].participants[participantNumber].event[event].shares[0]<amount):
-			self.Markets[market].events[i].sharesPurchased[0] += amount
+			self.Markets[market].sharesPurchased[i*2] += amount
 			return(0)
 		else:
 			# send bitcoin from the market to the user acc.
@@ -464,7 +463,7 @@ def queryShareCost():
 def inPeriod(branchID, eventID):
 	votePeriod = self.Branches[branchID].currentVotePeriod
 	i = 0
-	while i < len(self.Reporting[branchID].eventsExpDates[votePeriod].events):
+	while i < len(self.Reporting[branchID].eventsExpDates[votePeriod].events[]):
 		if(eventID==self.Reporting[branchID].eventsExpDates[votePeriod].events[i]):
 			return(1)
 		i += 1
@@ -614,11 +613,11 @@ def redeem(branch):
 
 # loop through events in the market, get their outcomes and use those to determine the winning events!
 # distribute coins among winning events
-# only works for inTrade style predictions at the moment
+# only works for inTrade style 1 event in a market predictions at the moment
 def close_market(branch, market):
 	currentPeriod = block.number / self.Branches[branch].periodLength
 	numberEvents = len(self.Markets[market].events[])
-	eventVotePeriod = self.Events[self.Markets[market].events[numberEvents-1].eventID].expirationDate / self.Branches[branch].periodLength
+	eventVotePeriod = self.Events[self.Markets[market].events[numberEvents-1]].expirationDate / self.Branches[branch].periodLength
 	if(currentPeriod > (eventVotePeriod+2) && self.Reporting[branch].eventsExpDates[currentPeriod].totalRepReported >= self.Branches[branch].repRequired):
 		# give back initial liquidity
 		#self.cashcoin_balances[market] -= self.Info[market].creationFee
@@ -630,7 +629,7 @@ def close_market(branch, market):
 		e = 0
 		while n < numberEvents:
 			if(self.Events[self.Markets[market].events[n].eventID].outcome):
-				self.Markets[market].winningEvents[e] = self.Markets[market].events[n].eventID
+				self.Markets[market].winningEvents[e] = self.Markets[market].events[n]
 				e+=1
 			n+=1
 
@@ -640,15 +639,15 @@ def close_market(branch, market):
 	 	#   while a < e:
 	 	#   self.Markets[market].events[self.Markets[market].winningEvents[e]].shares
 
-		winningEvent = self.Markets[market].winningEvents[e]
+		winningEvent = self.Markets[market].winningEvents[e-1]
 		winningShares = 0
 		winningOutcome = self.Events[winningEvent].outcome
 		winningSharesIndex = 0
 		if(winningOutcome==1):
-			winningShares = self.Markets[market].events[winningEvent].sharesPurchased[1]
+			winningShares = self.Markets[market].sharesPurchased[(2*(n-1) + 1)]
 			winningSharesIndex = 1
 		elif(winningOutcome==-1):
-			winningShares = self.Markets[market].events[winningEvent].sharesPurchased[0]
+			winningShares = self.Markets[market].sharesPurchased[2*(n-1)]
 			winningSharesIndex = 0
 		elif(winningOutcome==0):
 			return(text("outcome hasn't been decided yet"))
