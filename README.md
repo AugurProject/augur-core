@@ -6,6 +6,7 @@ augur-serpent
 	# api voting
 	# blockchain explorer to get / examine data or make rpc api calls to the contract to get it
 			# local contract calls don't cost gas
+	# search engine for contract data / events
 
 ### Version 0.3:
 	# make sure this follows paul's whitepaper well
