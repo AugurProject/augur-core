@@ -419,7 +419,7 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
 			self.Markets[market].sharesPurchased[i*2+1] -= amount
 		# outcome is no
 		else:
-			self.Markets[market].events[i].sharesPurchased[i*2] -= amount
+			self.Markets[market].sharesPurchased[i*2] -= amount
 		newCost = ls_lmsr(market)
 	# using lmsr
 	else:
@@ -427,10 +427,10 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
 			oldCost = lmsr(market)
 			# send unspent shares from the user to the event
 			if outcome:
-				self.Markets[market].events[i].sharesPurchased[i*2+1] -= amount
+				self.Markets[market].sharesPurchased[i*2+1] -= amount
 			# outcome is no
 			else:
-				self.Markets[market].events[i].sharesPurchased[i*2] -= amount
+				self.Markets[market].sharesPurchased[i*2] -= amount
 			newCost = ls_lmsr(market)
 
 	# these prices are in fixed point
@@ -631,7 +631,7 @@ def close_market(branch, market):
 		n = 0
 		e = 0
 		while n < numberEvents:
-			if(self.Events[self.Markets[market].events[n].eventID].outcome):
+			if(self.Events[self.Markets[market].events[n]].outcome):
 				self.Markets[market].winningEvents[e] = self.Markets[market].events[n]
 				e+=1
 			n+=1
