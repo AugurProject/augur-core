@@ -52,7 +52,7 @@ data Events[](branch, expirationDate, outcome)
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
-data Reporting[](eventsExpDates[](events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
+data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market
@@ -62,7 +62,7 @@ data Reporting[](eventsExpDates[](events[], totalRepReported, reporters[][]), re
    # ex: eventIndex*2 is outcome 0, eventIndex*2 + 1 is outcome one for each corresponding event 
    #    self.Markets[$marketID].sharesPurchased[$i*2]
    #    self.Markets[$marketID].sharesPurchased[$i*2 + 1]
-data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[2])), lossLimit, tradingFee, currentParticipant, winningEvents[], alpha)
+data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[2])), lossLimit, tradingFee, numberEvents, currentParticipant, winningEvents[], alpha)
 
 data cashcoin_balances[2^160]
 
@@ -102,8 +102,8 @@ def send_reputation(branch, recver, value):
 	if(value<=0 or !self.send_cashcoin(branch, 5*2^64)):
 		return(0)
 	sender = tx.origin
-	senderIndex = self.Reporting[oldBranch].repIDtoIndex[sender]
-	receiverIndex = self.Reporting[newBranch].repIDtoIndex[recver]
+	senderIndex = self.Reporting[branch].repIDtoIndex[sender]
+	receiverIndex = self.Reporting[branch].repIDtoIndex[recver]
 	# if the sender's rep. account doesn't exist, make one
 	if(self.Reporting[branch].reputation[senderIndex].reporterID!=tx.origin):
 			self.Reporting[branch].numberReporters += 1
@@ -132,7 +132,7 @@ def get_rep_balance(branch, address):
 def make_subbranch(description:s, periodLength, parent, repRequired):
 	if(periodLength<=0 or !self.Branches[parent].periodLength or !repRequired or description==0):
 		return(0)
-	branchCharacteristics = array(8)
+	branchCharacteristics = array(7)
 	branchCharacteristics[0] = BRANCH
 	branchCharacteristics[1] = description
 	branchCharacteristics[2] = tx.origin
@@ -158,6 +158,8 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
 			self.Reporting[branchID].reputation[i].reporterID = self.Reporting[parent].reputation[i].reporterID
 			self.Reporting[branchID].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
 			i+=1
+		# because there is a 0th reporter
+		self.Reporting[branchID].numberReporters = i-1
 		return(branchID)
 	else:
 		return(0)
@@ -188,7 +190,8 @@ def create_event(branch, description:s, expDate):
 		#403200 is number of blocks == 8 weeks
 		# 0 means it expires in the next period
 		futurePeriod = expDate / self.Branches[branch].periodLength
-		self.Reporting[branch].eventsExpDates[futurePeriod].events[len(self.Reporting[branch].eventsExpDates[futurePeriod].events[])] = eventID
+		self.Reporting[branch].eventsExpDates[futurePeriod].events[self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents] = eventID
+		self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents += 1
 		return(eventID)
 	else:
 		return(0)
@@ -262,10 +265,9 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 # alpha is equal to v/(n*log(n)) where v is the max percent commission,
 # and n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
-# make sure fixed point stuff is right here
 macro ls_lmsr($marketID):
 	with $Bq = 0:
-		with $l = len(self.Markets[$marketID].events[]):
+		with $l = self.Markets[$marketID].numberEvents:
 			with $i = 0:
 				while $i < $l:
 					$Bq += self.Markets[$marketID].sharesPurchased[$i*2]
@@ -287,7 +289,7 @@ macro ls_lmsr($marketID):
 macro lmsr($marketID):
 	with $sum_exp = 0:
 		with $B = self.Markets[$marketID].lossLimit:
-			with $l = len(self.Markets[$marketID].events[]):
+			with $l = self.Markets[$marketID].numberEvents:
 				with $i = 0:
 					with $a = 0:
 						with $b = 0:
@@ -313,13 +315,13 @@ def buy_shares(branch, event, market, outcome, amount, fee):
 	
 	# find the right event index
 	i = 0
-	while (i<len(self.Markets[market].events[])):
+	while (i<self.Markets[market].numberEvents):
 		if(self.Markets[market].events[i] == event):
 			break
 		else:
 			i+=1
 	# event doesn't exist in index
-	if(i==len(self.Markets[market].events[])):
+	if(i==self.Markets[market].numberEvents):
 		return(0)
 	oldCost = 0
 	newCost = 0
@@ -399,13 +401,13 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
 
 	# find the right event index
 	i = 0
-	while (i<len(self.Markets[market].events[])):
+	while (i<self.Markets[market].numberEvents):
 		if(self.Markets[market].events[i] == event):
 			break
 		else:
 			i+=1
 	# event doesn't exist in index
-	if(i==len(self.Markets[market].events[])):
+	if(i==self.Markets[market].numberEvents):
 		return(0)
 
 	# for the first trade oldcost shares bought will be at 0
@@ -466,7 +468,7 @@ def queryShareCost():
 def inPeriod(branchID, eventID):
 	votePeriod = self.Branches[branchID].currentVotePeriod
 	i = 0
-	while i < len(self.Reporting[branchID].eventsExpDates[votePeriod].events[]):
+	while i < self.Reporting[branchID].eventsExpDates[votePeriod].numberEvents:
 		if(eventID==self.Reporting[branchID].eventsExpDates[votePeriod].events[i]):
 			return(1)
 		i += 1
@@ -483,7 +485,7 @@ def vote(branch, report:a):
 	# make sure the branch exists
 	repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
 	# need report length to be same as number of items in the current eventexpdates voting period events!
-	if(len(report)!=len(self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].events[])):
+	if(len(report)!=self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].numberEvents):
 		return(0)
 
 	# if current period is more than 2 periods past the vote period
@@ -550,7 +552,7 @@ def redeem(branch):
 	# (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
 	reputation = array(self.Reporting[branch].numberReporters-1)
 	#votes = array(self.Reporting[branch].numberReporters-1)
-	numberEvents = len(self.Reporting[branch].eventsExpDates[currentvotePeriod].events[])
+	numberEvents = self.Reporting[branch].eventsExpDates[currentvotePeriod].numberEvents
 	numReporters = self.Reporting[branch].numberReporters
 	votes = array(numReporters * numberEvents)
 
@@ -620,7 +622,7 @@ def redeem(branch):
 # only works for inTrade style 1 event in a market predictions at the moment
 def close_market(branch, market):
 	currentPeriod = block.number / self.Branches[branch].periodLength
-	numberEvents = len(self.Markets[market].events[])
+	numberEvents = self.Markets[market].numberEvents
 	eventVotePeriod = self.Events[self.Markets[market].events[numberEvents-1]].expirationDate / self.Branches[branch].periodLength
 	if(currentPeriod > (eventVotePeriod+2) && self.Reporting[branch].eventsExpDates[currentPeriod].totalRepReported >= self.Branches[branch].repRequired):
 		# give back initial liquidity

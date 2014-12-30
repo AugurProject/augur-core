@@ -25,7 +25,7 @@ data Events[](branch, expirationDate, outcome)
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
-data Reporting[](eventsExpDates[](events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
+data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market
@@ -35,17 +35,16 @@ data Reporting[](eventsExpDates[](events[], totalRepReported, reporters[][]), re
    # ex: eventIndex*2 is outcome 0, eventIndex*2 + 1 is outcome one for each corresponding event 
    #    self.Markets[$marketID].sharesPurchased[$i*2]
    #    self.Markets[$marketID].sharesPurchased[$i*2 + 1]
-data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[2])), lossLimit, tradingFee, currentParticipant, winningEvents[], alpha)
+data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[2])), lossLimit, tradingFee, numberEvents, currentParticipant, winningEvents[], alpha)
 
 data cashcoin_balances[2^160]
-data bananas[]
 
 def tests():
-	x = self.testCashBal()
-	y = self.testSendCash()
-	z = self.testSendRep()
-	w = self.testMakeSubbranch()
-	v = self.testMakeEvent()
+	self.testCashBal()
+	self.testSendCash()
+	self.testSendRep()
+	self.testMakeSubbranch()
+	#self.testMakeEvent()
 	#self.testMakeMarket()
 	#self.testBuyShares()
 	#self.testSellShares()
@@ -53,49 +52,45 @@ def tests():
 	#self.testQuoremChecker()
 	#self.testRedeem()
 	#self.testCloseMarket()
-	if(x and y and z and w and v):
-		return(1)
-	else:
-		return(0)
+
 
 def testCashBal():
 	bal = self.get_cash_balance(tx.origin)
-	if(bal==1000000*2^64):
-		return(1)
-	else:
-		return(0)
+	log(bal)
+	return(1)
 
 def testSendCash():
 	self.send_cashcoin(0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826, 47)
-	if(self.cashcoin_balances[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826]==47):
-		return(1)
-	else:
-		return(0)
+	log(self.cashcoin_balances[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826])
+	return(1)
 
 def testSendRep():
-	if(self.send_reputation(1010101, 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826, 20)!=1):
-		return(1)
-	else:
-		return(0)
+	self.send_reputation(1010101, 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826, 20)
+	log(self.Reporting[1010101].reputation[self.Reporting[1010101].repIDtoIndex[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826]].repValue)
+	return(1)
 
 def testMakeSubbranch():
 	newBranchID = self.make_subbranch(text("Hello World!"), 10, 1010101, 447)
 	if(self.Branches[newBranchID].repRequired==447):
+		log(newBranchID)
+		log(self.Branches[newBranchID].repRequired)
 		return(1)
 	else:
 		return(0)
 
 def testMakeEvent():
 	if(self.create_event(1010101, text("lol"), 447)):
-		return(1)
+		log(1)
 	else:
 		return(0)
 
 def init():
-	self.cashcoin_balances[tx.origin] = 1000000*2^64
+	self.cashcoin_balances[tx.origin] = 1000000
 	self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
 	self.Reporting[1010101].reputation[0].repValue = 47
 	self.Reporting[1010101].reputation[0].reporterID = tx.origin
+	self.Reporting[1010101].repIDtoIndex[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826] = 1
+	self.Reporting[1010101].reputation[1].reporterID = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
 	# number of reporters is 0 indexed
 	self.Reporting[1010101].numberReporters = 0
 	self.Info[1010101].typecode = 0
@@ -122,11 +117,11 @@ def send_cashcoin(recver, value):
 		return(0)
 
 def send_reputation(branch, recver, value):
-	if(value<=0 or !self.send_cashcoin(branch, 5*2^64)):
+	if(value<=0 or !self.send_cashcoin(branch, 5)):
 		return(0)
 	sender = tx.origin
-	senderIndex = self.Reporting[oldBranch].repIDtoIndex[sender]
-	receiverIndex = self.Reporting[newBranch].repIDtoIndex[recver]
+	senderIndex = self.Reporting[branch].repIDtoIndex[sender]
+	receiverIndex = self.Reporting[branch].repIDtoIndex[recver]
 	# if the sender's rep. account doesn't exist, make one
 	if(self.Reporting[branch].reputation[senderIndex].reporterID!=tx.origin):
 			self.Reporting[branch].numberReporters += 1
@@ -134,10 +129,10 @@ def send_reputation(branch, recver, value):
 			self.Reporting[branch].repIDtoIndex[tx.origin] = reporterIndex
 			self.Reporting[branch].reputation[reporterIndex].repValue = 0
 			self.Reporting[branch].reputation[reporterIndex].reporterID = tx.origin
-			return(text("Your reputation account was just created, earn some rep. before you can send to others"))
+			return(text("Your reputation account was just created, earn some rep. before you can send to others"): s)
 
 	if(self.Reporting[branch].reputation[receiverIndex].reporterID!=recver):
-		return(text("Receiving address doesn't exist"))
+		return(text("Receiving address doesn't exist"): s)
 		
 	sender_balance = self.Reporting[branch].reputation[senderIndex].repValue
 	if(sender_balance >= value):
@@ -155,20 +150,19 @@ def get_rep_balance(branch, address):
 def make_subbranch(description:s, periodLength, parent, repRequired):
 	if(periodLength<=0 or !self.Branches[parent].periodLength or !repRequired or description==0):
 		return(0)
-	branchCharacteristics = array(8)
-	branchCharacteristics[0] = BRANCH
-	branchCharacteristics[1] = description
-	branchCharacteristics[2] = tx.origin
-	branchCharacteristics[3] = 47*2^64
-	branchCharacteristics[4] = periodLength
-	branchCharacteristics[5] = block.number
-	branchCharacteristics[6] = parent
-	branchCharacteristics[7] = repRequired
+	branchCharacteristics = array(7)
+	branchCharacteristics[0] = 444
+	branchCharacteristics[1] = 2
+	branchCharacteristics[2] = 47*2^64
+	branchCharacteristics[3] = 777
+	branchCharacteristics[4] = block.number
+	branchCharacteristics[5] = 232323232
+	branchCharacteristics[6] = 111
 
 	# people can check that these characteristics hash to the ID if they want
 	# people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
-	branchID = sha256(branchCharacteristics, 8)
-	if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator and self.send_cashcoin(branchID, 47*2^64)):
+	branchID = sha256(branchCharacteristics[0], 7)
+	if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator and self.send_cashcoin(branchID, 47)):
 		self.Info[branchID].typecode = BRANCH
 		self.Info[branchID].description[] = description
 		self.Info[branchID].creator = tx.origin
@@ -181,10 +175,12 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
 			self.Reporting[branchID].reputation[i].reporterID = self.Reporting[parent].reputation[i].reporterID
 			self.Reporting[branchID].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
 			i+=1
+		# because there is a 0th reporter	
+		self.Reporting[branchID].numberReporters = i-1
 		return(branchID)
 	else:
 		return(0)
-
+		
 def create_event(branch, description:s, expDate):
 	if(self.Branches[branch].periodLength and description!=0 and expDate>block.number):
 		eventCharacteristics = array(6)
@@ -211,7 +207,8 @@ def create_event(branch, description:s, expDate):
 		#403200 is number of blocks == 8 weeks
 		# 0 means it expires in the next period
 		futurePeriod = expDate / self.Branches[branch].periodLength
-		self.Reporting[branch].eventsExpDates[futurePeriod].events[len(self.Reporting[branch].eventsExpDates[futurePeriod].events[])] = eventID
+		self.Reporting[branch].eventsExpDates[futurePeriod].events[self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents] = eventID
+		self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents += 1
 		return(eventID)
 	else:
 		return(0)

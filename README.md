@@ -21,11 +21,10 @@ augur-serpent
 	# profit msr
 
 ### Version 0.2:
+	# add support for categorical and scalar and multidimensional events
 	# Scalar event where people update what type of share they bought using a thing
 	# in an array where index is their scalar x and value
 	# is the share updated number of shares bought
-	# update data structure to have reporting have markets instead of events possibly.
-	# if current vote period is == 0 then we looped past 2^256 --- set values in array to 0 at that point
 	# zeroing of array values
 	# make sure events voting periods are properly setup
 	# make sure eventsexpdates currentindex -1 is the stuff we actually vote on in redeem tx
@@ -33,9 +32,8 @@ augur-serpent
 	# hash first frontrunning prevention mechanism
 	# salt hash vote mechanism
 	# add a branch initial rbcr rapid period to start w/
-	# add support for categorical and scalar and multidimensional events
-	# should make an API function for this (make ballot)!!!
+	# should make an API function for this (make ballot)
 	# can't determine vote scenario
+	#0th reporter funny business or change numReporters to currentRepIndex
 
 ### To do:
-	# len doesn't actually work on data arrays it turns out...
