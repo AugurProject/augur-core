@@ -68,7 +68,7 @@ data cashcoin_balances[2^160]
 
 def init():
 	# test initial funds
-	cashcoin_balances[tx.origin] = 1000000*2^64
+	self.cashcoin_balances[tx.origin] = 1000000*2^64
 	self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
 	self.Reporting[1010101].reputation[0].repValue = 47
 	self.Reporting[1010101].reputation[0].reporterID = tx.origin
@@ -144,7 +144,7 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
 
 	# people can check that these characteristics hash to the ID if they want
 	# people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
-	branchID = sha256(eventCharacteristics, 8)
+	branchID = sha256(branchCharacteristics, 8)
 	if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator and self.send_cashcoin(branchID, 47*2^64)):
 		self.Info[branchID].typecode = BRANCH
 		self.Info[branchID].description[] = description

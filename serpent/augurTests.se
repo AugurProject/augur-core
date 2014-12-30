@@ -9,10 +9,12 @@ MARKET = 2
 data Info[](typecode, description[], creator, creationFee)
 
 # CurrentVotePeriod is the current index in eventsExpDates
-# Parent is the branch's parent branch.
 # Branches' index is the hash of the branch (aka branchID)
 # RepRequired is the amount of reputation required to reach quorem
-data Branches[](currentVotePeriod, markets[], marketCount, periodLength, parent, repRequired)
+# markets[] is a 0 index array of market hashes (a.k.a. marketID)
+# currentVotePeriod is a nonce that tells us which bucket of events up to be
+# voted on in the upcoming vote period
+data Branches[](currentVotePeriod, markets[], marketCount, periodLength, repRequired)
 
 # Events' index is the eventID
 data Events[](branch, expirationDate, outcome)
@@ -23,60 +25,73 @@ data Events[](branch, expirationDate, outcome)
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
-data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
+data Reporting[](eventsExpDates[](events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market
 # Sharespurchased keeps track of the number of shares purchased for each outcome
-# Participants is a 0 indexed array of participants, their cashIDs, and the shares in each outcome they've purchased of an event
-data Markets[](branch, events[](eventID, sharesPurchased[2]), participants[](participantID, event[](shares[2])), lossLimit, tradingFee, numberEvents, currentParticipant, winningEvents[])
+# Participants is a 0 indexed array of participants, their cashIDs, and the shares in each outcome they've purchased of an event (events' indexes are actual event IDs)
+# sharesPurchased is 0 indexed (0 is outcome 0, 1 is outcome 1, 2 is outcome 2 (notice we're on a new event here if they're binary))
+   # ex: eventIndex*2 is outcome 0, eventIndex*2 + 1 is outcome one for each corresponding event 
+   #    self.Markets[$marketID].sharesPurchased[$i*2]
+   #    self.Markets[$marketID].sharesPurchased[$i*2 + 1]
+data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[2])), lossLimit, tradingFee, currentParticipant, winningEvents[], alpha)
 
 data cashcoin_balances[2^160]
 
-### Version 0.4:
-	# make code updatable 
-	# seigniorage coin
+def tests():
+	x = self.testCashBal()
+	y = self.testSendCash()
+	z = self.testSendRep()
+	w = self.testMakeSubbranch()
+	v = self.testMakeEvent()
+	#self.testMakeMarket()
+	#self.testBuyShares()
+	#self.testSellShares()
+	#self.testVote()
+	#self.testQuoremChecker()
+	#self.testRedeem()
+	#self.testCloseMarket()
+	if(x and y and z and w and v):
+		return(1)
+	else:
+		return(0)
 
-### Version 0.3:
-	# make sure this follows paul's whitepaper well
-	# how do we scale / what if a ton of events, markets, etc.
-	# api voting option
-	# may need a ballot max size b/c cost so need a systematic way to do voting (e.g. vote on first xxx events, then next set are another ballot)
-	# randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot
+def testCashBal():
+	bal = self.get_cash_balance(tx.origin)
+	if(bal==1000000*2^64):
+		return(1)
+	else:
+		return(0)
 
-### Version 0.2:
-	# blockchain explorer to get / examine data or make rpc api calls to the contract to get it
-	# local contract calls don't cost gas
-	# Scalar event where people update what type of share they bought using a thing
-	# in an array where index is their scalar x and value
-	# is the share updated number of shares bought
-	# update data structure to have reporting have markets instead of events possibly.
-	# if current vote period is == 0 then we looped past 2^256 --- set values in array to 0 at that point
-	# new market maker
-	# api voting
-	# hashed votes
-	# make sure events voting periods are properly setup
-	# ui functions
-	# hash first frontrunning prevention mechanism
-	# salt hash vote mechanism
-	# add support for categorical and scalar and multidimensional events
+def testSendCash():
+	self.send_cashcoin(0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826, 47)
+	if(self.cashcoin_balances[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826]==47):
+		return(1)
+	else:
+		return(0)
 
-### To do:
-	# proper mult. div (perhaps store all cashcoin balances as fixed)
-	# add a branch initial rbcr rapid period to start w/
-	# make so eventsexpdates currentindex -1 is the stuff we actually vote on in redeem tx
-	# fast voting cycle first few days to get the 60% problem away from a branch, e.g. what if not enough people vote
-	# 60% of votes -- need to get the cycle length parameters right
-	# any parameters why not - func. should pay for rbcr?
-	# reward whoever does redeem and close market
-	# fix stuff for new msr
-	# one syntax error left surrounding msr
-	# don't need number of x. in arrays data structures now because arrays already have size as a prop. now
-	# account initialization function
+def testSendRep():
+	if(self.send_reputation(1010101, 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826, 20)!=1):
+		return(1)
+	else:
+		return(0)
+
+def testMakeSubbranch():
+	newBranchID = self.make_subbranch(text("Hello World!"), 10, 1010101, 447)
+	if(self.Branches[newBranchID].repRequired==447):
+		return(1)
+	else:
+		return(0)
+
+def testMakeEvent():
+	if(self.create_event(1010101, text("lol"), 447)):
+		return(1)
+	else:
+		return(0)
 
 def init():
-	# test initial funds
-	cashcoin_balances[tx.origin] = 1000000
+	self.cashcoin_balances[tx.origin] = 1000000*2^64
 	self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
 	self.Reporting[1010101].reputation[0].repValue = 47
 	self.Reporting[1010101].reputation[0].reporterID = tx.origin
@@ -89,14 +104,12 @@ def init():
 	self.Branches[1010101].currentVotePeriod = block.number / 403200
 	self.Branches[1010101].marketCount = 0
 	self.Branches[1010101].periodLength = 403200
-	self.Branches[1010101].parent = 0
 	self.Branches[1010101].repRequired = 14000000
-
 
 def get_cash_balance(address):
 	return(self.cashcoin_balances[address])
 
-# should send values as fixed point (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
+# should send values as fixed point in UI (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
 def send_cashcoin(recver, value):
 	sender = tx.origin
 	sender_balance = self.cashcoin_balances[sender]
@@ -108,7 +121,7 @@ def send_cashcoin(recver, value):
 		return(0)
 
 def send_reputation(branch, recver, value):
-	if(value<=0 or !self.send_cashcoin(branch, 5)):
+	if(value<=0 or !self.send_cashcoin(branch, 5*2^64)):
 		return(0)
 	sender = tx.origin
 	senderIndex = self.Reporting[oldBranch].repIDtoIndex[sender]
@@ -145,7 +158,7 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
 	branchCharacteristics[0] = BRANCH
 	branchCharacteristics[1] = description
 	branchCharacteristics[2] = tx.origin
-	branchCharacteristics[3] = 47
+	branchCharacteristics[3] = 47*2^64
 	branchCharacteristics[4] = periodLength
 	branchCharacteristics[5] = block.number
 	branchCharacteristics[6] = parent
@@ -153,14 +166,13 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
 
 	# people can check that these characteristics hash to the ID if they want
 	# people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
-	branchID = sha256(eventCharacteristics, 8)
-	if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator and self.send_cashcoin(branchID, 47)):
+	branchID = sha256(branchCharacteristics, 8)
+	if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator and self.send_cashcoin(branchID, 47*2^64)):
 		self.Info[branchID].typecode = BRANCH
 		self.Info[branchID].description[] = description
 		self.Info[branchID].creator = tx.origin
-		self.Info[branchID].creationFee = 47
+		self.Info[branchID].creationFee = 47*2^64
 		self.Branches[branchID].periodLength = periodLength
-		self.Branches[branchID].parent = parent
 		self.Branches[branchID].repRequired = repRequired
 		self.Branches[branchID].currentVotePeriod = block.number / periodLength
 		i = 0
@@ -168,10 +180,10 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
 			self.Reporting[branchID].reputation[i].reporterID = self.Reporting[parent].reputation[i].reporterID
 			self.Reporting[branchID].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
 			i+=1
-		return(1)
+		return(branchID)
 	else:
 		return(0)
-		
+
 def create_event(branch, description:s, expDate):
 	if(self.Branches[branch].periodLength and description!=0 and expDate>block.number):
 		eventCharacteristics = array(6)
@@ -180,16 +192,16 @@ def create_event(branch, description:s, expDate):
 		eventCharacteristics[2] = branch
 		eventCharacteristics[3] = expDate
 		eventCharacteristics[4] = tx.origin
-		eventCharacteristics[5] = 42
+		eventCharacteristics[5] = 42*2^64
 		eventID = sha256(eventCharacteristics, 6)
 	else:
 		return(0)
 
-	if (!self.Info[eventID].creator and !self.Events[eventID].branch and self.send_cashcoin(branch, 42)):
+	if(!self.Info[eventID].creator and !self.Events[eventID].branch and self.send_cashcoin(branch, 42*2^64)):
 		self.Info[eventID].typecode = EVENT
 		self.Info[eventID].description[] = description
 		self.Info[eventID].creator = tx.origin
-		self.Info[eventID].creationFee = 42
+		self.Info[eventID].creationFee = 42*2^64
 		self.Events[eventID].branch = branch
 		self.Events[eventID].expirationDate = expDate
 		
@@ -198,44 +210,7 @@ def create_event(branch, description:s, expDate):
 		#403200 is number of blocks == 8 weeks
 		# 0 means it expires in the next period
 		futurePeriod = expDate / self.Branches[branch].periodLength
-		self.Reporting[branch].eventsExpDates[futurePeriod].events[self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents] = eventID
-		self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents += 1
-		return(1)
-	else:
-		return(0)
-
-def tests():
-	x = self.testCashBal()
-	y = self.testSendCash()
-	z = self.testSendRep()
-	#self.testMakeBranch()
-	#self.testMakeEvent()
-	#self.testMakeMarket()
-	#self.testBuyShares()
-	#self.testSellShares()
-	#self.testVote()
-	#self.testQuoremChecker()
-	#self.testRedeem()
-	#self.testCloseMarket()
-	if(x and y and z):
-		return(1)
-
-def testCashBal():
-	bal = self.get_cash_balance(tx.origin)
-	if(bal==1000000):
-		return(1)
-	else:
-		return(0)
-
-def testSendCash():
-	self.send_cashcoin(0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826, 47)
-	if(self.cashcoin_balances[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826]==47):
-		return(1)
-	else:
-		return(0)
-
-def testSendRep():
-	if(self.send_reputation(1010101, 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826, 20)!=1):
+		self.Reporting[branch].eventsExpDates[futurePeriod].events[len(self.Reporting[branch].eventsExpDates[].events[])] = eventID
 		return(1)
 	else:
 		return(0)

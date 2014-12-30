@@ -39,3 +39,4 @@ augur-serpent
 
 ### To do:
 	# fix strings w/ Chris's methods
+	# things should return their IDs instead of a 1
