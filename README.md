@@ -38,4 +38,4 @@ augur-serpent
 	# can't determine vote scenario
 
 ### To do:
-	# don't need number of x. in arrays data structures now because arrays already have size as a prop. now
+	# fix strings w/ Chris's methods

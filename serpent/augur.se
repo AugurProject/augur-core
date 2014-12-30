@@ -59,6 +59,9 @@ data Reporting[](eventsExpDates[](events[], totalRepReported, reporters[][]), re
 # Sharespurchased keeps track of the number of shares purchased for each outcome
 # Participants is a 0 indexed array of participants, their cashIDs, and the shares in each outcome they've purchased of an event (events' indexes are actual event IDs)
 # sharesPurchased is 0 indexed (0 is outcome 0, 1 is outcome 1, 2 is outcome 2 (notice we're on a new event here if they're binary))
+   # ex: eventIndex*2 is outcome 0, eventIndex*2 + 1 is outcome one for each corresponding event 
+   #    self.Markets[$marketID].sharesPurchased[$i*2]
+   #    self.Markets[$marketID].sharesPurchased[$i*2 + 1]
 data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[2])), lossLimit, tradingFee, currentParticipant, winningEvents[], alpha)
 
 data cashcoin_balances[2^160]
@@ -265,8 +268,8 @@ macro ls_lmsr($marketID):
 		with $l = len(self.Markets[$marketID].events[]):
 			with $i = 0:
 				while $i < $l:
-					$Bq += self.Markets[$marketID].events[$i].shares[0]
-					$Bq += self.Markets[$marketID].events[$i].shares[1]
+					$Bq += self.Markets[$marketID].sharesPurchased[$i*2]
+					$Bq += self.Markets[$marketID].sharesPurchased[$i*2 + 1]
 					$i += 1
 				$Bq *= self.Markets[$marketID].alpha
 				$i = 0
@@ -274,8 +277,8 @@ macro ls_lmsr($marketID):
 					with $a = 0:
 						with $b = 0:
 							while $i < $l:
-								$a = self.Markets[$marketID].events[$i].shares[0]
-								$b = self.Markets[$marketID].events[$i].shares[1]
+								$a = self.Markets[$marketID].sharesPurchased[$i*2]
+								$b = self.Markets[$marketID].sharesPurchased[$i*2 + 1]
 								$sum_exp += self.exp($a*2^64/$Bq)
 								$sum_exp += self.exp($b*2^64/$Bq)
 								$i += 1
@@ -289,8 +292,8 @@ macro lmsr($marketID):
 					with $a = 0:
 						with $b = 0:
 							while $i < $l:
-								$a = self.Markets[$marketID].events[$i].shares[0] 
-								$b = self.Markets[$marketID].events[$i].shares[1]
+								$a = self.Markets[$marketID].sharesPurchased[$i*2]
+								$b = self.Markets[$marketID].sharesPurchased[$i*2 + 1]
 								$sum_exp += self.exp($a*2^64/$B)
 								$sum_exp += self.exp($b*2^64/$B)
 								$i += 1
