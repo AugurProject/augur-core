@@ -1,5 +1,10 @@
 augur-serpent
 -------------
+
+### To do:
+	# Optimize consensus.se contract
+	# 4th Cumulant in consensus.se
+
 ### Version 0.4:
 	# make code updatable 
 	# seigniorage coin
@@ -35,5 +40,3 @@ augur-serpent
 	# should make an API function for this (make ballot)
 	# can't determine vote scenario
 	#0th reporter funny business or change numReporters to currentRepIndex
-
-### To do:
