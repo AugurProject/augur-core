@@ -129,22 +129,22 @@ def get_rep_balance(branch, address):
 
 # period length is given in blocks
 # description format is branchName:description
+# is there some way we can include the description bytes in the sha256 hash?
 def make_subbranch(description:s, periodLength, parent, repRequired):
 	if(periodLength<=0 or !self.Branches[parent].periodLength or !repRequired or description==0):
 		return(0)
 	branchCharacteristics = array(7)
 	branchCharacteristics[0] = BRANCH
-	branchCharacteristics[1] = description
-	branchCharacteristics[2] = tx.origin
-	branchCharacteristics[3] = 47*2^64
-	branchCharacteristics[4] = periodLength
-	branchCharacteristics[5] = block.number
-	branchCharacteristics[6] = parent
-	branchCharacteristics[7] = repRequired
+	branchCharacteristics[1] = tx.origin
+	branchCharacteristics[2] = 47*2^64
+	branchCharacteristics[3] = periodLength
+	branchCharacteristics[4] = block.number
+	branchCharacteristics[5] = parent
+	branchCharacteristics[6] = repRequired
 
 	# people can check that these characteristics hash to the ID if they want
 	# people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
-	branchID = sha256(branchCharacteristics, 8)
+	branchID = sha256(branchCharacteristics, 7)
 	if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator and self.send_cashcoin(branchID, 47*2^64)):
 		self.Info[branchID].typecode = BRANCH
 		self.Info[branchID].description[] = description
@@ -198,7 +198,7 @@ def create_event(branch, description:s, expDate):
 
 # lossLimit is a fixedpoint syntax number (so a losslimit of 1 is 2^64) (0 if not using lmsr)
 # ditto for alpha
-# tradingFee is a fixedpoint number as well
+# tradingFee is a fixedpoint number as well --- perhaps make it a percent
 def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a):
 	# check that events have same exp. dates and branch
 	i = 0
@@ -217,18 +217,17 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 	if(numEvents > 200 or self.cashcoin_balances[tx.origin]<initialLiquidity or !self.Branches[branch].periodLength or description==0 or !lossLimit or !tradingFee or !alpha):
 		return(0)
 	# formation of marketID (hash)
-	marketCharacteristics = array(10)
+	marketCharacteristics = array(9)
 	marketCharacteristics[0] = MARKET
-	marketCharacteristics[1] = description
-	marketCharacteristics[2] = tx.origin
-	marketCharacteristics[3] = initialLiquidity
-	marketCharacteristics[4] = branch
-	marketCharacteristics[5] = events
-	marketCharacteristics[6] = numEvents
-	marketCharacteristics[7] = lossLimit
-	marketCharacteristics[8] = tradingFee
-	marketCharacteristics[9] = alpha
-	marketID = sha256(marketCharacteristics, 10)
+	marketCharacteristics[1] = tx.origin
+	marketCharacteristics[2] = initialLiquidity
+	marketCharacteristics[3] = branch
+	marketCharacteristics[4] = events
+	marketCharacteristics[5] = numEvents
+	marketCharacteristics[6] = lossLimit
+	marketCharacteristics[7] = tradingFee
+	marketCharacteristics[8] = alpha
+	marketID = sha256(marketCharacteristics, 9)
 
 	if(self.send_cashcoin(marketID, initialLiquidity)):
 		# add event list to the market

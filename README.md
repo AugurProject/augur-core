@@ -37,3 +37,4 @@ augur-serpent
 	#0th reporter funny business or change numReporters to currentRepIndex
 
 ### To do:
+	# inset bug

@@ -44,8 +44,8 @@ def tests():
 	self.testSendCash()
 	self.testSendRep()
 	self.testMakeSubbranch()
-	#self.testMakeEvent()
-	#self.testMakeMarket()
+	self.testMakeEvent()
+	self.testMakeMarket()
 	#self.testBuyShares()
 	#self.testSellShares()
 	#self.testVote()
@@ -73,26 +73,34 @@ def testMakeSubbranch():
 	newBranchID = self.make_subbranch(text("Hello World!"), 10, 1010101, 447)
 	if(self.Branches[newBranchID].repRequired==447):
 		log(newBranchID)
-		log(self.Branches[newBranchID].repRequired)
 		return(1)
 	else:
 		return(0)
 
 def testMakeEvent():
-	if(self.create_event(1010101, text("lol"), 447)):
-		log(1)
-	else:
-		return(0)
+	eventID = self.create_event(1010101, text("lol"), 447)
+	log(eventID)
+	self.testMakeMarket(eventID)
+	return(1)
+
+def testMakeMarket(eventID):
+	marketID = self.create_market(1010101, text("elections 2016 market"), 15*2^64, 0, 1, [eventID])
+	log(marketID)
+
+exp_halfZ = [2^64, 0x1a61298e1e069bc97, 0x2b7e151628aed2a6b, 0x47b4ff993f15055f7, 0x763992e35376b730d, 0xc2eb7ec98f05d8ea7, 0x1415e5bf6fb105f2d5, 0x211d8e4272d7b6a1aa, 0x3699205c4e74b0cf1b, 0x5a0462b7877aa8b7cf, 0x9469c4cb819c78fb38, 0xf4b122790ddfb1298d, 0x1936dc5690c08f37a9b, 0x2992442102d91286adc, 0x448a216abb76a9bc7e8, 0x7100adbac7dab4a4e30, 0xba4f53ea38636f85f00]
+
+def log(x):
+ 	return(1)
 
 def init():
-	self.cashcoin_balances[tx.origin] = 1000000
+	self.cashcoin_balances[tx.origin] = 1000000*10*2^64
 	self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
 	self.Reporting[1010101].reputation[0].repValue = 47
 	self.Reporting[1010101].reputation[0].reporterID = tx.origin
 	self.Reporting[1010101].repIDtoIndex[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826] = 1
 	self.Reporting[1010101].reputation[1].reporterID = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
 	# number of reporters is 0 indexed
-	self.Reporting[1010101].numberReporters = 0
+	self.Reporting[1010101].numberReporters = 1
 	self.Info[1010101].typecode = 0
 	self.Info[1010101].description[] = "initial branch"
 	self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
@@ -145,23 +153,21 @@ def send_reputation(branch, recver, value):
 def get_rep_balance(branch, address):
 	return(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[address]].repValue)
 
-# period length is given in blocks
-# description format is branchName:description
 def make_subbranch(description:s, periodLength, parent, repRequired):
 	if(periodLength<=0 or !self.Branches[parent].periodLength or !repRequired or description==0):
 		return(0)
 	branchCharacteristics = array(7)
-	branchCharacteristics[0] = 444
-	branchCharacteristics[1] = 2
+	branchCharacteristics[0] = BRANCH
+	branchCharacteristics[1] = tx.origin
 	branchCharacteristics[2] = 47*2^64
-	branchCharacteristics[3] = 777
+	branchCharacteristics[3] = periodLength
 	branchCharacteristics[4] = block.number
-	branchCharacteristics[5] = 232323232
-	branchCharacteristics[6] = 111
+	branchCharacteristics[5] = parent
+	branchCharacteristics[6] = repRequired
 
 	# people can check that these characteristics hash to the ID if they want
 	# people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
-	branchID = sha256(branchCharacteristics[0], 7)
+	branchID = sha256(branchCharacteristics, 7)
 	if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator and self.send_cashcoin(branchID, 47)):
 		self.Info[branchID].typecode = BRANCH
 		self.Info[branchID].description[] = description
@@ -175,7 +181,7 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
 			self.Reporting[branchID].reputation[i].reporterID = self.Reporting[parent].reputation[i].reporterID
 			self.Reporting[branchID].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
 			i+=1
-		# because there is a 0th reporter	
+		# because there is a 0th reporter
 		self.Reporting[branchID].numberReporters = i-1
 		return(branchID)
 	else:
@@ -194,7 +200,7 @@ def create_event(branch, description:s, expDate):
 	else:
 		return(0)
 
-	if (!self.Info[eventID].creator and !self.Events[eventID].branch and self.send_cashcoin(branch, 42*2^64)):
+	if (!self.Info[eventID].creator and !self.Events[eventID].branch and self.send_cashcoin(branch, 42)):
 		self.Info[eventID].typecode = EVENT
 		self.Info[eventID].description[] = description
 		self.Info[eventID].creator = tx.origin
@@ -210,5 +216,70 @@ def create_event(branch, description:s, expDate):
 		self.Reporting[branch].eventsExpDates[futurePeriod].events[self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents] = eventID
 		self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents += 1
 		return(eventID)
+	else:
+		return(0)
+
+# lossLimit is a fixedpoint syntax number (so a losslimit of 1 is 2^64) (0 if not using lmsr)
+# ditto for alpha
+# tradingFee is a fixedpoint number as well
+def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a):
+	# check that events have same exp. dates and branch
+	i = 0
+	numEvents = len(events)
+	expDate = self.Events[events[0]].expirationDate
+	while i < numEvents:
+		event = events[i]
+		if self.Events[event].expirationDate != expDate:
+			return(0)
+		if self.Events[event].branch != branch:
+			return(0)
+
+	# initialLiquidity is a fixedpoint number
+	# divide by 2^64 to stay in fixedpoint
+	initialLiquidity = lossLimit*self.log(numEvents*2^64)/2^64
+	if(numEvents > 200 or self.cashcoin_balances[tx.origin]<initialLiquidity or !self.Branches[branch].periodLength or description==0 or !lossLimit or !tradingFee or !alpha):
+		return(0)
+	# formation of marketID (hash)
+	marketCharacteristics = array(9)
+	marketCharacteristics[0] = MARKET
+	marketCharacteristics[1] = tx.origin
+	marketCharacteristics[2] = initialLiquidity
+	marketCharacteristics[3] = branch
+	marketCharacteristics[4] = events
+	marketCharacteristics[5] = numEvents
+	marketCharacteristics[6] = lossLimit
+	marketCharacteristics[7] = tradingFee
+	marketCharacteristics[8] = alpha
+	marketID = sha256(marketCharacteristics, 9)
+
+	if(self.send_cashcoin(marketID, initialLiquidity)):
+		# add event list to the market
+		i = 0
+		while i<numEvents:
+			eventID = events[i]
+			if(!self.Info[eventID].creator or self.Events[eventID].branch!=branch):
+				return(0)
+			# initialize market events array with eventIDs from the eventList
+			self.Markets[marketID].events[i] = eventID
+			i+=1
+
+		# creator of the first market in a branch gets the branch's creation fee
+		if(self.Branches[branch].marketCount==0):
+			self.send_cashcoin(tx.origin, self.Info[branch].creationFee)
+			
+		self.Info[marketID].typecode = MARKET
+		self.Info[marketID].description[] = description
+		self.Info[marketID].creator = tx.origin
+		self.Info[marketID].creationFee = initialLiquidity
+		self.cashcoin_balances[marketID] = initialLiquidity
+		self.Markets[marketID].lossLimit = lossLimit
+		self.Markets[marketID].tradingFee = tradingFee
+		self.Markets[marketID].branch = branch
+		self.Markets[marketID].alpha = alpha
+		# add the market to the branch
+		marketCount = self.Branches[branch].marketCount
+		self.Branches[branch].markets[marketCount] = marketID
+		self.Branches[branch].marketCount += 1
+		return(marketID)
 	else:
 		return(0)
