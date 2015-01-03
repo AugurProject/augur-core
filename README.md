@@ -1,5 +1,10 @@
 augur-serpent
 -------------
+
+### To do:
+	# Optimize consensus.se contract
+	# 4th Cumulant in consensus.se
+
 ### Version 0.4:
 	# make code updatable 
 	# seigniorage coin
