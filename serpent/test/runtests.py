@@ -114,7 +114,19 @@ def test_contract(contract):
         #                     [  1, -1,  1,  1],
         #                     [ -1, -1,  1,  1]])
         reputation = [2, 10, 4, 2, 7, 1]
-        result = s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), 5])
+
+        # consensus()
+        result = s.send(t.k0, c, 0, funid=3, abi=[map(fix, reports.flatten()), map(fix, reputation), 5])
+
+        # pca()
+        result = s.send(t.k0, c, 0, funid=3, abi=[])
+
+        # pca_iter()
+        result = s.send(t.k0, c, 0, funid=3, abi=[])
+
+        # pca_iter_scores()
+        result = s.send(t.k0, c, 0, funid=3, abi=[])
+
         try:
             assert(result == [1])
         except:
@@ -160,8 +172,8 @@ def main():
         # "get_weight",
         # "interpolate",
         # "fixedpoint",
-        # "../consensus", 
-        "../consensus-readable",
+        "../consensus", 
+        # "../consensus-readable",
     ]
     for contract in contracts:
         test_contract(contract)
