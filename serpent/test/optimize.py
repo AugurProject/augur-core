@@ -54,6 +54,57 @@ def fix(x):
 def unfix(x):
     return x / 0x10000000000000000
 
+def consensus(reports, reputation, max_iterations=10):
+    s = t.state()
+    filename = "../consensus.se"
+    c = s.contract(filename)
+
+    num_voters = len(reputation)
+    num_events = len(reports[0])
+    v_size = len(reports.flatten())
+
+    reputation_fixed = map(fix, reputation)
+    reports_fixed = map(fix, reports.flatten())
+
+    # tx 1: consensus()
+    result = s.send(t.k0, c, 0,
+                    funid=0,
+                    abi=[reports_fixed, reputation_fixed, max_iterations])
+
+    result = np.array(result)
+    weighted_centered_data = result[0:v_size]
+    votes_filled = result[v_size:(2*v_size)]
+    votes_mask = result[(2*v_size):(3*v_size)]
+
+    # pca()
+    s = t.state()
+    c = s.contract(filename)
+    scores = s.send(t.k0, c, 0,
+                    funid=1,
+                    abi=[weighted_centered_data.tolist(),
+                         reputation_fixed,
+                         num_voters,
+                         num_events,
+                         max_iterations])
+
+    # consensus2()
+    s = t.state()
+    c = s.contract(filename)
+    retval = s.send(t.k0, c, 0,
+                    funid=2,
+                    abi=[reputation_fixed,
+                         scores,
+                         votes_filled.tolist(),
+                         votes_mask.tolist(),
+                         num_voters,
+                         num_events])
+
+    outcome_final = retval[0:num_events]
+    author_bonus = retval[num_events:(2*num_events)]
+    voter_bonus = retval[(2*num_events):-2]
+
+    return outcome_final, author_bonus, voter_bonus, retval[-2] - retval[-1]
+
 def profile(contract):
     filename = contract + ".se"
     print BB("Contract:"), BG(filename)
@@ -62,8 +113,8 @@ def profile(contract):
     np.random.seed(0)
 
     print BR("Events fixed, varying reporters")
-    s = t.state()
-    c = s.contract(filename)
+    # s = t.state()
+    # c = s.contract(filename)
     reporters_gas_used = []
     sizes = range(2, MAX_SIZE+1)
     reporters_sizes_used = []
@@ -74,17 +125,21 @@ def profile(contract):
         reports = np.random.randint(-1, 2, (k, num_events))
         reputation = np.random.randint(1, 100, k)
         try:
-            gas_used = s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), 5])
-            print gas_used
-            reporters_gas_used.append(gas_used[-2] - gas_used[-1])
+            # gas_used = s.send(t.k0, c, 0,
+            #                   funid=0,
+            #                   abi=[map(fix, reports.flatten()),
+            #                        map(fix, reputation),
+            #                        5])
+            gas_used = consensus(reports, reputation, max_iterations=5)[-1]
+            reporters_gas_used.append(gas_used)
             reporters_sizes_used.append(k)
         except Exception as exc:
             print(exc)
             break
 
     print BR("Reporters fixed, varying events")
-    s = t.state()
-    c = s.contract(filename)
+    # s = t.state()
+    # c = s.contract(filename)
     sizes = range(2, MAX_SIZE+1)
     events_gas_used = []
     events_sizes_used = []
@@ -94,9 +149,13 @@ def profile(contract):
         reports = np.random.randint(-1, 2, (num_reporters, k))
         reputation = np.random.randint(1, 100, num_reporters)
         try:
-            gas_used = s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), 5])
-            print gas_used
-            events_gas_used.append(gas_used[-2] - gas_used[-1])
+            # gas_used = s.send(t.k0, c, 0,
+            #                   funid=0,
+            #                   abi=[map(fix, reports.flatten()),
+            #                        map(fix, reputation),
+            #                        5])
+            gas_used = consensus(reports, reputation, max_iterations=5)[-1]
+            events_gas_used.append(gas_used)
             events_sizes_used.append(k)
         except Exception as exc:
             print(exc)
@@ -111,16 +170,15 @@ def profile(contract):
     outcome_rmsd = []
     pca_iter_sizes_used = []
     for k in pca_iter_sizes:
-        s = t.state()
-        c = s.contract(filename)
+        # s = t.state()
+        # c = s.contract(filename)
         print k, "iterations"
         reports = np.random.randint(-1, 2, (num_reporters, num_events))
         reputation = np.random.randint(1, 100, num_reporters)
         try:
-            retval = np.array(map(unfix, s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), k])))
-            outcome_final = retval[0:num_events]
-            author_bonus = retval[num_events:(2*num_events)]
-            voter_bonus = retval[(2*num_events):-2]
+            # retval = np.array(map(unfix, s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), k])))
+            outcome_final, author_bonus, voter_bonus = consensus(reports, reputation, max_iterations=k)
+
             # compare to pyconsensus results
             outcome = Oracle(votes=reports, reputation=reputation).consensus()
             outcome_rmsd.append(np.mean((outcome_final - np.array(outcome["events"]["outcome_final"]))**2))
