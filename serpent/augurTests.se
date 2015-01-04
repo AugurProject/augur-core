@@ -87,11 +87,6 @@ def testMakeMarket(eventID):
 	marketID = self.create_market(1010101, text("elections 2016 market"), 15*2^64, 0, 1, [eventID])
 	log(marketID)
 
-exp_halfZ = [2^64, 0x1a61298e1e069bc97, 0x2b7e151628aed2a6b, 0x47b4ff993f15055f7, 0x763992e35376b730d, 0xc2eb7ec98f05d8ea7, 0x1415e5bf6fb105f2d5, 0x211d8e4272d7b6a1aa, 0x3699205c4e74b0cf1b, 0x5a0462b7877aa8b7cf, 0x9469c4cb819c78fb38, 0xf4b122790ddfb1298d, 0x1936dc5690c08f37a9b, 0x2992442102d91286adc, 0x448a216abb76a9bc7e8, 0x7100adbac7dab4a4e30, 0xba4f53ea38636f85f00]
-
-def log(x):
- 	return(1)
-
 def init():
 	self.cashcoin_balances[tx.origin] = 1000000*10*2^64
 	self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
