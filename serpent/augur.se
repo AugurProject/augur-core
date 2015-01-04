@@ -166,14 +166,13 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
 		
 def create_event(branch, description:s, expDate):
 	if(self.Branches[branch].periodLength and description!=0 and expDate>block.number):
-		eventCharacteristics = array(6)
-		eventCharacteristics[0] = description
-		eventCharacteristics[1] = EVENT
-		eventCharacteristics[2] = branch
-		eventCharacteristics[3] = expDate
-		eventCharacteristics[4] = tx.origin
-		eventCharacteristics[5] = 42*2^64
-		eventID = sha256(eventCharacteristics, 6)
+		eventCharacteristics = array(5)
+		eventCharacteristics[0] = EVENT
+		eventCharacteristics[1] = branch
+		eventCharacteristics[2] = expDate
+		eventCharacteristics[3] = tx.origin
+		eventCharacteristics[4] = 42*2^64
+		eventID = sha256(eventCharacteristics, 5)
 	else:
 		return(0)
 
