@@ -86,6 +86,80 @@ macro fixed_multiply($x, $y):
 macro fixed_divide($x, $y):
     $x * 2^64 / $y
 
+def pca_iter_loading():
+    with s = array(num_events):
+        with j = 0:
+            while j < num_voters:
+                with d_dot_lv = 0:
+                    with k = 0:
+                        while k < num_events:
+                            d_dot_lv += weighted_centered_data[j * num_events + k] * loading_vector[k]
+                            k += 1
+                        d_dot_lv /= ONE
+                    with k = 0:
+                        while k < num_events:
+                            s[k] -= d_dot_lv * weighted_centered_data[j * num_events + k] * reputation[j]
+                            k += 1
+                j += 1
+            # loading_vector = normalize(s)
+            # (first rejig s to account for double fixed multiplication in loop)
+            with j = 0:
+                while j < num_events:
+                    s[j] /= 2^128
+                    j += 1
+            # QQ
+            with s_dot_s = 0:
+                with j = 0:
+                    while j < num_events:
+                        s_dot_s += s[j] * s[j]
+                        j += 1
+                s_dot_s /= ONE
+                # QQ!!!!
+                with norm_s = s_dot_s / 2:
+                    with j = 0:
+                        while j < 11:
+                            norm_s = (norm_s + s_dot_s*ONE/norm_s) / 2
+                            j += 1
+                    # fuggin assign
+                    with j = 0:
+                        while j < num_events:
+                            loading_vector[j] = s[j]*ONE/norm_s
+                            j += 1
+
+def pca_iter_scores():
+    with i = 0:
+        while i < num_voters:
+            with k = 0:
+                while k < num_events:
+                    scores[i] += fixed_multiply(weighted_centered_data[i*num_events + k], loading_vector[k])
+                    k += 1
+            i += 1
+
+def pca_iter(i, loading_vector, scores):
+    # PCA results are unique up to their sign, for consistency, if the
+    # leading entry in the loading vector is negative, multiply the
+    # vector by -1
+    if loading_vector[0] < 0:
+        with i = 0:
+            while i < num_events:
+                loading_vector[i] = -loading_vector[i]
+                i += 1
+    return(loading_vector, num_events)
+
+def pca(weighted_centered_data:a, num_voters, num_events, max_iterations):
+     # initialize the scores and loading vectors
+    with scores = array(num_voters):
+        with loading_vector = array(num_events):
+            loading_vector[0] = ONE
+            with i = 0:
+                # careful, setting this to 25 causes tx gas to run out!
+                while i < max_iterations:
+                    pca_iter(i, loading_vector, scores)
+                    i += 1
+
+            
+        return(scores, num_voters)
+
 def consensus(votes:a, reputation:a, max_iterations):
     ONE = 2^64
     TRUE = ONE
@@ -195,79 +269,13 @@ def consensus(votes:a, reputation:a, max_iterations):
                                     weighted_centered_data[i] = votes_filled[i] - weighted_means[i % num_events]
                                     i += 1
 
-                # initialize the scores and loading vectors
-                with old = array(num_events):
-                    with new1 = array(num_events):
-                        with new2 = array(num_events):
-                            with scores = array(num_voters):
-                                with loading_vector = array(num_events):
-                                    loading_vector[0] = ONE
-                                    with i = 0:
-                                        # careful, setting this to 25 causes tx gas to run out!
-                                        while i < max_iterations:
-                                            with s = array(num_events):
-                                                with j = 0:
-                                                    while j < num_voters:
-                                                        with d_dot_lv = 0:
-                                                            with k = 0:
-                                                                while k < num_events:
-                                                                    d_dot_lv += weighted_centered_data[j * num_events + k] * loading_vector[k]
-                                                                    k += 1
-                                                                d_dot_lv /= ONE
-                                                            with k = 0:
-                                                                while k < num_events:
-                                                                    s[k] -= d_dot_lv * weighted_centered_data[j * num_events + k] * reputation[j]
-                                                                    k += 1
-                                                        j += 1
-                                                    # loading_vector = normalize(s)
-                                                    # (first rejig s to account for double fixed multiplication in loop)
-                                                    with j = 0:
-                                                        while j < num_events:
-                                                            s[j] /= 2^128
-                                                            j += 1
-                                                    # QQ
-                                                    with s_dot_s = 0:
-                                                        with j = 0:
-                                                            while j < num_events:
-                                                                s_dot_s += s[j] * s[j]
-                                                                j += 1
-                                                        s_dot_s /= ONE
-                                                        # QQ!!!!
-                                                        with norm_s = s_dot_s / 2:
-                                                            with j = 0:
-                                                                while j < 11:
-                                                                    norm_s = (norm_s + s_dot_s*ONE/norm_s) / 2
-                                                                    j += 1
-                                                            # fuggin assign
-                                                            with j = 0:
-                                                                while j < num_events:
-                                                                    loading_vector[j] = s[j]*ONE/norm_s
-                                                                    j += 1
+                    scores = pca(weighted_centered_data, num_votes, num_events, max_iterations)
 
-                                                    i += 1
-                                    with i = 0:
-                                        while i < num_voters:
-                                            with k = 0:
-                                                while k < num_events:
-                                                    scores[i] += fixed_multiply(weighted_centered_data[i*num_events + k], loading_vector[k])
-                                                    k += 1
-                                            i += 1
-
-                                    # PCA results are unique up to their sign,
-                                    # for consistency, if the leading entry in the
-                                    # loading vector is negative, multiply the
-                                    # vector by -1
-                                    if loading_vector[0] < 0:
-                                        with i = 0:
-                                            while i < num_events:
-                                                loading_vector[i] = -loading_vector[i]
-                                                i += 1
-
-                                    # return(loading_vector, num_events)
-                                    # return(scores, num_voters)
-
-                                # Which of the two possible 'new' reputation vectors had more opinion in common
-                                # with the original 'old' reputation.
+                    # Which of the two possible 'new' reputation vectors had more opinion in common
+                    # with the original 'old' reputation.
+                    with old = array(num_events):
+                        with new1 = array(num_events):
+                            with new2 = array(num_events):
                                 with set1 = array(num_voters):
                                     with set2 = array(num_voters):
                                         with i = 0:
@@ -430,7 +438,7 @@ def consensus(votes:a, reputation:a, max_iterations):
                                                                 while i < num_voters:
                                                                     retval[2*num_events + i] = voter_bonus[i]
                                                                     i += 1
-                                                                retval[2*num_events + num_voters] = start_gas
+                                                                retval[2*num_events + num_voters] = startgas
                                                                 retval[2*num_events + num_voters + 1] = tx.gas
                                                                 return(retval, 2*num_events + num_voters + 2)
 

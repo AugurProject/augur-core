@@ -3,6 +3,7 @@
 from __future__ import division
 from pprint import pprint
 import numpy as np
+import pandas as pd
 try:
     from colorama import Fore, Style, init
 except ImportError:
@@ -13,6 +14,10 @@ np.set_printoptions(linewidth=500)
                     # precision=5,
                     # suppress=True,
                     # formatter={"float": "{: 0.3f}".format})
+pd.set_option("display.max_rows", 25)
+pd.set_option("display.width", 1000)
+pd.set_option('display.float_format', lambda x: '%.8f' % x)
+
 tolerance = 1e-12
 init()
 
@@ -116,17 +121,11 @@ def test_contract(contract):
             try:
                 assert(map(unfix, result) == [1])
             except:
-                if len(result) < 4:
-                    print "result:   ", result
-                    print "base 16:  ", map(hex, result)
-                    print "base 2^64:", map(unfix, result)
-                else:
-                    print "result:   "
-                    pprint(result)
-                    print "base 16:  "
-                    pprint(map(hex, result))
-                    print "base 2^64:"
-                    pprint(map(unfix, result))
+                print(pd.DataFrame({
+                    'result': result,
+                    'base 16': map(hex, result),
+                    'base 2^64': map(unfix, result),
+                }))
     else:
         result = s.send(t.k0, c, 0, funid=0, abi=[])
         try:
@@ -144,24 +143,24 @@ def main():
     print BR("Forming new test genesis block")
     s = t.state()
     contracts = [
-        "sum",
-        "mean",
-        "normalize",
-        "dot",
-        "outer",
-        "multiply",
-        "kron",
-        "hadamard",
-        "transpose",
-        "diag",
-        "isnan",
-        "mask",
-        "any",
-        "catch",
-        "get_weight",
-        "interpolate",
-        "fixedpoint",
-        "../consensus",
+        # "sum",
+        # "mean",
+        # "normalize",
+        # "dot",
+        # "outer",
+        # "multiply",
+        # "kron",
+        # "hadamard",
+        # "transpose",
+        # "diag",
+        # "isnan",
+        # "mask",
+        # "any",
+        # "catch",
+        # "get_weight",
+        # "interpolate",
+        # "fixedpoint",
+        # "../consensus",
         "../consensus-readable",
     ]
     for contract in contracts:
