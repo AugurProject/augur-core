@@ -18,7 +18,7 @@ pd.set_option("display.max_rows", 25)
 pd.set_option("display.width", 1000)
 pd.set_option('display.float_format', lambda x: '%.8f' % x)
 
-max_iterations = 10
+max_iterations = 4
 tolerance = 1e-12
 init()
 
@@ -29,14 +29,18 @@ init()
 #                     [  1,  1,  1, -1],
 #                     [  0, -1,  1,  1],
 #                     [ -1, -1,  1,  1]])
-reports = np.array([[  1,  1, -1,  1],
-                    [  1, -1, -1, -1],
-                    [  1,  1, -1, -1],
-                    [  1,  1,  1, -1],
-                    [  1, -1,  1,  1],
-                    [ -1, -1,  1,  1]])
-reputation = [2, 10, 4, 2, 7, 1]
+# reports = np.array([[  1,  1, -1,  1],
+#                     [  1, -1, -1, -1],
+#                     [  1,  1, -1, -1],
+#                     [  1,  1,  1, -1],
+#                     [  1, -1,  1,  1],
+#                     [ -1, -1,  1,  1]])
+# reputation = [2, 10, 4, 2, 7, 1]
 
+num_voters = 39
+num_events = 39
+reports = np.random.randint(-1, 2, (num_voters, num_events))
+reputation = np.random.randint(1, 100, num_voters)
 
 def BR(string): # bright red
     return "\033[1;31m" + str(string) + "\033[0m"
@@ -105,8 +109,8 @@ def test_contract(contract):
         except:
             print(actual)
     elif contract == "../consensus":
-        num_voters = len(reputation)
-        num_events = len(reports[0])
+        # num_voters = len(reputation)
+        # num_events = len(reports[0])
         v_size = len(reports.flatten())
 
         reputation_fixed = map(fix, reputation)
@@ -211,7 +215,7 @@ def main():
         # "interpolate",
         # "fixedpoint",
         "../consensus", 
-        "../consensus-readable",
+        # "../consensus-readable",
     ]
     for contract in contracts:
         test_contract(contract)

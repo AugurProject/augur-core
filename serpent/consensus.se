@@ -206,6 +206,7 @@ def consensus(votes:a, reputation:a, max_iterations):
                                 while i < three_v_size:
                                     retval[i] = votes_mask[i - two_v_size]
                                     i += 1
+                                log(tx.gas)
                                 return(retval, three_v_size)
 
 # funid: 1
@@ -273,6 +274,7 @@ def pca(weighted_centered_data:a, reputation:a, num_voters, num_events, max_iter
                             scores[i] += fixed_multiply(weighted_centered_data[i*num_events + k], loading_vector[k])
                             k += 1
                     i += 1
+            log(tx.gas)
             return(scores, num_voters)
 
 # funid: 2
@@ -450,5 +452,6 @@ def consensus2(reputation:a, scores:a, votes_filled:a, votes_mask:a, num_voters,
                                                         i += 1
                                                     retval[2*num_events + num_voters] = startgas
                                                     retval[2*num_events + num_voters + 1] = tx.gas
+                                                    log(tx.gas)
                                                     return(retval, 2*num_events + num_voters + 2)
 
