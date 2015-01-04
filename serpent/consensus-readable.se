@@ -162,16 +162,10 @@ def consensus(votes:a, reputation:a, max_iterations):
                 j += 1
             i += 1
 
-        # return(num_present)
-        # return(outcomes_raw, num_events)
-        # return(active_rep, num_present)
-        # return(active_events, num_present)
-        # return(caught, v_size)
-        # return(to_fill, v_size)
-        # return(votes_filled, v_size)
-
     else:
         votes_filled = votes
+
+    # return(votes_filled, v_size)
 
     # weighted pca: project votes onto principal component
     weighted_means = array(num_events)
@@ -255,9 +249,6 @@ def consensus(votes:a, reputation:a, max_iterations):
             k += 1
         i += 1
 
-    # return(loading_vector, num_events)
-    # return(scores, num_voters)
-
     # Which of the two possible 'new' reputation vectors had more opinion in common
     # with the original 'old' reputation.
     set1 = array(num_voters)
@@ -326,6 +317,8 @@ def consensus(votes:a, reputation:a, max_iterations):
             row_reward_weighted[i] = adj_prin_comp[i] * row_reward_weighted[i] / mean_weight
             i += 1
         row_reward_weighted = get_weight(row_reward_weighted, num_voters)
+
+    # return(votes_filled, v_size)
 
     # Freshly-calculated reward (in reputation) using exponential smoothing
     # New Reward: row_reward_weighted
@@ -415,6 +408,7 @@ def consensus(votes:a, reputation:a, max_iterations):
     # return(participation_voters, num_voters)
     # return(sum(author_bonus:num_events))
     # return(outcomes_raw, num_events)
+    # return(scores, num_voters)
     retval = array(2*num_events + num_voters)
     i = 0
     while i < num_events:
@@ -431,3 +425,4 @@ def consensus(votes:a, reputation:a, max_iterations):
     retval[2*num_events + num_voters] = startgas
     retval[2*num_events + num_voters + 1] = tx.gas
     return(retval, 2*num_events + num_voters + 2)
+ 

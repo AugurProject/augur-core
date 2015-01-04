@@ -18,8 +18,25 @@ pd.set_option("display.max_rows", 25)
 pd.set_option("display.width", 1000)
 pd.set_option('display.float_format', lambda x: '%.8f' % x)
 
+max_iterations = 10
 tolerance = 1e-12
 init()
+
+# true=1, false=-1, indeterminate=0.5, no response=0
+# reports = np.array([[  1,  1, -1,  0],
+#                     [  1, -1, -1, -1],
+#                     [  1,  1, -1, -1],
+#                     [  1,  1,  1, -1],
+#                     [  0, -1,  1,  1],
+#                     [ -1, -1,  1,  1]])
+reports = np.array([[  1,  1, -1,  1],
+                    [  1, -1, -1, -1],
+                    [  1,  1, -1, -1],
+                    [  1,  1,  1, -1],
+                    [  1, -1,  1,  1],
+                    [ -1, -1,  1,  1]])
+reputation = [2, 10, 4, 2, 7, 1]
+
 
 def BR(string): # bright red
     return "\033[1;31m" + str(string) + "\033[0m"
@@ -51,6 +68,7 @@ def unfix(x):
     return x / 0x10000000000000000
 
 def test_contract(contract):
+    s = t.state()
     filename = contract + ".se"
     print BB("Testing contract:"), BG(filename)
     c = s.contract(filename)
@@ -86,47 +104,78 @@ def test_contract(contract):
             assert((np.asarray(actual) - np.asarray(expected) < tolerance).all())
         except:
             print(actual)
-    elif contract in ("../consensus", "../consensus-readable"):
-        # old: true=10, false=0, indeterminate=5, no response=-1
-        # reports = np.array([[10, 10,  0, -1],
-        #                     [10,  0,  0,  0],
-        #                     [10, 10,  0,  0],
-        #                     [10, 10, 10,  0],
-        #                     [-1,  0, 10, 10],
-        #                     [ 0,  0, 10, 10]])
-        # reports = np.array([[10, 10,  0, 10],
-        #                     [10,  0,  0,  0],
-        #                     [10, 10,  0,  0],
-        #                     [10, 10, 10,  0],
-        #                     [10,  0, 10, 10],
-        #                     [ 0,  0, 10, 10]])
-        # new: true=1, false=-1, indeterminate=0.5, no response=0
-        reports = np.array([[  1,  1, -1,  0],
-                            [  1, -1, -1, -1],
-                            [  1,  1, -1, -1],
-                            [  1,  1,  1, -1],
-                            [  0, -1,  1,  1],
-                            [ -1, -1,  1,  1]])
-        # reports = np.array([[  1,  1, -1,  1],
-        #                     [  1, -1, -1, -1],
-        #                     [  1,  1, -1, -1],
-        #                     [  1,  1,  1, -1],
-        #                     [  1, -1,  1,  1],
-        #                     [ -1, -1,  1,  1]])
-        reputation = [2, 10, 4, 2, 7, 1]
+    elif contract == "../consensus":
+        num_voters = len(reputation)
+        num_events = len(reports[0])
+        v_size = len(reports.flatten())
 
-        # consensus()
-        result = s.send(t.k0, c, 0, funid=3, abi=[map(fix, reports.flatten()), map(fix, reputation), 5])
+        reputation_fixed = map(fix, reputation)
+        reports_fixed = map(fix, reports.flatten())
+
+        # tx 1: consensus()
+        result = s.send(t.k0, c, 0,
+                        funid=0,
+                        abi=[reports_fixed, reputation_fixed, max_iterations])
+
+        result = np.array(result)
+        weighted_centered_data = result[0:v_size]
+        votes_filled = result[v_size:(2*v_size)]
+        votes_mask = result[(2*v_size):(3*v_size)]
+
+        # print(pd.DataFrame({
+        #     'result': weighted_centered_data,
+        #     'base 16': map(hex, weighted_centered_data),
+        #     'base 2^64': map(unfix, weighted_centered_data),
+        # }))
+
+        # print(pd.DataFrame({
+        #     'result': votes_filled,
+        #     'base 16': map(hex, votes_filled),
+        #     'base 2^64': map(unfix, votes_filled),
+        # }))
 
         # pca()
-        result = s.send(t.k0, c, 0, funid=3, abi=[])
+        s = t.state()
+        c = s.contract(filename)
+        scores = s.send(t.k0, c, 0,
+                        funid=1,
+                        abi=[weighted_centered_data.tolist(),
+                             reputation_fixed,
+                             num_voters,
+                             num_events,
+                             max_iterations])
 
-        # pca_iter()
-        result = s.send(t.k0, c, 0, funid=3, abi=[])
+        # consensus2()
+        s = t.state()
+        c = s.contract(filename)
+        result = s.send(t.k0, c, 0,
+                        funid=2,
+                        abi=[reputation_fixed,
+                             scores,
+                             votes_filled.tolist(),
+                             votes_mask.tolist(),
+                             num_voters,
+                             num_events])
 
-        # pca_iter_scores()
-        result = s.send(t.k0, c, 0, funid=3, abi=[])
+        print(pd.DataFrame({
+            'result': result,
+            'base 16': map(hex, result),
+            'base 2^64': map(unfix, result),
+        }))
 
+    elif contract == "../consensus-readable":
+        result = s.send(t.k0, c, 0,
+                        funid=0,
+                        abi=[map(fix, reports.flatten()), map(fix, reputation), max_iterations])
+
+        print(pd.DataFrame({
+            'result': result,
+            'base 16': map(hex, result),
+            'base 2^64': map(unfix, result),
+        }))
+
+    else:
+        result = s.send(t.k0, c, 0, funid=0, abi=[])
         try:
             assert(result == [1])
         except:
@@ -138,17 +187,6 @@ def test_contract(contract):
                     'base 16': map(hex, result),
                     'base 2^64': map(unfix, result),
                 }))
-    else:
-        result = s.send(t.k0, c, 0, funid=0, abi=[])
-        try:
-            assert(result == [1])
-        except:
-            try:
-                assert(map(unfix, result) == [1])
-            except:
-                print "result:   ", result
-                print "base 16:  ", map(hex, result)
-                print "base 2^64:", map(unfix, result)
 
 def main():
     global s
@@ -173,7 +211,7 @@ def main():
         # "interpolate",
         # "fixedpoint",
         "../consensus", 
-        # "../consensus-readable",
+        "../consensus-readable",
     ]
     for contract in contracts:
         test_contract(contract)
