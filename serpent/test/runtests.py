@@ -160,7 +160,7 @@ def main():
         # "get_weight",
         # "interpolate",
         # "fixedpoint",
-        # "../consensus",
+        # "../consensus", 
         "../consensus-readable",
     ]
     for contract in contracts:

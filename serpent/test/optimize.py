@@ -75,6 +75,7 @@ def profile(contract):
         reputation = np.random.randint(1, 100, k)
         try:
             gas_used = s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), 5])
+            print gas_used
             reporters_gas_used.append(gas_used[-2] - gas_used[-1])
             reporters_sizes_used.append(k)
         except Exception as exc:
@@ -94,6 +95,7 @@ def profile(contract):
         reputation = np.random.randint(1, 100, num_reporters)
         try:
             gas_used = s.send(t.k0, c, 0, funid=0, abi=[map(fix, reports.flatten()), map(fix, reputation), 5])
+            print gas_used
             events_gas_used.append(gas_used[-2] - gas_used[-1])
             events_sizes_used.append(k)
         except Exception as exc:
@@ -106,6 +108,7 @@ def profile(contract):
     pca_iter_sizes = range(1, 31)
     voter_bonus_rmsd = []
     author_bonus_rmsd = []
+    outcome_rmsd = []
     pca_iter_sizes_used = []
     for k in pca_iter_sizes:
         s = t.state()
@@ -120,6 +123,7 @@ def profile(contract):
             voter_bonus = retval[(2*num_events):-2]
             # compare to pyconsensus results
             outcome = Oracle(votes=reports, reputation=reputation).consensus()
+            outcome_rmsd.append(np.mean((outcome_final - np.array(outcome["events"]["outcome_final"]))**2))
             voter_bonus_rmsd.append(np.mean((voter_bonus - np.array(outcome["agents"]["voter_bonus"]))**2))
             author_bonus_rmsd.append(np.mean((author_bonus - np.array(outcome["events"]["author_bonus"]))**2))
             pca_iter_sizes_used.append(k)
@@ -129,25 +133,32 @@ def profile(contract):
 
     plt.figure()
 
-    plt.subplot(311)
+    plt.subplot(411)
     plt.plot(reporters_sizes_used, reporters_gas_used, 'o-', linewidth=1.5, color="steelblue")
     plt.axis([1, np.max(reporters_sizes_used)+1, np.min(reporters_gas_used)/1.1, np.max(reporters_gas_used)*1.1])
     plt.xlabel("# reporters (" + str(num_events) + " events)")
     plt.ylabel("gas used")
     plt.grid(True)
 
-    plt.subplot(312)
+    plt.subplot(412)
     plt.plot(events_sizes_used, events_gas_used, 'o-', linewidth=1.5, color="steelblue")
     plt.axis([1, np.max(events_sizes_used)+1, np.min(events_gas_used)/1.1, np.max(events_gas_used)*1.1])
     plt.xlabel("# events (" + str(num_reporters) + " reporters)")
     plt.ylabel("gas used")
     plt.grid(True)
 
-    plt.subplot(313)
+    plt.subplot(421)
     plt.plot(pca_iter_sizes_used, voter_bonus_rmsd, 'o-', linewidth=1.5, color="steelblue")
     plt.plot(pca_iter_sizes_used, author_bonus_rmsd, 'o-', linewidth=1.5, color="red")
     # plt.axis([1, np.max(events_sizes_used)+1, np.min(events_gas_used)/1.1, np.max(events_gas_used)*1.1])
     plt.title("red: author bonus (cash/bitcoin), blue: voter bonus (reputation)")
+    plt.xlabel("# pca iterations")
+    plt.ylabel("RMSD")
+    plt.grid(True)
+
+    plt.subplot(422)
+    plt.plot(pca_iter_sizes_used, outcome_rmsd, 'o-', linewidth=1.5, color="steelblue")
+    plt.title("outcome")
     plt.xlabel("# pca iterations")
     plt.ylabel("RMSD")
     plt.grid(True)
