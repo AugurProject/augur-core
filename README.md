@@ -22,7 +22,7 @@ augur-serpent
 	# randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot
 	# fast voting cycle first few days to get the 60% problem away from a branch, e.g. what if not enough people vote
 	# 60% of votes -- need to get the cycle length parameters right
-	# rapid rbcr anytime
+	# rapid rbcr anytime to vote i'm alive if <60% of people vote after a few cycles or something
 	# profit msr
 
 ### Version 0.2:

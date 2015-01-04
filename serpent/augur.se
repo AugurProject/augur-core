@@ -19,11 +19,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joeykrug@gmail.com
 
-# includes
-#extern fp:[new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
-#FixedPoint = create('fixedpoint.se')
-inset('fixedpoint.se')
-inset('consensus.se')
+
 
 BRANCH = 0
 EVENT = 1
@@ -670,3 +666,9 @@ def close_market(branch, market):
 		self.cashcoin_balances[self.Info[market].creator] += self.cashcoin_balances[market]
 		self.cashcoin_balances[market] -= self.cashcoin_balances[market]
 		return(text("Market closed"): s)
+
+# includes
+#extern fp:[new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
+#FixedPoint = create('fixedpoint.se')
+inset('fixedpoint.se')
+inset('consensus.se')

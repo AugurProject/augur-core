@@ -2,7 +2,6 @@ BRANCH = 0
 EVENT = 1
 MARKET = 2
 
-inset('fixedpoint.se')
 
 # Every entity in our contract has similar metadata.
 # Instead of putting it in each entity, we put all the
@@ -42,10 +41,10 @@ data Markets[](branch, events[], sharesPurchased[], participants[](participantID
 data cashcoin_balances[2^160]
 
 def tests():
-	self.testCashBal()
-	self.testSendCash()
-	self.testSendRep()
-	self.testMakeSubbranch()
+	#self.testCashBal()
+	#self.testSendCash()
+	#self.testSendRep()
+	#self.testMakeSubbranch()
 	self.testMakeEvent()
 	 #& self.testMakeMarket()
 	#self.testBuyShares()
@@ -247,6 +246,7 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 	marketCharacteristics[7] = tradingFee
 	marketCharacteristics[8] = alpha
 	marketID = sha256(marketCharacteristics, 9)
+	log(marketID)
 
 	if(self.send_cashcoin(marketID, initialLiquidity)):
 		# add event list to the market
@@ -279,3 +279,5 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 		return(marketID)
 	else:
 		return(0)
+
+inset('fixedpoint.se')
