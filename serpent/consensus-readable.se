@@ -31,16 +31,16 @@ macro get_weight($a, $asz):
                     i += 1
             wt
 
-# Bins values to 0, .5, and 1
+# Bins values to -1, 0, and 1
 macro catch($x):
-    with catch_lo = (2^64 - 0x1999999999999999) / 2:
-        with catch_hi = (2^64 + 0x1999999999999999) / 2:
+    with catch_lo = (-0x1999999999999999) / 2:
+        with catch_hi = (0x1999999999999999) / 2:
             if $x < catch_lo:
-                caught = 0x0
+                caught = -2^64
             elif $x > catch_hi:
                 caught = 2^64
             else:
-                caught = 2^63
+                caught = 0
             caught
 
 # Absolute value
