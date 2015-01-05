@@ -34,15 +34,13 @@ macro get_weight($a, $asz):
 
 # Bins values to -1, 0, and 1
 macro catch($x):
-    with catch_lo = (-0x1999999999999999) / 2:
-        with catch_hi = (0x1999999999999999) / 2:
-            if $x < catch_lo:
-                caught = -2^64
-            elif $x > catch_hi:
-                caught = 2^64
-            else:
-                caught = 0
-            caught
+    if $x < -2^64 / 10:
+        caught = -2^64
+    elif $x > 2^64 / 10:
+        caught = 2^64
+    else:
+        caught = 0
+    caught
 
 # Absolute value
 macro abs($x):
@@ -206,7 +204,7 @@ def consensus(votes:a, reputation:a, max_iterations):
                                 while i < three_v_size:
                                     retval[i] = votes_mask[i - two_v_size]
                                     i += 1
-                                log(tx.gas)
+                                # log(tx.gas)
                                 return(retval, three_v_size)
 
 # funid: 1
@@ -274,7 +272,7 @@ def pca(weighted_centered_data:a, reputation:a, num_voters, num_events, max_iter
                             scores[i] += fixed_multiply(weighted_centered_data[i*num_events + k], loading_vector[k])
                             k += 1
                     i += 1
-            log(tx.gas)
+            # log(tx.gas)
             return(scores, num_voters)
 
 # funid: 2
@@ -362,7 +360,7 @@ def consensus2(reputation:a, scores:a, votes_filled:a, votes_mask:a, num_voters,
                 with smooth_rep = array(num_voters):
                     with i = 0:
                         while i < num_voters:
-                            smooth_rep[i] = row_reward_weighted[i]/5 + rep_weights[i]*4/5
+                            smooth_rep[i] = row_reward_weighted[i]/10 + rep_weights[i]*9/10
                             i += 1
 
                     # return(smooth_rep, num_voters)
@@ -384,12 +382,20 @@ def consensus2(reputation:a, scores:a, votes_filled:a, votes_mask:a, num_voters,
                         with certainty = array(num_events):
                             with i = 0:
                                 while i < num_events:
-                                    certainty[i] = 2*outcomes_raw[i] - ONE
+                                    with j = 0:
+                                        while j < num_voters:
+                                            if votes_filled[j*num_events + i] == outcomes_final[i]:
+                                                certainty[i] += smooth_rep[j]
+                                            j += 1
                                     i += 1
+                            # return(outcomes_final, num_events)
+                            # return(smooth_rep, num_voters)
+                            # return(certainty, num_events)
                             consensus_reward = get_weight(certainty, num_events)
 
                             # return(outcomes_raw, num_events)
                             # return(certainty, num_events)
+                            return(consensus_reward, num_events)
 
                     # Event participation (within columns): proportion of reputation
                     # that answered each event
@@ -452,6 +458,6 @@ def consensus2(reputation:a, scores:a, votes_filled:a, votes_mask:a, num_voters,
                                                         i += 1
                                                     retval[2*num_events + num_voters] = startgas
                                                     retval[2*num_events + num_voters + 1] = tx.gas
-                                                    log(tx.gas)
+                                                    # log(tx.gas)
                                                     return(retval, 2*num_events + num_voters + 2)
 

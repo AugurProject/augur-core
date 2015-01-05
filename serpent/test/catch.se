@@ -1,14 +1,12 @@
 # Bins values to -1, 0, and 1
 macro catch($x):
-    with catch_lo = (-0x1999999999999999) / 2:
-        with catch_hi = (0x1999999999999999) / 2:
-            if $x < catch_lo:
-                caught = -2^64
-            elif $x > catch_hi:
-                caught = 2^64
-            else:
-                caught = 0
-            caught
+    if $x < -2^64 / 10:
+        caught = -2^64
+    elif $x > 2^64 / 10:
+        caught = 2^64
+    else:
+        caught = 0
+    caught
 
 def test_catch():
     result = catch(0x10000000000000000 * 9/10)
