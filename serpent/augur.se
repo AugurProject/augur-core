@@ -244,6 +244,7 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 			self.Markets[marketID].events[i] = eventID
 			i+=1
 
+		self.Markets[marketID].numberEvents = numEvents
 		# creator of the first market in a branch gets the branch's creation fee
 		if(self.Branches[branch].marketCount==0):
 			self.send_cashcoin(tx.origin, self.Info[branch].creationFee)
@@ -323,11 +324,9 @@ def buy_shares(branch, event, market, outcome, amount, fee):
 	
 	# find the right event index
 	i = 0
-	while (i<self.Markets[market].numberEvents):
-		if(self.Markets[market].events[i] == event):
-			break
-		else:
+	while (i<self.Markets[market].numberEvents and self.Markets[market].events[i] != event):
 			i+=1
+
 	# event doesn't exist in index
 	if(i==self.Markets[market].numberEvents):
 		return(0)
@@ -409,10 +408,7 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
 
 	# find the right event index
 	i = 0
-	while (i<self.Markets[market].numberEvents):
-		if(self.Markets[market].events[i] == event):
-			break
-		else:
+	while (i<self.Markets[market].numberEvents and self.Markets[market].events[i] != event):
 			i+=1
 	# event doesn't exist in index
 	if(i==self.Markets[market].numberEvents):
