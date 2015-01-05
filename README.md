@@ -12,6 +12,7 @@ augur-serpent
 	# blockchain explorer to get / examine data or make rpc api calls to the contract to get it
 			# local contract calls don't cost gas
 	# search engine for contract data / events
+	# p2p 1-1 parimutuel betting
 
 ### Version 0.3:
 	# make sure this follows paul's whitepaper well

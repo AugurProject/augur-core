@@ -85,11 +85,13 @@ def testMakeEvent():
 	return(1)
 
 def testMakeMarket(eventID):
-	marketID = self.create_market(1010101, text("elections 2016 market"), 15*2^64, 0, 1, [eventID])
+	x = array(1)
+	x[0] = eventID
+	marketID = self.create_market(1010101, text("elections 2016 market"), 15*2^64, 0, 1, x)
 	log(marketID)
 
 def init():
-	self.cashcoin_balances[tx.origin] = 1000000*10*2^64
+	self.cashcoin_balances[tx.origin] = 1000000*30*2^64
 	self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
 	self.Reporting[1010101].reputation[0].repValue = 47
 	self.Reporting[1010101].reputation[0].reporterID = tx.origin
@@ -216,23 +218,23 @@ def create_event(branch, description:s, expDate):
 
 # lossLimit is a fixedpoint syntax number (so a losslimit of 1 is 2^64) (0 if not using lmsr)
 # ditto for alpha
-# tradingFee is a fixedpoint number as well
+# tradingFee is a fixedpoint number as well --- perhaps make it a percent
 def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a):
 	# check that events have same exp. dates and branch
 	i = 0
 	numEvents = len(events)
+	eventsConcat = 0
 	expDate = self.Events[events[0]].expirationDate
 	while i < numEvents:
 		event = events[i]
+		eventsConcat += events[i]
 		if self.Events[event].expirationDate != expDate:
 			return(0)
 		if self.Events[event].branch != branch:
 			return(0)
+		i+=1
 
-	# initialLiquidity is a fixedpoint number
-	# divide by 2^64 to stay in fixedpoint
-	initialLiquidity = lossLimit*self.log(numEvents*2^64)/2^64
-	if(numEvents > 200 or self.cashcoin_balances[tx.origin]<initialLiquidity or !self.Branches[branch].periodLength or description==0 or !lossLimit or !tradingFee or !alpha):
+	if(numEvents > 200 or !self.Branches[branch].periodLength or description==0 or !lossLimit or !tradingFee or (!alpha and !lossLimit)):
 		return(0)
 	# formation of marketID (hash)
 	marketCharacteristics = array(9)
@@ -240,13 +242,21 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 	marketCharacteristics[1] = tx.origin
 	marketCharacteristics[2] = initialLiquidity
 	marketCharacteristics[3] = branch
-	marketCharacteristics[4] = events
+	marketCharacteristics[4] = eventsConcat
 	marketCharacteristics[5] = numEvents
 	marketCharacteristics[6] = lossLimit
 	marketCharacteristics[7] = tradingFee
 	marketCharacteristics[8] = alpha
 	marketID = sha256(marketCharacteristics, 9)
-	log(marketID)
+
+	# if regular lmsr
+	if(losslimit):
+		# initialLiquidity is a fixedpoint number
+		# divide by 2^64 to stay in fixedpoint
+		initialLiquidity = lossLimit*self.log(numEvents*2^64)/2^64
+	# ls-lmsr needs a very small initial liquidity
+	elif(alpha):
+		initialLiquidity = 2^62
 
 	if(self.send_cashcoin(marketID, initialLiquidity)):
 		# add event list to the market

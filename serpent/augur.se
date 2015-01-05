@@ -198,18 +198,18 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 	# check that events have same exp. dates and branch
 	i = 0
 	numEvents = len(events)
+	eventsConcat = 0
 	expDate = self.Events[events[0]].expirationDate
 	while i < numEvents:
 		event = events[i]
+		eventsConcat += events[i]
 		if self.Events[event].expirationDate != expDate:
 			return(0)
 		if self.Events[event].branch != branch:
 			return(0)
+		i+=1
 
-	# initialLiquidity is a fixedpoint number
-	# divide by 2^64 to stay in fixedpoint
-	initialLiquidity = lossLimit*self.log(numEvents*2^64)/2^64
-	if(numEvents > 200 or self.cashcoin_balances[tx.origin]<initialLiquidity or !self.Branches[branch].periodLength or description==0 or !lossLimit or !tradingFee or !alpha):
+	if(numEvents > 200 or !self.Branches[branch].periodLength or description==0 or !lossLimit or !tradingFee or (!alpha and !lossLimit)):
 		return(0)
 	# formation of marketID (hash)
 	marketCharacteristics = array(9)
@@ -217,12 +217,21 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 	marketCharacteristics[1] = tx.origin
 	marketCharacteristics[2] = initialLiquidity
 	marketCharacteristics[3] = branch
-	marketCharacteristics[4] = events
+	marketCharacteristics[4] = eventsConcat
 	marketCharacteristics[5] = numEvents
 	marketCharacteristics[6] = lossLimit
 	marketCharacteristics[7] = tradingFee
 	marketCharacteristics[8] = alpha
 	marketID = sha256(marketCharacteristics, 9)
+
+	# if regular lmsr
+	if(losslimit):
+		# initialLiquidity is a fixedpoint number
+		# divide by 2^64 to stay in fixedpoint
+		initialLiquidity = lossLimit*self.log(numEvents*2^64)/2^64
+	# ls-lmsr needs a very small initial liquidity
+	elif(alpha):
+		initialLiquidity = 2^62
 
 	if(self.send_cashcoin(marketID, initialLiquidity)):
 		# add event list to the market
@@ -297,6 +306,11 @@ macro lmsr($marketID):
 
 # fee should be in fixed point
 # amount of shares should be an integer
+# trading fees go to branch directly and are distributed upon rbcr
+# cost of shares go directly to the market
+# so markets using lmsr should charge a higher fee here because the market creator will get less as fees from market making
+# ls-lmsr markets won't have much in fees in the branch, so the market creator will thus get a lot of fees himself hmmm...
+# is there a way to pool ls-lmsr fees separately?
 def buy_shares(branch, event, market, outcome, amount, fee):
 	if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee):
 		return(0)
@@ -615,6 +629,8 @@ def redeem(branch):
 # distribute coins among winning events
 # only works for inTrade style 1 event in a market predictions at the moment
 def close_market(branch, market):
+	if(self.cashcoin_balances[market]<=0):
+		return(0)
 	currentPeriod = block.number / self.Branches[branch].periodLength
 	numberEvents = self.Markets[market].numberEvents
 	eventVotePeriod = self.Events[self.Markets[market].events[numberEvents-1]].expirationDate / self.Branches[branch].periodLength
@@ -662,7 +678,7 @@ def close_market(branch, market):
 			self.cashcoin_balances[market] -= sharesOwned*2^64
 			self.cashcoin_balances[participant] += sharesOwned*2^64
 
-		# give back initial liquidity (or as much of it is left)
+		# give back initial liquidity (or as much of it/profits are left)
 		self.cashcoin_balances[self.Info[market].creator] += self.cashcoin_balances[market]
 		self.cashcoin_balances[market] -= self.cashcoin_balances[market]
 		return(text("Market closed"): s)
