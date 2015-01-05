@@ -230,7 +230,9 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 	# ls-lmsr needs a very small initial liquidity
 	elif(alpha):
 		initialLiquidity = 2^62
-
+		self.Markets[marketID].sharesPurchased[0] += 2^62 / 2
+		self.Markets[marketID].sharesPurchased[1] += 2^62 / 2
+		
 	if(self.send_cashcoin(marketID, initialLiquidity)):
 		# add event list to the market
 		i = 0
