@@ -23,24 +23,24 @@ tolerance = 1e-12
 init()
 
 # true=1, false=-1, indeterminate=0.5, no response=0
-# reports = np.array([[  1,  1, -1,  0],
-#                     [  1, -1, -1, -1],
-#                     [  1,  1, -1, -1],
-#                     [  1,  1,  1, -1],
-#                     [  0, -1,  1,  1],
-#                     [ -1, -1,  1,  1]])
-# reports = np.array([[  1,  1, -1,  1],
-#                     [  1, -1, -1, -1],
-#                     [  1,  1, -1, -1],
-#                     [  1,  1,  1, -1],
-#                     [  1, -1,  1,  1],
-#                     [ -1, -1,  1,  1]])
-# reputation = [2, 10, 4, 2, 7, 1]
+reports = np.array([[  1,  1, -1,  0],
+                    [  1, -1, -1, -1],
+                    [  1,  1, -1, -1],
+                    [  1,  1,  1, -1],
+                    [  0, -1,  1,  1],
+                    [ -1, -1,  1,  1]])
+reports = np.array([[  1,  1, -1,  1],
+                    [  1, -1, -1, -1],
+                    [  1,  1, -1, -1],
+                    [  1,  1,  1, -1],
+                    [  1, -1,  1,  1],
+                    [ -1, -1,  1,  1]])
+reputation = [2, 10, 4, 2, 7, 1]
 
-num_voters = 39
-num_events = 39
-reports = np.random.randint(-1, 2, (num_voters, num_events))
-reputation = np.random.randint(1, 100, num_voters)
+# num_voters = 39
+# num_events = 39
+# reports = np.random.randint(-1, 2, (num_voters, num_events))
+# reputation = np.random.randint(1, 100, num_voters)
 
 def BR(string): # bright red
     return "\033[1;31m" + str(string) + "\033[0m"
@@ -109,8 +109,8 @@ def test_contract(contract):
         except:
             print(actual)
     elif contract == "../consensus":
-        # num_voters = len(reputation)
-        # num_events = len(reports[0])
+        num_voters = len(reputation)
+        num_events = len(reports[0])
         v_size = len(reports.flatten())
 
         reputation_fixed = map(fix, reputation)
@@ -210,12 +210,12 @@ def main():
         # "isnan",
         # "mask",
         # "any",
-        # "catch",
+        "catch",
         # "get_weight",
         # "interpolate",
         # "fixedpoint",
         "../consensus", 
-        # "../consensus-readable",
+        "../consensus-readable",
     ]
     for contract in contracts:
         test_contract(contract)
