@@ -347,7 +347,11 @@ def consensus(votes:a, reputation:a, max_iterations):
     certainty = array(num_events)
     i = 0
     while i < num_events:
-        certainty[i] = 2*outcomes_raw[i] - ONE
+        j = 0
+        while j < num_voters:
+            if votes_filled[j*num_events + i] == outcomes_final[i]:
+                certainty[i] += smooth_rep[j]
+            j += 1
         i += 1
     consensus_reward = get_weight(certainty, num_events)
     avg_certainty = mean(certainty, num_events)

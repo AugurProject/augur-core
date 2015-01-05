@@ -395,7 +395,7 @@ def consensus2(reputation:a, scores:a, votes_filled:a, votes_mask:a, num_voters,
 
                             # return(outcomes_raw, num_events)
                             # return(certainty, num_events)
-                            return(consensus_reward, num_events)
+                            # return(consensus_reward, num_events)
 
                     # Event participation (within columns): proportion of reputation
                     # that answered each event
