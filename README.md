@@ -25,6 +25,7 @@ augur-serpent
 	# 60% of votes -- need to get the cycle length parameters right
 	# rapid rbcr anytime to vote i'm alive if <60% of people vote after a few cycles or something
 	# profit msr
+	# .5 & no vote stuff
 
 ### Version 0.2:
 	# add support for categorical and scalar and multidimensional events
@@ -44,3 +45,4 @@ augur-serpent
 
 ### To do:
 	# inset bug
+	# max number of owners in a branch of rep.

@@ -19,8 +19,6 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joeykrug@gmail.com
 
-
-
 BRANCH = 0
 EVENT = 1
 MARKET = 2

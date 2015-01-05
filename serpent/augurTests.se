@@ -95,6 +95,10 @@ def testBuyShares(eventID, marketID):
 	log(self.buy_shares(1010101, eventID, marketID, 1, 10, 2))
 	# should be 10
 	log(self.Markets[marketID].participants[0].event[eventID].shares[1])
+	self.testSellShares(eventID, marketID)
+
+def testSellShares(eventID, marketID):
+	self.sell_shares(1010101, eventID, marketID, 1, 10, 2, 0)
 
 def init():
 	self.cashcoin_balances[tx.origin] = 1000000*30*2^64
@@ -420,5 +424,79 @@ def buy_shares(branch, event, market, outcome, amount, fee):
 			self.Markets[market].participants[participantNumber].event[event].shares[0] += amount
 			self.Markets[market].currentParticipant += 1
 			return(participantNumber)
+
+# amount is amount of shares to buy
+# instead of inputting particip. num could just loop through array if dont have it
+# fee should be fixed point
+def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
+	# When sell check that event hasn't expired
+	if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee or self.Markets[market].participants[participantNumber].participantID != tx.origin or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee):
+		return(0)
+
+	# pay one-fourth of trading fee to market creator via sending to market.creator
+	# other half is stored in branchID cashcoin balance
+	self.cashcoin_balances[tx.origin] -= fee
+	marketCreatorFee = fee - (3*fee)/4
+	self.cashcoin_balances[self.Info[market].creator] += marketCreatorFee
+	self.cashcoin_balances[branch] += (3*fee)/4
+
+	# find the right event index
+	i = 0
+	while (i<self.Markets[market].numberEvents and self.Markets[market].events[i] != event):
+			i+=1
+	# event doesn't exist in index
+	if(i==self.Markets[market].numberEvents):
+		return(0)
+
+	# for the first trade oldcost shares bought will be at 0
+	oldCost = 0
+	newCost = 0
+	# using ls-lmsr
+	if(self.Markets[market].alpha):
+		oldCost = ls_lmsr(market)
+		# send unspent shares from the user to the event
+		if outcome:
+			self.Markets[market].sharesPurchased[i*2+1] -= amount
+		# outcome is no
+		else:
+			self.Markets[market].sharesPurchased[i*2] -= amount
+		newCost = ls_lmsr(market)
+	# using lmsr
+	else:
+		if(self.Markets[market].lossLimit):
+			oldCost = lmsr(market)
+			# send unspent shares from the user to the event
+			if outcome:
+				self.Markets[market].sharesPurchased[i*2+1] -= amount
+			# outcome is no
+			else:
+				self.Markets[market].sharesPurchased[i*2] -= amount
+			newCost = ls_lmsr(market)
+
+	# these prices are in fixed point
+	priceToPayPerShare = oldCost - newCost
+	# remove shares from the user's account
+	if outcome:
+		# if user actually doesn't have the shares, revert
+		if(self.Markets[market].participants[participantNumber].event[event].shares[1]<amount):
+			self.Markets[market].sharesPurchased[i*2+1] += amount
+			return(0)
+		else:
+			# send bitcoin from the market to the user acc.
+			self.cashcoin_balances[market] -= priceToPayPerShare*amount
+			self.cashcoin_balances[tx.origin] += priceToPayPerShare*amount
+			self.Markets[market].participants[participantNumber].event[event].shares[1] -= amount
+			return(1)
+	else:
+		# if user actually doesn't have the shares, revert
+		if(self.Markets[market].participants[participantNumber].event[event].shares[0]<amount):
+			self.Markets[market].sharesPurchased[i*2] += amount
+			return(0)
+		else:
+			# send bitcoin from the market to the user acc.
+			self.cashcoin_balances[market] -= priceToPayPerShare*amount
+			self.cashcoin_balances[tx.origin] += priceToPayPerShare*amount
+			self.Markets[market].participants[participantNumber].event[event].shares[0] -= amount
+			return(1)
 
 inset('fixedpoint.se')
