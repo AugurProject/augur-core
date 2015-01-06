@@ -119,7 +119,7 @@ def test_contract(contract):
     elif contract == "../consensus":
         num_voters = len(reputation)
         num_events = len(reports[0])
-        v_size = len(reports.flatten())
+        v_size = num_voters * num_events
 
         reputation_fixed = map(fix, reputation)
         reports_fixed = map(fix, reports.flatten())
@@ -130,42 +130,58 @@ def test_contract(contract):
                         abi=[reports_fixed, reputation_fixed, max_iterations])
 
         result = np.array(result)
-        weighted_centered_data = result[0:v_size]
-        votes_filled = result[v_size:(2*v_size)]
-        votes_mask = result[(2*v_size):(3*v_size)]
+        weighted_centered_data = result[0:v_size].tolist()
+        votes_filled = result[v_size:(2*v_size)].tolist()
+        votes_mask = result[(2*v_size):(3*v_size)].tolist()
 
-        # print(pd.DataFrame({
-        #     'result': weighted_centered_data,
-        #     'base 16': map(hex, weighted_centered_data),
-        #     'base 2^64': map(unfix, weighted_centered_data),
-        # }))
-
-        # print(pd.DataFrame({
-        #     'result': votes_filled,
-        #     'base 16': map(hex, votes_filled),
-        #     'base 2^64': map(unfix, votes_filled),
-        # }))
-
-        # pca()
         s = t.state()
         c = s.contract(filename)
+
+        # multistep pca
+        # pca_init()
+        loading_vector = s.send(t.k0, c, 0,
+                                funid=1,
+                                abi=[num_voters,
+                                     num_events,
+                                     max_iterations])
+
+        # pca_loadings()
+        while (loading_vector[num_events] > 0):
+            loading_vector = s.send(t.k0, c, 0,
+                                    funid=2,
+                                    abi=[loading_vector,
+                                         weighted_centered_data,
+                                         reputation_fixed,
+                                         num_voters,
+                                         num_events,
+                                         max_iterations])
+
+        # pca_scores()
         scores = s.send(t.k0, c, 0,
-                        funid=1,
-                        abi=[weighted_centered_data.tolist(),
-                             reputation_fixed,
+                        funid=3,
+                        abi=[loading_vector,
+                             weighted_centered_data,
                              num_voters,
-                             num_events,
-                             max_iterations])
+                             num_events])
+
+        # pca() (monolithic)
+        # scores = s.send(t.k0, c, 0,
+        #                 funid=4,
+        #                 abi=[weighted_centered_data,
+        #                      reputation_fixed,
+        #                      num_voters,
+        #                      num_events,
+        #                      max_iterations])
 
         # consensus2()
         s = t.state()
         c = s.contract(filename)
         result = s.send(t.k0, c, 0,
-                        funid=2,
+                        funid=5,
                         abi=[reputation_fixed,
                              scores,
-                             votes_filled.tolist(),
-                             votes_mask.tolist(),
+                             votes_filled,
+                             votes_mask,
                              num_voters,
                              num_events])
 

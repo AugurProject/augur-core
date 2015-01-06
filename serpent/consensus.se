@@ -208,6 +208,79 @@ def consensus(votes:a, reputation:a, max_iterations):
                                 return(retval, three_v_size)
 
 # funid: 1
+def pca_init(num_voters, num_events, max_iterations):
+    # initialize the loading vector (extra element at end is to store iterations left)
+    with lv_size = num_events + 1:
+        with loading_vector = array(lv_size):
+            loading_vector[0] = 2^64
+            loading_vector[num_events] = max_iterations
+            # log(tx.gas)
+            return(loading_vector, lv_size)
+
+# funid: 2
+def pca_loadings(loading_vector:a, weighted_centered_data:a, reputation:a, num_voters, num_events, max_iterations):
+    with ONE = 2^64:
+        with lv_size = len(loading_vector):
+            with s = array(num_events):
+                with j = 0:
+                    while j < num_voters:
+                        with d_dot_lv = 0:
+                            with k = 0:
+                                while k < num_events:
+                                    d_dot_lv += weighted_centered_data[j*num_events + k] * loading_vector[k]
+                                    k += 1
+                                d_dot_lv /= ONE
+                            with k = 0:
+                                while k < num_events:
+                                    s[k] -= d_dot_lv * weighted_centered_data[j*num_events + k] * reputation[j]
+                                    k += 1
+                        j += 1
+
+                # loading_vector = normalize(s)
+                # (first rejig s to account for double fixed multiplication in loop)
+                with j = 0:
+                    while j < num_events:
+                        s[j] /= 2^128
+                        j += 1
+
+                # QQ
+                with s_dot_s = 0:
+                    with j = 0:
+                        while j < num_events:
+                            s_dot_s += s[j] * s[j]
+                            j += 1
+                    s_dot_s /= ONE
+
+                    # QQ!!!!
+                    with norm_s = s_dot_s / 2:
+                        with j = 0:
+                            while j < 11:
+                                norm_s = (norm_s + s_dot_s*ONE/norm_s) / 2
+                                j += 1
+
+                        # fuggin assign
+                        with j = 0:
+                            while j < num_events:
+                                loading_vector[j] = s[j]*ONE/norm_s
+                                j += 1
+                loading_vector[num_events] -= 1
+                # log(tx.gas)
+                return(loading_vector, lv_size)
+
+# funid: 3
+def pca_scores(loading_vector:a, weighted_centered_data:a, num_voters, num_events):
+    with scores = array(num_voters):
+        with i = 0:
+            while i < num_voters:
+                with k = 0:
+                    while k < num_events:
+                        scores[i] += fixed_multiply(weighted_centered_data[i*num_events + k], loading_vector[k])
+                        k += 1
+                i += 1
+            # log(tx.gas)
+            return(scores, num_voters)
+
+# funid: 4
 def pca(weighted_centered_data:a, reputation:a, num_voters, num_events, max_iterations):
     ONE = 2^64
     TRUE = ONE
@@ -220,6 +293,7 @@ def pca(weighted_centered_data:a, reputation:a, num_voters, num_events, max_iter
         loading_vector[0] = ONE
         with i = 0:
             while i < max_iterations:
+                ##### pca_iter #####
                 with s = array(num_events):
                     with j = 0:
                         while j < num_voters:
@@ -262,6 +336,7 @@ def pca(weighted_centered_data:a, reputation:a, num_voters, num_events, max_iter
                                 while j < num_events:
                                     loading_vector[j] = s[j]*ONE/norm_s
                                     j += 1
+                ##### end pca_iter #####
                 i += 1
 
         with scores = array(num_voters):
@@ -275,7 +350,7 @@ def pca(weighted_centered_data:a, reputation:a, num_voters, num_events, max_iter
             # log(tx.gas)
             return(scores, num_voters)
 
-# funid: 2
+# funid: 5
 def consensus2(reputation:a, scores:a, votes_filled:a, votes_mask:a, num_voters, num_events):
     ONE = 2^64
     TRUE = ONE
