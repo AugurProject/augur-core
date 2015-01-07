@@ -18,17 +18,18 @@ pd.set_option("display.max_rows", 25)
 pd.set_option("display.width", 1000)
 pd.set_option('display.float_format', lambda x: '%.8f' % x)
 
+# max_iterations + x = number of blocks required to complete consensus
 max_iterations = 4
 tolerance = 1e-12
 init()
 
 # true=1, false=-1, indeterminate=0.5, no response=0
-reports = np.array([[  1,  1, -1,  0],
-                    [  1, -1, -1, -1],
-                    [  1,  1, -1, -1],
-                    [  1,  1,  1, -1],
-                    [  0, -1,  1,  1],
-                    [ -1, -1,  1,  1]])
+# reports = np.array([[  1,  1, -1,  0],
+#                     [  1, -1, -1, -1],
+#                     [  1,  1, -1, -1],
+#                     [  1,  1,  1, -1],
+#                     [  0, -1,  1,  1],
+#                     [ -1, -1,  1,  1]])
 # reports = np.array([[  1,  1, -1,  1],
 #                     [  1, -1, -1, -1],
 #                     [  1,  1, -1, -1],
@@ -37,18 +38,18 @@ reports = np.array([[  1,  1, -1,  0],
 #                     [ -1, -1,  1,  1]])
 # reputation = [2, 10, 4, 2, 7, 1]
 
-reports = np.array([[ 1,  1, -1, -1 ],
-                    [ 1, -1, -1, -1 ],
-                    [ 1,  1, -1, -1 ],
-                    [ 1,  1,  1, -1 ],
-                    [-1, -1,  1,  1 ],
-                    [-1, -1,  1,  1 ]])
-reputation = [1, 1, 1, 1, 1, 1]
+# reports = np.array([[ 1,  1, -1, -1 ],
+#                     [ 1, -1, -1, -1 ],
+#                     [ 1,  1, -1, -1 ],
+#                     [ 1,  1,  1, -1 ],
+#                     [-1, -1,  1,  1 ],
+#                     [-1, -1,  1,  1 ]])
+# reputation = [1, 1, 1, 1, 1, 1]
 
-# num_voters = 39
-# num_events = 39
-# reports = np.random.randint(-1, 2, (num_voters, num_events))
-# reputation = np.random.randint(1, 100, num_voters)
+num_voters = 55
+num_events = 55
+reports = np.random.randint(-1, 2, (num_voters, num_events))
+reputation = np.random.randint(1, 100, num_voters)
 
 def BR(string): # bright red
     return "\033[1;31m" + str(string) + "\033[0m"
@@ -111,7 +112,10 @@ def test_contract(contract):
     elif contract == "interpolate":
         result = s.send(t.k0, c, 0, funid=0, abi=[])
         actual = map(unfix, result)
-        expected = [0.94736842105263164, 0.30769230769230776, 0.38461538461538469, 0.33333333333333337]
+        expected = [0.94736842105263164,
+                    0.30769230769230776,
+                    0.38461538461538469,
+                    0.33333333333333337]
         try:
             assert((np.asarray(actual) - np.asarray(expected) < tolerance).all())
         except:
@@ -124,41 +128,52 @@ def test_contract(contract):
         reputation_fixed = map(fix, reputation)
         reports_fixed = map(fix, reports.flatten())
 
-        # tx 1: consensus()
+        # tx 1: interpolate()
+        print("interpolate")
         result = s.send(t.k0, c, 0,
                         funid=0,
-                        abi=[reports_fixed, reputation_fixed, max_iterations])
+                        abi=[reports_fixed, reputation_fixed])
 
         result = np.array(result)
-        weighted_centered_data = result[0:v_size].tolist()
-        votes_filled = result[v_size:(2*v_size)].tolist()
-        votes_mask = result[(2*v_size):(3*v_size)].tolist()
+        votes_filled = result[0:v_size].tolist()
+        votes_mask = result[v_size:(2*v_size)].tolist()
+        del result
+
+        # tx 2: center()
+        print("center")
+        weighted_centered_data = s.send(t.k0, c, 0,
+                                        funid=1,
+                                        abi=[votes_filled,
+                                             votes_mask,
+                                             reputation_fixed])
 
         s = t.state()
         c = s.contract(filename)
 
         # multistep pca
+        # note: pca_init() is small and can always be combined with the first
+        #       pca_loadings() iteration
         # pca_init()
+        print("pca: loadings")
         loading_vector = s.send(t.k0, c, 0,
-                                funid=1,
-                                abi=[num_voters,
-                                     num_events,
+                                funid=2,
+                                abi=[num_events,
                                      max_iterations])
 
-        # pca_loadings()
+        # tx 3 to (3+max_iterations): pca_loadings()
         while (loading_vector[num_events] > 0):
             loading_vector = s.send(t.k0, c, 0,
-                                    funid=2,
+                                    funid=3,
                                     abi=[loading_vector,
                                          weighted_centered_data,
                                          reputation_fixed,
                                          num_voters,
-                                         num_events,
-                                         max_iterations])
+                                         num_events])
 
-        # pca_scores()
+        # tx 4+max_iterations: pca_scores()
+        print("pca: scores")
         scores = s.send(t.k0, c, 0,
-                        funid=3,
+                        funid=4,
                         abi=[loading_vector,
                              weighted_centered_data,
                              num_voters,
@@ -166,20 +181,66 @@ def test_contract(contract):
 
         # pca() (monolithic)
         # scores = s.send(t.k0, c, 0,
-        #                 funid=4,
+        #                 funid=5,
         #                 abi=[weighted_centered_data,
         #                      reputation_fixed,
         #                      num_voters,
         #                      num_events,
         #                      max_iterations])
 
-        # consensus2()
         s = t.state()
         c = s.contract(filename)
+
+        print("calibrate_sets")
         result = s.send(t.k0, c, 0,
-                        funid=5,
-                        abi=[reputation_fixed,
-                             scores,
+                        funid=6,
+                        abi=[scores,
+                             num_voters,
+                             num_events])
+
+        result = np.array(result)
+        set1 = result[0:num_voters].tolist()
+        set2 = result[num_voters:(2*num_voters)].tolist()
+        assert(len(set1) == len(set2))
+        assert(len(result) == 2*num_voters)
+        del result
+
+        print("calibrate_wsets")
+        result = s.send(t.k0, c, 0,
+                        funid=7,
+                        abi=[set1,
+                             set2,
+                             reputation_fixed,
+                             votes_filled,
+                             num_voters,
+                             num_events])
+
+        result = np.array(result)
+        old = result[0:v_size].tolist()
+        new1 = result[v_size:(2*v_size)].tolist()
+        new2 = result[(2*v_size):(3*v_size)].tolist()
+        assert(len(result) == 3*num_events)
+        # print len(old), len(new1), len(new2)
+        # assert(len(old) == len(new1) == len(new2))
+        del result
+
+        print("pca_adjust")
+        adj_prin_comp = s.send(t.k0, c, 0,
+                               funid=8,
+                               abi=[old,
+                                    new1,
+                                    new2,
+                                    set1,
+                                    set2,
+                                    scores,
+                                    num_voters,
+                                    num_events])
+
+        print("consensus")
+        result = s.send(t.k0, c, 0,
+                        funid=9,
+                        abi=[adj_prin_comp,
+                             reputation_fixed,
                              votes_filled,
                              votes_mask,
                              num_voters,
@@ -238,8 +299,8 @@ def main():
         # "get_weight",
         # "interpolate",
         # "fixedpoint",
-        "../consensus", 
-        "../consensus-readable",
+        "../consensus",
+        # "../consensus-readable", 
     ]
     for contract in contracts:
         test_contract(contract)

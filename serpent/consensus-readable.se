@@ -405,7 +405,7 @@ def consensus(votes:a, reputation:a, max_iterations):
         author_bonus[i] = (na_bonus_events[i]*participation + consensus_reward[i]*(ONE - participation)) / ONE
         i += 1
 
-    # return(adj_prin_comp, num_events)
+    # return(adj_prin_comp, num_voters)
     # return(participation_events, num_events)
     # return(participation_voters, num_voters)
     # return(sum(author_bonus:num_events))
