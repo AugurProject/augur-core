@@ -39,7 +39,7 @@ data Branches[](currentVotePeriod, markets[], marketCount, periodLength, repRequ
 
 # Events' index is the eventID
 # outcome is -1 if false, 1 if true, 0 if not determined yet
-data Events[](branch, expirationDate, outcome)
+data Events[](branch, expirationDate, outcome, minValue, maxValue)
 
 # Reporting index is the branchID
 # Reporters index is the rep. address
@@ -159,15 +159,17 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
 	else:
 		return(0)
 		
-def create_event(branch, description:s, expDate):
+def create_event(branch, description:s, expDate, minValue, maxValue):
 	if(self.Branches[branch].periodLength and description!=0 and expDate>block.number):
-		eventCharacteristics = array(5)
+		eventCharacteristics = array(7)
 		eventCharacteristics[0] = EVENT
 		eventCharacteristics[1] = branch
 		eventCharacteristics[2] = expDate
 		eventCharacteristics[3] = tx.origin
 		eventCharacteristics[4] = 42*2^64
-		eventID = sha256(eventCharacteristics, 5)
+		eventCharacteristics[5] = minValue
+		eventCharacteristics[6] = maxValue
+		eventID = sha256(eventCharacteristics, 7)
 	else:
 		return(0)
 
@@ -177,7 +179,9 @@ def create_event(branch, description:s, expDate):
 		self.Info[eventID].creator = tx.origin
 		self.Info[eventID].creationFee = 42*2^64
 		self.Events[eventID].branch = branch
-		self.Events[eventID].expirationDate = expDate		
+		self.Events[eventID].expirationDate = expDate
+		self.Events[eventID].minValue = minValue
+		self.Events[eventID].maxValue = maxValue	
 		# see which future period it expires in and put the event in that bin
 		futurePeriod = expDate / self.Branches[branch].periodLength
 		self.Reporting[branch].eventsExpDates[futurePeriod].events[self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents] = eventID

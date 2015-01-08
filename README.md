@@ -6,6 +6,7 @@ augur-serpent
 	# Implement Version 0.2 (eta - feb?)
 
 ### Version 0.4 (Awesome fun stuff):
+	# clean api interface
 	# make code updatable 
 	# how do we scale / what if a ton of events, markets, etc.
 	# featured markets
@@ -41,3 +42,29 @@ augur-serpent
 	# salt hash vote mechanism
 	# should make an API function to make ballot
 	# 0th reporter funny business or change numReporters to currentRepIndex
+
+### AMSR:
+	# events exhaustive partition - 1 has to happen (can actually add a new event while market is running - can't delete events)
+	# specify probabilities & how much money they're willing to lose (can increase $ want to lose, ability to change priors on events - separate vector of probabilities and market maker can just change them -- changes prior, not the actual market price) -- change prior during event.
+	# market maker if he sets bad odds people will arbitrage it and make him lose his money.
+	# market prices will equilibrate as well if there are two separate markets on the same thing.
+	# market makers make a ton of money
+	# ways to make money in system are:
+		# creating events, creating markets, reporting on their outcomes, holding rep due to market profit
+
+	Distance function:
+	# l1 (a function of the number of shares you purchase in the market)
+
+	Utility function:
+	# ln(x)
+
+	Liquidity function:
+	f(s) = .924*sqrt(s+132.3) - sqrt(132.3)
+
+	Profit function:
+	variable for g(s) profit cut should be adjustable from .25 - 5%
+	early stage parameter 1.10
+	g(s) = .01s
+
+
+	# event probabilities from pricing would be price per share - (excess fee / share)
