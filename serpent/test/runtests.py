@@ -46,8 +46,8 @@ init()
 #                     [-1, -1,  1,  1 ]])
 # reputation = [1, 1, 1, 1, 1, 1]
 
-num_voters = 55
-num_events = 55
+num_voters = 65
+num_events = 65
 reports = np.random.randint(-1, 2, (num_voters, num_events))
 reputation = np.random.randint(1, 100, num_voters)
 
@@ -236,12 +236,35 @@ def test_contract(contract):
                                     num_voters,
                                     num_events])
 
+        print("smooth")
+        smooth_rep = s.send(t.k0, c, 0,
+                            funid=9,
+                            abi=[adj_prin_comp,
+                                 reputation_fixed,
+                                 num_voters,
+                                 num_events])
+
         print("consensus")
         result = s.send(t.k0, c, 0,
-                        funid=9,
-                        abi=[adj_prin_comp,
+                        funid=10,
+                        abi=[smooth_rep,
                              reputation_fixed,
                              votes_filled,
+                             num_voters,
+                             num_events])
+
+        result = np.array(result)
+        outcomes_final = result[0:num_events].tolist()
+        consensus_reward = result[num_events:(2*num_events)].tolist()
+        assert(len(outcomes_final) == len(consensus_reward))
+        del result
+
+        print("participation")
+        result = s.send(t.k0, c, 0,
+                        funid=11,
+                        abi=[outcomes_final,
+                             consensus_reward,
+                             smooth_rep,
                              votes_mask,
                              num_voters,
                              num_events])

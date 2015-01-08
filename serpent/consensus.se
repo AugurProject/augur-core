@@ -409,10 +409,9 @@ def pca_adjust(old:a, new1:a, new2:a, set1:a, set2:a, scores:a, num_voters, num_
                     return(adj_prin_comp, num_voters)
 
 # funid: 9
-def consensus(adj_prin_comp:a, reputation:a, votes_filled:a, votes_mask:a, num_voters, num_events):
+def smooth(adj_prin_comp:a, reputation:a, num_voters, num_events):
 
     # Diffuse towards previous reputation.
-    with outcomes_final = array(num_events):
         with rep_weights = get_weight(reputation, num_voters):
             with row_reward_weighted = array(num_voters):
                 with i = 0:
@@ -439,101 +438,111 @@ def consensus(adj_prin_comp:a, reputation:a, votes_filled:a, votes_mask:a, num_v
                             smooth_rep[i] = row_reward_weighted[i]/10 + rep_weights[i]*9/10
                             i += 1
 
-                    # return(smooth_rep, num_voters)
+                    log(tx.gas)
+                    return(smooth_rep, num_voters)
 
-                    with outcomes_raw = array(num_events):
-                        with i = 0:
-                            while i < num_events:
-                                with k = 0:
-                                    while k < num_voters:
-                                        outcomes_raw[i] += fixed_multiply(smooth_rep[k], votes_filled[k*num_events + i])
-                                        k += 1
-                                    outcomes_final[i] = catch(outcomes_raw[i])
-                                    i += 1
+# funid: 10
+def consensus(smooth_rep:a, reputation:a, votes_filled:a, num_voters, num_events):
+    with outcomes_final = array(num_events):
+        with outcomes_raw = array(num_events):
+            with i = 0:
+                while i < num_events:
+                    with k = 0:
+                        while k < num_voters:
+                            outcomes_raw[i] += fixed_multiply(smooth_rep[k], votes_filled[k*num_events + i])
+                            k += 1
+                        outcomes_final[i] = catch(outcomes_raw[i])
+                        i += 1
 
-                        # return(votes_filled, v_size)
-                        # return(outcomes_raw, num_events)
+            # Smoothing function travels from 0 to 1 with a minimum at .5
+            with certainty = array(num_events):
+                with i = 0:
+                    while i < num_events:
+                        with j = 0:
+                            while j < num_voters:
+                                if votes_filled[j*num_events + i] == outcomes_final[i]:
+                                    certainty[i] += smooth_rep[j]
+                                j += 1
+                        i += 1
+                with consensus_reward = get_weight(certainty, num_events):
 
-                        # Smoothing function travels from 0 to 1 with a minimum at .5
-                        with certainty = array(num_events):
+                    # outcomes_final: [0, num_events - 1]
+                    # consensus_reward: [num_events, 2*num_events - 1]
+                    with two_num_events = 2*num_events:
+                        with retval = array(two_num_events):
                             with i = 0:
                                 while i < num_events:
-                                    with j = 0:
-                                        while j < num_voters:
-                                            if votes_filled[j*num_events + i] == outcomes_final[i]:
-                                                certainty[i] += smooth_rep[j]
-                                            j += 1
+                                    retval[i] = outcomes_final[i]
                                     i += 1
-                            # return(outcomes_final, num_events)
-                            # return(smooth_rep, num_voters)
-                            # return(certainty, num_events)
-                            consensus_reward = get_weight(certainty, num_events)
+                                while i < two_num_events:
+                                    retval[i] = consensus_reward[i - num_events]
+                                    i += 1
+                                log(tx.gas)
+                                return(retval, two_num_events)
 
-                            # return(outcomes_raw, num_events)
-                            # return(certainty, num_events)
-                            # return(consensus_reward, num_events)
+def participation(outcomes_final:a, consensus_reward:a, smooth_rep:a, votes_mask:a, num_voters, num_events):
 
-                    # Event participation (within columns): proportion of reputation
-                    # that answered each event
-                    with participation_events = array(num_events):
+        # Event participation (within columns): proportion of reputation
+        # that answered each event
+        with participation_events = array(num_events):
+            with i = 0:
+                while i < num_events:
+                    with k = 0:
+                        while k < num_voters:
+                            participation_events[i] += fixed_multiply(smooth_rep[k], votes_mask[k*num_events + i])
+                            k += 1
+                    participation_events[i] = 2^64 - participation_events[i]
+                    i += 1
+
+            # Voter participation (within rows): all events treated equally
+            with participation_voters = array(num_voters):
+                with i = 0:
+                    while i < num_voters:
+                        with total = 0:
+                            with j = 0:
+                                while j < num_events:
+                                    total += votes_mask[i*num_events + j]
+                                    j += 1
+                                participation_voters[i] = 2^64 - total / num_events
+                        i += 1
+
+                    # General participation
+                    with total = 0:
                         with i = 0:
                             while i < num_events:
-                                with k = 0:
-                                    while k < num_voters:
-                                        participation_events[i] += fixed_multiply(smooth_rep[k] votes_mask[k*num_events + i])
-                                        k += 1
-                                participation_events[i] = 2^64 - participation_events[i]
+                                total += participation_events[i]
                                 i += 1
+                        with participation = 2^64 - total / num_events:
 
-                        # Voter participation (within rows): all events treated equally
-                        with participation_voters = array(num_voters):
-                            with i = 0:
-                                while i < num_voters:
-                                    with total = 0:
-                                        with j = 0:
-                                            while j < num_events:
-                                                total += votes_mask[i*num_events + j]
-                                                j += 1
-                                            participation_voters[i] = 2^64 - total / num_events
-                                    i += 1
-
-                                # General participation
-                                with total = 0:
+                            # Bringing it all together!
+                            with voter_bonus = array(num_voters):
+                                with na_bonus_voters = get_weight(participation_voters, num_voters):
                                     with i = 0:
-                                        while i < num_events:
-                                            total += participation_events[i]
+                                        while i < num_voters:
+                                            voter_bonus[i] = fixed_multiply(na_bonus_voters[i], participation) + fixed_multiply(smooth_rep[i], 2^64 - participation)
                                             i += 1
-                                    with participation = 2^64 - total / num_events:
+                                with author_bonus = array(num_events):
+                                    with na_bonus_events = get_weight(participation_events, num_events):    
+                                        with i = 0:
+                                            while i < num_events:
+                                                author_bonus[i] = fixed_multiply(na_bonus_events[i], participation) + fixed_multiply(consensus_reward[i], 2^64 - participation)
+                                                i += 1
 
-                                        # Bringing it all together!
-                                        with voter_bonus = array(num_voters):
-                                            with na_bonus_voters = get_weight(participation_voters, num_voters):
-                                                with i = 0:
-                                                    while i < num_voters:
-                                                        voter_bonus[i] = fixed_multiply(na_bonus_voters[i], participation) + fixed_multiply(smooth_rep[i], 2^64 - participation)
-                                                        i += 1
-                                            with author_bonus = array(num_events):
-                                                with na_bonus_events = get_weight(participation_events, num_events):    
-                                                    with i = 0:
-                                                        while i < num_events:
-                                                            author_bonus[i] = fixed_multiply(na_bonus_events[i], participation) + fixed_multiply(consensus_reward[i], 2^64 - participation)
-                                                            i += 1
-
-                                                    retval = array(2*num_events + num_voters)
-                                                    i = 0
-                                                    while i < num_events:
-                                                        retval[i] = outcomes_final[i]
-                                                        i += 1
-                                                    i = 0
-                                                    while i < num_events:
-                                                        retval[num_events + i] = author_bonus[i]
-                                                        i += 1
-                                                    i = 0
-                                                    while i < num_voters:
-                                                        retval[2*num_events + i] = voter_bonus[i]
-                                                        i += 1
-                                                    retval[2*num_events + num_voters] = 10^6
-                                                    retval[2*num_events + num_voters + 1] = tx.gas
-                                                    log(tx.gas)
-                                                    return(retval, 2*num_events + num_voters + 2)
+                                        retval = array(2*num_events + num_voters)
+                                        i = 0
+                                        while i < num_events:
+                                            retval[i] = outcomes_final[i]
+                                            i += 1
+                                        i = 0
+                                        while i < num_events:
+                                            retval[num_events + i] = author_bonus[i]
+                                            i += 1
+                                        i = 0
+                                        while i < num_voters:
+                                            retval[2*num_events + i] = voter_bonus[i]
+                                            i += 1
+                                        retval[2*num_events + num_voters] = 10^6
+                                        retval[2*num_events + num_voters + 1] = tx.gas
+                                        log(tx.gas)
+                                        return(retval, 2*num_events + num_voters + 2)
 
