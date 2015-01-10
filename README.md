@@ -13,6 +13,7 @@ augur-serpent
 	# how do we scale / what if a ton of events, markets, etc.
 	# featured markets
 	# seigniorage coin
+	# zeroing of array values
 	# api voting
 	# blockchain explorer to get / examine data or make rpc api calls to the contract to get it
 			# local contract calls don't cost gas - # ui functions
@@ -33,13 +34,8 @@ augur-serpent
 
 ### Version 0.2 (Markets Upgrades):
 	# add support for categorical and scalar and multidimensional events
-	# Scalar event where people update what type of share they bought using a thing
-	# in an array where index is their scalar x and value
-	# is the share updated number of shares bought
-	# zeroing of array values
 	# hash first frontrunning prevention mechanism
 	# salt hash vote mechanism
-	# should make an API function to make ballot
 	# 0th reporter funny business or change numReporters to currentRepIndex
 
 ### AMSR:

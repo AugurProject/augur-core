@@ -736,6 +736,25 @@ def closeBet(betID):
 		self.cashcoin_balances[betID+0] -= self.cashcoin_balances[betID+0]
 		self.cashcoin_balances[betID+1] -= self.cashcoin_balances[betID+1]
 
+### API (for UI)
+
+# atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
+# ui should handle this ^
+# ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents
+# and loop through the events[] array from 0 to numberEvents -1 for the votes list / order
+# should make an API function for this (make ballot)!!!
+# UI will need a function to get the items in that array above so it can make a report!
+# w/ this function you can get the eventIDs, look them up and report on outcomes (probably w/ a nother function to look them up)
+def makeBallot(branch):
+	numEvents = self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].numberEvents
+	eventArray = array(numEvents)
+	i = 0
+	while i < numEvents:
+		eventID = self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].events[numEvents]
+		eventArray[i] = eventID
+	return(eventArray: a)
+
+
 # includes
 # extern fp:[new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
 # FixedPoint = create('fixedpoint.se')
