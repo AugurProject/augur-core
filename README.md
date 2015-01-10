@@ -7,6 +7,8 @@ augur-serpent
 
 ### Version 0.4 (Awesome fun stuff):
 	# clean api interface
+	# record number of shares bought in USD at conversion rate of bitcoin in the UI to give accurate probabilities
+	# or just use seigniorage shares
 	# make code updatable 
 	# how do we scale / what if a ton of events, markets, etc.
 	# featured markets
@@ -15,9 +17,6 @@ augur-serpent
 	# blockchain explorer to get / examine data or make rpc api calls to the contract to get it
 			# local contract calls don't cost gas - # ui functions
 	# search engine for contract data / events
-	# p2p 1-1 parimutuel betting
-	# conditional upon eventhash and its outcome data Events[](branch, expirationDate, outcome)
-	# need a function to setup the bet & another function to close it provided event is expired & outcome is determined
 	# 4th Cumulant in consensus.se
 
 ### Version 0.3 (The Voting Upgrade):
@@ -65,6 +64,5 @@ augur-serpent
 	variable for g(s) profit cut should be adjustable from .25 - 5%
 	early stage parameter 1.10
 	g(s) = .01s
-
 
 	# event probabilities from pricing would be price per share - (excess fee / share)

@@ -39,6 +39,7 @@ data Branches[](currentVotePeriod, markets[], marketCount, periodLength, repRequ
 
 # Events' index is the eventID
 # outcome is -1 if false, 1 if true, 0 if not determined yet
+# a binary outcome has 0 for min and 1 for max value
 data Events[](branch, expirationDate, outcome, minValue, maxValue)
 
 # Reporting index is the branchID
@@ -57,9 +58,11 @@ data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, repo
    # ex: eventIndex*2 is outcome 0, eventIndex*2 + 1 is outcome one for each corresponding event 
    #    self.Markets[$marketID].sharesPurchased[$i*2]
    #    self.Markets[$marketID].sharesPurchased[$i*2 + 1]
-data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[2])), lossLimit, tradingFee, numberEvents, currentParticipant, winningEvents[], alpha)
+data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[])), lossLimit, tradingFee, numberEvents, currentParticipant, winningEvents[], alpha, probabilities[])
 
-data cashcoin_balances[2^160]
+data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
+
+data cashcoin_balances[]
 
 def init():
 	# test initial funds
@@ -193,12 +196,14 @@ def create_event(branch, description:s, expDate, minValue, maxValue):
 # lossLimit is a fixedpoint syntax number (so a losslimit of 1 is 2^64) (0 if not using lmsr)
 # ditto for alpha
 # tradingFee is a fixedpoint number as well --- perhaps make it a percent
+# scalar events 
 def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a):
 	# check that events have same exp. dates and branch
 	i = 0
 	numEvents = len(events)
 	eventsConcat = 0
 	expDate = self.Events[events[0]].expirationDate
+	cumulativeScale = 0
 	while i < numEvents:
 		event = events[i]
 		eventsConcat += events[i]
@@ -206,6 +211,7 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 			return(0)
 		if self.Events[event].branch != branch:
 			return(0)
+		cumulativeScale += self.Events[event].maxValue - self.Events[event].minValue
 		i+=1
 
 	if(numEvents > 200 or !self.Branches[branch].periodLength or description==0 or !lossLimit or !tradingFee or (!alpha and !lossLimit)):
@@ -686,9 +692,52 @@ def close_market(branch, market):
 		self.cashcoin_balances[self.Info[market].creator] += self.cashcoin_balances[market]
 		self.cashcoin_balances[market] -= self.cashcoin_balances[market]
 		return(text("Market closed"): s)
+		data Events[](branch, expirationDate, outcome, minValue, maxValue)
+
+### P2P parimutuel betting
+def makeBet(eventID, amtToBet):
+	betData = array(2)
+	betData[0] = eventID
+	betData[1] = block.number
+	betID = sha256(branchCharacteristics, 2)
+	self.p2pBets[betID].eventID = betData[0]
+	self.p2pBets[betID].amtToBet = amtToBet
+
+# should add a fee to market
+# outcome is 0 or 1
+def sendMoneytoBet(betID, outcome):
+	if(self.cashcoin_balances[betID+outcome]==0):
+		self.send_cashcoin(betID+outcome, self.p2pBets[betID].amtToBet)
+	else:
+		return(0)
+
+	if(outcome):
+		self.p2pBets[betID].outcomeOneBettor = tx.origin
+	else:
+		self.p2pBets[betID].outcomeZeroBettor = tx.origin
+
+# add support for a .5 outcome
+def closeBet(betID):
+	# outcome not determined yet
+	if(self.Events[self.p2pBets[betID].eventID].outcome == 0):
+		return(0)
+	# pay out depending on outcome
+	elif(self.cashcoin_balances[betID+0]==self.p2pBets[betID].amtToBet && self.cashcoin_balances[betID+1]==self.p2pBets[betID].amtToBet):
+		self.cashcoin_balances[betID+0] -= self.cashcoin_balances[betID+0]
+		self.cashcoin_balances[betID+1] -= self.cashcoin_balances[betID+1]
+		if(self.Events[self.p2pBets[betID].eventID].outcome):
+			self.cashcoin_balances[self.p2pBets[betID].outcomeOneBettor] += self.p2pBets[betID].amtToBet*2
+		elif(self.Events[self.p2pBets[betID].eventID].outcome == -1)
+			self.cashcoin_balances[self.p2pBets[betID].outcomeZeroBettor] += self.p2pBets[betID].amtToBet*2
+	# someone didn't pay their side of the bet, refund funds
+	else:
+		self.cashcoin_balances[self.p2pBets[betID].outcomeZeroBettor] += self.cashcoin_balances[betID+0]
+		self.cashcoin_balances[self.p2pBets[betID].outcomeOneBettor] += self.cashcoin_balances[betID+1]
+		self.cashcoin_balances[betID+0] -= self.cashcoin_balances[betID+0]
+		self.cashcoin_balances[betID+1] -= self.cashcoin_balances[betID+1]
 
 # includes
-#extern fp:[new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
-#FixedPoint = create('fixedpoint.se')
+# extern fp:[new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
+# FixedPoint = create('fixedpoint.se')
 inset('fixedpoint.se')
 inset('consensus.se')
