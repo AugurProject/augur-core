@@ -7,6 +7,7 @@ augur-serpent
 
 ### Version 0.4 (Awesome fun stuff):
 	# clean api interface
+	# secure multiparty computation to prevent attack vitalik brought up
 	# record number of shares bought in USD at conversion rate of bitcoin in the UI to give accurate probabilities
 	# or just use seigniorage shares
 	# make code updatable 
@@ -19,6 +20,8 @@ augur-serpent
 			# local contract calls don't cost gas - # ui functions
 	# search engine for contract data / events
 	# 4th Cumulant in consensus.se
+	# hash first frontrunning prevention mechanism
+
 
 ### Version 0.3 (The Voting Upgrade):
 	# make sure this follows paul's whitepaper well
@@ -34,9 +37,8 @@ augur-serpent
 
 ### Version 0.2 (Markets Upgrades):
 	# add support for categorical and scalar and multidimensional events
-	# hash first frontrunning prevention mechanism
 	# salt hash vote mechanism
-	# 0th reporter funny business or change numReporters to currentRepIndex
+	# fix strings
 
 ### AMSR:
 	# events exhaustive partition - 1 has to happen (can actually add a new event while market is running - can't delete events)

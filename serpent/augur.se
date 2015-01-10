@@ -70,8 +70,7 @@ def init():
 	self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
 	self.Reporting[1010101].reputation[0].repValue = 47
 	self.Reporting[1010101].reputation[0].reporterID = tx.origin
-	# number of reporters is 0 indexed
-	self.Reporting[1010101].numberReporters = 0
+	self.Reporting[1010101].numberReporters = 1
 	self.Info[1010101].typecode = 0
 	self.Info[1010101].description[] = "initial branch"
 	self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
@@ -104,11 +103,11 @@ def send_reputation(branch, recver, value):
 	receiverIndex = self.Reporting[branch].repIDtoIndex[recver]
 	# if the sender's rep. account doesn't exist, make one
 	if(self.Reporting[branch].reputation[senderIndex].reporterID!=tx.origin):
-			self.Reporting[branch].numberReporters += 1
 			reporterIndex = self.Reporting[branch].numberReporters
 			self.Reporting[branch].repIDtoIndex[tx.origin] = reporterIndex
 			self.Reporting[branch].reputation[reporterIndex].repValue = 0
 			self.Reporting[branch].reputation[reporterIndex].reporterID = tx.origin
+			self.Reporting[branch].numberReporters += 1
 			return(text("Your reputation account was just created, earn some rep. before you can send to others"): s)
 
 	if(self.Reporting[branch].reputation[receiverIndex].reporterID!=recver):
@@ -156,8 +155,7 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
 			self.Reporting[branchID].reputation[i].reporterID = self.Reporting[parent].reputation[i].reporterID
 			self.Reporting[branchID].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
 			i+=1
-		# because there is a 0th reporter
-		self.Reporting[branchID].numberReporters = i-1
+		self.Reporting[branchID].numberReporters = i
 		return(branchID)
 	else:
 		return(0)
@@ -564,8 +562,7 @@ def redeem(branch):
 	# use this to make a giant array of votes to pass to self.consensus
 	# want to pass votes for each 0 indexed event in order (so we get votes from an actual reporter)
 	# (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
-	reputation = array(self.Reporting[branch].numberReporters-1)
-	#votes = array(self.Reporting[branch].numberReporters-1)
+	reputation = array(self.Reporting[branch].numberReporters)
 	numberEvents = self.Reporting[branch].eventsExpDates[currentvotePeriod].numberEvents
 	numReporters = self.Reporting[branch].numberReporters
 	votes = array(numReporters * numberEvents)
