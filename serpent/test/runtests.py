@@ -46,10 +46,27 @@ init()
 #                     [-1, -1,  1,  1 ]])
 # reputation = [1, 1, 1, 1, 1, 1]
 
-num_voters = 65
-num_events = 65
+num_voters = 66
+num_events = 66
 reports = np.random.randint(-1, 2, (num_voters, num_events))
 reputation = np.random.randint(1, 100, num_voters)
+
+# pyconsensus bounds format:
+#     event_bounds = [
+#         {"scaled": True, "min": 0.1, "max": 0.5},
+#         {"scaled": True, "min": 0.2, "max": 0.7},
+#         {"scaled": False, "min": 0, "max": 1},
+#         {"scaled": False, "min": 0, "max": 1},
+#     ]
+scaled = np.random.randint(0, 2, num_events).tolist()
+scaled_max = np.ones(num_events)
+scaled_min = np.zeros(num_events)
+for i in range(num_events):
+    if scaled[i]:
+        scaled_max[i] = np.random.randint(1, 100)
+        scaled_min[i] = np.random.randint(0, scaled_max[i])
+scaled_max = scaled_max.astype(int).tolist()
+scaled_min = scaled_min.astype(int).tolist()
 
 def BR(string): # bright red
     return "\033[1;31m" + str(string) + "\033[0m"
@@ -130,9 +147,18 @@ def test_contract(contract):
 
         # tx 1: interpolate()
         print("interpolate")
+        # print(pd.DataFrame({
+        #     "scaled": scaled,
+        #     "min": scaled_min,
+        #     "max": scaled_max,
+        # }))
         result = s.send(t.k0, c, 0,
                         funid=0,
-                        abi=[reports_fixed, reputation_fixed])
+                        abi=[reports_fixed,
+                             reputation_fixed,
+                             scaled,
+                             scaled_max,
+                             scaled_min])
 
         result = np.array(result)
         votes_filled = result[0:v_size].tolist()
@@ -145,8 +171,10 @@ def test_contract(contract):
                                         funid=1,
                                         abi=[votes_filled,
                                              votes_mask,
-                                             reputation_fixed])
-
+                                             reputation_fixed,
+                                             scaled,
+                                             scaled_max,
+                                             scaled_min])
         s = t.state()
         c = s.contract(filename)
 

@@ -85,7 +85,7 @@ macro fixed_divide($x, $y):
     $x * 2^64 / $y
 
 # funid: 0
-def interpolate(votes:a, reputation:a):
+def interpolate(votes:a, reputation:a, scaled:a, scaled_max:a, scaled_min:a):
     # ONE = 2^64
     # TRUE = ONE
     # FALSE = -ONE
@@ -94,6 +94,30 @@ def interpolate(votes:a, reputation:a):
     with num_voters = len(reputation):
         with v_size = len(votes):
             with num_events = v_size / num_voters:
+
+                # Calculate multiplicative factors
+                with inv_span = array(num_events):
+                    with i = 0:
+                        while i < num_events:
+                            if scaled[i] == 1:
+                                inv_span[i] = 2^64 / (scaled_max[i] - scaled_min[i])
+                            i += 1
+
+                    # Recenter
+                    with out_matrix = array(v_size):
+                        with i = 0:
+                            while i < v_size:
+                                out_matrix[i] = votes[i] - scaled_min[i]
+                                i += 1
+
+                        # Rescale
+                        with out_matrix_mean = mean(out_matrix):
+                            with i = 0:
+                                while i < v_size:
+                                    if out_matrix[i] == 2^63:
+                                        out_matrix[i] = out_matrix_mean
+                                    i += 1                        
+                        scaled_reports = dot(out_matrix, inv_span)
 
                 # use existing data and reputations to fill missing observations
                 # (weighted average over all non-missing data)
@@ -178,7 +202,7 @@ def interpolate(votes:a, reputation:a):
                                         return(retval, two_v_size)
 
 # funid: 1
-def center(votes_filled:a, votes_mask:a, reputation:a):
+def center(votes_filled:a, votes_mask:a, reputation:a, scaled:a, scaled_max:a, scaled_min:a):
     with num_voters = len(reputation):
         with v_size = len(votes_filled):
             with num_events = v_size / num_voters:
