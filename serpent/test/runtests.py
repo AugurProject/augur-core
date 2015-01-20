@@ -362,23 +362,10 @@ def main():
     print BR("Forming new test genesis block")
     s = t.state()
     contracts = [
-        # "sum",
-        # "mean",
-        # "normalize",
-        # "dot",
-        # "outer",
-        # "multiply",
-        # "kron",
-        # "hadamard",
-        # "transpose",
-        # "diag",
-        # "isnan",
-        # "mask",
-        # "any",
-        # "catch",
-        # "get_weight",
-        # "interpolate",
-        # "fixedpoint",
+        "sum",
+        "mean",
+        "catch",
+        "get_weight",
         "../consensus",
         # "../consensus-readable", 
     ]
