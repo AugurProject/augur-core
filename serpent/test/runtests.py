@@ -46,8 +46,8 @@ init()
 #                     [-1, -1,  1,  1 ]])
 # reputation = [1, 1, 1, 1, 1, 1]
 
-num_voters = 66
-num_events = 66
+num_voters = 25
+num_events = 25
 reports = np.random.randint(-1, 2, (num_voters, num_events))
 reputation = np.random.randint(1, 100, num_voters)
 
@@ -67,6 +67,11 @@ for i in range(num_events):
         scaled_min[i] = np.random.randint(0, scaled_max[i])
 scaled_max = scaled_max.astype(int).tolist()
 scaled_min = scaled_min.astype(int).tolist()
+# print(pd.DataFrame({
+#     "scaled": scaled,
+#     "min": scaled_min,
+#     "max": scaled_max,
+# }))
 
 def BR(string): # bright red
     return "\033[1;31m" + str(string) + "\033[0m"
@@ -147,11 +152,6 @@ def test_contract(contract):
 
         # tx 1: interpolate()
         print("interpolate")
-        # print(pd.DataFrame({
-        #     "scaled": scaled,
-        #     "min": scaled_min,
-        #     "max": scaled_max,
-        # }))
         result = s.send(t.k0, c, 0,
                         funid=0,
                         abi=[reports_fixed,
@@ -159,7 +159,11 @@ def test_contract(contract):
                              scaled,
                              scaled_max,
                              scaled_min])
-
+        # print(pd.DataFrame({
+        #     'result': result,
+        #     'base 16': map(hex, result),
+        #     'base 2^64': map(unfix, result),
+        # }))
         result = np.array(result)
         votes_filled = result[0:v_size].tolist()
         votes_mask = result[v_size:(2*v_size)].tolist()

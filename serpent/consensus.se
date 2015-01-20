@@ -111,13 +111,21 @@ def interpolate(votes:a, reputation:a, scaled:a, scaled_max:a, scaled_min:a):
                                 i += 1
 
                         # Rescale
-                        with out_matrix_mean = mean(out_matrix):
+                        with out_matrix_mean = mean(out_matrix, v_size):
                             with i = 0:
                                 while i < v_size:
                                     if out_matrix[i] == 2^63:
                                         out_matrix[i] = out_matrix_mean
-                                    i += 1                        
-                        scaled_reports = dot(out_matrix, inv_span)
+                                    i += 1
+                        with scaled_reports = array(v_size):
+                            with j = 0:
+                                while j < num_events:
+                                    with i = 0:
+                                        while i < num_voters:
+                                            with k = i*num_events + j:
+                                                scaled_reports[k] = fixed_multiply(out_matrix[k], inv_span[j])
+                                            i += 1
+                                    j += 1
 
                 # use existing data and reputations to fill missing observations
                 # (weighted average over all non-missing data)
