@@ -191,7 +191,7 @@ def test_contract(contract):
             'base 2^64': map(unfix, result),
         }))
 
-        sys.exit()
+        # sys.exit()
 
         result = np.array(result)
         votes_filled = result[0:v_size].tolist()
