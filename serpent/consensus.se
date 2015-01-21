@@ -124,7 +124,7 @@ def interpolate(votes:a, reputation:a, scaled:a, scaled_max:a, scaled_min:a):
                     with i = 0:
                         while i < num_events:
                             if scaled[i] == 1:
-                                inv_span[i] = 2^64 / (scaled_max[i] - scaled_min[i])
+                                inv_span[i] = fixed_divide(2^64, (scaled_max[i] - scaled_min[i]))
                             i += 1
 
                     # Recenter
@@ -150,6 +150,7 @@ def interpolate(votes:a, reputation:a, scaled:a, scaled_max:a, scaled_min:a):
                                                 scaled_reports[k] = fixed_multiply(out_matrix[k], inv_span[j])
                                             i += 1
                                     j += 1
+                            # return(scaled_reports, v_size)
 
                 # use existing data and reputations to fill missing observations
                 # (weighted average over all non-missing data)

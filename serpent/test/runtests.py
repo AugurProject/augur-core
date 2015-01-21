@@ -26,6 +26,7 @@ Questions?  Please contact jack@tinybike.net or joeykrug@gmail.com.
 
 """
 from __future__ import division
+import sys
 from pprint import pprint
 import numpy as np
 import pandas as pd
@@ -63,18 +64,13 @@ init()
 #                     [ -1, -1,  1,  1]])
 # reputation = [2, 10, 4, 2, 7, 1]
 
-# reports = np.array([[ 1,  1, -1, -1 ],
-#                     [ 1, -1, -1, -1 ],
-#                     [ 1,  1, -1, -1 ],
-#                     [ 1,  1,  1, -1 ],
-#                     [-1, -1,  1,  1 ],
-#                     [-1, -1,  1,  1 ]])
-# reputation = [1, 1, 1, 1, 1, 1]
-
-num_voters = 25
-num_events = 25
-reports = np.random.randint(-1, 2, (num_voters, num_events))
-reputation = np.random.randint(1, 100, num_voters)
+reports = np.array([[ 1,  1, -1, -1 ],
+                    [ 1, -1, -1, -1 ],
+                    [ 1,  1, -1, -1 ],
+                    [ 1,  1,  1, -1 ],
+                    [-1, -1,  1,  1 ],
+                    [-1, -1,  1,  1 ]])
+reputation = [1, 1, 1, 1, 1, 1]
 
 # pyconsensus bounds format:
 #     event_bounds = [
@@ -83,20 +79,23 @@ reputation = np.random.randint(1, 100, num_voters)
 #         {"scaled": False, "min": 0, "max": 1},
 #         {"scaled": False, "min": 0, "max": 1},
 #     ]
-scaled = np.random.randint(0, 2, num_events).tolist()
-scaled_max = np.ones(num_events)
-scaled_min = np.zeros(num_events)
-for i in range(num_events):
-    if scaled[i]:
-        scaled_max[i] = np.random.randint(1, 100)
-        scaled_min[i] = np.random.randint(0, scaled_max[i])
-scaled_max = scaled_max.astype(int).tolist()
-scaled_min = scaled_min.astype(int).tolist()
-# print(pd.DataFrame({
-#     "scaled": scaled,
-#     "min": scaled_min,
-#     "max": scaled_max,
-# }))
+scaled = [1, 1, 0, 0]
+scaled_max = [0.5, 0.7, 1, 1]
+scaled_min = [0.1, 0.2, 0, 0]
+
+# num_voters = 25
+# num_events = 25
+# reports = np.random.randint(-1, 2, (num_voters, num_events))
+# reputation = np.random.randint(1, 100, num_voters)
+# scaled = np.random.randint(0, 2, num_events).tolist()
+# scaled_max = np.ones(num_events)
+# scaled_min = np.zeros(num_events)
+# for i in range(num_events):
+#     if scaled[i]:
+#         scaled_max[i] = np.random.randint(1, 100)
+#         scaled_min[i] = np.random.randint(0, scaled_max[i])
+# scaled_max = scaled_max.astype(int).tolist()
+# scaled_min = scaled_min.astype(int).tolist()
 
 def BR(string): # bright red
     return "\033[1;31m" + str(string) + "\033[0m"
@@ -174,6 +173,8 @@ def test_contract(contract):
 
         reputation_fixed = map(fix, reputation)
         reports_fixed = map(fix, reports.flatten())
+        scaled_max_fixed = map(fix, scaled_max)
+        scaled_min_fixed = map(fix, scaled_min)
 
         # tx 1: interpolate()
         print("interpolate")
@@ -182,13 +183,16 @@ def test_contract(contract):
                         abi=[reports_fixed,
                              reputation_fixed,
                              scaled,
-                             scaled_max,
-                             scaled_min])
-        # print(pd.DataFrame({
-        #     'result': result,
-        #     'base 16': map(hex, result),
-        #     'base 2^64': map(unfix, result),
-        # }))
+                             scaled_max_fixed,
+                             scaled_min_fixed])
+        print(pd.DataFrame({
+            'result': result,
+            'base 16': map(hex, result),
+            'base 2^64': map(unfix, result),
+        }))
+
+        sys.exit()
+
         result = np.array(result)
         votes_filled = result[0:v_size].tolist()
         votes_mask = result[v_size:(2*v_size)].tolist()
@@ -202,8 +206,8 @@ def test_contract(contract):
                                              votes_mask,
                                              reputation_fixed,
                                              scaled,
-                                             scaled_max,
-                                             scaled_min])
+                                             scaled_max_fixed,
+                                             scaled_min_fixed])
         s = t.state()
         c = s.contract(filename)
 
