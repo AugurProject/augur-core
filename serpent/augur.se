@@ -27,7 +27,7 @@ MARKET = 2
 # Instead of putting it in each entity, we put all the
 # metadata here.
 # Info's index is the hash of the item we're getting info on
-data Info[](typecode, description[], creator, creationFee)
+data Info[](typecode, description[2048], descriptionLength, creator, creationFee)
 
 # CurrentVotePeriod is the current index in eventsExpDates
 # Branches' index is the hash of the branch (aka branchID)
@@ -130,18 +130,18 @@ def get_rep_balance(branch, address):
 def make_subbranch(description:s, periodLength, parent, repRequired):
 	if(periodLength<=0 or !self.Branches[parent].periodLength or !repRequired or description==0):
 		return(0)
-	branchCharacteristics = array(7)
-	branchCharacteristics[0] = BRANCH
-	branchCharacteristics[1] = tx.origin
-	branchCharacteristics[2] = 47*2^64
-	branchCharacteristics[3] = periodLength
-	branchCharacteristics[4] = block.number
-	branchCharacteristics[5] = parent
-	branchCharacteristics[6] = repRequired
-
+	branchCharacteristics = array(8)
+	branchCharacteristics[0] = BRANCH                                      #typecode
+	branchCharacteristics[1] = tx.origin                                   #creator address
+	branchCharacteristics[2] = 47*2^64                                     #creation fee
+	branchCharacteristics[3] = periodLength                                #length of voting cycle
+	branchCharacteristics[4] = block.number                                #current block number
+	branchCharacteristics[5] = parent                                      #branchID of parent branch
+	branchCharacteristics[6] = repRequired                                 #minimum rep required to vote
+	branchCharacteristics[7] = sha256(description, chars=len(description)) #sha256 of description
 	# people can check that these characteristics hash to the ID if they want
 	# people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
-	branchID = sha256(branchCharacteristics, 7)
+	branchID = sha256(branchCharacteristics, 8)
 	if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator and self.send_cashcoin(branchID, 47*2^64)):
 		self.Info[branchID].typecode = BRANCH
 		self.Info[branchID].description[] = description
@@ -162,7 +162,7 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
 		
 def create_event(branch, description:s, expDate, minValue, maxValue):
 	if(self.Branches[branch].periodLength and description!=0 and expDate>block.number):
-		eventCharacteristics = array(7)
+		eventCharacteristics = array(8)
 		eventCharacteristics[0] = EVENT
 		eventCharacteristics[1] = branch
 		eventCharacteristics[2] = expDate
@@ -170,7 +170,8 @@ def create_event(branch, description:s, expDate, minValue, maxValue):
 		eventCharacteristics[4] = 42*2^64
 		eventCharacteristics[5] = minValue
 		eventCharacteristics[6] = maxValue
-		eventID = sha256(eventCharacteristics, 7)
+		eventCharacteristics[7] = sha256(description, chars=len(description))
+		eventID = sha256(eventCharacteristics, 8)
 	else:
 		return(0)
 
@@ -215,7 +216,7 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 	if(numEvents > 200 or !self.Branches[branch].periodLength or description==0 or !lossLimit or !tradingFee or (!alpha and !lossLimit)):
 		return(0)
 	# formation of marketID (hash)
-	marketCharacteristics = array(9)
+	marketCharacteristics = array(10)
 	marketCharacteristics[0] = MARKET
 	marketCharacteristics[1] = tx.origin
 	marketCharacteristics[2] = initialLiquidity
@@ -225,7 +226,8 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 	marketCharacteristics[6] = lossLimit
 	marketCharacteristics[7] = tradingFee
 	marketCharacteristics[8] = alpha
-	marketID = sha256(marketCharacteristics, 9)
+	marketCharacteristics[9] = sha256(description, chars=len(description))
+	marketID = sha256(marketCharacteristics, 10)
 
 	# if regular lmsr
 	if(losslimit):
