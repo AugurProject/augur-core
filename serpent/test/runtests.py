@@ -76,9 +76,12 @@ reputation = [1, 1, 1, 1, 1, 1]
 #         {"scaled": False, "min": 0, "max": 1},
 #         {"scaled": False, "min": 0, "max": 1},
 #     ]
-scaled = [1, 1, 0, 0]
-scaled_max = [0.5, 0.7, 1, 1]
-scaled_min = [0.1, 0.2, 0, 0]
+# scaled = [1, 1, 0, 0]
+# scaled_max = [0.5, 0.7, 1, 1]
+# scaled_min = [0.1, 0.2, 0, 0]
+scaled = [0, 0, 0, 0]
+scaled_max = [1, 1, 1, 1]
+scaled_min = [0, 0, 0, 0]
 
 # num_voters = 25
 # num_events = 25
