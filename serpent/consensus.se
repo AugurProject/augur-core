@@ -397,31 +397,25 @@ def pca(weighted_centered_data:a, reputation:a, num_voters, num_events, max_iter
 def calibrate_sets(scores:a, num_voters, num_events):
     # Which of the two possible 'new' reputation vectors had more opinion in common
     # with the original 'old' reputation?
-    with set1 = array(num_voters):
-        with set2 = array(num_voters):
-            with i = 0:
-                while i < num_voters:
-                    set1[i] = scores[i] + abs(minimum(scores, num_voters))
-                    set2[i] = scores[i] - maximum(scores, num_voters)
-                    i += 1
-
-            # set1: [0, num_voters - 1]
-            # set2: [num_voters, 2*num_voters - 1]
-            with two_num_voters = 2*num_voters:
-                with retval = array(two_num_voters):
+    # set1: [0, num_voters - 1]
+    # set2: [num_voters, 2*num_voters - 1]
+    with two_num_voters = 2*num_voters:
+        with sets = array(two_num_voters):
+            with set1_compare = abs(minimum(scores, num_voters)):
+                with set2_compare = maximum(scores, num_voters):
                     with i = 0:
                         while i < num_voters:
-                            retval[i] = set1[i]
+                            sets[i] = scores[i] + set1_compare
                             i += 1
                         while i < two_num_voters:
-                            retval[i] = set2[i - num_voters]
+                            sets[i] = scores[i - num_voters] - set2_compare
                             i += 1
-                        return(retval, two_num_voters)
+                        return(sets, two_num_voters)
 
 # funid: 7
 def calibrate_wsets(set1:a, set2:a, reputation:a, votes_filled:a, num_voters, num_events):
     with three_num_events = 3*num_events:
-        with retval = array(three_num_events):
+        with wsets = array(three_num_events):
             with wset1 = get_weight(set1, num_voters):
                 with wset2 = get_weight(set2, num_voters):
                     with i = 0:
@@ -430,12 +424,12 @@ def calibrate_wsets(set1:a, set2:a, reputation:a, votes_filled:a, num_voters, nu
                                 with k = 0:
                                     while k < num_voters:
                                         with pos = k*num_events + i:
-                                            retval[i] += fixed_multiply(reputation[k], votes_filled[pos])
-                                            retval[i + num_events] += fixed_multiply(wset1[k], votes_filled[pos])
-                                            retval[i + two_num_events] += fixed_multiply(wset2[k], votes_filled[pos])
+                                            wsets[i] += fixed_multiply(reputation[k], votes_filled[pos])
+                                            wsets[i + num_events] += fixed_multiply(wset1[k], votes_filled[pos])
+                                            wsets[i + two_num_events] += fixed_multiply(wset2[k], votes_filled[pos])
                                         k += 1
                                 i += 1
-                            return(retval, three_num_events)
+                            return(wsets, three_num_events)
 
 # funid: 8
 def pca_adjust(old:a, new1:a, new2:a, set1:a, set2:a, scores:a, num_voters, num_events):
@@ -489,41 +483,42 @@ def smooth(adj_prin_comp:a, reputation:a, num_voters, num_events):
 
 # funid: 10
 def consensus(smooth_rep:a, reputation:a, votes_filled:a, num_voters, num_events):
-    with outcomes_final = array(num_events):
-        with outcomes_raw = array(num_events):
-            with i = 0:
-                while i < num_events:
-                    with k = 0:
-                        while k < num_voters:
-                            outcomes_raw[i] += fixed_multiply(smooth_rep[k], votes_filled[k*num_events + i])
-                            k += 1
-                        outcomes_final[i] = catch(outcomes_raw[i])
-                        i += 1
-
-            # Smoothing function travels from 0 to 1 with a minimum at .5
-            with certainty = array(num_events):
+    # outcomes_final: [0, num_events - 1]
+    # consensus_reward: [num_events, 2*num_events - 1]
+    with two_num_events = 2*num_events:
+        with consensus_outcomes = array(two_num_events):
+            with outcomes_raw = array(num_events):
                 with i = 0:
                     while i < num_events:
-                        with j = 0:
-                            while j < num_voters:
-                                if votes_filled[j*num_events + i] == outcomes_final[i]:
-                                    certainty[i] += smooth_rep[j]
-                                j += 1
-                        i += 1
-                with consensus_reward = get_weight(certainty, num_events):
+                        with k = 0:
+                            while k < num_voters:
+                                outcomes_raw[i] += fixed_multiply(smooth_rep[k], votes_filled[k*num_events + i])
+                                k += 1
+                            consensus_outcomes[i] = catch(outcomes_raw[i])
+                            i += 1
 
-                    # outcomes_final: [0, num_events - 1]
-                    # consensus_reward: [num_events, 2*num_events - 1]
-                    with two_num_events = 2*num_events:
-                        with retval = array(two_num_events):
-                            with i = 0:
-                                while i < num_events:
-                                    retval[i] = outcomes_final[i]
-                                    i += 1
-                                while i < two_num_events:
-                                    retval[i] = consensus_reward[i - num_events]
-                                    i += 1
-                                return(retval, two_num_events)
+                # Smoothing function travels from 0 to 1 with a minimum at .5
+                with certainty = array(num_events):
+                    with i = 0:
+                        while i < num_events:
+                            with j = 0:
+                                while j < num_voters:
+                                    if votes_filled[j*num_events + i] == consensus_outcomes[i]:
+                                        certainty[i] += smooth_rep[j]
+                                    j += 1
+                            i += 1
+
+                    with total = 0:
+                        with i = 0:
+                            while i < num_events:
+                                certainty[i] = abs(certainty[i])
+                                total += certainty[i]
+                                i += 1
+                        with i = 0:
+                            while i < num_events:
+                                consensus_outcomes[i + num_events] = certainty[i] * 2^64 / total
+                                i += 1
+                            return(consensus_outcomes, two_num_events)
 
 def participation(outcomes_final:a, consensus_reward:a, smooth_rep:a, votes_mask:a, num_voters, num_events):
 

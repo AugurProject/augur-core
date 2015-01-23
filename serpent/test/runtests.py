@@ -175,8 +175,7 @@ def test_contract(contract):
 
         # tx 1: interpolate()
         print("interpolate")
-        result = s.send(t.k0, c, 0,
-                        funid=0,
+        result = s.send(t.k0, c, 0, funid=0,
                         abi=[reports_fixed,
                              reputation_fixed,
                              scaled,
@@ -194,8 +193,7 @@ def test_contract(contract):
 
         # tx 2: center()
         print("center")
-        weighted_centered_data = s.send(t.k0, c, 0,
-                                        funid=1,
+        weighted_centered_data = s.send(t.k0, c, 0, funid=1,
                                         abi=[votes_filled,
                                              reputation_fixed,
                                              scaled,
@@ -207,15 +205,13 @@ def test_contract(contract):
         # multistep pca
         # pca_init()
         print("pca: loadings")
-        loading_vector = s.send(t.k0, c, 0,
-                                funid=2,
+        loading_vector = s.send(t.k0, c, 0, funid=2,
                                 abi=[num_events,
                                      max_iterations])
 
         # pca_loadings()
         while (loading_vector[num_events] > 0):
-            loading_vector = s.send(t.k0, c, 0,
-                                    funid=3,
+            loading_vector = s.send(t.k0, c, 0, funid=3,
                                     abi=[loading_vector,
                                          weighted_centered_data,
                                          reputation_fixed,
@@ -224,8 +220,7 @@ def test_contract(contract):
 
         # pca_scores()
         print("pca: scores")
-        scores = s.send(t.k0, c, 0,
-                        funid=4,
+        scores = s.send(t.k0, c, 0, funid=4,
                         abi=[loading_vector,
                              weighted_centered_data,
                              num_voters,
@@ -235,8 +230,12 @@ def test_contract(contract):
         c = s.contract(filename)
 
         print("calibrate_sets")
-        result = s.send(t.k0, c, 0,
-                        funid=6,
+        # print(s.profile(t.k0, c, 0,
+        #           funid=6,
+        #           abi=[scores,
+        #                num_voters,
+        #                num_events]))
+        result = s.send(t.k0, c, 0, funid=6,
                         abi=[scores,
                              num_voters,
                              num_events])
@@ -248,8 +247,7 @@ def test_contract(contract):
         del result
 
         print("calibrate_wsets")
-        result = s.send(t.k0, c, 0,
-                        funid=7,
+        result = s.send(t.k0, c, 0, funid=7,
                         abi=[set1,
                              set2,
                              reputation_fixed,
@@ -265,8 +263,7 @@ def test_contract(contract):
         del result
 
         print("pca_adjust")
-        adj_prin_comp = s.send(t.k0, c, 0,
-                               funid=8,
+        adj_prin_comp = s.send(t.k0, c, 0, funid=8,
                                abi=[old,
                                     new1,
                                     new2,
@@ -277,16 +274,14 @@ def test_contract(contract):
                                     num_events])
 
         print("smooth")
-        smooth_rep = s.send(t.k0, c, 0,
-                            funid=9,
+        smooth_rep = s.send(t.k0, c, 0, funid=9,
                             abi=[adj_prin_comp,
                                  reputation_fixed,
                                  num_voters,
                                  num_events])
 
         print("consensus")
-        result = s.send(t.k0, c, 0,
-                        funid=10,
+        result = s.send(t.k0, c, 0, funid=10,
                         abi=[smooth_rep,
                              reputation_fixed,
                              votes_filled,
