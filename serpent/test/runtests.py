@@ -61,12 +61,19 @@ init()
 #                     [ -1, -1,  1,  1]])
 # reputation = [2, 10, 4, 2, 7, 1]
 
-reports = np.array([[ 1,  1, -1, -1 ],
-                    [ 1, -1, -1, -1 ],
-                    [ 1,  1, -1, -1 ],
-                    [ 1,  1,  1, -1 ],
-                    [-1, -1,  1,  1 ],
-                    [-1, -1,  1,  1 ]])
+# reports = np.array([[ 1,  1, -1, -1 ],
+#                     [ 1, -1, -1, -1 ],
+#                     [ 1,  1, -1, -1 ],
+#                     [ 1,  1,  1, -1 ],
+#                     [-1, -1,  1,  1 ],
+#                     [-1, -1,  1,  1 ]])
+
+reports = np.array([[ 1,  1, -1, -1, 233, 16027.59],
+                    [ 1, -1, -1, -1, 199,     0.  ],
+                    [ 1,  1, -1, -1, 233, 16027.59],
+                    [ 1,  1,  1, -1, 250,     0.  ],
+                    [-1, -1,  1,  1, 435,  8001.00],
+                    [-1, -1,  1,  1, 435, 19999.00]])
 reputation = [1, 1, 1, 1, 1, 1]
 
 # pyconsensus bounds format:
@@ -76,12 +83,15 @@ reputation = [1, 1, 1, 1, 1, 1]
 #         {"scaled": False, "min": 0, "max": 1},
 #         {"scaled": False, "min": 0, "max": 1},
 #     ]
+scaled = [0, 0, 0, 0, 1, 1]
+scaled_max = [1, 1, 1, 1, 435, 20000]
+scaled_min = [-1, -1, -1, -1, 0, 8000]
 # scaled = [1, 1, 0, 0]
 # scaled_max = [0.5, 0.7, 1, 1]
 # scaled_min = [0.1, 0.2, 0, 0]
-scaled = [0, 0, 0, 0]
-scaled_max = [1, 1, 1, 1]
-scaled_min = [0, 0, 0, 0]
+# scaled = [0, 0, 0, 0]
+# scaled_max = [1, 1, 1, 1]
+# scaled_min = [0, 0, 0, 0]
 
 # num_voters = 25
 # num_events = 25
@@ -89,7 +99,7 @@ scaled_min = [0, 0, 0, 0]
 # reputation = np.random.randint(1, 100, num_voters)
 # scaled = np.random.randint(0, 2, num_events).tolist()
 # scaled_max = np.ones(num_events)
-# scaled_min = np.zeros(num_events)
+# scaled_min = -np.ones(num_events)
 # for i in range(num_events):
 #     if scaled[i]:
 #         scaled_max[i] = np.random.randint(1, 100)
@@ -184,11 +194,12 @@ def test_contract(contract):
                              scaled,
                              scaled_max_fixed,
                              scaled_min_fixed])
-        print(pd.DataFrame({
-            'result': result,
-            'base 16': map(hex, result),
-            'base 2^64': map(unfix, result),
-        }))
+        # print(pd.DataFrame({
+        #     'result': result,
+        #     'base 16': map(hex, result),
+        #     'base 2^64': map(unfix, result),
+        # }))
+        # import pdb; pdb.set_trace()
         result = np.array(result)
         votes_filled = result[0:v_size].tolist()
         votes_mask = result[v_size:(2*v_size)].tolist()
