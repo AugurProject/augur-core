@@ -37,14 +37,11 @@ except ImportError:
 from pyethereum import tester as t
 
 np.set_printoptions(linewidth=500)
-                    # precision=5,
-                    # suppress=True,
-                    # formatter={"float": "{: 0.3f}".format})
 pd.set_option("display.max_rows", 25)
 pd.set_option("display.width", 1000)
 pd.set_option('display.float_format', lambda x: '%.8f' % x)
 
-# max_iterations + x = number of blocks required to complete consensus
+# max_iterations: number of blocks required to complete PCA
 max_iterations = 4
 tolerance = 1e-12
 init()
@@ -190,9 +187,6 @@ def test_contract(contract):
             'base 16': map(hex, result),
             'base 2^64': map(unfix, result),
         }))
-
-        # sys.exit()
-
         result = np.array(result)
         votes_filled = result[0:v_size].tolist()
         votes_mask = result[v_size:(2*v_size)].tolist()
@@ -203,7 +197,6 @@ def test_contract(contract):
         weighted_centered_data = s.send(t.k0, c, 0,
                                         funid=1,
                                         abi=[votes_filled,
-                                             votes_mask,
                                              reputation_fixed,
                                              scaled,
                                              scaled_max_fixed,
@@ -212,8 +205,6 @@ def test_contract(contract):
         c = s.contract(filename)
 
         # multistep pca
-        # note: pca_init() is small and can always be combined with the first
-        #       pca_loadings() iteration
         # pca_init()
         print("pca: loadings")
         loading_vector = s.send(t.k0, c, 0,
@@ -221,7 +212,7 @@ def test_contract(contract):
                                 abi=[num_events,
                                      max_iterations])
 
-        # tx 3 to (3+max_iterations): pca_loadings()
+        # pca_loadings()
         while (loading_vector[num_events] > 0):
             loading_vector = s.send(t.k0, c, 0,
                                     funid=3,
@@ -231,7 +222,7 @@ def test_contract(contract):
                                          num_voters,
                                          num_events])
 
-        # tx 4+max_iterations: pca_scores()
+        # pca_scores()
         print("pca: scores")
         scores = s.send(t.k0, c, 0,
                         funid=4,
@@ -239,15 +230,6 @@ def test_contract(contract):
                              weighted_centered_data,
                              num_voters,
                              num_events])
-
-        # pca() (monolithic)
-        # scores = s.send(t.k0, c, 0,
-        #                 funid=5,
-        #                 abi=[weighted_centered_data,
-        #                      reputation_fixed,
-        #                      num_voters,
-        #                      num_events,
-        #                      max_iterations])
 
         s = t.state()
         c = s.contract(filename)
@@ -258,7 +240,6 @@ def test_contract(contract):
                         abi=[scores,
                              num_voters,
                              num_events])
-
         result = np.array(result)
         set1 = result[0:num_voters].tolist()
         set2 = result[num_voters:(2*num_voters)].tolist()
@@ -275,14 +256,12 @@ def test_contract(contract):
                              votes_filled,
                              num_voters,
                              num_events])
-
         result = np.array(result)
-        old = result[0:v_size].tolist()
-        new1 = result[v_size:(2*v_size)].tolist()
-        new2 = result[(2*v_size):(3*v_size)].tolist()
+        old = result[0:num_events].tolist()
+        new1 = result[num_events:(2*num_events)].tolist()
+        new2 = result[(2*num_events):(3*num_events)].tolist()
         assert(len(result) == 3*num_events)
-        # print len(old), len(new1), len(new2)
-        # assert(len(old) == len(new1) == len(new2))
+        assert(len(old) == len(new1) == len(new2))
         del result
 
         print("pca_adjust")
@@ -313,7 +292,6 @@ def test_contract(contract):
                              votes_filled,
                              num_voters,
                              num_events])
-
         result = np.array(result)
         outcomes_final = result[0:num_events].tolist()
         consensus_reward = result[num_events:(2*num_events)].tolist()
@@ -329,7 +307,6 @@ def test_contract(contract):
                              votes_mask,
                              num_voters,
                              num_events])
-
         print(pd.DataFrame({
             'result': result,
             'base 16': map(hex, result),
@@ -366,10 +343,10 @@ def main():
     print BR("Forming new test genesis block")
     s = t.state()
     contracts = [
-        "sum",
-        "mean",
-        "catch",
-        "get_weight",
+        # "sum",
+        # "mean",
+        # "catch",
+        # "get_weight",
         "../consensus",
         # "../consensus-readable", 
     ]

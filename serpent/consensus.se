@@ -231,11 +231,10 @@ def interpolate(votes:a, reputation:a, scaled:a, scaled_max:a, scaled_min:a):
                                         while i < two_v_size:
                                             retval[i] = votes_mask[i - v_size]
                                             i += 1
-                                        log(tx.gas)
                                         return(retval, two_v_size)
 
 # funid: 1
-def center(votes_filled:a, votes_mask:a, reputation:a, scaled:a, scaled_max:a, scaled_min:a):
+def center(votes_filled:a, reputation:a, scaled:a, scaled_max:a, scaled_min:a):
     with num_voters = len(reputation):
         with v_size = len(votes_filled):
             with num_events = v_size / num_voters:
@@ -260,7 +259,6 @@ def center(votes_filled:a, votes_mask:a, reputation:a, scaled:a, scaled_max:a, s
                                     while i < v_size:
                                         weighted_centered_data[i] = votes_filled[i] - weighted_means[i % num_events]
                                         i += 1
-                                    log(tx.gas)
                                     return(weighted_centered_data, v_size)
 
 # funid: 2
@@ -270,7 +268,6 @@ def pca_init(num_events, max_iterations):
         with loading_vector = array(lv_size):
             loading_vector[0] = 2^64
             loading_vector[num_events] = max_iterations
-            log(tx.gas)
             return(loading_vector, lv_size)
 
 # funid: 3
@@ -320,7 +317,6 @@ def pca_loadings(loading_vector:a, weighted_centered_data:a, reputation:a, num_v
                                 loading_vector[j] = s[j]*ONE/norm_s
                                 j += 1
                 loading_vector[num_events] -= 1
-                log(tx.gas)
                 return(loading_vector, lv_size)
 
 # funid: 4
@@ -333,7 +329,6 @@ def pca_scores(loading_vector:a, weighted_centered_data:a, num_voters, num_event
                         scores[i] += fixed_multiply(weighted_centered_data[i*num_events + k], loading_vector[k])
                         k += 1
                 i += 1
-            log(tx.gas)
             return(scores, num_voters)
 
 # funid: 5
@@ -396,7 +391,6 @@ def pca(weighted_centered_data:a, reputation:a, num_voters, num_events, max_iter
                                 scores[i] += fixed_multiply(weighted_centered_data[i*num_events + k], loading_vector[k])
                                 k += 1
                         i += 1
-                log(tx.gas)
                 return(scores, num_voters)
 
 # funid: 6
@@ -422,7 +416,6 @@ def calibrate_sets(scores:a, num_voters, num_events):
                         while i < two_num_voters:
                             retval[i] = set2[i - num_voters]
                             i += 1
-                        log(tx.gas)
                         return(retval, two_num_voters)
 
 # funid: 7
@@ -442,7 +435,6 @@ def calibrate_wsets(set1:a, set2:a, reputation:a, votes_filled:a, num_voters, nu
                                             retval[i + two_num_events] += fixed_multiply(wset2[k], votes_filled[pos])
                                         k += 1
                                 i += 1
-                            log(tx.gas)
                             return(retval, three_num_events)
 
 # funid: 8
@@ -462,7 +454,6 @@ def pca_adjust(old:a, new1:a, new2:a, set1:a, set2:a, scores:a, num_voters, num_
                         adj_prin_comp = set1
                     else:
                         adj_prin_comp = set2
-                    log(tx.gas)
                     return(adj_prin_comp, num_voters)
 
 # funid: 9
@@ -494,8 +485,6 @@ def smooth(adj_prin_comp:a, reputation:a, num_voters, num_events):
                         while i < num_voters:
                             smooth_rep[i] = row_reward_weighted[i]/10 + rep_weights[i]*9/10
                             i += 1
-
-                    log(tx.gas)
                     return(smooth_rep, num_voters)
 
 # funid: 10
@@ -534,7 +523,6 @@ def consensus(smooth_rep:a, reputation:a, votes_filled:a, num_voters, num_events
                                 while i < two_num_events:
                                     retval[i] = consensus_reward[i - num_events]
                                     i += 1
-                                log(tx.gas)
                                 return(retval, two_num_events)
 
 def participation(outcomes_final:a, consensus_reward:a, smooth_rep:a, votes_mask:a, num_voters, num_events):
@@ -598,8 +586,5 @@ def participation(outcomes_final:a, consensus_reward:a, smooth_rep:a, votes_mask
                                         while i < num_voters:
                                             retval[2*num_events + i] = voter_bonus[i]
                                             i += 1
-                                        retval[2*num_events + num_voters] = 10^6
-                                        retval[2*num_events + num_voters + 1] = tx.gas
-                                        log(tx.gas)
-                                        return(retval, 2*num_events + num_voters + 2)
+                                        return(retval, 2*num_events + num_voters)
 
