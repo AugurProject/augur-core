@@ -470,7 +470,7 @@ def smooth(adj_prin_comp:arr, reputation:arr, num_reports, num_events):
                     return(smooth_rep, num_reports)
 
 # funid: 10
-def consensus(smooth_rep:arr, reputation:arr, reports_filled:a, num_reports, num_events):
+def consensus(smooth_rep:arr, reputation:arr, reports_filled:arr, num_reports, num_events):
     # outcomes_final: [0, num_events - 1]
     # consensus_reward: [num_events, 2*num_events - 1]
     with two_num_events = 2*num_events:
