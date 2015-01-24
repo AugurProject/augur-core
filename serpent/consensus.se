@@ -109,7 +109,7 @@ macro fixed_divide($x, $y):
     $x * 2^64 / $y
 
 # funid: 0
-def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
+def interpolate(reports:a, reputation:a, scaled:a, scaled_max:a, scaled_min:a):
     # ONE = 2^64
     # TRUE = ONE
     # FALSE = -ONE
@@ -224,7 +224,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                             return(reports_interp, two_flatsize)
 
 # funid: 1
-def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
+def center(reports_filled:a, reputation:a, scaled:a, scaled_max:a, scaled_min:a):
     with num_reports = len(reputation):
         with flatsize = len(reports_filled):
             with num_events = flatsize / num_reports:
@@ -261,7 +261,7 @@ def pca_init(num_events, max_iterations):
             return(loading_vector, lflatsize)
 
 # funid: 3
-def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr, num_reports, num_events):
+def pca_loadings(loading_vector:a, weighted_centered_data:a, reputation:a, num_reports, num_events):
     with ONE = 2^64:
         with lflatsize = len(loading_vector):
             with s = array(num_events):
@@ -310,7 +310,7 @@ def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr,
                 return(loading_vector, lflatsize)
 
 # funid: 4
-def pca_scores(loading_vector:arr, weighted_centered_data:arr, num_reports, num_events):
+def pca_scores(loading_vector:a, weighted_centered_data:a, num_reports, num_events):
     with scores = array(num_reports):
         with i = 0:
             while i < num_reports:
@@ -322,7 +322,7 @@ def pca_scores(loading_vector:arr, weighted_centered_data:arr, num_reports, num_
             return(scores, num_reports)
 
 # funid: 5
-def pca(weighted_centered_data:arr, reputation:arr, num_reports, num_events, max_iterations):
+def pca(weighted_centered_data:a, reputation:a, num_reports, num_events, max_iterations):
     # initialize the loading vector
     with loading_vector = array(num_events):
         loading_vector[0] = 2^64
@@ -382,7 +382,7 @@ def pca(weighted_centered_data:arr, reputation:arr, num_reports, num_events, max
             return(scores, num_reports)
 
 # funid: 6
-def calibrate_sets(scores:arr, num_reports, num_events):
+def calibrate_sets(scores:a, num_reports, num_events):
     # Which of the two possible 'new' reputation vectors had more opinion in common
     # with the original 'old' reputation?
     # set1: [0, num_reports - 1]
@@ -401,7 +401,7 @@ def calibrate_sets(scores:arr, num_reports, num_events):
                         return(sets, two_num_reports)
 
 # funid: 7
-def calibrate_wsets(set1:arr, set2:arr, reputation:arr, reports_filled:arr, num_reports, num_events):
+def calibrate_wsets(set1:a, set2:a, reputation:a, reports_filled:a, num_reports, num_events):
     with three_num_events = 3*num_events:
         with wsets = array(three_num_events):
             with wset1 = get_weight(set1, num_reports):
@@ -420,7 +420,7 @@ def calibrate_wsets(set1:arr, set2:arr, reputation:arr, reports_filled:arr, num_
                             return(wsets, three_num_events)
 
 # funid: 8
-def pca_adjust(old:arr, new1:arr, new2:arr, set1:arr, set2:arr, scores:arr, num_reports, num_events):
+def pca_adjust(old:a, new1:a, new2:a, set1:a, set2:a, scores:a, num_reports, num_events):
     # Difference in sum of squared errors. If > 0, then new1 had higher
     # errors (use new2); conversely if < 0, then use new1.
     with sse1 = 0:
@@ -439,7 +439,7 @@ def pca_adjust(old:arr, new1:arr, new2:arr, set1:arr, set2:arr, scores:arr, num_
                     return(adj_prin_comp, num_reports)
 
 # funid: 9
-def smooth(adj_prin_comp:arr, reputation:arr, num_reports, num_events):
+def smooth(adj_prin_comp:a, reputation:a, num_reports, num_events):
 
     # Diffuse towards previous reputation.
         with rep_weights = get_weight(reputation, num_reports):
@@ -470,7 +470,7 @@ def smooth(adj_prin_comp:arr, reputation:arr, num_reports, num_events):
                     return(smooth_rep, num_reports)
 
 # funid: 10
-def consensus(smooth_rep:arr, reputation:arr, reports_filled:arr, num_reports, num_events):
+def consensus(smooth_rep:a, reputation:a, reports_filled:a, num_reports, num_events):
     # outcomes_final: [0, num_events - 1]
     # consensus_reward: [num_events, 2*num_events - 1]
     with two_num_events = 2*num_events:
@@ -507,7 +507,7 @@ def consensus(smooth_rep:arr, reputation:arr, reports_filled:arr, num_reports, n
                                 i += 1
                             return(consensus_outcomes, two_num_events)
 
-def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, reports_mask:arr, num_reports, num_events):
+def participation(outcomes_final:a, consensus_reward:a, smooth_rep:a, reports_mask:a, num_reports, num_events):
 
         # Event participation (within columns): proportion of reputation
         # that answered each event
