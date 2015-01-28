@@ -329,7 +329,7 @@ macro lmsr($marketID):
 # ls-lmsr markets won't have much in fees in the branch, so the market creator will thus get a lot of fees himself hmmm...
 # is there a way to pool ls-lmsr fees separately?
 def buy_shares(branch, event, market, outcome, amount, fee):
-    if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee):
+    if (fee<self.Markets[market].tradingFee or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee or self.Events[event].outcome!=0):
         return(0)
     # pay one-fourth of trading fee to market creator via sending to market.creator
     # other half is stored in branchID cashcoin balance
@@ -412,7 +412,7 @@ def buy_shares(branch, event, market, outcome, amount, fee):
 # fee should be fixed point
 def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
     # When sell check that event hasn't expired
-    if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee or self.Markets[market].participants[participantNumber].participantID != tx.origin or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee):
+    if (self.Events[event].outcome!=0 or fee<self.Markets[market].tradingFee or self.Markets[market].participants[participantNumber].participantID != tx.origin or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee):
         return(0)
 
     # pay one-fourth of trading fee to market creator via sending to market.creator

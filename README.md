@@ -3,10 +3,13 @@ augur-serpent
 
 ### To do:
 	# test / fixup redeem close market and consensus in augur.se
-	# optimize consensus.se (martin & alan)
+	# optimize consensus.se (martin will help w/ this too!)
 	# Implement Version 0.2 (eta - feb?)
 	# abi_contract to js for calling js functions
 
+### Version 0.5 
+	# pay fee to just get a report / consensus
+	 # e.g. real world event consensus
 ### Version 0.4 (Awesome fun stuff):
 	# clean api interface
 	# secure multiparty computation to prevent attack vitalik brought up
@@ -50,36 +53,9 @@ augur-serpent
 	# add support for categorical and multidimensional events
 	# order by the dimensions
 	# allow settable trading fees
-	so categorical would just be a list of events, 1 dimension, states = numevents+1
-	multidimensional binary is just 1, event, 2, event, states = 2^k
-	can also have multidimensional w/ scalars
-	or a multidimensional with a binary and a scalar
-	multidimensional categorical
 	# salt hash vote mechanism
-	# fix strings
 	# .5 outcome needs to pay back money, and whoever provided liquidity gets 0 back
-
-### AMSR:
-	# events exhaustive partition - 1 has to happen (can actually add a new event while market is running - can't delete events)
-	# specify probabilities & how much money they're willing to lose (can increase $ want to lose, ability to change priors on events - separate vector of probabilities and market maker can just change them -- changes prior, not the actual market price) -- change prior during event.
-	# market maker if he sets bad odds people will arbitrage it and make him lose his money.
-	# market prices will equilibrate as well if there are two separate markets on the same thing.
-	# market makers make a ton of money
-	# ways to make money in system are:
-		# creating events, creating markets, reporting on their outcomes, holding rep due to market profit
-
-	Distance function:
-	# l1 (a function of the number of shares you purchase in the market)
-
-	Utility function:
-	# ln(x)
-
-	Liquidity function:
-	f(s) = .924*sqrt(s+132.3) - sqrt(132.3)
-
-	Profit function:
-	variable for g(s) profit cut should be adjustable from .25 - 5%
-	early stage parameter 1.10
-	g(s) = .01s
-
-	# event probabilities from pricing would be price per share - (excess fee / share)
+	# can people trade after a market is closed but before resolved? i think yes, need to make sure this is happening
+	# need to add audits
+	# allow people to buy -1 or 1 outcomes, not 0 b/c that's undetermined
+	# getters/api
