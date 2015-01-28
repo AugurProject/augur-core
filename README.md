@@ -3,11 +3,21 @@ augur-serpent
 
 ### To do:
 	# test / fixup redeem close market and consensus in augur.se
+	# optimize consensus.se (martin & alan)
 	# Implement Version 0.2 (eta - feb?)
+	# abi_contract to js for calling js functions
 
 ### Version 0.4 (Awesome fun stuff):
 	# clean api interface
 	# secure multiparty computation to prevent attack vitalik brought up
+		zack [4:42 PM] 
+		Faster alternative to SMPC:
+		Say there are 100 votecoin holders in a jury.
+		Each voter makes their encrypted vote, then they collect all the encrypted votes onto one big page.
+		Each voter make sure that their own vote is on the page.
+		Each voter signs the page. 
+		Each voter then creates an un-signed transaction that reveals their vote.
+		It would be impossible for a voter to prove how he voted (unless all 100 voted the same way). So the attacker wont know who to reward. (edited)
 	# record number of shares bought in USD at conversion rate of bitcoin in the UI to give accurate probabilities
 	# or just use seigniorage shares
 	# make code updatable 
@@ -21,7 +31,7 @@ augur-serpent
 	# search engine for contract data / events
 	# 4th Cumulant in consensus.se
 	# hash first frontrunning prevention mechanism
-
+	# high fees to check event outcome
 
 ### Version 0.3 (The Voting Upgrade):
 	# make sure this follows paul's whitepaper well
@@ -34,11 +44,20 @@ augur-serpent
 	# rapid rbcr anytime to vote i'm alive if <60% of people vote after a few cycles or something
 	# profit msr
 	# max number of owners in a branch of rep.
+	# people should choose markets based on lower trading fee, more liquidity, and most volume
 
 ### Version 0.2 (Markets Upgrades):
-	# add support for categorical and scalar and multidimensional events
+	# add support for categorical and multidimensional events
+	# order by the dimensions
+	# allow settable trading fees
+	so categorical would just be a list of events, 1 dimension, states = numevents+1
+	multidimensional binary is just 1, event, 2, event, states = 2^k
+	can also have multidimensional w/ scalars
+	or a multidimensional with a binary and a scalar
+	multidimensional categorical
 	# salt hash vote mechanism
 	# fix strings
+	# .5 outcome needs to pay back money, and whoever provided liquidity gets 0 back
 
 ### AMSR:
 	# events exhaustive partition - 1 has to happen (can actually add a new event while market is running - can't delete events)

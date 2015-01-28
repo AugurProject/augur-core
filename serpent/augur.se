@@ -58,7 +58,7 @@ data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, repo
    # ex: eventIndex*2 is outcome 0, eventIndex*2 + 1 is outcome one for each corresponding event 
    #    self.Markets[$marketID].sharesPurchased[$i*2]
    #    self.Markets[$marketID].sharesPurchased[$i*2 + 1]
-data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[])), lossLimit, tradingFee, numberEvents, currentParticipant, winningEvents[], alpha, probabilities[])
+data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[])), lossLimit, tradingFee, numberEvents, currentParticipant, winningEvents[], alpha, probabilities[], cumulativeScale)
 
 data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
@@ -80,6 +80,9 @@ def init():
 	self.Branches[1010101].periodLength = 403200
 	self.Branches[1010101].repRequired = 14000000
 
+# string chunks
+macro chunks($l):
+    $l + if(l%32 != 0, 1, 0)
 
 def get_cash_balance(address):
 	return(self.cashcoin_balances[address])
@@ -209,13 +212,15 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 			return(0)
 		if self.Events[event].branch != branch:
 			return(0)
-		cumulativeScale += self.Events[event].maxValue - self.Events[event].minValue
+		#provided not a binary outcome
+		if(self.Events[event].maxValue!=1):
+			cumulativeScale += self.Events[event].maxValue - self.Events[event].minValue
 		i+=1
 
 	if(numEvents > 200 or !self.Branches[branch].periodLength or description==0 or !lossLimit or !tradingFee or (!alpha and !lossLimit)):
 		return(0)
 	# formation of marketID (hash)
-	marketCharacteristics = array(9)
+	marketCharacteristics = array(10)
 	marketCharacteristics[0] = MARKET
 	marketCharacteristics[1] = tx.origin
 	marketCharacteristics[2] = initialLiquidity
@@ -225,7 +230,8 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 	marketCharacteristics[6] = lossLimit
 	marketCharacteristics[7] = tradingFee
 	marketCharacteristics[8] = alpha
-	marketID = sha256(marketCharacteristics, 9)
+	marketCharacteristics[9] = cumulativeScale
+	marketID = sha256(marketCharacteristics, 10)
 
 	# if regular lmsr
 	if(losslimit):
@@ -263,6 +269,7 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 		self.Markets[marketID].tradingFee = tradingFee
 		self.Markets[marketID].branch = branch
 		self.Markets[marketID].alpha = alpha
+		self.Markets[marketID].cumulativeScale = cumulativeScale
 		# add the market to the branch
 		marketCount = self.Branches[branch].marketCount
 		self.Branches[branch].markets[marketCount] = marketID
@@ -293,7 +300,7 @@ macro ls_lmsr($marketID):
 								$sum_exp += self.exp($a*2^64/$Bq)
 								$sum_exp += self.exp($b*2^64/$Bq)
 								$i += 1
-							$Bq*self.log($sum_exp)/2^64
+							$Bq*self.Markets[$marketID].cumulativeScale*self.log($sum_exp)/2^64
 
 macro lmsr($marketID):
 	with $sum_exp = 0:
@@ -308,7 +315,7 @@ macro lmsr($marketID):
 								$sum_exp += self.exp($a*2^64/$B)
 								$sum_exp += self.exp($b*2^64/$B)
 								$i += 1
-							$B*self.log($sum_exp)/2^64
+							$B*self.Markets[$marketID].cumulativeScale*self.log($sum_exp)/2^64
 
 # fee should be in fixed point
 # amount of shares should be an integer
@@ -491,6 +498,7 @@ def inPeriod(branchID, eventID):
 # should make an API function for this (make ballot)!!!
 # UI will need a function to get the items in that array above so it can make a report!
 # check this fun.
+# people could report something like 16027*2^64 for a scalar
 def vote(branch, report:a):
 	# make sure the branch exists
 	repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
@@ -509,13 +517,13 @@ def vote(branch, report:a):
 
 	reputation = self.Reporting[branch].reputation[repIndex].repValue
 
+	if (report[i] != 2^64 | report[i] != -2^64 | report[i] != 0 | report[i] != 2^63):
+		return(0) # make sure vote values are valid
+	
 	i = 0
 	while i < len(report):
-		if (report[i] != 2^64 | report[i] != -2^64 | report[i] != 0 | report[i] != 2^63):
-			return(0) # make sure vote values are valid
-		else:
-			if(!self.inPeriod(branch, report[i])):
-				return(0)
+		if(!self.inPeriod(branch, report[i])):
+			return(0)
 		i += 1
 
 	# need to update stuff for quorem
@@ -607,11 +615,9 @@ def redeem(branch):
 	while n < numberEvents:
 		eventID = self.Reporting[branch].eventsExpDates[currentVotePeriod].events[n]
 		# then take outcomes_final and set each event outcome to -1 if false or 1 if true (if 0 it's undecided)
-		if(outcomes_final[n]==-1):
-			self.Events[eventID].outcome = -1
-		elif(outcomes_final[n]==1):
-			self.Events[eventID].outcome = 1
-
+		# a scalar could have a number like say 47
+		self.Events[eventID].outcome = outcomes_final[n]
+		
 		# need to loop through eventid holders and distribute 25% coins using the event_bonus to determine how much
 		# of the 25% each get
 		self.cashcoin_balances[self.Info[eventID].creator] += fixed_multiply(event_bonus[n], self.cashcoin_balances[branch]) / 3
@@ -635,6 +641,7 @@ def redeem(branch):
 # this doesn't work due to winning events oddities if(1) thing
 # fix this
 # what happens if undecided event in a market?
+# implement multidimensional scalar payouts and multidimensional payouts
 def close_market(branch, market):
 	if(self.cashcoin_balances[market]<=0):
 		return(0)
@@ -661,7 +668,7 @@ def close_market(branch, market):
 	 	#   a = 0
 	 	#   while a < e:
 	 	#   self.Markets[market].events[self.Markets[market].winningEvents[e]].shares
-
+	 	# needs to be fixed for scalar payouts
 		winningEvent = self.Markets[market].winningEvents[e-1]
 		winningShares = 0
 		winningOutcome = self.Events[winningEvent].outcome
@@ -682,8 +689,9 @@ def close_market(branch, market):
 			# winning price is $1 / share
 			# pricePerShare = 2^64
 			#moneyWon = sharesOwned*pricePerShare
-			self.cashcoin_balances[market] -= sharesOwned*2^64
-			self.cashcoin_balances[participant] += sharesOwned*2^64
+			pricePerShare = (self.Events[winningEvent].outcome - self.Events[winningEvent].minValue)*2^64/(self.Events[winningEvent].maxValue - self.Events[winningEvent].minValue)
+			self.cashcoin_balances[market] -= sharesOwned*pricePerShare
+			self.cashcoin_balances[participant] += sharesOwned*pricePerShare
 
 		# give back initial liquidity (or as much of it/profits are left)
 		self.cashcoin_balances[self.Info[market].creator] += self.cashcoin_balances[market]
@@ -741,7 +749,7 @@ def closeBet(betID):
 # and loop through the events[] array from 0 to numberEvents -1 for the votes list / order
 # should make an API function for this (make ballot)!!!
 # UI will need a function to get the items in that array above so it can make a report!
-# w/ this function you can get the eventIDs, look them up and report on outcomes (probably w/ a nother function to look them up)
+# w/ this function you can get the eventIDs, look them up and report on outcomes (probably w/ another function to look them up) -- make sure in this function to check that the report value is not >maxvalue or <minvalue for the event
 def makeBallot(branch):
 	numEvents = self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].numberEvents
 	eventArray = array(numEvents)
