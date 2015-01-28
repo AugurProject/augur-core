@@ -632,8 +632,8 @@ def redeem(branch):
 	z = 0
 	while z < numReporters:
 		self.Reporting[branch].reputation[z].repValue += (voter_bonus[z]*21000000)/2^64
-		self.cashcoin_balances[self.Reporting[branch].reputation[z].reporterID] += 2*self.cashcoin_balances[branch] / (3*numReporters)
-		self.cashcoin_balances[branch] -= 2*self.cashcoin_balances[branch] / (3*numReporters)
+		self.cashcoin_balances[self.Reporting[branch].reputation[z].reporterID] += 2*self.cashcoin_balances[branch]*voter_bonus[z] / (3*2^64*numReporters)
+		self.cashcoin_balances[branch] -= 2*self.cashcoin_balances[branch]*voter_bonus[z] / (3*2^64*numReporters)
 	self.Branches[branch].currentVotePeriod += 1
 	return(self.Branches[branch].currentVotePeriod)
 
