@@ -1,15 +1,278 @@
 # 192.64 fixed point
 # http://www.ti.com/lit/an/spra619/spra619.pdf
-# >>> from mpmath import *
-# >>> mp.dps = 128
-# >>> print 'exp = [ ' + ', '.join(['0x{0:x}'.format(int(nint(exp(n*.5) * 2^64))) for n in range(266)]) + ' ]'
-exp_halfZ = [ 2^64, 0x1a61298e1e069bc97, 0x2b7e151628aed2a6b, 0x47b4ff993f15055f7, 0x763992e35376b730d, 0xc2eb7ec98f05d8ea7, 0x1415e5bf6fb105f2d5, 0x211d8e4272d7b6a1aa, 0x3699205c4e74b0cf1b, 0x5a0462b7877aa8b7cf, 0x9469c4cb819c78fb38, 0xf4b122790ddfb1298d, 0x1936dc5690c08f37a9b, 0x2992442102d91286adc, 0x448a216abb76a9bc7e8, 0x7100adbac7dab4a4e30, 0xba4f53ea38636f85f00, 0x1332c4d2b7c4a1061df0, 0x1fa7157c470f81c3655e, 0x342fba11823b8110d5af, 0x560a773e54157e7c1faa, 0x8ddb80af4269d9bc1c42, 0xe9e22447727bf9f7b893, 0x1819bc560f6113356bf98, 0x27bc2ca9a6f9345d400b9, 0x4183149596e9969f89de1, 0x6c02d645ab2554d531d36, 0xb21485eae56c5b89b411a, 0x1259ac48bf05d6ef81ba34, 0x1e4127437732b71f4a21ba, 0x31e1995f5a550dde2e5fe3, 0x523d8279edaef9c297debd, 0x87975e854001024911f8b8, 0xdf8d5f6dcfe5cea20fb90f, 0x1709348c0ea4f8ce7e990cb, 0x25fad9065c78e3422d593ef, 0x3e9e441232817a615846a58, 0x673d70bc00f1f76d6312bc1, 0xaa36c7cf69370b940b198f7, 0x118a2aae0aa05236b32b9a68, 0x1ceb088b68e80402189797f9, 0x2fad89e179bab8eade0ff795, 0x4e9b87f67bb3f55976a7206a, 0x819a18019394c0d960c5a430, 0xd5ad6dce21affc0dd9a3592a, 0x1604b68cf05f65faa9a6a968f, 0x244d5e6763fb814af09c1f5d4, 0x3bda2cbd09f5ac214617da03a, 0x62adfed51d7edccde68e84119, 0xa2b1fd3d9a57b6c33cdc40438, 0x10c3d3920962c88aafb2ae72d7, 0x1ba4068aac2b6e3ee345f24591, 0x2d9264d2d4d6b94153be31fa7b, 0x4b22a1b5c327a2fd85a4a054ef, 0x7be08bdfd9cc72249abc11d148, 0xcc3d265776c3d25779eaed0d42, 0x150bba3796379a4fb6ad6b829df, 0x22b2dc5c41dad89559eb9edae59, 0x39355c8c6380ac5631b1fe51530, 0x5e521e7a16e51f9cd3c2ffb2123, 0x9b823857614764f43e201f73a54, 0x10063f4e687ba1a43a35b9ea8f74, 0x1a6b765d8cdf6cdbf1c63f4b59e4, 0x2b8f1073a6afba219db610f7d766, 0x47d0ff312d98b1f611e210061086, 0x7667bc4077c8f04f794da397a46a, 0xc3379a5392bc108b37cd69a982a5, 0x141dbd6e3e063dfb9d3c41742b0b8, 0x212a7c5e743dee1a39ee1d8390e30, 0x36ae71ceef8486915af286281572f, 0x5a278886f2356ba66b452ea7226f5, 0x94a3b7ad119809b7d87578d13435b, 0xf510ad0e906bb3a241af13aff48c6, 0x1940b4acc4e544109ac4cb558a8e47, 0x29a27f763400334f0bbe4e4afe0c1d, 0x44a4e467080794355c79162f250480, 0x712ccd185f319c386775b75404cede, 0xba9812d30dff2628448a0a26998625, 0x133a43d282a5192f41f957d44a33353, 0x1fb37161577edd1eae6be57211c6c34, 0x34441a72f2e5d51686c20e8b55b3b8b, 0x562c0f99e5dc9e405ee9ccbcd3087f1, 0x8e12e446fb43125390078041d8cb210, 0xea3d7679a1de38a735688fdb9be3b97, 0x18232558201159376509d57b5a57c8fd, 0x27cbb0720f47b8a7905dea10d1734630, 0x419ca8f27ae1c50179760d035398ecdb, 0x6c2d02b28021721f97f7b9cdba011408, 0xb25a0e369bc18ff3cf2e42bcb82d54e0, 0x1260d6845da876824eb8c5106ca4b7335, 0x1e4cf766fe49be1b408e878b37871208b, 0x31f513559b85e56f944bda59bb789da0f, 0x525d9ef0120f8d7292236d41b2997bb31, 0x87cc4fc52d8214218f9e9490f4e779902, 0xdfe4a8f5c5dbac4a7492a33f1c9f73a6d, 0x17123324e55ff0282abe14408f578ef229, 0x2609ad5d944a9675e978bac527abecb8fa, 0x3eb6b72dc1d07e40210a564c39aa2ef030, 0x6765c0422109427e1d198f2d3f949d68bc, 0xaa793dd42c5491209a44fd31ec9b96b784, 0x119103e4080b45664d7740cf8c5d8b4f40a, 0x1cf65319c5751a36461eaba8b080c0990b4, 0x2fc0279a2288c16a04c24b01e96fcb8b4ec, 0x4eba394f17060b1056c6454c0382b85e51b, 0x81ccb294703a5f5e7ebb20b7e16075c9286, 0xd600dc495029ed3fe0c5055cab8e594ff69, 0x160d4f6fdac7308d3d7abab5b1ca6324adc1, 0x245b8b0d54b3b8760ba17ea39926eec869dc, 0x3bf18b5e2f7475b81c2e5ad443d9970e8dff, 0x62d486855d70d65ffc66139204a345782438, 0xa2f183b6b0b4c5b1baa28f1b78d4c2ab2a73, 0x10ca5f5699572476dfb6ca05e88b0d6deaf7d, 0x1baed16a6e0da7307177f283f388a5416fca4, 0x2da430086427e4c8318c7b046600de374a699, 0x4b3ff7faf78684c6610dcd2150558f2b48b54, 0x7c10ea37841a2a877ee20e030b9b438afd7a2, 0xcc8ce55f7e5b48735190ee942bd6a238b81a5, 0x1513f1e2bae576cfb58d86aa708e840dc2c168, 0x22c068b932a7c596f3d1ee4ea41c1f8effeb55, 0x394bb2e98e46d682b03c4786ba64dc0d58474d, 0x5e76f27714f19924caf2a650818939874ea47e, 0x9bbef0775236a3110ec428ecc663e8ba9df976, 0x100c810d4640970ca8375861c577e3523d5bfd5, 0x1a75c7328a6c49c9c995b77a0b57f99ba9b7555, 0x2ba0127298b84ef4d2d5d54098d440f9c140b72, 0x47ed09b7bcb0e571f1119c25b7059af576c7445, 0x7695f7a3c41e9ee6237270844c3dc654027021a, 0xc383d3950b9a5b061f457b857756b582b6b85ed, 0x1425982cf597cd205ce3d5b4edb031756054bd2c, 0x21376f86e9102990047e9d4dfb14e9fbaabf8853, 0x36c3cb9474bc6165e1407e525f39c01091c7cbf1, 0x5a4abc0f9bd6c15fc4be0685a38c3c6ece4095ff, 0x94ddc12efe7c35d5f0ca2fac0f61dac9da2a4cff, 0xf5705cf210e8dc89fd78573c192af2da34033049, 0x194a90db0d6fe27ef7cda73ea6fc37e7e6d550e89, 0x29b2c121de4472b33ebde73e242e1d0cfa04aca93, 0x44bfb1d6561bf2a7476d7e1ec6f600fd4e4876c24, 0x7158fdb04d5ad159f26c594409bdbe82d04f35c23, 0xbae0ee234f1d7a598238e5e34bc0dea9a4136bf48, 0x1341c5bf963ce6c104d59f0128999b3eb370f52345, 0x1fbfd219c43b04730797e2bfec1ceb09ee8c819b68, 0x345882c92774ff8bc7876ed2ba07c5f844b1bf9bce, 0x564db5138685170118fcfed235b601357843172b0e, 0x8e4a5d7f34963b3410ef111eb90872e7c3cabb5203, 0xea98ec53f73ce350b40b9b7d4169755ae675fbed81, 0x182c9206cd1d605ecb6a0c8f41a77af164db81d9d5f, 0x27db3a4945aa368d9c27f9d5b01a58010a5a8e36732, 0x41b6474c373780f01da5d68c72728f6b6278b7995c2, 0x6c573f96db85edc6f75a14ce875e4a600a8e4b35194, 0xb29fb1a88be3c28c4c35c56676b4620ad0c3e232ad7, 0x1268038c2c0e003733d79812578603abf7e406fd919b, 0x1e58cc27502323056813f8f40b0c1d0e3f10fc17fd48, 0x320894e6a8ba8fbeef9ef8242884f9cc7fdf94c3082c, 0x527dc7eff02b65a6ab639d4301a0f33bc80d73dc3f39, 0x880155b10c59be67c82472ddaac5f17ed4721c92f51e, 0xe03c1492ac1595d7f7b9fa75b9d601e449bdfe2cc135, 0x171b3540cbf920971ed0e2388a8fc74678647a5ff2341, 0x2618877f1994a413c3184f6962c27777f199c0fe32fbe, 0x3ecf33d5388293812662cd92fe4985fec2a9ffa45b370, 0x678e1f8592179ee58c2b7739047d6bf2ab9aacaa35d26, 0xaabbcdcc279f59e45281da5471244ecc3691bd26997bf, 0x1197dfc6928976838ec7a7df2a6ee415bf02bcdb81f6bd, 0x1d01a210c44aa39e108adb3da26c0a309fe2859532856d, 0x2fd2cc9798d7a5175ff49e4012a3756490e10d04b9bfb4, 0x4ed8f6a3a44841011f780919abcf3851ef0b9a6ef1d881, 0x81ff60e97c91007cf42fcfa32c5eded08bb2d01ccba97c, 0xd6546b5808b5be7bf3f7924788d2c5bbec770f3e2ed902, 0x1615ebae1e65d36c4e994276958031af906674a6448ad97, 0x2469bd3c18e9d13dbd3297ca0d9078678127ee790f6714c, 0x3c08f31f4881bfbf914aadf0e955a7734fa9ef214a766c0, 0x62fb1d40f291dd6226be9bba10745e77c7d406c0088e8cf, 0xa33122fd8d4562cfdbb0959826720abf6c57bcf23805983, 0x10d0eda9796b9027b9e057916cbdcd86c6801fadccd270bf, 0x1bb9a080f78d1d4655df345496acd444b2a3493a6d62307c, 0x2db602308ee48a83bbc11aaa51a6f5309d1eef01e2f15503, 0x4b5d59b4994dad2a38ff890c9ca7b222b315f677236af284, 0x7c415b71efc8b4f783b55d856f1407e2f67f9434dab8086a, 0xccdcc38aaff13e4b3af1123bf3c41b902692b9d91227f7e6, 0x151c2cc3433800992eced3ea2b1487700991a5eefccf17ef3, 0x22cdfa606161b1ba41b20fd33e0c0e68a9de9d96ff70d38b8, 0x396211ff7d82c792f823b2ba3a1657f72bf1574048bc4515a, 0x5e9bd4d5490b6f801bcd8270e55520eb0044eb7ae7da2d5de, 0x9bfbc04c8dac1d463cb38bf577213cae303bb97a53f775f51, 0x1012c53d8d219db3066c1a3dd631d07732dc2f7b3aacf81c5c, 0x1a801c0ea8ac4d573be5b3c733918e2c78bf0146543c525fdc, 0x2bb11b1595904b41dac2ce979209f7c2bf2c792ebf3c1b54da, 0x48091f31311b0280d5acd4e4d33d71807f906c1c7b82fa065d, 0x76c4451442175584d2e345a01c625474e041a4f55cd2b56d72, 0xc3d02a999400a5193d3c70c925f9584fb9e335f576928f5e8c, 0x142d75fcc87ad1ef70a0ed583381a7dbac99b8f878ccd8ab0b3, 0x214467bdc9f375a87847e4e2ff06f0521d5b7ab17a79cd451a6, 0x36d92db01e20fd1f8804fe981f8d48de19ec61bd3c7907717fd, 0x5a6dfd56e022e8b790d44dc2256f4e36803f5062953c3eb1b89, 0x9517e15a1df223e9c86dca7367ab9c5b08e9c3a12dc43e1d696, 0xf5d0323220304e05db816721d9e35768aed750bf412d7ad1525, 0x195470e2ea9db78949e971e00ec87bbd72b229d4bcab67f6696f, 0x29c309267b26c772e3b45f88fc735c79c2ed41804efc8becbbde, 0x44da89bcba2c6136fdbed5ec5993eb1f000d4b62177d582e47d7, 0x71853f894c6105aa3e9c8ad4cf105beaa39a9b716a66b903223c, 0xbb29e5e612e9260edc9d880b85b820cf5e5e62da2fdd38b48f9b, 0x13494a9b171bf4acc2250933224286534456ec613f35c5142427b, 0x1fcc37a76f9e75e06958419be0b5d7140f759dee1a674abfe4ba7, 0x346cf3173b2d36c57d13878e452a8f4017ab6157e72ed5c954bd3, 0x566f67b0553b200841d608781404149759e1d4027755baf083e74, 0x8e81ec60602577a48e6186a5f3bb94c7c859b0e2b35d79a80d37a, 0xeaf485e45ebb0ac045bad5848220a2dc7ad8506209db617db2302, 0x1836026385c97435f1591b3252a97b06abf7c9103883ea5b4caf47, 0x27eaca31a7a5f0b7508b45ca84d71899136f8022228b148effff1b, 0x41cfefa6b24073485ba35f76414c60d319953fb28e54df79e8f792, 0x6c818cf92b4c82610a0d6b486abc225ee8b7a8d39fad0eecffcf44, 0xb2e5704b4f942f6dac92b8dd8736cb9b0610a41ca82181948d33f1, 0x126f336141da0ee32260d28a4a7e01877908f643d08424423d290c4, 0x1e64a58639cae79989476a8522cc4a9fd8a116954566f1ff3e8095b, 0x321c1e157a1655d5d8f1824645a0a4b42a68f5634897bcc5a8b13a9, 0x529dfd7e6d43e5337c90c458aee7fdd4a3fd634bbdb95a1896463e2, 0x88367050eeccd50fbe60107ed76823abf09fec88dc2b1b47fa8bbd9, 0xe093a251d1471b7dbcac72862ef9e6662b993fa3ac1c7d88ecbe963, 0x17243ae1217bc1c8290fcde9173790ba28669e9b31c481785acdaadb, 0x2627676d2f1d0a50e5fe998158d583aff58da50f6649da958fb3f8e7, 0x3ee7ba0c50d426c02886d03001789b4cd072867776f613b9efb66923, 0x67b68e8c7961f9c9e62d3062ef795db187a02cdd273c166f1e10d249, 0xaafe77c17cf94f31eee03d90c7bcfd58de6a5c43ed9a47c0587b2752, 0x119ebe56b56452e7705e6df6c8aad8529088625f0752a72f6d618920c, 0x1d0cf5721e17154341c46d4d40bef425c1b5b70b80d8289ad720bf642, 0x2fe578dcb336fc51b64d6015bad015481e4b24920bf77c6318800c3d6, 0x4ef7bff8d16014571673acd7d7b35c28891a2e451f28e8635377701b7, 0x823223086f97f60e1636f48d892637b75a1f59f05b097bdce155d2f0d, 0xd6a81b07038bca18490fdc878970fb00f34c0145322536d037b004241, 0x161e8b490ac4e5af8cc8d8a0c016042f5edd7517b014399c7cb4692b24, 0x2477f4f5d9d2fac17081fc47a27b44d07920916b317205e8708f5fdce1, 0x3c206403e53366027103d28adfcf1515259ca742e78212accc9bb474b7, 0x6321c30dbca83c5fe2b7c524be770a3bbf1595ffec753a6858eaabe774, 0xa370db1bdf57aafd5ddc4423071be769bbde60584edf7aea655e9ba455, 0x10d77e8ba91af998cafd010cf042ed381014e435e06d0d544170cf9b374, 0x1bc473cfede104045e943fe93c35e75188481a2684fca78cb5b0eb7432c, 0x2dc7db4e0b8442cd44b5cf63493690cdbc8466f2b91452e075c336096dc, 0x4b7ac6e72178b470c3daf9bab49bed0ba79cc7e885c7e72f61e5c952a5e, 0x7c71df967c99fbf3382572775877148db497eccd1c6734ee386505995e2, 0xcd2cc0e533e87f6b160fbb787ddb1374153416a5db3cc31acc4690277cd, 0x15246ada6fe686ff1da3e1ac5cda0e2bdbf6b6c823144fe5677cb5fedae8, 0x22db9153dece162d72d1ddab53f80b39bc94c39ca17cba72d05da98de4e9, 0x397879d199006ef37d9ed6d86b4761782cdcc29cf79519dd8b9870a07aa4, 0x5ec0c59a508c2454b02616671f541724eb8f8a957390c51bc824d24750c7, 0x9c38a7e05571c9f7c1af2fde8dc7d49774d73b397a42d1e98bdd482eb343, 0x10190be03150a6d0c482bf429fd51ab9f83d4d386ad2342472807ba3f9849, 0x1a8a74f37a3b88810a09cbd72dd578db5c1c2e7488946f70e9c755bb202dc, 0x2bc22a5f3502327274223b3e673da94ecde76b3faddf7c00d5fe186592e92, 0x48253fa1d13f166a3a4f2db1cc1785055ad176fce64a985a60a868b2d6d4d, 0x76f2a498fe121af3b3783146f2c75673ad76f0d1e734eea261ee9cd583d12, 0xc41c9f6ccad6a8317d53c07019f6f45090deae164aafd5908ec05186860d2, 0x143556dee93bedf1c8ce764d91e442ad6fdea1631ce09947d985cd2c693c87, 0x215165051051e9a0a75db1cbe72873952481d5a56e0459c9040ee647aa6787, 0x36ee98252cfbf3578c701b62effcb418889951268eddb2c51cb9431b34e0cb, 0x5a914c621cf5bdb0268722dbb85a2892d972bd9b487974851514fa09ab123c, 0x9552183749160e8b702888dad950f9efb602404ef2b02b9e9cece33198cf0c, 0xf6302cdd54cb1d5ffc5f9898e36ddd466d65d3e0e99967eceed345606fc168, 0x195e54c5dd42177f53f4d5219df11ca3b98db969c591bf9bacc9526bfd504b1, 0x29d35786851f833668997c82c98ed6fc347d1439599b5bc8029c67585a5879d, 0x44f56c1e4a494ddd22f664d9422114fa2a98b350959e3a39decf6d62c0942ac, 0x71b192aa18ef4c4d9fd0cf58dcbbe65dc15be0e359f71c0b2a8d1b0990f1779, 0xbb72fa2674e174d4dbfd1777365c7b7da37751c283b200123958910a14a8362, 0x1350d2662a44696c5135fa9069c1ccded1dc523c48ca72757e9a582b87a3fdab, 0x1fd8a20c3cc005f62fc06ef3ba86c782d9d1992fab21c071b59140dafd278ba7, 0x34816b604a893542b8044a93bedf2796a3bc479132709b2f2089152cce052b04, 0x56912775732ae50c0c96294161cb07ea1fb3f244cc0b7c8605c8e7653e72c1b1, 0x8eb990f2f2fefd075462ea3a34b8b867803773111218e00b07ea14ef70b09177 ]
+data exp_halfZ[266]
+def init():
+    self.exp_halfZ[0] = 2^64
+    self.exp_halfZ[1] = 0x1a61298e1e069bc97
+    self.exp_halfZ[2] = 0x2b7e151628aed2a6b
+    self.exp_halfZ[3] = 0x47b4ff993f15055f7
+    self.exp_halfZ[4] = 0x763992e35376b730d
+    self.exp_halfZ[5] = 0xc2eb7ec98f05d8ea7
+    self.exp_halfZ[6] = 0x1415e5bf6fb105f2d5
+    self.exp_halfZ[7] = 0x211d8e4272d7b6a1aa
+    self.exp_halfZ[8] = 0x3699205c4e74b0cf1b
+    self.exp_halfZ[9] = 0x5a0462b7877aa8b7cf
+    self.exp_halfZ[10] = 0x9469c4cb819c78fb38
+    self.exp_halfZ[11] = 0xf4b122790ddfb1298d
+    self.exp_halfZ[12] = 0x1936dc5690c08f37a9b
+    self.exp_halfZ[13] = 0x2992442102d91286adc
+    self.exp_halfZ[14] = 0x448a216abb76a9bc7e8
+    self.exp_halfZ[15] = 0x7100adbac7dab4a4e30
+    self.exp_halfZ[16] = 0xba4f53ea38636f85f00
+    self.exp_halfZ[17] = 0x1332c4d2b7c4a1061df0
+    self.exp_halfZ[18] = 0x1fa7157c470f81c3655e
+    self.exp_halfZ[19] = 0x342fba11823b8110d5af
+    self.exp_halfZ[20] = 0x560a773e54157e7c1faa
+    self.exp_halfZ[21] = 0x8ddb80af4269d9bc1c42
+    self.exp_halfZ[22] = 0xe9e22447727bf9f7b893
+    self.exp_halfZ[23] = 0x1819bc560f6113356bf98
+    self.exp_halfZ[24] = 0x27bc2ca9a6f9345d400b9
+    self.exp_halfZ[25] = 0x4183149596e9969f89de1
+    self.exp_halfZ[26] = 0x6c02d645ab2554d531d36
+    self.exp_halfZ[27] = 0xb21485eae56c5b89b411a
+    self.exp_halfZ[28] = 0x1259ac48bf05d6ef81ba34
+    self.exp_halfZ[29] = 0x1e4127437732b71f4a21ba
+    self.exp_halfZ[30] = 0x31e1995f5a550dde2e5fe3
+    self.exp_halfZ[31] = 0x523d8279edaef9c297debd
+    self.exp_halfZ[32] = 0x87975e854001024911f8b8
+    self.exp_halfZ[33] = 0xdf8d5f6dcfe5cea20fb90f
+    self.exp_halfZ[34] = 0x1709348c0ea4f8ce7e990cb
+    self.exp_halfZ[35] = 0x25fad9065c78e3422d593ef
+    self.exp_halfZ[36] = 0x3e9e441232817a615846a58
+    self.exp_halfZ[37] = 0x673d70bc00f1f76d6312bc1
+    self.exp_halfZ[38] = 0xaa36c7cf69370b940b198f7
+    self.exp_halfZ[39] = 0x118a2aae0aa05236b32b9a68
+    self.exp_halfZ[40] = 0x1ceb088b68e80402189797f9
+    self.exp_halfZ[41] = 0x2fad89e179bab8eade0ff795
+    self.exp_halfZ[42] = 0x4e9b87f67bb3f55976a7206a
+    self.exp_halfZ[43] = 0x819a18019394c0d960c5a430
+    self.exp_halfZ[44] = 0xd5ad6dce21affc0dd9a3592a
+    self.exp_halfZ[45] = 0x1604b68cf05f65faa9a6a968f
+    self.exp_halfZ[46] = 0x244d5e6763fb814af09c1f5d4
+    self.exp_halfZ[47] = 0x3bda2cbd09f5ac214617da03a
+    self.exp_halfZ[48] = 0x62adfed51d7edccde68e84119
+    self.exp_halfZ[49] = 0xa2b1fd3d9a57b6c33cdc40438
+    self.exp_halfZ[50] = 0x10c3d3920962c88aafb2ae72d7
+    self.exp_halfZ[51] = 0x1ba4068aac2b6e3ee345f24591
+    self.exp_halfZ[52] = 0x2d9264d2d4d6b94153be31fa7b
+    self.exp_halfZ[53] = 0x4b22a1b5c327a2fd85a4a054ef
+    self.exp_halfZ[54] = 0x7be08bdfd9cc72249abc11d148
+    self.exp_halfZ[55] = 0xcc3d265776c3d25779eaed0d42
+    self.exp_halfZ[56] = 0x150bba3796379a4fb6ad6b829df
+    self.exp_halfZ[57] = 0x22b2dc5c41dad89559eb9edae59
+    self.exp_halfZ[58] = 0x39355c8c6380ac5631b1fe51530
+    self.exp_halfZ[59] = 0x5e521e7a16e51f9cd3c2ffb2123
+    self.exp_halfZ[60] = 0x9b823857614764f43e201f73a54
+    self.exp_halfZ[61] = 0x10063f4e687ba1a43a35b9ea8f74
+    self.exp_halfZ[62] = 0x1a6b765d8cdf6cdbf1c63f4b59e4
+    self.exp_halfZ[63] = 0x2b8f1073a6afba219db610f7d766
+    self.exp_halfZ[64] = 0x47d0ff312d98b1f611e210061086
+    self.exp_halfZ[65] = 0x7667bc4077c8f04f794da397a46a
+    self.exp_halfZ[66] = 0xc3379a5392bc108b37cd69a982a5
+    self.exp_halfZ[67] = 0x141dbd6e3e063dfb9d3c41742b0b8
+    self.exp_halfZ[68] = 0x212a7c5e743dee1a39ee1d8390e30
+    self.exp_halfZ[69] = 0x36ae71ceef8486915af286281572f
+    self.exp_halfZ[70] = 0x5a278886f2356ba66b452ea7226f5
+    self.exp_halfZ[71] = 0x94a3b7ad119809b7d87578d13435b
+    self.exp_halfZ[72] = 0xf510ad0e906bb3a241af13aff48c6
+    self.exp_halfZ[73] = 0x1940b4acc4e544109ac4cb558a8e47
+    self.exp_halfZ[74] = 0x29a27f763400334f0bbe4e4afe0c1d
+    self.exp_halfZ[75] = 0x44a4e467080794355c79162f250480
+    self.exp_halfZ[76] = 0x712ccd185f319c386775b75404cede
+    self.exp_halfZ[77] = 0xba9812d30dff2628448a0a26998625
+    self.exp_halfZ[78] = 0x133a43d282a5192f41f957d44a33353
+    self.exp_halfZ[79] = 0x1fb37161577edd1eae6be57211c6c34
+    self.exp_halfZ[80] = 0x34441a72f2e5d51686c20e8b55b3b8b
+    self.exp_halfZ[81] = 0x562c0f99e5dc9e405ee9ccbcd3087f1
+    self.exp_halfZ[82] = 0x8e12e446fb43125390078041d8cb210
+    self.exp_halfZ[83] = 0xea3d7679a1de38a735688fdb9be3b97
+    self.exp_halfZ[84] = 0x18232558201159376509d57b5a57c8fd
+    self.exp_halfZ[85] = 0x27cbb0720f47b8a7905dea10d1734630
+    self.exp_halfZ[86] = 0x419ca8f27ae1c50179760d035398ecdb
+    self.exp_halfZ[87] = 0x6c2d02b28021721f97f7b9cdba011408
+    self.exp_halfZ[88] = 0xb25a0e369bc18ff3cf2e42bcb82d54e0
+    self.exp_halfZ[89] = 0x1260d6845da876824eb8c5106ca4b7335
+    self.exp_halfZ[90] = 0x1e4cf766fe49be1b408e878b37871208b
+    self.exp_halfZ[91] = 0x31f513559b85e56f944bda59bb789da0f
+    self.exp_halfZ[92] = 0x525d9ef0120f8d7292236d41b2997bb31
+    self.exp_halfZ[93] = 0x87cc4fc52d8214218f9e9490f4e779902
+    self.exp_halfZ[94] = 0xdfe4a8f5c5dbac4a7492a33f1c9f73a6d
+    self.exp_halfZ[95] = 0x17123324e55ff0282abe14408f578ef229
+    self.exp_halfZ[96] = 0x2609ad5d944a9675e978bac527abecb8fa
+    self.exp_halfZ[97] = 0x3eb6b72dc1d07e40210a564c39aa2ef030
+    self.exp_halfZ[98] = 0x6765c0422109427e1d198f2d3f949d68bc
+    self.exp_halfZ[99] = 0xaa793dd42c5491209a44fd31ec9b96b784
+    self.exp_halfZ[100] = 0x119103e4080b45664d7740cf8c5d8b4f40a
+    self.exp_halfZ[101] = 0x1cf65319c5751a36461eaba8b080c0990b4
+    self.exp_halfZ[102] = 0x2fc0279a2288c16a04c24b01e96fcb8b4ec
+    self.exp_halfZ[103] = 0x4eba394f17060b1056c6454c0382b85e51b
+    self.exp_halfZ[104] = 0x81ccb294703a5f5e7ebb20b7e16075c9286
+    self.exp_halfZ[105] = 0xd600dc495029ed3fe0c5055cab8e594ff69
+    self.exp_halfZ[106] = 0x160d4f6fdac7308d3d7abab5b1ca6324adc1
+    self.exp_halfZ[107] = 0x245b8b0d54b3b8760ba17ea39926eec869dc
+    self.exp_halfZ[108] = 0x3bf18b5e2f7475b81c2e5ad443d9970e8dff
+    self.exp_halfZ[109] = 0x62d486855d70d65ffc66139204a345782438
+    self.exp_halfZ[110] = 0xa2f183b6b0b4c5b1baa28f1b78d4c2ab2a73
+    self.exp_halfZ[111] = 0x10ca5f5699572476dfb6ca05e88b0d6deaf7d
+    self.exp_halfZ[112] = 0x1baed16a6e0da7307177f283f388a5416fca4
+    self.exp_halfZ[113] = 0x2da430086427e4c8318c7b046600de374a699
+    self.exp_halfZ[114] = 0x4b3ff7faf78684c6610dcd2150558f2b48b54
+    self.exp_halfZ[115] = 0x7c10ea37841a2a877ee20e030b9b438afd7a2
+    self.exp_halfZ[116] = 0xcc8ce55f7e5b48735190ee942bd6a238b81a5
+    self.exp_halfZ[117] = 0x1513f1e2bae576cfb58d86aa708e840dc2c168
+    self.exp_halfZ[118] = 0x22c068b932a7c596f3d1ee4ea41c1f8effeb55
+    self.exp_halfZ[119] = 0x394bb2e98e46d682b03c4786ba64dc0d58474d
+    self.exp_halfZ[120] = 0x5e76f27714f19924caf2a650818939874ea47e
+    self.exp_halfZ[121] = 0x9bbef0775236a3110ec428ecc663e8ba9df976
+    self.exp_halfZ[122] = 0x100c810d4640970ca8375861c577e3523d5bfd5
+    self.exp_halfZ[123] = 0x1a75c7328a6c49c9c995b77a0b57f99ba9b7555
+    self.exp_halfZ[124] = 0x2ba0127298b84ef4d2d5d54098d440f9c140b72
+    self.exp_halfZ[125] = 0x47ed09b7bcb0e571f1119c25b7059af576c7445
+    self.exp_halfZ[126] = 0x7695f7a3c41e9ee6237270844c3dc654027021a
+    self.exp_halfZ[127] = 0xc383d3950b9a5b061f457b857756b582b6b85ed
+    self.exp_halfZ[128] = 0x1425982cf597cd205ce3d5b4edb031756054bd2c
+    self.exp_halfZ[129] = 0x21376f86e9102990047e9d4dfb14e9fbaabf8853
+    self.exp_halfZ[130] = 0x36c3cb9474bc6165e1407e525f39c01091c7cbf1
+    self.exp_halfZ[131] = 0x5a4abc0f9bd6c15fc4be0685a38c3c6ece4095ff
+    self.exp_halfZ[132] = 0x94ddc12efe7c35d5f0ca2fac0f61dac9da2a4cff
+    self.exp_halfZ[133] = 0xf5705cf210e8dc89fd78573c192af2da34033049
+    self.exp_halfZ[134] = 0x194a90db0d6fe27ef7cda73ea6fc37e7e6d550e89
+    self.exp_halfZ[135] = 0x29b2c121de4472b33ebde73e242e1d0cfa04aca93
+    self.exp_halfZ[136] = 0x44bfb1d6561bf2a7476d7e1ec6f600fd4e4876c24
+    self.exp_halfZ[137] = 0x7158fdb04d5ad159f26c594409bdbe82d04f35c23
+    self.exp_halfZ[138] = 0xbae0ee234f1d7a598238e5e34bc0dea9a4136bf48
+    self.exp_halfZ[139] = 0x1341c5bf963ce6c104d59f0128999b3eb370f52345
+    self.exp_halfZ[140] = 0x1fbfd219c43b04730797e2bfec1ceb09ee8c819b68
+    self.exp_halfZ[141] = 0x345882c92774ff8bc7876ed2ba07c5f844b1bf9bce
+    self.exp_halfZ[142] = 0x564db5138685170118fcfed235b601357843172b0e
+    self.exp_halfZ[143] = 0x8e4a5d7f34963b3410ef111eb90872e7c3cabb5203
+    self.exp_halfZ[144] = 0xea98ec53f73ce350b40b9b7d4169755ae675fbed81
+    self.exp_halfZ[145] = 0x182c9206cd1d605ecb6a0c8f41a77af164db81d9d5f
+    self.exp_halfZ[146] = 0x27db3a4945aa368d9c27f9d5b01a58010a5a8e36732
+    self.exp_halfZ[147] = 0x41b6474c373780f01da5d68c72728f6b6278b7995c2
+    self.exp_halfZ[148] = 0x6c573f96db85edc6f75a14ce875e4a600a8e4b35194
+    self.exp_halfZ[149] = 0xb29fb1a88be3c28c4c35c56676b4620ad0c3e232ad7
+    self.exp_halfZ[150] = 0x1268038c2c0e003733d79812578603abf7e406fd919b
+    self.exp_halfZ[151] = 0x1e58cc27502323056813f8f40b0c1d0e3f10fc17fd48
+    self.exp_halfZ[152] = 0x320894e6a8ba8fbeef9ef8242884f9cc7fdf94c3082c
+    self.exp_halfZ[153] = 0x527dc7eff02b65a6ab639d4301a0f33bc80d73dc3f39
+    self.exp_halfZ[154] = 0x880155b10c59be67c82472ddaac5f17ed4721c92f51e
+    self.exp_halfZ[155] = 0xe03c1492ac1595d7f7b9fa75b9d601e449bdfe2cc135
+    self.exp_halfZ[156] = 0x171b3540cbf920971ed0e2388a8fc74678647a5ff2341
+    self.exp_halfZ[157] = 0x2618877f1994a413c3184f6962c27777f199c0fe32fbe
+    self.exp_halfZ[158] = 0x3ecf33d5388293812662cd92fe4985fec2a9ffa45b370
+    self.exp_halfZ[159] = 0x678e1f8592179ee58c2b7739047d6bf2ab9aacaa35d26
+    self.exp_halfZ[160] = 0xaabbcdcc279f59e45281da5471244ecc3691bd26997bf
+    self.exp_halfZ[161] = 0x1197dfc6928976838ec7a7df2a6ee415bf02bcdb81f6bd
+    self.exp_halfZ[162] = 0x1d01a210c44aa39e108adb3da26c0a309fe2859532856d
+    self.exp_halfZ[163] = 0x2fd2cc9798d7a5175ff49e4012a3756490e10d04b9bfb4
+    self.exp_halfZ[164] = 0x4ed8f6a3a44841011f780919abcf3851ef0b9a6ef1d881
+    self.exp_halfZ[165] = 0x81ff60e97c91007cf42fcfa32c5eded08bb2d01ccba97c
+    self.exp_halfZ[166] = 0xd6546b5808b5be7bf3f7924788d2c5bbec770f3e2ed902
+    self.exp_halfZ[167] = 0x1615ebae1e65d36c4e994276958031af906674a6448ad97
+    self.exp_halfZ[168] = 0x2469bd3c18e9d13dbd3297ca0d9078678127ee790f6714c
+    self.exp_halfZ[169] = 0x3c08f31f4881bfbf914aadf0e955a7734fa9ef214a766c0
+    self.exp_halfZ[170] = 0x62fb1d40f291dd6226be9bba10745e77c7d406c0088e8cf
+    self.exp_halfZ[171] = 0xa33122fd8d4562cfdbb0959826720abf6c57bcf23805983
+    self.exp_halfZ[172] = 0x10d0eda9796b9027b9e057916cbdcd86c6801fadccd270bf
+    self.exp_halfZ[173] = 0x1bb9a080f78d1d4655df345496acd444b2a3493a6d62307c
+    self.exp_halfZ[174] = 0x2db602308ee48a83bbc11aaa51a6f5309d1eef01e2f15503
+    self.exp_halfZ[175] = 0x4b5d59b4994dad2a38ff890c9ca7b222b315f677236af284
+    self.exp_halfZ[176] = 0x7c415b71efc8b4f783b55d856f1407e2f67f9434dab8086a
+    self.exp_halfZ[177] = 0xccdcc38aaff13e4b3af1123bf3c41b902692b9d91227f7e6
+    self.exp_halfZ[178] = 0x151c2cc3433800992eced3ea2b1487700991a5eefccf17ef3
+    self.exp_halfZ[179] = 0x22cdfa606161b1ba41b20fd33e0c0e68a9de9d96ff70d38b8
+    self.exp_halfZ[180] = 0x396211ff7d82c792f823b2ba3a1657f72bf1574048bc4515a
+    self.exp_halfZ[181] = 0x5e9bd4d5490b6f801bcd8270e55520eb0044eb7ae7da2d5de
+    self.exp_halfZ[182] = 0x9bfbc04c8dac1d463cb38bf577213cae303bb97a53f775f51
+    self.exp_halfZ[183] = 0x1012c53d8d219db3066c1a3dd631d07732dc2f7b3aacf81c5c
+    self.exp_halfZ[184] = 0x1a801c0ea8ac4d573be5b3c733918e2c78bf0146543c525fdc
+    self.exp_halfZ[185] = 0x2bb11b1595904b41dac2ce979209f7c2bf2c792ebf3c1b54da
+    self.exp_halfZ[186] = 0x48091f31311b0280d5acd4e4d33d71807f906c1c7b82fa065d
+    self.exp_halfZ[187] = 0x76c4451442175584d2e345a01c625474e041a4f55cd2b56d72
+    self.exp_halfZ[188] = 0xc3d02a999400a5193d3c70c925f9584fb9e335f576928f5e8c
+    self.exp_halfZ[189] = 0x142d75fcc87ad1ef70a0ed583381a7dbac99b8f878ccd8ab0b3
+    self.exp_halfZ[190] = 0x214467bdc9f375a87847e4e2ff06f0521d5b7ab17a79cd451a6
+    self.exp_halfZ[191] = 0x36d92db01e20fd1f8804fe981f8d48de19ec61bd3c7907717fd
+    self.exp_halfZ[192] = 0x5a6dfd56e022e8b790d44dc2256f4e36803f5062953c3eb1b89
+    self.exp_halfZ[193] = 0x9517e15a1df223e9c86dca7367ab9c5b08e9c3a12dc43e1d696
+    self.exp_halfZ[194] = 0xf5d0323220304e05db816721d9e35768aed750bf412d7ad1525
+    self.exp_halfZ[195] = 0x195470e2ea9db78949e971e00ec87bbd72b229d4bcab67f6696f
+    self.exp_halfZ[196] = 0x29c309267b26c772e3b45f88fc735c79c2ed41804efc8becbbde
+    self.exp_halfZ[197] = 0x44da89bcba2c6136fdbed5ec5993eb1f000d4b62177d582e47d7
+    self.exp_halfZ[198] = 0x71853f894c6105aa3e9c8ad4cf105beaa39a9b716a66b903223c
+    self.exp_halfZ[199] = 0xbb29e5e612e9260edc9d880b85b820cf5e5e62da2fdd38b48f9b
+    self.exp_halfZ[200] = 0x13494a9b171bf4acc2250933224286534456ec613f35c5142427b
+    self.exp_halfZ[201] = 0x1fcc37a76f9e75e06958419be0b5d7140f759dee1a674abfe4ba7
+    self.exp_halfZ[202] = 0x346cf3173b2d36c57d13878e452a8f4017ab6157e72ed5c954bd3
+    self.exp_halfZ[203] = 0x566f67b0553b200841d608781404149759e1d4027755baf083e74
+    self.exp_halfZ[204] = 0x8e81ec60602577a48e6186a5f3bb94c7c859b0e2b35d79a80d37a
+    self.exp_halfZ[205] = 0xeaf485e45ebb0ac045bad5848220a2dc7ad8506209db617db2302
+    self.exp_halfZ[206] = 0x1836026385c97435f1591b3252a97b06abf7c9103883ea5b4caf47
+    self.exp_halfZ[207] = 0x27eaca31a7a5f0b7508b45ca84d71899136f8022228b148effff1b
+    self.exp_halfZ[208] = 0x41cfefa6b24073485ba35f76414c60d319953fb28e54df79e8f792
+    self.exp_halfZ[209] = 0x6c818cf92b4c82610a0d6b486abc225ee8b7a8d39fad0eecffcf44
+    self.exp_halfZ[210] = 0xb2e5704b4f942f6dac92b8dd8736cb9b0610a41ca82181948d33f1
+    self.exp_halfZ[211] = 0x126f336141da0ee32260d28a4a7e01877908f643d08424423d290c4
+    self.exp_halfZ[212] = 0x1e64a58639cae79989476a8522cc4a9fd8a116954566f1ff3e8095b
+    self.exp_halfZ[213] = 0x321c1e157a1655d5d8f1824645a0a4b42a68f5634897bcc5a8b13a9
+    self.exp_halfZ[214] = 0x529dfd7e6d43e5337c90c458aee7fdd4a3fd634bbdb95a1896463e2
+    self.exp_halfZ[215] = 0x88367050eeccd50fbe60107ed76823abf09fec88dc2b1b47fa8bbd9
+    self.exp_halfZ[216] = 0xe093a251d1471b7dbcac72862ef9e6662b993fa3ac1c7d88ecbe963
+    self.exp_halfZ[217] = 0x17243ae1217bc1c8290fcde9173790ba28669e9b31c481785acdaadb
+    self.exp_halfZ[218] = 0x2627676d2f1d0a50e5fe998158d583aff58da50f6649da958fb3f8e7
+    self.exp_halfZ[219] = 0x3ee7ba0c50d426c02886d03001789b4cd072867776f613b9efb66923
+    self.exp_halfZ[220] = 0x67b68e8c7961f9c9e62d3062ef795db187a02cdd273c166f1e10d249
+    self.exp_halfZ[221] = 0xaafe77c17cf94f31eee03d90c7bcfd58de6a5c43ed9a47c0587b2752
+    self.exp_halfZ[222] = 0x119ebe56b56452e7705e6df6c8aad8529088625f0752a72f6d618920c
+    self.exp_halfZ[223] = 0x1d0cf5721e17154341c46d4d40bef425c1b5b70b80d8289ad720bf642
+    self.exp_halfZ[224] = 0x2fe578dcb336fc51b64d6015bad015481e4b24920bf77c6318800c3d6
+    self.exp_halfZ[225] = 0x4ef7bff8d16014571673acd7d7b35c28891a2e451f28e8635377701b7
+    self.exp_halfZ[226] = 0x823223086f97f60e1636f48d892637b75a1f59f05b097bdce155d2f0d
+    self.exp_halfZ[227] = 0xd6a81b07038bca18490fdc878970fb00f34c0145322536d037b004241
+    self.exp_halfZ[228] = 0x161e8b490ac4e5af8cc8d8a0c016042f5edd7517b014399c7cb4692b24
+    self.exp_halfZ[229] = 0x2477f4f5d9d2fac17081fc47a27b44d07920916b317205e8708f5fdce1
+    self.exp_halfZ[230] = 0x3c206403e53366027103d28adfcf1515259ca742e78212accc9bb474b7
+    self.exp_halfZ[231] = 0x6321c30dbca83c5fe2b7c524be770a3bbf1595ffec753a6858eaabe774
+    self.exp_halfZ[232] = 0xa370db1bdf57aafd5ddc4423071be769bbde60584edf7aea655e9ba455
+    self.exp_halfZ[233] = 0x10d77e8ba91af998cafd010cf042ed381014e435e06d0d544170cf9b374
+    self.exp_halfZ[234] = 0x1bc473cfede104045e943fe93c35e75188481a2684fca78cb5b0eb7432c
+    self.exp_halfZ[235] = 0x2dc7db4e0b8442cd44b5cf63493690cdbc8466f2b91452e075c336096dc
+    self.exp_halfZ[236] = 0x4b7ac6e72178b470c3daf9bab49bed0ba79cc7e885c7e72f61e5c952a5e
+    self.exp_halfZ[237] = 0x7c71df967c99fbf3382572775877148db497eccd1c6734ee386505995e2
+    self.exp_halfZ[238] = 0xcd2cc0e533e87f6b160fbb787ddb1374153416a5db3cc31acc4690277cd
+    self.exp_halfZ[239] = 0x15246ada6fe686ff1da3e1ac5cda0e2bdbf6b6c823144fe5677cb5fedae8
+    self.exp_halfZ[240] = 0x22db9153dece162d72d1ddab53f80b39bc94c39ca17cba72d05da98de4e9
+    self.exp_halfZ[241] = 0x397879d199006ef37d9ed6d86b4761782cdcc29cf79519dd8b9870a07aa4
+    self.exp_halfZ[242] = 0x5ec0c59a508c2454b02616671f541724eb8f8a957390c51bc824d24750c7
+    self.exp_halfZ[243] = 0x9c38a7e05571c9f7c1af2fde8dc7d49774d73b397a42d1e98bdd482eb343
+    self.exp_halfZ[244] = 0x10190be03150a6d0c482bf429fd51ab9f83d4d386ad2342472807ba3f9849
+    self.exp_halfZ[245] = 0x1a8a74f37a3b88810a09cbd72dd578db5c1c2e7488946f70e9c755bb202dc
+    self.exp_halfZ[246] = 0x2bc22a5f3502327274223b3e673da94ecde76b3faddf7c00d5fe186592e92
+    self.exp_halfZ[247] = 0x48253fa1d13f166a3a4f2db1cc1785055ad176fce64a985a60a868b2d6d4d
+    self.exp_halfZ[248] = 0x76f2a498fe121af3b3783146f2c75673ad76f0d1e734eea261ee9cd583d12
+    self.exp_halfZ[249] = 0xc41c9f6ccad6a8317d53c07019f6f45090deae164aafd5908ec05186860d2
+    self.exp_halfZ[250] = 0x143556dee93bedf1c8ce764d91e442ad6fdea1631ce09947d985cd2c693c87
+    self.exp_halfZ[251] = 0x215165051051e9a0a75db1cbe72873952481d5a56e0459c9040ee647aa6787
+    self.exp_halfZ[252] = 0x36ee98252cfbf3578c701b62effcb418889951268eddb2c51cb9431b34e0cb
+    self.exp_halfZ[253] = 0x5a914c621cf5bdb0268722dbb85a2892d972bd9b487974851514fa09ab123c
+    self.exp_halfZ[254] = 0x9552183749160e8b702888dad950f9efb602404ef2b02b9e9cece33198cf0c
+    self.exp_halfZ[255] = 0xf6302cdd54cb1d5ffc5f9898e36ddd466d65d3e0e99967eceed345606fc168
+    self.exp_halfZ[256] = 0x195e54c5dd42177f53f4d5219df11ca3b98db969c591bf9bacc9526bfd504b1
+    self.exp_halfZ[257] = 0x29d35786851f833668997c82c98ed6fc347d1439599b5bc8029c67585a5879d
+    self.exp_halfZ[258] = 0x44f56c1e4a494ddd22f664d9422114fa2a98b350959e3a39decf6d62c0942ac
+    self.exp_halfZ[259] = 0x71b192aa18ef4c4d9fd0cf58dcbbe65dc15be0e359f71c0b2a8d1b0990f1779
+    self.exp_halfZ[260] = 0xbb72fa2674e174d4dbfd1777365c7b7da37751c283b200123958910a14a8362
+    self.exp_halfZ[261] = 0x1350d2662a44696c5135fa9069c1ccded1dc523c48ca72757e9a582b87a3fdab
+    self.exp_halfZ[262] = 0x1fd8a20c3cc005f62fc06ef3ba86c782d9d1992fab21c071b59140dafd278ba7
+    self.exp_halfZ[263] = 0x34816b604a893542b8044a93bedf2796a3bc479132709b2f2089152cce052b04
+    self.exp_halfZ[264] = 0x56912775732ae50c0c96294161cb07ea1fb3f244cc0b7c8605c8e7653e72c1b1
+    self.exp_halfZ[265] = 0x8eb990f2f2fefd075462ea3a34b8b867803773111218e00b07ea14ef70b09177
 ############################################################################################################
 #                               The average error for exp is +4.951261E-01.                                #
 #                              The average amount of gas used per call is 870                              #
 ############################################################################################################
 def exp(x):
-    start_gas = tx.gas
     if(x < 0):
         v = -x
     else:
@@ -38,11 +301,11 @@ def exp(x):
 
         preshift_pt = 1
         postshift_pt = 2^64
-        ret = exp_halfZ[twice_n] * acc / postshift_pt 
+        ret = self.exp_halfZ[twice_n] * acc / postshift_pt 
         while(ret < 0 and postshift_pt > 0):
             preshift_pt *= 2
             postshift_pt /= 2
-            ret = exp_halfZ[twice_n] / preshift_pt * acc / postshift_pt
+            ret = self.exp_halfZ[twice_n] / preshift_pt * acc / postshift_pt
 
         if(ret < 0):
             # overflow
@@ -52,28 +315,27 @@ def exp(x):
                 return(2^255-1)
         else:
             if(x < 0):
-                return([2^128/ ret, start_gas - tx.gas], 2)
+                return(2^128/ret)
             else:
-                return([ret, start_gas - tx.gas], 2)
+                return(ret)
 
 ############################################################################################################
 #                               The average error for log is +7.055475E-04.                                #
 #                             The average amount of gas used per call is 1023                              #
 ############################################################################################################
 def log(x):
-    start_gas = tx.gas
     # binary search for integral part
     imin = 0
     imax = 266
     while(imin < imax):
         twice_n = (imin + imax) / 2
 
-        if(exp_halfZ[twice_n] <= x):
+        if(self.exp_halfZ[twice_n] <= x):
             imin = twice_n + 1
         else:
             imax = twice_n
 
-    z = 2^64 - x * 2^64 / exp_halfZ[twice_n]
+    z = 2^64 - x * 2^64 / self.exp_halfZ[twice_n]
 
     k = 2
     f = z
@@ -85,18 +347,23 @@ def log(x):
         f += term
         k += 1
 
-    return([twice_n * 2^63 - f, start_gas - tx.gas], 2)
+    return(twice_n * 2^63 - f)
 
 def sqrt(n):
-    start_gas = tx.gas
     guess = n/2
-    i = 0
-    while i < 11:
-        guess = (guess + n * 2^64 / guess)/2
-        i += 1
-    return([guess, start_gas - tx.gas], 2)
+    guess = (guess + n * 2^64 / guess)/2
+    guess = (guess + n * 2^64 / guess)/2
+    guess = (guess + n * 2^64 / guess)/2
+    guess = (guess + n * 2^64 / guess)/2
+    guess = (guess + n * 2^64 / guess)/2
+    guess = (guess + n * 2^64 / guess)/2
+    guess = (guess + n * 2^64 / guess)/2
+    guess = (guess + n * 2^64 / guess)/2
+    guess = (guess + n * 2^64 / guess)/2
+    guess = (guess + n * 2^64 / guess)/2
+    guess = (guess + n * 2^64 / guess)/2
+    return(guess)
 
 def pow(b, e):
-    start_gas = tx.gas
     result = self.exp(e*self.log(b)/2^64)
-    return([result, start_gas - tx.gas], 2)
+    return(result)

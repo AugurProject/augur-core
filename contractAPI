@@ -1,0 +1,84 @@
+# Build UI starting with augurTests.se --- it compiles + works - augur.se is more bleeding edge
+
+# Every entity in our contract has similar metadata.
+# Instead of putting it in each entity, we put some of the
+# metadata here.
+# Info's index is the hash of the item we're getting info on
+data Info[](typecode, description[], creator, creationFee)
+
+# CurrentVotePeriod is the current index in eventsExpDates
+# Branches' index is the hash of the branch (aka branchID)
+# RepRequired is the amount of reputation required to reach quorem
+# markets[] is a 0 indexed array of market hashes (a.k.a. marketID)
+# currentVotePeriod is a nonce that tells us which bucket of events are up to be
+# voted on in the upcoming vote period
+# periodLength is the length of a voting period
+data Branches[](currentVotePeriod, markets[], marketCount, periodLength, repRequired)
+
+# Events' index is the eventID
+# outcome is -1 if false, 1 if true, 0 if not determined yet
+data Events[](branch, expirationDate, outcome)
+
+# Reporting index is the branchID
+# Reporters index is the repIDIndex (given by repIDtoIndex) then event index (starting at 0)
+# We 0 index reputation so can walk thru for consensus
+# EventsExpDates index is the currentVotePeriod or a future one if an event expires in the future
+# RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
+# Events is 0 indexed as well
+data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
+
+# Markets' index is the marketID
+# Events is a 0 indexed array of events in the market
+# Sharespurchased keeps track of the number of shares purchased for each outcome
+# Participants is a 0 indexed array of participants, their cashIDs, and the shares in each outcome they've purchased of an event (events' indexes are actual event IDs)
+# sharesPurchased is 0 indexed (0 is outcome 0, 1 is outcome 1, 2 is outcome 2 (notice we're on a new event here if they're binary))
+   # ex: eventIndex*2 is outcome 0, eventIndex*2 + 1 is outcome one for each corresponding event 
+   #    self.Markets[$marketID].sharesPurchased[$i*2]
+   #    self.Markets[$marketID].sharesPurchased[$i*2 + 1]
+data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[2])), lossLimit, tradingFee, numberEvents, currentParticipant, winningEvents[], alpha)
+
+data cashcoin_balances[2^160]
+
+# initializes some test / example values for us
+def init()
+
+def get_cash_balance(address)
+	return(self.cashcoin_balances[address])
+
+# should send values as fixed point in UI (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
+# recver is receiver address
+def send_cashcoin(recver, value)
+
+# branch is branchID, value in fixed point again
+def send_reputation(branch, recver, value)
+
+def get_rep_balance(branch, address):
+	return(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[address]].repValue)
+
+# periodLength is period of branch as int, parent is the branch's parent branchID
+# repRequired: int, amt. of rep. req. for quorem
+def make_subbranch(description:s, periodLength, parent, repRequired):
+
+# allows you to make an event with branchID, a string description, and expiration block
+# (in UI we should allow people to put in a date and time, then convert using numsSecInFuture / 12 seconds per block  + current block num)
+# always ceiling this number - e.g. if we get 4.1, expiration block is 5
+def create_event(branch, description:s, expDate):
+
+# lossLimit is a fixedpoint syntax number (so a losslimit of 1 is 2^64) (0 if not using lmsr)
+# ditto for alpha
+# tradingFee is a fixedpoint number as well
+# only put one of losslimit or alpha, put the one you don't check off in UI as a 0
+# events is a list of eventIDs (hashes) in the market
+# atm only tested to work with 1 event, working on multiple events
+def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a):
+
+# fee should be in fixed point
+# amount of shares should be an integer
+# outcomes you can buy atm are 0 or 1, no or true
+# everything else is a hash / ID
+def buy_shares(branch, event, market, outcome, amount, fee):
+
+# amount is amount of shares to buy
+# fee should be fixed point
+# participantNumber is the number returned by buy_shares
+def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):

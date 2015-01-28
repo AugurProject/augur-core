@@ -27,7 +27,7 @@ MARKET = 2
 # Instead of putting it in each entity, we put all the
 # metadata here.
 # Info's index is the hash of the item we're getting info on
-data Info[](typecode, description[], creator, creationFee)
+data Info[](typecode, description[2048], descriptionLength, creator, creationFee)
 
 # CurrentVotePeriod is the current index in eventsExpDates
 # Branches' index is the hash of the branch (aka branchID)
@@ -65,134 +65,137 @@ data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 data cashcoin_balances[]
 
 def init():
-	# test initial funds
-	self.cashcoin_balances[tx.origin] = 1000000*2^64
-	self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
-	self.Reporting[1010101].reputation[0].repValue = 47
-	self.Reporting[1010101].reputation[0].reporterID = tx.origin
-	self.Reporting[1010101].numberReporters = 1
-	self.Info[1010101].typecode = 0
-	self.Info[1010101].description[] = "initial branch"
-	self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
-	self.Info[1010101].creationFee = 10
-	self.Branches[1010101].currentVotePeriod = block.number / 403200
-	self.Branches[1010101].marketCount = 0
-	self.Branches[1010101].periodLength = 403200
-	self.Branches[1010101].repRequired = 14000000
+    # test initial funds
+    self.cashcoin_balances[tx.origin] = 1000000*2^64
+    self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
+    self.Reporting[1010101].reputation[0].repValue = 47
+    self.Reporting[1010101].reputation[0].reporterID = tx.origin
+    self.Reporting[1010101].numberReporters = 1
+    self.Info[1010101].typecode = 0
+    self.Info[1010101].description[] = "initial branch"
+    self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
+    self.Info[1010101].creationFee = 10
+    self.Branches[1010101].currentVotePeriod = block.number / 403200
+    self.Branches[1010101].marketCount = 0
+    self.Branches[1010101].periodLength = 403200
+    self.Branches[1010101].repRequired = 14000000
 
 # string chunks
 macro chunks($l):
     $l + if(l%32 != 0, 1, 0)
 
 def get_cash_balance(address):
-	return(self.cashcoin_balances[address])
+    return(self.cashcoin_balances[address])
 
 # should send values as fixed point in UI (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
 def send_cashcoin(recver, value):
-	sender = tx.origin
-	sender_balance = self.cashcoin_balances[sender]
-	if(sender_balance >= value):
-		self.cashcoin_balances[sender] -= value
-		self.cashcoin_balances[recver] += value
-		return(1)
-	else:
-		return(0)
+    sender = tx.origin
+    sender_balance = self.cashcoin_balances[sender]
+    if(sender_balance >= value):
+        self.cashcoin_balances[sender] -= value
+        self.cashcoin_balances[recver] += value
+        return(1)
+    else:
+        return(0)
 
 def send_reputation(branch, recver, value):
-	if(value<=0 or !self.send_cashcoin(branch, 5*2^64)):
-		return(0)
-	sender = tx.origin
-	senderIndex = self.Reporting[branch].repIDtoIndex[sender]
-	receiverIndex = self.Reporting[branch].repIDtoIndex[recver]
-	# if the sender's rep. account doesn't exist, make one
-	if(self.Reporting[branch].reputation[senderIndex].reporterID!=tx.origin):
-			reporterIndex = self.Reporting[branch].numberReporters
-			self.Reporting[branch].repIDtoIndex[tx.origin] = reporterIndex
-			self.Reporting[branch].reputation[reporterIndex].repValue = 0
-			self.Reporting[branch].reputation[reporterIndex].reporterID = tx.origin
-			self.Reporting[branch].numberReporters += 1
-			return(text("Your reputation account was just created, earn some rep. before you can send to others"): s)
+    if(value<=0 or !self.send_cashcoin(branch, 5*2^64)):
+        return(0)
+    sender = tx.origin
+    senderIndex = self.Reporting[branch].repIDtoIndex[sender]
+    receiverIndex = self.Reporting[branch].repIDtoIndex[recver]
+    # if the sender's rep. account doesn't exist, make one
+    if(self.Reporting[branch].reputation[senderIndex].reporterID!=tx.origin):
+        reporterIndex = self.Reporting[branch].numberReporters
+        self.Reporting[branch].repIDtoIndex[tx.origin] = reporterIndex
+        self.Reporting[branch].reputation[reporterIndex].repValue = 0
+        self.Reporting[branch].reputation[reporterIndex].reporterID = tx.origin
+        self.Reporting[branch].numberReporters += 1
+        return(text("Your reputation account was just created, earn some rep. before you can send to others"): s)
 
-	if(self.Reporting[branch].reputation[receiverIndex].reporterID!=recver):
-		return(text("Receiving address doesn't exist"): s)
-		
-	sender_balance = self.Reporting[branch].reputation[senderIndex].repValue
-	if(sender_balance >= value):
-		self.Reporting[branch].reputation[senderIndex].repValue -= value
-		self.Reporting[branch].reputation[receiverIndex].repValue += value
-		return(1)
-	else:
-		return(0)
-		
+    if(self.Reporting[branch].reputation[receiverIndex].reporterID!=recver):
+        return(text("Receiving address doesn't exist"): s)
+        
+    sender_balance = self.Reporting[branch].reputation[senderIndex].repValue
+    if(sender_balance >= value):
+        self.Reporting[branch].reputation[senderIndex].repValue -= value
+        self.Reporting[branch].reputation[receiverIndex].repValue += value
+        return(1)
+    else:
+        return(0)
+        
 def get_rep_balance(branch, address):
-	return(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[address]].repValue)
+    return(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[address]].repValue)
 
 # period length is given in blocks
 # description format is branchName:description
 # is there some way we can include the description bytes in the sha256 hash?
-def make_subbranch(description:s, periodLength, parent, repRequired):
-	if(periodLength<=0 or !self.Branches[parent].periodLength or !repRequired or description==0):
-		return(0)
-	branchCharacteristics = array(7)
-	branchCharacteristics[0] = BRANCH
-	branchCharacteristics[1] = tx.origin
-	branchCharacteristics[2] = 47*2^64
-	branchCharacteristics[3] = periodLength
-	branchCharacteristics[4] = block.number
-	branchCharacteristics[5] = parent
-	branchCharacteristics[6] = repRequired
+def make_subbranch(description:str, periodLength, parent, repRequired):
+    if(periodLength<=0 or !self.Branches[parent].periodLength or !repRequired or description==0):
+        return(0)
+    branchinfo = string((items=7)+len(description))
+    branchinfo[0] = BRANCH                                      #typecode
+    branchinfo[1] = tx.origin                                   #creator address
+    branchinfo[2] = 47*2^64                                     #creation fee
+    branchinfo[3] = periodLength                                #length of voting cycle
+    branchinfo[4] = block.number                                #current block number
+    branchinfo[5] = parent                                      #branchID of parent branch
+    branchinfo[6] = repRequired                                 #minimum rep required to vote
+    mcopy(branchinfo+(items=7), description, len(description))
+    # people can check that these characteristics hash to the ID if they want
+    # people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
+    branchID = sha256(branchinfo, len(branchinfo))
+    if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator and self.send_cashcoin(branchID, 47*2^64)):
+        self.Info[branchID].typecode = BRANCH
+        self.Info[branchID].creator = tx.origin
+        self.Info[branchID].creationFee = 47*2^64
+        self.Info[branchID].descriptionLength = len(description)
+        save(self.Info[branchID].description[0], description, chars=len(description))
+        self.Branches[branchID].periodLength = periodLength
+        self.Branches[branchID].repRequired = repRequired
+        self.Branches[branchID].currentVotePeriod = block.number / periodLength
+        i = 0
+        while i < self.Reporting[parent].numberReporters:
+            self.Reporting[branchID].reputation[i].reporterID = self.Reporting[parent].reputation[i].reporterID
+            self.Reporting[branchID].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
+            i+=1
+        self.Reporting[branchID].numberReporters = i
+        return(branchID)
+    else:
+        return(0)
+        
+def create_event(branch, description:str, expDate, minValue, maxValue):
+    if(self.Branches[branch].periodLength and description!=0 and expDate>block.number):
+        eventinfo = string((items=7)+len(description))
+        eventinfo[0] = EVENT
+        eventinfo[1] = branch
+        eventinfo[2] = expDate
+        eventinfo[3] = tx.origin
+        eventinfo[4] = 42*2^64
+        eventinfo[5] = minValue
+        eventinfo[6] = maxValue
+        mcopy(eventinfo+(items=7), description, len(description))
+        eventID = sha256(eventinfo, chars=len(eventinfo))
+    else:
+        return(0)
 
-	# people can check that these characteristics hash to the ID if they want
-	# people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
-	branchID = sha256(branchCharacteristics, 7)
-	if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator and self.send_cashcoin(branchID, 47*2^64)):
-		self.Info[branchID].typecode = BRANCH
-		self.Info[branchID].description[] = description
-		self.Info[branchID].creator = tx.origin
-		self.Info[branchID].creationFee = 47*2^64
-		self.Branches[branchID].periodLength = periodLength
-		self.Branches[branchID].repRequired = repRequired
-		self.Branches[branchID].currentVotePeriod = block.number / periodLength
-		i = 0
-		while i < self.Reporting[parent].numberReporters:
-			self.Reporting[branchID].reputation[i].reporterID = self.Reporting[parent].reputation[i].reporterID
-			self.Reporting[branchID].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
-			i+=1
-		self.Reporting[branchID].numberReporters = i
-		return(branchID)
-	else:
-		return(0)
-		
-def create_event(branch, description:s, expDate, minValue, maxValue):
-	if(self.Branches[branch].periodLength and description!=0 and expDate>block.number):
-		eventCharacteristics = array(7)
-		eventCharacteristics[0] = EVENT
-		eventCharacteristics[1] = branch
-		eventCharacteristics[2] = expDate
-		eventCharacteristics[3] = tx.origin
-		eventCharacteristics[4] = 42*2^64
-		eventCharacteristics[5] = minValue
-		eventCharacteristics[6] = maxValue
-		eventID = sha256(eventCharacteristics, 7)
-	else:
-		return(0)
-
-	if (!self.Info[eventID].creator and !self.Events[eventID].branch and self.send_cashcoin(branch, 42*2^64)):
-		self.Info[eventID].typecode = EVENT
-		self.Info[eventID].description[] = description
-		self.Info[eventID].creator = tx.origin
-		self.Info[eventID].creationFee = 42*2^64
-		self.Events[eventID].branch = branch
-		self.Events[eventID].expirationDate = expDate
-		self.Events[eventID].minValue = minValue
-		self.Events[eventID].maxValue = maxValue	
-		# see which future period it expires in and put the event in that bin
-		futurePeriod = expDate / self.Branches[branch].periodLength
-		self.Reporting[branch].eventsExpDates[futurePeriod].events[self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents] = eventID
-		self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents += 1
-		return(eventID)
-	else:
-		return(0)
+    if (!self.Info[eventID].creator and !self.Events[eventID].branch and self.send_cashcoin(branch, 42*2^64)):
+        self.Info[eventID].typecode = EVENT
+        self.Info[eventID].creator = tx.origin
+        self.Info[eventID].creationFee = 42*2^64
+        self.Info[eventID].descriptionLength = len(description)
+        save(self.Info[eventID].description[0], description, chars=len(description))
+        self.Events[eventID].branch = branch
+        self.Events[eventID].expirationDate = expDate
+        self.Events[eventID].minValue = minValue
+        self.Events[eventID].maxValue = maxValue    
+        # see which future period it expires in and put the event in that bin
+        futurePeriod = expDate / self.Branches[branch].periodLength
+        self.Reporting[branch].eventsExpDates[futurePeriod].events[self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents] = eventID
+        self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents += 1
+        return(eventID)
+    else:
+        return(0)
 
 # lossLimit is a fixedpoint syntax number (so a losslimit of 1 is 2^64) (0 if not using lmsr)
 # ditto for alpha
@@ -219,19 +222,20 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 
 	if(numEvents > 200 or !self.Branches[branch].periodLength or description==0 or !lossLimit or !tradingFee or (!alpha and !lossLimit)):
 		return(0)
+	
 	# formation of marketID (hash)
-	marketCharacteristics = array(10)
-	marketCharacteristics[0] = MARKET
-	marketCharacteristics[1] = tx.origin
-	marketCharacteristics[2] = initialLiquidity
-	marketCharacteristics[3] = branch
-	marketCharacteristics[4] = eventsConcat
-	marketCharacteristics[5] = numEvents
-	marketCharacteristics[6] = lossLimit
-	marketCharacteristics[7] = tradingFee
-	marketCharacteristics[8] = alpha
-	marketCharacteristics[9] = cumulativeScale
-	marketID = sha256(marketCharacteristics, 10)
+    marketinfo = string((items=9)+len(description))
+    marketinfo[0] = MARKET
+    marketinfo[1] = tx.origin
+    marketinfo[2] = initialLiquidity
+    marketinfo[3] = branch
+    marketinfo[4] = eventsConcat
+    marketinfo[5] = numEvents
+    marketinfo[6] = lossLimit
+    marketinfo[7] = tradingFee
+    marketinfo[8] = alpha
+    mcopy(marketinfo+(items=9), description, chars=len(description))
+    marketID = sha256(marketinfo, chars=len(marketinfo))
 
 	# if regular lmsr
 	if(losslimit):
@@ -260,21 +264,21 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 		if(self.Branches[branch].marketCount==0):
 			self.send_cashcoin(tx.origin, self.Info[branch].creationFee)
 			
-		self.Info[marketID].typecode = MARKET
-		self.Info[marketID].description[] = description
-		self.Info[marketID].creator = tx.origin
-		self.Info[marketID].creationFee = initialLiquidity
-		self.cashcoin_balances[marketID] = initialLiquidity
-		self.Markets[marketID].lossLimit = lossLimit
-		self.Markets[marketID].tradingFee = tradingFee
-		self.Markets[marketID].branch = branch
-		self.Markets[marketID].alpha = alpha
-		self.Markets[marketID].cumulativeScale = cumulativeScale
-		# add the market to the branch
-		marketCount = self.Branches[branch].marketCount
-		self.Branches[branch].markets[marketCount] = marketID
-		self.Branches[branch].marketCount += 1
-		return(marketID)
+ 		self.Info[marketID].typecode = MARKET
+        self.Info[marketID].creator = tx.origin
+        self.Info[marketID].creationFee = initialLiquidity
+        self.Info[marketID].descriptionLength = len(description)
+        save(self.Info[marketID].description[0], description, chars=len(description))
+        self.cashcoin_balances[marketID] = initialLiquidity
+        self.Markets[marketID].lossLimit = lossLimit
+        self.Markets[marketID].tradingFee = tradingFee
+        self.Markets[marketID].branch = branch
+        self.Markets[marketID].alpha = alpha
+        # add the market to the branch
+        marketCount = self.Branches[branch].marketCount
+        self.Branches[branch].markets[marketCount] = marketID
+        self.Branches[branch].marketCount += 1
+        return(marketID)
 	else:
 		return(0)
 
@@ -282,40 +286,40 @@ def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a)
 # and n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
 macro ls_lmsr($marketID):
-	with $Bq = 0:
-		with $l = self.Markets[$marketID].numberEvents:
-			with $i = 0:
-				while $i < $l:
-					$Bq += self.Markets[$marketID].sharesPurchased[$i*2]
-					$Bq += self.Markets[$marketID].sharesPurchased[$i*2 + 1]
-					$i += 1
-				$Bq *= self.Markets[$marketID].alpha
-				$i = 0
-				with $sum_exp = 0:
-					with $a = 0:
-						with $b = 0:
-							while $i < $l:
-								$a = self.Markets[$marketID].sharesPurchased[$i*2]
-								$b = self.Markets[$marketID].sharesPurchased[$i*2 + 1]
-								$sum_exp += self.exp($a*2^64/$Bq)
-								$sum_exp += self.exp($b*2^64/$Bq)
-								$i += 1
-							$Bq*self.Markets[$marketID].cumulativeScale*self.log($sum_exp)/2^64
+    with $Bq = 0:
+        with $l = self.Markets[$marketID].numberEvents:
+            with $i = 0:
+                while $i < $l:
+                    $Bq += self.Markets[$marketID].sharesPurchased[$i*2]
+                    $Bq += self.Markets[$marketID].sharesPurchased[$i*2 + 1]
+                    $i += 1
+                $Bq *= self.Markets[$marketID].alpha
+                $i = 0
+                with $sum_exp = 0:
+                    with $a = 0:
+                        with $b = 0:
+                            while $i < $l:
+                                $a = self.Markets[$marketID].sharesPurchased[$i*2]
+                                $b = self.Markets[$marketID].sharesPurchased[$i*2 + 1]
+                                $sum_exp += self.exp($a*2^64/$Bq)
+                                $sum_exp += self.exp($b*2^64/$Bq)
+                                $i += 1
+                            $Bq*self.log($sum_exp)/2^64
 
 macro lmsr($marketID):
-	with $sum_exp = 0:
-		with $B = self.Markets[$marketID].lossLimit:
-			with $l = self.Markets[$marketID].numberEvents:
-				with $i = 0:
-					with $a = 0:
-						with $b = 0:
-							while $i < $l:
-								$a = self.Markets[$marketID].sharesPurchased[$i*2]
-								$b = self.Markets[$marketID].sharesPurchased[$i*2 + 1]
-								$sum_exp += self.exp($a*2^64/$B)
-								$sum_exp += self.exp($b*2^64/$B)
-								$i += 1
-							$B*self.Markets[$marketID].cumulativeScale*self.log($sum_exp)/2^64
+    with $sum_exp = 0:
+        with $B = self.Markets[$marketID].lossLimit:
+            with $l = self.Markets[$marketID].numberEvents:
+                with $i = 0:
+                    with $a = 0:
+                        with $b = 0:
+                            while $i < $l:
+                                $a = self.Markets[$marketID].sharesPurchased[$i*2]
+                                $b = self.Markets[$marketID].sharesPurchased[$i*2 + 1]
+                                $sum_exp += self.exp($a*2^64/$B)
+                                $sum_exp += self.exp($b*2^64/$B)
+                                $i += 1
+                            $B*self.log($sum_exp)/2^64
 
 # fee should be in fixed point
 # amount of shares should be an integer
@@ -325,170 +329,170 @@ macro lmsr($marketID):
 # ls-lmsr markets won't have much in fees in the branch, so the market creator will thus get a lot of fees himself hmmm...
 # is there a way to pool ls-lmsr fees separately?
 def buy_shares(branch, event, market, outcome, amount, fee):
-	if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee):
-		return(0)
-	# pay one-fourth of trading fee to market creator via sending to market.creator
-	# other half is stored in branchID cashcoin balance
-	self.cashcoin_balances[tx.origin] -= fee
-	marketCreatorFee = fee - (3*fee)/4
-	self.cashcoin_balances[self.Info[market].creator] += marketCreatorFee
-	self.cashcoin_balances[branch] += (3*fee)/4
-	
-	# find the right event index
-	i = 0
-	while (i<self.Markets[market].numberEvents and self.Markets[market].events[i] != event):
-			i+=1
+    if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee):
+        return(0)
+    # pay one-fourth of trading fee to market creator via sending to market.creator
+    # other half is stored in branchID cashcoin balance
+    self.cashcoin_balances[tx.origin] -= fee
+    marketCreatorFee = fee - (3*fee)/4
+    self.cashcoin_balances[self.Info[market].creator] += marketCreatorFee
+    self.cashcoin_balances[branch] += (3*fee)/4
+    
+    # find the right event index
+    i = 0
+    while (i<self.Markets[market].numberEvents and self.Markets[market].events[i] != event):
+            i+=1
 
-	# event doesn't exist in index
-	if(i==self.Markets[market].numberEvents):
-		return(0)
-	oldCost = 0
-	newCost = 0
-	# using ls-lmsr
-	if(self.Markets[market].alpha):
-		# for the first trade's oldcost shares bought will be at 0
-		# only 2 outcomes poss. for now
-		oldCost = ls_lmsr(market)
-		# if buying outcome 1
-		if outcome:
-			self.Markets[market].sharesPurchased[i*2+1] += amount
-		# outcome is no
-		else:
-			self.Markets[market].sharesPurchased[i*2] += amount
-		newCost = ls_lmsr(market) 
-	# regular lmsr
-	else:
-		if(self.Markets[market].lossLimit):
-			# for the first trade's oldcost shares bought will be at 0
-			# only 2 outcomes poss. for now
-			oldCost = lmsr(market)
-			# if buying outcome 1
-			if outcome:
-				self.Markets[market].sharesPurchased[i*2+1] += amount
-			# outcome is no
-			else:
-				self.Markets[market].sharesPurchased[i*2] += amount
-			newCost = lmsr(market) 
+    # event doesn't exist in index
+    if(i==self.Markets[market].numberEvents):
+        return(0)
+    oldCost = 0
+    newCost = 0
+    # using ls-lmsr
+    if(self.Markets[market].alpha):
+        # for the first trade's oldcost shares bought will be at 0
+        # only 2 outcomes poss. for now
+        oldCost = ls_lmsr(market)
+        # if buying outcome 1
+        if outcome:
+            self.Markets[market].sharesPurchased[i*2+1] += amount
+        # outcome is no
+        else:
+            self.Markets[market].sharesPurchased[i*2] += amount
+        newCost = ls_lmsr(market) 
+    # regular lmsr
+    else:
+        if(self.Markets[market].lossLimit):
+            # for the first trade's oldcost shares bought will be at 0
+            # only 2 outcomes poss. for now
+            oldCost = lmsr(market)
+            # if buying outcome 1
+            if outcome:
+                self.Markets[market].sharesPurchased[i*2+1] += amount
+            # outcome is no
+            else:
+                self.Markets[market].sharesPurchased[i*2] += amount
+            newCost = lmsr(market) 
 
-	# these prices are in fixed point
-	pricePerShare = newCost - oldCost
-	participantNumber = self.Markets[market].currentParticipant
-	
-	# send shares of the event to user address
-	if outcome:
-		# if user doesn't have enough money, revert
-		if(self.cashcoin_balances[tx.origin]<amount*pricePerShare):
-			self.Markets[market].sharesPurchased[i*2+1] -= amount
-			return(0)
-		else:
-			# send ether from user acc. to market address/account
-			self.send_cashcoin(market, pricePerShare*amount)
-			self.Markets[market].participants[participantNumber].participantID = tx.origin
-			self.Markets[market].participants[participantNumber].event[event].shares[1] += amount
-			self.Markets[market].currentParticipant += 1
-			return(participantNumber)
-			
-	# outcome 0
-	else:
-		# if user doesn't have enough money, revert
-		if(self.cashcoin_balances[tx.origin]<amount*pricePerShare):
-			self.Markets[market].sharesPurchased[i*2] -= amount
-			return(0)
-		else:
-			# send ether from user acc. to market address/account
-			self.send_cashcoin(market, pricePerShare*amount)
-			self.Markets[market].participants[participantNumber].participantID = tx.origin
-			self.Markets[market].participants[participantNumber].event[event].shares[0] += amount
-			self.Markets[market].currentParticipant += 1
-			return(participantNumber)
-			
+    # these prices are in fixed point
+    pricePerShare = newCost - oldCost
+    participantNumber = self.Markets[market].currentParticipant
+    
+    # send shares of the event to user address
+    if outcome:
+        # if user doesn't have enough money, revert
+        if(self.cashcoin_balances[tx.origin]<amount*pricePerShare):
+            self.Markets[market].sharesPurchased[i*2+1] -= amount
+            return(0)
+        else:
+            # send ether from user acc. to market address/account
+            self.send_cashcoin(market, pricePerShare*amount)
+            self.Markets[market].participants[participantNumber].participantID = tx.origin
+            self.Markets[market].participants[participantNumber].event[event].shares[1] += amount
+            self.Markets[market].currentParticipant += 1
+            return(participantNumber)
+            
+    # outcome 0
+    else:
+        # if user doesn't have enough money, revert
+        if(self.cashcoin_balances[tx.origin]<amount*pricePerShare):
+            self.Markets[market].sharesPurchased[i*2] -= amount
+            return(0)
+        else:
+            # send ether from user acc. to market address/account
+            self.send_cashcoin(market, pricePerShare*amount)
+            self.Markets[market].participants[participantNumber].participantID = tx.origin
+            self.Markets[market].participants[participantNumber].event[event].shares[0] += amount
+            self.Markets[market].currentParticipant += 1
+            return(participantNumber)
+            
 
 # amount is amount of shares to buy
 # instead of inputting particip. num could just loop through array if dont have it
 # fee should be fixed point
 def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
-	# When sell check that event hasn't expired
-	if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee or self.Markets[market].participants[participantNumber].participantID != tx.origin or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee):
-		return(0)
+    # When sell check that event hasn't expired
+    if (block.number >= self.Events[event].expirationDate or fee<self.Markets[market].tradingFee or self.Markets[market].participants[participantNumber].participantID != tx.origin or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee):
+        return(0)
 
-	# pay one-fourth of trading fee to market creator via sending to market.creator
-	# other half is stored in branchID cashcoin balance
-	self.cashcoin_balances[tx.origin] -= fee
-	marketCreatorFee = fee - (3*fee)/4
-	self.cashcoin_balances[self.Info[market].creator] += marketCreatorFee
-	self.cashcoin_balances[branch] += (3*fee)/4
+    # pay one-fourth of trading fee to market creator via sending to market.creator
+    # other half is stored in branchID cashcoin balance
+    self.cashcoin_balances[tx.origin] -= fee
+    marketCreatorFee = fee - (3*fee)/4
+    self.cashcoin_balances[self.Info[market].creator] += marketCreatorFee
+    self.cashcoin_balances[branch] += (3*fee)/4
 
-	# find the right event index
-	i = 0
-	while (i<self.Markets[market].numberEvents and self.Markets[market].events[i] != event):
-			i+=1
-	# event doesn't exist in index
-	if(i==self.Markets[market].numberEvents):
-		return(0)
+    # find the right event index
+    i = 0
+    while (i<self.Markets[market].numberEvents and self.Markets[market].events[i] != event):
+            i+=1
+    # event doesn't exist in index
+    if(i==self.Markets[market].numberEvents):
+        return(0)
 
-	# for the first trade oldcost shares bought will be at 0
-	oldCost = 0
-	newCost = 0
-	# using ls-lmsr
-	if(self.Markets[market].alpha):
-		oldCost = ls_lmsr(market)
-		# send unspent shares from the user to the event
-		if outcome:
-			self.Markets[market].sharesPurchased[i*2+1] -= amount
-		# outcome is no
-		else:
-			self.Markets[market].sharesPurchased[i*2] -= amount
-		newCost = ls_lmsr(market)
-	# using lmsr
-	else:
-		if(self.Markets[market].lossLimit):
-			oldCost = lmsr(market)
-			# send unspent shares from the user to the event
-			if outcome:
-				self.Markets[market].sharesPurchased[i*2+1] -= amount
-			# outcome is no
-			else:
-				self.Markets[market].sharesPurchased[i*2] -= amount
-			newCost = ls_lmsr(market)
+    # for the first trade oldcost shares bought will be at 0
+    oldCost = 0
+    newCost = 0
+    # using ls-lmsr
+    if(self.Markets[market].alpha):
+        oldCost = ls_lmsr(market)
+        # send unspent shares from the user to the event
+        if outcome:
+            self.Markets[market].sharesPurchased[i*2+1] -= amount
+        # outcome is no
+        else:
+            self.Markets[market].sharesPurchased[i*2] -= amount
+        newCost = ls_lmsr(market)
+    # using lmsr
+    else:
+        if(self.Markets[market].lossLimit):
+            oldCost = lmsr(market)
+            # send unspent shares from the user to the event
+            if outcome:
+                self.Markets[market].sharesPurchased[i*2+1] -= amount
+            # outcome is no
+            else:
+                self.Markets[market].sharesPurchased[i*2] -= amount
+            newCost = ls_lmsr(market)
 
-	# these prices are in fixed point
-	priceToPayPerShare = oldCost - newCost
-	# remove shares from the user's account
-	if outcome:
-		# if user actually doesn't have the shares, revert
-		if(self.Markets[market].participants[participantNumber].event[event].shares[1]<amount):
-			self.Markets[market].sharesPurchased[i*2+1] += amount
-			return(0)
-		else:
-			# send bitcoin from the market to the user acc.
-			self.cashcoin_balances[market] -= priceToPayPerShare*amount
-			self.cashcoin_balances[tx.origin] += priceToPayPerShare*amount
-			self.Markets[market].participants[participantNumber].event[event].shares[1] -= amount
-			return(1)
-	else:
-		# if user actually doesn't have the shares, revert
-		if(self.Markets[market].participants[participantNumber].event[event].shares[0]<amount):
-			self.Markets[market].sharesPurchased[i*2] += amount
-			return(0)
-		else:
-			# send bitcoin from the market to the user acc.
-			self.cashcoin_balances[market] -= priceToPayPerShare*amount
-			self.cashcoin_balances[tx.origin] += priceToPayPerShare*amount
-			self.Markets[market].participants[participantNumber].event[event].shares[0] -= amount
-			return(1)
+    # these prices are in fixed point
+    priceToPayPerShare = oldCost - newCost
+    # remove shares from the user's account
+    if outcome:
+        # if user actually doesn't have the shares, revert
+        if(self.Markets[market].participants[participantNumber].event[event].shares[1]<amount):
+            self.Markets[market].sharesPurchased[i*2+1] += amount
+            return(0)
+        else:
+            # send bitcoin from the market to the user acc.
+            self.cashcoin_balances[market] -= priceToPayPerShare*amount
+            self.cashcoin_balances[tx.origin] += priceToPayPerShare*amount
+            self.Markets[market].participants[participantNumber].event[event].shares[1] -= amount
+            return(1)
+    else:
+        # if user actually doesn't have the shares, revert
+        if(self.Markets[market].participants[participantNumber].event[event].shares[0]<amount):
+            self.Markets[market].sharesPurchased[i*2] += amount
+            return(0)
+        else:
+            # send bitcoin from the market to the user acc.
+            self.cashcoin_balances[market] -= priceToPayPerShare*amount
+            self.cashcoin_balances[tx.origin] += priceToPayPerShare*amount
+            self.Markets[market].participants[participantNumber].event[event].shares[0] -= amount
+            return(1)
 
 def queryShareCost():
-	return(1)
+    return(1)
 
 #check if the eventID is in the currentvotingperiod pointed to by the branchID's currentVotePeriod 
 def inPeriod(branchID, eventID):
-	votePeriod = self.Branches[branchID].currentVotePeriod
-	i = 0
-	while i < self.Reporting[branchID].eventsExpDates[votePeriod].numberEvents:
-		if(eventID==self.Reporting[branchID].eventsExpDates[votePeriod].events[i]):
-			return(1)
-		i += 1
-	return(0)
+    votePeriod = self.Branches[branchID].currentVotePeriod
+    i = 0
+    while i < self.Reporting[branchID].eventsExpDates[votePeriod].numberEvents:
+        if(eventID==self.Reporting[branchID].eventsExpDates[votePeriod].events[i]):
+            return(1)
+        i += 1
+    return(0)
 
 # a no vote is -2^64, a yes vote is 2^64 and a can't determine vote is 2^63 (a empty ballot is 0)
 # atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
@@ -534,28 +538,27 @@ def vote(branch, report:a):
 	self.Reporting[branchID].eventsExpDates[self.Branches[branchID].currentVotePeriod].totalRepReported += reputation
 	return(1)
 
-
 # returns whether a quorem has a matured event and whether
 # the number of required reports are met as a tuple (matured, met)
 def check_quorum(branch):
-	currentPeriod = block.number / self.Branches[branch].periodLength
-	# provided the currentPeriod is >2 periods past the things we're going to rbcr on
-	# we can then conclude it has matured and people have had time to vote
-	if (currentPeriod > (self.Branches[branch].currentVotePeriod+2)):
-		matured = true
-	else:
-		matured = false
-	currentVotePeriod = self.Branches[branchID].currentVotePeriod
-	# check that enough people actually did vote
-	if (self.Reporting[branch].eventsExpDates[currentVotePeriod].totalRepReported >= self.Branches[branch].repRequired):
-		met = true
-	else:
-		met = false
-	if(met and matured):
-		return(1)
-	else:
-		return(0)
-		
+    currentPeriod = block.number / self.Branches[branch].periodLength
+    # provided the currentPeriod is >2 periods past the things we're going to rbcr on
+    # we can then conclude it has matured and people have had time to vote
+    if (currentPeriod > (self.Branches[branch].currentVotePeriod+2)):
+        matured = true
+    else:
+        matured = false
+    currentVotePeriod = self.Branches[branchID].currentVotePeriod
+    # check that enough people actually did vote
+    if (self.Reporting[branch].eventsExpDates[currentVotePeriod].totalRepReported >= self.Branches[branch].repRequired):
+        met = true
+    else:
+        met = false
+    if(met and matured):
+        return(1)
+    else:
+        return(0)
+        
 # perhaps give the redeemer some fees to cover svd costs
 # 25% of fees already distributed to market creators
 # so 2/3 of remaining fees to voters = 50%
@@ -697,50 +700,49 @@ def close_market(branch, market):
 		self.cashcoin_balances[self.Info[market].creator] += self.cashcoin_balances[market]
 		self.cashcoin_balances[market] -= self.cashcoin_balances[market]
 		return(text("Market closed"): s)
-		data Events[](branch, expirationDate, outcome, minValue, maxValue)
 
 ### P2P parimutuel betting
 def makeBet(eventID, amtToBet):
-	betData = array(2)
-	betData[0] = eventID
-	betData[1] = block.number
-	betID = sha256(branchCharacteristics, 2)
-	self.p2pBets[betID].eventID = betData[0]
-	self.p2pBets[betID].amtToBet = amtToBet
+    betData = array(2)
+    betData[0] = eventID
+    betData[1] = block.number
+    betID = sha256(branchinfo, 2)
+    self.p2pBets[betID].eventID = betData[0]
+    self.p2pBets[betID].amtToBet = amtToBet
 
 # should add a fee to market
 # outcome is 0 or 1
 def sendMoneytoBet(betID, outcome):
-	if(self.cashcoin_balances[betID+outcome]==0):
-		self.send_cashcoin(betID+outcome, self.p2pBets[betID].amtToBet)
-	else:
-		return(0)
+    if(self.cashcoin_balances[betID+outcome]==0):
+        self.send_cashcoin(betID+outcome, self.p2pBets[betID].amtToBet)
+    else:
+        return(0)
 
-	if(outcome):
-		self.p2pBets[betID].outcomeOneBettor = tx.origin
-	else:
-		self.p2pBets[betID].outcomeZeroBettor = tx.origin
+    if(outcome):
+        self.p2pBets[betID].outcomeOneBettor = tx.origin
+    else:
+        self.p2pBets[betID].outcomeZeroBettor = tx.origin
 
 # add support for a .5 outcome
 def closeBet(betID):
-	# outcome not determined yet
-	if(self.Events[self.p2pBets[betID].eventID].outcome == 0):
-		return(0)
-	# pay out depending on outcome
-	elif(self.cashcoin_balances[betID+0]==self.p2pBets[betID].amtToBet && self.cashcoin_balances[betID+1]==self.p2pBets[betID].amtToBet):
-		self.cashcoin_balances[betID+0] -= self.cashcoin_balances[betID+0]
-		self.cashcoin_balances[betID+1] -= self.cashcoin_balances[betID+1]
-		if(self.Events[self.p2pBets[betID].eventID].outcome):
-			self.cashcoin_balances[self.p2pBets[betID].outcomeOneBettor] += self.p2pBets[betID].amtToBet*2
-		elif(self.Events[self.p2pBets[betID].eventID].outcome == -1)
-			self.cashcoin_balances[self.p2pBets[betID].outcomeZeroBettor] += self.p2pBets[betID].amtToBet*2
-	# someone didn't pay their side of the bet, refund funds
-	else:
-		self.cashcoin_balances[self.p2pBets[betID].outcomeZeroBettor] += self.cashcoin_balances[betID+0]
-		self.cashcoin_balances[self.p2pBets[betID].outcomeOneBettor] += self.cashcoin_balances[betID+1]
-		self.cashcoin_balances[betID+0] -= self.cashcoin_balances[betID+0]
-		self.cashcoin_balances[betID+1] -= self.cashcoin_balances[betID+1]
-
+    # outcome not determined yet
+    if(self.Events[self.p2pBets[betID].eventID].outcome == 0):
+        return(0)
+    # pay out depending on outcome
+    if(self.cashcoin_balances[betID+0]==self.p2pBets[betID].amtToBet && self.cashcoin_balances[betID+1]==self.p2pBets[betID].amtToBet):
+        self.cashcoin_balances[betID+0] -= self.cashcoin_balances[betID+0]
+        self.cashcoin_balances[betID+1] -= self.cashcoin_balances[betID+1]
+        if(self.Events[self.p2pBets[betID].eventID].outcome):
+            self.cashcoin_balances[self.p2pBets[betID].outcomeOneBettor] += self.p2pBets[betID].amtToBet*2
+        elif(self.Events[self.p2pBets[betID].eventID].outcome == -1):
+            self.cashcoin_balances[self.p2pBets[betID].outcomeZeroBettor] += self.p2pBets[betID].amtToBet*2
+    # someone didn't pay their side of the bet, refund funds
+    else:
+        self.cashcoin_balances[self.p2pBets[betID].outcomeZeroBettor] += self.cashcoin_balances[betID+0]
+        self.cashcoin_balances[self.p2pBets[betID].outcomeOneBettor] += self.cashcoin_balances[betID+1]
+        self.cashcoin_balances[betID+0] -= self.cashcoin_balances[betID+0]
+        self.cashcoin_balances[betID+1] -= self.cashcoin_balances[betID+1]
+    return(1) 
 ### API (for UI)
 
 # atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
@@ -751,17 +753,17 @@ def closeBet(betID):
 # UI will need a function to get the items in that array above so it can make a report!
 # w/ this function you can get the eventIDs, look them up and report on outcomes (probably w/ another function to look them up) -- make sure in this function to check that the report value is not >maxvalue or <minvalue for the event
 def makeBallot(branch):
-	numEvents = self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].numberEvents
-	eventArray = array(numEvents)
-	i = 0
-	while i < numEvents:
-		eventID = self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].events[numEvents]
-		eventArray[i] = eventID
-	return(eventArray: a)
+    numEvents = self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].numberEvents
+    eventArray = array(numEvents)
+    i = 0
+    while i < numEvents:
+        eventID = self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].events[numEvents]
+        eventArray[i] = eventID
+    return(eventArray: arr)
 
 
 # includes
 # extern fp:[new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
 # FixedPoint = create('fixedpoint.se')
 inset('fixedpoint.se')
-inset('consensus.se')
+#inset('consensus.se')

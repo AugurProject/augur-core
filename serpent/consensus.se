@@ -1,3 +1,27 @@
+# This software (Augur) allows buying and selling event options in Ethereum.
+#
+# Copyright (c) 2014 Chris Calderon, Joey Krug, Alan Lu, Jack Peterson
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Questions?  Please contact jack@tinybike.net or joeykrug@gmail.com.
+
 # Arithmetic mean of an array, takes fixed-point inputs
 macro mean($a, $asz):
     with total = 0:
@@ -85,41 +109,76 @@ macro fixed_divide($x, $y):
     $x * 2^64 / $y
 
 # funid: 0
-def interpolate(votes:a, reputation:a):
+def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
     # ONE = 2^64
     # TRUE = ONE
     # FALSE = -ONE
     # INDETERMINATE = 2^63  # 0.5
     # NO_RESPONSE = 0       # 0
-    with num_voters = len(reputation):
-        with v_size = len(votes):
-            with num_events = v_size / num_voters:
 
-                # use existing data and reputations to fill missing observations
-                # (weighted average over all non-missing data)
-                with votes_mask = array(v_size):
-                    with missing_values = 0:
+    # return vector: reports_interp
+    # reports_filled: [0, flatsize - 1]
+    # reports_mask: [flatsize, 2*flatsize - 1]
+    with num_reports = len(reputation):
+        with flatsize = len(reports):
+            with two_flatsize = 2*flatsize:
+                with num_events = flatsize / num_reports:
+
+                    # Calculate multiplicative factors
+                    with inv_span = array(num_events):
                         with i = 0:
-                            while i < v_size:
-                                if votes[i] == 2^63:
-                                    votes_mask[i] = 2^64
-                                    missing_values += 1
+                            while i < num_events:
+                                if scaled[i] == 1:
+                                    inv_span[i] = fixed_divide(2^64, (scaled_max[i] - scaled_min[i]))
                                 else:
-                                    votes_mask[i] = 0
+                                    inv_span[i] = 2^63
                                 i += 1
 
-                        with votes_filled = array(v_size):
+                        # Recenter
+                        with out_matrix = array(flatsize):
+                            with i = 0:
+                                while i < flatsize:
+                                    out_matrix[i] = reports[i] - scaled_min[i]
+                                    i += 1
+
+                            # Rescale
+                            with out_matrix_mean = mean(out_matrix, flatsize):
+                                with i = 0:
+                                    while i < flatsize:
+                                        if out_matrix[i] == 2^63:
+                                            out_matrix[i] = out_matrix_mean
+                                        i += 1
+                            with scaled_reports = array(flatsize):
+                                with j = 0:
+                                    while j < num_events:
+                                        with i = 0:
+                                            while i < num_reports:
+                                                with k = i*num_events + j:
+                                                    scaled_reports[k] = fixed_multiply(out_matrix[k], inv_span[j])
+                                                i += 1
+                                        j += 1
+                    
+                    # use existing data and reputations to fill missing observations
+                    # (weighted average over all non-missing data)
+                    with reports_interp = array(two_flatsize):
+                        with missing_values = 0:
+                            with i = 0:
+                                while i < flatsize:
+                                    if reports[i] == 2^63:
+                                        reports_interp[i + flatsize] = 2^64
+                                        missing_values += 1
+                                    i += 1
                             if missing_values:
                                 with outcomes_raw = array(num_events):
                                     with j = 0:
                                         while j < num_events:
-                                            with present = array(num_voters):
+                                            with present = array(num_reports):
 
-                                                # reputation of the users who voted, rescaled to sum to 1
+                                                # reputation of the users who reported, rescaled to sum to 1
                                                 with total_active_rep = 0:
                                                     with i = 0:
-                                                        while i < num_voters:
-                                                            if votes[i*num_events + j] != 2^63:
+                                                        while i < num_reports:
+                                                            if reports[i*num_events + j] != 2^63:
                                                                 total_active_rep += reputation[i]
                                                                 present[i] = 1
                                                             i += 1
@@ -127,7 +186,7 @@ def interpolate(votes:a, reputation:a):
                                                             with active_rep = array(num_present):
                                                                 with i = 0:
                                                                     with m = 0:
-                                                                        while i < num_voters:
+                                                                        while i < num_reports:
                                                                             if present[i]:
                                                                                 active_rep[i - m] = fixed_divide(reputation[i], total_active_rep)
                                                                             else:
@@ -135,62 +194,49 @@ def interpolate(votes:a, reputation:a):
                                                                             i += 1
 
                                                                 # current best-guess for this event's outcome is a weighted sum
-                                                                # (votes weighted by reputation)
+                                                                # (reports weighted by reputation)
                                                                 with active_events = array(num_present):
                                                                     with i = 0:
                                                                         with m = 0:
-                                                                            while i < num_voters:
+                                                                            while i < num_reports:
                                                                                 if present[i]:
-                                                                                    active_events[i - m] = votes[i*num_events + j]
+                                                                                    active_events[i - m] = reports[i*num_events + j]
                                                                                     outcomes_raw[j] += fixed_multiply(active_rep[i - m], active_events[i - m])
                                                                                 else:
                                                                                     m += 1
                                                                                 i += 1
-
                                             j += 1
-
-                                    with to_fill = array(v_size):
+                                    with to_fill = array(flatsize):
                                         with i = 0:
-                                            while i < num_voters:
+                                            while i < num_reports:
                                                 with j = 0:
                                                     while j < num_events:
                                                         with pos = i*num_events + j:
-                                                            to_fill[pos] += fixed_multiply(votes_mask[pos], outcomes_raw[j])
-                                                            votes_filled[pos] = catch(votes[pos] + to_fill[pos])
+                                                            to_fill[pos] += fixed_multiply(reports_mask[pos], outcomes_raw[j])
+                                                            reports_interp[pos] = catch(reports[pos] + to_fill[pos])
                                                         j += 1
                                                     i += 1
-
                             else:
-                                votes_filled = votes
-
-                            # votes_filled: [0, v_size - 1]
-                            # votes_mask: [v_size, 2*v_size - 1]
-                            with two_v_size = 2*v_size:
-                                with retval = array(two_v_size):
-                                    with i = 0:
-                                        while i < v_size:
-                                            retval[i] = votes_filled[i]
-                                            i += 1
-                                        while i < two_v_size:
-                                            retval[i] = votes_mask[i - v_size]
-                                            i += 1
-                                        log(tx.gas)
-                                        return(retval, two_v_size)
+                                with i = 0:
+                                    while i < flatsize:
+                                        reports_interp[i] = reports[i]
+                                        i += 1
+                            return(reports_interp, two_flatsize)
 
 # funid: 1
-def center(votes_filled:a, votes_mask:a, reputation:a):
-    with num_voters = len(reputation):
-        with v_size = len(votes_filled):
-            with num_events = v_size / num_voters:
+def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
+    with num_reports = len(reputation):
+        with flatsize = len(reports_filled):
+            with num_events = flatsize / num_reports:
 
                 # calculate weighted centered data matrix for pca
                 with weighted_means = array(num_events):
                     with total_weight = 0:
                         with i = 0:
-                            while i < num_voters:
+                            while i < num_reports:
                                 with j = 0:
                                     while j < num_events:
-                                        weighted_means[j] += reputation[i] * votes_filled[i * num_events + j]
+                                        weighted_means[j] += reputation[i] * reports_filled[i * num_events + j]
                                         j += 1
                                 total_weight += reputation[i]
                                 i += 1
@@ -198,31 +244,29 @@ def center(votes_filled:a, votes_mask:a, reputation:a):
                                 while j < num_events:
                                     weighted_means[j] /= total_weight
                                     j += 1
-                            with weighted_centered_data = array(v_size):
+                            with weighted_centered_data = array(flatsize):
                                 with i = 0:
-                                    while i < v_size:
-                                        weighted_centered_data[i] = votes_filled[i] - weighted_means[i % num_events]
+                                    while i < flatsize:
+                                        weighted_centered_data[i] = reports_filled[i] - weighted_means[i % num_events]
                                         i += 1
-                                    log(tx.gas)
-                                    return(weighted_centered_data, v_size)
+                                    return(weighted_centered_data, flatsize)
 
 # funid: 2
 def pca_init(num_events, max_iterations):
     # initialize the loading vector (extra element at end is to store iterations left)
-    with lv_size = num_events + 1:
-        with loading_vector = array(lv_size):
+    with lflatsize = num_events + 1:
+        with loading_vector = array(lflatsize):
             loading_vector[0] = 2^64
             loading_vector[num_events] = max_iterations
-            log(tx.gas)
-            return(loading_vector, lv_size)
+            return(loading_vector, lflatsize)
 
 # funid: 3
-def pca_loadings(loading_vector:a, weighted_centered_data:a, reputation:a, num_voters, num_events):
+def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr, num_reports, num_events):
     with ONE = 2^64:
-        with lv_size = len(loading_vector):
+        with lflatsize = len(loading_vector):
             with s = array(num_events):
                 with j = 0:
-                    while j < num_voters:
+                    while j < num_reports:
                         with d_dot_lv = 0:
                             with k = 0:
                                 while k < num_events:
@@ -263,133 +307,120 @@ def pca_loadings(loading_vector:a, weighted_centered_data:a, reputation:a, num_v
                                 loading_vector[j] = s[j]*ONE/norm_s
                                 j += 1
                 loading_vector[num_events] -= 1
-                log(tx.gas)
-                return(loading_vector, lv_size)
+                return(loading_vector, lflatsize)
 
 # funid: 4
-def pca_scores(loading_vector:a, weighted_centered_data:a, num_voters, num_events):
-    with scores = array(num_voters):
+def pca_scores(loading_vector:arr, weighted_centered_data:arr, num_reports, num_events):
+    with scores = array(num_reports):
         with i = 0:
-            while i < num_voters:
+            while i < num_reports:
                 with k = 0:
                     while k < num_events:
                         scores[i] += fixed_multiply(weighted_centered_data[i*num_events + k], loading_vector[k])
                         k += 1
                 i += 1
-            log(tx.gas)
-            return(scores, num_voters)
+            return(scores, num_reports)
 
 # funid: 5
-def pca(weighted_centered_data:a, reputation:a, num_voters, num_events, max_iterations):
-    with ONE = 2^64:
+def pca(weighted_centered_data:arr, reputation:arr, num_reports, num_events, max_iterations):
+    # initialize the loading vector
+    with loading_vector = array(num_events):
+        loading_vector[0] = 2^64
+        with i = 0:
+            while i < max_iterations:
+                with s = array(num_events):
+                    with j = 0:
+                        while j < num_reports:
+                            with d_dot_lv = 0:
+                                with k = 0:
+                                    while k < num_events:
+                                        d_dot_lv += weighted_centered_data[j * num_events + k] * loading_vector[k]
+                                        k += 1
+                                    d_dot_lv /= 2^64
+                                with k = 0:
+                                    while k < num_events:
+                                        s[k] -= d_dot_lv * weighted_centered_data[j * num_events + k] * reputation[j]
+                                        k += 1
+                            j += 1
 
-        # initialize the loading vector
-        with loading_vector = array(num_events):
-            loading_vector[0] = ONE
-            with i = 0:
-                while i < max_iterations:
-                    with s = array(num_events):
-                        with j = 0:
-                            while j < num_voters:
-                                with d_dot_lv = 0:
-                                    with k = 0:
-                                        while k < num_events:
-                                            d_dot_lv += weighted_centered_data[j * num_events + k] * loading_vector[k]
-                                            k += 1
-                                        d_dot_lv /= ONE
-                                    with k = 0:
-                                        while k < num_events:
-                                            s[k] -= d_dot_lv * weighted_centered_data[j * num_events + k] * reputation[j]
-                                            k += 1
-                                j += 1
+                    # loading_vector = normalize(s)
+                    # (first rejig s to account for double fixed multiplication in loop)
+                    with j = 0:
+                        while j < num_events:
+                            s[j] /= 2^128
+                            j += 1
 
-                        # loading_vector = normalize(s)
-                        # (first rejig s to account for double fixed multiplication in loop)
+                    # QQ
+                    with s_dot_s = 0:
                         with j = 0:
                             while j < num_events:
-                                s[j] /= 2^128
+                                s_dot_s += s[j] * s[j]
                                 j += 1
+                        s_dot_s /= 2^64
 
-                        # QQ
-                        with s_dot_s = 0:
+                        # QQ!!!!
+                        with norm_s = s_dot_s / 2:
+                            with j = 0:
+                                while j < 11:
+                                    norm_s = (norm_s + s_dot_s*2^64/norm_s) / 2
+                                    j += 1
+
+                            # fuggin assign
                             with j = 0:
                                 while j < num_events:
-                                    s_dot_s += s[j] * s[j]
+                                    loading_vector[j] = s[j]*2^64/norm_s
                                     j += 1
-                            s_dot_s /= ONE
-
-                            # QQ!!!!
-                            with norm_s = s_dot_s / 2:
-                                with j = 0:
-                                    while j < 11:
-                                        norm_s = (norm_s + s_dot_s*ONE/norm_s) / 2
-                                        j += 1
-
-                                # fuggin assign
-                                with j = 0:
-                                    while j < num_events:
-                                        loading_vector[j] = s[j]*ONE/norm_s
-                                        j += 1
+                i += 1
+        with scores = array(num_reports):
+            with i = 0:
+                while i < num_reports:
+                    with k = 0:
+                        while k < num_events:
+                            scores[i] += fixed_multiply(weighted_centered_data[i*num_events + k], loading_vector[k])
+                            k += 1
                     i += 1
-            with scores = array(num_voters):
-                with i = 0:
-                    while i < num_voters:
-                        with k = 0:
-                            while k < num_events:
-                                scores[i] += fixed_multiply(weighted_centered_data[i*num_events + k], loading_vector[k])
-                                k += 1
-                        i += 1
-                log(tx.gas)
-                return(scores, num_voters)
+            return(scores, num_reports)
 
 # funid: 6
-def calibrate_sets(scores:a, num_voters, num_events):
+def calibrate_sets(scores:arr, num_reports, num_events):
     # Which of the two possible 'new' reputation vectors had more opinion in common
     # with the original 'old' reputation?
-    with set1 = array(num_voters):
-        with set2 = array(num_voters):
-            with i = 0:
-                while i < num_voters:
-                    set1[i] = scores[i] + abs(minimum(scores, num_voters))
-                    set2[i] = scores[i] - maximum(scores, num_voters)
-                    i += 1
-
-            # set1: [0, num_voters - 1]
-            # set2: [num_voters, 2*num_voters - 1]
-            with two_num_voters = 2*num_voters:
-                with retval = array(two_num_voters):
+    # set1: [0, num_reports - 1]
+    # set2: [num_reports, 2*num_reports - 1]
+    with two_num_reports = 2*num_reports:
+        with sets = array(two_num_reports):
+            with set1_compare = abs(minimum(scores, num_reports)):
+                with set2_compare = maximum(scores, num_reports):
                     with i = 0:
-                        while i < num_voters:
-                            retval[i] = set1[i]
+                        while i < num_reports:
+                            sets[i] = scores[i] + set1_compare
                             i += 1
-                        while i < two_num_voters:
-                            retval[i] = set2[i - num_voters]
+                        while i < two_num_reports:
+                            sets[i] = scores[i - num_reports] - set2_compare
                             i += 1
-                        log(tx.gas)
-                        return(retval, two_num_voters)
+                        return(sets, two_num_reports)
 
 # funid: 7
-def calibrate_wsets(set1:a, set2:a, reputation:a, votes_filled:a, num_voters, num_events):
+def calibrate_wsets(set1:arr, set2:arr, reputation:arr, reports_filled:arr, num_reports, num_events):
     with three_num_events = 3*num_events:
-        with retval = array(three_num_events):
-            with wset1 = get_weight(set1, num_voters):
-                with wset2 = get_weight(set2, num_voters):
+        with wsets = array(three_num_events):
+            with wset1 = get_weight(set1, num_reports):
+                with wset2 = get_weight(set2, num_reports):
                     with i = 0:
                         with two_num_events = 2*num_events:
                             while i < num_events:
                                 with k = 0:
-                                    while k < num_voters:
+                                    while k < num_reports:
                                         with pos = k*num_events + i:
-                                            retval[i] += fixed_multiply(reputation[k], votes_filled[pos])
-                                            retval[i + num_events] += fixed_multiply(wset1[k], votes_filled[pos])
-                                            retval[i + two_num_events] += fixed_multiply(wset2[k], votes_filled[pos])
+                                            wsets[i] += fixed_multiply(reputation[k], reports_filled[pos])
+                                            wsets[i + num_events] += fixed_multiply(wset1[k], reports_filled[pos])
+                                            wsets[i + two_num_events] += fixed_multiply(wset2[k], reports_filled[pos])
                                         k += 1
                                 i += 1
-                            log(tx.gas)
-                            return(retval, three_num_events)
+                            return(wsets, three_num_events)
 
 # funid: 8
-def pca_adjust(old:a, new1:a, new2:a, set1:a, set2:a, scores:a, num_voters, num_events):
+def pca_adjust(old:arr, new1:arr, new2:arr, set1:arr, set2:arr, scores:arr, num_reports, num_events):
     # Difference in sum of squared errors. If > 0, then new1 had higher
     # errors (use new2); conversely if < 0, then use new1.
     with sse1 = 0:
@@ -400,87 +431,83 @@ def pca_adjust(old:a, new1:a, new2:a, set1:a, set2:a, scores:a, num_voters, num_
                     sse2 += fixed_multiply(new2[i] - old[i], new2[i] - old[i])
                     i += 1
             with ref_ind = sse1 - sse2:
-                with adj_prin_comp = array(num_voters):
+                with adj_prin_comp = array(num_reports):
                     if ref_ind <= 0:
                         adj_prin_comp = set1
                     else:
                         adj_prin_comp = set2
-                    log(tx.gas)
-                    return(adj_prin_comp, num_voters)
+                    return(adj_prin_comp, num_reports)
 
 # funid: 9
-def smooth(adj_prin_comp:a, reputation:a, num_voters, num_events):
+def smooth(adj_prin_comp:arr, reputation:arr, num_reports, num_events):
 
     # Diffuse towards previous reputation.
-        with rep_weights = get_weight(reputation, num_voters):
-            with row_reward_weighted = array(num_voters):
+        with rep_weights = get_weight(reputation, num_reports):
+            with row_reward_weighted = array(num_reports):
                 with i = 0:
-                    while i < num_voters:
+                    while i < num_reports:
                         row_reward_weighted[i] = rep_weights[i]
                         i += 1
 
                 # Overwrite the inital declaration IFF there wasn't perfect consensus.
-                if maximum(array_abs(adj_prin_comp, num_voters), num_voters) != 0:
-                    with mean_weight = mean(row_reward_weighted, num_voters):
+                if maximum(array_abs(adj_prin_comp, num_reports), num_reports) != 0:
+                    with mean_weight = mean(row_reward_weighted, num_reports):
                         with i = 0:
-                            while i < num_voters:
+                            while i < num_reports:
                                 row_reward_weighted[i] = adj_prin_comp[i] * row_reward_weighted[i] / mean_weight
                                 i += 1
-                    row_reward_weighted = get_weight(row_reward_weighted, num_voters)
+                    row_reward_weighted = get_weight(row_reward_weighted, num_reports)
 
                 # Freshly-calculated reward (in reputation) using exponential smoothing
                 # New Reward: row_reward_weighted
                 # Old Reward: rep_weights
                 # (0.1 is the adjustable parameter "alpha", hard-coding it for now)
-                with smooth_rep = array(num_voters):
+                with smooth_rep = array(num_reports):
                     with i = 0:
-                        while i < num_voters:
+                        while i < num_reports:
                             smooth_rep[i] = row_reward_weighted[i]/10 + rep_weights[i]*9/10
                             i += 1
-
-                    log(tx.gas)
-                    return(smooth_rep, num_voters)
+                    return(smooth_rep, num_reports)
 
 # funid: 10
-def consensus(smooth_rep:a, reputation:a, votes_filled:a, num_voters, num_events):
-    with outcomes_final = array(num_events):
-        with outcomes_raw = array(num_events):
-            with i = 0:
-                while i < num_events:
-                    with k = 0:
-                        while k < num_voters:
-                            outcomes_raw[i] += fixed_multiply(smooth_rep[k], votes_filled[k*num_events + i])
-                            k += 1
-                        outcomes_final[i] = catch(outcomes_raw[i])
-                        i += 1
-
-            # Smoothing function travels from 0 to 1 with a minimum at .5
-            with certainty = array(num_events):
+def consensus(smooth_rep:arr, reputation:arr, reports_filled:arr, num_reports, num_events):
+    # outcomes_final: [0, num_events - 1]
+    # consensus_reward: [num_events, 2*num_events - 1]
+    with two_num_events = 2*num_events:
+        with consensus_outcomes = array(two_num_events):
+            with outcomes_raw = array(num_events):
                 with i = 0:
                     while i < num_events:
-                        with j = 0:
-                            while j < num_voters:
-                                if votes_filled[j*num_events + i] == outcomes_final[i]:
-                                    certainty[i] += smooth_rep[j]
-                                j += 1
-                        i += 1
-                with consensus_reward = get_weight(certainty, num_events):
+                        with k = 0:
+                            while k < num_reports:
+                                outcomes_raw[i] += fixed_multiply(smooth_rep[k], reports_filled[k*num_events + i])
+                                k += 1
+                            consensus_outcomes[i] = catch(outcomes_raw[i])
+                            i += 1
 
-                    # outcomes_final: [0, num_events - 1]
-                    # consensus_reward: [num_events, 2*num_events - 1]
-                    with two_num_events = 2*num_events:
-                        with retval = array(two_num_events):
-                            with i = 0:
-                                while i < num_events:
-                                    retval[i] = outcomes_final[i]
-                                    i += 1
-                                while i < two_num_events:
-                                    retval[i] = consensus_reward[i - num_events]
-                                    i += 1
-                                log(tx.gas)
-                                return(retval, two_num_events)
+                # Smoothing function travels from 0 to 1 with a minimum at .5
+                with certainty = array(num_events):
+                    with i = 0:
+                        while i < num_events:
+                            with j = 0:
+                                while j < num_reports:
+                                    if reports_filled[j*num_events + i] == consensus_outcomes[i]:
+                                        certainty[i] += smooth_rep[j]
+                                    j += 1
+                            i += 1
+                    with total = 0:
+                        with i = 0:
+                            while i < num_events:
+                                certainty[i] = abs(certainty[i])
+                                total += certainty[i]
+                                i += 1
+                        with i = 0:
+                            while i < num_events:
+                                consensus_outcomes[i + num_events] = certainty[i] * 2^64 / total
+                                i += 1
+                            return(consensus_outcomes, two_num_events)
 
-def participation(outcomes_final:a, consensus_reward:a, smooth_rep:a, votes_mask:a, num_voters, num_events):
+def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, reports_mask:arr, num_reports, num_events):
 
         # Event participation (within columns): proportion of reputation
         # that answered each event
@@ -488,22 +515,22 @@ def participation(outcomes_final:a, consensus_reward:a, smooth_rep:a, votes_mask
             with i = 0:
                 while i < num_events:
                     with k = 0:
-                        while k < num_voters:
-                            participation_events[i] += fixed_multiply(smooth_rep[k], votes_mask[k*num_events + i])
+                        while k < num_reports:
+                            participation_events[i] += fixed_multiply(smooth_rep[k], reports_mask[k*num_events + i])
                             k += 1
                     participation_events[i] = 2^64 - participation_events[i]
                     i += 1
 
             # Voter participation (within rows): all events treated equally
-            with participation_voters = array(num_voters):
+            with participation_reports = array(num_reports):
                 with i = 0:
-                    while i < num_voters:
+                    while i < num_reports:
                         with total = 0:
                             with j = 0:
                                 while j < num_events:
-                                    total += votes_mask[i*num_events + j]
+                                    total += reports_mask[i*num_events + j]
                                     j += 1
-                                participation_voters[i] = 2^64 - total / num_events
+                                participation_reports[i] = 2^64 - total / num_events
                         i += 1
 
                     # General participation
@@ -515,11 +542,11 @@ def participation(outcomes_final:a, consensus_reward:a, smooth_rep:a, votes_mask
                         with participation = 2^64 - total / num_events:
 
                             # Bringing it all together!
-                            with voter_bonus = array(num_voters):
-                                with na_bonus_voters = get_weight(participation_voters, num_voters):
+                            with voter_bonus = array(num_reports):
+                                with na_bonus_reports = get_weight(participation_reports, num_reports):
                                     with i = 0:
-                                        while i < num_voters:
-                                            voter_bonus[i] = fixed_multiply(na_bonus_voters[i], participation) + fixed_multiply(smooth_rep[i], 2^64 - participation)
+                                        while i < num_reports:
+                                            voter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], 2^64 - participation)
                                             i += 1
                                 with author_bonus = array(num_events):
                                     with na_bonus_events = get_weight(participation_events, num_events):    
@@ -528,7 +555,7 @@ def participation(outcomes_final:a, consensus_reward:a, smooth_rep:a, votes_mask
                                                 author_bonus[i] = fixed_multiply(na_bonus_events[i], participation) + fixed_multiply(consensus_reward[i], 2^64 - participation)
                                                 i += 1
 
-                                        retval = array(2*num_events + num_voters)
+                                        retval = array(2*num_events + num_reports)
                                         i = 0
                                         while i < num_events:
                                             retval[i] = outcomes_final[i]
@@ -538,11 +565,7 @@ def participation(outcomes_final:a, consensus_reward:a, smooth_rep:a, votes_mask
                                             retval[num_events + i] = author_bonus[i]
                                             i += 1
                                         i = 0
-                                        while i < num_voters:
+                                        while i < num_reports:
                                             retval[2*num_events + i] = voter_bonus[i]
                                             i += 1
-                                        retval[2*num_events + num_voters] = 10^6
-                                        retval[2*num_events + num_voters + 1] = tx.gas
-                                        log(tx.gas)
-                                        return(retval, 2*num_events + num_voters + 2)
-
+                                        return(retval, 2*num_events + num_reports)
