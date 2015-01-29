@@ -58,7 +58,7 @@ data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, repo
    # ex: eventIndex*2 is outcome 0, eventIndex*2 + 1 is outcome one for each corresponding event 
    #    self.Markets[$marketID].sharesPurchased[$i*2]
    #    self.Markets[$marketID].sharesPurchased[$i*2 + 1]
-data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[])), lossLimit, tradingFee, numberEvents, currentParticipant, winningEvents[], alpha, probabilities[], cumulativeScale)
+data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[])), lossLimit, tradingFee, numberEvents, currentParticipant, winningOutcome, alpha, probabilities[], cumulativeScale)
 
 data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
@@ -662,6 +662,7 @@ def close_market(branch, market):
 		e = 0
 		while n < numberEvents:
 			if(self.Events[self.Markets[market].events[n]].outcome & self.Events[self.Markets[market].events[n]].outcome!=0):
+                # make this one winning outcome
 				self.Markets[market].winningEvents[e] = self.Markets[market].events[n]
 				e+=1
 			n+=1
@@ -766,8 +767,85 @@ def api(dataStructure, itemNumber, arrayIndex, ID):
     if(dataStructure==0):
         if(itemNumber==0):
             return(self.Info[ID].typecode)
+        #elif(itemNumber==1):
+        #length=self.Info[ID].descriptionLength
+        #return(load(self.Info[ID].description[0], chars=length):a)
+        #length=self.Info[ID].descriptionLength
+        #data = load(self.Info[ID].description[0], chars=length)
+        #return(data, length/32 + if(length%32,1,0))
+        #    return(self.Info[ID].description[])
+        elif(itemNumber==2):
+            return(self.Info[ID].descriptionLength)
+        elif(itemNumber==3):
+            return(self.Info[ID].creator)
+        elif(itemNumber==4):
+            return(self.Info[ID].creationFee)
+    elif(dataStructure==1):
+        if(itemNumber==0):
+            return(self.Branches[ID].currentVotePeriod)
         elif(itemNumber==1):
-            return(self.Info[ID].description[])
+            return(self.Branches[ID].markets[arrayIndex])
+        elif(itemNumber==2):
+            return(self.Branches[ID].marketCount)
+        elif(itemNumber==3):
+            return(self.Branches[ID].periodLength)
+        elif(itemNumber==4):
+            return(self.Branches[ID].repRequired)
+    elif(dataStructure==2):
+        if(itemNumber==0):
+            return(self.Events[ID].branch)
+        elif(itemNumber==1):
+            return(self.Events[ID].expirationDate)
+        elif(itemNumber==2):
+            return(self.Events[ID].outcome)
+        elif(itemNumber==3):
+            return(self.Events[ID].minValue)
+        elif(itemNumber==4):
+            return(self.Events[ID].maxValue)
+    elif(dataStructure==3):
+        if(itemNumber==0):
+            return(text("Please call the eventsExpApi function"): str)
+        elif(itemNumber==1):
+            return(text("Please call the reputation api function"): str)
+        elif(itemNumber==2):
+            return(self.Reporting[ID].numberReporters)
+        elif(itemNumber==3):
+            return(self.Reporting[ID].repIDtoIndex[arrayIndex])
+    elif(dataStructure==4):
+        if(itemNumber==0):
+            return(self.Markets[ID].branch)
+        elif(itemNumber==1):
+            return(self.Markets[ID].events[arrayIndex])
+        elif(itemNumber==2):
+            return(self.Markets[ID].sharesPurchased[arrayIndex])
+        elif(itemNumber==3):
+            return(text("Please call the participants api function"): str)
+        elif(itemNumber==4):
+            return(self.Markets[ID].lossLimit)
+        elif(itemNumber==5):
+            return(self.Markets[ID].tradingFee)
+        elif(itemNumber==6):
+            return(self.Markets[ID].numberEvents)
+        elif(itemNumber==7):
+            return(self.Markets[ID].currentParticipant)
+        elif(itemNumber==8):
+            return(self.Markets[ID].winningOutcome)
+        elif(itemNumber==9):
+            return(self.Markets[ID].alpha)
+        elif(itemNumber==10):
+            return(self.Markets[ID].probabilities[arrayIndex])
+        elif(itemNumber==11):
+            return(self.Markets[ID].cumulativeScale)
+    elif(dataStructure==5):
+        if(itemNumber==0):
+            return(self.p2pBets[ID].eventID)
+        elif(itemNumber==1):
+            return(self.p2pBets[ID].amtToBet)
+        elif(itemNumber==2):
+            return(self.p2pBets[ID].outcomeOneBettor)
+        elif(itemNumber==3):
+            return(self.p2pBets[ID].outcomeZeroBettor)
+
 
 def eventsExpApi():
     #
@@ -775,10 +853,14 @@ def eventsExpApi():
 def marketParticipantsApi():
     #
 
+def reputationApi():
+    #
+
+
 
 
 # includes
 # extern fp:[new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
 # FixedPoint = create('fixedpoint.se')
 inset('fixedpoint.se')
-#inset('consensus.se')
+# inset('consensus.se')
