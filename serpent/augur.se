@@ -846,16 +846,28 @@ def api(dataStructure, itemNumber, arrayIndex, ID):
         elif(itemNumber==3):
             return(self.p2pBets[ID].outcomeZeroBettor)
 
+def eventsExpApi(expDateIndex, itemNumber, arrayIndexOne, arrayIndexTwo, ID):
+    if(itemNumber==0):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].numberEvents)
+    elif(itemNumber==1):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].events[arrayIndexOne])
+    elif(itemNumber==2):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].totalRepReported)
+    elif(itemNumber==3):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].reporters[arrayIndexOne][ArrayIndexTwo])
 
-def eventsExpApi():
-    #
+def reputationApi(reputationIndex, itemNumber, branchID):
+    if(itemNumber==0):
+        return(self.Reporting[branchID].reputation[reputationIndex].repValue)
+    elif(itemNumber==1):
+        return(self.Reporting[branchID].reputation[reputationIndex].reporterID)
 
-def marketParticipantsApi():
-    #
-
-def reputationApi():
-    #
-
+# eventID and outcomeNumber only needed if itemNumber is 1
+def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, marketID):
+    if(itemNumber==0):
+        return(self.Markets[marketID].participants[participantIndex].participantID)
+    elif(itemNumber==1):
+        return(self.Markets[marketID].participants[participantIndex].event[eventID].shares[outcomeNumber])
 
 
 

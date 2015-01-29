@@ -10,6 +10,10 @@ augur-serpent
 ### Version 0.5 
 	# pay fee to just get a report / consensus
 	 # e.g. real world event consensus
+	# need to add audits
+	# chat in UI
+	# social media integrations
+
 ### Version 0.4 (Awesome fun stuff):
 	# clean api interface
 	# secure multiparty computation to prevent attack vitalik brought up
@@ -51,11 +55,50 @@ augur-serpent
 
 ### Version 0.2 (Markets Upgrades):
 	# add support for categorical and multidimensional events
-	# order by the dimensions
 	# allow settable trading fees
 	# salt hash vote mechanism
 	# .5 outcome needs to pay back money, and whoever provided liquidity gets 0 back
 	# can people trade after a market is closed but before resolved? i think yes, need to make sure this is happening
-	# need to add audits
 	# allow people to buy -1 or 1 outcomes, not 0 b/c that's undetermined
 	# getters/api
+
+
+
+data Info[](typecode, description[2048], descriptionLength, creator, creationFee)
+
+data Branches[](currentVotePeriod, markets[], marketCount, periodLength, repRequired)
+
+data Events[](branch, expirationDate, outcome, minValue, maxValue)
+
+data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
+
+data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[])), lossLimit, tradingFee, numberEvents, currentParticipant, winningEvents[], alpha, probabilities[], cumulativeScale)
+
+data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
