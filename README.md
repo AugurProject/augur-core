@@ -5,7 +5,6 @@ augur-serpent
 	# test / fixup redeem close market and consensus in augur.se
 	# optimize consensus.se (martin will help w/ this too!)
 	# Implement Version 0.2 (eta - feb?)
-	# abi_contract to js for calling js functions
 
 ### Version 0.5 
 	# pay fee to just get a report / consensus
@@ -15,7 +14,6 @@ augur-serpent
 	# social media integrations
 
 ### Version 0.4 (Awesome fun stuff):
-	# clean api interface
 	# secure multiparty computation to prevent attack vitalik brought up
 		zack [4:42 PM] 
 		Faster alternative to SMPC:
@@ -33,8 +31,6 @@ augur-serpent
 	# seigniorage coin
 	# zeroing of array values
 	# api voting
-	# blockchain explorer to get / examine data or make rpc api calls to the contract to get it
-			# local contract calls don't cost gas - # ui functions
 	# search engine for contract data / events
 	# 4th Cumulant in consensus.se
 	# hash first frontrunning prevention mechanism
@@ -60,28 +56,6 @@ augur-serpent
 	# .5 outcome needs to pay back money, and whoever provided liquidity gets 0 back
 	# can people trade after a market is closed but before resolved? i think yes, need to make sure this is happening
 	# allow people to buy -1 or 1 outcomes, not 0 b/c that's undetermined
-	# getters/api
-
-
-
-data Info[](typecode, description[2048], descriptionLength, creator, creationFee)
-
-data Branches[](currentVotePeriod, markets[], marketCount, periodLength, repRequired)
-
-data Events[](branch, expirationDate, outcome, minValue, maxValue)
-
-data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
-
-data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[])), lossLimit, tradingFee, numberEvents, currentParticipant, winningEvents[], alpha, probabilities[], cumulativeScale)
-
-data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
-
-
-
-
-
-
-
 
 
 
