@@ -201,7 +201,7 @@ def create_event(branch, description:str, expDate, minValue, maxValue):
 # ditto for alpha
 # tradingFee is a fixedpoint number as well --- perhaps make it a percent
 # scalar events 
-def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a):
+def create_market(branch, description:str, lossLimit, alpha, tradingFee, events:arr):
 	# check that events have same exp. dates and branch
 	i = 0
 	numEvents = len(events)
@@ -503,7 +503,7 @@ def inPeriod(branchID, eventID):
 # UI will need a function to get the items in that array above so it can make a report!
 # check this fun.
 # people could report something like 16027*2^64 for a scalar
-def vote(branch, report:a):
+def vote(branch, report:arr):
 	# make sure the branch exists
 	repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
 	# need report length to be same as number of items in the current eventexpdates voting period events!
@@ -760,6 +760,21 @@ def makeBallot(branch):
         eventID = self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].events[numEvents]
         eventArray[i] = eventID
     return(eventArray: arr)
+
+# arrayIndex only matters if array
+def api(dataStructure, itemNumber, arrayIndex, ID):
+    if(dataStructure==0):
+        if(itemNumber==0):
+            return(self.Info[ID].typecode)
+        elif(itemNumber==1):
+            return(self.Info[ID].description[])
+
+def eventsExpApi():
+    #
+
+def marketParticipantsApi():
+    #
+
 
 
 # includes
