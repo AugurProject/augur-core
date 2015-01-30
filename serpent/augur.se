@@ -111,10 +111,10 @@ def send_reputation(branch, recver, value):
         self.Reporting[branch].reputation[reporterIndex].repValue = 0
         self.Reporting[branch].reputation[reporterIndex].reporterID = tx.origin
         self.Reporting[branch].numberReporters += 1
-        return(text("Your reputation account was just created, earn some rep. before you can send to others"): s)
+        return(text("Your reputation account was just created, earn some rep. before you can send to others"): str)
 
     if(self.Reporting[branch].reputation[receiverIndex].reporterID!=recver):
-        return(text("Receiving address doesn't exist"): s)
+        return(text("Receiving address doesn't exist"): str)
         
     sender_balance = self.Reporting[branch].reputation[senderIndex].repValue
     if(sender_balance >= value):
@@ -560,14 +560,14 @@ def check_quorum(branch):
         return(0)
         
 # perhaps give the redeemer some fees to cover svd costs
-# 25% of fees already distributed to market creators
+# 25% of fees already distributed to market creatorswww
 # so 2/3 of remaining fees to voters = 50%
 # and 1/3 of remaining fees to event creators = 25%
 # need to check >60% per event reported
 # fix this
 def redeem(branch):
 	if(!self.check_quorum(branch)):
-		return(text("quorem not satisfied yet"): s)
+		return(text("quorem not satisfied yet"): str)
 	currentVotePeriod = self.Branches[branchID].currentVotePeriod
 	# loop through reputation and check if in reporters, if so use their report, if not use the fillin / not reported report
 	# use this to make a giant array of votes to pass to self.consensus
@@ -684,7 +684,10 @@ def close_market(branch, market):
 			winningShares = self.Markets[market].sharesPurchased[2*(n-1)]
 			winningSharesIndex = 0
 		elif(winningOutcome==0):
-			return(text("outcome hasn't been decided yet"): s)
+			return(text("outcome hasn't been decided yet"): str)
+        elif(winningOutcome==2^63):
+            banana = 2
+
 		# distribute cashcoin to the people who won money by holding winning shares
 		i = 0
 		while i <= self.Markets[market].currentParticipant:
@@ -700,7 +703,7 @@ def close_market(branch, market):
 		# give back initial liquidity (or as much of it/profits are left)
 		self.cashcoin_balances[self.Info[market].creator] += self.cashcoin_balances[market]
 		self.cashcoin_balances[market] -= self.cashcoin_balances[market]
-		return(text("Market closed"): s)
+		return(text("Market closed"): str)
 
 ### P2P parimutuel betting
 def makeBet(eventID, amtToBet):
@@ -874,5 +877,5 @@ def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, 
 # includes
 # extern fp:[new, mul, div, intpart, fracpart, log, exp, pow, sqrt]
 # FixedPoint = create('fixedpoint.se')
-inset('fixedpoint.se')
+# inset('fixedpoint.se')
 # inset('consensus.se')
