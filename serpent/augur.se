@@ -58,7 +58,7 @@ data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, repo
    # ex: eventIndex*2 is outcome 0, eventIndex*2 + 1 is outcome one for each corresponding event 
    #    self.Markets[$marketID].sharesPurchased[$i*2]
    #    self.Markets[$marketID].sharesPurchased[$i*2 + 1]
-data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[])), lossLimit, tradingFee, numberEvents, currentParticipant, winningOutcome, alpha, probabilities[], cumulativeScale)
+data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[])), tradingFee, numberEvents, currentParticipant, winningOutcome, alpha, probabilities[], cumulativeScale)
 
 data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
@@ -145,6 +145,7 @@ def make_subbranch(description:str, periodLength, parent, repRequired):
     # people can check that these characteristics hash to the ID if they want
     # people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
     branchID = sha256(branchinfo, len(branchinfo))
+
     if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator and self.send_cashcoin(branchID, 47*2^64)):
         self.Info[branchID].typecode = BRANCH
         self.Info[branchID].creator = tx.origin
@@ -167,13 +168,13 @@ def make_subbranch(description:str, periodLength, parent, repRequired):
 def create_event(branch, description:str, expDate, minValue, maxValue):
     if(self.Branches[branch].periodLength and description!=0 and expDate>block.number):
         eventinfo = string((items=7)+len(description))
-        eventinfo[0] = EVENT
-        eventinfo[1] = branch
-        eventinfo[2] = expDate
-        eventinfo[3] = tx.origin
-        eventinfo[4] = 42*2^64
-        eventinfo[5] = minValue
-        eventinfo[6] = maxValue
+        eventinfo[0] = EVENT                                        #typecode
+        eventinfo[1] = branch                                       #branchID
+        eventinfo[2] = expDate                                      #expiration date
+        eventinfo[3] = tx.origin                                    #creator address
+        eventinfo[4] = 42*2^64                                      #creation fee
+        eventinfo[5] = minValue                                     #minimum outcome value
+        eventinfo[6] = maxValue                                     #maximum outcome value
         mcopy(eventinfo+(items=7), description, len(description))
         eventID = sha256(eventinfo, chars=len(eventinfo))
     else:
@@ -197,11 +198,8 @@ def create_event(branch, description:str, expDate, minValue, maxValue):
     else:
         return(0)
 
-# lossLimit is a fixedpoint syntax number (so a losslimit of 1 is 2^64) (0 if not using lmsr)
-# ditto for alpha
-# tradingFee is a fixedpoint number as well --- perhaps make it a percent
-# scalar events 
-def create_market(branch, description:str, lossLimit, alpha, tradingFee, events:arr):
+# alpha is a fixedpoint number 
+def create_market(branch, description:str, alpha, events:arr):
 	# check that events have same exp. dates and branch
 	i = 0
 	numEvents = len(events)
@@ -306,21 +304,6 @@ macro ls_lmsr($marketID):
                                 $i += 1
                             $Bq*self.log($sum_exp)/2^64
 
-macro lmsr($marketID):
-    with $sum_exp = 0:
-        with $B = self.Markets[$marketID].lossLimit:
-            with $l = self.Markets[$marketID].numberEvents:
-                with $i = 0:
-                    with $a = 0:
-                        with $b = 0:
-                            while $i < $l:
-                                $a = self.Markets[$marketID].sharesPurchased[$i*2]
-                                $b = self.Markets[$marketID].sharesPurchased[$i*2 + 1]
-                                $sum_exp += self.exp($a*2^64/$B)
-                                $sum_exp += self.exp($b*2^64/$B)
-                                $i += 1
-                            $B*self.log($sum_exp)/2^64
-
 # fee should be in fixed point
 # amount of shares should be an integer
 # trading fees go to branch directly and are distributed upon rbcr
@@ -329,7 +312,7 @@ macro lmsr($marketID):
 # ls-lmsr markets won't have much in fees in the branch, so the market creator will thus get a lot of fees himself hmmm...
 # is there a way to pool ls-lmsr fees separately?
 def buy_shares(branch, event, market, outcome, amount, fee):
-    if (fee<self.Markets[market].tradingFee or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee or self.Events[event].outcome!=0):
+    if (fee<self.Markets[market].tradingFee or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee or self.Events[event].outcome!=0 or outcome==0):
         return(0)
     # pay one-fourth of trading fee to market creator via sending to market.creator
     # other half is stored in branchID cashcoin balance
@@ -393,6 +376,7 @@ def buy_shares(branch, event, market, outcome, amount, fee):
             return(participantNumber)
             
     # outcome 0
+    # can't allow people to buy outcome 0 b/c undetermined
     else:
         # if user doesn't have enough money, revert
         if(self.cashcoin_balances[tx.origin]<amount*pricePerShare):
@@ -412,7 +396,7 @@ def buy_shares(branch, event, market, outcome, amount, fee):
 # fee should be fixed point
 def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
     # When sell check that event hasn't expired
-    if (self.Events[event].outcome!=0 or fee<self.Markets[market].tradingFee or self.Markets[market].participants[participantNumber].participantID != tx.origin or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee):
+    if (self.Events[event].outcome!=0 or fee<self.Markets[market].tradingFee or self.Markets[market].participants[participantNumber].participantID != tx.origin or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee or outcome==0):
         return(0)
 
     # pay one-fourth of trading fee to market creator via sending to market.creator
@@ -458,6 +442,7 @@ def sell_shares(branch, event, market, outcome, amount, fee, participantNumber):
     # these prices are in fixed point
     priceToPayPerShare = oldCost - newCost
     # remove shares from the user's account
+    # can't allow people to buy outcome 0 b/c undetermined
     if outcome:
         # if user actually doesn't have the shares, revert
         if(self.Markets[market].participants[participantNumber].event[event].shares[1]<amount):
@@ -686,7 +671,7 @@ def close_market(branch, market):
 		elif(winningOutcome==0):
 			return(text("outcome hasn't been decided yet"): str)
         elif(winningOutcome==2^63):
-            banana = 2
+            # return funds to people
 
 		# distribute cashcoin to the people who won money by holding winning shares
 		i = 0
