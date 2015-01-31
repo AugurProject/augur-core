@@ -38,9 +38,10 @@ data Info[](typecode, description[2048], descriptionLength, creator, creationFee
 data Branches[](currentVotePeriod, markets[], marketCount, periodLength, repRequired)
 
 # Events' index is the eventID
-# outcome is -1 if false, 1 if true, 0 if not determined yet
+# a binary outcome state 1 is no, 2 is true, 0 if not determined
 # a binary outcome has 0 for min and 1 for max value
-data Events[](branch, expirationDate, outcome, minValue, maxValue)
+# S&P 500 would be say 0 and 4700, respectively
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
 
 # Reporting index is the branchID
 # Reporters index is the rep. address
@@ -51,14 +52,13 @@ data Events[](branch, expirationDate, outcome, minValue, maxValue)
 data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[][]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
 
 # Markets' index is the marketID
-# Events is a 0 indexed array of events in the market
+# Events is a 0 indexed array of events in the market in the format of
+    # [1, event, event, 2, event, 3, event, event, event]
+    # 1 means dimension 1, 2 is events in dimension 2, 3 is the dimension 3 events
 # Sharespurchased keeps track of the number of shares purchased for each outcome
-# Participants is a 0 indexed array of participants, their cashIDs, and the shares in each outcome they've purchased of an event (events' indexes are actual event IDs)
-# sharesPurchased is 0 indexed (0 is outcome 0, 1 is outcome 1, 2 is outcome 2 (notice we're on a new event here if they're binary))
-   # ex: eventIndex*2 is outcome 0, eventIndex*2 + 1 is outcome one for each corresponding event 
-   #    self.Markets[$marketID].sharesPurchased[$i*2]
-   #    self.Markets[$marketID].sharesPurchased[$i*2 + 1]
-data Markets[](branch, events[], sharesPurchased[], participants[](participantID, event[](shares[])), tradingFee, numberEvents, currentParticipant, winningOutcome, alpha, probabilities[], cumulativeScale)
+    # sharesPurchased states starts at 1 - (same for participants[].shares[] array)
+# Participants is a 0 indexed array of participants, their cashIDs, and the shares in each outcome they've purchased of an event
+data Markets[](branch, events[], sharesPurchased[], participants[](participantID, shares[]), tradingFee, lenEvents, currentParticipant, winningOutcome, alpha, cumulativeScale, numOutcomes)
 
 data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
@@ -164,10 +164,12 @@ def make_subbranch(description:str, periodLength, parent, repRequired):
         return(branchID)
     else:
         return(0)
-        
-def create_event(branch, description:str, expDate, minValue, maxValue):
+
+# numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0
+# to 11.0 would be 11 outcomes (if incremented by 0.1)
+def create_event(branch, description:str, expDate, minValue, maxValue, numOutcomes):
     if(self.Branches[branch].periodLength and description!=0 and expDate>block.number):
-        eventinfo = string((items=7)+len(description))
+        eventinfo = string((items=8)+len(description))
         eventinfo[0] = EVENT                                        #typecode
         eventinfo[1] = branch                                       #branchID
         eventinfo[2] = expDate                                      #expiration date
@@ -175,7 +177,8 @@ def create_event(branch, description:str, expDate, minValue, maxValue):
         eventinfo[4] = 42*2^64                                      #creation fee
         eventinfo[5] = minValue                                     #minimum outcome value
         eventinfo[6] = maxValue                                     #maximum outcome value
-        mcopy(eventinfo+(items=7), description, len(description))
+        eventinfo[7] = numOutcomes                                  #number of outcomes
+        mcopy(eventinfo+(items=8), description, len(description))
         eventID = sha256(eventinfo, chars=len(eventinfo))
     else:
         return(0)
@@ -189,7 +192,8 @@ def create_event(branch, description:str, expDate, minValue, maxValue):
         self.Events[eventID].branch = branch
         self.Events[eventID].expirationDate = expDate
         self.Events[eventID].minValue = minValue
-        self.Events[eventID].maxValue = maxValue    
+        self.Events[eventID].maxValue = maxValue
+        self.Events[eventID].numOutcomes = numOutcomes
         # see which future period it expires in and put the event in that bin
         futurePeriod = expDate / self.Branches[branch].periodLength
         self.Reporting[branch].eventsExpDates[futurePeriod].events[self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents] = eventID
@@ -198,29 +202,65 @@ def create_event(branch, description:str, expDate, minValue, maxValue):
     else:
         return(0)
 
+# alpha is equal to v/(n*log(n)) where v is the max percent commission,
+# and n is the number of outcomes people can trade. Alpha is set when
+# a market is created.
+macro ls_lmsr($marketID):
+    with $Bq = 0:
+        with $l = self.Markets[$marketID].numberEvents:
+            with $i = 0:
+                while $i < $l:
+                    $Bq += self.Markets[$marketID].sharesPurchased[$i*2]
+                    $Bq += self.Markets[$marketID].sharesPurchased[$i*2 + 1]
+                    $i += 1
+                $Bq *= self.Markets[$marketID].alpha
+                $i = 0
+                with $sum_exp = 0:
+                    with $a = 0:
+                        with $b = 0:
+                            while $i < $l:
+                                $a = self.Markets[$marketID].sharesPurchased[$i*2]
+                                $b = self.Markets[$marketID].sharesPurchased[$i*2 + 1]
+                                $sum_exp += self.exp($a*2^64/$Bq)
+                                $sum_exp += self.exp($b*2^64/$Bq)
+                                $i += 1
+                            $Bq*self.log($sum_exp)/2^64
+
 # alpha is a fixedpoint number 
-def create_market(branch, description:str, alpha, events:arr):
+# initialLiquidity is initial number of shares of each outcome you want to buy/initialize/set
+def create_market(branch, description:str, alpha, initialLiquidity, events:arr):
+    if(len(events) > 203 or !self.Branches[branch].periodLength or description==0 or !initialLiquidity or !alpha):
+        return(0)
 	# check that events have same exp. dates and branch
 	i = 0
-	numEvents = len(events)
+    numOutcomes = 1
 	eventsConcat = 0
-	expDate = self.Events[events[0]].expirationDate
 	cumulativeScale = 0
-	while i < numEvents:
-		event = events[i]
-		eventsConcat += events[i]
-		if self.Events[event].expirationDate != expDate:
-			return(0)
-		if self.Events[event].branch != branch:
-			return(0)
-		#provided not a binary outcome
-		if(self.Events[event].maxValue!=1):
-			cumulativeScale += self.Events[event].maxValue - self.Events[event].minValue
-		i+=1
+    n = 1
+	while i < len(events):
+        if(events[i]==n):
+            i+=1
+            currentDimenOutcomes = 0
+            while(events[i]!=0 and events[i]!=(n+1)):
+                event = events[i]
+                eventsConcat += event
+                if (self.Events[event].branch != branch):
+                    return(0)
+                #provided not a binary outcome
+                if(self.Events[event].maxValue!=1):
+                    cumulativeScale += self.Events[event].maxValue - self.Events[event].minValue
+                if(self.Events[event].numOutcomes==2):
+                    currentDimenOutcomes += 1
+                else:
+                    currentDimenOutcomes += self.Events[event].numOutcomes
+                i+=1
+            currentDimenOutcomes += 1
+            numOutcomes *= currentDimenOutcomes
+            n += 1
+        else:
+            # 1 wasn't the first array item
+            return(0)
 
-	if(numEvents > 200 or !self.Branches[branch].periodLength or description==0 or !lossLimit or !tradingFee or (!alpha and !lossLimit)):
-		return(0)
-	
 	# formation of marketID (hash)
     marketinfo = string((items=9)+len(description))
     marketinfo[0] = MARKET
@@ -228,23 +268,20 @@ def create_market(branch, description:str, alpha, events:arr):
     marketinfo[2] = initialLiquidity
     marketinfo[3] = branch
     marketinfo[4] = eventsConcat
-    marketinfo[5] = numEvents
-    marketinfo[6] = lossLimit
-    marketinfo[7] = tradingFee
-    marketinfo[8] = alpha
+    marketinfo[5] = len(events)
+    marketinfo[6] = cumulativeScale
+    marketinfo[7] = alpha
+    marketinfo[8] = numOutcomes
     mcopy(marketinfo+(items=9), description, chars=len(description))
     marketID = sha256(marketinfo, chars=len(marketinfo))
 
-	# if regular lmsr
-	if(losslimit):
-		# initialLiquidity is a fixedpoint number
-		# divide by 2^64 to stay in fixedpoint
-		initialLiquidity = lossLimit*self.log(numEvents*2^64)/2^64
+    # buy all outcomes
 	# ls-lmsr needs a very small initial liquidity
-	elif(alpha):
-		initialLiquidity = 2^62
-		self.Markets[marketID].sharesPurchased[0] += 2^62 / 2
-		self.Markets[marketID].sharesPurchased[1] += 2^62 / 2
+	self.Markets[marketID].sharesPurchased[0] += initialLiquidity
+	self.Markets[marketID].sharesPurchased[1] += initialLiquidity
+    cost = ls_lmsr(marketID)
+
+
 
 	if(self.send_cashcoin(marketID, initialLiquidity)):
 		# add event list to the market
@@ -268,10 +305,11 @@ def create_market(branch, description:str, alpha, events:arr):
         self.Info[marketID].descriptionLength = len(description)
         save(self.Info[marketID].description[0], description, chars=len(description))
         self.cashcoin_balances[marketID] = initialLiquidity
-        self.Markets[marketID].lossLimit = lossLimit
-        self.Markets[marketID].tradingFee = tradingFee
         self.Markets[marketID].branch = branch
         self.Markets[marketID].alpha = alpha
+        self.Markets[marketID].lenEvents = len(events)
+        self.Markets[marketID].cumulativeScale = cumulativeScale
+        self.Markets[marketID].numOutcomes = numOutcomes
         # add the market to the branch
         marketCount = self.Branches[branch].marketCount
         self.Branches[branch].markets[marketCount] = marketID
@@ -630,6 +668,8 @@ def redeem(branch):
 # fix this
 # what happens if undecided event in a market?
 # implement multidimensional scalar payouts and multidimensional payouts
+# when multidimen fancy payouts we report on the events separately per usual, but combine them to determine winning state of a fancy market and then payout that state
+# make so can't close until last exp event in market has expired
 def close_market(branch, market):
 	if(self.cashcoin_balances[market]<=0):
 		return(0)
