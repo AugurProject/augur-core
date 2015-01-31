@@ -21,7 +21,7 @@ augur-serpent
 	# https://blog.ethereum.org/2015/01/28/p-epsilon-attack/
 
 ### Version 0.4 (Awesome fun stuff):
-	# make code updatable 
+	# make code updatable + work with etherex
 	# how do we scale / what if a ton of events, markets, etc.
 	# stablecoin
 	# reward whoever does redeem and close market according to gas cost
@@ -43,7 +43,7 @@ augur-serpent
 
 ### Version 0.2 (Markets Upgrades):
 	# add support for categorical and multidimensional events
-	# salt hash vote mechanism	
+	# salt hash vote mechanism
 
 
 

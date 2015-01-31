@@ -58,7 +58,7 @@ data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, repo
 # Sharespurchased keeps track of the number of shares purchased for each outcome
     # sharesPurchased states starts at 1 - (same for participants[].shares[] array)
 # Participants is a 0 indexed array of participants, their cashIDs, and the shares in each outcome they've purchased of an event
-data Markets[](branch, events[], sharesPurchased[], participants[](participantID, shares[]), tradingFee, lenEvents, currentParticipant, winningOutcome, alpha, cumulativeScale, numOutcomes)
+data Markets[](branch, events[], sharesPurchased[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcome, alpha, cumulativeScale, numOutcomes)
 
 data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
@@ -237,6 +237,8 @@ def create_market(branch, description:str, alpha, initialLiquidity, events:arr):
 	eventsConcat = 0
 	cumulativeScale = 0
     n = 1
+    eventsArray = array(len(events))
+    eventNum = 0
 	while i < len(events):
         if(events[i]==n):
             i+=1
@@ -244,7 +246,7 @@ def create_market(branch, description:str, alpha, initialLiquidity, events:arr):
             while(events[i]!=0 and events[i]!=(n+1)):
                 event = events[i]
                 eventsConcat += event
-                if (self.Events[event].branch != branch):
+                if (self.Events[event].branch != branch or !self.Info[eventID].creator):
                     return(0)
                 #provided not a binary outcome
                 if(self.Events[event].maxValue!=1):
@@ -253,6 +255,8 @@ def create_market(branch, description:str, alpha, initialLiquidity, events:arr):
                     currentDimenOutcomes += 1
                 else:
                     currentDimenOutcomes += self.Events[event].numOutcomes
+                eventsArray[eventNum] = event
+                eventNum += 1
                 i+=1
             currentDimenOutcomes += 1
             numOutcomes *= currentDimenOutcomes
@@ -275,47 +279,42 @@ def create_market(branch, description:str, alpha, initialLiquidity, events:arr):
     mcopy(marketinfo+(items=9), description, chars=len(description))
     marketID = sha256(marketinfo, chars=len(marketinfo))
 
-    # buy all outcomes
-	# ls-lmsr needs a very small initial liquidity
-	self.Markets[marketID].sharesPurchased[0] += initialLiquidity
-	self.Markets[marketID].sharesPurchased[1] += initialLiquidity
+    # buy some of all outcomes
+	# ls-lmsr needs at least a very small initial liquidity
+    y = 1
+    while y <= numOutcomes:
+        self.Markets[marketID].sharesPurchased[y] += initialLiquidity
     cost = ls_lmsr(marketID)
 
-
-
-	if(self.send_cashcoin(marketID, initialLiquidity)):
+	if(self.send_cashcoin(marketID, cost)):
 		# add event list to the market
-		i = 0
-		while i<numEvents:
-			eventID = events[i]
-			if(!self.Info[eventID].creator or self.Events[eventID].branch!=branch):
-				return(0)
+		z = 0
+		while z<=eventNum:
 			# initialize market events array with eventIDs from the eventList
-			self.Markets[marketID].events[i] = eventID
-			i+=1
-
-		self.Markets[marketID].numberEvents = numEvents
-		# creator of the first market in a branch gets the branch's creation fee
-		if(self.Branches[branch].marketCount==0):
-			self.send_cashcoin(tx.origin, self.Info[branch].creationFee)
+			self.Markets[marketID].events[z] = eventsArray[eventNum]
+			z+=1
 			
  		self.Info[marketID].typecode = MARKET
         self.Info[marketID].creator = tx.origin
         self.Info[marketID].creationFee = initialLiquidity
         self.Info[marketID].descriptionLength = len(description)
         save(self.Info[marketID].description[0], description, chars=len(description))
-        self.cashcoin_balances[marketID] = initialLiquidity
         self.Markets[marketID].branch = branch
         self.Markets[marketID].alpha = alpha
         self.Markets[marketID].lenEvents = len(events)
         self.Markets[marketID].cumulativeScale = cumulativeScale
         self.Markets[marketID].numOutcomes = numOutcomes
+        self.Markets[marketID].numberEvents = numEvents
         # add the market to the branch
         marketCount = self.Branches[branch].marketCount
         self.Branches[branch].markets[marketCount] = marketID
         self.Branches[branch].marketCount += 1
         return(marketID)
 	else:
+        # revert shares bought
+        y = 1
+        while y <= numOutcomes:
+            self.Markets[marketID].sharesPurchased[y] -= initialLiquidity
 		return(0)
 
 # alpha is equal to v/(n*log(n)) where v is the max percent commission,
@@ -342,14 +341,10 @@ macro ls_lmsr($marketID):
                                 $i += 1
                             $Bq*self.log($sum_exp)/2^64
 
-# fee should be in fixed point
 # amount of shares should be an integer
 # trading fees go to branch directly and are distributed upon rbcr
-# cost of shares go directly to the market
-# so markets using lmsr should charge a higher fee here because the market creator will get less as fees from market making
 # ls-lmsr markets won't have much in fees in the branch, so the market creator will thus get a lot of fees himself hmmm...
-# is there a way to pool ls-lmsr fees separately?
-def buy_shares(branch, event, market, outcome, amount, fee):
+def buy_shares(branch, event, market, outcome, amount):
     if (fee<self.Markets[market].tradingFee or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee or self.Events[event].outcome!=0 or outcome==0):
         return(0)
     # pay one-fourth of trading fee to market creator via sending to market.creator
