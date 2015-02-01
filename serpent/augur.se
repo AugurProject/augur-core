@@ -202,27 +202,26 @@ def create_event(branch, description:str, expDate, minValue, maxValue, numOutcom
     else:
         return(0)
 
+        data Markets[](branch, events[], sharesPurchased[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcome, alpha, cumulativeScale, numOutcomes)
+
 # alpha is equal to v/(n*log(n)) where v is the max percent commission,
 # and n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
 macro ls_lmsr($marketID):
     with $Bq = 0:
-        with $l = self.Markets[$marketID].numberEvents:
-            with $i = 0:
-                while $i < $l:
-                    $Bq += self.Markets[$marketID].sharesPurchased[$i*2]
-                    $Bq += self.Markets[$marketID].sharesPurchased[$i*2 + 1]
+        with $l = self.Markets[$marketID].numOutcomes:
+            with $i = 1:
+                while $i <= $l:
+                    $Bq += self.Markets[$marketID].sharesPurchased[$i]
                     $i += 1
                 $Bq *= self.Markets[$marketID].alpha
-                $i = 0
+                $Bq *= self.Markets[$marketID].cumulativeScale
+                $i = 1
                 with $sum_exp = 0:
                     with $a = 0:
-                        with $b = 0:
-                            while $i < $l:
-                                $a = self.Markets[$marketID].sharesPurchased[$i*2]
-                                $b = self.Markets[$marketID].sharesPurchased[$i*2 + 1]
+                            while $i <= $l:
+                                $a = self.Markets[$marketID].sharesPurchased[$i]
                                 $sum_exp += self.exp($a*2^64/$Bq)
-                                $sum_exp += self.exp($b*2^64/$Bq)
                                 $i += 1
                             $Bq*self.log($sum_exp)/2^64
 
@@ -317,112 +316,33 @@ def create_market(branch, description:str, alpha, initialLiquidity, events:arr):
             self.Markets[marketID].sharesPurchased[y] -= initialLiquidity
 		return(0)
 
-# alpha is equal to v/(n*log(n)) where v is the max percent commission,
-# and n is the number of outcomes people can trade. Alpha is set when
-# a market is created.
-macro ls_lmsr($marketID):
-    with $Bq = 0:
-        with $l = self.Markets[$marketID].numberEvents:
-            with $i = 0:
-                while $i < $l:
-                    $Bq += self.Markets[$marketID].sharesPurchased[$i*2]
-                    $Bq += self.Markets[$marketID].sharesPurchased[$i*2 + 1]
-                    $i += 1
-                $Bq *= self.Markets[$marketID].alpha
-                $i = 0
-                with $sum_exp = 0:
-                    with $a = 0:
-                        with $b = 0:
-                            while $i < $l:
-                                $a = self.Markets[$marketID].sharesPurchased[$i*2]
-                                $b = self.Markets[$marketID].sharesPurchased[$i*2 + 1]
-                                $sum_exp += self.exp($a*2^64/$Bq)
-                                $sum_exp += self.exp($b*2^64/$Bq)
-                                $i += 1
-                            $Bq*self.log($sum_exp)/2^64
-
 # amount of shares should be an integer
-# trading fees go to branch directly and are distributed upon rbcr
-# ls-lmsr markets won't have much in fees in the branch, so the market creator will thus get a lot of fees himself hmmm...
-def buy_shares(branch, event, market, outcome, amount):
-    if (fee<self.Markets[market].tradingFee or self.Events[event].branch!=branch or self.cashcoin_balances[tx.origin]<fee or self.Events[event].outcome!=0 or outcome==0):
+def buy_shares(branch, market, outcome, amount):
+    # need to check that event hasn't started to be in the new voting batch yet!!!!
+    # can still trade if expired but before that ^
+    if (self.Markets[market].branch!=branch or outcome==0):
         return(0)
-    # pay one-fourth of trading fee to market creator via sending to market.creator
-    # other half is stored in branchID cashcoin balance
-    self.cashcoin_balances[tx.origin] -= fee
-    marketCreatorFee = fee - (3*fee)/4
-    self.cashcoin_balances[self.Info[market].creator] += marketCreatorFee
-    self.cashcoin_balances[branch] += (3*fee)/4
-    
-    # find the right event index
-    i = 0
-    while (i<self.Markets[market].numberEvents and self.Markets[market].events[i] != event):
-            i+=1
-
-    # event doesn't exist in index
-    if(i==self.Markets[market].numberEvents):
-        return(0)
-    oldCost = 0
-    newCost = 0
-    # using ls-lmsr
-    if(self.Markets[market].alpha):
-        # for the first trade's oldcost shares bought will be at 0
-        # only 2 outcomes poss. for now
-        oldCost = ls_lmsr(market)
-        # if buying outcome 1
-        if outcome:
-            self.Markets[market].sharesPurchased[i*2+1] += amount
-        # outcome is no
-        else:
-            self.Markets[market].sharesPurchased[i*2] += amount
-        newCost = ls_lmsr(market) 
-    # regular lmsr
-    else:
-        if(self.Markets[market].lossLimit):
-            # for the first trade's oldcost shares bought will be at 0
-            # only 2 outcomes poss. for now
-            oldCost = lmsr(market)
-            # if buying outcome 1
-            if outcome:
-                self.Markets[market].sharesPurchased[i*2+1] += amount
-            # outcome is no
-            else:
-                self.Markets[market].sharesPurchased[i*2] += amount
-            newCost = lmsr(market) 
+    # lmsr cost calcs
+    oldCost = ls_lmsr(market)
+    self.Markets[market].sharesPurchased[outcome] += amount
+    newCost = ls_lmsr(market)
 
     # these prices are in fixed point
     pricePerShare = newCost - oldCost
     participantNumber = self.Markets[market].currentParticipant
-    
+  
     # send shares of the event to user address
-    if outcome:
-        # if user doesn't have enough money, revert
-        if(self.cashcoin_balances[tx.origin]<amount*pricePerShare):
-            self.Markets[market].sharesPurchased[i*2+1] -= amount
-            return(0)
-        else:
-            # send ether from user acc. to market address/account
-            self.send_cashcoin(market, pricePerShare*amount)
-            self.Markets[market].participants[participantNumber].participantID = tx.origin
-            self.Markets[market].participants[participantNumber].event[event].shares[1] += amount
-            self.Markets[market].currentParticipant += 1
-            return(participantNumber)
-            
-    # outcome 0
-    # can't allow people to buy outcome 0 b/c undetermined
+    # if user doesn't have enough money, revert
+    if(self.cashcoin_balances[tx.origin]<amount*pricePerShare):
+        self.Markets[market].sharesPurchased[outcome] -= amount
+        return(0)
     else:
-        # if user doesn't have enough money, revert
-        if(self.cashcoin_balances[tx.origin]<amount*pricePerShare):
-            self.Markets[market].sharesPurchased[i*2] -= amount
-            return(0)
-        else:
-            # send ether from user acc. to market address/account
-            self.send_cashcoin(market, pricePerShare*amount)
-            self.Markets[market].participants[participantNumber].participantID = tx.origin
-            self.Markets[market].participants[participantNumber].event[event].shares[0] += amount
-            self.Markets[market].currentParticipant += 1
-            return(participantNumber)
-            
+        # send money from user acc. to market address/account
+        self.send_cashcoin(market, pricePerShare*amount)
+        self.Markets[market].participants[participantNumber].participantID = tx.origin
+        self.Markets[market].participants[participantNumber].shares[outcome] += amount
+        self.Markets[market].currentParticipant += 1
+        return(participantNumber)
 
 # amount is amount of shares to buy
 # instead of inputting particip. num could just loop through array if dont have it

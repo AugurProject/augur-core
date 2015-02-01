@@ -18,6 +18,8 @@ augur-serpent
 	# pay fee to just get a report / consensus
 	 # e.g. real world event consensus
 	# need to add audits
+	# special cfds 
+	# decentralized exchange (etherex and chow)
 	# https://blog.ethereum.org/2015/01/28/p-epsilon-attack/
 
 ### Version 0.4 (Awesome fun stuff):
@@ -43,6 +45,7 @@ augur-serpent
 
 ### Version 0.2 (Markets Upgrades):
 	# add support for categorical and multidimensional events
+	# need to check that event hasn't started to be in the new voting batch yet!!!!
 	# salt hash vote mechanism
 
 
