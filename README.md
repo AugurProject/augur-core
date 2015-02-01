@@ -44,9 +44,19 @@ augur-serpent
 	# max number of owners in a branch of rep.
 
 ### Version 0.2 (Markets Upgrades):
-	# add support for categorical and multidimensional events
 	# need to check that event hasn't started to be in the new voting batch yet!!!!
 	# salt hash vote mechanism
+
+
+
+
+
+
+
+
+
+
+
 
 
 
