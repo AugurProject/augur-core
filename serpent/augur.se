@@ -547,7 +547,7 @@ def close_market(branch, market):
 		# give back initial liquidity
 		#self.cashcoin_balances[market] -= self.Info[market].creationFee
 		#self.cashcoin_balances[self.Info[market].creator] += self.Info[market].creationFee
-		# get # of shares of winning outcome
+		# get # of shares of winning outcome``k-,ij9uh8
 
 		# loop through events in the market, get their outcomes and use those to determine the winning events!
 		n = 0
@@ -723,6 +723,7 @@ def api(dataStructure, itemNumber, arrayIndex, ID):
             return(self.Markets[ID].numberEvents)
         elif(itemNumber==7):
             return(self.Markets[ID].currentParticipant)
+        #remove this
         elif(itemNumber==8):
             return(self.Markets[ID].winningOutcome)
         elif(itemNumber==9):
@@ -758,6 +759,7 @@ def reputationApi(reputationIndex, itemNumber, branchID):
         return(self.Reporting[branchID].reputation[reputationIndex].reporterID)
 
 # eventID and outcomeNumber only needed if itemNumber is 1
+# remove this
 def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, marketID):
     if(itemNumber==0):
         return(self.Markets[marketID].participants[participantIndex].participantID)
