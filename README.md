@@ -6,14 +6,6 @@ augur-serpent
 	# optimize consensus.se (martin will help w/ this too!)
 	# Implement Version 0.2 (eta - feb?)
 
-### UI features:
-	# featured markets
-	# filters to organize markets by volume, category, number of traders, trading fee, initial liquidity
-	# api voting
-	# search engine for contract data / markets
-	# chat in UI
-	# social media integrations
-
 ### Version 0.5 
 	# pay fee to just get a report / consensus
 	 # e.g. real world event consensus
