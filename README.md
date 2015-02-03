@@ -4,6 +4,7 @@ augur-serpent
 ### To do:
 	# test / fixup redeem close market and consensus in augur.se
 	# Implement Version 0.2 (eta - feb?)
+	# Implement Version 0.3 (eta - mar?) - Basic UI needs to be ready at this time too
 	# make sure this follows paul's whitepaper well
 	# optimize consensus.se (martin will help w/ this too!)
 
