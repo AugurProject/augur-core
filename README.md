@@ -43,6 +43,12 @@ augur-serpent
 	# and fee to get event output in apis
 
 
+event voting periods - expDate / periodLength gives you the voting period #
+when can people trade and not trade - can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the expDate/periodLength)
+when can they vote and not vote
+what happens if not enough consensus or enough events
+
+
 
 
 
