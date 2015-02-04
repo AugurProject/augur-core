@@ -195,6 +195,7 @@ def create_event(branch, description:str, expDate, minValue, maxValue, numOutcom
         self.Events[eventID].maxValue = maxValue
         self.Events[eventID].numOutcomes = numOutcomes
         # see which future period it expires in and put the event in that bin
+        # event voting periods - expDate / periodLength gives you the voting period #
         futurePeriod = expDate / self.Branches[branch].periodLength
         self.Reporting[branch].eventsExpDates[futurePeriod].events[self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents] = eventID
         self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents += 1
@@ -226,7 +227,7 @@ macro ls_lmsr($marketID):
 # alpha is a fixedpoint number 
 # initialLiquidity is initial number of shares of each outcome you want to buy/initialize/set
 def create_market(branch, description:str, alpha, initialLiquidity, events:arr):
-    if(len(events) > 203 or !self.Branches[branch].periodLength or description==0 or !initialLiquidity or !alpha):
+    if(!self.Branches[branch].periodLength or description==0 or !initialLiquidity or !alpha):
         return(0)
 	# check that events have same exp. dates and branch
 	i = 0
@@ -264,7 +265,8 @@ def create_market(branch, description:str, alpha, initialLiquidity, events:arr):
         else:
             # 1 wasn't the first array item
             return(0)
-
+    if(numOutcomes > 200):
+        return(0)
     tradingPeriod = tradingPeriod / self.Branches[branch].periodLength
 	# formation of marketID (hash)
     marketinfo = string((items=10)+len(description))
@@ -322,6 +324,7 @@ def create_market(branch, description:str, alpha, initialLiquidity, events:arr):
 
 # amount of shares should be an integer
 def buy_shares(branch, market, outcome, amount):
+    # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     if (self.Markets[market].branch!=branch or outcome==0 or self.Branches[branch].currentVotePeriod>=self.Markets[marketID].tradingPeriod):
         return(0)
     # lmsr cost calcs
@@ -349,6 +352,7 @@ def buy_shares(branch, market, outcome, amount):
 # amount is amount of shares to buy
 # instead of inputting particip. num could just loop through array if dont have it
 def sell_shares(branch, market, outcome, amount, participantNumber):
+        # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     if (self.Markets[market].participants[participantNumber].participantID != tx.origin or self.Markets[market].branch!=branch or outcome==0 or self.Branches[branch].currentVotePeriod>=self.Markets[marketID].tradingPeriod):
         return(0)
     # lmsr cost calcs
@@ -384,12 +388,10 @@ def inPeriod(branchID, eventID):
 
 # a no vote is -2^64, a yes vote is 2^64 and a can't determine vote is 2^63 (a empty ballot is 0)
 # atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
-# ui should handle this ^
-# ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents
-# and loop through the events[] array from 0 to numberEvents -1 for the votes list / order
-# should make an API function for this (make ballot)!!!
-# UI will need a function to get the items in that array above so it can make a report!
-# check this fun.
+# ui should handle this by filling in things you didn't vote on automatically & ask to be sure you didn't want to vote on them
+# UI makeBallot function does this
+    # ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[votePeriod].numberEvents
+    # and loop through the events[] array from 0 to numberEvents -1 for the votes list / order
 # people could report something like 16027*2^64 for a scalar
 def vote(branch, report:arr):
 	# make sure the branch exists
@@ -644,7 +646,6 @@ def closeBet(betID):
 # ui should handle this ^
 # ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents
 # and loop through the events[] array from 0 to numberEvents -1 for the votes list / order
-# should make an API function for this (make ballot)!!!
 # UI will need a function to get the items in that array above so it can make a report!
 # w/ this function you can get the eventIDs, look them up and report on outcomes (probably w/ another function to look them up) -- make sure in this function to check that the report value is not >maxvalue or <minvalue for the event
 def makeBallot(branch):

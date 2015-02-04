@@ -17,6 +17,7 @@ augur-serpent
 	# make code updatable + work with etherex
 	# https://blog.ethereum.org/2015/01/28/p-epsilon-attack/
 	# stablecoin
+	# could have multiple people add liquidity to the market :o
 
 ### Version 0.4 (Awesome fun stuff):
 	# how do we scale / what if a ton of events, markets, etc.
@@ -46,29 +47,6 @@ augur-serpent
 event voting periods - expDate / periodLength gives you the voting period #
 when can people trade and not trade - can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the expDate/periodLength)
 when can they vote and not vote
-what happens if not enough consensus or enough events
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
