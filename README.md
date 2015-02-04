@@ -2,17 +2,17 @@ augur-serpent
 -------------
 
 ### To do:
-	# test / fixup redeem close market and consensus in augur.se
+	# test / fixup close market in augur.se
 	# fix current voting period stuff
-	# Implement Version 0.2 (eta - feb?)
+	# market rewards (why do eventid holders have a special distribution anyway re fee bonus?)
+	# i presume same reporter order i pass array to consensus i get out?
 	# Implement Version 0.3 (eta - mar?) - Basic UI needs to be ready at this time too
 	# make sure this follows paul's whitepaper well
 	# optimize consensus.se (martin will help w/ this too!)
 	# voting period fixes / when can / can't vote
+	# update api
 
-### Version 0.5 (More fun features):
-	# pay fee to just get a report / consensus
-	 # e.g. real world event consensus
+### Version 0.5 (More fun features - May):
 	# need to add audits
 	# special cfds + public good funding + poss. futarchy
 	# decentralized exchange (etherex and chow) -- chow exchange needs a way to prevent two people from claiming an order, sending bitcoin, then being screwed unless altruism (suggest a claim tx w/ possible small ether bond and during that time no one else can claim the exchange tx - but if you wait too long you lose the bond + it becomes open again, something like that)
@@ -21,7 +21,7 @@ augur-serpent
 	# stablecoin
 	# could have multiple people add liquidity to the market :o
 
-### Version 0.4 (Awesome fun stuff):
+### Version 0.4 (Awesome fun stuff - April):
 	# how do we scale / what if a ton of events, markets, etc.
 	# reward whoever does redeem and close market according to gas cost
 	# zeroing of array values
@@ -38,7 +38,3 @@ augur-serpent
 	# 60% of votes -- need to get the cycle length parameters right
 	# rapid rbcr anytime to vote i'm alive if <60% of people vote after a few cycles or something
 	# max number of owners in a branch of rep.
-
-### Version 0.2 (Markets Upgrades):
-	# need to check that event hasn't started to be in the new voting batch yet!!!!
-	# alpha should have a range of acceptable values
