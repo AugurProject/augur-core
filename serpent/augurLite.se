@@ -312,7 +312,6 @@ def create_market(branch, description:str, alpha, initialLiquidity, events:arr):
         self.Markets[marketID].lenEvents = len(events)
         self.Markets[marketID].cumulativeScale = cumulativeScale
         self.Markets[marketID].numOutcomes = numOutcomes
-        self.Markets[marketID].tradingPeriod = tradingPeriod
         # add the market to the branch
         marketCount = self.Branches[branch].marketCount
         self.Branches[branch].markets[marketCount] = marketID
@@ -432,162 +431,12 @@ def check_quorum(branch):
     else:
         return(0)
         
-# perhaps give the redeemer some fees to cover svd costs
-# 25% of fees already distributed to market creatorswww
-# so 2/3 of remaining fees to voters = 50%
-# and 1/3 of remaining fees to event creators = 25%
-# need to check >60% per event reported
-# fix this
-# what if not enough consensus or not enough events expiring upcoming
-def redeem(branch):
-    if(!self.check_quorum(branch)):
-        return(text("quorem not satisfied yet"): str)
-    currentVotePeriod = self.Branches[branchID].currentVotePeriod
-    # loop through reputation and check if in reporters, if so use their report, if not use the fillin / not reported report
-    # use this to make a giant array of votes to pass to self.consensus
-    # want to pass votes for each 0 indexed event in order (so we get votes from an actual reporter)
-    # (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
-    reputation = array(self.Reporting[branch].numberReporters)
-    numberEvents = self.Reporting[branch].eventsExpDates[currentvotePeriod].numberEvents
-    numReporters = self.Reporting[branch].numberReporters
-    votes = array(numReporters * numberEvents)
-
-    i = 0
-    while i < numReporters:
-        # checks to see if each reporter actually voted on any events
-        reporterID = self.Reporting[branch].reputation[i].reporterID
-        reputation[i] = self.Reporting[branch].reputation[i].repValue
-
-        # if they didn't vote do nothing (these values will be 0 by default due to Serpent array styles)
-
-        # else if the reporter did report on events (check if they voted on first event)
-        if(self.Reporting[branch].eventsExpDates[currentVotePeriod].reporters[reporterID][0] != 0):
-            x = 0
-            while x < numberEvents:
-                votes[x + i*numberEvents] = self.Reporting[branch].eventsExpDates[currentVotePeriod].reporters[reporterID][x]
-                x += 1
-        i += 1
-
-    # populate returned arrays
-    megaArray = self.consensus(votes, reputation)
-    outcomes_final = array(numberEvents)
-    event_bonus = array(numberEvents)
-    voter_bonus = array(numReporters)
-    a = 0
-    while a < numberEvents:
-        outcomes_final[a] = megaArray[a]
-        a+=1
-    b = numberEvents
-    while b < (2*numberEvents):
-        event_bonus[b] = megaArray[b]
-        b+=1
-    c = (2*numberEvents)
-    while c < numReporters:
-        voter_bonus[c] = megaArray[c]
-        c+=1
-
-    # get event ID for each event by taking the x index in the votes arrays - shoving it in reporting.events[]
-    # and getting the cooresponding ID
-    n = 0
-    while n < numberEvents:
-        eventID = self.Reporting[branch].eventsExpDates[currentVotePeriod].events[n]
-        # then take outcomes_final and set each event outcome to -1 if false or 1 if true (if 0 it's undecided)
-        # a scalar could have a number like say 47
-        self.Events[eventID].outcome = outcomes_final[n]
-        
-        # need to loop through eventid holders and distribute 25% coins using the event_bonus to determine how much
-        # of the 25% each get
-        self.cashcoin_balances[self.Info[eventID].creator] += fixed_multiply(event_bonus[n], self.cashcoin_balances[branch]) / 3
-        self.cashcoin_balances[branch] -= fixed_multiply(event_bonus[n], self.cashcoin_balances[branch]) / 3
-
-    # need to loop through rep holders and distribute 50% of branch fees to voters' cashcoin addresses 
-    # (use 2/3 because 25% was distributed in market creation)
-    # also need to take voter_bonus and redistribute reputation in the Reporting structure accordingly
-    z = 0
-    while z < numReporters:
-        self.Reporting[branch].reputation[z].repValue += (voter_bonus[z]*21000000)/2^64
-        self.cashcoin_balances[self.Reporting[branch].reputation[z].reporterID] += 2*self.cashcoin_balances[branch]*voter_bonus[z] / (3*2^64*numReporters)
-        self.cashcoin_balances[branch] -= 2*self.cashcoin_balances[branch]*voter_bonus[z] / (3*2^64*numReporters)
-    self.Branches[branch].currentVotePeriod += 1
-    return(self.Branches[branch].currentVotePeriod)
-
-
-# loop through events in the market, get their outcomes and use those to determine the winning events!
-# distribute coins among winning events
-# only works for inTrade style 1 event in a market predictions at the moment
-# this doesn't work due to winning events oddities if(1) thing
-# fix this
-# what happens if undecided event in a market?
-# implement multidimensional scalar payouts and multidimensional payouts
-# when multidimen fancy payouts we report on the events separately per usual, but combine them to determine winning state of a fancy market and then payout that state
-# make so can't close until last exp event in market has expired
-def close_market(branch, market):
-    if(self.cashcoin_balances[market]<=0):
-        return(0)
-    currentPeriod = block.number / self.Branches[branch].periodLength
-    numberEvents = self.Markets[market].numOutcomes
-    eventVotePeriod = self.Events[self.Markets[market].events[numberEvents-1]].expirationDate / self.Branches[branch].periodLength
-    if(currentPeriod > (eventVotePeriod+2) && self.Reporting[branch].eventsExpDates[currentPeriod].totalRepReported >= self.Branches[branch].repRequired):
-        # give back initial liquidity
-        #self.cashcoin_balances[market] -= self.Info[market].creationFee
-        #self.cashcoin_balances[self.Info[market].creator] += self.Info[market].creationFee
-        # get # of shares of winning outcome``k-,ij9uh8
-
-        # loop through events in the market, get their outcomes and use those to determine the winning events!
-        n = 0
-        e = 0
-        while n < numberEvents:
-            if(self.Events[self.Markets[market].events[n]].outcome & self.Events[self.Markets[market].events[n]].outcome!=0):
-                # make this one winning outcome
-                self.Markets[market].winningEvents[e] = self.Markets[market].events[n]
-                e+=1
-            n+=1
-
-        winningShares = 0
-        # number of winning events is equivalent to e
-        #   a = 0
-        #   while a < e:
-        #   self.Markets[market].events[self.Markets[market].winningEvents[e]].shares
-        # needs to be fixed for scalar payouts
-        winningEvent = self.Markets[market].winningEvents[e-1]
-        winningShares = 0
-        winningOutcome = self.Events[winningEvent].outcome
-        winningSharesIndex = 0
-        if(winningOutcome==1):
-            winningShares = self.Markets[market].sharesPurchased[(2*(n-1) + 1)]
-            winningSharesIndex = 1
-        elif(winningOutcome==-1):
-            winningShares = self.Markets[market].sharesPurchased[2*(n-1)]
-            winningSharesIndex = 0
-        elif(winningOutcome==0):
-            return(text("outcome hasn't been decided yet"): str)
-        elif(winningOutcome==2^63):
-            return(0)
-            # return funds to people
-
-        # distribute cashcoin to the people who won money by holding winning shares
-        i = 0
-        while i <= self.Markets[market].currentParticipant:
-            sharesOwned = self.Markets[market].participants[i].event[winningEvent].shares[winningSharesIndex]
-            participant = self.Markets[market].participants[i].participantID
-            # winning price is $1 / share
-            # pricePerShare = 2^64
-            #moneyWon = sharesOwned*pricePerShare
-            pricePerShare = (self.Events[winningEvent].outcome - self.Events[winningEvent].minValue)*2^64/(self.Events[winningEvent].maxValue - self.Events[winningEvent].minValue)
-            self.cashcoin_balances[market] -= sharesOwned*pricePerShare
-            self.cashcoin_balances[participant] += sharesOwned*pricePerShare
-
-        # give back initial liquidity (or as much of it/profits are left)
-        self.cashcoin_balances[self.Info[market].creator] += self.cashcoin_balances[market]
-        self.cashcoin_balances[market] -= self.cashcoin_balances[market]
-        return(text("Market closed"): str)
-
 ### P2P parimutuel betting
 def makeBet(eventID, amtToBet):
     betData = array(2)
     betData[0] = eventID
     betData[1] = block.number
-    betID = sha256(branchinfo, 2)
+    betID = sha256(branchinfo, items=len(2))
     self.p2pBets[betID].eventID = betData[0]
     self.p2pBets[betID].amtToBet = amtToBet
 
@@ -624,6 +473,7 @@ def closeBet(betID):
         self.cashcoin_balances[betID+0] -= self.cashcoin_balances[betID+0]
         self.cashcoin_balances[betID+1] -= self.cashcoin_balances[betID+1]
     return(1) 
+
 ### API (for UI)
 
 # atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
@@ -699,12 +549,6 @@ def api(dataStructure, itemNumber, arrayIndex, ID):
             return(self.Markets[ID].sharesPurchased[arrayIndex])
         elif(itemNumber==3):
             return(text("Please call the participants api function"): str)
-        elif(itemNumber==4):
-            return(self.Markets[ID].lossLimit)
-        elif(itemNumber==5):
-            return(self.Markets[ID].tradingFee)
-        elif(itemNumber==6):
-            return(self.Markets[ID].numberEvents)
         elif(itemNumber==7):
             return(self.Markets[ID].currentParticipant)
         #remove this
@@ -712,8 +556,6 @@ def api(dataStructure, itemNumber, arrayIndex, ID):
             return(self.Markets[ID].winningOutcome)
         elif(itemNumber==9):
             return(self.Markets[ID].alpha)
-        elif(itemNumber==10):
-            return(self.Markets[ID].probabilities[arrayIndex])
         elif(itemNumber==11):
             return(self.Markets[ID].cumulativeScale)
     elif(dataStructure==5):
@@ -747,8 +589,6 @@ def reputationApi(reputationIndex, itemNumber, branchID):
 def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, marketID):
     if(itemNumber==0):
         return(self.Markets[marketID].participants[participantIndex].participantID)
-    elif(itemNumber==1):
-        return(self.Markets[marketID].participants[participantIndex].event[eventID].shares[outcomeNumber])
 
 inset('fixedpoint.se')
 inset('consensus.se')

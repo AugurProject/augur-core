@@ -221,7 +221,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                     while i < flatsize:
                                         reports_interp[i] = reports[i]
                                         i += 1
-                            return(reports_interp, two_flatsize)
+                            return(reports_interp, items=two_flatsize)
 
 # funid: 1
 def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
@@ -249,7 +249,7 @@ def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scale
                                     while i < flatsize:
                                         weighted_centered_data[i] = reports_filled[i] - weighted_means[i % num_events]
                                         i += 1
-                                    return(weighted_centered_data, flatsize)
+                                    return(weighted_centered_data, items=flatsize)
 
 # funid: 2
 def pca_init(num_events, max_iterations):
@@ -258,7 +258,7 @@ def pca_init(num_events, max_iterations):
         with loading_vector = array(lflatsize):
             loading_vector[0] = 2^64
             loading_vector[num_events] = max_iterations
-            return(loading_vector, lflatsize)
+            return(loading_vector, items=lflatsize)
 
 # funid: 3
 def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr, num_reports, num_events):
@@ -307,7 +307,7 @@ def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr,
                                 loading_vector[j] = s[j]*ONE/norm_s
                                 j += 1
                 loading_vector[num_events] -= 1
-                return(loading_vector, lflatsize)
+                return(loading_vector, items=lflatsize)
 
 # funid: 4
 def pca_scores(loading_vector:arr, weighted_centered_data:arr, num_reports, num_events):
@@ -319,7 +319,7 @@ def pca_scores(loading_vector:arr, weighted_centered_data:arr, num_reports, num_
                         scores[i] += fixed_multiply(weighted_centered_data[i*num_events + k], loading_vector[k])
                         k += 1
                 i += 1
-            return(scores, num_reports)
+            return(scores, items=num_reports)
 
 # funid: 5
 def pca(weighted_centered_data:arr, reputation:arr, num_reports, num_events, max_iterations):
@@ -379,7 +379,7 @@ def pca(weighted_centered_data:arr, reputation:arr, num_reports, num_events, max
                             scores[i] += fixed_multiply(weighted_centered_data[i*num_events + k], loading_vector[k])
                             k += 1
                     i += 1
-            return(scores, num_reports)
+            return(scores, items=num_reports)
 
 # funid: 6
 def calibrate_sets(scores:arr, num_reports, num_events):
@@ -398,7 +398,7 @@ def calibrate_sets(scores:arr, num_reports, num_events):
                         while i < two_num_reports:
                             sets[i] = scores[i - num_reports] - set2_compare
                             i += 1
-                        return(sets, two_num_reports)
+                        return(sets, items=two_num_reports)
 
 # funid: 7
 def calibrate_wsets(set1:arr, set2:arr, reputation:arr, reports_filled:arr, num_reports, num_events):
@@ -417,7 +417,7 @@ def calibrate_wsets(set1:arr, set2:arr, reputation:arr, reports_filled:arr, num_
                                             wsets[i + two_num_events] += fixed_multiply(wset2[k], reports_filled[pos])
                                         k += 1
                                 i += 1
-                            return(wsets, three_num_events)
+                            return(wsets, items=three_num_events)
 
 # funid: 8
 def pca_adjust(old:arr, new1:arr, new2:arr, set1:arr, set2:arr, scores:arr, num_reports, num_events):
@@ -436,7 +436,7 @@ def pca_adjust(old:arr, new1:arr, new2:arr, set1:arr, set2:arr, scores:arr, num_
                         adj_prin_comp = set1
                     else:
                         adj_prin_comp = set2
-                    return(adj_prin_comp, num_reports)
+                    return(adj_prin_comp, items=num_reports)
 
 # funid: 9
 def smooth(adj_prin_comp:arr, reputation:arr, num_reports, num_events):
@@ -467,7 +467,7 @@ def smooth(adj_prin_comp:arr, reputation:arr, num_reports, num_events):
                         while i < num_reports:
                             smooth_rep[i] = row_reward_weighted[i]/10 + rep_weights[i]*9/10
                             i += 1
-                    return(smooth_rep, num_reports)
+                    return(smooth_rep, items=num_reports)
 
 # funid: 10
 def consensus(smooth_rep:arr, reputation:arr, reports_filled:arr, num_reports, num_events):
@@ -505,7 +505,7 @@ def consensus(smooth_rep:arr, reputation:arr, reports_filled:arr, num_reports, n
                             while i < num_events:
                                 consensus_outcomes[i + num_events] = certainty[i] * 2^64 / total
                                 i += 1
-                            return(consensus_outcomes, two_num_events)
+                            return(consensus_outcomes, items=two_num_events)
 
 def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, reports_mask:arr, num_reports, num_events):
 
@@ -568,4 +568,4 @@ def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, repo
                                         while i < num_reports:
                                             retval[2*num_events + i] = voter_bonus[i]
                                             i += 1
-                                        return(retval, 2*num_events + num_reports)
+                                        return(retval, items=(2*num_events + num_reports))
