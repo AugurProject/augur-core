@@ -3,10 +3,12 @@ augur-serpent
 
 ### To do:
 	# test / fixup redeem close market and consensus in augur.se
+	# fix current voting period stuff
 	# Implement Version 0.2 (eta - feb?)
 	# Implement Version 0.3 (eta - mar?) - Basic UI needs to be ready at this time too
 	# make sure this follows paul's whitepaper well
 	# optimize consensus.se (martin will help w/ this too!)
+	# voting period fixes / when can / can't vote
 
 ### Version 0.5 (More fun features):
 	# pay fee to just get a report / consensus
@@ -40,15 +42,3 @@ augur-serpent
 ### Version 0.2 (Markets Upgrades):
 	# need to check that event hasn't started to be in the new voting batch yet!!!!
 	# alpha should have a range of acceptable values
-	# possibly have whoever asks a question pay a fee to the oracle
-	# and fee to get event output in apis
-
-
-event voting periods - expDate / periodLength gives you the voting period #
-when can people trade and not trade - can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the expDate/periodLength)
-when can they vote and not vote
-
-
-
-
-
