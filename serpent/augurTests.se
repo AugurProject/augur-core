@@ -161,7 +161,7 @@ def send_reputation(branch, recver, value):
 def get_rep_balance(branch, address):
 	return(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[address]].repValue)
 
-def make_subbranch(description:s, periodLength, parent, repRequired):
+def make_subbranch(description:str, periodLength, parent, repRequired):
 	if(periodLength<=0 or !self.Branches[parent].periodLength or !repRequired or description==0):
 		return(0)
 	branchCharacteristics = array(7)
@@ -195,7 +195,7 @@ def make_subbranch(description:s, periodLength, parent, repRequired):
 	else:
 		return(0)
 		
-def create_event(branch, description:s, expDate):
+def create_event(branch, description:str, expDate):
 	if(self.Branches[branch].periodLength and description!=0 and expDate>block.number):
 		eventCharacteristics = array(5)
 		eventCharacteristics[0] = EVENT
@@ -229,7 +229,7 @@ def create_event(branch, description:s, expDate):
 # lossLimit is a fixedpoint syntax number (so a losslimit of 1 is 2^64) (0 if not using lmsr)
 # ditto for alpha
 # tradingFee is a fixedpoint number as well --- perhaps make it a percent
-def create_market(branch, description:s, lossLimit, alpha, tradingFee, events:a):
+def create_market(branch, description:str, lossLimit, alpha, tradingFee, events:arr):
 	# check that events have same exp. dates and branch
 	i = 0
 	numEvents = len(events)
