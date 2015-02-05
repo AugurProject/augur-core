@@ -27,6 +27,7 @@ Questions?  Please contact jack@tinybike.net or joeykrug@gmail.com.
 """
 from __future__ import division
 import sys
+import json
 from pprint import pprint
 import numpy as np
 import pandas as pd
@@ -93,10 +94,10 @@ scaled_min = [-1, -1, -1, -1, 0, 8000]
 # scaled_max = [1, 1, 1, 1]
 # scaled_min = [0, 0, 0, 0]
 
-# num_voters = 25
+# num_reports = 25
 # num_events = 25
-# reports = np.random.randint(-1, 2, (num_voters, num_events))
-# reputation = np.random.randint(1, 100, num_voters)
+# reports = np.random.randint(-1, 2, (num_reports, num_events))
+# reputation = np.random.randint(1, 100, num_reports)
 # scaled = np.random.randint(0, 2, num_events).tolist()
 # scaled_max = np.ones(num_events)
 # scaled_min = -np.ones(num_events)
@@ -112,6 +113,9 @@ def BR(string): # bright red
 
 def BB(string): # bright blue
     return Fore.BLUE + Style.BRIGHT + str(string) + Style.RESET_ALL
+
+def BW(string): # bright white
+    return Fore.WHITE + Style.BRIGHT + str(string) + Style.RESET_ALL
 
 def BG(string): # bright green
     return Fore.GREEN + Style.BRIGHT + str(string) + Style.RESET_ALL
@@ -136,14 +140,17 @@ def fix(x):
 def unfix(x):
     return x / 0x10000000000000000
 
-def display(arr, description=None):
+def display(arr, description=None, show_all=None):
     if description is not None:
-        print(BB(description))
-    print(pd.DataFrame({
-        'result': arr,
-        'base 16': map(hex, arr),
-        'base 2^64': map(unfix, arr),
-    }))
+        print(BW(description))
+    if show_all is not None:
+        print(pd.DataFrame({
+            'result': arr,
+            'base 16': map(hex, arr),
+            'base 2^64': map(unfix, arr),
+        }))
+    else:
+        print(json.dumps(map(unfix, arr), indent=3, sort_keys=True))
 
 def serpent_function(s, c, name, signature, args=[]):
     sys.stdout.write("  " + BG(name) + " ")
@@ -158,9 +165,9 @@ def test_contract(contract):
     print BB("Testing contract:"), BG(filename)
     c = s.contract(filename)
 
-    num_voters = len(reputation)
+    num_reports = len(reputation)
     num_events = len(reports[0])
-    v_size = num_voters * num_events
+    v_size = num_reports * num_events
 
     reputation_fixed = map(fix, reputation)
     reports_fixed = map(fix, reports.flatten())
@@ -177,33 +184,27 @@ def test_contract(contract):
     arglist = [votes_filled, reputation_fixed, scaled, scaled_max_fixed, scaled_min_fixed]
     weighted_centered_data = serpent_function(s, c, "center", "aaaaa", args=arglist)
 
-    s = t.state()
-    c = s.contract(filename)
-
     # multistep pca
     arglist = [num_events, max_iterations]
     loading_vector = serpent_function(s, c, "pca_init", "ii", args=arglist)
 
     while (loading_vector[num_events] > 0):
-        arglist = [loading_vector, weighted_centered_data, reputation_fixed, num_voters, num_events]
+        arglist = [loading_vector, weighted_centered_data, reputation_fixed, num_reports, num_events]
         loading_vector = serpent_function(s, c, "pca_loadings", "aaaii", args=arglist)
 
-    arglist = [loading_vector, weighted_centered_data, num_voters, num_events]
+    arglist = [loading_vector, weighted_centered_data, num_reports, num_events]
     scores = serpent_function(s, c, "pca_scores", "aaii", args=arglist)
 
-    s = t.state()
-    c = s.contract(filename)
-
-    arglist = [scores, num_voters, num_events]
+    arglist = [scores, num_reports, num_events]
     result = serpent_function(s, c, "calibrate_sets", "aii", args=arglist)
     result = np.array(result)
-    set1 = result[0:num_voters].tolist()
-    set2 = result[num_voters:(2*num_voters)].tolist()
+    set1 = result[0:num_reports].tolist()
+    set2 = result[num_reports:(2*num_reports)].tolist()
     assert(len(set1) == len(set2))
-    assert(len(result) == 2*num_voters)
+    assert(len(result) == 2*num_reports)
     del result
 
-    arglist = [set1, set2, reputation_fixed, votes_filled, num_voters, num_events]
+    arglist = [set1, set2, reputation_fixed, votes_filled, num_reports, num_events]
     result = serpent_function(s, c, "calibrate_wsets", "aaaaii", args=arglist)
     result = np.array(result)
     old = result[0:num_events].tolist()
@@ -213,13 +214,13 @@ def test_contract(contract):
     assert(len(old) == len(new1) == len(new2))
     del result
 
-    arglist = [old, new1, new2, set1, set2, scores, num_voters, num_events]
+    arglist = [old, new1, new2, set1, set2, scores, num_reports, num_events]
     adj_prin_comp = serpent_function(s, c, "pca_adjust", "aaaaaaii", args=arglist)
 
-    arglist = [adj_prin_comp, reputation_fixed, num_voters, num_events]
+    arglist = [adj_prin_comp, reputation_fixed, num_reports, num_events]
     smooth_rep = serpent_function(s, c, "smooth", "aaii", args=arglist)
 
-    arglist = [smooth_rep, reputation_fixed, votes_filled, num_voters, num_events]
+    arglist = [smooth_rep, reputation_fixed, votes_filled, num_reports, num_events]
     result = serpent_function(s, c, "consensus", "aaaii", args=arglist)
     result = np.array(result)
     outcomes_final = result[0:num_events].tolist()
@@ -227,10 +228,20 @@ def test_contract(contract):
     assert(len(outcomes_final) == len(consensus_reward))
     del result
 
-    arglist = [outcomes_final, consensus_reward, smooth_rep, votes_mask, num_voters, num_events]
+    arglist = [outcomes_final, consensus_reward, smooth_rep, votes_mask, num_reports, num_events]
     result = serpent_function(s, c, "participation", "aaaaii", args=arglist)
+    result = np.array(result)
+    outcomes_final = result[0:num_events].tolist()
+    author_bonus = result[num_events:(2*num_events)]
+    reporter_bonus = result[(2*num_events):(2*num_events + num_reports)]
 
-    display(result, "Results:")
+    display(loading_vector, "Loadings:")
+    display(adj_prin_comp, "Adjusted loadings:")
+    display(scores, "Scores:")
+    display(smooth_rep, "Updated reputation:")
+    display(outcomes_final, "Outcomes (final):")
+    display(author_bonus, "Author bonus:")
+    display(reporter_bonus, "Reporter bonus:")
 
 def main():
     global s

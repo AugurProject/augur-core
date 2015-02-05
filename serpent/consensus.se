@@ -541,11 +541,11 @@ def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, repo
                         with participation = 2^64 - total / num_events:
 
                             # Bringing it all together!
-                            with voter_bonus = array(num_reports):
+                            with reporter_bonus = array(num_reports):
                                 with na_bonus_reports = get_weight(participation_reports, num_reports):
                                     with i = 0:
                                         while i < num_reports:
-                                            voter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], 2^64 - participation)
+                                            reporter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], 2^64 - participation)
                                             i += 1
                                 with author_bonus = array(num_events):
                                     with na_bonus_events = get_weight(participation_events, num_events):    
@@ -565,6 +565,6 @@ def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, repo
                                             i += 1
                                         i = 0
                                         while i < num_reports:
-                                            retval[2*num_events + i] = voter_bonus[i]
+                                            retval[2*num_events + i] = reporter_bonus[i]
                                             i += 1
                                         return(retval, items=(2*num_events + num_reports))
