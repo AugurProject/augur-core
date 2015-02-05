@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """This software (Augur) allows buying and selling event options in Ethereum.
 
-Copyright (c) 2014 Chris Calderon, Joey Krug, Alan Lu, Jack Peterson
+Copyright (c) 2014 Chris Calderon, Joey Krug, Scott Leonard, Alan Lu, Jack Peterson
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -237,7 +237,7 @@ def main():
     print BR("Forming new test genesis block")
     s = t.state()
     contracts = [
-        "../consensus",
+        "consensus",
     ]
     for contract in contracts:
         test_contract(contract)
