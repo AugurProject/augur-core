@@ -262,52 +262,51 @@ def pca_init(num_events, max_iterations):
 
 # funid: 3
 def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr, num_reports, num_events):
-    with ONE = 2^64:
-        with lflatsize = len(loading_vector):
-            with s = array(num_events):
-                with j = 0:
-                    while j < num_reports:
-                        with d_dot_lv = 0:
-                            with k = 0:
-                                while k < num_events:
-                                    d_dot_lv += weighted_centered_data[j*num_events + k] * loading_vector[k]
-                                    k += 1
-                                d_dot_lv /= ONE
-                            with k = 0:
-                                while k < num_events:
-                                    s[k] -= d_dot_lv * weighted_centered_data[j*num_events + k] * reputation[j]
-                                    k += 1
-                        j += 1
+    with lflatsize = len(loading_vector):
+        with s = array(num_events):
+            with j = 0:
+                while j < num_reports:
+                    with d_dot_lv = 0:
+                        with k = 0:
+                            while k < num_events:
+                                d_dot_lv += weighted_centered_data[j*num_events + k] * loading_vector[k]
+                                k += 1
+                            d_dot_lv /= 2^64
+                        with k = 0:
+                            while k < num_events:
+                                s[k] -= d_dot_lv * weighted_centered_data[j*num_events + k] * reputation[j]
+                                k += 1
+                    j += 1
 
-                # loading_vector = normalize(s)
-                # (first rejig s to account for double fixed multiplication in loop)
+            # loading_vector = normalize(s)
+            # (first rejig s to account for double fixed multiplication in loop)
+            with j = 0:
+                while j < num_events:
+                    s[j] /= 2^128
+                    j += 1
+
+            # QQ
+            with s_dot_s = 0:
                 with j = 0:
                     while j < num_events:
-                        s[j] /= 2^128
+                        s_dot_s += s[j] * s[j]
                         j += 1
+                s_dot_s /= 2^64
 
-                # QQ
-                with s_dot_s = 0:
+                # QQ!!!!
+                with norm_s = s_dot_s / 2:
+                    with j = 0:
+                        while j < 11:
+                            norm_s = (norm_s + s_dot_s*2^64/norm_s) / 2
+                            j += 1
+
+                    # fuggin assign
                     with j = 0:
                         while j < num_events:
-                            s_dot_s += s[j] * s[j]
+                            loading_vector[j] = s[j]*2^64/norm_s
                             j += 1
-                    s_dot_s /= ONE
-
-                    # QQ!!!!
-                    with norm_s = s_dot_s / 2:
-                        with j = 0:
-                            while j < 11:
-                                norm_s = (norm_s + s_dot_s*ONE/norm_s) / 2
-                                j += 1
-
-                        # fuggin assign
-                        with j = 0:
-                            while j < num_events:
-                                loading_vector[j] = s[j]*ONE/norm_s
-                                j += 1
-                loading_vector[num_events] -= 1
-                return(loading_vector, items=lflatsize)
+            loading_vector[num_events] -= 1
+            return(loading_vector, items=lflatsize)
 
 # funid: 4
 def pca_scores(loading_vector:arr, weighted_centered_data:arr, num_reports, num_events):
@@ -542,11 +541,11 @@ def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, repo
                         with participation = 2^64 - total / num_events:
 
                             # Bringing it all together!
-                            with voter_bonus = array(num_reports):
+                            with reporter_bonus = array(num_reports):
                                 with na_bonus_reports = get_weight(participation_reports, num_reports):
                                     with i = 0:
                                         while i < num_reports:
-                                            voter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], 2^64 - participation)
+                                            reporter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], 2^64 - participation)
                                             i += 1
                                 with author_bonus = array(num_events):
                                     with na_bonus_events = get_weight(participation_events, num_events):    
@@ -566,6 +565,6 @@ def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, repo
                                             i += 1
                                         i = 0
                                         while i < num_reports:
-                                            retval[2*num_events + i] = voter_bonus[i]
+                                            retval[2*num_events + i] = reporter_bonus[i]
                                             i += 1
                                         return(retval, items=(2*num_events + num_reports))

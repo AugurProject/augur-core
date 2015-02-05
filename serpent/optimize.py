@@ -1,5 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""This software (Augur) allows buying and selling event options in Ethereum.
+
+Copyright (c) 2014 Chris Calderon, Joey Krug, Scott Leonard, Alan Lu, Jack Peterson
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Questions?  Please contact jack@tinybike.net or joeykrug@gmail.com.
+
+"""
 from __future__ import division
 from pprint import pprint
 import numpy as np
@@ -56,7 +81,7 @@ def unfix(x):
 
 def consensus(reports, reputation, max_iterations=10):
     s = t.state()
-    filename = "../consensus.se"
+    filename = "consensus.se"
     c = s.contract(filename)
 
     num_voters = len(reputation)
@@ -225,7 +250,7 @@ def profile(contract):
     plt.show()
 
 def main():
-    profile("../consensus")
+    profile("consensus")
 
 if __name__ == "__main__":
     main()
