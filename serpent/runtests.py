@@ -37,13 +37,17 @@ except ImportError:
     pass
 from pyethereum import tester as t
 
-np.set_printoptions(linewidth=500)
+# np.set_printoptions(linewidth=500)
+np.set_printoptions(linewidth=225,
+                    suppress=True,
+                    formatter={"float": "{: 0.6f}".format})
+
 pd.set_option("display.max_rows", 25)
 pd.set_option("display.width", 1000)
 pd.set_option('display.float_format', lambda x: '%.8f' % x)
 
 # max_iterations: number of blocks required to complete PCA
-max_iterations = 10
+max_iterations = 5
 tolerance = 1e-12
 init()
 
@@ -84,15 +88,15 @@ reputation = [1, 1, 1, 1, 1, 1]
 #         {"scaled": False, "min": 0, "max": 1},
 #         {"scaled": False, "min": 0, "max": 1},
 #     ]
-scaled = [0, 0, 0, 0, 1, 1]
-scaled_max = [1, 1, 1, 1, 435, 20000]
-scaled_min = [-1, -1, -1, -1, 0, 8000]
+# scaled = [0, 0, 0, 0, 1, 1]
+# scaled_max = [1, 1, 1, 1, 435, 20000]
+# scaled_min = [-1, -1, -1, -1, 0, 8000]
 # scaled = [1, 1, 0, 0]
 # scaled_max = [0.5, 0.7, 1, 1]
-# scaled_min = [0.1, 0.2, 0, 0]
-# scaled = [0, 0, 0, 0]
-# scaled_max = [1, 1, 1, 1]
-# scaled_min = [0, 0, 0, 0]
+# scaled_min = [0.1, 0.2, -1, -1]
+scaled = [0, 0, 0, 0]
+scaled_max = [1, 1, 1, 1]
+scaled_min = [-1, -1, -1, -1]
 
 # num_reports = 25
 # num_events = 25
@@ -140,17 +144,33 @@ def fix(x):
 def unfix(x):
     return x / 0x10000000000000000
 
-def display(arr, description=None, show_all=None):
+def fold(arr, num_cols):
+    folded = []
+    num_rows = len(arr) / float(num_cols)
+    if num_rows != int(num_rows):
+        raise Exception("array length (%i) not divisible by %i" % (len(arr), num_cols))
+    num_rows = int(num_rows)
+    for i in range(num_rows):
+        row = []
+        for j in range(num_cols):
+            row.append(arr[i*num_cols + j])
+        folded.append(row)
+    return folded
+
+def display(arr, description=None, show_all=None, refold=False):
     if description is not None:
         print(BW(description))
-    if show_all is not None:
-        print(pd.DataFrame({
-            'result': arr,
-            'base 16': map(hex, arr),
-            'base 2^64': map(unfix, arr),
-        }))
+    if refold:
+        print(np.array(fold(map(unfix, arr), refold)))
     else:
-        print(json.dumps(map(unfix, arr), indent=3, sort_keys=True))
+        if show_all is not None:
+            print(pd.DataFrame({
+                'result': arr,
+                'base 16': map(hex, arr),
+                'base 2^64': map(unfix, arr),
+            }))
+        else:
+            print(json.dumps(map(unfix, arr), indent=3, sort_keys=True))
 
 def serpent_function(s, c, name, signature, args=[]):
     sys.stdout.write("  " + BG(name) + " ")
@@ -160,6 +180,32 @@ def serpent_function(s, c, name, signature, args=[]):
     return s.call(t.k0, c, 0, name, signature, args)
 
 def test_contract(contract):
+    """
+    To run consensus, you should call the Serpent functions in consensus.se
+    in this order:
+    
+    interpolate
+    center
+    pca_init
+    pca_loadings (this should be called once for each PCA iteration --
+                  in tests, it seems that 5 iterations is sufficient.
+                  each iteration takes the previous iteration's
+                  loading_vector output as its input.)
+    pca_scores
+    calibrate_sets
+    calibrate_wsets
+    pca_adjust
+    smooth
+    consensus
+    participation
+
+    Refer to the function signatures (in serpent_function, which are passed
+    to s.call() below for the arguments you need to pass to each function).
+
+    Final results (event outcomes and updated reputation values) are returned
+    as fixed-point (base 2^64) values from the participation function.
+
+    """
     s = t.state()
     filename = contract + ".se"
     print BB("Testing contract:"), BG(filename)
@@ -177,20 +223,26 @@ def test_contract(contract):
     arglist = [reports_fixed, reputation_fixed, scaled, scaled_max_fixed, scaled_min_fixed]
     result = serpent_function(s, c, "interpolate", "aaaaa", args=arglist)
     result = np.array(result)
-    votes_filled = result[0:v_size].tolist()
-    votes_mask = result[v_size:(2*v_size)].tolist()
+    reports_filled = result[0:v_size].tolist()
+    reports_mask = result[v_size:(2*v_size)].tolist()
     del result
 
-    arglist = [votes_filled, reputation_fixed, scaled, scaled_max_fixed, scaled_min_fixed]
+    # display(reports_fixed, "reports:", refold=num_events)
+    # display(reports_filled, "reports_filled:", refold=num_events)
+    # display(reports_mask, "reports_mask:", refold=num_events)
+
+    arglist = [reports_filled, reputation_fixed, scaled, scaled_max_fixed, scaled_min_fixed]
     weighted_centered_data = serpent_function(s, c, "center", "aaaaa", args=arglist)
 
     # multistep pca
     arglist = [num_events, max_iterations]
     loading_vector = serpent_function(s, c, "pca_init", "ii", args=arglist)
 
-    while (loading_vector[num_events] > 0):
-        arglist = [loading_vector, weighted_centered_data, reputation_fixed, num_reports, num_events]
+    arglist = [loading_vector, weighted_centered_data, reputation_fixed, num_reports, num_events]
+    while loading_vector[num_events] > 0:
         loading_vector = serpent_function(s, c, "pca_loadings", "aaaii", args=arglist)
+        arglist[0] = loading_vector
+        # display(loading_vector, "Loadings %i:" % loading_vector[num_events], show_all=True)
 
     arglist = [loading_vector, weighted_centered_data, num_reports, num_events]
     scores = serpent_function(s, c, "pca_scores", "aaii", args=arglist)
@@ -204,7 +256,7 @@ def test_contract(contract):
     assert(len(result) == 2*num_reports)
     del result
 
-    arglist = [set1, set2, reputation_fixed, votes_filled, num_reports, num_events]
+    arglist = [set1, set2, reputation_fixed, reports_filled, num_reports, num_events]
     result = serpent_function(s, c, "calibrate_wsets", "aaaaii", args=arglist)
     result = np.array(result)
     old = result[0:num_events].tolist()
@@ -220,7 +272,7 @@ def test_contract(contract):
     arglist = [adj_prin_comp, reputation_fixed, num_reports, num_events]
     smooth_rep = serpent_function(s, c, "smooth", "aaii", args=arglist)
 
-    arglist = [smooth_rep, reputation_fixed, votes_filled, num_reports, num_events]
+    arglist = [smooth_rep, reputation_fixed, reports_filled, num_reports, num_events]
     result = serpent_function(s, c, "consensus", "aaaii", args=arglist)
     result = np.array(result)
     outcomes_final = result[0:num_events].tolist()
@@ -228,14 +280,14 @@ def test_contract(contract):
     assert(len(outcomes_final) == len(consensus_reward))
     del result
 
-    arglist = [outcomes_final, consensus_reward, smooth_rep, votes_mask, num_reports, num_events]
+    arglist = [outcomes_final, consensus_reward, smooth_rep, reports_mask, num_reports, num_events]
     result = serpent_function(s, c, "participation", "aaaaii", args=arglist)
     result = np.array(result)
     outcomes_final = result[0:num_events].tolist()
     author_bonus = result[num_events:(2*num_events)]
     reporter_bonus = result[(2*num_events):(2*num_events + num_reports)]
 
-    display(loading_vector, "Loadings:")
+    display(loading_vector, "Loadings:", show_all=True)
     display(adj_prin_comp, "Adjusted loadings:")
     display(scores, "Scores:")
     display(smooth_rep, "Updated reputation:")

@@ -164,7 +164,8 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                         with missing_values = 0:
                             with i = 0:
                                 while i < flatsize:
-                                    if reports[i] == 2^63:
+                                    # if reports[i] == 2^63:
+                                    if reports[i] == 0:
                                         reports_interp[i + flatsize] = 2^64
                                         missing_values += 1
                                     i += 1
@@ -178,7 +179,8 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                                 with total_active_rep = 0:
                                                     with i = 0:
                                                         while i < num_reports:
-                                                            if reports[i*num_events + j] != 2^63:
+                                                            # if reports[i*num_events + j] != 2^63:
+                                                            if reports[i*num_events + j] != 0:
                                                                 total_active_rep += reputation[i]
                                                                 present[i] = 1
                                                             i += 1
@@ -547,24 +549,14 @@ def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, repo
                                         while i < num_reports:
                                             reporter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], 2^64 - participation)
                                             i += 1
-                                with author_bonus = array(num_events):
-                                    with na_bonus_events = get_weight(participation_events, num_events):    
-                                        with i = 0:
-                                            while i < num_events:
-                                                author_bonus[i] = fixed_multiply(na_bonus_events[i], participation) + fixed_multiply(consensus_reward[i], 2^64 - participation)
-                                                i += 1
 
-                                        retval = array(2*num_events + num_reports)
-                                        i = 0
+                                with retval = array(num_events + num_reports):
+                                    with i = 0:
                                         while i < num_events:
                                             retval[i] = outcomes_final[i]
                                             i += 1
-                                        i = 0
-                                        while i < num_events:
-                                            retval[num_events + i] = author_bonus[i]
-                                            i += 1
-                                        i = 0
+                                    with i = 0:
                                         while i < num_reports:
-                                            retval[2*num_events + i] = reporter_bonus[i]
+                                            retval[num_events + i] = reporter_bonus[i]
                                             i += 1
-                                        return(retval, items=(2*num_events + num_reports))
+                                    return(retval, items=(num_events + num_reports))
