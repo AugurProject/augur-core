@@ -5,12 +5,13 @@ augur-serpent
 	# test / fixup close market in augur.se
 	# fix current voting period stuff
 	# market rewards (why do eventid holders have a special distribution anyway re fee bonus?)
-	# i presume same reporter order i pass array to consensus i get out?
 	# Implement Version 0.3 (eta - mar?) - Basic UI needs to be ready at this time too
 	# make sure this follows paul's whitepaper well
 	# optimize consensus.se (martin will help w/ this too!)
 	# voting period fixes / when can / can't vote
+	# fix create market (event stuff) & redeem (don't want event reward + multiple tx stuff)
 	# update api
+	# fix casing
 
 ### Version 0.5 (More fun features - May):
 	# need to add audits

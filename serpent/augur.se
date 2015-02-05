@@ -66,6 +66,7 @@ data cashcoin_balances[]
 
 def init():
     # test initial funds
+    fx_init(0)
     self.cashcoin_balances[tx.origin] = 1000000*2^64
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
     self.Reporting[1010101].reputation[0].repValue = 47
@@ -521,8 +522,8 @@ def close_market(branch, market):
     eventVotePeriod = self.Events[self.Markets[market].events[numberEvents-1]].expirationDate / self.Branches[branch].periodLength
     if(currentPeriod > (eventVotePeriod+2) && self.Reporting[branch].eventsExpDates[currentPeriod].totalRepReported >= self.Branches[branch].repRequired):
         # give back initial liquidity
-        #self.cashcoin_balances[market] -= self.Info[market].creationFee
-        #self.cashcoin_balances[self.Info[market].creator] += self.Info[market].creationFee
+        # self.cashcoin_balances[market] -= self.Info[market].creationFee
+        # self.cashcoin_balances[self.Info[market].creator] += self.Info[market].creationFee
         # get # of shares of winning outcome``k-,ij9uh8
 
         # loop through events in the market, get their outcomes and use those to determine the winning events!
