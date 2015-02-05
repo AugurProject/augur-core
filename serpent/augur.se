@@ -237,6 +237,9 @@ def createMarket(branch, description:str, alpha, initialLiquidity, events:arr):
     # check that events have same exp. dates and branch
     i = 0
     eventNum = len(events)
+    # only supports 3 dimensional markets atm
+    if(eventNum > 3):
+        return(0)
     numOutcomes = 0
     eventsConcat = 0
     cumulativeScale = 0
@@ -493,34 +496,35 @@ def redeem(branch):
 
 # loop through events in the market, get their outcomes and use those to determine the winning events!
 # distribute coins among winning events
-# only works for inTrade style 1 event in a market predictions at the moment
-# this doesn't work due to winning events oddities if(1) thing
-# fix this
-# what happens if undecided event in a market?
-# implement multidimensional scalar payouts and multidimensional payouts
 # when multidimen fancy payouts we report on the events separately per usual, but combine them to determine winning state of a fancy market and then payout that state
-# make so can't close until last exp event in market has expired
 def closeMarket(branch, market):
     if(self.cashcoinBalances[market]<=0):
         return(0)
     currentPeriod = block.number / self.Branches[branch].periodLength
-    numberEvents = self.Markets[market].numOutcomes
+    numberEvents = self.Markets[market].lenEvents
     eventVotePeriod = self.Events[self.Markets[market].events[numberEvents-1]].expirationDate / self.Branches[branch].periodLength
     if(currentPeriod > (eventVotePeriod+2) && self.Reporting[branch].eventsExpDates[currentPeriod].totalRepReported >= self.Branches[branch].repRequired):
-        # give back initial liquidity
-        # self.cashcoin_balances[market] -= self.Info[market].creationFee
-        # self.cashcoin_balances[self.Info[market].creator] += self.Info[market].creationFee
-        # get # of shares of winning outcome``k-,ij9uh8
-
         # loop through events in the market, get their outcomes and use those to determine the winning events!
         n = 0
-        e = 0
+        winningOutcome = 0
         while n < numberEvents:
-            if(self.Events[self.Markets[market].events[n]].outcome & self.Events[self.Markets[market].events[n]].outcome!=0):
-                # make this one winning outcome
-                self.Markets[market].winningEvents[e] = self.Markets[market].events[n]
-                e+=1
+            outcome = self.Events[self.Markets[market].events[n]].outcome
+            if(outcome==2^63):
+                # return all t3h $$$
+            elif(outcome==0):
+                return(0)
+            # make this one winning outcome
+            if(n==0):
+                winningOutcome += outcome
+            elif(n==1):
+                winningOutcome += winningOutcome*(outcome-1)
+            elif(n==2):
+                # if(outcome==1) we're set, else...
+                if(outcome==2):
+                    # += numOutcomesinfirstevent*numOutcomesinsecondevent
+                    winningOutcome += self.Events[self.Markets[market].events[n-2]].outcome * self.Events[self.Markets[market].events[n-1]].outcome
             n+=1
+        self.Markets[market].winningOutcome = winningOutcome
 
         winningShares = 0
         # number of winning events is equivalent to e
@@ -548,9 +552,9 @@ def closeMarket(branch, market):
         # distribute cashcoin to the people who won money by holding winning shares
         i = 0
         while i <= self.Markets[market].currentParticipant:
-            sharesOwned = self.Markets[market].participants[i].event[winningEvent].shares[winningSharesIndex]
+            sharesOwned = self.Markets[market].participants[i].shares[winningSharesIndex]
             participant = self.Markets[market].participants[i].participantID
-            # winning price is $1 / share
+            # winning price is $1 / share unless scalar
             # pricePerShare = 2^64
             #moneyWon = sharesOwned*pricePerShare
             pricePerShare = (self.Events[winningEvent].outcome - self.Events[winningEvent].minValue)*2^64/(self.Events[winningEvent].maxValue - self.Events[winningEvent].minValue)
