@@ -236,40 +236,26 @@ def createMarket(branch, description:str, alpha, initialLiquidity, events:arr):
         return(0)
     # check that events have same exp. dates and branch
     i = 0
-    numOutcomes = 1
+    eventNum = len(events)
+    numOutcomes = 0
     eventsConcat = 0
     cumulativeScale = 0
     tradingPeriod = 0
-    n = 1
-    eventsArray = array(len(events))
-    eventNum = 0
-    while i < len(events):
-        if(events[i]==n):
-            i+=1
-            currentDimenOutcomes = 0
-            while(events[i]!=0 and events[i]!=(n+1)):
-                event = events[i]
-                if(self.Events[event].expirationDate > tradingPeriod):
-                    tradingPeriod = self.Events[event].expirationDate
-                eventsConcat += event
-                if (self.Events[event].branch != branch or !self.Info[eventID].creator):
-                    return(0)
-                #provided not a binary outcome
-                if(self.Events[event].maxValue!=1):
-                    cumulativeScale += self.Events[event].maxValue - self.Events[event].minValue
-                if(self.Events[event].numOutcomes==2):
-                    currentDimenOutcomes += 1
-                else:
-                    currentDimenOutcomes += self.Events[event].numOutcomes
-                eventsArray[eventNum] = event
-                eventNum += 1
-                i+=1
-            currentDimenOutcomes += 1
-            numOutcomes *= currentDimenOutcomes
-            n += 1
-        else:
-            # 1 wasn't the first array item
-            return(0)
+    while i < eventNum:
+            event = events[i]
+            if(self.Events[event].expirationDate > tradingPeriod):
+                tradingPeriod = self.Events[event].expirationDate
+            eventsConcat += event
+            if (self.Events[event].branch != branch or !self.Info[eventID].creator):
+                return(0)
+            #provided not a binary outcome
+            if(self.Events[event].maxValue!=1):
+               cumulativeScale += self.Events[event].maxValue - self.Events[event].minValue
+            if(i==0):
+                numOutcomes += self.Events[event].numOutcomes
+            else:
+                numOutcomes *= self.Events[event].numOutcomes
+            i += 1
     if(numOutcomes > 200):
         return(0)
     tradingPeriod = tradingPeriod / self.Branches[branch].periodLength
@@ -298,9 +284,9 @@ def createMarket(branch, description:str, alpha, initialLiquidity, events:arr):
     if(self.sendCashcoin(marketID, cost)):
         # add event list to the market
         z = 0
-        while z<=eventNum:
+        while z < eventNum:
             # initialize market events array with eventIDs from the eventList
-            self.Markets[marketID].events[z] = eventsArray[eventNum]
+            self.Markets[marketID].events[z] = events[eventNum]
             z+=1
             
         self.Info[marketID].typecode = MARKET
@@ -432,7 +418,7 @@ def checkQuorum(branch):
         return(1)
     else:
         return(0)
-        
+      
 # 25% of fees already distributed to market creators
 # so 2/3 of remaining fees to voters = 50%
 # and 1/3 of remaining fees to event creators = 25%
