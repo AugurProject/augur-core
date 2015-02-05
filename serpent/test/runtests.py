@@ -42,7 +42,7 @@ pd.set_option("display.width", 1000)
 pd.set_option('display.float_format', lambda x: '%.8f' % x)
 
 # max_iterations: number of blocks required to complete PCA
-max_iterations = 4
+max_iterations = 10
 tolerance = 1e-12
 init()
 
@@ -136,228 +136,108 @@ def fix(x):
 def unfix(x):
     return x / 0x10000000000000000
 
+def display(arr, description=None):
+    if description is not None:
+        print(BB(description))
+    print(pd.DataFrame({
+        'result': arr,
+        'base 16': map(hex, arr),
+        'base 2^64': map(unfix, arr),
+    }))
+
+def serpent_function(s, c, name, signature, args=[]):
+    sys.stdout.write("  " + BG(name) + " ")
+    sys.stdout.flush()
+    profile = s.profile(t.k0, c, 0, name, signature, args)
+    print "%i gas (%d seconds)" % (profile['gas'], profile['time'])
+    return s.call(t.k0, c, 0, name, signature, args)
+
 def test_contract(contract):
     s = t.state()
     filename = contract + ".se"
     print BB("Testing contract:"), BG(filename)
     c = s.contract(filename)
-    if contract == "dot":
-        num_signals = 10   # columns
-        num_samples = 5    # rows
-        data = (np.random.rand(num_samples, num_signals) * 10).astype(int)
-        for i in range(num_signals):
-            for j in range(num_signals):
-                expected = np.dot(data[:,i], data[:,j])
-                actual = s.send(t.k0, c, 0, funid=0, abi=(list(data[:,i]),))
-                try:
-                    assert(actual - expected < tolerance)
-                except:
-                    print(actual)
-    elif contract == "mean":
-        num_signals = 10      # columns
-        num_samples = 5       # rows
-        data = (np.random.rand(num_samples, num_signals) * 10).astype(int)
-        expected = np.mean(data, 0)
-        for i in range(num_signals):
-            result = s.send(t.k0, c, 0, funid=0, abi=(list(data[:,i]),))
-            actual = unfix(result[0])
-            try:
-                assert(actual - expected[i] < tolerance)
-            except:
-                print(actual)
-    elif contract == "interpolate":
-        result = s.send(t.k0, c, 0, funid=0, abi=[])
-        actual = map(unfix, result)
-        expected = [0.94736842105263164,
-                    0.30769230769230776,
-                    0.38461538461538469,
-                    0.33333333333333337]
-        try:
-            assert((np.asarray(actual) - np.asarray(expected) < tolerance).all())
-        except:
-            print(actual)
-    elif contract == "../consensus":
-        num_voters = len(reputation)
-        num_events = len(reports[0])
-        v_size = num_voters * num_events
 
-        reputation_fixed = map(fix, reputation)
-        reports_fixed = map(fix, reports.flatten())
-        scaled_max_fixed = map(fix, scaled_max)
-        scaled_min_fixed = map(fix, scaled_min)
+    num_voters = len(reputation)
+    num_events = len(reports[0])
+    v_size = num_voters * num_events
 
-        # tx 1: interpolate()
-        print("interpolate")
-        result = s.send(t.k0, c, 0, funid=0,
-                        abi=[reports_fixed,
-                             reputation_fixed,
-                             scaled,
-                             scaled_max_fixed,
-                             scaled_min_fixed])
-        # print(pd.DataFrame({
-        #     'result': result,
-        #     'base 16': map(hex, result),
-        #     'base 2^64': map(unfix, result),
-        # }))
-        # import pdb; pdb.set_trace()
-        result = np.array(result)
-        votes_filled = result[0:v_size].tolist()
-        votes_mask = result[v_size:(2*v_size)].tolist()
-        del result
+    reputation_fixed = map(fix, reputation)
+    reports_fixed = map(fix, reports.flatten())
+    scaled_max_fixed = map(fix, scaled_max)
+    scaled_min_fixed = map(fix, scaled_min)
 
-        # tx 2: center()
-        print("center")
-        weighted_centered_data = s.send(t.k0, c, 0, funid=1,
-                                        abi=[votes_filled,
-                                             reputation_fixed,
-                                             scaled,
-                                             scaled_max_fixed,
-                                             scaled_min_fixed])
-        s = t.state()
-        c = s.contract(filename)
+    arglist = [reports_fixed, reputation_fixed, scaled, scaled_max_fixed, scaled_min_fixed]
+    result = serpent_function(s, c, "interpolate", "aaaaa", args=arglist)
+    result = np.array(result)
+    votes_filled = result[0:v_size].tolist()
+    votes_mask = result[v_size:(2*v_size)].tolist()
+    del result
 
-        # multistep pca
-        # pca_init()
-        print("pca: loadings")
-        loading_vector = s.send(t.k0, c, 0, funid=2,
-                                abi=[num_events,
-                                     max_iterations])
+    arglist = [votes_filled, reputation_fixed, scaled, scaled_max_fixed, scaled_min_fixed]
+    weighted_centered_data = serpent_function(s, c, "center", "aaaaa", args=arglist)
 
-        # pca_loadings()
-        while (loading_vector[num_events] > 0):
-            loading_vector = s.send(t.k0, c, 0, funid=3,
-                                    abi=[loading_vector,
-                                         weighted_centered_data,
-                                         reputation_fixed,
-                                         num_voters,
-                                         num_events])
+    s = t.state()
+    c = s.contract(filename)
 
-        # pca_scores()
-        print("pca: scores")
-        scores = s.send(t.k0, c, 0, funid=4,
-                        abi=[loading_vector,
-                             weighted_centered_data,
-                             num_voters,
-                             num_events])
+    # multistep pca
+    arglist = [num_events, max_iterations]
+    loading_vector = serpent_function(s, c, "pca_init", "ii", args=arglist)
 
-        s = t.state()
-        c = s.contract(filename)
+    while (loading_vector[num_events] > 0):
+        arglist = [loading_vector, weighted_centered_data, reputation_fixed, num_voters, num_events]
+        loading_vector = serpent_function(s, c, "pca_loadings", "aaaii", args=arglist)
 
-        print("calibrate_sets")
-        # print(s.profile(t.k0, c, 0,
-        #           funid=6,
-        #           abi=[scores,
-        #                num_voters,
-        #                num_events]))
-        result = s.send(t.k0, c, 0, funid=6,
-                        abi=[scores,
-                             num_voters,
-                             num_events])
-        result = np.array(result)
-        set1 = result[0:num_voters].tolist()
-        set2 = result[num_voters:(2*num_voters)].tolist()
-        assert(len(set1) == len(set2))
-        assert(len(result) == 2*num_voters)
-        del result
+    arglist = [loading_vector, weighted_centered_data, num_voters, num_events]
+    scores = serpent_function(s, c, "pca_scores", "aaii", args=arglist)
 
-        print("calibrate_wsets")
-        result = s.send(t.k0, c, 0, funid=7,
-                        abi=[set1,
-                             set2,
-                             reputation_fixed,
-                             votes_filled,
-                             num_voters,
-                             num_events])
-        result = np.array(result)
-        old = result[0:num_events].tolist()
-        new1 = result[num_events:(2*num_events)].tolist()
-        new2 = result[(2*num_events):(3*num_events)].tolist()
-        assert(len(result) == 3*num_events)
-        assert(len(old) == len(new1) == len(new2))
-        del result
+    s = t.state()
+    c = s.contract(filename)
 
-        print("pca_adjust")
-        adj_prin_comp = s.send(t.k0, c, 0, funid=8,
-                               abi=[old,
-                                    new1,
-                                    new2,
-                                    set1,
-                                    set2,
-                                    scores,
-                                    num_voters,
-                                    num_events])
+    arglist = [scores, num_voters, num_events]
+    result = serpent_function(s, c, "calibrate_sets", "aii", args=arglist)
+    result = np.array(result)
+    set1 = result[0:num_voters].tolist()
+    set2 = result[num_voters:(2*num_voters)].tolist()
+    assert(len(set1) == len(set2))
+    assert(len(result) == 2*num_voters)
+    del result
 
-        print("smooth")
-        smooth_rep = s.send(t.k0, c, 0, funid=9,
-                            abi=[adj_prin_comp,
-                                 reputation_fixed,
-                                 num_voters,
-                                 num_events])
+    arglist = [set1, set2, reputation_fixed, votes_filled, num_voters, num_events]
+    result = serpent_function(s, c, "calibrate_wsets", "aaaaii", args=arglist)
+    result = np.array(result)
+    old = result[0:num_events].tolist()
+    new1 = result[num_events:(2*num_events)].tolist()
+    new2 = result[(2*num_events):(3*num_events)].tolist()
+    assert(len(result) == 3*num_events)
+    assert(len(old) == len(new1) == len(new2))
+    del result
 
-        print("consensus")
-        result = s.send(t.k0, c, 0, funid=10,
-                        abi=[smooth_rep,
-                             reputation_fixed,
-                             votes_filled,
-                             num_voters,
-                             num_events])
-        result = np.array(result)
-        outcomes_final = result[0:num_events].tolist()
-        consensus_reward = result[num_events:(2*num_events)].tolist()
-        assert(len(outcomes_final) == len(consensus_reward))
-        del result
+    arglist = [old, new1, new2, set1, set2, scores, num_voters, num_events]
+    adj_prin_comp = serpent_function(s, c, "pca_adjust", "aaaaaaii", args=arglist)
 
-        print("participation")
-        result = s.send(t.k0, c, 0,
-                        funid=11,
-                        abi=[outcomes_final,
-                             consensus_reward,
-                             smooth_rep,
-                             votes_mask,
-                             num_voters,
-                             num_events])
-        print(pd.DataFrame({
-            'result': result,
-            'base 16': map(hex, result),
-            'base 2^64': map(unfix, result),
-        }))
+    arglist = [adj_prin_comp, reputation_fixed, num_voters, num_events]
+    smooth_rep = serpent_function(s, c, "smooth", "aaii", args=arglist)
 
-    elif contract == "../consensus-readable":
-        result = s.send(t.k0, c, 0,
-                        funid=0,
-                        abi=[map(fix, reports.flatten()), map(fix, reputation), max_iterations])
+    arglist = [smooth_rep, reputation_fixed, votes_filled, num_voters, num_events]
+    result = serpent_function(s, c, "consensus", "aaaii", args=arglist)
+    result = np.array(result)
+    outcomes_final = result[0:num_events].tolist()
+    consensus_reward = result[num_events:(2*num_events)].tolist()
+    assert(len(outcomes_final) == len(consensus_reward))
+    del result
 
-        print(pd.DataFrame({
-            'result': result,
-            'base 16': map(hex, result),
-            'base 2^64': map(unfix, result),
-        }))
+    arglist = [outcomes_final, consensus_reward, smooth_rep, votes_mask, num_voters, num_events]
+    result = serpent_function(s, c, "participation", "aaaaii", args=arglist)
 
-    else:
-        result = s.send(t.k0, c, 0, funid=0, abi=[])
-        try:
-            assert(result == [1])
-        except:
-            try:
-                assert(map(unfix, result) == [1])
-            except:
-                print(pd.DataFrame({
-                    'result': result,
-                    'base 16': map(hex, result),
-                    'base 2^64': map(unfix, result),
-                }))
+    display(result, "Results:")
 
 def main():
     global s
     print BR("Forming new test genesis block")
     s = t.state()
     contracts = [
-        # "sum",
-        # "mean",
-        # "catch",
-        # "get_weight",
         "../consensus",
-        # "../consensus-readable", 
     ]
     for contract in contracts:
         test_contract(contract)
