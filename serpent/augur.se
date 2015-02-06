@@ -600,40 +600,41 @@ def closeMarket(branch, market):
 
         elif(winningOutcomes[1]):
             # look for the scalar
+            scalar = 0
             if(self.Events[self.Markets[market].events[0]].maxValue!=1):
-                outcome = self.Events[self.Markets[market].events[0]].outcome
-                # price is in fixed point
-                pricePerShare1 = 2^64*(outcome - 2^64*self.Events[self.Markets[market].events[0]].minValue)/(2^64*self.Events[self.Markets[market].events[0]].maxValue - 2^64*self.Events[self.Markets[market].events[0]].minValue)
-                pricePerShare2 = 2^64 - pricePerShare1
-
+                scalar = 0
             elif(self.Events[self.Markets[market].events[1]].maxValue!=1):
-                outcome = self.Events[self.Markets[market].events[0]].outcome
-                # price is in fixed point
-                pricePerShare1 = 2^64*(outcome - 2^64*self.Events[self.Markets[market].events[0]].minValue)/(2^64*self.Events[self.Markets[market].events[0]].maxValue - 2^64*self.Events[self.Markets[market].events[0]].minValue)
-                pricePerShare2 = 2^64 - pricePerShare1
-
+                scalar = 1
             elif(self.Events[self.Markets[market].events[2]].maxValue!=1):
-                outcome = self.Events[self.Markets[market].events[0]].outcome
-                # price is in fixed point
-                pricePerShare1 = 2^64*(outcome - 2^64*self.Events[self.Markets[market].events[0]].minValue)/(2^64*self.Events[self.Markets[market].events[0]].maxValue - 2^64*self.Events[self.Markets[market].events[0]].minValue)
-                pricePerShare2 = 2^64 - pricePerShare1
-
-
-
-
-
-        # distribute cashcoin to the people who won money by holding winning shares
-        i = 0
-        while i <= self.Markets[market].currentParticipant:
-            # for each winning outcome do...
-            sharesOwned = self.Markets[market].participants[i].shares[winningSharesIndex]
-            participant = self.Markets[market].participants[i].participantID
-            self.cashcoinBalances[market] -= sharesOwned*pricePerShare
-            self.cashcoinBalances[participant] += sharesOwned*pricePerShare
-
-
-
-
+                scalar = 2
+            outcome = self.Events[self.Markets[market].events[scalar]].outcome
+            minValue = self.Events[self.Markets[market].events[scalar]].minValue
+            maxValue = self.Events[self.Markets[market].events[scalar]].maxValue
+            if(outcome>maxValue):
+                outcome = maxValue
+            elif(outcome<minValue):
+                outcome = minValue 
+            # price is in fixed point
+            #share one goes with the high side
+            pricePerShare1 = 2^64*(outcome - 2^64*minValue)/(2^64*maxValue - 2^64*minValue)
+            #share two goes with the low side of the calc
+            pricePerShare2 = 2^64 - pricePerShare1
+            # distribute cashcoin to the people who won money by holding winning shares
+            i = 0
+            while i < self.Markets[market].currentParticipant:
+                # for each winning outcome do...
+                n = 0
+                while(winningOutcome[n]!=0):
+                    sharesOwned = self.Markets[market].participants[i].shares[winningOutcome[n]]
+                    participant = self.Markets[market].participants[i].participantID
+                    # low side
+                    if(n==0):
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare2
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare2
+                    # high side (of the scalar part)
+                    elif(n==1):
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare1
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare1
         # give back initial liquidity (or as much of it/profits are left)
         self.cashcoinBalances[self.Info[market].creator] += self.cashcoinBalances[market]
         self.cashcoinBalances[market] -= self.cashcoinBalances[market]
