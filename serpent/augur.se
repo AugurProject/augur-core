@@ -576,32 +576,25 @@ def closeMarket(branch, market):
                     elif(winningOutcomes[1]):
                         winningOutcomes[0] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
                         winningOutcomes[1] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
-
+                    
+                    #nonscalar, nonscalar, nonscalar
                     else:
-                    # nonscalar, nonscalar, nonscalar
                         winningOutcomes[0] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
             n+=1
 
-
-        winningShares = 0
-        winningEvent = self.Markets[market].winningEvents[e-1]
-        winningShares = 0
-        if(winningOutcome==1):
-           # winning outcome in a binary market is 2, no is 1
-            winningShares = self.Markets[market].sharesPurchased[(2*(n-1) + 1)]
-            winningSharesIndex = 1
-        elif(winningOutcome==-1):
-            winningShares = self.Markets[market].sharesPurchased[2*(n-1)]
-            winningSharesIndex = 0
-        elif(winningOutcome==0):
-            return(text("outcome hasn't been decided yet"): str)
-        elif(winningOutcome==2^63):
-            return(0)
-            # return funds to people
+        if(winningOutcomes[1]==0):
+            #payout winningOutcomes[0]
+        elif(winningOutcomes[7]):
+            # dunno lol
+        elif(winningOutcomes[3]):
+            # first is low-low and whatever, second is high-low, third is low-high, fourth is high-high
+        elif(winningOutcomes[1]):
+            # first is low second is high
 
         # distribute cashcoin to the people who won money by holding winning shares
         i = 0
         while i <= self.Markets[market].currentParticipant:
+            # for each winning outcome do...
             sharesOwned = self.Markets[market].participants[i].shares[winningSharesIndex]
             participant = self.Markets[market].participants[i].participantID
             # winning price is $1 / share unless scalar
