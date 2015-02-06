@@ -37,25 +37,16 @@ def test(t, s, c):
     for i in range(2,130,2):
         x = gmpy2.mpfr(i + 2*random.random())
         expected = int(gmpy2.exp(x)*2**64)
-        result = suppress_output(lambda: s.profile(t.k0, c, 0, 'func', 'i', [int(x*2**64)]))
+        result = suppress_output(lambda: s.profile(t.k0, c, 0, 'exp', 'i', [int(x*2**64)]))
         total_error += abs((result['output'][0] - expected)/float(expected))
         total_gas += result['gas']
     return(total_gas/49.0, total_error/49.0)
 
 def main():
-    code = '''\
-def init():
-    fxp_init(0)
-
-def func(n):
-    result = fxp_exp(n)
-    return(result)
-inset('fxp_macros.se')
-'''
     s = t.state()    
     sys.stdout.write('Compiling...\t')
     sys.stdout.flush()
-    c = suppress_output(lambda: s.contract(code))
+    c = suppress_output(lambda: s.contract('fixedpoint.se'))
     print 'Done.'
 
     print 'Running Tests'
