@@ -160,9 +160,13 @@ def fold(arr, num_cols):
 def display(arr, description=None, show_all=None, refold=False):
     if description is not None:
         print(BW(description))
-    if refold:
-        print(np.array(fold(map(unfix, arr), refold)))
-    else:
+    if refold and type(refold) == int:
+        num_rows = len(arr) / float(refold)
+        if num_rows == int(num_rows) and len(arr) > refold:
+            print(np.array(fold(map(unfix, arr), refold)))
+        else:
+            refold = False
+    if not refold:
         if show_all is not None:
             print(pd.DataFrame({
                 'result': arr,
@@ -216,13 +220,12 @@ def test_contract(contract):
     v_size = num_reports * num_events
 
     reputation_fixed = map(fix, reputation)
-    reports_fixed = map(fix, reports.flatten())
+    reports_fixed = map(fix, reports.ravel())
     scaled_max_fixed = map(fix, scaled_max)
     scaled_min_fixed = map(fix, scaled_min)
 
     arglist = [reports_fixed, reputation_fixed, scaled, scaled_max_fixed, scaled_min_fixed]
     result = serpent_function(s, c, "interpolate", "aaaaa", args=arglist)
-
     result = np.array(result)
     reports_filled = result[0:v_size].tolist()
     reports_mask = result[v_size:(2*v_size)].tolist()
