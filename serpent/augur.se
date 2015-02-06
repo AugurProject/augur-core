@@ -582,14 +582,45 @@ def closeMarket(branch, market):
                         winningOutcomes[0] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
             n+=1
 
+        pricePerShare1 = 0
+        pricePerShare2 = 0
+        pricePerShare3 = 0
+        pricePerShare4 = 0
+        pricePerShare5 = 0
+        pricePerShare6 = 0
+        pricePerShare7 = 0
+        pricePerShare8 = 0
+
         if(winningOutcomes[1]==0):
-            #payout winningOutcomes[0]
+            pricePerShare1 = 2^64
         elif(winningOutcomes[7]):
             # dunno lol
         elif(winningOutcomes[3]):
             # first is low-low and whatever, second is high-low, third is low-high, fourth is high-high
+
         elif(winningOutcomes[1]):
-            # first is low second is high
+            # look for the scalar
+            if(self.Events[self.Markets[market].events[0]].maxValue!=1):
+                outcome = self.Events[self.Markets[market].events[0]].outcome
+                # price is in fixed point
+                pricePerShare1 = 2^64*(outcome - 2^64*self.Events[self.Markets[market].events[0]].minValue)/(2^64*self.Events[self.Markets[market].events[0]].maxValue - 2^64*self.Events[self.Markets[market].events[0]].minValue)
+                pricePerShare2 = 2^64 - pricePerShare1
+
+            elif(self.Events[self.Markets[market].events[1]].maxValue!=1):
+                outcome = self.Events[self.Markets[market].events[0]].outcome
+                # price is in fixed point
+                pricePerShare1 = 2^64*(outcome - 2^64*self.Events[self.Markets[market].events[0]].minValue)/(2^64*self.Events[self.Markets[market].events[0]].maxValue - 2^64*self.Events[self.Markets[market].events[0]].minValue)
+                pricePerShare2 = 2^64 - pricePerShare1
+
+            elif(self.Events[self.Markets[market].events[2]].maxValue!=1):
+                outcome = self.Events[self.Markets[market].events[0]].outcome
+                # price is in fixed point
+                pricePerShare1 = 2^64*(outcome - 2^64*self.Events[self.Markets[market].events[0]].minValue)/(2^64*self.Events[self.Markets[market].events[0]].maxValue - 2^64*self.Events[self.Markets[market].events[0]].minValue)
+                pricePerShare2 = 2^64 - pricePerShare1
+
+
+
+
 
         # distribute cashcoin to the people who won money by holding winning shares
         i = 0
@@ -597,12 +628,11 @@ def closeMarket(branch, market):
             # for each winning outcome do...
             sharesOwned = self.Markets[market].participants[i].shares[winningSharesIndex]
             participant = self.Markets[market].participants[i].participantID
-            # winning price is $1 / share unless scalar
-            # pricePerShare = 2^64
-            #moneyWon = sharesOwned*pricePerShare
-            pricePerShare = (self.Events[winningEvent].outcome - self.Events[winningEvent].minValue)*2^64/(self.Events[winningEvent].maxValue - self.Events[winningEvent].minValue)
             self.cashcoinBalances[market] -= sharesOwned*pricePerShare
             self.cashcoinBalances[participant] += sharesOwned*pricePerShare
+
+
+
 
         # give back initial liquidity (or as much of it/profits are left)
         self.cashcoinBalances[self.Info[market].creator] += self.cashcoinBalances[market]
