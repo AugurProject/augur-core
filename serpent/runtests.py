@@ -88,15 +88,15 @@ reputation = [1, 1, 1, 1, 1, 1]
 #         {"scaled": False, "min": 0, "max": 1},
 #         {"scaled": False, "min": 0, "max": 1},
 #     ]
-# scaled = [0, 0, 0, 0, 1, 1]
-# scaled_max = [1, 1, 1, 1, 435, 20000]
-# scaled_min = [-1, -1, -1, -1, 0, 8000]
+scaled = [0, 0, 0, 0, 1, 1]
+scaled_max = [1, 1, 1, 1, 435, 20000]
+scaled_min = [-1, -1, -1, -1, 0, 8000]
 # scaled = [1, 1, 0, 0]
 # scaled_max = [0.5, 0.7, 1, 1]
 # scaled_min = [0.1, 0.2, -1, -1]
-scaled = [0, 0, 0, 0]
-scaled_max = [1, 1, 1, 1]
-scaled_min = [-1, -1, -1, -1]
+# scaled = [0, 0, 0, 0]
+# scaled_max = [1, 1, 1, 1]
+# scaled_min = [-1, -1, -1, -1]
 
 # num_reports = 25
 # num_events = 25
@@ -222,6 +222,7 @@ def test_contract(contract):
 
     arglist = [reports_fixed, reputation_fixed, scaled, scaled_max_fixed, scaled_min_fixed]
     result = serpent_function(s, c, "interpolate", "aaaaa", args=arglist)
+
     result = np.array(result)
     reports_filled = result[0:v_size].tolist()
     reports_mask = result[v_size:(2*v_size)].tolist()
