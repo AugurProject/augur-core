@@ -10,12 +10,34 @@ so outcome 1 and outcome 1 have 1
 3 and 1 are 3
 
 if you have outcome 1 and outcome 2 it's numOutcomesinX*1 + 1
-outcome 2 and outcome 2 is numOutcomesinX*1 + 2
+outcome 2 and outcome 2 is firsteventoutcome + numOutcomesinfirstevent*secondeventoutcome-1
 outcome 1 and outcome 3 is numOutcomesinX*2 + 1
 
 add the third dimension say
-outcome 1 and outcome 
+outcome 1 and outcome 3 and outcome 2
+  if dimension 3 is 1
+ firsteventoutcome + numOutcomesinfirstevent*secondeventoutcome-1 
+ if 2 then
+  firsteventoutcome + numOutcomesinfirstevent*secondeventoutcome-1 + numOutcomesinfirstevent*numOutcomesinsecondevent	
 
 
 
+  firsteventoutcome + numOutcomesinfirstevent*secondeventoutcome-1 + numOutcomesinfirstevent*numOutcomesinsecondevent*(OutcomeinThird-1)	
 
+
+  1
+  2
+  3         2
+           1 
+   1 2 3 4 
+
+
+    1  2
+1 
+2
+3
+
+
+1 4
+2 5
+3 6
