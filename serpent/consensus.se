@@ -108,6 +108,13 @@ macro fixed_multiply($x, $y):
 macro fixed_divide($x, $y):
     $x * 2^64 / $y
 
+# macro 2da10(x)[a][b]:
+#     x[a * 10 + b]
+
+# macro loop($i, $n):
+#     with $i = 0:
+#         while $i < $n:
+
 # funid: 0
 def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
     # ONE = 2^64
@@ -115,7 +122,6 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
     # FALSE = -ONE
     # INDETERMINATE = 2^63  # 0.5
     # NO_RESPONSE = 0       # 0
-
     # return vector: reports_interp
     # reports_filled: [0, flatsize - 1]
     # reports_mask: [flatsize, 2*flatsize - 1]
@@ -123,48 +129,28 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
         with flatsize = len(reports):
             with two_flatsize = 2*flatsize:
                 with num_events = flatsize / num_reports:
-
-                    # Calculate multiplicative factors
-                    with inv_span = array(num_events):
+                    with scaled_reports = array(flatsize):
                         with i = 0:
                             while i < num_events:
-                                if scaled[i] == 1:
-                                    inv_span[i] = fixed_divide(2^64, (scaled_max[i] - scaled_min[i]))
-                                else:
-                                    inv_span[i] = 2^63
+                                with j = 0:
+                                    while j < num_reports:
+                                        with idx = i + j*num_reports:
+                                            if reports[idx] == 0:
+                                                scaled_reports[idx] = 0
+                                            else:
+                                                if scaled[i] == 1:
+                                                    scaled_reports[idx] = fixed_divide(reports[idx] - scaled_min[i], scaled_max[i] - scaled_min[i])
+                                                else:
+                                                    scaled_reports[idx] = reports[idx]
+                                        j += 1
                                 i += 1
 
-                        # Recenter
-                        with out_matrix = array(flatsize):
-                            with i = 0:
-                                while i < flatsize:
-                                    out_matrix[i] = reports[i] - scaled_min[i]
-                                    i += 1
-
-                            # Rescale
-                            with out_matrix_mean = mean(out_matrix, flatsize):
-                                with i = 0:
-                                    while i < flatsize:
-                                        if out_matrix[i] == 2^63:
-                                            out_matrix[i] = out_matrix_mean
-                                        i += 1
-                            with scaled_reports = array(flatsize):
-                                with j = 0:
-                                    while j < num_events:
-                                        with i = 0:
-                                            while i < num_reports:
-                                                with k = i*num_events + j:
-                                                    scaled_reports[k] = fixed_multiply(out_matrix[k], inv_span[j])
-                                                i += 1
-                                        j += 1
-                    
                     # use existing data and reputations to fill missing observations
                     # (weighted average over all non-missing data)
                     with reports_interp = array(two_flatsize):
                         with missing_values = 0:
                             with i = 0:
                                 while i < flatsize:
-                                    # if reports[i] == 2^63:
                                     if reports[i] == 0:
                                         reports_interp[i + flatsize] = 2^64
                                         missing_values += 1

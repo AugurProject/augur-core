@@ -38,7 +38,7 @@ data Info[](typecode, description[2048], descriptionLength, creator, creationFee
 data Branches[](currentVotePeriod, markets[], marketCount, periodLength, repRequired)
 
 # Events' index is the eventID
-# a binary outcome has 0 for min and 1 for max value
+# a binary outcome has 0 for min and 1 for max value (ditto for categorical even though not actually true)
 # S&P 500 would be say 0 and 4700, respectively
 data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
 
@@ -251,9 +251,13 @@ def createMarket(branch, description:str, alpha, initialLiquidity, events:arr):
             eventsConcat += event
             if (self.Events[event].branch != branch or !self.Info[eventID].creator):
                 return(0)
-            #provided not a binary outcome
+            #scalars
             if(self.Events[event].maxValue!=1):
-               cumulativeScale += self.Events[event].maxValue - self.Events[event].minValue
+                # not a scalar but also not categorical or binary - invalid event
+                if(self.Events[event].numOutcomes!=2):
+                    return(0)
+                # is a valid scalar
+                cumulativeScale += self.Events[event].maxValue - self.Events[event].minValue
             if(i==0):
                 numOutcomes += self.Events[event].numOutcomes
             else:
@@ -506,61 +510,132 @@ def closeMarket(branch, market):
     if(currentPeriod > (eventVotePeriod+2) && self.Reporting[branch].eventsExpDates[currentPeriod].totalRepReported >= self.Branches[branch].repRequired):
         # loop through events in the market, get their outcomes and use those to determine the winning events!
         n = 0
-        winningOutcome = 0
+        winningOutcomes = array(200)
         while n < numberEvents:
             outcome = self.Events[self.Markets[market].events[n]].outcome
             if(outcome==2^63):
                 # return all t3h $$$
             elif(outcome==0):
                 return(0)
-            # make this one winning outcome
             if(n==0):
-                winningOutcome += outcome
+                #scalar
+                if(self.Events[self.Markets[market].events[n]].maxValue!=1):
+                    winningOutcomes[0] = 1
+                    winningOutcomes[1] = 2
+                # anything besides scalar
+                else:
+                    winningOutcomes[0] += outcome
             elif(n==1):
-                winningOutcome += winningOutcome*(outcome-1)
+                if(self.Events[self.Markets[market].events[n]].maxValue!=1):
+                    # scalar, scalar
+                    if(winningOutcomes[1]):
+                        winningOutcomes[2] = 3
+                        winningOutcomes[3] = 4
+                    # nonscalar, scalar
+                    else:
+                      # winningOutcomes[0] = winningOutcomes[0]
+                        winningOutcomes[1] = winningOutcomes[0] + self.Events[self.Markets[market].events[n-1]].numOutcomes
+                # scalar, nonscalar
+                elif(winningOutcomes[1] and self.Events[self.Markets[market].events[n]].maxValue==1):
+                    winningOutcomes[0] += self.Events[self.Markets[market].events[n-1]].numOutcomes*(outcome-1)
+                    winningOutcomes[1] += self.Events[self.Markets[market].events[n-1]].numOutcomes*(outcome-1)
+                # nonscalar, nonscalar
+                else:
+                    winningOutcomes[0] += self.Events[self.Markets[market].events[n-1]].numOutcomes*(outcome-1)
             elif(n==2):
-                # if(outcome==1) we're set, else...
-                if(outcome==2):
-                    # += numOutcomesinfirstevent*numOutcomesinsecondevent
-                    winningOutcome += self.Events[self.Markets[market].events[n-2]].outcome * self.Events[self.Markets[market].events[n-1]].outcome
+                if(self.Events[self.Markets[market].events[n]].maxValue!=1):
+                    #scalar, scalar, scalar
+                    if(winningOutcomes[3]):
+                        winningOutcomes[4] = 5
+                        winningOutcomes[5] = 6
+                        winningOutcomes[6] = 7
+                        winningOutcomes[7] = 8
+                    #scalar, nonscalar, scalar
+                    #nonscalar, scalar, scalar
+                    elif(winningOutcomes[1]):
+                      # winningOutcomes[0] = winningOutcomes[0]
+                      # winningOutcomes[1] = winningOutcomes[1]
+                        winningOutcomes[2] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes
+                        winningOutcomes[3] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes
+
+                    #nonscalar, nonscalar, scalar
+                    elif(winningOutcomes[1]==0):
+                      # winningOutcomes[0] = winningOutcomes[0]
+                        winningOutcomes[1] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes 
+    
+                else:
+                    #scalar, scalar, nonscalar
+                    if(winningOutcomes[3]):
+                        winningOutcomes[0] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1) 
+                        winningOutcomes[1] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
+                        winningOutcomes[2] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
+                        winningOutcomes[3] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
+
+                    #scalar, nonscalar, nonscalar
+                    #nonscalar, scalar, nonscalar
+                    elif(winningOutcomes[1]):
+                        winningOutcomes[0] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
+                        winningOutcomes[1] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
+                    
+                    #nonscalar, nonscalar, nonscalar
+                    else:
+                        winningOutcomes[0] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
             n+=1
-        self.Markets[market].winningOutcome = winningOutcome
 
-        winningShares = 0
-        # number of winning events is equivalent to e
-        #   a = 0
-        #   while a < e:
-        #   self.Markets[market].events[self.Markets[market].winningEvents[e]].shares
-        # needs to be fixed for scalar payouts
-        winningEvent = self.Markets[market].winningEvents[e-1]
-        winningShares = 0
-        winningOutcome = self.Events[winningEvent].outcome
-        winningSharesIndex = 0
-        if(winningOutcome==1):
-           # winning outcome in a binary market is 2, no is 1
-            winningShares = self.Markets[market].sharesPurchased[(2*(n-1) + 1)]
-            winningSharesIndex = 1
-        elif(winningOutcome==-1):
-            winningShares = self.Markets[market].sharesPurchased[2*(n-1)]
-            winningSharesIndex = 0
-        elif(winningOutcome==0):
-            return(text("outcome hasn't been decided yet"): str)
-        elif(winningOutcome==2^63):
-            return(0)
-            # return funds to people
+        pricePerShare1 = 0
+        pricePerShare2 = 0
+        pricePerShare3 = 0
+        pricePerShare4 = 0
+        pricePerShare5 = 0
+        pricePerShare6 = 0
+        pricePerShare7 = 0
+        pricePerShare8 = 0
 
-        # distribute cashcoin to the people who won money by holding winning shares
-        i = 0
-        while i <= self.Markets[market].currentParticipant:
-            sharesOwned = self.Markets[market].participants[i].shares[winningSharesIndex]
-            participant = self.Markets[market].participants[i].participantID
-            # winning price is $1 / share unless scalar
-            # pricePerShare = 2^64
-            #moneyWon = sharesOwned*pricePerShare
-            pricePerShare = (self.Events[winningEvent].outcome - self.Events[winningEvent].minValue)*2^64/(self.Events[winningEvent].maxValue - self.Events[winningEvent].minValue)
-            self.cashcoinBalances[market] -= sharesOwned*pricePerShare
-            self.cashcoinBalances[participant] += sharesOwned*pricePerShare
+        if(winningOutcomes[1]==0):
+            pricePerShare1 = 2^64
+        elif(winningOutcomes[7]):
+            # dunno lol
+        elif(winningOutcomes[3]):
+            # first is low-low and whatever, second is high-low, third is low-high, fourth is high-high
 
+        elif(winningOutcomes[1]):
+            # look for the scalar
+            scalar = 0
+            if(self.Events[self.Markets[market].events[0]].maxValue!=1):
+                scalar = 0
+            elif(self.Events[self.Markets[market].events[1]].maxValue!=1):
+                scalar = 1
+            elif(self.Events[self.Markets[market].events[2]].maxValue!=1):
+                scalar = 2
+            outcome = self.Events[self.Markets[market].events[scalar]].outcome
+            minValue = self.Events[self.Markets[market].events[scalar]].minValue
+            maxValue = self.Events[self.Markets[market].events[scalar]].maxValue
+            if(outcome>maxValue):
+                outcome = maxValue
+            elif(outcome<minValue):
+                outcome = minValue 
+            # price is in fixed point
+            #share two goes with the high side
+            pricePerShare2 = 2^64*(outcome - 2^64*minValue)/(2^64*maxValue - 2^64*minValue)
+            #share one goes with the low side of the calc
+            pricePerShare1 = 2^64 - pricePerShare1
+            # distribute cashcoin to the people who won money by holding winning shares
+            i = 0
+            while i < self.Markets[market].currentParticipant:
+                # for each winning outcome do...
+                n = 0
+                while(winningOutcome[n]!=0):
+                    sharesOwned = self.Markets[market].participants[i].shares[winningOutcome[n]]
+                    participant = self.Markets[market].participants[i].participantID
+                    # low side
+                    if(n==0):
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare1
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare1
+                    # high side (of the scalar part)
+                    elif(n==1):
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare2
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare2
+                        
         # give back initial liquidity (or as much of it/profits are left)
         self.cashcoinBalances[self.Info[market].creator] += self.cashcoinBalances[market]
         self.cashcoinBalances[market] -= self.cashcoinBalances[market]
