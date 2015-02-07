@@ -3,11 +3,11 @@ augur-serpent
 
 ### To do:
 	# MVP
-		# cumulative scale payouts x2
 		# trading fees for markets
 		# voting period fixes / when can / can't vote / when things up for voting
 		# redeem (multiple tx stuff from consensus)
 		# update api
+		# accuracy of exp needs to be within .1%
 	# Implement Version 0.3
 
 ### Version 0.5 (More fun features - May):
