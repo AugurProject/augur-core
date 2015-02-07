@@ -108,6 +108,106 @@ macro fixed_multiply($x, $y):
 macro fixed_divide($x, $y):
     $x * 2^64 / $y
 
+macro qsort($a, $l, $h):
+    with a = $a:
+        with l = $l:
+            with h = $h:
+                with stack = array(h - l + 1):
+                    with top = -1:
+                        top += 1
+                        stack[top] = l
+                        top += 1
+                        stack[top] = h
+                        while top >= 0:
+                            h = stack[top]
+                            top -= 1
+                            l = stack[top]
+                            top -= 1
+                            with x = a[h]:
+                                with t = 0:
+                                    with i = l - 1:
+                                        with j = l:
+                                            while j <= h - 1:
+                                                if a[j] <= x:
+                                                    i += 1
+                                                    t = a[i]
+                                                    a[i] = a[j]
+                                                    a[j] = t
+                                                j += 1
+                                        t = a[i + 1]
+                                        a[i + 1] = a[h]
+                                        a[h] = t
+                                        with p = i + 1:
+                                            if p - 1 > l:
+                                                top += 1
+                                                stack[top] = l
+                                                top += 1
+                                                stack[top] = p - 1
+                                            if p + 1 < h:
+                                                top += 1
+                                                stack[top] = p + 1
+                                                top += 1
+                                                stack[top] = h
+                        a
+
+macro paired_qsort($a, $b, $l, $h):
+    with a = $a:
+        with b = $b:
+            with asz = len(a):
+                with c = array(2*asz):
+                    with l = $l:
+                        with h = $h:
+                            with stack = array(h - l + 1):
+                                log(asz)
+                                log(h-l+1)
+                                with top = -1:
+                                    top += 1
+                                    stack[top] = l
+                                    top += 1
+                                    stack[top] = h
+                                    while top >= 0:
+                                        h = stack[top]
+                                        top -= 1
+                                        l = stack[top]
+                                        top -= 1
+                                        with x = a[h]:
+                                            with t = 0:
+                                                with i = l - 1:
+                                                    with j = l:
+                                                        while j <= h - 1:
+                                                            if a[j] <= x:
+                                                                i += 1
+                                                                t = a[i]
+                                                                a[i] = a[j]
+                                                                a[j] = t
+                                                                t = b[i]
+                                                                b[i] = b[j]
+                                                                b[j] = t
+                                                            j += 1
+                                                    t = a[i + 1]
+                                                    a[i + 1] = a[h]
+                                                    a[h] = t
+                                                    t = b[i + 1]
+                                                    b[i + 1] = b[h]
+                                                    b[h] = t
+                                                    with p = i + 1:
+                                                        if p - 1 > l:
+                                                            top += 1
+                                                            stack[top] = l
+                                                            top += 1
+                                                            stack[top] = p - 1
+                                                        if p + 1 < h:
+                                                            top += 1
+                                                            stack[top] = p + 1
+                                                            top += 1
+                                                            stack[top] = h
+                                    with i = 0:
+                                        while i < asz:
+                                            c[i] = a[i]
+                                            c[i + asz] = b[i]
+                                            i += 1
+                                        c
+
 # macro 2da10(x)[a][b]:
 #     x[a * 10 + b]
 
@@ -209,7 +309,6 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                                                             with j = 0:
                                                                                 while j < num_present[i]:
                                                                                     active_reputation[j] = fixed_divide(active_reputation[j], total_active_reputation)
-                                                                                    # todo: use weighted median
                                                                                     guess += fixed_multiply(active_reputation[j], active_reports[j])
                                                                                     j += 1
                                                                         with j = 0:
