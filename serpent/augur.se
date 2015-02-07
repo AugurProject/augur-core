@@ -557,12 +557,10 @@ def closeMarket(branch, market):
                       # winningOutcomes[1] = winningOutcomes[1]
                         winningOutcomes[2] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes
                         winningOutcomes[3] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes
-
                     #nonscalar, nonscalar, scalar
                     elif(winningOutcomes[1]==0):
                       # winningOutcomes[0] = winningOutcomes[0]
                         winningOutcomes[1] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes 
-    
                 else:
                     #scalar, scalar, nonscalar
                     if(winningOutcomes[3]):
@@ -570,13 +568,11 @@ def closeMarket(branch, market):
                         winningOutcomes[1] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
                         winningOutcomes[2] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
                         winningOutcomes[3] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
-
                     #scalar, nonscalar, nonscalar
                     #nonscalar, scalar, nonscalar
                     elif(winningOutcomes[1]):
                         winningOutcomes[0] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
                         winningOutcomes[1] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
-                    
                     #nonscalar, nonscalar, nonscalar
                     else:
                         winningOutcomes[0] += self.Events[self.Markets[market].events[n-2]].numOutcomes * self.Events[self.Markets[market].events[n-1]].numOutcomes * (outcome-1)
@@ -593,11 +589,80 @@ def closeMarket(branch, market):
 
         if(winningOutcomes[1]==0):
             pricePerShare1 = 2^64
+
         elif(winningOutcomes[7]):
             # dunno lol
+
         elif(winningOutcomes[3]):
             # first is low-low and whatever, second is high-low, third is low-high, fourth is high-high
+            scalarOne = -1
+            scalarTwo = -1
+            if(self.Events[self.Markets[market].events[0]].maxValue!=1):
+                scalarOne = 0
+            if(self.Events[self.Markets[market].events[1]].maxValue!=1):
+                if(scalarOne == -1):
+                    scalarOne = 0
+                else:
+                    scalarTwo = 1
+            elif(self.Events[self.Markets[market].events[2]].maxValue!=1):
+                scalarTwo = 2
+            outcomeOne = self.Events[self.Markets[market].events[scalarOne]].outcome
+            minValueOne = self.Events[self.Markets[market].events[scalarOne]].minValue
+            maxValueOne = self.Events[self.Markets[market].events[scalarOne]].maxValue
+            if(outcomeOne>maxValueOne):
+                outcomeOne = maxValueOne
+            elif(outcomeOne<minValueOne):
+                outcomeOne = minValueOne
+            outcomeTwo = self.Events[self.Markets[market].events[scalarTwo]].outcome
+            minValueTwo = self.Events[self.Markets[market].events[scalarTwo]].minValue
+            maxValueTwo = self.Events[self.Markets[market].events[scalarTwo]].maxValue
+            if(outcomeTwo>maxValueTwo):
+                outcomeTwo = maxValueTwo
+            elif(outcomeTwo<minValueTwo):
+                outcomeTwo = minValueTwo
 
+            outcomeOneHighSidePercent = 2^64*(outcomeOne - 2^64*minValueOne)/(2^64*maxValueOne - 2^64*minValueOne)
+            outcomeOneLowSidePercent = 2^64 - outcomeOneHighSidePercent
+            outcomeTwoHighSidePercent = 2^64*(outcomeTwo - 2^64*minValueTwo)/(2^64*maxValueTwo - 2^64*minValueTwo)
+            outcomeTwoLowSidePercent = 2^64 - outcomeTwoHighSidePercent
+
+            # price is in fixed point
+            # share four goes with the high-high side 
+            pricePerShare4 = outcomeOneHighSidePercent * outcomeTwoHighSidePercent / 2^64
+            # share three goes with the low-high side
+            pricePerShare3 = outcomeOneLowSidePercent * outcomeTwoHighSidePercent / 2^64
+            # share two goes with the high-low side
+            pricePerShare2 = outcomeOneHighSidePercent * outcomeTwoLowSidePercent / 2^64
+            # share one goes with the low-low
+             # both fixed point so div by 2^64 to keep in fixed point
+            pricePerShare1 = outcomeOneLowSidePercent * outcomeTwoLowSidePercent / 2^64
+            # distribute cashcoin to the people who won money by holding winning shares
+            i = 0
+            while i < self.Markets[market].currentParticipant:
+                # for each winning outcome do...
+                n = 0
+                while(winningOutcome[n]!=0):
+                    sharesOwned = self.Markets[market].participants[i].shares[winningOutcome[n]]
+                    participant = self.Markets[market].participants[i].participantID
+                    # low-low
+                    if(n==0):
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare1
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare1
+                    # high-low
+                    elif(n==1):
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare2
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare2
+                    # low-high
+                    elif(n==2):
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare3
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare3
+                    # high-high
+                    elif(n==3):
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare4
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare4
+                    n+=1
+                i+=1
+                
         elif(winningOutcomes[1]):
             # look for the scalar
             scalar = 0
@@ -613,7 +678,7 @@ def closeMarket(branch, market):
             if(outcome>maxValue):
                 outcome = maxValue
             elif(outcome<minValue):
-                outcome = minValue 
+                outcome = minValue
             # price is in fixed point
             #share two goes with the high side
             pricePerShare2 = 2^64*(outcome - 2^64*minValue)/(2^64*maxValue - 2^64*minValue)
@@ -635,7 +700,9 @@ def closeMarket(branch, market):
                     elif(n==1):
                         self.cashcoinBalances[market] -= sharesOwned*pricePerShare2
                         self.cashcoinBalances[participant] += sharesOwned*pricePerShare2
-                        
+                    n+=1
+                i += 1
+
         # give back initial liquidity (or as much of it/profits are left)
         self.cashcoinBalances[self.Info[market].creator] += self.cashcoinBalances[market]
         self.cashcoinBalances[market] -= self.cashcoinBalances[market]
