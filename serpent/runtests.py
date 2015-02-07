@@ -88,15 +88,15 @@ reputation = [1, 1, 1, 1, 1, 1]
 #         {"scaled": False, "min": 0, "max": 1},
 #         {"scaled": False, "min": 0, "max": 1},
 #     ]
-# scaled = [0, 0, 0, 0, 1, 1]
-# scaled_max = [1, 1, 1, 1, 435, 20000]
-# scaled_min = [-1, -1, -1, -1, 0, 8000]
+scaled = [0, 0, 0, 0, 1, 1]
+scaled_max = [1, 1, 1, 1, 435, 20000]
+scaled_min = [-1, -1, -1, -1, 0, 8000]
 # scaled = [1, 1, 0, 0]
 # scaled_max = [0.5, 0.7, 1, 1]
 # scaled_min = [0.1, 0.2, -1, -1]
-scaled = [0, 0, 0, 0]
-scaled_max = [1, 1, 1, 1]
-scaled_min = [-1, -1, -1, -1]
+# scaled = [0, 0, 0, 0]
+# scaled_max = [1, 1, 1, 1]
+# scaled_min = [-1, -1, -1, -1]
 
 # num_reports = 25
 # num_events = 25
@@ -160,9 +160,13 @@ def fold(arr, num_cols):
 def display(arr, description=None, show_all=None, refold=False):
     if description is not None:
         print(BW(description))
-    if refold:
-        print(np.array(fold(map(unfix, arr), refold)))
-    else:
+    if refold and type(refold) == int:
+        num_rows = len(arr) / float(refold)
+        if num_rows == int(num_rows) and len(arr) > refold:
+            print(np.array(fold(map(unfix, arr), refold)))
+        else:
+            refold = False
+    if not refold:
         if show_all is not None:
             print(pd.DataFrame({
                 'result': arr,
@@ -216,7 +220,7 @@ def test_contract(contract):
     v_size = num_reports * num_events
 
     reputation_fixed = map(fix, reputation)
-    reports_fixed = map(fix, reports.flatten())
+    reports_fixed = map(fix, reports.ravel())
     scaled_max_fixed = map(fix, scaled_max)
     scaled_min_fixed = map(fix, scaled_min)
 
