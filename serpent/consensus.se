@@ -124,9 +124,14 @@ macro fixed_divide($x, $y):
 
 # Paired quicksort: sort b according to a
 macro paired_qsort($a, $b, $l, $h):
-    with a = $a:
-        with b = $b:
-            with asz = len(a):
+    with asz = len($a):
+        with a = array(asz):
+            with b = array(asz):
+                with i = 0:
+                    while i < asz:
+                        a[i] = $a[i]
+                        b[i] = $b[i]
+                        i += 1
                 with c = array(2 * asz):
                     with l = $l:
                         with h = $h:
@@ -301,7 +306,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                                                                                             cumulative_weight -= sorted_reputation[below_midpoint_index-1]
                                                                                                             # conservative machine epsilon:
                                                                                                             # 0x1197998 = 18446744 = 2^64 / 10^12
-                                                                                                            if cumulative_weight - midpoint < 0x1197998:
+                                                                                                            if abs(cumulative_weight - midpoint) < 0x1197998:
                                                                                                                 guess = (sorted_reports[below_midpoint_index-2] + sorted_reports[below_midpoint_index-1]) / 2
                                                                                                             else:
                                                                                                                 guess = sorted_reports[below_midpoint_index-1]
@@ -528,7 +533,7 @@ def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_mi
                                                                     below_midpoint_index += 1
                                                                     cumulative_weight += sorted_reputation[below_midpoint_index-1]
                                                                 cumulative_weight -= sorted_reputation[below_midpoint_index-1]
-                                                                if cumulative_weight - midpoint < 0x1197998:
+                                                                if abs(cumulative_weight - midpoint) < 0x1197998:
                                                                     outcomes_raw[i] = (sorted_reports[below_midpoint_index-2] + sorted_reports[below_midpoint_index-1]) / 2
                                                                 else:
                                                                     outcomes_raw[i] = sorted_reports[below_midpoint_index-1]
@@ -559,7 +564,7 @@ def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_mi
                             while i < num_events:
                                 with j = 0:
                                     while j < num_players:
-                                        if reports[j*num_events + i] == consensus_outcomes[i]:
+                                        if abs(reports[i + j*num_events] - outcomes_adj[i]) < 0x1197998:
                                             certainty[i] += smooth_rep[j]
                                         j += 1
                                 i += 1
