@@ -186,6 +186,11 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     else:
         return(0)
 
+    # can't have a scalar and categorical event in one
+    # you can make a market like that though!
+    if(numOutcomes!=2 and maxValue!=1):
+        return(0)
+
     if (!self.Info[eventID].creator and !self.Events[eventID].branch and self.sendCashcoin(branch, 42*2^64)):
         self.Info[eventID].typecode = EVENT
         self.Info[eventID].creator = tx.origin
