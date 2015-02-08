@@ -322,7 +322,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                             i += 1
                                 return(reports_interp, items=two_flatsize)
 
-def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
+def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr, max_iterations):
     with num_players = len(reputation):
         with flatsize = len(reports_filled):
             with num_events = flatsize / num_players:
@@ -342,20 +342,26 @@ def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scale
                                 while j < num_events:
                                     weighted_means[j] /= total_weight
                                     j += 1
-                            with weighted_centered_data = array(flatsize):
-                                with i = 0:
-                                    while i < flatsize:
-                                        weighted_centered_data[i] = reports_filled[i] - weighted_means[i % num_events]
-                                        i += 1
-                                    return(weighted_centered_data, items=flatsize)
 
-def pca_init(num_events, max_iterations):
-    # initialize the loading vector (extra element at end is to store iterations left)
-    with lflatsize = num_events + 1:
-        with loading_vector = array(lflatsize):
-            loading_vector[0] = 2^64
-            loading_vector[num_events] = max_iterations
-            return(loading_vector, items=lflatsize)
+                            # weighted_centered_data: [0, flatsize-1]
+                            # loading_vector [1 0 0 . . . 0]: [flatsize, flatsize + num_events]
+                            with lflatsize = flatsize + len(scaled) + 1:
+                                with weighted_centered_data = array(lflatsize):
+                                    with i = 0:
+                                        while i < flatsize:
+                                            weighted_centered_data[i] = reports_filled[i] - weighted_means[i % num_events]
+                                            i += 1
+                                        weighted_centered_data[i] = 2^64
+                                        weighted_centered_data[lflatsize - 1] = max_iterations
+                                        return(weighted_centered_data, items=lflatsize)
+
+# def pca_init(num_events, max_iterations):
+#     # initialize the loading vector (extra element at end is to store iterations left)
+#     with lflatsize = num_events + 1:
+#         with loading_vector = array(lflatsize):
+#             loading_vector[0] = 2^64
+#             loading_vector[num_events] = max_iterations
+#             return(loading_vector, items=lflatsize)
 
 def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr, num_players, num_events):
     with lflatsize = len(loading_vector):

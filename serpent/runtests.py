@@ -228,17 +228,18 @@ def test_contract(contract):
     result = serpent_function(s, c, "interpolate", "aaaaa", args=arglist)
     result = np.array(result)
     reports_filled = result[0:v_size].tolist()
-    reports_mask = result[v_size:(2*v_size)].tolist()
+    reports_mask = result[v_size:].tolist()
     del result
 
     display(reports_filled, "reports (filled):", refold=num_events, show_all=True)
 
-    arglist = [reports_filled, reputation_fixed, scaled, scaled_max_fixed, scaled_min_fixed]
-    weighted_centered_data = serpent_function(s, c, "center", "aaaaa", args=arglist)
-
-    # multistep pca
-    arglist = [num_events, max_iterations]
-    loading_vector = serpent_function(s, c, "pca_init", "ii", args=arglist)
+    # center and initiate multistep pca loading vector
+    arglist = [reports_filled, reputation_fixed, scaled,
+               scaled_max_fixed, scaled_min_fixed, max_iterations]
+    result = serpent_function(s, c, "center", "aaaaai", args=arglist)
+    result = np.array(result)
+    weighted_centered_data = result[0:v_size].tolist()
+    loading_vector = result[v_size:].tolist()
 
     arglist = [loading_vector, weighted_centered_data, reputation_fixed, num_players, num_events]
     while loading_vector[num_events] > 0:
@@ -253,7 +254,7 @@ def test_contract(contract):
     result = serpent_function(s, c, "calibrate_sets", "aii", args=arglist)
     result = np.array(result)
     set1 = result[0:num_players].tolist()
-    set2 = result[num_players:(2*num_players)].tolist()
+    set2 = result[num_players:].tolist()
     assert(len(set1) == len(set2))
     assert(len(result) == 2*num_players)
     del result
@@ -266,7 +267,7 @@ def test_contract(contract):
     result = np.array(result)
     old = result[0:num_events].tolist()
     new1 = result[num_events:(2*num_events)].tolist()
-    new2 = result[(2*num_events):(3*num_events)].tolist()
+    new2 = result[(2*num_events):].tolist()
     assert(len(result) == 3*num_events)
     assert(len(old) == len(new1) == len(new2))
     del result
@@ -295,7 +296,7 @@ def test_contract(contract):
 
     result = np.array(result)
     outcomes_final = result[0:num_events].tolist()
-    consensus_reward = result[num_events:(2*num_events)].tolist()
+    consensus_reward = result[num_events:].tolist()
     assert(len(outcomes_final) == len(consensus_reward))
     del result
 
@@ -306,7 +307,7 @@ def test_contract(contract):
     result = serpent_function(s, c, "participation", "aaaaii", args=arglist)
     result = np.array(result)
     outcomes_final = result[0:num_events].tolist()
-    reporter_bonus = result[num_events:(num_events+num_players)].tolist()
+    reporter_bonus = result[num_events:].tolist()
 
     display(loading_vector, "Loadings:", show_all=True)
     display(adj_prin_comp, "Adjusted loadings:")
