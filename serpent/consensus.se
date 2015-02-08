@@ -22,6 +22,12 @@
 #
 # Questions?  Please contact jack@tinybike.net or joeykrug@gmail.com.
 
+# ONE = 2^64
+# TRUE = ONE
+# FALSE = -ONE
+# INDETERMINATE = 2^63  # 0.5
+# NO_RESPONSE = 0       # 0
+
 # Arithmetic mean of an array, takes fixed-point inputs
 macro mean($a, $asz):
     with total = 0:
@@ -102,17 +108,17 @@ macro maximum($a, $asz):
                 i += 1
         maxval
 
-# Find [maximum value, correspondng index] of an array
+# Find index corresponding to the maximum value of an array
 macro findmax($a, $asz):
-    with maxpair = array(2):
-        maxpair[0] = $a[0]
-        with i = 1:
-            while i < $asz:
-                if $a[i] > maxpair[0]:
-                    maxpair[0] = $a[i]
-                    maxpair[1] = i
-                i += 1
-        maxpair
+    with maxval = $a[0]:
+        with maxidx = 0:
+            with i = 1:
+                while i < $asz:
+                    if $a[i] > maxval:
+                        maxval = $a[i]
+                        maxidx = i
+                    i += 1
+                maxidx        
 
 # Fixed-point multiplication
 macro fixed_multiply($x, $y):
@@ -184,6 +190,40 @@ macro paired_qsort($a, $b, $l, $h):
                                             i += 1
                                         c
 
+# Weighted median of an array
+macro weighted_median($data, $weights):
+    with n = len($data):
+        with done = 0:
+            with midpoint = sum($weights) / 2:
+                with j = 0:
+                    while j < num_present[i]:
+                        if $weights[j] > midpoint:
+                            with maxidx = findmax($weights, n):
+                                wmedian = $data[maxidx]
+                            done = 1
+                        j += 1
+                if done == 0:
+                    with sorted = paired_qsort($data, $weights, 0, n-1):
+                        with sorted_data = array(n):
+                            with sorted_weights = array(n):
+                                with j = 0:
+                                    while j < n:
+                                        sorted_data[j] = sorted[j]
+                                        sorted_weights[j] = sorted[j + n]
+                                        j += 1
+                                with cumulative_weight = 0:
+                                    with idx = 0:
+                                        while cumulative_weight <= midpoint:
+                                            idx += 1
+                                            cumulative_weight += sorted_weights[idx-1]
+                                        cumulative_weight -= sorted_weights[idx-1]
+                                        # conservative machine epsilon: 0x1197998 = 18446744 = 2^64 / 10^12
+                                        if abs(cumulative_weight - midpoint) < 0x1197998:
+                                            wmedian = (sorted_data[idx-2] + sorted_data[idx-1]) / 2
+                                        else:
+                                            wmedian = sorted_data[idx-1]
+                wmedian
+
 # macro 2da10(x)[a][b]:
 #     x[a * 10 + b]
 
@@ -192,11 +232,6 @@ macro paired_qsort($a, $b, $l, $h):
 #         while $i < $n:
 
 def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
-    # ONE = 2^64
-    # TRUE = ONE
-    # FALSE = -ONE
-    # INDETERMINATE = 2^63  # 0.5
-    # NO_RESPONSE = 0       # 0
     # return vector: reports_interp
     # reports_filled: [0, flatsize - 1]
     # reports_mask: [flatsize, 2*flatsize - 1]
@@ -278,38 +313,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                                                                 while j < num_present[i]:
                                                                                     active_reputation[j] = fixed_divide(active_reputation[j], total_active_reputation)
                                                                                     j += 1
-
-                                                                            # weighted median
-                                                                            with done = 0:
-                                                                                with midpoint = sum(active_reputation) / 2:
-                                                                                    with j = 0:
-                                                                                        while j < num_present[i]:
-                                                                                            if active_reputation[j] > midpoint:
-                                                                                                with maxpair = findmax(active_reputation, num_present[i]):
-                                                                                                    guess = active_reports[maxpair[1]]
-                                                                                                done = 1
-                                                                                            j += 1
-                                                                                    if done == 0:
-                                                                                        with sorted = paired_qsort(active_reports, active_reputation, 0, num_present[i]-1):
-                                                                                            with sorted_reports = array(num_present[i]):
-                                                                                                with sorted_reputation = array(num_present[i]):
-                                                                                                    with j = 0:
-                                                                                                        while j < num_present[i]:
-                                                                                                            sorted_reports[j] = sorted[j]
-                                                                                                            sorted_reputation[j] = sorted[j + num_present[i]]
-                                                                                                            j += 1
-                                                                                                    with cumulative_weight = 0:
-                                                                                                        with below_midpoint_index = 0:
-                                                                                                            while cumulative_weight <= midpoint:
-                                                                                                                below_midpoint_index += 1
-                                                                                                                cumulative_weight += sorted_reputation[below_midpoint_index-1]
-                                                                                                            cumulative_weight -= sorted_reputation[below_midpoint_index-1]
-                                                                                                            # conservative machine epsilon:
-                                                                                                            # 0x1197998 = 18446744 = 2^64 / 10^12
-                                                                                                            if abs(cumulative_weight - midpoint) < 0x1197998:
-                                                                                                                guess = (sorted_reports[below_midpoint_index-2] + sorted_reports[below_midpoint_index-1]) / 2
-                                                                                                            else:
-                                                                                                                guess = sorted_reports[below_midpoint_index-1]
+                                                                            guess = weighted_median(active_reports, active_reputation)
                                                                         with j = 0:
                                                                             while j < num_players - num_present[i]:
                                                                                 reports_interp[nan_indices[j]] = guess
@@ -354,14 +358,6 @@ def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scale
                                         weighted_centered_data[i] = 2^64
                                         weighted_centered_data[lflatsize - 1] = max_iterations
                                         return(weighted_centered_data, items=lflatsize)
-
-# def pca_init(num_events, max_iterations):
-#     # initialize the loading vector (extra element at end is to store iterations left)
-#     with lflatsize = num_events + 1:
-#         with loading_vector = array(lflatsize):
-#             loading_vector[0] = 2^64
-#             loading_vector[num_events] = max_iterations
-#             return(loading_vector, items=lflatsize)
 
 def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr, num_players, num_events):
     with lflatsize = len(loading_vector):
@@ -515,34 +511,7 @@ def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_mi
                                     while j < num_players:
                                         active_reports[j] = reports[i + j*num_events]
                                         j += 1
-                                with done = 0:
-                                    with midpoint = sum(smooth_rep) / 2:
-                                        with j = 0:
-                                            while j < num_players:
-                                                if smooth_rep[j] > midpoint:
-                                                    with maxpair = findmax(smooth_rep, num_players):
-                                                        outcomes_raw[i] = active_reports[maxpair[1]]
-                                                    done = 1
-                                                j += 1
-                                        if done == 0:
-                                            with sorted = paired_qsort(active_reports, smooth_rep, 0, num_players-1):
-                                                with sorted_reports = array(num_players):
-                                                    with sorted_reputation = array(num_players):
-                                                        with j = 0:
-                                                            while j < num_players:
-                                                                sorted_reports[j] = sorted[j]
-                                                                sorted_reputation[j] = sorted[j + num_players]
-                                                                j += 1
-                                                        with cumulative_weight = 0:
-                                                            with below_midpoint_index = 0:
-                                                                while cumulative_weight <= midpoint:
-                                                                    below_midpoint_index += 1
-                                                                    cumulative_weight += sorted_reputation[below_midpoint_index-1]
-                                                                cumulative_weight -= sorted_reputation[below_midpoint_index-1]
-                                                                if abs(cumulative_weight - midpoint) < 0x1197998:
-                                                                    outcomes_raw[i] = (sorted_reports[below_midpoint_index-2] + sorted_reports[below_midpoint_index-1]) / 2
-                                                                else:
-                                                                    outcomes_raw[i] = sorted_reports[below_midpoint_index-1]
+                                outcomes_raw[i] = weighted_median(active_reports, smooth_rep)
                         else:
                             with j = 0:
                                 while j < num_players:
