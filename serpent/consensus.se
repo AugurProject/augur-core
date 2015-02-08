@@ -102,64 +102,35 @@ macro maximum($a, $asz):
                 i += 1
         maxval
 
+# Find [maximum value, correspondng index] of an array
+macro findmax($a, $asz):
+    with maxpair = array(2):
+        maxpair[0] = $a[0]
+        with i = 1:
+            while i < $asz:
+                if $a[i] > maxpair[0]:
+                    maxpair[0] = $a[i]
+                    maxpair[1] = i
+                i += 1
+        maxpair
+
+# Fixed-point multiplication
 macro fixed_multiply($x, $y):
     $x * $y / 2^64
 
+# Fixed-point division
 macro fixed_divide($x, $y):
     $x * 2^64 / $y
 
-macro qsort($a, $l, $h):
-    with a = $a:
-        with l = $l:
-            with h = $h:
-                with stack = array(h - l + 1):
-                    with top = -1:
-                        top += 1
-                        stack[top] = l
-                        top += 1
-                        stack[top] = h
-                        while top >= 0:
-                            h = stack[top]
-                            top -= 1
-                            l = stack[top]
-                            top -= 1
-                            with x = a[h]:
-                                with t = 0:
-                                    with i = l - 1:
-                                        with j = l:
-                                            while j <= h - 1:
-                                                if a[j] <= x:
-                                                    i += 1
-                                                    t = a[i]
-                                                    a[i] = a[j]
-                                                    a[j] = t
-                                                j += 1
-                                        t = a[i + 1]
-                                        a[i + 1] = a[h]
-                                        a[h] = t
-                                        with p = i + 1:
-                                            if p - 1 > l:
-                                                top += 1
-                                                stack[top] = l
-                                                top += 1
-                                                stack[top] = p - 1
-                                            if p + 1 < h:
-                                                top += 1
-                                                stack[top] = p + 1
-                                                top += 1
-                                                stack[top] = h
-                        a
-
+# Paired quicksort: sort b according to a
 macro paired_qsort($a, $b, $l, $h):
     with a = $a:
         with b = $b:
             with asz = len(a):
-                with c = array(2*asz):
+                with c = array(2 * asz):
                     with l = $l:
                         with h = $h:
                             with stack = array(h - l + 1):
-                                log(asz)
-                                log(h-l+1)
                                 with top = -1:
                                     top += 1
                                     stack[top] = l
@@ -309,8 +280,39 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                                                             with j = 0:
                                                                                 while j < num_present[i]:
                                                                                     active_reputation[j] = fixed_divide(active_reputation[j], total_active_reputation)
-                                                                                    guess += fixed_multiply(active_reputation[j], active_reports[j])
                                                                                     j += 1
+
+                                                                            # weighted median
+                                                                            with done = 0:
+                                                                                with midpoint = sum(active_reputation) / 2:
+                                                                                    with j = 0:
+                                                                                        while j < num_present[i]:
+                                                                                            if active_reputation[j] > midpoint:
+                                                                                                with maxpair = findmax(active_reputation, num_present[i]):
+                                                                                                    guess = active_reports[maxpair[1]]
+                                                                                                done = 1
+                                                                                            j += 1
+                                                                                    if done == 0:
+                                                                                        with sorted = paired_qsort(active_reports, active_reputation, 0, num_present[i]-1):
+                                                                                            with sorted_reports = array(num_present[i]):
+                                                                                                with sorted_reputation = array(num_present[i]):
+                                                                                                    with j = 0:
+                                                                                                        while j < num_present[i]:
+                                                                                                            sorted_reports[j] = sorted[j]
+                                                                                                            sorted_reputation[j] = sorted[j + num_present[i]]
+                                                                                                            j += 1
+                                                                                                    with cumulative_weight = 0:
+                                                                                                        with below_midpoint_index = 0:
+                                                                                                            while cumulative_weight <= midpoint:
+                                                                                                                below_midpoint_index += 1
+                                                                                                                cumulative_weight += sorted_reputation[below_midpoint_index-1]
+                                                                                                            cumulative_weight -= sorted_reputation[below_midpoint_index-1]
+                                                                                                            # conservative machine epsilon:
+                                                                                                            # 0x1197998 = 18446744 = 2^64 / 10^12
+                                                                                                            if cumulative_weight - midpoint < 0x1197998:
+                                                                                                                guess = (sorted_reports[below_midpoint_index-2] + sorted_reports[below_midpoint_index-1]) / 2
+                                                                                                            else:
+                                                                                                                guess = sorted_reports[below_midpoint_index-1]
                                                                         with j = 0:
                                                                             while j < num_players - num_present[i]:
                                                                                 reports_interp[nan_indices[j]] = guess

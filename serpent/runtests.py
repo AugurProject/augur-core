@@ -238,6 +238,8 @@ def test_contract(contract):
     arglist = [reports_filled, reputation_fixed, scaled, scaled_max_fixed, scaled_min_fixed]
     weighted_centered_data = serpent_function(s, c, "center", "aaaaa", args=arglist)
 
+    # display(weighted_centered_data, "weighted_centered_data:", refold=num_events)
+
     # multistep pca
     arglist = [num_events, max_iterations]
     loading_vector = serpent_function(s, c, "pca_init", "ii", args=arglist)
