@@ -1,11 +1,11 @@
-# This software (Augur) allows buying and selling event options in ethereum
+# This software (Augur) allows buying && selling event options in ethereum
 # Copyright (C)  2014 Chris Calderon, Joey Krug, Alan Lu, Jack Peterson
-#    This program is free software; you can redistribute it and/or modify
+#    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
 #
-#    This program is free software: you can redistribute it and/or modify
+#    This program is free software: you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
@@ -38,8 +38,8 @@ data Info[](typecode, description[2048], descriptionLength, creator, creationFee
 data Branches[](currentVotePeriod, markets[], marketCount, periodLength, repRequired)
 
 # Events' index is the eventID
-# a binary outcome has 0 for min and 1 for max value (ditto for categorical even though not actually true)
-# S&P 500 would be say 0 and 4700, respectively
+# a binary outcome has 0 for min && 1 for max value (ditto for categorical even though not actually true)
+# S&P 500 would be say 0 && 4700, respectively
 data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
 
 # Reporting index is the branchID
@@ -56,7 +56,7 @@ data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, repo
     # 1 means dimension 1, 2 is events in dimension 2, 3 is the dimension 3 events
 # Sharespurchased keeps track of the number of shares purchased for each outcome
     # sharesPurchased states starts at 1 - (same for participants[].shares[] array)
-# Participants is a 0 indexed array of participants, their cashIDs, and the shares in each outcome they've purchased of an event
+# Participants is a 0 indexed array of participants, their cashIDs, && the shares in each outcome they've purchased of an event
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 data Markets[](branch, events[], sharesPurchased[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcome, alpha, cumulativeScale, numOutcomes, tradingPeriod)
 
@@ -100,7 +100,7 @@ def sendCashcoin(recver, value):
         return(0)
 
 def sendReputation(branch, recver, value):
-    if(value<=0 or !self.sendCashcoin(branch, 5*2^64)):
+    if(value<=0 || !self.sendCashcoin(branch, 5*2^64)):
         return(0)
     sender = tx.origin
     senderIndex = self.Reporting[branch].repIDtoIndex[sender]
@@ -132,7 +132,7 @@ def getRepBalance(branch, address):
 # description format is branchName:description
 # is there some way we can include the description bytes in the sha256 hash?
 def makeSubBranch(description:str, periodLength, parent, repRequired):
-    if(periodLength<=0 or !self.Branches[parent].periodLength or !repRequired or description==0):
+    if(periodLength<=0 || !self.Branches[parent].periodLength || !repRequired || description==0):
         return(0)
     branchInfo = string((items=7)+len(description))
     branchInfo[0] = BRANCH                                      #typecode
@@ -144,10 +144,10 @@ def makeSubBranch(description:str, periodLength, parent, repRequired):
     branchInfo[6] = repRequired                                 #minimum rep required to vote
     mcopy(branchInfo+(items=7), description, len(description))
     # people can check that these characteristics hash to the ID if they want
-    # people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
+    # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
     branchID = sha256(branchinfo, chars=len(branchinfo))
 
-    if(!self.Branches[branchID].periodLength and !self.Info[branchID].creator and self.sendCashcoin(branchID, 47*2^64)):
+    if(!self.Branches[branchID].periodLength && !self.Info[branchID].creator && self.sendCashcoin(branchID, 47*2^64)):
         self.Info[branchID].typecode = BRANCH
         self.Info[branchID].creator = tx.origin
         self.Info[branchID].creationFee = 47*2^64
@@ -171,7 +171,7 @@ def makeSubBranch(description:str, periodLength, parent, repRequired):
 # numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0
 # to 11.0 would be 11 outcomes (if incremented by 0.1)
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes):
-    if(self.Branches[branch].periodLength and description!=0 and expDate>block.number):
+    if(self.Branches[branch].periodLength && description!=0 && expDate>block.number):
         eventinfo = string((items=8)+len(description))
         eventinfo[0] = EVENT                                        #typecode
         eventinfo[1] = branch                                       #branchID
@@ -186,12 +186,12 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     else:
         return(0)
 
-    # can't have a scalar and categorical event in one
+    # can't have a scalar && categorical event in one
     # you can make a market like that though!
-    if(numOutcomes!=2 and maxValue!=1):
+    if(numOutcomes!=2 && maxValue!=1):
         return(0)
 
-    if (!self.Info[eventID].creator and !self.Events[eventID].branch and self.sendCashcoin(branch, 42*2^64)):
+    if (!self.Info[eventID].creator && !self.Events[eventID].branch && self.sendCashcoin(branch, 42*2^64)):
         self.Info[eventID].typecode = EVENT
         self.Info[eventID].creator = tx.origin
         self.Info[eventID].creationFee = 42*2^64
@@ -202,7 +202,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         self.Events[eventID].minValue = minValue
         self.Events[eventID].maxValue = maxValue
         self.Events[eventID].numOutcomes = numOutcomes
-        # see which future period it expires in and put the event in that bin
+        # see which future period it expires in && put the event in that bin
         # event voting periods - expDate / periodLength gives you the voting period #
         futurePeriod = expDate / self.Branches[branch].periodLength
         self.Reporting[branch].eventsExpDates[futurePeriod].events[self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents] = eventID
@@ -212,7 +212,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         return(0)
 
 # alpha is equal to v/(n*log(n)) where v is the max percent commission,
-# and n is the number of outcomes people can trade. Alpha is set when
+# && n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
 macro lsLmsr($marketID):
     with $Bq = 0:
@@ -237,9 +237,9 @@ macro lsLmsr($marketID):
 # z = liquidity / (1+(alpha*n*ln(n)))
 # initialLiquidity is initial number of shares of each outcome you want to buy/initialize/set
 def createMarket(branch, description:str, alpha, initialLiquidity, events:arr):
-    if(!self.Branches[branch].periodLength or description==0 or !initialLiquidity or !alpha or alpha <= (2^64 / 132)):
+    if(!self.Branches[branch].periodLength || description==0 || !initialLiquidity || !alpha || alpha <= (2^64 / 132)):
         return(0)
-    # check that events have same exp. dates and branch
+    # check that events have same exp. dates && branch
     i = 0
     eventNum = len(events)
     # only supports 3 dimensional markets atm
@@ -254,7 +254,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, events:arr):
             if(self.Events[event].expirationDate > tradingPeriod):
                 tradingPeriod = self.Events[event].expirationDate
             eventsConcat += event
-            if (self.Events[event].branch != branch or !self.Info[eventID].creator):
+            if (self.Events[event].branch != branch || !self.Info[eventID].creator):
                 return(0)
             #scalars
             if(self.Events[event].maxValue!=1):
@@ -327,7 +327,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, events:arr):
 # amount of shares should be an integer
 def buyShares(branch, market, outcome, amount):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
-    if (self.Markets[market].branch!=branch or outcome==0 or self.Branches[branch].currentVotePeriod>=self.Markets[marketID].tradingPeriod):
+    if (self.Markets[market].branch!=branch || outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[marketID].tradingPeriod):
         return(0)
     # lmsr cost calcs
     oldCost = lsLmsr(market)
@@ -355,7 +355,7 @@ def buyShares(branch, market, outcome, amount):
 # instead of inputting particip. num could just loop through array if dont have it
 def sellShares(branch, market, outcome, amount, participantNumber):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
-    if (self.Markets[market].participants[participantNumber].participantID != tx.origin or self.Markets[market].branch!=branch or outcome==0 or self.Branches[branch].currentVotePeriod>=self.Markets[marketID].tradingPeriod):
+    if (self.Markets[market].participants[participantNumber].participantID != tx.origin || self.Markets[market].branch!=branch || outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[marketID].tradingPeriod):
         return(0)
     # lmsr cost calcs
     oldCost = lsLmsr(market)
@@ -378,12 +378,12 @@ def sellShares(branch, market, outcome, amount, participantNumber):
         self.Markets[market].participants[participantNumber].shares[outcome] -= amount
         return(1)
 
-# a no vote is -2^64, a yes vote is 2^64 and a can't determine vote is 2^63 (a empty ballot is 0)
+# a no vote is -2^64, a yes vote is 2^64 && a can't determine vote is 2^63 (a empty ballot is 0)
 # atm voters who do vote are req. to vote on all things in their respective ballots (rest just auto .5 them)
 # ui should handle this by filling in things you didn't vote on automatically & ask to be sure you didn't want to vote on them
 # UI makeBallot function does this
     # ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[votePeriod].numberEvents
-    # and loop through the events[] array from 0 to numberEvents -1 for the votes list / order
+    # && loop through the events[] array from 0 to numberEvents -1 for the votes list / order
 # people could report something like 16027*2^64 for a scalar
 def vote(branch, report:arr):
     # make sure the branch exists
@@ -403,19 +403,19 @@ def vote(branch, report:arr):
 
     reputation = self.Reporting[branch].reputation[repIndex].repValue
     # need to update stuff for quorem
-    # and store the report and the rep value
+    # && store the report && the rep value
     while i < len(report):
         self.Reporting[branchID].eventsExpDates[self.Branches[branch].currentVotePeriod].reporters[tx.origin][i] = report[i]
         i+=1
     self.Reporting[branchID].eventsExpDates[self.Branches[branchID].currentVotePeriod].totalRepReported += reputation
     return(1)
 
-# returns whether a quorem has a matured event and whether
+# returns whether a quorem has a matured event && whether
 # the number of required reports are met
 def checkQuorum(branch):
     currentPeriod = block.number / self.Branches[branch].periodLength
     # provided the currentPeriod is >2 periods past the things we're going to rbcr on
-    # we can then conclude it has matured and people have had time to vote
+    # we can then conclude it has matured && people have had time to vote
     if (currentPeriod > (self.Branches[branch].currentVotePeriod+2)):
         matured = true
     else:
@@ -426,20 +426,20 @@ def checkQuorum(branch):
         met = true
     else:
         met = false
-    if(met and matured):
+    if(met && matured):
         return(1)
     else:
         return(0)
       
 # 25% of fees already distributed to market creators
 # so 2/3 of remaining fees to voters = 50%
-# and 1/3 of remaining fees to event creators = 25%
+# && 1/3 of remaining fees to event creators = 25%
 # what if not enough consensus or not enough events expiring upcoming
 def redeem(branch):
     if(!self.checkQuorum(branch)):
         return(text("quorem not satisfied yet"): str)
     currentVotePeriod = self.Branches[branchID].currentVotePeriod
-    # loop through reputation and check if in reporters, if so use their report, if not use the fillin / not reported report (all zeroes)
+    # loop through reputation && check if in reporters, if so use their report, if not use the fillin / not reported report (all zeroes)
     # use this to make a giant array of votes to pass to self.consensus
     # want to pass votes for each 0 indexed event in order (so we get votes from an actual reporter)
     # (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
@@ -462,7 +462,7 @@ def redeem(branch):
                 x += 1
         i += 1
     # populate returned arrays
-    # pass votes and rep vector to consensus
+    # pass votes && rep vector to consensus
     megaArray = self.consensus(votes, reputation)
     outcomesFinal = array(numberEvents)
     eventBonus = array(numberEvents)
@@ -480,20 +480,20 @@ def redeem(branch):
         voterBonus[c] = megaArray[c]
         c+=1
     # get event ID for each event by taking the x index in the votes arrays - shoving it in reporting.events[]
-    # and getting the cooresponding ID
+    # && getting the cooresponding ID
     n = 0
     while n < numberEvents:
         eventID = self.Reporting[branch].eventsExpDates[currentVotePeriod].events[n]
-        # then take outcomes_final and set each event outcome to -1 if false or 1 if true (if 0 it's undecided)
+        # then take outcomes_final && set each event outcome to -1 if false or 1 if true (if 0 it's undecided)
         # a scalar could have a number like say 47
         self.Events[eventID].outcome = outcomesFinal[n]
-        # need to loop through eventid holders and distribute 25% coins using the event_bonus to determine how much
+        # need to loop through eventid holders && distribute 25% coins using the event_bonus to determine how much
         # of the 25% each get
         #self.cashcoin_balances[self.Info[eventID].creator] += fixed_multiply(event_bonus[n], self.cashcoin_balances[branch]) / 3
         #self.cashcoin_balances[branch] -= fixed_multiply(event_bonus[n], self.cashcoin_balances[branch]) / 3
-    # need to loop through rep holders and distribute 50% of branch fees to reporters' cashcoin addresses 
+    # need to loop through rep holders && distribute 50% of branch fees to reporters' cashcoin addresses 
     # (use 2/3 because 25% was distributed in market creation)
-    # also need to take voter_bonus and redistribute reputation in the Reporting structure accordingly
+    # also need to take voter_bonus && redistribute reputation in the Reporting structure accordingly
     z = 0
     while z < numReporters:
         self.Reporting[branch].reputation[z].repValue += (voterBonus[z]*21000000)/2^64
@@ -503,9 +503,9 @@ def redeem(branch):
     return(self.Branches[branch].currentVotePeriod)
 
 
-# loop through events in the market, get their outcomes and use those to determine the winning events!
+# loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
-# when multidimen fancy payouts we report on the events separately per usual, but combine them to determine winning state of a fancy market and then payout that state
+# when multidimen fancy payouts we report on the events separately per usual, but combine them to determine winning state of a fancy market && then payout that state
 def closeMarket(branch, market):
     if(self.cashcoinBalances[market]<=0):
         return(0)
@@ -513,7 +513,7 @@ def closeMarket(branch, market):
     numberEvents = self.Markets[market].lenEvents
     eventVotePeriod = self.Events[self.Markets[market].events[numberEvents-1]].expirationDate / self.Branches[branch].periodLength
     if(currentPeriod > (eventVotePeriod+2) && self.Reporting[branch].eventsExpDates[currentPeriod].totalRepReported >= self.Branches[branch].repRequired):
-        # loop through events in the market, get their outcomes and use those to determine the winning events!
+        # loop through events in the market, get their outcomes && use those to determine the winning events!
         n = 0
         winningOutcomes = array(200)
         while n < numberEvents:
@@ -541,7 +541,7 @@ def closeMarket(branch, market):
                       # winningOutcomes[0] = winningOutcomes[0]
                         winningOutcomes[1] = winningOutcomes[0] + self.Events[self.Markets[market].events[n-1]].numOutcomes
                 # scalar, nonscalar
-                elif(winningOutcomes[1] and self.Events[self.Markets[market].events[n]].maxValue==1):
+                elif(winningOutcomes[1] && self.Events[self.Markets[market].events[n]].maxValue==1):
                     winningOutcomes[0] += self.Events[self.Markets[market].events[n-1]].numOutcomes*(outcome-1)
                     winningOutcomes[1] += self.Events[self.Markets[market].events[n-1]].numOutcomes*(outcome-1)
                 # nonscalar, nonscalar
@@ -664,7 +664,7 @@ def closeMarket(branch, market):
                 i+=1
 
         elif(winningOutcomes[3]):
-            # first is low-low and whatever, second is high-low, third is low-high, fourth is high-high
+            # first is low-low && whatever, second is high-low, third is low-high, fourth is high-high
             scalarOne = -1
             scalarTwo = -1
             if(self.Events[self.Markets[market].events[0]].maxValue!=1):
@@ -824,9 +824,9 @@ def closeBet(betID):
 # atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
 # ui should handle this ^
 # ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents
-# and loop through the events[] array from 0 to numberEvents -1 for the votes list / order
+# && loop through the events[] array from 0 to numberEvents -1 for the votes list / order
 # UI will need a function to get the items in that array above so it can make a report!
-# w/ this function you can get the eventIDs, look them up and report on outcomes (probably w/ another function to look them up) -- make sure in this function to check that the report value is not >maxvalue or <minvalue for the event
+# w/ this function you can get the eventIDs, look them up && report on outcomes (probably w/ another function to look them up) -- make sure in this function to check that the report value is not >maxvalue or <minvalue for the event
 def makeBallot(branch):
     numEvents = self.Reporting[branch].eventsExpDates[self.Branches[branch].currentVotePeriod].numberEvents
     eventArray = array(numEvents)
@@ -937,7 +937,7 @@ def reputationApi(reputationIndex, itemNumber, branchID):
     elif(itemNumber==1):
         return(self.Reporting[branchID].reputation[reputationIndex].reporterID)
 
-# eventID and outcomeNumber only needed if itemNumber is 1
+# eventID && outcomeNumber only needed if itemNumber is 1
 # remove this
 def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, marketID):
     if(itemNumber==0):
