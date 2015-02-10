@@ -4,7 +4,7 @@ augur-serpent
 ### To do:
 	# MVP
 		# trading fees for markets
-		# voting period fixes / when can / can't vote / when things up for voting
+		# voting period fixes
 		# redeem (multiple tx stuff from consensus)
 		# update api
 		# accuracy of exp needs to be within .1%
@@ -32,4 +32,4 @@ augur-serpent
 	# fast voting cycle first few days to get the 60% problem away from a branch, e.g. what if not enough people vote
 	# 60% of votes -- need to get the cycle length parameters right
 	# rapid rbcr anytime to vote i'm alive if <60% of people vote after a few cycles or something
-	# max number of owners in a branch of rep.
+	# max number of owners in a branch of rep.个

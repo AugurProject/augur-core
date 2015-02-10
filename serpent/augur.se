@@ -34,7 +34,7 @@ data Info[](typecode, description[2048], descriptionLength, creator, creationFee
 # RepRequired is the amount of reputation required to reach quorem
 # markets[] is a 0 index array of market hashes (a.k.a. marketID)
 # currentVotePeriod is a nonce that tells us which bucket of events up to be
-# voted on in the upcoming vote period
+# voted on in the current vote period
 data Branches[](currentVotePeriod, markets[], marketCount, periodLength, repRequired)
 
 # Events' index is the eventID
@@ -155,9 +155,8 @@ def makeSubBranch(description:str, periodLength, parent, repRequired):
         save(self.Info[branchID].description[0], description, chars=len(description))
         self.Branches[branchID].periodLength = periodLength
         self.Branches[branchID].repRequired = repRequired
-        # subtract one period length because the current voting period should be one period behind what's currently expiring
-        # current vote period is what we're actually voting on at the moment
-        self.Branches[branchID].currentVotePeriod = (block.number - periodLength) / periodLength
+        # first vote period won't be until after the current (in this case first) basket of things has expired
+        self.Branches[branchID].currentVotePeriod = (block.number / periodLength) + 1
         i = 0
         while i < self.Reporting[parent].numberReporters:
             self.Reporting[branchID].reputation[i].reporterID = self.Reporting[parent].reputation[i].reporterID
