@@ -98,10 +98,10 @@ scaled_min = [-1, -1, -1, -1, 0, 8000]
 # scaled_max = [1, 1, 1, 1]
 # scaled_min = [-1, -1, -1, -1]
 
-# num_reports = 25
+# num_players = 25
 # num_events = 25
-# reports = np.random.randint(-1, 2, (num_reports, num_events))
-# reputation = np.random.randint(1, 100, num_reports)
+# reports = np.random.randint(-1, 2, (num_players, num_events))
+# reputation = np.random.randint(1, 100, num_players)
 # scaled = np.random.randint(0, 2, num_events).tolist()
 # scaled_max = np.ones(num_events)
 # scaled_min = -np.ones(num_events)
@@ -215,9 +215,9 @@ def test_contract(contract):
     print BB("Testing contract:"), BG(filename)
     c = s.contract(filename)
 
-    num_reports = len(reputation)
+    num_players = len(reputation)
     num_events = len(reports[0])
-    v_size = num_reports * num_events
+    v_size = num_players * num_events
 
     reputation_fixed = map(fix, reputation)
     reports_fixed = map(fix, reports.ravel())
@@ -228,75 +228,92 @@ def test_contract(contract):
     result = serpent_function(s, c, "interpolate", "aaaaa", args=arglist)
     result = np.array(result)
     reports_filled = result[0:v_size].tolist()
-    reports_mask = result[v_size:(2*v_size)].tolist()
+    reports_mask = result[v_size:].tolist()
     del result
 
-    # display(reports_fixed, "reports:", refold=num_events)
-    # display(reports_filled, "reports_filled:", refold=num_events)
-    # display(reports_mask, "reports_mask:", refold=num_events)
+    display(reports_filled, "reports (filled):", refold=num_events, show_all=True)
 
-    arglist = [reports_filled, reputation_fixed, scaled, scaled_max_fixed, scaled_min_fixed]
-    weighted_centered_data = serpent_function(s, c, "center", "aaaaa", args=arglist)
+    # center and initiate multistep pca loading vector
+    arglist = [reports_filled, reputation_fixed, scaled,
+               scaled_max_fixed, scaled_min_fixed, max_iterations]
+    result = serpent_function(s, c, "center", "aaaaai", args=arglist)
+    result = np.array(result)
+    weighted_centered_data = result[0:v_size].tolist()
+    loading_vector = result[v_size:].tolist()
 
-    # multistep pca
-    arglist = [num_events, max_iterations]
-    loading_vector = serpent_function(s, c, "pca_init", "ii", args=arglist)
-
-    arglist = [loading_vector, weighted_centered_data, reputation_fixed, num_reports, num_events]
+    arglist = [loading_vector, weighted_centered_data, reputation_fixed, num_players, num_events]
     while loading_vector[num_events] > 0:
         loading_vector = serpent_function(s, c, "pca_loadings", "aaaii", args=arglist)
         arglist[0] = loading_vector
         # display(loading_vector, "Loadings %i:" % loading_vector[num_events], show_all=True)
 
-    arglist = [loading_vector, weighted_centered_data, num_reports, num_events]
+    arglist = [loading_vector, weighted_centered_data, num_players, num_events]
     scores = serpent_function(s, c, "pca_scores", "aaii", args=arglist)
 
-    arglist = [scores, num_reports, num_events]
+    arglist = [scores, num_players, num_events]
     result = serpent_function(s, c, "calibrate_sets", "aii", args=arglist)
     result = np.array(result)
-    set1 = result[0:num_reports].tolist()
-    set2 = result[num_reports:(2*num_reports)].tolist()
+    set1 = result[0:num_players].tolist()
+    set2 = result[num_players:].tolist()
     assert(len(set1) == len(set2))
-    assert(len(result) == 2*num_reports)
+    assert(len(result) == 2*num_players)
     del result
 
-    arglist = [set1, set2, reputation_fixed, reports_filled, num_reports, num_events]
+    # display(set1, "set1:", show_all=True)
+    # display(set2, "set2:", show_all=True)
+
+    arglist = [set1, set2, reputation_fixed, reports_filled, num_players, num_events]
     result = serpent_function(s, c, "calibrate_wsets", "aaaaii", args=arglist)
     result = np.array(result)
     old = result[0:num_events].tolist()
     new1 = result[num_events:(2*num_events)].tolist()
-    new2 = result[(2*num_events):(3*num_events)].tolist()
+    new2 = result[(2*num_events):].tolist()
     assert(len(result) == 3*num_events)
     assert(len(old) == len(new1) == len(new2))
     del result
 
-    arglist = [old, new1, new2, set1, set2, scores, num_reports, num_events]
+    # display(old, "old:", show_all=True)
+    # display(new1, "new1:", show_all=True)
+    # display(new2, "new2:", show_all=True)
+
+    arglist = [old, new1, new2, set1, set2, scores, num_players, num_events]
     adj_prin_comp = serpent_function(s, c, "pca_adjust", "aaaaaaii", args=arglist)
 
-    arglist = [adj_prin_comp, reputation_fixed, num_reports, num_events]
+    # display(adj_prin_comp, "adj_prin_comp:", show_all=True)
+
+    arglist = [adj_prin_comp, reputation_fixed, num_players, num_events]
     smooth_rep = serpent_function(s, c, "smooth", "aaii", args=arglist)
 
-    arglist = [smooth_rep, reputation_fixed, reports_filled, num_reports, num_events]
-    result = serpent_function(s, c, "consensus", "aaaii", args=arglist)
+    # display(reports_filled, "reports_filled:", show_all=True)
+    # display(reports_filled,"reports_filled:",refold=num_events, show_all=True)
+    # display(smooth_rep, "smooth_rep:", show_all=True)
+
+    arglist = [smooth_rep, reports_filled, scaled, scaled_max_fixed,
+               scaled_min_fixed, num_players, num_events]
+    result = serpent_function(s, c, "consensus", "aaaaaii", args=arglist)
+
+    # display(result, "Consensus:", show_all=True)
+
     result = np.array(result)
     outcomes_final = result[0:num_events].tolist()
-    consensus_reward = result[num_events:(2*num_events)].tolist()
+    consensus_reward = result[num_events:].tolist()
     assert(len(outcomes_final) == len(consensus_reward))
     del result
 
-    arglist = [outcomes_final, consensus_reward, smooth_rep, reports_mask, num_reports, num_events]
+    # display(outcomes_final, "Outcomes (final):", show_all=True)
+    # display(consensus_reward, "Consensus reward:", show_all=True)
+
+    arglist = [outcomes_final, consensus_reward, smooth_rep, reports_mask, num_players, num_events]
     result = serpent_function(s, c, "participation", "aaaaii", args=arglist)
     result = np.array(result)
     outcomes_final = result[0:num_events].tolist()
-    author_bonus = result[num_events:(2*num_events)]
-    reporter_bonus = result[(2*num_events):(2*num_events + num_reports)]
+    reporter_bonus = result[num_events:].tolist()
 
     display(loading_vector, "Loadings:", show_all=True)
     display(adj_prin_comp, "Adjusted loadings:")
     display(scores, "Scores:")
     display(smooth_rep, "Updated reputation:")
     display(outcomes_final, "Outcomes (final):")
-    display(author_bonus, "Author bonus:")
     display(reporter_bonus, "Reporter bonus:")
 
 def main():
