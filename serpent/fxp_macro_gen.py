@@ -89,6 +89,23 @@ macro fxp_log($x):
         with $e_y = self.exp_table[$y_i]:
             with $A = bigdiv($x, $e_y):
                 $y_i*{fixedpoint_step} + fxp_log1p($A)
+
+macro fxp_sqrt($x):
+    with $guess = $x/2:
+        $guess = ($guess + $n*2^64/$guess)/2
+        $guess = ($guess + $n*2^64/$guess)/2
+        $guess = ($guess + $n*2^64/$guess)/2
+        $guess = ($guess + $n*2^64/$guess)/2
+        $guess = ($guess + $n*2^64/$guess)/2
+        $guess = ($guess + $n*2^64/$guess)/2
+        $guess = ($guess + $n*2^64/$guess)/2
+        $guess = ($guess + $n*2^64/$guess)/2
+        $guess = ($guess + $n*2^64/$guess)/2
+        $guess = ($guess + $n*2^64/$guess)/2
+        ($guess + $n*2^64/$guess)/2
+
+macro fxp_pow($a, $b):
+    fxp_exp($b*fxp_log($a)/2^64)
 '''
 
 def get_highest_fractional_bit(n):
