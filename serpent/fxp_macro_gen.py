@@ -92,17 +92,17 @@ macro fxp_log($x):
 
 macro fxp_sqrt($x):
     with $guess = $x/2:
-        $guess = ($guess + $n*2^64/$guess)/2
-        $guess = ($guess + $n*2^64/$guess)/2
-        $guess = ($guess + $n*2^64/$guess)/2
-        $guess = ($guess + $n*2^64/$guess)/2
-        $guess = ($guess + $n*2^64/$guess)/2
-        $guess = ($guess + $n*2^64/$guess)/2
-        $guess = ($guess + $n*2^64/$guess)/2
-        $guess = ($guess + $n*2^64/$guess)/2
-        $guess = ($guess + $n*2^64/$guess)/2
-        $guess = ($guess + $n*2^64/$guess)/2
-        ($guess + $n*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        ($guess + $x*2^64/$guess)/2
 
 macro fxp_pow($a, $b):
     fxp_exp($b*fxp_log($a)/2^64)
