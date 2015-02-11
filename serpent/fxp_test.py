@@ -15,22 +15,26 @@ def main():
 def init():
     fxp_init(0)
 
-def func(n):
-    return(fxp_exp(n))
+def ln(x):
+    return(fxp_log(x))
+
 inset('fxp_macros.se')
 '''
-    s = t.state()    
+    s = t.state()
     printf('Compiling...\t')
     c = s.abi_contract(code)
     printf('Done.\n')
+    s.mine(1)
 
     total_error = 0
-    for i in range(2,100,2):
-        x = gmpy2.mpfr(i + 2*random.random())
-        expected = int(gmpy2.exp(x)*2**64)
-        result = c.func(int(x*2**64))[0]
+    for i in range(30):
+        print i
+        x = random.randrange(int(gmpy2.exp(100)))
+        expected = int(gmpy2.log(x) * 2**64)
+        print len(bin(x)) - 2
+        result = c.ln(x << 64)
         total_error += abs((result - expected))/float(expected)
-    printf('average error = {:3.2%}\n'.format(total_error/49.0))
+    printf('average log error = {:3.4%}\n'.format(total_error/49.0))        
 
 if __name__ == '__main__':
     main()
