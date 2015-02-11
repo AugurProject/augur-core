@@ -511,11 +511,12 @@ def redeem(branch, step):
                 scaled[j] = 0
                 scaledMinFixed[j] = -1*2^64
                 scaledMaxFixed[j] = 1*2^64
+        vSize = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize
         reportsFilled = array(self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
         reportsFilled = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].reportsFilled[0], items=self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
-        self.center(reportsFilled, reputation, scaled, scaledMaxFixed, scaledMinFixed, 5)
-        weighted_centered_data = fun result from 0 to  (noninclusive) v_size = num_reports * num_events
-        loading_vector = result[v_size:] to end
+        result = self.center(reportsFilled, reputation, scaled, scaledMaxFixed, scaledMinFixed, 5)
+        weightedCenteredData = save(self.Reporting[branch].eventsExpDates[currentVotePeriod].weightedCenteredData[0], result, items=vSize)
+        loadingVector = save(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[0], slice(result, vSize, len(result)), items=(len(result)-vSize))
     elif(step==2):
         # loading vector is numEvents + 1 long, the last element says how many iterations of it are left, should check
         # multistep pca
