@@ -536,7 +536,6 @@ def redeem(branch, step):
         loadingVector = self.pca_loadings(loadingVector, weightedCenteredData, reputation, numReports, numEvents)
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[0], loadingVector, items=len(loadingVector))
     elif(step==3):
-         # loading vector is numEvents + 1 long, the last element says how many iterations of it are left, should check this
         numEvents = self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents
         numReports = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize / numEvents
         if(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[numEvents]==0):
@@ -545,13 +544,19 @@ def redeem(branch, step):
         loadingVector = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[0], items=numEvents+1)
         weightedCenteredData = array(self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
         weightedCenteredData = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].weightedCenteredData[0], items=self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
-        scores = pcaScores.(loadingVector, weightedCenteredData, numReports, numEvents)
+        scores = pca_scores.(loadingVector, weightedCenteredData, numReports, numEvents)
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].scores[0], scores, items=len(scores))
     elif(step==4):
-        calibrate_sets arglist = [scores, num_reports, num_events]
-        result = fun result
+        numEvents = self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents
+        numReports = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize / numEvents
+        scores = array()
+        scores = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].scores[0], items=len())
+        result = self.calibrate_sets(scores, numReports, numEvents)
         set1 = result[0:num_reports].tolist()
         set2 = result[num_reports:(2*num_reports)].tolist()
+        # loads the first set of numReports items from result
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].set1[0], result, items=numReports)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].set2[0], slice(result, numReports, 2*numReports), items=numReports)
     elif(step==5):
         calibrate_wsets arglist = [set1, set2, reputation_fixed, reports_filled, num_reports, num_events]
         old = result[0:num_events].tolist()
