@@ -538,30 +538,40 @@ def redeem(branch, step):
     elif(step==3):
         numEvents = self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents
         numReports = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize / numEvents
-        if(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[numEvents]==0):
-            return(0)
         loadingVector = array(numEvents+1)
         loadingVector = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[0], items=numEvents+1)
         weightedCenteredData = array(self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
         weightedCenteredData = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].weightedCenteredData[0], items=self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
-        scores = pca_scores.(loadingVector, weightedCenteredData, numReports, numEvents)
+        scores = self.pca_scores.(loadingVector, weightedCenteredData, numReports, numEvents)
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].scores[0], scores, items=len(scores))
     elif(step==4):
         numEvents = self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents
         numReports = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize / numEvents
-        scores = array()
-        scores = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].scores[0], items=len())
+        scores = array(numReports)
+        scores = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].scores[0], items=len(numReports))
         result = self.calibrate_sets(scores, numReports, numEvents)
-        set1 = result[0:num_reports].tolist()
-        set2 = result[num_reports:(2*num_reports)].tolist()
         # loads the first set of numReports items from result
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].set1[0], result, items=numReports)
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].set2[0], slice(result, numReports, 2*numReports), items=numReports)
     elif(step==5):
-        calibrate_wsets arglist = [set1, set2, reputation_fixed, reports_filled, num_reports, num_events]
-        old = result[0:num_events].tolist()
-        new1 = result[num_events:(2*num_events)].tolist()
-        new2 = result[(2*num_events):(3*num_events)].tolist()
+        vSize = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize
+        reportsFilled = array(self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
+        reportsFilled = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].reportsFilled[0], items=self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
+         # loading vector is numEvents + 1 long, the last element says how many iterations of it are left, should check this
+        numEvents = self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents
+        numReports = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize / numEvents
+        reputation = array(numReports)
+        i = 0
+        while i < numReports:
+            reputation[i] = self.Reporting[branch].reputation[i].repValue
+        set1 = array(numReports)
+        set2 = array(numReports)
+        set1 = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].set1[0], items=numReports)
+        set2 = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].set2[0], items=numReports)
+        result = self.calibrate_wsets(set1, set2, reputation, reportsFilled, numReports, numEvents)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].old[0], result, numEvents)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].new1[0], slice(result, numEvents, 2*numEvents), numEvents)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].new2[0], slice(result, 2*numEvents, 3*numEvents), numEvents)
     elif(step==6):
         pca_adjust arglist = [old, new1, new2, set1, set2, scores, num_reports, num_events]
         adj_prin_comp = fun result
