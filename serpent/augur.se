@@ -297,12 +297,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, events:arr):
 
     if(self.sendCashcoin(marketID, cost)):
         # add event list to the market
-        z = 0
-        while z < eventNum:
-            # initialize market events array with eventIDs from the eventList
-            self.Markets[marketID].events[z] = events[eventNum]
-            z+=1
-            
+        save(self.Markets[marketID].events[0], events, items=eventNum)      
         self.Info[marketID].typecode = MARKET
         self.Info[marketID].creator = tx.origin
         self.Info[marketID].creationFee = initialLiquidity
@@ -406,9 +401,7 @@ def vote(branch, report:arr):
     reputation = self.Reporting[branch].reputation[repIndex].repValue
     # need to update stuff for quorem
     # && store the report && the rep value
-    while i < len(report):
-        self.Reporting[branchID].eventsExpDates[self.Branches[branch].currentVotePeriod].reporters[tx.origin][i] = report[i]
-        i+=1
+    save(self.Reporting[branchID].eventsExpDates[self.Branches[branch].currentVotePeriod].reporters[tx.origin][0], report, items=len(report))
     self.Reporting[branchID].eventsExpDates[self.Branches[branchID].currentVotePeriod].totalRepReported += reputation
     return(1)
 
@@ -1004,13 +997,13 @@ def api(dataStructure, itemNumber, arrayIndex, ID):
     if(dataStructure==0):
         if(itemNumber==0):
             return(self.Info[ID].typecode)
-        #elif(itemNumber==1):
-        #length=self.Info[ID].descriptionLength
-        #return(load(self.Info[ID].description[0], chars=length):a)
-        #length=self.Info[ID].descriptionLength
-        #data = load(self.Info[ID].description[0], chars=length)
-        #return(data, length/32 + if(length%32,1,0))
-        #    return(self.Info[ID].description[])
+        # elif(itemNumber==1):
+        # length=self.Info[ID].descriptionLength
+        # return(load(self.Info[ID].description[0], chars=length):a)
+        # length=self.Info[ID].descriptionLength
+        # data = load(self.Info[ID].description[0], chars=length)
+        # return(data, length/32 + if(length%32,1,0))
+        # return(self.Info[ID].description[])
         elif(itemNumber==2):
             return(self.Info[ID].descriptionLength)
         elif(itemNumber==3):

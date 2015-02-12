@@ -4,11 +4,14 @@ augur-serpent
 ### To do:
 	# MVP
 		# trading fees for markets
-		# voting period fixes
+		# voting period fixes / when can / can't vote / when things up for voting
 		# redeem (multiple tx stuff from consensus)
 		# update api
 		# accuracy of exp needs to be within .1%
 	# Implement Version 0.3
+	# implement .5 outcome pricing?
+	# ditto for mcopy and local arrays
+	# Vitalik bond idea for event creation
 
 ### Version 0.5 (More fun features - May):
 	# need to add audits
@@ -33,3 +36,4 @@ augur-serpent
 	# 60% of votes -- need to get the cycle length parameters right
 	# rapid rbcr anytime to vote i'm alive if <60% of people vote after a few cycles or something
 	# max number of owners in a branch of rep.个
+	# go over stuff in close and redeem txs
