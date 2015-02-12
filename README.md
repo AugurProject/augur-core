@@ -9,6 +9,13 @@ augur-serpent
 		# update api
 		# accuracy of exp needs to be within .1%
 	# Implement Version 0.3
+	# support https://github.com/ethereum/cpp-ethereum/wiki/MetaCoin-API
+	# and https://github.com/ethereum/cpp-ethereum/wiki/Exchange-API possibly
+	# slice(x, start, end)
+	shrink
+	string stuff
+	# To hash an arbitrary number of bytes, use chars syntax. Example: x = sha256([0xf1fc122bc7f5d74df2b9441a42a1469500000000000000000000000000000000], chars=16) - returns the sha256 of the first 16 bytes. Note: padding with trailing zeroes, otherwise the first 16 bytes will be zeroes, and the sha256 of it will be computed instead of the desired.
+	# The person who improperly revealed their secret could lose a safety deposit, and the tattle-tail would get part of the deposit. w/ collusion
 
 ### Version 0.5 (More fun features - May):
 	# need to add audits
@@ -33,3 +40,7 @@ augur-serpent
 	# 60% of votes -- need to get the cycle length parameters right
 	# rapid rbcr anytime to vote i'm alive if <60% of people vote after a few cycles or something
 	# max number of owners in a branch of rep.
+
+	collusion (solved by zack proposal)
+	p + epsilon (req. a 51% atk)
+	free rider (solved by vss)
