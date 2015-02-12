@@ -7,10 +7,8 @@ augur-serpent
 		# voting period fixes / when can / can't vote / when things up for voting
 		# redeem (multiple tx stuff from consensus)
 		# update api
-		# accuracy of exp needs to be within .1%
 	# Implement Version 0.3
-	# implement .5 outcome pricing?
-	# ditto for mcopy and local arrays
+	# implement .5 outcome pricing
 	# Vitalik bond idea for event creation
 
 ### Version 0.5 (More fun features - May):
