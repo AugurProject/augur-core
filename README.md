@@ -8,10 +8,6 @@ augur-serpent
 		# redeem (multiple tx stuff from consensus)
 		# update api
 	# Implement Version 0.3
-	# support https://github.com/ethereum/cpp-ethereum/wiki/MetaCoin-API
-	# and https://github.com/ethereum/cpp-ethereum/wiki/Exchange-API possibly
-	shrink
-	string stuff
 	# The person who improperly revealed their secret could lose a safety deposit, and the tattle-tail would get part of the deposit. w/ collusion
 	# implement .5 outcome pricing
 	# Vitalik bond idea for event creation

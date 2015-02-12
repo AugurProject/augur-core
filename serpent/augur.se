@@ -88,15 +88,26 @@ def init():
 macro chunks($l):
     $l + if(l%32 != 0, 1, 0)
 
-def getCashBalance(address):
+def balance(address):
     return(self.cashcoinBalances[address])
 
 # should send values as fixed point in UI (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
-def sendCashcoin(recver, value):
+def send(recver, value):
     sender = tx.origin
     senderBalance = self.cashcoinBalances[sender]
     if(senderBalance >= value):
         self.cashcoinBalances[sender] -= value
+        self.cashcoinBalances[recver] += value
+        return(1)
+    else:
+        return(0)
+
+def send(recver, value, from):
+    if(from!=tx.origin):
+        return(0)
+    senderBalance = self.cashcoinBalances[from]
+    if(senderBalance >= value):
+        self.cashcoinBalances[from] -= value
         self.cashcoinBalances[recver] += value
         return(1)
     else:
