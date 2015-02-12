@@ -577,8 +577,8 @@ def redeem(branch, step):
         set2 = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].set2[0], items=numReports)
         result = self.calibrate_wsets(set1, set2, reputation, reportsFilled, numReports, numEvents)
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].old[0], result, numEvents)
-        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].new1[0], slice(result, numEvents, 2*numEvents), numEvents)
-        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].new2[0], slice(result, 2*numEvents, 3*numEvents), numEvents)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].new1[0], slice(result, numEvents, 2*numEvents), items=numEvents)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].new2[0], slice(result, 2*numEvents, 3*numEvents), items=numEvents)
     elif(step==6):
         vSize = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize
         numEvents = self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents
@@ -596,7 +596,7 @@ def redeem(branch, step):
         set2 = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].set2[0], items=numReports)
         scores = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].scores[0], items=numReports)
         adjPrinComp = self.pca_adjust(old, new1, new2, set1, set2, scores, numReports, numEvents)
-        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].adjPrinComp[0], adjPrinComp, len(adjPrinComp))
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].adjPrinComp[0], adjPrinComp, items=len(adjPrinComp))
     elif(step==7):
         vSize = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize
         numEvents = self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents
@@ -608,11 +608,22 @@ def redeem(branch, step):
         adjPrinComp = array()
         adjPrinComp = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].adjPrinComp[0], items=)
         smoothRep = self.smooth(adjPrinComp, reputation, numReports, numEvents)
-        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].smoothRep[0], smoothRep, len(smoothRep))
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].smoothRep[0], smoothRep, items=len(smoothRep))
     elif(step==8):
-        consensus arglist = [smooth_rep, reputation_fixed, reports_filled, num_reports, num_events]
-        outcomes_final = result[0:num_events].tolist()
-        consensus_reward = result[num_events:(2*num_events)].tolist()
+        vSize = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize
+        numEvents = self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents
+        numReports = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize / numEvents
+        i = 0
+        while i < numReports:
+            reputation[i] = self.Reporting[branch].reputation[i].repValue
+            i+=1
+        reportsFilled = array(self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
+        reportsFilled = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].reportsFilled[0], items=self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
+        smoothRep = array(numReports)
+        smoothRep = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].smoothRep, numReports)
+        result = self.consensus(smoothRep, reputation, reportsFilled, numReports, numEvents)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].outcomesFinal[0], result, items=numEvents)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].consensusReward[0], slice(result, numEvents, 2*numEvents), items=2*numEvents)
     elif(step==9):
         participation arglist = [outcomes_final, consensus_reward, smooth_rep, reports_mask, num_reports, num_events]
         outcomes_final = result[0:num_events].tolist()
@@ -622,7 +633,6 @@ def redeem(branch, step):
         # pass votes && rep vector to consensus
         megaArray = self.consensus(votes, reputation)
         outcomesFinal = array(numberEvents)
-        eventBonus = array(numberEvents)
         voterBonus = array(numReporters)
         a = 0
         while a < numberEvents:
@@ -649,7 +659,7 @@ def redeem(branch, step):
         # also need to take voter_bonus && redistribute reputation in the Reporting structure accordingly
         z = 0
         while z < numReporters:
-            self.Reporting[branch].reputation[z].repValue += (voterBonus[z]*21000000)/2^64
+            self.Reporting[branch].reputation[z].repValue = (voterBonus[z]*21000000)/2^64
             self.cashcoinBalances[self.Reporting[branch].reputation[z].reporterID] += 2*self.cashcoinBalances[branch]*voterBonus[z] / (3*2^64)
             self.cashcoinBalances[branch] -= 2*self.cashcoinBalances[branch]*voterBonus[z] / (3*2^64)
         self.Branches[branch].currentVotePeriod += 1
