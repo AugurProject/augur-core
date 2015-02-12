@@ -2060,7 +2060,8 @@ macro smallmul($a, $b):
     with $i = 61:
         with $acc = $a:
             while $i > 0:
-                $acc += $a / (bit($b, $i) * 2^(65 - $i))
+                if bit($b, $i):
+                    $acc += $a / 2^(64 - $i)
                 $i -= 1
             $acc
 
@@ -2095,6 +2096,96 @@ macro fxp_exp($x):
         if $index > (2048 - 2):
             2^255-1
         else:
-            with $e_a = self.exp_table[$index]:
-                with $e_b = smallexp($x&(0x1000000000000000 - 1)):
-                    smallmul($e_a, $e_b)
+            with $f = $x&(0x1000000000000000 - 1):
+                with $e_a = self.exp_table[$index]:
+                    with $e_b = smallexp($f):
+                        smallmul($e_a, $e_b)
+
+# $a/$b < 3/2, so...
+# 1 + ($a - $b)/$b < 3/2,
+# ($a - $b)/$b < 1/2
+# $c/$b < 1/2, $c = $a - $b
+# 2*$c < $b
+# 1/q > 2, q = $c/$b
+macro bigdiv($a, $b):
+    with $c = $a - $b:
+        with $q = 2^63 - 1:
+            with $acc = 0:
+                with $i = 62:
+                    with $shift = 4:
+                        while $i >= 0:
+                            if $acc + $b / $shift > $c:
+                                $q -= 2^$i
+                            else:
+                                $acc += $b / $shift
+                            $i -= 1
+                            $shift *= 2
+                        $q + 1
+
+macro fxp_log_pc($x):
+    #finds the index of the closest precomputed value of log <= log($x)
+    with $lo = 0:
+        with $hi = 2048 - 1:
+            with $mid = ($lo + $hi)/2:
+                while $lo < $hi:
+                    if self.exp_table[$mid] < $x:
+                        $lo = $mid + 1
+                    else:
+                        $hi = $mid - 1
+                    $mid = ($lo + $hi)/2
+                $mid
+
+macro fxp_log1p($x):
+    if $x == 0:
+        0
+    else:
+        with $xpow = $x*$x / 2^64:
+            with $result = $x + $xpow / 2:
+                $result -= $xpow / 3
+                $xpow = $xpow*$x / 2^64
+                $result += $xpow / 4
+                $xpow = $xpow*$x / 2^64
+                $result -= $xpow / 5
+                $xpow = $xpow*$x / 2^64
+                $result += $xpow / 6
+                $xpow = $xpow*$x / 2^64
+                $result -= $xpow / 7
+                $xpow = $xpow*$x / 2^64
+                $result += $xpow / 8
+                $xpow = $xpow*$x / 2^64
+                $result -= $xpow / 9
+                $xpow = $xpow*$x / 2^64
+                $result += $xpow / 10
+                $xpow = $xpow*$x / 2^64
+                $result -= $xpow / 11
+                $xpow = $xpow*$x / 2^64
+                $result += $xpow / 12
+                $xpow = $xpow*$x / 2^64
+                $result -= $xpow / 13
+                $xpow = $xpow*$x / 2^64
+                $result += $xpow / 14
+                $xpow = $xpow*$x / 2^64
+                $result - $xpow / 15
+
+macro fxp_log($x):
+    with $y_i = fxp_log_pc($x):
+        with $e_y = self.exp_table[$y_i]:
+            with $A = bigdiv($x, $e_y):
+                $y_i*0x1000000000000000 + fxp_log1p($A)
+
+macro fxp_sqrt($x):
+    with $guess = $x/2:
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        $guess = ($guess + $x*2^64/$guess)/2
+        ($guess + $x*2^64/$guess)/2
+
+macro fxp_pow($a, $b):
+    fxp_exp($b*fxp_log($a)/2^64)
