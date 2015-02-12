@@ -492,13 +492,13 @@ def redeem(branch, step):
         #log(len(a))
         #return(load(self.a[0], items=4):arr)‏
     elif(step==1):
-        numReporters = self.Reporting[branch].numberReporters
+        numEvents = self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents
+        numReporters = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize / numEvents
         reputation = array(numReporters)
         i = 0
         while i < numReporters:
             reputation[i] = self.Reporting[branch].reputation[i].repValue
         j = 0
-        numEvents = self.Reporting[branch].eventsExpDates[branch].numberEvents
         scaled = array(numEvents)
         scaledMaxFixed = array(numEvents)
         scaledMinFixed = array(numEvents)
@@ -515,17 +515,38 @@ def redeem(branch, step):
         reportsFilled = array(self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
         reportsFilled = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].reportsFilled[0], items=self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
         result = self.center(reportsFilled, reputation, scaled, scaledMaxFixed, scaledMinFixed, 5)
-        weightedCenteredData = save(self.Reporting[branch].eventsExpDates[currentVotePeriod].weightedCenteredData[0], result, items=vSize)
-        loadingVector = save(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[0], slice(result, vSize, len(result)), items=(len(result)-vSize))
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].weightedCenteredData[0], result, items=vSize)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[0], slice(result, vSize, len(result)), items=(len(result)-vSize))
     elif(step==2):
-        # loading vector is numEvents + 1 long, the last element says how many iterations of it are left, should check
+        # loading vector is numEvents + 1 long, the last element says how many iterations of it are left, should check this
+        numEvents = self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents
+        numReports = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize / numEvents
+        if(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[numEvents]==0):
+            return(0)
+        loadingVector = array(numEvents+1)
+        loadingVector = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[0], items=numEvents+1)
+        weightedCenteredData = array(self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
+        weightedCenteredData = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].weightedCenteredData[0], items=self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
+        reputation = array(numReports)
+        i = 0
+        while i < numReports:
+            reputation[i] = self.Reporting[branch].reputation[i].repValue
         # multistep pca
         # call this 5 times
-        pca_loadings arglist = [loading_vector, weighted_centered_data, reputation_fixed, num_reports, num_events]
-        loading_vector = fun result
+        loadingVector = self.pca_loadings(loadingVector, weightedCenteredData, reputation, numReports, numEvents)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[0], loadingVector, items=len(loadingVector))
     elif(step==3):
-        pca_scores arglist = [loading_vector, weighted_centered_data, num_reports, num_events]
-        scores = fun result
+         # loading vector is numEvents + 1 long, the last element says how many iterations of it are left, should check this
+        numEvents = self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents
+        numReports = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize / numEvents
+        if(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[numEvents]==0):
+            return(0)
+        loadingVector = array(numEvents+1)
+        loadingVector = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[0], items=numEvents+1)
+        weightedCenteredData = array(self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
+        weightedCenteredData = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].weightedCenteredData[0], items=self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
+        scores = pcaScores.(loadingVector, weightedCenteredData, numReports, numEvents)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].scores[0], scores, items=len(scores))
     elif(step==4):
         calibrate_sets arglist = [scores, num_reports, num_events]
         result = fun result
