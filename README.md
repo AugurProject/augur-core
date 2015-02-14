@@ -8,14 +8,14 @@ augur-serpent
 		# update api
 	# Vitalik bond idea for event creation
 	# division of fixedpoint to lose least precision
+	# make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
 
-### Version 0.5 (More fun features - May):
+### Version 0.5 (More fun features - May and Beyond):
 	# need to add audits
 	# special cfds + public good funding + poss. futarchy
 	# make code updatable + work with etherex & chow (bitsquare, coineffine other decentralized exchanges as well)
 		# chow exchange needs a way to prevent two people from claiming an order, sending bitcoin, then being screwed unless altruism due to its use of spv proofs (suggest a claim tx w/ possible small ether bond and during that time no one else can claim the exchange tx - but if you wait too long you lose the bond + it becomes open again, something like that)
 	# stablecoin
-	# make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
 
 ### Version 0.4 (Awesome fun stuff - April):
 	# make sure this follows paul's whitepaper well	
