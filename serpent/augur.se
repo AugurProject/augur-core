@@ -51,7 +51,7 @@ data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
 # v_size = numReports * numEvents
 # reportsFilled, reportsMask, weightedCenteredData, loadingVector, scores, set1, set2, old,
 # new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
-data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[][], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[], consensusReward[]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
+data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[][], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market in the format of
@@ -609,8 +609,8 @@ def redeem(branch, step):
         while i < numReports:
             reputation[i] = self.Reporting[branch].reputation[i].repValue
             i+=1
-        adjPrinComp = array()
-        adjPrinComp = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].adjPrinComp[0], items=)
+        adjPrinComp = array(numReports)
+        adjPrinComp = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].adjPrinComp[0], items=numReports)
         smoothRep = self.smooth(adjPrinComp, reputation, numReports, numEvents)
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].smoothRep[0], smoothRep, items=len(smoothRep))
     elif(step==8):
@@ -624,14 +624,20 @@ def redeem(branch, step):
         reportsFilled = array(self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
         reportsFilled = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].reportsFilled[0], items=self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
         smoothRep = array(numReports)
-        smoothRep = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].smoothRep, numReports)
+        smoothRep = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].smoothRep[0], items=numReports)
         result = self.consensus(smoothRep, reputation, reportsFilled, numReports, numEvents)
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].outcomesFinal[0], result, items=numEvents)
-        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].consensusReward[0], slice(result, numEvents, 2*numEvents), items=2*numEvents)
     elif(step==9):
-        participation arglist = [outcomes_final, consensus_reward, smooth_rep, reports_mask, num_reports, num_events]
-        outcomes_final = result[0:num_events].tolist()
-        reporter_bonus = result[num_events:num_reports]
+        vSize = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize
+        numEvents = self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents
+        numReports = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize / numEvents
+        smoothRep = array(numReports)
+        smoothRep = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].smoothRep[0], items=numReports)
+        reportsMask = array(vSize)
+        reportsMask = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].reportsMask[0], items=vSize)
+        outcomesFinal = array(numEvents)
+        outcomesFinal = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].outcomesFinal[0], items=numEvents)
+        reporterBonus = self.participation(outcomesFinal, smoothRep, reportsMask, numReports, numEvents)
 
         # populate returned arrays
         # pass votes && rep vector to consensus
