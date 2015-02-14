@@ -6,7 +6,6 @@ augur-serpent
 		# trading fees for markets
 		# voting period fixes / when can / can't vote / when things up for voting
 		# update api
-	# Vitalik bond idea for event creation
 	# division of fixedpoint to lose least precision
 	# make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
 
@@ -29,5 +28,5 @@ augur-serpent
 	# randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot
 	# fast voting cycle first few days to get the <60% problem away from a branch, e.g. what if not enough people vote
 	# rapid rbcr anytime to vote i'm alive if <60% of people vote after a few cycles or something
-	# max number of owners in a branch of rep.
+	# max number of owners in a branch of rep. issues w/ sending rep etc
 	# go over stuff in close and redeem txs

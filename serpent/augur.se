@@ -114,7 +114,7 @@ def send(recver, value, from):
         return(0)
 
 def sendReputation(branch, recver, value):
-    if(value<=0 || !self.sendCashcoin(branch, 5*2^64)):
+    if(value<=0 || !self.send(branch, 5*2^64)):
         return(0)
     sender = tx.origin
     senderIndex = self.Reporting[branch].repIDtoIndex[sender]
@@ -161,7 +161,7 @@ def makeSubBranch(description:str, periodLength, parent, repRequired):
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
     branchID = sha256(branchinfo, chars=len(branchinfo))
 
-    if(!self.Branches[branchID].periodLength && !self.Info[branchID].creator && self.sendCashcoin(branchID, 47*2^64)):
+    if(!self.Branches[branchID].periodLength && !self.Info[branchID].creator && self.send(branchID, 47*2^64)):
         self.Info[branchID].typecode = BRANCH
         self.Info[branchID].creator = tx.origin
         self.Info[branchID].creationFee = 47*2^64
@@ -203,26 +203,27 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     # you can make a market like that though!
     if(numOutcomes!=2 && maxValue!=1):
         return(0)
-
-    if (!self.Info[eventID].creator && !self.Events[eventID].branch && self.sendCashcoin(branch, 42*2^64)):
-        self.Info[eventID].typecode = EVENT
-        self.Info[eventID].creator = tx.origin
-        self.Info[eventID].creationFee = 42*2^64
-        self.Info[eventID].descriptionLength = len(description)
-        save(self.Info[eventID].description[0], description, chars=len(description))
-        self.Events[eventID].branch = branch
-        self.Events[eventID].expirationDate = expDate
-        self.Events[eventID].minValue = minValue
-        self.Events[eventID].maxValue = maxValue
-        self.Events[eventID].numOutcomes = numOutcomes
-        # see which future period it expires in && put the event in that bin
-        # event voting periods - expDate / periodLength gives you the voting period #
-        futurePeriod = expDate / self.Branches[branch].periodLength
-        self.Reporting[branch].eventsExpDates[futurePeriod].events[self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents] = eventID
-        self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents += 1
-        return(eventID)
-    else:
-        return(0)
+    # send fee and bond
+    if(self.balance(tx.origin)>=85*2^64):
+        if (!self.Info[eventID].creator && !self.Events[eventID].branch && self.send(branch, 42*2^64) && self.send(eventID, 43*2^64)):
+            self.Info[eventID].typecode = EVENT
+            self.Info[eventID].creator = tx.origin
+            self.Info[eventID].creationFee = 42*2^64
+            self.Info[eventID].descriptionLengthF = len(description)
+            save(self.Info[eventID].description[0], description, chars=len(description))
+            self.Events[eventID].branch = branch
+            self.Events[eventID].expirationDate = expDate
+            self.Events[eventID].minValue = minValue
+            self.Events[eventID].maxValue = maxValue
+            self.Events[eventID].numOutcomes = numOutcomes
+            # see which future period it expires in && put the event in that bin
+            # event voting periods - expDate / periodLength gives you the voting period #
+            futurePeriod = expDate / self.Branches[branch].periodLength
+            self.Reporting[branch].eventsExpDates[futurePeriod].events[self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents] = eventID
+            self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents += 1
+            return(eventID)
+        else:
+            return(0)
 
 # alpha is equal to v/(n*log(n)) where v is the max percent commission,
 # && n is the number of outcomes people can trade. Alpha is set when
@@ -306,7 +307,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, events:arr):
         self.Markets[marketID].sharesPurchased[y] += initialLiquidity
     cost = lsLmsr(marketID)
 
-    if(self.sendCashcoin(marketID, cost)):
+    if(self.send(marketID, cost)):
         # add event list to the market
         save(self.Markets[marketID].events[0], events, items=eventNum)      
         self.Info[marketID].typecode = MARKET
@@ -353,7 +354,7 @@ def buyShares(branch, market, outcome, amount):
         return(0)
     else:
         # send money from user acc. to market address/account
-        self.sendCashcoin(market, pricePerShare*amount)
+        self.send(market, pricePerShare*amount)
         self.Markets[market].participants[participantNumber].participantID = tx.origin
         self.Markets[market].participants[participantNumber].shares[outcome] += amount
         self.Markets[market].currentParticipant += 1
@@ -646,6 +647,10 @@ def redeem(branch, step):
             eventID = self.Reporting[branch].eventsExpDates[currentVotePeriod].events[n]
             # then take outcomes_final && set each event outcome
             self.Events[eventID].outcome = outcomesFinal[n]
+            if(outcomesFinal[n]!=2^63):
+                # return bond
+                self.cashcoinBalances[eventID] -= 43*2^64
+                self.cashcoinBalances[self.Info[eventID].creator] += 43*2^64
         # need to loop through rep holders && distribute 50% of branch fees to reporters' cashcoin addresses 
         # also need to take reporterBonus && redistribute reputation in the Reporting structure accordingly
         z = 0
@@ -674,6 +679,7 @@ def closeMarket(branch, market):
             outcome = self.Events[self.Markets[market].events[n]].outcome
             if(outcome==2^63):
                 # return all t3h $$$ - (@ 50 cents a share i presume)
+                # give event bond money to reporters
             elif(outcome==0):
                 return(0)
             if(n==0):
@@ -945,7 +951,7 @@ def makeBet(eventID, amtToBet):
 # outcome is 0 or 1
 def sendMoneytoBet(betID, outcome):
     if(self.cashcoinBalances[betID+outcome]==0):
-        self.sendCashcoin(betID+outcome, self.p2pBets[betID].amtToBet)
+        self.send(betID+outcome, self.p2pBets[betID].amtToBet)
     else:
         return(0)
     if(outcome):
