@@ -639,40 +639,21 @@ def redeem(branch, step):
         outcomesFinal = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].outcomesFinal[0], items=numEvents)
         reporterBonus = self.participation(outcomesFinal, smoothRep, reportsMask, numReports, numEvents)
 
-        # populate returned arrays
-        # pass votes && rep vector to consensus
-        megaArray = self.consensus(votes, reputation)
-        outcomesFinal = array(numberEvents)
-        voterBonus = array(numReporters)
-        a = 0
-        while a < numberEvents:
-            outcomesFinal[a] = megaArray[a]
-            a+=1
-        c = numberEvents
-        while c < numReporters:
-            voterBonus[c] = megaArray[c]
-            c+=1
         # get event ID for each event by taking the x index in the votes arrays - shoving it in reporting.events[]
         # && getting the cooresponding ID
         n = 0
-        while n < numberEvents:
+        while n < numEvents:
             eventID = self.Reporting[branch].eventsExpDates[currentVotePeriod].events[n]
-            # then take outcomes_final && set each event outcome to -1 if false or 1 if true (if 0 it's undecided)
-            # a scalar could have a number like say 47
+            # then take outcomes_final && set each event outcome
             self.Events[eventID].outcome = outcomesFinal[n]
-            # need to loop through eventid holders && distribute 25% coins using the event_bonus to determine how much
-            # of the 25% each get
-            #self.cashcoin_balances[self.Info[eventID].creator] += fixed_multiply(event_bonus[n], self.cashcoin_balances[branch]) / 3
-            #self.cashcoin_balances[branch] -= fixed_multiply(event_bonus[n], self.cashcoin_balances[branch]) / 3
         # need to loop through rep holders && distribute 50% of branch fees to reporters' cashcoin addresses 
-        # (use 2/3 because 25% was distributed in market creation)
-        # also need to take voter_bonus && redistribute reputation in the Reporting structure accordingly
+        # also need to take reporterBonus && redistribute reputation in the Reporting structure accordingly
         z = 0
-        while z < numReporters:
-            self.Reporting[branch].reputation[z].repValue = (voterBonus[z]*21000000)/2^64
-            self.cashcoinBalances[self.Reporting[branch].reputation[z].reporterID] += 2*self.cashcoinBalances[branch]*voterBonus[z] / (3*2^64)
-            self.cashcoinBalances[branch] -= 2*self.cashcoinBalances[branch]*voterBonus[z] / (3*2^64)
+        while z < numReports:
+            self.Reporting[branch].reputation[z].repValue = (reporterBonus[z]*21000000)/2^64
+            self.cashcoinBalances[self.Reporting[branch].reputation[z].reporterID] += self.cashcoinBalances[branch]*reporterBonus[z] / 2^64
         self.Branches[branch].currentVotePeriod += 1
+        self.cashcoinBalances[branch] -= self.cashcoinBalances[branch]
         return(self.Branches[branch].currentVotePeriod)
 
 

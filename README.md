@@ -5,11 +5,11 @@ augur-serpent
 	# MVP
 		# trading fees for markets
 		# voting period fixes / when can / can't vote / when things up for voting
-		# redeem (multiple tx stuff from consensus)
 		# update api
 	# Implement Version 0.3
 	# implement .5 outcome pricing
 	# Vitalik bond idea for event creation
+	# division of fixedpoint to lose least precision
 
 ### Version 0.5 (More fun features - May):
 	# need to add audits
@@ -19,6 +19,7 @@ augur-serpent
 	# https://blog.ethereum.org/2015/01/28/p-epsilon-attack/
 	# stablecoin
 	# could have multiple people add liquidity to the market :o
+	# make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
 
 ### Version 0.4 (Awesome fun stuff - April):
 	# make sure this follows paul's whitepaper well	
@@ -26,6 +27,7 @@ augur-serpent
 	# zeroing of array values
 	# hash first frontrunning prevention mechanism
 	# salt hash vote mechanism
+	# consensus bond mechanism cheaper
 	# high fees to check event outcome - doesn't solve freeloader problem :/
 
 ### Version 0.3 (The Voting Upgrade - March):
