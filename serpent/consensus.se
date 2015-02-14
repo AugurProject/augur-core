@@ -459,14 +459,14 @@ def pca_adjust(old:arr, new1:arr, new2:arr, set1:arr, set2:arr, scores:arr, num_
                     sse2 += fixed_multiply(new2[i] - old[i], new2[i] - old[i])
                     i += 1
             with ref_ind = sse1 - sse2:
-                with adj_prin_comp = array(num_players):
+                with adjusted_scores = array(num_players):
                     if ref_ind <= 0:
-                        adj_prin_comp = set1
+                        adjusted_scores = set1
                     else:
-                        adj_prin_comp = set2
-                    return(adj_prin_comp, items=num_players)
+                        adjusted_scores = set2
+                    return(adjusted_scores, items=num_players)
 
-def smooth(adj_prin_comp:arr, reputation:arr, num_players, num_events):
+def smooth(adjusted_scores:arr, reputation:arr, num_players, num_events):
     # Weighted sum of old and new reputation vectors.
     # New: row_reward_weighted
     # Old: reputation
@@ -478,11 +478,11 @@ def smooth(adj_prin_comp:arr, reputation:arr, num_players, num_events):
                 i += 1
 
         # Overwrite the inital declaration IFF there wasn't perfect consensus.
-        if maximum(array_abs(adj_prin_comp, num_players), num_players) != 0:
+        if maximum(array_abs(adjusted_scores, num_players), num_players) != 0:
             with mean_weight = mean(row_reward_weighted, num_players):
                 with i = 0:
                     while i < num_players:
-                        row_reward_weighted[i] = adj_prin_comp[i] * row_reward_weighted[i] / mean_weight
+                        row_reward_weighted[i] = adjusted_scores[i] * row_reward_weighted[i] / mean_weight
                         i += 1
             row_reward_weighted = get_weight(row_reward_weighted, num_players)
 
@@ -595,14 +595,4 @@ def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, repo
                                         while i < num_players:
                                             reporter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], 2^64 - participation)
                                             i += 1
-
-                                with retval = array(num_events + num_players):
-                                    with i = 0:
-                                        while i < num_events:
-                                            retval[i] = outcomes_final[i]
-                                            i += 1
-                                    with i = 0:
-                                        while i < num_players:
-                                            retval[num_events + i] = reporter_bonus[i]
-                                            i += 1
-                                    return(retval, items=num_events+num_players)
+                                    return(reporter_bonus, items=num_players)

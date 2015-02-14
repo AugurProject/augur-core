@@ -277,11 +277,11 @@ def test_contract(contract):
     # display(new2, "new2:", show_all=True)
 
     arglist = [old, new1, new2, set1, set2, scores, num_players, num_events]
-    adj_prin_comp = serpent_function(s, c, "pca_adjust", "aaaaaaii", args=arglist)
+    adjusted_scores = serpent_function(s, c, "pca_adjust", "aaaaaaii", args=arglist)
 
-    # display(adj_prin_comp, "adj_prin_comp:", show_all=True)
+    # display(adjusted_scores, "adjusted_scores:", show_all=True)
 
-    arglist = [adj_prin_comp, reputation_fixed, num_players, num_events]
+    arglist = [adjusted_scores, reputation_fixed, num_players, num_events]
     smooth_rep = serpent_function(s, c, "smooth", "aaii", args=arglist)
 
     # display(reports_filled, "reports_filled:", show_all=True)
@@ -304,13 +304,10 @@ def test_contract(contract):
     # display(consensus_reward, "Consensus reward:", show_all=True)
 
     arglist = [outcomes_final, consensus_reward, smooth_rep, reports_mask, num_players, num_events]
-    result = serpent_function(s, c, "participation", "aaaaii", args=arglist)
-    result = np.array(result)
-    outcomes_final = result[0:num_events].tolist()
-    reporter_bonus = result[num_events:].tolist()
+    reporter_bonus = serpent_function(s, c, "participation", "aaaaii", args=arglist)
 
     display(loading_vector, "Loadings:", show_all=True)
-    display(adj_prin_comp, "Adjusted loadings:")
+    display(adjusted_scores, "Adjusted scores:")
     display(scores, "Scores:")
     display(smooth_rep, "Updated reputation:")
     display(outcomes_final, "Outcomes (final):")
