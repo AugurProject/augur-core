@@ -5,7 +5,6 @@ augur-serpent
 	# MVP
 		# trading fees for markets
 		# voting period fixes / when can / can't vote / when things up for voting
-		# update api
 	# make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
 	# min/max to fixed poss.
 
@@ -15,6 +14,7 @@ augur-serpent
 	# make code updatable + work with etherex & chow (bitsquare, coineffine other decentralized exchanges as well)
 		# chow exchange needs a way to prevent two people from claiming an order, sending bitcoin, then being screwed unless altruism due to its use of spv proofs (suggest a claim tx w/ possible small ether bond and during that time no one else can claim the exchange tx - but if you wait too long you lose the bond + it becomes open again, something like that)
 	# stablecoin
+	# https://github.com/ethereum/wiki/wiki/Ethereum-Natural-Specification-Format
 
 ### Version 0.4 (Awesome fun stuff - April):
 	# make sure this follows paul's whitepaper well	
