@@ -251,7 +251,7 @@ macro lsLmsr($marketID):
 # z = liquidity / (1+(alpha*n*ln(n)))
 # initialLiquidity is initial number of shares of each outcome you want to buy/initialize/set
 def createMarket(branch, description:str, alpha, initialLiquidity, events:arr):
-    if(!self.Branches[branch].periodLength || description==0 || !initialLiquidity || !alpha || alpha <= (2^64 / 132)):
+    if(!self.Branches[branch].periodLength || description==0 || !initialLiquidity || alpha <= (2^64 / 132)):
         return(0)
     # check that events have same exp. dates && branch
     i = 0
@@ -778,11 +778,11 @@ def closeMarket(branch, market):
             elif(outcomeThree<minValueThree):
                 outcomeThree = minValueThree
 
-            outcomeOneHighSidePercent = 2^64*(outcomeOne - 2^64*minValueOne)/(2^64*maxValueOne - 2^64*minValueOne)
+            outcomeOneHighSidePercent = 2^64*(outcomeOne - 2^64*minValueOne) / (2^64*maxValueOne - 2^64*minValueOne)
             outcomeOneLowSidePercent = 2^64 - outcomeOneHighSidePercent
-            outcomeTwoHighSidePercent = 2^64*(outcomeTwo - 2^64*minValueTwo)/(2^64*maxValueTwo - 2^64*minValueTwo)
+            outcomeTwoHighSidePercent = 2^64*(outcomeTwo - 2^64*minValueTwo) / (2^64*maxValueTwo - 2^64*minValueTwo)
             outcomeTwoLowSidePercent = 2^64 - outcomeTwoHighSidePercent
-            outcomeThreeHighSidePercent = 2^64*(outcomeThree - 2^64*minValueThree)/(2^64*maxValueThree - 2^64*minValueThree)
+            outcomeThreeHighSidePercent = 2^64*(outcomeThree - 2^64*minValueThree) / (2^64*maxValueThree - 2^64*minValueThree)
             outcomeThreeLowSidePercent = 2^64 - outcomeThreeHighSidePercent
             
             # price is in fixed point
@@ -851,9 +851,9 @@ def closeMarket(branch, market):
             elif(outcomeTwo<minValueTwo):
                 outcomeTwo = minValueTwo
 
-            outcomeOneHighSidePercent = 2^64*(outcomeOne - 2^64*minValueOne)/(2^64*maxValueOne - 2^64*minValueOne)
+            outcomeOneHighSidePercent = 2^64*(outcomeOne - 2^64*minValueOne) / (2^64*maxValueOne - 2^64*minValueOne)
             outcomeOneLowSidePercent = 2^64 - outcomeOneHighSidePercent
-            outcomeTwoHighSidePercent = 2^64*(outcomeTwo - 2^64*minValueTwo)/(2^64*maxValueTwo - 2^64*minValueTwo)
+            outcomeTwoHighSidePercent = 2^64*(outcomeTwo - 2^64*minValueTwo) / (2^64*maxValueTwo - 2^64*minValueTwo)
             outcomeTwoLowSidePercent = 2^64 - outcomeTwoHighSidePercent
 
             # price is in fixed point
@@ -911,7 +911,7 @@ def closeMarket(branch, market):
                 outcome = minValue
             # price is in fixed point
             #share two goes with the high side
-            pricePerShare2 = 2^64*(outcome - 2^64*minValue)/(2^64*maxValue - 2^64*minValue)
+            pricePerShare2 = 2^64*(outcome - 2^64*minValue) / (2^64*maxValue - 2^64*minValue)
             #share one goes with the low side of the calc
             pricePerShare1 = 2^64 - pricePerShare1
             # distribute cashcoin to the people who won money by holding winning shares

@@ -6,8 +6,8 @@ augur-serpent
 		# trading fees for markets
 		# voting period fixes / when can / can't vote / when things up for voting
 		# update api
-	# division of fixedpoint to lose least precision
 	# make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
+	# min/max to fixed poss.
 
 ### Version 0.5 (More fun features - May and Beyond):
 	# need to add audits
