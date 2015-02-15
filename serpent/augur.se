@@ -61,7 +61,8 @@ data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, repo
     # sharesPurchased states starts at 1 - (same for participants[].shares[] array)
 # Participants is a 0 indexed array of participants, their cashIDs, && the shares in each outcome they've purchased of an event
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
-data Markets[](branch, events[], sharesPurchased[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcome, alpha, cumulativeScale, numOutcomes, tradingPeriod)
+# tradingFee is a percent in fixedPoint
+data Markets[](branch, events[], sharesPurchased[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcome, alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee)
 
 data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
@@ -250,8 +251,9 @@ macro lsLmsr($marketID):
 # z is the optimal initial vector for each outcome
 # z = liquidity / (1+(alpha*n*ln(n)))
 # initialLiquidity is initial number of shares of each outcome you want to buy/initialize/set
-def createMarket(branch, description:str, alpha, initialLiquidity, events:arr):
-    if(!self.Branches[branch].periodLength || description==0 || !initialLiquidity || !alpha || alpha <= (2^64 / 132)):
+# tradingFee is a percent in fixedPoint
+def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr):
+    if(!self.Branches[branch].periodLength || description==0 || !initialLiquidity || alpha <= (2^64 / 132) || tradingFee <= 2^64):
         return(0)
     # check that events have same exp. dates && branch
     i = 0
@@ -286,7 +288,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, events:arr):
         return(0)
     tradingPeriod = tradingPeriod / self.Branches[branch].periodLength
     # formation of marketID (hash)
-    marketinfo = string((items=10)+len(description))
+    marketinfo = string((items=11)+len(description))
     marketinfo[0] = MARKET
     marketinfo[1] = tx.origin
     marketinfo[2] = initialLiquidity
@@ -297,7 +299,8 @@ def createMarket(branch, description:str, alpha, initialLiquidity, events:arr):
     marketinfo[7] = alpha
     marketinfo[8] = numOutcomes
     marketinfo[9] = tradingPeriod
-    mcopy(marketinfo+(items=10), description, chars=len(description))
+    marketinfo[10] = tradingFee
+    mcopy(marketinfo+(items=11), description, chars=len(description))
     marketID = sha256(marketinfo, chars=len(marketinfo))
 
     # buy some of all outcomes
@@ -321,6 +324,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, events:arr):
         self.Markets[marketID].cumulativeScale = cumulativeScale
         self.Markets[marketID].numOutcomes = numOutcomes
         self.Markets[marketID].tradingPeriod = tradingPeriod
+        self.Markets[marketID].tradingFee = tradingFee
         # add the market to the branch
         marketCount = self.Branches[branch].marketCount
         self.Branches[branch].markets[marketCount] = marketID
@@ -349,12 +353,17 @@ def buyShares(branch, market, outcome, amount):
   
     # send shares of the event to user address
     # if user doesn't have enough money, revert
-    if(self.cashcoinBalances[tx.origin]<amount*pricePerShare):
+    if(self.cashcoinBalances[tx.origin]<((amount*pricePerShare)+(self.Markets[marketID].tradingFee*amount*pricePerShare/2^64))):
         self.Markets[market].sharesPurchased[outcome] -= amount
         return(0)
     else:
         # send money from user acc. to market address/account
-        self.send(market, pricePerShare*amount)
+        # cost for shares
+        self.send(market, amount*pricePerShare)
+        # half of fees to market creator
+        self.send(self.Info[marketID].creator, (self.Markets[marketID].tradingFee*amount*pricePerShare)/2^65)
+        # other half go to branch
+        self.send(branch, (self.Markets[marketID].tradingFee*amount*pricePerShare)/2^65)
         self.Markets[market].participants[participantNumber].participantID = tx.origin
         self.Markets[market].participants[participantNumber].shares[outcome] += amount
         self.Markets[market].currentParticipant += 1
@@ -383,7 +392,11 @@ def sellShares(branch, market, outcome, amount, participantNumber):
     else:
         # send bitcoin from the market to the user acc.
         self.cashcoinBalances[market] -= priceToPayPerShare*amount
-        self.cashcoinBalances[tx.origin] += priceToPayPerShare*amount
+        # half of fees go to market creator
+        self.cashcoinBalances[self.Info[marketID].creator] +=  (self.Markets[marketID].tradingFee*amount*priceToPayPerShare)/2^65
+        # half go to branch
+        self.cashcoinBalances[branch] += (self.Markets[marketID].tradingFee*amount*priceToPayPerShare)/2^65
+        self.cashcoinBalances[tx.origin] += (priceToPayPerShare*amount - ((self.Markets[marketID].tradingFee*amount*priceToPayPerShare)/2^64))
         self.Markets[market].participants[participantNumber].shares[outcome] -= amount
         return(1)
 
@@ -778,11 +791,11 @@ def closeMarket(branch, market):
             elif(outcomeThree<minValueThree):
                 outcomeThree = minValueThree
 
-            outcomeOneHighSidePercent = 2^64*(outcomeOne - 2^64*minValueOne)/(2^64*maxValueOne - 2^64*minValueOne)
+            outcomeOneHighSidePercent = 2^64*(outcomeOne - 2^64*minValueOne) / (2^64*maxValueOne - 2^64*minValueOne)
             outcomeOneLowSidePercent = 2^64 - outcomeOneHighSidePercent
-            outcomeTwoHighSidePercent = 2^64*(outcomeTwo - 2^64*minValueTwo)/(2^64*maxValueTwo - 2^64*minValueTwo)
+            outcomeTwoHighSidePercent = 2^64*(outcomeTwo - 2^64*minValueTwo) / (2^64*maxValueTwo - 2^64*minValueTwo)
             outcomeTwoLowSidePercent = 2^64 - outcomeTwoHighSidePercent
-            outcomeThreeHighSidePercent = 2^64*(outcomeThree - 2^64*minValueThree)/(2^64*maxValueThree - 2^64*minValueThree)
+            outcomeThreeHighSidePercent = 2^64*(outcomeThree - 2^64*minValueThree) / (2^64*maxValueThree - 2^64*minValueThree)
             outcomeThreeLowSidePercent = 2^64 - outcomeThreeHighSidePercent
             
             # price is in fixed point
@@ -851,9 +864,9 @@ def closeMarket(branch, market):
             elif(outcomeTwo<minValueTwo):
                 outcomeTwo = minValueTwo
 
-            outcomeOneHighSidePercent = 2^64*(outcomeOne - 2^64*minValueOne)/(2^64*maxValueOne - 2^64*minValueOne)
+            outcomeOneHighSidePercent = 2^64*(outcomeOne - 2^64*minValueOne) / (2^64*maxValueOne - 2^64*minValueOne)
             outcomeOneLowSidePercent = 2^64 - outcomeOneHighSidePercent
-            outcomeTwoHighSidePercent = 2^64*(outcomeTwo - 2^64*minValueTwo)/(2^64*maxValueTwo - 2^64*minValueTwo)
+            outcomeTwoHighSidePercent = 2^64*(outcomeTwo - 2^64*minValueTwo) / (2^64*maxValueTwo - 2^64*minValueTwo)
             outcomeTwoLowSidePercent = 2^64 - outcomeTwoHighSidePercent
 
             # price is in fixed point
@@ -911,7 +924,7 @@ def closeMarket(branch, market):
                 outcome = minValue
             # price is in fixed point
             #share two goes with the high side
-            pricePerShare2 = 2^64*(outcome - 2^64*minValue)/(2^64*maxValue - 2^64*minValue)
+            pricePerShare2 = 2^64*(outcome - 2^64*minValue) / (2^64*maxValue - 2^64*minValue)
             #share one goes with the low side of the calc
             pricePerShare1 = 2^64 - pricePerShare1
             # distribute cashcoin to the people who won money by holding winning shares
@@ -933,9 +946,19 @@ def closeMarket(branch, market):
                     n+=1
                 i += 1
 
-        # give back initial liquidity (or as much of it/profits are left)
-        self.cashcoinBalances[self.Info[market].creator] += self.cashcoinBalances[market]
-        self.cashcoinBalances[market] -= self.cashcoinBalances[market]
+        # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
+        initialLiquidity = self.Info[marketID].creationFee
+        if(self.cashcoinBalances[market] > initialLiquidity):
+            # pay back liquidity, split up excess profits
+            self.cashcoinBalances[self.Info[market].creator] += initialLiquidity
+            self.cashcoinBalances[market] -= initialLiquidity
+            self.cashcoinBalances[branch] += self.cashcoinBalances[market] / 2
+            self.cashcoinBalances[self.Info[market].creator] += self.cashcoinBalances[market] / 2
+            self.cashcoinBalances[market] -= self.cashcoinBalances[market]
+        # send whatever's left of the initial liquidity to the creator
+        else:
+            self.cashcoinBalances[self.Info[market].creator] += self.cashcoinBalances[market]
+            self.cashcoinBalances[market] -= self.cashcoinBalances[market]
         return(text("Market closed"): str)
 
 ### P2P parimutuel betting
@@ -1001,13 +1024,9 @@ def api(dataStructure, itemNumber, arrayIndex, ID):
     if(dataStructure==0):
         if(itemNumber==0):
             return(self.Info[ID].typecode)
-        # elif(itemNumber==1):
-        # length=self.Info[ID].descriptionLength
-        # return(load(self.Info[ID].description[0], chars=length):a)
-        # length=self.Info[ID].descriptionLength
-        # data = load(self.Info[ID].description[0], chars=length)
-        # return(data, length/32 + if(length%32,1,0))
-        # return(self.Info[ID].description[])
+        elif(itemNumber==1):
+            length=self.Info[ID].descriptionLength
+            return(load(self.Info[ID].description[0], chars=length))
         elif(itemNumber==2):
             return(self.Info[ID].descriptionLength)
         elif(itemNumber==3):
@@ -1036,6 +1055,8 @@ def api(dataStructure, itemNumber, arrayIndex, ID):
             return(self.Events[ID].minValue)
         elif(itemNumber==4):
             return(self.Events[ID].maxValue)
+        elif(itemNumber==5):
+            return(self.Events[ID].numOutcomes)
     elif(dataStructure==3):
         if(itemNumber==0):
             return(text("Please call the eventsExpApi function"): str)
@@ -1055,22 +1076,21 @@ def api(dataStructure, itemNumber, arrayIndex, ID):
         elif(itemNumber==3):
             return(text("Please call the participants api function"): str)
         elif(itemNumber==4):
-            return(self.Markets[ID].lossLimit)
+            return(self.Markets[ID].lenEvents)
         elif(itemNumber==5):
-            return(self.Markets[ID].tradingFee)
-        elif(itemNumber==6):
-            return(self.Markets[ID].numberEvents)
-        elif(itemNumber==7):
             return(self.Markets[ID].currentParticipant)
-        #remove this
-        elif(itemNumber==8):
+        elif(itemNumber==6):
             return(self.Markets[ID].winningOutcome)
-        elif(itemNumber==9):
+        elif(itemNumber==7):
             return(self.Markets[ID].alpha)
-        elif(itemNumber==10):
-            return(self.Markets[ID].probabilities[arrayIndex])
-        elif(itemNumber==11):
+        elif(itemNumber==8):
             return(self.Markets[ID].cumulativeScale)
+        elif(itemNumber==9):
+            return(self.Markets[ID].numOutcomes)
+        elif(itemNumber==10):
+            return(self.Markets[ID].tradingPeriod)
+        elif(itemNumber==11):
+            return(self.Markets[ID].tradingFee)
     elif(dataStructure==5):
         if(itemNumber==0):
             return(self.p2pBets[ID].eventID)
@@ -1090,6 +1110,34 @@ def eventsExpApi(expDateIndex, itemNumber, arrayIndexOne, arrayIndexTwo, ID):
         return(self.Reporting[ID].eventsExpDates[expDateIndex].totalRepReported)
     elif(itemNumber==3):
         return(self.Reporting[ID].eventsExpDates[expDateIndex].reporters[arrayIndexOne][ArrayIndexTwo])
+    elif(itemNumber==4):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].vSize)
+    elif(itemNumber==5):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].reportsFilled[arrayIndexOne])
+    elif(itemNumber==6):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].reportsMask[arrayIndexOne])
+    elif(itemNumber==7):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].weightedCenteredData[arrayIndexOne])
+    elif(itemNumber==8):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].loadingVector[arrayIndexOne])
+    elif(itemNumber==9):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].scores[arrayIndexOne])
+    elif(itemNumber==10):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].set1[arrayIndexOne])
+    elif(itemNumber==11):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].set2[arrayIndexOne])
+    elif(itemNumber==12):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].old[arrayIndexOne])
+    elif(itemNumber==13):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].new1[arrayIndexOne])
+    elif(itemNumber==14):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].new2[arrayIndexOne])
+    elif(itemNumber==15):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].adjPrinComp[arrayIndexOne])
+    elif(itemNumber==16):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].smoothRep[arrayIndexOne])
+    elif(itemNumber==17):
+        return(self.Reporting[ID].eventsExpDates[expDateIndex].outcomesFinal[arrayIndexOne])
 
 def reputationApi(reputationIndex, itemNumber, branchID):
     if(itemNumber==0):

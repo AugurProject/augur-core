@@ -3,11 +3,21 @@ augur-serpent
 
 ### To do:
 	# MVP
-		# trading fees for markets
 		# voting period fixes / when can / can't vote / when things up for voting
-		# update api
-	# division of fixedpoint to lose least precision
+			however if you don't sef
+        things we're voting on
+
+        if blockNum / periodLength is say 5 and eventsExpDates[5]
+
+        the current vote period should be on things from eventsExpDates 4
+
+        then once blockNum / periodLength is say 6 and eventsExpDates[6]
+
+       	votePeriod 4 should close and the currentVotePeriod should be from
+   		eventsExpDates 5 (anyone can call the consensus function for voteperiod 4 at this point)
+
 	# make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
+	# min/max to fixed poss.
 
 ### Version 0.5 (More fun features - May and Beyond):
 	# need to add audits
@@ -15,10 +25,12 @@ augur-serpent
 	# make code updatable + work with etherex & chow (bitsquare, coineffine other decentralized exchanges as well)
 		# chow exchange needs a way to prevent two people from claiming an order, sending bitcoin, then being screwed unless altruism due to its use of spv proofs (suggest a claim tx w/ possible small ether bond and during that time no one else can claim the exchange tx - but if you wait too long you lose the bond + it becomes open again, something like that)
 	# stablecoin
+	# https://github.com/ethereum/wiki/wiki/Ethereum-Natural-Specification-Format
 
 ### Version 0.4 (Awesome fun stuff - April):
+	# go over stuff in close and redeem txs
 	# make sure this follows paul's whitepaper well	
-	# reward whoever does redeem and close market according to gas cost
+		# reward whoever does close market according to gas cost (pay gas fee in cashcoin to miner)
 	# zeroing of array values
 	# hash first frontrunning prevention mechanism
 	# salt hash vote mechanism
@@ -29,4 +41,3 @@ augur-serpent
 	# fast voting cycle first few days to get the <60% problem away from a branch, e.g. what if not enough people vote
 	# rapid rbcr anytime to vote i'm alive if <60% of people vote after a few cycles or something
 	# max number of owners in a branch of rep. issues w/ sending rep etc
-	# go over stuff in close and redeem txs
