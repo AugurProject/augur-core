@@ -73,23 +73,26 @@ def exp_test_code(max_n):
     return ''.join(map(exp_interp, range(1, max_n+1)))
 
 def main():
-    max_n = 14
-    ecode = exp_test_code(max_n)
-    lcode = log_test_code(max_n)
-    trials = 100
+    with timer():
+        max_n = 14
+        ecode = exp_test_code(max_n)
+        lcode = log_test_code(max_n)
+        trials = 100
 
-    efunc_dict = OrderedDict()
-    exp_max = 128
-    for i in range(1,max_n+1):
-        efunc_dict['exp%d'%i] = ([0, exp_max], gmpy2.exp)
+        efunc_dict = OrderedDict()
+        exp_max = 128
+        for i in range(1,max_n+1):
+            efunc_dict['exp%d'%i] = ([0, exp_max], gmpy2.exp)
 
-    lfunc_dict = OrderedDict()
-    log_max = gmpy2.exp(128)
-    for i in range(1,max_n+1):
-        lfunc_dict['log%d'%i] = ([0, log_max], gmpy2.log)
+        lfunc_dict = OrderedDict()
+        log_max = gmpy2.exp(128)
+        for i in range(1,max_n+1):
+            lfunc_dict['log%d'%i] = ([0, log_max], gmpy2.log)
 
-    test_code(ecode, efunc_dict, trials)
-    test_code(lcode, lfunc_dict, trials)
+        print "Testing exp code"
+        test_code(ecode, efunc_dict, trials)
+        print "Testing log code"
+        test_code(lcode, lfunc_dict, trials)
 
 if __name__ == '__main__':
     main()

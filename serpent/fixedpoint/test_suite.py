@@ -6,6 +6,7 @@ sys.stderr = cStringIO.StringIO()
 from pyethereum import tester as t
 sys.stderr = _
 
+from contextlib import contextmanager
 from collections import namedtuple
 import random
 import gmpy2
@@ -69,3 +70,10 @@ def test_code(filename, func_dict, trials):
     contract = compile(filename)
     for thunk in thunks(contract, func_dict):
         printf('\t' + str(test_thunk(thunk, trials)) + '\n')
+
+@contextmanager
+def timer():
+    start = time.time()
+    yield
+    print
+    print "Runtime: %.2f seconds" % (time.time() - start)
