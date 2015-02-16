@@ -1,2 +1,0 @@
-def init():
-	self.storage[msg.sender] = 10000

@@ -102,7 +102,11 @@ def send(recver, value):
     else:
         return(0)
 
-def send(recver, value, from):
+def faucet():
+    sender = tx.origin
+    self.cashcoinBalances[sender] = 10000*2^64
+
+def sendFrom(recver, value, from):
     if(from!=tx.origin):
         return(0)
     senderBalance = self.cashcoinBalances[from]
@@ -209,7 +213,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
             self.Info[eventID].typecode = EVENT
             self.Info[eventID].creator = tx.origin
             self.Info[eventID].creationFee = 42*2^64
-            self.Info[eventID].descriptionLengthF = len(description)
+            self.Info[eventID].descriptionLength = len(description)
             save(self.Info[eventID].description[0], description, chars=len(description))
             self.Events[eventID].branch = branch
             self.Events[eventID].expirationDate = expDate
@@ -498,10 +502,10 @@ def redeem(branch, step):
                 scaledMinFixed[j] = -1*2^64
                 scaledMaxFixed[j] = 1*2^64
             j+=1
-        result = self.interpolate(votes, reputation, scaled, scaledMaxFixed, scaledMinFixed)
+        result = self.interpolate(votes, reputation, scaled, scaledMaxFixed, scaledMinFixed, outsz=2*vSize)
         self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize = vSize
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].reportsFilled[0], result, items=vSize)
-        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].reportsMask[0], slice(result, vSize, 2*vSize), items=vSize)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].reportsMask[0], slice(result, items=vSize, items=2*vSize), items=vSize)
         #def array_saveload():
         #a = [1,2,3,4,5]
         #save(self.a[0], a, items=5)
@@ -534,9 +538,9 @@ def redeem(branch, step):
         vSize = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize
         reportsFilled = array(self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
         reportsFilled = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].reportsFilled[0], items=self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
-        result = self.center(reportsFilled, reputation, scaled, scaledMaxFixed, scaledMinFixed, 5)
+        result = self.center(reportsFilled, reputation, scaled, scaledMaxFixed, scaledMinFixed, 5, outsz=vSize+numEvents+1)
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].weightedCenteredData[0], result, items=vSize)
-        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[0], slice(result, vSize, len(result)), items=(len(result)-vSize))
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[0], slice(result, items=vSize, items=len(result)), items=(len(result)-vSize))
     elif(step==2):
         vSize = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize
         # loading vector is numEvents + 1 long, the last element says how many iterations of it are left, should check this
@@ -555,7 +559,7 @@ def redeem(branch, step):
             i+=1
         # multistep pca
         # call this 5 times
-        loadingVector = self.pca_loadings(loadingVector, weightedCenteredData, reputation, numReports, numEvents)
+        loadingVector = self.pca_loadings(loadingVector, weightedCenteredData, reputation, numReports, numEvents, outsz=numEvents+1)
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[0], loadingVector, items=len(loadingVector))
     elif(step==3):
         vSize = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize
@@ -565,17 +569,17 @@ def redeem(branch, step):
         loadingVector = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].loadingVector[0], items=numEvents+1)
         weightedCenteredData = array(self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
         weightedCenteredData = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].weightedCenteredData[0], items=self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
-        scores = self.pca_scores.(loadingVector, weightedCenteredData, numReports, numEvents)
+        scores = self.pca_scores(loadingVector, weightedCenteredData, numReports, numEvents, outsz=numReports)
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].scores[0], scores, items=len(scores))
     elif(step==4):
         numEvents = self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents
         numReports = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize / numEvents
         scores = array(numReports)
         scores = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].scores[0], items=len(numReports))
-        result = self.calibrate_sets(scores, numReports, numEvents)
+        result = self.calibrate_sets(scores, numReports, numEvents, outsz=3*numReports)
         # loads the first set of numReports items from result
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].set1[0], result, items=numReports)
-        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].set2[0], slice(result, numReports, 2*numReports), items=numReports)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].set2[0], slice(result, items=numReports, items=2*numReports), items=numReports)
     elif(step==5):
         vSize = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize
         reportsFilled = array(self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
@@ -592,10 +596,10 @@ def redeem(branch, step):
         set2 = array(numReports)
         set1 = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].set1[0], items=numReports)
         set2 = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].set2[0], items=numReports)
-        result = self.calibrate_wsets(set1, set2, reputation, reportsFilled, numReports, numEvents)
-        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].old[0], result, numEvents)
-        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].new1[0], slice(result, numEvents, 2*numEvents), items=numEvents)
-        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].new2[0], slice(result, 2*numEvents, 3*numEvents), items=numEvents)
+        result = self.calibrate_wsets(set1, set2, reputation, reportsFilled, numReports, numEvents, outsz=3*numEvents)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].old[0], result, items=numEvents)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].new1[0], slice(result, items=numEvents, items=2*numEvents), items=numEvents)
+        save(self.Reporting[branch].eventsExpDates[currentVotePeriod].new2[0], slice(result, items=2*numEvents, items=3*numEvents), items=numEvents)
     elif(step==6):
         vSize = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize
         numEvents = self.Reporting[branch].eventsExpDates[currentVotePeriod].numberEvents
@@ -612,7 +616,7 @@ def redeem(branch, step):
         set1 = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].set1[0], items=numReports)
         set2 = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].set2[0], items=numReports)
         scores = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].scores[0], items=numReports)
-        adjPrinComp = self.pca_adjust(old, new1, new2, set1, set2, scores, numReports, numEvents)
+        adjPrinComp = self.pca_adjust(old, new1, new2, set1, set2, scores, numReports, numEvents, outsz=numReports)
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].adjPrinComp[0], adjPrinComp, items=len(adjPrinComp))
     elif(step==7):
         vSize = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize
@@ -624,7 +628,7 @@ def redeem(branch, step):
             i+=1
         adjPrinComp = array(numReports)
         adjPrinComp = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].adjPrinComp[0], items=numReports)
-        smoothRep = self.smooth(adjPrinComp, reputation, numReports, numEvents)
+        smoothRep = self.smooth(adjPrinComp, reputation, numReports, numEvents, outsz=numReports)
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].smoothRep[0], smoothRep, items=len(smoothRep))
     elif(step==8):
         vSize = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize
@@ -638,7 +642,7 @@ def redeem(branch, step):
         reportsFilled = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].reportsFilled[0], items=self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize)
         smoothRep = array(numReports)
         smoothRep = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].smoothRep[0], items=numReports)
-        result = self.consensus(smoothRep, reputation, reportsFilled, numReports, numEvents)
+        result = self.consensus(smoothRep, reputation, reportsFilled, numReports, numEvents, outsz=numEvents)
         save(self.Reporting[branch].eventsExpDates[currentVotePeriod].outcomesFinal[0], result, items=numEvents)
     elif(step==9):
         vSize = self.Reporting[branch].eventsExpDates[currentVotePeriod].vSize
@@ -650,7 +654,7 @@ def redeem(branch, step):
         reportsMask = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].reportsMask[0], items=vSize)
         outcomesFinal = array(numEvents)
         outcomesFinal = load(self.Reporting[branch].eventsExpDates[currentVotePeriod].outcomesFinal[0], items=numEvents)
-        reporterBonus = self.participation(outcomesFinal, smoothRep, reportsMask, numReports, numEvents)
+        reporterBonus = self.participation(outcomesFinal, smoothRep, reportsMask, numReports, numEvents, outsz=numReports)
 
         # get event ID for each event by taking the x index in the votes arrays - shoving it in reporting.events[]
         # && getting the cooresponding ID
@@ -692,6 +696,7 @@ def closeMarket(branch, market):
             if(outcome==2^63):
                 # return all t3h $$$ - (@ 50 cents a share i presume)
                 # give event bond money to reporters
+                return(0)
             elif(outcome==0):
                 return(0)
             if(n==0):
@@ -965,7 +970,7 @@ def makeBet(eventID, amtToBet):
     betData = array(2)
     betData[0] = eventID
     betData[1] = block.number
-    betID = sha256(branchinfo, 2)
+    betID = sha256(branchinfo, items=2)
     self.p2pBets[betID].eventID = betData[0]
     self.p2pBets[betID].amtToBet = amtToBet
 
@@ -987,9 +992,9 @@ def closeBet(betID):
     if(self.Events[self.p2pBets[betID].eventID].outcome == 0):
         return(0)
     # pay out depending on outcome
-    if(self.cashcoinBalances[betID+0]==self.p2pBets[betID].amtToBet && self.cashcoin_balances[betID+1]==self.p2pBets[betID].amtToBet):
-        self.cashcoinBalances[betID+0] -= self.cashcoin_balances[betID+0]
-        self.cashcoinBalances[betID+1] -= self.cashcoin_balances[betID+1]
+    if(self.cashcoinBalances[betID+0]==self.p2pBets[betID].amtToBet && self.cashcoinBalances[betID+1]==self.p2pBets[betID].amtToBet):
+        self.cashcoinBalances[betID+0] -= self.cashcoinBalances[betID+0]
+        self.cashcoinBalances[betID+1] -= self.cashcoinBalances[betID+1]
         if(self.Events[self.p2pBets[betID].eventID].outcome):
             self.cashcoinBalances[self.p2pBets[betID].outcomeOneBettor] += self.p2pBets[betID].amtToBet*2
         elif(self.Events[self.p2pBets[betID].eventID].outcome == -1):
@@ -1150,7 +1155,7 @@ def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, 
     if(itemNumber==0):
         return(self.Markets[marketID].participants[participantIndex].participantID)
     elif(itemNumber==1):
-        return(self.Markets[marketID].participants[participantIndex].event[eventID].shares[outcomeNumber])
+        return(self.Markets[marketID].participants[participantIndex].shares[outcomeNumber])
 
 inset('fxp_macros_lagrange.se')
 inset('consensus.se')
