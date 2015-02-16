@@ -70,7 +70,6 @@ data cashcoinBalances[]
 
 def init():
     # test initial funds
-    fx_init(0)
     self.cashcoinBalances[tx.origin] = 1000000*2^64
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
     self.Reporting[1010101].reputation[0].repValue = 47
@@ -243,9 +242,9 @@ macro lsLmsr($marketID):
                     with $a = 0:
                             while $i <= $l:
                                 $a = self.Markets[$marketID].sharesPurchased[$i]
-                                $sumExp += self.exp($a*2^64/$Bq)
+                                $sumExp += fxp_exp($a*2^64/$Bq)
                                 $i += 1
-                            $Bq*self.log($sumExp)/2^64
+                            $Bq*fxp_log($sumExp)/2^64
 
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
@@ -1153,5 +1152,5 @@ def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, 
     elif(itemNumber==1):
         return(self.Markets[marketID].participants[participantIndex].event[eventID].shares[outcomeNumber])
 
-inset('fixedpoint.se')
+inset('fxp_macros_lagrange.se')
 inset('consensus.se')
