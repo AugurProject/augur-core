@@ -4,37 +4,30 @@ augur-serpent
 ### To do:
 	# MVP
 		# voting period fixes / when can / can't vote / when things up for voting
-			however if you don't sef
-        things we're voting on
-
         if blockNum / periodLength is say 5 and eventsExpDates[5]
-
         the current vote period should be on things from eventsExpDates 4
-
         then once blockNum / periodLength is say 6 and eventsExpDates[6]
-
        	votePeriod 4 should close and the currentVotePeriod should be from
    		eventsExpDates 5 (anyone can call the consensus function for voteperiod 4 at this point)
-
-	# make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
 	# min/max to fixed poss.
 
 ### Version 0.5 (More fun features - May and Beyond):
 	# need to add audits
 	# special cfds + public good funding + poss. futarchy
 	# make code updatable + work with etherex & chow (bitsquare, coineffine other decentralized exchanges as well)
-		# chow exchange needs a way to prevent two people from claiming an order, sending bitcoin, then being screwed unless altruism due to its use of spv proofs (suggest a claim tx w/ possible small ether bond and during that time no one else can claim the exchange tx - but if you wait too long you lose the bond + it becomes open again, something like that)
 	# stablecoin
-	# https://github.com/ethereum/wiki/wiki/Ethereum-Natural-Specification-Format
+	# make sure this follows paul's whitepaper well	
+	# zeroing of array values
+	# consensus bond mechanism cheaper
+	# VPM
 
 ### Version 0.4 (Awesome fun stuff - April):
 	# go over stuff in close and redeem txs
-	# make sure this follows paul's whitepaper well	
+	# make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
 		# reward whoever does close market according to gas cost (pay gas fee in cashcoin to miner)
-	# zeroing of array values
 	# hash first frontrunning prevention mechanism
 	# salt hash vote mechanism
-	# consensus bond mechanism cheaper
+	# p+e fix?
 
 ### Version 0.3 (The Voting Upgrade - March):
 	# randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot
