@@ -102,6 +102,10 @@ def send(recver, value):
 	else:
 		return(0)
 
+def faucet():
+	sender = tx.origin
+	self.cashcoinBalances[sender] = 10000*2^64
+
 def sendFrom(recver, value, from):
 	if(from!=tx.origin):
 		return(0)
