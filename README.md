@@ -10,7 +10,6 @@ augur-serpent
        	votePeriod 4 should close and the currentVotePeriod should be from
    		eventsExpDates 5 (anyone can call the consensus function for voteperiod 4 at this point)
 	# min/max to fixed poss.
-	# update eventsexpdates stuff
 	# do winningOutcomes stuff
 
 ### Version 0.5 (More fun features - May and Beyond):
