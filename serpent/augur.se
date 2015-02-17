@@ -27,15 +27,14 @@ MARKET = 2
 # Instead of putting it in each entity, we put all the
 # metadata here.
 # Info's index is the hash of the item we're getting info on
-data Info[](typecode, description[2048], descriptionLength, creator, creationFee)
+data Info[](description[2048], descriptionLength, creator, creationFee)
 
 # CurrentVotePeriod is the current index in eventsExpDates
 # Branches' index is the hash of the branch (aka branchID)
 # RepRequired is the amount of reputation required to reach quorem
-# markets[] is a 0 index array of market hashes (a.k.a. marketID)
 # currentVotePeriod is a nonce that tells us which bucket of events up to be
 # voted on in the current vote period
-data Branches[](currentVotePeriod, markets[], marketCount, periodLength, repRequired)
+data Branches[](currentVotePeriod, periodLength, repRequired)
 
 # Events' index is the eventID
 # a binary outcome has 0 for min && 1 for max value (ditto for categorical even though not actually true)
@@ -45,13 +44,16 @@ data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
 # Reporting index is the branchID
 # Reporters index is the rep. address
 # We 0 index reputation so can walk thru for consensus
-# EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
+# EventsExpDates index is the currentVotePeriod or in the future if an  event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
 # v_size = numReports * numEvents
 # reportsFilled, reportsMask, weightedCenteredData, loadingVector, scores, set1, set2, old,
 # new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
-data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, reporters[][], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[]), reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
+data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
+
+# [branchID][votingPeriod]
+data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market in the format of
@@ -62,7 +64,8 @@ data Reporting[](eventsExpDates[](numberEvents, events[], totalRepReported, repo
 # Participants is a 0 indexed array of participants, their cashIDs, && the shares in each outcome they've purchased of an event
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
-data Markets[](branch, events[], sharesPurchased[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcome, alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee)
+# tradingPeriod is which 
+data Markets[](events[], sharesPurchased[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee)
 
 data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
@@ -71,7 +74,7 @@ data cashcoinBalances[]
 def init():
     # test initial funds
     self.cashcoinBalances[tx.origin] = 1000000*2^64
-    self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
+    self.Reporting[1010101].repIDtoIndex[tix.origin] = 0
     self.Reporting[1010101].reputation[0].repValue = 47
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
     self.Reporting[1010101].numberReporters = 1
@@ -105,6 +108,7 @@ def send(recver, value):
 def faucet():
     sender = tx.origin
     self.cashcoinBalances[sender] = 10000*2^64
+    return(1)
 
 def sendFrom(recver, value, from):
     if(from!=tx.origin):
@@ -229,7 +233,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         else:
             return(0)
 
-# alpha is equal to v/(n*log(n)) where v is the max percent commission,
+# alpha is equal to v/(n*log(n)) where v is the max percent commission
 # && n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
 macro lsLmsr($marketID):
@@ -967,10 +971,11 @@ def closeMarket(branch, market):
 
 ### P2P parimutuel betting
 def makeBet(eventID, amtToBet):
-    betData = array(2)
+    betData = array(3)
     betData[0] = eventID
     betData[1] = block.number
-    betID = sha256(branchinfo, items=2)
+    betData[2] = tx.origin
+    betID = sha256(branchinfo, items=3)
     self.p2pBets[betID].eventID = betData[0]
     self.p2pBets[betID].amtToBet = amtToBet
 

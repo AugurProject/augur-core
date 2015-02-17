@@ -10,6 +10,8 @@ augur-serpent
        	votePeriod 4 should close and the currentVotePeriod should be from
    		eventsExpDates 5 (anyone can call the consensus function for voteperiod 4 at this point)
 	# min/max to fixed poss.
+	# update eventsexpdates stuff
+	# do winningOutcomes stuff
 
 ### Version 0.5 (More fun features - May and Beyond):
 	# need to add audits
@@ -34,3 +36,4 @@ augur-serpent
 	# fast voting cycle first few days to get the <60% problem away from a branch, e.g. what if not enough people vote
 	# rapid rbcr anytime to vote i'm alive if <60% of people vote after a few cycles or something
 	# max number of owners in a branch of rep. issues w/ sending rep etc
+
