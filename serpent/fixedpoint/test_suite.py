@@ -8,6 +8,7 @@ sys.stderr = _
 
 from contextlib import contextmanager
 from collections import namedtuple
+from bitcoin import encode, decode
 import random
 import gmpy2
 import time
