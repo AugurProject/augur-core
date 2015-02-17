@@ -967,6 +967,11 @@ def closeMarket(branch, market):
         else:
             self.cashcoinBalances[self.Info[market].creator] += self.cashcoinBalances[market]
             self.cashcoinBalances[market] -= self.cashcoinBalances[market]
+        q = 0
+        while(winningOutcomes[q]!=0):
+            self.Markets[market].winningOutcomes[q] = winningOutcomes[q]
+            q += 1
+            
         return(text("Market closed"): str)
 
 ### P2P parimutuel betting
