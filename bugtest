@@ -1,0 +1,31 @@
+#   var evm = '0x...';
+#   var address = web3.eth.transact({code: evm});
+#   serpent mk_full_signature and set desc to output
+#   var contract = web3.eth.contract(address, desc);
+
+
+data cashcoinBalances[]
+
+def init():
+    # test initial funds
+    self.cashcoinBalances[tx.origin] = 1000000*2^64
+
+def faucet():
+    sender = tx.origin
+    self.cashcoinBalances[sender] = 10000*2^64
+    return(10000*2^64)
+
+# Proportional distance from zero, inputs are fixed point
+macro get_weight($a, $asz):
+    with total = 0:
+        with i = 0:
+            while i < $asz:
+                $a[i] = abs($a[i])
+                total += $a[i]
+                i += 1
+        with wt = array($asz):
+            with i = 0:
+                while i < $asz:
+                    wt[i] = $a[i] * 2^64 / total
+                    i += 1
+            wt

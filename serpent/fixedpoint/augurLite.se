@@ -234,3 +234,4 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
 			return(eventID)
 		else:
 			return(0)
+
