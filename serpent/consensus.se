@@ -28,81 +28,70 @@
 # INDETERMINATE = 2^63  # 0.5
 # NO_RESPONSE = 0       # 0
 
-# Arithmetic mean of an array, takes fixed-point inputs
-macro mean($a, $asz):
-    with total = 0:
-        with i = 0:
-            while i < $asz:
-                total += $a[i]
-                i += 1
-        total / $asz
-
 # Sum elements of array
 macro sum($a):
-    with $asz = len($a):
-        with $total = 0:
-            with $i = 0:
-                while $i < $asz:
-                    $total += $a[$i]
-                    $i += 1
-                $total
+    $len = len($a)
+    $total = 0
+    $i = 0
+    while $i < $len:
+        $total += $a[$i]
+        $i += 1
+    $total
+
+# Arithmetic mean
+macro mean($a):
+    sum($a) / len($a)
+
+macro abs($n):
+    if($n<0, -$n, $n)
 
 # Proportional distance from zero, inputs are fixed point
-macro get_weight($a, $asz):
-    with total = 0:
-        with i = 0:
-            while i < $asz:
-                $a[i] = abs($a[i])
-                total += $a[i]
-                i += 1
-        with wt = array($asz):
-            with i = 0:
-                while i < $asz:
-                    wt[i] = $a[i] * 2^64 / total
-                    i += 1
-            wt
+macro get_weight($a):
+    $len = len($a)
+    $total = 0
+    $i = 0
+    while $i < $len:
+        $a[$i] = abs($a[$i])
+        $total += $a[$i]
+        $i += 1
+    $wt = array($len)
+    $i = 0
+    while $i < $len:
+        $wt[$i] = $a[$i] * 2^64 / $total
+        $i += 1
+    $wt
 
 # Bins values to -1, 0, and 1
 macro catch($x):
-    if $x < -2^64 / 10:
-        caught = -2^64
-    elif $x > 2^64 / 10:
-        caught = 2^64
-    else:
-        caught = 0
-    caught
-
-# Absolute value
-macro abs($x):
-    with absval = $x:
-        if $x < 0:
-            absval = -$x
-        absval
+    if($x < -(2^64 / 10), -(2^64), if($x > (2^64 / 10), 2^64, 0))
 
 # Absolute value of all array elements
-macro array_abs($a, $asz):
-    with absval = array($asz):
-        with i = 0:
-            while i < $asz:
-                absval[i] = abs($a[i])
-                i += 1
-        absval
+macro array_abs($a):
+    $len = len($a)
+    $absval = array($len)
+    $i = 0
+    while $i < $len:
+        $absval[$i] = abs($a[$i])
+        $i += 1
+    $absval
 
 # Minimum value of array
-macro minimum($a, $asz):
-    with minval = $a[0]:
-        with i = 1:
-            while i < $asz:
-                if $a[i] < minval:
-                    minval = $a[i]
-                i += 1
-        minval
+macro minimum($a):
+    $min = $a[0]
+    $i = 1
+    $len = len($a)
+    while $i < $len:
+        if $a[$i] < $min:
+            $min = $a[$i]
+        $i += 1
+    $min
 
 # Maximum value of array
-macro maximum($a, $asz):
-    with maxval = $a[0]:
-        with i = 1:
-            while i < $asz:
+macro maximum($a):
+    $max = $a[0]
+    $i = 1
+    $len = len($a)
+    while $i < $len:
                 if $a[i] > maxval:
                     maxval = $a[i]
                 i += 1
@@ -479,7 +468,7 @@ def smooth(adjusted_scores:arr, reputation:arr, num_players, num_events):
 
         # Overwrite the inital declaration IFF there wasn't perfect consensus.
         if maximum(array_abs(adjusted_scores, num_players), num_players) != 0:
-            with mean_weight = mean(row_reward_weighted, num_players):
+            with mean_weight = mean(row_reward_weighted):
                 with i = 0:
                     while i < num_players:
                         row_reward_weighted[i] = adjusted_scores[i] * row_reward_weighted[i] / mean_weight
