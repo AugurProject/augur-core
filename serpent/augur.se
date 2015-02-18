@@ -74,16 +74,14 @@ data cashcoinBalances[]
 def init():
     # test initial funds
     self.cashcoinBalances[tx.origin] = 1000000*2^64
-    self.Reporting[1010101].repIDtoIndex[tix.origin] = 0
+    self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
     self.Reporting[1010101].reputation[0].repValue = 47
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
     self.Reporting[1010101].numberReporters = 1
-    self.Info[1010101].typecode = 0
     self.Info[1010101].description[] = "initial branch"
     self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
     self.Info[1010101].creationFee = 10
     self.Branches[1010101].currentVotePeriod = block.number / 403200
-    self.Branches[1010101].marketCount = 0
     self.Branches[1010101].periodLength = 403200
     self.Branches[1010101].repRequired = 14000000
 
@@ -170,7 +168,6 @@ def makeSubBranch(description:str, periodLength, parent, repRequired):
     branchID = sha256(branchinfo, chars=len(branchinfo))
 
     if(!self.Branches[branchID].periodLength && !self.Info[branchID].creator && self.send(branchID, 47*2^64)):
-        self.Info[branchID].typecode = BRANCH
         self.Info[branchID].creator = tx.origin
         self.Info[branchID].creationFee = 47*2^64
         self.Info[branchID].descriptionLength = len(description)
@@ -214,7 +211,6 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     # send fee and bond
     if(self.balance(tx.origin)>=85*2^64):
         if (!self.Info[eventID].creator && !self.Events[eventID].branch && self.send(branch, 42*2^64) && self.send(eventID, 43*2^64)):
-            self.Info[eventID].typecode = EVENT
             self.Info[eventID].creator = tx.origin
             self.Info[eventID].creationFee = 42*2^64
             self.Info[eventID].descriptionLength = len(description)
@@ -227,7 +223,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
             # see which future period it expires in && put the event in that bin
             # event voting periods - expDate / periodLength gives you the voting period #
             futurePeriod = expDate / self.Branches[branch].periodLength
-            self.EventsExpDates[branch][futurePeriod].events[self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents] = eventID
+            self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
             self.EventsExpDates[branch][futurePeriod].numberEvents += 1
             return(eventID)
         else:
@@ -319,23 +315,17 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
 
     if(self.send(marketID, cost)):
         # add event list to the market
-        save(self.Markets[marketID].events[0], events, items=eventNum)      
-        self.Info[marketID].typecode = MARKET
+        save(self.Markets[marketID].events[0], events, items=eventNum)
         self.Info[marketID].creator = tx.origin
         self.Info[marketID].creationFee = initialLiquidity
         self.Info[marketID].descriptionLength = len(description)
         save(self.Info[marketID].description[0], description, chars=len(description))
-        self.Markets[marketID].branch = branch
         self.Markets[marketID].alpha = alpha
         self.Markets[marketID].lenEvents = len(events)
         self.Markets[marketID].cumulativeScale = cumulativeScale
         self.Markets[marketID].numOutcomes = numOutcomes
         self.Markets[marketID].tradingPeriod = tradingPeriod
         self.Markets[marketID].tradingFee = tradingFee
-        # add the market to the branch
-        marketCount = self.Branches[branch].marketCount
-        self.Branches[branch].markets[marketCount] = marketID
-        self.Branches[branch].marketCount += 1
         return(marketID)
     else:
         # revert shares bought
@@ -347,7 +337,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
 # amount of shares should be an integer
 def buyShares(branch, market, outcome, amount):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
-    if (self.Markets[market].branch!=branch || outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[marketID].tradingPeriod):
+    if (outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod):
         return(0)
     # lmsr cost calcs
     oldCost = lsLmsr(market)
@@ -380,7 +370,7 @@ def buyShares(branch, market, outcome, amount):
 # instead of inputting particip. num could just loop through array if dont have it
 def sellShares(branch, market, outcome, amount, participantNumber):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
-    if (self.Markets[market].participants[participantNumber].participantID != tx.origin || self.Markets[market].branch!=branch || outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[marketID].tradingPeriod):
+    if (self.Markets[market].participants[participantNumber].participantID != tx.origin || outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[marketID].tradingPeriod):
         return(0)
     # lmsr cost calcs
     oldCost = lsLmsr(market)
@@ -967,6 +957,11 @@ def closeMarket(branch, market):
         else:
             self.cashcoinBalances[self.Info[market].creator] += self.cashcoinBalances[market]
             self.cashcoinBalances[market] -= self.cashcoinBalances[market]
+        q = 0
+        while(winningOutcomes[q]!=0):
+            self.Markets[market].winningOutcomes[q] = winningOutcomes[q]
+            q += 1
+
         return(text("Market closed"): str)
 
 ### P2P parimutuel betting
@@ -1010,7 +1005,7 @@ def closeBet(betID):
         self.cashcoinBalances[self.p2pBets[betID].outcomeOneBettor] += self.cashcoinBalances[betID+1]
         self.cashcoinBalances[betID+0] -= self.cashcoinBalances[betID+0]
         self.cashcoinBalances[betID+1] -= self.cashcoinBalances[betID+1]
-    return(1) 
+    return(1)
 
 ### API (for UI)
 
@@ -1021,11 +1016,11 @@ def closeBet(betID):
 # UI will need a function to get the items in that array above so it can make a report!
 # w/ this function you can get the eventIDs, look them up && report on outcomes (probably w/ another function to look them up) -- make sure in this function to check that the report value is not >maxvalue or <minvalue for the event
 def makeBallot(branch):
-    numEvents = self.EventsExpDates[self.Branches[branch].currentVotePeriod].numberEvents
+    numEvents = self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].numberEvents
     eventArray = array(numEvents)
     i = 0
     while i < numEvents:
-        eventID = self.EventsExpDates[self.Branches[branch].currentVotePeriod].events[numEvents]
+        eventID = self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].events[numEvents]
         eventArray[i] = eventID
     return(eventArray: arr)
 
@@ -1033,26 +1028,20 @@ def makeBallot(branch):
 def api(dataStructure, itemNumber, arrayIndex, ID):
     if(dataStructure==0):
         if(itemNumber==0):
-            return(self.Info[ID].typecode)
-        elif(itemNumber==1):
             length=self.Info[ID].descriptionLength
             return(load(self.Info[ID].description[0], chars=length))
-        elif(itemNumber==2):
+        elif(itemNumber==1):
             return(self.Info[ID].descriptionLength)
-        elif(itemNumber==3):
+        elif(itemNumber==2):
             return(self.Info[ID].creator)
-        elif(itemNumber==4):
+        elif(itemNumber==3):
             return(self.Info[ID].creationFee)
     elif(dataStructure==1):
         if(itemNumber==0):
             return(self.Branches[ID].currentVotePeriod)
         elif(itemNumber==1):
-            return(self.Branches[ID].markets[arrayIndex])
-        elif(itemNumber==2):
-            return(self.Branches[ID].marketCount)
-        elif(itemNumber==3):
             return(self.Branches[ID].periodLength)
-        elif(itemNumber==4):
+        elif(itemNumber==2):
             return(self.Branches[ID].repRequired)
     elif(dataStructure==2):
         if(itemNumber==0):
@@ -1078,28 +1067,26 @@ def api(dataStructure, itemNumber, arrayIndex, ID):
             return(self.Reporting[ID].repIDtoIndex[arrayIndex])
     elif(dataStructure==4):
         if(itemNumber==0):
-            return(self.Markets[ID].branch)
-        elif(itemNumber==1):
             return(self.Markets[ID].events[arrayIndex])
-        elif(itemNumber==2):
+        elif(itemNumber==1):
             return(self.Markets[ID].sharesPurchased[arrayIndex])
-        elif(itemNumber==3):
+        elif(itemNumber==2):
             return(text("Please call the participants api function"): str)
-        elif(itemNumber==4):
+        elif(itemNumber==3):
             return(self.Markets[ID].lenEvents)
-        elif(itemNumber==5):
+        elif(itemNumber==4):
             return(self.Markets[ID].currentParticipant)
+        elif(itemNumber==5):
+            return(self.Markets[ID].winningOutcomes[arrayIndex])
         elif(itemNumber==6):
-            return(self.Markets[ID].winningOutcome)
-        elif(itemNumber==7):
             return(self.Markets[ID].alpha)
-        elif(itemNumber==8):
+        elif(itemNumber==7):
             return(self.Markets[ID].cumulativeScale)
-        elif(itemNumber==9):
+        elif(itemNumber==8):
             return(self.Markets[ID].numOutcomes)
-        elif(itemNumber==10):
+        elif(itemNumber==9):
             return(self.Markets[ID].tradingPeriod)
-        elif(itemNumber==11):
+        elif(itemNumber==10):
             return(self.Markets[ID].tradingFee)
     elif(dataStructure==5):
         if(itemNumber==0):
@@ -1163,5 +1150,5 @@ def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, 
     elif(itemNumber==1):
         return(self.Markets[marketID].participants[participantIndex].shares[outcomeNumber])
 
-inset('fxp_macros_lagrange.se')
+inset('fxp_macros.se')
 inset('consensus.se')
