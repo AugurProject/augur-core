@@ -92,22 +92,23 @@ macro maximum($a):
     $i = 1
     $len = len($a)
     while $i < $len:
-                if $a[i] > maxval:
-                    maxval = $a[i]
-                i += 1
-        maxval
+        if $a[$i] > $max:
+            $max = $a[$i]
+        $i += 1
+    $max
 
 # Find index corresponding to the maximum value of an array
-macro findmax($a, $asz):
-    with maxval = $a[0]:
-        with maxidx = 0:
-            with i = 1:
-                while i < $asz:
-                    if $a[i] > maxval:
-                        maxval = $a[i]
-                        maxidx = i
-                    i += 1
-                maxidx        
+macro findmax($a):
+    $len = len($a)
+    $max = $a[0]
+    $maxidx = 0
+    $i = 1
+    while $i < $len:
+        if $a[$i] > $max:
+            $maxval = $a[$i]
+            $maxidx = $i
+        $i += 1
+    $maxidx        
 
 # Fixed-point multiplication
 macro fixed_multiply($x, $y):
