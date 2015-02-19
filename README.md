@@ -3,12 +3,8 @@ augur-serpent
 
 ### To do:
 	# MVP
-		# voting period fixes / when can / can't vote / when things up for voting
-        if blockNum / periodLength is say 5 and eventsExpDates[5]
-        the current vote period should be on things from eventsExpDates 4
-        then once blockNum / periodLength is say 6 and eventsExpDates[6]
-       	votePeriod 4 should close and the currentVotePeriod should be from
-   		eventsExpDates 5 (anyone can call the consensus function for voteperiod 4 at this point)
+   		see if current block.num/period is greater than the last period, if so we're in the start of a new period
+   		check mul and div parens
 	# min/max to fixed poss.
 
 ### Version 0.5 (More fun features - May and Beyond):
@@ -27,10 +23,17 @@ augur-serpent
 		# reward whoever does close market according to gas cost (pay gas fee in cashcoin to miner)
 	# hash first frontrunning prevention mechanism
 	# salt hash vote mechanism
+   		blocknumber mod period is residual
+   		if residual is <period/2 submit hash of (msg.sender, Rnum, Votes[]) for that reporter
+   		if >period/2 submit Rnum and Votes[] for reporter
+   		check in consensus if they match, if not, no vote ballot (allow people to change votes and hash up until lock in residual change)
+   		anti cheat provide p and randomNum mechanism steal deposit (will need to support snarks eventually)
 	# p+e fix?
 
 ### Version 0.3 (The Voting Upgrade - March):
 	# randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot
-	# fast voting cycle first few days to get the <60% problem away from a branch, e.g. what if not enough people vote
+	# fast voting cycle first few days to get the <60% problem away from a branch
+	# e.g. what if not enough people vote
+	# or what if people get behind on voting
 	# rapid rbcr anytime to vote i'm alive if <60% of people vote after a few cycles or something
 	# max number of owners in a branch of rep. issues w/ sending rep etc
