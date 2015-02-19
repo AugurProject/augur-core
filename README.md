@@ -3,8 +3,8 @@ augur-serpent
 
 ### To do:
 	# MVP
-   		see if current block.num/period is greater than the last period, if so we're in the start of a new period
-   		check mul and div parens
+		# what if people get behind on voting
+		# + other issues in voting function
 	# min/max to fixed poss.
 
 ### Version 0.5 (More fun features - May and Beyond):
@@ -34,6 +34,5 @@ augur-serpent
 	# randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot
 	# fast voting cycle first few days to get the <60% problem away from a branch
 	# e.g. what if not enough people vote
-	# or what if people get behind on voting
 	# rapid rbcr anytime to vote i'm alive if <60% of people vote after a few cycles or something
 	# max number of owners in a branch of rep. issues w/ sending rep etc

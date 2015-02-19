@@ -227,7 +227,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
             self.Events[eventID].numOutcomes = numOutcomes
             # see which future period it expires in && put the event in that bin
             # event voting periods - expDate / periodLength gives you the voting period #
-            futurePeriod = expDate / self.Branches[branch].periodLength
+            futurePeriod = floor(expDate / self.Branches[branch].periodLength)
             self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
             self.EventsExpDates[branch][futurePeriod].numberEvents += 1
             return(eventID)
@@ -438,7 +438,7 @@ def vote(branch, report:arr):
 # if there aren't enough events in a vote period eventsexpdate, push them to the next period and increment the vote period
 def checkQuorum(branch):
     currentVotePeriod = self.Branches[branchID].currentVotePeriod
-    currentPeriod = block.number / self.Branches[branch].periodLength
+    currentPeriod = floor(block.number / self.Branches[branch].periodLength)
     # provided the currentPeriod is >=2 periods past the things we're going to rbcr on
     # we can then conclude it has matured && people have had time to vote
     met = false
