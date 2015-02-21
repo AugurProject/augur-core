@@ -409,7 +409,6 @@ def sellShares(branch, market, outcome, amount, participantNumber):
     # ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[votePeriod].numberEvents
     # && loop through the events[] array from 0 to numberEvents -1 for the votes list / order
 # people could report something like 16027*2^64 for a scalar
-# voteperiod is an optional parameter only used in the scenario that we get behind on voting periods so people will need to vote on periods that are upcoming even if our currentVotePeriod is a bit behind, but what if an event then gets pushed into one of these periods that can't be voted on anymore..., perhaps don't allow voting if upcoming even & behind, but then we have a problem
 def vote(branch, report:arr):
     # make sure the branch exists
     repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
@@ -512,8 +511,8 @@ def redeem(branch, step):
                 scaledMinFixed[j] = self.Events[self.EventsExpDates[branch][currentVotePeriod].events[j]].minValue*2^64
             else:
                 scaled[j] = 0
-                scaledMinFixed[j] = -1*2^64
-                scaledMaxFixed[j] = 1*2^64
+                scaledMinFixed[j] = 1*2^64
+                scaledMaxFixed[j] = 2*2^64
             j+=1
         result = self.interpolate(votes, reputation, scaled, scaledMaxFixed, scaledMinFixed, outsz=2*vSize)
         self.EventsExpDates[branch][currentVotePeriod].vSize = vSize
