@@ -177,7 +177,7 @@ macro weighted_median($data, $weights):
                 with j = 0:
                     while j < num_present[i]:
                         if $weights[j] > midpoint:
-                            with maxidx = findmax($weights, n):
+                            with maxidx = findmax($weights):
                                 wmedian = $data[maxidx]
                             done = 1
                         j += 1
@@ -216,7 +216,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
     # reports_mask: [flatsize, 2*flatsize - 1]
     with num_players = len(reputation):
         # normalize reputation vector
-        reputation = get_weight(reputation, num_players)
+        reputation = get_weight(reputation)
         with flatsize = len(reports):
             with two_flatsize = 2*flatsize:
                 with num_events = flatsize / num_players:
@@ -393,8 +393,8 @@ def calibrate_sets(scores:arr, num_players, num_events):
     # set2: [num_players, 2*num_players - 1]
     with two_num_players = 2*num_players:
         with sets = array(two_num_players):
-            with set1_compare = abs(minimum(scores, num_players)):
-                with set2_compare = maximum(scores, num_players):
+            with set1_compare = abs(minimum(scores)):
+                with set2_compare = maximum(scores):
                     with i = 0:
                         while i < num_players:
                             sets[i] = scores[i] + set1_compare
@@ -405,11 +405,11 @@ def calibrate_sets(scores:arr, num_players, num_events):
                         return(sets, items=two_num_players)
 
 def calibrate_wsets(set1:arr, set2:arr, reputation:arr, reports:arr, num_players, num_events):
-    reputation = get_weight(reputation, num_players)
+    reputation = get_weight(reputation)
     with three_num_events = 3*num_events:
         with wsets = array(three_num_events):
-            with wset1 = get_weight(set1, num_players):
-                with wset2 = get_weight(set2, num_players):
+            with wset1 = get_weight(set1):
+                with wset2 = get_weight(set2):
                     with i = 0:
                         with two_num_events = 2*num_events:
                             while i < num_events:
@@ -445,7 +445,7 @@ def smooth(adjusted_scores:arr, reputation:arr, num_players, num_events):
     # Weighted sum of old and new reputation vectors.
     # New: row_reward_weighted
     # Old: reputation
-    reputation = get_weight(reputation, num_players)
+    reputation = get_weight(reputation)
     with row_reward_weighted = array(num_players):
         with i = 0:
             while i < num_players:
@@ -453,13 +453,13 @@ def smooth(adjusted_scores:arr, reputation:arr, num_players, num_events):
                 i += 1
 
         # Overwrite the inital declaration IFF there wasn't perfect consensus.
-        if maximum(array_abs(adjusted_scores, num_players), num_players) != 0:
+        if maximum(array_abs(adjusted_scores)) != 0:
             with mean_weight = mean(row_reward_weighted):
                 with i = 0:
                     while i < num_players:
                         row_reward_weighted[i] = adjusted_scores[i] * row_reward_weighted[i] / mean_weight
                         i += 1
-            row_reward_weighted = get_weight(row_reward_weighted, num_players)
+            row_reward_weighted = get_weight(row_reward_weighted)
         # Freshly-calculated reward (in reputation) using exponential smoothing
         # (0.1 is the adjustable parameter "alpha", hard-coding it for now)
         with smooth_rep = array(num_players):
@@ -560,7 +560,7 @@ def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, repo
                         with participation = 2^64 - total / num_events:
                             # Bringing it all together!
                             with reporter_bonus = array(num_players):
-                                with na_bonus_reports = get_weight(participation_reports, num_players):
+                                with na_bonus_reports = get_weight(participation_reports):
                                     with i = 0:
                                         while i < num_players:
                                             reporter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], 2^64 - participation)
