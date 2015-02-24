@@ -19,7 +19,7 @@ _TestResultBase = namedtuple('_TestResultBase', 'avg_error avg_gas')
 
 class TestResults(_TestResultBase):
     def __str__(self):
-      return 'TestResults(avg_error={:%}%, avg_gas={})'.format(self[0], self[1])  
+      return 'TestResults(avg_error={:3.18%}%, avg_gas={})'.format(self[0], self[1])  
 
 def suppress_output(thunk):
     old_stdout = sys.stdout
@@ -48,7 +48,7 @@ def test_thunk(thunk, trials):
         error += abs(result['output'] - expected)/expected
         gas += result['gas']
     printf('\n')
-    return TestResults(float(100*error/trials), gas/float(trials))
+    return TestResults(float(error/trials), gas/float(trials))
 
 def thunks(contract, func_dict):
     for name, (bounds, ref_func) in func_dict.items():
