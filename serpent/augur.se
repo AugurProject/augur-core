@@ -1187,8 +1187,10 @@ def reputation(address):
         balance = self.getRepBalance(branch, address)
         if(balance!=0):
             branchBalances[b] = branch
-            branchBalanaces[b+1] = balance
-            b += 2
+            branchBalances[b+1] = balance
+            branchBalances[b+2] = array(2048)
+            branchBalances[b+2] = load(self.Info[branch].description[0], items=2048)
+            b += 3
         i += 1
     return(branchBalances: arr)
 
