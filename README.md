@@ -4,6 +4,26 @@ augur-serpent
 ### To do:
 	# min max categorical events - so max-min/numOutcomes is interval between outcome
 	# implement categorical in consensus fun + augur.se.
+	# event description chars limit
+	# what if a scalar has a .5 actual value outcome
+		# I suggest the null outcome be either scalarmin-1 or max+1
+	# what happens if a .5 disputed outcome in general?
+	# Disputed: If any of a Market’s Decisions attain ‘Disputed’ status, the Market attains the
+Disputed status. No one can buy or sell until the Dispute is resolved
+	# Audited: If a Market remained in a Disputed state and became audited, the Market
+would enter this state. Shares can be sold (redeemed) but the payoff formula is
+slightly more complicated (see Appendix III). Buying is also disabled (for simplicity
+and consistency).
+	# if no agreement on any outcome <65% or whatever confidence, then do over next voting period, if that fails then it goes to audit vote (where people "vote" with their cash)
+	# market listing fee
+	# VoteCoins cannot be simultaneously spent (transferred) and used to vote (need to fix this)
+	# fee to ask a question rises if voter participation (rep reported) falls, if it's really high, the fee is lowered
+	# market creator has no additional fee besides liquidity if <=200 states
+	# refund left over initial liquidity in market - half to market creator, other half to voters
+	# *unless* it's a scaled decision, refund all initial liquidity left overto market creator
+	# rest of money available in market + the additional trading fees divy up amongst reporters and market creator
+	# for final .5 outcomes take shares bought and divide the money up amongst them equally (should be .50 each)
+
 
 ### Scalability optimizations (hopefully these become an issue!):
 	# randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot (V presentation on a similar strat.)
@@ -13,7 +33,7 @@ augur-serpent
 	  if(sha(block.prevhash+block.coinbase+block.timestamp+nonce) mod 2^32<prob):
 	   	you got picked / won the rng!
 	# max number of owners in a branch of rep. issues w/ sending rep etc
-	# zeroing of array values
+	# zeroing of array values (e.g. people in the rep index after they have 0 rep left)
 	# consensus bond mechanism cheaper
 	# possibly enable people to choose their own resolution scripts
 
@@ -35,6 +55,7 @@ augur-serpent
 ### Version 0.3 (The Voting Upgrade - March):
 	# fast voting cycle first few days to get the <60% problem away from a branch
 	# rapid rbcr *anytime* to vote i'm alive if <60% of people vote after a few cycles
+
 	# salt hash vote mechanism
    		blocknumber mod period is residual
    		if residual is <period/2 submit hash of (msg.sender, Rnum, Votes[]) for that reporter
@@ -46,7 +67,7 @@ augur-serpent
 	the next voting period comes up and you still haven't solved the last one
 	now the problem is no one is allowed to vote on the old period anymore so it'll never get enough rep reported
 	and if you get far enough behind, any events that get pushed up due to a small voting period can't be voted on either
-	I think a solution to this is to simply notice when a branch is stalled in this case (not enough rep reported at the point people can no longer vote in that period) and then move all those events up to the next voting period
+	I think a solution to this is to simply notice when a branch is stalled in this case (not enough rep reported at the point people can no longer vote in that period) and then move all those events up to the next voting period (and possibly allow an alive vote consensus call to be made)
 
 	when the next voting period clock starts we don't want anyone to submit a vote not counted because some events got pushed up from the last vote period due to either not enough reporters or not enough events
 
