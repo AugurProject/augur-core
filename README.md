@@ -23,6 +23,14 @@ and consistency).
 	# *unless* it's a scaled decision, refund all initial liquidity left overto market creator
 	# rest of money available in market + the additional trading fees divy up amongst reporters and market creator
 	# for final .5 outcomes take shares bought and divide the money up amongst them equally (should be .50 each)
+			# ) Shares themselves can be ‘traded’ for efficiency or (optionally) even to offload tradinginfrastructure
+		to third parties. Instead of selling for CashCoin, transferring CashCoin, and
+		then re-buying (a cost of 2 trading fees and 3 transaction fees, and substantial delay and
+		price risk), a ‘transfer’ function can simply move shares among keypairs in one
+		transaction. However, to remain incentive-compatible, this function would need to
+		require an explicit payment to the Market of 2 trading fees.
+	# With these three conditions: [1] Stalled Branch, [2] Decision-Author’s signature, [3] Market-Author’s signature, one can move a Market’s Decisions to a new Branch
+
 
 
 ### Scalability optimizations (hopefully these become an issue!):

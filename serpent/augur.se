@@ -71,6 +71,8 @@ data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
 data cashcoinBalances[]
 
+data branchesList[]
+
 def init():
     # test initial funds
     self.cashcoinBalances[tx.origin] = 1000000*2^64
@@ -84,6 +86,8 @@ def init():
     self.Branches[1010101].currentVotePeriod = (block.number / 403200) - 1 
     self.Branches[1010101].periodLength = 403200
     self.Branches[1010101].repRequired = 14000000
+    self.branchesList[0] = 2
+    self.branchesList[1] = 1010101
 
 # string chunks
 macro chunks($l):
@@ -187,6 +191,8 @@ def makeSubBranch(description:str, periodLength, parent, repRequired):
             self.Reporting[branchID].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
             i+=1
         self.Reporting[branchID].numberReporters = i
+        self.branchesList[self.branchesList[0]] = branchID
+        self.branchesList[0] += 1
         return(branchID)
     else:
         return(0)
@@ -1171,6 +1177,20 @@ def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, 
         return(self.Markets[marketID].participants[participantIndex].participantID)
     elif(itemNumber==1):
         return(self.Markets[marketID].participants[participantIndex].shares[outcomeNumber])
+
+def reputation(address):
+    branchBalances = array(2*self.branchesList[0])
+    i = 1
+    b = 0
+    while i < self.branchesList[0]:
+        branch = self.branchesList[i]
+        balance = self.getRepBalance(branch, address)
+        if(balance!=0):
+            branchBalances[b] = branch
+            branchBalanaces[b+1] = balance
+            b += 2
+        i += 1
+    return(branchBalances: arr)
 
 inset('fxp_macros.se')
 inset('consensus.se')
