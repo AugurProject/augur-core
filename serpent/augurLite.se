@@ -412,4 +412,32 @@ def sellShares(branch, market, outcome, amount, participantNumber):
         self.Markets[market].participants[participantNumber].shares[outcome] -= amount
         return(amount*priceToPayPerShare)
 
+def reputation(address):
+    if(address):
+        branches = array(2*self.branchesList[0])
+        i = 1
+        b = 0
+        while i < self.branchesList[0]:
+            branch = self.branchesList[i]
+            balance = self.getRepBalance(branch, address)
+            if(balance!=0):
+                branches[b] = branch
+                branches[b+1] = balance
+                branches[b+2] = array(2048)
+                branches[b+2] = load(self.Info[branch].description[0], items=2048)
+                b += 3
+            i += 1
+    else:
+        branches = array(self.branchesList[0])
+        i = 1
+        b = 0
+        while i < self.branchesList[0]:
+            branch = self.branchesList[i]
+            branches[b] = branch
+            branches[b+1] = array(2048)
+            branches[b+1] = load(self.Info[branch].description[0], items=2048)
+            b += 2
+            i += 1
+    return(branchBalances: arr)
+
 inset('fxp_macros.se')
