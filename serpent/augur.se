@@ -71,6 +71,7 @@ data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
 data cashcoinBalances[]
 
+# 0th item in branchesList is the length of the branch list
 data branchesList[]
 
 def init():
@@ -317,6 +318,10 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     mcopy(marketinfo+(items=11), description, chars=len(description))
     marketID = sha256(marketinfo, chars=len(marketinfo))
 
+    # pay numOutcomes fee
+    if(!self.send(branch, numOutcomes*2^63)):
+        return(0)
+
     # buy some of all outcomes
     # ls-lmsr needs at least a very small initial liquidity
     y = 1
@@ -458,7 +463,7 @@ def checkQuorum(branch):
         met = true
     else:
         met = false
-    if (self.EventsExpDates[branch][currentVotePeriod].numberEvents<20 && matured):
+    if (self.EventsExpDates[branch][currentVotePeriod].numberEvents<30 && matured):
         self.Branches[branchID].currentVotePeriod += 1
         x = 0
         while(x < self.EventsExpDates[branch][currentVotePeriod-1].numberEvents):
@@ -706,7 +711,7 @@ def closeMarket(branch, market):
     tradingPeriod = self.Markets[market].tradingPeriod
     # check if any events in the market were pushed back and that market has expired
     # (as long as the latest expiring event wasn't pushed back, we know they all got reported on)
-    if(self.Branches[branch].currentVotePeriod > tradingPeriod && self.EventsExpDates[branch][tradingPeriod].numberEvents>=20):
+    if(self.Branches[branch].currentVotePeriod > tradingPeriod && self.EventsExpDates[branch][tradingPeriod].numberEvents>=30):
         # loop through events in the market, get their outcomes && use those to determine the winning events!
         n = 0
         # (max poss. winning outcomes is 200 outcomes total all scalar multidimensional)
