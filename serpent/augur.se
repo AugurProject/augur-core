@@ -225,9 +225,9 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     participationFactor = (self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod-2].totalRepReported * 2^64) / self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod-1].totalRepReported
     # send fee and bond
     if(self.balance(tx.origin)>=87*2^64):
-        if (!self.Info[eventID].creator && !self.Events[eventID].branch && self.send(branch, 42*2^64) && self.send(eventID, participationFactor*45)):
+        if (!self.Info[eventID].creator && !self.Events[eventID].branch && self.send(eventID, 42*2^64) && self.send(branch, participationFactor*45)):
             self.Info[eventID].creator = tx.origin
-            self.Info[eventID].creationFee = 42*2^64
+            self.Info[eventID].creationFee = participationFactor*45 # this is not the bond
             self.Info[eventID].descriptionLength = len(description)
             save(self.Info[eventID].description[0], description, chars=len(description))
             self.Events[eventID].branch = branch
@@ -691,8 +691,8 @@ def redeem(branch, step):
             self.Events[eventID].outcome = outcomesFinal[n]
             if(outcomesFinal[n]!=2^63):
                 # return bond
-                self.cashcoinBalances[eventID] -= 43*2^64
-                self.cashcoinBalances[self.Info[eventID].creator] += 43*2^64
+                self.cashcoinBalances[eventID] -= 42*2^64
+                self.cashcoinBalances[self.Info[eventID].creator] += 42*2^64
         # need to loop through rep holders && distribute 50% of branch fees to reporters' cashcoin addresses 
         # also need to take reporterBonus && redistribute reputation in the Reporting structure accordingly
         z = 0

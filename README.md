@@ -8,16 +8,11 @@ augur-serpent
 	# what if a scalar has a .5 actual value outcome
 		# I suggest the null outcome be either scalarmin-1 or max+1
 	# what happens if a .5 disputed outcome in general?
-	# Disputed: If any of a Market’s Decisions attain ‘Disputed’ status, the Market attains the
-Disputed status. No one can buy or sell until the Dispute is resolved
-	# Audited: If a Market remained in a Disputed state and became audited, the Market
-would enter this state. Shares can be sold (redeemed) but the payoff formula is
-slightly more complicated (see Appendix III). Buying is also disabled (for simplicity
-and consistency).
+	# Disputed: If any of a Market’s Decisions attain ‘Disputed’ status, the Market attains the Disputed status. No one can buy or sell until the Dispute is resolved
+	# Audited: If a Market remained in a Disputed state and became audited, the Market would enter this state. Shares can be sold (redeemed) but the payoff formula is slightly more complicated (see Appendix III). Buying is also disabled (for simplicity and consistency).  
 	# if no agreement on any outcome <65% or whatever confidence, then do over next voting period, if that fails then it goes to audit vote (where people "vote" with their cash)
 	# market listing fee
 	# VoteCoins cannot be simultaneously spent (transferred) and used to vote (need to fix this)
-	
 	# refund left over initial liquidity in market - half to market creator, other half to voters
 	# *unless* it's a scaled decision, refund all initial liquidity left overto market creator
 	# rest of money available in market + the additional trading fees divy up amongst reporters and market creator
@@ -30,11 +25,11 @@ and consistency).
 		require an explicit payment to the Market of 2 trading fees.
 	# With these three conditions: [1] Stalled Branch, [2] Decision-Author’s signature, [3] Market-Author’s signature, one can move a Market’s Decisions to a new Branch
 
+
 It may be desirable to impose serious prerequisites for Branching. The option to Branch may require an automatic trigger, for example, that there be >500 upcoming Decisions.  Requiring high λ and Λ parameters would also discourage the creation of frivolous Branches (as these would need to reliably support many Decisions in order to operate effectively).
 limit order
 front running pow
 
-Votes can contain a transaction (a new private key controlling next period’s vote) which becomes valid after the voting deadline passes. This scheme also prevents you from ‘spending’ your coins and voting with them at the same time, which simplifies coin trading.
 
 does it matter if we have mult. decisions for a dimension vs just one event w/ multiple outcome
 
