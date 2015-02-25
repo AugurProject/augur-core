@@ -722,7 +722,7 @@ def closeMarket(branch, market):
             if(n==0):
                 #scalar
                 if(self.Events[self.Markets[market].events[n]].maxValue!=1):
-                    winningOutcomes[0git] = 1
+                    winningOutcomes[0] = 1
                     winningOutcomes[1] = 2
                 # anything besides scalar
                 else:

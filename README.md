@@ -5,6 +5,7 @@ augur-serpent
 	# min max categorical events - so max-min/numOutcomes is interval between outcome
 	# implement categorical in consensus fun + augur.se.
 	# event description chars limit
+	# don't need reprequired, do need rep reported to record participation
 	# what if a scalar has a .5 actual value outcome
 		# I suggest the null outcome be either scalarmin-1 or max+1
 	# what happens if a .5 disputed outcome in general?
@@ -18,7 +19,6 @@ and consistency).
 	# market listing fee
 	# VoteCoins cannot be simultaneously spent (transferred) and used to vote (need to fix this)
 	# fee to ask a question rises if voter participation (rep reported) falls, if it's really high, the fee is lowered
-	# market creator has no additional fee besides liquidity if <=200 states
 	# refund left over initial liquidity in market - half to market creator, other half to voters
 	# *unless* it's a scaled decision, refund all initial liquidity left overto market creator
 	# rest of money available in market + the additional trading fees divy up amongst reporters and market creator
@@ -31,16 +31,11 @@ and consistency).
 		require an explicit payment to the Market of 2 trading fees.
 	# With these three conditions: [1] Stalled Branch, [2] Decision-Author’s signature, [3] Market-Author’s signature, one can move a Market’s Decisions to a new Branch
 
-Moreover, as a new “tree” can be “planted”, one might create a new VoteCoin set (from nowhere) to create private internal markets for a private business or club. These markets can set up the initial allocation of reputation (and reputation smoothing parameters), to establish an ‘eternal dictator’ or ‘rotating board of directors’, etc..
-It may be desirable to impose serious prerequisites for both Branching and Planting. The option to Branch may require an automatic trigger, for example, that there be >500 upcoming Decisions. Planting may require the permanent destruction of, say 1 CashCoin, or Branches could be required to bid for the option to “rent” one “SVD slot” among a fixed (but growing) number of slots. Requiring high λ and Λ parameters would also discourage the creation of frivolous Branches (as these would need to reliably support many Decisions in order to operate effectively).
+It may be desirable to impose serious prerequisites for Branching. The option to Branch may require an automatic trigger, for example, that there be >500 upcoming Decisions.  Requiring high λ and Λ parameters would also discourage the creation of frivolous Branches (as these would need to reliably support many Decisions in order to operate effectively).
 limit order
 front running pow
 
-To implement sealed voting, consider the following schedule: encrypt vote17, sign vote, broadcast vote, voting deadline passes, reveal private key, decrypt vote. Sharing one’s key before voting deadline could allow someone to change your vote (potentially in a malicious way) or outright steal your coins, so no one could reasonably ask to know your key or vote. However, votes can contain a transaction (a new private key controlling next period’s vote) which becomes valid after the voting deadline passes. This scheme also prevents you from ‘spending’ your coins and voting with them at the same time, which simplifies coin trading.
-Recall that, to allow reuse of Decisions, they are created in a first phase, paying for each Decision.
-2) Recall also that Markets are then, secondly, submitted in the form (L(O), T), where L(O) is an ordered list of Decisions defining the dimensions and space of the Market, and T is the payment transaction amounting to
-28 | P a g e
-3) It is possible to track the number of Decisions required in each Ballot (i.e., each month or so), and incrementally adjust the fee upwards if, say, March is an especially crowded month. A simple solution would be , where K’ is the number of Decisions exceeding a threshold, say 100.
+Votes can contain a transaction (a new private key controlling next period’s vote) which becomes valid after the voting deadline passes. This scheme also prevents you from ‘spending’ your coins and voting with them at the same time, which simplifies coin trading.
 
 does it matter if we have mult. decisions for a dimension vs just one event w/ multiple outcome
 
@@ -49,8 +44,23 @@ catch parameter
 could do .5 outcomes where if a .5 in a market with multiple dimensions it still pays out 
 
 two wave svd before audits?
+e.g. if it falls within the certainty threshold, then it goes to wave 2 of svd
+else it goes to an audit
+
+One failure to achieve
+Certainty could be a
+simple confusion (and
+should not go directly to audit) - perhaps vote again on it
+
+a certain .5 outcome shouldn't be voted on again though
 
 separate Branches might compete over different parameter-families, it may be advantageous for the blockchain itself to impose “Reasonable Bounds” on possible choices for parameters. Branches themselves may impose “Reasonable Bounds” on Market-specific parameters, (b, content-tags, trading/audit fees).
+
+
+minimum ballot size (30?)
+min future decisions at stake - 200 - else branch stalls (do same thing we do if min ballot/event size isn't met, push events into next voting period and hopefully more people will create decisions so it can actually be vote on, else repeat)
+
+audit fee
 
 ### Scalability optimizations (hopefully these become an issue!):
 	# randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot (V presentation on a similar strat.)
@@ -106,3 +116,5 @@ separate Branches might compete over different parameter-families, it may be adv
 
 
 	so you can't vote anymore on the next period, so instead the events get pushed up to next vote period provided stuff has expired, currentVotePeriod is incremented, and people try to vote again (if we're still so behind, checkQuorem again, etc.)
+
+	what if we have 3-4 cycles in a row of 10 events getting pushed back --- market would already be closed even though events up to be decided on for a while yet never decided --- technically this is a stalled branch and market should be open no?
