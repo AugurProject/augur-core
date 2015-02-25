@@ -203,13 +203,6 @@ macro weighted_median($data, $weights):
                                             wmedian = sorted_data[idx-1]
                 wmedian
 
-# macro 2da10(x)[a][b]:
-#     x[a * 10 + b]
-
-# macro loop($i, $n):
-#     with $i = 0:
-#         while $i < $n:
-
 def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
     # return vector: reports_interp
     # reports_filled: [0, flatsize - 1]

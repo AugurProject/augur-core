@@ -179,9 +179,9 @@ def display(arr, description=None, show_all=None, refold=False):
 def serpent_function(s, c, name, signature, args=[]):
     sys.stdout.write("  " + BG(name) + " ")
     sys.stdout.flush()
-    profile = s.profile(t.k0, c, 0, name, signature, args)
-    print "%i gas (%d seconds)" % (profile['gas'], profile['time'])
-    return s.call(t.k0, c, 0, name, signature, args)
+    # profile = s.profile(t.k0, c, 0, name, signature, args)
+    # print "%i gas (%d seconds)" % (profile['gas'], profile['time'])
+    # return s.call(t.k0, c, 0, name, signature, args)
 
 def test_contract(contract):
     """
@@ -190,7 +190,6 @@ def test_contract(contract):
     
     interpolate
     center
-    pca_init
     pca_loadings (this should be called once for each PCA iteration --
                   in tests, it seems that 5 iterations is sufficient.
                   each iteration takes the previous iteration's
@@ -213,7 +212,7 @@ def test_contract(contract):
     s = t.state()
     filename = contract + ".se"
     print BB("Testing contract:"), BG(filename)
-    c = s.contract(filename)
+    c = s.abi_contract(filename, sender=t.k0)
 
     num_players = len(reputation)
     num_events = len(reports[0])
@@ -225,7 +224,7 @@ def test_contract(contract):
     scaled_min_fixed = map(fix, scaled_min)
 
     arglist = [reports_fixed, reputation_fixed, scaled, scaled_max_fixed, scaled_min_fixed]
-    result = serpent_function(s, c, "interpolate", "aaaaa", args=arglist)
+    result = c.interpolate(*arglist)
     result = np.array(result)
     reports_filled = result[0:v_size].tolist()
     reports_mask = result[v_size:].tolist()
@@ -236,22 +235,22 @@ def test_contract(contract):
     # center and initiate multistep pca loading vector
     arglist = [reports_filled, reputation_fixed, scaled,
                scaled_max_fixed, scaled_min_fixed, max_iterations]
-    result = serpent_function(s, c, "center", "aaaaai", args=arglist)
+    result = c.center(*arglist)
     result = np.array(result)
     weighted_centered_data = result[0:v_size].tolist()
     loading_vector = result[v_size:].tolist()
 
     arglist = [loading_vector, weighted_centered_data, reputation_fixed, num_players, num_events]
     while loading_vector[num_events] > 0:
-        loading_vector = serpent_function(s, c, "pca_loadings", "aaaii", args=arglist)
+        loading_vector = c.pca_loadings(*arglist)
         arglist[0] = loading_vector
         # display(loading_vector, "Loadings %i:" % loading_vector[num_events], show_all=True)
 
     arglist = [loading_vector, weighted_centered_data, num_players, num_events]
-    scores = serpent_function(s, c, "pca_scores", "aaii", args=arglist)
+    scores = c.pca_scores(*arglist)
 
     arglist = [scores, num_players, num_events]
-    result = serpent_function(s, c, "calibrate_sets", "aii", args=arglist)
+    result = c.calibrate_sets(*arglist)
     result = np.array(result)
     set1 = result[0:num_players].tolist()
     set2 = result[num_players:].tolist()
@@ -263,7 +262,7 @@ def test_contract(contract):
     # display(set2, "set2:", show_all=True)
 
     arglist = [set1, set2, reputation_fixed, reports_filled, num_players, num_events]
-    result = serpent_function(s, c, "calibrate_wsets", "aaaaii", args=arglist)
+    result = c.calibrate_wsets(*arglist)
     result = np.array(result)
     old = result[0:num_events].tolist()
     new1 = result[num_events:(2*num_events)].tolist()
@@ -277,12 +276,12 @@ def test_contract(contract):
     # display(new2, "new2:", show_all=True)
 
     arglist = [old, new1, new2, set1, set2, scores, num_players, num_events]
-    adjusted_scores = serpent_function(s, c, "pca_adjust", "aaaaaaii", args=arglist)
+    adjusted_scores = c.pca_adjust(*arglist)
 
     # display(adjusted_scores, "adjusted_scores:", show_all=True)
 
     arglist = [adjusted_scores, reputation_fixed, num_players, num_events]
-    smooth_rep = serpent_function(s, c, "smooth", "aaii", args=arglist)
+    smooth_rep = c.smooth(*arglist)
 
     # display(reports_filled, "reports_filled:", show_all=True)
     # display(reports_filled,"reports_filled:",refold=num_events, show_all=True)
@@ -290,9 +289,7 @@ def test_contract(contract):
 
     arglist = [smooth_rep, reports_filled, scaled, scaled_max_fixed,
                scaled_min_fixed, num_players, num_events]
-    result = serpent_function(s, c, "consensus", "aaaaaii", args=arglist)
-
-    # display(result, "Consensus:", show_all=True)
+    result = c.consensus(*arglist)
 
     result = np.array(result)
     outcomes_final = result[0:num_events].tolist()
@@ -300,11 +297,8 @@ def test_contract(contract):
     assert(len(outcomes_final) == len(consensus_reward))
     del result
 
-    # display(outcomes_final, "Outcomes (final):", show_all=True)
-    # display(consensus_reward, "Consensus reward:", show_all=True)
-
     arglist = [outcomes_final, consensus_reward, smooth_rep, reports_mask, num_players, num_events]
-    reporter_bonus = serpent_function(s, c, "participation", "aaaaii", args=arglist)
+    reporter_bonus = c.participation(*arglist)
 
     display(loading_vector, "Loadings:", show_all=True)
     display(adjusted_scores, "Adjusted scores:")
