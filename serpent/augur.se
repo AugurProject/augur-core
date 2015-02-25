@@ -220,9 +220,12 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     # you can make a market like that though!
     if(numOutcomes!=2 && maxValue!=1):
         return(0)
+
+    # fee to ask a question rises if voter participation (rep reported) falls, if it's really high, the fee is lowered (participationFactor is a fixedpoint number)
+    participationFactor = (self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod-2].totalRepReported * 2^64) / self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod-1].totalRepReported
     # send fee and bond
-    if(self.balance(tx.origin)>=85*2^64):
-        if (!self.Info[eventID].creator && !self.Events[eventID].branch && self.send(branch, 42*2^64) && self.send(eventID, 43*2^64)):
+    if(self.balance(tx.origin)>=87*2^64):
+        if (!self.Info[eventID].creator && !self.Events[eventID].branch && self.send(branch, 42*2^64) && self.send(eventID, participationFactor*45)):
             self.Info[eventID].creator = tx.origin
             self.Info[eventID].creationFee = 42*2^64
             self.Info[eventID].descriptionLength = len(description)

@@ -4,8 +4,7 @@ augur-serpent
 ### To do:
 	# min max categorical events - so max-min/numOutcomes is interval between outcome
 	# implement categorical in consensus fun + augur.se.
-	# event description chars limit
-	# don't need reprequired, do need rep reported to record participation
+	# don't need reprequired
 	# what if a scalar has a .5 actual value outcome
 		# I suggest the null outcome be either scalarmin-1 or max+1
 	# what happens if a .5 disputed outcome in general?
@@ -18,7 +17,7 @@ and consistency).
 	# if no agreement on any outcome <65% or whatever confidence, then do over next voting period, if that fails then it goes to audit vote (where people "vote" with their cash)
 	# market listing fee
 	# VoteCoins cannot be simultaneously spent (transferred) and used to vote (need to fix this)
-	# fee to ask a question rises if voter participation (rep reported) falls, if it's really high, the fee is lowered
+	
 	# refund left over initial liquidity in market - half to market creator, other half to voters
 	# *unless* it's a scaled decision, refund all initial liquidity left overto market creator
 	# rest of money available in market + the additional trading fees divy up amongst reporters and market creator
@@ -47,17 +46,13 @@ two wave svd before audits?
 e.g. if it falls within the certainty threshold, then it goes to wave 2 of svd
 else it goes to an audit
 
-One failure to achieve
-Certainty could be a
-simple confusion (and
-should not go directly to audit) - perhaps vote again on it
+One failure to achieve certainty could be a simple confusion (and should not go directly to audit) - perhaps vote again on it
 
 a certain .5 outcome shouldn't be voted on again though
 
 separate Branches might compete over different parameter-families, it may be advantageous for the blockchain itself to impose “Reasonable Bounds” on possible choices for parameters. Branches themselves may impose “Reasonable Bounds” on Market-specific parameters, (b, content-tags, trading/audit fees).
 
 
-minimum ballot size (30?)
 min future decisions at stake - 200 - else branch stalls (do same thing we do if min ballot/event size isn't met, push events into next voting period and hopefully more people will create decisions so it can actually be vote on, else repeat)
 
 audit fee
