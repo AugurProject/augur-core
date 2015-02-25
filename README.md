@@ -31,7 +31,26 @@ and consistency).
 		require an explicit payment to the Market of 2 trading fees.
 	# With these three conditions: [1] Stalled Branch, [2] Decision-Author’s signature, [3] Market-Author’s signature, one can move a Market’s Decisions to a new Branch
 
+Moreover, as a new “tree” can be “planted”, one might create a new VoteCoin set (from nowhere) to create private internal markets for a private business or club. These markets can set up the initial allocation of reputation (and reputation smoothing parameters), to establish an ‘eternal dictator’ or ‘rotating board of directors’, etc..
+It may be desirable to impose serious prerequisites for both Branching and Planting. The option to Branch may require an automatic trigger, for example, that there be >500 upcoming Decisions. Planting may require the permanent destruction of, say 1 CashCoin, or Branches could be required to bid for the option to “rent” one “SVD slot” among a fixed (but growing) number of slots. Requiring high λ and Λ parameters would also discourage the creation of frivolous Branches (as these would need to reliably support many Decisions in order to operate effectively).
+limit order
+front running pow
 
+To implement sealed voting, consider the following schedule: encrypt vote17, sign vote, broadcast vote, voting deadline passes, reveal private key, decrypt vote. Sharing one’s key before voting deadline could allow someone to change your vote (potentially in a malicious way) or outright steal your coins, so no one could reasonably ask to know your key or vote. However, votes can contain a transaction (a new private key controlling next period’s vote) which becomes valid after the voting deadline passes. This scheme also prevents you from ‘spending’ your coins and voting with them at the same time, which simplifies coin trading.
+Recall that, to allow reuse of Decisions, they are created in a first phase, paying for each Decision.
+2) Recall also that Markets are then, secondly, submitted in the form (L(O), T), where L(O) is an ordered list of Decisions defining the dimensions and space of the Market, and T is the payment transaction amounting to
+28 | P a g e
+3) It is possible to track the number of Decisions required in each Ballot (i.e., each month or so), and incrementally adjust the fee upwards if, say, March is an especially crowded month. A simple solution would be , where K’ is the number of Decisions exceeding a threshold, say 100.
+
+does it matter if we have mult. decisions for a dimension vs just one event w/ multiple outcome
+
+catch parameter
+
+could do .5 outcomes where if a .5 in a market with multiple dimensions it still pays out 
+
+two wave svd before audits?
+
+separate Branches might compete over different parameter-families, it may be advantageous for the blockchain itself to impose “Reasonable Bounds” on possible choices for parameters. Branches themselves may impose “Reasonable Bounds” on Market-specific parameters, (b, content-tags, trading/audit fees).
 
 ### Scalability optimizations (hopefully these become an issue!):
 	# randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot (V presentation on a similar strat.)
@@ -70,6 +89,8 @@ and consistency).
    		if >period/2 submit Rnum and Votes[] for reporter
    		check in consensus if they match, if not, no vote ballot (allow people to change votes and hash up until lock in residual change)
 	   	anti cheat provide p and randomNum mechanism steal deposit (will need to support snarks eventually)
+
+	is there *supposed* to be a min rep reported? i don't think so
 
 	if your minimum rep reported isn't enough, you get behind
 	the next voting period comes up and you still haven't solved the last one
