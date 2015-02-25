@@ -10,7 +10,8 @@ augur-serpent
 	# what happens if a .5 disputed outcome in general?
 	# Disputed: If any of a Market’s Decisions attain ‘Disputed’ status, the Market attains the Disputed status. No one can buy or sell until the Dispute is resolved
 	# Audited: If a Market remained in a Disputed state and became audited, the Market would enter this state. Shares can be sold (redeemed) but the payoff formula is slightly more complicated (see Appendix III). Buying is also disabled (for simplicity and consistency).  
-	# if no agreement on any outcome <65% or whatever confidence, then do over next voting period, if that fails then it goes to audit vote (where people "vote" with their cash)
+	# if no agreement on any outcome <65% or whatever confidence, then do over next voting period, if th
+	vbnat fails then it goes to audit vote (where people "vote" with their cash)
 	# market listing fee
 	# VoteCoins cannot be simultaneously spent (transferred) and used to vote (need to fix this)
 	# refund left over initial liquidity in market - half to market creator, other half to voters
