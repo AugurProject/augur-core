@@ -31,10 +31,9 @@ data Info[](description[2048], descriptionLength, creator, creationFee)
 
 # CurrentVotePeriod is the current index in eventsExpDates
 # Branches' index is the hash of the branch (aka branchID)
-# RepRequired is the amount of reputation required to reach quorem
 # currentVotePeriod is a nonce that tells us which bucket of events up to be
 # voted on in the current vote period (should always be 1 behind block.number/periodlength or current EventsExpDates index)
-data Branches[](currentVotePeriod, periodLength, repRequired, step)
+data Branches[](currentVotePeriod, periodLength, step)
 
 # Events' index is the eventID
 # a binary outcome has 0 for min && 1 for max value (ditto for categorical even though not actually true)
@@ -86,7 +85,6 @@ def init():
     self.Info[1010101].creationFee = 10
     self.Branches[1010101].currentVotePeriod = (block.number / 403200) - 1 
     self.Branches[1010101].periodLength = 403200
-    self.Branches[1010101].repRequired = 14000000
     self.branchesList[0] = 2
     self.branchesList[1] = 1010101
 
@@ -156,18 +154,17 @@ def getRepBalance(branch, address):
 # period length is given in blocks
 # description format is branchName:description
 # is there some way we can include the description bytes in the sha256 hash?
-def makeSubBranch(description:str, periodLength, parent, repRequired):
-    if(periodLength<=0 || !self.Branches[parent].periodLength || !repRequired || description==0):
+def makeSubBranch(description:str, periodLength, parent):
+    if(periodLength<=0 || !self.Branches[parent].periodLength || description==0):
         return(0)
-    branchInfo = string((items=7)+len(description))
+    branchInfo = string((items=6)+len(description))
     branchInfo[0] = BRANCH                                      #typecode
     branchInfo[1] = tx.origin                                   #creator address
     branchInfo[2] = 47*2^64                                     #creation fee
     branchInfo[3] = periodLength                                #length of voting cycle
     branchInfo[4] = block.number                                #current block number
     branchInfo[5] = parent                                      #branchID of parent branch
-    branchInfo[6] = repRequired                                 #minimum rep required to vote
-    mcopy(branchInfo+(items=7), description, len(description))
+    mcopy(branchInfo+(items=6), description, len(description))
     # people can check that these characteristics hash to the ID if they want
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
     branchID = sha256(branchinfo, chars=len(branchinfo))
@@ -178,7 +175,6 @@ def makeSubBranch(description:str, periodLength, parent, repRequired):
         self.Info[branchID].descriptionLength = len(description)
         save(self.Info[branchID].description[0], description, chars=len(description))
         self.Branches[branchID].periodLength = periodLength
-        self.Branches[branchID].repRequired = repRequired
         # first vote period won't be until after the current (in this case first) basket of things has expired
         # if floor(blockNum / periodLength) is say 5 and eventsExpDates[5]
         # the current vote period should be on things from eventsExpDates 4 (when making a new branch this vote period will just fail quorem, and current vote period will be incrememented)
@@ -446,26 +442,19 @@ def vote(branch, report:arr):
     self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].totalRepReported += reputation
     return(1)
 
-# returns whether a quorem has a matured event && whether
-# the number of required reports are met
+# returns whether a quorem has a matured event
 # if there aren't enough events in a vote period eventsexpdate, push them to the next period and increment the vote period
 def checkQuorum(branch):
     currentVotePeriod = self.Branches[branchID].currentVotePeriod
     currentPeriod = (block.number / self.Branches[branch].periodLength)
     # provided the currentPeriod is >=2 periods past the things we're going to rbcr on
     # we can then conclude it has matured && people have had time to vote
-    met = false
     matured = false
     enoughEvents = false
     if (currentPeriod >= (currentVotePeriod+2)):
         matured = true
     else:
         matured = false
-    # check that enough people actually did vote
-    if (self.EventsExpDates[branch][currentVotePeriod].totalRepReported >= self.Branches[branch].repRequired):
-        met = true
-    else:
-        met = false
     if (self.EventsExpDates[branch][currentVotePeriod].numberEvents<30 && matured):
         self.Branches[branchID].currentVotePeriod += 1
         x = 0
@@ -475,7 +464,7 @@ def checkQuorum(branch):
             x += 1
     else:
         enoughEvents = true
-    if(met && matured && enoughEvents):
+    if(matured && enoughEvents):
         return(1)
     else:
         return(0)
@@ -1089,7 +1078,7 @@ def api(dataStructure, itemNumber, arrayIndex, ID):
         elif(itemNumber==1):
             return(self.Branches[ID].periodLength)
         elif(itemNumber==2):
-            return(self.Branches[ID].repRequired)
+            return(self.Branches[ID].step)
     elif(dataStructure==2):
         if(itemNumber==0):
             return(self.Events[ID].branch)

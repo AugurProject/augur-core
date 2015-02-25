@@ -10,9 +10,7 @@ augur-serpent
 	# what happens if a .5 disputed outcome in general?
 	# Disputed: If any of a Market’s Decisions attain ‘Disputed’ status, the Market attains the Disputed status. No one can buy or sell until the Dispute is resolved
 	# Audited: If a Market remained in a Disputed state and became audited, the Market would enter this state. Shares can be sold (redeemed) but the payoff formula is slightly more complicated (see Appendix III). Buying is also disabled (for simplicity and consistency).  
-	# if no agreement on any outcome <65% or whatever confidence, then do over next voting period, if th
-	vbnat fails then it goes to audit vote (where people "vote" with their cash)
-	# market listing fee
+	# if no agreement on any outcome <65% or whatever confidence, then do over next voting period, if that fails then it goes to audit vote (where people "vote" with their cash) - this confidence is *of the rep reported*
 	# VoteCoins cannot be simultaneously spent (transferred) and used to vote (need to fix this)
 	# refund left over initial liquidity in market - half to market creator, other half to voters
 	# *unless* it's a scaled decision, refund all initial liquidity left overto market creator
@@ -81,12 +79,9 @@ audit fee
 	# p+e fix?
 
 ### Version 0.3 (The Voting Upgrade - March):
-	# fast voting cycle first few days to get the <60% problem away from a branch
-	# rapid rbcr *anytime* to vote i'm alive if <60% of people vote after a few cycles
-
 	# salt hash vote mechanism
    		blocknumber mod period is residual
-   		if residual is <period/2 submit hash of (msg.sender, Rnum, Votes[]) for that reporter
+   	    if residual is <period/2 submit hash of (msg.sender, Rnum, Votes[]) for that reporter
    		if >period/2 submit Rnum and Votes[] for reporter
    		check in consensus if they match, if not, no vote ballot (allow people to change votes and hash up until lock in residual change)
 	   	anti cheat provide p and randomNum mechanism steal deposit (will need to support snarks eventually)
