@@ -1,7 +1,7 @@
 augur-serpent
 -------------
 
-### To do:
+### To do (Paul update):
 	# min max categorical events - so max-min/numOutcomes is interval between outcome
 	# implement categorical in consensus fun + augur.se.
 	# don't need reprequired
@@ -65,7 +65,8 @@ augur-serpent
 		# reward whoever does close market according to gas cost (pay gas fee in cashcoin to miner)
 	# hash first frontrunning prevention mechanism
 	# p+e fix?
-
+	# how did V propose we support mult. currencies?
+	
 ### Version 0.3 (The Voting Upgrade - March):
 	# salt hash vote mechanism
    		blocknumber mod period is residual
@@ -74,15 +75,11 @@ augur-serpent
    		check in consensus if they match, if not, no vote ballot (allow people to change votes and hash up until lock in residual change)
 	   	anti cheat provide p and randomNum mechanism steal deposit (will need to support snarks eventually)
 
-	If you get far enough behind, any events that get pushed up due to a small voting period can't be voted on either - not an issue anymore
-	I think a solution to this is to simply notice when a branch is stalled in this case (not enough rep reported at the point people can no longer vote in that period) and then move all those events up to the next voting period (and possibly allow an alive vote consensus call to be made)
-
 	when the next voting period clock starts we don't want anyone to submit a vote not counted because some events got pushed up from the last vote period due to either not enough reporters or not enough events
 
 	# what if people get behind on voting (e.g the redeem tx isn't called <1 period after it can be called) 
 	# voteperiod is an optional parameter only used in the scenario that we get behind on voting periods
-	# so people will need to vote on periods that are upcoming even if our currentVotePeriod is a bit behind, but what if an event then gets pushed into one of these periods that can't be voted on anymore..., perhaps don't allow voting if upcoming even if behind, but then we have a problem because can't vote on pushed up events
-
+	# so people will need to vote on periods that are upcoming even if our currentVotePeriod is a bit behind, but what if an event then gets pushed into one of these periods that can't be voted on anymore e.g due to not enough events..., perhaps don't allow voting if upcoming even if behind, but then we have a problem because can't vote on pushed up events
 
 	so you can't vote anymore on the next period, so instead the events get pushed up to next vote period provided stuff has expired, currentVotePeriod is incremented, and people try to vote again (if we're still so behind, checkQuorem again, etc.)
 
