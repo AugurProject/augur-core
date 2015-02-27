@@ -245,6 +245,150 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         else:
             return(0)
 
+### API (for UI)
+
+# atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
+# ui should handle this ^
+# ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents
+# && loop through the events[] array from 0 to numberEvents -1 for the votes list / order
+# UI will need a function to get the items in that array above so it can make a report!
+# w/ this function you can get the eventIDs, look them up && report on outcomes (probably w/ another function to look them up) -- make sure in this function to check that the report value is not >maxvalue or <minvalue for the event
+def makeBallot(branch):
+    numEvents = self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].numberEvents
+    eventArray = array(numEvents)
+    i = 0
+    while i < numEvents:
+        eventID = self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].events[numEvents]
+        eventArray[i] = eventID
+    return(eventArray: arr)
+
+# arrayIndex only matters if array
+def api(dataStructure, itemNumber, arrayIndex, ID):
+    if(dataStructure==0):
+        if(itemNumber==0):
+            length=self.Info[ID].descriptionLength
+            return(load(self.Info[ID].description[0], chars=length))
+        elif(itemNumber==1):
+            return(self.Info[ID].descriptionLength)
+        elif(itemNumber==2):
+            return(self.Info[ID].creator)
+        elif(itemNumber==3):
+            return(self.Info[ID].creationFee)
+    elif(dataStructure==1):
+        if(itemNumber==0):
+            return(self.Branches[ID].currentVotePeriod)
+        elif(itemNumber==1):
+            return(self.Branches[ID].periodLength)
+        elif(itemNumber==2):
+            return(self.Branches[ID].step)
+    elif(dataStructure==2):
+        if(itemNumber==0):
+            return(self.Events[ID].branch)
+        elif(itemNumber==1):
+            return(self.Events[ID].expirationDate)
+        elif(itemNumber==2):
+            return(self.Events[ID].outcome)
+        elif(itemNumber==3):
+            return(self.Events[ID].minValue)
+        elif(itemNumber==4):
+            return(self.Events[ID].maxValue)
+        elif(itemNumber==5):
+            return(self.Events[ID].numOutcomes)
+    elif(dataStructure==3):
+        if(itemNumber==0):
+            return(text("Please call the eventsExpApi function"): str)
+        elif(itemNumber==1):
+            return(text("Please call the reputation api function"): str)
+        elif(itemNumber==2):
+            return(self.Reporting[ID].numberReporters)
+        elif(itemNumber==3):
+            return(self.Reporting[ID].repIDtoIndex[arrayIndex])
+    elif(dataStructure==4):
+        if(itemNumber==0):
+            return(self.Markets[ID].events[arrayIndex])
+        elif(itemNumber==1):
+            return(self.Markets[ID].sharesPurchased[arrayIndex])
+        elif(itemNumber==2):
+            return(text("Please call the participants api function"): str)
+        elif(itemNumber==3):
+            return(self.Markets[ID].lenEvents)
+        elif(itemNumber==4):
+            return(self.Markets[ID].currentParticipant)
+        elif(itemNumber==5):
+            return(self.Markets[ID].winningOutcomes[arrayIndex])
+        elif(itemNumber==6):
+            return(self.Markets[ID].alpha)
+        elif(itemNumber==7):
+            return(self.Markets[ID].cumulativeScale)
+        elif(itemNumber==8):
+            return(self.Markets[ID].numOutcomes)
+        elif(itemNumber==9):
+            return(self.Markets[ID].tradingPeriod)
+        elif(itemNumber==10):
+            return(self.Markets[ID].tradingFee)
+    elif(dataStructure==5):
+        if(itemNumber==0):
+            return(self.p2pBets[ID].eventID)
+        elif(itemNumber==1):
+            return(self.p2pBets[ID].amtToBet)
+        elif(itemNumber==2):
+            return(self.p2pBets[ID].outcomeOneBettor)
+        elif(itemNumber==3):
+            return(self.p2pBets[ID].outcomeZeroBettor)
+
+def eventsExpApi(expDateIndex, itemNumber, arrayIndexOne, arrayIndexTwo, ID):
+    if(itemNumber==0):
+        return(self.EventsExpDates[ID][expDateIndex].numberEvents)
+    elif(itemNumber==1):
+        return(self.EventsExpDates[ID][expDateIndex].events[arrayIndexOne])
+    elif(itemNumber==2):
+        return(self.EventsExpDates[ID][expDateIndex].totalRepReported)
+    elif(itemNumber==3):
+        return(self.EventsExpDates[ID][expDateIndex].reporters[arrayIndexOne][ArrayIndexTwo])
+    elif(itemNumber==4):
+        return(self.EventsExpDates[ID][expDateIndex].vSize)
+    elif(itemNumber==5):
+        return(self.EventsExpDates[ID][expDateIndex].reportsFilled[arrayIndexOne])
+    elif(itemNumber==6):
+        return(self.EventsExpDates[ID][expDateIndex].reportsMask[arrayIndexOne])
+    elif(itemNumber==7):
+        return(self.EventsExpDates[ID][expDateIndex].weightedCenteredData[arrayIndexOne])
+    elif(itemNumber==8):
+        return(self.EventsExpDates[ID][expDateIndex].loadingVector[arrayIndexOne])
+    elif(itemNumber==9):
+        return(self.EventsExpDates[ID][expDateIndex].scores[arrayIndexOne])
+    elif(itemNumber==10):
+        return(self.EventsExpDates[ID][expDateIndex].set1[arrayIndexOne])
+    elif(itemNumber==11):
+        return(self.EventsExpDates[ID][expDateIndex].set2[arrayIndexOne])
+    elif(itemNumber==12):
+        return(self.EventsExpDates[ID][expDateIndex].old[arrayIndexOne])
+    elif(itemNumber==13):
+        return(self.EventsExpDates[ID][expDateIndex].new1[arrayIndexOne])
+    elif(itemNumber==14):
+        return(self.EventsExpDates[ID][expDateIndex].new2[arrayIndexOne])
+    elif(itemNumber==15):
+        return(self.EventsExpDates[ID][expDateIndex].adjPrinComp[arrayIndexOne])
+    elif(itemNumber==16):
+        return(self.EventsExpDates[ID][expDateIndex].smoothRep[arrayIndexOne])
+    elif(itemNumber==17):
+        return(self.EventsExpDates[ID][expDateIndex].outcomesFinal[arrayIndexOne])
+
+def reputationApi(reputationIndex, itemNumber, branchID):
+    if(itemNumber==0):
+        return(self.Reporting[branchID].reputation[reputationIndex].repValue)
+    elif(itemNumber==1):
+        return(self.Reporting[branchID].reputation[reputationIndex].reporterID)
+
+# eventID && outcomeNumber only needed if itemNumber is 1
+# remove this
+def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, marketID):
+    if(itemNumber==0):
+        return(self.Markets[marketID].participants[participantIndex].participantID)
+    elif(itemNumber==1):
+        return(self.Markets[marketID].participants[participantIndex].shares[outcomeNumber])
+
+
 def reputation(address):
     if(address):
         branches = array(2*self.branchesList[0])
