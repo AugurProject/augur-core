@@ -81,6 +81,6 @@ augur-serpent
 	# voteperiod is an optional parameter only used in the scenario that we get behind on voting periods
 	# so people will need to vote on periods that are upcoming even if our currentVotePeriod is a bit behind, but what if an event then gets pushed into one of these periods that can't be voted on anymore e.g due to not enough events..., perhaps don't allow voting if upcoming even if behind, but then we have a problem because can't vote on pushed up events
 
-	so you can't vote anymore on the next period, so instead the events get pushed up to next vote period provided stuff has expired, currentVotePeriod is incremented, and people try to vote again (if we're still so behind, checkQuorem again, etc.)
+	so you can't vote anymore on the next period, so instead the egitvents get pushed up to next vote period provided stuff has expired, currentVotePeriod is incremented, and people try to vote again (if we're still so behind, checkQuorem again, etc.)
 
 	what if we have 3-4 cycles in a row of 10 events getting pushed back --- market would already be closed even though events up to be decided on for a while yet never decided --- technically this is a stalled branch and market should be open no?
