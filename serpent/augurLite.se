@@ -245,6 +245,51 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         else:
             return(0)
 
+### P2P parimutuel betting
+def makeBet(eventID, amtToBet):
+    betData = array(3)
+    betData[0] = eventID
+    betData[1] = block.number
+    betData[2] = tx.origin
+    betID = sha256(branchinfo, items=3)
+    self.p2pBets[betID].eventID = betData[0]
+    self.p2pBets[betID].amtToBet = amtToBet
+    return(betID)
+
+# should add a fee to market
+# outcome is 0 or 1
+def sendMoneytoBet(betID, outcome):
+    if(self.cashcoinBalances[betID+outcome]==0):
+        self.send(betID+outcome, self.p2pBets[betID].amtToBet)
+    else:
+        return(0)
+    if(outcome):
+        self.p2pBets[betID].outcomeOneBettor = tx.origin
+    else:
+        self.p2pBets[betID].outcomeZeroBettor = tx.origin
+    return(1)
+
+# add support for a .5 outcome
+def closeBet(betID):
+    # outcome not determined yet
+    if(self.Events[self.p2pBets[betID].eventID].outcome == 0):
+        return(0)
+    # pay out depending on outcome
+    if(self.cashcoinBalances[betID+0]==self.p2pBets[betID].amtToBet && self.cashcoinBalances[betID+1]==self.p2pBets[betID].amtToBet):
+        self.cashcoinBalances[betID+0] -= self.cashcoinBalances[betID+0]
+        self.cashcoinBalances[betID+1] -= self.cashcoinBalances[betID+1]
+        if(self.Events[self.p2pBets[betID].eventID].outcome):
+            self.cashcoinBalances[self.p2pBets[betID].outcomeOneBettor] += self.p2pBets[betID].amtToBet*2
+        elif(self.Events[self.p2pBets[betID].eventID].outcome == -1):
+            self.cashcoinBalances[self.p2pBets[betID].outcomeZeroBettor] += self.p2pBets[betID].amtToBet*2
+    # someone didn't pay their side of the bet, refund funds
+    else:
+        self.cashcoinBalances[self.p2pBets[betID].outcomeZeroBettor] += self.cashcoinBalances[betID+0]
+        self.cashcoinBalances[self.p2pBets[betID].outcomeOneBettor] += self.cashcoinBalances[betID+1]
+        self.cashcoinBalances[betID+0] -= self.cashcoinBalances[betID+0]
+        self.cashcoinBalances[betID+1] -= self.cashcoinBalances[betID+1]
+    return(1)
+
 ### API (for UI)
 
 # atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
