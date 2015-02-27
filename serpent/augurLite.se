@@ -461,3 +461,7 @@ def reputation(address):
             b += 2
             i += 1
     return(branchBalances: arr)
+
+
+inset('fxp_macros.se')
+inset('consensus.se')
