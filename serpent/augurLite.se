@@ -159,7 +159,7 @@ def getRepBalance(branch, address):
 # period length is given in blocks
 # description format is branchName:description
 # is there some way we can include the description bytes in the sha256 hash?
-def makeSubBranch(description:str, periodLength, parent):
+def makeSubBranch(description:str, periodLength, parent): 
     if(periodLength<=0 || !self.Branches[parent].periodLength || description==0):
         return(0)
     branchInfo = string((items=6)+len(description))
@@ -224,6 +224,8 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
 
     # fee to ask a question rises if voter participation (rep reported) falls, if it's really high, the fee is lowered (participationFactor is a fixedpoint number)
     participationFactor = (self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod-2].totalRepReported * 2^64) / self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod-1].totalRepReported
+    if(participationFactor==0):
+        participationFactor = 1
     # send fee and bond
     if(self.balance(tx.origin)>=87*2^64):
         if (!self.Info[eventID].creator && !self.Events[eventID].branch && self.send(eventID, 42*2^64) && self.send(branch, participationFactor*45)):
