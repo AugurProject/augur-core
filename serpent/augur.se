@@ -36,7 +36,8 @@ data Info[](description[2048], descriptionLength, creator, creationFee)
 data Branches[](currentVotePeriod, periodLength, step)
 
 # Events' index is the eventID
-# a binary outcome has 0 for min && 1 for max value (ditto for categorical even though not actually true)
+# a binary outcome has 0 for min && 1 for max value (ditto for categorical even though not actually true) - a no is 1, yes is 2
+# this is just for events array we do 0 and 1
 # S&P 500 would be say 0 && 4700, respectively
 data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
 
