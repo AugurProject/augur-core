@@ -39,6 +39,8 @@ augur-serpent
 	# audit fee
 
 ### Scalability optimizations (hopefully these become an issue!:
+	# http://lightning.network/lightning-network.pdf 
+	# sidechains 
 	# randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot (V presentation on a similar strat.)
 	# ethereum rng:
 	  probability 0 1 ... 100
