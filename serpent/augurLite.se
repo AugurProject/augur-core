@@ -23,11 +23,6 @@ BRANCH = 0
 EVENT = 1
 MARKET = 2
 
-# var evm = '0x...';
-#  var address = web3.eth.transact({code: evm});
-#  var contract = web3.eth.contract(address, desc);
-#  serpent mk_full_signature
-
 # Every entity in our contract has similar metadata.
 # Instead of putting it in each entity, we put all the
 # metadata here.
@@ -41,7 +36,8 @@ data Info[](description[2048], descriptionLength, creator, creationFee)
 data Branches[](currentVotePeriod, periodLength, step)
 
 # Events' index is the eventID
-# a binary outcome has 0 for min && 1 for max value (ditto for categorical even though not actually true)
+# a binary outcome has 0 for min && 1 for max value (ditto for categorical even though not actually true) - a no is 1, yes is 2
+# this is just for events array we do 0 and 1
 # S&P 500 would be say 0 && 4700, respectively
 data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
 
@@ -159,7 +155,7 @@ def getRepBalance(branch, address):
 # period length is given in blocks
 # description format is branchName:description
 # is there some way we can include the description bytes in the sha256 hash?
-def makeSubBranch(description:str, periodLength, parent): 
+def makeSubBranch(description:str, periodLength, parent):
     if(periodLength<=0 || !self.Branches[parent].periodLength || description==0):
         return(0)
     branchInfo = string((items=6)+len(description))
@@ -174,7 +170,7 @@ def makeSubBranch(description:str, periodLength, parent):
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
     branchID = sha256(branchinfo, chars=len(branchInfo))
 
-    if(self.Branches[parent].periodLength && self.Info[parent].creator && self.send(parent, 47*2^64)):
+    if(self.Branches[parent].periodLength && self.Info[parent].creator && self.send(parent, 47*2^64) && self.Branches[branchID].periodLength==0):
         self.Info[branchID].creator = tx.origin
         self.Info[branchID].creationFee = 47*2^64
         self.Info[branchID].descriptionLength = len(description)
@@ -201,6 +197,7 @@ def makeSubBranch(description:str, periodLength, parent):
 
 # numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0
 # to 11.0 would be 11 outcomes (if incremented by 0.1)
+# need to make sure these values are ok
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes):
     if(self.Branches[branch].periodLength && description!=0 && expDate>block.number):
         eventinfo = string((items=8)+len(description))
@@ -247,7 +244,6 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         else:
             return(0)
 
-
 # alpha is equal to v/(n*log(n)) where v is the max percent commission
 # && n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
@@ -274,6 +270,7 @@ macro lsLmsr($marketID):
 # z = liquidity / (1+(alpha*n*ln(n)))
 # initialLiquidity is initial number of shares of each outcome you want to buy/initialize/set
 # tradingFee is a percent in fixedPoint
+# same for these als
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr):
     if(!self.Branches[branch].periodLength || description==0 || !initialLiquidity || alpha <= (2^64 / 132) || tradingFee <= 2^64):
         return(0)
@@ -320,23 +317,27 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     marketinfo[6] = cumulativeScale
     marketinfo[7] = alpha
     marketinfo[8] = numOutcomes
-
     marketinfo[9] = tradingPeriod
     marketinfo[10] = tradingFee
     mcopy(marketinfo+(items=11), description, chars=len(description))
     marketID = sha256(marketinfo, chars=len(marketinfo))
+
     # pay numOutcomes fee
-    if(!self.send(branch, numOutcomes*2^63)):
+    # if it's already been created return 0
+    if(!self.send(branch, numOutcomes*2^63) || self.Info[marketID].creator || self.Markets[marketID].numOutcomes):
         return(0)
+
     # buy some of all outcomes
     # ls-lmsr needs at least a very small initial liquidity
     y = 1
     while y <= numOutcomes:
         self.Markets[marketID].sharesPurchased[y] += initialLiquidity
         y += 1
-    log(text("rorororororo"))
-    cost = lsLmsr(marketID)
+    self.Markets[marketID].alpha = alpha
+    self.Markets[marketID].cumulativeScale = cumulativeScale
+    self.Markets[marketID].numOutcomes = numOutcomes
     log(text("ok"))
+    cost = lsLmsr(marketID)
     if(self.send(marketID, cost)):
         # add event list to the market
         save(self.Markets[marketID].events[0], events, items=eventNum)
@@ -352,10 +353,13 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         self.Markets[marketID].tradingFee = tradingFee
         return(marketID)
     else:
-        # revert shares bought
+        # revert shares bought and other variables
         y = 1
         while y <= numOutcomes:
             self.Markets[marketID].sharesPurchased[y] -= initialLiquidity
+        self.Markets[marketID].alpha = 0
+        self.Markets[marketID].cumulativeScale = 0
+        self.Markets[marketID].numOutcomes = 0
         return(0)
 
 # amount of shares should be an integer
@@ -421,7 +425,6 @@ def sellShares(branch, market, outcome, amount, participantNumber):
         self.Markets[market].participants[participantNumber].shares[outcome] -= amount
         return(amount*priceToPayPerShare)
 
-
 # a no vote is -2^64, a yes vote is 2^64 && a can't determine vote is 2^63 (a empty ballot is 0)
 # atm voters who do vote are req. to vote on all things in their respective ballots (rest just auto .5 them)
 # ui should handle this by filling in things you didn't vote on automatically & ask to be sure you didn't want to vote on them
@@ -478,7 +481,7 @@ def checkQuorum(branch):
         return(1)
     else:
         return(0)
-
+      
 # 25% of fees already distributed to market creators
 # so 2/3 of remaining fees to voters = 50%
 # && 1/3 of remaining fees to event creators = 25%
@@ -712,6 +715,7 @@ def redeem(branch):
         self.cashcoinBalances[branch] -= self.cashcoinBalances[branch]
         self.Branches[branch].step = 0
         return(self.Branches[branch].currentVotePeriod)
+
 
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
@@ -1195,7 +1199,6 @@ def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, 
     elif(itemNumber==1):
         return(self.Markets[marketID].participants[participantIndex].shares[outcomeNumber])
 
-
 def reputation(address):
     if(address):
         branches = array(2*self.branchesList[0])
@@ -1223,7 +1226,6 @@ def reputation(address):
             b += 2
             i += 1
     return(branchBalances: arr)
-
 
 inset('fxp_macros.se')
 inset('consensus.se')
