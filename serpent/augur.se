@@ -170,7 +170,7 @@ def makeSubBranch(description:str, periodLength, parent):
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
     branchID = sha256(branchinfo, chars=len(branchInfo))
 
-    if(!self.Branches[parent].periodLength && !self.Info[parent].creator && self.send(parent, 47*2^64)):
+    if(self.Branches[parent].periodLength && self.Info[parent].creator && self.send(parent, 47*2^64)):
         self.Info[branchID].creator = tx.origin
         self.Info[branchID].creationFee = 47*2^64
         self.Info[branchID].descriptionLength = len(description)
