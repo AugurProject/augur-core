@@ -78,7 +78,7 @@ def init():
     # test initial funds
     self.cashcoinBalances[tx.origin] = 1000000*2^64
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
-    self.Reporting[1010101].reputation[0].repValue = 47
+    self.Reporting[1010101].reputation[0].repValue = 470*2^64
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
     self.Reporting[1010101].numberReporters = 1
     self.Info[1010101].description[] = "initial branch"
@@ -170,7 +170,7 @@ def makeSubBranch(description:str, periodLength, parent):
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
     branchID = sha256(branchinfo, chars=len(branchinfo))
 
-    if(!self.Branches[branchID].periodLength && !self.Info[branchID].creator && self.send(branchID, 47*2^64)):
+    if(!self.Branches[parent].periodLength && !self.Info[parent].creator && self.send(parent, 47*2^64)):
         self.Info[branchID].creator = tx.origin
         self.Info[branchID].creationFee = 47*2^64
         self.Info[branchID].descriptionLength = len(description)

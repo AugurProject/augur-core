@@ -82,7 +82,7 @@ def init():
     # test initial funds
     self.cashcoinBalances[tx.origin] = 1000000*2^64
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
-    self.Reporting[1010101].reputation[0].repValue = 47
+    self.Reporting[1010101].reputation[0].repValue = 470*2^64
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
     self.Reporting[1010101].numberReporters = 1
     self.Info[1010101].description[] = "initial branch"
