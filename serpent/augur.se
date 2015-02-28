@@ -287,7 +287,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
             if(self.Events[event].expirationDate > tradingPeriod):
                 tradingPeriod = self.Events[event].expirationDate
             eventsConcat += event
-            if (self.Events[event].branch != branch || !self.Info[eventID].creator):
+            if (self.Events[event].branch != branch || !self.Info[event].creator):
                 return(0)
             #scalars
             if(self.Events[event].maxValue!=1):
@@ -329,6 +329,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     y = 1
     while y <= numOutcomes:
         self.Markets[marketID].sharesPurchased[y] += initialLiquidity
+        y += 1
     cost = lsLmsr(marketID)
 
     if(self.send(marketID, cost)):

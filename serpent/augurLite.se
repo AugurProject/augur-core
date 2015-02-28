@@ -292,7 +292,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
             if(self.Events[event].expirationDate > tradingPeriod):
                 tradingPeriod = self.Events[event].expirationDate
             eventsConcat += event
-            if (self.Events[event].branch != branch || !self.Info[eventID].creator):
+            if (self.Events[event].branch != branch || !self.Info[event].creator):
                 return(0)
             #scalars
             if(self.Events[event].maxValue!=1):
@@ -325,18 +325,18 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     marketinfo[10] = tradingFee
     mcopy(marketinfo+(items=11), description, chars=len(description))
     marketID = sha256(marketinfo, chars=len(marketinfo))
-
     # pay numOutcomes fee
     if(!self.send(branch, numOutcomes*2^63)):
         return(0)
-
     # buy some of all outcomes
     # ls-lmsr needs at least a very small initial liquidity
     y = 1
     while y <= numOutcomes:
         self.Markets[marketID].sharesPurchased[y] += initialLiquidity
+        y += 1
+    log(text("rorororororo"))
     cost = lsLmsr(marketID)
-
+    log(text("ok"))
     if(self.send(marketID, cost)):
         # add event list to the market
         save(self.Markets[marketID].events[0], events, items=eventNum)
