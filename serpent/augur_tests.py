@@ -1,22 +1,14 @@
 #!/usr/bin/python2
-import sys
-import os
-import random
 import time
-oldstderr, oldstdout = sys.stderr, sys.stdout
-sys.stdout = open(os.devnull, 'wb')
-sys.stderr = sys.stdout
-### Replace stderr for this shiz to stop
-oldstdout.write("Compiling augur.se ... ")
-oldstdout.flush()
-start = time.time()
+import random
 from pyethereum import tester as t
+FILE = "augurLite.se"
+
+print "Compiling %s ... " % FILE
+start = time.time()
 s = t.state()
 augur = s.abi_contract("augurLite.se")
-oldstdout.write("Done in %f seconds.\n" % (time.time() - start))
-oldstdout.flush()
-### random shiz from being shizzed onto the terminal
-sys.stderr, sys.stdout = oldstderr, oldstdout
+print "Done compiling in %f seconds." % (time.time() - start)
 
 balances = []
 a_k = zip(t.accounts, t.keys)
@@ -42,7 +34,7 @@ print "creating an event!"
 event = augur.createEvent(subbranch, '"will jack grow at least six inches in 2014?"', 1000, 0,1, 2)
 print '>>', event
 print "creating a market!"
-market = augur.createMarket(subbranch, '"Market on event %d"' % event, 1 << 63, 10 << 64, 1 << 60, [event])
+market = augur.createMarket(subbranch, '"Market on event %d"' % event, 1 << 60, 10 << 64, (1 << 64) + (1 << 60), [event])
 print '>>', market
 for addr, key in a_k:
     x = random.randrange(1)

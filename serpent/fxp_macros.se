@@ -8,7 +8,7 @@ macro fxp_ilog2($x):
             $hi = $mid - 1
         else:
             $lo = $mid + 1
-            $mid = ($lo + $hi)/2
+        $mid = ($lo + $hi)/2
     $lo
 
 macro fxp_log($x):
@@ -18,8 +18,7 @@ macro fxp_log($x):
 
 macro fxp_log2($x):
     $xpow = 2^64
-    $result = 0
-    $result += -0x443b9c5adb08cc45f*$xpow/2^64
+    $result = -0x443b9c5adb08cc45f*$xpow/2^64
     $xpow = $xpow*$x/2^64
     $result += 0xf0a52590f17c71a3f*$xpow/2^64
     $xpow = $xpow*$x/2^64
@@ -58,8 +57,7 @@ macro fxp_exp($x):
 
 macro fxp_exp2($x):
     $xpow = $x
-    $result = 2^64
-    $result += 0xb172182739bc0e46*$xpow/2^64
+    $result = 2^64 + 0xb172182739bc0e46*$xpow/2^64
     $xpow = $xpow*$x/2^64
     $result += 0x3d7f78a624cfb9b5*$xpow/2^64
     $xpow = $xpow*$x/2^64
