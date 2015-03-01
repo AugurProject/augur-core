@@ -66,7 +66,7 @@ data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][],
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which 
-data Markets[](events[], sharesPurchased[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee)
 
 data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
@@ -337,14 +337,17 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     cost = lsLmsr(marketID)
     if(self.send(marketID, cost)):
         # add event list to the market
+        log(data=text("E"))
         save(self.Markets[marketID].events[0], events, items=eventNum)
         self.Info[marketID].creator = tx.origin
         self.Info[marketID].creationFee = initialLiquidity
         self.Info[marketID].descriptionLength = len(description)
+        log(data=text("F"))
         save(self.Info[marketID].description[0], description, chars=len(description))
         self.Markets[marketID].alpha = alpha
         self.Markets[marketID].lenEvents = len(events)
         self.Markets[marketID].cumulativeScale = cumulativeScale
+        log(data=text("G"))
         self.Markets[marketID].numOutcomes = numOutcomes
         self.Markets[marketID].tradingPeriod = tradingPeriod
         self.Markets[marketID].tradingFee = tradingFee
@@ -361,7 +364,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
 
 # amount of shares should be an integer
 def buyShares(branch, market, outcome, amount):
-    # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
+    # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)  
     if (outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod):
         return(0)
     # lmsr cost calcs
@@ -369,33 +372,39 @@ def buyShares(branch, market, outcome, amount):
     self.Markets[market].sharesPurchased[outcome] += amount
     newCost = lsLmsr(market)
 
-    # these prices are in fixed point
-    pricePerShare = newCost - oldCost
-    participantNumber = self.Markets[market].currentParticipant
-  
-    # send shares of the event to user address
-    # if user doesn't have enough money, revert
-    if(self.cashcoinBalances[tx.origin]<((amount*pricePerShare)+(self.Markets[marketID].tradingFee*amount*pricePerShare/2^64))):
+    price = (newCost - oldCost)
+    
+    if(self.cashcoinBalances[tx.origin] < price*(self.Markets[market].tradingFee + 2^64)/2^64):
         self.Markets[market].sharesPurchased[outcome] -= amount
         return(0)
-    else:
-        # send money from user acc. to market address/account
-        # cost for shares
-        self.send(market, amount*pricePerShare)
-        # half of fees to market creator
-        self.send(self.Info[marketID].creator, (self.Markets[marketID].tradingFee*amount*pricePerShare)/2^65)
-        # other half go to branch
-        self.send(branch, (self.Markets[marketID].tradingFee*amount*pricePerShare)/2^65)
+
+    participantNumber = self.Markets[market].addr2participant[tx.origin]
+
+    if(tx.origin != self.Markets[market].participants[participantNumber].participantID):
+        participantNumber = self.Markets[market].currentParticipant
         self.Markets[market].participants[participantNumber].participantID = tx.origin
-        self.Markets[market].participants[participantNumber].shares[outcome] += amount
+        self.Markets[market].addr2participant[tx.origin] = participantNumber
         self.Markets[market].currentParticipant += 1
-        return(participantNumber)
+
+    self.Markets[market].participants[participantNumber].shares[outcome] += amount
+    # send shares of the event to user address
+    # if user doesn't have enough money, revert
+    # send money from user acc. to market address/account
+    # cost for shares
+    self.send(market, price)
+    # half of fees to market creator
+    fee = self.Markets[market].tradingFee*price/2^64
+    self.send(self.Info[market].creator, fee/2)
+    # other half go to branch
+    self.send(branch, fee/2)
+    return(participantNumber)
 
 # amount is amount of shares to buy
 # instead of inputting particip. num could just loop through array if dont have it
-def sellShares(branch, market, outcome, amount, participantNumber):
+def sellShares(branch, market, outcome, amount):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
-    if (self.Markets[market].participants[participantNumber].participantID != tx.origin || outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[marketID].tradingPeriod):
+    participantNumber = self.Markets[market].addr2participant[tx.origin]
+    if (self.Markets[market].participants[participantNumber].participantID != tx.origin || outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod):
         return(0)
     # lmsr cost calcs
     oldCost = lsLmsr(market)
@@ -403,8 +412,7 @@ def sellShares(branch, market, outcome, amount, participantNumber):
     newCost = lsLmsr(market)
 
     # these prices are in fixed point
-    pricePerShare = oldCost - newCost
-    participantNumber = self.Markets[market].currentParticipant
+    price = oldCost - newCost
 
     # remove shares from the user's account
     # if user actually doesn't have the shares, revert
@@ -413,14 +421,15 @@ def sellShares(branch, market, outcome, amount, participantNumber):
         return(0)
     else:
         # send bitcoin from the market to the user acc.
-        self.cashcoinBalances[market] -= priceToPayPerShare*amount
+        self.cashcoinBalances[market] -= price
+        fee = self.Markets[market].tradingFee*price/2^64
         # half of fees go to market creator
-        self.cashcoinBalances[self.Info[marketID].creator] +=  (self.Markets[marketID].tradingFee*amount*priceToPayPerShare)/2^65
+        self.cashcoinBalances[self.Info[market].creator] += fee/2
         # half go to branch
-        self.cashcoinBalances[branch] += (self.Markets[marketID].tradingFee*amount*priceToPayPerShare)/2^65
-        self.cashcoinBalances[tx.origin] += (priceToPayPerShare*amount - ((self.Markets[marketID].tradingFee*amount*priceToPayPerShare)/2^64))
+        self.cashcoinBalances[branch] += fee/2
+        self.cashcoinBalances[tx.origin] += (price - fee)
         self.Markets[market].participants[participantNumber].shares[outcome] -= amount
-        return(amount*priceToPayPerShare)
+        return(price)
 
 # a no vote is -2^64, a yes vote is 2^64 && a can't determine vote is 2^63 (a empty ballot is 0)
 # atm voters who do vote are req. to vote on all things in their respective ballots (rest just auto .5 them)
