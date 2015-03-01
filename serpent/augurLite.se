@@ -350,14 +350,17 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     log(data=text("D"))
     if(self.send(marketID, cost)):
         # add event list to the market
+        log(data=text("E"))
         save(self.Markets[marketID].events[0], events, items=eventNum)
         self.Info[marketID].creator = tx.origin
         self.Info[marketID].creationFee = initialLiquidity
         self.Info[marketID].descriptionLength = len(description)
+        log(data=text("F"))
         save(self.Info[marketID].description[0], description, chars=len(description))
         self.Markets[marketID].alpha = alpha
         self.Markets[marketID].lenEvents = len(events)
         self.Markets[marketID].cumulativeScale = cumulativeScale
+        log(data=text("G"))
         self.Markets[marketID].numOutcomes = numOutcomes
         self.Markets[marketID].tradingPeriod = tradingPeriod
         self.Markets[marketID].tradingFee = tradingFee
@@ -374,7 +377,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
 
 # amount of shares should be an integer
 def buyShares(branch, market, outcome, amount):
-    # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
+    # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)  
     if (outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod):
         return(0)
     # lmsr cost calcs
@@ -385,7 +388,7 @@ def buyShares(branch, market, outcome, amount):
     # these prices are in fixed point
     pricePerShare = newCost - oldCost
     participantNumber = self.Markets[market].currentParticipant
-  
+    
     # send shares of the event to user address
     # if user doesn't have enough money, revert
     if(self.cashcoinBalances[tx.origin]<((amount*pricePerShare)+(self.Markets[marketID].tradingFee*amount*pricePerShare/2^64))):
