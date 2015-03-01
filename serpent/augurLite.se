@@ -372,27 +372,19 @@ def buyShares(branch, market, outcome, amount):
     self.Markets[market].sharesPurchased[outcome] += amount
     newCost = lsLmsr(market)
 
-    # these prices are in fixed point
-<<<<<<< HEAD
-    pricePerShare = newCost - oldCost
-    participantNumber = self.Markets[market].currentParticipant
-    
-    # send shares of the event to user address
-    # if user doesn't have enough money, revert
-    if(self.cashcoinBalances[tx.origin]<((amount*pricePerShare)+(self.Markets[marketID].tradingFee*amount*pricePerShare/2^64))):
-=======
     price = (newCost - oldCost)
     
-    if self.cashcoinBalances[tx.origin] < (price + 2^64)*self.Markets[market].tradingFee/2^64:
->>>>>>> 7fa4b733ee2a5e685b6cc06909a3841130531118
+    if(self.cashcoinBalances[tx.origin] < price*(1 + (self.Markets[marketID].tradingFee/2^64))):
         self.Markets[market].sharesPurchased[outcome] -= amount
         return(0)
 
     participantNumber = self.Markets[market].addr2participant[tx.origin]
-    if tx.origin != self.Markets[market].participant[participantNumber].address:
+    if(tx.origin != self.Markets[market].participant[participantNumber].participantID):
         participantNumber = self.Markets[market].currentParticipant
+        self.Markets[market].participants[participantNumber].participantID = tx.origin
         self.Markets[market].currentParticipant += 1
-        
+    
+    self.Markets[market].participants[participantNumber].shares[outcome] += amount
     # send shares of the event to user address
     # if user doesn't have enough money, revert
     # send money from user acc. to market address/account
@@ -403,7 +395,6 @@ def buyShares(branch, market, outcome, amount):
     self.send(self.Info[market].creator, fee/2)
     # other half go to branch
     self.send(branch, fee/2)
-
     return(participantNumber)
 
 # amount is amount of shares to buy
