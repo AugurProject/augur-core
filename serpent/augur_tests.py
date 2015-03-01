@@ -41,7 +41,7 @@ for addr, key in a_k:
     x = random.randrange(1, 3)
     print "%s is  buying a share of %d" % (addr, x)
     myid = augur.buyShares(subbranch, market, x, 1, sender=key)
-    print '>>', 
+    print '>>', myid
     bought[addr] = (x, myid)
 
 for addr, key in a_k:
