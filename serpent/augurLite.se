@@ -39,6 +39,7 @@ data Branches[](currentVotePeriod, periodLength, step)
 # a binary outcome has 0 for min && 1 for max value (ditto for categorical even though not actually true) - a no is 1, yes is 2
 # this is just for events array we do 0 and 1
 # S&P 500 would be say 0 && 4700, respectively
+# should min and max be fxp?
 data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
 
 # Reporting index is the branchID
@@ -274,7 +275,7 @@ macro lsLmsr($marketID):
 # z = liquidity / (1+(alpha*n*ln(n)))
 # initialLiquidity is initial number of shares of each outcome you want to buy/initialize/set
 # tradingFee is a percent in fixedPoint
-# same for these als
+# same for these values
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr):
     if(self.Branches[branch].periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee <= 2^64):
         return(0)
@@ -311,6 +312,8 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         i += 1
     if(numOutcomes > 200):
         return(0)
+    if(cumulativeScale==0):
+        cumulativeScale = 1
     tradingPeriod = (tradingPeriod / self.Branches[branch].periodLength)
     # formation of marketID (hash)
     marketinfo = string((items=11)+len(description))
@@ -344,7 +347,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     self.Markets[marketID].numOutcomes = numOutcomes
     log(data=text("C"))
     cost = lsLmsr(marketID)
-    log(data=text("E"))
+    log(data=text("D"))
     if(self.send(marketID, cost)):
         # add event list to the market
         save(self.Markets[marketID].events[0], events, items=eventNum)

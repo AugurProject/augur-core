@@ -271,7 +271,7 @@ macro lsLmsr($marketID):
 # z = liquidity / (1+(alpha*n*ln(n)))
 # initialLiquidity is initial number of shares of each outcome you want to buy/initialize/set
 # tradingFee is a percent in fixedPoint
-# same for these als
+# same for these values
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr):
     if(!self.Branches[branch].periodLength || description==0 || !initialLiquidity || alpha <= (2^64 / 132) || tradingFee <= 2^64):
         return(0)
