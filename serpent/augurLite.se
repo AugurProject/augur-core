@@ -66,7 +66,7 @@ data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][],
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which 
-data Markets[](events[], sharesPurchased[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee)
 
 data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
@@ -370,26 +370,29 @@ def buyShares(branch, market, outcome, amount):
     newCost = lsLmsr(market)
 
     # these prices are in fixed point
-    pricePerShare = newCost - oldCost
-    participantNumber = self.Markets[market].currentParticipant
-  
-    # send shares of the event to user address
-    # if user doesn't have enough money, revert
-    if(self.cashcoinBalances[tx.origin]<((amount*pricePerShare)+(self.Markets[marketID].tradingFee*amount*pricePerShare/2^64))):
+    price = (newCost - oldCost)
+    
+    if self.cashcoinBalances[tx.origin] < (price + 2^64)*self.Markets[market].tradingFee/2^64:
         self.Markets[market].sharesPurchased[outcome] -= amount
         return(0)
-    else:
-        # send money from user acc. to market address/account
-        # cost for shares
-        self.send(market, amount*pricePerShare)
-        # half of fees to market creator
-        self.send(self.Info[marketID].creator, (self.Markets[marketID].tradingFee*amount*pricePerShare)/2^65)
-        # other half go to branch
-        self.send(branch, (self.Markets[marketID].tradingFee*amount*pricePerShare)/2^65)
-        self.Markets[market].participants[participantNumber].participantID = tx.origin
-        self.Markets[market].participants[participantNumber].shares[outcome] += amount
+
+    participantNumber = self.Markets[market].addr2participant[tx.origin]
+    if tx.origin != self.Markets[market].participant[participantNumber].address:
+        participantNumber = self.Markets[market].currentParticipant
         self.Markets[market].currentParticipant += 1
-        return(participantNumber)
+        
+    # send shares of the event to user address
+    # if user doesn't have enough money, revert
+    # send money from user acc. to market address/account
+    # cost for shares
+    self.send(market, price)
+    # half of fees to market creator
+    fee = self.Markets[market].tradingFee*price/2^64
+    self.send(self.Info[market].creator, fee/2)
+    # other half go to branch
+    self.send(branch, fee/2)
+
+    return(participantNumber)
 
 # amount is amount of shares to buy
 # instead of inputting particip. num could just loop through array if dont have it
