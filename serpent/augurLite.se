@@ -379,7 +379,8 @@ def buyShares(branch, market, outcome, amount):
     participantNumber = self.Markets[market].addr2participant[tx.origin]
     if tx.origin != self.Markets[market].participants[participantNumber].participantID:
         participantNumber = self.Markets[market].currentParticipant
-        self.Markets[market].participants[participantNumber].particpantID = tx.origin
+        self.Markets[market].participants[participantNumber].participantID = tx.origin
+        self.Markets[market].addr2participant[tx.origin] = participantNumber
         self.Markets[market].currentParticipant += 1
         
     self.Markets[market].participants[participantNumber].shares[outcome] += amount
