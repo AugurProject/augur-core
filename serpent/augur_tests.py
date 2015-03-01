@@ -36,8 +36,16 @@ print '>>', event
 print "creating a market!"
 market = augur.createMarket(subbranch, '"Market on event %d"' % event, 1 << 60, 10 << 64, (1 << 64) + (1 << 60), [event])
 print '>>', market
+bought = {}
 for addr, key in a_k:
-    x = random.randrange(1)
+    x = random.randrange(1, 3)
     print "%s is  buying a share of %d" % (addr, x)
-    print '>>', augur.buyShares(subbranch, market, x, 1)
+    myid = augur.buyShares(subbranch, market, x, 1, sender=key)
+    print '>>', myid
+    bought[addr] = (x, myid)
 
+for addr, key in a_k:
+    share, myid = bought[addr]
+    paid = augur.sellShares(subbranch, market, share, 1, myid, sender=key)
+    print "%s got paid %f for selling 1 share of outcome %d" % (addr, paid/float(2**64), share)
+    
