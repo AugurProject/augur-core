@@ -39,7 +39,7 @@ data Branches[](currentVotePeriod, periodLength, step)
 # a binary outcome has 0 for min && 1 for max value (ditto for categorical even though not actually true) - a no is 1, yes is 2
 # this is just for events array we do 0 and 1
 # S&P 500 would be say 0 && 4700, respectively
-# should min / max be fxp?
+# should min and max be fxp?
 data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
 
 # Reporting index is the branchID
@@ -249,22 +249,17 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
 # && n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
 macro lsLmsr($marketID):
-    with $Bq = 0:
-        with $l = self.Markets[$marketID].numOutcomes:
-            with $i = 1:
-                while $i <= $l:
-                    $Bq += self.Markets[$marketID].sharesPurchased[$i]
-                    $i += 1
-                $Bq *= self.Markets[$marketID].alpha
-                $Bq *= self.Markets[$marketID].cumulativeScale
-                $i = 1
-                with $sumExp = 0:
-                    with $a = 0:
-                            while $i <= $l:
-                                $a = self.Markets[$marketID].sharesPurchased[$i]
-                                $sumExp += fxp_exp($a*2^64/$Bq)
-                                $i += 1
-                            $Bq*fxp_log($sumExp)/2^64
+    with $q = load(self.Markets[$marketID].sharesPurchased[1], items=self.Markets[$marketID].numOutcomes):
+        with $alpha = self.Markets[$marketID].alpha:
+            with $cumScale = self.Markets[$marketID].cumulativeScale:
+                with $Bq = $alpha*$cumScale*sum($q):
+                    with $i = 0:
+                        with $len = len($q):
+                            with $sumexp = 0:
+                                while $i < $len:
+                                    $sumexp += fxp_exp($q[$i]*2^64/$Bq)
+                                    $i += 1
+                                $Bq*fxp_log($sumExp)/2^64
 
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
@@ -273,7 +268,7 @@ macro lsLmsr($marketID):
 # tradingFee is a percent in fixedPoint
 # same for these values
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr):
-    if(!self.Branches[branch].periodLength || description==0 || !initialLiquidity || alpha <= (2^64 / 132) || tradingFee <= 2^64):
+    if(self.Branches[branch].periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee <= 2^64):
         return(0)
     # check that events have same exp. dates && branch
     i = 0
@@ -286,24 +281,24 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     cumulativeScale = 0
     tradingPeriod = 0
     while i < eventNum:
-            event = events[i]
-            if(self.Events[event].expirationDate > tradingPeriod):
-                tradingPeriod = self.Events[event].expirationDate
-            eventsConcat += event
-            if (self.Events[event].branch != branch || !self.Info[event].creator):
+        event = events[i]
+        if(self.Events[event].expirationDate > tradingPeriod):
+            tradingPeriod = self.Events[event].expirationDate
+        eventsConcat += event
+        if (self.Events[event].branch != branch || !self.Info[event].creator):
+            return(0)
+        #scalars
+        if(self.Events[event].maxValue!=1):
+            # not a scalar but also not categorical or binary - invalid event
+            if(self.Events[event].numOutcomes!=2):
                 return(0)
-            #scalars
-            if(self.Events[event].maxValue!=1):
-                # not a scalar but also not categorical or binary - invalid event
-                if(self.Events[event].numOutcomes!=2):
-                    return(0)
-                # is a valid scalar
-                cumulativeScale += self.Events[event].maxValue - self.Events[event].minValue
-            if(i==0):
-                numOutcomes += self.Events[event].numOutcomes
-            else:
-                numOutcomes *= self.Events[event].numOutcomes
-            i += 1
+            # is a valid scalar
+            cumulativeScale += self.Events[event].maxValue - self.Events[event].minValue
+        if(i==0):
+            numOutcomes += self.Events[event].numOutcomes
+        else:
+            numOutcomes *= self.Events[event].numOutcomes
+        i += 1
     if(numOutcomes > 200):
         return(0)
     if(cumulativeScale==0):

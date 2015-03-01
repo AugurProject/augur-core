@@ -250,24 +250,15 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
 # a market is created.
 macro lsLmsr($marketID):
     with $q = load(self.Markets[$marketID].sharesPurchased[1], items=self.Markets[$marketID].numOutcomes):
-        log(data=text("a"))
         with $alpha = self.Markets[$marketID].alpha:
-            log(data=text("b"))
             with $cumScale = self.Markets[$marketID].cumulativeScale:
-                log(data=text("c"))
                 with $Bq = $alpha*$cumScale*sum($q):
-                    log(data=text("d"))
                     with $i = 0:
-                        log(data=text("e"))
                         with $len = len($q):
-                            log(data=text("f"))
                             with $sumexp = 0:
-                                log(data=text("g"))
                                 while $i < $len:
-                                    log(data=text("h"))
                                     $sumexp += fxp_exp($q[$i]*2^64/$Bq)
                                     $i += 1
-                                log(data=text("i"))
                                 $Bq*fxp_log($sumExp)/2^64
 
 # alpha is a fixedpoint number / calc. it in UI
@@ -279,7 +270,6 @@ macro lsLmsr($marketID):
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr):
     if(self.Branches[branch].periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee <= 2^64):
         return(0)
-    log(data=text("A"))
     # check that events have same exp. dates && branch
     i = 0
     eventNum = len(events)
@@ -291,7 +281,6 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     cumulativeScale = 0
     tradingPeriod = 0
     while i < eventNum:
-        log(data=text("B"))
         event = events[i]
         if(self.Events[event].expirationDate > tradingPeriod):
             tradingPeriod = self.Events[event].expirationDate
@@ -345,9 +334,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     self.Markets[marketID].alpha = alpha
     self.Markets[marketID].cumulativeScale = cumulativeScale
     self.Markets[marketID].numOutcomes = numOutcomes
-    log(data=text("C"))
     cost = lsLmsr(marketID)
-    log(data=text("D"))
     if(self.send(marketID, cost)):
         # add event list to the market
         log(data=text("E"))
