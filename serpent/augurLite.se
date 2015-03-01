@@ -397,7 +397,7 @@ def buyShares(branch, market, outcome, amount):
     self.send(self.Info[market].creator, fee/2)
     # other half go to branch
     self.send(branch, fee/2)
-    return(participantNumber)
+    return(price+fee)
 
 # amount is amount of shares to buy
 # instead of inputting particip. num could just loop through array if dont have it
