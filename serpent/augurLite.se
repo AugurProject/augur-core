@@ -871,22 +871,22 @@ def closeMarket(branch, market):
                     sharesOwned[n] = self.Markets[market].participants[i].shares[winningOutcome[n]]
                     n+=1
                 participant = self.Markets[market].participants[i].participantID
-                self.cashcoinBalances[market] -= sharesOwned[0]*pricePerShare1
-                self.cashcoinBalances[participant] += sharesOwned[0]*pricePerShare1
-                self.cashcoinBalances[market] -= sharesOwned[1]*pricePerShare2
-                self.cashcoinBalances[participant] += sharesOwned[1]*pricePerShare2
-                self.cashcoinBalances[market] -= sharesOwned[2]*pricePerShare3
-                self.cashcoinBalances[participant] += sharesOwned[2]*pricePerShare3
-                self.cashcoinBalances[market] -= sharesOwned[3]*pricePerShare4
-                self.cashcoinBalances[participant] += sharesOwned[3]*pricePerShare4
-                self.cashcoinBalances[market] -= sharesOwned[4]*pricePerShare5
-                self.cashcoinBalances[participant] += sharesOwned[4]*pricePerShare5
-                self.cashcoinBalances[market] -= sharesOwned[5]*pricePerShare6
-                self.cashcoinBalances[participant] += sharesOwned[5]*pricePerShare6
-                self.cashcoinBalances[market] -= sharesOwned[6]*pricePerShare7
-                self.cashcoinBalances[participant] += sharesOwned[6]*pricePerShare7
-                self.cashcoinBalances[market] -= sharesOwned[7]*pricePerShare8
-                self.cashcoinBalances[participant] += sharesOwned[7]*pricePerShare8
+                self.cashcoinBalances[market] -= sharesOwned[0]*pricePerShare1/2^64
+                self.cashcoinBalances[participant] += sharesOwned[0]*pricePerShare1/2^64
+                self.cashcoinBalances[market] -= sharesOwned[1]*pricePerShare2/2^64
+                self.cashcoinBalances[participant] += sharesOwned[1]*pricePerShare2/2^64
+                self.cashcoinBalances[market] -= sharesOwned[2]*pricePerShare3/2^64
+                self.cashcoinBalances[participant] += sharesOwned[2]*pricePerShare3/2^64
+                self.cashcoinBalances[market] -= sharesOwned[3]*pricePerShare4/2^64
+                self.cashcoinBalances[participant] += sharesOwned[3]*pricePerShare4/2^64
+                self.cashcoinBalances[market] -= sharesOwned[4]*pricePerShare5/2^64
+                self.cashcoinBalances[participant] += sharesOwned[4]*pricePerShare5/2^64
+                self.cashcoinBalances[market] -= sharesOwned[5]*pricePerShare6/2^64
+                self.cashcoinBalances[participant] += sharesOwned[5]*pricePerShare6/2^64
+                self.cashcoinBalances[market] -= sharesOwned[6]*pricePerShare7/2^64
+                self.cashcoinBalances[participant] += sharesOwned[6]*pricePerShare7/2^64
+                self.cashcoinBalances[market] -= sharesOwned[7]*pricePerShare8/2^64
+                self.cashcoinBalances[participant] += sharesOwned[7]*pricePerShare8/2^64
                 i+=1
 
         elif(winningOutcomes[3]):
@@ -942,20 +942,20 @@ def closeMarket(branch, market):
                     participant = self.Markets[market].participants[i].participantID
                     # low-low
                     if(n==0):
-                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare1
-                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare1
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare1/2^64
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare1/2^64
                     # high-low
                     elif(n==1):
-                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare2
-                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare2
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare2/2^64
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare2/2^64
                     # low-high
                     elif(n==2):
-                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare3
-                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare3
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare3/2^64
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare3/2^64
                     # high-high
                     elif(n==3):
-                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare4
-                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare4
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare4/2^64
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare4/2^64
                     n+=1
                 i+=1
 
@@ -990,12 +990,12 @@ def closeMarket(branch, market):
                     participant = self.Markets[market].participants[i].participantID
                     # low side
                     if(n==0):
-                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare1
-                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare1
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare1/2^64
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare1/2^64
                     # high side (of the scalar part)
                     elif(n==1):
-                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare2
-                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare2
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare2/2^64
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare2/2^64
                     n+=1
                 i += 1
 
