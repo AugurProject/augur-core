@@ -24,6 +24,8 @@ augur-serpent
 		require an explicit payment to the Market of 2 trading fees.
 	# With these three conditions: [1] Stalled Branch, [2] Decision-Author’s signature, [3] Market-Author’s signature, one can move a Market’s Decisions to a new Branch
 
+	# what if we have 3-4 cycles in a row of 10 events getting pushed back --- market would already be closed even though events up to be decided on for a while yet never decided --- technically this is a stalled branch and market should be open no? -- yes
+
 	#It may be desirable to impose serious prerequisites for Branching. The option to Branch may require an automatic trigger, for example, that there be >500 upcoming Decisions.  Requiring high λ and Λ parameters would also discourage the creation of frivolous Branches (as these would need to reliably support many Decisions in order to operate effectively).
 	# limit order
 	# front running pow
@@ -76,13 +78,3 @@ augur-serpent
    		if >period/2 submit Rnum and Votes[] for reporter
    		check in consensus if they match, if not, no vote ballot (allow people to change votes and hash up until lock in residual change)
 	   	anti cheat provide p and randomNum mechanism steal deposit (will need to support snarks eventually)
-
-	when the next voting period clock starts we don't want anyone to submit a vote not counted because some events got pushed up from the last vote period due to either not enough reporters or not enough events
-
-	# what if people get behind on voting (e.g the redeem tx isn't called <1 period after it can be called) 
-	# voteperiod is an optional parameter only used in the scenario that we get behind on voting periods
-	# so people will need to vote on periods that are upcoming even if our currentVotePeriod is a bit behind, but what if an event then gets pushed into one of these periods that can't be voted on anymore e.g due to not enough events..., perhaps don't allow voting if upcoming even if behind, but then we have a problem because can't vote on pushed up events
-
-	so you can't vote anymore on the next period, so instead the egitvents get pushed up to next vote period provided stuff has expired, currentVotePeriod is incremented, and people try to vote again (if we're still so behind, checkQuorem again, etc.)
-
-	what if we have 3-4 cycles in a row of 10 events getting pushed back --- market would already be closed even though events up to be decided on for a while yet never decided --- technically this is a stalled branch and market should be open no?

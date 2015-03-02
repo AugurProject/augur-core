@@ -253,11 +253,11 @@ macro lsLmsr($marketID):
         with $alpha = self.Markets[$marketID].alpha:
             with $cumScale = self.Markets[$marketID].cumulativeScale:
                 with $Bq = $alpha*$cumScale*sum($q):
-                    with $i = 0:
+                    with $i = 1:
                         with $len = len($q):
                             with $sumexp = 0:
-                                while $i < $len:
-                                    $sumexp += fxp_exp($q[$i]*2^64/$Bq)
+                                while $i <= $len:
+                                    $sumexp += fxp_exp($q[$i]*2^128/$Bq)
                                     $i += 1
                                 $Bq*fxp_log($sumExp)/2^64
 
@@ -268,7 +268,7 @@ macro lsLmsr($marketID):
 # tradingFee is a percent in fixedPoint
 # same for these values
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr):
-    if(self.Branches[branch].periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee <= 2^64):
+    if(self.Branches[branch].periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee < 2^64):
         return(0)
     # check that events have same exp. dates && branch
     i = 0
@@ -369,10 +369,12 @@ def buyShares(branch, market, outcome, amount):
         return(0)
     # lmsr cost calcs
     oldCost = lsLmsr(market)
+    log(oldCost)
     self.Markets[market].sharesPurchased[outcome] += amount
     newCost = lsLmsr(market)
-
+    log(newCost)
     price = (newCost - oldCost)
+    log(price)
     
     if(self.cashcoinBalances[tx.origin] < price*(self.Markets[market].tradingFee + 2^64)/2^64):
         self.Markets[market].sharesPurchased[outcome] -= amount
@@ -397,7 +399,7 @@ def buyShares(branch, market, outcome, amount):
     self.send(self.Info[market].creator, fee/2)
     # other half go to branch
     self.send(branch, fee/2)
-    return(participantNumber)
+    return(price+fee)
 
 # amount is amount of shares to buy
 # instead of inputting particip. num could just loop through array if dont have it
@@ -436,33 +438,58 @@ def sellShares(branch, market, outcome, amount):
 # ui should handle this by filling in things you didn't vote on automatically & ask to be sure you didn't want to vote on them
 # UI makeBallot function does this
     # ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[votePeriod].numberEvents
-    # && loop through the events[] array from 0 to numberEvents -1 for the votes list / order
+    # && loop through the events[] array fr2om 0 to numberEvents -1 for the votes list / order
 # people could report something like 16027*2^64 for a scalar
-def vote(branch, report:arr):
+# if people get behind on voting (e.g the redeem tx isn't called <1 period after it can be called) 
+    # voteperiod is an optional parameter only used in the scenario that we get behind on voting periods
+    # so people will need to vote on periods that are upcoming even if our currentVotePeriod is a bit behind (e.g. if current expperiod is 7 you should vote on stuff from voteperiod 6 (and then upon period 8 you can't vote anymore))
+def vote(branch, report:arr, votePeriod):
     # make sure the branch exists
     repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
-    # need report length to be same as number of items in the current eventexpdates voting period events!
-    if(len(report)!=self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].numberEvents):
-        return(0)
+    if(votePeriod):
+        # need report length to be same as number of items in the current eventexpdates voting period events!
+        if(len(report)!=self.EventsExpDates[branch][votePeriod].numberEvents):
+            return(0)
 
-    # if currentExpPeriod is more than 2 periods past the current vote period
-    # then there can be no more voting for that voting period
-    # (reasoning being: >1 period past means all the events in that period have expired)
-    # (>=2 periods past mean the events have exp. & people have had 1 full period to vote)
-    # currently requires events to expire to vote
-    currentExpPeriod = (block.number / self.Branches[branch].periodLength)
-    if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin || currentExpPeriod >= (self.Branches[branch].currentVotePeriod+2) || currentExpPeriod < (self.Branches[branch].currentVotePeriod+1)):
-        return(0)
+        # if currentExpPeriod is more than 2 periods past the current vote period
+        # then there can be no more voting for that voting period
+        # (reasoning being: >=1 period past means all the events in that period have expired)
+        # (>=2 periods past mean the events have exp. & people have had 1 full period to vote)
+        # currently requires events to expire to vote
+        currentExpPeriod = (block.number / self.Branches[branch].periodLength)
+        if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
+            return(0)
 
-    reputation = self.Reporting[branch].reputation[repIndex].repValue
-    # need to update stuff for quorem
-    # && store the report && the rep value
-    save(self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].reporters[tx.origin][0], report, items=len(report))
-    self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].totalRepReported += reputation
-    return(1)
+        reputation = self.Reporting[branch].reputation[repIndex].repValue
+        # need to update stuff for quorem
+        # && store the report && the rep value
+        save(self.EventsExpDates[branch][votePeriod].reporters[tx.origin][0], report, items=len(report))
+        self.EventsExpDates[branch][votePeriod].totalRepReported += reputation
+        return(1)
+
+    else:
+        # need report length to be same as number of items in the current eventexpdates voting period events!
+        if(len(report)!=self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].numberEvents):
+            return(0)
+
+        # if currentExpPeriod is more than 2 periods past the current vote period
+        # then there can be no more voting for that voting period
+        # (reasoning being: >=1 period past means all the events in that period have expired)
+        # (>=2 periods past mean the events have exp. & people have had 1 full period to vote)
+        # currently requires events to expire to vote
+        currentExpPeriod = (block.number / self.Branches[branch].periodLength)
+        if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin || currentExpPeriod >= (self.Branches[branch].currentVotePeriod+2) || currentExpPeriod < (self.Branches[branch].currentVotePeriod+1)):
+            return(0)
+
+        reputation = self.Reporting[branch].reputation[repIndex].repValue
+        # need to update stuff for quorem
+        # && store the report && the rep value
+        save(self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].reporters[tx.origin][0], report, items=len(report))
+        self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].totalRepReported += reputation
+        return(1)
 
 # returns whether a quorem has a matured event
-# if there aren't enough events in a vote period eventsexpdate, push them to the next period and increment the vote period
+# if there aren't enough events in a vote period eventsexpdate, push them to the current period and increment the vote period
 def checkQuorum(branch):
     currentVotePeriod = self.Branches[branchID].currentVotePeriod
     currentPeriod = (block.number / self.Branches[branch].periodLength)
@@ -478,8 +505,8 @@ def checkQuorum(branch):
         self.Branches[branchID].currentVotePeriod += 1
         x = 0
         while(x < self.EventsExpDates[branch][currentVotePeriod-1].numberEvents):
-            self.EventsExpDates[branch][currentVotePeriod].events[self.EventsExpDates[branch][currentVotePeriod].numberEvents] = self.EventsExpDates[branch][currentVotePeriod-1].events[x]
-            self.EventsExpDates[branch][currentVotePeriod].numberEvents += 1
+            self.EventsExpDates[branch][currentVotePeriod].events[self.EventsExpDates[branch][currentPeriod].numberEvents] = self.EventsExpDates[branch][currentVotePeriod-1].events[x]
+            self.EventsExpDates[branch][currentPeriod].numberEvents += 1
             x += 1
     else:
         enoughEvents = true
@@ -869,22 +896,22 @@ def closeMarket(branch, market):
                     sharesOwned[n] = self.Markets[market].participants[i].shares[winningOutcome[n]]
                     n+=1
                 participant = self.Markets[market].participants[i].participantID
-                self.cashcoinBalances[market] -= sharesOwned[0]*pricePerShare1
-                self.cashcoinBalances[participant] += sharesOwned[0]*pricePerShare1
-                self.cashcoinBalances[market] -= sharesOwned[1]*pricePerShare2
-                self.cashcoinBalances[participant] += sharesOwned[1]*pricePerShare2
-                self.cashcoinBalances[market] -= sharesOwned[2]*pricePerShare3
-                self.cashcoinBalances[participant] += sharesOwned[2]*pricePerShare3
-                self.cashcoinBalances[market] -= sharesOwned[3]*pricePerShare4
-                self.cashcoinBalances[participant] += sharesOwned[3]*pricePerShare4
-                self.cashcoinBalances[market] -= sharesOwned[4]*pricePerShare5
-                self.cashcoinBalances[participant] += sharesOwned[4]*pricePerShare5
-                self.cashcoinBalances[market] -= sharesOwned[5]*pricePerShare6
-                self.cashcoinBalances[participant] += sharesOwned[5]*pricePerShare6
-                self.cashcoinBalances[market] -= sharesOwned[6]*pricePerShare7
-                self.cashcoinBalances[participant] += sharesOwned[6]*pricePerShare7
-                self.cashcoinBalances[market] -= sharesOwned[7]*pricePerShare8
-                self.cashcoinBalances[participant] += sharesOwned[7]*pricePerShare8
+                self.cashcoinBalances[market] -= sharesOwned[0]*pricePerShare1/2^64
+                self.cashcoinBalances[participant] += sharesOwned[0]*pricePerShare1/2^64
+                self.cashcoinBalances[market] -= sharesOwned[1]*pricePerShare2/2^64
+                self.cashcoinBalances[participant] += sharesOwned[1]*pricePerShare2/2^64
+                self.cashcoinBalances[market] -= sharesOwned[2]*pricePerShare3/2^64
+                self.cashcoinBalances[participant] += sharesOwned[2]*pricePerShare3/2^64
+                self.cashcoinBalances[market] -= sharesOwned[3]*pricePerShare4/2^64
+                self.cashcoinBalances[participant] += sharesOwned[3]*pricePerShare4/2^64
+                self.cashcoinBalances[market] -= sharesOwned[4]*pricePerShare5/2^64
+                self.cashcoinBalances[participant] += sharesOwned[4]*pricePerShare5/2^64
+                self.cashcoinBalances[market] -= sharesOwned[5]*pricePerShare6/2^64
+                self.cashcoinBalances[participant] += sharesOwned[5]*pricePerShare6/2^64
+                self.cashcoinBalances[market] -= sharesOwned[6]*pricePerShare7/2^64
+                self.cashcoinBalances[participant] += sharesOwned[6]*pricePerShare7/2^64
+                self.cashcoinBalances[market] -= sharesOwned[7]*pricePerShare8/2^64
+                self.cashcoinBalances[participant] += sharesOwned[7]*pricePerShare8/2^64
                 i+=1
 
         elif(winningOutcomes[3]):
@@ -940,20 +967,20 @@ def closeMarket(branch, market):
                     participant = self.Markets[market].participants[i].participantID
                     # low-low
                     if(n==0):
-                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare1
-                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare1
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare1/2^64
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare1/2^64
                     # high-low
                     elif(n==1):
-                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare2
-                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare2
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare2/2^64
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare2/2^64
                     # low-high
                     elif(n==2):
-                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare3
-                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare3
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare3/2^64
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare3/2^64
                     # high-high
                     elif(n==3):
-                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare4
-                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare4
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare4/2^64
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare4/2^64
                     n+=1
                 i+=1
 
@@ -988,12 +1015,12 @@ def closeMarket(branch, market):
                     participant = self.Markets[market].participants[i].participantID
                     # low side
                     if(n==0):
-                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare1
-                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare1
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare1/2^64
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare1/2^64
                     # high side (of the scalar part)
                     elif(n==1):
-                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare2
-                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare2
+                        self.cashcoinBalances[market] -= sharesOwned*pricePerShare2/2^64
+                        self.cashcoinBalances[participant] += sharesOwned*pricePerShare2/2^64
                     n+=1
                 i += 1
 
@@ -1070,13 +1097,22 @@ def closeBet(betID):
 # && loop through the events[] array from 0 to numberEvents -1 for the votes list / order
 # UI will need a function to get the items in that array above so it can make a report!
 # w/ this function you can get the eventIDs, look them up && report on outcomes (probably w/ another function to look them up) -- make sure in this function to check that the report value is not >maxvalue or <minvalue for the event
-def makeBallot(branch):
-    numEvents = self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].numberEvents
-    eventArray = array(numEvents)
-    i = 0
-    while i < numEvents:
-        eventID = self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].events[numEvents]
-        eventArray[i] = eventID
+# voteperiod is an optional parameter only used in the scenario that we get behind on voting periods - ui will want to alert users of this and say hey we're behind but atm you should really be voting on this voting period (anything meeting the req. of vote if we were caught up)
+def makeBallot(branch, votePeriod):
+    if(votePeriod):
+        numEvents = self.EventsExpDates[branch][votePeriod].numberEvents
+        eventArray = array(numEvents)
+        i = 0
+        while i < numEvents:
+            eventID = self.EventsExpDates[branch][votePeriod].events[numEvents]
+            eventArray[i] = eventID
+    else:
+        numEvents = self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].numberEvents
+        eventArray = array(numEvents)
+        i = 0
+        while i < numEvents:
+            eventID = self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].events[numEvents]
+            eventArray[i] = eventID
     return(eventArray: arr)
 
 # arrayIndex only matters if array
