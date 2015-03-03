@@ -1277,7 +1277,7 @@ def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, 
     elif(itemNumber==1):
         return(self.Markets[marketID].participants[participantIndex].shares[outcomeNumber])
 
-def reputation(address):
+def reputation(address, branch):
     if(address):
         branches = array(2*self.branchesList[0])
         i = 1
