@@ -71,4 +71,3 @@ augur-serpent
 ### Bugs:
 	# not allowing me to make a subbranch w/ same desc. name and parent which is another subbranch (I have a suspicion the *only* thing getting hashed is the description and not the other metadata, causing this issue)
 	# reputation function gives me a "transaction failed" (getRepBalance works fine so I suspect this is another load issue)
-	# does make event function work? - Scott says no, need to check again (worked last time I checked)
