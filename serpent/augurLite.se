@@ -164,9 +164,10 @@ def makeSubBranch(description:str, periodLength, parent):
 
     #upcomingDecisions = 0
     #a = (block.number / self.Branches[branch].periodLength)
-    #while a < (a+100):
+    #b = a
+    #while b < (a+100):
     #    upcomingDecisions += self.EventsExpDates[parent][a].numberEvents
-    #    a += 1
+    #    b += 1
     # turned off for testing
     #if(upcomingDecisions < 500):
     #    return(0)
@@ -1333,7 +1334,6 @@ def retAllMarkets(branch):
     return(markets: arr)
 
 def retAllEvents(branch, expPeriod):
-        data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
     numEvents = self.EventsExpDates[branch][expPeriod].numberEvents
     events = array(numEvents)
     i = 0
