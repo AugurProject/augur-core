@@ -4,10 +4,10 @@ augur-serpent
 ### To do (Paul update):
 	# min max categorical events - so max-min/numOutcomes is interval between outcome
 	# implement categorical in consensus fun + augur.se.
-	# don't need reprequired
 	# what if a scalar has a .5 actual value outcome
 		# I suggest the null outcome be either scalarmin-1 or max+1
 	# what happens if a .5 disputed outcome in general?
+	# cashcoin fees to send/go over fee structure
 	# Disputed: If any of a Market’s Decisions attain ‘Disputed’ status, the Market attains the Disputed status. No one can buy or sell until the Dispute is resolved
 	# Audited: If a Market remained in a Disputed state and became audited, the Market would enter this state. Shares can be sold (redeemed) but the payoff formula is slightly more complicated (see Appendix III). Buying is also disabled (for simplicity and consistency).  
 	# if no agreement on any outcome <65% or whatever confidence, then do over next voting period, if that fails then it goes to audit vote (where people "vote" with their cash) - this confidence is *of the rep reported*
@@ -16,12 +16,6 @@ augur-serpent
 	# *unless* it's a scaled decision, refund all initial liquidity left overto market creator
 	# rest of money available in market + the additional trading fees divy up amongst reporters and market creator
 	# for final .5 outcomes take shares bought and divide the money up amongst them equally (should be .50 each)
-			# ) Shares themselves can be ‘traded’ for efficiency or (optionally) even to offload tradinginfrastructure
-		to third parties. Instead of selling for CashCoin, transferring CashCoin, and
-		then re-buying (a cost of 2 trading fees and 3 transaction fees, and substantial delay and
-		price risk), a ‘transfer’ function can simply move shares among keypairs in one
-		transaction. However, to remain incentive-compatible, this function would need to
-		require an explicit payment to the Market of 2 trading fees.
 	# With these three conditions: [1] Stalled Branch, [2] Decision-Author’s signature, [3] Market-Author’s signature, one can move a Market’s Decisions to a new Branch
 
 	# what if we have 3-4 cycles in a row of 10 events getting pushed back --- market would already be closed even though events up to be decided on for a while yet never decided --- technically this is a stalled branch and market should be open no? -- yes
@@ -34,7 +28,6 @@ augur-serpent
 	# e.g. if it falls within the certainty threshold, then it goes to wave 2 of svd else it goes to an audit
 	# One failure to achieve certainty could be a simple confusion (and should not go directly to audit) - perhaps vote again on it
 	# a certain .5 outcome shouldn't be voted on again though
-	# separate Branches might compete over different parameter-families, it may be advantageous for the blockchain itself to impose “Reasonable Bounds” on possible choices for parameters. Branches themselves may impose “Reasonable Bounds” on Market-specific parameters, (b, content-tags, trading/audit fees).
 	# min future decisions at stake - 200 - else branch stalls (do same thing we do if min ballot/event size isn't met, push events into current voting period and hopefully more people will create decisions so it can actually be vote on, else repeat)
 	# audit fee
 
@@ -58,6 +51,7 @@ augur-serpent
 	# make code updatable + work with etherex & chow (bitsquare, coineffine other decentralized exchanges as well)
 	# stablecoin
 	# VPM
+	# separate Branches might compete over different parameter-families, it may be advantageous for the blockchain itself to impose “Reasonable Bounds” on possible choices for parameters. Branches themselves may impose “Reasonable Bounds” on Market-specific parameters, (b, content-tags, trading/audit fees).	
 
 ### Version 0.4 (Awesome fun stuff - April):
 	# go over stuff in close and redeem txs

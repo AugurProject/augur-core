@@ -443,6 +443,32 @@ def sellShares(branch, market, outcome, amount):
         self.Markets[market].participants[participantNumber].shares[outcome] -= amount
         return(price)
 
+def transferShares(branch, market, outcome, amount, to):
+    participantNumber = self.Markets[market].addr2participant[tx.origin]
+    receiverNumber = self.Markets[market].addr2participant[to]
+    if (outcome==0 || self.Markets[market].participants[participantNumber].participantID != tx.origin):
+        return(0)
+    if(to != self.Markets[market].participants[receiverNumber].participantID):
+        receiverNumber = self.Markets[market].currentParticipant
+        self.Markets[market].participants[receiverNumber].participantID = to
+        self.Markets[market].addr2participant[to] = receiverNumber
+        self.Markets[market].currentParticipant += 1
+    # remove shares from the user's account
+    # if user actually doesn't have the shares, return 0
+    if(self.Markets[market].participants[participantNumber].shares[outcome] < amount):
+        return(0)
+    self.Markets[market].participants[participantNumber].shares[outcome] -= amount
+    self.Markets[market].participants[receiverNumber].shares[outcome] =+ amount
+
+    # needs msrPrice macro implemented to send fees
+    # half of fees to market creator
+    #fee = self.Markets[market].tradingFee*msrPrice(market, outcome)/2^64
+    #self.send(self.Info[market].creator, fee/2)
+    # other half go to branch
+    #self.send(branch, fee/2)
+
+    return(amount)
+
 # a no vote is -2^64, a yes vote is 2^64 && a can't determine vote is 2^63 (a empty ballot is 0)
 # atm voters who do vote are req. to vote on all things in their respective ballots (rest just auto .5 them)
 # ui should handle this by filling in things you didn't vote on automatically & ask to be sure you didn't want to vote on them
