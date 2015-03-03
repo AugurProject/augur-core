@@ -159,6 +159,16 @@ def getRepBalance(branch, address):
 def makeSubBranch(description:str, periodLength, parent):
     if(periodLength<=0 || !self.Branches[parent].periodLength || description==0):
         return(0)
+
+    upcomingDecisions = 0
+    a = (block.number / self.Branches[branch].periodLength)
+    while a < (a+100):
+        upcomingDecisions += self.EventsExpDates[parent][a].numberEvents
+        a += 1
+    # turned off for testing
+    #if(upcomingDecisions < 500):
+    #    return(0)
+
     branchInfo = string((items=6)+len(description))
     branchInfo[0] = BRANCH                                      #typecode
     branchInfo[1] = tx.origin                                   #creator address

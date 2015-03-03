@@ -26,9 +26,7 @@ augur-serpent
 
 	# what if we have 3-4 cycles in a row of 10 events getting pushed back --- market would already be closed even though events up to be decided on for a while yet never decided --- technically this is a stalled branch and market should be open no? -- yes
 
-	#It may be desirable to impose serious prerequisites for Branching. The option to Branch may require an automatic trigger, for example, that there be >500 upcoming Decisions.  Requiring high λ and Λ parameters would also discourage the creation of frivolous Branches (as these would need to reliably support many Decisions in order to operate effectively).
 	# limit order
-	# front running pow
 	# does it matter if we have mult. decisions for a dimension vs just one event w/ multiple outcome
 	# catch parameter
 	# could do .5 outcomes where if a .5 in a market with multiple dimensions it still pays out 
@@ -37,7 +35,7 @@ augur-serpent
 	# One failure to achieve certainty could be a simple confusion (and should not go directly to audit) - perhaps vote again on it
 	# a certain .5 outcome shouldn't be voted on again though
 	# separate Branches might compete over different parameter-families, it may be advantageous for the blockchain itself to impose “Reasonable Bounds” on possible choices for parameters. Branches themselves may impose “Reasonable Bounds” on Market-specific parameters, (b, content-tags, trading/audit fees).
-	# min future decisions at stake - 200 - else branch stalls (do same thing we do if min ballot/event size isn't met, push events into next voting period and hopefully more people will create decisions so it can actually be vote on, else repeat)
+	# min future decisions at stake - 200 - else branch stalls (do same thing we do if min ballot/event size isn't met, push events into current voting period and hopefully more people will create decisions so it can actually be vote on, else repeat)
 	# audit fee
 
 ### Scalability optimizations (hopefully these become an issue!:
@@ -59,15 +57,13 @@ augur-serpent
 	# special cfds + public good funding + poss. futarchy
 	# make code updatable + work with etherex & chow (bitsquare, coineffine other decentralized exchanges as well)
 	# stablecoin
-
-	# make sure this follows paul's whitepaper well	
 	# VPM
 
 ### Version 0.4 (Awesome fun stuff - April):
 	# go over stuff in close and redeem txs
 	# make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
 		# reward whoever does close market according to gas cost (pay gas fee in cashcoin to miner)
-	# hash first frontrunning prevention mechanism
+	# hash first frontrunning prevention mechanism or pow
 	# p+e fix?
 	# how did V propose we support mult. currencies?
 	
