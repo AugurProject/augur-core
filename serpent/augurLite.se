@@ -458,7 +458,7 @@ def transferShares(branch, market, outcome, amount, to):
     if(self.Markets[market].participants[participantNumber].shares[outcome] < amount):
         return(0)
     self.Markets[market].participants[participantNumber].shares[outcome] -= amount
-    self.Markets[market].participants[receiverNumber].shares[outcome] =+ amount
+    self.Markets[market].participants[receiverNumber].shares[outcome] += amount
 
     # needs msrPrice macro implemented to send fees
     # half of fees to market creator
