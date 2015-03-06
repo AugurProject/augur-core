@@ -3,11 +3,11 @@ macro fxp_ilog2($x):
     $lo = 0
     $hi = 191
     $mid = ($lo + $hi)/2
-    while $lo < $hi:
+    while $lo + 1 != $hi:
         if 2^$mid > $y:
-            $hi = $mid - 1
+            $hi = $mid
         else:
-            $lo = $mid + 1
+            $lo = $mid
         $mid = ($lo + $hi)/2
     $lo
 
@@ -17,9 +17,8 @@ macro fxp_log($x):
     ($y*2^64 + fxp_log2($z))*2^64/0x171547652b82fe177
 
 macro fxp_log2($x):
-    $xpow = 2^64
-    $result = -0x443b9c5adb08cc45f*$xpow/2^64
-    $xpow = $xpow*$x/2^64
+    $xpow = $x
+    $result = -0x443b9c5adb08cc45f
     $result += 0xf0a52590f17c71a3f*$xpow/2^64
     $xpow = $xpow*$x/2^64
     $result += -0x2478f22e787502b023*$xpow/2^64
