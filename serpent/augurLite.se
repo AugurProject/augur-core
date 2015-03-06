@@ -87,7 +87,7 @@ def init():
     self.Info[1010101].creationFee = 10
     self.Branches[1010101].currentVotePeriod = (block.number / 403200) - 1 
     self.Branches[1010101].periodLength = 403200
-    self.branchesList[0] = 2
+    self.branchesList[0] = 1
     self.branchesList[1] = 1010101
 
 # string chunks
@@ -1323,9 +1323,9 @@ def reputation(address, branch):
             branches[b+1] = load(self.Info[branch].description[0], items=2048)
             b += 2
             i += 1
-    return(branchBalances: arr)
+    return(branches: arr)
 
-def retAllMarkets(branch):
+def getAllMarkets(branch):
     numMarkets = self.Branches[branch].numMarkets
     markets = array(numMarkets)
     i = 0
@@ -1333,7 +1333,7 @@ def retAllMarkets(branch):
         markets[i] = self.Branches[branch].markets[i]
     return(markets: arr)
 
-def retAllEvents(branch, expPeriod):
+def getAllEvents(branch, expPeriod):
     numEvents = self.EventsExpDates[branch][expPeriod].numberEvents
     events = array(numEvents)
     i = 0
