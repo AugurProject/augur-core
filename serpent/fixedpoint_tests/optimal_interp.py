@@ -1,8 +1,9 @@
 #!/usr/bin/python2
 import gmpy2
-import pylab
+import matplotlib.pyplot as plt
 import os
 import bisect
+from numpy import linspace
 # gmpy2 precision initialization
 BITS = (1 << 10)
 BYTES = BITS/8
@@ -115,12 +116,18 @@ def fx_max_random_error(fx_func, ref_func, trials, a, b):
 
 def fx_relative_random_error(fx_func, ref_func, trials, a, b):
     errors = []
+    min_err, max_err = float('inf'), float('-inf')
     for i in range(trials):
         random_input = random()*(b - a) + a
         expected = ref_func(random_input) * 2**64
         result = fx_func(int(random_input * 2**64))
-        bisect.insort(errors, (result - expected)*100/expected)
-    return sum(errors[trials/4:3*trials/4])*4/trials, min(errors), max(errors), errors[len(errors)/2]
+        diff = result - expected
+        if diff < min_err:
+            min_err = diff
+        if max_err < diff:
+            max_err = diff
+        bisect.insort(errors, diff*100/expected)
+    return sum(map(abs, errors[trials/4:3*trials/4]))*4/trials, min(errors), max(errors), errors[len(errors)/2], max_err, min_err
 
 def fx_floor_log2(x):
     y = x >> 64
@@ -157,10 +164,17 @@ def fx_exp(x, exp2_poly):
 
 def test_interps_random(trials, *range_args):
     log_min, log_max = 1, gmpy2.exp(128)
-    exp_min, exp_max = 0, 64
+    exp_min, exp_max = 0, 128
 
-    errstr = '\terror in fx_log: avg_mid50:%f%%, min:%f%%, max:%f%%, median:%f%%'
-    errstr += '\n\terror in fx_exp: avg_mid50:%f%%, min:%f%%, max:%f%%, median:%f%%'
+    datastr = ',\n\t\t'.join([
+        'avg_abs_mid_50:%E%%', 'min_rel:%E%%', 
+        'max_rel:%E%%', 'median_rel:%E%%',
+        'max_diff:%E%%', 'min_diff:%E%%'
+    ])
+    errstr = '\terror in fx_log:\n\t\t'
+    errstr += datastr
+    errstr += '\n\terror in fx_exp:\n\t\t'
+    errstr += datastr
 
     for i in range(*range_args):
         
@@ -177,8 +191,44 @@ def test_interps_random(trials, *range_args):
         print "Relative error using %d Chebyshev nodes:" % i
         print errstr % errs
 
-#def graph_errors():
-    
+def graph_errors(*range_args):
+    exp_min, exp_max = 0, 10
+    exp_xs = map(gmpy2.mpfr, linspace(exp_min, exp_max, 10000))
+    exp_ys = map(gmpy2.exp, exp_xs)
+
+    log_min, log_max = 1, gmpy2.exp(exp_max)
+    log_xs = map(gmpy2.mpfr, linspace(log_min, log_max, 10000))
+    log_ys = map(gmpy2.log, log_xs)
+
+    funcs = [
+        (fx_exp, gmpy2.exp2, 0, 1, exp_xs, exp_ys, 'exp'),
+        (fx_log, gmpy2.log2, 1, 2, log_xs, log_ys, 'log'),
+    ]
+
+    for i in range(*range_args):
+        for func_items in funcs:
+            fx_func, interp_func = func_items[:2]
+            interp_min, interp_max = func_items[2:4]
+            ref_xs, ref_ys = func_items[4:6]
+            name = func_items[6]
+            p_i = make_fx_poly(
+                optimal_interp(
+                    interp_func,
+                    i,
+                    interp_min,
+                    interp_max
+                )
+            )
+            fx_f = lambda x: fx_func(int(x * 2**64), p_i)/gmpy2.mpfr(1 << 64)
+            fx_ys = map(fx_f, ref_xs)
+            fig, axes = plt.subplots(2, sharex=True)
+            axes[0].set_title('gmpy2.%s and fx_%s' % (name, name))
+            axes[0].plot(ref_xs, ref_ys, label=('gmpy2.%s' % name))
+            axes[0].plot(ref_xs, fx_ys, label=('fx_%s' % name))
+            axes[1].set_title('fx_%s(x) - gmpy2.%s(x)' % (name, name))
+            axes[1].plot(ref_xs, map(lambda a, b: a-b, fx_ys, ref_ys))
+        
+            fig.savefig('chebyshev-%s-%d.png'%(name, i))
 
 if __name__ == '__main__':
-    test_interps_random(512, 5, 51, 5)
+    graph_errors(5, 51, 5)
