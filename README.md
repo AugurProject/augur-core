@@ -2,8 +2,7 @@ augur-serpent
 -------------
 
 ### To do (Paul update):
-	# market needs liquidity changes (and Chris trading fee fix)
-	# msr broken
+	# market needs liquidity cash changes
 	# need a price function for tradeshares function
 	# min max categorical events - so max-min/numOutcomes is interval between outcome
 	# implement categorical in consensus fun + augur.se.
