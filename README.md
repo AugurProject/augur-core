@@ -2,7 +2,12 @@ augur-serpent
 -------------
 
 ### To do (Paul update):
+<<<<<<< HEAD
 	# market needs liquidity cash changes
+=======
+	# market needs liquidity changes (and Chris trading fee fix)
+	# msr broken
+>>>>>>> 248ac8daf89bf685feda2085dd7d387544e3213c
 	# need a price function for tradeshares function
 	# min max categorical events - so max-min/numOutcomes is interval between outcome
 	# implement categorical in consensus fun + augur.se.
@@ -11,6 +16,7 @@ augur-serpent
 	# what happens if a .5 disputed outcome in general?
 	# Disputed: If any of a Market’s Decisions attain ‘Disputed’ status, the Market attains the Disputed status. No one can buy or sell until the Dispute is resolved (i suggest a disputed outcome is a 0 returned from consensus)
 	# if no agreement on any outcome <65% or whatever confidence, then do over next voting period (i guess have consensus return a 0), if that fails then it goes to audit vote (where people "vote" with their cash) - this confidence is *of the rep reported*
+<<<<<<< HEAD
 	# for final .5 outcomes take shares bought and divide the money up amongst them equally (should be .50 each)
 	# With these three conditions: [1] Stalled Branch, [2] Decision-Author’s signature, [3] Market-Author’s signature, one can move a Market’s Decisions to a new Branch
 	# what if we have 3-4 cycles in a row of 10 events getting pushed back --- market would already be closed even though events up to be decided on for a while yet never decided --- technically this is a stalled branch and market should be open no? -- yes
@@ -21,6 +27,19 @@ augur-serpent
 
 ### Bugs:
 	# not allowing me to make a subbranch w/ same desc. but a parent which is a different subbranch (I have a suspicion the *only* thing getting hashed is the description and not the other metadata, causing this issue)
+=======
+	# VoteCoins cannot be simultaneously spent (transferred) and used to vote (need to fix this)
+	# for final .5 outcomes take shares bought and divide the money up amongst them equally (should be .50 each)
+	# With these three conditions: [1] Stalled Branch, [2] Decision-Author’s signature, [3] Market-Author’s signature, one can move a Market’s Decisions to a new Branch
+	# what if we have 3-4 cycles in a row of 10 events getting pushed back --- market would already be closed even though events up to be decided on for a while yet never decided --- technically this is a stalled branch and market should be open no? -- yes
+	# does it matter if we have mult. decisions for a dimension vs just one event w/ multiple outcome
+	# catch parameter
+	# could do .5 outcomes where if a .5 in a market with multiple dimensions it still pays out 
+	# One failure to achieve certainty could be a simple confusion (and should not go directly to audit) - perhaps vote again on it
+	# a certain .5 outcome shouldn't be voted on again though
+	# min future decisions at stake - 200 - else branch stalls (do same thing we do if min ballot/event size isn't met, push events into current voting period and hopefully more people will create decisions so it can actually be vote on, else repeat)
+
+>>>>>>> 248ac8daf89bf685feda2085dd7d387544e3213c
 
 ### Scalability optimizations (hopefully these become an issue!:
 	# http://lightning.network/lightning-network.pdf
@@ -47,7 +66,11 @@ augur-serpent
 	# stablecoin
 	# VPM
 	# allow people to set market base currencies
+<<<<<<< HEAD
 	# separate Branches might compete over different parameter-families, it may be advantageous for the blockchain itself to impose “Reasonable Bounds” on possible choices for parameters. Branches themselves may impose “Reasonable Bounds” on Market-specific parameters, (content-tags, trading/audit fees).
+=======
+	# separate Branches might compete over different parameter-families, it may be advantageous for the blockchain itself to impose “Reasonable Bounds” on possible choices for parameters. Branches themselves may impose “Reasonable Bounds” on Market-specific parameters, (b, content-tags, trading/audit fees).	
+>>>>>>> 248ac8daf89bf685feda2085dd7d387544e3213c
 
 ### Version 0.4 (Awesome fun stuff - April):
 	# go over stuff in close and redeem txs
@@ -64,4 +87,12 @@ augur-serpent
    	    if residual is <period/2 submit hash of (msg.sender, Rnum, Votes[]) for that reporter
    		if >period/2 submit Rnum and Votes[] for reporter
    		check in consensus if they match, if not, no vote ballot (allow people to change votes and hash up until lock in residual change)
+<<<<<<< HEAD
 	   	anti cheat provide p and randomNum mechanism steal deposit (will need to support snarks eventually)
+=======
+	   	anti cheat provide p and randomNum mechanism steal deposit (will need to support snarks eventually)
+
+### Bugs:
+	# not allowing me to make a subbranch w/ same desc. name and parent which is another subbranch (I have a suspicion the *only* thing getting hashed is the description and not the other metadata, causing this issue)
+	# reputation function gives me a "transaction failed" (getRepBalance works fine so I suspect this is another load issue)
+>>>>>>> 248ac8daf89bf685feda2085dd7d387544e3213c
