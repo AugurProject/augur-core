@@ -18,8 +18,6 @@ augur-serpent
 	# could do .5 outcomes where if a .5 in a market with multiple dimensions it still pays out
 	# One failure to achieve certainty could be a simple confusion (and should not go directly to audit) - perhaps vote again on it
 	# a certain .5 outcome shouldn't be voted on again though
-	# min future decisions at stake - 200 - else branch stalls (do same thing we do if min ballot/event size isn't met, push events into current voting period and hopefully more people will create decisions so it can actually be vote on, else repeat)
-
 
 ### Scalability optimizations (hopefully these become an issue!:
 	# http://lightning.network/lightning-network.pdf 

@@ -538,11 +538,19 @@ def checkQuorum(branch):
     # we can then conclude it has matured && people have had time to vote
     matured = false
     enoughEvents = false
+    enoughUpcoming = false
     if (currentPeriod >= (currentVotePeriod+2)):
         matured = true
-    else:
-        matured = false
-    if (self.EventsExpDates[branch][currentVotePeriod].numberEvents<30 && matured):
+
+    # min future decisions at stake - 200 - else branch stalls (do same thing we do if min ballot/event size isn't met,
+    # push events into current voting period and hopefully more people will create decisions so it can actually be voted on, else repeat)
+    upcomingDecisions = 0
+    b = currentPeriod
+    while b < (currentPeriod+100):
+        upcomingDecisions += self.EventsExpDates[parent][a].numberEvents
+        b += 1
+
+    if ((self.EventsExpDates[branch][currentVotePeriod].numberEvents < 30 || upcomingDecisions < 500) && matured):
         self.Branches[branchID].currentVotePeriod += 1
         x = 0
         while(x < self.EventsExpDates[branch][currentVotePeriod-1].numberEvents):
@@ -551,7 +559,11 @@ def checkQuorum(branch):
             x += 1
     else:
         enoughEvents = true
-    if(matured && enoughEvents):
+        enoughUpcoming = true
+    # for testing!
+    enoughUpcoming = true
+    enoughEvents = true
+    if(matured && enoughEvents && enoughUpcoming):
         return(1)
     else:
         return(0)
