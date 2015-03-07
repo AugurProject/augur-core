@@ -48,12 +48,12 @@ data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
 # EventsExpDates index is the currentVotePeriod or in the future if an  event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
-# v_size = numReports * numEvents
-# reportsFilled, reportsMask, weightedCenteredData, loadingVector, scores, set1, set2, old,
-# new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
 data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
 
 # [branchID][votingPeriod]
+# v_size = numReports * numEvents
+# reportsFilled, reportsMask, weightedCenteredData, loadingVector, scores, set1, set2, old,
+# new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
 data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
 
 # Markets' index is the marketID
@@ -87,7 +87,7 @@ def init():
     self.Info[1010101].creationFee = 10
     self.Branches[1010101].currentVotePeriod = (block.number / 403200) - 1 
     self.Branches[1010101].periodLength = 403200
-    self.branchesList[0] = 2
+    self.branchesList[0] = 1
     self.branchesList[1] = 1010101
 
 # string chunks
@@ -98,6 +98,8 @@ def balance(address):
     return(self.cashcoinBalances[address])
 
 # should send values as fixed point in UI (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
+# so cashcoin fees could just go to root branch, or we could not have fees besides 
+# gas fee to do a send transaction
 def send(recver, value):
     sender = tx.origin
     senderBalance = self.cashcoinBalances[sender]
@@ -125,7 +127,9 @@ def sendFrom(recver, value, from):
         return(0)
 
 def sendReputation(branch, recver, value):
-    if(value<=0 || !self.send(branch, 5*2^64)):
+    # VoteCoins cannot be simultaneously spent (transferred) and used to vote
+    currentVotePeriod = self.Branches[branch].currentVotePeriod
+    if(value<=0 || !self.send(branch, 5*2^64) || self.EventsExpDates[branch][currentVotePeriod].reporters[tx.origin][0] != 0 || self.EventsExpDates[branch][currentVotePeriod].reporters[recver][0] != 0):
         return(0)
     sender = tx.origin
     senderIndex = self.Reporting[branch].repIDtoIndex[sender]
@@ -162,9 +166,10 @@ def makeSubBranch(description:str, periodLength, parent):
 
     #upcomingDecisions = 0
     #a = (block.number / self.Branches[branch].periodLength)
-    #while a < (a+100):
+    #b = a
+    #while b < (a+100):
     #    upcomingDecisions += self.EventsExpDates[parent][a].numberEvents
-    #    a += 1
+    #    b += 1
     # turned off for testing
     #if(upcomingDecisions < 500):
     #    return(0)
@@ -799,7 +804,8 @@ def closeMarket(branch, market):
     tradingPeriod = self.Markets[market].tradingPeriod
     # check if any events in the market were pushed back and that market has expired
     # (as long as the latest expiring event wasn't pushed back, we know they all got reported on)
-    if(self.Branches[branch].currentVotePeriod > tradingPeriod && self.EventsExpDates[branch][tradingPeriod].numberEvents>=30):
+    # if it *was* pushed back, we'll just get an outcome of 0, return 0 until the event is actually reported on, then we can resolve the market
+    if(self.Branches[branch].currentVotePeriod > tradingPeriod):
         # loop through events in the market, get their outcomes && use those to determine the winning events!
         n = 0
         # (max poss. winning outcomes is 200 outcomes total all scalar multidimensional)
@@ -1319,9 +1325,9 @@ def reputation(address, branch):
             branches[b+1] = load(self.Info[branch].description[0], items=2048)
             b += 2
             i += 1
-    return(branchBalances: arr)
+    return(branches: arr)
 
-def retAllMarkets(branch):
+def getAllMarkets(branch):
     numMarkets = self.Branches[branch].numMarkets
     markets = array(numMarkets)
     i = 0
@@ -1329,8 +1335,7 @@ def retAllMarkets(branch):
         markets[i] = self.Branches[branch].markets[i]
     return(markets: arr)
 
-def retAllEvents(branch, expPeriod):
-        data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
+def getAllEvents(branch, expPeriod):
     numEvents = self.EventsExpDates[branch][expPeriod].numberEvents
     events = array(numEvents)
     i = 0
