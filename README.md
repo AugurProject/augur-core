@@ -19,9 +19,12 @@ augur-serpent
 	# One failure to achieve certainty could be a simple confusion (and should not go directly to audit) - perhaps vote again on it
 	# a certain .5 outcome shouldn't be voted on again though
 
+### Bugs:
+	# not allowing me to make a subbranch w/ same desc. but a parent which is a different subbranch (I have a suspicion the *only* thing getting hashed is the description and not the other metadata, causing this issue)
+
 ### Scalability optimizations (hopefully these become an issue!:
-	# http://lightning.network/lightning-network.pdf 
-	# sidechains 
+	# http://lightning.network/lightning-network.pdf
+	# sidechains
 	# randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot (V presentation on a similar strat.)
 	# ethereum rng:
 	  probability 0 1 ... 100
@@ -44,7 +47,7 @@ augur-serpent
 	# stablecoin
 	# VPM
 	# allow people to set market base currencies
-	# separate Branches might compete over different parameter-families, it may be advantageous for the blockchain itself to impose “Reasonable Bounds” on possible choices for parameters. Branches themselves may impose “Reasonable Bounds” on Market-specific parameters, (b, content-tags, trading/audit fees).	
+	# separate Branches might compete over different parameter-families, it may be advantageous for the blockchain itself to impose “Reasonable Bounds” on possible choices for parameters. Branches themselves may impose “Reasonable Bounds” on Market-specific parameters, (content-tags, trading/audit fees).
 
 ### Version 0.4 (Awesome fun stuff - April):
 	# go over stuff in close and redeem txs
@@ -62,6 +65,3 @@ augur-serpent
    		if >period/2 submit Rnum and Votes[] for reporter
    		check in consensus if they match, if not, no vote ballot (allow people to change votes and hash up until lock in residual change)
 	   	anti cheat provide p and randomNum mechanism steal deposit (will need to support snarks eventually)
-
-### Bugs:
-	# not allowing me to make a subbranch w/ same desc. but a parent which is a different subbranch (I have a suspicion the *only* thing getting hashed is the description and not the other metadata, causing this issue)

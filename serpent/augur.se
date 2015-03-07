@@ -380,7 +380,13 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
 # amount of shares should be an integer
 def buyShares(branch, market, outcome, amount):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)  
-    if (outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod):
+    # if we have 3-4 cycles in a row of events getting pushed back market would already be closed even though events up to be decided on for a while yet never decided
+    # technically this is a stalled branch and market should be open
+    # if(currentPeriod + 3 >= currentVotePeriod) we're stalled
+    #the question is though --- are these events part of the set that were stalled?
+    #if above && the event outcomes aren't determined (0), then yes
+    #then set a stalled boolean 
+    if (outcome==0 || (self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod && !stalled)):
         return(0)
     # lmsr cost calcs
     oldCost = lsLmsr(market)
