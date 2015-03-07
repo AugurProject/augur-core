@@ -192,7 +192,7 @@ def test_interps_random(trials, *range_args):
         print errstr % errs
 
 def graph_errors(*range_args):
-    exp_min, exp_max = 0, 10
+    exp_min, exp_max = 0, 16
     exp_xs = map(gmpy2.mpfr, linspace(exp_min, exp_max, 10000))
     exp_ys = map(gmpy2.exp, exp_xs)
 
@@ -221,14 +221,18 @@ def graph_errors(*range_args):
             )
             fx_f = lambda x: fx_func(int(x * 2**64), p_i)/gmpy2.mpfr(1 << 64)
             fx_ys = map(fx_f, ref_xs)
-            fig, axes = plt.subplots(2, sharex=True)
+            first_diff = map(lambda a, b: b - a, fx_ys[:-1], fx_ys[1:])
+            fig, axes = plt.subplots(3, sharex=True)
             axes[0].set_title('gmpy2.%s and fx_%s' % (name, name))
             axes[0].plot(ref_xs, ref_ys, label=('gmpy2.%s' % name))
             axes[0].plot(ref_xs, fx_ys, label=('fx_%s' % name))
             axes[1].set_title('fx_%s(x) - gmpy2.%s(x)' % (name, name))
             axes[1].plot(ref_xs, map(lambda a, b: a-b, fx_ys, ref_ys))
-        
+            axes[2].set_title('first difference of fx_%s' % name)
+            axes[2].plot(ref_xs[:-1], first_diff)
             fig.savefig('chebyshev-%s-%d.png'%(name, i))
 
+            if any(map(lambda a: 1 if a < 0 else 0, first_diff)):
+                print "\033[1;31mBAD FIRST DIFF!!!!! fx_%s with %d nodes\033[0m" % (name, i)
 if __name__ == '__main__':
     graph_errors(5, 51, 5)
