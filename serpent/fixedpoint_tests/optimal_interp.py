@@ -21,7 +21,7 @@ LN2 = gmpy2.log(2)
 FX_PI = int(PI * 2**64)
 FX_LOG2E = int(LOG2E * 2**64)
 FX_LN2 = int(LN2 * 2**64)
-
+FX_ONE = 1 << 64
 ## The index of a poly is the power of x,
 ## the val at the index is the coefficient.
 ##
@@ -234,5 +234,81 @@ def graph_errors(*range_args):
 
             if any(map(lambda a: 1 if a < 0 else 0, first_diff)):
                 print "\033[1;31mBAD FIRST DIFF!!!!! fx_%s with %d nodes\033[0m" % (name, i)
+
+def generate_serpent(*range_args):
+    exp_code = '''\
+macro fx_exp2_small($x):
+    with $result = {poly[0]}:
+        with $temp = $x:
+            {interp_code}
+
+macro fx_exp2($x):
+    with $y = $x / {FX_ONE}:
+        with $z = $x % {FX_ONE}:
+            fx_exp2_small($z) * 2**y
+
+macro fx_exp($x):
+    fx_exp2($x * {FX_ONE} / {FX_LN2})
+'''
+
+    log_code = '''
+macro fx_floor_log2($x):
+    with $y = $x / {FX_ONE}:
+        with $lo = 0:
+            with $hi = 191:
+                with $mid = ($hi + $lo)/2:
+                    while ($lo + 1) != $hi:
+                        if $y < 2**$mid:
+                            $hi = $mid
+                        else:
+                            $lo = $mid
+                        $mid = ($hi + $lo)/2
+                    $lo
+
+macro fx_log2_small($x):
+    with $result = {poly[0]}:
+        with $temp = $x:
+            {interp_code}
+
+macro fx_log2($x):
+    with $y = fx_floor_log2($x):
+        with $z = $x / 2**$y:
+            $y * 2**64 + fx_log2_small($z)
+
+macro fx_log($x):
+    fx_log2($x) * {FX_ONE} / {FX_LOG2E}
+'''
+
+    code_items = [
+        (exp_code, gmpy2.exp2, 0, 1),
+        (log_code, gmpy2.log2, 1, 2),
+    ]
+
+    tab = ' '*12
+    for i in range(*range_args):
+        full_code = ''
+        for code, ref_func, a, b in code_items:
+            poly = make_fx_poly(optimal_interp(ref_func, i, a, b))
+            interp_code = ''
+            for j, a_j in enumerate(poly[1:]):
+                piece = '$result %%s= {poly[%d]}*$temp / {FX_ONE}' % (j + 1)
+                if a_j > 0:
+                    interp_code += piece % '+'
+                else:
+                    interp_code += piece % '-'
+                    poly[j] = -poly[j]
+                interp_code += '\n' + tab
+                interp_code += '$temp = $temp*$x / {FX_ONE}'
+                interp_code += '\n' + tab
+            interp_code = interp_code.strip()
+            fmt_args = globals().copy()
+            fmt_args.update(locals())
+            this_code = code.format(**fmt_args).format(**fmt_args)
+            full_code += this_code
+        f = open('fx_macros_%d.se'%i, 'w')
+        f.write(full_code)
+        f.close()
+
 if __name__ == '__main__':
-    graph_errors(5, 51, 5)
+#    graph_errors(5, 51, 5)
+    generate_serpent(5, 51, 5)
