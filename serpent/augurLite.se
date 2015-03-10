@@ -45,7 +45,7 @@ data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
 # Reporting index is the branchID
 # Reporters index is the rep. address
 # We 0 index reputation so can walk thru for consensus
-# EventsExpDates index is the currentVotePeriod or in the future if an  event expires in the future
+# EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
 data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
@@ -1328,7 +1328,9 @@ def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, 
     elif(itemNumber==1):
         return(self.Markets[marketID].participants[participantIndex].shares[outcomeNumber])
 
-def reputation(address, branch):
+# @return if address passed, returns branchID, balance (for that address in that branch), branch description, next branchID, next balance, etc.
+# @return if address is 0, branchID, branch description, next branchID, etc.
+def reputation(address):
     if(address):
         branches = array(3*self.branchesList[0])
         i = 1
