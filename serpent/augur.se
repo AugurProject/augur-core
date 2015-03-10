@@ -386,6 +386,7 @@ def buyShares(branch, market, outcome, amount):
     #the question is though --- are these events part of the set that were stalled?
     #if above && the event outcomes aren't determined (0), then yes
     #then set a stalled boolean 
+    stalled = false
     if (outcome==0 || (self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod && !stalled)):
         return(0)
     # lmsr cost calcs
