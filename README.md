@@ -8,15 +8,12 @@ augur-serpent
 - implement categorical in consensus fun + augur.se.
 - what if a scalar has a .5 actual value outcome
   - I suggest the .5 outcome be something like 2^256
-- for final .5 outcomes take shares bought and divide the money up amongst gthem equally (should be .50 each)
+- for final .5 outcomes take shares bought and divide the money up amongst them equally (should be .50 each)
 - if a .5 in a market with multiple dimensions it still pays out (just mult. prices by .5)
-- Disputed: If any of a Market’s Decisions attain ‘Disputed’ status, the Market attains the Disputed status. No one can buy or sell until the Dispute is resolved (i suggest a disputed outcome is a weird value returned from consensus)
-- if no agreement on any outcome <65% or whatever confidence (failure to achieve certainty), then do over next voting period (i guess have consensus push them all into next voting period and not report outcomes besides 0), if that fails then it goes to audit vote (where people "vote" with their cash) (every 6 mo. disputed decisions have this happen)- this confidence is *of the rep reported* - perhaps use a "times voted" thing for this
 - With these three conditions: [1] Stalled Branch, [2] Decision-Author’s signature, [3] Market-Author’s signature, one can move a Market’s Decisions to a new Branch (use ecVerify serpent function)
-- 20k gas storage issue
 
 ### Bugs:
-- not allowing me to make a subbranch w/ same desc. but a parent which is a different subbranch (I h5ave a suspicion the *only* thing getting hashed is the description and not the other metadata, causing this issue)
+- not allowing me to make a subbranch w/ same desc. but a parent which is a different subbranch (I have a suspicion the *only* thing getting hashed is the description and not the other metadata, causing this issue)
 
 ### Scalability optimizations (hopefully these become an issue!) ... Curse you gas issues (too soon):
 - http://lightning.network/lightning-network.pdf
@@ -35,11 +32,15 @@ augur-serpent
 - metadata off chain
 
 ### Version 0.5 (More fun features - May and Beyond):
-- audit fee
-- need to add audits
-- Audited: If a Market remained in a Disputed state and became audited, the Market would enter this state. Shares can be sold (redeemed) but the payoff formula is slightly more complicated (see Appendix III). Buying is also disabled (for simplicity and consistency).
+- if no agreement on any outcome <65% or whatever confidence (failure to achieve certainty) this confidence is *of the rep reported* (consensus needs to take this as a param), then do over next voting period
+  - have consensus push all into next voting period (this is currently known as disputed)
+    - perhaps use a "times voted" thing for this
+    - Disputed: If any of a Market’s Decisions attain ‘Disputed’ status, the Market attains the Disputed status. No one can buy or sell until the Dispute is resolved (i suggest a disputed outcome is a weird value returned from consensus or perhaps a simple 0) 
+- Audited: If a Market remained in a Disputed state and became audited (after 2 failures to achieve consensus), the Market would enter this state. Shares can be sold (redeemed) but the payoff formula is slightly more complicated (see Appendix III). Buying is also disabled (for simplicity and consistency).
+  - audit vote (where people "vote" with their cash) (every 6 mo. disputed decisions have this happen)
+  - audits have a fee
 - two wave svd before audits?
-- e.g. if it falls within the certainty threshold, then it goes to wave 2 of svd else it goes to an audit  
+  - e.g. if it falls within the certainty threshold, then it goes to wave 2 of svd else it goes to next period (disputed), if that fails, audit
 - special cfds + public good funding + poss. futarchy
 - make code updatable + work with etherex & chow (bitsquare, coineffine other decentralized exchanges as well)
 - stablecoin
