@@ -31,6 +31,8 @@ augur-serpent
 	- zeroing of array values (e.g. people in the rep index after they have 0 rep left)
 	- consensus bond mechanism cheaper
 	- possibly enable people to choose their own resolution scripts
+	- lazy evaluation
+	- metadata off chain
 
 ### Version 0.5 (More fun features - May and Beyond):
 	- audit fee
