@@ -48,12 +48,12 @@ data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
 # EventsExpDates index is the currentVotePeriod or in the future if an  event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
-# v_size = numReports * numEvents
-# reportsFilled, reportsMask, weightedCenteredData, loadingVector, scores, set1, set2, old,
-# new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
 data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
 
 # [branchID][votingPeriod]
+# v_size = numReports * numEvents
+# reportsFilled, reportsMask, weightedCenteredData, loadingVector, scores, set1, set2, old,
+# new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
 data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
 
 # Markets' index is the marketID
@@ -77,7 +77,7 @@ data branchesList[]
 
 def init():
     # test initial funds
-    self.cashcoinBalances[tx.origin] = 1000000*2^64
+    self.cashcoinBalances[tx.origin] = 100000*2^64
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
     self.Reporting[1010101].reputation[0].repValue = 470*2^64
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
@@ -94,12 +94,14 @@ def init():
 macro chunks($l):
     $l + if(l%32 != 0, 1, 0)
 
+# @return: cash balance of address
 def balance(address):
     return(self.cashcoinBalances[address])
 
 # should send values as fixed point in UI (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
 # so cashcoin fees could just go to root branch, or we could not have fees besides 
 # gas fee to do a send transaction
+# @return: value sent, 0 if fails
 def send(recver, value):
     sender = tx.origin
     senderBalance = self.cashcoinBalances[sender]
@@ -113,8 +115,14 @@ def send(recver, value):
 def faucet():
     sender = tx.origin
     self.cashcoinBalances[sender] = 10000*2^64
+    index = self.Reporting[1010101].numberReporters
+    self.Reporting[1010101].repIDtoIndex[tx.origin] = index
+    self.Reporting[1010101].reputation[index].repValue = 47*2^64
+    self.Reporting[1010101].reputation[index].reporterID = tx.origin
+    self.Reporting[1010101].numberReporters += 1
     return(1)
 
+# @return value of cash sent; fail is 0
 def sendFrom(recver, value, from):
     if(from!=tx.origin):
         return(0)
@@ -126,8 +134,11 @@ def sendFrom(recver, value, from):
     else:
         return(0)
 
+# @return value of reputation sent, 0 if not enough reputation, text error messages otherwise
 def sendReputation(branch, recver, value):
-    if(value<=0 || !self.send(branch, 5*2^64)):
+    # VoteCoins cannot be simultaneously spent (transferred) and used to vote
+    currentVotePeriod = self.Branches[branch].currentVotePeriod
+    if(value<=0 || !self.send(branch, 5*2^64) || self.EventsExpDates[branch][currentVotePeriod].reporters[tx.origin][0] != 0 || self.EventsExpDates[branch][currentVotePeriod].reporters[recver][0] != 0):
         return(0)
     sender = tx.origin
     senderIndex = self.Reporting[branch].repIDtoIndex[sender]
@@ -151,7 +162,8 @@ def sendReputation(branch, recver, value):
         return(value)
     else:
         return(0)
-        
+
+# @return reputation value        
 def getRepBalance(branch, address):
     return(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[address]].repValue)
 
@@ -282,7 +294,7 @@ macro lsLmsr($marketID):
 # tradingFee is a percent in fixedPoint
 # same for these values
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr):
-    if(self.Branches[branch].periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee < 2^64):
+    if(self.Branches[branch].periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee < 2^57):
         return(0)
     # check that events have same exp. dates && branch
     i = 0
@@ -351,17 +363,14 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     cost = lsLmsr(marketID)
     if(self.send(marketID, cost)):
         # add event list to the market
-        log(data=text("E"))
         save(self.Markets[marketID].events[0], events, items=eventNum)
         self.Info[marketID].creator = tx.origin
         self.Info[marketID].creationFee = initialLiquidity
         self.Info[marketID].descriptionLength = len(description)
-        log(data=text("F"))
         save(self.Info[marketID].description[0], description, chars=len(description))
         self.Markets[marketID].alpha = alpha
         self.Markets[marketID].lenEvents = len(events)
         self.Markets[marketID].cumulativeScale = cumulativeScale
-        log(data=text("G"))
         self.Markets[marketID].numOutcomes = numOutcomes
         self.Markets[marketID].tradingPeriod = tradingPeriod
         self.Markets[marketID].tradingFee = tradingFee
@@ -381,7 +390,14 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
 # amount of shares should be an integer
 def buyShares(branch, market, outcome, amount):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)  
-    if (outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod):
+    # if we have 3-4 cycles in a row of events getting pushed back market would already be closed even though events up to be decided on for a while yet never decided
+    # technically this is a stalled branch and market should be open
+    # if(currentPeriod + 3 >= currentVotePeriod) we're stalled
+    #the question is though --- are these events part of the set that were stalled?
+    #if above && the event outcomes aren't determined (0), then yes
+    #then set a stalled boolean 
+    stalled = false
+    if (outcome==0 || (self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod && !stalled)):
         return(0)
     # lmsr cost calcs
     oldCost = lsLmsr(market)
@@ -539,11 +555,19 @@ def checkQuorum(branch):
     # we can then conclude it has matured && people have had time to vote
     matured = false
     enoughEvents = false
+    enoughUpcoming = false
     if (currentPeriod >= (currentVotePeriod+2)):
         matured = true
-    else:
-        matured = false
-    if (self.EventsExpDates[branch][currentVotePeriod].numberEvents<30 && matured):
+
+    # min future decisions at stake - 200 - else branch stalls (do same thing we do if min ballot/event size isn't met,
+    # push events into current voting period and hopefully more people will create decisions so it can actually be voted on, else repeat)
+    upcomingDecisions = 0
+    b = currentPeriod
+    while b < (currentPeriod+100):
+        upcomingDecisions += self.EventsExpDates[parent][a].numberEvents
+        b += 1
+
+    if ((self.EventsExpDates[branch][currentVotePeriod].numberEvents < 30 || upcomingDecisions < 500) && matured):
         self.Branches[branchID].currentVotePeriod += 1
         x = 0
         while(x < self.EventsExpDates[branch][currentVotePeriod-1].numberEvents):
@@ -552,7 +576,11 @@ def checkQuorum(branch):
             x += 1
     else:
         enoughEvents = true
-    if(matured && enoughEvents):
+        enoughUpcoming = true
+    # for testing!
+    enoughUpcoming = true
+    enoughEvents = true
+    if(matured && enoughEvents && enoughUpcoming):
         return(1)
     else:
         return(0)
