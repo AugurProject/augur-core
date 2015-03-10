@@ -134,7 +134,10 @@ def sendFrom(recver, value, from):
     else:
         return(0)
 
-# @return value of reputation sent, 0 if not enough reputation, text error messages otherwise
+# @return value of reputation sent, 0 if not enough reputation
+# error messages otherwise
+    # 6: "Your reputation account was just created, earn some rep. before you can send to others"
+    # 7: "Receiving address doesn't exist"
 def sendReputation(branch, recver, value):
     # VoteCoins cannot be simultaneously spent (transferred) and used to vote
     currentVotePeriod = self.Branches[branch].currentVotePeriod
@@ -150,10 +153,10 @@ def sendReputation(branch, recver, value):
         self.Reporting[branch].reputation[reporterIndex].repValue = 0
         self.Reporting[branch].reputation[reporterIndex].reporterID = tx.origin
         self.Reporting[branch].numberReporters += 1
-        return(text("Your reputation account was just created, earn some rep. before you can send to others"): str)
+        return(6)
 
     if(self.Reporting[branch].reputation[receiverIndex].reporterID!=recver):
-        return(text("Receiving address doesn't exist"): str)
+        return(7)
         
     senderBalance = self.Reporting[branch].reputation[senderIndex].repValue
     if(senderBalance >= value):
@@ -598,9 +601,10 @@ def checkQuorum(branch):
 # && 1/3 of remaining fees to event creators = 25%
 # what if not enough consensus or not enough events expiring upcoming
 # @return step we're on of redeem function, for final call return new voting period
+# Error: 2: "quorem not satisfied"
 def redeem(branch):
     if(!self.checkQuorum(branch)):
-        return(text("quorem not satisfied yet"): str)
+        return(2)
     currentVotePeriod = self.Branches[branchID].currentVotePeriod
     step = self.Branches[branch].step
     if(step==0):
@@ -841,7 +845,7 @@ def redeem(branch):
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
 # when multidimen fancy payouts we report on the events separately per usual, but combine them to determine winning state of a fancy market && then payout that state
-# @return 0 if fail, if success "Market closed"
+# @return 0 if fail, if success 1
 def closeMarket(branch, market):
     if(self.cashcoinBalances[market]<=0):
         return(0)
@@ -1145,7 +1149,7 @@ def closeMarket(branch, market):
         while(winningOutcomes[q]!=0):
             self.Markets[market].winningOutcomes[q] = winningOutcomes[q]
             q += 1
-        return(text("Market closed"): str)
+        return(1)
 
 ### P2P parimutuel betting
 # @return betID
@@ -1223,6 +1227,9 @@ def makeBallot(branch, votePeriod):
     return(eventArray: arr)
 
 # arrayIndex only matters if array
+# Error: 3: "Please call the eventsExpApi function"
+       # 4: "Please call the reputation api function"
+       # 5: "Please call the participants api function"
 def api(dataStructure, itemNumber, arrayIndex, ID):
     if(dataStructure==0):
         if(itemNumber==0):
@@ -1256,9 +1263,9 @@ def api(dataStructure, itemNumber, arrayIndex, ID):
             return(self.Events[ID].numOutcomes)
     elif(dataStructure==3):
         if(itemNumber==0):
-            return(text("Please call the eventsExpApi function"): str)
+            return(3)
         elif(itemNumber==1):
-            return(text("Please call the reputation api function"): str)
+            return(4)
         elif(itemNumber==2):
             return(self.Reporting[ID].numberReporters)
         elif(itemNumber==3):
@@ -1269,7 +1276,7 @@ def api(dataStructure, itemNumber, arrayIndex, ID):
         elif(itemNumber==1):
             return(self.Markets[ID].sharesPurchased[arrayIndex])
         elif(itemNumber==2):
-            return(text("Please call the participants api function"): str)
+            return(5)
         elif(itemNumber==3):
             return(self.Markets[ID].lenEvents)
         elif(itemNumber==4):
