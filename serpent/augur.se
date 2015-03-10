@@ -1328,6 +1328,8 @@ def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, 
     elif(itemNumber==1):
         return(self.Markets[marketID].participants[participantIndex].shares[outcomeNumber])
 
+# @return if address passed, returns branchID, balance (for that address in that branch), branch description, next branchID, next balance, etc.
+# @return if address is 0, branchID, branch description, next branchID, etc.
 def reputation(address, branch):
     if(address):
         branches = array(3*self.branchesList[0])
