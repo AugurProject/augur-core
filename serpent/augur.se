@@ -391,6 +391,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         return(0)
 
 # amount of shares should be an integer
+# @return 0 if fail, else return price + fee to buy shares
 def buyShares(branch, market, outcome, amount):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)  
     # if we have 3-4 cycles in a row of events getting pushed back market would already be closed even though events up to be decided on for a while yet never decided
@@ -438,6 +439,7 @@ def buyShares(branch, market, outcome, amount):
 
 # amount is amount of shares to buy
 # instead of inputting particip. num could just loop through array if dont have it
+# @return 0 if fail, returns amount you get paid if success
 def sellShares(branch, market, outcome, amount):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     participantNumber = self.Markets[market].addr2participant[tx.origin]
@@ -468,6 +470,7 @@ def sellShares(branch, market, outcome, amount):
         self.Markets[market].participants[participantNumber].shares[outcome] -= amount
         return(price)
 
+# @return amount of shares transferred
 def transferShares(branch, market, outcome, amount, to):
     participantNumber = self.Markets[market].addr2participant[tx.origin]
     receiverNumber = self.Markets[market].addr2participant[to]
@@ -504,6 +507,7 @@ def transferShares(branch, market, outcome, amount, to):
 # if people get behind on voting (e.g the redeem tx isn't called <1 period after it can be called) 
     # voteperiod is an optional parameter only used in the scenario that we get behind on voting periods
     # so people will need to vote on periods that are upcoming even if our currentVotePeriod is a bit behind (e.g. if current expperiod is 7 you should vote on stuff from voteperiod 6 (and then upon period 8 you can't vote anymore))
+# @return 0 if fail, 1 if success
 def vote(branch, report:arr, votePeriod):
     # make sure the branch exists
     repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
@@ -551,6 +555,7 @@ def vote(branch, report:arr, votePeriod):
 
 # returns whether a quorem has a matured event
 # if there aren't enough events in a vote period eventsexpdate, push them to the current period and increment the vote period
+# @return 0 if fail, 1 if success
 def checkQuorum(branch):
     currentVotePeriod = self.Branches[branchID].currentVotePeriod
     currentPeriod = (block.number / self.Branches[branch].periodLength)
@@ -592,6 +597,7 @@ def checkQuorum(branch):
 # so 2/3 of remaining fees to voters = 50%
 # && 1/3 of remaining fees to event creators = 25%
 # what if not enough consensus or not enough events expiring upcoming
+# @
 def redeem(branch):
     if(!self.checkQuorum(branch)):
         return(text("quorem not satisfied yet"): str)
