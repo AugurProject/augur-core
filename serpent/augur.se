@@ -122,6 +122,7 @@ def faucet():
     self.Reporting[1010101].numberReporters += 1
     return(1)
 
+# @return value of cash sent; fail is 0
 def sendFrom(recver, value, from):
     if(from!=tx.origin):
         return(0)
@@ -133,6 +134,7 @@ def sendFrom(recver, value, from):
     else:
         return(0)
 
+# @return value of reputation sent, 0 if not enough reputation, text error messages otherwise
 def sendReputation(branch, recver, value):
     # VoteCoins cannot be simultaneously spent (transferred) and used to vote
     currentVotePeriod = self.Branches[branch].currentVotePeriod
@@ -160,13 +162,15 @@ def sendReputation(branch, recver, value):
         return(value)
     else:
         return(0)
-        
+
+# @return reputation value        
 def getRepBalance(branch, address):
     return(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[address]].repValue)
 
 # period length is given in blocks
 # description format is branchName:description
 # is there some way we can include the description bytes in the sha256 hash?
+# @return branchID if success, else 0
 def makeSubBranch(description:str, periodLength, parent):
     if(periodLength<=0 || !self.Branches[parent].periodLength || description==0):
         return(0)
@@ -222,6 +226,7 @@ def makeSubBranch(description:str, periodLength, parent):
 # numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0
 # to 11.0 would be 11 outcomes (if incremented by 0.1)
 # need to make sure these values are ok
+# @return 0 as fail state, eventID if success
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes):
     if(self.Branches[branch].periodLength && description!=0 && expDate>block.number):
         eventinfo = string((items=8)+len(description))
@@ -290,6 +295,7 @@ macro lsLmsr($marketID):
 # initialLiquidity is initial number of shares of each outcome you want to buy/initialize/set
 # tradingFee is a percent in fixedPoint
 # same for these values
+# @return 0 as fail state, marketID if success
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr):
     if(self.Branches[branch].periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee < 2^57):
         return(0)
