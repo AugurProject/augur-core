@@ -257,7 +257,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         participationFactor = 1
     # send fee and bond
     if(self.balance(tx.origin)>=87*2^64):
-        if (!self.Info[eventID].creator && !self.Events[eventID].branch && self.send(eventID, 42*2^64) && self.send(branch, participationFactor*45)):
+        if (!self.Info[eventID].creator && !self.Events[eventID].branch && self.send(eventID, 42*2^64) && self.send(branch, participationFactor*45*2^64)):
             self.Info[eventID].creator = tx.origin
             self.Info[eventID].creationFee = participationFactor*45 # this is not the bond
             self.Info[eventID].descriptionLength = len(description)
