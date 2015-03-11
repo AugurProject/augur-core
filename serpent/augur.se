@@ -1410,7 +1410,7 @@ def getAllEvents(branch, expPeriod):
     while i < numEvents:
         events[i] = self.EventsExpDates[branch][expPeriod].events[i]
         i += 1
-    return(events: arr)    
+    return(events: arr)
 
 inset('fx_macros.se')
 inset('consensus.se')

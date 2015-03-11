@@ -1153,6 +1153,7 @@ def getAllMarkets(branch):
     i = 0
     while i < numMarkets:
         markets[i] = self.Branches[branch].markets[i]
+        i += 1
     return(markets: arr)
 
 # @return all events in a branch
@@ -1162,7 +1163,8 @@ def getAllEvents(branch, expPeriod):
     i = 0
     while i < numEvents:
         events[i] = self.EventsExpDates[branch][expPeriod].events[i]
-    return(events: arr)    
+        i += 1
+    return(events: arr)
 
 inset('fx_macros.se')
 inset('consensus.se')
