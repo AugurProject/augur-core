@@ -82,14 +82,14 @@ print title(' Testing CreateEvent ')
 event1 = augur.createEvent(
     subbranch,                                           #branch 
     '"Will Jack grow at least san inch in March 2015?"', #description
-    31*24*60*5,                                          #expiration block
+    5*5,                                                #expiration block
     0,                                                   #min value (binary)
     1,                                                   #max value
     2)                                                   #number of outcomes
 event2 = augur.createEvent(
     subbranch, 
     '"What will Jack\'s height be, from 60 to 72 inches, at noon PST on April 1st, 2015?"', 
-    31*24*60*5, 
+    5*5, 
     60,                                                   #scalar event!
     72, 
     2) 
@@ -102,22 +102,44 @@ market = augur.createMarket(
     '"Market on events %d & %d"' % (event1, event2), 
     1 << 60, 
     10 << 70, 
-    (1 << 64) + (1 << 60), 
+    1 << 58, 
     [event1, event2])
-print yellow("Created market ", cyan("%d "), 'with address ', green('%s')) % (market, t.a0) 
+print yellow("Created market ", cyan("%d "), 'with address ', green('%s')) % (market, t.a0)
+
+def lslmsr(q_, i, a):
+    q = q_[:]
+    alpha = 1/16.
+    cumScale = 12
+    Bq1 = alpha*cumScale*sum(q)
+    C1 = Bq1*gmpy2.log(sum(gmpy2.exp(q_i/Bq1) for q_i in q))
+    q[i] += a
+    Bq2 = alpha*cumScale*sum(q)
+    C2 = Bq2*gmpy2.log(sum(gmpy2.exp(q_i/Bq2) for q_i in q))
+
+    if a > 0: 
+        return (C2 - C1)*1.015625
+    else:
+        return (C2 - C1)*0.984375
 
 print title(' Testing BuyShares ')
 bought = {}
+shares = [640/(1+12/16.*gmpy2.log(4))]*4
 for addr, key in a_k:
-    x = random.randrange(1, 5)
-    cost = augur.buyShares(subbranch, market, x, 2 << 64, sender=key)
-    print yellow(green("%s "), "bought 2 shares of outcome %d for ", cyan("%d ")) % (addr, x, cost)
+    x = random.randrange(4)
+    expected = lslmsr(shares, x, 2)
+    cost = augur.buyShares(subbranch, market, x + 1, 1 << 65, sender=key)
+    shares[x] += 2
+    print yellow(green("%s "), "bought 2 shares of outcome %d for ", cyan("%f")) % (addr, x, cost/gmpy2.mpfr(1 << 64))
+    print yellow("expected price: ", cyan("%f")) % expected
     bought[addr] = x
 
-print title('Testing SellShares')
+print title(' Testing SellShares ')
 for addr, key in a_k:
     x = bought[addr]
-    paid = augur.sellShares(subbranch, market, x, 2 << 64, sender=key)
-    print yellow(green("%s "), "sold 2 shares of outcome %d for ", cyan("%d ")) % \
-    (addr, x, paid)
-print red("Finished Tests in %f seconds") % (time.time() - start)
+    paid = augur.sellShares(subbranch, market, x + 1, 1 << 65, sender=key)
+    cost = lslmsr(shares, x, -2)
+    shares[x] -= 2
+    print yellow(green("%s "), "sold 2 shares of outcome %d for ", cyan("%f")) % \
+    (addr, x, paid/gmpy2.mpfr(1 << 64))
+    print yellow("expected payment: ", cyan("%f")) % -cost
+print red(" Finished Tests in %f seconds ") % (time.time() - start)

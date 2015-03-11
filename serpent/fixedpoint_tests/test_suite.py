@@ -44,7 +44,7 @@ def test_thunk(thunk, trials):
     for i in range(int(trials)):
         printf('\tTrials: %d\r', i)
         expected, result = thunk()
-        result['output'] /= float(2**64)
+        result['output'] /= gmpy2.mpfr(1 << 64)
         error += abs(result['output'] - expected)/expected
         gas += result['gas']
     printf('\n')

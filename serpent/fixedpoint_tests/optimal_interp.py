@@ -1,6 +1,6 @@
 #!/usr/bin/python2
 import gmpy2
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import os
 import bisect
 from numpy import linspace
@@ -192,7 +192,7 @@ def test_interps_random(trials, *range_args):
         print errstr % errs
 
 def graph_errors(*range_args):
-    exp_min, exp_max = 0, 16
+    exp_min, exp_max = 0, 4
     exp_xs = map(gmpy2.mpfr, linspace(exp_min, exp_max, 10000))
     exp_ys = map(gmpy2.exp, exp_xs)
 
@@ -223,12 +223,12 @@ def graph_errors(*range_args):
             fx_ys = map(fx_f, ref_xs)
             first_diff = map(lambda a, b: b - a, fx_ys[:-1], fx_ys[1:])
             fig, axes = plt.subplots(3, sharex=True)
-            axes[0].set_title('gmpy2.%s and fx_%s' % (name, name))
-            axes[0].plot(ref_xs, ref_ys, label=('gmpy2.%s' % name))
-            axes[0].plot(ref_xs, fx_ys, label=('fx_%s' % name))
-            axes[1].set_title('fx_%s(x) - gmpy2.%s(x)' % (name, name))
+            axes[0].set_title('$\\%s(x)$ and $\\%s_{fx}(x)$' % (name, name))
+            axes[0].plot(ref_xs, ref_ys, label=('$\\%s$' % name))
+            axes[0].plot(ref_xs, fx_ys, label=('$\\%s_{fx}$' % name))
+            axes[1].set_title('$(\\%s_{fx} - \\%s)(x)$' % (name, name))
             axes[1].plot(ref_xs, map(lambda a, b: a-b, fx_ys, ref_ys))
-            axes[2].set_title('first difference of fx_%s' % name)
+            axes[2].set_title('$\\frac{d}{dx}(\\%s_{fx})$' % name)
             axes[2].plot(ref_xs[:-1], first_diff)
             fig.savefig('chebyshev-%s-%d.png'%(name, i))
 
@@ -238,22 +238,22 @@ def graph_errors(*range_args):
 def generate_serpent(*range_args):
     exp_code = '''\
 macro fx_exp2_small($x):
-    with $result = {poly[0]}:
+    with $result = %s0x{poly[0]:X}:
         with $temp = $x:
             {interp_code}
 
 macro fx_exp2($x):
-    with $y = $x / {FX_ONE}:
-        with $z = $x % {FX_ONE}:
+    with $y = $x / 0x{FX_ONE:X}:
+        with $z = $x %% 0x{FX_ONE:X}:
             fx_exp2_small($z) * 2**y
 
 macro fx_exp($x):
-    fx_exp2($x * {FX_ONE} / {FX_LN2})
+    fx_exp2($x * 0x{FX_ONE:X} / 0x{FX_LN2:X})
 '''
 
     log_code = '''
 macro fx_floor_log2($x):
-    with $y = $x / {FX_ONE}:
+    with $y = $x / 0x{FX_ONE:X}:
         with $lo = 0:
             with $hi = 191:
                 with $mid = ($hi + $lo)/2:
@@ -266,17 +266,17 @@ macro fx_floor_log2($x):
                     $lo
 
 macro fx_log2_small($x):
-    with $result = {poly[0]}:
+    with $result = %s0x{poly[0]:X}:
         with $temp = $x:
             {interp_code}
 
 macro fx_log2($x):
     with $y = fx_floor_log2($x):
         with $z = $x / 2**$y:
-            $y * 2**64 + fx_log2_small($z)
+            $y * 0x{FX_ONE:X} + fx_log2_small($z)
 
 macro fx_log($x):
-    fx_log2($x) * {FX_ONE} / {FX_LOG2E}
+    fx_log2($x) * 0x{FX_ONE:X} / 0x{FX_LOG2E:X}
 '''
 
     code_items = [
@@ -290,25 +290,32 @@ macro fx_log($x):
         for code, ref_func, a, b in code_items:
             poly = make_fx_poly(optimal_interp(ref_func, i, a, b))
             interp_code = ''
-            for j, a_j in enumerate(poly[1:]):
-                piece = '$result %%s= {poly[%d]}*$temp / {FX_ONE}' % (j + 1)
+            for j, a_j in enumerate(poly[1:-1]):
+                piece = '$result %%s= 0x{poly[%d]:X}*$temp / 0x{FX_ONE:X}' % (j + 1)
                 if a_j > 0:
                     interp_code += piece % '+'
                 else:
                     interp_code += piece % '-'
-                    poly[j] = -poly[j]
                 interp_code += '\n' + tab
-                interp_code += '$temp = $temp*$x / {FX_ONE}'
+                interp_code += '$temp = $temp*$x / 0x{FX_ONE:X}'
                 interp_code += '\n' + tab
-            interp_code = interp_code.strip()
+            if poly[0] > 0:
+                this_code = code % '+'
+            else:
+                this_code = code % '-'
+            if poly[-1] > 0:
+                interp_code += '$result + 0x{poly[%d]:X}*$temp / 0x{FX_ONE:X}' % (len(poly) - 1)
+            else:
+                interp_code += '$result - 0x{poly[%d]:X}*$temp / 0x{FX_ONE:X}' % (len(poly) - 1)
+            poly = map(abs, poly)
             fmt_args = globals().copy()
             fmt_args.update(locals())
-            this_code = code.format(**fmt_args).format(**fmt_args)
+            this_code = this_code.format(**fmt_args).format(**fmt_args)
             full_code += this_code
         f = open('fx_macros_%d.se'%i, 'w')
         f.write(full_code)
         f.close()
 
 if __name__ == '__main__':
-#    graph_errors(5, 51, 5)
-    generate_serpent(5, 51, 5)
+#    graph_errors(15, 21)
+    generate_serpent(15, 21)
