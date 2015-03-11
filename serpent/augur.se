@@ -256,8 +256,8 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     if(participationFactor==0):
         participationFactor = 1
     # send fee and bond
-    if(self.balance(tx.origin)>=87*2^64):
-        if (!self.Info[eventID].creator && !self.Events[eventID].branch && self.send(eventID, 42*2^64) && self.send(branch, participationFactor*45*2^64)):
+    if(self.balance(tx.origin)>=(42*2^64 + participationFactor*45)):
+        if (!self.Info[eventID].creator && !self.Events[eventID].branch && self.send(eventID, 42*2^64) && self.send(branch, participationFactor*45)):
             self.Info[eventID].creator = tx.origin
             self.Info[eventID].creationFee = participationFactor*45 # this is not the bond
             self.Info[eventID].descriptionLength = len(description)
@@ -1402,7 +1402,7 @@ def getAllMarkets(branch):
         i += 1
     return(markets: arr)
 
-# @return all events in a branch
+# @return all events in a branch and expiration period
 def getAllEvents(branch, expPeriod):
     numEvents = self.EventsExpDates[branch][expPeriod].numberEvents
     events = array(numEvents)
@@ -1411,6 +1411,26 @@ def getAllEvents(branch, expPeriod):
         events[i] = self.EventsExpDates[branch][expPeriod].events[i]
         i += 1
     return(events: arr)
+
+# @return all branches
+def getBranches():
+    i = 1
+    numBranches = self.branchesList[0]
+    branches = array(numBranches)
+    while i <= numBranches:
+        branches[i] = self.branchesList[i]
+        i += 1
+    return(branches: arr)
+
+def getBranchDesc(branch):
+    return(load(self.Info[branch].description[0], chars=2048))
+
+def getEventDesc(event):
+    return(load(self.Info[event].description[0], chars=2048))
+
+def getMarketDesc(market):
+    return(load(self.Info[market].description[0], chars=2048))
+
 
 inset('fx_macros.se')
 inset('consensus.se')
