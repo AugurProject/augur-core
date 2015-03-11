@@ -72,8 +72,8 @@ data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
 data cashcoinBalances[]
 
-# 0th item in branchesList is the length of the branch list
-data branchesList[]
+# 0th item in branchesByHash is the length of the branch list
+data branchesByHash[]
 
 def init():
     # test initial funds
@@ -87,8 +87,8 @@ def init():
     self.Info[1010101].creationFee = 10
     self.Branches[1010101].currentVotePeriod = (block.number / 403200) - 1 
     self.Branches[1010101].periodLength = 403200
-    self.branchesList[0] = 1
-    self.branchesList[1] = 1010101
+    self.branchesByHash[0] = 1
+    self.branchesByHash[1] = 1010101
 
 # string chunks
 macro chunks($l):
@@ -220,8 +220,8 @@ def makeSubBranch(description:str, periodLength, parent):
             self.Reporting[branchID].repIDtoIndex[reporterID] = i
             i+=1
         self.Reporting[branchID].numberReporters = i
-        self.branchesList[0] += 1
-        self.branchesList[self.branchesList[0]] = branchID
+        self.branchesByHash[0] += 1
+        self.branchesByHash[self.branchesByHash[0]] = branchID
         return(branchID)
     else:
         return(0)
@@ -1366,11 +1366,11 @@ def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, 
 # @return if address is 0, branchID, branch description, next branchID, etc.
 def reputation(address):
     if(address):
-        branches = array(3*self.branchesList[0])
+        branches = array(3*self.branchesByHash[0])
         i = 1
         b = 0
-        while i <= self.branchesList[0]:
-            branch = self.branchesList[i]
+        while i <= self.branchesByHash[0]:
+            branch = self.branchesByHash[i]
             balance = self.getRepBalance(branch, address)
             if(balance!=0):
                 branches[b] = branch
@@ -1380,11 +1380,11 @@ def reputation(address):
                 b += 3
             i += 1
     else:
-        branches = array(2*self.branchesList[0])
+        branches = array(2*self.branchesByHash[0])
         i = 1
         b = 0
-        while i <= self.branchesList[0]:
-            branch = self.branchesList[i]
+        while i <= self.branchesByHash[0]:
+            branch = self.branchesByHash[i]
             branches[b] = branch
             branches[b+1] = array(2048)
             branches[b+1] = load(self.Info[branch].description[0], items=2048)
@@ -1415,11 +1415,13 @@ def getAllEvents(branch, expPeriod):
 # @return all branches
 def getBranches():
     i = 1
-    numBranches = self.branchesList[0]
+    b = 0
+    numBranches = self.branchesByHash[0]
     branches = array(numBranches)
     while i <= numBranches:
-        branches[i] = self.branchesList[i]
+        branches[b] = self.branchesByHash[i]
         i += 1
+        b += 1
     return(branches: arr)
 
 def getBranchDesc(branch):
@@ -1439,6 +1441,16 @@ def getMarketEvents(market):
         events[i] = self.Markets[market].events[i]
         i += 1
     return(events: arr)
+
+#def getMarketInfo():
+#    info = array()
+
+#def getEventInfo():
+#    info = array()
+
+#def getBranchInfo():
+#    info = array()
+
 
 inset('fx_macros.se')
 inset('consensus.se')
