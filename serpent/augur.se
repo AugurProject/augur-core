@@ -1446,12 +1446,12 @@ def getMarketInfo(market):
     info = array(8)
     info[0] = self.Info[market].creator
     info[1] = self.Info[market].creationFee
-    info[2] = self.Info[market].currentParticipant
-    info[3] = self.Info[market].alpha
-    info[4] = self.Info[market].cumulativeScale
-    info[5] = self.Info[market].numOutcomes
-    info[6] = self.Info[market].tradingPeriod
-    info[7] = self.Info[market].tradingFee
+    info[2] = self.Markets[market].currentParticipant
+    info[3] = self.Markets[market].alpha
+    info[4] = self.Markets[market].cumulativeScale
+    info[5] = self.Markets[market].numOutcomes
+    info[6] = self.Markets[market].tradingPeriod
+    info[7] = self.Markets[market].tradingFee
 
 def getEventInfo(event):
     info = array(8)
