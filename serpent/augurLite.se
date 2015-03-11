@@ -174,7 +174,7 @@ def getRepBalance(branch, address):
 # description format is branchName:description
 # is there some way we can include the description bytes in the sha256 hash?
 # @return branchID if success, else 0
-def makeSubBranch(description:str, periodLength, parent):
+def createSubbranch(description:str, periodLength, parent):
     if(periodLength<=0 || !self.Branches[parent].periodLength || description==0):
         return(0)
 

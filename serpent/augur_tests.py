@@ -75,7 +75,7 @@ for i, (addr, key) in reversed(list(enumerate(a_k))):
     print yellow("Sent 1 cashcoin from ", green("%s "), "to ", green("%s")) % (addr, to)
 
 print title(' Testing MakeSubBranch ')
-subbranch = augur.makeSubBranch('"test branch"', 100, 1010101)
+subbranch = augur.createSubbranch('"test branch"', 100, 1010101)
 print yellow('Created subbranch ', cyan('%s '), 'with address ', green(t.a0)) % subbranch
 
 print title(' Testing CreateEvent ')
