@@ -72,8 +72,10 @@ data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
 data cashcoinBalances[]
 
-# 0th item in branchesByHash is the length of the branch list
-data branchesByHash[]
+# 0th item in branchList is the length of the branch list
+data branchList[]
+
+data branchListCount
 
 def init():
     # test initial funds
@@ -87,8 +89,8 @@ def init():
     self.Info[1010101].creationFee = 10
     self.Branches[1010101].currentVotePeriod = (block.number / 403200) - 1 
     self.Branches[1010101].periodLength = 403200
-    self.branchesByHash[0] = 1
-    self.branchesByHash[1] = 1010101
+    self.branchList[0] = 1
+    self.branchList[1] = 1010101
 
 # string chunks
 macro chunks($l):
@@ -220,8 +222,8 @@ def createSubbranch(description:str, periodLength, parent):
             self.Reporting[branchID].repIDtoIndex[reporterID] = i
             i+=1
         self.Reporting[branchID].numberReporters = i
-        self.branchesByHash[0] += 1
-        self.branchesByHash[self.branchesByHash[0]] = branchID
+        self.branchList[0] += 1
+        self.branchList[self.branchList[0]] = branchID
         return(branchID)
     else:
         return(0)
@@ -1362,36 +1364,6 @@ def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, 
     elif(itemNumber==1):
         return(self.Markets[marketID].participants[participantIndex].shares[outcomeNumber])
 
-# @return if address passed, returns branchID, balance (for that address in that branch), branch description, next branchID, next balance, etc.
-# @return if address is 0, branchID, branch description, next branchID, etc.
-def reputation(address):
-    if(address):
-        branches = array(3*self.branchesByHash[0])
-        i = 1
-        b = 0
-        while i <= self.branchesByHash[0]:
-            branch = self.branchesByHash[i]
-            balance = self.getRepBalance(branch, address)
-            if(balance!=0):
-                branches[b] = branch
-                branches[b+1] = balance
-                branches[b+2] = array(2048)
-                branches[b+2] = load(self.Info[branch].description[0], items=2048)
-                b += 3
-            i += 1
-    else:
-        branches = array(2*self.branchesByHash[0])
-        i = 1
-        b = 0
-        while i <= self.branchesByHash[0]:
-            branch = self.branchesByHash[i]
-            branches[b] = branch
-            branches[b+1] = array(2048)
-            branches[b+1] = load(self.Info[branch].description[0], items=2048)
-            b += 2
-            i += 1
-    return(branches: arr)
-
 # @return all markets in a branch
 def getMarkets(branch):
     numMarkets = self.Branches[branch].numMarkets
@@ -1413,15 +1385,43 @@ def getEvents(branch, expPeriod):
     return(events: arr)
 
 # @return all branches
-def getBranches():
-    i = 1
-    b = 0
-    numBranches = self.branchesByHash[0]
-    branches = array(numBranches)
-    while i <= numBranches:
-        branches[b] = self.branchesByHash[i]
-        i += 1
-        b += 1
+# takes 1 if you want to use tx.origin default address
+# or you can pass a real address in, or 0 to just return all branches
+def getBranches(address):
+    if(address==1):
+        address = tx.origin
+        branches = array(2*self.branchList[0])
+        i = 1
+        b = 0
+        while i <= self.branchList[0]:
+            branch = self.branchList[i]
+            balance = self.getRepBalance(branch, address)
+            if(balance!=0):
+                branches[b] = branch
+                branches[b+1] = balance
+                b += 2
+            i += 1
+    elif(address):
+        branches = array(2*self.branchList[0])
+        i = 1
+        b = 0
+        while i <= self.branchList[0]:
+            branch = self.branchList[i]
+            balance = self.getRepBalance(branch, address)
+            if(balance!=0):
+                branches[b] = branch
+                branches[b+1] = balance
+                b += 2
+            i += 1
+    else:    
+        i = 1
+        b = 0
+        numBranches = self.branchList[0]
+        branches = array(numBranches)
+        while i <= numBranches:
+            branches[b] = self.branchList[i]
+            i += 1
+            b += 1
     return(branches: arr)
 
 def getBranchDesc(branch):
@@ -1452,6 +1452,7 @@ def getMarketInfo(market):
     info[5] = self.Markets[market].numOutcomes
     info[6] = self.Markets[market].tradingPeriod
     info[7] = self.Markets[market].tradingFee
+    return(info: arr)
 
 def getEventInfo(event):
     info = array(8)
