@@ -174,7 +174,7 @@ def getRepBalance(branch, address):
 # description format is branchName:description
 # is there some way we can include the description bytes in the sha256 hash?
 # @return branchID if success, else 0
-def makeSubBranch(description:str, periodLength, parent):
+def createSubbranch(description:str, periodLength, parent):
     if(periodLength<=0 || !self.Branches[parent].periodLength || description==0):
         return(0)
 
@@ -1393,7 +1393,7 @@ def reputation(address):
     return(branches: arr)
 
 # @return all markets in a branch
-def getAllMarkets(branch):
+def getMarkets(branch):
     numMarkets = self.Branches[branch].numMarkets
     markets = array(numMarkets)
     i = 0
@@ -1403,7 +1403,7 @@ def getAllMarkets(branch):
     return(markets: arr)
 
 # @return all events in a branch and expiration period
-def getAllEvents(branch, expPeriod):
+def getEvents(branch, expPeriod):
     numEvents = self.EventsExpDates[branch][expPeriod].numberEvents
     events = array(numEvents)
     i = 0
