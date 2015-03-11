@@ -1442,15 +1442,38 @@ def getMarketEvents(market):
         i += 1
     return(events: arr)
 
-#def getMarketInfo():
-#    info = array()
+def getMarketInfo(market):
+    info = array(8)
+    info[0] = self.Info[market].creator
+    info[1] = self.Info[market].creationFee
+    info[2] = self.Info[market].currentParticipant
+    info[3] = self.Info[market].alpha
+    info[4] = self.Info[market].cumulativeScale
+    info[5] = self.Info[market].numOutcomes
+    info[6] = self.Info[market].tradingPeriod
+    info[7] = self.Info[market].tradingFee
 
-#def getEventInfo():
-#    info = array()
+def getEventInfo(event):
+    info = array(8)
+    info[0] = self.Info[event].creator
+    info[1] = self.Info[event].creationFee
+    info[2] = self.Events[event].branch
+    info[3] = self.Events[event].expirationDate
+    info[4] = self.Events[event].outcome
+    info[5] = self.Events[event].minValue
+    info[6] = self.Events[event].maxValue
+    info[7] = self.Events[event].numOutcomes
+    return(info: arr)
 
-#def getBranchInfo():
-#    info = array()
-
+def getBranchInfo(branch):
+    info = array(6)
+    info[0] = self.Info[branch].creator
+    info[1] = self.Info[branch].creationFee
+    info[2] = self.Branches[branch].currentVotePeriod
+    info[3] = self.Branches[branch].periodLength
+    info[4] = self.Branches[branch].step
+    info[5] = self.Branches[branch].numMarkets
+    return(info: arr)
 
 inset('fx_macros.se')
 inset('consensus.se')
