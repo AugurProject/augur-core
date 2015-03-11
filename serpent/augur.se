@@ -280,17 +280,24 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
 # && n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
 macro lsLmsr($marketID):
-    with $q = load(self.Markets[$marketID].sharesPurchased[1], items=self.Markets[$marketID].numOutcomes):
-        with $alpha = self.Markets[$marketID].alpha:
-            with $cumScale = self.Markets[$marketID].cumulativeScale:
-                with $Bq = $alpha*$cumScale*sum($q):
+    with $alpha = self.Markets[$marketID].alpha:
+        with $cumScale = self.Markets[$marketID].cumulativeScale:
+            with $Bq = $alpha*$cumScale:
+                with $sum = 0:
                     with $i = 1:
-                        with $len = len($q):
+                        with $len = self.Markets[$marketID].numOutcomes:
                             with $sumexp = 0:
-                                while $i <= $len:
-                                    $sumexp += fxp_exp($q[$i]*2^128/$Bq)
-                                    $i += 1
-                                $Bq*fxp_log($sumExp)/2^64
+                                with $result = 0:
+                                    while $i <= $len:
+                                        $sum += self.Markets[$marketID].sharesPurchased[$i]
+                                        $i += 1
+                                    $Bq = $Bq * $sum / 2**64
+                                    $i = 1
+                                    while $i <= $len:
+                                        $sumexp += fx_exp(self.Markets[$marketID].sharesPurchased[$i] * 2**64 / $Bq)
+                                        $i += 1
+                                    $result = $Bq * fx_log($sumexp) / 2**64
+                                    $result
 
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
@@ -333,6 +340,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         i += 1
     if(numOutcomes > 200):
         return(0)
+    log(cumulativeScale)
     if(cumulativeScale==0):
         cumulativeScale = 1
     tradingPeriod = (tradingPeriod / self.Branches[branch].periodLength)
@@ -360,8 +368,10 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     # buy some of all outcomes
     # ls-lmsr needs at least a very small initial liquidity
     y = 1
+    z = initialLiquidity * 2**64 / (2**64 + alpha*cumulativeScale*fx_log(initialLiquidity)/2**64)
+    log(z)
     while y <= numOutcomes:
-        self.Markets[marketID].sharesPurchased[y] += initialLiquidity
+        self.Markets[marketID].sharesPurchased[y] += z
         y += 1
     self.Markets[marketID].alpha = alpha
     self.Markets[marketID].cumulativeScale = cumulativeScale
@@ -387,7 +397,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         # revert shares bought and other variables
         y = 1
         while y <= numOutcomes:
-            self.Markets[marketID].sharesPurchased[y] -= initialLiquidity
+            self.Markets[marketID].sharesPurchased[y] -= z
         self.Markets[marketID].alpha = 0
         self.Markets[marketID].cumulativeScale = 0
         self.Markets[marketID].numOutcomes = 0
@@ -403,17 +413,17 @@ def buyShares(branch, market, outcome, amount):
     #the question is though --- are these events part of the set that were stalled?
     #if above && the event outcomes aren't determined (0), then yes
     #then set a stalled boolean 
-    stalled = false
+    stalled = 0
     if (outcome==0 || (self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod && !stalled)):
         return(0)
     # lmsr cost calcs
     oldCost = lsLmsr(market)
-    log(oldCost)
     self.Markets[market].sharesPurchased[outcome] += amount
     newCost = lsLmsr(market)
-    log(newCost)
+    if newCost < oldCost:
+        self.Markets[market].sharesPurchased[outcome] -= amount
+        return(0)
     price = (newCost - oldCost)
-    log(price)
     
     if(self.cashcoinBalances[tx.origin] < price*(self.Markets[market].tradingFee + 2^64)/2^64):
         self.Markets[market].sharesPurchased[outcome] -= amount
@@ -440,7 +450,7 @@ def buyShares(branch, market, outcome, amount):
     self.send(branch, fee/2)
     return(price+fee)
 
-# amount is amount of shares to buy
+# amount is amount of shares to sell
 # instead of inputting particip. num could just loop through array if dont have it
 # @return 0 if fail, returns amount you get paid if success
 def sellShares(branch, market, outcome, amount):
@@ -452,10 +462,8 @@ def sellShares(branch, market, outcome, amount):
     oldCost = lsLmsr(market)
     self.Markets[market].sharesPurchased[outcome] -= amount
     newCost = lsLmsr(market)
-
     # these prices are in fixed point
     price = oldCost - newCost
-
     # remove shares from the user's account
     # if user actually doesn't have the shares, revert
     if(self.Markets[market].participants[participantNumber].shares[outcome] < amount):
@@ -471,7 +479,7 @@ def sellShares(branch, market, outcome, amount):
         self.cashcoinBalances[branch] += fee/2
         self.cashcoinBalances[tx.origin] += (price - fee)
         self.Markets[market].participants[participantNumber].shares[outcome] -= amount
-        return(price)
+        return(price - fee)
 
 # @return amount of shares transferred
 def transferShares(branch, market, outcome, amount, to):
@@ -1402,5 +1410,5 @@ def getAllEvents(branch, expPeriod):
         events[i] = self.EventsExpDates[branch][expPeriod].events[i]
     return(events: arr)    
 
-inset('fxp_macros.se')
+inset('fx_macros.se')
 inset('consensus.se')
