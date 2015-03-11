@@ -1431,6 +1431,14 @@ def getEventDesc(event):
 def getMarketDesc(market):
     return(load(self.Info[market].description[0], chars=2048))
 
+def getMarketEvents(market):
+    i = 0
+    lenEvents = self.Markets[market].lenEvents
+    events = array(lenEvents)
+    while i < lenEvents:
+        events[i] = self.Markets[market].events[i]
+        i += 1
+    return(events: arr)
 
 inset('fx_macros.se')
 inset('consensus.se')
