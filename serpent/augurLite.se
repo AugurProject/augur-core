@@ -275,6 +275,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
             return(eventID)
         else:
             return(0)
+
 # alpha is equal to v/(n*log(n)) where v is the max percent commission
 # && n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
@@ -403,6 +404,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         return(0)
 
 # amount of shares should be an integer
+# @return 0 if fail, else return price + fee to buy shares
 def buyShares(branch, market, outcome, amount):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)  
     # if we have 3-4 cycles in a row of events getting pushed back market would already be closed even though events up to be decided on for a while yet never decided
@@ -448,8 +450,9 @@ def buyShares(branch, market, outcome, amount):
     self.send(branch, fee/2)
     return(price+fee)
 
-# amount is amount of shares to buy
+# amount is amount of shares to sell
 # instead of inputting particip. num could just loop through array if dont have it
+# @return 0 if fail, returns amount you get paid if success
 def sellShares(branch, market, outcome, amount):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     participantNumber = self.Markets[market].addr2participant[tx.origin]
@@ -600,7 +603,7 @@ def checkQuorum(branch):
         return(1)
     else:
         return(0)
-      
+
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
 # when multidimen fancy payouts we report on the events separately per usual, but combine them to determine winning state of a fancy market && then payout that state
@@ -1162,3 +1165,4 @@ def getAllEvents(branch, expPeriod):
     return(events: arr)    
 
 inset('fx_macros.se')
+inset('consensus.se')
