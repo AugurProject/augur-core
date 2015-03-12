@@ -173,6 +173,8 @@ def sendReputation(branch, recver, value):
 # @return reputation value        
 def getRepBalance(branch, address):
     repIndex = self.Reporting[branch].repIDtoIndex[address]
+    if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
+        return(0)
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
 # period length is given in blocks
