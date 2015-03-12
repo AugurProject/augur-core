@@ -85,11 +85,10 @@ def init():
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
     self.Reporting[1010101].numberReporters = 1
     description = text("Root branch")
-    log(len(description))
-    log(data=description)   
     save(self.Info[1010101].description[0], description, chars=len(description))
     self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
     self.Info[1010101].creationFee = 10
+    self.Info[1010101].descriptionLength = len(description)
     self.Branches[1010101].currentVotePeriod = (block.number / 403200) - 1 
     self.Branches[1010101].periodLength = 403200
     self.branchList[0] = 1

@@ -15,7 +15,6 @@ augur-serpent
 
 ### Bugs:
 - not allowing me to make a subbranch w/ same desc. but a parent which is a different subbranch (I have a suspicion the *only* thing getting hashed is the description and not the other metadata, causing this issue)
-- return strings from root branch desc error
 - get rep balance bug
 
 ### Scalability optimizations (hopefully these become an issue!) ... Curse you gas issues (too soon):
