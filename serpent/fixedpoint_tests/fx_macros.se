@@ -1,0 +1,98 @@
+macro fx_floor_log2($x):
+    with $y = $x / 0x10000000000000000:
+        with $lo = 0:
+            with $hi = 191:
+                with $mid = ($hi + $lo)/2:
+                    while (($lo + 1) != $hi):
+                        if $y < 2**$mid:
+                            $hi = $mid
+                        else:
+                            $lo = $mid
+                        $mid = ($hi + $lo)/2
+                    $lo
+
+macro fx_log2_small($x):
+    with $result = -0x48A49EAD9B2CD16BE:
+        with $temp = $x:
+            $result += 0x124DC64B2741E5F083*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result -= 0x36A569D528A96FF419*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x880785B1DE09970584*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result -= 0x10AF33C52EB996E92A6*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x19FD6E8AC1305DD6D3F*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result -= 0x2086485A91622AE7378*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x210382DF5A3175686B4*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result -= 0x1B58D71F02D9DA4F7B6*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x1288E14C2FB8C4C1595*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result -= 0xA44C5BBEB599D5AB38*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x4A0E619C630B69BC17*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result -= 0x1AE8CAEA63CF2593A9*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x7C3EF5A5BFC21BA1F*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result -= 0x1BD202FA82B683802*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x4A90858A0731AD74*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result -= 0x8CB3CD4376E76EF*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0xA6B8F8E68CD877*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result - 0x5D5316875D9E3*$temp / 0x10000000000000000
+
+macro fx_log2($x):
+    with $y = fx_floor_log2($x):
+        with $z = $x / 2**$y:
+            $y * 0x10000000000000000 + fx_log2_small($z)
+
+macro fx_log($x):
+    fx_log2($x) * 0x10000000000000000 / 0x171547652B82FE177
+
+macro fx_exp2_small($x):
+    with $result = 0x10000000000000000:
+        with $temp = $x:
+            $result += 0xB17217F7D1CF79AC*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x3D7F7BFF058B1D56*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0xE35846B82505F32*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x276556DF749D7C6*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x5761FF9E294A6F*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0xA184897C5558D*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0xFFE5FE24386C*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x162C023B2A1D*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x1B5250C02BF*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x1E4D3F1A83*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x1E87B8E21*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x1C768AA3*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result += 0x164F0A9*$temp / 0x10000000000000000
+            $temp = $temp*$x / 0x10000000000000000
+            $result + 0x1B08D3*$temp / 0x10000000000000000
+
+macro fx_exp2($x):
+    with $y = $x / 0x10000000000000000:
+        with $z = $x % 0x10000000000000000:
+            fx_exp2_small($z) * 2**$y
+
+macro fx_exp($x):
+    fx_exp2($x * 0x10000000000000000 / 0xB17217F7D1CF79AC)

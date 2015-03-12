@@ -8,6 +8,7 @@ import types
 import gmpy2
 gmpy2.get_context().precision = 256
 
+t.gas_limit = 10**20
 
 FILE = "augurLite.se"
 VERBOSE = True
@@ -55,16 +56,16 @@ print red(' Starting Tests '.center(80, '#'))
 print title(" Compiling %s ... " % FILE)
 start = time.time()
 s = t.state()
-augur = ContractWrapper(VERBOSE, s.abi_contract(FILE))
+augur = ContractWrapper(VERBOSE, s.abi_contract(FILE, gas=10**8))
 print yellow("Done compiling in %f seconds.") % (time.time() - start)
 
 balances = []
 a_k = zip(t.accounts, t.keys)
-
+s.mine(1)
 print title(' Testing Faucet and Balance ')
 for addr, key in a_k:
     print yellow("Results of calls with address ", green("%s:")) % addr
-    augur.faucet(sender=key)
+    augur.faucet(sender=key, value=10**8)
     print yellow("\taugur.faucet: ", cyan("Success"))
     print yellow("\taugur.balance: ",cyan("%d")) % augur.balance(addr)
 

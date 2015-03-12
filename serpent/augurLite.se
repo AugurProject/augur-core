@@ -280,24 +280,83 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
 # && n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
 macro lsLmsr($marketID):
-    with $alpha = self.Markets[$marketID].alpha:
-        with $cumScale = self.Markets[$marketID].cumulativeScale:
+    with $alpha = market($marketID).alpha:
+        with $cumScale = market($marketID).cumulativeScale:
             with $Bq = $alpha*$cumScale:
                 with $sum = 0:
                     with $i = 1:
-                        with $len = self.Markets[$marketID].numOutcomes:
+                        with $len = market($marketID).numOutcomes:
                             with $sumexp = 0:
                                 with $result = 0:
                                     while $i <= $len:
-                                        $sum += self.Markets[$marketID].sharesPurchased[$i]
+                                        $sum += market($marketID).sharesPurchased[$i]
                                         $i += 1
                                     $Bq = $Bq * $sum / 2**64
                                     $i = 1
                                     while $i <= $len:
-                                        $sumexp += fx_exp(self.Markets[$marketID].sharesPurchased[$i] * 2**64 / $Bq)
+                                        $sumexp += fx_exp(market($marketID).sharesPurchased[$i] * 2**64 / $Bq)
                                         $i += 1
                                     $result = $Bq * fx_log($sumexp) / 2**64
                                     $result
+
+macro load_q($marketID):
+    with $len = market($marketID).numOutcomes:
+        with $q = array($len):
+            with $i = 1:
+                while $i <= $len:
+                    $q[$i] = market($marketID).sharesPurchased[$i + 1]
+                    $i += 1
+                $q
+
+macro sum($q):
+    with $i = 0:
+        with $result = 0:
+            with $len = len($q):
+                while $i < $len:
+                    $result += $q[$i]
+                    $i += 1
+                $result
+
+macro market($marketID):
+    self.Markets[$marketID]
+
+macro alpha($marketID):
+    market($marketID).alpha
+
+macro cumScale($marketID):
+    market($marketID).cumulativeScale
+
+macro numOutcomes($marketID):
+    market($marketID).numOutcomes
+
+macro priceMac($marketID, $outcome):
+    with $q = load_q($marketID):
+        with $sum_q = sum($q):
+            with $alpha = alpha($marketID)*cumScale($marketID):
+                with $Bq = $alpha*$sum_q/2**64:
+                    with $len = numOutcoms($marketID):
+                        with $exps = array(numOutcomes($marketID)):
+                            with $sum_exps = 0:
+                                with $result = 0:
+                                    with $nt1 = 0:
+                                        with $nt2 = 0:
+                                            with $dt = 0:
+                                                with $i = 0:
+                                                    while $i < $len:
+                                                        $exps[$i]=fx_exp($q[$i]*2**64/$Bq)
+                                                        $i += 1
+                                                    $sum_exps = sum($exps)
+                                                    $result+=$alpha*fx_log($sum_exps)/2**64
+                                                    $nt1 = $exps[$outcome]*$sum_q
+                                                    $dt = $sum_q*$sum_exps/2**64
+                                                    $i = 0
+                                                    while $i < $len:
+                                                        $nt2 += $q[$i]*exps[$i]/2**64
+                                                        $i += 1
+                                                    $result + ($nt1 - $nt2)*2**64/$dt
+
+def price(marketID, outcome):
+    return(priceMac(marketID, outcome))
 
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
@@ -1167,4 +1226,3 @@ def getAllEvents(branch, expPeriod):
     return(events: arr)
 
 inset('fx_macros.se')
-inset('consensus.se')
