@@ -204,7 +204,7 @@ def createSubbranch(description:str, periodLength, parent):
     mcopy(branchInfo+(items=6), description, len(description))
     # people can check that these characteristics hash to the ID if they want
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
-    branchID = sha256(branchinfo, chars=len(branchInfo))
+    branchID = sha256(branchInfo, chars=len(branchInfo))
 
     if(self.Branches[parent].periodLength && self.Info[parent].creator && self.send(parent, 47*2^64) && self.Branches[branchID].periodLength==0):
         self.Info[branchID].creator = tx.origin

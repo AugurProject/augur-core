@@ -12,7 +12,6 @@ augur-serpent
 - With these three conditions: [1] Stalled Branch, [2] Decision-Author’s signature, [3] Market-Author’s signature, one can move a Market’s Decisions to a new Branch (use ecVerify serpent function)
 
 ### Bugs:
-- not allowing me to make a subbranch w/ same desc. but a parent which is a different subbranch (I have a suspicion the *only* thing getting hashed is the description and not the other metadata, causing this issue)
 
 ### Scalability optimizations (hopefully these become an issue!) ... Curse you gas issues (too soon):
 - http://lightning.network/lightning-network.pdf
