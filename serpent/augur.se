@@ -84,7 +84,10 @@ def init():
     self.Reporting[1010101].reputation[0].repValue = 470*2^64
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
     self.Reporting[1010101].numberReporters = 1
-    self.Info[1010101].description[] = "initial branch"
+    description = text("Root branch")
+    log(len(description))
+    log(data=description)   
+    save(self.Info[1010101].description[0], description, chars=len(description))
     self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
     self.Info[1010101].creationFee = 10
     self.Branches[1010101].currentVotePeriod = (block.number / 403200) - 1 
@@ -170,7 +173,8 @@ def sendReputation(branch, recver, value):
 
 # @return reputation value        
 def getRepBalance(branch, address):
-    return(self.Reporting[branch].reputation[self.Reporting[branch].repIDtoIndex[address]].repValue)
+    repIndex = self.Reporting[branch].repIDtoIndex[address]
+    return(self.Reporting[branch].reputation[repIndex].repValue)
 
 # period length is given in blocks
 # description format is branchName:description
@@ -1385,10 +1389,31 @@ def getEvents(branch, expPeriod):
     return(events: arr)
 
 # @return all branches
-# takes 1 if you want to use tx.origin default address
-# or you can pass a real address in, or 0 to just return all branches
-def getBranches(address):
-    if(address==1):
+def getBranches(): 
+    i = 1
+    b = 0
+    numBranches = self.branchList[0]
+    branches = array(numBranches)
+    while i <= numBranches:
+        branches[b] = self.branchList[i]
+        i += 1
+        b += 1
+    return(branches: arr)
+
+def getReputation(address):
+    if(address):
+        branches = array(2*self.branchList[0])
+        i = 1
+        b = 0
+        while i <= self.branchList[0]:
+            branch = self.branchList[i]
+            balance = self.getRepBalance(branch, address)
+            if(balance!=0):
+                branches[b] = branch
+                branches[b+1] = balance
+                b += 2
+            i += 1
+    else:
         address = tx.origin
         branches = array(2*self.branchList[0])
         i = 1
@@ -1401,37 +1426,19 @@ def getBranches(address):
                 branches[b+1] = balance
                 b += 2
             i += 1
-    elif(address):
-        branches = array(2*self.branchList[0])
-        i = 1
-        b = 0
-        while i <= self.branchList[0]:
-            branch = self.branchList[i]
-            balance = self.getRepBalance(branch, address)
-            if(balance!=0):
-                branches[b] = branch
-                branches[b+1] = balance
-                b += 2
-            i += 1
-    else:    
-        i = 1
-        b = 0
-        numBranches = self.branchList[0]
-        branches = array(numBranches)
-        while i <= numBranches:
-            branches[b] = self.branchList[i]
-            i += 1
-            b += 1
     return(branches: arr)
-
+    
 def getBranchDesc(branch):
-    return(load(self.Info[branch].description[0], chars=2048))
+    length = self.Info[branch].descriptionLength
+    return(load(self.Info[branch].description[0], chars=length): str)
 
 def getEventDesc(event):
-    return(load(self.Info[event].description[0], chars=2048))
+    length = self.Info[event].descriptionLength
+    return(load(self.Info[event].description[0], chars=length): str)
 
 def getMarketDesc(market):
-    return(load(self.Info[market].description[0], chars=2048))
+    length = self.Info[market].descriptionLength
+    return(load(self.Info[market].description[0], chars=length): str)
 
 def getMarketEvents(market):
     i = 0

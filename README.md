@@ -11,9 +11,12 @@ augur-serpent
 - for final .5 outcomes take shares bought and divide the money up amongst them equally (should be .50 each)
 - if a .5 in a market with multiple dimensions it still pays out (just mult. prices by .5)
 - With these three conditions: [1] Stalled Branch, [2] Decision-Author’s signature, [3] Market-Author’s signature, one can move a Market’s Decisions to a new Branch (use ecVerify serpent function)
+- branchlist data len
 
 ### Bugs:
 - not allowing me to make a subbranch w/ same desc. but a parent which is a different subbranch (I have a suspicion the *only* thing getting hashed is the description and not the other metadata, causing this issue)
+- return strings from root branch desc error
+- get rep balance bug
 
 ### Scalability optimizations (hopefully these become an issue!) ... Curse you gas issues (too soon):
 - http://lightning.network/lightning-network.pdf
