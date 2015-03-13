@@ -2,6 +2,7 @@ augur-serpent
 -------------
 
 ### To do:
+- need outcomes returned as 1, 2, etc... .5 as 2^63
 - need a price function for ls-lmsr
 - min max categorical events - so max-min/numOutcomes is interval between outcome
 - implement categorical in consensus fun + augur.se.
