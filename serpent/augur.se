@@ -39,7 +39,8 @@ data Branches[](currentVotePeriod, periodLength, step, markets[], numMarkets)
 # a binary outcome has 0 for min && 1 for max value (ditto for categorical even though not actually true) - a no is 1, yes is 2
 # this is just for events array we do 0 and 1
 # S&P 500 would be say 0 && 4700, respectively
-# should min and max be fxp?
+# should min and max be fxp? not for now
+# need outcomes returned as 1*2^64, 2*2^64, etc... .5 as 2^63
 data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
 
 # Reporting index is the branchID
@@ -1182,7 +1183,7 @@ def closeMarket(branch, market):
             if(self.Events[self.Markets[market].events[0]].maxValue!=1 || self.Events[self.Markets[market].events[0]].outcome==2^63):
                 scalar = 0
             elif(self.Events[self.Markets[market].events[1]].maxValue!=1 || self.Events[self.Markets[market].events[0]].outcome==2^63):
-                scalar = 1fgfgytrfdsfgt
+                scalar = 1
             elif(self.Events[self.Markets[market].events[2]].maxValue!=1 || self.Events[self.Markets[market].events[0]].outcome==2^63):
                 scalar = 2
             outcome = self.Events[self.Markets[market].events[scalar]].outcome

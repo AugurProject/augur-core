@@ -2,16 +2,13 @@ augur-serpent
 -------------
 
 ### To do:
-- need outcomes returned as 1, 2, etc... .5 as 2^63
-- need a price function for ls-lmsr
-- min max categorical events - so max-min/numOutcomes is interval between outcome
-- implement categorical in consensus fun + augur.se.
-- what if a scalar has a .5 actual value outcome
-  - I suggest the .5 outcome be something like 2^256
-- if a .5 in a market with multiple dimensions it still pays out (just mult. prices by .5)
+- min max categorical events - so max-min/numOutcomes is interval between outcome & min/max fxp?
 - With these three conditions: [1] Stalled Branch, [2] Decision-Author’s signature, [3] Market-Author’s signature, one can move a Market’s Decisions to a new Branch (use ecVerify serpent function)
 
 ### Bugs:
+- what if a scalar has a .5 actual value outcome
+  - I suggest the .5 outcome be something like 2^256
+  - scalar .5 outcomes just don't work at all atm either
 
 ### Scalability optimizations (hopefully these become an issue!) ... Curse you gas issues (too soon):
 - http://lightning.network/lightning-network.pdf
