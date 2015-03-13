@@ -317,6 +317,24 @@ macro sum($q):
                     $i += 1
                 $result
 
+macro load_q($marketID):
+    $len = market($marketID).numOutcomes
+    $q = array($len)
+    $i = 1
+    while $i <= $len:
+        $q[$i] = market($marketID).sharesPurchased[$i + 1]
+        $i += 1
+    $q
+
+macro sum($q):
+    $i = 1
+    $result = $q[0]
+    $len = len($q)
+    while $i < $len:
+        $result += $q[$i]
+        $i += 1
+    $result
+
 macro market($marketID):
     self.Markets[$marketID]
 
@@ -330,30 +348,28 @@ macro numOutcomes($marketID):
     market($marketID).numOutcomes
 
 macro priceMac($marketID, $outcome):
-    with $q = load_q($marketID):
-        with $sum_q = sum($q):
-            with $alpha = alpha($marketID)*cumScale($marketID):
-                with $Bq = $alpha*$sum_q/2**64:
-                    with $len = numOutcoms($marketID):
-                        with $exps = array(numOutcomes($marketID)):
-                            with $sum_exps = 0:
-                                with $result = 0:
-                                    with $nt1 = 0:
-                                        with $nt2 = 0:
-                                            with $dt = 0:
-                                                with $i = 0:
-                                                    while $i < $len:
-                                                        $exps[$i]=fx_exp($q[$i]*2**64/$Bq)
-                                                        $i += 1
-                                                    $sum_exps = sum($exps)
-                                                    $result+=$alpha*fx_log($sum_exps)/2**64
-                                                    $nt1 = $exps[$outcome]*$sum_q
-                                                    $dt = $sum_q*$sum_exps/2**64
-                                                    $i = 0
-                                                    while $i < $len:
-                                                        $nt2 += $q[$i]*exps[$i]/2**64
-                                                        $i += 1
-                                                    $result + ($nt1 - $nt2)*2**64/$dt
+    $q = load_q($marketID)
+    $sum_q = sum($q)
+    $alpha = alpha($marketID)*cumScale($marketID)
+    $Bq = $alpha*$sum_q/2**64
+    $len = numOutcomes($marketID)
+    $exps = array($len)
+    $sum_exps = 0
+    $nt1 = 0
+    $nt2 = 0
+    $dt = 0
+    $i = 0
+    while $i < $len:
+        $exps[$i]=fx_exp($q[$i]*2**64/$Bq)
+        $i += 1
+    $sum_exps = sum($exps)
+    $nt1 = $exps[$outcome]*$sum_q
+    $dt = $sum_q*$sum_exps/2**64
+    $i = 0
+    while $i < $len:
+        $nt2 += $q[$i]*exps[$i]/2**64
+        $i += 1
+    $alpha*fx_log($sum_exps)/2**64 + ($nt1 - $nt2)*2**64/$dt
 
 def price(marketID, outcome):
     return(priceMac(marketID, outcome))
