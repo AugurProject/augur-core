@@ -366,7 +366,7 @@ def price(marketID, outcome):
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
 # z = liquidity / (1+(alpha*n*ln(n)))
-# initialLiquidity is initial number of shares of each outcome you want to buy/initialize/set
+# initialLiquidity is initial number of cash in each outcome you want to buy/initialize/set
 # tradingFee is a percent in fixedPoint
 # same for these values
 # @return 0 as fail state, marketID if success
@@ -563,14 +563,13 @@ def transferShares(branch, market, outcome, amount, to):
     self.Markets[market].participants[participantNumber].shares[outcome] -= amount
     self.Markets[market].participants[receiverNumber].shares[outcome] += amount
 
-    # needs msrPrice macro implemented to send fees
     # half of fees to market creator
-    #fee = self.Markets[market].tradingFee*msrPrice(market, outcome)/2^64
-    #self.send(self.Info[market].creator, fee/2)
     # other half go to branch
-    #self.send(branch, fee/2)
-
-    return(amount)
+    fee = self.Markets[market].tradingFee*priceMac(market, outcome)/2^64
+    if((self.balance(tx.origin) >= fee) && self.send(self.Info[market].creator, fee/2) && self.send(branch, fee/2)):
+        return(amount)
+    else:
+        return(0)
 
 # a no vote is -2^64, a yes vote is 2^64 && a can't determine vote is 2^63 (a empty ballot is 0)
 # atm voters who do vote are req. to vote on all things in their respective ballots (rest just auto .5 them)

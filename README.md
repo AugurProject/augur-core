@@ -4,6 +4,7 @@ augur-serpent
 ### To do:
 - min max categorical events - so max-min/numOutcomes is interval between outcome & min/max fxp?
 - With these three conditions: [1] Stalled Branch, [2] Decision-Author’s signature, [3] Market-Author’s signature, one can move a Market’s Decisions to a new Branch (use ecVerify serpent function)
+- get transfer shares working
 
 ### Bugs:
 - what if a scalar has a .5 actual value outcome
@@ -59,3 +60,4 @@ augur-serpent
   - if >period/2 submit Rnum and Votes[] for reporter
   - check in consensus if they match, if not, no vote ballot (allow people to change votes and hash up until lock in residual change)
   - anti cheat provide p and randomNum mechanism steal deposit (will need to support snarks eventually)
+
