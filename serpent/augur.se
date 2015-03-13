@@ -36,10 +36,10 @@ data Info[](description[2048], descriptionLength, creator, creationFee)
 data Branches[](currentVotePeriod, periodLength, step, markets[], numMarkets)
 
 # Events' index is the eventID
-# a binary outcome has 0 for min && 1 for max value (ditto for categorical even though not actually true) - a no is 1, yes is 2
-# this is just for events array we do 0 and 1
-# S&P 500 would be say 0 && 4700, respectively
-# should min and max be fxp? not for now
+# a binary outcome has 0 for min && 1 for max value
+# S&P 500 scalar would be say 0 && 4700, respectively
+# categorical markets have fixed point min and max
+ # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
 # need outcomes returned as 1*2^64, 2*2^64, etc... .5 as 2^63
 data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
 
@@ -93,10 +93,6 @@ def init():
     self.Branches[1010101].periodLength = 403200
     self.branchListCount = 1
     self.branchList[0] = 1010101
-
-# string chunks
-macro chunks($l):
-    $l + if(l%32 != 0, 1, 0)
 
 # @return: cash balance of address
 def balance(address):
@@ -391,10 +387,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         if (self.Events[event].branch != branch || !self.Info[event].creator):
             return(0)
         #scalars
-        if(self.Events[event].maxValue!=1):
-            # not a scalar but also not categorical or binary - invalid event
-            if(self.Events[event].numOutcomes!=2):
-                return(0)
+        if(self.Events[event].maxValue!=1 && self.Events[event].numOutcomes==2):
             # is a valid scalar
             cumulativeScale += self.Events[event].maxValue - self.Events[event].minValue
         if(i==0):
@@ -565,7 +558,12 @@ def transferShares(branch, market, outcome, amount, to):
 
     # half of fees to market creator
     # other half go to branch
-    fee = self.Markets[market].tradingFee*priceMac(market, outcome)/2^64
+    oldCost = lsLmsr(market)
+    self.Markets[market].sharesPurchased[outcome] += 2^32
+    newCost = lsLmsr(market)
+    price = 2^32*(newCost - oldCost)
+    fee = self.Markets[market].tradingFee*price/2^64
+    self.Markets[market].sharesPurchased[outcome] -= 2^32
     if((self.balance(tx.origin) >= fee) && self.send(self.Info[market].creator, fee/2) && self.send(branch, fee/2)):
         return(amount)
     else:
@@ -666,7 +664,9 @@ def checkQuorum(branch):
         return(1)
     else:
         return(0)
-      
+
+#def moveEvent(event, newBranch, authorSignature):
+
 # 25% of fees already distributed to market creators
 # so 2/3 of remaining fees to voters = 50%
 # && 1/3 of remaining fees to event creators = 25%
@@ -937,7 +937,8 @@ def closeMarket(branch, market):
         while n < numberEvents:
             fxpOutcome = self.Events[self.Markets[market].events[n]].outcome
             outcome = fxpOutcome/2^64
-            if(fxpOutcome==2^63 && numberEvents==1 && self.Events[self.Markets[market].events[0]].maxValue==1):
+            # makes sure it's not a scalar
+            if(fxpOutcome==2^63 && numberEvents==1 && !(self.Events[event].maxValue!=1 && self.Events[event].numOutcomes==2)):
                 # return all the $$$ - (@ 50 cents a share)
                 i = 0
                 while i < self.Markets[market].currentParticipant:
@@ -966,14 +967,14 @@ def closeMarket(branch, market):
                 return(0)
             if(n==0):
                 #scalar or .5
-                if(self.Events[self.Markets[market].events[n]].maxValue!=1 || fxpOutcome==2^63):
+                if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || fxpOutcome==2^63):
                     winningOutcomes[0] = 1
                     winningOutcomes[1] = 2
                 # anything besides scalar or .5
                 else:
                     winningOutcomes[0] += outcome
             elif(n==1):
-                if(self.Events[self.Markets[market].events[n]].maxValue!=1 || fxpOutcome==2^63):
+                if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || fxpOutcome==2^63):
                     # scalar, scalar
                     if(winningOutcomes[1]):
                         winningOutcomes[2] = 3
@@ -983,14 +984,14 @@ def closeMarket(branch, market):
                       # winningOutcomes[0] = winningOutcomes[0]
                         winningOutcomes[1] = winningOutcomes[0] + self.Events[self.Markets[market].events[n-1]].numOutcomes
                 # scalar, nonscalar
-                elif(winningOutcomes[1] && self.Events[self.Markets[market].events[n]].maxValue==1):
+                elif(winningOutcomes[1]):
                     winningOutcomes[0] += self.Events[self.Markets[market].events[n-1]].numOutcomes*(outcome-1)
                     winningOutcomes[1] += self.Events[self.Markets[market].events[n-1]].numOutcomes*(outcome-1)
                 # nonscalar, nonscalar
                 else:
                     winningOutcomes[0] += self.Events[self.Markets[market].events[n-1]].numOutcomes*(outcome-1)
             elif(n==2):
-                if(self.Events[self.Markets[market].events[n]].maxValue!=1 || fxpOutcome==2^63):
+                if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || fxpOutcome==2^63):
                     #scalar, scalar, scalar
                     if(winningOutcomes[3]):
                         winningOutcomes[4] = 5
@@ -1110,14 +1111,14 @@ def closeMarket(branch, market):
             # first is low-low && whatever, second is high-low, third is low-high, fourth is high-high
             scalarOne = -1
             scalarTwo = -1
-            if(self.Events[self.Markets[market].events[0]].maxValue!=1 || self.Events[self.Markets[market].events[0]].outcome==2^63):
+            if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==2^63):
                 scalarOne = 0
-            if(self.Events[self.Markets[market].events[1]].maxValue!=1 || self.Events[self.Markets[market].events[0]].outcome==2^63):
+            if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==2^63):
                 if(scalarOne == -1):
                     scalarOne = 0
                 else:
                     scalarTwo = 1
-            elif(self.Events[self.Markets[market].events[2]].maxValue!=1 || self.Events[self.Markets[market].events[0]].outcome==2^63):
+            elif((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==2^63):
                 scalarTwo = 2
             outcomeOne = self.Events[self.Markets[market].events[scalarOne]].outcome
             minValueOne = self.Events[self.Markets[market].events[scalarOne]].minValue
@@ -1179,11 +1180,11 @@ def closeMarket(branch, market):
         elif(winningOutcomes[1]):
             # look for the scalar
             scalar = 0
-            if(self.Events[self.Markets[market].events[0]].maxValue!=1 || self.Events[self.Markets[market].events[0]].outcome==2^63):
+            if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==2^63):
                 scalar = 0
-            elif(self.Events[self.Markets[market].events[1]].maxValue!=1 || self.Events[self.Markets[market].events[0]].outcome==2^63):
+            elif((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==2^63):
                 scalar = 1
-            elif(self.Events[self.Markets[market].events[2]].maxValue!=1 || self.Events[self.Markets[market].events[0]].outcome==2^63):
+            elif((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==2^63):
                 scalar = 2
             outcome = self.Events[self.Markets[market].events[scalar]].outcome
             minValue = self.Events[self.Markets[market].events[scalar]].minValue

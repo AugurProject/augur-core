@@ -2,10 +2,13 @@ augur-serpent
 -------------
 
 ### To do:
-- min max categorical events - so max-min/numOutcomes is interval between outcome & min/max fxp?
-- With these three conditions: [1] Stalled Branch, [2] Decision-Author’s signature, [3] Market-Author’s signature, one can move a Market’s Decisions to a new Branch (use ecVerify serpent function)
-- get transfer shares working
-
+- min/max fxp?
+- lslmsr old
+inc outcome by a 2^32
+lmsr again
+second lmsr - old lmsr
+then divide by 2^32
+revert
 ### Bugs:
 - what if a scalar has a .5 actual value outcome
   - I suggest the .5 outcome be something like 2^256
@@ -43,6 +46,7 @@ augur-serpent
 - VPM
 - allow people to set market base currencies
 - separate Branches might compete over different parameter-families, it may be advantageous for the blockchain itself to impose “Reasonable Bounds” on possible choices for parameters. Branches themselves may impose “Reasonable Bounds” on Market-specific parameters, (content-tags, trading/audit fees).
+- With these conditions: [1] Stalled Branch, [2] Decision-Author’s signature, one can move an event to a new Branch (use ecVerify serpent function)
 
 ### Version 0.4 (Awesome fun stuff - April):
 - go over stuff in close and redeem txs
@@ -60,4 +64,3 @@ augur-serpent
   - if >period/2 submit Rnum and Votes[] for reporter
   - check in consensus if they match, if not, no vote ballot (allow people to change votes and hash up until lock in residual change)
   - anti cheat provide p and randomNum mechanism steal deposit (will need to support snarks eventually)
-
