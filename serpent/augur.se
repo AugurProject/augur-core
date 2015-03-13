@@ -409,7 +409,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         self.Markets[marketID].numOutcomes = 0
         return(0)
 
-# amount of shares should be an integer
+# amount of shares should be fixed point
 # @return 0 if fail, else return price + fee to buy shares
 def buyShares(branch, market, outcome, amount):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)  
@@ -875,10 +875,35 @@ def closeMarket(branch, market):
         winningOutcomes = array(200)
         while n < numberEvents:
             outcome = self.Events[self.Markets[market].events[n]].outcome
-            if(outcome==2^63):
-                # return all t3h $$$ - (@ 50 cents a share i presume)
+            if(outcome==2^63 && numberEvents==1 && self.Events[self.Markets[market].events[0]].maxValue==1):
+                # return all the $$$ - (@ 50 cents a share)
+                i = 0
+                while i < self.Markets[market].currentParticipant:
+                    sharesOwnedOne = self.Markets[market].participants[i].shares[1]
+                    sharesOwnedTwo = self.Markets[market].participants[i].shares[2]
+                    participant = self.Markets[market].participants[i].participantID
+                    self.cashcoinBalances[market] -= sharesOwnedOne*2^63 / 2^64
+                    self.cashcoinBalances[participant] += sharesOwnedOne*2^63 / 2^64
+                    self.cashcoinBalances[market] -= sharesOwnedTwo*2^63 / 2^64
+                    self.cashcoinBalances[participant] += sharesOwnedTwo*2^63 / 2^64
+                    i += 1
+
+                # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
+                # refund left over initial liquidity in market - half to market creator, other half to voters
+                # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
+                initialLiquidity = self.Info[marketID].creationFee
+                # split up excess profits & liquidity
+                self.cashcoinBalances[branch] += self.cashcoinBalances[market] / 2
+                self.cashcoinBalances[self.Info[market].creator] += self.cashcoinBalances[market] / 2
+                self.cashcoinBalances[market] -= self.cashcoinBalances[market]
+
+                self.Markets[market].winningOutcomes[0] = 1
+                self.Markets[market].winningOutcomes[0] = 2
+
                 # give event bond money to reporters
-                return(0)
+                self.cashcoinBalances[eventID] -= 42*2^64
+                self.cashcoinBalances[branch] += 42*2^64
+                return(-1)
             elif(outcome==0):
                 return(0)
             if(n==0):
@@ -1153,11 +1178,10 @@ def closeMarket(branch, market):
 
         # no scalars
         else:
-            if(self.cashcoinBalances[market] > initialLiquidity):
-                # split up excess profits & liquidity
-                self.cashcoinBalances[branch] += self.cashcoinBalances[market] / 2
-                self.cashcoinBalances[self.Info[market].creator] += self.cashcoinBalances[market] / 2
-                self.cashcoinBalances[market] -= self.cashcoinBalances[market]
+            # split up excess profits & liquidity
+            self.cashcoinBalances[branch] += self.cashcoinBalances[market] / 2
+            self.cashcoinBalances[self.Info[market].creator] += self.cashcoinBalances[market] / 2
+            self.cashcoinBalances[market] -= self.cashcoinBalances[market]
 
         q = 0
         while(winningOutcomes[q]!=0):
