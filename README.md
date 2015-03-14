@@ -2,16 +2,17 @@ augur-serpent
 -------------
 
 ### To do:
-- need outcomes returned as 1, 2, etc... .5 as 2^63
-- need a price function for ls-lmsr
-- min max categorical events - so max-min/numOutcomes is interval between outcome
-- implement categorical in consensus fun + augur.se.
+- min/max fxp?
+- lslmsr old
+inc outcome by a 2^32
+lmsr again
+second lmsr - old lmsr
+then divide by 2^32
+revert
+### Bugs:
 - what if a scalar has a .5 actual value outcome
   - I suggest the .5 outcome be something like 2^256
-- if a .5 in a market with multiple dimensions it still pays out (just mult. prices by .5)
-- With these three conditions: [1] Stalled Branch, [2] Decision-Author’s signature, [3] Market-Author’s signature, one can move a Market’s Decisions to a new Branch (use ecVerify serpent function)
-
-### Bugs:
+  - scalar .5 outcomes just don't work at all atm either
 
 ### Scalability optimizations (hopefully these become an issue!) ... Curse you gas issues (too soon):
 - http://lightning.network/lightning-network.pdf
@@ -45,6 +46,7 @@ augur-serpent
 - VPM
 - allow people to set market base currencies
 - separate Branches might compete over different parameter-families, it may be advantageous for the blockchain itself to impose “Reasonable Bounds” on possible choices for parameters. Branches themselves may impose “Reasonable Bounds” on Market-specific parameters, (content-tags, trading/audit fees).
+- With these conditions: [1] Stalled Branch, [2] Decision-Author’s signature, one can move an event to a new Branch (use ecVerify serpent function)
 
 ### Version 0.4 (Awesome fun stuff - April):
 - go over stuff in close and redeem txs
