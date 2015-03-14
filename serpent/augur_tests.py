@@ -59,7 +59,7 @@ start = time.time()
 s = t.state()
 augur = ContractWrapper(VERBOSE, s.abi_contract(FILE, gas=10**8))
 print yellow("Done compiling in %f seconds.") % (time.time() - start)
-s.mine(1)
+s.mine()
 balances = []
 a_k = zip(t.accounts, t.keys)
 s.mine(1)
@@ -139,8 +139,8 @@ for i in range(50):
     print yellow("expected cost: ", cyan("%f")) % expected1
     print yellow("approximate expected cost per share: ", cyan("%f")) % (expected2 / gmpy2.mpfr(1 << 64))
     bought[addr][outcome] += amt
-print bought
 
+s.mine()
 print title(' Testing SellShares ')
 while bought:
     addr = random.choice(bought.keys())
