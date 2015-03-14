@@ -286,39 +286,20 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
 # && n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
 macro lsLmsr($marketID):
-    with $alpha = self.Markets[$marketID].alpha:
-        with $cumScale = self.Markets[$marketID].cumulativeScale:
-            with $Bq = $alpha*$cumScale:
-                with $sum = 0:
-                    with $i = 1:
-                        with $len = self.Markets[$marketID].numOutcomes:
-                            with $sumexp = 0:
-                                with $result = 0:
-                                    while $i <= $len:
-                                        $sum += self.Markets[$marketID].sharesPurchased[$i]
-                                        $i += 1
-                                    $Bq = $Bq * $sum / 2**64
-                                    $i = 1
-                                    while $i <= $len:
-                                        $sumexp += fx_exp(self.Markets[$marketID].sharesPurchased[$i] * 2**64 / $Bq)
-                                        $i += 1
-                                    $result = $Bq * fx_log($sumexp) / 2**64
-                                    $result
+    with $bq = Bq($marketID):
+        with $i = 1:
+            with $sumExp = 0:
+                with $result = 0:
+                    while $i <= numOutcomes($marketID):
+                        $sumExp += fx_exp(q($marketID)[$i] * 2**64 / $bq)
+                        $i += 1
+                    $result = $bq*fx_log($sumExp)/2**64
+                    $result
 
-macro load_q($marketID):
-    $len = market($marketID).numOutcomes
-    $q = array($len)
-    $i = 1
-    while $i <= $len:
-        $q[$i] = market($marketID).sharesPurchased[$i + 1]
-        $i += 1
-    $q
-
-macro sum($q):
-    $i = 1
-    $result = $q[0]
-    $len = len($q)
-    while $i < $len:
+macro sumList($q, $a, $b):
+    $i = $a + 1
+    $result = $q[$a]
+    while $i <= $b:
         $result += $q[$i]
         $i += 1
     $result
@@ -335,32 +316,18 @@ macro cumScale($marketID):
 macro numOutcomes($marketID):
     market($marketID).numOutcomes
 
-macro priceMac($marketID, $outcome):
-    $q = load_q($marketID)
-    $sum_q = sum($q)
-    $alpha = alpha($marketID)*cumScale($marketID)
-    $Bq = $alpha*$sum_q/2**64
-    $len = numOutcomes($marketID)
-    $exps = array($len)
-    $sum_exps = 0
-    $nt1 = 0
-    $nt2 = 0
-    $dt = 0
-    $i = 0
-    while $i < $len:
-        $exps[$i]=fx_exp($q[$i]*2**64/$Bq)
-        $i += 1
-    $sum_exps = sum($exps)
-    $nt1 = $exps[$outcome]*$sum_q
-    $dt = $sum_q*$sum_exps/2**64
-    $i = 0
-    while $i < $len:
-        $nt2 += $q[$i]*exps[$i]/2**64
-        $i += 1
-    $alpha*fx_log($sum_exps)/2**64 + ($nt1 - $nt2)*2**64/$dt
+macro q($marketID):
+    market($marketID).sharesPurchased
 
-def price(marketID, outcome):
-    return(priceMac(marketID, outcome))
+macro Bq($marketID):
+   alpha($marketID) * cumScale($marketID) * sumList(q($marketID), 1, numOutcomes($marketID)) / 2**64
+
+def price(market, outcome):
+    a = lsLmsr(market)
+    q(market)[outcome] += 2**32
+    b = lsLmsr(market)
+    q(market)[outcome] -= 2**32
+    return((b - a) * 2**32)
 
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
@@ -432,15 +399,13 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     # ls-lmsr needs at least a very small initial liquidity
     y = 1
     z = initialLiquidity * 2**64 / (2**64 + alpha*cumulativeScale*fx_log(initialLiquidity)/2**64)
-    log(z)
     while y <= numOutcomes:
-        self.Markets[marketID].sharesPurchased[y] += z
+        q(marketID)[y] += z
         y += 1
     self.Markets[marketID].alpha = alpha
     self.Markets[marketID].cumulativeScale = cumulativeScale
     self.Markets[marketID].numOutcomes = numOutcomes
-    cost = lsLmsr(marketID)
-    if(self.send(marketID, cost)):
+    if(self.send(marketID, initialLiquidity)):
         # add event list to the market
         save(self.Markets[marketID].events[0], events, items=eventNum)
         self.Info[marketID].creator = tx.origin
@@ -481,15 +446,15 @@ def buyShares(branch, market, outcome, amount):
         return(0)
     # lmsr cost calcs
     oldCost = lsLmsr(market)
-    self.Markets[market].sharesPurchased[outcome] += amount
+    q(market)[outcome] += amount
     newCost = lsLmsr(market)
     if newCost < oldCost:
-        self.Markets[market].sharesPurchased[outcome] -= amount
+        q(market)[outcome] -= amount
         return(0)
     price = (newCost - oldCost)
     
     if(self.cashcoinBalances[tx.origin] < price*(self.Markets[market].tradingFee + 2^64)/2^64):
-        self.Markets[market].sharesPurchased[outcome] -= amount
+        q(market)[outcome] -= amount
         return(0)
 
     participantNumber = self.Markets[market].addr2participant[tx.origin]
@@ -523,26 +488,36 @@ def sellShares(branch, market, outcome, amount):
         return(0)
     # lmsr cost calcs
     oldCost = lsLmsr(market)
-    self.Markets[market].sharesPurchased[outcome] -= amount
+    log(q(market)[outcome])
+    q(market)[outcome] -= amount
+    log(q(market)[outcome])
     newCost = lsLmsr(market)
+    if oldCost <= newCost:
+        q(market)[outcome] += amount
+        return(0)
     # these prices are in fixed point
     price = oldCost - newCost
+    log(price)
     # remove shares from the user's account
     # if user actually doesn't have the shares, revert
     if(self.Markets[market].participants[participantNumber].shares[outcome] < amount):
-        self.Markets[market].sharesPurchased[outcome] += amount
+        q(market)[outcome] += amount
         return(0)
     else:
         # send bitcoin from the market to the user acc.
         self.cashcoinBalances[market] -= price
         fee = self.Markets[market].tradingFee*price/2^64
+        log(fee)
+        log(price)
+        log(1)
         # half of fees go to market creator
         self.cashcoinBalances[self.Info[market].creator] += fee/2
         # half go to branch
         self.cashcoinBalances[branch] += fee/2
-        self.cashcoinBalances[tx.origin] += (price - fee)
+        price -= fee
+        self.cashcoinBalances[tx.origin] += price
         self.Markets[market].participants[participantNumber].shares[outcome] -= amount
-        return(price - fee)
+        return(price)
 
 # @return amount of shares transferred
 def transferShares(branch, market, outcome, amount, to):

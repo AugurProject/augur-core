@@ -3,14 +3,15 @@ import time
 import random
 from pyethereum import tester as t
 from cStringIO import StringIO
+from collections import defaultdict
 import sys
 import types
 import gmpy2
 gmpy2.get_context().precision = 256
 
-t.gas_limit = 10**9
+t.gas_limit = 10**7
 
-FILE = "augurLite.se"
+FILE = "augur.se"
 VERBOSE = True
 
 class ContractWrapper(object):
@@ -83,64 +84,75 @@ print title(' Testing CreateEvent ')
 event1 = augur.createEvent(
     subbranch,                                           #branch 
     '"Will Jack grow at least san inch in March 2015?"', #description
-    5*5,                                                #expiration block
+    5*5,                                                 #expiration block
     0,                                                   #min value (binary)
     1,                                                   #max value
     2)                                                   #number of outcomes
 event2 = augur.createEvent(
-    subbranch, 
-    '"What will Jack\'s height be, from 60 to 72 inches, at noon PST on April 1st, 2015?"', 
-    5*5, 
+    subbranch,
+    '"What will Jack\'s height be, from 60 to 72 inches, at noon PST on April 1st, 2015?"',
+    5*5,
     60,                                                   #scalar event!
-    72, 
-    2) 
+    72,
+    2)
 print yellow('Created events ', cyan('%d '), 'and ', cyan('%d '), 'with address ', green('%s')) % \
 (event1, event2, t.a0) 
 
 print title(" Testing CreateMarket ")
 market = augur.createMarket(
     subbranch,
-    '"Market on events %d & %d"' % (event1, event2), 
-    1 << 60, 
-    10 << 70, 
-    1 << 58, 
+    '"Market on events %d & %d"' % (event1, event2),
+    1 << 60,
+    10 << 70,
+    1 << 58,
     [event1, event2])
 print yellow("Created market ", cyan("%d "), 'with address ', green('%s')) % (market, t.a0)
 
 def lslmsr(q_, i, a):
+    assert q_[i] + a >= 0
     q = q_[:]
     alpha = 1/16.
-    cumScale = 12
-    Bq1 = alpha*cumScale*sum(q)
+    scale = 12
+    Bq1 = alpha*scale*sum(q)
     C1 = Bq1*gmpy2.log(sum(gmpy2.exp(q_i/Bq1) for q_i in q))
     q[i] += a
-    Bq2 = alpha*cumScale*sum(q)
+    Bq2 = alpha*scale*sum(q)
     C2 = Bq2*gmpy2.log(sum(gmpy2.exp(q_i/Bq2) for q_i in q))
 
-    if a > 0: 
+    if a > 0:
         return (C2 - C1)*1.015625
     else:
-        return (C2 - C1)*0.984375
+        return (C1 - C2)*0.984375
 
 print title(' Testing BuyShares ')
-bought = {}
+bought = defaultdict(lambda : [0]*4)
 shares = [640/(1+12/16.*gmpy2.log(4))]*4
-for addr, key in a_k:
-    x = random.randrange(4)
-    expected = lslmsr(shares, x, 2)
-    cost = augur.buyShares(subbranch, market, x + 1, 1 << 65, sender=key)
-    shares[x] += 2
-    print yellow(green("%s "), "bought 2 shares of outcome %d for ", cyan("%f")) % (addr, x, cost/gmpy2.mpfr(1 << 64))
-    print yellow("expected price: ", cyan("%f")) % expected
-    bought[addr] = x
+for i in range(50):
+    addr, key = random.choice(a_k)
+    outcome = random.randrange(4)
+    amt = random.randrange(1,3)
+    expected1 = lslmsr(shares, outcome, amt)
+    expected2 = augur.price(market, outcome + 1)
+    cost = augur.buyShares(subbranch, market, outcome + 1, amt << 64, sender=key)
+    shares[outcome] += amt
+    print yellow(green("%s "), "bought ", cyan("%d "), "shares of outcome ", cyan("%d "), "for ", red("%f")) % (addr, amt, outcome + 1, cost/gmpy2.mpfr(1 << 64))
+    print yellow("expected cost: ", cyan("%f")) % expected1
+    print yellow("approximate expected cost per share: ", cyan("%f")) % (expected2 / gmpy2.mpfr(1 << 64))
+    bought[addr][outcome] += amt
+print bought
 
 print title(' Testing SellShares ')
-for addr, key in a_k:
-    x = bought[addr]
-    paid = augur.sellShares(subbranch, market, x + 1, 1 << 65, sender=key)
-    cost = lslmsr(shares, x, -2)
-    shares[x] -= 2
-    print yellow(green("%s "), "sold 2 shares of outcome %d for ", cyan("%f")) % \
-    (addr, x, paid/gmpy2.mpfr(1 << 64))
-    print yellow("expected payment: ", cyan("%f")) % -cost
-print red(" Finished Tests in %f seconds ") % (time.time() - start)
+while bought:
+    addr = random.choice(bought.keys())
+    outcome = random.choice([i for i, v in enumerate(bought[addr]) if v])
+    amt = random.randrange(1, bought[addr][outcome]+1)
+    expected1 = lslmsr(shares, outcome, -amt)
+    expected2 = augur.price(market, outcome + 1)
+    paid = augur.sellShares(subbranch, market, outcome + 1, amt << 64, sender=key)
+    shares[outcome] -= amt
+    print yellow(green("%s "), "sold ", cyan("%d "), "shares of outcome ", cyan("%d "), "for ", red("%f")) % (addr, amt, outcome + 1, cost/gmpy2.mpfr(1 << 64))
+    print yellow("expected payment: ", cyan("%f")) % expected1
+    print yellow("approximate expected cost per share: ", cyan("%f")) % (expected2 / gmpy2.mpfr(1 << 64))
+    bought[addr][outcome] -= amt
+    if not any(bought[addr]):
+        bought.pop(addr)
