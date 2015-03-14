@@ -126,11 +126,13 @@ def lslmsr(q_, i, a):
 
 print title(' Testing BuyShares ')
 bought = defaultdict(lambda : [0]*4)
+reverse_key_lookup = {}
 shares = [640/(1+12/16.*gmpy2.log(4))]*4
 for i in range(50):
     addr, key = random.choice(a_k)
+    reverse_key_lookup[addr] = key
     outcome = random.randrange(4)
-    amt = random.randrange(1,3)
+    amt = random.randrange(1, 3)
     expected1 = lslmsr(shares, outcome, amt)
     expected2 = augur.price(market, outcome + 1)
     cost = augur.buyShares(subbranch, market, outcome + 1, amt << 64, sender=key)
@@ -144,13 +146,14 @@ s.mine()
 print title(' Testing SellShares ')
 while bought:
     addr = random.choice(bought.keys())
+    key = reverse_key_lookup[addr]
     outcome = random.choice([i for i, v in enumerate(bought[addr]) if v])
     amt = random.randrange(1, bought[addr][outcome]+1)
     expected1 = lslmsr(shares, outcome, -amt)
     expected2 = augur.price(market, outcome + 1)
     paid = augur.sellShares(subbranch, market, outcome + 1, amt << 64, sender=key)
     shares[outcome] -= amt
-    print yellow(green("%s "), "sold ", cyan("%d "), "shares of outcome ", cyan("%d "), "for ", red("%f")) % (addr, amt, outcome + 1, cost/gmpy2.mpfr(1 << 64))
+    print yellow(green("%s "), "sold ", cyan("%d "), "shares of outcome ", cyan("%d "), "for ", red("%f")) % (addr, amt, outcome + 1, paid/gmpy2.mpfr(1 << 64))
     print yellow("expected payment: ", cyan("%f")) % expected1
     print yellow("approximate expected cost per share: ", cyan("%f")) % (expected2 / gmpy2.mpfr(1 << 64))
     bought[addr][outcome] -= amt
