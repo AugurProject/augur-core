@@ -286,12 +286,10 @@ macro lsLmsr($marketID):
     with $bq = Bq($marketID):
         with $i = 1:
             with $sumExp = 0:
-                with $result = 0:
-                    while $i <= numOutcomes($marketID):
-                        $sumExp += fx_exp(q($marketID)[$i] * 2**64 / $bq)
-                        $i += 1
-                    $result = $bq*fx_log($sumExp)/2**64
-                    $result
+                while $i <= numOutcomes($marketID):
+                    $sumExp += fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
+                    $i += 1
+                $bq*fx_log($sumExp)/2**64
 
 macro sumList($q, $a, $b):
     $i = $a + 1
@@ -313,17 +311,17 @@ macro cumScale($marketID):
 macro numOutcomes($marketID):
     market($marketID).numOutcomes
 
-macro q($marketID):
+macro sharesPurchased($marketID):
     market($marketID).sharesPurchased
 
 macro Bq($marketID):
-   alpha($marketID) * cumScale($marketID) * sumList(q($marketID), 1, numOutcomes($marketID)) / 2**64
+   alpha($marketID) * cumScale($marketID) * sumList(sharesPurchased($marketID), 1, numOutcomes($marketID)) / 2**64
 
 def price(market, outcome):
     a = lsLmsr(market)
-    q(market)[outcome] += 2**32
+    sharesPurchased(market)[outcome] += 2**32
     b = lsLmsr(market)
-    q(market)[outcome] -= 2**32
+    sharesPurchased(market)[outcome] -= 2**32
     return((b - a) * 2**32)
 
 # alpha is a fixedpoint number / calc. it in UI
@@ -394,7 +392,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     y = 1
     z = initialLiquidity * 2**64 / (2**64 + alpha*cumulativeScale*fx_log(initialLiquidity)/2**64)
     while y <= numOutcomes:
-        q(marketID)[y] += z
+        sharesPurchased(marketID)[y] += z
         y += 1
     self.Markets[marketID].alpha = alpha
     self.Markets[marketID].cumulativeScale = cumulativeScale
@@ -440,15 +438,15 @@ def buyShares(branch, market, outcome, amount):
         return(0)
     # lmsr cost calcs
     oldCost = lsLmsr(market)
-    q(market)[outcome] += amount
+    sharesPurchased(market)[outcome] += amount
     newCost = lsLmsr(market)
     if newCost < oldCost:
-        q(market)[outcome] -= amount
+        sharesPurchased(market)[outcome] -= amount
         return(0)
     price = (newCost - oldCost)
     
     if(self.cashcoinBalances[tx.origin] < price*(self.Markets[market].tradingFee + 2^64)/2^64):
-        q(market)[outcome] -= amount
+        sharesPurchased(market)[outcome] -= amount
         return(0)
 
     participantNumber = self.Markets[market].addr2participant[tx.origin]
@@ -482,28 +480,23 @@ def sellShares(branch, market, outcome, amount):
         return(0)
     # lmsr cost calcs
     oldCost = lsLmsr(market)
-    log(q(market)[outcome])
-    q(market)[outcome] -= amount
-    log(q(market)[outcome])
+    sharesPurchased(market)[outcome] -= amount
     newCost = lsLmsr(market)
     if oldCost <= newCost:
-        q(market)[outcome] += amount
+        sharesPurchased(market)[outcome] += amount
         return(0)
     # these prices are in fixed point
     price = oldCost - newCost
-    log(price)
     # remove shares from the user's account
     # if user actually doesn't have the shares, revert
-    if(self.Markets[market].participants[participantNumber].shares[outcome] < amount):
-        q(market)[outcome] += amount
+    if self.Markets[market].participants[participantNumber].shares[outcome] < amount:
+        sharesPurchased(market)[outcome] += amount
         return(0)
     else:
         # send bitcoin from the market to the user acc.
         self.cashcoinBalances[market] -= price
         fee = self.Markets[market].tradingFee*price/2^64
         log(fee)
-        log(price)
-        log(1)
         # half of fees go to market creator
         self.cashcoinBalances[self.Info[market].creator] += fee/2
         # half go to branch

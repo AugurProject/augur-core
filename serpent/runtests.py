@@ -183,7 +183,7 @@ def serpent_function(s, c, name, signature, args=[]):
     # print "%i gas (%d seconds)" % (profile['gas'], profile['time'])
     # return s.call(t.k0, c, 0, name, signature, args)
 
-def test_contract(contract):
+def main():
     """
     To run consensus, you should call the Serpent functions in consensus.se
     in this order:
@@ -209,11 +209,14 @@ def test_contract(contract):
     as fixed-point (base 2^64) values from the participation function.
 
     """
+    print BR("Forming new test genesis block")
     s = t.state()
-    filename = contract + ".se"
+    t.gas_limit = 100000000
+    s = t.state()
+    filename = "consensus.se"
     print BB("Testing contract:"), BG(filename)
-    c = s.abi_contract(filename, sender=t.k0)
-
+    c = s.abi_contract(filename, gas=70000000)
+    
     num_players = len(reputation)
     num_events = len(reports[0])
     v_size = num_players * num_events
@@ -306,16 +309,6 @@ def test_contract(contract):
     display(smooth_rep, "Updated reputation:")
     display(outcomes_final, "Outcomes (final):")
     display(reporter_bonus, "Reporter bonus:")
-
-def main():
-    global s
-    print BR("Forming new test genesis block")
-    s = t.state()
-    contracts = [
-        "consensus",
-    ]
-    for contract in contracts:
-        test_contract(contract)
 
 if __name__ == "__main__":
     main()
