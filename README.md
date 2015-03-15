@@ -3,16 +3,12 @@ augur-serpent
 
 ### To do:
 - min/max fxp?
-- lslmsr old
-inc outcome by a 2^32
-lmsr again
-second lmsr - old lmsr
-then divide by 2^32
-revert
+
 ### Bugs:
 - what if a scalar has a .5 actual value outcome
   - I suggest the .5 outcome be something like 2^256
   - scalar .5 outcomes just don't work at all atm either
+- false vs true vs 0 vs 1
 
 ### Scalability optimizations (hopefully these become an issue!) ... Curse you gas issues (too soon):
 - http://lightning.network/lightning-network.pdf

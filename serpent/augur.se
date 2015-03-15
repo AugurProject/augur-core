@@ -90,7 +90,7 @@ def init():
     self.Info[1010101].creationFee = 10
     self.Info[1010101].descriptionLength = len(description)
     self.Branches[1010101].currentVotePeriod = (block.number / 403200) - 1 
-    self.Branches[1010101].periodLength = 403200
+    self.Branches[1010101].periodLength = 20
     self.branchListCount = 1
     self.branchList[0] = 1010101
 
@@ -580,6 +580,7 @@ def vote(branch, report:arr, votePeriod):
         return(1)
 
     else:
+        log(self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].numberEvents)
         # need report length to be same as number of items in the current eventexpdates voting period events!
         if(len(report)!=self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].numberEvents):
             return(0)
@@ -604,37 +605,37 @@ def vote(branch, report:arr, votePeriod):
 # if there aren't enough events in a vote period eventsexpdate, push them to the current period and increment the vote period
 # @return 0 if fail, 1 if success
 def checkQuorum(branch):
-    currentVotePeriod = self.Branches[branchID].currentVotePeriod
+    currentVotePeriod = self.Branches[branch].currentVotePeriod
     currentPeriod = (block.number / self.Branches[branch].periodLength)
     # provided the currentPeriod is >=2 periods past the things we're going to rbcr on
     # we can then conclude it has matured && people have had time to vote
-    matured = false
-    enoughEvents = false
-    enoughUpcoming = false
+    matured = 0
+    enoughEvents = 0
+    enoughUpcoming = 0
     if (currentPeriod >= (currentVotePeriod+2)):
-        matured = true
+        matured = 1
 
     # min future decisions at stake - 200 - else branch stalls (do same thing we do if min ballot/event size isn't met,
     # push events into current voting period and hopefully more people will create decisions so it can actually be voted on, else repeat)
     upcomingDecisions = 0
     b = currentPeriod
     while b < (currentPeriod+100):
-        upcomingDecisions += self.EventsExpDates[parent][a].numberEvents
+        upcomingDecisions += self.EventsExpDates[branch][b].numberEvents
         b += 1
-
     if ((self.EventsExpDates[branch][currentVotePeriod].numberEvents < 30 || upcomingDecisions < 500) && matured):
-        self.Branches[branchID].currentVotePeriod += 1
+        self.Branches[branch].currentVotePeriod += 1
+        currentVotePeriod = self.Branches[branch].currentVotePeriod
         x = 0
         while(x < self.EventsExpDates[branch][currentVotePeriod-1].numberEvents):
-            self.EventsExpDates[branch][currentVotePeriod].events[self.EventsExpDates[branch][currentPeriod].numberEvents] = self.EventsExpDates[branch][currentVotePeriod-1].events[x]
-            self.EventsExpDates[branch][currentPeriod].numberEvents += 1
+            self.EventsExpDates[branch][currentVotePeriod].events[self.EventsExpDates[branch][currentVotePeriod].numberEvents] = self.EventsExpDates[branch][currentVotePeriod-1].events[x]
+            self.EventsExpDates[branch][currentVotePeriod].numberEvents += 1
             x += 1
     else:
-        enoughEvents = true
-        enoughUpcoming = true
+        enoughEvents = 1
+        enoughUpcoming = 1
     # for testing!
-    enoughUpcoming = true
-    enoughEvents = true
+    enoughUpcoming = 1
+    enoughEvents = 1
     if(matured && enoughEvents && enoughUpcoming):
         return(1)
     else:
