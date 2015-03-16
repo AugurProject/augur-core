@@ -8,7 +8,6 @@ augur-serpent
 - what if a scalar has a .5 actual value outcome
   - I suggest the .5 outcome be something like 2^256
   - scalar .5 outcomes just don't work at all atm either
-- false vs true vs 0 vs 1
 
 ### Scalability optimizations (hopefully these become an issue!) ... Curse you gas issues (too soon):
 - http://lightning.network/lightning-network.pdf
@@ -60,3 +59,15 @@ augur-serpent
   - if >period/2 submit Rnum and Votes[] for reporter
   - check in consensus if they match, if not, no vote ballot (allow people to change votes and hash up until lock in residual change)
   - anti cheat provide p and randomNum mechanism steal deposit (will need to support snarks eventually)
+
+
+>>> c.createEvent(1010101, "lol", 20, 0, 1, 2)
+>>> s.mine(25)
+>>> c.checkQuorum(1010101)
+>>> c.checkQuorum(1010101)
+>>> s.mine(25)
+>>> c.checkQuorum(1010101)
+>>> c.vote(1010101, [1], 0)
+>>> s.mine(25)
+>>> c.redeem(1010101)
+
