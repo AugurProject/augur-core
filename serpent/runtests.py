@@ -52,58 +52,50 @@ tolerance = 1e-12
 init()
 
 # true=1, false=-1, indeterminate=0.5, no response=0
-# reports = np.array([[  1,  1, -1,  0],
-#                     [  1, -1, -1, -1],
-#                     [  1,  1, -1, -1],
-#                     [  1,  1,  1, -1],
-#                     [  0, -1,  1,  1],
-#                     [ -1, -1,  1,  1]])
-# reports = np.array([[  1,  1, -1,  1],
-#                     [  1, -1, -1, -1],
-#                     [  1,  1, -1, -1],
-#                     [  1,  1,  1, -1],
-#                     [  1, -1,  1,  1],
-#                     [ -1, -1,  1,  1]])
-# reputation = [2, 10, 4, 2, 7, 1]
 
-# reports = np.array([[ 1,  1, -1, -1 ],
-#                     [ 1, -1, -1, -1 ],
-#                     [ 1,  1, -1, -1 ],
-#                     [ 1,  1,  1, -1 ],
-#                     [-1, -1,  1,  1 ],
-#                     [-1, -1,  1,  1 ]])
+def binary_input_example():
+    reports = np.array([[  1,  1, -1,  1],
+                        [  1, -1, -1, -1],
+                        [  1,  1, -1, -1],
+                        [  1,  1,  1, -1],
+                        [  1, -1,  1,  1],
+                        [ -1, -1,  1,  1]])
+    reputation = [2, 10, 4, 2, 7, 1]
 
-# reports = np.array([[ 1,  1, -1, -1, 233, 16027.59],
-#                     [ 1, -1, -1, -1, 199,     0.  ],
-#                     [ 1,  1, -1, -1, 233, 16027.59],
-#                     [ 1,  1,  1, -1, 250,     0.  ],
-#                     [-1, -1,  1,  1, 435,  8001.00],
-#                     [-1, -1,  1,  1, 435, 19999.00]])
-# reputation = [1, 1, 1, 1, 1, 1]
+def single_input_example():
+    reports = np.array([[-1]])
+    reputation = [10000,]
+    scaled = [0,]
+    scaled_max = [1,]
+    scaled_min = [-1,]
+    return (reports, reputation, scaled, scaled_max, scaled_min)
 
-reports = np.array([[-1]])
-reputation = [10000,]
-scaled = [0,]
-scaled_max = [1,]
-scaled_min = [-1,]
+def scalar_input_example():
+    reports = np.array([[ 1,  1, -1, -1, 233, 16027.59],
+                        [ 1, -1, -1, -1, 199,     0.  ],
+                        [ 1,  1, -1, -1, 233, 16027.59],
+                        [ 1,  1,  1, -1, 250,     0.  ],
+                        [-1, -1,  1,  1, 435,  8001.00],
+                        [-1, -1,  1,  1, 435, 19999.00]])
+    reputation = [1, 1, 1, 1, 1, 1]
+    scaled = [0, 0, 0, 0, 1, 1]
+    scaled_max = [1, 1, 1, 1, 435, 20000]
+    scaled_min = [-1, -1, -1, -1, 0, 8000]
+    return (reports, reputation, scaled, scaled_max, scaled_min)
 
-# scaled = [0, 0, 0, 0, 1, 1]
-# scaled_max = [1, 1, 1, 1, 435, 20000]
-# scaled_min = [-1, -1, -1, -1, 0, 8000]
-
-# num_reports = 25
-# num_events = 25
-# reports = np.random.randint(-1, 2, (num_reports, num_events))
-# reputation = np.random.randint(1, 100, num_reports)
-# scaled = np.random.randint(0, 2, num_events).tolist()
-# scaled_max = np.ones(num_events)
-# scaled_min = -np.ones(num_events)
-# for i in range(num_events):
-#     if scaled[i]:
-#         scaled_max[i] = np.random.randint(1, 100)
-#         scaled_min[i] = np.random.randint(0, scaled_max[i])
-# scaled_max = scaled_max.astype(int).tolist()
-# scaled_min = scaled_min.astype(int).tolist()
+def randomized_inputs(num_reports=50, num_events=25):
+    reports = np.random.randint(-1, 2, (num_reports, num_events))
+    reputation = np.random.randint(1, 100, num_reports)
+    scaled = np.random.randint(0, 2, num_events).tolist()
+    scaled_max = np.ones(num_events)
+    scaled_min = -np.ones(num_events)
+    for i in range(num_events):
+        if scaled[i]:
+            scaled_max[i] = np.random.randint(1, 100)
+            scaled_min[i] = np.random.randint(0, scaled_max[i])
+    scaled_max = scaled_max.astype(int).tolist()
+    scaled_min = scaled_min.astype(int).tolist()
+    return (reports, reputation, scaled, scaled_max, scaled_min)
 
 def BR(string): # bright red
     return "\033[1;31m" + str(string) + "\033[0m"
@@ -116,20 +108,6 @@ def BW(string): # bright white
 
 def BG(string): # bright green
     return Fore.GREEN + Style.BRIGHT + str(string) + Style.RESET_ALL
-
-def blocky(*strings, **kwds):
-    colored = kwds.get("colored", True)
-    width = kwds.get("width", 108)
-    bound = width*"#"
-    fmt = "#{:^%d}#" % (width - 2)
-    lines = [bound]
-    for string in strings:
-        lines.append(fmt.format(string))
-    lines.append(bound)
-    lines = "\n".join(lines)
-    if colored:
-        lines = BR(lines)
-    return lines
 
 def fix(x):
     return int(x * 0x10000000000000000)
@@ -169,13 +147,6 @@ def display(arr, description=None, show_all=None, refold=False):
         else:
             print(json.dumps(map(unfix, arr), indent=3, sort_keys=True))
 
-def serpent_function(s, c, name, signature, args=[]):
-    sys.stdout.write("  " + BG(name) + " ")
-    sys.stdout.flush()
-    # profile = s.profile(t.k0, c, 0, name, signature, args)
-    # print "%i gas (%d seconds)" % (profile['gas'], profile['time'])
-    # return s.call(t.k0, c, 0, name, signature, args)
-
 def main():
     """
     To run consensus, you should call the Serpent functions in consensus.se
@@ -202,6 +173,11 @@ def main():
     as fixed-point (base 2^64) values from the participation function.
 
     """
+    # reports, reputation, scaled, scaled_max, scaled_min = binary_input_example()
+    # reports, reputation, scaled, scaled_max, scaled_min = single_input_example()
+    reports, reputation, scaled, scaled_max, scaled_min = scalar_input_example()
+    # reports, reputation, scaled, scaled_max, scaled_min = randomized_inputs()
+
     print BR("Forming new test genesis block")
     s = t.state()
     t.gas_limit = 100000000
@@ -224,7 +200,6 @@ def main():
     result = np.array(result)
     reports_filled = result[0:v_size].tolist()
     reports_mask = result[v_size:].tolist()
-    del result
 
     display(reports_filled, "reports (filled):", refold=num_events, show_all=True)
 
@@ -252,7 +227,6 @@ def main():
     set2 = result[num_reports:].tolist()
     assert(len(set1) == len(set2))
     assert(len(result) == 2*num_reports)
-    del result
 
     # display(set1, "set1:", show_all=True)
     # display(set2, "set2:", show_all=True)
@@ -265,7 +239,6 @@ def main():
     new2 = result[(2*num_events):].tolist()
     assert(len(result) == 3*num_events)
     assert(len(old) == len(new1) == len(new2))
-    del result
 
     # display(old, "old:", show_all=True)
     # display(new1, "new1:", show_all=True)
@@ -291,7 +264,6 @@ def main():
     outcomes_final = result[0:num_events].tolist()
     consensus_reward = result[num_events:].tolist()
     assert(len(outcomes_final) == len(consensus_reward))
-    del result
 
     arglist = [outcomes_final, consensus_reward, smooth_rep, reports_mask, num_reports, num_events]
     reporter_bonus = c.participation(*arglist)

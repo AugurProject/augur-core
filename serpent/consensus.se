@@ -206,10 +206,26 @@ macro weighted_median($data, $weights):
                                             wmedian = sorted_data[idx-1]
                 wmedian
 
+# Prints an array.  Logs either contain a single entry (for integer values)
+# or two entries (for fixed point numbers, the first entry is the integer
+# and the second is the decimal).
+macro log_array($a):
+    $n = len($a)
+    $i = 0
+    while $i < $n:
+        # Get 8 decimal points
+        $decimal = ($a[$i] & (2^64 - 1))*10^8 / 2^64
+        if $decimal > 0:
+            log($a[$i] / 2^64, $decimal)
+        else:
+            log($a[$i] / 2^64)
+        $i += 1
+
 def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
     # return vector: reports_interp
     # reports_filled: [0, flatsize - 1]
     # reports_mask: [flatsize, 2*flatsize - 1]
+    log_array(reports)
     with num_reports = len(reputation):
         # normalize reputation vector
         reputation = get_weight(reputation)
