@@ -60,14 +60,14 @@ augur-serpent
   - check in consensus if they match, if not, no vote ballot (allow people to change votes and hash up until lock in residual change)
   - anti cheat provide p and randomNum mechanism steal deposit (will need to support snarks eventually)
 
+c.createEvent(1010101, "lol", 20, 0, 1, 2)
+s.mine(25)
+c.checkQuorum(1010101)
+c.checkQuorum(1010101)
+s.mine(25)
+c.checkQuorum(1010101)
+c.vote(1010101, [1], 0)
+s.mine(25)
 
->>> c.createEvent(1010101, "lol", 20, 0, 1, 2)
->>> s.mine(25)
->>> c.checkQuorum(1010101)
->>> c.checkQuorum(1010101)
->>> s.mine(25)
->>> c.checkQuorum(1010101)
->>> c.vote(1010101, [1], 0)
->>> s.mine(25)
->>> c.redeem(1010101)
-
+for i in range(100):
+    c.redeem(1010101)

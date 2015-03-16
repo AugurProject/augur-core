@@ -623,6 +623,7 @@ def checkQuorum(branch):
         while(x < self.EventsExpDates[branch][currentVotePeriod-1].numberEvents):
             self.EventsExpDates[branch][currentPeriod].events[self.EventsExpDates[branch][currentPeriod].numberEvents] = self.EventsExpDates[branch][currentVotePeriod-1].events[x]
             self.EventsExpDates[branch][currentPeriod].numberEvents += 1
+            # sub and set old period event to 0 poss.?
             x += 1
     else:
         enoughEvents = 1
@@ -646,7 +647,7 @@ def checkQuorum(branch):
 def redeem(branch):
     #if(!self.checkQuorum(branch)):
     #    return(-1)
-    currentVotePeriod = self.Branches[branchID].currentVotePeriod
+    currentVotePeriod = self.Branches[branch].currentVotePeriod
     step = self.Branches[branch].step
     if(step==0):
         # loop through reputation && check if in reporters, if so use their report, if not use the fillin / not reported report (all zeroes)
@@ -654,8 +655,11 @@ def redeem(branch):
         # want to pass votes for each 0 indexed event in order (so we get votes from an actual reporter)
         # (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
         numReporters = self.Reporting[branch].numberReporters
+        log(numReporters)
         reputation = array(numReporters)
-        numberEvents = self.EventsExpDates[branch][currentvotePeriod].numberEvents
+        numberEvents = self.EventsExpDates[branch][currentVotePeriod].numberEvents
+        (self.EventsExpDates[ID][expDateIndex].numberEvents)
+        log(numberEvents)
         votes = array(numReporters * numberEvents)
 
         i = 0
@@ -672,7 +676,7 @@ def redeem(branch):
                     x += 1
             i += 1
         vSize = len(votes)
-
+        log(vSize)
         j = 0
         scaled = array(numberEvents)
         scaledMaxFixed = array(numberEvents)
@@ -736,8 +740,8 @@ def redeem(branch):
         # loading vector is numEvents + 1 long, the last element says how many iterations of it are left, should check this
         numEvents = self.EventsExpDates[branch][currentVotePeriod].numberEvents
         numReports = self.EventsExpDates[branch][currentVotePeriod].vSize / numEvents
-        if(self.EventsExpDates[branch][currentVotePeriod].loadingVector[numEvents]==0):
-            return(0)
+        #if(self.EventsExpDates[branch][currentVotePeriod].loadingVector[numEvents]==0):
+        #    return(0)
         loadingVector = array(numEvents+1)
         loadingVector = load(self.EventsExpDates[branch][currentVotePeriod].loadingVector[0], items=numEvents+1)
         weightedCenteredData = array(self.EventsExpDates[branch][currentVotePeriod].vSize)
@@ -770,11 +774,15 @@ def redeem(branch):
         return(8)
     elif(step==8):
         numEvents = self.EventsExpDates[branch][currentVotePeriod].numberEvents
+        log(numEvents)
         numReports = self.EventsExpDates[branch][currentVotePeriod].vSize / numEvents
         scores = array(numReports)
-        scores = load(self.EventsExpDates[branch][currentVotePeriod].scores[0], items=len(numReports))
+        log(numReports)
+        scores = load(self.EventsExpDates[branch][currentVotePeriod].scores[0], items=numReports)
+        log(2)
         result = self.calibrate_sets(scores, numReports, numEvents, outsz=2*numReports)
         # loads the first set of numReports items from result
+        log(3)
         save(self.EventsExpDates[branch][currentVotePeriod].set1[0], result, items=numReports)
         save(self.EventsExpDates[branch][currentVotePeriod].set2[0], slice(result, items=numReports, items=2*numReports), items=numReports)
         self.Branches[branch].step = 9
@@ -825,6 +833,7 @@ def redeem(branch):
         vSize = self.EventsExpDates[branch][currentVotePeriod].vSize
         numEvents = self.EventsExpDates[branch][currentVotePeriod].numberEvents
         numReports = self.EventsExpDates[branch][currentVotePeriod].vSize / numEvents
+        reputation = array(numReports)
         i = 0
         while i < numReports:
             reputation[i] = self.Reporting[branch].reputation[i].repValue
@@ -839,16 +848,27 @@ def redeem(branch):
         vSize = self.EventsExpDates[branch][currentVotePeriod].vSize
         numEvents = self.EventsExpDates[branch][currentVotePeriod].numberEvents
         numReports = self.EventsExpDates[branch][currentVotePeriod].vSize / numEvents
-        i = 0
-        while i < numReports:
-            reputation[i] = self.Reporting[branch].reputation[i].repValue
-            i+=1
         reportsFilled = array(self.EventsExpDates[branch][currentVotePeriod].vSize)
         reportsFilled = load(self.EventsExpDates[branch][currentVotePeriod].reportsFilled[0], items=self.EventsExpDates[branch][currentVotePeriod].vSize)
         smoothRep = array(numReports)
         smoothRep = load(self.EventsExpDates[branch][currentVotePeriod].smoothRep[0], items=numReports)
-        result = self.consensus(smoothRep, reputation, reportsFilled, numReports, numEvents, outsz=numEvents)
+        j = 0
+        scaled = array(numEvents)
+        scaledMaxFixed = array(numEvents)
+        scaledMinFixed = array(numEvents)
+        while j < numEvents:
+            if(self.Events[self.EventsExpDates[branch][currentVotePeriod].events[j]].maxValue!=1 && self.Events[self.EventsExpDates[branch][currentVotePeriod].events[j]].numOutcomes==2):
+                scaled[j] = 1
+                scaledMaxFixed[j] = self.Events[self.EventsExpDates[branch][currentVotePeriod].events[j]].maxValue*2^64
+                scaledMinFixed[j] = self.Events[self.EventsExpDates[branch][currentVotePeriod].events[j]].minValue*2^64
+            else:
+                scaled[j] = 0
+                scaledMinFixed[j] = 1*2^64
+                scaledMaxFixed[j] = 2*2^64
+            j+=1
+        result = self.consensus(smoothRep, reportsFilled, scaled, scaledMaxFixed, scaledMinFixed, numReports, numEvents, outsz=numEvents)
         save(self.EventsExpDates[branch][currentVotePeriod].outcomesFinal[0], result, items=numEvents)
+        log(5)
         self.Branches[branch].step = 13
         return(13)
     elif(step==13):
