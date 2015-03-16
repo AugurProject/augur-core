@@ -73,35 +73,28 @@ init()
 #                     [-1, -1,  1,  1 ],
 #                     [-1, -1,  1,  1 ]])
 
-reports = np.array([[ 1,  1, -1, -1, 233, 16027.59],
-                    [ 1, -1, -1, -1, 199,     0.  ],
-                    [ 1,  1, -1, -1, 233, 16027.59],
-                    [ 1,  1,  1, -1, 250,     0.  ],
-                    [-1, -1,  1,  1, 435,  8001.00],
-                    [-1, -1,  1,  1, 435, 19999.00]])
-reputation = [1, 1, 1, 1, 1, 1]
+# reports = np.array([[ 1,  1, -1, -1, 233, 16027.59],
+#                     [ 1, -1, -1, -1, 199,     0.  ],
+#                     [ 1,  1, -1, -1, 233, 16027.59],
+#                     [ 1,  1,  1, -1, 250,     0.  ],
+#                     [-1, -1,  1,  1, 435,  8001.00],
+#                     [-1, -1,  1,  1, 435, 19999.00]])
+# reputation = [1, 1, 1, 1, 1, 1]
 
-# pyconsensus bounds format:
-#     event_bounds = [
-#         {"scaled": True, "min": 0.1, "max": 0.5},
-#         {"scaled": True, "min": 0.2, "max": 0.7},
-#         {"scaled": False, "min": 0, "max": 1},
-#         {"scaled": False, "min": 0, "max": 1},
-#     ]
-scaled = [0, 0, 0, 0, 1, 1]
-scaled_max = [1, 1, 1, 1, 435, 20000]
-scaled_min = [-1, -1, -1, -1, 0, 8000]
-# scaled = [1, 1, 0, 0]
-# scaled_max = [0.5, 0.7, 1, 1]
-# scaled_min = [0.1, 0.2, -1, -1]
-# scaled = [0, 0, 0, 0]
-# scaled_max = [1, 1, 1, 1]
-# scaled_min = [-1, -1, -1, -1]
+reports = np.array([[-1]])
+reputation = [10000,]
+scaled = [0,]
+scaled_max = [1,]
+scaled_min = [-1,]
 
-# num_players = 25
+# scaled = [0, 0, 0, 0, 1, 1]
+# scaled_max = [1, 1, 1, 1, 435, 20000]
+# scaled_min = [-1, -1, -1, -1, 0, 8000]
+
+# num_reports = 25
 # num_events = 25
-# reports = np.random.randint(-1, 2, (num_players, num_events))
-# reputation = np.random.randint(1, 100, num_players)
+# reports = np.random.randint(-1, 2, (num_reports, num_events))
+# reputation = np.random.randint(1, 100, num_reports)
 # scaled = np.random.randint(0, 2, num_events).tolist()
 # scaled_max = np.ones(num_events)
 # scaled_min = -np.ones(num_events)
@@ -217,9 +210,9 @@ def main():
     print BB("Testing contract:"), BG(filename)
     c = s.abi_contract(filename, gas=70000000)
     
-    num_players = len(reputation)
+    num_reports = len(reputation)
     num_events = len(reports[0])
-    v_size = num_players * num_events
+    v_size = num_reports * num_events
 
     reputation_fixed = map(fix, reputation)
     reports_fixed = map(fix, reports.ravel())
@@ -243,28 +236,28 @@ def main():
     weighted_centered_data = result[0:v_size].tolist()
     loading_vector = result[v_size:].tolist()
 
-    arglist = [loading_vector, weighted_centered_data, reputation_fixed, num_players, num_events]
+    arglist = [loading_vector, weighted_centered_data, reputation_fixed, num_reports, num_events]
     while loading_vector[num_events] > 0:
         loading_vector = c.pca_loadings(*arglist)
         arglist[0] = loading_vector
         # display(loading_vector, "Loadings %i:" % loading_vector[num_events], show_all=True)
 
-    arglist = [loading_vector, weighted_centered_data, num_players, num_events]
+    arglist = [loading_vector, weighted_centered_data, num_reports, num_events]
     scores = c.pca_scores(*arglist)
 
-    arglist = [scores, num_players, num_events]
+    arglist = [scores, num_reports, num_events]
     result = c.calibrate_sets(*arglist)
     result = np.array(result)
-    set1 = result[0:num_players].tolist()
-    set2 = result[num_players:].tolist()
+    set1 = result[0:num_reports].tolist()
+    set2 = result[num_reports:].tolist()
     assert(len(set1) == len(set2))
-    assert(len(result) == 2*num_players)
+    assert(len(result) == 2*num_reports)
     del result
 
     # display(set1, "set1:", show_all=True)
     # display(set2, "set2:", show_all=True)
 
-    arglist = [set1, set2, reputation_fixed, reports_filled, num_players, num_events]
+    arglist = [set1, set2, reputation_fixed, reports_filled, num_reports, num_events]
     result = c.calibrate_wsets(*arglist)
     result = np.array(result)
     old = result[0:num_events].tolist()
@@ -278,12 +271,12 @@ def main():
     # display(new1, "new1:", show_all=True)
     # display(new2, "new2:", show_all=True)
 
-    arglist = [old, new1, new2, set1, set2, scores, num_players, num_events]
+    arglist = [old, new1, new2, set1, set2, scores, num_reports, num_events]
     adjusted_scores = c.pca_adjust(*arglist)
 
     # display(adjusted_scores, "adjusted_scores:", show_all=True)
 
-    arglist = [adjusted_scores, reputation_fixed, num_players, num_events]
+    arglist = [adjusted_scores, reputation_fixed, num_reports, num_events]
     smooth_rep = c.smooth(*arglist)
 
     # display(reports_filled, "reports_filled:", show_all=True)
@@ -291,7 +284,7 @@ def main():
     # display(smooth_rep, "smooth_rep:", show_all=True)
 
     arglist = [smooth_rep, reports_filled, scaled, scaled_max_fixed,
-               scaled_min_fixed, num_players, num_events]
+               scaled_min_fixed, num_reports, num_events]
     result = c.consensus(*arglist)
 
     result = np.array(result)
@@ -300,7 +293,7 @@ def main():
     assert(len(outcomes_final) == len(consensus_reward))
     del result
 
-    arglist = [outcomes_final, consensus_reward, smooth_rep, reports_mask, num_players, num_events]
+    arglist = [outcomes_final, consensus_reward, smooth_rep, reports_mask, num_reports, num_events]
     reporter_bonus = c.participation(*arglist)
 
     display(loading_vector, "Loadings:", show_all=True)

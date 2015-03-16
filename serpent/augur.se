@@ -769,7 +769,7 @@ def redeem(branch):
         numReports = self.EventsExpDates[branch][currentVotePeriod].vSize / numEvents
         scores = array(numReports)
         scores = load(self.EventsExpDates[branch][currentVotePeriod].scores[0], items=len(numReports))
-        result = self.calibrate_sets(scores, numReports, numEvents, outsz=3*numReports)
+        result = self.calibrate_sets(scores, numReports, numEvents, outsz=2*numReports)
         # loads the first set of numReports items from result
         save(self.EventsExpDates[branch][currentVotePeriod].set1[0], result, items=numReports)
         save(self.EventsExpDates[branch][currentVotePeriod].set2[0], slice(result, items=numReports, items=2*numReports), items=numReports)

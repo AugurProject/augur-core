@@ -28,6 +28,9 @@
 # INDETERMINATE = 2^63  # 0.5
 # NO_RESPONSE = 0       # 0
 
+# TODO change these to:
+# 1 as no, 2 as yes, 2^63 indeterminate, 0 no response
+
 # Sum elements of array
 macro sum($a):
     $len = len($a)
@@ -207,18 +210,18 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
     # return vector: reports_interp
     # reports_filled: [0, flatsize - 1]
     # reports_mask: [flatsize, 2*flatsize - 1]
-    with num_players = len(reputation):
+    with num_reports = len(reputation):
         # normalize reputation vector
         reputation = get_weight(reputation)
         with flatsize = len(reports):
             with two_flatsize = 2*flatsize:
-                with num_events = flatsize / num_players:
+                with num_events = flatsize / num_reports:
                     with scaled_reports = array(flatsize):
                         with i = 0:
                             while i < num_events:
                                 with j = 0:
-                                    while j < num_players:
-                                        with idx = i + j*num_players:
+                                    while j < num_reports:
+                                        with idx = i + j*num_reports:
                                             if reports[idx] == 0:
                                                 scaled_reports[idx] = 0
                                             else:
@@ -245,23 +248,23 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                         with i = 0:
                                             while i < num_events:
                                                 with j = 0:
-                                                    while j < num_players:
-                                                        if reports[i + j*num_players] != 0:
+                                                    while j < num_reports:
+                                                        if reports[i + j*num_reports] != 0:
                                                             num_present[i] += 1
                                                         j += 1
                                                 i += 1
                                         with i = 0:
                                             while i < num_events:
-                                                if num_present[i] < num_players:
+                                                if num_present[i] < num_reports:
                                                     with total_active_reputation = 0:
                                                         with active_reputation = array(num_present[i]):
                                                             with active_reports = array(num_present[i]):
-                                                                with nan_indices = array(num_players - num_present[i]):
+                                                                with nan_indices = array(num_reports - num_present[i]):
                                                                     with nan_index = 0:
                                                                         with active_index = 0:
                                                                             with j = 0:
-                                                                                while j < num_players:
-                                                                                    with idx = i + j*num_players:
+                                                                                while j < num_reports:
+                                                                                    with idx = i + j*num_reports:
                                                                                         if scaled_reports[idx] == 0:
                                                                                             nan_indices[nan_index] = idx
                                                                                             nan_index += 1
@@ -286,7 +289,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                                                                     j += 1
                                                                             guess = weighted_median(active_reports, active_reputation)
                                                                         with j = 0:
-                                                                            while j < num_players - num_present[i]:
+                                                                            while j < num_reports - num_present[i]:
                                                                                 reports_interp[nan_indices[j]] = guess
                                                                                 j += 1
                                                 i += 1
@@ -298,14 +301,14 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                 return(reports_interp, items=two_flatsize)
 
 def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr, max_iterations):
-    with num_players = len(reputation):
+    with num_reports = len(reputation):
         with flatsize = len(reports_filled):
-            with num_events = flatsize / num_players:
+            with num_events = flatsize / num_reports:
                 # calculate weighted centered data matrix for pca
                 with weighted_means = array(num_events):
                     with total_weight = 0:
                         with i = 0:
-                            while i < num_players:
+                            while i < num_reports:
                                 with j = 0:
                                     while j < num_events:
                                         weighted_means[j] += reputation[i] * reports_filled[i * num_events + j]
@@ -328,11 +331,11 @@ def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scale
                                         weighted_centered_data[lflatsize - 1] = max_iterations
                                         return(weighted_centered_data, items=lflatsize)
 
-def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr, num_players, num_events):
+def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr, num_reports, num_events):
     with lflatsize = len(loading_vector):
         with s = array(num_events):
             with j = 0:
-                while j < num_players:
+                while j < num_reports:
                     with d_dot_lv = 0:
                         with k = 0:
                             while k < num_events:
@@ -368,36 +371,36 @@ def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr,
             loading_vector[num_events] -= 1
             return(loading_vector, items=lflatsize)
 
-def pca_scores(loading_vector:arr, weighted_centered_data:arr, num_players, num_events):
-    with scores = array(num_players):
+def pca_scores(loading_vector:arr, weighted_centered_data:arr, num_reports, num_events):
+    with scores = array(num_reports):
         with i = 0:
-            while i < num_players:
+            while i < num_reports:
                 with k = 0:
                     while k < num_events:
                         scores[i] += fixed_multiply(weighted_centered_data[i*num_events + k], loading_vector[k])
                         k += 1
                 i += 1
-            return(scores, items=num_players)
+            return(scores, items=num_reports)
 
-def calibrate_sets(scores:arr, num_players, num_events):
+def calibrate_sets(scores:arr, num_reports, num_events):
     # Which of the two possible 'new' reputation vectors had more opinion in common
     # with the original 'old' reputation?
-    # set1: [0, num_players - 1]
-    # set2: [num_players, 2*num_players - 1]
-    with two_num_players = 2*num_players:
-        with sets = array(two_num_players):
+    # set1: [0, num_reports - 1]
+    # set2: [num_reports, 2*num_reports - 1]
+    with two_num_reports = 2*num_reports:
+        with sets = array(two_num_reports):
             with set1_compare = abs(minimum(scores)):
                 with set2_compare = maximum(scores):
                     with i = 0:
-                        while i < num_players:
+                        while i < num_reports:
                             sets[i] = scores[i] + set1_compare
                             i += 1
-                        while i < two_num_players:
-                            sets[i] = scores[i - num_players] - set2_compare
+                        while i < two_num_reports:
+                            sets[i] = scores[i - num_reports] - set2_compare
                             i += 1
-                        return(sets, items=two_num_players)
+                        return(sets, items=two_num_reports)
 
-def calibrate_wsets(set1:arr, set2:arr, reputation:arr, reports:arr, num_players, num_events):
+def calibrate_wsets(set1:arr, set2:arr, reputation:arr, reports:arr, num_reports, num_events):
     reputation = get_weight(reputation)
     with three_num_events = 3*num_events:
         with wsets = array(three_num_events):
@@ -407,7 +410,7 @@ def calibrate_wsets(set1:arr, set2:arr, reputation:arr, reports:arr, num_players
                         with two_num_events = 2*num_events:
                             while i < num_events:
                                 with k = 0:
-                                    while k < num_players:
+                                    while k < num_reports:
                                         with pos = k*num_events + i:
                                             wsets[i] += fixed_multiply(reputation[k], reports[pos])
                                             wsets[i + num_events] += fixed_multiply(wset1[k], reports[pos])
@@ -416,7 +419,7 @@ def calibrate_wsets(set1:arr, set2:arr, reputation:arr, reports:arr, num_players
                                 i += 1
                             return(wsets, items=three_num_events)
 
-def pca_adjust(old:arr, new1:arr, new2:arr, set1:arr, set2:arr, scores:arr, num_players, num_events):
+def pca_adjust(old:arr, new1:arr, new2:arr, set1:arr, set2:arr, scores:arr, num_reports, num_events):
     # Difference in sum of squared errors. If > 0, then new1 had higher
     # errors (use new2); conversely if < 0, then use new1.
     with sse1 = 0:
@@ -427,21 +430,21 @@ def pca_adjust(old:arr, new1:arr, new2:arr, set1:arr, set2:arr, scores:arr, num_
                     sse2 += fixed_multiply(new2[i] - old[i], new2[i] - old[i])
                     i += 1
             with ref_ind = sse1 - sse2:
-                with adjusted_scores = array(num_players):
+                with adjusted_scores = array(num_reports):
                     if ref_ind <= 0:
                         adjusted_scores = set1
                     else:
                         adjusted_scores = set2
-                    return(adjusted_scores, items=num_players)
+                    return(adjusted_scores, items=num_reports)
 
-def smooth(adjusted_scores:arr, reputation:arr, num_players, num_events):
+def smooth(adjusted_scores:arr, reputation:arr, num_reports, num_events):
     # Weighted sum of old and new reputation vectors.
     # New: row_reward_weighted
     # Old: reputation
     reputation = get_weight(reputation)
-    with row_reward_weighted = array(num_players):
+    with row_reward_weighted = array(num_reports):
         with i = 0:
-            while i < num_players:
+            while i < num_reports:
                 row_reward_weighted[i] = reputation[i]
                 i += 1
 
@@ -449,20 +452,20 @@ def smooth(adjusted_scores:arr, reputation:arr, num_players, num_events):
         if maximum(array_abs(adjusted_scores)) != 0:
             with mean_weight = mean(row_reward_weighted):
                 with i = 0:
-                    while i < num_players:
+                    while i < num_reports:
                         row_reward_weighted[i] = adjusted_scores[i] * row_reward_weighted[i] / mean_weight
                         i += 1
             row_reward_weighted = get_weight(row_reward_weighted)
         # Freshly-calculated reward (in reputation) using exponential smoothing
         # (0.1 is the adjustable parameter "alpha", hard-coding it for now)
-        with smooth_rep = array(num_players):
+        with smooth_rep = array(num_reports):
             with i = 0:
-                while i < num_players:
+                while i < num_reports:
                     smooth_rep[i] = row_reward_weighted[i]/10 + reputation[i]*9/10
                     i += 1
-            return(smooth_rep, items=num_players)
+            return(smooth_rep, items=num_reports)
 
-def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:arr, num_players, num_events):
+def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports, num_events):
     # outcomes_final: [0, num_events - 1]
     # consensus_reward: [num_events, 2*num_events - 1]
     with two_num_events = 2*num_events:
@@ -472,15 +475,15 @@ def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_mi
                 with i = 0:
                     while i < num_events:
                         if scaled[i] == 1:
-                            with active_reports = array(num_players):
+                            with active_reports = array(num_reports):
                                 with j = 0:
-                                    while j < num_players:
+                                    while j < num_reports:
                                         active_reports[j] = reports[i + j*num_events]
                                         j += 1
                                 outcomes_raw[i] = weighted_median(active_reports, smooth_rep)
                         else:
                             with j = 0:
-                                while j < num_players:
+                                while j < num_reports:
                                     outcomes_raw[i] += fixed_multiply(smooth_rep[j], reports[j*num_events + i])
                                     j += 1
                         i += 1
@@ -504,7 +507,7 @@ def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_mi
                         with i = 0:
                             while i < num_events:
                                 with j = 0:
-                                    while j < num_players:
+                                    while j < num_reports:
                                         if abs(reports[i + j*num_events] - outcomes_adj[i]) < 0x1197998:
                                             certainty[i] += smooth_rep[j]
                                         j += 1
@@ -521,22 +524,22 @@ def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_mi
                                     i += 1
                                 return(consensus_outcomes, items=two_num_events)
 
-def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, reports_mask:arr, num_players, num_events):
+def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, reports_mask:arr, num_reports, num_events):
         # Event participation (within columns):
         # proportion of reputation that answered each event
         with participation_events = array(num_events):
             with i = 0:
                 while i < num_events:
                     with k = 0:
-                        while k < num_players:
+                        while k < num_reports:
                             participation_events[i] += fixed_multiply(smooth_rep[k], reports_mask[k*num_events + i])
                             k += 1
                     participation_events[i] = 2^64 - participation_events[i]
                     i += 1
             # Voter participation (within rows): all events treated equally
-            with participation_reports = array(num_players):
+            with participation_reports = array(num_reports):
                 with i = 0:
-                    while i < num_players:
+                    while i < num_reports:
                         with total = 0:
                             with j = 0:
                                 while j < num_events:
@@ -552,10 +555,10 @@ def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, repo
                                 i += 1
                         with participation = 2^64 - total / num_events:
                             # Bringing it all together!
-                            with reporter_bonus = array(num_players):
+                            with reporter_bonus = array(num_reports):
                                 with na_bonus_reports = get_weight(participation_reports):
                                     with i = 0:
-                                        while i < num_players:
+                                        while i < num_reports:
                                             reporter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], 2^64 - participation)
                                             i += 1
-                                    return(reporter_bonus, items=num_players)
+                                    return(reporter_bonus, items=num_reports)
