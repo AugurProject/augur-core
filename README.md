@@ -2,7 +2,7 @@ augur-serpent
 -------------
 
 ### To do:
-- min/max fxp?
+- min/max fxp? & 1,2 or 2^64 and 2*2^64 - should probably support fxp
 
 ### Bugs:
 - what if a scalar has a .5 actual value outcome

@@ -36,7 +36,8 @@ data Info[](description[2048], descriptionLength, creator, creationFee)
 data Branches[](currentVotePeriod, periodLength, step, markets[], numMarkets)
 
 # Events' index is the eventID
-# a binary outcome has 0 for min && 1 for max value
+# a binary outcome has 0 for min && 1 for max value, but consensus will return 1 and 2 respectively
+# so for voting 1 and 2 need to be given for binaries, not 0 & 1
 # S&P 500 scalar would be say 0 && 4700, respectively
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
