@@ -22,104 +22,100 @@
 #
 # Questions?  Please contact jack@tinybike.net or joeykrug@gmail.com.
 
-# ONE = 2^64
-# TRUE = ONE
-# FALSE = -ONE
-# INDETERMINATE = 2^63  # 0.5
-# NO_RESPONSE = 0       # 0
-
-# TODO change these to:
-# 1 as no, 2 as yes, 2^63 indeterminate, 0 no response
+macro ONE: 2^64
+macro TWO: 2^65
+macro HALF: 2^63
 
 # Sum elements of array
 macro sum($a):
-    $len = len($a)
-    $total = 0
-    $i = 0
-    while $i < $len:
-        $total += $a[$i]
-        $i += 1
-    $total
+    with $len = len($a):
+        with $total = 0:
+            with $i = 0:
+                while $i < $len:
+                    $total += $a[$i]
+                    $i += 1
+                $total
 
 # Arithmetic mean
 macro mean($a):
     sum($a) / len($a)
 
+# Absolute value
 macro abs($n):
     if($n<0, -$n, $n)
 
 # Proportional distance from zero, inputs are fixed point
 macro get_weight($a):
-    $len = len($a)
-    $total = 0
-    $i = 0
-    while $i < $len:
-        $a[$i] = abs($a[$i])
-        $total += $a[$i]
-        $i += 1
-    $wt = array($len)
-    $i = 0
-    while $i < $len:
-        $wt[$i] = $a[$i] * 2^64 / $total
-        $i += 1
-    $wt
+    with $len = len($a):
+        with $total = 0:
+            with $i = 0:
+                while $i < $len:
+                    $a[$i] = abs($a[$i])
+                    $total += $a[$i]
+                    $i += 1
+                with $wt = array($len):
+                    with $i = 0:
+                        while $i < $len:
+                            $wt[$i] = $a[$i] * ONE / $total
+                            $i += 1
+                        $wt
 
 # Bins values to -1, 0, and 1
 macro catch($x):
-    if($x < -(2^64 / 10), -(2^64), if($x > (2^64 / 10), 2^64, 0))
+    if($x < -(ONE / 10), -(ONE), if($x > (ONE / 10), ONE, 0))
 
 # Absolute value of all array elements
 macro array_abs($a):
-    $len = len($a)
-    $absval = array($len)
-    $i = 0
-    while $i < $len:
-        $absval[$i] = abs($a[$i])
-        $i += 1
-    $absval
+    with $len = len($a):
+        with $absval = array($len):
+            with $i = 0:
+                while $i < $len:
+                    $absval[$i] = abs($a[$i])
+                    $i += 1
+                $absval
 
 # Minimum value of array
 macro minimum($a):
-    $min = $a[0]
-    $i = 1
-    $len = len($a)
-    while $i < $len:
-        if $a[$i] < $min:
-            $min = $a[$i]
-        $i += 1
-    $min
+    with $min = $a[0]:
+        with $i = 1:
+            with $len = len($a):
+                while $i < $len:
+                    if $a[$i] < $min:
+                        $min = $a[$i]
+                    $i += 1
+                $min
 
 # Maximum value of array
 macro maximum($a):
-    $max = $a[0]
-    $i = 1
-    $len = len($a)
-    while $i < $len:
-        if $a[$i] > $max:
-            $max = $a[$i]
-        $i += 1
-    $max
+    with $max = $a[0]:
+        with $i = 1:
+            with $len = len($a):
+                while $i < $len:
+                    if $a[$i] > $max:
+                        $max = $a[$i]
+                    $i += 1
+                $max
 
 # Find index corresponding to the maximum value of an array
 macro findmax($a):
-    $len = len($a)
-    $max = $a[0]
-    $maxidx = 0
-    $i = 1
-    while $i < $len:
-        if $a[$i] > $max:
-            $maxval = $a[$i]
-            $maxidx = $i
-        $i += 1
-    $maxidx        
+    with $len = len($a):
+        with $max = $a[0]:
+            with $maxidx = 0:
+                with $i = 1:
+                    while $i < $len:
+                        if $a[$i] > $max:
+                            $maxval = $a[$i]
+                            $maxidx = $i
+                        $i += 1
+                    $maxidx        
 
 # Fixed-point multiplication
 macro fixed_multiply($x, $y):
-    $x * $y / 2^64
+    $x * $y / ONE
 
 # Fixed-point division
 macro fixed_divide($x, $y):
-    $x * 2^64 / $y
+    $x * ONE / $y
 
 macro concat($a, $b):
     with $c = array(len($a)+len($b)):
@@ -128,9 +124,9 @@ macro concat($a, $b):
         $c
 
 macro swap($a, $i, $j):
-    $t = $a[$i]
-    $a[$i] = $a[$j]
-    $a[$j] = $t
+    with $t = $a[$i]:
+        $a[$i] = $a[$j]
+        $a[$j] = $t
 
 macro paired_qsort($a, $b):
     with $len = len($a):
@@ -199,7 +195,8 @@ macro weighted_median($data, $weights):
                                             idx += 1
                                             cumulative_weight += sorted_weights[idx-1]
                                         cumulative_weight -= sorted_weights[idx-1]
-                                        # conservative machine epsilon: 0x1197998 = 18446744 = 2^64 / 10^12
+                                        # conservative machine epsilon: 
+                                        # 0x1197998 = 18446744 = ONE / 10^12
                                         if abs(cumulative_weight - midpoint) < 0x1197998:
                                             wmedian = (sorted_data[idx-2] + sorted_data[idx-1]) / 2
                                         else:
@@ -210,25 +207,33 @@ macro weighted_median($data, $weights):
 # or two entries (for fixed point numbers, the first entry is the integer
 # and the second is the decimal).
 macro log_array($a):
-    $n = len($a)
-    $i = 0
-    while $i < $n:
-        # Get 8 decimal points
-        $decimal = ($a[$i] & (2^64 - 1))*10^8 / 2^64
-        if $decimal > 0:
-            log($a[$i] / 2^64, $decimal)
-        else:
-            log($a[$i] / 2^64)
-        $i += 1
+    with $n = len($a):
+        with $i = 0:
+            while $i < $n:
+                # print 8 decimal points (adjustable)
+                with $decimal = ($a[$i] & (ONE - 1)) * 10^8 / ONE:
+                    if $decimal > 0:
+                        log($a[$i] / ONE, $decimal)
+                    else:
+                        log($a[$i] / ONE)
+                    $i += 1
+
+# Works with modified serpent/pyethereum
+macro print_array($x):
+    with $n = len($x):
+        with $i = 0:
+            while $i < $n:
+                print($x[$i] / ONE)
+                $i += 1
 
 def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
-    # return vector: reports_interp
-    # reports_filled: [0, flatsize - 1]
-    # reports_mask: [flatsize, 2*flatsize - 1]
-    log_array(reports)
+    # returns:
+    #   reports_filled: [0, flatsize - 1]
+    #   reports_mask: [flatsize, 2*flatsize - 1]
+    #
+    # normalize reputation vector
+    reputation = get_weight(reputation)
     with num_reports = len(reputation):
-        # normalize reputation vector
-        reputation = get_weight(reputation)
         with flatsize = len(reports):
             with two_flatsize = 2*flatsize:
                 with num_events = flatsize / num_reports:
@@ -254,7 +259,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                 with i = 0:
                                     while i < flatsize:
                                         if reports[i] == 0:
-                                            reports_interp[i + flatsize] = 2^64 # reports_mask
+                                            reports_interp[i + flatsize] = ONE # reports_mask
                                             missing_values += 1
                                         else:
                                             reports_interp[i] = scaled_reports[i]
@@ -320,7 +325,7 @@ def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scale
     with num_reports = len(reputation):
         with flatsize = len(reports_filled):
             with num_events = flatsize / num_reports:
-                # calculate weighted centered data matrix for pca
+                # calculate weighted centered data matrix
                 with weighted_means = array(num_events):
                     with total_weight = 0:
                         with i = 0:
@@ -343,7 +348,7 @@ def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scale
                                         while i < flatsize:
                                             weighted_centered_data[i] = reports_filled[i] - weighted_means[i % num_events]
                                             i += 1
-                                        weighted_centered_data[i] = 2^64
+                                        weighted_centered_data[i] = ONE
                                         weighted_centered_data[lflatsize - 1] = max_iterations
                                         return(weighted_centered_data, items=lflatsize)
 
@@ -357,7 +362,7 @@ def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr,
                             while k < num_events:
                                 d_dot_lv += weighted_centered_data[j*num_events + k] * loading_vector[k]
                                 k += 1
-                            d_dot_lv /= 2^64
+                            d_dot_lv /= ONE
                         with k = 0:
                             while k < num_events:
                                 s[k] -= d_dot_lv * weighted_centered_data[j*num_events + k] * reputation[j]
@@ -374,15 +379,15 @@ def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr,
                     while j < num_events:
                         s_dot_s += s[j] * s[j]
                         j += 1
-                s_dot_s /= 2^64
+                s_dot_s /= ONE
                 with norm_s = s_dot_s / 2:
                     with j = 0:
                         while j < 11:
-                            norm_s = (norm_s + s_dot_s*2^64/norm_s) / 2
+                            norm_s = (norm_s + s_dot_s*ONE/norm_s) / 2
                             j += 1
                     with j = 0:
                         while j < num_events:
-                            loading_vector[j] = s[j]*2^64/norm_s
+                            loading_vector[j] = s[j]*ONE/norm_s
                             j += 1
             loading_vector[num_events] -= 1
             return(loading_vector, items=lflatsize)
@@ -399,7 +404,7 @@ def pca_scores(loading_vector:arr, weighted_centered_data:arr, num_reports, num_
             return(scores, items=num_reports)
 
 def calibrate_sets(scores:arr, num_reports, num_events):
-    # Which of the two possible 'new' reputation vectors had more opinion in common
+    # Which of the two possible 'new' reputation vectors had more in common
     # with the original 'old' reputation?
     # set1: [0, num_reports - 1]
     # set2: [num_reports, 2*num_reports - 1]
@@ -482,10 +487,8 @@ def smooth(adjusted_scores:arr, reputation:arr, num_reports, num_events):
             return(smooth_rep, items=num_reports)
 
 def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports, num_events):
-    # outcomes_final: [0, num_events - 1]
-    # consensus_reward: [num_events, 2*num_events - 1]
     with two_num_events = 2*num_events:
-        with consensus_outcomes = array(two_num_events):
+        with outcomes_final = array(num_events):
             # discriminate based on contract type
             with outcomes_raw = array(num_events):
                 with i = 0:
@@ -514,9 +517,9 @@ def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_mi
                     with i = 0:
                         while i < num_events:
                             if scaled[i] == 1:
-                                consensus_outcomes[i] = fixed_multiply(outcomes_adj[i], scaled_max[i] - scaled_min[i]) + scaled_min[i]
+                                outcomes_final[i] = fixed_multiply(outcomes_adj[i], scaled_max[i] - scaled_min[i]) + scaled_min[i]
                             else:
-                                consensus_outcomes[i] = outcomes_adj[i]
+                                outcomes_final[i] = outcomes_adj[i]
                             i += 1
 
                     with certainty = array(num_events):
@@ -534,13 +537,9 @@ def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_mi
                                     certainty[i] = abs(certainty[i])
                                     total += certainty[i]
                                     i += 1
-                            with i = 0:
-                                while i < num_events:
-                                    consensus_outcomes[i + num_events] = fixed_divide(certainty[i], total)
-                                    i += 1
-                                return(consensus_outcomes, items=two_num_events)
+                            return(outcomes_final, items=num_events)
 
-def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, reports_mask:arr, num_reports, num_events):
+def participation(outcomes_final:arr, smooth_rep:arr, reports_mask:arr, num_reports, num_events):
         # Event participation (within columns):
         # proportion of reputation that answered each event
         with participation_events = array(num_events):
@@ -550,7 +549,7 @@ def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, repo
                         while k < num_reports:
                             participation_events[i] += fixed_multiply(smooth_rep[k], reports_mask[k*num_events + i])
                             k += 1
-                    participation_events[i] = 2^64 - participation_events[i]
+                    participation_events[i] = ONE - participation_events[i]
                     i += 1
             # Voter participation (within rows): all events treated equally
             with participation_reports = array(num_reports):
@@ -561,7 +560,7 @@ def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, repo
                                 while j < num_events:
                                     total += reports_mask[i*num_events + j]
                                     j += 1
-                                participation_reports[i] = 2^64 - total / num_events
+                                participation_reports[i] = ONE - total / num_events
                         i += 1
                     # General participation
                     with total = 0:
@@ -569,12 +568,12 @@ def participation(outcomes_final:arr, consensus_reward:arr, smooth_rep:arr, repo
                             while i < num_events:
                                 total += participation_events[i]
                                 i += 1
-                        with participation = 2^64 - total / num_events:
+                        with participation = ONE - total / num_events:
                             # Bringing it all together!
                             with reporter_bonus = array(num_reports):
                                 with na_bonus_reports = get_weight(participation_reports):
                                     with i = 0:
                                         while i < num_reports:
-                                            reporter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], 2^64 - participation)
+                                            reporter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], ONE - participation)
                                             i += 1
                                     return(reporter_bonus, items=num_reports)

@@ -36,6 +36,7 @@ try:
 except ImportError:
     pass
 from pyethereum import tester as t
+from pyconsensus import Oracle
 
 # np.set_printoptions(linewidth=500)
 np.set_printoptions(linewidth=225,
@@ -48,12 +49,26 @@ pd.set_option('display.float_format', lambda x: '%.8f' % x)
 
 # max_iterations: number of blocks required to complete PCA
 max_iterations = 5
-tolerance = 1e-12
+tolerance = 0.01
 init()
 
 # true=1, false=-1, indeterminate=0.5, no response=0
 
+def BR(string): # bright red
+    return "\033[1;31m" + str(string) + "\033[0m"
+
+def BB(string): # bright blue
+    return Fore.BLUE + Style.BRIGHT + str(string) + Style.RESET_ALL
+
+def BW(string): # bright white
+    return Fore.WHITE + Style.BRIGHT + str(string) + Style.RESET_ALL
+
+def BG(string): # bright green
+    return Fore.GREEN + Style.BRIGHT + str(string) + Style.RESET_ALL
+
 def binary_input_example():
+    print BW("Testing with binary inputs")
+    print BW("==========================")
     reports = np.array([[  1,  1, -1,  1],
                         [  1, -1, -1, -1],
                         [  1,  1, -1, -1],
@@ -63,6 +78,8 @@ def binary_input_example():
     reputation = [2, 10, 4, 2, 7, 1]
 
 def single_input_example():
+    print BW("Testing with a single input")
+    print BW("===========================")
     reports = np.array([[-1]])
     reputation = [10000,]
     scaled = [0,]
@@ -71,6 +88,8 @@ def single_input_example():
     return (reports, reputation, scaled, scaled_max, scaled_min)
 
 def scalar_input_example():
+    print BW("Testing with binary and scalar inputs")
+    print BW("=====================================")
     reports = np.array([[ 1,  1, -1, -1, 233, 16027.59],
                         [ 1, -1, -1, -1, 199,     0.  ],
                         [ 1,  1, -1, -1, 233, 16027.59],
@@ -84,6 +103,8 @@ def scalar_input_example():
     return (reports, reputation, scaled, scaled_max, scaled_min)
 
 def randomized_inputs(num_reports=50, num_events=25):
+    print BW("Testing with randomized inputs")
+    print BW("==============================")
     reports = np.random.randint(-1, 2, (num_reports, num_events))
     reputation = np.random.randint(1, 100, num_reports)
     scaled = np.random.randint(0, 2, num_events).tolist()
@@ -96,18 +117,6 @@ def randomized_inputs(num_reports=50, num_events=25):
     scaled_max = scaled_max.astype(int).tolist()
     scaled_min = scaled_min.astype(int).tolist()
     return (reports, reputation, scaled, scaled_max, scaled_min)
-
-def BR(string): # bright red
-    return "\033[1;31m" + str(string) + "\033[0m"
-
-def BB(string): # bright blue
-    return Fore.BLUE + Style.BRIGHT + str(string) + Style.RESET_ALL
-
-def BW(string): # bright white
-    return Fore.WHITE + Style.BRIGHT + str(string) + Style.RESET_ALL
-
-def BG(string): # bright green
-    return Fore.GREEN + Style.BRIGHT + str(string) + Style.RESET_ALL
 
 def fix(x):
     return int(x * 0x10000000000000000)
@@ -201,7 +210,7 @@ def main():
     reports_filled = result[0:v_size].tolist()
     reports_mask = result[v_size:].tolist()
 
-    display(reports_filled, "reports (filled):", refold=num_events, show_all=True)
+    # display(reports_filled, "reports (filled):", refold=num_events, show_all=True)
 
     # center and initiate multistep pca loading vector
     arglist = [reports_filled, reputation_fixed, scaled,
@@ -262,18 +271,47 @@ def main():
 
     result = np.array(result)
     outcomes_final = result[0:num_events].tolist()
-    consensus_reward = result[num_events:].tolist()
-    assert(len(outcomes_final) == len(consensus_reward))
 
-    arglist = [outcomes_final, consensus_reward, smooth_rep, reports_mask, num_reports, num_events]
+    # outcomes_final[i] *= self.event_bounds[i]["max"] - self.event_bounds[i]["min"]
+    # outcomes_final[i] += self.event_bounds[i]["min"]
+
+    arglist = [outcomes_final, smooth_rep, reports_mask, num_reports, num_events]
     reporter_bonus = c.participation(*arglist)
 
-    display(loading_vector, "Loadings:", show_all=True)
-    display(adjusted_scores, "Adjusted scores:")
-    display(scores, "Scores:")
-    display(smooth_rep, "Updated reputation:")
-    display(outcomes_final, "Outcomes (final):")
-    display(reporter_bonus, "Reporter bonus:")
+    # display(loading_vector, "Loadings:", show_all=True)
+    # display(adjusted_scores, "Adjusted scores:")
+    # display(scores, "Scores:")
+    # display(smooth_rep, "Updated reputation:")
+    # display(outcomes_final, "Outcomes (final):")
+    # display(reporter_bonus, "Reporter bonus:")
+
+    # Compare to pyconsensus results
+    event_bounds = []
+    for i, s in enumerate(scaled):
+        event_bounds.append({
+            'scaled': 0 if s == False else 1,
+            'min': scaled_min[i],
+            'max': scaled_max[i],
+        })
+    for i in range(num_events):
+        for j in range(num_reports):
+            if reports[i,j] == 0:
+                reports[i,j] = np.nan
+    pyresults = Oracle(reports=reports,
+                       reputation=reputation,
+                       event_bounds=event_bounds,
+                       algorithm="sztorc").consensus()
+    comparisons = {
+        'reputation': abs(map(unfix, smooth_rep) - pyresults['agents']['smooth_rep'].data),
+        'outcomes': abs(map(unfix, outcomes_final) - np.array(pyresults['events']['outcomes_final'])),
+        'reporter_bonus': abs(map(unfix, reporter_bonus) - np.array(pyresults['agents']['reporter_bonus'])),
+    }
+    for key, value in comparisons.items():
+        try:
+            assert((value < tolerance).all())
+        except Exception as e:
+            print BW("Tolerance exceeded for ") + BR("%s:" % key)
+            print comparisons[key]
 
 if __name__ == "__main__":
     main()
