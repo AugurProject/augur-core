@@ -567,14 +567,17 @@ def transferShares(branch, market, outcome, amount, to):
 # if people get behind on voting (e.g the redeem tx isn't called <1 period after it can be called) 
     # voteperiod is an optional parameter only used in the scenario that we get behind on voting periods
     # so people will need to vote on periods that are upcoming even if our currentVotePeriod is a bit behind (e.g. if current expperiod is 7 you should vote on stuff from voteperiod 6 (and then upon period 8 you can't vote anymore))
-# @return 0 if fail, 1 if success
+# @return 1 if success
+# Error messages otherwise
+    # -1: report isn't long enough
+    # -2: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
 def vote(branch, report:arr, votePeriod):
     # make sure the branch exists
     repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
     if(votePeriod):
         # need report length to be same as number of items in the current eventexpdates voting period events!
         if(len(report)!=self.EventsExpDates[branch][votePeriod].numberEvents):
-            return(0)
+            return(-1)
 
         # if currentExpPeriod is more than 2 periods past the current vote period
         # then there can be no more voting for that voting period
@@ -583,7 +586,7 @@ def vote(branch, report:arr, votePeriod):
         # currently requires events to expire to vote
         currentExpPeriod = (block.number / self.Branches[branch].periodLength)
         if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
-            return(0)
+            return(-2)
 
         reputation = self.Reporting[branch].reputation[repIndex].repValue
         # need to update stuff for quorem
@@ -596,7 +599,7 @@ def vote(branch, report:arr, votePeriod):
         log(self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].numberEvents)
         # need report length to be same as number of items in the current eventexpdates voting period events!
         if(len(report)!=self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].numberEvents):
-            return(0)
+            return(-1)
 
         # if currentExpPeriod is more than 2 periods past the current vote period
         # then there can be no more voting for that voting period
@@ -605,7 +608,7 @@ def vote(branch, report:arr, votePeriod):
         # currently requires events to expire to vote
         currentExpPeriod = (block.number / self.Branches[branch].periodLength)
         if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin || currentExpPeriod >= (self.Branches[branch].currentVotePeriod+2) || currentExpPeriod < (self.Branches[branch].currentVotePeriod+1)):
-            return(0)
+            return(-2)
 
         reputation = self.Reporting[branch].reputation[repIndex].repValue
         # need to update stuff for quorem
@@ -929,14 +932,17 @@ def redeem(branch):
         self.Branches[branch].step = 0
         return(self.Branches[branch].currentVotePeriod)
 
-
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
 # when multidimen fancy payouts we report on the events separately per usual, but combine them to determine winning state of a fancy market && then payout that state
 # @return 0 if fail, if success 1
+# Error messages otherwise
+    # -1: Market has no cash anyway
+    # -2: 0 outcome
+    # -3: Outcome indeterminable 
 def closeMarket(branch, market):
     if(self.cashcoinBalances[market]<=0):
-        return(0)
+        return(-1)
     numberEvents = self.Markets[market].lenEvents
     tradingPeriod = self.Markets[market].tradingPeriod
     # check if any events in the market were pushed back and that market has expired
@@ -950,7 +956,7 @@ def closeMarket(branch, market):
         while n < numberEvents:
             fxpOutcome = self.Events[self.Markets[market].events[n]].outcome
             if(fxpOutcome==0):
-                return(-1)
+                return(-2)
             outcome = fxpOutcome/2^64 
             # makes sure it's not a scalar
             if(fxpOutcome==2^63 && numberEvents==1 && !(self.Events[event].maxValue!=1 && self.Events[event].numOutcomes==2)):
@@ -977,9 +983,9 @@ def closeMarket(branch, market):
 
                 self.Markets[market].winningOutcomes[0] = 1
                 self.Markets[market].winningOutcomes[0] = 2
-                return(-1)
-            elif(outcome==0):
-                return(0)
+                return(-3)
+            elif(fxpOutcome==0):
+                return(-2)
             if(n==0):
                 #scalar or .5
                 if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || fxpOutcome==2^63):
