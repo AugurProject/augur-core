@@ -24,6 +24,7 @@ augur-serpent
 - possibly enable people to choose their own resolution scripts
 - lazy evaluation
 - metadata off chain
+- events
 
 ### Version 0.5 (More fun features - May and Beyond):
 - if no agreement on any outcome <65% or whatever confidence (failure to achieve certainty) this confidence is *of the rep reported* (consensus needs to take this as a param), then do over next voting period
@@ -50,7 +51,7 @@ augur-serpent
 - hash first frontrunning prevention mechanism or pow
 - p+e fix?
 - how did V propose we support mult. currencies?
-- limit orders
+- limit orders in UI if price > or < a number and maximum amount of money (or shares?) you're willing to spend for buy, max shares to sell for sell
 	
 ### Version 0.3 (The Voting Upgrade - March):
 - salt hash vote mechanism
@@ -59,7 +60,7 @@ augur-serpent
   - if >period/2 submit Rnum and Votes[] for reporter
   - check in consensus if they match, if not, no vote ballot (allow people to change votes and hash up until lock in residual change)
   - anti cheat provide p and randomNum mechanism steal deposit (will need to support snarks eventually)
-
+- add check for invalid outcomes in buy shares
 c.createEvent(1010101, "lol", 20, 0, 1, 2)
 s.mine(25)
 c.checkQuorum(1010101)
@@ -71,3 +72,4 @@ s.mine(25)
 
 for i in range(100):
     c.redeem(1010101)
+reporting thing for scott

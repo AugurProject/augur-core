@@ -68,7 +68,7 @@ data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][],
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch)
 
 data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
@@ -177,10 +177,13 @@ def getRepBalance(branch, address):
 # period length is given in blocks
 # description format is branchName:description
 # is there some way we can include the description bytes in the sha256 hash?
-# @return branchID if success, else 0
+# @return branchID if success
+# error messages otherwise
+    # -1: bad input or parent doesn't exist
+    # -2: no money for creation fee or branch already exists
 def createSubbranch(description:str, periodLength, parent):
     if(periodLength<=0 || !self.Branches[parent].periodLength || description==0):
-        return(0)
+        return(-1)
 
     #upcomingDecisions = 0
     #a = (block.number / self.Branches[branch].periodLength)
@@ -204,7 +207,7 @@ def createSubbranch(description:str, periodLength, parent):
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
     branchID = sha256(branchInfo, chars=len(branchInfo))
 
-    if(self.Branches[parent].periodLength && self.Info[parent].creator && self.send(parent, 47*2^64) && self.Branches[branchID].periodLength==0):
+    if(self.Info[parent].creator && self.send(parent, 47*2^64) && self.Branches[branchID].periodLength==0):
         self.Info[branchID].creator = tx.origin
         self.Info[branchID].creationFee = 47*2^64
         self.Info[branchID].descriptionLength = len(description)
@@ -228,12 +231,15 @@ def createSubbranch(description:str, periodLength, parent):
         self.branchListCount += 1
         return(branchID)
     else:
-        return(0)
+        return(-2)
 
 # numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0
 # to 11.0 would be 11 outcomes (if incremented by 0.1)
 # need to make sure these values are ok
-# @return 0 as fail state, eventID if success
+# @return eventID if success
+# error messages otherwise
+    # -1: we're either already past that date, branch doesn't exist, or description is bad
+    # 0: not enough money to pay fees or event already exists 
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes):
     if(self.Branches[branch].periodLength && description!=0 && expDate>block.number):
         eventinfo = string((items=8)+len(description))
@@ -248,12 +254,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         mcopy(eventinfo+(items=8), description, len(description))
         eventID = sha256(eventinfo, chars=len(eventinfo))
     else:
-        return(0)
-
-    # can't have a scalar && categorical event in one
-    # you can make a market like that though!
-    if(numOutcomes!=2 && maxValue!=1):
-        return(0)
+        return(-1)
 
     # fee to ask a question rises if voter participation (rep reported) falls, if it's really high, the fee is lowered (participationFactor is a fixedpoint number)
     participationFactor = (self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod-2].totalRepReported * 2^64) / self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod-1].totalRepReported
@@ -331,16 +332,21 @@ def price(market, outcome):
 # initialLiquidity is initial number of cash in each outcome you want to buy/initialize/set
 # tradingFee is a percent in fixedPoint
 # same for these values
-# @return 0 as fail state, marketID if success
+# @return marketID if success
+# error messages otherwise
+    # -1: bad input or parent doesn't exist
+    # -2: too many events
+    # -3: too many outcomes
+    # -4: not enough money or market already exists
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr):
     if(self.Branches[branch].periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee < 2^57):
-        return(0)
+        return(-1)
     # check that events have same exp. dates && branch
     i = 0
     eventNum = len(events)
     # only supports 3 dimensional markets atm
     if(eventNum > 3):
-        return(0)
+        return(-2)
     numOutcomes = 0
     eventsConcat = 0
     cumulativeScale = 0
@@ -362,7 +368,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
             numOutcomes *= self.Events[event].numOutcomes
         i += 1
     if(numOutcomes > 200):
-        return(0)
+        return(-3)
     log(cumulativeScale)
     if(cumulativeScale==0):
         cumulativeScale = 1
@@ -386,7 +392,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     # pay numOutcomes fee
     # if it's already been created return 0
     if(!self.send(branch, numOutcomes*2^63) || self.Info[marketID].creator || self.Markets[marketID].numOutcomes):
-        return(0)
+        return(-4)
 
     # buy some of all outcomes
     # ls-lmsr needs at least a very small initial liquidity
@@ -411,6 +417,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         self.Markets[marketID].numOutcomes = numOutcomes
         self.Markets[marketID].tradingPeriod = tradingPeriod
         self.Markets[marketID].tradingFee = tradingFee
+        self.Markets[marketID].branch = branch
         self.Branches[branch].markets[self.Branches[branch].numMarkets] = marketID
         self.Branches[branch].numMarkets += 1
         return(marketID)
@@ -422,10 +429,14 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         self.Markets[marketID].alpha = 0
         self.Markets[marketID].cumulativeScale = 0
         self.Markets[marketID].numOutcomes = 0
-        return(0)
+        return(-4)
 
 # amount of shares should be fixed point
-# @return 0 if fail, else return price + fee to buy shares
+# @return return price + fee to buy shares
+# Error messages otherwise
+    # -1: invalid outcome or trading closed
+    # -2: entered a -amt of shares
+    # -3: not enough money
 def buyShares(branch, market, outcome, amount):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)  
     # if we have 3-4 cycles in a row of events getting pushed back market would already be closed even though events up to be decided on for a while yet never decided
@@ -435,20 +446,20 @@ def buyShares(branch, market, outcome, amount):
     #if above && the event outcomes aren't determined (0), then yes
     #then set a stalled boolean 
     stalled = 0
-    if (outcome==0 || (self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod && !stalled)):
-        return(0)
+    if (outcome==0 || (self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod && !stalled) || self.Markets[market].branch != branch):
+        return(-1)
     # lmsr cost calcs
     oldCost = lsLmsr(market)
     sharesPurchased(market)[outcome] += amount
     newCost = lsLmsr(market)
     if newCost < oldCost:
         sharesPurchased(market)[outcome] -= amount
-        return(0)
+        return(-2)
     price = (newCost - oldCost)
     
     if(self.cashcoinBalances[tx.origin] < price*(self.Markets[market].tradingFee + 2^64)/2^64):
         sharesPurchased(market)[outcome] -= amount
-        return(0)
+        return(-3)
 
     participantNumber = self.Markets[market].addr2participant[tx.origin]
 
@@ -473,26 +484,30 @@ def buyShares(branch, market, outcome, amount):
 
 # amount is amount of shares to sell
 # instead of inputting particip. num could just loop through array if dont have it
-# @return 0 if fail, returns amount you get paid if success
+# @return error msg if fail, returns amount you get paid if success
+# Error messages otherwise
+    # -1: invalid outcome, trading closed, or you haven't traded in this market
+    # -2: entered a -amt of shares
+    # -3: you own no shares 
 def sellShares(branch, market, outcome, amount):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     participantNumber = self.Markets[market].addr2participant[tx.origin]
-    if (self.Markets[market].participants[participantNumber].participantID != tx.origin || outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod):
-        return(0)
+    if (self.Markets[market].participants[participantNumber].participantID != tx.origin || outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod || self.Markets[market].branch != branch):
+        return(-1)
     # lmsr cost calcs
     oldCost = lsLmsr(market)
     sharesPurchased(market)[outcome] -= amount
     newCost = lsLmsr(market)
     if oldCost <= newCost:
         sharesPurchased(market)[outcome] += amount
-        return(0)
+        return(-2)
     # these prices are in fixed point
     price = oldCost - newCost
     # remove shares from the user's account
     # if user actually doesn't have the shares, revert
     if self.Markets[market].participants[participantNumber].shares[outcome] < amount:
         sharesPurchased(market)[outcome] += amount
-        return(0)
+        return(-3)
     else:
         # send bitcoin from the market to the user acc.
         self.cashcoinBalances[market] -= price
@@ -508,20 +523,24 @@ def sellShares(branch, market, outcome, amount):
         return(price)
 
 # @return amount of shares transferred
+# Error messages otherwise
+    # -1: invalid outcome or you haven't traded in this market
+    # -2: user actually doesn't have the shares
+    # -3: not enough money to transfer the shares 
 def transferShares(branch, market, outcome, amount, to):
     participantNumber = self.Markets[market].addr2participant[tx.origin]
     receiverNumber = self.Markets[market].addr2participant[to]
     if (outcome==0 || self.Markets[market].participants[participantNumber].participantID != tx.origin):
-        return(0)
+        return(-1)
     if(to != self.Markets[market].participants[receiverNumber].participantID):
         receiverNumber = self.Markets[market].currentParticipant
         self.Markets[market].participants[receiverNumber].participantID = to
         self.Markets[market].addr2participant[to] = receiverNumber
         self.Markets[market].currentParticipant += 1
     # remove shares from the user's account
-    # if user actually doesn't have the shares, return 0
+    # if user actually doesn't have the shares, return -2
     if(self.Markets[market].participants[participantNumber].shares[outcome] < amount):
-        return(0)
+        return(-2)
     self.Markets[market].participants[participantNumber].shares[outcome] -= amount
     self.Markets[market].participants[receiverNumber].shares[outcome] += amount
 
@@ -536,7 +555,7 @@ def transferShares(branch, market, outcome, amount, to):
     if((self.balance(tx.origin) >= fee) && self.send(self.Info[market].creator, fee/2) && self.send(branch, fee/2)):
         return(amount)
     else:
-        return(0)
+        return(-3)
 
 # a no vote is -2^64, a yes vote is 2^64 && a can't determine vote is 2^63 (a empty ballot is 0)
 # atm voters who do vote are req. to vote on all things in their respective ballots (rest just auto .5 them)
@@ -930,7 +949,9 @@ def closeMarket(branch, market):
         winningOutcomes = array(200)
         while n < numberEvents:
             fxpOutcome = self.Events[self.Markets[market].events[n]].outcome
-            outcome = fxpOutcome/2^64
+            if(fxpOutcome==0):
+                return(-1)
+            outcome = fxpOutcome/2^64 
             # makes sure it's not a scalar
             if(fxpOutcome==2^63 && numberEvents==1 && !(self.Events[event].maxValue!=1 && self.Events[event].numOutcomes==2)):
                 # return all the $$$ - (@ 50 cents a share)
