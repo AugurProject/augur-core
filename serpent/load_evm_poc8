@@ -1,0 +1,5 @@
+#!/bin/bash
+
+evm=$(cat $1)
+#curl -X POST --data '{"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"data": "0x'$evm'"}],"id":1}' http://localhost:8080
+curl -X POST --data '{"jsonrpc":"2.0","method":"eth_transact","params":[{"data": "0x'$evm'"}],"id":1}' http://localhost:8080
