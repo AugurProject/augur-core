@@ -59,7 +59,9 @@ data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoInd
 # v_size = numReports * numEvents
 # reportsFilled, reportsMask, weightedCenteredData, loadingVector, scores, set1, set2, old,
 # new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
-data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
+# reporters is [reporterID][eventNum]
+# reporthashes is [reporterID] = hash
+data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHashes[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market in the format of
@@ -577,14 +579,27 @@ def transferShares(branch, market, outcome, amount, to):
 # Error messages otherwise
     # -1: report isn't long enough
     # -2: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
-def vote(branch, report:arr, votePeriod):
+def report(branch, report:arr, votePeriod, salt):
     # make sure the branch exists
     repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
-    if(votePeriod):
+    residual = block.number % votePeriod
+    if(residual > (votePeriod/2)):
+        # submit salt and votes
         # need report length to be same as number of items in the current eventexpdates voting period events!
-        residual = block.number % self.Branches[branch]
         if(len(report)!=self.EventsExpDates[branch][votePeriod].numberEvents):
             return(-1)
+
+        realHash = self.EventsExpDates[branch][votePeriod].reportHash[tx.origin]
+        hashInfo = array(len(report) + 2)
+        hashInfo[0] = tx.origin
+        hashInfo[1] = salt
+        i = 2
+        while i < (len(report) + 2):
+            hashInfo[i] = report[i]
+            i += 1
+        reportHash = sha256(hashInfo, items=len(hashInfo))
+        if(reportHash!=realHash):
+            (return(-3))
 
         # if currentExpPeriod is more than 2 periods past the current vote period
         # then there can be no more voting for that voting period
@@ -602,10 +617,38 @@ def vote(branch, report:arr, votePeriod):
         self.EventsExpDates[branch][votePeriod].totalRepReported += reputation
         return(1)
 
+# Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
+# Error -2: not in hash submitting timeframe
+# Python code to get the hash:
+    #from bitcoin import encode
+    #from hashlib import sha256
+    #def sha256list(xs):
+    #    data = ''.join(encode(x, 256, 32) for x in xs)
+    #    hashed = int(sha256(data).hexdigest(), 16)
+    #    if hashed > 2**255:
+    #        return hashed - 2**256
+    #    else:
+    #        return hashed
+def submitReportHash(branch, reportHash, votePeriod):
+    # make sure the branch exists
+    repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
+    residual = block.number % votePeriod
+    currentExpPeriod = (block.number / self.Branches[branch].periodLength)
+    if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
+        return(-1)
+    if(residual < (votePeriod/2)):
+        # submit hash of (tx.origin, salt, Votes[])
+        self.EventsExpDates[branch][votePeriod].reportHash[tx.origin] = reportHash
     else:
-        log(self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].numberEvents)
-        # need report length to be same as number of items in the current eventexpdates voting period events!
-        if(len(report)!=self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].numberEvents):
+        return(-1)
+
+# for ui client side
+# @return 1 if success
+# Error messages otherwise
+    # -1: report isn't long enough
+    # -2: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
+def checkReportValidity(branch, report:arr, votePeriod):
+       if(len(report)!=self.EventsExpDates[branch][votePeriod].numberEvents):
             return(-1)
 
         # if currentExpPeriod is more than 2 periods past the current vote period
@@ -614,15 +657,43 @@ def vote(branch, report:arr, votePeriod):
         # (>=2 periods past mean the events have exp. & people have had 1 full period to vote)
         # currently requires events to expire to vote
         currentExpPeriod = (block.number / self.Branches[branch].periodLength)
-        if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin || currentExpPeriod >= (self.Branches[branch].currentVotePeriod+2) || currentExpPeriod < (self.Branches[branch].currentVotePeriod+1)):
+        if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
             return(-2)
+        else:
+            return(1)
 
-        reputation = self.Reporting[branch].reputation[repIndex].repValue
-        # need to update stuff for quorem
-        # && store the report && the rep value
-        save(self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].reporters[tx.origin][0], report, items=len(report))
-        self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].totalRepReported += reputation
-        return(1)
+# anti cheat provide ballot and randomNum mechanism steal deposit
+def slashRep(branch, votePeriod, salt, report:arr, reporter):
+        realHash = self.EventsExpDates[branch][votePeriod].reportHash[reporter]
+        hashInfo = array(len(report) + 2)
+        hashInfo[0] = reporter
+        hashInfo[1] = salt
+        i = 2
+        while i < (len(report) + 2):
+            hashInfo[i] = report[i]
+            i += 1
+        reportHash = sha256(hashInfo, items=len(hashInfo))
+        if(reportHash!=realHash):
+            return(0)
+        else:
+            reporterIndex = self.Reporting[branch].repIDtoIndex[reporter]
+            trutherIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
+            # if the truther's rep. account doesn't exist, make one
+            if(self.Reporting[branch].reputation[trutherIndex].reporterID!=tx.origin):
+                trutherIndex = self.Reporting[branch].numberReporters
+                self.Reporting[branch].repIDtoIndex[tx.origin] = trutherIndex
+                self.Reporting[branch].reputation[trutherIndex].repValue = 0
+                self.Reporting[branch].reputation[trutherIndex].reporterID = tx.origin
+                self.Reporting[branch].numberReporters += 1
+
+            if(self.Reporting[branch].reputation[reporterIndex].reporterID!=reporter):
+                return(-2)
+                
+            reporterBalance = self.Reporting[branch].reputation[reporterIndex].repValue
+
+            self.Reporting[branch].reputation[reporterIndex].repValue -= reporterBalance
+            self.Reporting[branch].reputation[trutherIndex].repValue += value*2^58 / 2^64
+        return(value)
 
 # returns whether a quorem has a matured event
 # if there aren't enough events in a vote period eventsexpdate, push them to the current period and increment the vote period
@@ -1374,6 +1445,8 @@ def api(dataStructure, itemNumber, arrayIndex, ID):
             return(self.Branches[ID].periodLength)
         elif(itemNumber==2):
             return(self.Branches[ID].step)
+        elif(itemNumber==3):
+            return(self.Branches[ID].minTradingFee)
     elif(dataStructure==2):
         if(itemNumber==0):
             return(self.Events[ID].branch)
