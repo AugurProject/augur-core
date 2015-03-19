@@ -60,8 +60,8 @@ data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoInd
 # reportsFilled, reportsMask, weightedCenteredData, loadingVector, scores, set1, set2, old,
 # new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
 # reporters is [reporterID][eventNum]
-# reporthashes is [reporterID] = hash
-data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHashes[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
+# reporthash is [reporterID] = hash
+data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market in the format of
@@ -445,14 +445,33 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     # -1: invalid outcome or trading closed
     # -2: entered a -amt of shares
     # -3: not enough money
-def buyShares(branch, market, outcome, amount):
+    # -4: bad nonce/hash
+def buyShares(branch, market, outcome, amount, nonce):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)  
     # if we have 3-4 cycles in a row of events getting pushed back market would already be closed even though events up to be decided on for a while yet never decided
     # technically this is a stalled branch and market should be open
     # if(currentPeriod + 3 >= currentVotePeriod) we're stalled
     #the question is though --- are these events part of the set that were stalled?
     #if above && the event outcomes aren't determined (0), then yes
-    #then set a stalled boolean 
+    #then set a stalled boolean
+
+    hashInfo = array(4)
+    hashInfo[0] = branch
+    hashInfo[1] = market
+    hashInfo[2] = outcome
+    hashInfo[3] = amount
+    hashID = sha3(hashInfo, items=4)
+    log(hashID)
+
+    secondRound = array(2)
+    secondRound[0] = hashID
+    secondRound[1] = nonce
+    finalHash = sha3(secondRound, items=2)
+    log(finalHash)
+    # div by difficulty
+    if(!LT(finalHash, 2^256/10000)):
+        return(-4)
+
     stalled = 0
     if (outcome==0 || (self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod && !stalled) || self.Markets[market].branch != branch):
         return(-1)
@@ -649,7 +668,7 @@ def submitReportHash(branch, reportHash, votePeriod):
     # -2: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
 def checkReportValidity(branch, report:arr, votePeriod):
        if(len(report)!=self.EventsExpDates[branch][votePeriod].numberEvents):
-            return(-1)
+        return(-1)
 
         # if currentExpPeriod is more than 2 periods past the current vote period
         # then there can be no more voting for that voting period

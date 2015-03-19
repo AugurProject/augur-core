@@ -1,11 +1,13 @@
-# sudo pip install struct, hashlib, sha3
+# sudo pip install struct, hashlib, sha3, pybitcointools
 import struct, hashlib
 from sha3 import sha3_256
+from bitcoin import encode, decode
 class Hash:
+    # start nonce
     def __init__(self, nonce):
         self.nonce = nonce
 
-    def hash(self, data, difficulty, steps=1000):
+    def hash(self, branch, market, outcome, amount, difficulty, steps=1000):
             """
             It is formally defined as PoW: PoW(H, n) = BE(SHA3(SHA3(RLP(Hn)) o n))
             where:
@@ -20,7 +22,7 @@ class Hash:
             #difficulty = branch.difficulty
             nonce_bin_prefix = '\x00' * (32 - len(struct.pack('>q', 0)))
             target = 2 ** 256 / difficulty
-            rlp_Hn = data
+            rlp_Hn = encode(branch, 256, 32) + encode(market, 256, 32) + encode(outcome, 256, 32) + encode(amount, 256, 32)
             for nonce in range(self.nonce, self.nonce + steps):
                 nonce_bin = nonce_bin_prefix + struct.pack('>q', nonce)
                 # BE(SHA3(SHA3(RLP(Hn)) o n))
@@ -28,10 +30,10 @@ class Hash:
                 #log.debug('nonce found', nonce=nonce, hash=(h.encode('hex') or '0'))
                 l256 = self.big_endian_to_int(h)
                 if l256 < target:
-                    return nonce_bin
+                    return decode(nonce_bin, 256)
             self.nonce = nonce
             return False
-            
+
     @staticmethod
     def sha3(seed):
         return sha3_256(seed).digest()
@@ -43,12 +45,15 @@ class Hash:
         s = string.encode('hex') or '0'
         return long(s, 16) 
 
-    # PoW verification
-    def check__pow(self, metadata, nonce):
+    # PoW verification (done in ethereum)
+    def check__pow(self, branch, market, outcome, amount, nonce):
         assert len(nonce) == 32
         #difficulty = branch.difficulty
-        difficulty = 2
+        difficulty = 10000
+        metadata = encode(branch, 256, 32) + encode(market, 256, 32) + encode(outcome, 256, 32) + encode(amount, 256, 32)
         h = self.sha3(self.sha3(metadata) + nonce)
-        if(market+outcome+branch+amount != metadata):
-            return(0)
         return self.big_endian_to_int(h) < 2 ** 256 / difficulty
+
+#base 256, 32 bytes each (<= 256)
+#encode(val, base, minlen=0)
+#decode(string, base)

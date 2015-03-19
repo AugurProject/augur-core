@@ -1,0 +1,7 @@
+def sha(banana: arr):
+    finalHash = sha3(banana, items=len(banana))
+    if(LT(finalHash, 2^256/10000)):
+        return(-4)
+    else:
+        return(finalHash)
+
