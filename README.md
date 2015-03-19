@@ -38,20 +38,17 @@ augur-serpent
   - e.g. if it falls within the certainty threshold, then it goes to wave 2 of svd else it goes to next period (disputed), if that fails, audit
 - special cfds + public good funding + poss. futarchy
 - make code updatable + work with etherex & chow (bitsquare, coineffine other decentralized exchanges as well)
-- stablecoin
 - VPM
-- allow people to set market base currencies
-- separate Branches might compete over different parameter-families, it may be advantageous for the blockchain itself to impose “Reasonable Bounds” on possible choices for parameters. Branches themselves may impose “Reasonable Bounds” on Market-specific parameters, (content-tags, trading/audit fees).
+- allow people to set market base currencies - is this what V meant by mult. currency support
 - With these conditions: [1] Stalled Branch, [2] Decision-Author’s signature, one can move an event to a new Branch (use ecVerify serpent function)
 
 ### Version 0.4 (Awesome fun stuff - April):
 - go over stuff in close and redeem txs
 - make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
 - reward whoever does close market according to gas cost (pay gas fee in cashcoin to miner)
-- hash first frontrunning prevention mechanism or pow
+- frontrunning prevention pow
 - p+e fix?
-- how did V propose we support mult. currencies?
-- limit orders in UI if price > or < a number and maximum amount of money (or shares?) you're willing to spend for buy, max shares to sell for sell
+- limit orders in UI if price > or < a number and maximum amount of money (or shares?) you're willing to spend for buy, max shares to sell for sell - but what about real on chain limit orders?
 	
 ### Version 0.3 (The Voting Upgrade - March):
 - salt hash vote mechanism
