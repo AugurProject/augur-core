@@ -21,7 +21,7 @@ class Hash:
             """
             #difficulty = branch.difficulty
             nonce_bin_prefix = '\x00' * (32 - len(struct.pack('>q', 0)))
-            target = 2 ** 256 / difficulty
+            target = 2 ** 254 / difficulty
             rlp_Hn = encode(branch, 256, 32) + encode(market, 256, 32) + encode(outcome, 256, 32) + encode(amount, 256, 32)
             for nonce in range(self.nonce, self.nonce + steps):
                 nonce_bin = nonce_bin_prefix + struct.pack('>q', nonce)
@@ -52,7 +52,7 @@ class Hash:
         difficulty = 10000
         metadata = encode(branch, 256, 32) + encode(market, 256, 32) + encode(outcome, 256, 32) + encode(amount, 256, 32)
         h = self.sha3(self.sha3(metadata) + nonce)
-        return self.big_endian_to_int(h) < 2 ** 256 / difficulty
+        return self.big_endian_to_int(h) < 2 ** 254 / difficulty
 
 #base 256, 32 bytes each (<= 256)
 #encode(val, base, minlen=0)
