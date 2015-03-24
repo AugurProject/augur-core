@@ -3,6 +3,7 @@ augur-serpent
 
 ### To do:
 - min/max fxp? & 1,2 or 2^64 and 2*2^64 - should probably support fxp
+- make sure no rounding errors @ Chris
 
 ### Bugs:
 - what if a scalar has a .5 actual value outcome
@@ -26,6 +27,10 @@ augur-serpent
 - metadata off chain
 - events
 
+### Once eth supports it:
+- reward whoever does close market according to gas cost (pay gas fee in cashcoin to miner)
+- make code updatable + work with etherex & chow (bitsquare, coineffine other decentralized exchanges as well)
+
 ### Version 0.5 (More fun features - May and Beyond):
 - if no agreement on any outcome <65% or whatever confidence (failure to achieve certainty) this confidence is *of the rep reported* (consensus needs to take this as a param), then do over next voting period
   - have consensus push all into next voting period (this is currently known as disputed)
@@ -36,8 +41,7 @@ augur-serpent
   - audits have a fee
 - two wave svd before audits?
   - e.g. if it falls within the certainty threshold, then it goes to wave 2 of svd else it goes to next period (disputed), if that fails, audit
-- special cfds + public good funding + poss. futarchy
-- make code updatable + work with etherex & chow (bitsquare, coineffine other decentralized exchanges as well)
+- public good funding + poss. futarchy
 - VPM
 - allow people to set market base currencies - is this what V meant by mult. currency support
 - With these conditions: [1] Stalled Branch, [2] Decision-Author’s signature, one can move an event to a new Branch (use ecVerify serpent function)
@@ -45,6 +49,4 @@ augur-serpent
 ### Version 0.4 (Awesome fun stuff - April):
 - go over stuff in close and redeem txs
 - make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
-- reward whoever does close market according to gas cost (pay gas fee in cashcoin to miner)
-- p+e fix?
 - limit orders in UI if price > or < a number and maximum amount of money (or shares?) you're willing to spend for buy, max shares to sell for sell - but what about real on chain limit orders?
