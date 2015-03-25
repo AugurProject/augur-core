@@ -39,12 +39,12 @@ data Info[](description[2048], descriptionLength, creator, creationFee)
 data Branches[](currentVotePeriod, periodLength, step, markets[], numMarkets, minTradingFee)
 
 # Events' index is the eventID
-# a binary outcome has 0 for min && 1 for max value, but consensus will return 1 and 2 respectively
-# so for voting 1 and 2 need to be given for binaries, not 0 & 1
+# a binary outcome has 0 for min && 1 for max value, but consensus will return 2^64 and 2^65 respectively
+# so for voting 1 and 2 in fxp. need to be given for binaries, not 0 & 1
 # S&P 500 scalar would be say 0 && 4700, respectively
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
-# need outcomes returned as 1*2^64, 2*2^64, etc... .5 as 2^63
+# need outcomes returned as 1*2^64, 2*2^64, etc... indeterminate as 3*2^63
 data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
 
 # Reporting index is the branchID
@@ -593,7 +593,7 @@ def transferShares(branch, market, outcome, amount, to):
     else:
         return(-3)
 
-# a no vote is -2^64, a yes vote is 2^64 && a can't determine vote is 2^63 (a empty ballot is 0)
+# a no vote is -2^64, a yes vote is 2^64 && a can't determine vote is 3*2^63 (a empty ballot is 0)
 # atm voters who do vote are req. to vote on all things in their respective ballots (rest just auto .5 them)
 # ui should handle this by filling in things you didn't vote on automatically & ask to be sure you didn't want to vote on them
 # UI makeBallot function does this
@@ -610,8 +610,8 @@ def transferShares(branch, market, outcome, amount, to):
 def report(branch, report:arr, votePeriod, salt):
     # make sure the branch exists
     repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
-    residual = block.number % votePeriod
-    if(residual > (votePeriod/2)):
+    residual = block.number % self.Branches[branch].periodLength
+    if(residual > self.Branches[branch].periodLength/2):
         # submit salt and votes
         # need report length to be same as number of items in the current eventexpdates voting period events!
         if(len(report)!=self.EventsExpDates[branch][votePeriod].numberEvents):
@@ -660,13 +660,14 @@ def report(branch, report:arr, votePeriod, salt):
 def submitReportHash(branch, reportHash, votePeriod):
     # make sure the branch exists
     repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
-    residual = block.number % votePeriod
+    residual = block.number % self.Branches[branch].periodLength
     currentExpPeriod = (block.number / self.Branches[branch].periodLength)
     if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
         return(-1)
-    if(residual < (votePeriod/2)):
+    if(residual < self.Branches[branch].periodLength/2):
         # submit hash of (tx.origin, salt, Votes[])
         self.EventsExpDates[branch][votePeriod].reportHash[tx.origin] = reportHash
+        return(1)
     else:
         return(-1)
 
@@ -1019,7 +1020,7 @@ def redeem(branch):
             eventID = self.EventsExpDates[branch][currentVotePeriod].events[n]
             # then take outcomes_final && set each event outcome
             self.Events[eventID].outcome = outcomesFinal[n]
-            if(outcomesFinal[n]!=2^63):
+            if(outcomesFinal[n]!=3*2^63):
                 # return bond
                 self.cashcoinBalances[eventID] -= 42*2^64
                 self.cashcoinBalances[self.Info[eventID].creator] += 42*2^64
@@ -1027,12 +1028,14 @@ def redeem(branch):
                 # give event bond money to reporters
                 self.cashcoinBalances[eventID] -= 42*2^64
                 self.cashcoinBalances[branch] += 42*2^64
+            n += 1
         # need to loop through rep holders && distribute 50% of branch fees to reporters' cashcoin addresses 
         # also need to take reporterBonus && redistribute reputation in the Reporting structure accordingly
         z = 0
         while z < numReports:
             self.Reporting[branch].reputation[z].repValue = (reporterBonus[z]*21000000)/2^64
             self.cashcoinBalances[self.Reporting[branch].reputation[z].reporterID] += self.cashcoinBalances[branch]*reporterBonus[z] / 2^64
+            z += 1
         self.Branches[branch].currentVotePeriod += 1
         self.cashcoinBalances[branch] -= self.cashcoinBalances[branch]
         self.Branches[branch].step = 0
@@ -1065,17 +1068,17 @@ def closeMarket(branch, market):
                 return(-2)
             outcome = fxpOutcome/2^64 
             # makes sure it's not a scalar
-            if(fxpOutcome==2^63 && numberEvents==1 && !(self.Events[event].maxValue!=1 && self.Events[event].numOutcomes==2)):
+            if(fxpOutcome==3*2^63 && numberEvents==1 && !(self.Events[event].maxValue!=1 && self.Events[event].numOutcomes==2)):
                 # return all the $$$ - (@ 50 cents a share)
                 i = 0
                 while i < self.Markets[market].currentParticipant:
                     sharesOwnedOne = self.Markets[market].participants[i].shares[1]
                     sharesOwnedTwo = self.Markets[market].participants[i].shares[2]
                     participant = self.Markets[market].participants[i].participantID
-                    self.cashcoinBalances[market] -= sharesOwnedOne*2^63 / 2^64
-                    self.cashcoinBalances[participant] += sharesOwnedOne*2^63 / 2^64
-                    self.cashcoinBalances[market] -= sharesOwnedTwo*2^63 / 2^64
-                    self.cashcoinBalances[participant] += sharesOwnedTwo*2^63 / 2^64
+                    self.cashcoinBalances[market] -= sharesOwnedOne*3*2^63 / 2^64
+                    self.cashcoinBalances[participant] += sharesOwnedOne*3*2^63 / 2^64
+                    self.cashcoinBalances[market] -= sharesOwnedTwo*3*2^63 / 2^64
+                    self.cashcoinBalances[participant] += sharesOwnedTwo*3*2^63 / 2^64
                     i += 1
 
                 # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
@@ -1094,14 +1097,14 @@ def closeMarket(branch, market):
                 return(-2)
             if(n==0):
                 #scalar or .5
-                if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || fxpOutcome==2^63):
+                if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || fxpOutcome==3*2^63):
                     winningOutcomes[0] = 1
                     winningOutcomes[1] = 2
                 # anything besides scalar or .5
                 else:
                     winningOutcomes[0] += outcome
             elif(n==1):
-                if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || fxpOutcome==2^63):
+                if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || fxpOutcome==3*2^63):
                     # scalar, scalar
                     if(winningOutcomes[1]):
                         winningOutcomes[2] = 3
@@ -1118,7 +1121,7 @@ def closeMarket(branch, market):
                 else:
                     winningOutcomes[0] += self.Events[self.Markets[market].events[n-1]].numOutcomes*(outcome-1)
             elif(n==2):
-                if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || fxpOutcome==2^63):
+                if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || fxpOutcome==3*2^63):
                     #scalar, scalar, scalar
                     if(winningOutcomes[3]):
                         winningOutcomes[4] = 5
@@ -1238,14 +1241,14 @@ def closeMarket(branch, market):
             # first is low-low && whatever, second is high-low, third is low-high, fourth is high-high
             scalarOne = -1
             scalarTwo = -1
-            if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==2^63):
+            if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==3*2^63):
                 scalarOne = 0
-            if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==2^63):
+            if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==3*2^63):
                 if(scalarOne == -1):
                     scalarOne = 0
                 else:
                     scalarTwo = 1
-            elif((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==2^63):
+            elif((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==3*2^63):
                 scalarTwo = 2
             outcomeOne = self.Events[self.Markets[market].events[scalarOne]].outcome
             minValueOne = self.Events[self.Markets[market].events[scalarOne]].minValue
@@ -1307,11 +1310,11 @@ def closeMarket(branch, market):
         elif(winningOutcomes[1]):
             # look for the scalar
             scalar = 0
-            if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==2^63):
+            if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==3*2^63):
                 scalar = 0
-            elif((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==2^63):
+            elif((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==3*2^63):
                 scalar = 1
-            elif((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==2^63):
+            elif((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==3*2^63):
                 scalar = 2
             outcome = self.Events[self.Markets[market].events[scalar]].outcome
             minValue = self.Events[self.Markets[market].events[scalar]].minValue
@@ -1695,6 +1698,17 @@ def getBranchInfo(branch):
     info[4] = self.Branches[branch].step
     info[5] = self.Branches[branch].numMarkets
     return(info: arr)
+
+def hashReport(report: arr, salt):
+        hashInfo = array(len(report) + 2)
+        hashInfo[0] = tx.origin
+        hashInfo[1] = salt
+        i = 2
+        while i < (len(report) + 2):
+            hashInfo[i] = report[i]
+            i += 1
+        reportHash = sha256(hashInfo, items=len(hashInfo))
+        return(reportHash)
 
 inset('fx_macros.se')
 inset('consensus.se')
