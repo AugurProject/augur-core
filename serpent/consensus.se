@@ -23,8 +23,12 @@
 # Questions?  Please contact jack@tinybike.net or joeykrug@gmail.com.
 
 macro ONE: 2^64
-macro TWO: 2^65
-macro HALF: 2^63
+
+macro YES: 2^65
+macro NO: 2^64
+macro BAD: 3 * 2^63
+
+macro CATCH_TOLERANCE: 2^64 / 10
 
 # Sum elements of array
 macro sum($a):
@@ -60,9 +64,16 @@ macro get_weight($a):
                             $i += 1
                         $wt
 
-# Bins values to -1, 0, and 1
+# Bins values to 1, 1.5, 2
 macro catch($x):
-    if($x < -(ONE / 10), -(ONE), if($x > (ONE / 10), ONE, 0))
+    if($x < (BAD - CATCH_TOLERANCE), NO, if($x > BAD + CATCH_TOLERANCE, YES, BAD))
+    # if $x < BAD - CATCH_TOLERANCE:
+    #     c = NO
+    # elif $x > BAD + CATCH_TOLERANCE:
+    #     c = YES
+    # else:
+    #     c = BAD
+    # c
 
 # Absolute value of all array elements
 macro array_abs($a):
@@ -242,9 +253,9 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                             while i < num_events:
                                 with j = 0:
                                     while j < num_reports:
-                                        with idx = i + j*num_reports:
-                                            if reports[idx] == 0:
-                                                scaled_reports[idx] = 0
+                                        with idx = i + j*num_events:
+                                            if reports[idx] == NA:
+                                                scaled_reports[idx] = NA
                                             else:
                                                 if scaled[i] == 1:
                                                     scaled_reports[idx] = fixed_divide(reports[idx] - scaled_min[i], scaled_max[i] - scaled_min[i])
@@ -258,7 +269,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                             with missing_values = 0:
                                 with i = 0:
                                     while i < flatsize:
-                                        if reports[i] == 0:
+                                        if reports[i] == NA:
                                             reports_interp[i + flatsize] = ONE # reports_mask
                                             missing_values += 1
                                         else:
@@ -270,7 +281,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                             while i < num_events:
                                                 with j = 0:
                                                     while j < num_reports:
-                                                        if reports[i + j*num_reports] != 0:
+                                                        if reports[i + j*num_reports] != NA:
                                                             num_present[i] += 1
                                                         j += 1
                                                 i += 1
@@ -286,7 +297,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                                                             with j = 0:
                                                                                 while j < num_reports:
                                                                                     with idx = i + j*num_reports:
-                                                                                        if scaled_reports[idx] == 0:
+                                                                                        if scaled_reports[idx] == NA:
                                                                                             nan_indices[nan_index] = idx
                                                                                             nan_index += 1
                                                                                         else:
@@ -558,7 +569,7 @@ def participation(outcomes_final:arr, smooth_rep:arr, reports_mask:arr, num_repo
                         with total = 0:
                             with j = 0:
                                 while j < num_events:
-                                    total += reports_mask[i*num_events + j]
+                                    total += [i*num_events + j]
                                     j += 1
                                 participation_reports[i] = ONE - total / num_events
                         i += 1
@@ -572,6 +583,7 @@ def participation(outcomes_final:arr, smooth_rep:arr, reports_mask:arr, num_repo
                             # Bringing it all together!
                             with reporter_bonus = array(num_reports):
                                 with na_bonus_reports = get_weight(participation_reports):
+                                    # log_array(na_bonus_reports)
                                     with i = 0:
                                         while i < num_reports:
                                             reporter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], ONE - participation)
