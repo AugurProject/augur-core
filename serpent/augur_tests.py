@@ -25,7 +25,7 @@ with timer():
             print yellow("\taugur.faucet: ", cyan("Success"))
             print yellow("\t\tgas used: ", cyan(result['gas']))
             result = augur.balance(addr, profiling=True)
-            print yellow("\taugur.balance: ",cyan(result['output']))
+            print yellow("\taugur.balance: ",cyan(result['output']/float(1<<64)))
             print yellow("\t\tgas used: ", cyan(result['gas']))
 
     with timer():
@@ -37,12 +37,13 @@ with timer():
                     "Sent 1 cashcoin from ",
                     pretty_address(addr),
                     " to ",
-                    pretty_address(to)) 
+                    pretty_address(to))
 
     with timer():
         print title('Testing CreateSubBranch')
-        subbranch = augur.createSubbranch('test branch', 100, 1010101, 2**57)
-        addr = addresses[0]
+        addr = addresses[1]
+        key = addr2key[addr]
+        subbranch = augur.createSubbranch('test branch', 100, 1010101, 2**57, sender=key)
         print yellow(
                 'Created subbranch ',
                 pretty_address(subbranch),
@@ -51,45 +52,52 @@ with timer():
 
     with timer():
         print title('Testing CreateEvent')
+        addr = addresses[2]
+        key = addr2key[addr]
         event1 = augur.createEvent(
             subbranch,                                           #branch 
-            'Will Jack grow at least an inch in March 2015?',  #description
-            5*5,                                                 #expiration block
+            '"Will Jack grow at least an inch in March 2015?"',  #description
+            5*5*1000,                                            #expiration block
             0,                                                   #min value (binary)
             1,                                                   #max value
-            2)                                                   #number of outcomes
+            2,                                                   #number of outcomes
+            sender=key)
         event2 = augur.createEvent(
             subbranch,
             '''\
-What will Jack's height be, from 60 to 72 inches, 
-at noon PST on April 1st, 2015?''',
-            5*5,
+"What will Jack's height be, from 60 to 72 inches, 
+at noon PST on April 1st, 2015?"''',
+            5*5*1000,
             60,                                                   #scalar event!
             72,
-            2)
+            2,
+            sender=key)
         print yellow(
                 'Created events ',
                 pretty_address(event1),
                 ' and ',
                 pretty_address(event2),
                 ' with creator ',
-                pretty_address(addresses[0]),
+                pretty_address(addr),
         )
 
     with timer():
         print title('Testing CreateMarket')
+        addr = addresses[3]
+        key = addr2key[addr]
         market = augur.createMarket(
             subbranch,                                       #branch
-            'Market on events %d & %d' % (event1, event2), #events
+            '"Market on events %d & %d"' % (event1, event2), #events
             1 << 60,                                         #alpha
             10 << 70,                                        #fixedpoint initial liquidity
             1 << 58,                                         #trading fee
-            [event1, event2])                                #array of events
+            [event1, event2],                                #array of events
+            sender=key)
         print yellow(
                 'Created market ',
                 pretty_address(market),
                 ' with creator ',
-                pretty_address(addresses[0]))
+                pretty_address(addr))
 
     def lslmsr(q_, i, a):
         assert q_[i] + a >= 0
@@ -107,18 +115,21 @@ at noon PST on April 1st, 2015?''',
         else:
             return (C1 - C2)*0.984375
 
+    bought = defaultdict(lambda : [0]*4)
+    shares = [640/(1+12/16.*gmpy2.log(4))]*4
+    transaction_nonce = defaultdict(int)
     with timer():
         print title('Testing BuyShares')
-        bought = defaultdict(lambda : [0]*4)
-        shares = [640/(1+12/16.*gmpy2.log(4))]*4
         for i in range(50):
             addr = random.choice(addresses)
             key = addr2key[addr]
             outcome = random.randrange(4)
             amt = random.randrange(1, 3)
             expected1 = lslmsr(shares, outcome, amt)
+            nonce = trade_pow(subbranch, market, addr, transaction_nonce[addr])
+            transaction_nonce[addr] += 1
             expected2 = augur.price(market, outcome + 1)
-            cost = augur.buyShares(subbranch, market, outcome + 1, amt << 64, sender=key)
+            cost = augur.buyShares(subbranch, market, outcome + 1, amt << 64, nonce, sender=key)
             shares[outcome] += amt
             print yellow(
                 pretty_address(addr),
@@ -128,12 +139,12 @@ at noon PST on April 1st, 2015?''',
                 cyan(outcome + 1),
                 " for ",
                 dim_red(cost/float(1 << 64)))
-            print yellow("expected cost: ", cyan(expected1))
+            print yellow("expected cost: ", cyan(float(expected1)))
             print yellow(
                 "approximate expected cost per share: ",
                 cyan(expected2/float(1 << 64)))
             bought[addr][outcome] += amt
-        
+
     with timer():
         print title('Testing SellShares')
         while bought:
@@ -143,7 +154,9 @@ at noon PST on April 1st, 2015?''',
             amt = random.randrange(1, bought[addr][outcome]+1)
             expected1 = lslmsr(shares, outcome, -amt)
             expected2 = augur.price(market, outcome + 1)
-            paid = augur.sellShares(subbranch, market, outcome + 1, amt << 64, sender=key)
+            nonce = trade_pow(subbranch, market, addr, transaction_nonce[addr])
+            transaction_nonce[addr] += 1
+            paid = augur.sellShares(subbranch, market, outcome + 1, amt << 64, nonce, sender=key)
             shares[outcome] -= amt
             print yellow(
                 pretty_address(addr),
@@ -153,7 +166,7 @@ at noon PST on April 1st, 2015?''',
                 cyan(outcome + 1),
                 " for ",
                 dim_red(paid/float(1 << 64)))
-            print yellow("expected payment: ", cyan(expected1))
+            print yellow("expected payment: ", cyan(float(expected1)))
             print yellow(
                 "approximate expected cost per share: ",
                 cyan(expected2/float(1 << 64)))
