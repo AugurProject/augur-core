@@ -79,6 +79,8 @@ data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
 data cashcoinBalances[]
 
+data nonces[]
+
 data branchList[]
 
 data branchListCount
@@ -324,6 +326,9 @@ macro numOutcomes($marketID):
 macro sharesPurchased($marketID):
     market($marketID).sharesPurchased
 
+macro particpant($marketID, $addr):
+    market($marketID).participants[$addr]
+
 macro Bq($marketID):
    alpha($marketID) * cumScale($marketID) * sumList(sharesPurchased($marketID), 1, numOutcomes($marketID)) / 2**64
 
@@ -439,6 +444,21 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         self.Markets[marketID].numOutcomes = 0
         return(-4)
 
+macro bad_pow():
+    with $data = array(4):
+        $data[0] = branch
+        $data[1] = market
+        $data[2] = tx.origin
+        $data[3] = self.nonces[tx.origin]
+        with $firstHash = sha3($data, items=4):
+            with $data2 = array(2):
+                $data2[0] = $firstHash
+                $data2[1] = nonce
+                ~lt(sha3($data2, items=2), 2**254/10000)
+
+macro inc_nonce():
+    self.nonces[tx.origin] += 1
+
 # amount of shares should be fixed point
 # @return return price + fee to buy shares
 # Error messages otherwise
@@ -455,24 +475,9 @@ def buyShares(branch, market, outcome, amount, nonce):
     #if above && the event outcomes aren't determined (0), then yes
     #then set a stalled boolean
 
-    hashInfo = array(4)
-    hashInfo[0] = branch
-    hashInfo[1] = market
-    hashInfo[2] = outcome
-    hashInfo[3] = amount
-    hashID = sha3(hashInfo, items=4)
-
-    secondRound = array(2)
-    secondRound[0] = hashID
-    secondRound[1] = nonce
-    finalHash = sha3(secondRound, items=2)
-
-    # div by difficulty
-    if(finalHash < 0):
-        finalHash = finalHash % 2^256
-    if(!(finalHash < 2^254/10000)):
+    if bad_pow():
         return(-4)
-
+    inc_nonce()
     stalled = 0
     if (outcome==0 || (self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod && !stalled) || self.Markets[market].branch != branch):
         return(-1)
@@ -518,25 +523,9 @@ def buyShares(branch, market, outcome, amount, nonce):
     # -2: entered a -amt of shares
     # -3: you own no shares 
 def sellShares(branch, market, outcome, amount, nonce):
-    hashInfo = array(4)
-    hashInfo[0] = branch
-    hashInfo[1] = market
-    hashInfo[2] = outcome
-    hashInfo[3] = amount
-    hashID = sha3(hashInfo, items=4)
-
-    secondRound = array(2)
-    secondRound[0] = hashID
-    secondRound[1] = nonce
-    finalHash = sha3(secondRound, items=2)
-
-    # div by difficulty
-    if(finalHash < 0):
-        finalHash = finalHash % 2^256
-    if(!(finalHash < 2^254/10000)):
+    if bad_pow():
         return(-4)
-
-
+    inc_nonce()
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     participantNumber = self.Markets[market].addr2participant[tx.origin]
     if (self.Markets[market].participants[participantNumber].participantID != tx.origin || outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod || self.Markets[market].branch != branch):

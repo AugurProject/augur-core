@@ -7,6 +7,8 @@ except ImportError:
 from cStringIO import StringIO as _StringIO
 from contextlib import contextmanager as _contextmanager
 from collections import OrderedDict
+from bitcoin import encode, decode
+from sha3 import sha3_256 as sha3
 import logging
 import types
 import time
@@ -129,3 +131,17 @@ def timer():
     yield
     result = dim_yellow('Finished in %f seconds.')
     print result % (time.time() - start)
+
+def trade_pow(branch, market, address, trade_nonce, difficulty=10000):
+    nonce = 0
+    target = 2**254/difficulty
+    address = decode(address, 16)
+    data = [branch, market, address, trade_nonce]
+    encoder = lambda x: encode(x, 256, 32)
+    decoder = lambda x: decode(x, 256)
+    first_hash = sha3(''.join(map(encoder, data))).digest()
+    while True:
+        h = decoder(sha3(first_hash+encoder(nonce)).digest())
+        if h < target:
+            return nonce
+        nonce += 1
