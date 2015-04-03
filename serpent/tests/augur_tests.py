@@ -6,7 +6,7 @@ import random
 
 gmpy2.get_context().precision = 256
 
-FILE = 'augur.se'
+FILE = '../augur.se'
 
 with timer():
     print title('Starting Tests', dim=False)
