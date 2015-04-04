@@ -231,10 +231,26 @@ def main():
         loading_vector = result[v_size:].tolist()
 
         arglist = [loading_vector, weighted_centered_data, reputation_fixed, num_reports, num_events]
+
+        lv = np.array(map(unfix, result[v_size:-1]))
+        wcd = np.array(fold(map(unfix, weighted_centered_data), num_events))
+        R = np.diag(map(unfix, reputation_fixed))
+
+        import pdb; pdb.set_trace()
+
         while loading_vector[num_events] > 0:
             loading_vector = c.pca_loadings(*arglist)
             arglist[0] = loading_vector
-            # display(loading_vector, "Loadings %i:" % loading_vector[num_events], show_all=True)
+            # Compare to Python version (lv)
+            lv = R.dot(wcd).dot(lv).dot(wcd)
+            percent_error = np.max(abs(lv - np.array(map(unfix, loading_vector[:-1]))) / lv)
+            assert(percent_error < tolerance)
+            # display(loading_vector, "Loadings:", show_all=True)
+
+        unfixed_lv = np.array(map(unfix, loading_vector))
+        print unfixed_lv / np.sqrt(np.sum(unfixed_lv**2))
+        sys.exit(0)
+        # display(loading_vector, "Loadings %i:" % loading_vector[num_events], show_all=True)
 
         arglist = [loading_vector, weighted_centered_data, num_reports, num_events]
         scores = c.pca_scores(*arglist)
