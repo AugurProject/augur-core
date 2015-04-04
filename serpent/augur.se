@@ -1710,5 +1710,36 @@ def hashReport(report: arr, salt):
         reportHash = sha256(hashInfo, items=len(hashInfo))
         return(reportHash)
 
+# @return cost - how much it costs you to buy
+#         price - current share price of that outcome after buy
+def getSimulatedBuy(market, outcome):
+    # lmsr cost calcs
+    oldCost = lsLmsr(market)
+    sharesPurchased(market)[outcome] += amount
+    newCost = lsLmsr(market)
+    if newCost <= oldCost:
+        sharesPurchased(market)[outcome] -= amount
+        return(-2)
+    cost = (newCost - oldCost)
+    price = self.price(market, outcome)
+    sharesPurchased(market)[outcome] -= amount
+    return(cost, price)
+
+# @return cost - how much you get paid to sell
+#         price - current share price of that outcome after sell
+def getSimulatedSell(market, outcome):
+    # lmsr cost calcs
+    oldCost = lsLmsr(market)
+    sharesPurchased(market)[outcome] -= amount
+    newCost = lsLmsr(market)
+    if oldCost <= newCost:
+        sharesPurchased(market)[outcome] += amount
+        return(-2)
+    # these prices are in fixed point
+    cost = oldCost - newCost
+    price = self.price(market, outcome)
+    sharesPurchased(market)[outcome] += amount
+    return(cost, price)
+
 inset('fx_macros.se')
 inset('consensus.se')
