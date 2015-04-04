@@ -365,7 +365,7 @@ def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scale
 
 def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr, num_reports, num_events):
     with lflatsize = len(loading_vector):
-        with s = array(num_events):
+        with s = array(lflatsize):
             with j = 0:
                 while j < num_reports:
                     with d_dot_lv = 0:
@@ -373,35 +373,14 @@ def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr,
                             while k < num_events:
                                 d_dot_lv += weighted_centered_data[j*num_events + k] * loading_vector[k]
                                 k += 1
-                            d_dot_lv /= ONE
+                        d_dot_lv /= ONE
                         with k = 0:
                             while k < num_events:
-                                s[k] -= d_dot_lv * weighted_centered_data[j*num_events + k] * reputation[j]
+                                s[k] -= d_dot_lv * weighted_centered_data[j*num_events + k] * reputation[j] / ONE^2
                                 k += 1
                     j += 1
-            # loading_vector = normalize(s)
-            # (first rejig s to account for double fixed multiplication in loop)
-            with j = 0:
-                while j < num_events:
-                    s[j] /= 2^128
-                    j += 1
-            with s_dot_s = 0:
-                with j = 0:
-                    while j < num_events:
-                        s_dot_s += s[j] * s[j]
-                        j += 1
-                s_dot_s /= ONE
-                with norm_s = s_dot_s / 2:
-                    with j = 0:
-                        while j < 11:
-                            norm_s = (norm_s + s_dot_s*ONE/norm_s) / 2
-                            j += 1
-                    with j = 0:
-                        while j < num_events:
-                            loading_vector[j] = s[j]*ONE/norm_s
-                            j += 1
-            loading_vector[num_events] -= 1
-            return(loading_vector, items=lflatsize)
+            s[num_events] -= 1
+            return(s, items=lflatsize)
 
 def pca_scores(loading_vector:arr, weighted_centered_data:arr, num_reports, num_events):
     with scores = array(num_reports):
