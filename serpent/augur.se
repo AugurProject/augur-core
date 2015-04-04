@@ -1723,7 +1723,7 @@ def getSimulatedBuy(market, outcome):
     cost = (newCost - oldCost)
     price = self.price(market, outcome)
     sharesPurchased(market)[outcome] -= amount
-    return(cost, price)
+    return([cost, price], items=2)
 
 # @return cost - how much you get paid to sell
 #         price - current share price of that outcome after sell
@@ -1739,7 +1739,7 @@ def getSimulatedSell(market, outcome):
     cost = oldCost - newCost
     price = self.price(market, outcome)
     sharesPurchased(market)[outcome] += amount
-    return(cost, price)
+    return([cost, price], items=2)
 
 inset('fx_macros.se')
 inset('consensus.se')
