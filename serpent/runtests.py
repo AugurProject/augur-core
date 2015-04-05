@@ -48,7 +48,7 @@ pd.set_option("display.width", 1000)
 pd.set_option('display.float_format', lambda x: '%.8f' % x)
 
 # max_iterations: number of blocks required to complete PCA
-max_iterations = 5
+max_iterations = 25
 tolerance = 0.05
 init()
 
@@ -232,17 +232,18 @@ def main():
 
         arglist = [loading_vector, weighted_centered_data, reputation_fixed, num_reports, num_events]
 
-        lv = np.array(map(unfix, result[v_size:-1]))
-        wcd = np.array(fold(map(unfix, weighted_centered_data), num_events))
-        R = np.diag(map(unfix, reputation_fixed))
+        # lv = np.array(map(unfix, result[v_size:-1]))
+        # wcd = np.array(fold(map(unfix, weighted_centered_data), num_events))
+        # R = np.diag(map(unfix, reputation_fixed))
 
         while loading_vector[num_events] > 0:
             loading_vector = c.pca_loadings(*arglist)
             arglist[0] = loading_vector
             # Compare to Python version (lv)
-            lv = R.dot(wcd).dot(lv).dot(wcd)
-            percent_error = np.max(abs(lv - np.array(map(unfix, loading_vector[:-1]))) / lv)
-            assert(percent_error < tolerance)
+            # lv = R * data * lv * data
+            # lv = -R.dot(wcd).dot(lv).dot(wcd)
+            # percent_error = np.max(abs(lv - np.array(map(unfix, loading_vector[:-1]))) / lv)
+            # assert(percent_error < tolerance)
             # display(loading_vector, "Loadings %i:" % loading_vector[num_events], show_all=True)
 
         arglist = [loading_vector, weighted_centered_data, num_reports, num_events]

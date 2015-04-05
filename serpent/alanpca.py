@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-timing tests for emwpca
+Timing tests for AlanPCA (first eigenvector only)
 
 """
 import sys
@@ -23,8 +23,6 @@ MAX_SIZE = 100
 PCA_ITERATIONS = 25
 TIMER_ITERATIONS = 100
 
-times = []
-
 def fix(x):
     return int(x * 0x10000000000000000)
 
@@ -33,16 +31,6 @@ def unfix(x):
 
 def array(size):
     return [0] * size
-
-# Timing decorator (milliseconds)
-def timer(f):
-    def wrapper(*args, **kwargs):
-        start_time = int(round(time.time() * 1000))
-        result = f(*args, **kwargs)
-        end_time = int(round(time.time() * 1000))
-        times.append(end_time - start_time)
-        return result
-    return wrapper
 
 def emwpca(data, weights):
     num_obs = len(weights)
@@ -143,22 +131,32 @@ def main():
             start_time = time.time() * 1000
             lv = emwpca(data, weights)
             time_elapsed.append(time.time() * 1000 - start_time)
-        print "\t->", np.round(np.mean(time_elapsed), 4), "+/-", np.round(np.std(time_elapsed), 4), "ms"
+        print "\t->", np.round(np.mean(time_elapsed), 4), "+/-",
+        print np.round(np.std(time_elapsed), 4), "ms"
         mean_time_elapsed.append(np.mean(time_elapsed))
-        std_time_elapsed.append(np.std(time_elapsed))
+        std_time_elapsed.append(np.std(time_elapsed, ddof=1) / (TIMER_ITERATIONS - 1))
         sizes_used.append(str(k + k))
+    
     mean_time_elapsed = np.array(mean_time_elapsed).astype(float)
     std_time_elapsed = np.array(std_time_elapsed).astype(float)
     sizes_used = np.array(sizes_used).astype(float)
 
     # Plot results and save to file
     plt.figure()
-    plt.plot(sizes_used, mean_time_elapsed, 'o-', linewidth=1.5, color="steelblue")
-    plt.axis([np.min(sizes_used)-1, np.max(sizes_used)+1, np.min(mean_time_elapsed)/1.1, np.max(mean_time_elapsed)*1.1])
+    plt.errorbar(sizes_used,
+                 mean_time_elapsed,
+                 yerr=std_time_elapsed,
+                 fmt='o-',
+                 linewidth=1.5,
+                 color="steelblue")
+    plt.axis([np.min(sizes_used)-1,
+              np.max(sizes_used)+1,
+              0,
+              np.max(mean_time_elapsed)*1.1])
     plt.xlabel("number of reporters + number of events")
-    plt.ylabel("time elapsed")
+    plt.ylabel("time elapsed (ms)")
     plt.grid(True)
-    plt.savefig("alanpca_timing.png")
+    plt.savefig("timing_alanpca_%d.png" % int(round(time.time())))
     plt.show()
 
 if __name__ == '__main__':
