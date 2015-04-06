@@ -175,120 +175,46 @@ def sendReputation(branch, recver, value):
     else:
         return(0)
 
-# @return reputation value        
-def getRepBalance(branch, address):
-    repIndex = self.Reporting[branch].repIDtoIndex[address]
-    if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
-        return(0)
-    return(self.Reporting[branch].reputation[repIndex].repValue)
+# @return all branches
+def getBranches(): 
+    b = 0
+    numBranches = self.branchListCount
+    branches = array(numBranches)
+    while b < numBranches:
+        branches[b] = self.branchList[b]
+        b += 1
+    return(branches: arr)
 
-# period length is given in blocks
-# description format is branchName:description
-# is there some way we can include the description bytes in the sha256 hash?
-# @return branchID if success
-# error messages otherwise
-    # -1: bad input or parent doesn't exist
-    # -2: no money for creation fee or branch already exists
-def createSubbranch(description:str, periodLength, parent, tradingFee):
-    if(periodLength<=0 || !self.Branches[parent].periodLength || description==0):
-        return(-1)
-
-    #upcomingDecisions = 0
-    #a = (block.number / self.Branches[branch].periodLength)
-    #b = a
-    #while b < (a+100):
-    #    upcomingDecisions += self.EventsExpDates[parent][a].numberEvents
-    #    b += 1
-    # turned off for testing
-    #if(upcomingDecisions < 500):
-    #    return(0)
-
-    branchInfo = string((items=7)+len(description))
-    branchInfo[0] = BRANCH                                      #typecode
-    branchInfo[1] = tx.origin                                   #creator address
-    branchInfo[2] = 47*2^64                                     #creation fee
-    branchInfo[3] = periodLength                                #length of voting cycle
-    branchInfo[4] = block.number                                #current block number
-    branchInfo[5] = parent                                      #branchID of parent branch
-    branchInfo[6] = tradingFee
-    mcopy(branchInfo+(items=7), description, len(description))
-    # people can check that these characteristics hash to the ID if they want
-    # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
-    branchID = sha256(branchInfo, chars=len(branchInfo))
-
-    if(self.Info[parent].creator && self.send(parent, 47*2^64) && self.Branches[branchID].periodLength==0):
-        self.Info[branchID].creator = tx.origin
-        self.Info[branchID].creationFee = 47*2^64
-        self.Info[branchID].descriptionLength = len(description)
-        save(self.Info[branchID].description[0], description, chars=len(description))
-        self.Branches[branchID].periodLength = periodLength
-        self.Branches[branchID].minTradingFee = tradingFee
-        # first vote period won't be until after the current (in this case first) basket of things has expired
-        # if floor(blockNum / periodLength) is say 5 and eventsExpDates[5]
-        # the current vote period should be on things from eventsExpDates 4 (when making a new branch this vote period will just fail quorem, and current vote period will be incrememented)
-        # then once blockNum / periodLength is say 6 and eventsExpDates[6]
-        # votePeriod 4 should close and the currentVotePeriod should be from
-        # eventsExpDates 5 (anyone can call the consensus function for voteperiod 4 at this point)
-        self.Branches[branchID].currentVotePeriod = (block.number / periodLength) - 1
+# will return 0s for array values after it's looped through all the ones you 
+# have an actual balance in
+def getReputation(address):
+    if(address):
+        branches = array(2*self.branchListCount)
         i = 0
-        while i < self.Reporting[parent].numberReporters:
-            self.Reporting[branchID].reputation[i].reporterID = self.Reporting[parent].reputation[i].reporterID
-            self.Reporting[branchID].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
-            self.Reporting[branchID].repIDtoIndex[reporterID] = i
-            i+=1
-        self.Reporting[branchID].numberReporters = i
-        self.branchList[self.branchListCount] = branchID
-        self.branchListCount += 1
-        return(branchID)
+        b = 0
+        while i < self.branchListCount:
+            branch = self.branchList[i]
+            balance = self.getRepBalance(branch, address)
+            if(balance!=0):
+                branches[b] = branch
+                branches[b+1] = balance
+                b += 2
+            i += 1
     else:
-        return(-2)
-
-# numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0
-# to 11.0 would be 11 outcomes (if incremented by 0.1)
-# need to make sure these values are ok
-# @return eventID if success
-# error messages otherwise
-    # -1: we're either already past that date, branch doesn't exist, or description is bad
-    # 0: not enough money to pay fees or event already exists 
-def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes):
-    if(self.Branches[branch].periodLength && description!=0 && expDate>block.number):
-        eventinfo = string((items=8)+len(description))
-        eventinfo[0] = EVENT                                        #typecode
-        eventinfo[1] = branch                                       #branchID
-        eventinfo[2] = expDate                                      #expiration date
-        eventinfo[3] = tx.origin                                    #creator address
-        eventinfo[4] = 42*2^64                                      #creation fee
-        eventinfo[5] = minValue                                     #minimum outcome value
-        eventinfo[6] = maxValue                                     #maximum outcome value
-        eventinfo[7] = numOutcomes                                  #number of outcomes
-        mcopy(eventinfo+(items=8), description, len(description))
-        eventID = sha256(eventinfo, chars=len(eventinfo))
-    else:
-        return(-1)
-
-    # fee to ask a question rises if voter participation (rep reported) falls, if it's really high, the fee is lowered (participationFactor is a fixedpoint number)
-    participationFactor = (self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod-2].totalRepReported * 2^64) / self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod-1].totalRepReported
-    if(participationFactor==0):
-        participationFactor = 1
-    # send fee and bond
-    if(self.balance(tx.origin)>=(42*2^64 + participationFactor*45)):
-        if (!self.Info[eventID].creator && !self.Events[eventID].branch && self.send(eventID, 42*2^64) && self.send(branch, participationFactor*45)):
-            self.Info[eventID].creator = tx.origin
-            self.Info[eventID].creationFee = participationFactor*45 # this is not the bond
-            self.Info[eventID].descriptionLength = len(description)
-            save(self.Info[eventID].description[0], description, chars=len(description))
-            self.Events[eventID].branch = branch
-            self.Events[eventID].expirationDate = expDate
-            self.Events[eventID].minValue = minValue
-            self.Events[eventID].maxValue = maxValue
-            self.Events[eventID].numOutcomes = numOutcomes
-            # see which future period it expires in && put the event in that bin
-            # event voting periods - expDate / periodLength gives you the voting period #
-            futurePeriod = (expDate / self.Branches[branch].periodLength)
-            self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
-            self.EventsExpDates[branch][futurePeriod].numberEvents += 1
-            return(eventID)
-        else:
-            return(0)
-
-inset('fx_macros.se')
+        address = tx.origin
+        branches = array(2*self.branchListCount)
+        i = 0
+        b = 0
+        while i < self.branchListCount:
+            branch = self.branchList[i]
+            balance = self.getRepBalance(branch, address)
+            if(balance!=0):
+                branches[b] = branch
+                branches[b+1] = balance
+                b += 2
+            i += 1
+    return(branches: arr)
+    
+def getBranchDesc(branch):
+    length = self.Info[branch].descriptionLength
+    return(load(self.Info[branch].description[0], chars=length): str)

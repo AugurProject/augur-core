@@ -62,5 +62,23 @@ contract = new Contract(address);
 contract.call({"from": coinbase}).faucet().toNumber();
 eth.getCode(address);
 
+3a52e22178b3ecc3bc7f9918fd81973d33c8d10e
+
+> eth.getCode('f29dca2dff273fa528e6045338c8b9c8f9e9c394')
+[{
+    "name": "balance(int256)",
+    "type": "function",
+    "inputs": [{ "name": "address", "type": "int256" }],
+    "outputs": [{ "name": "out", "type": "int256" }]
+},
+{
+    "name": "faucet()",
+    "type": "function",
+    "inputs": [],
+    "outputs": [{ "name": "out", "type": "int256" }]
+}]
+
 
 # need to tell geth how much gas to use
+
+
