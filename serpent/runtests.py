@@ -229,14 +229,22 @@ def main():
         result = np.array(result)
         weighted_centered_data = result[0:v_size].tolist()
 
+        lv = np.array(map(unfix, result[v_size:-1]))
+        wcd = np.array(fold(map(unfix, weighted_centered_data), num_events))
+        wcd_init = wcd
+        rep = map(unfix, reputation_fixed)
+        R = np.diag(rep)
+
+        print BW("Variance:")
+        print "Python: ", np.sum(np.var(wcd, axis=0))
         variance = c.total_variance(weighted_centered_data, num_reports, num_events)
-        print BW("Variance:\t"), unfix(variance)
+        print "Serpent:", unfix(variance)
 
         init_vector = result[v_size:].tolist()
         data = weighted_centered_data
+        evals = []
         for j in range(4):
             loading_vector = init_vector
-            lv = np.array(map(unfix, result[v_size:-1]))
             while loading_vector[num_events] > 0:
                 loading_vector = c.pca_loadings(loading_vector,
                                                 data,
@@ -244,6 +252,7 @@ def main():
                                                 num_reports,
                                                 num_events)
             evalue = c.rayleigh(loading_vector[:-1], data, num_reports, num_events)
+            evals.append(unfix(evalue))
             print BW("Eigenvalue:\t"), unfix(evalue)
             print BW("Component %d:\t" % j), np.array(map(unfix, loading_vector[:-1]))
             data = c.deflate(loading_vector[:-1],
@@ -252,6 +261,10 @@ def main():
                              num_events)
             # percent_error = np.max(abs(lv - np.array(map(unfix, loading_vector[:-1]))) / lv)
             # assert(percent_error < tolerance)
+            lv = R.dot(wcd).dot(lv).dot(wcd)
+            wcd = wcd - wcd.dot(np.outer(lv, lv))
+            # import pdb; pdb.set_trace()
+        evals = np.array(evals)
 
         scores = c.pca_scores(loading_vector, weighted_centered_data, num_reports, num_events)
 

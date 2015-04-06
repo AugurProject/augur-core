@@ -394,19 +394,19 @@ def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scale
 def total_variance(wcd:arr, num_reports, num_events):
     with variance = 0:
         with i = 0:
-            while i < num_reports:
+            while i < num_events:
                 with avg = 0:
                     with var = 0:
                         with j = 0:
-                            while j < num_events:
-                                avg += wcd[i*num_events + j]
+                            while j < num_reports:
+                                avg += wcd[j*num_events + i]
                                 j += 1
-                        avg /= num_events
+                        avg /= num_reports
                         with j = 0:
-                            while j < num_events:
-                                var += (wcd[i*num_events + j] - avg)^2
+                            while j < num_reports:
+                                var += (wcd[j*num_events + i] - avg)^2
                                 j += 1
-                        variance += var / ONE / num_events
+                        variance += var / ONE / num_reports
                 i += 1
             return(variance)
 
@@ -414,22 +414,22 @@ def rayleigh(v:arr, X:arr, num_reports, num_events):
     # v^T X^T X v
     # -----------
     #    v^T v
-    Xv = array(num_reports)
-    num = 0
-    i = 0
-    while i < num_reports:
-        j = 0
-        while j < num_events:
-            Xv[i] += fixed_multiply(X[i], v[j])
-            j += 1
-        num += Xv[i]^2
-        i += 1
-    den = 0
-    j = 0
-    while j < num_events:
-        den += v[j]^2
-        j += 1
-    return(fixed_divide(num, den))
+    with Xv = array(num_reports):
+        with num = 0:
+            with i = 0:
+                while i < num_reports:
+                    with j = 0:
+                        while j < num_events:
+                            Xv[i] += fixed_multiply(X[i], v[j])
+                            j += 1
+                        num += Xv[i]^2
+                        i += 1
+                    with den = 0:
+                        with j = 0:
+                            while j < num_events:
+                                den += v[j]^2
+                                j += 1
+                        return(fixed_divide(num, den))
 
 def pca_loadings(iv:arr, X:arr, reputation:arr, num_reports, num_events):
     with lflatsize = len(iv):
