@@ -56,13 +56,13 @@ def getCreator(ID):
 def getCreationFee(ID):
 	return(self.Info[ID].creationFee)
 
-def setDescription(ID, description: str):
-	save(self.Info[ID].description[0], description, chars=len(description))
-	self.Info[ID].descriptionLength = len(description)
-	return(1)
-
-def setCreator(ID, creator):
-	self.Info[ID].creator = creator
-
-def setCreationFee(ID, fee):
-	self.Info[ID].creationFee = fee
+# @return 1 if success, 0 if creator already exists
+def setInfo(ID, description: str, creator, fee):
+	if(self.Info[ID].creator == 0):
+		save(self.Info[ID].description[0], description, chars=len(description))
+		self.Info[ID].descriptionLength = len(description)
+		self.Info[ID].creationFee = fee
+		self.Info[ID].creator = creator
+		return(1)
+	else:
+		return(0)
