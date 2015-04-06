@@ -20,3 +20,26 @@
 # Any questions please contact joey@augur.net
 
 data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
+
+def getEvent(ID):
+	return(self.p2pBets[ID].eventID)
+
+def getAmtBet(ID):
+	return(self.p2pBets[ID].amtToBet)
+
+def getOutcomeOneBettor(ID):
+	return(self.p2pBets[ID].outcomeOneBettor)
+
+def getOutcomeZeroBettor(ID):
+	return(self.p2pBets[ID].outcomeZeroBettor)
+
+# check that msg.sender is one of our function contracts
+def initializeP2PWager(ID, eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor):
+	if(self.p2pBets[ID].eventID == 0):
+		self.p2pBets[ID].eventID = eventID
+		self.p2pBets[ID].amtToBet = amtToBet
+		self.p2pBets[ID].outcomeOneBettor = outcomeOneBettor
+		self.p2pBets[ID].outcomeZeroBettor = outcomeZeroBettor
+		return(1)
+	else:
+		return(0)
