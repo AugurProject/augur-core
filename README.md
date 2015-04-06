@@ -51,3 +51,5 @@ augur-serpent
 - go over stuff in close and redeem txs
 - make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
 - limit orders in UI if price > or < a number and maximum amount of money (or shares?) you're willing to spend for buy, max shares to sell for sell - but what about real on chain limit orders?
+
+add block num to market and event

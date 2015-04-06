@@ -38,3 +38,64 @@ def init():
     self.Branches[1010101].minTradingFee = 2^57
     self.branchListCount = 1
     self.branchList[0] = 1010101
+
+def getVotePeriod(branch):
+	return(self.Branches[branch].currentVotePeriod)
+
+def getPeriodLength(branch):
+	return(self.Branches[branch].periodLength)
+
+def getStep(branch):
+	return(self.Branches[branch].step)
+
+# @return all markets in a branch
+def getMarkets(branch):
+    numMarkets = self.Branches[branch].numMarkets
+    markets = array(numMarkets)
+    i = 0
+    while i < numMarkets:
+        markets[i] = self.Branches[branch].markets[i]
+        i += 1
+    return(markets: arr)
+
+def getNumMarkets(branch):
+	return(self.Branches[branch].numMarkets)
+
+def getMinTradingFee(branch):
+	return(self.Branches[branch].minTradingFee)
+
+# @return all branches
+def getBranches(): 
+    b = 0
+    numBranches = self.branchListCount
+    branches = array(numBranches)
+    while b < numBranches:
+        branches[b] = self.branchList[b]
+        b += 1
+    return(branches: arr)
+
+def getNumBranches():
+	return(branchListCount)
+
+# check that msg.sender is one of our function contracts
+def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee):
+	if(self.Branches[ID].periodLength==0):
+		self.Branches[ID].currentVotePeriod = currentVotePeriod
+		self.Branches[ID].periodLength = periodLength
+		self.Branches[ID].minTradingFee = minTradingFee
+		self.branchList[branchListCount] = ID
+		branchListCount += 1
+		return(1)
+	else:
+		return(0)
+
+# check that msg.sender is one of our function contracts
+def incrementStep(branch):
+	self.Branches[ID].step += 1
+
+# check that msg.sender is one of our function contracts
+def addMarket(branch, market):
+	numMarkets = self.Branches[branch].numMarkets
+	self.Branches[branch].markets[numMarkets] = market
+	self.Branches[branch].numMarkets += 1
+	return(1)

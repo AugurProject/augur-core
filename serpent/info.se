@@ -58,6 +58,7 @@ def getCreationFee(ID):
 
 # @return 1 if success, 0 if creator already exists
 def setInfo(ID, description: str, creator, fee):
+	# check that msg.sender is one of our function contracts
 	if(self.Info[ID].creator == 0):
 		save(self.Info[ID].description[0], description, chars=len(description))
 		self.Info[ID].descriptionLength = len(description)
