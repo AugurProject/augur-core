@@ -116,9 +116,95 @@ def randomized_inputs(num_reports=50, num_events=25):
     reputation = map(fix, np.random.randint(1, 100, num_reports).ravel().tolist())
     return reports, reputation
 
-def main():
+def time_events():
+    print "Timing AlanPCA (randomized inputs, events only)..."
+    sizes = range(5, MAX_SIZE+1, 5)
+    sizes_used = []
+    mean_time_elapsed = []
+    std_time_elapsed = []
+    for k in sizes:
+        sys.stdout.write("  %dx%d" % (20, k))
+        sys.stdout.flush()
+        data, weights = randomized_inputs(20, k)
+        time_elapsed = []
+        for i in range(TIMER_ITERATIONS):
+            start_time = time.time() * 1000
+            lv = emwpca(data, weights)
+            time_elapsed.append(time.time() * 1000 - start_time)
+        print "\t->", np.round(np.mean(time_elapsed), 4), "+/-",
+        print np.round(np.std(time_elapsed), 4), "ms"
+        mean_time_elapsed.append(np.mean(time_elapsed))
+        std_time_elapsed.append(np.std(time_elapsed, ddof=1) / (TIMER_ITERATIONS - 1))
+        sizes_used.append(str(k))
+    
+    mean_time_elapsed = np.array(mean_time_elapsed).astype(float)
+    std_time_elapsed = np.array(std_time_elapsed).astype(float)
+    sizes_used = np.array(sizes_used).astype(float)
+
+    # Plot results and save to file
+    plt.figure()
+    plt.errorbar(sizes_used,
+                 mean_time_elapsed,
+                 yerr=std_time_elapsed,
+                 fmt='o-',
+                 linewidth=1.5,
+                 color="steelblue")
+    plt.axis([np.min(sizes_used)-1,
+              np.max(sizes_used)+1,
+              0,
+              np.max(mean_time_elapsed)*1.1])
+    plt.xlabel("number of events (number of reporters fixed)")
+    plt.ylabel("time elapsed (ms)")
+    plt.grid(True)
+    plt.savefig("timing_alanpca_events_%d.png" % int(round(time.time())))
+    plt.show()
+
+def time_reporters():
+    print "Timing AlanPCA (randomized inputs, reporters only)..."
+    sizes = range(5, MAX_SIZE+1, 5)
+    sizes_used = []
+    mean_time_elapsed = []
+    std_time_elapsed = []
+    for k in sizes:
+        sys.stdout.write("  %dx%d" % (k, 20))
+        sys.stdout.flush()
+        data, weights = randomized_inputs(k, 20)
+        time_elapsed = []
+        for i in range(TIMER_ITERATIONS):
+            start_time = time.time() * 1000
+            lv = emwpca(data, weights)
+            time_elapsed.append(time.time() * 1000 - start_time)
+        print "\t->", np.round(np.mean(time_elapsed), 4), "+/-",
+        print np.round(np.std(time_elapsed), 4), "ms"
+        mean_time_elapsed.append(np.mean(time_elapsed))
+        std_time_elapsed.append(np.std(time_elapsed, ddof=1) / (TIMER_ITERATIONS - 1))
+        sizes_used.append(str(k))
+    
+    mean_time_elapsed = np.array(mean_time_elapsed).astype(float)
+    std_time_elapsed = np.array(std_time_elapsed).astype(float)
+    sizes_used = np.array(sizes_used).astype(float)
+
+    # Plot results and save to file
+    plt.figure()
+    plt.errorbar(sizes_used,
+                 mean_time_elapsed,
+                 yerr=std_time_elapsed,
+                 fmt='o-',
+                 linewidth=1.5,
+                 color="steelblue")
+    plt.axis([np.min(sizes_used)-1,
+              np.max(sizes_used)+1,
+              0,
+              np.max(mean_time_elapsed)*1.1])
+    plt.xlabel("number of reporters (number of events fixed)")
+    plt.ylabel("time elapsed (ms)")
+    plt.grid(True)
+    plt.savefig("timing_alanpca_reporters_%d.png" % int(round(time.time())))
+    plt.show()
+
+def time_both():
     print "Timing AlanPCA (randomized inputs)..."
-    sizes = range(5, MAX_SIZE+1)
+    sizes = range(5, MAX_SIZE+1, 5)
     sizes_used = []
     mean_time_elapsed = []
     std_time_elapsed = []
@@ -158,6 +244,11 @@ def main():
     plt.grid(True)
     plt.savefig("timing_alanpca_%d.png" % int(round(time.time())))
     plt.show()
+
+def main():
+    time_both()
+    time_reporters()
+    time_events()
 
 if __name__ == '__main__':
     main()
