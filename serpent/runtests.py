@@ -189,7 +189,7 @@ def main():
     examples = (
         binary_input_example,
         # single_input_example,
-        scalar_input_example,
+        # scalar_input_example,
         # randomized_inputs,
     )
     for example in examples:   
@@ -228,67 +228,30 @@ def main():
         result = c.center(*arglist)
         result = np.array(result)
         weighted_centered_data = result[0:v_size].tolist()
-        loading_vector = result[v_size:].tolist()
 
-        lv = np.array(map(unfix, result[v_size:-1]))
-        wcd = np.array(fold(map(unfix, weighted_centered_data), num_events))
-        R = np.diag(map(unfix, reputation_fixed))
-        while loading_vector[num_events] > 0:
-            loading_vector = c.pca_loadings(loading_vector,
-                                            weighted_centered_data,
-                                            reputation_fixed,
-                                            num_reports,
-                                            num_events)
-            # Compare to Python version (lv)
-            # lv = R * data * lv * data
-            lv = -R.dot(wcd).dot(lv).dot(wcd)
-            lv /= np.sqrt(np.sum(lv**2))
-        print BW("Component 1:")
-        print "Python:"
-        print np.array(map(unfix, loading_vector))
-        print "Serpent:"
-        print np.array(lv)
-        print
-        # percent_error = np.max(abs(lv - np.array(map(unfix, loading_vector[:-1]))) / lv)
-        # assert(percent_error < tolerance)
-        # display(loading_vector, "Loadings %i:" % loading_vector[num_events], show_all=True)
-
-        print BW("Variance:")
-        print "Python:"
-        print np.trace(np.cov(wcd, bias=1))
-        print "Serpent:"
         variance = c.total_variance(weighted_centered_data, num_reports, num_events)
-        print unfix(variance)
+        print BW("Variance:\t"), unfix(variance)
 
-        loading_vector_1 = result[v_size:].tolist()
-        lv1 = np.array(map(unfix, result[v_size:-1]))
-        wcd1 = wcd - wcd.dot(np.outer(lv, lv))
-        deflated_data = c.deflate(loading_vector[:-1],
-                                  weighted_centered_data,
-                                  num_reports,
-                                  num_events)
-        print BW("Deflated:")
-        print "Python:"
-        print wcd1
-        print "Serpent:"
-        display(np.array(deflated_data), refold=num_events)
-        print
-
-        while loading_vector_1[num_events] > 0:
-            loading_vector_1 = c.pca_loadings(loading_vector_1,
-                                              deflated_data,
-                                              reputation_fixed,
-                                              num_reports,
-                                              num_events)
-            lv1 = -R.dot(wcd1).dot(lv1).dot(wcd)
-            lv1 /= np.sqrt(np.sum(lv1**2))
-        print BW("Component 2:")
-        print "Python:"
-        print np.array(lv1)
-        print "Serpent:"
-        print np.array(map(unfix, loading_vector_1))
-        print
-        sys.exit()
+        init_vector = result[v_size:].tolist()
+        data = weighted_centered_data
+        for j in range(4):
+            loading_vector = init_vector
+            lv = np.array(map(unfix, result[v_size:-1]))
+            while loading_vector[num_events] > 0:
+                loading_vector = c.pca_loadings(loading_vector,
+                                                data,
+                                                reputation_fixed,
+                                                num_reports,
+                                                num_events)
+            evalue = c.rayleigh(loading_vector[:-1], data, num_reports, num_events)
+            print BW("Eigenvalue:\t"), unfix(evalue)
+            print BW("Component %d:\t" % j), np.array(map(unfix, loading_vector[:-1]))
+            data = c.deflate(loading_vector[:-1],
+                             data,
+                             num_reports,
+                             num_events)
+            # percent_error = np.max(abs(lv - np.array(map(unfix, loading_vector[:-1]))) / lv)
+            # assert(percent_error < tolerance)
 
         scores = c.pca_scores(loading_vector, weighted_centered_data, num_reports, num_events)
 
@@ -363,7 +326,7 @@ def main():
         pyresults = Oracle(reports=reports,
                            reputation=reputation,
                            event_bounds=event_bounds,
-                           algorithm="sztorc").consensus()
+                           algorithm="fixed-variance").consensus()
         serpent_results = {
             'reputation': map(unfix, smooth_rep),
             'outcomes': map(unfix, outcomes_final),

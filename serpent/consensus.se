@@ -410,7 +410,28 @@ def total_variance(wcd:arr, num_reports, num_events):
                 i += 1
             return(variance)
 
-def pca_loadings(iv:arr, wcd:arr, reputation:arr, num_reports, num_events):
+def rayleigh(v:arr, X:arr, num_reports, num_events):
+    # v^T X^T X v
+    # -----------
+    #    v^T v
+    Xv = array(num_reports)
+    num = 0
+    i = 0
+    while i < num_reports:
+        j = 0
+        while j < num_events:
+            Xv[i] += fixed_multiply(X[i], v[j])
+            j += 1
+        num += Xv[i]^2
+        i += 1
+    den = 0
+    j = 0
+    while j < num_events:
+        den += v[j]^2
+        j += 1
+    return(fixed_divide(num, den))
+
+def pca_loadings(iv:arr, X:arr, reputation:arr, num_reports, num_events):
     with lflatsize = len(iv):
         with lv = array(lflatsize):
             with j = 0:
@@ -418,12 +439,12 @@ def pca_loadings(iv:arr, wcd:arr, reputation:arr, num_reports, num_events):
                     with d_dot_lv = 0:
                         with k = 0:
                             while k < num_events:
-                                d_dot_lv += wcd[j*num_events + k] * iv[k]
+                                d_dot_lv += X[j*num_events + k] * iv[k]
                                 k += 1
                         d_dot_lv /= ONE
                         with k = 0:
                             while k < num_events:
-                                lv[k] -= d_dot_lv * wcd[j*num_events + k] * reputation[j] / ONE^2
+                                lv[k] -= d_dot_lv * X[j*num_events + k] * reputation[j] / ONE^2
                                 k += 1
                     j += 1
 
