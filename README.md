@@ -9,6 +9,7 @@ augur-serpent
 - what if a scalar has a .5 actual value outcome
   - I suggest the .5 outcome be something like 2^256
   - scalar .5 outcomes just don't work at all atm either
+  - jack idea for this
 - for scalar events, how do you distinguish a 0 numerical response from a no-response (usually 0)?
 
 ### Scalability optimizations (hopefully these become an issue!) ... Curse you gas issues (too soon):
