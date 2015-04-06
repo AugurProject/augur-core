@@ -214,6 +214,34 @@ macro weighted_median($data, $weights):
                                             wmedian = sorted_data[idx-1]
                 wmedian
 
+# Outer product of vectors
+macro outer_product($u, $v):
+    with $usz = len($u):
+        with $p = array($usz^2):
+            with $i = 0:
+                while $i < $usz:
+                    with $j = 0:
+                        while $j < $usz:
+                            $p[$i*$usz + $j] += $u[$i] * $v[$j] / ONE
+                            $j += 1
+                    $i += 1
+                $p
+
+# Flattened fixed-point matrix multiplication
+macro matrix_multiply($a, $arows, $acols, $b, $brows, $bcols):
+    with $c = array($arows*$bcols):
+        with $i = 0:
+            while $i < $arows:
+                with $j = 0:
+                    while $j < $bcols:
+                        with $k = 0:
+                            while $k < $acols:
+                                $c[$i*$bcols + $j] += $a[$i*$acols + $k] * $b[$k*$bcols + $j] / ONE
+                                $k += 1
+                        $j += 1
+                $i += 1
+            $c
+
 # Prints an array.  Logs either contain a single entry (for integer values)
 # or two entries (for fixed point numbers, the first entry is the integer
 # and the second is the decimal).
@@ -363,32 +391,99 @@ def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scale
                                         weighted_centered_data[lflatsize - 1] = max_iterations
                                         return(weighted_centered_data, items=lflatsize)
 
-def pca_loadings(loading_vector:arr, weighted_centered_data:arr, reputation:arr, num_reports, num_events):
-    with lflatsize = len(loading_vector):
+def total_variance(wcd:arr, num_reports, num_events):
+    with variance = 0:
+        with i = 0:
+            while i < num_reports:
+                with avg = 0:
+                    with var = 0:
+                        with j = 0:
+                            while j < num_events:
+                                avg += wcd[i*num_events + j]
+                                j += 1
+                        avg /= num_events
+                        with j = 0:
+                            while j < num_events:
+                                var += (wcd[i*num_events + j] - avg)^2
+                                j += 1
+                        variance += var / ONE / num_events
+                i += 1
+            return(variance)
+
+def rayleigh(v:arr, X:arr, num_reports, num_events):
+    # v^T X^T X v
+    # -----------
+    #    v^T v
+    Xv = array(num_reports)
+    num = 0
+    i = 0
+    while i < num_reports:
+        j = 0
+        while j < num_events:
+            Xv[i] += fixed_multiply(X[i], v[j])
+            j += 1
+        num += Xv[i]^2
+        i += 1
+    den = 0
+    j = 0
+    while j < num_events:
+        den += v[j]^2
+        j += 1
+    return(fixed_divide(num, den))
+
+def pca_loadings(iv:arr, X:arr, reputation:arr, num_reports, num_events):
+    with lflatsize = len(iv):
         with lv = array(lflatsize):
             with j = 0:
                 while j < num_reports:
                     with d_dot_lv = 0:
                         with k = 0:
                             while k < num_events:
-                                d_dot_lv += weighted_centered_data[j*num_events + k] * loading_vector[k]
+                                d_dot_lv += X[j*num_events + k] * iv[k]
                                 k += 1
                         d_dot_lv /= ONE
                         with k = 0:
                             while k < num_events:
-                                lv[k] += d_dot_lv * weighted_centered_data[j*num_events + k] * reputation[j] / ONE^2
+                                lv[k] -= d_dot_lv * X[j*num_events + k] * reputation[j] / ONE^2
                                 k += 1
                     j += 1
-            lv[num_events] = loading_vector[num_events] - 1
+
+            with s_dot_s = 0:
+                with j = 0:
+                    while j < num_events:
+                        s_dot_s += lv[j] * lv[j]
+                        j += 1
+                s_dot_s /= ONE
+                with norm_s = s_dot_s / 2:
+                    with j = 0:
+                        while j < 11:
+                            norm_s = (norm_s + s_dot_s*ONE/norm_s) / 2
+                            j += 1
+                    with j = 0:
+                        while j < num_events:
+                            lv[j] = lv[j]*ONE/norm_s
+                            j += 1
+            lv[num_events] = iv[num_events] - 1
             return(lv, items=lflatsize)
 
-def pca_scores(loading_vector:arr, weighted_centered_data:arr, num_reports, num_events):
+def deflate(ev:arr, wcd:arr, num_reports, num_events):
+    with dsz = len(wcd):
+        with evop = outer_product(ev, ev):
+            with ddata = array(dsz):
+                with data_x_evop = matrix_multiply(wcd, num_reports, num_events, evop, num_events, num_events):
+                    with i = 0:
+                        while i < dsz:
+                            ddata[i] = wcd[i] - data_x_evop[i]
+                            i += 1
+                    return(ddata, items=dsz)
+
+def pca_scores(lv:arr, wcd:arr, num_reports, num_events):
     with scores = array(num_reports):
         with i = 0:
             while i < num_reports:
                 with k = 0:
                     while k < num_events:
-                        scores[i] += fixed_multiply(weighted_centered_data[i*num_events + k], loading_vector[k])
+                        scores[i] += fixed_multiply(wcd[i*num_events + k], lv[k])
                         k += 1
                 i += 1
             return(scores, items=num_reports)
