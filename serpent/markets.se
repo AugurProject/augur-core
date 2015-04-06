@@ -1,0 +1,34 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation 
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+# Markets' index is the marketID
+# Events is a 0 indexed array of events in the market in the format of
+    # [1, event, event, 2, event, 3, event, event, event]
+    # 1 means dimension 1, 2 is events in dimension 2, 3 is the dimension 3 events
+# Sharespurchased keeps track of the number of shares purchased for each outcome
+    # sharesPurchased states starts at 1 - (same for participants[].shares[] array)
+# Participants is a 0 indexed array of participants, their cashIDs, && the shares in each outcome they've purchased of an event
+# a binary outcome state 1 is no, 2 is true, 0 if not determined
+# tradingFee is a percent in fixedPoint
+# tradingPeriod is which eventexpperiod market expires in
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch)
+
+data nonces[]

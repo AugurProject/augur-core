@@ -1,0 +1,29 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation 
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+# Events' index is the eventID
+# a binary outcome has 0 for min && 1 for max value, but consensus will return 2^64 and 2^65 respectively
+# so for voting 1 and 2 in fxp. need to be given for binaries, not 0 & 1
+# S&P 500 scalar would be say 0 && 4700, respectively
+# categorical markets have fixed point min and max
+ # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
+# need outcomes returned as 1*2^64, 2*2^64, etc... indeterminate as 3*2^63
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
