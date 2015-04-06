@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C)  2014 Chris Calderon, Joey Krug, Alan Lu, Jack Peterson
+# Copyright (C) 2015 Forecast Foundation 
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -17,11 +17,8 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-# Any questions please contact joeykrug@gmail.com
+# Any questions please contact joey@augur.net
 
-BRANCH = 0
-EVENT = 1
-MARKET = 2
 
 # Every entity in our contract has similar metadata.
 # Instead of putting it in each entity, we put all the
@@ -1643,18 +1640,6 @@ def getReputation(address):
                 b += 2
             i += 1
     return(branches: arr)
-    
-def getBranchDesc(branch):
-    length = self.Info[branch].descriptionLength
-    return(load(self.Info[branch].description[0], chars=length): str)
-
-def getEventDesc(event):
-    length = self.Info[event].descriptionLength
-    return(load(self.Info[event].description[0], chars=length): str)
-
-def getMarketDesc(market):
-    length = self.Info[market].descriptionLength
-    return(load(self.Info[market].description[0], chars=length): str)
 
 def getMarketEvents(market):
     i = 0
