@@ -249,9 +249,9 @@ def main():
                                             reputation,
                                             num_reports,
                                             num_events)
-        print BW("Covariance matrix row:")
-        print "  Python: ", Crow
-        print "  Serpent:", np.array(map(unfix, covmatrow))
+        print BR("Covariance matrix row:")
+        print BW("  Python: "), Crow
+        print BW("  Serpent:"), np.array(map(unfix, covmatrow))
         print
 
         #######
@@ -269,7 +269,7 @@ def main():
         for j in range(components):
 
             # Calculate loading vector
-            lv = iv
+            lv = iv[:-1]
             for i in range(max_iterations):
                 lv = R.dot(wcd).dot(lv).dot(wcd)
                 lv /= np.sqrt(lv.dot(lv))
@@ -280,8 +280,8 @@ def main():
             # Deflate the data matrix
             wcd = wcd - wcd.dot(np.outer(lv, lv))
 
-            print BW("  Eigenvector %d:\t" % j), lv
-            print BW("  Eigenvalue %d:\t" % j), E
+            print BW("  Eigenvector %d:" % j), np.array(lv)
+            print BW("  Eigenvalue %d: " % j), E
             print
 
         # Serpent
@@ -307,19 +307,17 @@ def main():
                              num_events)
 
             # Project data onto this component and add to weighted scores
-            scores = c.cumulative_scores(scores,
-                                         loading_vector,
-                                         weighted_centered_data,
-                                         latent,
-                                         num_reports,
-                                         num_events)
+            scores = c.nonconformity(scores,
+                                     loading_vector,
+                                     weighted_centered_data,
+                                     latent,
+                                     num_reports,
+                                     num_events)
 
-            print BW("  Eigenvector %d:\t" % j), np.array(map(unfix, loading_vector[:-1]))
-            print BW("  Eigenvalue %d:\t" % j), unfix(latent)
-            print BW("  Nonconformity:\t"), np.array(map(unfix, scores))
+            print BW("  Eigenvector %d:" % j), np.array(map(unfix, loading_vector[:-1]))
+            print BW("  Eigenvalue %d: " % j), unfix(latent)
+            print BW("  Nonconformity: "), np.array(map(unfix, scores))
             print
-
-        # scores = c.pca_scores(loading_vector, weighted_centered_data, num_reports, num_events)
 
         arglist = [scores, num_reports, num_events]
         result = c.calibrate_sets(*arglist)
