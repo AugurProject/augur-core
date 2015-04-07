@@ -234,13 +234,61 @@ def main():
         wcd_init = wcd
         rep = map(unfix, reputation_fixed)
         R = np.diag(rep)
+        tokens = np.array([int(r * 1e6) for r in rep])
+        alltokens = np.sum(tokens)
+        covmat = wcd.T.dot(np.diag(tokens)).dot(wcd) / float(alltokens - 1)
 
-        init_vector = result[v_size:].tolist()
+        # Calculate the first row of the covariance matrix
+        # Python
+        Crow = np.zeros(num_events)
+        wcd_x_tokens = wcd[:,0] * tokens
+        for i in range(num_events):
+            Crow[i] = wcd_x_tokens.dot(wcd[:,i]) / (alltokens-1)
+        # Serpent
+        covmatrow = c.covariance_matrix_row(weighted_centered_data,
+                                            reputation,
+                                            num_reports,
+                                            num_events)
+        print BW("Covariance matrix row:")
+        print "  Python: ", Crow
+        print "  Serpent:", np.array(map(unfix, covmatrow))
+        print
+
+        #######
+        # PCA #
+        #######
+
+        iv = result[v_size:]
+        init_vector = iv.tolist()
         data = weighted_centered_data
-        evals = []
         components = int(np.ceil(num_events / 3.0))
         scores = map(int, np.zeros(num_reports).tolist())
+
+        # Python
+        print BR("Python PCA")
         for j in range(components):
+
+            # Calculate loading vector
+            lv = iv
+            for i in range(max_iterations):
+                lv = R.dot(wcd).dot(lv).dot(wcd)
+                lv /= np.sqrt(lv.dot(lv))
+
+            # Calculate the eigenvalue for this eigenvector
+            E = Crow.dot(lv) / lv[0]
+
+            # Deflate the data matrix
+            wcd = wcd - wcd.dot(np.outer(lv, lv))
+
+            print BW("  Eigenvector %d:\t" % j), lv
+            print BW("  Eigenvalue %d:\t" % j), E
+            print
+
+        # Serpent
+        print BR("Serpent PCA")
+        for j in range(components):
+
+            # Calculate loading vector
             loading_vector = init_vector
             while loading_vector[num_events] > 0:
                 loading_vector = c.pca_loadings(loading_vector,
@@ -248,25 +296,29 @@ def main():
                                                 reputation_fixed,
                                                 num_reports,
                                                 num_events)
-            # S = [ 0.561359,  0.263844,  0.103586,  0.045314]
-            # S /= np.sum(S)
-            evalue = c.rayleigh(loading_vector[:-1], data, num_reports, num_events)
-            evals.append(unfix(evalue))
-            print BW("Eigenvalue:\t"), unfix(evalue)
-            print BW("Component %d:\t" % j), np.array(map(unfix, loading_vector[:-1]))
+
+            # Calculate the eigenvalue (latent factor) for this eigenvector
+            latent = c.pca_latent(covmatrow, loading_vector, num_events)
+
+            # Deflate the data matrix
             data = c.deflate(loading_vector[:-1],
                              data,
                              num_reports,
                              num_events)
-            # percent_error = np.max(abs(lv - np.array(map(unfix, loading_vector[:-1]))) / lv)
-            # assert(percent_error < tolerance)
-            lv = R.dot(wcd).dot(lv).dot(wcd)
-            print BW("Alternate:\t"), wcd[0,:].dot(lv) / lv[0]
-            wcd = wcd - wcd.dot(np.outer(lv, lv))
-            # import pdb; pdb.set_trace()
-            scores = c.cumulative_scores(scores, loading_vector, weighted_centered_data, num_reports, num_events)
-            print np.array(map(unfix, scores))
-        # evals = np.array(evals)
+
+            # Project data onto this component and add to weighted scores
+            scores = c.cumulative_scores(scores,
+                                         loading_vector,
+                                         weighted_centered_data,
+                                         latent,
+                                         num_reports,
+                                         num_events)
+
+            print BW("  Eigenvector %d:\t" % j), np.array(map(unfix, loading_vector[:-1]))
+            print BW("  Eigenvalue %d:\t" % j), unfix(latent)
+            print BW("  Nonconformity:\t"), np.array(map(unfix, scores))
+            print
+
         # scores = c.pca_scores(loading_vector, weighted_centered_data, num_reports, num_events)
 
         arglist = [scores, num_reports, num_events]
