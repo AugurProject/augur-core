@@ -234,9 +234,30 @@ def main():
         wcd_init = wcd
         rep = map(unfix, reputation_fixed)
         R = np.diag(rep)
+
+        # Get "Satoshi" (integer) Reputation values
+        # Python
         tokens = np.array([int(r * 1e6) for r in rep])
         alltokens = np.sum(tokens)
+        # Serpent
+        reptokens = c.tokenize(reputation, num_reports)
+        print BR("Tokens:")
+        print BW("  Python: "), tokens
+        print BW("  Serpent:"), np.array(map(unfix, reptokens)).astype(int)
+        print
+
+        # Total variance
+        # Python
         covmat = wcd.T.dot(np.diag(tokens)).dot(wcd) / float(alltokens - 1)
+        # Serpent
+        variance = c.total_variance(weighted_centered_data,
+                                    reptokens,
+                                    num_reports,
+                                    num_events)
+        print BR("Total variance:")
+        print BW("  Python: "), np.trace(covmat)
+        print BW("  Serpent:"), unfix(variance)
+        print
 
         # Calculate the first row of the covariance matrix
         # Python
@@ -246,7 +267,7 @@ def main():
             Crow[i] = wcd_x_tokens.dot(wcd[:,i]) / (alltokens-1)
         # Serpent
         covmatrow = c.covariance_matrix_row(weighted_centered_data,
-                                            reputation,
+                                            reptokens,
                                             num_reports,
                                             num_events)
         print BR("Covariance matrix row:")
@@ -259,10 +280,7 @@ def main():
         #######
 
         iv = result[v_size:]
-        init_vector = iv.tolist()
-        data = weighted_centered_data
         components = int(np.ceil(num_events / 3.0))
-        scores = map(int, np.zeros(num_reports).tolist())
 
         # Python
         print BR("Python PCA")
@@ -286,6 +304,11 @@ def main():
 
         # Serpent
         print BR("Serpent PCA")
+
+        init_vector = iv.tolist()
+        data = weighted_centered_data
+        scores = map(int, np.zeros(num_reports).tolist())
+
         for j in range(components):
 
             # Calculate loading vector

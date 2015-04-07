@@ -28,6 +28,8 @@ macro YES: 2^65
 macro NO: 2^64
 macro BAD: 3 * 2^63
 
+macro COINS: 10^6
+
 macro CATCH_TOLERANCE: 2^64 / 10
 
 # Sum elements of array
@@ -391,48 +393,51 @@ def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scale
                                         weighted_centered_data[lflatsize - 1] = max_iterations
                                         return(weighted_centered_data, items=lflatsize)
 
-def total_variance(wcd:arr, num_reports, num_events):
-    with variance = 0:
+def tokenize(reputation:arr, num_reports):
+    with tokens = array(num_reports):
+        with i = 0:
+            while i < num_reports:
+                tokens[i] = reputation[i] * COINS * ONE
+                i += 1
+            return(tokens, items=num_reports)
+
+def total_variance(wcd:arr, tokens:arr, num_reports, num_events):
+    with wcd_x_tokens = array(num_reports * num_events):
         with i = 0:
             while i < num_events:
-                with avg = 0:
-                    with var = 0:
-                        with j = 0:
-                            while j < num_reports:
-                                avg += wcd[j*num_events + i]
-                                j += 1
-                        avg /= num_reports
-                        with j = 0:
-                            while j < num_reports:
-                                var += (wcd[j*num_events + i] - avg)^2
-                                j += 1
-                        variance += var / ONE / num_reports
+                with j = 0:
+                    while j < num_reports:
+                        wcd_x_tokens[j*num_events + i] = fixed_multiply(wcd[j*num_events + i], tokens[j])
+                        j += 1
                 i += 1
-            return(variance)
+        with variance = 0:
+            with i = 0:
+                while i < num_events:
+                    with j = 0:
+                        while j < num_reports:
+                            variance += fixed_multiply(wcd_x_tokens[j*num_events + i], wcd[i*num_reports + j])
+                            j += 1
+                    variance = fixed_divide(variance, sum(tokens) - ONE)
+                    i += 1
+                return(variance)
 
-def covariance_matrix_row(wcd:arr, reputation:arr, num_reports, num_events):
-    tokens = array(num_reports)
-    alltokens = 0
-    i = 0
-    while i < num_reports:
-        tokens[i] = reputation[i] * 1000000 * ONE
-        alltokens += tokens[i]
-        i += 1
-    covmatrow = array(num_events)
-    wcd_x_tokens = array(num_reports)
-    i = 0
-    while i < num_reports:
-        wcd_x_tokens[i] = fixed_multiply(wcd[i*num_events], tokens[i])
-        i += 1
-    i = 0
-    while i < num_events:
-        j = 0
-        while j < num_reports:
-            covmatrow[i] += fixed_multiply(wcd_x_tokens[j], wcd[j*num_events + i])
-            j += 1
-        covmatrow[i] = fixed_divide(covmatrow[i], alltokens - ONE)
-        i += 1
-    return(covmatrow, items=num_events)
+def covariance_matrix_row(wcd:arr, tokens:arr, num_reports, num_events):
+    with covmatrow = array(num_events):
+        with wcd_x_tokens = array(num_reports):
+            with i = 0:
+                while i < num_reports:
+                    wcd_x_tokens[i] = fixed_multiply(wcd[i*num_events], tokens[i])
+                    i += 1
+            with alltokens = sum(tokens):
+                with i = 0:
+                    while i < num_events:
+                        with j = 0:
+                            while j < num_reports:
+                                covmatrow[i] += fixed_multiply(wcd_x_tokens[j], wcd[j*num_events + i])
+                                j += 1
+                        covmatrow[i] = fixed_divide(covmatrow[i], alltokens - ONE)
+                        i += 1
+                    return(covmatrow, items=num_events)
 
 def pca_loadings(iv:arr, X:arr, reputation:arr, num_reports, num_events):
     with lflatsize = len(iv):
