@@ -235,15 +235,12 @@ def main():
         rep = map(unfix, reputation_fixed)
         R = np.diag(rep)
 
-        print BW("Variance:")
-        print "Python: ", np.sum(np.var(wcd, axis=0))
-        variance = c.total_variance(weighted_centered_data, num_reports, num_events)
-        print "Serpent:", unfix(variance)
-
         init_vector = result[v_size:].tolist()
         data = weighted_centered_data
         evals = []
-        for j in range(4):
+        components = int(np.ceil(num_events / 3.0))
+        scores = map(int, np.zeros(num_reports).tolist())
+        for j in range(components):
             loading_vector = init_vector
             while loading_vector[num_events] > 0:
                 loading_vector = c.pca_loadings(loading_vector,
@@ -251,6 +248,8 @@ def main():
                                                 reputation_fixed,
                                                 num_reports,
                                                 num_events)
+            # S = [ 0.561359,  0.263844,  0.103586,  0.045314]
+            # S /= np.sum(S)
             evalue = c.rayleigh(loading_vector[:-1], data, num_reports, num_events)
             evals.append(unfix(evalue))
             print BW("Eigenvalue:\t"), unfix(evalue)
@@ -262,11 +261,13 @@ def main():
             # percent_error = np.max(abs(lv - np.array(map(unfix, loading_vector[:-1]))) / lv)
             # assert(percent_error < tolerance)
             lv = R.dot(wcd).dot(lv).dot(wcd)
+            print BW("Alternate:\t"), wcd[0,:].dot(lv) / lv[0]
             wcd = wcd - wcd.dot(np.outer(lv, lv))
             # import pdb; pdb.set_trace()
-        evals = np.array(evals)
-
-        scores = c.pca_scores(loading_vector, weighted_centered_data, num_reports, num_events)
+            scores = c.cumulative_scores(scores, loading_vector, weighted_centered_data, num_reports, num_events)
+            print np.array(map(unfix, scores))
+        # evals = np.array(evals)
+        # scores = c.pca_scores(loading_vector, weighted_centered_data, num_reports, num_events)
 
         arglist = [scores, num_reports, num_events]
         result = c.calibrate_sets(*arglist)

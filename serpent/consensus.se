@@ -414,22 +414,22 @@ def rayleigh(v:arr, X:arr, num_reports, num_events):
     # v^T X^T X v
     # -----------
     #    v^T v
-    with Xv = array(num_reports):
-        with num = 0:
-            with i = 0:
-                while i < num_reports:
-                    with j = 0:
-                        while j < num_events:
-                            Xv[i] += fixed_multiply(X[i], v[j])
-                            j += 1
-                        num += Xv[i]^2
-                        i += 1
-                    with den = 0:
-                        with j = 0:
-                            while j < num_events:
-                                den += v[j]^2
-                                j += 1
-                        return(fixed_divide(num, den))
+    Xv = array(num_reports)
+    num = 0
+    i = 0
+    while i < num_reports:
+        j = 0
+        while j < num_events:
+            Xv[i] += fixed_multiply(X[i], v[j])
+            j += 1
+        num += Xv[i]^2
+        i += 1
+    den = 0
+    j = 0
+    while j < num_events:
+        den += v[j]^2
+        j += 1
+    return(fixed_divide(num, den))
 
 def pca_loadings(iv:arr, X:arr, reputation:arr, num_reports, num_events):
     with lflatsize = len(iv):
@@ -487,6 +487,16 @@ def pca_scores(lv:arr, wcd:arr, num_reports, num_events):
                         k += 1
                 i += 1
             return(scores, items=num_reports)
+
+def cumulative_scores(scores:arr, lv:arr, wcd:arr, num_reports, num_events):
+    with i = 0:
+        while i < num_reports:
+            with k = 0:
+                while k < num_events:
+                    scores[i] += fixed_multiply(wcd[i*num_events + k], lv[k])
+                    k += 1
+            i += 1
+        return(scores, items=num_reports)
 
 def calibrate_sets(scores:arr, num_reports, num_events):
     # Which of the two possible 'new' reputation vectors had more in common
