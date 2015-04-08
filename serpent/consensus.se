@@ -402,24 +402,16 @@ def tokenize(reputation:arr, num_reports):
             return(tokens, items=num_reports)
 
 def total_variance(wcd:arr, tokens:arr, num_reports, num_events):
-    with wcd_x_tokens = array(num_reports * num_events):
+    # (wcd[:,0]*tokens).dot(wcd[:,0]) + (wcd[:,1]*tokens).dot(wcd[:,1]) + ...
+    with variance = 0:
         with i = 0:
             while i < num_events:
                 with j = 0:
                     while j < num_reports:
-                        wcd_x_tokens[j*num_events + i] = fixed_multiply(wcd[j*num_events + i], tokens[j])
+                        variance += fixed_multiply(wcd[j*num_events + i] * tokens[j] / ONE, wcd[j*num_events + i])
                         j += 1
                 i += 1
-        with variance = 0:
-            with i = 0:
-                while i < num_events:
-                    with j = 0:
-                        while j < num_reports:
-                            variance += fixed_multiply(wcd_x_tokens[j*num_events + i], wcd[i*num_reports + j])
-                            j += 1
-                    variance = fixed_divide(variance, sum(tokens) - ONE)
-                    i += 1
-                return(variance)
+            return(fixed_divide(variance, sum(tokens) - ONE))
 
 def covariance_matrix_row(wcd:arr, tokens:arr, num_reports, num_events):
     with covmatrow = array(num_events):

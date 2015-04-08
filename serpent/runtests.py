@@ -249,13 +249,14 @@ def main():
         # Total variance
         # Python
         covmat = wcd.T.dot(np.diag(tokens)).dot(wcd) / float(alltokens - 1)
+        totalvar = np.trace(covmat)
         # Serpent
         variance = c.total_variance(weighted_centered_data,
                                     reptokens,
                                     num_reports,
                                     num_events)
         print BR("Total variance:")
-        print BW("  Python: "), np.trace(covmat)
+        print BW("  Python: "), totalvar
         print BW("  Serpent:"), unfix(variance)
         print
 
@@ -279,12 +280,17 @@ def main():
         # PCA #
         #######
 
-        iv = result[v_size:]
-        components = int(np.ceil(num_events / 3.0))
-
         # Python
         print BR("Python PCA")
-        for j in range(components):
+
+        iv = result[v_size:]
+        # components = int(np.ceil(num_events / 3.0))
+        variance_threshold = 0.75
+        variance_explained = 0
+        num_components = 0
+        nc = np.zeros(num_reports)
+
+        while variance_explained < variance_threshold:
 
             # Calculate loading vector
             lv = iv[:-1]
@@ -295,12 +301,21 @@ def main():
             # Calculate the eigenvalue for this eigenvector
             E = Crow.dot(lv) / lv[0]
 
+            # Cumulative variance explained
+            variance_explained += E / totalvar
+
+            # Projection onto new axis: nonconformity vector
+            nc += E * wcd.dot(lv)
+
             # Deflate the data matrix
             wcd = wcd - wcd.dot(np.outer(lv, lv))
 
-            print BW("  Eigenvector %d:" % j), np.array(lv)
-            print BW("  Eigenvalue %d: " % j), E
+            print BW("  Eigenvector %d:" % num_components), np.array(lv)
+            print BW("  Eigenvalue %d: " % num_components), E, "(%s%% variance explained)" % np.round(variance_explained * 100, 3)
+            print BW("  Nonconformity: "), nc
             print
+
+            num_components += 1
 
         # Serpent
         print BR("Serpent PCA")
@@ -308,8 +323,10 @@ def main():
         init_vector = iv.tolist()
         data = weighted_centered_data
         scores = map(int, np.zeros(num_reports).tolist())
+        var_exp = 0
+        num_comps = 0
 
-        for j in range(components):
+        while var_exp < variance_threshold:
 
             # Calculate loading vector
             loading_vector = init_vector
@@ -322,6 +339,9 @@ def main():
 
             # Calculate the eigenvalue (latent factor) for this eigenvector
             latent = c.pca_latent(covmatrow, loading_vector, num_events)
+
+            # Total variance explained
+            var_exp += unfix(latent) / unfix(variance)
 
             # Deflate the data matrix
             data = c.deflate(loading_vector[:-1],
@@ -337,10 +357,15 @@ def main():
                                      num_reports,
                                      num_events)
 
-            print BW("  Eigenvector %d:" % j), np.array(map(unfix, loading_vector[:-1]))
-            print BW("  Eigenvalue %d: " % j), unfix(latent)
+            print BW("  Eigenvector %d:" % num_comps), np.array(map(unfix, loading_vector[:-1]))
+            print BW("  Eigenvalue %d: " % num_comps), unfix(latent), "(%s%% variance explained)" % np.round(var_exp * 100, 3)
             print BW("  Nonconformity: "), np.array(map(unfix, scores))
             print
+
+            if unfix(latent) / unfix(variance) < sys.float_info.epsilon:
+                break
+
+            num_comps += 1
 
         arglist = [scores, num_reports, num_events]
         result = c.calibrate_sets(*arglist)
@@ -417,15 +442,13 @@ def main():
         serpent_results = {
             'reputation': map(unfix, smooth_rep),
             'outcomes': map(unfix, outcomes_final),
-            'reporter_bonus': map(unfix, reporter_bonus),
         }
         python_results = {
             'reputation': pyresults['agents']['smooth_rep'].data,
             'outcomes': np.array(pyresults['events']['outcomes_final']),
-            'reporter_bonus': np.array(pyresults['agents']['reporter_bonus']),
         }
         comparisons = {}
-        for m in ('reputation', 'outcomes', 'reporter_bonus'):
+        for m in ('reputation', 'outcomes'):
             comparisons[m] = abs((python_results[m] - serpent_results[m]) / python_results[m])
 
         for key, value in comparisons.items():
@@ -433,7 +456,7 @@ def main():
                 assert((value < tolerance).all())
             except Exception as e:
                 print BW("Tolerance exceeded for ") + BR("%s:" % key)
-                print "Serpent:    ", serpent_results[key]
+                print "Serpent:    ", np.array(serpent_results[key])
                 print "Python:     ", python_results[key]
                 print "Difference: ", comparisons[key]
 
