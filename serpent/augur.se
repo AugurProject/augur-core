@@ -56,69 +56,6 @@ def sendReputation(branch, recver, value):
     else:
         return(0)
 
-
-
-# period length is given in blocks
-# description format is branchName:description
-# is there some way we can include the description bytes in the sha256 hash?
-# @return branchID if success
-# error messages otherwise
-    # -1: bad input or parent doesn't exist
-    # -2: no money for creation fee or branch already exists
-def createSubbranch(description:str, periodLength, parent, tradingFee):
-    if(periodLength<=0 || !self.Branches[parent].periodLength || description==0):
-        return(-1)
-
-    #upcomingDecisions = 0
-    #a = (block.number / self.Branches[branch].periodLength)
-    #b = a
-    #while b < (a+100):
-    #    upcomingDecisions += self.EventsExpDates[parent][a].numberEvents
-    #    b += 1
-    # turned off for testing
-    #if(upcomingDecisions < 500):
-    #    return(0)
-
-    branchInfo = string((items=7)+len(description))
-    branchInfo[0] = BRANCH                                      #typecode
-    branchInfo[1] = tx.origin                                   #creator address
-    branchInfo[2] = 47*2^64                                     #creation fee
-    branchInfo[3] = periodLength                                #length of voting cycle
-    branchInfo[4] = block.number                                #current block number
-    branchInfo[5] = parent                                      #branchID of parent branch
-    branchInfo[6] = tradingFee
-    mcopy(branchInfo+(items=7), description, len(description))
-    # people can check that these characteristics hash to the ID if they want
-    # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
-    branchID = sha256(branchInfo, chars=len(branchInfo))
-
-    if(self.Info[parent].creator && self.send(parent, 47*2^64) && self.Branches[branchID].periodLength==0):
-        self.Info[branchID].creator = tx.origin
-        self.Info[branchID].creationFee = 47*2^64
-        self.Info[branchID].descriptionLength = len(description)
-        save(self.Info[branchID].description[0], description, chars=len(description))
-        self.Branches[branchID].periodLength = periodLength
-        self.Branches[branchID].minTradingFee = tradingFee
-        # first vote period won't be until after the current (in this case first) basket of things has expired
-        # if floor(blockNum / periodLength) is say 5 and eventsExpDates[5]
-        # the current vote period should be on things from eventsExpDates 4 (when making a new branch this vote period will just fail quorem, and current vote period will be incrememented)
-        # then once blockNum / periodLength is say 6 and eventsExpDates[6]
-        # votePeriod 4 should close and the currentVotePeriod should be from
-        # eventsExpDates 5 (anyone can call the consensus function for voteperiod 4 at this point)
-        self.Branches[branchID].currentVotePeriod = (block.number / periodLength) - 1
-        i = 0
-        while i < self.Reporting[parent].numberReporters:
-            self.Reporting[branchID].reputation[i].reporterID = self.Reporting[parent].reputation[i].reporterID
-            self.Reporting[branchID].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
-            self.Reporting[branchID].repIDtoIndex[reporterID] = i
-            i+=1
-        self.Reporting[branchID].numberReporters = i
-        self.branchList[self.branchListCount] = branchID
-        self.branchListCount += 1
-        return(branchID)
-    else:
-        return(-2)
-
 # numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0
 # to 11.0 would be 11 outcomes (if incremented by 0.1)
 # need to make sure these values are ok
@@ -545,7 +482,7 @@ def submitReportHash(branch, reportHash, votePeriod):
         self.EventsExpDates[branch][votePeriod].reportHash[tx.origin] = reportHash
         return(1)
     else:
-        return(-1)
+        return(-2)
 
 # for ui client side
 # @return 1 if success

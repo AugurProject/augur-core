@@ -83,7 +83,7 @@ def getNewTwo(branch, expDateIndex):
 	return(load(self.EventsExpDates[branch][expDateIndex].new2[0], items=self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
 
 def getAdjPrinComp(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].adjPrinComp[0], items=(self.EventsExpDates[branch][expDateIndex].vSize/self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].adjPrinComp[0], items=(self.EventsExpDates[branch][expDateIndex].vSize/self.EventsExpDates[branch][expDateIndex].numberEvents)): arr)
 
 def getSmoothRep(branch, expDateIndex):
 	return(load(self.EventsExpDates[branch][expDateIndex].smoothRep[0], items=(self.EventsExpDates[branch][expDateIndex].vSize/self.EventsExpDates[branch][expDateIndex].numberEvents)): arr)
@@ -92,8 +92,9 @@ def getOutcomesFinal(branch, expDateIndex):
 	return(load(self.EventsExpDates[branch][expDateIndex].outcomesFinal[0], items=self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
 
 # check that msg.sender is one of our function contracts
-def addEvent():
+def addEvent(branch, expDateIndex, eventID):
 	# do some event adding stuff here
+	return(1)
 
 def setTotalRepReported(branch, expDateIndex, repReported):
 	self.EventsExpDates[branch][expDateIndex].totalRepReported = repReported

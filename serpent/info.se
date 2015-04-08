@@ -33,17 +33,6 @@ def init():
     self.Info[1010101].creationFee = 10
     self.Info[1010101].descriptionLength = len(description)
 
-def infoApi(itemNumber, ID):
-	if(itemNumber==0):
-		length=self.Info[ID].descriptionLength
-        return(load(self.Info[ID].description[0], chars=length): str)
-    elif(itemNumber==1):
-        return(self.Info[ID].descriptionLength)
-    elif(itemNumber==2):
-        return(self.Info[ID].creator)
-    elif(itemNumber==3):
-        return(self.Info[ID].creationFee)
-
 def getDescription(ID):
 	return(load(self.Info[ID].description[0], chars=self.Info[ID].descriptionLength): str)
 

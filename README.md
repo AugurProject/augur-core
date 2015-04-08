@@ -5,6 +5,9 @@ augur-serpent
 - min/max fxp? & 1,2 or 2^64 and 2*2^64 - should probably support fxp
 - make sure no rounding errors @ Chris
 - need to support categorical outcomes in consensus --- dunno if we do atm
+- check that msg.sender is one of our function contracts
+- this really needs to be = branches.se addr., not create a new one each time
+- min branch trading fee?
 
 ### Bugs:
 - what if a scalar has a .5 actual value outcome

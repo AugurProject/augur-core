@@ -32,3 +32,87 @@
 data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch)
 
 data nonces[]
+
+
+
+# @return cost - how much it costs you to buy
+#         price - current share price of that outcome after buy
+def getSimulatedBuy(market, outcome):
+    # lmsr cost calcs
+    oldCost = lsLmsr(market)
+    sharesPurchased(market)[outcome] += amount
+    newCost = lsLmsr(market)
+    if newCost <= oldCost:
+        sharesPurchased(market)[outcome] -= amount
+        return(-2)
+    cost = (newCost - oldCost)
+    price = self.price(market, outcome)
+    sharesPurchased(market)[outcome] -= amount
+    return([cost, price], items=2)
+
+# @return cost - how much you get paid to sell
+#         price - current share price of that outcome after sell
+def getSimulatedSell(market, outcome):
+    # lmsr cost calcs
+    oldCost = lsLmsr(market)
+    sharesPurchased(market)[outcome] -= amount
+    newCost = lsLmsr(market)
+    if oldCost <= newCost:
+        sharesPurchased(market)[outcome] += amount
+        return(-2)
+    # these prices are in fixed point
+    cost = oldCost - newCost
+    price = self.price(market, outcome)
+    sharesPurchased(market)[outcome] += amount
+    return([cost, price], items=2)
+
+
+def getMarketInfo(market):
+    info = array(8)
+    info[0] = self.Info[market].creator
+    info[1] = self.Info[market].creationFee
+    info[2] = self.Markets[market].currentParticipant
+    info[3] = self.Markets[market].alpha
+    info[4] = self.Markets[market].cumulativeScale
+    info[5] = self.Markets[market].numOutcomes
+    info[6] = self.Markets[market].tradingPeriod
+    info[7] = self.Markets[market].tradingFee
+    return(info: arr)
+
+def getMarketEvents(market):
+    i = 0
+    lenEvents = self.Markets[market].lenEvents
+    events = array(lenEvents)
+    while i < lenEvents:
+        events[i] = self.Markets[market].events[i]
+        i += 1
+    return(events: arr)
+
+# eventID && outcomeNumber only needed if itemNumber is 1
+def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, marketID):
+    if(itemNumber==0):
+        return(self.Markets[marketID].participants[participantIndex].participantID)
+    elif(itemNumber==1):
+        return(self.Markets[marketID].participants[participantIndex].shares[outcomeNumber])==4):
+        if(itemNumber==0):
+            return(self.Markets[ID].events[arrayIndex])
+        elif(itemNumber==1):
+            return(self.Markets[ID].sharesPurchased[arrayIndex])
+        elif(itemNumber==2):
+            return(-5)
+        elif(itemNumber==3):
+            return(self.Markets[ID].lenEvents)
+        elif(itemNumber==4):
+            return(self.Markets[ID].currentParticipant)
+        elif(itemNumber==5):
+            return(self.Markets[ID].winningOutcomes[arrayIndex])
+        elif(itemNumber==6):
+            return(self.Markets[ID].alpha)
+        elif(itemNumber==7):
+            return(self.Markets[ID].cumulativeScale)
+        elif(itemNumber==8):
+            return(self.Markets[ID].numOutcomes)
+        elif(itemNumber==9):
+            return(self.Markets[ID].tradingPeriod)
+        elif(itemNumber==10):
+            return(self.Markets[ID].tradingFee)
