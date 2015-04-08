@@ -1,0 +1,72 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation 
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+extern branches.se: [addMarket:ii:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementStep:i:_, initializeBranch:iiii:i]
+# this really needs to be = branches.se addr., not create a new one each time
+BRANCHES = create('branches.se')
+
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getEvent:iii:i, getEvents:ii:a, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReporterVotes:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, returnOld:ii:a, setAdjPrinComp:iia:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReporterVotes:iiia:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+EXPEVENTS = create('expiringEvents.se')
+
+extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
+INFO = create('info.se')
+
+extern cash.se: [balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i]
+CASH = create('cash.se')
+
+extern reporting.se: [addReporter:i:i, faucet:_:_, getRepBalance:ii:i, getReputation:i:a, hashReport:ai:i, makeBallot:ii:a, reputationApi:iii:i, setInitialReporters:ii:i]
+REPORTING = create('reporting.se')
+
+
+# @return amount of shares transferred
+# Error messages otherwise
+    # -1: invalid outcome or you haven't traded in this market
+    # -2: user actually doesn't have the shares
+    # -3: not enough money to transfer the shares 
+def transferShares(branch, market, outcome, amount, to):
+    participantNumber = self.Markets[market].addr2participant[tx.origin]
+    receiverNumber = self.Markets[market].addr2participant[to]
+    if (outcome==0 || self.Markets[market].participants[participantNumber].participantID != tx.origin):
+        return(-1)
+    if(to != self.Markets[market].participants[receiverNumber].participantID):
+        receiverNumber = self.Markets[market].currentParticipant
+        self.Markets[market].participants[receiverNumber].participantID = to
+        self.Markets[market].addr2participant[to] = receiverNumber
+        self.Markets[market].currentParticipant += 1
+    # remove shares from the user's account
+    # if user actually doesn't have the shares, return -2
+    if(self.Markets[market].participants[participantNumber].shares[outcome] < amount):
+        return(-2)
+    self.Markets[market].participants[participantNumber].shares[outcome] -= amount
+    self.Markets[market].participants[receiverNumber].shares[outcome] += amount
+
+    # half of fees to market creator
+    # other half go to branch
+    oldCost = lsLmsr(market)
+    self.Markets[market].sharesPurchased[outcome] += 2^32
+    newCost = lsLmsr(market)
+    price = 2^32*(newCost - oldCost)
+    fee = self.Markets[market].tradingFee*price/2^64
+    self.Markets[market].sharesPurchased[outcome] -= 2^32
+    if((self.balance(tx.origin) >= fee) && self.send(self.Info[market].creator, fee/2) && self.send(branch, fee/2)):
+        return(amount)
+    else:
+        return(-3)

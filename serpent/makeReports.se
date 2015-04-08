@@ -1,0 +1,167 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation 
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+extern branches.se: [addMarket:ii:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementStep:i:_, initializeBranch:iiii:i]
+# this really needs to be = branches.se addr., not create a new one each time
+BRANCHES = create('branches.se')
+
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getEvent:iii:i, getEvents:ii:a, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReporterVotes:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, returnOld:ii:a, setAdjPrinComp:iia:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReporterVotes:iiia:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+EXPEVENTS = create('expiringEvents.se')
+
+extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
+INFO = create('info.se')
+
+extern cash.se: [balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i]
+CASH = create('cash.se')
+
+extern reporting.se: [addReporter:i:i, faucet:_:_, getRepBalance:ii:i, getReputation:i:a, hashReport:ai:i, makeBallot:ii:a, reputationApi:iii:i, setInitialReporters:ii:i]
+REPORTING = create('reporting.se')
+
+# a no vote is -2^64, a yes vote is 2^64 && a can't determine vote is 3*2^63 (a empty ballot is 0)
+# atm voters who do vote are req. to vote on all things in their respective ballots (rest just auto .5 them)
+# ui should handle this by filling in things you didn't vote on automatically & ask to be sure you didn't want to vote on them
+# UI makeBallot function does this
+    # ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[votePeriod].numberEvents
+    # && loop through the events[] array fr2om 0 to numberEvents -1 for the votes list / order
+# people could report something like 16027*2^64 for a scalar
+# if people get behind on voting (e.g the redeem tx isn't called <1 period after it can be called) 
+    # voteperiod is an optional parameter only used in the scenario that we get behind on voting periods
+    # so people will need to vote on periods that are upcoming even if our currentVotePeriod is a bit behind (e.g. if current expperiod is 7 you should vote on stuff from voteperiod 6 (and then upon period 8 you can't vote anymore))
+# @return 1 if success
+# Error messages otherwise
+    # -1: report isn't long enough
+    # -2: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
+def report(branch, report:arr, votePeriod, salt):
+    # make sure the branch exists
+    repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
+    residual = block.number % self.Branches[branch].periodLength
+    if(residual > self.Branches[branch].periodLength/2):
+        # submit salt and votes
+        # need report length to be same as number of items in the current eventexpdates voting period events!
+        if(len(report)!=self.EventsExpDates[branch][votePeriod].numberEvents):
+            return(-1)
+
+        realHash = self.EventsExpDates[branch][votePeriod].reportHash[tx.origin]
+        hashInfo = array(len(report) + 2)
+        hashInfo[0] = tx.origin
+        hashInfo[1] = salt
+        i = 2
+        while i < (len(report) + 2):
+            hashInfo[i] = report[i]
+            i += 1
+        reportHash = sha256(hashInfo, items=len(hashInfo))
+        if(reportHash!=realHash):
+            (return(-3))
+
+        # if currentExpPeriod is more than 2 periods past the current vote period
+        # then there can be no more voting for that voting period
+        # (reasoning being: >=1 period past means all the events in that period have expired)
+        # (>=2 periods past mean the events have exp. & people have had 1 full period to vote)
+        # currently requires events to expire to vote
+        currentExpPeriod = (block.number / self.Branches[branch].periodLength)
+        if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
+            return(-2)
+
+        reputation = self.Reporting[branch].reputation[repIndex].repValue
+        # need to update stuff for quorem
+        # && store the report && the rep value
+        save(self.EventsExpDates[branch][votePeriod].reporters[tx.origin][0], report, items=len(report))
+        self.EventsExpDates[branch][votePeriod].totalRepReported += reputation
+        return(1)
+
+# Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
+# Error -2: not in hash submitting timeframe
+# Python code to get the hash:
+    #from bitcoin import encode
+    #from hashlib import sha256
+    #def sha256list(xs):
+    #    data = ''.join(encode(x, 256, 32) for x in xs)
+    #    hashed = int(sha256(data).hexdigest(), 16)
+    #    if hashed > 2**255:
+    #        return hashed - 2**256
+    #    else:
+    #        return hashed
+def submitReportHash(branch, reportHash, votePeriod):
+    # make sure the branch exists
+    repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
+    residual = block.number % self.Branches[branch].periodLength
+    currentExpPeriod = (block.number / self.Branches[branch].periodLength)
+    if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
+        return(-1)
+    if(residual < self.Branches[branch].periodLength/2):
+        # submit hash of (tx.origin, salt, Votes[])
+        self.EventsExpDates[branch][votePeriod].reportHash[tx.origin] = reportHash
+        return(1)
+    else:
+        return(-2)
+
+# for ui client side
+# @return 1 if success
+# Error messages otherwise
+    # -1: report isn't long enough
+    # -2: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
+def checkReportValidity(branch, report:arr, votePeriod):
+       if(len(report)!=self.EventsExpDates[branch][votePeriod].numberEvents):
+        return(-1)
+
+        # if currentExpPeriod is more than 2 periods past the current vote period
+        # then there can be no more voting for that voting period
+        # (reasoning being: >=1 period past means all the events in that period have expired)
+        # (>=2 periods past mean the events have exp. & people have had 1 full period to vote)
+        # currently requires events to expire to vote
+        currentExpPeriod = (block.number / self.Branches[branch].periodLength)
+        if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
+            return(-2)
+        else:
+            return(1)
+
+# anti cheat provide ballot and randomNum mechanism steal deposit
+def slashRep(branch, votePeriod, salt, report:arr, reporter):
+        realHash = self.EventsExpDates[branch][votePeriod].reportHash[reporter]
+        hashInfo = array(len(report) + 2)
+        hashInfo[0] = reporter
+        hashInfo[1] = salt
+        i = 2
+        while i < (len(report) + 2):
+            hashInfo[i] = report[i]
+            i += 1
+        reportHash = sha256(hashInfo, items=len(hashInfo))
+        if(reportHash!=realHash):
+            return(0)
+        else:
+            reporterIndex = self.Reporting[branch].repIDtoIndex[reporter]
+            trutherIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
+            # if the truther's rep. account doesn't exist, make one
+            if(self.Reporting[branch].reputation[trutherIndex].reporterID!=tx.origin):
+                trutherIndex = self.Reporting[branch].numberReporters
+                self.Reporting[branch].repIDtoIndex[tx.origin] = trutherIndex
+                self.Reporting[branch].reputation[trutherIndex].repValue = 0
+                self.Reporting[branch].reputation[trutherIndex].reporterID = tx.origin
+                self.Reporting[branch].numberReporters += 1
+
+            if(self.Reporting[branch].reputation[reporterIndex].reporterID!=reporter):
+                return(-2)
+                
+            reporterBalance = self.Reporting[branch].reputation[reporterIndex].repValue
+
+            self.Reporting[branch].reputation[reporterIndex].repValue -= reporterBalance
+            self.Reporting[branch].reputation[trutherIndex].repValue += value*2^58 / 2^64
+        return(value)

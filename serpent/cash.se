@@ -59,3 +59,10 @@ def sendFrom(recver, value, from):
         return(value)
     else:
         return(0)
+
+# make sure only coming from specific contracts
+def subtractCash(ID, amount):
+    self.cashcoinBalances[ID] -= amount
+
+def addCash(ID, amount):
+    self.cashcoinBalances[ID] += amount

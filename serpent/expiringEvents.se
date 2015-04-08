@@ -46,8 +46,11 @@ def getEvent(branch, expDateIndex, expDateIndex):
 def getTotalRepReported(branch, expDateIndex):
 	return(self.EventsExpDates[branch][expDateIndex].totalRepReported)
 
-def getReporterVotes(branch, expDateIndex, reporterID):
+def getReporterBallot(branch, expDateIndex, reporterID):
 	return(load(self.EventsExpDates[branch][expDateIndex].reporters[reporterID][0], items=self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
+
+def getReport(branch, expDateIndex, reporter, reportNum):
+	return(self.EventsExpDates[branch][expDateIndex].reporters[reporter][reportNum])
 
 def getVSize(branch, expDateIndex):
     return(self.EventsExpDates[branch][expDateIndex].vSize)
@@ -100,7 +103,7 @@ def setTotalRepReported(branch, expDateIndex, repReported):
 	self.EventsExpDates[branch][expDateIndex].totalRepReported = repReported
 	return(1)
 
-def setReporterVotes(branch, expDateIndex, reporterID, report: arr):
+def setReporterBallot(branch, expDateIndex, reporterID, report: arr):
 	save(self.EventsExpDates[branch][expDateIndex].reporters[reporterID][0], report, items=len(report))
 	return(1)
 

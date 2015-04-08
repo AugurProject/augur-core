@@ -116,3 +116,52 @@ def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, 
             return(self.Markets[ID].tradingPeriod)
         elif(itemNumber==10):
             return(self.Markets[ID].tradingFee)
+
+
+# alpha is equal to v/(n*log(n)) where v is the max percent commission
+# && n is the number of outcomes people can trade. Alpha is set when
+# a market is created.
+macro lsLmsr($marketID):
+    with $bq = Bq($marketID):
+        with $i = 1:
+            with $sumExp = 0:
+                while $i <= numOutcomes($marketID):
+                    $sumExp += fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
+                    $i += 1
+                $bq*fx_log($sumExp)/2**64
+
+macro sumList($q, $a, $b):
+    $i = $a + 1
+    $result = $q[$a]
+    while $i <= $b:
+        $result += $q[$i]
+        $i += 1
+    $result
+
+macro market($marketID):
+    self.Markets[$marketID]
+
+macro alpha($marketID):
+    market($marketID).alpha
+
+macro cumScale($marketID):
+    market($marketID).cumulativeScale
+
+macro numOutcomes($marketID):
+    market($marketID).numOutcomes
+
+macro sharesPurchased($marketID):
+    market($marketID).sharesPurchased
+
+macro particpant($marketID, $addr):
+    market($marketID).participants[$addr]
+
+macro Bq($marketID):
+   alpha($marketID) * cumScale($marketID) * sumList(sharesPurchased($marketID), 1, numOutcomes($marketID)) / 2**64
+
+def price(market, outcome):
+    a = lsLmsr(market)
+    sharesPurchased(market)[outcome] += 2**32
+    b = lsLmsr(market)
+    sharesPurchased(market)[outcome] -= 2**32
+    return((b - a) * 2**32)

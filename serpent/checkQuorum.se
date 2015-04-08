@@ -1,0 +1,78 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation 
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+extern branches.se: [addMarket:ii:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementStep:i:_, initializeBranch:iiii:i]
+# this really needs to be = branches.se addr., not create a new one each time
+BRANCHES = create('branches.se')
+
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getEvent:iii:i, getEvents:ii:a, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReporterVotes:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, returnOld:ii:a, setAdjPrinComp:iia:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReporterVotes:iiia:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+EXPEVENTS = create('expiringEvents.se')
+
+extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
+INFO = create('info.se')
+
+extern cash.se: [balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i]
+CASH = create('cash.se')
+
+extern reporting.se: [addReporter:i:i, faucet:_:_, getRepBalance:ii:i, getReputation:i:a, hashReport:ai:i, makeBallot:ii:a, reputationApi:iii:i, setInitialReporters:ii:i]
+REPORTING = create('reporting.se')
+
+# returns whether a quorem has a matured event
+# if there aren't enough events in a vote period eventsexpdate, push them to the current period and increment the vote period
+# @return 0 if fail, 1 if success
+def checkQuorum(branch):
+    currentVotePeriod = self.Branches[branch].currentVotePeriod
+    currentPeriod = (block.number / self.Branches[branch].periodLength)
+    # provided the currentPeriod is >=2 periods past the things we're going to rbcr on
+    # we can then conclude it has matured && people have had time to vote
+    matured = 0
+    enoughEvents = 0
+    enoughUpcoming = 0
+    if (currentPeriod >= (currentVotePeriod+2)):
+        matured = 1
+
+    # min future decisions at stake - 200 - else branch stalls (do same thing we do if min ballot/event size isn't met,
+    # push events into current period and hopefully more people will create decisions so it can actually be voted on, else repeat)
+    upcomingDecisions = 0
+    b = currentPeriod
+    while b < (currentPeriod+100):
+        upcomingDecisions += self.EventsExpDates[branch][b].numberEvents
+        b += 1
+    if ((self.EventsExpDates[branch][currentVotePeriod].numberEvents < 30 || upcomingDecisions < 500) && matured):
+        self.Branches[branch].currentVotePeriod += 1
+        self.Branches[branch].step = 0
+        currentVotePeriod = self.Branches[branch].currentVotePeriod
+        x = 0
+        while(x < self.EventsExpDates[branch][currentVotePeriod-1].numberEvents):
+            self.EventsExpDates[branch][currentPeriod].events[self.EventsExpDates[branch][currentPeriod].numberEvents] = self.EventsExpDates[branch][currentVotePeriod-1].events[x]
+            self.EventsExpDates[branch][currentPeriod].numberEvents += 1
+            # sub and set old period event to 0 poss.?
+            x += 1
+    else:
+        enoughEvents = 1
+        enoughUpcoming = 1
+    # for testing!
+    enoughUpcoming = 1
+    enoughEvents = 1
+    if(matured && enoughEvents && enoughUpcoming):
+        return(1)
+    else:
+        return(0)
