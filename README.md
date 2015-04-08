@@ -4,6 +4,7 @@ augur-serpent
 ### To do:
 - min/max fxp? & 1,2 or 2^64 and 2*2^64 - should probably support fxp
 - make sure no rounding errors @ Chris
+- need to support categorical outcomes in consensus --- dunno if we do atm
 
 ### Bugs:
 - what if a scalar has a .5 actual value outcome

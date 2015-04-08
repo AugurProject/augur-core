@@ -19,126 +19,10 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+BRANCH = 0
+EVENT = 1
+MARKET = 2
 
-# Every entity in our contract has similar metadata.
-# Instead of putting it in each entity, we put all the
-# metadata here.
-# Info's index is the hash of the item we're getting info on
-data Info[](description[2048], descriptionLength, creator, creationFee)
-
-# CurrentVotePeriod is the current index in eventsExpDates
-# Branches' index is the hash of the branch (aka branchID)
-# currentVotePeriod is a nonce that tells us which bucket of events up to be
-# voted on in the current vote period (should always be 1 behind block.number/periodlength or current EventsExpDates index)
-# period parameter for reporting
-# currentExpPeriod = (block.number / self.Branches[branch].periodLength)
-# currentExpPeriod - 1 is what's up for reporting at any given time
-data Branches[](currentVotePeriod, periodLength, step, markets[], numMarkets, minTradingFee)
-
-# Events' index is the eventID
-# a binary outcome has 0 for min && 1 for max value, but consensus will return 2^64 and 2^65 respectively
-# so for voting 1 and 2 in fxp. need to be given for binaries, not 0 & 1
-# S&P 500 scalar would be say 0 && 4700, respectively
-# categorical markets have fixed point min and max
- # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
-# need outcomes returned as 1*2^64, 2*2^64, etc... indeterminate as 3*2^63
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
-
-# Reporting index is the branchID
-# Reporters index is the rep. address
-# We 0 index reputation so can walk thru for consensus
-# EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
-# RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
-# Events is 0 indexed as well
-data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
-
-# [branchID][votingPeriod]
-# v_size = numReports * numEvents
-# reportsFilled, reportsMask, weightedCenteredData, loadingVector, scores, set1, set2, old,
-# new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
-# reporters is [reporterID][eventNum]
-# reporthash is [reporterID] = hash
-data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
-
-# Markets' index is the marketID
-# Events is a 0 indexed array of events in the market in the format of
-    # [1, event, event, 2, event, 3, event, event, event]
-    # 1 means dimension 1, 2 is events in dimension 2, 3 is the dimension 3 events
-# Sharespurchased keeps track of the number of shares purchased for each outcome
-    # sharesPurchased states starts at 1 - (same for participants[].shares[] array)
-# Participants is a 0 indexed array of participants, their cashIDs, && the shares in each outcome they've purchased of an event
-# a binary outcome state 1 is no, 2 is true, 0 if not determined
-# tradingFee is a percent in fixedPoint
-# tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch)
-
-data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
-
-data cashcoinBalances[]
-
-data nonces[]
-
-data branchList[]
-
-data branchListCount
-
-def init():
-    # test initial funds
-    self.cashcoinBalances[tx.origin] = 100000*2^64
-    self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
-    self.Reporting[1010101].reputation[0].repValue = 470*2^64
-    self.Reporting[1010101].reputation[0].reporterID = tx.origin
-    self.Reporting[1010101].numberReporters = 1
-    description = text("Root branch")
-    save(self.Info[1010101].description[0], description, chars=len(description))
-    self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
-    self.Info[1010101].creationFee = 10
-    self.Info[1010101].descriptionLength = len(description)
-    self.Branches[1010101].currentVotePeriod = (block.number / 403200) - 1 
-    self.Branches[1010101].periodLength = 20
-    self.Branches[1010101].minTradingFee = 2^57
-    self.branchListCount = 1
-    self.branchList[0] = 1010101
-
-# @return: cash balance of address
-def balance(address):
-    return(self.cashcoinBalances[address])
-
-# should send values as fixed point in UI (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
-# so cashcoin fees could just go to root branch, or we could not have fees besides 
-# gas fee to do a send transaction
-# @return: value sent, 0 if fails
-def send(recver, value):
-    sender = tx.origin
-    senderBalance = self.cashcoinBalances[sender]
-    if(senderBalance >= value):
-        self.cashcoinBalances[sender] -= value
-        self.cashcoinBalances[recver] += value
-        return(value)
-    else:
-        return(0)
-
-def faucet():
-    sender = tx.origin
-    self.cashcoinBalances[sender] = 10000*2^64
-    index = self.Reporting[1010101].numberReporters
-    self.Reporting[1010101].repIDtoIndex[tx.origin] = index
-    self.Reporting[1010101].reputation[index].repValue = 47*2^64
-    self.Reporting[1010101].reputation[index].reporterID = tx.origin
-    self.Reporting[1010101].numberReporters += 1
-    return(1)
-
-# @return value of cash sent; fail is 0
-def sendFrom(recver, value, from):
-    if(from!=tx.origin):
-        return(0)
-    senderBalance = self.cashcoinBalances[from]
-    if(senderBalance >= value):
-        self.cashcoinBalances[from] -= value
-        self.cashcoinBalances[recver] += value
-        return(value)
-    else:
-        return(0)
 
 # @return value of reputation sent, 0 if not enough reputation
 # error messages otherwise
@@ -172,12 +56,7 @@ def sendReputation(branch, recver, value):
     else:
         return(0)
 
-# @return reputation value        
-def getRepBalance(branch, address):
-    repIndex = self.Reporting[branch].repIDtoIndex[address]
-    if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
-        return(0)
-    return(self.Reporting[branch].reputation[repIndex].repValue)
+
 
 # period length is given in blocks
 # description format is branchName:description
