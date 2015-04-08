@@ -50,6 +50,7 @@ pd.set_option('display.float_format', lambda x: '%.8f' % x)
 # max_iterations: number of blocks required to complete PCA
 max_iterations = 25
 tolerance = 0.05
+variance_threshold = 0.85
 init()
 
 YES = 2.0
@@ -284,16 +285,15 @@ def main():
         print BR("Python PCA")
 
         iv = result[v_size:]
-        # components = int(np.ceil(num_events / 3.0))
-        variance_threshold = 0.75
         variance_explained = 0
         num_components = 0
         nc = np.zeros(num_reports)
+        negative = False
 
         while variance_explained < variance_threshold:
 
             # Calculate loading vector
-            lv = iv[:-1]
+            lv = np.array(map(unfix, iv[:-1]))
             for i in range(max_iterations):
                 lv = R.dot(wcd).dot(lv).dot(wcd)
                 lv /= np.sqrt(lv.dot(lv))
@@ -305,15 +305,19 @@ def main():
             variance_explained += E / totalvar
 
             # Projection onto new axis: nonconformity vector
+            if num_components == 0 and lv[0] < 0:
+                negative = True
+            if negative:
+                lv *= -1
             nc += E * wcd.dot(lv)
+
+            print BW("  Eigenvector %d:" % num_components), np.round(np.array(lv), 6)
+            print BW("  Eigenvalue %d: " % num_components), E, "(%s%% variance explained)" % np.round(variance_explained * 100, 3)
+            print BW("  Nonconformity: "), np.round(nc, 6)
+            print
 
             # Deflate the data matrix
             wcd = wcd - wcd.dot(np.outer(lv, lv))
-
-            print BW("  Eigenvector %d:" % num_components), np.array(lv)
-            print BW("  Eigenvalue %d: " % num_components), E, "(%s%% variance explained)" % np.round(variance_explained * 100, 3)
-            print BW("  Nonconformity: "), nc
-            print
 
             num_components += 1
 
@@ -438,13 +442,33 @@ def main():
         pyresults = Oracle(reports=reports,
                            reputation=reputation,
                            event_bounds=event_bounds,
-                           algorithm="fixed-variance").consensus()
+                           algorithm="fixed-variance",
+                           variance_threshold=variance_threshold,
+                           verbose=True).consensus()
         serpent_results = {
             'reputation': map(unfix, smooth_rep),
             'outcomes': map(unfix, outcomes_final),
         }
         python_results = {
-            'reputation': pyresults['agents']['smooth_rep'].data,
+            'reputation': pyresults['agents']['smooth_rep'],
+            'outcomes': np.array(pyresults['events']['outcomes_final']),
+        }
+        comparisons = {}
+        for m in ('reputation', 'outcomes'):
+            comparisons[m] = abs((python_results[m] - serpent_results[m]) / python_results[m])
+
+        pyresults = Oracle(reports=reports,
+                           reputation=reputation,
+                           event_bounds=event_bounds,
+                           algorithm="absolute",
+                           variance_threshold=variance_threshold,
+                           verbose=True).consensus()
+        serpent_results = {
+            'reputation': map(unfix, smooth_rep),
+            'outcomes': map(unfix, outcomes_final),
+        }
+        python_results = {
+            'reputation': pyresults['agents']['smooth_rep'],
             'outcomes': np.array(pyresults['events']['outcomes_final']),
         }
         comparisons = {}

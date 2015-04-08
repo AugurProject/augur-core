@@ -447,7 +447,7 @@ def pca_loadings(iv:arr, X:arr, reputation:arr, num_reports, num_events):
                                 lv[k] -= d_dot_lv * X[j*num_events + k] * reputation[j] / ONE^2
                                 k += 1
                     j += 1
-
+            # Normalize by length
             with s_dot_s = 0:
                 with j = 0:
                     while j < num_events:
@@ -463,6 +463,11 @@ def pca_loadings(iv:arr, X:arr, reputation:arr, num_reports, num_events):
                         while j < num_events:
                             lv[j] = lv[j]*ONE/norm_s
                             j += 1
+            if lv[0] < 0:
+                with j = 0:
+                    while j < num_events:
+                        lv[j] = -lv[j]
+                        j += 1
             lv[num_events] = iv[num_events] - 1
             return(lv, items=lflatsize)
 
