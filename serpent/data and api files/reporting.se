@@ -124,5 +124,17 @@ def setInitialReporters(parent, branchID):
     self.Reporting[branchID].numberReporters = i
     return(1)
 
-def addReporter(branch):
+def addReporter(branch, sender):
+    reporterIndex = self.Reporting[branch].numberReporters
+    self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
+    self.Reporting[branch].reputation[reporterIndex].repValue = 0
+    self.Reporting[branch].reputation[reporterIndex].reporterID = sender
+    self.Reporting[branch].numberReporters += 1
     return(1)
+
+def addRep(branch, index, value):
+    self.Reporting[branch].reputation[index].repValue += value
+    return(1)
+
+def subtractRep(branch, index, value):
+    self.Reporting[branch].reputation[index].repValue -= value
