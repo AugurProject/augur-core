@@ -182,6 +182,10 @@ macro particpant($marketID, $addr):
 macro Bq($marketID):
    alpha($marketID) * cumScale($marketID) * sumList(sharesPurchased($marketID), 1, numOutcomes($marketID)) / 2**64
 
+def lsLmsr(marketID):
+    lsLmsr(marketID)
+    return(1)
+
 def getNonce(ID):
     return(self.nonces[ID])
 

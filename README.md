@@ -3,12 +3,10 @@ augur-serpent
 
 ### To do:
 - min/max fxp? & 1,2 or 2^64 and 2*2^64 - should probably support fxp
-- make sure no rounding errors @ Chris
 - need to support categorical outcomes in consensus --- dunno if we do atm
 - check that msg.sender is one of our function contracts
 - this really needs to be = branches.se addr., not create a new one each time
 - min branch trading fee?
-- refactor consensus
 - #def moveEvent(event, newBranch, authorSignature):
 - can do 4%a, 10%b, 7%c, 25%d, etc. with many dimensions of scalars
 - need a master admin contract that can set which contracts to check for in msg.sender checks

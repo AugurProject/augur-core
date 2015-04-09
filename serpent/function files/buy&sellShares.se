@@ -35,6 +35,11 @@ CASH = create('cash.se')
 extern reporting.se: [addReporter:i:i, faucet:_:_, getRepBalance:ii:i, getReputation:i:a, hashReport:ai:i, makeBallot:ii:a, reputationApi:iii:i, setInitialReporters:ii:i]
 REPORTING = create('reporting.se')
 
+extern fx_macros.se: [fx_exp:i:i, fx_log:i:i]
+FXP = create('fxpFunctions.se')
+
+extern markets.se: [addParticipant:_:i, getAlpha:i:i, getBranch:i:i, getCumScale:i:i, getCurrentParticipantNumber:i:i, getMarketEvents:i:a, getMarketInfo:i:a, getNonce:i:i, getNumEvents:i:i, getNumOutcomes:i:i, getParticipantID:ii:i, getParticipantNumber:i:i, getParticipantSharesPurchased:iii:i, getSharesPurchased:ii:i, getSimulatedBuy:ii:_, getSimulatedSell:ii:_, getTradingFee:i:i, getTradingPeriod:i:i, getWinningOutcomes:i:a, incrementNonce:i:i, initializeMarket:iaiiiiii:i, modifyShares:_:i, price:ii:i, setWinningOutcomes:_:i]
+MARKETS = create('markets.se')
 
 macro bad_pow():
     with $data = array(4):
@@ -71,40 +76,38 @@ def buyShares(branch, market, outcome, amount, nonce):
         return(-4)
     inc_nonce()
     stalled = 0
-    if (outcome==0 || (self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod && !stalled) || self.Markets[market].branch != branch):
+    if (outcome==0 || (BRANCHES.getVotePeriod(branch)>=MARKETS.getTradingPeriod(market) && !stalled) || MARKETS.getBranch(market) != branch):
         return(-1)
     # lmsr cost calcs
-    oldCost = lsLmsr(market)
-    sharesPurchased(market)[outcome] += amount
-    newCost = lsLmsr(market)
+    oldCost = MARKETS.lsLmsr(market)
+    MARKETS.modifyShares(market, outcome, amount)
+    newCost = MARKETS.lsLmsr(market)
     if newCost <= oldCost:
-        sharesPurchased(market)[outcome] -= amount
+        MARKETS.modifyShares(market, outcome, -amount)
         return(-2)
     price = (newCost - oldCost)
     
-    if(self.cashcoinBalances[tx.origin] < price*(self.Markets[market].tradingFee + 2^64)/2^64):
-        sharesPurchased(market)[outcome] -= amount
+    if(CASH.balance(tx.origin) < price*(MARKETS.getTradingFee + 2^64)/2^64):
+        MARKETS.modifyShares(market, outcome, -amount)
         return(-3)
 
-    participantNumber = self.Markets[market].addr2participant[tx.origin]
+    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
 
-    if(tx.origin != self.Markets[market].participants[participantNumber].participantID):
-        participantNumber = self.Markets[market].currentParticipant
-        self.Markets[market].participants[participantNumber].participantID = tx.origin
-        self.Markets[market].addr2participant[tx.origin] = participantNumber
-        self.Markets[market].currentParticipant += 1
+    # if participant doesn't exist in market, add them
+    if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
+        MARKETS.addParticipant(market, tx.origin)
 
-    self.Markets[market].participants[participantNumber].shares[outcome] += amount
+    MARKETS.modifyParticipantShares(market, participantNumber, outcome, amount)
     # send shares of the event to user address
     # if user doesn't have enough money, revert
     # send money from user acc. to market address/account
     # cost for shares
-    self.send(market, price)
+    CASH.send(market, price)
     # half of fees to market creator
-    fee = self.Markets[market].tradingFee*price/2^64
-    self.send(self.Info[market].creator, fee/2)
+    fee = MARKETS.getTradingFee(market)*price/2^64
+    CASH.send(INFO.getCreator(market), fee/2)
     # other half go to branch
-    self.send(branch, fee/2)
+    CASH.send(branch, fee/2)
     return(price+fee)
 
 # amount is amount of shares to sell
