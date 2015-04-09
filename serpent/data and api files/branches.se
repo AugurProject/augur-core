@@ -94,7 +94,16 @@ def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee):
 
 # check that msg.sender is one of our function contracts
 def incrementStep(branch):
-	self.Branches[ID].step += 1
+	self.Branches[branch].step += 1
+	return(1)
+
+def setStep(branch, step):
+	self.Branches[branch].step = step
+	return(1)
+
+def incrementPeriod(branch):
+	self.Branches[branch].currentVotePeriod += 1
+	return(1)
 
 # check that msg.sender is one of our function contracts
 def addMarket(branch, market):

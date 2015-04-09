@@ -10,7 +10,9 @@ augur-serpent
 - min branch trading fee?
 - refactor consensus
 - #def moveEvent(event, newBranch, authorSignature):
-
+- can do 4%a, 10%b, 7%c, 25%d, etc. with many dimensions of scalars
+- need a master admin contract that can set which contracts to check for in msg.sender checks
+- or a 1 time function call to set the contract addr. for msg.sender checks
 
 ### Bugs:
 - what if a scalar has a .5 actual value outcome
