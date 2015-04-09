@@ -122,33 +122,32 @@ def sellShares(branch, market, outcome, amount, nonce):
         return(-4)
     inc_nonce()
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
-    participantNumber = self.Markets[market].addr2participant[tx.origin]
-    if (self.Markets[market].participants[participantNumber].participantID != tx.origin || outcome==0 || self.Branches[branch].currentVotePeriod>=self.Markets[market].tradingPeriod || self.Markets[market].branch != branch):
+    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    if (MARKETS.getParticipantID(market, participantNumber) != tx.origin || outcome==0 || BRANCHES.getVotePeriod(branch)>=MARKETS.getTradingPeriod(market) || MARKETS.getBranch(market) != branch):
         return(-1)
     # lmsr cost calcs
-    oldCost = lsLmsr(market)
-    sharesPurchased(market)[outcome] -= amount
-    newCost = lsLmsr(market)
+    oldCost = MARKETS.lsLmsr(market)
+    MARKETS.modifyShares(market, outcome, -amount)
+    newCost = MARKETS.lsLmsr(market)
     if oldCost <= newCost:
-        sharesPurchased(market)[outcome] += amount
+        MARKETS.modifyShares(market, outcome, amount)
         return(-2)
     # these prices are in fixed point
     price = oldCost - newCost
     # remove shares from the user's account
     # if user actually doesn't have the shares, revert
-    if self.Markets[market].participants[participantNumber].shares[outcome] < amount:
-        sharesPurchased(market)[outcome] += amount
+    if MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome) < amount:
+        MARKETS.modifyShares(market, outcome, amount)
         return(-3)
     else:
         # send bitcoin from the market to the user acc.
-        self.cashcoinBalances[market] -= price
-        fee = self.Markets[market].tradingFee*price/2^64
-        log(fee)
+        CASH.subtractCash(market, price)
+        fee = MARKETS.getTradingFee(market)*price/2^64
         # half of fees go to market creator
-        self.cashcoinBalances[self.Info[market].creator] += fee/2
+        CASH.addCash(INFO.getCreator(market), fee/2)
         # half go to branch
-        self.cashcoinBalances[branch] += fee/2
+        CASH.addCash(branch, fee/2)
         price -= fee
-        self.cashcoinBalances[tx.origin] += price
-        self.Markets[market].participants[participantNumber].shares[outcome] -= amount
+        CASH.addCash(tx.origin, price)
+        MARKETS.modifyParticipantShares(market, participantNumber, outcome, -amount)
         return(price)
