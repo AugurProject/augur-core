@@ -56,14 +56,17 @@ def getMaxValue(event):
 def getNumOutcomes(event):
 	return(self.Events[event].numOutcomes)
 
-def initializeEvent(ID, branch, expirationDate, outcome, minValue, maxValue, numOutcomes):
+def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes):
 	# check that msg.sender is one of our function contracts
 	if(self.Events[ID].expirationDate==0):
 		self.Events[ID].branch = branch
 		self.Events[ID].expirationDate = expirationDate
-		self.Events[ID].outcome = outcome
 		self.Events[ID].minValue = minValue
 		self.Events[ID].maxValue = maxValue
 		self.Events[ID].numOutcomes = numOutcomes
 	else:
 		return(0)
+
+def setOutcome(ID, outcome):
+	self.Events[ID].outcome = outcome
+	return(1)
