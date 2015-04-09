@@ -19,6 +19,10 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+extern branches.se: [addMarket:ii:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementStep:i:_, initializeBranch:iiii:i]
+# in reality set this equal to branch contract address
+BRANCHES = create('branches.se')
+
 # Reporting index is the branchID
 # Reporters index is the rep. address
 # We 0 index reputation so can walk thru for consensus
@@ -47,15 +51,21 @@ def getRepBalance(branch, address):
         return(0)
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
+def getReporterID(branch, index):
+    return(self.Reporting[branch].reputation[index].reporterID)
+
 # will return 0s for array values after it's looped through all the ones you
 # have an actual balance in
 def getReputation(address):
+    branchListCount = BRANCHES.getNumBranches()
     if(address):
-        branches = array(2*self.branchListCount)
+        branches = array(2*branchListCount)
+        branchList = array(branchListCount)
+        branchList = BRANCHES.getBranches(outsz=branchListCount)
         i = 0
         b = 0
-        while i < self.branchListCount:
-            branch = self.branchList[i]
+        while i < branchListCount:
+            branch = branchList[i]
             balance = self.getRepBalance(branch, address)
             if(balance!=0):
                 branches[b] = branch
@@ -64,11 +74,13 @@ def getReputation(address):
             i += 1
     else:
         address = tx.origin
-        branches = array(2*self.branchListCount)
+        branches = array(2*branchListCount)
+        branchList = array(branchListCount)
+        branchList = BRANCHES.getBranches(outsz=branchListCount)
         i = 0
         b = 0
-        while i < self.branchListCount:
-            branch = self.branchList[i]
+        while i < branchListCount:
+            branch = branchList[i]
             balance = self.getRepBalance(branch, address)
             if(balance!=0):
                 branches[b] = branch
@@ -76,6 +88,12 @@ def getReputation(address):
                 b += 2
             i += 1
     return(branches: arr)
+
+def getNumberReporters(branch):
+    return(self.Reporting[branch].numberReporters)
+
+def repIDToIndex(branch, repID):
+    return(self.Reporting[branch].repIDtoIndex[repID])
 
 def hashReport(report: arr, salt):
         hashInfo = array(len(report) + 2)
@@ -88,44 +106,7 @@ def hashReport(report: arr, salt):
         reportHash = sha256(hashInfo, items=len(hashInfo))
         return(reportHash)
 
-# atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
-# ui should handle this ^
-# ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents
-# && loop through the events[] array from 0 to numberEvents -1 for the votes list / order
-# UI will need a function to get the items in that array above so it can make a report!
-# w/ this function you can get the eventIDs, look them up && report on outcomes (probably w/ another function to look them up) -- make sure in this function to check that the report value is not >maxvalue or <minvalue for the event
-# voteperiod is an optional parameter only used in the scenario that we get behind on voting periods - ui will want to alert users of this and say hey we're behind but atm you should really be voting on this voting period (anything meeting the req. of vote if we were caught up)
-# @returns a ballot of events (UI needs to vote w/ a ballot of reports in this order per corresponding event)
-def makeBallot(branch, votePeriod):
-    if(votePeriod):
-        numEvents = self.EventsExpDates[branch][votePeriod].numberEvents
-        eventArray = array(numEvents)
-        i = 0
-        while i < numEvents:
-            eventID = self.EventsExpDates[branch][votePeriod].events[numEvents]
-            eventArray[i] = eventID
-    else:
-        numEvents = self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].numberEvents
-        eventArray = array(numEvents)
-        i = 0
-        while i < numEvents:
-            eventID = self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].events[numEvents]
-            eventArray[i] = eventID
-    return(eventArray: arr)
-
-def reputationApi(reputationIndex, itemNumber, branchID):
-    if(itemNumber==0):
-        return(self.Reporting[branchID].reputation[reputationIndex].repValue)
-    elif(itemNumber==1):
-        return(self.Reporting[branchID].reputation[reputationIndex].reporterID)
-
-elif(itemNumber==2):
-    return(self.Reporting[ID].numberReporters)
-elif(itemNumber==3):
-    return(self.Reporting[ID].repIDtoIndex[arrayIndex])
-
 # check that msg.sender is one of our function contracts
-
 def setInitialReporters(parent, branchID):
     # first vote period won't be until after the current (in this case first) basket of things has expired
         # if floor(blockNum / periodLength) is say 5 and eventsExpDates[5]

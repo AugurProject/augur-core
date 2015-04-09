@@ -77,6 +77,9 @@ def getBranches():
 def getNumBranches():
 	return(branchListCount)
 
+def getBranch(branchNumber):
+	return(branchList[branchNumber])
+
 # check that msg.sender is one of our function contracts
 def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee):
 	if(self.Branches[ID].periodLength==0):

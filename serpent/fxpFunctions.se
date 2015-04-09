@@ -1,3 +1,8 @@
 inset('fx_macros.se')
 
-# make these functions
+# macros into functions
+def fx_exp(x):
+	return(fx_exp(x))
+
+def fx_log(x):
+	return(fx_log(x))

@@ -19,6 +19,10 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+extern fx_macros.se: [fx_exp:i:i, fx_log:i:i]
+# should really be the address
+FXP = create('fx_macros.se')
+
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market in the format of
     # [1, event, event, 2, event, 3, event, event, event]
@@ -32,8 +36,6 @@
 data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch)
 
 data nonces[]
-
-
 
 # @return cost - how much it costs you to buy
 #         price - current share price of that outcome after buy
@@ -66,17 +68,21 @@ def getSimulatedSell(market, outcome):
     sharesPurchased(market)[outcome] += amount
     return([cost, price], items=2)
 
+def price(market, outcome):
+    a = lsLmsr(market)
+    sharesPurchased(market)[outcome] += 2**32
+    b = lsLmsr(market)
+    sharesPurchased(market)[outcome] -= 2**32
+    return((b - a) * 2**32)
 
 def getMarketInfo(market):
-    info = array(8)
-    info[0] = self.Info[market].creator
-    info[1] = self.Info[market].creationFee
-    info[2] = self.Markets[market].currentParticipant
-    info[3] = self.Markets[market].alpha
-    info[4] = self.Markets[market].cumulativeScale
-    info[5] = self.Markets[market].numOutcomes
-    info[6] = self.Markets[market].tradingPeriod
-    info[7] = self.Markets[market].tradingFee
+    info = array(6)
+    info[0] = self.Markets[market].currentParticipant
+    info[1] = self.Markets[market].alpha
+    info[2] = self.Markets[market].cumulativeScale
+    info[3] = self.Markets[market].numOutcomes
+    info[4] = self.Markets[market].tradingPeriod
+    info[5] = self.Markets[market].tradingFee
     return(info: arr)
 
 def getMarketEvents(market):
@@ -88,35 +94,52 @@ def getMarketEvents(market):
         i += 1
     return(events: arr)
 
-# eventID && outcomeNumber only needed if itemNumber is 1
-def marketParticipantsApi(participantIndex, itemNumber, eventID, outcomeNumber, marketID):
-    if(itemNumber==0):
-        return(self.Markets[marketID].participants[participantIndex].participantID)
-    elif(itemNumber==1):
-        return(self.Markets[marketID].participants[participantIndex].shares[outcomeNumber])==4):
-        if(itemNumber==0):
-            return(self.Markets[ID].events[arrayIndex])
-        elif(itemNumber==1):
-            return(self.Markets[ID].sharesPurchased[arrayIndex])
-        elif(itemNumber==2):
-            return(-5)
-        elif(itemNumber==3):
-            return(self.Markets[ID].lenEvents)
-        elif(itemNumber==4):
-            return(self.Markets[ID].currentParticipant)
-        elif(itemNumber==5):
-            return(self.Markets[ID].winningOutcomes[arrayIndex])
-        elif(itemNumber==6):
-            return(self.Markets[ID].alpha)
-        elif(itemNumber==7):
-            return(self.Markets[ID].cumulativeScale)
-        elif(itemNumber==8):
-            return(self.Markets[ID].numOutcomes)
-        elif(itemNumber==9):
-            return(self.Markets[ID].tradingPeriod)
-        elif(itemNumber==10):
-            return(self.Markets[ID].tradingFee)
+def getSharesPurchased(market, outcome):
+    return(self.Markets[market].sharesPurchased[outcome])
 
+def getParticipantNumber(address):
+    return(self.Markets[market].addr2participant[address])
+
+def getParticipantID(market, participantNumber):
+    return(self.Markets[market].participants[participantNumber].participantID)
+
+def getParticipantSharesPurchased(market, participantNumber, outcome):
+    return(self.Markets[market].participants[participantNumber].shares[outcome])
+
+def getNumEvents(market):
+    return(self.Markets[market].lenEvents)
+
+def getCurrentParticipantNumber(market):
+    return(self.Markets[market].currentParticipant)
+
+def getWinningOutcomes(market):
+    # largest # of winning outcomes is 8
+    winningOutcomes = array(8)
+    i = 0
+    outcome = self.Markets[market].winningOutcomes[i]
+    while outcome != 0:
+        winningOutcomes[i] = outcome
+        i += 1
+        outcome = self.Markets[market].winningOutcomes[i]
+    return(winningOutcomes: arr)
+
+def getAlpha(market):
+    return(self.Markets[market].alpha)
+
+def getCumScale(market):
+    return(self.Markets[market].cumulativeScale)
+
+def getNumOutcomes(market):
+    return(self.Markets[market].numOutcomes)
+
+def getTradingPeriod(market):
+    return(self.Markets[market].tradingPeriod)
+
+def getTradingFee(market):
+    return(self.Markets[market].tradingFee)
+
+def getBranch(market):
+    return(self.Markets[market].branch)
 
 # alpha is equal to v/(n*log(n)) where v is the max percent commission
 # && n is the number of outcomes people can trade. Alpha is set when
@@ -126,9 +149,9 @@ macro lsLmsr($marketID):
         with $i = 1:
             with $sumExp = 0:
                 while $i <= numOutcomes($marketID):
-                    $sumExp += fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
+                    $sumExp += FXP.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
                     $i += 1
-                $bq*fx_log($sumExp)/2**64
+                $bq*FXP.fx_log($sumExp)/2**64
 
 macro sumList($q, $a, $b):
     $i = $a + 1
@@ -159,9 +182,23 @@ macro particpant($marketID, $addr):
 macro Bq($marketID):
    alpha($marketID) * cumScale($marketID) * sumList(sharesPurchased($marketID), 1, numOutcomes($marketID)) / 2**64
 
-def price(market, outcome):
-    a = lsLmsr(market)
-    sharesPurchased(market)[outcome] += 2**32
-    b = lsLmsr(market)
-    sharesPurchased(market)[outcome] -= 2**32
-    return((b - a) * 2**32)
+def getNonce(ID):
+    return(self.nonces[ID])
+
+# check that msg.sender is one of our function contracts
+def incrementNonce(ID):
+    self.nonces[ID] += 1
+    return(1)
+
+# check that msg.sender is one of our function contracts
+def initializeMarket(marketID, events: arr, alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch):
+    return(1)
+
+def addParticipant():
+    return(1)
+
+def modifyShares():
+    return(1)
+
+def setWinningOutcomes():
+    return(1)
