@@ -191,14 +191,27 @@ def incrementNonce(ID):
     return(1)
 
 # check that msg.sender is one of our function contracts
-def initializeMarket(marketID, events: arr, alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch):
+def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch):
+    # add event list to the market
+    save(self.Markets[marketID].events[0], events, items=eventNum)
+    self.Markets[marketID].lenEvents = len(events)
+    self.Markets[marketID].tradingPeriod = tradingPeriod
+    self.Markets[marketID].tradingFee = tradingFee
+    self.Markets[marketID].branch = branch
     return(1)
 
 def addParticipant():
     return(1)
 
-def modifyShares():
+def modifyShares(marketID, outcome, amount):
+    sharesPurchased(marketID)[outcome] += amount
     return(1)
 
 def setWinningOutcomes():
+    return(1)
+
+def initialLiquiditySetup(marketID, alpha, cumScale, numOutcomes):
+    self.Markets[marketID].alpha = alpha
+    self.Markets[marketID].cumulativeScale = cumScale
+    self.Markets[marketID].numOutcomes = numOutcomes
     return(1)

@@ -35,6 +35,12 @@ CASH = create('cash.se')
 extern reporting.se: [addReporter:i:i, faucet:_:_, getRepBalance:ii:i, getReputation:i:a, hashReport:ai:i, makeBallot:ii:a, reputationApi:iii:i, setInitialReporters:ii:i]
 REPORTING = create('reporting.se')
 
+extern fx_macros.se: [fx_exp:i:i, fx_log:i:i]
+FXP = create('fxpFunctions.se')
+
+extern markets.se: [addParticipant:_:i, getAlpha:i:i, getBranch:i:i, getCumScale:i:i, getCurrentParticipantNumber:i:i, getMarketEvents:i:a, getMarketInfo:i:a, getNonce:i:i, getNumEvents:i:i, getNumOutcomes:i:i, getParticipantID:ii:i, getParticipantNumber:i:i, getParticipantSharesPurchased:iii:i, getSharesPurchased:ii:i, getSimulatedBuy:ii:_, getSimulatedSell:ii:_, getTradingFee:i:i, getTradingPeriod:i:i, getWinningOutcomes:i:a, incrementNonce:i:i, initializeMarket:iaiiiiii:i, modifyShares:_:i, price:ii:i, setWinningOutcomes:_:i]
+MARKETS = create('markets.se')
+
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
 # z = liquidity / (1+(alpha*n*ln(n)))
@@ -48,7 +54,8 @@ REPORTING = create('reporting.se')
     # -3: too many outcomes
     # -4: not enough money or market already exists
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr):
-    if(self.Branches[branch].periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee < self.Branches[branch].minTradingFee):
+    periodLength = BRANCHES.getPeriodLength(branch)
+    if(periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee < BRANCHES.getMinTradingFee(branch)):
         return(-1)
     # check that events have same exp. dates && branch
     i = 0
@@ -62,26 +69,28 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     tradingPeriod = 0
     while i < eventNum:
         event = events[i]
-        if(self.Events[event].expirationDate > tradingPeriod):
-            tradingPeriod = self.Events[event].expirationDate
+        expirationDate = EVENTS.getExpiration(event)
+        if(expirationDate > tradingPeriod):
+            tradingPeriod = expirationDate
         eventsConcat += event
-        if (self.Events[event].branch != branch || !self.Info[event].creator):
+        if (EVENTS.getBranch(event) != branch || !INFO.getCreator(event)):
             return(0)
         #scalars
-        if(self.Events[event].maxValue!=1 && self.Events[event].numOutcomes==2):
+        maxValue = EVENTS.getMaxValue(event)
+        if(maxValue!=1 && EVENTS.getNumOutcomes(event)==2):
             # is a valid scalar
-            cumulativeScale += self.Events[event].maxValue - self.Events[event].minValue
+            cumulativeScale += maxValue - EVENTS.getMinValue(event)
+        eventNumOutcomes = EVENT.getNumOutcomes(event)
         if(i==0):
-            numOutcomes += self.Events[event].numOutcomes
+            numOutcomes += eventNumOutcomes
         else:
-            numOutcomes *= self.Events[event].numOutcomes
+            numOutcomes *= eventNumOutcomes
         i += 1
     if(numOutcomes > 200):
         return(-3)
-    log(cumulativeScale)
     if(cumulativeScale==0):
         cumulativeScale = 1
-    tradingPeriod = (tradingPeriod / self.Branches[branch].periodLength)
+    tradingPeriod = (tradingPeriod / periodLength
     # formation of marketID (hash)
     marketinfo = string((items=11)+len(description))
     marketinfo[0] = MARKET
@@ -100,42 +109,27 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
 
     # pay numOutcomes fee
     # if it's already been created return 0
-    if(!self.send(branch, numOutcomes*2^63) || self.Info[marketID].creator || self.Markets[marketID].numOutcomes):
+    if(!CASH.send(branch, numOutcomes*2^63) || INFO.getCreator(marketID) || MARKETS.getNumOutcomes(marketID)):
         return(-4)
 
     # buy some of all outcomes
     # ls-lmsr needs at least a very small initial liquidity
     y = 1
-    z = initialLiquidity * 2**64 / (2**64 + alpha*cumulativeScale*fx_log(initialLiquidity)/2**64)
+    z = initialLiquidity * 2**64 / (2**64 + alpha*cumulativeScale*FXP.fx_log(initialLiquidity)/2**64)
+    MARKETS.initialLiquiditySetup(marketID, alpha, cumulativeScale, numOutcomes)
     while y <= numOutcomes:
-        sharesPurchased(marketID)[y] += z
+        MARKETS.modifyShares(marketID, y, z)
         y += 1
-    self.Markets[marketID].alpha = alpha
-    self.Markets[marketID].cumulativeScale = cumulativeScale
-    self.Markets[marketID].numOutcomes = numOutcomes
-    if(self.send(marketID, initialLiquidity)):
-        # add event list to the market
-        save(self.Markets[marketID].events[0], events, items=eventNum)
-        self.Info[marketID].creator = tx.origin
-        self.Info[marketID].creationFee = initialLiquidity
-        self.Info[marketID].descriptionLength = len(description)
-        save(self.Info[marketID].description[0], description, chars=len(description))
-        self.Markets[marketID].alpha = alpha
-        self.Markets[marketID].lenEvents = len(events)
-        self.Markets[marketID].cumulativeScale = cumulativeScale
-        self.Markets[marketID].numOutcomes = numOutcomes
-        self.Markets[marketID].tradingPeriod = tradingPeriod
-        self.Markets[marketID].tradingFee = tradingFee
-        self.Markets[marketID].branch = branch
-        self.Branches[branch].markets[self.Branches[branch].numMarkets] = marketID
-        self.Branches[branch].numMarkets += 1
+    if(CASH.send(marketID, initialLiquidity)):
+        INFO.setInfo(marketID, description, tx.origin, initialLiquidity)
+        MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch)
+        BRANCHES.addMarket(branch, marketID)
         return(marketID)
     else:
         # revert shares bought and other variables
-        y = 1
-        while y <= numOutcomes:
-            self.Markets[marketID].sharesPurchased[y] -= z
-        self.Markets[marketID].alpha = 0
-        self.Markets[marketID].cumulativeScale = 0
-        self.Markets[marketID].numOutcomes = 0
+        v = 1
+        while v <= numOutcomes:
+            MARKETS.modifyShares(marketID, v, -z)
+            y += 1
+        MARKETS.initialLiquiditySetup(marketID, 0, 0, 0)
         return(-4)
