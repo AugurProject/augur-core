@@ -97,7 +97,7 @@ def getMarketEvents(market):
 def getSharesPurchased(market, outcome):
     return(self.Markets[market].sharesPurchased[outcome])
 
-def getParticipantNumber(address):
+def getParticipantNumber(market, address):
     return(self.Markets[market].addr2participant[address])
 
 def getParticipantID(market, participantNumber):
@@ -204,14 +204,27 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch):
     self.Markets[marketID].branch = branch
     return(1)
 
-def addParticipant():
+def addParticipant(market, address):
+    participantNumber = self.Markets[market].currentParticipant
+    self.Markets[market].participants[participantNumber].participantID = address
+    self.Markets[market].addr2participant[address] = participantNumber
+    self.Markets[market].currentParticipant += 1
     return(1)
 
 def modifyShares(marketID, outcome, amount):
     sharesPurchased(marketID)[outcome] += amount
     return(1)
 
-def setWinningOutcomes():
+def modifyParticipantShares(marketID, participantNumber, outcome, amount):
+    self.Markets[market].participants[participantNumber].shares[outcome] += amount
+    return(1)
+
+def setWinningOutcomes(outcomes: arr):
+    # largest # of winning outcomes is 8
+    i = 0
+    while outcomes[i] != 0:
+        self.Markets[market].winningOutcomes[i] = outcomes[i]
+        i += 1
     return(1)
 
 def initialLiquiditySetup(marketID, alpha, cumScale, numOutcomes):
