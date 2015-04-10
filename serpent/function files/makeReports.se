@@ -32,7 +32,7 @@ INFO = create('info.se')
 extern cash.se: [addCash:ii:_, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:_]
 CASH = create('cash.se')
 
-extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, subtractRep:iii:_]
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getEvent:iii:i, getEvents:ii:a, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReporterBallot:iiia:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
 REPORTING = create('reporting.se')
 
 # a no vote is -2^64, a yes vote is 2^64 && a can't determine vote is 3*2^63 (a empty ballot is 0)
@@ -51,15 +51,16 @@ REPORTING = create('reporting.se')
     # -2: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
 def report(branch, report:arr, votePeriod, salt):
     # make sure the branch exists
-    repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
-    residual = block.number % self.Branches[branch].periodLength
-    if(residual > self.Branches[branch].periodLength/2):
+    repIndex = REPORTING.repIDToIndex(branch, tx.origin)
+    periodLength = BRANCHES.getPeriodLength(branch)
+    residual = block.number % periodLength
+    if(residual > periodLength/2):
         # submit salt and votes
         # need report length to be same as number of items in the current eventexpdates voting period events!
-        if(len(report)!=self.EventsExpDates[branch][votePeriod].numberEvents):
+        if(len(report)!=EXPEVENTS.getNumberEvents(branch, votePeriod)):
             return(-1)
 
-        realHash = self.EventsExpDates[branch][votePeriod].reportHash[tx.origin]
+        realHash = EXPEVENTS.getReportHash(branch, votePeriod, tx.origin)
         hashInfo = array(len(report) + 2)
         hashInfo[0] = tx.origin
         hashInfo[1] = salt
@@ -76,15 +77,14 @@ def report(branch, report:arr, votePeriod, salt):
         # (reasoning being: >=1 period past means all the events in that period have expired)
         # (>=2 periods past mean the events have exp. & people have had 1 full period to vote)
         # currently requires events to expire to vote
-        currentExpPeriod = (block.number / self.Branches[branch].periodLength)
-        if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
+        currentExpPeriod = (block.number / periodLength)
+        if (REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
             return(-2)
 
-        reputation = self.Reporting[branch].reputation[repIndex].repValue
+        reputation = REPORTING.getRepBalance(branch, tx.origin)
         # need to update stuff for quorem
         # && store the report && the rep value
-        save(self.EventsExpDates[branch][votePeriod].reporters[tx.origin][0], report, items=len(report))
-        self.EventsExpDates[branch][votePeriod].totalRepReported += reputation
+        EXPEVENTS.setReporterBallot(branch, votePeriod, tx.origin, report, reputation)
         return(1)
 
 # Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
@@ -101,14 +101,15 @@ def report(branch, report:arr, votePeriod, salt):
     #        return hashed
 def submitReportHash(branch, reportHash, votePeriod):
     # make sure the branch exists
-    repIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
-    residual = block.number % self.Branches[branch].periodLength
-    currentExpPeriod = (block.number / self.Branches[branch].periodLength)
-    if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
+    repIndex = REPORTING.repIDToIndex(branch, tx.origin)
+    periodLength = BRANCHES.getPeriodLength(branch)
+    residual = block.number % periodLength
+    currentExpPeriod = (block.number / periodLength)
+    if (REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
         return(-1)
-    if(residual < self.Branches[branch].periodLength/2):
+    if(residual < periodLength/2):
         # submit hash of (tx.origin, salt, Votes[])
-        self.EventsExpDates[branch][votePeriod].reportHash[tx.origin] = reportHash
+        EXPEVENTS.setReportHash(branch, votePeriod, tx.origin, reportHash)
         return(1)
     else:
         return(-2)
@@ -119,7 +120,7 @@ def submitReportHash(branch, reportHash, votePeriod):
     # -1: report isn't long enough
     # -2: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
 def checkReportValidity(branch, report:arr, votePeriod):
-       if(len(report)!=self.EventsExpDates[branch][votePeriod].numberEvents):
+       if(len(report)!=EXPEVENTS.getNumberEvents(branch, votePeriod)):
         return(-1)
 
         # if currentExpPeriod is more than 2 periods past the current vote period
@@ -127,15 +128,15 @@ def checkReportValidity(branch, report:arr, votePeriod):
         # (reasoning being: >=1 period past means all the events in that period have expired)
         # (>=2 periods past mean the events have exp. & people have had 1 full period to vote)
         # currently requires events to expire to vote
-        currentExpPeriod = (block.number / self.Branches[branch].periodLength)
-        if (self.Reporting[branch].reputation[repIndex].reporterID != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
+        currentExpPeriod = (block.number / BRANCHES.getPeriodLength(branch))
+        if (REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
             return(-2)
         else:
             return(1)
 
 # anti cheat provide ballot and randomNum mechanism steal deposit
 def slashRep(branch, votePeriod, salt, report:arr, reporter):
-        realHash = self.EventsExpDates[branch][votePeriod].reportHash[reporter]
+        realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter)
         hashInfo = array(len(report) + 2)
         hashInfo[0] = reporter
         hashInfo[1] = salt
@@ -147,21 +148,18 @@ def slashRep(branch, votePeriod, salt, report:arr, reporter):
         if(reportHash!=realHash):
             return(0)
         else:
-            reporterIndex = self.Reporting[branch].repIDtoIndex[reporter]
-            trutherIndex = self.Reporting[branch].repIDtoIndex[tx.origin]
+            reporterIndex = REPORTING.repIDToIndex(branch, reporter)
+            trutherIndex = REPORTING.repIDToIndex(branch, tx.origin)
             # if the truther's rep. account doesn't exist, make one
-            if(self.Reporting[branch].reputation[trutherIndex].reporterID!=tx.origin):
-                trutherIndex = self.Reporting[branch].numberReporters
-                self.Reporting[branch].repIDtoIndex[tx.origin] = trutherIndex
-                self.Reporting[branch].reputation[trutherIndex].repValue = 0
-                self.Reporting[branch].reputation[trutherIndex].reporterID = tx.origin
-                self.Reporting[branch].numberReporters += 1
+            if(REPORTING.getReporter(branch, trutherIndex)!=tx.origin):
+                trutherIndex = REPORTING.getNumberReporters(branch)
+                REPORTING.addReporter(branch, tx.origin)
 
-            if(self.Reporting[branch].reputation[reporterIndex].reporterID!=reporter):
+            if(REPORTING.getReporterID(branch, reporterIndex)!=reporter):
                 return(-2)
                 
-            reporterBalance = self.Reporting[branch].reputation[reporterIndex].repValue
+            reporterBalance = REPORTING.getRepBalance(branch, reporter)
 
-            self.Reporting[branch].reputation[reporterIndex].repValue -= reporterBalance
-            self.Reporting[branch].reputation[trutherIndex].repValue += value*2^58 / 2^64
-        return(value)
+            REPORTING.subtractRep(branch, reporterIndex, reporterBalance)
+            REPORTING.addRep(branch, trutherIndex, reporterBalance*2^58 / 2^64)
+        return(reporterBalance)

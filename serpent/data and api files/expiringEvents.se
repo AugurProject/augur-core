@@ -52,6 +52,9 @@ def getReporterBallot(branch, expDateIndex, reporterID):
 def getReport(branch, expDateIndex, reporter, reportNum):
 	return(self.EventsExpDates[branch][expDateIndex].reporters[reporter][reportNum])
 
+def getReportHash(branch, expDateIndex, reporter):
+	return(self.EventsExpDates[branch][expDateIndex].reportHash[reporter])
+
 def getVSize(branch, expDateIndex):
     return(self.EventsExpDates[branch][expDateIndex].vSize)
 
@@ -104,8 +107,9 @@ def setTotalRepReported(branch, expDateIndex, repReported):
 	self.EventsExpDates[branch][expDateIndex].totalRepReported = repReported
 	return(1)
 
-def setReporterBallot(branch, expDateIndex, reporterID, report: arr):
+def setReporterBallot(branch, expDateIndex, reporterID, report: arr, reputation):
 	save(self.EventsExpDates[branch][expDateIndex].reporters[reporterID][0], report, items=len(report))
+	self.EventsExpDates[branch][expDateIndex].totalRepReported += reputation
 	return(1)
 
 def setVSize(branch, expDateIndex, vSize):
@@ -162,6 +166,10 @@ def setSmoothRep(branch, expDateIndex, smoothRep: arr):
 
 def setOutcomesFinal(branch, expDateIndex, outcomesFinal: arr):
 	save(self.EventsExpDates[branch][expDateIndex].outcomesFinal[0], outcomesFinal, items=len(outcomesFinal))
+	return(1)
+
+def setReportHash(branch, expDateIndex, reporter, reportHash):
+	self.EventsExpDates[branch][expDateIndex].reportHash[reporter] = reportHash
 	return(1)
 
 # atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
