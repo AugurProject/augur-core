@@ -95,7 +95,7 @@ def buyShares(branch, market, outcome, amount, nonce):
 
     # if participant doesn't exist in market, add them
     if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
-        MARKETS.addParticipant(market, tx.origin)
+        participantNumber = MARKETS.addParticipant(market, tx.origin)
 
     MARKETS.modifyParticipantShares(market, participantNumber, outcome, amount)
     # send shares of the event to user address

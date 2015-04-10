@@ -209,7 +209,7 @@ def addParticipant(market, address):
     self.Markets[market].participants[participantNumber].participantID = address
     self.Markets[market].addr2participant[address] = participantNumber
     self.Markets[market].currentParticipant += 1
-    return(1)
+    return(participantNumber)
 
 def modifyShares(marketID, outcome, amount):
     sharesPurchased(marketID)[outcome] += amount

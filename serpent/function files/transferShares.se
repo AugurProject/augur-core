@@ -42,31 +42,28 @@ REPORTING = create('reporting.se')
     # -2: user actually doesn't have the shares
     # -3: not enough money to transfer the shares 
 def transferShares(branch, market, outcome, amount, to):
-    participantNumber = self.Markets[market].addr2participant[tx.origin]
-    receiverNumber = self.Markets[market].addr2participant[to]
-    if (outcome==0 || self.Markets[market].participants[participantNumber].participantID != tx.origin):
+    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    receiverNumber = MARKETS.getParticipantNumber(market, to)
+    if (outcome==0 || MARKETS.getParticipantID(market, participantNumber) != tx.origin):
         return(-1)
-    if(to != self.Markets[market].participants[receiverNumber].participantID):
-        receiverNumber = self.Markets[market].currentParticipant
-        self.Markets[market].participants[receiverNumber].participantID = to
-        self.Markets[market].addr2participant[to] = receiverNumber
-        self.Markets[market].currentParticipant += 1
+    if(to != MARKETS.getParticipantID(market, receiverNumber)):
+        receiverNumber = MARKETS.addParticipant(market, to)
     # remove shares from the user's account
     # if user actually doesn't have the shares, return -2
-    if(self.Markets[market].participants[participantNumber].shares[outcome] < amount):
+    if(MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome) < amount):
         return(-2)
-    self.Markets[market].participants[participantNumber].shares[outcome] -= amount
-    self.Markets[market].participants[receiverNumber].shares[outcome] += amount
+    MARKETS.modifyParticipantShares(market, participantNumber, outcome, -amount)
+    MARKETS.modifyParticipantShares(market, receiverNumber, outcome, amount)
 
     # half of fees to market creator
     # other half go to branch
-    oldCost = lsLmsr(market)
-    self.Markets[market].sharesPurchased[outcome] += 2^32
-    newCost = lsLmsr(market)
+    oldCost = MARKETS.lsLmsr(market)
+    MARKETS.modifyShares(market, outcome, 2^32)
+    newCost = MARKETS.lsLmsr(market)
     price = 2^32*(newCost - oldCost)
-    fee = self.Markets[market].tradingFee*price/2^64
-    self.Markets[market].sharesPurchased[outcome] -= 2^32
-    if((self.balance(tx.origin) >= fee) && self.send(self.Info[market].creator, fee/2) && self.send(branch, fee/2)):
+    fee = MARKETS.getTradingFee(market)*price/2^64
+    MARKETS.modifyShares(market, outcome, -2^32)
+    if((CASH.balance(tx.origin) >= fee) && CASH.send(INFO.getCreator(market), fee/2) && CASH.send(branch, fee/2)):
         return(amount)
     else:
         return(-3)
