@@ -34,7 +34,8 @@ def init():
     self.Info[1010101].descriptionLength = len(description)
 
 def getDescription(ID):
-	return(load(self.Info[ID].description[0], chars=self.Info[ID].descriptionLength): str)
+	length=self.Info[ID].descriptionLength
+	return(load(self.Info[ID].description[0], chars=length): str)
 
 def getDescriptionLength(ID):
 	return(self.Info[ID].descriptionLength)
