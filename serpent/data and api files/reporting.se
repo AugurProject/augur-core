@@ -20,8 +20,7 @@
 # Any questions please contact joey@augur.net
 
 extern branches.se: [addMarket:ii:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementStep:i:_, initializeBranch:iiii:i]
-# in reality set this equal to branch contract address
-BRANCHES = create('branches.se')
+BRANCHES = 0x8a26840f66bc222b0247ec922b821e14296c15ed
 
 # Reporting index is the branchID
 # Reporters index is the rep. address

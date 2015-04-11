@@ -9,3 +9,4 @@ var Contract = web3.eth.contract(desc);
 contract = new Contract(address);
 contract.call({"from": coinbase}).faucet().toNumber();
 eth.getCode(address);
+

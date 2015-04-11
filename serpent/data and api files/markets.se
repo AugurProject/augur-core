@@ -20,8 +20,7 @@
 # Any questions please contact joey@augur.net
 
 extern fx_macros.se: [fx_exp:i:i, fx_log:i:i]
-# should really be the address
-FXP = create('fx_macros.se')
+FXP = 0x63254747f8907121890bba837c7c4d725253d6a2
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market in the format of
