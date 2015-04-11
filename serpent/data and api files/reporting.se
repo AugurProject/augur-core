@@ -138,3 +138,4 @@ def addRep(branch, index, value):
 
 def subtractRep(branch, index, value):
     self.Reporting[branch].reputation[index].repValue -= value
+    return(1)

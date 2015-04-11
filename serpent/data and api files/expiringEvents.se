@@ -27,6 +27,9 @@
 # reporthash is [reporterID] = hash
 data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
 
+extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i]
+BRANCHES = 0x8a26840f66bc222b0247ec922b821e14296c15ed
+
 # @return all events in a branch and expiration period
 def getEvents(branch, expDateIndex):
     numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
@@ -133,7 +136,7 @@ def setLoadingVector(branch, expDateIndex, loadingVector: arr):
 	return(1)
 
 def setScores(branch, expDateIndex, scores: arr):
-	save(self.EventsExpDates[branch][expDateIndex].setScores[0], scores, items=len(scores))
+	save(self.EventsExpDates[branch][expDateIndex].scores[0], scores, items=len(scores))
 	return(1)
 
 def setSetOne(branch, expDateIndex, setOne: arr):
@@ -189,11 +192,11 @@ def makeBallot(branch, votePeriod):
             eventID = self.EventsExpDates[branch][votePeriod].events[numEvents]
             eventArray[i] = eventID
     else:
-        numEvents = self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].numberEvents
+        numEvents = self.EventsExpDates[branch][BRANCHES.getVotePeriod(branch)].numberEvents
         eventArray = array(numEvents)
         i = 0
         while i < numEvents:
-            eventID = self.EventsExpDates[branch][self.Branches[branch].currentVotePeriod].events[numEvents]
+            eventID = self.EventsExpDates[branch][BRANCHES.getVotePeriod(branch)].events[numEvents]
             eventArray[i] = eventID
     return(eventArray: arr)
 
