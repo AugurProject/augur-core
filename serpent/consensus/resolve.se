@@ -1,0 +1,122 @@
+inset('macros.se')
+
+def smooth(adjusted_scores:arr, reputation:arr, num_reports, num_events):
+    # Weighted sum of old and new reputation vectors.
+    # New: row_reward_weighted
+    # Old: reputation
+    reputation = get_weight(reputation)
+    with row_reward_weighted = array(num_reports):
+        with i = 0:
+            while i < num_reports:
+                row_reward_weighted[i] = reputation[i]
+                i += 1
+
+        # Overwrite the inital declaration IFF there wasn't perfect consensus.
+        if maximum(array_abs(adjusted_scores)) != 0:
+            with mean_weight = mean(row_reward_weighted):
+                with i = 0:
+                    while i < num_reports:
+                        row_reward_weighted[i] = adjusted_scores[i] * row_reward_weighted[i] / mean_weight
+                        i += 1
+            row_reward_weighted = get_weight(row_reward_weighted)
+        # Freshly-calculated reward (in reputation) using exponential smoothing
+        # (0.1 is the adjustable parameter "alpha", hard-coding it for now)
+        with smooth_rep = array(num_reports):
+            with i = 0:
+                while i < num_reports:
+                    smooth_rep[i] = row_reward_weighted[i]/10 + reputation[i]*9/10
+                    i += 1
+            return(smooth_rep, items=num_reports)
+
+def resolve(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports, num_events):
+    with two_num_events = 2*num_events:
+        with outcomes_final = array(num_events):
+            # discriminate based on contract type
+            with outcomes_raw = array(num_events):
+                with i = 0:
+                    while i < num_events:
+                        if scaled[i] == 1:
+                            with active_reports = array(num_reports):
+                                with j = 0:
+                                    while j < num_reports:
+                                        active_reports[j] = reports[i + j*num_events]
+                                        j += 1
+                                outcomes_raw[i] = weighted_median(active_reports, smooth_rep)
+                        else:
+                            with j = 0:
+                                while j < num_reports:
+                                    outcomes_raw[i] += fixed_multiply(smooth_rep[j], reports[j*num_events + i])
+                                    j += 1
+                        i += 1
+                with outcomes_adj = array(num_events):
+                    with i = 0:
+                        while i < num_events:
+                            if scaled[i] == 1:
+                                outcomes_adj[i] = outcomes_raw[i]
+                            else:
+                                outcomes_adj[i] = catch(outcomes_raw[i])
+                            i += 1
+                    with i = 0:
+                        while i < num_events:
+                            if scaled[i] == 1:
+                                outcomes_final[i] = fixed_multiply(outcomes_adj[i], scaled_max[i] - scaled_min[i]) + scaled_min[i]
+                            else:
+                                outcomes_final[i] = outcomes_adj[i]
+                            i += 1
+
+                    with certainty = array(num_events):
+                        with i = 0:
+                            while i < num_events:
+                                with j = 0:
+                                    while j < num_reports:
+                                        if abs(reports[i + j*num_events] - outcomes_adj[i]) < 0x1197998:
+                                            certainty[i] += smooth_rep[j]
+                                        j += 1
+                                i += 1
+                        with total = 0:
+                            with i = 0:
+                                while i < num_events:
+                                    certainty[i] = abs(certainty[i])
+                                    total += certainty[i]
+                                    i += 1
+                            return(outcomes_final, items=num_events)
+
+def payout(outcomes_final:arr, smooth_rep:arr, reports_mask:arr, num_reports, num_events):
+        # Event participation (within columns):
+        # proportion of reputation that answered each event
+        with participation_events = array(num_events):
+            with i = 0:
+                while i < num_events:
+                    with k = 0:
+                        while k < num_reports:
+                            participation_events[i] += fixed_multiply(smooth_rep[k], reports_mask[k*num_events + i])
+                            k += 1
+                    participation_events[i] = ONE - participation_events[i]
+                    i += 1
+            # Voter participation (within rows): all events treated equally
+            with participation_reports = array(num_reports):
+                with i = 0:
+                    while i < num_reports:
+                        with total = 0:
+                            with j = 0:
+                                while j < num_events:
+                                    total += [i*num_events + j]
+                                    j += 1
+                                participation_reports[i] = ONE - total / num_events
+                        i += 1
+                    # General participation
+                    with total = 0:
+                        with i = 0:
+                            while i < num_events:
+                                total += participation_events[i]
+                                i += 1
+                        with participation = ONE - total / num_events:
+                            # Bringing it all together!
+                            with reporter_bonus = array(num_reports):
+                                with na_bonus_reports = get_weight(participation_reports):
+                                    # log_array(na_bonus_reports)
+                                    with i = 0:
+                                        while i < num_reports:
+                                            reporter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], ONE - participation)
+                                            i += 1
+                                    return(reporter_bonus, items=num_reports)
