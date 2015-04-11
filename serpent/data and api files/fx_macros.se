@@ -1,3 +1,8 @@
+
+extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+data whitelist
+def init():
+    self.whitelist = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
 macro fx_floor_log2($x):
     with $y = $x / 0x10000000000000000:
         with $lo = 0:

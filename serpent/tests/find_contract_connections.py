@@ -1,43 +1,33 @@
+#!/usr/bin/python2
 import os
 import re
 from collections import defaultdict
 from colorama import Style, Fore, init
+import serpent
 
 init()
 
-MY_PATH = os.path.split(os.getcwd())[:-1][0]
-#print MY_PATH
+PARENTDIR = os.path.split(os.getcwd())[:-1][0]
 
-PATH1 = os.walk(os.path.join(MY_PATH, 'function files')).next()
-PATH2 = os.walk(os.path.join(MY_PATH, 'data and api files')).next()
+FUNCTION_PATHS = os.walk(os.path.join(PARENTDIR, 'function files')).next()
+API_PATHS = os.walk(os.path.join(PARENTDIR, 'data and api files')).next()
 
-#print PATH1, PATH2
+filedata = {}
+dependcounts = defaultdict(int)
+for paths in (FUNCTION_PATHS, API_PATHS):
+    pathdir, _, names = paths
+    for name in names:
+        createp = re.compile("[A-Z]+ = create\('{}'\)".format(name))
+        for opaths in (FUNCTION_PATHS, API_PATHS):
+            opathdir, _, onames = opaths
+            for oname in onames:
+                if oname == name:
+                    continue
+                if oname not in filedata:
+                    filedata[oname] = open(os.path.join(opathdir, oname)).read()
+                if createp.search(filedata[oname]):
+                    dependcounts[name] += 1
 
-data = {}
-data2 = defaultdict(list)
-for name in PATH2[-1]:
-#    print 'searching for', name, 'requirements'
-    createp = re.compile("(?P<name>[A-Z]+) = create\('{}'\)".format(name))
-    for oname in PATH1[-1]:
-        if oname not in data:
-#            print 'reading', oname
-            data[oname] = open(os.path.join(PATH1[0], oname)).read()
-        if createp.search(data[oname]):
-            data2[oname].append(name)
-
-for i, name in enumerate(PATH2[-1][:-1]):
-#    print 'searching for', name, 'requirements'
-    createp = re.compile("(?P<name>[A-Z]+) = create\('{}'\)".format(name))
-    for oname in PATH2[-1][i+1:]:
-        if oname not in data:
-#            print 'reading', oname
-            data[oname] = open(os.path.join(PATH2[0], oname)).read()
-        if createp.search(data[oname]):
-            data2[oname].append(name)
-
-name_Style = Style.BRIGHT + Fore.YELLOW
-deps_Style = Style.BRIGHT + Fore.RED
-
-for k, v in sorted(list(data2.items())):
-    print name_Style + k, Style.RESET_ALL + 'depends on', ', '.join(deps_Style + d + Style.RESET_ALL for d in sorted(v)[:-1])+', and '+deps_Style + sorted(v)[-1]
-    print Style.RESET_ALL
+for k, v in sorted(dependcounts.items()):
+    if v:
+        print k, 'has', v, 'dependencies'
