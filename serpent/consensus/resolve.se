@@ -1,10 +1,22 @@
+# inset('logging.se')
 inset('macros.se')
+inset('weighted-median.se')
+
+# Absolute value of all array elements
+macro array_abs($a):
+    with $len = len($a):
+        with $absval = array($len):
+            with $i = 0:
+                while $i < $len:
+                    $absval[$i] = abs($a[$i])
+                    $i += 1
+                $absval
 
 def smooth(adjusted_scores:arr, reputation:arr, num_reports, num_events):
     # Weighted sum of old and new reputation vectors.
     # New: row_reward_weighted
     # Old: reputation
-    reputation = get_weight(reputation)
+    reputation = normalize(reputation)
     with row_reward_weighted = array(num_reports):
         with i = 0:
             while i < num_reports:
@@ -18,7 +30,7 @@ def smooth(adjusted_scores:arr, reputation:arr, num_reports, num_events):
                     while i < num_reports:
                         row_reward_weighted[i] = adjusted_scores[i] * row_reward_weighted[i] / mean_weight
                         i += 1
-            row_reward_weighted = get_weight(row_reward_weighted)
+            row_reward_weighted = normalize(row_reward_weighted)
         # Freshly-calculated reward (in reputation) using exponential smoothing
         # (0.1 is the adjustable parameter "alpha", hard-coding it for now)
         with smooth_rep = array(num_reports):
@@ -113,7 +125,7 @@ def payout(outcomes_final:arr, smooth_rep:arr, reports_mask:arr, num_reports, nu
                         with participation = ONE - total / num_events:
                             # Bringing it all together!
                             with reporter_bonus = array(num_reports):
-                                with na_bonus_reports = get_weight(participation_reports):
+                                with na_bonus_reports = normalize(participation_reports):
                                     # log_array(na_bonus_reports)
                                     with i = 0:
                                         while i < num_reports:

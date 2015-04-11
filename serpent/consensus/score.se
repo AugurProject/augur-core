@@ -1,22 +1,43 @@
+# inset('logging.se')
 inset('macros.se')
 
-def covariance_slice(wcd:arr, tokens:arr, num_reports, num_events):
-    with covslice = array(num_events):
-        with wcd_x_tokens = array(num_reports):
-            with i = 0:
-                while i < num_reports:
-                    wcd_x_tokens[i] = fixed_multiply(wcd[i*num_events], tokens[i])
-                    i += 1
-            with alltokens = sum(tokens):
-                with i = 0:
-                    while i < num_events:
-                        with j = 0:
-                            while j < num_reports:
-                                covslice[i] += fixed_multiply(wcd_x_tokens[j], wcd[j*num_events + i])
-                                j += 1
-                        covslice[i] = fixed_divide(covslice[i], alltokens - ONE)
-                        i += 1
-                    return(covslice, items=num_events)
+# Minimum value of array
+macro minimum($a):
+    with $min = $a[0]:
+        with $i = 1:
+            with $len = len($a):
+                while $i < $len:
+                    if $a[$i] < $min:
+                        $min = $a[$i]
+                    $i += 1
+                $min
+
+# Outer product of vectors
+macro outer_product($u, $v, $n):
+    with $p = array($n^2):
+        with $i = 0:
+            while $i < $n:
+                with $j = 0:
+                    while $j < $n:
+                        $p[$i*$n + $j] += fixed_multiply($u[$i], $v[$j])
+                        $j += 1
+                $i += 1
+            $p
+
+# Flattened fixed-point matrix multiplication
+macro matrix_multiply($a, $arows, $acols, $b, $brows, $bcols):
+    with $c = array($arows*$bcols):
+        with $i = 0:
+            while $i < $arows:
+                with $j = 0:
+                    while $j < $bcols:
+                        with $k = 0:
+                            while $k < $acols:
+                                $c[$i*$bcols + $j] += fixed_multiply($a[$i*$acols + $k], $b[$k*$bcols + $j])
+                                $k += 1
+                        $j += 1
+                $i += 1
+            $c
 
 def blank(components_remaining, max_iterations, num_events):
     with ne_plus_2 = num_events + 2:
@@ -120,11 +141,11 @@ def calibrate_sets(scores:arr, num_reports, num_events):
                         return(sets, items=two_num_reports)
 
 def calibrate_wsets(set1:arr, set2:arr, reputation:arr, reports:arr, num_reports, num_events):
-    reputation = get_weight(reputation)
+    reputation = normalize(reputation)
     with three_num_events = 3*num_events:
         with wsets = array(three_num_events):
-            with wset1 = get_weight(set1):
-                with wset2 = get_weight(set2):
+            with wset1 = normalize(set1):
+                with wset2 = normalize(set2):
                     with i = 0:
                         with two_num_events = 2*num_events:
                             while i < num_events:

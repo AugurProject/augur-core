@@ -213,10 +213,6 @@ def test_consensus(example):
     # print BW("  Serpent:"), np.array(map(unfix, reptokens)).astype(int)
     # print
 
-    filename = "score.se"
-    print BB("Test contract:"), BG(filename)
-    c = s.abi_contract(filename, gas=70000000)
-
     # Total variance
     # Python
     covmat = wcd.T.dot(np.diag(tokens)).dot(wcd) / float(alltokens - 1)
@@ -246,6 +242,10 @@ def test_consensus(example):
     # print BW("  Python: "), Crow
     # print BW("  Serpent:"), np.array(map(unfix, covslice))
     # print
+
+    filename = "score.se"
+    print BB("Test contract:"), BG(filename)
+    c = s.abi_contract(filename, gas=70000000)
 
     #######
     # PCA #

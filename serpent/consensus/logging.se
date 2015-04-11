@@ -1,0 +1,23 @@
+# Prints an array.  Logs either contain a single entry (for integer values)
+# or two entries (for fixed point numbers, the first entry is the integer
+# and the second is the decimal).
+macro log_array($a):
+    with $n = len($a):
+        with $i = 0:
+            while $i < $n:
+                # print 8 decimal points (adjustable)
+                with $decimal = ($a[$i] & (ONE - 1)) * 10^8 / ONE:
+                    if $decimal > 0:
+                        log($a[$i] / ONE, $decimal)
+                    else:
+                        log($a[$i] / ONE)
+                    $i += 1
+
+# Prints a single entry (for integer values) or two entries (for fixed point
+# numbers, the first entry is the integer and the second is the decimal).
+macro log_fixed($x):
+    with $d = ($x & (ONE - 1)) * 10^8 / ONE:
+        if $d > 0:
+            log($x / ONE, $d)
+        else:
+            log($x / ONE)
