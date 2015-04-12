@@ -13,14 +13,14 @@ def fourOutcomes(market, winningOutcome: arr):
             # first is low-low && whatever, second is high-low, third is low-high, fourth is high-high
             scalarOne = -1
             scalarTwo = -1
-            if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==3*2^63):
+            if((EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2) || EVENTS.getOutcome(events[n])==3*2^63):
                 scalarOne = 0
-            if((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==3*2^63):
+            if((EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2) || EVENTS.getOutcome(events[n])==3*2^63):
                 if(scalarOne == -1):
                     scalarOne = 0
                 else:
                     scalarTwo = 1
-            elif((self.Events[self.Markets[market].events[n]].maxValue!=1 && self.Events[self.Markets[market].events[n]].numOutcomes==2) || self.Events[self.Markets[market].events[0]].outcome==3*2^63):
+            elif((EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2) || EVENTS.getOutcome(events[n])==3*2^63):
                 scalarTwo = 2
             outcomeOne = self.Events[self.Markets[market].events[scalarOne]].outcome
             minValueOne = self.Events[self.Markets[market].events[scalarOne]].minValue

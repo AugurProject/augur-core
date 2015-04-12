@@ -40,6 +40,9 @@ EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
 extern closeMarketOne.se: [oneOutcome:ii:i]
 CLOSEONE = 
 
+extern closeMarketTwo.se: [twoOutcomes:iaa:i]
+CLOSETWO = 
+
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
 # when multidimen fancy payouts we report on the events separately per usual, but combine them to determine winning state of a fancy market && then payout that state
@@ -179,7 +182,7 @@ def closeMarket(branch, market):
         elif(winningOutcomes[3]):
 
         elif(winningOutcomes[1]):
-
+            CLOSETWO.twoOutcomes(market, winningOutcomes, events)
 
         # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
         # refund left over initial liquidity in market - half to market creator, other half to voters
@@ -211,3 +214,5 @@ def closeMarket(branch, market):
 
         MARKETS.setWinningOutcomes(winningOutcomes)
         return(1)
+    else:
+        return(0)
