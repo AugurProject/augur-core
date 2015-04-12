@@ -27,7 +27,8 @@ pd.set_option("display.width", 1000)
 pd.set_option('display.float_format', lambda x: '%.8f' % x)
 
 # max_iterations: number of blocks required to complete PCA
-max_iterations = 25
+verbose = False
+max_iterations = 5
 tolerance = 0.05
 variance_threshold = 0.85
 max_components = 5
@@ -68,16 +69,6 @@ def binary_input_example():
     scaled_min = [NO, NO, NO, NO]
     return (reports, reputation, scaled, scaled_max, scaled_min)
 
-def single_input_example():
-    print BW("Testing with a single input")
-    print BW("===========================")
-    reports = np.array([[ NO, ]])
-    reputation = [10000,]
-    scaled = [0,]
-    scaled_max = [ YES,]
-    scaled_min = [  NO,]
-    return (reports, reputation, scaled, scaled_max, scaled_min)
-
 def scalar_input_example():
     print BW("Testing with binary and scalar inputs")
     print BW("=====================================")
@@ -93,11 +84,11 @@ def scalar_input_example():
     scaled_min = [  NO,  NO,  NO,  NO, 0,    8000 ]
     return (reports, reputation, scaled, scaled_max, scaled_min)
 
-def randomized_inputs(num_reports=50, num_events=25):
+def randomized_inputs(num_reports=10, num_events=5):
     print BW("Testing with randomized inputs")
     print BW("==============================")
-    reports = np.random.randint(-1, 2, (num_reports, num_events))
-    reputation = np.random.randint(1, 100, num_reports)
+    reports = np.random.randint(-1, 2, (num_reports, num_events)).astype(float)
+    reputation = np.random.randint(1, 100, num_reports).tolist()
     scaled = np.random.randint(0, 2, num_events).tolist()
     scaled_max = np.ones(num_events)
     scaled_min = -np.ones(num_events)
@@ -147,6 +138,24 @@ def display(arr, description=None, show_all=None, refold=False):
         else:
             print(json.dumps(map(unfix, arr), indent=3, sort_keys=True))
 
+def rmsd(forecast, actual, fixed=True):
+    if fixed:
+        if len(forecast) > 1:
+            forecast = np.array(map(unfix, forecast))
+        else:
+            forecast = unfix(np.array(forecast).squeeze())
+    return np.sqrt(np.mean((actual - forecast)**2))
+
+def tol(forecast, actual, fixed=True):
+    r = rmsd(forecast, actual, fixed=fixed)
+    try:
+        assert(r < tolerance)
+    except Exception as err:
+        print "Forecast:", forecast
+        print "Actual:", actual
+        print "RMSD tolerance exceeded:", r, ">=", tolerance
+        raise
+
 def test_consensus(example):
     reports, reputation, scaled, scaled_max, scaled_min = example()
 
@@ -156,7 +165,7 @@ def test_consensus(example):
     s = t.state()
 
     filename = "preprocess.se"
-    print BB("Test contract:"), BG(filename)
+    print BG(filename)
     c = s.abi_contract(filename, gas=70000000)
     
     num_reports = len(reputation)
@@ -168,8 +177,10 @@ def test_consensus(example):
     scaled_max_fixed = map(fix, scaled_max)
     scaled_min_fixed = map(fix, scaled_min)
 
-    # display(np.array(reports_fixed), "reports (raw):", refold=num_events, show_all=True)
+    if verbose:
+        display(np.array(reports_fixed), "reports (raw):", refold=num_events, show_all=True)
 
+    print "  - interpolate"
     result = c.interpolate(reports_fixed,
                            reputation_fixed,
                            scaled,
@@ -179,9 +190,10 @@ def test_consensus(example):
     reports_filled = result[0:v_size].tolist()
     reports_mask = result[v_size:].tolist()
 
-    # display(reports_filled, "reports (filled):", refold=num_events, show_all=True)
+    if verbose:
+        display(reports_filled, "reports (filled):", refold=num_events, show_all=True)
 
-    # center and initiate multistep pca loading vector
+    print "  - center"
     result = c.center(reports_filled,
                       reputation_fixed,
                       scaled,
@@ -191,10 +203,11 @@ def test_consensus(example):
                       max_components)
     result = np.array(result)
     weighted_centered_data = result[0:v_size].tolist()
-    # display(weighted_centered_data,
-    #         "Weighted centered data:",
-    #         refold=num_events,
-    #         show_all=True)
+    if verbose:
+        display(weighted_centered_data,
+                "Weighted centered data:",
+                refold=num_events,
+                show_all=True)
 
     lv = np.array(map(unfix, result[v_size:-2]))
     wcd = np.array(fold(map(unfix, weighted_centered_data), num_events))
@@ -207,88 +220,81 @@ def test_consensus(example):
     tokens = np.array([int(r * 1e6) for r in rep])
     alltokens = np.sum(tokens)
     # Serpent
+    print "  - tokenize"
     reptokens = c.tokenize(reputation, num_reports)
-    # print BR("Tokens:")
-    # print BW("  Python: "), tokens
-    # print BW("  Serpent:"), np.array(map(unfix, reptokens)).astype(int)
-    # print
+    if verbose:
+        print BR("Tokens:")
+        print BW("  Python: "), tokens
+        print BW("  Serpent:"), np.array(map(unfix, reptokens)).astype(int)
+        print
 
-    # Total variance
-    # Python
     covmat = wcd.T.dot(np.diag(tokens)).dot(wcd) / float(alltokens - 1)
     totalvar = np.trace(covmat)
-    # Serpent
-    # variance = c.total_variance(weighted_centered_data,
-    #                             reptokens,
-    #                             num_reports,
-    #                             num_events)
-    # print BR("Total variance:")
-    # print BW("  Python: "), totalvar
-    # print BW("  Serpent:"), unfix(variance)
-    # print
 
     # Calculate the first row of the covariance matrix
     # Python
     Crow = np.zeros(num_events)
     wcd_x_tokens = wcd[:,0] * tokens
-    for i in range(num_events):
-        Crow[i] = wcd_x_tokens.dot(wcd[:,i]) / (alltokens-1)
+    Crow = wcd_x_tokens.dot(wcd) / (alltokens-1)
     # Serpent
-    covslice = c.covariance_slice(weighted_centered_data,
-                                  reptokens,
-                                  num_reports,
-                                  num_events)
-    # print BR("Covariance matrix row:")
-    # print BW("  Python: "), Crow
-    # print BW("  Serpent:"), np.array(map(unfix, covslice))
-    # print
+    print "  - covariance"
+    covrow = c.covariance(weighted_centered_data,
+                            reptokens,
+                            num_reports,
+                            num_events)
+    if verbose:
+        print BR("Covariance matrix row")
+        print BW("  Python: "), Crow
+        print BW("  Serpent:"), np.array(map(unfix, covrow))
+    
+    tol(covrow, Crow)
 
     filename = "score.se"
-    print BB("Test contract:"), BG(filename)
+    print BG(filename)
     c = s.abi_contract(filename, gas=70000000)
 
     #######
     # PCA #
     #######
 
-    # # Python
-    # print BR("Python PCA")
+    # Python
+    iv = result[v_size:]
+    variance_explained = 0
+    nc = np.zeros(num_reports)
+    negative = False
 
-    # iv = result[v_size:]
-    # variance_explained = 0
-    # nc = np.zeros(num_reports)
-    # negative = False
+    for j in range(min(max_components, num_events)):
 
-    # for j in range(min(max_components, num_events)):
+        # Calculate loading vector
+        lv = np.array(map(unfix, iv[:-2]))
+        for i in range(max_iterations):
+            lv = R.dot(wcd).dot(lv).dot(wcd)
+            lv /= np.sqrt(lv.dot(lv))
 
-    #     # Calculate loading vector
-    #     lv = np.array(map(unfix, iv[:-2]))
-    #     for i in range(max_iterations):
-    #         lv = R.dot(wcd).dot(lv).dot(wcd)
-    #         lv /= np.sqrt(lv.dot(lv))
+        # Calculate the eigenvalue for this eigenvector
+        for k in range(num_events):
+            if lv[k] != 0:
+                break
+        E = covmat[k,:].dot(lv) / lv[k]
 
-    #     # Calculate the eigenvalue for this eigenvector
-    #     for k in range(num_events):
-    #         if lv[k] != 0:
-    #             break
-    #     E = covmat[k,:].dot(lv) / lv[k]
+        # Cumulative variance explained
+        variance_explained += E / totalvar
 
-    #     # Cumulative variance explained
-    #     variance_explained += E / totalvar
+        # Projection onto new axis: nonconformity vector
+        slv = lv
+        if slv[0] < 0:
+            slv *= -1
+        nc += E * wcd.dot(slv)
 
-    #     # Projection onto new axis: nonconformity vector
-    #     if lv[0] < 0:
-    #         lv *= -1
-    #     nc += E * wcd.dot(lv)
+        if verbose:
+            print BW("  Loadings %d:" % j), np.round(np.array(lv), 6)
+            print BW("  Latent %d:  " % j), E, "(%s%% variance explained)" % np.round(variance_explained * 100, 3)
 
-    #     print BW("  Loadings %d:" % j), np.round(np.array(lv), 6)
-    #     print BW("  Latent %d:  " % j), E, "(%s%% variance explained)" % np.round(variance_explained * 100, 3)
+        # Deflate the data matrix
+        wcd = wcd - wcd.dot(np.outer(lv, lv))
 
-    #     # Deflate the data matrix
-    #     wcd = wcd - wcd.dot(np.outer(lv, lv))
-
-    # print BW("  Nonconformity: "), np.round(nc, 6)
-    # print
+    if verbose:
+        print BW("  Nonconformity: "), np.round(nc, 6)
 
     # Serpent
     loading_vector = result[v_size:].tolist()
@@ -299,53 +305,68 @@ def test_consensus(example):
 
     while True:
 
+        print "  - component", num_comps + 1
+
         # Loading vector (eigenvector)
         #   - Second-to-last element: number of iterations remaining
-        #   - Last element: number of components remaining            
+        #   - Last element: number of components remaining
+        print "    - blank"
         loading_vector = c.blank(loading_vector[-1],
                                  max_iterations,
                                  num_events)
 
+        sys.stdout.write("    - loadings")
+        sys.stdout.flush()
         while loading_vector[num_events] > 0:
-            loading_vector = c.pca_loadings(loading_vector,
-                                            data,
-                                            reputation_fixed,
-                                            num_reports,
-                                            num_events)
+            sys.stdout.write(".")
+            sys.stdout.flush()
+            loading_vector = c.loadings(loading_vector,
+                                        data,
+                                        reputation_fixed,
+                                        num_reports,
+                                        num_events)
             # Normalization in Serpent (?)
             # lvector = np.array(map(unfix, loading_vector[:-2]))
             # lvector /= np.sqrt(lvector.dot(lvector))
             # for i in range(num_events):
             #     loading_vector[i] = fix(lvector[i])
+        print
 
         # Latent factor (eigenvalue)
         # (check sign bit)
-        latent = c.pca_latent(covslice, loading_vector, num_events)
+        print "    - latent"
+        latent = c.latent(covrow, loading_vector, num_events)
 
         # Deflate the data matrix
+        print "    - deflate"
         data = c.deflate(loading_vector,
                          data,
                          num_reports,
                          num_events)
 
         # Project data onto this component and add to weighted scores
-        scores = c.nonconformity(scores,
-                                 loading_vector,
-                                 weighted_centered_data,
-                                 latent,
-                                 num_reports,
-                                 num_events)
+        print "    - score"
+        scores = c.score(scores,
+                         loading_vector,
+                         weighted_centered_data,
+                         latent,
+                         num_reports,
+                         num_events)
 
-        printable_loadings = np.array(map(unfix, loading_vector[:-2]))
-        if printable_loadings[0] < 0:
-            printable_loadings *= -1
-        print BW("Component %d [%s]:\t" % (num_comps, np.round(unfix(latent), 4))), printable_loadings
+        if verbose:
+            printable_loadings = np.array(map(unfix, loading_vector[:-2]))
+            if printable_loadings[0] < 0:
+                printable_loadings *= -1
+            print BW("Component %d [%s]:\t" % (num_comps, np.round(unfix(latent), 4))), printable_loadings
 
         num_comps += 1
         if loading_vector[num_events + 1] == 0:
             break
 
-    result = c.calibrate_sets(scores, num_reports, num_events)
+    tol(scores, nc)
+
+    print "  - reputation_delta"
+    result = c.reputation_delta(scores, num_reports, num_events)
     result = np.array(result)
     set1 = result[0:num_reports].tolist()
     set2 = result[num_reports:].tolist()
@@ -355,7 +376,8 @@ def test_consensus(example):
     # display(set1, "set1:", show_all=True)
     # display(set2, "set2:", show_all=True)
 
-    result = c.calibrate_wsets(set1,
+    print "  - weighted_delta"
+    result = c.weighted_delta(set1,
                                set2,
                                reputation_fixed,
                                reports_filled,
@@ -372,26 +394,29 @@ def test_consensus(example):
     # display(new1, "new1:", show_all=True)
     # display(new2, "new2:", show_all=True)
 
-    adjusted_scores = c.pca_adjust(old,
-                                   new1,
-                                   new2,
-                                   set1,
-                                   set2,
-                                   scores,
-                                   num_reports,
-                                   num_events)
+    print "  - select_scores"
+    adjusted_scores = c.select_scores(old,
+                                      new1,
+                                      new2,
+                                      set1,
+                                      set2,
+                                      scores,
+                                      num_reports,
+                                      num_events)
 
     # display(adjusted_scores, "adjusted_scores:", show_all=True)
 
     filename = "resolve.se"
-    print BB("Test contract:"), BG(filename)
+    print BG(filename)
     c = s.abi_contract(filename, gas=70000000)
 
+    print "  - smooth"
     smooth_rep = c.smooth(adjusted_scores,
                           reputation_fixed,
                           num_reports,
                           num_events)
 
+    print "  - resolve"
     result = c.resolve(smooth_rep,
                        reports_filled,
                        scaled,
@@ -403,19 +428,21 @@ def test_consensus(example):
     result = np.array(result)
     event_outcomes = result[0:num_events].tolist()
 
+    print "  - payout"
     reporter_payout = c.payout(event_outcomes,
                               smooth_rep,
                               reports_mask,
                               num_reports,
                               num_events)
 
-    print BW("Nonconformity scores:"), np.array(map(unfix, scores))
-    print BW("Raw reputation:      "), np.array(map(unfix, smooth_rep))
-    print BW("Adjusted scores:     "), np.array(map(unfix, adjusted_scores))
-    print BW("Reporter payout:     "), np.array(map(unfix, reporter_payout))
-    print BW("Event outcomes:      "), np.array(map(unfix, event_outcomes))
+    if verbose:
+        print BW("Nonconformity scores:"), np.array(map(unfix, scores))
+        print BW("Raw reputation:      "), np.array(map(unfix, smooth_rep))
+        print BW("Adjusted scores:     "), np.array(map(unfix, adjusted_scores))
+        print BW("Reporter payout:     "), np.array(map(unfix, reporter_payout))
+        print BW("Event outcomes:      "), np.array(map(unfix, event_outcomes))
 
-    print BB("Verify against"), BG("pyconsensus")
+    print BG("pyconsensus")
 
     event_bounds = []
     for i, s in enumerate(scaled):
@@ -470,20 +497,20 @@ def main():
     interpolate
     center
     tokenize
+    covariance
 
     score.se
     --------
-    covariance_matrix_row
     loop max_components:
         blank
         loop max_iterations:
-            pca_loadings
-        pca_latent
+            loadings
+        latent
         deflate
-        nonconformity
-    calibrate_sets
-    calibrate_wsets
-    pca_adjust
+        score
+    reputation_delta
+    weighted_delta
+    select_scores
 
     resolve.se
     ----------
@@ -497,9 +524,8 @@ def main():
     """
     examples = (
         binary_input_example,
-        single_input_example,
         scalar_input_example,
-        # randomized_inputs,
+        randomized_inputs,
     )
     for example in examples:   
         test_consensus(example)

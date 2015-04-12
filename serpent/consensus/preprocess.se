@@ -140,8 +140,9 @@ def tokenize(reputation:arr, num_reports):
                 i += 1
             return(tokens, items=num_reports)
 
-def covariance_slice(wcd:arr, tokens:arr, num_reports, num_events):
-    with covslice = array(num_events):
+# First row of the covariance matrix
+def covariance(wcd:arr, tokens:arr, num_reports, num_events):
+    with cov = array(num_events):
         with wcd_x_tokens = array(num_reports):
             with i = 0:
                 while i < num_reports:
@@ -152,8 +153,8 @@ def covariance_slice(wcd:arr, tokens:arr, num_reports, num_events):
                     while i < num_events:
                         with j = 0:
                             while j < num_reports:
-                                covslice[i] += fixed_multiply(wcd_x_tokens[j], wcd[j*num_events + i])
+                                cov[i] += fixed_multiply(wcd_x_tokens[j], wcd[j*num_events + i])
                                 j += 1
-                        covslice[i] = fixed_divide(covslice[i], alltokens - ONE)
+                        cov[i] = fixed_divide(cov[i], alltokens - ONE)
                         i += 1
-                    return(covslice, items=num_events)
+                    return(cov, items=num_events)
