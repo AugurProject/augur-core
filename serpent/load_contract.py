@@ -8,7 +8,7 @@ In order to use this script successfully, you need to prepare your geth node.
 Start up a geth console using:
     geth --loglevel 0 console
 Once there, make a new account if needed:
-    admin.newAccuont()
+    admin.newAccount()
 This will ask you to set a password, which you must remember!!!
 If you don't have any money, you will have to mine for it:
     admin.miner.start()
@@ -17,28 +17,17 @@ You will also have to start the RPC server:
 And then finally you will have to unlock your account:
     admin.unlock(eth.coinbase, undefined, 60*60*24*30*12)
 This will prompt you for the password you chose earlier.
-Finally, you will need to copy-pasta your address into this script's
-coinbase variable, which you can see using the following command:
-    eth.coinbase
 '''
-
+import warnings; warnings.simplefilter('ignore')
 import serpent
 import socket
 import sys
 import json
 
-coinbase = '0x1c11aa45c792e202e9ffdc2f12f99d0d209bef70'
 
-data = json.dumps({
-    'jsonrpc': '2.0',
-    'method': 'eth_sendTransaction',
-    'id': 1,
-    'params':[
-        {'from': coinbase,
-         'gas': hex(3000000),
-         'data': '0x'+serpent.compile(sys.argv[1]).encode('hex')}]})
-
-request = '''\
+class GethRPC(object):
+    HOST, PORT = '127.0.0.1', 8545
+    REQUEST = '''\
 POST / HTTP/1.1\r
 User-Agent: augur-loader/0.0\r
 Host: localhost:8545\r
@@ -46,9 +35,35 @@ Accept: */*\r
 Content-Length: %d\r
 Content-Type: application/json\r
 \r
-%s''' % (len(data), data)
+%s'''
+    def __init__(self):
+        self.conn = socket.create_connection((GethRPC.HOST, GethRPC.PORT))
+        self._id = 1
 
-c = socket.create_connection(('127.0.0.1', 8545))
-c.sendall(request)
-response = c.recv(4096)
-print response
+    def __json(self, name, args):
+        if 'sender' in args:
+            args['from'] = args.pop('sender')
+        if args == {}:
+            args = []
+        else:
+            args = [args]
+        rpc_data = json.dumps({
+            'jsonrpc':'2.0',
+            'id': self._id,
+            'method': name,
+            'params': args})
+        request = GethRPC.REQUEST % (len(rpc_data), rpc_data)
+        self.conn.sendall(request)
+        response = self.conn.recv(4096)
+        self._id += 1
+        response_data = response.split('\r\n\r\n', 1)
+        return json.loads(response_data[1])
+        
+    def __getattr__(self, name):
+        return lambda **args: self.__json(name, args)
+
+rpc = GethRPC()
+coinbase = rpc.eth_coinbase()['result']
+evm = '0x' + serpent.compile(sys.argv[1]).encode('hex')
+data = rpc.eth_sendTransaction(sender=coinbase, gas=hex(3000000), data=evm)
+print json.dumps(data, sort_keys=True, indent=4)
