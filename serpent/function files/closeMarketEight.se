@@ -1,0 +1,79 @@
+extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
+CASH = 0x559b098076d35ddc7f5057bf28eb20d9cf183a99
+
+extern markets.se: [addParticipant:ii:i, getAlpha:i:i, getBranchID:i:i, getCumScale:i:i, getCurrentParticipantNumber:i:i, getMarketEvents:i:a, getMarketInfo:i:a, getMarketNumOutcomes:i:i, getNumEvents:i:i, getParticipantID:ii:i, getParticipantNumber:ii:i, getParticipantSharesPurchased:iii:i, getSharesPurchased:ii:i, getSimulatedBuy:ii:_, getSimulatedSell:ii:_, getTradingFee:i:i, getTradingPeriod:i:i, getWinningOutcomes:i:a, initialLiquiditySetup:iiii:i, initializeMarket:iaiii:i, lsLmsr:i:i, modifyParticipantShares:iiii:i, modifyShares:iii:i, price:ii:i, setWinningOutcomes:a:i]
+MARKETS = 0x9d8b4e6da4e917e7b951f372e66b1012b203e30e
+
+extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
+EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
+
+# eight winning outcomes
+def eightOutcomes(market, winningOutcome: arr):
+        outcomeOne = self.Events[self.Markets[market].events[0]].outcome
+            minValueOne = self.Events[self.Markets[market].events[0]].minValue
+            maxValueOne = self.Events[self.Markets[market].events[0]].maxValue
+            if(outcomeOne>maxValueOne):
+                outcomeOne = maxValueOne
+            elif(outcomeOne<minValueOne):
+                outcomeOne = minValueOne
+            outcomeTwo = self.Events[self.Markets[market].events[1]].outcome
+            minValueTwo = self.Events[self.Markets[market].events[1]].minValue
+            maxValueTwo = self.Events[self.Markets[market].events[1]].maxValue
+            if(outcomeTwo>maxValueTwo):
+                outcomeTwo = maxValueTwo
+            elif(outcomeTwo<minValueTwo):
+                outcomeTwo = minValueTwo
+            outcomeThree = self.Events[self.Markets[market].events[2]].outcome
+            minValueThree = self.Events[self.Markets[market].events[2]].minValue
+            maxValueThree = self.Events[self.Markets[market].events[2]].maxValue
+            if(outcomeThree>maxValueThree):
+                outcomeThree = maxValueThree
+            elif(outcomeThree<minValueThree):
+                outcomeThree = minValueThree
+
+            outcomeOneHighSidePercent = 2^64*(outcomeOne - 2^64*minValueOne) / (2^64*maxValueOne - 2^64*minValueOne)
+            outcomeOneLowSidePercent = 2^64 - outcomeOneHighSidePercent
+            outcomeTwoHighSidePercent = 2^64*(outcomeTwo - 2^64*minValueTwo) / (2^64*maxValueTwo - 2^64*minValueTwo)
+            outcomeTwoLowSidePercent = 2^64 - outcomeTwoHighSidePercent
+            outcomeThreeHighSidePercent = 2^64*(outcomeThree - 2^64*minValueThree) / (2^64*maxValueThree - 2^64*minValueThree)
+            outcomeThreeLowSidePercent = 2^64 - outcomeThreeHighSidePercent
+            
+            # price is in fixed point
+            # first is low low low, 2 is high low low, 3 is low high low, 4 is high high low, 5 is low low high, 6 is high low high, 7 is low high high, 8 is high high high
+            pricePerShare1 = outcomeOneLowSidePercent * outcomeTwoLowSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
+            pricePerShare2 = outcomeOneHighSidePercent * outcomeTwoLowSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
+            pricePerShare3 = outcomeOneLowSidePercent * outcomeTwoHighSidePercent * outcomeOneLowSidePercent / (2^64 * 2^64)
+            pricePerShare4 = outcomeOneHighSidePercent * outcomeTwoHighSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
+            pricePerShare5 = outcomeOneLowSidePercent * outcomeTwoLowSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
+            pricePerShare6 = outcomeOneHighSidePercent * outcomeTwoLowSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
+            pricePerShare7 = outcomeOneLowSidePercent * outcomeTwoHighSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
+            pricePerShare8 = outcomeOneHighSidePercent * outcomeTwoHighSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
+
+            # distribute cashcoin to the people who won money by holding winning shares
+            i = 0
+            while i < self.Markets[market].currentParticipant:
+                # for each winning outcome do...
+                sharesOwned = array(8)
+                while(winningOutcome[n]!=0):
+                    sharesOwned[n] = self.Markets[market].participants[i].shares[winningOutcome[n]]
+                    n+=1
+                participant = self.Markets[market].participants[i].participantID
+                self.cashcoinBalances[market] -= sharesOwned[0]*pricePerShare1/2^64
+                self.cashcoinBalances[participant] += sharesOwned[0]*pricePerShare1/2^64
+                self.cashcoinBalances[market] -= sharesOwned[1]*pricePerShare2/2^64
+                self.cashcoinBalances[participant] += sharesOwned[1]*pricePerShare2/2^64
+                self.cashcoinBalances[market] -= sharesOwned[2]*pricePerShare3/2^64
+                self.cashcoinBalances[participant] += sharesOwned[2]*pricePerShare3/2^64
+                self.cashcoinBalances[market] -= sharesOwned[3]*pricePerShare4/2^64
+                self.cashcoinBalances[participant] += sharesOwned[3]*pricePerShare4/2^64
+                self.cashcoinBalances[market] -= sharesOwned[4]*pricePerShare5/2^64
+                self.cashcoinBalances[participant] += sharesOwned[4]*pricePerShare5/2^64
+                self.cashcoinBalances[market] -= sharesOwned[5]*pricePerShare6/2^64
+                self.cashcoinBalances[participant] += sharesOwned[5]*pricePerShare6/2^64
+                self.cashcoinBalances[market] -= sharesOwned[6]*pricePerShare7/2^64
+                self.cashcoinBalances[participant] += sharesOwned[6]*pricePerShare7/2^64
+                self.cashcoinBalances[market] -= sharesOwned[7]*pricePerShare8/2^64
+                self.cashcoinBalances[participant] += sharesOwned[7]*pricePerShare8/2^64
+                i+=1
+
+    return(1)
