@@ -8,9 +8,8 @@ augur-serpent
 - can do 4%a, 10%b, 7%c, 25%d, etc. with many dimensions of scalars
 - min branch trading fee?
 - check that msg.sender is one of our function contracts
-- this really needs to be = branches.se addr., not create a new one each time
-- 1 time function call to set the contract addr. for msg.sender checks
-- update extern signatures
+- make data EXTERNs updatable
+- can update markets sig and addr to remove nonces
 
 ### Bugs:
 - what if a scalar has a .5 actual value outcome

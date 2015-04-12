@@ -23,7 +23,7 @@ data whitelist
 # Any questions please contact joey@augur.net
 
 extern branches.se: [addMarket:ii:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementStep:i:_, initializeBranch:iiii:i]
-BRANCHES = 0x8a26840f66bc222b0247ec922b821e14296c15ed
+BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
 
 # Reporting index is the branchID
 # Reporters index is the rep. address
@@ -112,6 +112,8 @@ def hashReport(report: arr, salt):
 
 # check that msg.sender is one of our function contracts
 def setInitialReporters(parent, branchID):
+    if(!self.whitelist.check(msg.sender)):
+        return(-1)
     # first vote period won't be until after the current (in this case first) basket of things has expired
         # if floor(blockNum / periodLength) is say 5 and eventsExpDates[5]
         # the current vote period should be on things from eventsExpDates 4 (when making a new branch this vote period will just fail quorem, and current vote period will be incrememented)
@@ -129,6 +131,8 @@ def setInitialReporters(parent, branchID):
     return(1)
 
 def addReporter(branch, sender):
+    if(!self.whitelist.check(msg.sender)):
+        return(-1)
     reporterIndex = self.Reporting[branch].numberReporters
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
     self.Reporting[branch].reputation[reporterIndex].repValue = 0
@@ -137,9 +141,13 @@ def addReporter(branch, sender):
     return(1)
 
 def addRep(branch, index, value):
+    if(!self.whitelist.check(msg.sender)):
+        return(-1)
     self.Reporting[branch].reputation[index].repValue += value
     return(1)
 
 def subtractRep(branch, index, value):
+    if(!self.whitelist.check(msg.sender)):
+        return(-1)
     self.Reporting[branch].reputation[index].repValue -= value
     return(1)

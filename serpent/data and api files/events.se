@@ -43,7 +43,7 @@ def getEventInfo(event):
     info[5] = self.Events[event].numOutcomes
     return(info: arr)
 
-def getBranch(event):
+def getEventBranch(event):
 	return(self.Events[event].branch)
 
 def getExpiration(event):
@@ -63,6 +63,8 @@ def getNumOutcomes(event):
 
 def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes):
 	# check that msg.sender is one of our function contracts
+	if(!self.whitelist.check(msg.sender)):
+		return(-1)
 	if(self.Events[ID].expirationDate==0):
 		self.Events[ID].branch = branch
 		self.Events[ID].expirationDate = expirationDate
@@ -73,5 +75,7 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes)
 		return(0)
 
 def setOutcome(ID, outcome):
+	if(!self.whitelist.check(msg.sender)):
+		return(-1)
 	self.Events[ID].outcome = outcome
 	return(1)

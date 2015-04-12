@@ -25,7 +25,7 @@ def init():
 # Any questions please contact joey@augur.net
 
 extern fx_macros.se: [fx_exp:i:i, fx_log:i:i]
-FXP = 0x63254747f8907121890bba837c7c4d725253d6a2
+FXP = 0x82695a58b84bbcc90372d06e9b1d599ca2dd60cd
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market in the format of
@@ -38,8 +38,6 @@ FXP = 0x63254747f8907121890bba837c7c4d725253d6a2
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
 data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch)
-
-data nonces[]
 
 # @return cost - how much it costs you to buy
 #         price - current share price of that outcome after buy
@@ -133,7 +131,7 @@ def getAlpha(market):
 def getCumScale(market):
     return(self.Markets[market].cumulativeScale)
 
-def getNumOutcomes(market):
+def getMarketNumOutcomes(market):
     return(self.Markets[market].numOutcomes)
 
 def getTradingPeriod(market):
@@ -142,7 +140,7 @@ def getTradingPeriod(market):
 def getTradingFee(market):
     return(self.Markets[market].tradingFee)
 
-def getBranch(market):
+def getBranchID(market):
     return(self.Markets[market].branch)
 
 # alpha is equal to v/(n*log(n)) where v is the max percent commission
@@ -190,16 +188,10 @@ def lsLmsr(marketID):
     lsLmsr(marketID)
     return(1)
 
-def getNonce(ID):
-    return(self.nonces[ID])
-
-# check that msg.sender is one of our function contracts
-def incrementNonce(ID):
-    self.nonces[ID] += 1
-    return(1)
-
 # check that msg.sender is one of our function contracts
 def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch):
+    if(!self.whitelist.check(msg.sender)):
+        return(-1)
     # add event list to the market
     save(self.Markets[marketID].events[0], events, items=eventNum)
     self.Markets[marketID].lenEvents = len(events)
@@ -209,6 +201,8 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch):
     return(1)
 
 def addParticipant(market, address):
+    if(!self.whitelist.check(msg.sender)):
+        return(-1)
     participantNumber = self.Markets[market].currentParticipant
     self.Markets[market].participants[participantNumber].participantID = address
     self.Markets[market].addr2participant[address] = participantNumber
@@ -216,14 +210,20 @@ def addParticipant(market, address):
     return(participantNumber)
 
 def modifyShares(marketID, outcome, amount):
+    if(!self.whitelist.check(msg.sender)):
+        return(-1)
     sharesPurchased(marketID)[outcome] += amount
     return(1)
 
 def modifyParticipantShares(marketID, participantNumber, outcome, amount):
+    if(!self.whitelist.check(msg.sender)):
+        return(-1)
     self.Markets[market].participants[participantNumber].shares[outcome] += amount
     return(1)
 
 def setWinningOutcomes(outcomes: arr):
+    if(!self.whitelist.check(msg.sender)):
+        return(-1)
     # largest # of winning outcomes is 8
     i = 0
     while outcomes[i] != 0:
@@ -232,6 +232,8 @@ def setWinningOutcomes(outcomes: arr):
     return(1)
 
 def initialLiquiditySetup(marketID, alpha, cumScale, numOutcomes):
+    if(!self.whitelist.check(msg.sender)):
+        return(-1)
     self.Markets[marketID].alpha = alpha
     self.Markets[marketID].cumulativeScale = cumScale
     self.Markets[marketID].numOutcomes = numOutcomes

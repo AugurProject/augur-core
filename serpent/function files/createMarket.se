@@ -20,26 +20,28 @@
 # Any questions please contact joey@augur.net
 
 extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i]
-# this really needs to be = branches.se addr., not create a new one each time
-BRANCHES = create('branches.se')
+BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
 
 extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getEvent:iii:i, getEvents:ii:a, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
-EXPEVENTS = create('expiringEvents.se')
+EXPEVENTS = 0xb7b617b776e66cbae79606d2b6221501ad110090
 
 extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
-INFO = create('info.se')
+INFO = 0x84ad0e89dbbbdfb18a59954addf10ad501525a01
 
-extern cash.se: [addCash:ii:_, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:_]
-CASH = create('cash.se')
+extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
+CASH = 0x559b098076d35ddc7f5057bf28eb20d9cf183a99
 
 extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, subtractRep:iii:i]
-REPORTING = create('reporting.se')
+REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
 
-extern fx_macros.se: [fx_exp:i:i, fx_log:i:i]
-FXP = create('fxpFunctions.se')
+extern fxpFunctions.se: [fx_exp:i:i, fx_log:i:i]
+FXP = 0x82695a58b84bbcc90372d06e9b1d599ca2dd60cd
 
-extern markets.se: [addParticipant:ii:i, getAlpha:i:i, getBranch:i:i, getCumScale:i:i, getCurrentParticipantNumber:i:i, getMarketEvents:i:a, getMarketInfo:i:a, getNonce:i:i, getNumEvents:i:i, getNumOutcomes:i:i, getParticipantID:ii:i, getParticipantNumber:ii:i, getParticipantSharesPurchased:iii:i, getSharesPurchased:ii:i, getSimulatedBuy:ii:_, getSimulatedSell:ii:_, getTradingFee:i:i, getTradingPeriod:i:i, getWinningOutcomes:i:a, incrementNonce:i:i, initialLiquiditySetup:iiii:i, initializeMarket:iaiii:i, lsLmsr:i:i, modifyParticipantShares:iiii:i, modifyShares:iii:i, price:ii:i, setWinningOutcomes:a:i]
-MARKETS = create('markets.se')
+extern markets.se: [addParticipant:ii:i, getAlpha:i:i, getBranchID:i:i, getCumScale:i:i, getCurrentParticipantNumber:i:i, getMarketEvents:i:a, getMarketInfo:i:a, getMarketNumOutcomes:i:i, getNumEvents:i:i, getParticipantID:ii:i, getParticipantNumber:ii:i, getParticipantSharesPurchased:iii:i, getSharesPurchased:ii:i, getSimulatedBuy:ii:_, getSimulatedSell:ii:_, getTradingFee:i:i, getTradingPeriod:i:i, getWinningOutcomes:i:a, initialLiquiditySetup:iiii:i, initializeMarket:iaiii:i, lsLmsr:i:i, modifyParticipantShares:iiii:i, modifyShares:iii:i, price:ii:i, setWinningOutcomes:a:i]
+MARKETS = 0x9d8b4e6da4e917e7b951f372e66b1012b203e30e
+
+extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
+EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
 
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
@@ -73,14 +75,14 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         if(expirationDate > tradingPeriod):
             tradingPeriod = expirationDate
         eventsConcat += event
-        if (EVENTS.getBranch(event) != branch || !INFO.getCreator(event)):
+        if (EVENTS.getEventBranch(event) != branch || !INFO.getCreator(event)):
             return(0)
         #scalars
         maxValue = EVENTS.getMaxValue(event)
         if(maxValue!=1 && EVENTS.getNumOutcomes(event)==2):
             # is a valid scalar
             cumulativeScale += maxValue - EVENTS.getMinValue(event)
-        eventNumOutcomes = EVENT.getNumOutcomes(event)
+        eventNumOutcomes = EVENTS.getNumOutcomes(event)
         if(i==0):
             numOutcomes += eventNumOutcomes
         else:
@@ -90,7 +92,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         return(-3)
     if(cumulativeScale==0):
         cumulativeScale = 1
-    tradingPeriod = (tradingPeriod / periodLength
+    tradingPeriod = (tradingPeriod / periodLength)
     # formation of marketID (hash)
     marketinfo = string((items=11)+len(description))
     marketinfo[0] = MARKET
@@ -109,7 +111,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
 
     # pay numOutcomes fee
     # if it's already been created return 0
-    if(!CASH.send(branch, numOutcomes*2^63) || INFO.getCreator(marketID) || MARKETS.getNumOutcomes(marketID)):
+    if(!CASH.send(branch, numOutcomes*2^63) || INFO.getCreator(marketID) || MARKETS.getMarketNumOutcomes(marketID)):
         return(-4)
 
     # buy some of all outcomes

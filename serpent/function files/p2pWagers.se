@@ -21,11 +21,11 @@
 
 #p2p hasn't been tested
 
-extern cash.se: [addCash:ii:_, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:_]
-CASH = create('cash.se')
+extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
+CASH = 0x559b098076d35ddc7f5057bf28eb20d9cf183a99
 
-extern events.se: [getBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
-EVENTS = create('events.se')
+extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
+EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
 
 data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
@@ -78,13 +78,13 @@ def closeBet(betID):
         CASH.subtractCash(betID+0, CASH.balance(betID+0))
         CASH.subtractCash(betID+1, CASH.balance(betID+1))
         if(EVENTS.getOutcome(self.p2pBets[betID].eventID)):
-            CASH.balance(self.p2pBets[betID].outcomeOneBettor) += self.p2pBets[betID].amtToBet*2
+            CASH.addCash(self.p2pBets[betID].outcomeOneBettor, self.p2pBets[betID].amtToBet*2)
         elif(EVENTS.getOutcome(self.p2pBets[betID].eventID) == -1):
-            CASH.balance(self.p2pBets[betID].outcomeZeroBettor) += self.p2pBets[betID].amtToBet*2
+            CASH.addCash(self.p2pBets[betID].outcomeZeroBettor, self.p2pBets[betID].amtToBet*2)
     # someone didn't pay their side of the bet, refund funds
     else:
-    	CASH.addCash(self.p2pBets[betID].outcomeZeroBettor, CASH.balance(betID+0))
-    	CASH.addCash(self.p2pBets[betID].outcomeOneBettor, CASH.balance(betID+1))
+        CASH.addCash(self.p2pBets[betID].outcomeZeroBettor, CASH.balance(betID+0))
+        CASH.addCash(self.p2pBets[betID].outcomeOneBettor, CASH.balance(betID+1))
         CASH.subtractCash(betID+0, CASH.balance(betID+0))
         CASH.subtractCash(betID+1, CASH.balance(betID+1))
     return(1)

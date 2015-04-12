@@ -67,7 +67,11 @@ def sendFrom(recver, value, from):
 
 # make sure only coming from specific contracts
 def subtractCash(ID, amount):
+    if(!self.whitelist.check(msg.sender)):
+        return(-1)
     self.cashcoinBalances[ID] -= amount
 
 def addCash(ID, amount):
+    if(!self.whitelist.check(msg.sender)):
+        return(-1)
     self.cashcoinBalances[ID] += amount
