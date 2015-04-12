@@ -19,6 +19,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+
 BRANCH = 0
 EVENT = 1
 MARKET = 2
@@ -296,4 +298,9 @@ def redeem(branch):
         self.Branches[branch].step = 0
         return(self.Branches[branch].currentVotePeriod)
 
-inset('consensus.se')
+# inset('../consensus/interpolate.se')
+# inset('../consensus/center.se')
+# inset('../consensus/score.se')
+# inset('../consensus/adjust.se')
+# inset('../consensus/resolve.se')
+# inset('../consensus/payout.se')
