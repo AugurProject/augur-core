@@ -151,7 +151,7 @@ def tol(forecast, actual, fixed=True):
     try:
         assert(r < tolerance)
     except Exception as err:
-        print "Forecast:", forecast
+        print "Forecast:", np.array(map(unfix, forecast))
         print "Actual:", actual
         print "RMSD tolerance exceeded:", r, ">=", tolerance
         raise
@@ -164,7 +164,7 @@ def test_consensus(example):
     t.gas_limit = 100000000
     s = t.state()
 
-    filename = "preprocess.se"
+    filename = "interpolate.se"
     print BG(filename)
     c = s.abi_contract(filename, gas=70000000)
     
@@ -192,6 +192,10 @@ def test_consensus(example):
 
     if verbose:
         display(reports_filled, "reports (filled):", refold=num_events, show_all=True)
+
+    filename = "center.se"
+    print BG(filename)
+    c = s.abi_contract(filename, gas=70000000)
 
     print "  - center"
     result = c.center(reports_filled,
@@ -365,6 +369,10 @@ def test_consensus(example):
 
     tol(scores, nc)
 
+    filename = "adjust.se"
+    print BG(filename)
+    c = s.abi_contract(filename, gas=70000000)
+
     print "  - reputation_delta"
     result = c.reputation_delta(scores, num_reports, num_events)
     result = np.array(result)
@@ -427,6 +435,10 @@ def test_consensus(example):
 
     result = np.array(result)
     event_outcomes = result[0:num_events].tolist()
+
+    filename = "payout.se"
+    print BG(filename)
+    c = s.abi_contract(filename, gas=70000000)
 
     print "  - payout"
     reporter_payout = c.payout(event_outcomes,
@@ -525,7 +537,7 @@ def main():
     examples = (
         binary_input_example,
         scalar_input_example,
-        randomized_inputs,
+        # randomized_inputs,
     )
     for example in examples:   
         test_consensus(example)

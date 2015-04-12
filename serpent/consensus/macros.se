@@ -86,27 +86,3 @@ macro maximum($a):
                         $max = $a[$i]
                     $i += 1
                 $max
-
-# Dot (inner) product of vectors.
-macro dot($a, $b, $len):
-    with $i = 0:
-        with $prod = 0:
-            while $i < $len:
-                $prod += $a[$i] * $b[$i]
-                $i += 1
-            $prod / ONE
-
-# Flattened fixed-point matrix multiplication
-macro matrix_multiply($a, $arows, $acols, $b, $brows, $bcols):
-    with $c = array($arows*$bcols):
-        with $i = 0:
-            while $i < $arows:
-                with $j = 0:
-                    while $j < $bcols:
-                        with $k = 0:
-                            while $k < $acols:
-                                $c[$i*$bcols + $j] += fixed_multiply($a[$i*$acols + $k], $b[$k*$bcols + $j])
-                                $k += 1
-                        $j += 1
-                $i += 1
-            $c
