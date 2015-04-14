@@ -28,7 +28,9 @@ extern RedeemA: [redeem_0:siiii:i]
 # function files/redeemB.se
 extern RedeemB: [redeem_1:siiii:i, redeem_2_6:siiii:i, redeem_7:siiii:i]
 # function files/redeemC.se
-extern RedeemC: [redeem_8:siiii:i, redeem_9:siiii:i, redeem_10:siiii:i, redeem_11:siiii:i, redeem_12:siiii:i, redeem_13:siiii:i]
+extern RedeemC: [redeem_8:siiii:i, redeem_9:siiii:i, redeem_10:siiii:i, redeem_11:siiii:i, redeem_12:siiii:i]
+# function files/redeemC.se
+extern RedeemD: [redeem_13:siiii:i]
 
 # inset('../consensus/logging.se')
 
@@ -62,4 +64,4 @@ def dispatch(branch):
                         elif step == 12:
                             return(RedeemC.redeem_12(branch, period, num_events, num_reports, v_size))
                         elif step == 13:
-                            return(RedeemC.redeem_13(branch, period, num_events, num_reports, v_size))
+                            return(RedeemD.redeem_13(branch, period, num_events, num_reports, v_size))
