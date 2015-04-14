@@ -13,29 +13,38 @@
 
 var rpc = { host: "127.0.0.1", port: 8545 };
 
-var EthRPC = (function ($, rpc_url) {
+var EthRPC = (function (rpc_url) {
 
-    // post json-rpc command to ethereum client (tested w/ geth)
+    // post json-rpc command to ethereum client
     function json_rpc(command, callback) {
-        $.post(rpc_url, JSON.stringify(command), function (data) {
-            if (data) {
-                if (data.error) {
-                    console.error("[" + data.error.code + "]", data.error.message);
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                var res = JSON.parse(xhr.responseText);
+                if (res.error) {
+                    console.error(
+                        "[" + res.error.code + "]",
+                        res.error.message
+                    );
                 } else {
-                    if (data.result && callback) {
-                        callback(data);
-                    } else if (data.result) {
-                        console.log(data.result);
+                    if (res.result && callback) {
+                        callback(res);
+                    } else if (res.result) {
+                        console.log(res.result);
                     } else {
-                        console.log(data);
+                        console.log(res);
                     }
                 }
             }
-        });
+        }
+        xhr.open("POST", rpc_url, false);
+        xhr.setRequestHeader("Content-type", "application/json");
+        xhr.send(JSON.stringify(command));
     }
 
     function postdata(command, params, prefix) {
         data = {
+            id: 1,
             jsonrpc: "2.0",
             method: (prefix || "eth_") + command.toString()
         };
@@ -45,6 +54,8 @@ var EthRPC = (function ($, rpc_url) {
             } else {
                 data.params = [params];
             }
+        } else {
+            data.params = null;
         }
         return data;
     }
@@ -76,35 +87,46 @@ var EthRPC = (function ($, rpc_url) {
                 });
             }
         },
-        hash: function (data, f) { this.sha3(data, f); },
+        blockNumber: function (f) {
+            json_rpc(postdata("blockNumber"), function (data) {
+                var blocknum = parseInt(data.result, 16);
+                console.log(blocknum, "(" + data.result + ")");
+                if (f) f(blocknum);
+            });
+        },
         getCode: function (address, block, f) {
             if (address) {
                 json_rpc(postdata("getCode", [address, block || "latest"]), f);
             }
         },
-        balance: function (address, f) {
-            json_rpc(postdata("getBalance", address), f || function (data) {
+        getBalance: function (address, block, f) {
+            json_rpc(postdata("getBalance", [address, block || "latest"]), f || function (data) {
                 var bal = parseInt(data.result, 16);
-                console.log(bal / 1e16, "(" + bal + ")");
+                console.log(bal / 1e16, "(" + bal.toString() + ")");
                 if (f) f(bal);
             });
         },
-        sendTx: function (tx, f) {
+        sendTransaction: function (tx, f) {
             tx.to = tx.to || "";
             tx.gas = (tx.gas) ? "0x" + tx.gas.toString(16) : "0x989680";
             json_rpc(postdata("sendTransaction", tx), f);
         },
-        getTx: function (hash, f) {
+        getTransactionByHash: function (hash, f) {
             json_rpc(postdata("getTransactionByHash", hash), f);
-        }
+        },
+        hash: function (data, f) { this.sha3(data, f); },
+        balance: function (address, block, f) { this.getBalance(address, block, f); },
+        sendTx: function (tx, f) { this.sendTransaction(tx, f); },
+        getTx: function (hash, f) { this.getTransactionByHash(hash, f); }
     };
-})(jQuery, "http://" + rpc.host.toString() + ":" + rpc.port.toString());
+})("http://" + rpc.host.toString() + ":" + rpc.port.toString());
 
 // broadcast contracts
 function broadcast(from, compiled, gas) {
     for (c in compiled) {
         if (!compiled.hasOwnProperty(c)) continue;
-        EthRPC.sendTransaction({from: from, data: c, gas: gas});
+        console.info("Broadcasting", c, "with", gas, "gas");
+        EthRPC.sendTransaction({from: from, data: compiled[c], gas: gas});
     }
 }
 
@@ -127,7 +149,7 @@ function test_ethrpc(addr, contracts, gas) {
     EthRPC.db("putString", [ "testDB", "myKey", "myString" ]);
     EthRPC.db("getString", [ "testDB", "myKey" ]);
     EthRPC.shh("version");
-    EthRPC.sha3(sigs.cash[2])
+    EthRPC.sha3(contracts.signature.cash[2])
     EthRPC.sendTx({from: addr.jack, data: contracts.compiled.mul2, gas: gas});
     EthRPC.sendTx({from: addr.jack, to: addr.cash, data: "0xc5d24601", gas: gas});
     EthRPC.eth(
@@ -137,22 +159,38 @@ function test_ethrpc(addr, contracts, gas) {
 }
 
 // lots of gas
-var gas = 70000000;
+var gas = 100000000;
 
 // frontier testnet addresses
+// info: "0xe9d61cfdc67115372a78578b3d1082e8911419d9",
+// cash: "0x5c90e13b3cdfb498945f10b60b140259e06a2651",
 var addr = {
+    loopy: "0x00e3f8de3ed9d428dc235ce0c25bc1136073be8b",
     jack: "0x63524e3fe4791aefce1e932bbfb3fdf375bfad89",
-    ten: "0x5c90e13b3cdfb498945f10b60b140259e06a2651",
-    mul2: "0x24c47de8ce8f9bca800c3b428a499fb5b0bcaa09",
+    ten: "0x3caf506cf3d5bb16ba2c8f89a6591c5160d69cf3",
+    mul2: "0x88cae18facdaa0f3d0839d3f8a8874f2fa8c54cf",
     info: "0x84ad0e89dbbbdfb18a59954addf10ad501525a01",
     cash: "0x559b098076d35ddc7f5057bf28eb20d9cf183a99",
     interpolate: "0x13aad6f5573db896e589d2fdef22da8c5033141d",
-    center: "0xe9d61cfdc67115372a78578b3d1082e8911419d9",
-    score: "0x5c90e13b3cdfb498945f10b60b140259e06a2651",
-    adjust: "0xa59e9d9b48f462135f7e971ab370d3e156fd3b37",
-    resolve: "0x63faff743ab0398524c08a435f94ceb91352ba58",
-    payout: "0x88cae18facdaa0f3d0839d3f8a8874f2fa8c54cf"
+    center: "0x63faff743ab0398524c08a435f94ceb91352ba58",
+    score: "0x24c47de8ce8f9bca800c3b428a499fb5b0bcaa09",
+    adjust: "0x3e79ddefd9406c913a74373eb65df6c0eaea98c1",
+    resolve: "0xd7a973f0f38a065a3c5a3e3d3f02ac80685f08a0",
+    payout: "0x7313f08f324b1b2ce54413a20677b3a43a27522f"
 };
+// var addr = {
+//     jack: "0x63524e3fe4791aefce1e932bbfb3fdf375bfad89",
+//     ten: "0x5c90e13b3cdfb498945f10b60b140259e06a2651",
+//     mul2: "0x24c47de8ce8f9bca800c3b428a499fb5b0bcaa09",
+//     info: "0x84ad0e89dbbbdfb18a59954addf10ad501525a01",
+//     cash: "0x559b098076d35ddc7f5057bf28eb20d9cf183a99",
+//     interpolate: "0x13aad6f5573db896e589d2fdef22da8c5033141d",
+//     center: "0xe9d61cfdc67115372a78578b3d1082e8911419d9",
+//     score: "0x5c90e13b3cdfb498945f10b60b140259e06a2651",
+//     adjust: "0xa59e9d9b48f462135f7e971ab370d3e156fd3b37",
+//     resolve: "0x63faff743ab0398524c08a435f94ceb91352ba58",
+//     payout: "0x88cae18facdaa0f3d0839d3f8a8874f2fa8c54cf"
+// };
 
 var contracts = {
     compiled: {
