@@ -1,0 +1,65 @@
+# This software (Augur) allows buying and selling event options in Ethereum.
+#
+# Copyright (c) 2015 Forecast Foundation 
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# If you have questions, please contact Joey Krug (joey@augur.net) or
+# Jack Peterson (jack@augur.net).
+
+# function files/redeemA.se
+extern RedeemA: [redeem_0:siiii:i]
+# function files/redeemB.se
+extern RedeemB: [redeem_1:siiii:i, redeem_2_6:siiii:i, redeem_7:siiii:i]
+# function files/redeemC.se
+extern RedeemC: [redeem_8:siiii:i, redeem_9:siiii:i, redeem_10:siiii:i, redeem_11:siiii:i, redeem_12:siiii:i, redeem_13:siiii:i]
+
+# inset('../consensus/logging.se')
+
+# Q: branch = string and currentVotePeriod = int?
+# - 50% of fees already distributed to market creators
+#   all remaining fees go to reporters
+# - what if not enough consensus or not enough events expiring upcoming
+# @return step we're on of redeem function, for final call return new voting period
+def dispatch(branch):
+    with period = self.Branches[branch].currentVotePeriod:
+        with num_events = self.EventsExpDates[branch][period].numberEvents:
+            with v_size = self.EventsExpDates[branch][period].vSize:
+                with num_reports = v_size / num_events:
+                    with step = self.Branches[branch].step:
+                        if step == 0:
+                            return(RedeemA.redeem_0(branch, period, num_events, num_reports, v_size))
+                        elif step == 1:
+                            return(RedeemB.redeem_1(branch, period, num_events, num_reports, v_size))
+                        elif step == 2 || step == 3 || step == 4 || step == 5 || step == 6:
+                            return(RedeemB.redeem_2_6(branch, period, num_events, num_reports, v_size))
+                        elif step == 7:
+                            return(RedeemB.redeem_7(branch, period, num_events, num_reports, v_size))
+                        elif step == 8:
+                            return(RedeemB.redeem_8(branch, period, num_events, num_reports, v_size))
+                        elif step == 9:
+                            return(RedeemC.redeem_9(branch, period, num_events, num_reports, v_size))
+                        elif step == 10:
+                            return(RedeemC.redeem_10(branch, period, num_events, num_reports, v_size))
+                        elif step == 11:
+                            return(RedeemC.redeem_11(branch, period, num_events, num_reports, v_size))
+                        elif step == 12:
+                            return(RedeemC.redeem_12(branch, period, num_events, num_reports, v_size))
+                        elif step == 13:
+                            return(RedeemC.redeem_13(branch, period, num_events, num_reports, v_size))

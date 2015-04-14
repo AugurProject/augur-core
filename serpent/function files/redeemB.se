@@ -1,0 +1,90 @@
+# This software (Augur) allows buying and selling event options in Ethereum.
+#
+# Copyright (c) 2015 Forecast Foundation 
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# If you have questions, please contact Joey Krug (joey@augur.net) or
+# Jack Peterson (jack@augur.net).
+
+extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+# consensus/center.se
+extern Center: [center:aaaaaii:a, tokenize:ai:a, covariance:aaii:a]
+# consensus/score.se
+extern Score: [blank:iii:a, loadings:aaaii:a, latent:aai, deflate:aaii, score:aaaiii]
+
+# inset('../consensus/logging.se')
+inset('../consensus/macros.se')
+
+def redeem_1(branch, period, num_events, num_reports, v_size):
+    with reputation = array(num_reports):
+        with i = 0:
+            while i < num_reports:
+                reputation[i] = self.Reporting[branch].reputation[i].repValue
+                i += 1
+        with scaled = array(num_events):
+            with scaled_max = array(num_events):
+                with scaled_min = array(num_events):
+                    with j = 0:
+                        while j < num_events:
+                            if self.Events[self.EventsExpDates[branch][period].events[j]].maxValue != 1:
+                                scaled[j] = 1
+                                scaled_max[j] = self.Events[self.EventsExpDates[branch][period].events[j]].maxValue * ONE
+                                scaled_min[j] = self.Events[self.EventsExpDates[branch][period].events[j]].minValue * ONE
+                            else:
+                                scaled[j] = 0
+                                scaled_min[j] = -ONE
+                                scaled_max[j] = ONE
+                            j += 1
+                    with reports_filled = load(self.EventsExpDates[branch][period].reportsFilled[0], items=v_size):
+                        with result = Center.center(reports_filled, reputation, scaled, scaled_max, scaled_min, 5, outsz=v_size+num_events+1):
+                            save(self.EventsExpDates[branch][period].weightedCenteredData[0], result, items=v_size)
+                            save(self.EventsExpDates[branch][period].loadingVector[0], slice(result, items=v_size, items=len(result)), items=(len(result)-v_size))
+                            self.Branches[branch].step = 2
+                            return(2)
+
+def redeem_2_6(branch, period, num_events, num_reports, v_size):
+    # loading vector is num_events + 1 long, the last element says
+    # how many iterations of it are left
+    if self.EventsExpDates[branch][period].loadingVector[num_events] == 0:
+        return(0)
+    with loadings = load(self.EventsExpDates[branch][period].loadingVector[0], items=num_events+1):
+        with wcd = load(self.EventsExpDates[branch][period].weightedCenteredData[0], items=v_size):
+            with reputation = array(num_reports):
+                with i = 0:
+                    while i < num_reports:
+                        reputation[i] = self.Reporting[branch].reputation[i].repValue
+                        i += 1
+                # multistep pca
+                # call this 5 times
+                loadings = Score.loadings(loadings, wcd, reputation, num_reports, num_events, outsz=num_events+1)
+                save(self.EventsExpDates[branch][period].loadingVector[0], loadings, items=num_events+1)
+                if step == 6:
+                    self.Branches[branch].step = 7
+                else:
+                    self.Branches[branch].step += 1
+                return(self.Branches[branch].step)
+
+def redeem_7(branch, period, num_events, num_reports, v_size):
+    with loadings = load(self.EventsExpDates[branch][period].loadingVector[0], items=num_events+1):
+        with wcd = load(self.EventsExpDates[branch][period].weightedCenteredData[0], items=v_size):
+            with scores = Score.score(loadings, wcd, num_reports, num_events, outsz=num_reports):
+                save(self.EventsExpDates[branch][period].scores[0], scores, items=num_reports)
+                self.Branches[branch].step = 8
+                return(8)

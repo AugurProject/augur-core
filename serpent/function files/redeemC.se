@@ -1,0 +1,145 @@
+# This software (Augur) allows buying and selling event options in Ethereum.
+#
+# Copyright (c) 2015 Forecast Foundation 
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# If you have questions, please contact Joey Krug (joey@augur.net) or
+# Jack Peterson (jack@augur.net).
+
+extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+# consensus/adjust.se
+extern Adjust: [reputation_delta:aii:a, weighted_delta:aaaaii:a, select_scores:aaaaaaii:a]
+# consensus/resolve.se
+extern Resolve: [smooth:aaii:a, resolve:aaaaaii:a]
+# consensus/payout.se
+extern Payout: [payout:aaaii]
+
+# inset('../consensus/logging.se')
+inset('../consensus/macros.se')
+
+macro BOND: 42 * ONE
+
+def redeem_8(branch, period, num_events, num_reports, v_size):
+    with scores = load(self.EventsExpDates[branch][period].scores[0], items=num_reports):
+        with result = Adjust.reputation_delta(scores, num_reports, num_events, outsz=2*num_reports):
+            # loads the first set of num_reports items from result
+            save(self.EventsExpDates[branch][period].set1[0], result, items=num_reports)
+            save(self.EventsExpDates[branch][period].set2[0], slice(result, items=num_reports, items=2*num_reports), items=num_reports)
+            self.Branches[branch].step = 9
+            return(9)
+
+def redeem_9(branch, period, num_events, num_reports, v_size):
+    with reports_filled = load(self.EventsExpDates[branch][period].reportsFilled[0], items=v_size):
+        with reputation = array(num_reports):
+            with i = 0:
+                while i < num_reports:
+                    reputation[i] = self.Reporting[branch].reputation[i].repValue
+                    i += 1
+                with set1 = load(self.EventsExpDates[branch][period].set1[0], items=num_reports):
+                    with set2 = load(self.EventsExpDates[branch][period].set2[0], items=num_reports):
+                        with result = Adjust.weighted_delta(set1, set2, reputation, reports_filled, num_reports, num_events, outsz=3*num_events):
+                            save(self.EventsExpDates[branch][period].old[0], result, items=num_events)
+                            save(self.EventsExpDates[branch][period].new1[0], slice(result, items=num_events, items=2*num_events), items=num_events)
+                            save(self.EventsExpDates[branch][period].new2[0], slice(result, items=2*num_events, items=3*num_events), items=num_events)
+                            self.Branches[branch].step = 10
+                            return(10)
+
+def redeem_10(branch, period, num_events, num_reports, v_size):
+    with old = load(self.EventsExpDates[branch][period].old[0], items=num_events):
+        with new1 = load(self.EventsExpDates[branch][period].new1[0], items=num_events):
+            with new2 = load(self.EventsExpDates[branch][period].new2[0], items=num_events):
+                with set1 = load(self.EventsExpDates[branch][period].set1[0], items=num_reports):
+                    with set2 = load(self.EventsExpDates[branch][period].set2[0], items=num_reports):
+                        with scores = load(self.EventsExpDates[branch][period].scores[0], items=num_reports):
+                            with adjusted_scores = Adjust.select_scores(old, new1, new2, set1, set2, scores, num_reports, num_events, outsz=num_reports):
+                                save(self.EventsExpDates[branch][period].adjPrinComp[0], adjusted_scores, items=num_reports)
+                                self.Branches[branch].step = 11
+                                return(11)
+
+def redeem_11(branch, period, num_events, num_reports, v_size):
+    with reputation = array(num_reports):
+        with i = 0:
+            while i < num_reports:
+                reputation[i] = self.Reporting[branch].reputation[i].repValue
+                i += 1
+            with adjusted_scores = load(self.EventsExpDates[branch][period].adjPrinComp[0], items=num_reports):
+                with smooth_rep = Resolve.smooth(adjusted_scores, reputation, num_reports, num_events, outsz=num_reports):
+                    save(self.EventsExpDates[branch][period].smoothRep[0], smooth_rep, items=num_reports)
+                    self.Branches[branch].step = 12
+                    return(12)
+
+def redeem_12(branch, period, num_events, num_reports, v_size):
+    with reports_filled = load(self.EventsExpDates[branch][period].reportsFilled[0], items=v_size):
+        with smooth_rep = load(self.EventsExpDates[branch][period].smoothRep[0], items=num_reports):
+            with scaled = array(num_events):
+                with scaled_max = array(num_events):
+                    with scaled_min = array(num_events):
+                        with j = 0:
+                            while j < num_events:
+                                if self.Events[self.EventsExpDates[branch][period].events[j]].maxValue != 1 && self.Events[self.EventsExpDates[branch][period].events[j]].numOutcomes == 2:
+                                    scaled[j] = 1
+                                    scaled_max[j] = self.Events[self.EventsExpDates[branch][period].events[j]].maxValue * ONE
+                                    scaled_min[j] = self.Events[self.EventsExpDates[branch][period].events[j]].minValue * ONE
+                                else:
+                                    scaled[j] = 0
+                                    scaled_min[j] = ONE
+                                    scaled_max[j] = 2 * ONE
+                                j += 1
+                            with result = Resolve.resolve(smooth_rep, reports_filled, scaled, scaled_max, scaled_min, num_reports, num_events, outsz=num_events):
+                                save(self.EventsExpDates[branch][period].outcomesFinal[0], result, items=num_events)
+                                self.Branches[branch].step = 13
+                                return(13)
+
+def redeem_13(branch, period, num_events, num_reports, v_size):
+    with smooth_rep = load(self.EventsExpDates[branch][period].smoothRep[0], items=num_reports):
+        with reports_mask = load(self.EventsExpDates[branch][period].reportsMask[0], items=v_size):
+            with outcomes = load(self.EventsExpDates[branch][period].outcomesFinal[0], items=num_events):
+                with reporter_payouts = Payout.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outsz=num_reports):
+                    # get event ID for each event by taking the x index in the reports arrays
+                    # - shoving it in reporting.events[]
+                    # && getting the cooresponding ID
+                    with j = 0:
+                        while j < num_events:
+                            eventID = self.EventsExpDates[branch][period].events[j]
+                            # then take outcomes_final && set each event outcome
+                            self.Events[eventID].outcome = outcomes[j]
+                            if outcomes[j] != BAD:
+                                # return bond
+                                self.cashcoinBalances[eventID] -= BOND
+                                self.cashcoinBalances[self.Info[eventID].creator] += BOND
+                            else:
+                                # give event bond money to reporters
+                                self.cashcoinBalances[eventID] -= BOND
+                                self.cashcoinBalances[branch] += BOND
+                            j += 1
+                    # - need to loop through rep holders && distribute 50% of branch fees to
+                    #   reporters' cashcoin addresses 
+                    # - also need to take reporter_payouts && redistribute reputation in the
+                    #   Reporting structure accordingly
+                    with i = 0:
+                        while i < num_reports:
+                            # Q: what is 21000000?
+                            self.Reporting[branch].reputation[i].repValue = fixed_multiply(reporter_payouts[i], 21000000)
+                            self.cashcoinBalances[self.Reporting[branch].reputation[i].reporterID] += fixed_multiply(self.cashcoinBalances[branch], reporter_payouts[i])
+                            i += 1
+                        self.Branches[branch].currentVotePeriod += 1
+                        self.cashcoinBalances[branch] -= self.cashcoinBalances[branch]
+                        self.Branches[branch].step = 0
+                        return(self.Branches[branch].currentVotePeriod)
