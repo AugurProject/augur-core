@@ -23,6 +23,9 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
+extern expiringEvents.se: [getEvents:ii:a, getNumberEvents:ii:i]
+extern branches.se: [getBranch:i:i, getBranches:_:a, getNumBranches:_:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, setStep:ii:i]
+
 extern redeem_interpolate.se: [interpolate:iiiii:i]
 extern redeem_center.se: [center:iiiii:i, covariance:iiiii:i]
 extern redeem_score.se: [blank:iiiii:i, loadings:iiiii:i, latent:iiiii:i, deflate:iiiii:i, score:iiiii:i]
@@ -32,6 +35,8 @@ extern redeem_payout.se: [payout:iiiii:i]
 
 # inset('../consensus/logging.se')
 
+EXPIRING_EVENTS = 0xb7b617b776e66cbae79606d2b6221501ad110090
+BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
 # replace these with contract addresses once loaded onto the chain!
 REDEEM_INTERPOLATE = create("../function files/redeem_interpolate.se")
 REDEEM_CENTER = create("../function files/redeem_center.se")
