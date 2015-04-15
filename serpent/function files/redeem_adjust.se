@@ -26,20 +26,18 @@
 extern adjust.se: [reputation_delta:aii:a, weighted_delta:aaaaii:a, select_scores:aaaaaaii:a]
 
 # inset('../consensus/logging.se')
-inset('../consensus/macros.se')
+inset('../consensus/constants.se')
 
 ADJUST = create("../consensus/adjust.se")
 
-def redeem_reputation_delta(branch, period, num_events, num_reports, v_size):
+def reputation_delta(branch, period, num_events, num_reports, v_size):
     with scores = load(self.EventsExpDates[branch][period].scores[0], items=num_reports):
         with result = ADJUST.reputation_delta(scores, num_reports, num_events, outsz=2*num_reports):
             # loads the first set of num_reports items from result
             save(self.EventsExpDates[branch][period].set1[0], result, items=num_reports)
             save(self.EventsExpDates[branch][period].set2[0], slice(result, items=num_reports, items=2*num_reports), items=num_reports)
-            self.Branches[branch].step += 1
-            return(self.Branches[branch].step)
 
-def redeem_weighted_delta(branch, period, num_events, num_reports, v_size):
+def weighted_delta(branch, period, num_events, num_reports, v_size):
     with reports_filled = load(self.EventsExpDates[branch][period].reportsFilled[0], items=v_size):
         with reputation = array(num_reports):
             with i = 0:
@@ -52,10 +50,8 @@ def redeem_weighted_delta(branch, period, num_events, num_reports, v_size):
                             save(self.EventsExpDates[branch][period].old[0], result, items=num_events)
                             save(self.EventsExpDates[branch][period].new1[0], slice(result, items=num_events, items=2*num_events), items=num_events)
                             save(self.EventsExpDates[branch][period].new2[0], slice(result, items=2*num_events, items=3*num_events), items=num_events)
-                            self.Branches[branch].step += 1
-                            return(self.Branches[branch].step)
 
-def redeem_select_scores(branch, period, num_events, num_reports, v_size):
+def select_scores(branch, period, num_events, num_reports, v_size):
     with old = load(self.EventsExpDates[branch][period].old[0], items=num_events):
         with new1 = load(self.EventsExpDates[branch][period].new1[0], items=num_events):
             with new2 = load(self.EventsExpDates[branch][period].new2[0], items=num_events):
@@ -64,5 +60,3 @@ def redeem_select_scores(branch, period, num_events, num_reports, v_size):
                         with scores = load(self.EventsExpDates[branch][period].scores[0], items=num_reports):
                             with adjusted_scores = ADJUST.select_scores(old, new1, new2, set1, set2, scores, num_reports, num_events, outsz=num_reports):
                                 save(self.EventsExpDates[branch][period].adjPrinComp[0], adjusted_scores, items=num_reports)
-                                self.Branches[branch].step += 1
-                                return(self.Branches[branch].step)

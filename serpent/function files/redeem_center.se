@@ -26,13 +26,11 @@
 extern center.se: [center:aaaaaii:a, tokenize:ai:a, covariance:aaii:a]
 
 # inset('../consensus/logging.se')
-inset('../consensus/macros.se')
+inset('../consensus/constants.se')
 
 CENTER = create("../consensus/center.se")
 
-macro MAX_ITERATIONS: 5
-
-def redeem_center(branch, period, num_events, num_reports, v_size):
+def center(branch, period, num_events, num_reports, v_size):
     with reputation = array(num_reports):
         with i = 0:
             while i < num_reports:
@@ -57,10 +55,8 @@ def redeem_center(branch, period, num_events, num_reports, v_size):
                             with result = CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, outsz=lflatsize):
                                 save(self.EventsExpDates[branch][period].weightedCenteredData[0], result, items=v_size)
                                 save(self.EventsExpDates[branch][period].loadingVector[0], slice(result, items=v_size, items=lflatsize), items=num_events+2)
-                                self.Branches[branch].step += 1
-                                return(self.Branches[branch].step)
 
-def redeem_covariance(branch, period, num_events, num_reports, v_size):
+def covariance(branch, period, num_events, num_reports, v_size):
     with reputation = array(num_reports):
         with i = 0:
             while i < num_reports:
@@ -72,5 +68,3 @@ def redeem_covariance(branch, period, num_events, num_reports, v_size):
                     save(self.EventsExpDates[branch][period].covarianceMatrixRow[0], covrow, items=num_events)
                     # save a copy of weightedCenteredData as "deflated", needed in the following steps
                     save(self.EventsExpDates[branch][period].deflated[0], self.EventsExpDates[branch][period].weightedCenteredData[0], items=v_size)
-                    self.Branches[branch].step += 1
-                    return(self.Branches[branch].step)

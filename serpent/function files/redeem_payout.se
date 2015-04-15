@@ -26,13 +26,12 @@
 extern payout.se: [payout:aaaii:a]
 
 # inset('../consensus/logging.se')
-inset('../consensus/macros.se')
+inset('../consensus/constants.se')
+inset('../consensus/arrays.se')
 
 PAYOUT = create("../consensus/payout.se")
 
-macro BOND: 42 * ONE
-
-def redeem_payout(branch, period, num_events, num_reports, v_size):
+def payout(branch, period, num_events, num_reports, v_size):
     with smooth_rep = load(self.EventsExpDates[branch][period].smoothRep[0], items=num_reports):
         with reports_mask = load(self.EventsExpDates[branch][period].reportsMask[0], items=v_size):
             with outcomes = load(self.EventsExpDates[branch][period].outcomesFinal[0], items=num_events):
@@ -64,7 +63,4 @@ def redeem_payout(branch, period, num_events, num_reports, v_size):
                             self.Reporting[branch].reputation[i].repValue = fixed_multiply(reporter_payouts[i], 21000000)
                             self.cashcoinBalances[self.Reporting[branch].reputation[i].reporterID] += fixed_multiply(self.cashcoinBalances[branch], reporter_payouts[i])
                             i += 1
-                        self.Branches[branch].currentVotePeriod += 1
                         self.cashcoinBalances[branch] -= self.cashcoinBalances[branch]
-                        self.Branches[branch].step = 0
-                        return(self.Branches[branch].currentVotePeriod)

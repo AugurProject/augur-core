@@ -23,7 +23,8 @@
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
 # inset('logging.se')
-inset('macros.se')
+inset('constants.se')
+inset('arrays.se')
 inset('weighted-median.se')
 
 # Absolute value of all array elements

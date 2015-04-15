@@ -26,11 +26,11 @@
 extern resolve.se: [smooth:aaii:a, resolve:aaaaaii:a]
 
 # inset('../consensus/logging.se')
-inset('../consensus/macros.se')
+inset('../consensus/constants.se')
 
 RESOLVE = create("../consensus/resolve.se")
 
-def redeem_smooth(branch, period, num_events, num_reports, v_size):
+def smooth(branch, period, num_events, num_reports, v_size):
     with reputation = array(num_reports):
         with i = 0:
             while i < num_reports:
@@ -39,10 +39,8 @@ def redeem_smooth(branch, period, num_events, num_reports, v_size):
             with adjusted_scores = load(self.EventsExpDates[branch][period].adjPrinComp[0], items=num_reports):
                 with smooth_rep = RESOLVE.smooth(adjusted_scores, reputation, num_reports, num_events, outsz=num_reports):
                     save(self.EventsExpDates[branch][period].smoothRep[0], smooth_rep, items=num_reports)
-                    self.Branches[branch].step += 1
-                    return(self.Branches[branch].step)
 
-def redeem_resolve(branch, period, num_events, num_reports, v_size):
+def resolve(branch, period, num_events, num_reports, v_size):
     with reports_filled = load(self.EventsExpDates[branch][period].reportsFilled[0], items=v_size):
         with smooth_rep = load(self.EventsExpDates[branch][period].smoothRep[0], items=num_reports):
             with scaled = array(num_events):
@@ -61,5 +59,3 @@ def redeem_resolve(branch, period, num_events, num_reports, v_size):
                                 j += 1
                             with result = RESOLVE.resolve(smooth_rep, reports_filled, scaled, scaled_max, scaled_min, num_reports, num_events, outsz=num_events):
                                 save(self.EventsExpDates[branch][period].outcomesFinal[0], result, items=num_events)
-                                self.Branches[branch].step += 1
-                                return(self.Branches[branch].step)

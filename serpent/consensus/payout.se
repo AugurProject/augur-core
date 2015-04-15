@@ -23,7 +23,8 @@
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
 # inset('logging.se')
-inset('macros.se')
+inset('constants.se')
+inset('arrays.se')
 
 def payout(outcomes_final:arr, smooth_rep:arr, reports_mask:arr, num_reports, num_events):
         # Event participation (within columns):
