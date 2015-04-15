@@ -51,3 +51,7 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Emacs auto saves
+*~
+\#*\#
