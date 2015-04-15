@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation 
+# Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -28,9 +28,6 @@ INFO = 0x84ad0e89dbbbdfb18a59954addf10ad501525a01
 extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
 CASH = 0x559b098076d35ddc7f5057bf28eb20d9cf183a99
 
-extern fxpFunctions.se: [fx_exp:i:i, fx_log:i:i]
-FXP = 0x82695a58b84bbcc90372d06e9b1d599ca2dd60cd
-
 extern markets.se: [addParticipant:ii:i, getAlpha:i:i, getBranchID:i:i, getCumScale:i:i, getCurrentParticipantNumber:i:i, getMarketEvents:i:a, getMarketInfo:i:a, getMarketNumOutcomes:i:i, getNumEvents:i:i, getParticipantID:ii:i, getParticipantNumber:ii:i, getParticipantSharesPurchased:iii:i, getSharesPurchased:ii:i, getSimulatedBuy:ii:_, getSimulatedSell:ii:_, getTradingFee:i:i, getTradingPeriod:i:i, getWinningOutcomes:i:a, initialLiquiditySetup:iiii:i, initializeMarket:iaiii:i, lsLmsr:i:i, modifyParticipantShares:iiii:i, modifyShares:iii:i, price:ii:i, setWinningOutcomes:a:i]
 MARKETS = 0x9d8b4e6da4e917e7b951f372e66b1012b203e30e
 
@@ -38,16 +35,16 @@ extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getM
 EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
 
 extern closeMarketOne.se: [oneOutcome:ii:i]
-CLOSEONE = 
+CLOSEONE = 0x90646695dc40c797aca00faecdfb3d3edcdd77e5
 
 extern closeMarketTwo.se: [twoOutcomes:iaa:i]
-CLOSETWO = 
-
-extern closeMarketEight.se: [eightOutcomes:iaa:i]
-CLOSEEIGHT = 
+CLOSETWO = 0x224006ecb3c6c8ab9eb5ddbdf5e18e2b379cea3f
 
 extern closeMarketFour.se: [fourOutcomes:iaa:i]
-CLOSEFOUR = 
+CLOSEFOUR = 0x6e9b02045dd156a89810d9ce6ee325371beb4db9
+
+extern closeMarketEight.se: [eightOutcomes:iaa:i]
+CLOSEEIGHT = 0x627ce97469fc29e876f928c300db8ae3ccf8bd9e
 
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
@@ -56,7 +53,7 @@ CLOSEFOUR =
 # Error messages otherwise
     # -1: Market has no cash anyway
     # -2: 0 outcome
-    # -3: Outcome indeterminable 
+    # -3: Outcome indeterminable
 def closeMarket(branch, market):
     if(CASH.balance(market)<=0):
         return(-1)
@@ -71,12 +68,12 @@ def closeMarket(branch, market):
         # (max poss. winning outcomes is 200 outcomes total all scalar multidimensional)
         winningOutcomes = array(200)
         events = array(3)
-        events = MARKETS.getMarketEvents(market)
+        events = MARKETS.getMarketEvents(market, outsz=3)
         while n < numberEvents:
             fxpOutcome = EVENTS.getOutcome(events[n])
             if(fxpOutcome==0):
                 return(-2)
-            outcome = fxpOutcome/2^64 
+            outcome = fxpOutcome/2^64
             # makes sure it's not a scalar
             if(fxpOutcome==3*2^63 && numberEvents==1 && !(EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2)):
                 # return all the $$$ - (@ 50 cents a share)
@@ -151,11 +148,11 @@ def closeMarket(branch, market):
                     #nonscalar, nonscalar, scalar
                     elif(winningOutcomes[1]==0):
                       # winningOutcomes[0] = winningOutcomes[0]
-                        winningOutcomes[1] += winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) 
+                        winningOutcomes[1] += winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
                 else:
                     #scalar, scalar, nonscalar
                     if(winningOutcomes[3]):
-                        winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1) 
+                        winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
                         winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
                         winningOutcomes[2] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
                         winningOutcomes[3] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
