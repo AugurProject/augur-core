@@ -23,22 +23,27 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
-# function files/redeemA.se
-extern RedeemA: [redeem_0:siiii:i]
-# function files/redeemB.se
-extern RedeemB: [redeem_1:siiii:i, redeem_2_6:siiii:i, redeem_7:siiii:i]
-# function files/redeemC.se
-extern RedeemC: [redeem_8:siiii:i, redeem_9:siiii:i, redeem_10:siiii:i, redeem_11:siiii:i, redeem_12:siiii:i]
-# function files/redeemC.se
-extern RedeemD: [redeem_13:siiii:i]
+extern redeem_interpolate.se: [interpolate:iiiii:i]
+extern redeem_center.se: [center:iiiii:i, covariance:iiiii:i]
+extern redeem_score.se: [blank:iiiii:i, loadings:iiiii:i, latent:iiiii:i, deflate:iiiii:i, score:iiiii:i]
+extern redeem_adjust.se: [reputation_delta:iiiii:i, weighted_delta:iiiii:i, select_scores:iiiii:i]
+extern redeem_resolve.se: [smooth:iiiii:i, resolve:iiiii:i]
+extern redeem_payout.se: [payout:iiiii:i]
 
 # inset('../consensus/logging.se')
 
-# Q: branch = string and currentVotePeriod = int?
+# replace these with contract addresses once loaded onto the chain!
+REDEEM_INTERPOLATE = create("../function files/redeem_interpolate.se")
+REDEEM_CENTER = create("../function files/redeem_center.se")
+REDEEM_SCORE = create("../function files/redeem_score.se")
+REDEEM_ADJUST = create("../function files/redeem_adjust.se")
+REDEEM_RESOLVE = create("../function files/redeem_resolve.se")
+REDEEM_PAYOUT = create("../function files/redeem_payout.se")
+
 # - 50% of fees already distributed to market creators
 #   all remaining fees go to reporters
 # - what if not enough consensus or not enough events expiring upcoming
-# @return step we're on of redeem function, for final call return new voting period
+# @return next step or loop index (see below), for final call return new voting period
 def dispatch(branch):
     with period = self.Branches[branch].currentVotePeriod:
         with num_events = self.EventsExpDates[branch][period].numberEvents:
@@ -46,22 +51,80 @@ def dispatch(branch):
                 with num_reports = v_size / num_events:
                     with step = self.Branches[branch].step:
                         if step == 0:
-                            return(RedeemA.redeem_0(branch, period, num_events, num_reports, v_size))
+                            REDEEM_INTERPOLATE.interpolate(branch, period, num_events, num_reports, v_size)
+                            self.Branches[branch].step = 1
+                            return(1)
                         elif step == 1:
-                            return(RedeemB.redeem_1(branch, period, num_events, num_reports, v_size))
-                        elif step == 2 || step == 3 || step == 4 || step == 5 || step == 6:
-                            return(RedeemB.redeem_2_6(branch, period, num_events, num_reports, v_size))
+                            REDEEM_CENTER.center(branch, period, num_events, num_reports, v_size)
+                            self.Branches[branch].step = 2
+                            return(2)
+                        elif step == 2:
+                            REDEEM_CENTER.covariance(branch, period, num_events, num_reports, v_size)
+                            self.Branches[branch].step = 3
+                            return(3)
+                        #######################
+                        # loop MAX_COMPONENTS #
+                        #######################
+                        elif step == 3:
+                            loop = self.Branches[branch].loop
+                            if loop == 0:
+                                REDEEM_SCORE.blank(branch, period, num_events, num_reports, v_size)
+                                self.Branches[branch].loop = 1
+                                return(1)
+                            #######################
+                            # loop MAX_ITERATIONS #
+                            #######################
+                            elif loop == 1:
+                                more = REDEEM_SCORE.loadings(branch, period, num_events, num_reports, v_size)
+                                if more == 1:
+                                    return(1) # loop
+                                else:
+                                    self.Branches[branch].loop = 2
+                                    return(2) # loop
+                            ############
+                            # end loop #
+                            ############
+                            elif loop == 2:
+                                REDEEM_SCORE.latent(branch, period, num_events, num_reports, v_size)
+                                self.Branches[branch].loop = 3
+                                return(3)
+                            elif loop == 3:
+                                REDEEM_SCORE.deflate(branch, period, num_events, num_reports, v_size)
+                                self.Branches[branch].loop = 4
+                                return(4)
+                            elif loop == 4:
+                                more = REDEEM_SCORE.score(branch, period, num_events, num_reports, v_size)
+                                if more == 1:
+                                    return(3) # step
+                                else:
+                                    self.Branches[branch].loop = 0 # reset loop
+                                    self.Branches[branch].step = 4 # next step
+                                    return(4) # step
+                        ############
+                        # end loop #
+                        ############
+                        elif step == 4:
+                            REDEEM_ADJUST.reputation_delta(branch, period, num_events, num_reports, v_size)
+                            self.Branches[branch].step = 5
+                            return(5)
+                        elif step == 5:
+                            REDEEM_ADJUST.weighted_delta(branch, period, num_events, num_reports, v_size)
+                            self.Branches[branch].step = 6
+                            return(6)
+                        elif step == 6:
+                            REDEEM_ADJUST.select_scores(branch, period, num_events, num_reports, v_size)
+                            self.Branches[branch].step = 7
+                            return(7)
                         elif step == 7:
-                            return(RedeemB.redeem_7(branch, period, num_events, num_reports, v_size))
+                            REDEEM_RESOLVE.smooth(branch, period, num_events, num_reports, v_size)
+                            self.Branches[branch].step = 8
+                            return(8)
                         elif step == 8:
-                            return(RedeemB.redeem_8(branch, period, num_events, num_reports, v_size))
+                            REDEEM_RESOLVE.resolve(branch, period, num_events, num_reports, v_size)
+                            self.Branches[branch].step = 9
+                            return(9)
                         elif step == 9:
-                            return(RedeemC.redeem_9(branch, period, num_events, num_reports, v_size))
-                        elif step == 10:
-                            return(RedeemC.redeem_10(branch, period, num_events, num_reports, v_size))
-                        elif step == 11:
-                            return(RedeemC.redeem_11(branch, period, num_events, num_reports, v_size))
-                        elif step == 12:
-                            return(RedeemC.redeem_12(branch, period, num_events, num_reports, v_size))
-                        elif step == 13:
-                            return(RedeemD.redeem_13(branch, period, num_events, num_reports, v_size))
+                            REDEEM_PAYOUT.payout(branch, period, num_events, num_reports, v_size)
+                            self.Branches[branch].step = 0 # reset step
+                            self.Branches[branch].currentVotePeriod += 1
+                            return(self.Branches[branch].currentVotePeriod)

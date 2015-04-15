@@ -15,109 +15,156 @@ var rpc = { host: "127.0.0.1", port: 8545 };
 
 var EthRPC = (function (rpc_url) {
 
-    // post json-rpc command to ethereum client
-    function json_rpc(command, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4) {
-                var res = JSON.parse(xhr.responseText);
-                if (res.error) {
-                    console.error(
-                        "[" + res.error.code + "]",
-                        res.error.message
-                    );
-                } else {
-                    if (res.result && callback) {
-                        callback(res);
-                    } else if (res.result) {
-                        console.log(res.result);
-                    } else {
-                        console.log(res);
-                    }
-                }
+    var pdata, id = 1;
+
+    function parse(response, callback) {
+        if (response.error) {
+            console.error(
+                "[" + response.error.code + "]",
+                response.error.message
+            );
+        } else {
+            if (response.result && callback) {
+                return callback(response);
+            } else if (response.result) {
+                return response.result;
+            } else {
+                return response;
             }
         }
-        xhr.open("POST", rpc_url, false);
-        xhr.setRequestHeader("Content-type", "application/json");
-        xhr.send(JSON.stringify(command));
+    }
+
+    // post json-rpc command to ethereum client
+    function json_rpc(command, callback, async) {
+        var xhr = null;
+        if (window.XMLHttpRequest) {
+            xhr = new XMLHttpRequest();
+        } else {
+            xhr = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        if (async) {
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4) {
+                    parse(JSON.parse(xhr.responseText), callback);
+                }
+            };
+            xhr.open("POST", rpc_url, true);
+            xhr.setRequestHeader("Content-type", "application/json");
+            xhr.send(JSON.stringify(command));
+        } else {            
+            xhr.open("POST", rpc_url, false);
+            xhr.setRequestHeader("Content-type", "application/json");
+            xhr.send(JSON.stringify(command));
+            return parse(JSON.parse(xhr.responseText), callback);
+        }
     }
 
     function postdata(command, params, prefix) {
-        data = {
-            id: 1,
+        pdata = {
+            id: id++,
             jsonrpc: "2.0",
             method: (prefix || "eth_") + command.toString()
         };
         if (params) {
             if (params.constructor === Array) {
-                data.params = params;
+                pdata.params = params;
             } else {
-                data.params = [params];
+                pdata.params = [params];
             }
         } else {
-            data.params = null;
+            pdata.params = null;
         }
-        return data;
+        return pdata;
     }
 
     return {
+        rpc: function (command, params, f) {
+            return json_rpc(postdata(command, params, ""), f);
+        },
         eth: function (command, params, f) {
-            json_rpc(postdata(command, params), f);
+            return json_rpc(postdata(command, params), f);
         },
         net: function (command, params, f) {
-            json_rpc(postdata(command, params, "net_"), f);
+            return json_rpc(postdata(command, params, "net_"), f);
         },
         web3: function (command, params, f) {
-            json_rpc(postdata(command, params, "web3_"), f);
+            return json_rpc(postdata(command, params, "web3_"), f);
         },
         db: function (command, params, f) {
-            json_rpc(postdata(command, params, "db_"), f);
+            return json_rpc(postdata(command, params, "db_"), f);
         },
         shh: function (command, params, f) {
-            json_rpc(postdata(command, params, "shh_"), f);
+            return json_rpc(postdata(command, params, "shh_"), f);
         },
-        sha3: function (data, f) {
+        hash: function (data, small, f) {
             if (data) {
                 if (data.constructor === Array || data.constructor === Object) {
                     data = JSON.stringify(data);
                 }
-                json_rpc(postdata("sha3", data.toString(), "web3_"), function (data) {
-                    console.log(data.result.slice(0, 10), "(" + data.result + ")");
-                    if (f) f(data.result);
+                return json_rpc(postdata("sha3", data.toString(), "web3_"), function (data) {
+                    var hash = (small) ? data.result.slice(0, 10) : data.result;
+                    if (f) {
+                        return f(hash);
+                    } else {
+                        return hash;
+                    }
                 });
             }
         },
         blockNumber: function (f) {
-            json_rpc(postdata("blockNumber"), function (data) {
+            return json_rpc(postdata("blockNumber"), function (data) {
                 var blocknum = parseInt(data.result, 16);
-                console.log(blocknum, "(" + data.result + ")");
-                if (f) f(blocknum);
+                if (f) {
+                    return f(blocknum);
+                } else {
+                    return blocknum;
+                }
             });
         },
-        getCode: function (address, block, f) {
+        code: function (address, block, f) {
             if (address) {
-                json_rpc(postdata("getCode", [address, block || "latest"]), f);
+                return json_rpc(postdata("getCode", [address, block || "latest"]), f);
             }
         },
-        getBalance: function (address, block, f) {
-            json_rpc(postdata("getBalance", [address, block || "latest"]), f || function (data) {
-                var bal = parseInt(data.result, 16);
-                console.log(bal / 1e16, "(" + bal.toString() + ")");
-                if (f) f(bal);
+        balance: function (address, block, f) {
+            return json_rpc(postdata("getBalance", [address, block || "latest"]), function (data) {
+                var wei = parseInt(data.result, 16);
+                var ether = wei / 1e16;
+                if (f) {
+                    return f(wei);
+                } else {
+                    return ether;
+                }
             });
         },
-        sendTransaction: function (tx, f) {
+        txCount: function (address, f) {
+            return json_rpc(postdata("getTransactionCount", address), f);
+        },
+        call: function (tx, f) {
             tx.to = tx.to || "";
             tx.gas = (tx.gas) ? "0x" + tx.gas.toString(16) : "0x989680";
-            json_rpc(postdata("sendTransaction", tx), f);
+            return json_rpc(postdata("call", tx), f);
         },
-        getTransactionByHash: function (hash, f) {
-            json_rpc(postdata("getTransactionByHash", hash), f);
+        sendTx: function (tx, f) {
+            tx.to = tx.to || "";
+            tx.gas = (tx.gas) ? "0x" + tx.gas.toString(16) : "0x989680";
+            return json_rpc(postdata("sendTransaction", tx), f);
         },
-        hash: function (data, f) { this.sha3(data, f); },
-        balance: function (address, block, f) { this.getBalance(address, block, f); },
-        sendTx: function (tx, f) { this.sendTransaction(tx, f); },
-        getTx: function (hash, f) { this.getTransactionByHash(hash, f); }
+        getTx: function (hash, f) {
+            return json_rpc(postdata("getTransactionByHash", hash), f);
+        },
+        peerCount: function (f) {
+            return json_rpc(postdata("peerCount", [], "net_"), f);
+        },
+        id: function () { return id; },
+        data: function () { return pdata; },
+        // aliases
+        sha3: function (data, f) { return this.hash(data, f); },
+        getCode: function (address, block, f) { return this.code(address, block, f); },
+        getBalance: function (address, block, f) { return this.balance(address, block, f); },
+        getTransactionCount: function (address, f) { return this.txCount(address, f); },
+        sendTransaction: function (tx, f) { return this.sendTx(tx, f); },
+        getTransactionByHash: function (hash, f) { return this.getTx(hash, f); }
     };
 })("http://" + rpc.host.toString() + ":" + rpc.port.toString());
 
@@ -132,9 +179,13 @@ function broadcast(from, compiled, gas) {
 
 // check if contracts are accessible
 function ping(addr) {
+    var contract_code;
     for (a in addr) {
         if (!addr.hasOwnProperty(a)) continue;
-        EthRPC.getCode(addr[a]);
+        contract_code = EthRPC.code(addr[a]);
+        if (contract_code !== "0x") {
+            console.log(a + ":", contract_code);
+        }
     }
 }
 
@@ -144,53 +195,49 @@ function test_ethrpc(addr, contracts, gas) {
     EthRPC.balance(addr.jack);
     EthRPC.eth("accounts");
     EthRPC.eth("blockNumber");
-    EthRPC.web3("sha3", "wheethereum");
     EthRPC.net("peerCount");
     EthRPC.db("putString", [ "testDB", "myKey", "myString" ]);
     EthRPC.db("getString", [ "testDB", "myKey" ]);
     EthRPC.shh("version");
-    EthRPC.sha3(contracts.signature.cash[2])
-    EthRPC.sendTx({from: addr.jack, data: contracts.compiled.mul2, gas: gas});
-    EthRPC.sendTx({from: addr.jack, to: addr.cash, data: "0xc5d24601", gas: gas});
-    EthRPC.eth(
-        "getTransactionByHash",
-        ["0xf1699079b4408caf18068cd546b95006428e0cfa89ef11dd4b349073042f8267", "pending"]
-    );
+    EthRPC.hash("wheethereum");
+    var result_cash = EthRPC.call({
+        from: addr.jack,
+        to: addr.contracts.cash,
+        data: "0xde5f72fd",
+        gas: gas
+    });
+    result_cash = parseInt(result_cash, 16);
+    var params = "000000000000000000000000000000000000000000000000000000000000002a";
+    var result_mul2 = EthRPC.call({
+        from: addr.jack,
+        to: addr.contracts.mul2,
+        data: contracts.abi_data.mul2.double + params,
+        gas: gas
+    });
+    result_mul2 = parseInt(result_mul2, 16);
 }
 
 // lots of gas
 var gas = 100000000;
 
 // frontier testnet addresses
-// info: "0xe9d61cfdc67115372a78578b3d1082e8911419d9",
-// cash: "0x5c90e13b3cdfb498945f10b60b140259e06a2651",
 var addr = {
     loopy: "0x00e3f8de3ed9d428dc235ce0c25bc1136073be8b",
     jack: "0x63524e3fe4791aefce1e932bbfb3fdf375bfad89",
-    ten: "0x3caf506cf3d5bb16ba2c8f89a6591c5160d69cf3",
-    mul2: "0x88cae18facdaa0f3d0839d3f8a8874f2fa8c54cf",
-    info: "0x84ad0e89dbbbdfb18a59954addf10ad501525a01",
-    cash: "0x559b098076d35ddc7f5057bf28eb20d9cf183a99",
-    interpolate: "0x13aad6f5573db896e589d2fdef22da8c5033141d",
-    center: "0x63faff743ab0398524c08a435f94ceb91352ba58",
-    score: "0x24c47de8ce8f9bca800c3b428a499fb5b0bcaa09",
-    adjust: "0x3e79ddefd9406c913a74373eb65df6c0eaea98c1",
-    resolve: "0xd7a973f0f38a065a3c5a3e3d3f02ac80685f08a0",
-    payout: "0x7313f08f324b1b2ce54413a20677b3a43a27522f"
+    toast: "0xb76a02724d44c89c20e41882f729a092f14d3eaf",
+    contracts: {
+        ten: "0x3caf506cf3d5bb16ba2c8f89a6591c5160d69cf3",
+        mul2: "0xe9d61cfdc67115372a78578b3d1082e8911419d9",
+        info: "0x84ad0e89dbbbdfb18a59954addf10ad501525a01",
+        cash: "0x559b098076d35ddc7f5057bf28eb20d9cf183a99",
+        interpolate: "0x13aad6f5573db896e589d2fdef22da8c5033141d",
+        center: "0x63faff743ab0398524c08a435f94ceb91352ba58",
+        score: "0x13aad6f5573db896e589d2fdef22da8c5033141d",
+        adjust: "0x3e79ddefd9406c913a74373eb65df6c0eaea98c1",
+        resolve: "0xd7a973f0f38a065a3c5a3e3d3f02ac80685f08a0",
+        payout: "0x7313f08f324b1b2ce54413a20677b3a43a27522f"
+    }
 };
-// var addr = {
-//     jack: "0x63524e3fe4791aefce1e932bbfb3fdf375bfad89",
-//     ten: "0x5c90e13b3cdfb498945f10b60b140259e06a2651",
-//     mul2: "0x24c47de8ce8f9bca800c3b428a499fb5b0bcaa09",
-//     info: "0x84ad0e89dbbbdfb18a59954addf10ad501525a01",
-//     cash: "0x559b098076d35ddc7f5057bf28eb20d9cf183a99",
-//     interpolate: "0x13aad6f5573db896e589d2fdef22da8c5033141d",
-//     center: "0xe9d61cfdc67115372a78578b3d1082e8911419d9",
-//     score: "0x5c90e13b3cdfb498945f10b60b140259e06a2651",
-//     adjust: "0xa59e9d9b48f462135f7e971ab370d3e156fd3b37",
-//     resolve: "0x63faff743ab0398524c08a435f94ceb91352ba58",
-//     payout: "0x88cae18facdaa0f3d0839d3f8a8874f2fa8c54cf"
-// };
 
 var contracts = {
     compiled: {
@@ -205,65 +252,31 @@ var contracts = {
         resolve: "0x610dee8061000e600039610dfc56600061107f537c010000000000000000000000000000000000000000000000000000000060003504633f8df0c481141561054a5760443560405260643560605260846004358080602002602001599059016000905281815260208101905090506080528060200282608051378060200282019150506024358080602002602001599059016000905281815260208101905090506101205280602002826101205137806020028201915050506020610120510351600060005b828112156101115760008160200261012051015112156100e357806020026101205101516000036100ee565b806020026101205101515b8160200261012051015280602002610120510151820191506001810190506100b7565b82806020026020015990590160009052818152602081019050905060005b848112156101605783680100000000000000008260200261012051015102058160200283015260018101905061012f565b819050905090509050905061012052604051806020026020015990590160009052818152602081019050905060005b6040518112156101b557806020026101205101518160200283015260018101905061018f565b5060006020608051035180806020026020015990590160009052818152602081019050905060005b82811215610223576000816020026080510151121561020757806020026080510151600003610211565b8060200260805101515b816020028301526001810190506101dd565b8190509050905051600160206020608051035180806020026020015990590160009052818152602081019050905060005b8281121561029a576000816020026080510151121561027e57806020026080510151600003610288565b8060200260805101515b81602002830152600181019050610254565b8190509050905003515b808212156103b15782826020026020608051035180806020026020015990590160009052818152602081019050905060005b8281121561031c57600081602002608051015112156103005780602002608051015160000361030a565b8060200260805101515b816020028301526001810190506102d6565b81905090509050015113156103a657816020026020608051035180806020026020015990590160009052818152602081019050905060005b8281121561039a576000816020026080510151121561037e57806020026080510151600003610388565b8060200260805101515b81602002830152600181019050610354565b81905090509050015192505b6001820191506102a4565b829050905090501415156104d75760208103516020820351600060005b828112156103ec5780602002850151820191506001810190506103ce565b819050905090500560005b6040518112156104265781816020028401518260200260805101510205816020028401526001810190506103f7565b50506020810351600060005b8281121561047d5760008160200285015112156104585780602002840151600003610460565b806020028401515b816020028501528060200284015182019150600181019050610432565b82806020026020015990590160009052818152602081019050905060005b848112156104c95783680100000000000000008260200288015102058160200283015260018101905061049b565b819050905090509050905090505b604051806020026020015990590160009052818152602081019050905060005b60405181121561052e57600a6009826020026101205101510205600a826020028501510501816020028301526001810190506104f7565b5060405180602083035260206020604051020160208303f35050505b63176802a0811415610dec5760a43560405260c43560605260e460043580806020026020015990590160009052818152602081019050905061072052806020028261072051378060200282019150506024358080602002602001599059016000905281815260208101905090506107a05280602002826107a05137806020028201915050604435808060200260200159905901600090528181526020810190509050610800528060200282610800513780602002820191505060643580806020026020015990590160009052818152602081019050905061086052806020028261086051378060200282019150506084358080602002602001599059016000905281815260208101905090506108c05280602002826108c05137806020028201915050506060516002026060518060200260200159905901600090528181526020810190509050606051806020026020015990590160009052818152602081019050905060005b606051811215610b78576001816020026108005101511415610b1e57604051806020026020015990590160009052818152602081019050905060005b60405181121561071957606051810283016020026107a0510151816020028301526001810190506106ed565b506020810351600060026020610720510351600060005b82811215610751578060200261072051015182019150600181019050610730565b819050905090500560005b85602002610a805101518112156107eb57818160200261072051015113156107e05760206107205103516107205151600060015b838112156107c657828160200261072051015113156107bb5780602002610720510151610b20528091505b600181019050610790565b81905090509050905080602002860151610b605250600192505b60018101905061075c565b506000821415610b075760208403516020610720510351602086035101806020026020015990590160009052818152602081019050905060206020870351028082828960006004600a8705601201f161084057fe5b5060206020610720510351028060206020890351028301826107205160006004600a8705601201f161086e57fe5b5080905081806020026020015990590160009052818152602081019050905060006000600060006000600060008752600189036020880152600195505b6000861215156109f9578560200287015194506001860360200287015193506002860395508460200288015192506001840391508390505b6001850381131515610954578281602002890151131515610949576001820191508160200288015181602002890151836020028a015280826020028a0152508882016020028801518982016020028901518a84016020028a0152808a83016020028a0152505b6001810190506108e3565b6001820160200288015185602002890151600184016020028a015280866020028a01525060018983010160200288015189860160200289015160018b8501016020028a0152808a87016020028a015250838213156109c957836001870160200288015281600287016020028801526002860195505b846002830112156109f457600282016001870160200288015284600287016020028801526002860195505b6108ab565b8790509050905090509050905090509050905083806020026020015990590160009052818152602081019050905084806020026020015990590160009052818152602081019050905060005b86811215610a7657806020028401518160200284015286810160200284015181602002830152600181019050610a45565b50600060005b8582131515610a9e576001810190506001810360200283015182019150610a7c565b6001810360200283015182039150630119799860008784031215610ac757868303600003610acb565b8683035b1215610af257600260018203602002850151600283036020028601510105610b6052610b01565b60018103602002840151610b60525b50505050505b610b60519050905090508260200284015250610b6d565b60005b604051811215610b6b5768010000000000000000826060518302016020026107a0510151826020026107205101510205826020028401510182602002840152600181019050610b21565b505b6001810190506106b1565b50606051806020026020015990590160009052818152602081019050905060005b606051811215610c33576001816020026108005101511415610bc8578060200283015181602002830152610c28565b68016666666666666667816020028401511215610bee5768010000000000000000610c20565b68019999999999999999816020028401511315610c145768020000000000000000610c1f565b680180000000000000005b5b816020028301525b600181019050610b99565b5060005b606051811215610cac576001816020026108005101511415610c9257806020026108c051015168010000000000000000826020026108c051015183602002610860510151038360200285015102050181602002850152610ca1565b80602002820151816020028501525b600181019050610c37565b50606051806020026020015990590160009052818152602081019050905060005b606051811215610d795760005b604051811215610d6d576301197998600083602002860151606051840285016020026107a0510151031215610d295782602002850151606051830284016020026107a051015103600003610d42565b82602002850151606051830284016020026107a0510151035b1215610d6257806020026107205101518260200284015101826020028401525b600181019050610cda565b50600181019050610ccd565b50600060005b606051811215610dcc576000816020028401511215610da75780602002830151600003610daf565b806020028301515b816020028401528060200283015182019150600181019050610d7f565b5060605180602087035260206020606051020160208703f3505050505050505b505b6000f3",
         payout: "0x6103808061000e60003961038e5660006104bf537c01000000000000000000000000000000000000000000000000000000006000350463616d333b81141561037e5760643560405260843560605260a46004358080602002602001599059016000905281815260208101905090506080528060200282608051378060200282019150506024358080602002602001599059016000905281815260208101905090506101205280602002826101205137806020028201915050604435808060200260200159905901600090528181526020810190509050610180528060200282610180513780602002820191505050606051806020026020015990590160009052818152602081019050905060005b60605181121561017b5760005b60405181121561015657680100000000000000008260605183020160200261018051015182602002610120510151020582602002840151018260200284015260018101905061010c565b50806020028201516801000000000000000003816020028301526001810190506100ff565b50604051806020026020015990590160009052818152602081019050905060005b60405181121561020857600060005b6060518112156101e4576040599059016000905260018152816060518502016020820152602081019050820191506001810190506101ab565b6060518205680100000000000000000383602002850152505060018101905061019c565b600060005b60605181121561022d57806020028501518201915060018101905061020d565b506060518105680100000000000000000360405180602002602001599059016000905281815260208101905090506020850351600060005b828112156102b057600081602002890151121561028b5780602002880151600003610293565b806020028801515b816020028901528060200288015182019150600181019050610265565b82806020026020015990590160009052818152602081019050905060005b848112156102fc578368010000000000000000826020028c01510205816020028301526001810190506102ce565b819050905090509050905060005b60405181121561035d57680100000000000000008468010000000000000000038260200261012051015102056801000000000000000085836020028501510205018160200284015260018101905061030a565b5060405180602084035260206020604051020160208403f350505050505050505b505b6000f3"
     },
-    signature: {
-        ten: [{
-            "name": "ten()",
-            "type": "function",
-            "inputs": [],
-            "outputs": [{ "name": "out", "type": "int256" }]
-        }],
-        mul2: [{
-            "name": "double(int256)",
-            "type": "function",
-            "inputs": [{ "name": "v", "type": "int256" }],
-            "outputs": [{ "name": "out", "type": "int256" }]
-        }],
-        info: [],
-        cash: [{
-            "name": "addCash(int256,int256)",
-            "type": "function",
-            "inputs": [{ "name": "ID", "type": "int256" }, { "name": "amount", "type": "int256" }],
-            "outputs": [{ "name": "out", "type": "int256" }]
-        }, {
-            "name": "balance(int256)",
-            "type": "function",
-            "inputs": [{ "name": "address", "type": "int256" }],
-            "outputs": [{ "name": "out", "type": "int256" }]
-        }, {
-            "name": "faucet()",
-            "type": "function",
-            "inputs": [],
-            "outputs": [{ "name": "out", "type": "int256" }]
-        }, {
-            "name": "send(int256,int256)",
-            "type": "function",
-            "inputs": [{ "name": "recver", "type": "int256" }, { "name": "value", "type": "int256" }],
-            "outputs": [{ "name": "out", "type": "int256" }]
-        }, {
-            "name": "sendFrom(int256,int256,int256)",
-            "type": "function",
-            "inputs": [{ "name": "recver", "type": "int256" }, { "name": "value", "type": "int256" }, { "name": "from", "type": "int256" }],
-            "outputs": [{ "name": "out", "type": "int256" }]
-        }, {
-            "name": "subtractCash(int256,int256)",
-            "type": "function",
-            "inputs": [{ "name": "ID", "type": "int256" }, { "name": "amount", "type": "int256" }],
-            "outputs": [{ "name": "out", "type": "int256" }]
-        }],
-        interpolate: [],
-        center: [],
-        score: [],
-        adjust: [],
-        resolve: [],
-        payout: []
+    abi_data: {
+        ten: {
+            ten: "0x643ceff9"
+        },
+        mul2: {
+            double: "0x6ffa1caa"
+        },
+        info: {},
+        cash: {
+            faucet: "0xde5f72fd"
+        },
+        interpolate: {},
+        center: {},
+        score: {},
+        adjust: {},
+        resolve: {},
+        payout: {}
     }
 };
 
 // test drive!
-test_ethrpc(addr, contracts, gas);
+// test_ethrpc(addr, contracts, gas);
 
 // load consensus on chain
-broadcast(addr.jack, contracts.compiled, gas);
+// broadcast(addr.jack, contracts.compiled, gas);
 
 // are contracts loaded yet?
-ping(addr)
+ping(addr.contracts)

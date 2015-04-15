@@ -23,7 +23,8 @@
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
 # inset('logging.se')
-inset('macros.se')
+inset('constants.se')
+inset('arrays.se')
 
 # Outer product of vectors
 macro outer_product($u, $v, $n):
@@ -62,8 +63,8 @@ def blank(components_remaining, max_iterations, num_events):
 
 def loadings(iv:arr, X:arr, reputation:arr, num_reports, num_events):
     # R.dot(wcd).dot(lv).dot(wcd)
-    with lflatsize = len(iv):
-        with lv = array(lflatsize):
+    with lvsize = len(iv):
+        with lv = array(lvsize):
             with j = 0:
                 while j < num_reports:
                     with d_dot_lv = 0:
@@ -95,13 +96,13 @@ def loadings(iv:arr, X:arr, reputation:arr, num_reports, num_events):
                             j += 1
             lv[num_events] = iv[num_events] - 1
             lv[num_events + 1] = iv[num_events + 1]
-            return(lv, items=lflatsize)
+            return(lv, items=lvsize)
 
-def latent(covslice:arr, loadings:arr, num_events):
+def latent(covrow:arr, loadings:arr, num_events):
     with lf = 0:
         with i = 0:
             while i < num_events:
-                lf += fixed_multiply(covslice[i], loadings[i])
+                lf += fixed_multiply(covrow[i], loadings[i])
                 i += 1
             if loadings[0] != 0:
                 lf = fixed_divide(lf, loadings[0])
