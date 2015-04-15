@@ -5,6 +5,7 @@ Augur consensus tests
 
 """
 from __future__ import division
+import os
 import sys
 import json
 from pprint import pprint
@@ -16,6 +17,8 @@ except ImportError:
     pass
 from pyethereum import tester as t
 from pyconsensus import Oracle
+
+HERE = os.path.dirname(os.path.realpath(__file__))
 
 # np.set_printoptions(linewidth=500)
 np.set_printoptions(linewidth=225,
@@ -164,7 +167,7 @@ def test_consensus(example):
     t.gas_limit = 100000000
     s = t.state()
 
-    filename = "interpolate.se"
+    filename = os.path.join(HERE, "interpolate.se")
     print BG(filename)
     c = s.abi_contract(filename, gas=70000000)
     
@@ -193,7 +196,7 @@ def test_consensus(example):
     if verbose:
         display(reports_filled, "reports (filled):", refold=num_events, show_all=True)
 
-    filename = "center.se"
+    filename = os.path.join(HERE, "center.se")
     print BG(filename)
     c = s.abi_contract(filename, gas=70000000)
 
@@ -253,7 +256,7 @@ def test_consensus(example):
     
     tol(covrow, Crow)
 
-    filename = "score.se"
+    filename = os.path.join(HERE, "score.se")
     print BG(filename)
     c = s.abi_contract(filename, gas=70000000)
 
@@ -364,7 +367,7 @@ def test_consensus(example):
 
     tol(scores, nc)
 
-    filename = "adjust.se"
+    filename = os.path.join(HERE, "adjust.se")
     print BG(filename)
     c = s.abi_contract(filename, gas=70000000)
 
@@ -409,7 +412,7 @@ def test_consensus(example):
 
     # display(adjusted_scores, "adjusted_scores:", show_all=True)
 
-    filename = "resolve.se"
+    filename = os.path.join(HERE, "resolve.se")
     print BG(filename)
     c = s.abi_contract(filename, gas=70000000)
 
@@ -431,7 +434,7 @@ def test_consensus(example):
     result = np.array(result)
     event_outcomes = result[0:num_events].tolist()
 
-    filename = "payout.se"
+    filename = os.path.join(HERE, "payout.se")
     print BG(filename)
     c = s.abi_contract(filename, gas=70000000)
 
