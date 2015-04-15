@@ -23,12 +23,12 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
-extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
-# consensus/interpolate.se
-extern Interpolate: [interpolate:aaaaa:a]
+extern interpolate.se: [interpolate:aaaaa:a]
 
 # inset('../consensus/logging.se')
 inset('../consensus/macros.se')
+
+INTERPOLATE = create("../consensus/interpolate.se")
 
 # - loop through reputation && check if in reporters, if so use their
 #   report, if not use the fillin / not reported report (all zeroes)
@@ -36,7 +36,7 @@ inset('../consensus/macros.se')
 # - want to pass reports for each 0 indexed event in order (so we get
 #   reports from an actual reporter)
 # (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
-def redeem_0(branch, period, num_events, num_reports, v_size):
+def redeem_interpolate(branch, period, num_events, num_reports, v_size):
     with reputation = array(num_reports):
         with report_matrix = array(v_size):
             with i = 0:
@@ -69,9 +69,9 @@ def redeem_0(branch, period, num_events, num_reports, v_size):
                                     scaled_min[j] = ONE
                                     scaled_max[j] = 2 * ONE
                                 j += 1
-                        with result = Interpolate.interpolate(report_matrix, reputation, scaled, scaled_max, scaled_min, outsz=2*v_size):
+                        with result = INTERPOLATE.interpolate(report_matrix, reputation, scaled, scaled_max, scaled_min, outsz=2*v_size):
                             self.EventsExpDates[branch][period].vSize = v_size
                             save(self.EventsExpDates[branch][period].reportsFilled[0], result, items=v_size)
                             save(self.EventsExpDates[branch][period].reportsMask[0], slice(result, items=v_size, items=2*v_size), items=v_size)
-                            self.Branches[branch].step = 1
-                            return(1)
+                            self.Branches[branch].step += 1
+                            return(self.Branches[branch].step)

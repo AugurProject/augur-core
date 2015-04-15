@@ -65,5 +65,5 @@ Content-Type: application/json\r
 rpc = GethRPC()
 coinbase = rpc.eth_coinbase()['result']
 evm = '0x' + serpent.compile(sys.argv[1]).encode('hex')
-data = rpc.eth_sendTransaction(sender=coinbase, gas=hex(3000000), data=evm)
+data = rpc.eth_sendTransaction(sender=coinbase, gas=hex(70000000), data=evm)
 print json.dumps(data, sort_keys=True, indent=4)

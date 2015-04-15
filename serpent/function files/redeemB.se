@@ -23,16 +23,18 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
-extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
-# consensus/center.se
-extern Center: [center:aaaaaii:a, tokenize:ai:a, covariance:aaii:a]
-# consensus/score.se
-extern Score: [blank:iii:a, loadings:aaaii:a, latent:aai, deflate:aaii, score:aaaiii]
+extern center.se: [center:aaaaaii:a, tokenize:ai:a, covariance:aaii:a]
+extern score.se: [blank:iii:a, loadings:aaaii:a, latent:aai:i, deflate:aaii:a, score:aaaiii:a]
 
 # inset('../consensus/logging.se')
 inset('../consensus/macros.se')
 
-def redeem_1(branch, period, num_events, num_reports, v_size):
+CENTER = create("../consensus/center.se")
+SCORE = create("../consensus/score.se")
+
+macro MAX_ITER: 5
+
+def redeem_center(branch, period, num_events, num_reports, v_size):
     with reputation = array(num_reports):
         with i = 0:
             while i < num_reports:
@@ -53,13 +55,27 @@ def redeem_1(branch, period, num_events, num_reports, v_size):
                                 scaled_max[j] = ONE
                             j += 1
                     with reports_filled = load(self.EventsExpDates[branch][period].reportsFilled[0], items=v_size):
-                        with result = Center.center(reports_filled, reputation, scaled, scaled_max, scaled_min, 5, outsz=v_size+num_events+1):
-                            save(self.EventsExpDates[branch][period].weightedCenteredData[0], result, items=v_size)
-                            save(self.EventsExpDates[branch][period].loadingVector[0], slice(result, items=v_size, items=len(result)), items=(len(result)-v_size))
-                            self.Branches[branch].step = 2
-                            return(2)
+                        with lflatsize = v_size + num_events + 1:
+                            with result = CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITER, outsz=lflatsize):
+                                save(self.EventsExpDates[branch][period].weightedCenteredData[0], result, items=v_size)
+                                save(self.EventsExpDates[branch][period].loadingVector[0], slice(result, items=v_size, items=lflatsize), items=num_events+1)
+                                self.Branches[branch].step += 1
+                                return(self.Branches[branch].step)
 
-def redeem_2_6(branch, period, num_events, num_reports, v_size):
+def redeem_tokenize_covariance(branch, period, num_events, num_reports, v_size):
+    with reputation = array(num_reports):
+        with i = 0:
+            while i < num_reports:
+                reputation[i] = self.Reporting[branch].reputation[i].repValue
+                i += 1
+        with reptokens = CENTER.tokenize(reputation, num_reports, outsz=num_reports):
+            with wcd = load(self.EventsExpDates[branch][period].weightedCenteredData[0], items=v_size):
+                with covrow = CENTER.covariance(wcd, reptokens, num_reports, num_events):
+                    save(self.EventsExpDates[branch][period].covarianceMatrixRow[0], covrow, items=num_events)
+                    self.Branches[branch].step += 1
+                    return(self.Branches[branch].step)
+
+def redeem_loadings(branch, period, num_events, num_reports, v_size):
     # loading vector is num_events + 1 long, the last element says
     # how many iterations of it are left
     if self.EventsExpDates[branch][period].loadingVector[num_events] == 0:
@@ -73,7 +89,7 @@ def redeem_2_6(branch, period, num_events, num_reports, v_size):
                         i += 1
                 # multistep pca
                 # call this 5 times
-                loadings = Score.loadings(loadings, wcd, reputation, num_reports, num_events, outsz=num_events+1)
+                loadings = SCORE.loadings(loadings, wcd, reputation, num_reports, num_events, outsz=num_events+1)
                 save(self.EventsExpDates[branch][period].loadingVector[0], loadings, items=num_events+1)
                 if step == 6:
                     self.Branches[branch].step = 7
@@ -81,10 +97,10 @@ def redeem_2_6(branch, period, num_events, num_reports, v_size):
                     self.Branches[branch].step += 1
                 return(self.Branches[branch].step)
 
-def redeem_7(branch, period, num_events, num_reports, v_size):
+def redeem_score(branch, period, num_events, num_reports, v_size):
     with loadings = load(self.EventsExpDates[branch][period].loadingVector[0], items=num_events+1):
         with wcd = load(self.EventsExpDates[branch][period].weightedCenteredData[0], items=v_size):
-            with scores = Score.score(loadings, wcd, num_reports, num_events, outsz=num_reports):
+            with scores = SCORE.score(loadings, wcd, num_reports, num_events, outsz=num_reports):
                 save(self.EventsExpDates[branch][period].scores[0], scores, items=num_reports)
-                self.Branches[branch].step = 8
-                return(8)
+                self.Branches[branch].step += 1
+                return(self.Branches[branch].step)

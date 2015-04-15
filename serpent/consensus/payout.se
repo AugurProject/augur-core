@@ -58,7 +58,6 @@ def payout(outcomes_final:arr, smooth_rep:arr, reports_mask:arr, num_reports, nu
                             # Bringing it all together!
                             with reporter_bonus = array(num_reports):
                                 with na_bonus_reports = normalize(participation_reports):
-                                    # log_array(na_bonus_reports)
                                     with i = 0:
                                         while i < num_reports:
                                             reporter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], ONE - participation)

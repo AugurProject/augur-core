@@ -23,16 +23,17 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
-# function files/redeemA.se
-extern RedeemA: [redeem_0:siiii:i]
-# function files/redeemB.se
-extern RedeemB: [redeem_1:siiii:i, redeem_2_6:siiii:i, redeem_7:siiii:i]
-# function files/redeemC.se
-extern RedeemC: [redeem_8:siiii:i, redeem_9:siiii:i, redeem_10:siiii:i, redeem_11:siiii:i, redeem_12:siiii:i]
-# function files/redeemC.se
-extern RedeemD: [redeem_13:siiii:i]
+extern redeemA.se: [redeem_0:iiiii:i]
+extern redeemB.se: [redeem_1:iiiii:i, redeem_2_6:iiiii:i, redeem_7:iiiii:i]
+extern redeemC.se: [redeem_8:iiiii:i, redeem_9:iiiii:i, redeem_10:iiiii:i, redeem_11:iiiii:i, redeem_12:iiiii:i]
+extern redeemD.se: [redeem_13:iiiii:i]
 
 # inset('../consensus/logging.se')
+
+REDEEM_A = create("../function files/redeemA.se")
+REDEEM_B = create("../function files/redeemB.se")
+REDEEM_C = create("../function files/redeemC.se")
+REDEEM_D = create("../function files/redeemD.se")
 
 # Q: branch = string and currentVotePeriod = int?
 # - 50% of fees already distributed to market creators
@@ -46,22 +47,22 @@ def dispatch(branch):
                 with num_reports = v_size / num_events:
                     with step = self.Branches[branch].step:
                         if step == 0:
-                            return(RedeemA.redeem_0(branch, period, num_events, num_reports, v_size))
+                            return(REDEEM_A.redeem_interpolate(branch, period, num_events, num_reports, v_size))
                         elif step == 1:
-                            return(RedeemB.redeem_1(branch, period, num_events, num_reports, v_size))
+                            return(REDEEM_B.redeem_center(branch, period, num_events, num_reports, v_size))
                         elif step == 2 || step == 3 || step == 4 || step == 5 || step == 6:
-                            return(RedeemB.redeem_2_6(branch, period, num_events, num_reports, v_size))
+                            return(REDEEM_B.redeem_2_6(branch, period, num_events, num_reports, v_size))
                         elif step == 7:
-                            return(RedeemB.redeem_7(branch, period, num_events, num_reports, v_size))
+                            return(REDEEM_B.redeem_7(branch, period, num_events, num_reports, v_size))
                         elif step == 8:
-                            return(RedeemB.redeem_8(branch, period, num_events, num_reports, v_size))
+                            return(REDEEM_B.redeem_8(branch, period, num_events, num_reports, v_size))
                         elif step == 9:
-                            return(RedeemC.redeem_9(branch, period, num_events, num_reports, v_size))
+                            return(REDEEM_C.redeem_9(branch, period, num_events, num_reports, v_size))
                         elif step == 10:
-                            return(RedeemC.redeem_10(branch, period, num_events, num_reports, v_size))
+                            return(REDEEM_C.redeem_10(branch, period, num_events, num_reports, v_size))
                         elif step == 11:
-                            return(RedeemC.redeem_11(branch, period, num_events, num_reports, v_size))
+                            return(REDEEM_C.redeem_11(branch, period, num_events, num_reports, v_size))
                         elif step == 12:
-                            return(RedeemC.redeem_12(branch, period, num_events, num_reports, v_size))
+                            return(REDEEM_C.redeem_12(branch, period, num_events, num_reports, v_size))
                         elif step == 13:
-                            return(RedeemD.redeem_13(branch, period, num_events, num_reports, v_size))
+                            return(REDEEM_D.redeem_13(branch, period, num_events, num_reports, v_size))

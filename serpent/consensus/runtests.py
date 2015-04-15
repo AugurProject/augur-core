@@ -243,9 +243,9 @@ def test_consensus(example):
     # Serpent
     print "  - covariance"
     covrow = c.covariance(weighted_centered_data,
-                            reptokens,
-                            num_reports,
-                            num_events)
+                          reptokens,
+                          num_reports,
+                          num_events)
     if verbose:
         print BR("Covariance matrix row")
         print BW("  Python: "), Crow

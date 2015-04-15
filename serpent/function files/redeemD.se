@@ -23,20 +23,20 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
-extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
-# consensus/payout.se
-extern Payout: [payout:aaaii]
+extern payout.se: [payout:aaaii:a]
 
 # inset('../consensus/logging.se')
 inset('../consensus/macros.se')
 
+PAYOUT = create("../consensus/payout.se")
+
 macro BOND: 42 * ONE
 
-def redeem_13(branch, period, num_events, num_reports, v_size):
+def redeem_payout(branch, period, num_events, num_reports, v_size):
     with smooth_rep = load(self.EventsExpDates[branch][period].smoothRep[0], items=num_reports):
         with reports_mask = load(self.EventsExpDates[branch][period].reportsMask[0], items=v_size):
             with outcomes = load(self.EventsExpDates[branch][period].outcomesFinal[0], items=num_events):
-                with reporter_payouts = Payout.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outsz=num_reports):
+                with reporter_payouts = PAYOUT.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outsz=num_reports):
                     # get event ID for each event by taking the x index in the reports arrays
                     # - shoving it in reporting.events[]
                     # && getting the cooresponding ID
