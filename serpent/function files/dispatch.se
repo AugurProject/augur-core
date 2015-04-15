@@ -23,19 +23,23 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
-extern redeemA.se: [redeem_0:iiiii:i]
-extern redeemB.se: [redeem_1:iiiii:i, redeem_2_6:iiiii:i, redeem_7:iiiii:i]
-extern redeemC.se: [redeem_8:iiiii:i, redeem_9:iiiii:i, redeem_10:iiiii:i, redeem_11:iiiii:i, redeem_12:iiiii:i]
-extern redeemD.se: [redeem_13:iiiii:i]
+extern redeem_interpolate.se: [redeem_interpolate:iiiii:i]
+extern redeem_center.se: [redeem_center:iiiii:i, redeem_covariance:iiiii:i]
+extern redeem_score.se: [redeem_blank:iiiii:i, redeem_loadings:iiiii:i, redeem_latent:iiiii:i, redeem_deflate:iiiii:i, redeem_score:iiiii:i]
+extern redeem_adjust.se: [redeem_reputation_delta:iiiii:i, redeem_weighted_delta:iiiii:i, redeem_select_scores:iiiii:i]
+extern redeem_resolve.se: [redeem_smooth:iiiii:i, redeem_resolve:iiiii:i]
+extern redeem_payout.se: [redeem_payout:iiiii:i]
 
 # inset('../consensus/logging.se')
 
-REDEEM_A = create("../function files/redeemA.se")
-REDEEM_B = create("../function files/redeemB.se")
-REDEEM_C = create("../function files/redeemC.se")
-REDEEM_D = create("../function files/redeemD.se")
+# replace these with contract addresses once loaded onto the chain!
+REDEEM_INTERPOLATE = create("../function files/redeem_interpolate.se")
+REDEEM_CENTER = create("../function files/redeem_center.se")
+REDEEM_SCORE = create("../function files/redeem_score.se")
+REDEEM_ADJUST = create("../function files/redeem_adjust.se")
+REDEEM_RESOLVE = create("../function files/redeem_resolve.se")
+REDEEM_PAYOUT = create("../function files/redeem_payout.se")
 
-# Q: branch = string and currentVotePeriod = int?
 # - 50% of fees already distributed to market creators
 #   all remaining fees go to reporters
 # - what if not enough consensus or not enough events expiring upcoming

@@ -68,7 +68,7 @@ def redeem_covariance(branch, period, num_events, num_reports, v_size):
                 i += 1
         with reptokens = CENTER.tokenize(reputation, num_reports, outsz=num_reports):
             with wcd = load(self.EventsExpDates[branch][period].weightedCenteredData[0], items=v_size):
-                with covrow = CENTER.covariance(wcd, reptokens, num_reports, num_events):
+                with covrow = CENTER.covariance(wcd, reptokens, num_reports, num_events, outsz=num_events):
                     save(self.EventsExpDates[branch][period].covarianceMatrixRow[0], covrow, items=num_events)
                     # save a copy of weightedCenteredData as "deflated", needed in the following steps
                     save(self.EventsExpDates[branch][period].deflated[0], self.EventsExpDates[branch][period].weightedCenteredData[0], items=v_size)

@@ -97,11 +97,11 @@ def loadings(iv:arr, X:arr, reputation:arr, num_reports, num_events):
             lv[num_events + 1] = iv[num_events + 1]
             return(lv, items=lvsize)
 
-def latent(covslice:arr, loadings:arr, num_events):
+def latent(covrow:arr, loadings:arr, num_events):
     with lf = 0:
         with i = 0:
             while i < num_events:
-                lf += fixed_multiply(covslice[i], loadings[i])
+                lf += fixed_multiply(covrow[i], loadings[i])
                 i += 1
             if loadings[0] != 0:
                 lf = fixed_divide(lf, loadings[0])
