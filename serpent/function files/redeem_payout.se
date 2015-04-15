@@ -1,0 +1,66 @@
+# This software (Augur) allows buying and selling event options in Ethereum.
+#
+# Copyright (c) 2015 Forecast Foundation 
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# If you have questions, please contact Joey Krug (joey@augur.net) or
+# Jack Peterson (jack@augur.net).
+
+extern payout.se: [payout:aaaii:a]
+
+# inset('../consensus/logging.se')
+inset('../consensus/constants.se')
+inset('../consensus/arrays.se')
+
+PAYOUT = create("../consensus/payout.se")
+
+def payout(branch, period, num_events, num_reports, v_size):
+    with smooth_rep = load(self.EventsExpDates[branch][period].smoothRep[0], items=num_reports):
+        with reports_mask = load(self.EventsExpDates[branch][period].reportsMask[0], items=v_size):
+            with outcomes = load(self.EventsExpDates[branch][period].outcomesFinal[0], items=num_events):
+                with reporter_payouts = PAYOUT.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outsz=num_reports):
+                    # get event ID for each event by taking the x index in the reports arrays
+                    # - shoving it in reporting.events[]
+                    # && getting the cooresponding ID
+                    with j = 0:
+                        while j < num_events:
+                            eventID = self.EventsExpDates[branch][period].events[j]
+                            # then take outcomes_final && set each event outcome
+                            self.Events[eventID].outcome = outcomes[j]
+                            if outcomes[j] != BAD:
+                                # return bond
+                                self.cashcoinBalances[eventID] -= BOND
+                                self.cashcoinBalances[self.Info[eventID].creator] += BOND
+                            else:
+                                # give event bond money to reporters
+                                self.cashcoinBalances[eventID] -= BOND
+                                self.cashcoinBalances[branch] += BOND
+                            j += 1
+                    # - need to loop through rep holders && distribute 50% of branch fees to
+                    #   reporters' cashcoin addresses 
+                    # - also need to take reporter_payouts && redistribute reputation in the
+                    #   Reporting structure accordingly
+                    with i = 0:
+                        while i < num_reports:
+                            # Q: what is 21000000?
+                            self.Reporting[branch].reputation[i].repValue = fixed_multiply(reporter_payouts[i], 21000000)
+                            self.cashcoinBalances[self.Reporting[branch].reputation[i].reporterID] += fixed_multiply(self.cashcoinBalances[branch], reporter_payouts[i])
+                            i += 1
+                        self.cashcoinBalances[branch] -= self.cashcoinBalances[branch]

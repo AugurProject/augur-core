@@ -1,0 +1,75 @@
+# This software (Augur) allows buying and selling event options in Ethereum.
+#
+# Copyright (c) 2015 Forecast Foundation 
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# If you have questions, please contact Joey Krug (joey@augur.net) or
+# Jack Peterson (jack@augur.net).
+
+extern interpolate.se: [interpolate:aaaaa:a]
+
+# inset('../consensus/logging.se')
+inset('../consensus/constants.se')
+
+INTERPOLATE = create("../consensus/interpolate.se")
+
+# - loop through reputation && check if in reporters, if so use their
+#   report, if not use the fillin / not reported report (all zeroes)
+# - use this to make a giant array of reports to pass to self.consensus
+# - want to pass reports for each 0 indexed event in order (so we get
+#   reports from an actual reporter)
+# (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
+def interpolate(branch, period, num_events, num_reports, v_size):
+    with reputation = array(num_reports):
+        with report_matrix = array(v_size):
+            with i = 0:
+                while i < num_reports:
+                    with reporterID = self.Reporting[branch].reputation[i].reporterID:
+                        reputation[i] = self.Reporting[branch].reputation[i].repValue
+                        # - checks to see if each reporter actually voted on events
+                        # - if they didn't vote (simply check if they voted on first event)
+                        #     do nothing (these values will be 0 by default due to Serpent array styles)
+                        #     else if the reporter did report on events put their ballot into the reports array
+                        if self.EventsExpDates[branch][period].reporters[reporterID][0] != 0:
+                            with j = 0:
+                                while j < num_events:
+                                    report_matrix[i*num_events + j] = self.EventsExpDates[branch][period].reporters[reporterID][j]
+                                    j += 1
+                    i += 1
+            with scaled = array(num_events):
+                with scaled_max = array(num_events):
+                    with scaled_min = array(num_events):
+                        with j = 0:
+                            while j < num_events:
+                                if self.Events[self.EventsExpDates[branch][period].events[j]].maxValue != 1:
+                                    scaled[j] = 1
+                                    # Q: the maxValue and minValue data aren't fixed-point?
+                                    #    (are they always integers?)
+                                    scaled_max[j] = self.Events[self.EventsExpDates[branch][period].events[j]].maxValue * ONE
+                                    scaled_min[j] = self.Events[self.EventsExpDates[branch][period].events[j]].minValue * ONE
+                                else:
+                                    scaled[j] = 0
+                                    scaled_min[j] = ONE
+                                    scaled_max[j] = 2 * ONE
+                                j += 1
+                        with result = INTERPOLATE.interpolate(report_matrix, reputation, scaled, scaled_max, scaled_min, outsz=2*v_size):
+                            self.EventsExpDates[branch][period].vSize = v_size
+                            save(self.EventsExpDates[branch][period].reportsFilled[0], result, items=v_size)
+                            save(self.EventsExpDates[branch][period].reportsMask[0], slice(result, items=v_size, items=2*v_size), items=v_size)

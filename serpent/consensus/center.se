@@ -23,7 +23,8 @@
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
 # inset('logging.se')
-inset('macros.se')
+inset('constants.se')
+inset('arrays.se')
 
 def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr, max_iterations, max_components):
     with num_reports = len(reputation):

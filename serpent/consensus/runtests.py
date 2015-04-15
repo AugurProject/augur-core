@@ -243,9 +243,9 @@ def test_consensus(example):
     # Serpent
     print "  - covariance"
     covrow = c.covariance(weighted_centered_data,
-                            reptokens,
-                            num_reports,
-                            num_events)
+                          reptokens,
+                          num_reports,
+                          num_events)
     if verbose:
         print BR("Covariance matrix row")
         print BW("  Python: "), Crow
@@ -329,11 +329,6 @@ def test_consensus(example):
                                         reputation_fixed,
                                         num_reports,
                                         num_events)
-            # Normalization in Serpent (?)
-            # lvector = np.array(map(unfix, loading_vector[:-2]))
-            # lvector /= np.sqrt(lvector.dot(lvector))
-            # for i in range(num_events):
-            #     loading_vector[i] = fix(lvector[i])
         print
 
         # Latent factor (eigenvalue)
