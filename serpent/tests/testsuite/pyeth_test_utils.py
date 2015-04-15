@@ -1,12 +1,12 @@
 import warnings; warnings.simplefilter('ignore')
 from collections import OrderedDict, namedtuple
 from colorama import init, Fore, Back, Style
+from types import FunctionType, MethodType
 from contextlib import contextmanager
-from pyethereum import tester as _t
+from ethereum import tester as _t
 from bitcoin import encode, decode
 from sha3 import sha3_256 as _sha3
 from cStringIO import StringIO
-from types import FunctionType
 from time import clock
 import traceback
 import sys
@@ -57,6 +57,12 @@ def suppressify(func):
                 return result
     return new_func
 
+@contextmanager
+def timer():
+    start = clock()
+    yield
+    print Fore.YELLOW + Style.BRIGHT + 'Done in %5.2f seconds.'%(clock() - start) + Style.RESET_ALL
+
 class Contract(object):
     def __init__(self, state, code, sender, gas, endowment, language):
         if language not in _t.languages:
@@ -64,34 +70,41 @@ class Contract(object):
         language = _t.languages[language]
         
         if os.path.exists(code):
-            cached = code.replace('.se', '.sec')
-            if os.path.exists(cached):
-                cache_made = os.path.getmtime(cached)
+            cache = code.replace('.se', '.sec')
+            if os.path.exists(cache):
+                cache_made = os.path.getmtime(cache)
                 code_made = os.path.getmtime(code)
                 if code_made > cache_made:
                     with open(cache, 'wb') as f:
+                        print Fore.YELLOW + Style.BRIGHT + 'Stale cache, recompiling...' + Style.RESET_ALL
+                        with timer():
+                            evm = language.compile(code)
+                            sig = language.mk_full_signature(code)
+                            evm_len = encode(len(evm), 256, 2)
+                            sig_len = encode(len(sig), 256, 2)
+                            f.write(evm_len + evm + sig_len + sig)
+                else:
+                    print Fore.YELLOW + Style.BRIGHT + 'Loading from cache...' + Style.RESET_ALL
+                    with open(cache, 'rb') as f:
+                        with timer():
+                            evm_len = decode(f.read(2), 256)
+                            evm = f.read(evm_len)
+                            sig_len = decode(f.read(2), 256)
+                            sig = f.read(sig_len)
+            else:
+                with open(cache, 'wb') as f:
+                    print Fore.YELLOW + Style.BRIGHT + 'Generating cache...' + Style.RESET_ALL
+                    with timer():
                         evm = language.compile(code)
-                        sig = language.mk_signature(code)
+                        sig = language.mk_full_signature(code)
                         evm_len = encode(len(evm), 256, 2)
                         sig_len = encode(len(sig), 256, 2)
                         f.write(evm_len + evm + sig_len + sig)
-                else:
-                    with open(cache, 'rb') as f:
-                        evm_len = decode(f.read(2), 256)
-                        evm = f.read(evm_len)
-                        sig_len = decode(f.read(2), 256)
-                        sig = f.read(sig_len)
-            else:
-                with open(cache, 'wb') as f:
-                    evm = language.compile(code)
-                    sig = language.mk_signature(code)
-                    evm_len = encode(len(evm), 256, 2)
-                    sig_len = encode(len(sig), 256, 2)
-                    f.write(evm_len + evm + sig_len + sig)
 
-            self.address = _t.encode_hex(state.evm(evm, sender, endowment, gas))
+            with suppressed_output():
+                self.address = _t.encode_hex(state.evm(evm, sender, endowment, gas))
             self._translator = _t.abi.ContractTranslator(sig)
-                assert len(state.block.get_code(self.address)), \
+            assert len(state.block.get_code(self.address)), \
                     "Contract code empty"
 
             def make_dispatcher(state, funcname):
@@ -103,7 +116,7 @@ class Contract(object):
                         self.address,
                         kwds.get('value', 0),
                         self._translator.encode(funcname, args),
-                        **dict_without(
+                        **_t.dict_without(
                             kwds,
                             'sender',
                             'value', 
@@ -114,7 +127,7 @@ class Contract(object):
                     elif not o['output']:
                         outdata = None
                     else:
-                        outdata = self._translator.decode(f, o['output'])
+                        outdata = self._translator.decode(funcname, o['output'])
                         outdata = outdata[0] if len(outdata) == 1 \
                                   else outdata
                     # Format output
@@ -131,7 +144,7 @@ class Contract(object):
 class State(_t.state):
     '''A subclass of pyethereum.tester.state, with cached compiled code
 and creates silent functions'''
-    def abi_contract(self, code, sender=k0, endowment=0, language='serpent', gas=None):
+    def abi_contract(self, code, sender=_t.k0, endowment=0, language='serpent', gas=None):
         return Contract(self, code, sender, gas, endowment, language)
 
 def repl_addr(match):
@@ -152,28 +165,59 @@ class PrettyOut(object):
     '''A file object wrapper that colorizes writes.'''
     def __init__(self, fileobj):
         self.fileobj = fileobj
-        self.proxy = StringIO()
         
     def write(self, s):
-        return self.fileobj.write(reduce(lambda a, (b, c): b.sub(c, a), 
-                                         [(addr_p,
-                                           repl_addr),
-                                          (num_p,
-                                           repl_num),
-                                          (err_p,
-                                           repl_err)],
-                                         Fore.YELLOW + s + Style.RESET_ALL))
+        return self.fileobj.write(
+            reduce(
+                lambda a, (b, c): b.sub(c, a), 
+                [
+                    (
+                        addr_p,
+                        repl_addr),
+                    (
+                        num_p,
+                        repl_num),
+                    (
+                        err_p,
+                        repl_err)],
+                Fore.YELLOW + s + Style.RESET_ALL))
 
     def __getattr__(self, name):
         return getattr(self.fileobj, name)
 
+@named
+def make_test(func):
+    def new_func(*args, **kwds):
+        print Fore.RED + func.__name__.split('_').capitalize().center(80, '#') + Style.RESET_ALL
+        start = clock()
+        result = func(*args, **kwds)
+        print Fore.YELLOW + Style.BRIGHT + 'Done in %5.2f seconds.' % (clock() - start)
+        return result
+    return new_func
+
+def missing(name):
+    def thunk():
+        raise NotImplementedError('function ' + name + ' not defined.')
+    return thunk
+
 class TestType(type):
     '''Metaclass for the Test class'''
     def __new__(cls, name, bases, dct):
-        pass
+        for k, v in dct.items():
+            if isinstance(v, (FunctionType, MethodType)):
+                if v.__name__.startswith('test_'):
+                    dct[k] = make_test(v)
+        return type.__new__(cls, name, bases, dct)
 
 class Test(object):
     __metaclass__ = TestType
+    def __init__(self, test_order):
+        self.test_order = test_order
+
+    def run(self):
+        for name in test_order:
+            errstr = 'function ' + name + ' not implemented.'
+            getattr(self, name, missing(name))()
 
 def trade_pow(branch, market, address, trade_nonce, difficulty=10000):
     nonce = 0
@@ -188,3 +232,9 @@ def trade_pow(branch, market, address, trade_nonce, difficulty=10000):
         if h < target:
             return nonce
         nonce += 1
+
+if __name__ == '__main__':
+    name = 'echo.se'
+    s = State()
+    c = s.abi_contract(name)
+    print c.echo('Hello World!')
