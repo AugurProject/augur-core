@@ -79,7 +79,7 @@ def interpolate(branch, period, num_events, num_reports, v_size):
                                         scaled[j] = 0
                                         scaled_min[j] = NO
                                         scaled_max[j] = YES
-                                    j += 1
+                                j += 1
                         with result = INTERPOLATE.interpolate(report_matrix, reputation, scaled, scaled_max, scaled_min, outsz=2*v_size):
                             EXPIRING.setVSize(branch, period, v_size)
                             EXPIRING.setReportsFilled(branch, period, slice(result, items=0, items=v_size))

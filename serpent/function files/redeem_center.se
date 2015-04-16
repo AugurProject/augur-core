@@ -59,7 +59,7 @@ def center(branch, period, num_events, num_reports, v_size):
                                     scaled[j] = 0
                                     scaled_min[j] = NO
                                     scaled_max[j] = YES
-                                j += 1
+                            j += 1
                     with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=v_size):
                         with lflatsize = v_size + num_events + 1:
                             with result = CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, outsz=lflatsize):
