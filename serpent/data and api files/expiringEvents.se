@@ -30,7 +30,7 @@ def init():
 # new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
 # reporters is [reporterID][eventNum]
 # reporthash is [reporterID] = hash
-data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], deflated[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
+data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
 
 extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i]
 BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
@@ -74,6 +74,12 @@ def getReportsMask(branch, expDateIndex):
 
 def getWeightedCenteredData(branch, expDateIndex):
 	return(load(self.EventsExpDates[branch][expDateIndex].weightedCenteredData[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)
+
+def getCovarianceMatrixRow(branch, expDateIndex):
+    return(load(self.EventsExpDates[branch][expDateIndex].covarianceMatrixRow[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)
+
+def getDeflated(branch, expDateIndex):
+    return(load(self.EventsExpDates[branch][expDateIndex].deflated[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)
 
 def getLoadingVector(branch, expDateIndex):
 	return(load(self.EventsExpDates[branch][expDateIndex].loadingVector[0], items=self.EventsExpDates[branch][expDateIndex].numberEvents+1): arr)
@@ -149,6 +155,12 @@ def setWeightedCenteredData(branch, expDateIndex, weightedCenteredData: arr):
 		return(-1)
 	save(self.EventsExpDates[branch][expDateIndex].weightedCenteredData[0], weightedCenteredData, items=len(weightedCenteredData))
 	return(1)
+
+def setCovarianceMatrixRow(branch, expDateIndex, covarianceMatrixRow: arr):
+    if !self.whitelist.check(msg.sender):
+        return(-1)
+    save(self.EventsExpDates[branch][expDateIndex].covarianceMatrixRow[0], covarianceMatrixRow, items=len(covarianceMatrixRow))
+    return(1)
 
 def setDeflated(branch, expDateIndex, deflated: arr):
     if(!self.whitelist.check(msg.sender)):

@@ -24,14 +24,17 @@
 # Jack Peterson (jack@augur.net).
 
 extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
-extern center.se: [center:aaaaaii:a, tokenize:ai:a, covariance:aaii:a]
-
-# inset('../consensus/logging.se')
-inset('../consensus/constants.se')
+extern center.se: [center:aaaaaii:a, covariance:aaii:a, tokenize:ai:a]
+extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getEvent:iii:i, getEvents:ii:a, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setDeflated:iia:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getSubstep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, initializeBranch:iiii:i, setStep:ii:i, setSubstep:ii:i]
+extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, subtractRep:iii:i]
 
 WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
+EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
 EXPIRING_EVENTS = 0xb7b617b776e66cbae79606d2b6221501ad110090
 BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
+REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
 CENTER = create("../consensus/center.se")
 
 def center(branch, period, num_events, num_reports, v_size):
@@ -40,27 +43,29 @@ def center(branch, period, num_events, num_reports, v_size):
     with reputation = array(num_reports):
         with i = 0:
             while i < num_reports:
-                reputation[i] = self.Reporting[branch].reputation[i].repValue
+                reputation[i] = REPORTING.getRepByIndex(branch, i)
                 i += 1
         with scaled = array(num_events):
             with scaled_max = array(num_events):
                 with scaled_min = array(num_events):
                     with j = 0:
                         while j < num_events:
-                            if self.Events[self.EventsExpDates[branch][period].events[j]].maxValue != 1:
-                                scaled[j] = 1
-                                scaled_max[j] = self.Events[self.EventsExpDates[branch][period].events[j]].maxValue * ONE
-                                scaled_min[j] = self.Events[self.EventsExpDates[branch][period].events[j]].minValue * ONE
-                            else:
-                                scaled[j] = 0
-                                scaled_min[j] = -ONE
-                                scaled_max[j] = ONE
-                            j += 1
-                    with reports_filled = load(self.EventsExpDates[branch][period].reportsFilled[0], items=v_size):
+                            with event = EXPIRING_EVENTS.getEvent(branch, period, j):
+                                if EVENTS.getMaxValue(event) != YES:
+                                    scaled[j] = 1
+                                    scaled_min[j] = fix(EVENTS.getMinValue(event))
+                                    scaled_max[j] = fix(EVENTS.getMaxValue(event))
+                                else:
+                                    scaled[j] = 0
+                                    scaled_min[j] = NO
+                                    scaled_max[j] = YES
+                                j += 1
+                    with reports_filled = EXPIRING_EVENTS.getReportsFilled(branch, period, outsz=v_size):
                         with lflatsize = v_size + num_events + 1:
                             with result = CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, outsz=lflatsize):
-                                save(self.EventsExpDates[branch][period].weightedCenteredData[0], result, items=v_size)
-                                save(self.EventsExpDates[branch][period].loadingVector[0], slice(result, items=v_size, items=lflatsize), items=num_events+2)
+                                EXPIRING_EVENTS.setWeightedCenteredData(branch, period, slice(result, items=0, items=v_size))
+                                EXPIRING_EVENTS.setLoadingVector(branch, period, slice(result, items=v_size, items=lflatsize))
+                                return(1)
 
 def covariance(branch, period, num_events, num_reports, v_size):
     if !WHITELIST.check(msg.sender):
@@ -68,11 +73,14 @@ def covariance(branch, period, num_events, num_reports, v_size):
     with reputation = array(num_reports):
         with i = 0:
             while i < num_reports:
-                reputation[i] = self.Reporting[branch].reputation[i].repValue
+                reputation[i] = REPORTING.getRepByIndex(branch, i)
                 i += 1
         with reptokens = CENTER.tokenize(reputation, num_reports, outsz=num_reports):
-            with wcd = load(self.EventsExpDates[branch][period].weightedCenteredData[0], items=v_size):
+            with wcd = EXPIRING_EVENTS.getWeightedCenteredData(branch, period, outsz=v_size):
                 with covrow = CENTER.covariance(wcd, reptokens, num_reports, num_events, outsz=num_events):
-                    save(self.EventsExpDates[branch][period].covarianceMatrixRow[0], covrow, items=num_events)
-                    # save a copy of weightedCenteredData as "deflated", needed in the following steps
-                    save(self.EventsExpDates[branch][period].deflated[0], self.EventsExpDates[branch][period].weightedCenteredData[0], items=v_size)
+                    EXPIRING_EVENTS.setCovarianceMatrixRow(branch, period, covrow)
+                    EXPIRING_EVENTS.setDeflated(branch, period, wcd)
+                    return(1)
+
+# inset('../consensus/logging.se')
+inset('../consensus/constants.se')

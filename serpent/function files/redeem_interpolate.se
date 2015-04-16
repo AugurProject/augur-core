@@ -25,12 +25,10 @@
 
 extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
 extern interpolate.se: [interpolate:aaaaa:a]
-extern expiringEvents.se: [getVSize:ii:i, getNumberEvents:ii:i]
-extern branches.se: [getBranch:i:i, getStep:i:i, getVotePeriod:i:i, getSubstep:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, setStep:ii:i, setSubstep:ii:i]
-extern reporting.se: [getReporterID:ii:i]
-
-# inset('../consensus/logging.se')
-inset('../consensus/constants.se')
+extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getEvent:iii:i, getEvents:ii:a, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setDeflated:iia:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getSubstep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, initializeBranch:iiii:i, setStep:ii:i, setSubstep:ii:i]
+extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, subtractRep:iii:i]
 
 WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
 EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
@@ -72,11 +70,11 @@ def interpolate(branch, period, num_events, num_reports, v_size):
                         with j = 0:
                             while j < num_events:
                                 with event = EXPIRING_EVENTS.getEvent(branch, period, j):
-                                    if EVENTS.getMaxValue(event) != 1:
+                                    if EVENTS.getMaxValue(event) != YES:
                                         scaled[j] = 1
                                         # TODO convert maxValue and minValue to fixed-point in storage
-                                        scaled_max[j] = EVENTS.getMaxValue(event) * ONE
-                                        scaled_min[j] = EVENTS.getMinValue(event) * ONE
+                                        scaled_max[j] = fix(EVENTS.getMaxValue(event))
+                                        scaled_min[j] = fix(EVENTS.getMinValue(event))
                                     else:
                                         scaled[j] = 0
                                         scaled_min[j] = NO
@@ -84,7 +82,9 @@ def interpolate(branch, period, num_events, num_reports, v_size):
                                     j += 1
                         with result = INTERPOLATE.interpolate(report_matrix, reputation, scaled, scaled_max, scaled_min, outsz=2*v_size):
                             EXPIRING_EVENTS.setVSize(branch, period, v_size)
-                            EXPIRING_EVENTS.setReportsFilled(branch, period, slice(result, items=v_size))
-                            EXPIRING_EVENTS.setReportsMask()
-                            save(self.EventsExpDates[branch][period].reportsFilled[0], result, items=v_size)
-                            save(self.EventsExpDates[branch][period].reportsMask[0], slice(result, items=v_size, items=2*v_size), items=v_size)
+                            EXPIRING_EVENTS.setReportsFilled(branch, period, slice(result, items=0, items=v_size))
+                            EXPIRING_EVENTS.setReportsMask(branch, period, slice(result, items=v_size, items=2*v_size))
+                            return(1)
+
+# inset('../consensus/logging.se')
+inset('../consensus/constants.se')

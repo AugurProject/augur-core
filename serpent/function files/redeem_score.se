@@ -24,14 +24,17 @@
 # Jack Peterson (jack@augur.net).
 
 extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
-extern score.se: [blank:iii:a, loadings:aaaii:a, latent:aai:i, deflate:aaii:a, score:aaaiii:a]
-
-# inset('../consensus/logging.se')
-inset('../consensus/constants.se')
+extern score.se: [blank:iii:a, deflate:aaii:a, latent:aai:i, loadings:aaaii:a, score:aaaiii:a]
+extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getEvent:iii:i, getEvents:ii:a, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setDeflated:iia:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getSubstep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, initializeBranch:iiii:i, setStep:ii:i, setSubstep:ii:i]
+extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, subtractRep:iii:i]
 
 WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
+EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
 EXPIRING_EVENTS = 0xb7b617b776e66cbae79606d2b6221501ad110090
 BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
+REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
 SCORE = create("../consensus/score.se")
 
 # we will ultimately want to combine these functions with their consensus counterparts!
@@ -54,6 +57,7 @@ def blank(branch, period, num_events, num_reports, v_size):
                 components_remaining -= 1
         with loading_vector = SCORE.blank(components_remaining, MAX_ITERATIONS, num_events, outsz=ne_plus_2):
             save(self.EventsExpDates[branch][period].loadingVector[0], loading_vector, items=ne_plus_2)
+            return(1)
 
 def loadings(branch, period, num_events, num_reports, v_size):
     if !WHITELIST.check(msg.sender):
@@ -89,6 +93,7 @@ def deflate(branch, period, num_events, num_reports, v_size):
         with deflated = load(self.EventsExpDates[branch][period].deflated[0], items=v_size):
             deflated = SCORE.deflate(loading_vector, deflated, num_reports, num_events, outsz=v_size)
             save(self.EventsExpDates[branch][period].deflated[0], deflated, items=v_size)
+            return(1)
 
 def score(branch, period, num_events, num_reports, v_size):
     if !WHITELIST.check(msg.sender):
@@ -101,3 +106,6 @@ def score(branch, period, num_events, num_reports, v_size):
                     return(0)
                 else:
                     return(1)
+
+# inset('../consensus/logging.se')
+inset('../consensus/constants.se')

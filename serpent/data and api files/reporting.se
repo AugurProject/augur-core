@@ -48,6 +48,10 @@ def faucet():
     self.Reporting[1010101].reputation[index].reporterID = tx.origin
     self.Reporting[1010101].numberReporters += 1
 
+# @return reputation value
+def getRepByIndex(branch, repIndex):
+    return(self.Reporting[branch].reputation[repIndex].repValue)
+
 # @return reputation value        
 def getRepBalance(branch, address):
     repIndex = self.Reporting[branch].repIDtoIndex[address]

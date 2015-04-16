@@ -22,11 +22,6 @@
 #
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
-# inset('logging.se')
-inset('constants.se')
-inset('arrays.se')
-inset('weighted-median.se')
-
 # Absolute value of all array elements
 macro array_abs($a):
     with $len = len($a):
@@ -117,3 +112,7 @@ def resolve(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:
                                     total += certainty[i]
                                     i += 1
                             return(outcomes_final, items=num_events)
+
+inset('constants.se')
+inset('arrays.se')
+inset('weighted-median.se')

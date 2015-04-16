@@ -26,12 +26,12 @@
 extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
 extern redeem_interpolate.se: [interpolate:iiiii:i]
 extern redeem_center.se: [center:iiiii:i, covariance:iiiii:i]
-extern redeem_score.se: [blank:iiiii:i, loadings:iiiii:i, latent:iiiii:i, deflate:iiiii:i, score:iiiii:i]
-extern redeem_adjust.se: [reputation_delta:iiiii:i, weighted_delta:iiiii:i, select_scores:iiiii:i]
-extern redeem_resolve.se: [smooth:iiiii:i, resolve:iiiii:i]
+extern redeem_score.se: [blank:iiiii:i, deflate:iiiii:i, latent:iiiii:i, loadings:iiiii:i, score:iiiii:i]
+extern redeem_adjust.se: [reputation_delta:iiiii:i, select_scores:iiiii:i, weighted_delta:iiiii:i]
+extern redeem_resolve.se: [resolve:iiiii:i, smooth:iiiii:i]
 extern redeem_payout.se: [payout:iiiii:i]
-extern expiringEvents.se: [getVSize:ii:i, getNumberEvents:ii:i]
-extern branches.se: [getBranch:i:i, getStep:i:i, getVotePeriod:i:i, getSubstep:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, setStep:ii:i, setSubstep:ii:i]
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getEvent:iii:i, getEvents:ii:a, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setDeflated:iia:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getSubstep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, initializeBranch:iiii:i, setStep:ii:i, setSubstep:ii:i]
 
 # inset('../consensus/logging.se')
 

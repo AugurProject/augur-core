@@ -45,3 +45,5 @@ macro log_fixed($x):
             log($x / ONE, $d)
         else:
             log($x / ONE)
+
+inset('constants.se')
