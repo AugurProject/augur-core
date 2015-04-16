@@ -30,7 +30,7 @@ def init():
 # new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
 # reporters is [reporterID][eventNum]
 # reporthash is [reporterID] = hash
-data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
+data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
 
 extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i]
 BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
@@ -83,6 +83,9 @@ def getDeflated(branch, expDateIndex):
 
 def getLoadingVector(branch, expDateIndex):
 	return(load(self.EventsExpDates[branch][expDateIndex].loadingVector[0], items=self.EventsExpDates[branch][expDateIndex].numberEvents+1): arr)
+
+def getLatent(branch, expDateIndex):
+    return(self.EventsExpDates[branch][expDateIndex].latent)
 
 def getComponentsRemaining(branch, expDateIndex, loadingVectorSize):
     return(self.EventsExpDates[branch][expDateIndex].loadingVector[loadingVectorSize-1])
@@ -176,6 +179,12 @@ def setLoadingVector(branch, expDateIndex, loadingVector: arr):
 		return(-1)
 	save(self.EventsExpDates[branch][expDateIndex].loadingVector[0], loadingVector, items=len(loadingVector))
 	return(1)
+
+def setLatent(branch, expDateIndex, latent):
+    if !self.whitelist.check(msg.sender):
+        return(-1)
+    self.EventsExpDates[branch][expDateIndex].latent = latent
+    return(1)
 
 def setScores(branch, expDateIndex, scores: arr):
 	if(!self.whitelist.check(msg.sender)):

@@ -24,33 +24,36 @@
 # Jack Peterson (jack@augur.net).
 
 extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getComponentsRemaining:iii:i, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getSubstep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, initializeBranch:iiii:i, setStep:ii:i, setSubstep:ii:i]
 extern redeem_interpolate.se: [interpolate:iiiii:i]
 extern redeem_center.se: [center:iiiii:i, covariance:iiiii:i]
 extern redeem_score.se: [blank:iiiii:i, deflate:iiiii:i, latent:iiiii:i, loadings:iiiii:i, score:iiiii:i]
 extern redeem_adjust.se: [reputation_delta:iiiii:i, select_scores:iiiii:i, weighted_delta:iiiii:i]
 extern redeem_resolve.se: [resolve:iiiii:i, smooth:iiiii:i]
 extern redeem_payout.se: [payout:iiiii:i]
-extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getEvent:iii:i, getEvents:ii:a, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setDeflated:iia:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
-extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getSubstep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, initializeBranch:iiii:i, setStep:ii:i, setSubstep:ii:i]
-
-# inset('../consensus/logging.se')
 
 WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
+EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
 EXPIRING = 0xb7b617b776e66cbae79606d2b6221501ad110090
 BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
+
 # replace these with contract addresses once loaded onto the chain!
-REDEEM_INTERPOLATE = create("../function files/redeem_interpolate.se")
-REDEEM_CENTER = create("../function files/redeem_center.se")
-REDEEM_SCORE = create("../function files/redeem_score.se")
-REDEEM_ADJUST = create("../function files/redeem_adjust.se")
-REDEEM_RESOLVE = create("../function files/redeem_resolve.se")
-REDEEM_PAYOUT = create("../function files/redeem_payout.se")
+REDEEM_INTERPOLATE = create("../consensus/redeem_interpolate.se")
+REDEEM_CENTER = create("../consensus/redeem_center.se")
+REDEEM_SCORE = create("../consensus/redeem_score.se")
+REDEEM_ADJUST = create("../consensus/redeem_adjust.se")
+REDEEM_RESOLVE = create("../consensus/redeem_resolve.se")
+REDEEM_PAYOUT = create("../consensus/redeem_payout.se")
 
 # - 50% of fees already distributed to market creators
 #   all remaining fees go to reporters
 # - what if not enough consensus or not enough events expiring upcoming
 # @return next step or loop index (see below), for final call return new voting period
 def dispatch(branchNumber):
+    if !WHITELIST.check(msg.sender):
+        return(-1)
     with branch = BRANCHES.getBranch(branchNumber):
         with period = BRANCHES.getVotePeriod(branch):
             with num_events = EXPIRING.getNumberEvents(branch, period):
@@ -118,3 +121,5 @@ def dispatch(branchNumber):
                                 REDEEM_RESOLVE.resolve(branch, period, num_events, num_reports, v_size)
                             BRANCHES.incrementStep(branch)
                             return(step + 1)
+
+# inset('logging.se')
