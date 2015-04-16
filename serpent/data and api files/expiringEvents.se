@@ -84,6 +84,9 @@ def getDeflated(branch, expDateIndex):
 def getLoadingVector(branch, expDateIndex):
 	return(load(self.EventsExpDates[branch][expDateIndex].loadingVector[0], items=self.EventsExpDates[branch][expDateIndex].numberEvents+1): arr)
 
+def getComponentsRemaining(branch, expDateIndex, loadingVectorSize):
+    return(self.EventsExpDates[branch][expDateIndex].loadingVector[loadingVectorSize-1])
+
 def getScores(branch, expDateIndex):
 	return(load(self.EventsExpDates[branch][expDateIndex].scores[0], items=(self.EventsExpDates[branch][expDateIndex].vSize/self.EventsExpDates[branch][expDateIndex].numberEvents)): arr)
 
