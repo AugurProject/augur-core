@@ -32,7 +32,7 @@ extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberRepor
 
 WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
 EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
-EXPIRING_EVENTS = 0xb7b617b776e66cbae79606d2b6221501ad110090
+EXPIRING = 0xb7b617b776e66cbae79606d2b6221501ad110090
 BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
 REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
 CENTER = create("../consensus/center.se")
@@ -50,7 +50,7 @@ def center(branch, period, num_events, num_reports, v_size):
                 with scaled_min = array(num_events):
                     with j = 0:
                         while j < num_events:
-                            with event = EXPIRING_EVENTS.getEvent(branch, period, j):
+                            with event = EXPIRING.getEvent(branch, period, j):
                                 if EVENTS.getMaxValue(event) != YES:
                                     scaled[j] = 1
                                     scaled_min[j] = fix(EVENTS.getMinValue(event))
@@ -60,11 +60,11 @@ def center(branch, period, num_events, num_reports, v_size):
                                     scaled_min[j] = NO
                                     scaled_max[j] = YES
                                 j += 1
-                    with reports_filled = EXPIRING_EVENTS.getReportsFilled(branch, period, outsz=v_size):
+                    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=v_size):
                         with lflatsize = v_size + num_events + 1:
                             with result = CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, outsz=lflatsize):
-                                EXPIRING_EVENTS.setWeightedCenteredData(branch, period, slice(result, items=0, items=v_size))
-                                EXPIRING_EVENTS.setLoadingVector(branch, period, slice(result, items=v_size, items=lflatsize))
+                                EXPIRING.setWeightedCenteredData(branch, period, slice(result, items=0, items=v_size))
+                                EXPIRING.setLoadingVector(branch, period, slice(result, items=v_size, items=lflatsize))
                                 return(1)
 
 def covariance(branch, period, num_events, num_reports, v_size):
@@ -76,10 +76,10 @@ def covariance(branch, period, num_events, num_reports, v_size):
                 reputation[i] = REPORTING.getRepByIndex(branch, i)
                 i += 1
         with reptokens = CENTER.tokenize(reputation, num_reports, outsz=num_reports):
-            with wcd = EXPIRING_EVENTS.getWeightedCenteredData(branch, period, outsz=v_size):
+            with wcd = EXPIRING.getWeightedCenteredData(branch, period, outsz=v_size):
                 with covrow = CENTER.covariance(wcd, reptokens, num_reports, num_events, outsz=num_events):
-                    EXPIRING_EVENTS.setCovarianceMatrixRow(branch, period, covrow)
-                    EXPIRING_EVENTS.setDeflated(branch, period, wcd)
+                    EXPIRING.setCovarianceMatrixRow(branch, period, covrow)
+                    EXPIRING.setDeflated(branch, period, wcd)
                     return(1)
 
 # inset('../consensus/logging.se')

@@ -36,7 +36,7 @@ extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:
 # inset('../consensus/logging.se')
 
 WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
-EXPIRING_EVENTS = 0xb7b617b776e66cbae79606d2b6221501ad110090
+EXPIRING = 0xb7b617b776e66cbae79606d2b6221501ad110090
 BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
 # replace these with contract addresses once loaded onto the chain!
 REDEEM_INTERPOLATE = create("../function files/redeem_interpolate.se")
@@ -53,8 +53,8 @@ REDEEM_PAYOUT = create("../function files/redeem_payout.se")
 def dispatch(branchNumber):
     with branch = BRANCHES.getBranch(branchNumber):
         with period = BRANCHES.getVotePeriod(branch):
-            with num_events = EXPIRING_EVENTS.getNumberEvents(branch, period):
-                with v_size = EXPIRING_EVENTS.getVSize(branch, period):
+            with num_events = EXPIRING.getNumberEvents(branch, period):
+                with v_size = EXPIRING.getVSize(branch, period):
                     with num_reports = v_size / num_events:
                         with step = BRANCHES.getStep(branch):
                             if step == 0:

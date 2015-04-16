@@ -32,7 +32,7 @@ extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberRepor
 
 WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
 EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
-EXPIRING_EVENTS = 0xb7b617b776e66cbae79606d2b6221501ad110090
+EXPIRING = 0xb7b617b776e66cbae79606d2b6221501ad110090
 BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
 REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
 INTERPOLATE = create("../consensus/interpolate.se")
@@ -57,7 +57,7 @@ def interpolate(branch, period, num_events, num_reports, v_size):
                         # - if they didn't vote (simply check if they voted on first event)
                         #     do nothing (these values will be 0 by default due to Serpent array styles)
                         #     else if the reporter did report on events put their ballot into the reports array
-                        with ballot = EXPIRING_EVENTS.getReporterBallot(branch, period, reporterID):
+                        with ballot = EXPIRING.getReporterBallot(branch, period, reporterID):
                             if ballot != 0:
                                 with j = 0:
                                     while j < num_events:
@@ -69,7 +69,7 @@ def interpolate(branch, period, num_events, num_reports, v_size):
                     with scaled_min = array(num_events):
                         with j = 0:
                             while j < num_events:
-                                with event = EXPIRING_EVENTS.getEvent(branch, period, j):
+                                with event = EXPIRING.getEvent(branch, period, j):
                                     if EVENTS.getMaxValue(event) != YES:
                                         scaled[j] = 1
                                         # TODO convert maxValue and minValue to fixed-point in storage
@@ -81,9 +81,9 @@ def interpolate(branch, period, num_events, num_reports, v_size):
                                         scaled_max[j] = YES
                                     j += 1
                         with result = INTERPOLATE.interpolate(report_matrix, reputation, scaled, scaled_max, scaled_min, outsz=2*v_size):
-                            EXPIRING_EVENTS.setVSize(branch, period, v_size)
-                            EXPIRING_EVENTS.setReportsFilled(branch, period, slice(result, items=0, items=v_size))
-                            EXPIRING_EVENTS.setReportsMask(branch, period, slice(result, items=v_size, items=2*v_size))
+                            EXPIRING.setVSize(branch, period, v_size)
+                            EXPIRING.setReportsFilled(branch, period, slice(result, items=0, items=v_size))
+                            EXPIRING.setReportsMask(branch, period, slice(result, items=v_size, items=2*v_size))
                             return(1)
 
 # inset('../consensus/logging.se')

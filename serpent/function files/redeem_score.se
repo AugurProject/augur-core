@@ -32,7 +32,7 @@ extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberRepor
 
 WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
 EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
-EXPIRING_EVENTS = 0xb7b617b776e66cbae79606d2b6221501ad110090
+EXPIRING = 0xb7b617b776e66cbae79606d2b6221501ad110090
 BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
 REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
 SCORE = create("../consensus/score.se")
@@ -47,21 +47,21 @@ def blank(branch, period, num_events, num_reports, v_size):
         # - if element ne_plus_2 is zero, we're on the first component, so set the last
         #   element equal to MAX_COMPONENTS
         # - otherwise, decrement the last element
-        with components_remaining = EXPIRING_EVENTS.getComponentsRemaining(branch, period, ne_plus_2 - 1):
+        with components_remaining = EXPIRING.getComponentsRemaining(branch, period, ne_plus_2 - 1):
             if components_remaining == 0:
                 components_remaining = MAX_COMPONENTS
             else:
                 components_remaining -= 1
         with loading_vector = SCORE.blank(components_remaining, MAX_ITERATIONS, num_events, outsz=ne_plus_2):
-            EXPIRING_EVENTS.setLoadingVector(branch, period, loading_vector)
+            EXPIRING.setLoadingVector(branch, period, loading_vector)
             return(1)
 
 def loadings(branch, period, num_events, num_reports, v_size):
     if !WHITELIST.check(msg.sender):
         return(-1)
     with ne_plus_2 = num_events + 2:
-        with loading_vector = EXPIRING_EVENTS.getLoadingVector(branch, period):
-            with deflated =  EXPIRING_EVENTS.getDeflated(branch, period):
+        with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=ne_plus_2):
+            with deflated =  EXPIRING.getDeflated(branch, period):
                 with reputation = array(num_reports):
                     with i = 0:
                         while i < num_reports:
@@ -70,8 +70,8 @@ def loadings(branch, period, num_events, num_reports, v_size):
                     # Iteratively diagonalize the weighted centered data matrix,
                     # deflating (subtracting out the eigenvectors) the matrix after each
                     # eigenvector is found
-                    loading_vector = SCORE.loadings(loading_vector, deflated, reputation, num_reports, num_events, outsz=num_events+2)
-                    EXPIRING_EVENTS.setLoadingVector(branch, period, loading_vector)
+                    loading_vector = SCORE.loadings(loading_vector, deflated, reputation, num_reports, num_events, outsz=ne_plus_2)
+                    EXPIRING.setLoadingVector(branch, period, loading_vector)
                     if loading_vector[num_events] == 0:
                         return(0)
                     else:
@@ -80,27 +80,26 @@ def loadings(branch, period, num_events, num_reports, v_size):
 def latent(branch, period, num_events, num_reports, v_size):
     if !WHITELIST.check(msg.sender):
         return(-1)
-    with ne_plus_2 = num_events + 2:
-        with loading_vector = EXPIRING_EVENTS.getLoadingVector(branch, period):
-            with covrow = EXPIRING_EVENTS.getCovarianceMatrixRow(branch, period):
-                self.EventsExpDates[branch][period].latent = SCORE.latent(covrow, loading_vector, num_events)
+    with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+        with covrow = EXPIRING.getCovarianceMatrixRow(branch, period):
+            self.EventsExpDates[branch][period].latent = SCORE.latent(covrow, loading_vector, num_events)
 
 def deflate(branch, period, num_events, num_reports, v_size):
     if !WHITELIST.check(msg.sender):
         return(-1)
-    with loading_vector = EXPIRING_EVENTS.getLoadingVector(branch, period):
-        with deflated = EXPIRING_EVENTS.getDeflated(branch, period):
+    with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+        with deflated = EXPIRING.getDeflated(branch, period):
             deflated = SCORE.deflate(loading_vector, deflated, num_reports, num_events, outsz=v_size)
-            EXPIRING_EVENTS.setDeflated(branch, period, deflated)
+            EXPIRING.setDeflated(branch, period, deflated)
             return(1)
 
 def score(branch, period, num_events, num_reports, v_size):
     if !WHITELIST.check(msg.sender):
         return(-1)
-    with loading_vector = EXPIRING_EVENTS.getLoadingVector(branch, period):
-        with wcd =  EXPIRING_EVENTS.getWeightedCenteredData(branch, period):
+    with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+        with wcd =  EXPIRING.getWeightedCenteredData(branch, period):
             with scores = SCORE.score(loading_vector, wcd, num_reports, num_events, outsz=num_reports):
-                EXPIRING_EVENTS.setScores(branch, period, scores)
+                EXPIRING.setScores(branch, period, scores)
                 if loading_vector[num_events] == 0:
                     return(0)
                 else:
