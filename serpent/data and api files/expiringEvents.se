@@ -30,7 +30,7 @@ def init():
 # new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
 # reporters is [reporterID][eventNum]
 # reporthash is [reporterID] = hash
-data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
+data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], deflated[], loadingVector[], scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
 
 extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i]
 BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
@@ -48,7 +48,7 @@ def getEvents(branch, expDateIndex):
 def getNumberEvents(branch, expDateIndex):
 	return(self.EventsExpDates[branch][expDateIndex].numberEvents)
 
-def getEvent(branch, expDateIndex, expDateIndex):
+def getEvent(branch, expDateIndex, eventIndex):
 	return(self.EventsExpDates[branch][expDateIndex].events[eventIndex])
 
 def getTotalRepReported(branch, expDateIndex):
@@ -149,6 +149,12 @@ def setWeightedCenteredData(branch, expDateIndex, weightedCenteredData: arr):
 		return(-1)
 	save(self.EventsExpDates[branch][expDateIndex].weightedCenteredData[0], weightedCenteredData, items=len(weightedCenteredData))
 	return(1)
+
+def setDeflated(branch, expDateIndex, deflated: arr):
+    if(!self.whitelist.check(msg.sender)):
+        return(-1)
+    save(self.EventsExpDates[branch][expDateIndex].deflated[0], deflated, items=len(deflated))
+    return(1)
 
 def setLoadingVector(branch, expDateIndex, loadingVector: arr):
 	if(!self.whitelist.check(msg.sender)):

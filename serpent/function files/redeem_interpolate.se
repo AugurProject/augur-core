@@ -23,11 +23,20 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
+extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
 extern interpolate.se: [interpolate:aaaaa:a]
+extern expiringEvents.se: [getVSize:ii:i, getNumberEvents:ii:i]
+extern branches.se: [getBranch:i:i, getStep:i:i, getVotePeriod:i:i, getSubstep:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, setStep:ii:i, setSubstep:ii:i]
+extern reporting.se: [getReporterID:ii:i]
 
 # inset('../consensus/logging.se')
 inset('../consensus/constants.se')
 
+WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
+EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
+EXPIRING_EVENTS = 0xb7b617b776e66cbae79606d2b6221501ad110090
+BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
+REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
 INTERPOLATE = create("../consensus/interpolate.se")
 
 # - loop through reputation && check if in reporters, if so use their
@@ -37,39 +46,45 @@ INTERPOLATE = create("../consensus/interpolate.se")
 #   reports from an actual reporter)
 # (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
 def interpolate(branch, period, num_events, num_reports, v_size):
+    if !WHITELIST.check(msg.sender):
+        return(-1)
     with reputation = array(num_reports):
         with report_matrix = array(v_size):
             with i = 0:
                 while i < num_reports:
-                    with reporterID = self.Reporting[branch].reputation[i].reporterID:
-                        reputation[i] = self.Reporting[branch].reputation[i].repValue
+                    with reporterID = REPORTING.getReporterID(branch, i):
+                        # Q: should the second argument here be reporterID or i (index)?
+                        reputation[i] = REPORTING.getRepBalance(branch, reporterID)
                         # - checks to see if each reporter actually voted on events
                         # - if they didn't vote (simply check if they voted on first event)
                         #     do nothing (these values will be 0 by default due to Serpent array styles)
                         #     else if the reporter did report on events put their ballot into the reports array
-                        if self.EventsExpDates[branch][period].reporters[reporterID][0] != 0:
-                            with j = 0:
-                                while j < num_events:
-                                    report_matrix[i*num_events + j] = self.EventsExpDates[branch][period].reporters[reporterID][j]
-                                    j += 1
+                        with ballot = EXPIRING_EVENTS.getReporterBallot(branch, period, reporterID):
+                            if ballot != 0:
+                                with j = 0:
+                                    while j < num_events:
+                                        report_matrix[i*num_events + j] = ballot[j]
+                                        j += 1
                     i += 1
             with scaled = array(num_events):
                 with scaled_max = array(num_events):
                     with scaled_min = array(num_events):
                         with j = 0:
                             while j < num_events:
-                                if self.Events[self.EventsExpDates[branch][period].events[j]].maxValue != 1:
-                                    scaled[j] = 1
-                                    # Q: the maxValue and minValue data aren't fixed-point?
-                                    #    (are they always integers?)
-                                    scaled_max[j] = self.Events[self.EventsExpDates[branch][period].events[j]].maxValue * ONE
-                                    scaled_min[j] = self.Events[self.EventsExpDates[branch][period].events[j]].minValue * ONE
-                                else:
-                                    scaled[j] = 0
-                                    scaled_min[j] = ONE
-                                    scaled_max[j] = 2 * ONE
-                                j += 1
+                                with event = EXPIRING_EVENTS.getEvent(branch, period, j):
+                                    if EVENTS.getMaxValue(event) != 1:
+                                        scaled[j] = 1
+                                        # TODO convert maxValue and minValue to fixed-point in storage
+                                        scaled_max[j] = EVENTS.getMaxValue(event) * ONE
+                                        scaled_min[j] = EVENTS.getMinValue(event) * ONE
+                                    else:
+                                        scaled[j] = 0
+                                        scaled_min[j] = NO
+                                        scaled_max[j] = YES
+                                    j += 1
                         with result = INTERPOLATE.interpolate(report_matrix, reputation, scaled, scaled_max, scaled_min, outsz=2*v_size):
-                            self.EventsExpDates[branch][period].vSize = v_size
+                            EXPIRING_EVENTS.setVSize(branch, period, v_size)
+                            EXPIRING_EVENTS.setReportsFilled(branch, period, slice(result, items=v_size))
+                            EXPIRING_EVENTS.setReportsMask()
                             save(self.EventsExpDates[branch][period].reportsFilled[0], result, items=v_size)
                             save(self.EventsExpDates[branch][period].reportsMask[0], slice(result, items=v_size, items=2*v_size), items=v_size)

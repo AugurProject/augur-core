@@ -23,14 +23,20 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
+extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
 extern center.se: [center:aaaaaii:a, tokenize:ai:a, covariance:aaii:a]
 
 # inset('../consensus/logging.se')
 inset('../consensus/constants.se')
 
+WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
+EXPIRING_EVENTS = 0xb7b617b776e66cbae79606d2b6221501ad110090
+BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
 CENTER = create("../consensus/center.se")
 
 def center(branch, period, num_events, num_reports, v_size):
+    if !WHITELIST.check(msg.sender):
+        return(-1)
     with reputation = array(num_reports):
         with i = 0:
             while i < num_reports:
@@ -57,6 +63,8 @@ def center(branch, period, num_events, num_reports, v_size):
                                 save(self.EventsExpDates[branch][period].loadingVector[0], slice(result, items=v_size, items=lflatsize), items=num_events+2)
 
 def covariance(branch, period, num_events, num_reports, v_size):
+    if !WHITELIST.check(msg.sender):
+        return(-1)
     with reputation = array(num_reports):
         with i = 0:
             while i < num_reports:
