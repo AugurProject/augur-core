@@ -155,3 +155,9 @@ def subtractRep(branch, index, value):
         return(-1)
     self.Reporting[branch].reputation[index].repValue -= value
     return(1)
+
+def setRep(branch, index, value):
+    if !self.whitelist.check(msg.sender):
+        return(-1)
+    self.Reporting[branch].reputation[index].repValue = value
+    return(1)

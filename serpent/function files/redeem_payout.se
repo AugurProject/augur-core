@@ -35,43 +35,46 @@ EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
 EXPIRING_EVENTS = 0xb7b617b776e66cbae79606d2b6221501ad110090
 BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
 REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
+CASH = 0x559b098076d35ddc7f5057bf28eb20d9cf183a99
+INFO = 0x84ad0e89dbbbdfb18a59954addf10ad501525a01
 PAYOUT = create("../consensus/payout.se")
 
 def payout(branch, period, num_events, num_reports, v_size):
     if !WHITELIST.check(msg.sender):
         return(-1)
-    with smooth_rep = load(self.EventsExpDates[branch][period].smoothRep[0], items=num_reports):
-        with reports_mask = load(self.EventsExpDates[branch][period].reportsMask[0], items=v_size):
-            with outcomes = load(self.EventsExpDates[branch][period].outcomesFinal[0], items=num_events):
+    with smooth_rep = EXPIRING.getSmoothRep(branch, period, outsz=num_reports):
+        with reports_mask = EXPIRING.getReportsMask(branch, period, outsz=v_size):
+            with outcomes = EXPIRING.getOutcomesFinal(branch, period, outsz=num_events):
                 with reporter_payouts = PAYOUT.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outsz=num_reports):
                     # get event ID for each event by taking the x index in the reports arrays
-                    # - shoving it in reporting.events[]
-                    # && getting the cooresponding ID
+                    # - shoving it in reporting.events[] && getting the cooresponding ID
                     with j = 0:
                         while j < num_events:
-                            eventID = self.EventsExpDates[branch][period].events[j]
-                            # then take outcomes_final && set each event outcome
-                            self.Events[eventID].outcome = outcomes[j]
-                            if outcomes[j] != BAD:
-                                # return bond
-                                self.cashcoinBalances[eventID] -= BOND
-                                self.cashcoinBalances[self.Info[eventID].creator] += BOND
-                            else:
-                                # give event bond money to reporters
-                                self.cashcoinBalances[eventID] -= BOND
-                                self.cashcoinBalances[branch] += BOND
+                            with event = EXPIRING.getEvent(branch, period, j):
+                                # then take outcomes_final && set each event outcome
+                                # (BAD and BOND macros defined in consensus/constants.se)
+                                EVENTS.setOutcome(event, outcomes[j])
+                                if outcomes[j] != BAD:
+                                    # return bond
+                                    # Q: should the subtractCash be from the event's ID?
+                                    CASH.subtractCash(event, BOND)
+                                    CASH.addCash(INFO.getCreator(event), BOND)
+                                else:
+                                    # give event bond money to reporters
+                                    CASH.subtractCash(event, BOND)
+                                    CASH.addCash(branch, BOND)
                             j += 1
                     # - need to loop through rep holders && distribute 50% of branch fees to
                     #   reporters' cashcoin addresses 
                     # - also need to take reporter_payouts && redistribute reputation in the
                     #   Reporting structure accordingly
                     with i = 0:
+                        # TODO double-check that the cash in and out adds up to 0
                         while i < num_reports:
-                            # Q: what is 21000000?
-                            self.Reporting[branch].reputation[i].repValue = fixed_multiply(reporter_payouts[i], 21000000)
-                            self.cashcoinBalances[self.Reporting[branch].reputation[i].reporterID] += fixed_multiply(self.cashcoinBalances[branch], reporter_payouts[i])
+                            REPORTING.setRep(branch, i, fixed_multiply(reporter_payouts[i], 21000000))
+                            CASH.addCash(REPORTING.getReporterID(branch, i), fixed_multiply(self.cashcoinBalances[branch], reporter_payouts[i]))
                             i += 1
-                        self.cashcoinBalances[branch] -= self.cashcoinBalances[branch]
+                        CASH.subtractCash(branch, CASH.balance(branch))
                         return(1)
 
 # inset('../consensus/logging.se')

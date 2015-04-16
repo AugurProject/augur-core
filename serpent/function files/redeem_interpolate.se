@@ -70,6 +70,7 @@ def interpolate(branch, period, num_events, num_reports, v_size):
                         with j = 0:
                             while j < num_events:
                                 with event = EXPIRING.getEvent(branch, period, j):
+                                    # YES, NO, ONE, etc. macros defined in consensus/constants.se
                                     if EVENTS.getMaxValue(event) != YES:
                                         scaled[j] = 1
                                         # TODO convert maxValue and minValue to fixed-point in storage
