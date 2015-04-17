@@ -25,7 +25,7 @@ import sys
 import json
 
 class GethRPC(object):
-    HOST, PORT = '127.0.0.1', 8545
+    HOST, PORT = 'cryptocastle.com', 8545
     REQUEST = '''\
 POST / HTTP/1.1\r
 User-Agent: augur-loader/0.0\r
@@ -57,13 +57,14 @@ Content-Type: application/json\r
         self._id += 1
         response_data = response.split('\r\n\r\n', 1)
         return json.loads(response_data[1])
-        
+
     def __getattr__(self, name):
         return lambda **args: self.__json(name, args)
 
 rpc = GethRPC()
-coinbase = rpc.eth_coinbase()['result']
+coinbase_data = rpc.eth_coinbase()
+print json.dumps(coinbase_data, sort_keys=True, indent=4)
+coinbase = coinbase_data['result']
 evm = '0x' + serpent.compile(sys.argv[1]).encode('hex')
-data = rpc.eth_sendTransaction(sender=coinbase, gas=hex(70000000), data=evm)
+data = rpc.eth_sendTransaction(sender=coinbase, gas=hex(3000000), data=evm)
 print json.dumps(data, sort_keys=True, indent=4)
-
