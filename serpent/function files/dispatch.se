@@ -34,10 +34,14 @@ extern redeem_adjust.se: [reputation_delta:iiiii:i, select_scores:iiiii:i, weigh
 extern redeem_resolve.se: [resolve:iiiii:i, smooth:iiiii:i]
 extern redeem_payout.se: [payout:iiiii:i]
 
-WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
-EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
-EXPIRING = 0xb7b617b776e66cbae79606d2b6221501ad110090
-BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
+# WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
+# EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
+# EXPIRING = 0xb7b617b776e66cbae79606d2b6221501ad110090
+# BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
+WHITELIST = create("../data and api files/whitelist.se")
+EVENTS = create("../data and api files/events.se")
+EXPIRING = create("../data and api files/expiring.se")
+BRANCHES = create("../data and api files/branches.se")
 
 # replace these with contract addresses once loaded onto the chain!
 REDEEM_INTERPOLATE = create("../consensus/redeem_interpolate.se")

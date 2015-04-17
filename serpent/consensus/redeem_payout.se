@@ -31,12 +31,18 @@ extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:
 extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
 extern payout.se: [payout:aaaii:a]
 
-WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
-EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
-EXPIRING = 0xb7b617b776e66cbae79606d2b6221501ad110090
-REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
-CASH = 0x559b098076d35ddc7f5057bf28eb20d9cf183a99
-INFO = 0x84ad0e89dbbbdfb18a59954addf10ad501525a01
+# WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
+# EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
+# EXPIRING = 0xb7b617b776e66cbae79606d2b6221501ad110090
+# REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
+# CASH = 0x559b098076d35ddc7f5057bf28eb20d9cf183a99
+# INFO = 0x84ad0e89dbbbdfb18a59954addf10ad501525a01
+WHITELIST = create("../data and api files/whitelist.se")
+EVENTS = create("../data and api files/events.se")
+EXPIRING = create("../data and api files/expiringEvents.se")
+REPORTING = create("../data and api files/reporting.se")
+CASH = create("../data and api files/cash.se")
+INFO = create("../data and api files/info.se")
 PAYOUT = create("payout.se")
 
 def payout(branch, period, num_events, num_reports, v_size):
