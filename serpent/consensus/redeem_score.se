@@ -1,0 +1,109 @@
+# This software (Augur) allows buying and selling event options in Ethereum.
+#
+# Copyright (c) 2015 Forecast Foundation 
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# If you have questions, please contact Joey Krug (joey@augur.net) or
+# Jack Peterson (jack@augur.net).
+
+extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getComponentsRemaining:iii:i, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
+extern score.se: [blank:iii:a, deflate:aaii:a, latent:aai:i, loadings:aaaii:a, score:aaaiii:a]
+
+# WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
+# EXPIRING = 0xb7b617b776e66cbae79606d2b6221501ad110090
+# REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
+# SCORE = 0x13aad6f5573db896e589d2fdef22da8c5033141d
+WHITELIST = create("../data and api files/whitelist.se")
+EXPIRING = create("../data and api files/expiringEvents.se")
+REPORTING = create("../data and api files/reporting.se")
+SCORE = create("score.se")
+
+def blank(branch, period, num_events, num_reports, v_size):
+    if !WHITELIST.check(msg.sender):
+        return(-1)
+    # loading vector (eigenvector) has num_events + 2 elements:
+    #   - second-to-last element: number of iterations remaining
+    #   - last element: number of components (eigenvectors) remaining
+    with ne_plus_2 = num_events + 2:
+        # - if element ne_plus_2 is zero, we're on the first component, so set the last
+        #   element equal to MAX_COMPONENTS
+        # - otherwise, decrement the last element
+        with components_remaining = EXPIRING.getComponentsRemaining(branch, period, ne_plus_2 - 1):
+            if components_remaining == 0:
+                components_remaining = MAX_COMPONENTS
+            else:
+                components_remaining -= 1
+        with loading_vector = SCORE.blank(components_remaining, MAX_ITERATIONS, num_events, outsz=ne_plus_2):
+            EXPIRING.setLoadingVector(branch, period, loading_vector)
+            return(1)
+
+def loadings(branch, period, num_events, num_reports, v_size):
+    if !WHITELIST.check(msg.sender):
+        return(-1)
+    with ne_plus_2 = num_events + 2:
+        with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=ne_plus_2):
+            with deflated =  EXPIRING.getDeflated(branch, period, outsz=v_size):
+                with reputation = array(num_reports):
+                    with i = 0:
+                        while i < num_reports:
+                            reputation[i] = REPORTING.getRepByIndex(branch, i)
+                            i += 1
+                    # Iteratively diagonalize the weighted centered data matrix,
+                    # deflating (subtracting out the eigenvectors) the matrix after each
+                    # eigenvector is found
+                    loading_vector = SCORE.loadings(loading_vector, deflated, reputation, num_reports, num_events, outsz=ne_plus_2)
+                    EXPIRING.setLoadingVector(branch, period, loading_vector)
+                    if loading_vector[num_events] == 0:
+                        return(0)
+                    else:
+                        return(1)
+
+def latent(branch, period, num_events, num_reports, v_size):
+    if !WHITELIST.check(msg.sender):
+        return(-1)
+    with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+        with covrow = EXPIRING.getCovarianceMatrixRow(branch, period, outsz=num_events):
+            EXPIRING.setLatent(branch, period, SCORE.latent(covrow, loading_vector, num_events))
+
+def deflate(branch, period, num_events, num_reports, v_size):
+    if !WHITELIST.check(msg.sender):
+        return(-1)
+    with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+        with deflated = EXPIRING.getDeflated(branch, period, outsz=num_events):
+            deflated = SCORE.deflate(loading_vector, deflated, num_reports, num_events, outsz=v_size)
+            EXPIRING.setDeflated(branch, period, deflated)
+            return(1)
+
+def score(branch, period, num_events, num_reports, v_size):
+    if !WHITELIST.check(msg.sender):
+        return(-1)
+    with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+        with wcd =  EXPIRING.getWeightedCenteredData(branch, period, outsz=num_events):
+            with scores = SCORE.score(loading_vector, wcd, EXPIRING.getLatent(branch, period), num_reports, num_events, outsz=num_reports):
+                EXPIRING.setScores(branch, period, scores)
+                if loading_vector[num_events] == 0:
+                    return(0)
+                else:
+                    return(1)
+
+# inset('logging.se')
+inset('constants.se')

@@ -33,6 +33,14 @@ macro MAX_ITERATIONS: 5
 macro MAX_COMPONENTS: 5
 macro BOND: 42 * ONE
 
+# Convert to fixed-point (base 2^64)
+macro fix($x):
+    $x * ONE
+
+# Revert from fixed-point
+macro unfix($x):
+    $x / ONE
+
 # Fixed-point multiplication
 macro fixed_multiply($x, $y):
     $x * $y / ONE

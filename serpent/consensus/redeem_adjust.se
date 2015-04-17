@@ -1,0 +1,82 @@
+# This software (Augur) allows buying and selling event options in Ethereum.
+#
+# Copyright (c) 2015 Forecast Foundation 
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# If you have questions, please contact Joey Krug (joey@augur.net) or
+# Jack Peterson (jack@augur.net).
+
+extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getComponentsRemaining:iii:i, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
+extern adjust.se: [reputation_delta:aii:a, select_scores:aaaaaaii:a, weighted_delta:aaaaii:a]
+
+# WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
+# EXPIRING = 0xb7b617b776e66cbae79606d2b6221501ad110090
+# REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
+WHITELIST = create("../data and api files/whitelist.se")
+EXPIRING = create("../data and api files/expiringEvents.se")
+REPORTING = create("../data and api files/reporting.se")
+ADJUST = create("adjust.se")
+
+def reputation_delta(branch, period, num_events, num_reports, v_size):
+    if !WHITELIST.check(msg.sender):
+        return(-1)
+    with scores = EXPIRING_EVENTS.getScores(branch, period, outsz=num_reports):
+        with nr_x_2 = num_reports * 2:
+            with result = ADJUST.reputation_delta(scores, num_reports, num_events, outsz=nr_x_2):
+                EXPIRING.setSetOne(branch, period, slice(result, items=0, items=num_reports))
+                EXPIRING.setSetTwo(branch, period, slice(result, items=num_reports, items=nr_x_2))
+                return(1)
+
+def weighted_delta(branch, period, num_events, num_reports, v_size):
+    if !WHITELIST.check(msg.sender):
+        return(-1)
+    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=v_size):
+        with reputation = array(num_reports):
+            with i = 0:
+                while i < num_reports:
+                    reputation[i] = REPORTING.getRepByIndex(branch, i)
+                    i += 1
+                with set1 = EXPIRING.getSetOne(branch, period, outsz=num_reports):
+                    with set2 = EXPIRING.getSetTwo(branch, period, outsz=num_reports):
+                        with ne_x_3 = num_events * 3:
+                            with ne_x_2 = num_events * 2:
+                                with result = ADJUST.weighted_delta(set1, set2, reputation, reports_filled, num_reports, num_events, outsz=ne_x_3):
+                                    EXPIRING.setOld(branch, period, slice(result, items=0, items=num_events))
+                                    EXPIRING.setNewOne(branch, period, slice(result, items=num_events, items=ne_x_2))
+                                    EXPIRING.setNewTwo(branch, period, slice(result, items=ne_x_2, items=ne_x_3))
+                                    return(1)
+
+def select_scores(branch, period, num_events, num_reports, v_size):
+    if !WHITELIST.check(msg.sender):
+        return(-1)
+    with old = EXPIRING.returnOld(branch, period, outsz=num_events):
+        with new1 = EXPIRING.getNewOne(branch, period, outsz=num_events):
+            with new2 = EXPIRING.getNewTwo(branch, period, outsz=num_events):
+                with set1 = EXPIRING.getSetOne(branch, period, outsz=num_reports):
+                    with set2 = EXPIRING.getSetTwo(branch, period, outsz=num_reports):
+                        with scores = EXPIRING.getScores(branch, period, outsz=num_reports):
+                            with adjusted_scores = ADJUST.select_scores(old, new1, new2, set1, set2, scores, num_reports, num_events, outsz=num_reports):
+                                EXPIRING.setAdjPrinComp(branch, period, adjusted_scores)
+                                return(1)
+
+# inset('logging.se')
+inset('constants.se')

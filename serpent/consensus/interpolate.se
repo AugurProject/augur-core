@@ -22,11 +22,6 @@
 #
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
-# inset('logging.se')
-inset('constants.se')
-inset('arrays.se')
-inset('weighted-median.se')
-
 def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
     # returns:
     #   reports_filled: [0, flatsize - 1]
@@ -122,3 +117,6 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                             i += 1
                                 return(reports_interp, items=two_flatsize)
 
+inset('constants.se')
+inset('arrays.se')
+inset('weighted-median.se')

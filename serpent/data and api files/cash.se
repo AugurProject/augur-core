@@ -70,8 +70,10 @@ def subtractCash(ID, amount):
     if(!self.whitelist.check(msg.sender)):
         return(-1)
     self.cashcoinBalances[ID] -= amount
+    return(1)
 
 def addCash(ID, amount):
     if(!self.whitelist.check(msg.sender)):
         return(-1)
     self.cashcoinBalances[ID] += amount
+    return(1)

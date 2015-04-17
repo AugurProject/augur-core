@@ -5,6 +5,7 @@ Augur consensus tests
 
 """
 from __future__ import division
+import os
 import sys
 import json
 from pprint import pprint
@@ -16,6 +17,9 @@ except ImportError:
     pass
 from pyethereum import tester as t
 from pyconsensus import Oracle
+
+HERE = os.path.dirname(os.path.realpath(__file__))
+ROOT = os.path.join(HERE, os.pardir, os.pardir, "consensus")
 
 # np.set_printoptions(linewidth=500)
 np.set_printoptions(linewidth=225,
@@ -156,6 +160,21 @@ def tol(forecast, actual, fixed=True):
         print "RMSD tolerance exceeded:", r, ">=", tolerance
         raise
 
+def test_redeem(example):
+    reports, reputation, scaled, scaled_max, scaled_min = example()
+    
+    print BR("Forming new test genesis block")
+    s = t.state()
+    t.gas_limit = 100000000
+    s = t.state()
+
+    filename = "dispatch.se"
+    print(BG(filename))
+    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
+
+    result = c.dispatch(0)
+
+
 def test_consensus(example):
     reports, reputation, scaled, scaled_max, scaled_min = example()
 
@@ -165,8 +184,8 @@ def test_consensus(example):
     s = t.state()
 
     filename = "interpolate.se"
-    print BG(filename)
-    c = s.abi_contract(filename, gas=70000000)
+    print(BG(filename))
+    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
     
     num_reports = len(reputation)
     num_events = len(reports[0])
@@ -194,8 +213,8 @@ def test_consensus(example):
         display(reports_filled, "reports (filled):", refold=num_events, show_all=True)
 
     filename = "center.se"
-    print BG(filename)
-    c = s.abi_contract(filename, gas=70000000)
+    print(BG(filename))
+    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
 
     print "  - center"
     result = c.center(reports_filled,
@@ -254,8 +273,8 @@ def test_consensus(example):
     tol(covrow, Crow)
 
     filename = "score.se"
-    print BG(filename)
-    c = s.abi_contract(filename, gas=70000000)
+    print(BG(filename))
+    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
 
     #######
     # PCA #
@@ -365,8 +384,8 @@ def test_consensus(example):
     tol(scores, nc)
 
     filename = "adjust.se"
-    print BG(filename)
-    c = s.abi_contract(filename, gas=70000000)
+    print(BG(filename))
+    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
 
     print "  - reputation_delta"
     result = c.reputation_delta(scores, num_reports, num_events)
@@ -410,8 +429,8 @@ def test_consensus(example):
     # display(adjusted_scores, "adjusted_scores:", show_all=True)
 
     filename = "resolve.se"
-    print BG(filename)
-    c = s.abi_contract(filename, gas=70000000)
+    print(BG(filename))
+    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
 
     print "  - smooth"
     smooth_rep = c.smooth(adjusted_scores,
@@ -432,8 +451,8 @@ def test_consensus(example):
     event_outcomes = result[0:num_events].tolist()
 
     filename = "payout.se"
-    print BG(filename)
-    c = s.abi_contract(filename, gas=70000000)
+    print(BG(filename))
+    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
 
     print "  - payout"
     reporter_payout = c.payout(event_outcomes,

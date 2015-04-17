@@ -1,0 +1,88 @@
+# This software (Augur) allows buying and selling event options in Ethereum.
+#
+# Copyright (c) 2015 Forecast Foundation 
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# If you have questions, please contact Joey Krug (joey@augur.net) or
+# Jack Peterson (jack@augur.net).
+
+extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getComponentsRemaining:iii:i, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
+extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
+extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
+extern payout.se: [payout:aaaii:a]
+
+# WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
+# EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
+# EXPIRING = 0xb7b617b776e66cbae79606d2b6221501ad110090
+# REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
+# CASH = 0x559b098076d35ddc7f5057bf28eb20d9cf183a99
+# INFO = 0x84ad0e89dbbbdfb18a59954addf10ad501525a01
+WHITELIST = create("../data and api files/whitelist.se")
+EVENTS = create("../data and api files/events.se")
+EXPIRING = create("../data and api files/expiringEvents.se")
+REPORTING = create("../data and api files/reporting.se")
+CASH = create("../data and api files/cash.se")
+INFO = create("../data and api files/info.se")
+PAYOUT = create("payout.se")
+
+def payout(branch, period, num_events, num_reports, v_size):
+    if !WHITELIST.check(msg.sender):
+        return(-1)
+    with smooth_rep = EXPIRING.getSmoothRep(branch, period, outsz=num_reports):
+        with reports_mask = EXPIRING.getReportsMask(branch, period, outsz=v_size):
+            with outcomes = EXPIRING.getOutcomesFinal(branch, period, outsz=num_events):
+                with reporter_payouts = PAYOUT.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outsz=num_reports):
+                    # get event ID for each event by taking the x index in the reports arrays
+                    # - shoving it in reporting.events[] && getting the cooresponding ID
+                    with j = 0:
+                        while j < num_events:
+                            with event = EXPIRING.getEvent(branch, period, j):
+                                # then take outcomes_final && set each event outcome
+                                # (BAD and BOND macros defined in consensus/constants.se)
+                                EVENTS.setOutcome(event, outcomes[j])
+                                if outcomes[j] != BAD:
+                                    # return bond
+                                    # Q: should the subtractCash be from the event's ID?
+                                    CASH.subtractCash(event, BOND)
+                                    CASH.addCash(INFO.getCreator(event), BOND)
+                                else:
+                                    # give event bond money to reporters
+                                    CASH.subtractCash(event, BOND)
+                                    CASH.addCash(branch, BOND)
+                            j += 1
+                    # - need to loop through rep holders && distribute 50% of branch fees to
+                    #   reporters' cashcoin addresses 
+                    # - also need to take reporter_payouts && redistribute reputation in the
+                    #   Reporting structure accordingly
+                    with i = 0:
+                        # TODO double-check that the cash in and out adds up to 0
+                        while i < num_reports:
+                            REPORTING.setRep(branch, i, fixed_multiply(reporter_payouts[i], 21000000))
+                            CASH.addCash(REPORTING.getReporterID(branch, i), fixed_multiply(CASH.balance(branch), reporter_payouts[i]))
+                            i += 1
+                        CASH.subtractCash(branch, CASH.balance(branch))
+                        return(1)
+
+# inset('logging.se')
+inset('constants.se')
+inset('arrays.se')
