@@ -160,6 +160,21 @@ def tol(forecast, actual, fixed=True):
         print "RMSD tolerance exceeded:", r, ">=", tolerance
         raise
 
+def test_redeem(example):
+    reports, reputation, scaled, scaled_max, scaled_min = example()
+    
+    print BR("Forming new test genesis block")
+    s = t.state()
+    t.gas_limit = 100000000
+    s = t.state()
+
+    filename = "dispatch.se"
+    print(BG(filename))
+    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
+
+    result = c.dispatch(0)
+
+
 def test_consensus(example):
     reports, reputation, scaled, scaled_max, scaled_min = example()
 

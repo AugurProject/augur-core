@@ -29,10 +29,14 @@ extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getComponentsRem
 extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
 extern interpolate.se: [interpolate:aaaaa:a]
 
-WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
-EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
-EXPIRING = 0xb7b617b776e66cbae79606d2b6221501ad110090
-REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
+# WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
+# EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
+# EXPIRING = 0xb7b617b776e66cbae79606d2b6221501ad110090
+# REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
+WHITELIST = create("../data and api files/whitelist.se")
+EVENTS = create("../data and api files/events.se")
+EXPIRING = create("../data and api files/expiringEvents.se")
+REPORTING = create("../data and api files/reporting.se")
 INTERPOLATE = create("interpolate.se")
 
 # - loop through reputation && check if in reporters, if so use their
