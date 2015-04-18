@@ -113,6 +113,6 @@ def resolve(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:
                                     i += 1
                             return(outcomes_final, items=num_events)
 
-inset('constants.se')
-inset('arrays.se')
-inset('weighted-median.se')
+inset('../macros/constants.se')
+inset('../macros/arrays.se')
+inset('../macros/wmedian.se')

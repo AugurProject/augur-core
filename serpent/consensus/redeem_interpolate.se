@@ -27,7 +27,9 @@ extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress
 extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
 extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getComponentsRemaining:iii:i, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
 extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
+extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getSubstep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, initializeBranch:iiii:i, setStep:ii:i, setSubstep:ii:i]
 extern interpolate.se: [interpolate:aaaaa:a]
+extern mock.se: [setup:ii:i]
 
 # WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
 # EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
@@ -37,7 +39,9 @@ WHITELIST = create("../data and api files/whitelist.se")
 EVENTS = create("../data and api files/events.se")
 EXPIRING = create("../data and api files/expiringEvents.se")
 REPORTING = create("../data and api files/reporting.se")
+BRANCHES = create("../data and api files/branches.se")
 INTERPOLATE = create("interpolate.se")
+# MOCK = create("mock.se")
 
 # - loop through reputation && check if in reporters, if so use their
 #   report, if not use the fillin / not reported report (all zeroes)
@@ -46,8 +50,9 @@ INTERPOLATE = create("interpolate.se")
 #   reports from an actual reporter)
 # (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
 def interpolate(branch, period, num_events, num_reports, v_size):
-    if !WHITELIST.check(msg.sender):
-        return(-1)
+    # if !WHITELIST.check(msg.sender):
+    #     return(-1)
+    mock(branch, period)
     with reputation = array(num_reports):
         with report_matrix = array(v_size):
             with i = 0:
@@ -58,7 +63,7 @@ def interpolate(branch, period, num_events, num_reports, v_size):
                         # - if they didn't vote (simply check if they voted on first event)
                         #     do nothing (these values will be 0 by default due to Serpent array styles)
                         #     else if the reporter did report on events put their ballot into the reports array
-                        with ballot = EXPIRING.getReporterBallot(branch, period, reporterID, outsz=num_events):
+                        with ballot = EXPIRING.getReporterBallot(branch, period, i, outsz=num_events):
                             if ballot != 0:
                                 with j = 0:
                                     while j < num_events:
@@ -82,11 +87,15 @@ def interpolate(branch, period, num_events, num_reports, v_size):
                                         scaled_min[j] = NO
                                         scaled_max[j] = YES
                                 j += 1
+                        log_array(reputation)
+                        log_array(report_matrix)
                         with result = INTERPOLATE.interpolate(report_matrix, reputation, scaled, scaled_max, scaled_min, outsz=2*v_size):
                             EXPIRING.setVSize(branch, period, v_size)
                             EXPIRING.setReportsFilled(branch, period, slice(result, items=0, items=v_size))
                             EXPIRING.setReportsMask(branch, period, slice(result, items=v_size, items=2*v_size))
                             return(1)
 
-# inset('logging.se')
-inset('constants.se')
+inset('../macros/constants.se')
+inset('../macros/fixed.se')
+inset('../macros/logging.se')
+inset('../macros/mock.se')

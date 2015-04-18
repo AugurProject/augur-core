@@ -26,8 +26,8 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
     # returns:
     #   reports_filled: [0, flatsize - 1]
     #   reports_mask: [flatsize, 2*flatsize - 1]
-    #
-    # normalize reputation vector
+    # log_array(reputation)
+    # log_array(reports)
     reputation = normalize(reputation)
     with num_reports = len(reputation):
         with flatsize = len(reports):
@@ -117,6 +117,8 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                             i += 1
                                 return(reports_interp, items=two_flatsize)
 
-inset('constants.se')
-inset('arrays.se')
-inset('weighted-median.se')
+inset('../macros/constants.se')
+inset('../macros/fixed.se')
+inset('../macros/arrays.se')
+inset('../macros/wmedian.se')
+# inset('../macros/logging.se')

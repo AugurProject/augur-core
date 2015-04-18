@@ -83,6 +83,8 @@ def payout(branch, period, num_events, num_reports, v_size):
                         CASH.subtractCash(branch, CASH.balance(branch))
                         return(1)
 
-# inset('logging.se')
-inset('constants.se')
-inset('arrays.se')
+inset('../macros/constants.se')
+inset('../macros/fixed.se')
+inset('../macros/arrays.se')
+inset('../macros/logging.se')
+inset('../macros/mock.se')

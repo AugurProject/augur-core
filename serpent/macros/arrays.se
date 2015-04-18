@@ -70,5 +70,3 @@ macro maximum($a):
                         $max = $a[$i]
                     $i += 1
                 $max
-
-inset('constants.se')

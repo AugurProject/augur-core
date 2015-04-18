@@ -132,5 +132,5 @@ def score(scores:arr, lv:arr, wcd:arr, latent, num_reports, num_events):
             i += 1
         return(scores, items=num_reports)
 
-inset('constants.se')
-inset('arrays.se')
+inset('../macros/constants.se')
+inset('../macros/arrays.se')
