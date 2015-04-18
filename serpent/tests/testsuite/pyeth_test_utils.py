@@ -200,6 +200,14 @@ def missing(name):
         raise NotImplementedError('function ' + name + ' not defined.')
     return thunk
 
+def running(run, name):
+    def wrapper(*args, **kwds):
+        print Fore.RED + Style.BRIGHT + (" Running " + name + " ").center(80, '#') + Style.RESET_ALL
+        with timer():
+            return run(*args, **kwds)
+    wrapper.__name__ = run.__name__
+    return wrapper
+
 class TestType(type):
     '''Metaclass for the Test class'''
     def __new__(cls, name, bases, dct):
@@ -207,17 +215,22 @@ class TestType(type):
             if isinstance(v, (FunctionType, MethodType)):
                 if v.__name__.startswith('test_'):
                     dct[k] = make_test(v)
+                if v.__name__ == 'run':
+                    dct[k] = running(v, name) 
         return type.__new__(cls, name, bases, dct)
 
-class Test(object):
+class ContractTest(object):
     __metaclass__ = TestType
     def __init__(self, test_order):
         self.test_order = test_order
 
     def run(self):
-        for name in test_order:
+        for name in self.test_order:
             errstr = 'function ' + name + ' not implemented.'
             getattr(self, name, missing(name))()
+
+def run_tests():
+    for k, v in globals()
 
 def trade_pow(branch, market, address, trade_nonce, difficulty=10000):
     nonce = 0
