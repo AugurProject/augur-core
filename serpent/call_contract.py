@@ -42,10 +42,16 @@ def get_sym(arg):
     else:
         return 's'
 
+def safe_eval(thing):
+    try:
+        return eval(thing)
+    except:
+        return thing
+
 if __name__ == '__main__':
     c = contracts[sys.argv[1]]
     func = sys.argv[2]
-    args = map(eval, sys.argv[3:])
+    args = map(safe_eval, sys.argv[3:])
     sig = reduce(lambda a, b: a+get_sym(b), args, '')
     data = abi_data(func, sig, args)
 
