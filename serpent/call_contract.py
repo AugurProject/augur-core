@@ -1,13 +1,13 @@
 #!/usr/bin/python
-import warning; warnings.simplefilter('ignore')
+import warnings; warnings.simplefilter('ignore')
 from load_contract import GethRPC
-from pyepm.abi import abi_data
-import colorama
+from pyepm.api import abi_data
+from colorama import init, Style, Fore
 import json
 import sys
 import re
 
-colorama.init()
+init()
 
 contracts = {
     'cash' : '0x559b098076d35ddc7f5057bf28eb20d9cf183a99',
@@ -29,15 +29,21 @@ contracts = {
     'createMarket' : '0x31298c07334febd45584d24797ced02bc54777ca',
     'closeMarket' : '0xfd7baeaae87c0a9833d1d9840d8f4be554f4a9fa',
     'interpolate' : '0x13aad6f5573db896e589d2fdef22da8c5033141d',
-    'center' ; '0x63faff743ab0398524c08a435f94ceb91352ba58',
+    'center' : '0x63faff743ab0398524c08a435f94ceb91352ba58',
     'score' : '0x5c90e13b3cdfb498945f10b60b140259e06a2651',
     'adjust' : '0xa59e9d9b48f462135f7e971ab370d3e156fd3b37',
     'resolve' : '0x63faff743ab0398524c08a435f94ceb91352ba58',
     'payout' : '0x88cae18facdaa0f3d0839d3f8a8874f2fa8c54cf',
 }
 
+def my_eval(arg):
+    try:
+        return eval(arg)
+    except:
+        return arg
+
 c = contracts[sys.argv[1]]
-args = [eval(arg) for arg in sys.argv]
+args = map(my_eval, sys.argv[2:])
 sig = ''
 for arg in args:
     if type(arg) in (int, long):
@@ -49,8 +55,8 @@ for arg in args:
 
 data = abi_data(sys.argv[1], sig, args)
 
-print Style.BRIGHT + Fore.RED + 'Running on cryptocastle.com\'s geth rpc!'.center(80, '#') + Style.RESET_ALL
+#print Style.BRIGHT + Fore.RED + 'Running on cryptocastle.com\'s geth rpc!'.center(80, '#') + Style.RESET_ALL
 rpc = GethRPC()
 coinbase = rpc.eth_coinbase()['result']
 result = rpc.eth_sendTransaction(sender=coinbase, gas=hex(3*10**6), to=c, data=data)
-print json.dumps(result, sort_index=True, indent=4)
+print json.dumps(result, sort_keys=True, indent=4)
