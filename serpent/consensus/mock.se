@@ -23,13 +23,17 @@ def mock(branch, period):
                         BRANCHES.initializeBranch(branch, period, 3, 1)
                         with j = 0:
                             while j < num_events:
+                                with i = 0:
+                                    while i < num_reports:
+                                        reports[i][j] = fix(reports[i][j])
+                                        i += 1
                                 EVENTS.initializeEvent(j, branch, period, 1, 2, 2)
                                 EXPIRING.addEvent(branch, period, j)
                                 j += 1
                         with i = 0:
                             while i < num_reports:
                                 REPORTING.addReporter(branch, reporters[i])
-                                REPORTING.setRep(branch, i, reputation[i])
+                                REPORTING.setRep(branch, i, fix(reputation[i]))
                                 EXPIRING.setReporterBallot(branch, period, i, reports[i], reputation[i])
                                 i += 1
                         with i = 0:
