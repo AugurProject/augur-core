@@ -7,8 +7,6 @@ import json
 import sys
 import re
 
-init()
-
 contracts = {
     'cash' : '0x559b098076d35ddc7f5057bf28eb20d9cf183a99',
     'info' : '0x84ad0e89dbbbdfb18a59954addf10ad501525a01',
@@ -36,27 +34,29 @@ contracts = {
     'payout' : '0x88cae18facdaa0f3d0839d3f8a8874f2fa8c54cf',
 }
 
-def my_eval(arg):
-    try:
-        return eval(arg)
-    except:
-        return arg
-
-c = contracts[sys.argv[1]]
-args = map(my_eval, sys.argv[2:])
-sig = ''
-for arg in args:
+def get_sym(arg):
     if type(arg) in (int, long):
-        sig += 'i'
+        return 'i'
     if type(arg) == list:
-        sig += 'a'
-    if type(arg) == str:
-        sig += 's'
+        return 'a'
+    else:
+        return 's'
 
-data = abi_data(sys.argv[1], sig, args)
+if __name__ == '__main__':
+    c = contracts[sys.argv[1]]
+    func = sys.argv[2]
+    args = map(eval, sys.argv[3:])
+    sig = reduce(lambda a, b: a+get_sym(b), args, '')
+    data = abi_data(func, sig, args)
 
-#print Style.BRIGHT + Fore.RED + 'Running on cryptocastle.com\'s geth rpc!'.center(80, '#') + Style.RESET_ALL
-rpc = GethRPC()
-coinbase = rpc.eth_coinbase()['result']
-result = rpc.eth_sendTransaction(sender=coinbase, gas=hex(3*10**6), to=c, data=data)
-print json.dumps(result, sort_keys=True, indent=4)
+    rpc = GethRPC()
+    coinbase = rpc.eth_coinbase()['result']
+    result = rpc.eth_sendTransaction(
+        sender=coinbase, gas=hex(3*10**4), to=c, data=data)
+    print json.dumps(result, sort_keys=True, indent=4)
+    print json.dumps(rpc.eth_getTransactionByHash(result['result']),
+                     sort_keys=True,
+                     indent=4)
+    print json.dumps(rpc.eth_call('pending', sender=coinbase, to=c, data=data),
+                     sort_keys=True,
+                     indent=4)
