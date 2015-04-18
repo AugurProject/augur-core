@@ -105,5 +105,7 @@ def score(branch, period, num_events, num_reports, v_size):
                 else:
                     return(1)
 
-# inset('logging.se')
-inset('constants.se')
+inset('../macros/constants.se')
+inset('../macros/fixed.se')
+# inset('../macros/logging.se')
+# inset('../macros/mock.se')

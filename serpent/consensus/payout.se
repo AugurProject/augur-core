@@ -61,5 +61,5 @@ def payout(outcomes_final:arr, smooth_rep:arr, reports_mask:arr, num_reports, nu
                                             i += 1
                                     return(reporter_bonus, items=num_reports)
 
-inset('constants.se')
-inset('arrays.se')
+inset('../macros/constants.se')
+inset('../macros/arrays.se')

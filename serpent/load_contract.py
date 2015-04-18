@@ -39,18 +39,17 @@ Content-Type: application/json\r
         self.conn = socket.create_connection((GethRPC.HOST, GethRPC.PORT))
         self._id = 1
 
-    def __json(self, name, args):
-        if 'sender' in args:
-            args['from'] = args.pop('sender')
-        if args == {}:
-            args = []
-        else:
-            args = [args]
+    def __json(self, name, args, kwds):
+        if 'sender' in kwds:
+            kwds['from'] = kwds.pop('sender')
+        params = []
+        if kwds: params.append(kwds)
+        if args: params.extend(list(args))
         rpc_data = json.dumps({
             'jsonrpc':'2.0',
             'id': self._id,
             'method': name,
-            'params': args})
+            'params': params})
         request = GethRPC.REQUEST % (len(rpc_data), rpc_data)
         self.conn.sendall(request)
         response = self.conn.recv(4096)
@@ -59,7 +58,7 @@ Content-Type: application/json\r
         return json.loads(response_data[1])
 
     def __getattr__(self, name):
-        return lambda **args: self.__json(name, args)
+        return lambda *args, **kwds: self.__json(name, args, kwds)
 
 if __name__ == '__main__':
     rpc = GethRPC()

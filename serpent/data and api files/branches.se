@@ -79,10 +79,10 @@ def getBranches():
     return(branches: arr)
 
 def getNumBranches():
-	return(branchListCount)
+	return(self.branchListCount)
 
 def getBranch(branchNumber):
-	return(branchList[branchNumber])
+	return(self.branchList[branchNumber])
 
 # check that msg.sender is one of our function contracts
 def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee):
@@ -92,8 +92,8 @@ def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee):
 		self.Branches[ID].currentVotePeriod = currentVotePeriod
 		self.Branches[ID].periodLength = periodLength
 		self.Branches[ID].minTradingFee = minTradingFee
-		self.branchList[branchListCount] = ID
-		branchListCount += 1
+		self.branchList[self.branchListCount] = ID
+		self.branchListCount += 1
 		return(1)
 	else:
 		return(0)
