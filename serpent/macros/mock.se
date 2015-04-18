@@ -27,40 +27,40 @@
 #   - expiringEvents.se -> EXPIRING
 #   - reporting.se -> REPORTING
 #   - branches.se -> BRANCHES
-macro mock(branch, period):
-    with reporters = [0x00e3f8de3ed9d428dc235ce0c25bc1136073be8b, 0x63524e3fe4791aefce1e932bbfb3fdf375bfad89, 0xb76a02724d44c89c20e41882f729a092f14d3eaf, 0xc76a02724d44c89c20e41882f729a092f14d3eaf, 0xd76a02724d44c89c20e41882f729a092f14d3eaf, 0xe76a02724d44c89c20e41882f729a092f14d3eaf]:
-        with reputation = [2, 10, 4, 2, 7, 1]:
-            with num_reports = len(reporters):
-                with reports = array(num_reports):
-                    reports[0] = [2, 2, 1, 2]
-                    reports[1] = [2, 1, 1, 1]
-                    reports[2] = [2, 2, 1, 1]
-                    reports[3] = [2, 2, 2, 1]
-                    reports[4] = [2, 1, 2, 2]
-                    reports[5] = [1, 1, 2, 2]
-                    with num_events = len(reports[0]):
-                        BRANCHES.initializeBranch(branch, period, 3, 1)
-                        with j = 0:
-                            while j < num_events:
-                                with i = 0:
-                                    while i < num_reports:
-                                        reports[i][j] = fix(reports[i][j])
-                                        i += 1
-                                EVENTS.initializeEvent(j, branch, period, 1, 2, 2)
-                                EXPIRING.addEvent(branch, period, j)
-                                j += 1
-                        with i = 0:
-                            while i < num_reports:
-                                REPORTING.addReporter(branch, reporters[i])
-                                REPORTING.setRep(branch, i, fix(reputation[i]))
-                                EXPIRING.setReporterBallot(branch, period, i, reports[i], reputation[i])
-                                i += 1
-                        with i = 0:
-                            while i < num_reports:
-                                with ballot = EXPIRING.getReporterBallot(branch, period, i, outsz=4):
-                                    with j = 0:
-                                        while j < num_events:
-                                            if reports[i][j] != ballot[j]:
+macro mock($branch, $period):
+    with $reporters = [0x00e3f8de3ed9d428dc235ce0c25bc1136073be8b, 0x63524e3fe4791aefce1e932bbfb3fdf375bfad89, 0xb76a02724d44c89c20e41882f729a092f14d3eaf, 0xc76a02724d44c89c20e41882f729a092f14d3eaf, 0xd76a02724d44c89c20e41882f729a092f14d3eaf, 0xe76a02724d44c89c20e41882f729a092f14d3eaf]:
+        with $reputation = [2, 10, 4, 2, 7, 1]:
+            with $num_reports = len($reporters):
+                with $reports = array($num_reports):
+                    $reports[0] = [2, 2, 1, 2]
+                    $reports[1] = [2, 1, 1, 1]
+                    $reports[2] = [2, 2, 1, 1]
+                    $reports[3] = [2, 2, 2, 1]
+                    $reports[4] = [2, 1, 2, 2]
+                    $reports[5] = [1, 1, 2, 2]
+                    with $num_events = len($reports[0]):
+                        BRANCHES.initializeBranch($branch, $period, 3, 1)
+                        with $j = 0:
+                            while $j < $num_events:
+                                with $i = 0:
+                                    while $i < $num_reports:
+                                        $reports[$i][$j] = fix($reports[$i][$j])
+                                        $i += 1
+                                EVENTS.initializeEvent($j, $branch, $period, 1, 2, 2)
+                                EXPIRING.addEvent($branch, $period, $j)
+                                $j += 1
+                        with $i = 0:
+                            while $i < $num_reports:
+                                REPORTING.addReporter($branch, $reporters[$i])
+                                REPORTING.setRep($branch, $i, fix($reputation[$i]))
+                                EXPIRING.setReporterBallot($branch, $period, $i, $reports[$i], $reputation[$i])
+                                $i += 1
+                        with $i = 0:
+                            while $i < $num_reports:
+                                with $ballot = EXPIRING.getReporterBallot($branch, $period, $i, outsz=4):
+                                    with $j = 0:
+                                        while $j < $num_events:
+                                            if $reports[$i][$j] != $ballot[$j]:
                                                 return(-1)
-                                            j += 1
-                                    i += 1
+                                            $j += 1
+                                    $i += 1
