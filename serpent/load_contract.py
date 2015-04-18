@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 '''
 This script loads serpent contracts onto the block chain using the geth RPC
 To load a contract onto the chain, do something like:
@@ -25,7 +25,7 @@ import sys
 import json
 
 class GethRPC(object):
-    HOST, PORT = 'cryptocastle.com', 8545
+    HOST, PORT = 'localhost', 8545
     REQUEST = '''\
 POST / HTTP/1.1\r
 User-Agent: augur-loader/0.0\r
@@ -61,10 +61,11 @@ Content-Type: application/json\r
     def __getattr__(self, name):
         return lambda **args: self.__json(name, args)
 
-rpc = GethRPC()
-coinbase_data = rpc.eth_coinbase()
-print json.dumps(coinbase_data, sort_keys=True, indent=4)
-coinbase = coinbase_data['result']
-evm = '0x' + serpent.compile(sys.argv[1]).encode('hex')
-data = rpc.eth_sendTransaction(sender=coinbase, gas=hex(3000000), data=evm)
-print json.dumps(data, sort_keys=True, indent=4)
+if __name__ == '__main__':
+    rpc = GethRPC()
+    coinbase_data = rpc.eth_coinbase()
+    print json.dumps(coinbase_data, sort_keys=True, indent=4)
+    coinbase = coinbase_data['result']
+    evm = '0x' + serpent.compile(sys.argv[1]).encode('hex')
+    data = rpc.eth_sendTransaction(sender=coinbase, gas=hex(3000000), data=evm)
+    print json.dumps(data, sort_keys=True, indent=4)
