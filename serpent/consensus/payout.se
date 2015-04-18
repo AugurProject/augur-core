@@ -22,10 +22,6 @@
 #
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
-# inset('logging.se')
-inset('constants.se')
-inset('arrays.se')
-
 def payout(outcomes_final:arr, smooth_rep:arr, reports_mask:arr, num_reports, num_events):
         # Event participation (within columns):
         # proportion of reputation that answered each event
@@ -64,3 +60,6 @@ def payout(outcomes_final:arr, smooth_rep:arr, reports_mask:arr, num_reports, nu
                                             reporter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], ONE - participation)
                                             i += 1
                                     return(reporter_bonus, items=num_reports)
+
+inset('constants.se')
+inset('arrays.se')

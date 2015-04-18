@@ -22,10 +22,6 @@
 #
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
-# inset('logging.se')
-inset('constants.se')
-inset('arrays.se')
-
 # Outer product of vectors
 macro outer_product($u, $v, $n):
     with $p = array($n^2):
@@ -135,3 +131,6 @@ def score(scores:arr, lv:arr, wcd:arr, latent, num_reports, num_events):
                     k += 1
             i += 1
         return(scores, items=num_reports)
+
+inset('constants.se')
+inset('arrays.se')

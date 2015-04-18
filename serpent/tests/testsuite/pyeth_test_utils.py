@@ -63,6 +63,38 @@ def timer():
     yield
     print Fore.YELLOW + Style.BRIGHT + 'Done in %5.2f seconds.'%(clock() - start) + Style.RESET_ALL
 
+def make_dispatcher(state, contract, funcname):
+    def dispatch(*args, **kwds):
+        state.block.log_listeners.append(
+            contract._translator.listen)
+        o = state._send(
+            kwds.get('sender', _t.k0),
+            contract.address,
+            kwds.get('value', 0),
+            contract._translator.encode(funcname, args),
+            **_t.dict_without(
+                kwds,
+                'sender',
+                'value', 
+                'output'))
+        state.block.log_listeners.pop()
+        if kwds.get('output', '') == 'raw':
+            outdata = o['output']
+        elif not o['output']:
+            outdata = None
+        else:
+            outdata = contract._translator.decode(funcname, o['output'])
+            outdata = outdata[0] if len(outdata) == 1 \
+                      else outdata
+        # Format output
+        if kwds.get('profiling', ''):
+            return _t.dict_with(o, output=outdata)
+        else:
+            return outdata
+
+    dispatch.__name__ = funcname
+    return suppressify(dispatch)
+
 class Contract(object):
     def __init__(self, state, code, sender, gas, endowment, language):
         if language not in _t.languages:
@@ -104,42 +136,9 @@ class Contract(object):
             with suppressed_output():
                 self.address = _t.encode_hex(state.evm(evm, sender, endowment, gas))
             self._translator = _t.abi.ContractTranslator(sig)
-            assert len(state.block.get_code(self.address)), \
-                    "Contract code empty"
-
-            def make_dispatcher(state, funcname):
-                def dispatch(*args, **kwds):
-                    state.block.log_listeners.append(
-                        self._translator.listen)
-                    o = state._send(
-                        kwds.get('sender', sender),
-                        self.address,
-                        kwds.get('value', 0),
-                        self._translator.encode(funcname, args),
-                        **_t.dict_without(
-                            kwds,
-                            'sender',
-                            'value', 
-                            'output'))
-                    state.block.log_listeners.pop()
-                    if kwds.get('output', '') == 'raw':
-                        outdata = o['output']
-                    elif not o['output']:
-                        outdata = None
-                    else:
-                        outdata = self._translator.decode(funcname, o['output'])
-                        outdata = outdata[0] if len(outdata) == 1 \
-                                  else outdata
-                    # Format output
-                    if kwds.get('profiling', ''):
-                        return _t.dict_with(o, output=outdata)
-                    else:
-                        return outdata
-                dispatch.__name__ = funcname
-                return suppressify(dispatch)
-
+            assert len(state.block.get_code(self.address)), "Contract code empty"
             for funcname in self._translator.function_data:
-                vars(self)[funcname] = make_dispatcher(state, funcname)
+                vars(self)[funcname] = make_dispatcher(state, self, funcname)
 
 class State(_t.state):
     '''A subclass of pyethereum.tester.state, with cached compiled code

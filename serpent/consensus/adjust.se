@@ -22,10 +22,6 @@
 #
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
-# inset('logging.se')
-inset('constants.se')
-inset('arrays.se')
-
 # Minimum value of array
 macro minimum($a):
     with $min = $a[0]:
@@ -91,3 +87,6 @@ def select_scores(old:arr, new1:arr, new2:arr, set1:arr, set2:arr, scores:arr, n
                     else:
                         adjusted_scores = set2
                     return(adjusted_scores, items=num_reports)
+
+inset('constants.se')
+inset('arrays.se')

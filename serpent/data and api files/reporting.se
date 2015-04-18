@@ -48,6 +48,10 @@ def faucet():
     self.Reporting[1010101].reputation[index].reporterID = tx.origin
     self.Reporting[1010101].numberReporters += 1
 
+# @return reputation value
+def getRepByIndex(branch, repIndex):
+    return(self.Reporting[branch].reputation[repIndex].repValue)
+
 # @return reputation value        
 def getRepBalance(branch, address):
     repIndex = self.Reporting[branch].repIDtoIndex[address]
@@ -150,4 +154,10 @@ def subtractRep(branch, index, value):
     if(!self.whitelist.check(msg.sender)):
         return(-1)
     self.Reporting[branch].reputation[index].repValue -= value
+    return(1)
+
+def setRep(branch, index, value):
+    if !self.whitelist.check(msg.sender):
+        return(-1)
+    self.Reporting[branch].reputation[index].repValue = value
     return(1)

@@ -22,8 +22,6 @@
 #
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
-inset('constants.se')
-
 # Sum elements of array
 macro sum($a):
     with $len = len($a):
@@ -72,3 +70,5 @@ macro maximum($a):
                         $max = $a[$i]
                     $i += 1
                 $max
+
+inset('constants.se')

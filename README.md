@@ -17,6 +17,11 @@ augur-serpent
   - scalar .5 outcomes just don't work at all atm either
   - jack idea for this
 - for scalar events, how do you distinguish a 0 numerical response from a no-response (usually 0)?
+  - idea: store answer/no-answer for each reporter separate from the report values
+
+### Redeem/consensus optimizations:
+- we will ultimately want to combine the redeem functions with their consensus counterparts! (it is inefficient to have two function calls for each step)
+- store iterations/components as contract data, instead of inside the loading vector
 
 ### Scalability optimizations (hopefully these become an issue!) ... Curse you gas issues (too soon):
 - http://lightning.network/lightning-network.pdf

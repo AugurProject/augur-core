@@ -22,10 +22,6 @@
 #
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
-# inset('logging.se')
-inset('constants.se')
-inset('arrays.se')
-
 def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr, max_iterations, max_components):
     with num_reports = len(reputation):
         with flatsize = len(reports_filled):
@@ -87,3 +83,6 @@ def covariance(wcd:arr, tokens:arr, num_reports, num_events):
                         cov[i] = fixed_divide(cov[i], alltokens - ONE)
                         i += 1
                     return(cov, items=num_events)
+
+inset('constants.se')
+inset('arrays.se')

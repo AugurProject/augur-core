@@ -1,0 +1,92 @@
+# This software (Augur) allows buying and selling event options in Ethereum.
+#
+# Copyright (c) 2015 Forecast Foundation 
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# If you have questions, please contact Joey Krug (joey@augur.net) or
+# Jack Peterson (jack@augur.net).
+
+extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getComponentsRemaining:iii:i, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
+extern interpolate.se: [interpolate:aaaaa:a]
+
+# WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
+# EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
+# EXPIRING = 0xb7b617b776e66cbae79606d2b6221501ad110090
+# REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
+WHITELIST = create("../data and api files/whitelist.se")
+EVENTS = create("../data and api files/events.se")
+EXPIRING = create("../data and api files/expiringEvents.se")
+REPORTING = create("../data and api files/reporting.se")
+INTERPOLATE = create("interpolate.se")
+
+# - loop through reputation && check if in reporters, if so use their
+#   report, if not use the fillin / not reported report (all zeroes)
+# - use this to make a giant array of reports to pass to self.consensus
+# - want to pass reports for each 0 indexed event in order (so we get
+#   reports from an actual reporter)
+# (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
+def interpolate(branch, period, num_events, num_reports, v_size):
+    if !WHITELIST.check(msg.sender):
+        return(-1)
+    with reputation = array(num_reports):
+        with report_matrix = array(v_size):
+            with i = 0:
+                while i < num_reports:
+                    with reporterID = REPORTING.getReporterID(branch, i):
+                        reputation[i] = REPORTING.getRepBalance(branch, reporterID)
+                        # - checks to see if each reporter actually voted on events
+                        # - if they didn't vote (simply check if they voted on first event)
+                        #     do nothing (these values will be 0 by default due to Serpent array styles)
+                        #     else if the reporter did report on events put their ballot into the reports array
+                        with ballot = EXPIRING.getReporterBallot(branch, period, reporterID, outsz=num_events):
+                            if ballot != 0:
+                                with j = 0:
+                                    while j < num_events:
+                                        report_matrix[i*num_events + j] = ballot[j]
+                                        j += 1
+                    i += 1
+            with scaled = array(num_events):
+                with scaled_max = array(num_events):
+                    with scaled_min = array(num_events):
+                        with j = 0:
+                            while j < num_events:
+                                with event = EXPIRING.getEvent(branch, period, j):
+                                    # YES, NO, ONE, etc. macros defined in consensus/constants.se
+                                    if EVENTS.getMaxValue(event) != YES:
+                                        scaled[j] = 1
+                                        # TODO convert maxValue and minValue to fixed-point in storage
+                                        scaled_max[j] = fix(EVENTS.getMaxValue(event))
+                                        scaled_min[j] = fix(EVENTS.getMinValue(event))
+                                    else:
+                                        scaled[j] = 0
+                                        scaled_min[j] = NO
+                                        scaled_max[j] = YES
+                                j += 1
+                        with result = INTERPOLATE.interpolate(report_matrix, reputation, scaled, scaled_max, scaled_min, outsz=2*v_size):
+                            EXPIRING.setVSize(branch, period, v_size)
+                            EXPIRING.setReportsFilled(branch, period, slice(result, items=0, items=v_size))
+                            EXPIRING.setReportsMask(branch, period, slice(result, items=v_size, items=2*v_size))
+                            return(1)
+
+# inset('logging.se')
+inset('constants.se')
