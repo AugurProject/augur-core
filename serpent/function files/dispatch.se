@@ -126,4 +126,5 @@ def dispatch(branchNumber):
                             BRANCHES.incrementStep(branch)
                             return(step + 1)
 
-# inset('logging.se')
+# inset('../macros/logging.se')
+# inset('../macros/mock.se')

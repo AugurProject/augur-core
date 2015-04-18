@@ -78,5 +78,7 @@ def select_scores(branch, period, num_events, num_reports, v_size):
                                 EXPIRING.setAdjPrinComp(branch, period, adjusted_scores)
                                 return(1)
 
-# inset('logging.se')
-inset('constants.se')
+inset('../macros/constants.se')
+inset('../macros/fixed.se')
+# inset('../macros/logging.se')
+# inset('../macros/mock.se')
