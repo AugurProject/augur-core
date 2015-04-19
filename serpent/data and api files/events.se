@@ -71,6 +71,7 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes)
 		self.Events[ID].minValue = minValue
 		self.Events[ID].maxValue = maxValue
 		self.Events[ID].numOutcomes = numOutcomes
+		return(1)
 	else:
 		return(0)
 
