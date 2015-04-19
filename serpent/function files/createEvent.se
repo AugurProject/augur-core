@@ -70,12 +70,12 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     # send fee and bond
     if(CASH.balance(tx.origin)>=(42*2^64 + participationFactor*45)):
         if (!INFO.getCreator(eventID) && !EVENTS.getEventBranch(eventID) && CASH.send(eventID, 42*2^64) && CASH.send(branch, participationFactor*45)):
-            INFO.setInfo(eventID, description, tx.origin, participationFactor*45)
-            EVENTS.initializeEvent(eventID, branch, expirationDate, minValue, maxValue, numOutcomes)
             # see which future period it expires in && put the event in that bin
             # event voting periods - expDate / periodLength gives you the voting period #
             futurePeriod = (expDate / periodLength)
-            EXPEVENTS.addEvent(branch, futurePeriod, eventID)
-            return(eventID)
+            if(INFO.setInfo(eventID, description, tx.origin, participationFactor*45) && EVENTS.initializeEvent(eventID, branch, expirationDate, minValue, maxValue, numOutcomes) && EXPEVENTS.addEvent(branch, futurePeriod, eventID)):
+                return(eventID)
+            else:
+                return(0)
         else:
             return(0)
