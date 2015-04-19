@@ -83,8 +83,10 @@ def report(branch, report:arr, votePeriod, salt):
         reputation = REPORTING.getRepBalance(branch, tx.origin)
         # need to update stuff for quorem
         # && store the report && the rep value
-        EXPEVENTS.setReporterBallot(branch, votePeriod, tx.origin, report, reputation)
-        return(1)
+        if(EXPEVENTS.setReporterBallot(branch, votePeriod, tx.origin, report, reputation)):
+            return(1)
+        else:
+            return(0)
 
 # Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
 # Error -2: not in hash submitting timeframe
@@ -108,8 +110,10 @@ def submitReportHash(branch, reportHash, votePeriod):
         return(-1)
     if(residual < periodLength/2):
         # submit hash of (tx.origin, salt, Votes[])
-        EXPEVENTS.setReportHash(branch, votePeriod, tx.origin, reportHash)
-        return(1)
+        if(EXPEVENTS.setReportHash(branch, votePeriod, tx.origin, reportHash)):
+            return(1)
+        else:
+            return(0)
     else:
         return(-2)
 
