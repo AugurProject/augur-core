@@ -56,5 +56,7 @@ def sendReputation(branch, recver, value):
     if(senderBalance >= value):
         if(REPORTING.subtractRep(branch, senderIndex, value) && REPORTING.addRep(branch, receiverIndex, value)):
             return(value)
+        else:
+            return(0)
     else:
         return(0)
