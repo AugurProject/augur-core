@@ -61,7 +61,7 @@ def tokenize(reputation:arr, num_reports):
     with tokens = array(num_reports):
         with i = 0:
             while i < num_reports:
-                tokens[i] = reputation[i] * COINS * ONE
+                tokens[i] = reputation[i] * COINS
                 i += 1
             return(tokens, items=num_reports)
 
@@ -87,4 +87,4 @@ def covariance(wcd:arr, tokens:arr, num_reports, num_events):
 inset('../macros/constants.se')
 inset('../macros/fixed.se')
 inset('../macros/arrays.se')
-# inset('../macros/logging.se')
+inset('../macros/logging.se')

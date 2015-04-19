@@ -160,21 +160,6 @@ def tol(forecast, actual, fixed=True):
         print "RMSD tolerance exceeded:", r, ">=", tolerance
         raise
 
-def test_redeem(example):
-    reports, reputation, scaled, scaled_max, scaled_min = example()
-    
-    print BR("Forming new test genesis block")
-    s = t.state()
-    t.gas_limit = 100000000
-    s = t.state()
-
-    filename = "dispatch.se"
-    print(BG(filename))
-    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
-
-    result = c.dispatch(0)
-
-
 def test_consensus(example):
     reports, reputation, scaled, scaled_max, scaled_min = example()
 
@@ -189,7 +174,7 @@ def test_consensus(example):
     
     num_reports = len(reputation)
     num_events = len(reports[0])
-    v_size = num_reports * num_events
+    flatsize = num_reports * num_events
 
     reputation_fixed = map(fix, reputation)
     reports_fixed = map(fix, reports.ravel())
@@ -206,8 +191,8 @@ def test_consensus(example):
                            scaled_max_fixed,
                            scaled_min_fixed)
     result = np.array(result)
-    reports_filled = result[0:v_size].tolist()
-    reports_mask = result[v_size:].tolist()
+    reports_filled = result[0:flatsize].tolist()
+    reports_mask = result[flatsize:].tolist()
 
     if verbose:
         display(reports_filled, "reports (filled):", refold=num_events, show_all=True)
@@ -225,14 +210,14 @@ def test_consensus(example):
                       max_iterations,
                       max_components)
     result = np.array(result)
-    weighted_centered_data = result[0:v_size].tolist()
+    weighted_centered_data = result[0:flatsize].tolist()
     if verbose:
         display(weighted_centered_data,
                 "Weighted centered data:",
                 refold=num_events,
                 show_all=True)
 
-    lv = np.array(map(unfix, result[v_size:-2]))
+    lv = np.array(map(unfix, result[flatsize:-2]))
     wcd = np.array(fold(map(unfix, weighted_centered_data), num_events))
     wcd_init = wcd
     rep = map(unfix, reputation_fixed)
@@ -244,12 +229,11 @@ def test_consensus(example):
     alltokens = np.sum(tokens)
     # Serpent
     print "  - tokenize"
-    reptokens = c.tokenize(reputation, num_reports)
+    reptokens = c.tokenize(reputation_fixed, num_reports)
     if verbose:
         print BR("Tokens:")
         print BW("  Python: "), tokens
         print BW("  Serpent:"), np.array(map(unfix, reptokens)).astype(int)
-        print
 
     covmat = wcd.T.dot(np.diag(tokens)).dot(wcd) / float(alltokens - 1)
     totalvar = np.trace(covmat)
@@ -281,7 +265,7 @@ def test_consensus(example):
     #######
 
     # Python
-    iv = result[v_size:]
+    iv = result[flatsize:]
     variance_explained = 0
     nc = np.zeros(num_reports)
     negative = False
@@ -320,7 +304,7 @@ def test_consensus(example):
         print BW("  Nonconformity: "), np.round(nc, 6)
 
     # Serpent
-    loading_vector = result[v_size:].tolist()
+    loading_vector = result[flatsize:].tolist()
     data = weighted_centered_data
     scores = map(int, np.zeros(num_reports).tolist())
     var_exp = 0
@@ -395,8 +379,9 @@ def test_consensus(example):
     assert(len(set1) == len(set2))
     assert(len(result) == 2*num_reports)
 
-    # display(set1, "set1:", show_all=True)
-    # display(set2, "set2:", show_all=True)
+    if verbose:
+        display(set1, "set1:", show_all=True)
+        display(set2, "set2:", show_all=True)
 
     print "  - weighted_delta"
     result = c.weighted_delta(set1,
@@ -412,9 +397,10 @@ def test_consensus(example):
     assert(len(result) == 3*num_events)
     assert(len(old) == len(new1) == len(new2))
 
-    # display(old, "old:", show_all=True)
-    # display(new1, "new1:", show_all=True)
-    # display(new2, "new2:", show_all=True)
+    if verbose:
+        display(old, "old:", show_all=True)
+        display(new1, "new1:", show_all=True)
+        display(new2, "new2:", show_all=True)
 
     print "  - select_scores"
     adjusted_scores = c.select_scores(old,
@@ -425,8 +411,6 @@ def test_consensus(example):
                                       scores,
                                       num_reports,
                                       num_events)
-
-    # display(adjusted_scores, "adjusted_scores:", show_all=True)
 
     filename = "resolve.se"
     print(BG(filename))
@@ -448,7 +432,7 @@ def test_consensus(example):
                        num_events)
 
     result = np.array(result)
-    event_outcomes = result[0:num_events].tolist()
+    event_outcomes = result.tolist()
 
     filename = "payout.se"
     print(BG(filename))
@@ -549,7 +533,7 @@ def main():
 
     """
     examples = (
-        binary_input_example,
+        # binary_input_example,
         scalar_input_example,
         # randomized_inputs,
     )
