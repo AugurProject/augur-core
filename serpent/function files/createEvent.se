@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation 
+# Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -20,22 +20,22 @@
 # Any questions please contact joey@augur.net
 
 extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i]
-BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
+BRANCHES = 0x148a56efa88437f52b9b22020bf0e9fdc75350e1
 
 extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getEvent:iii:i, getEvents:ii:a, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
-EXPEVENTS = 0xb7b617b776e66cbae79606d2b6221501ad110090
+EXPEVENTS = 0xf20cfeb17a3266f640077c7426b0d4c5081ecf43
 
 extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
-INFO = 0x84ad0e89dbbbdfb18a59954addf10ad501525a01
+INFO = 0x7f8bab7072ba2acc779dbb96d625bc73f6e6ccaf
 
 extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
-CASH = 0x559b098076d35ddc7f5057bf28eb20d9cf183a99
+CASH = 0x70e1ca88480a4b5f719a0add9b557779b9691764
 
 extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, subtractRep:iii:i]
-REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
+REPORTING = 0xaab1a136fc3f3fce92fa1f8fe740e5e45ce6cde6
 
 extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
-EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
+EVENTS = 0x45b5293570e78207f1c6dc41ca3e171c76b3d6db
 
 # numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0
 # to 11.0 would be 11 outcomes (if incremented by 0.1)
@@ -43,7 +43,7 @@ EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
 # @return eventID if success
 # error messages otherwise
     # -1: we're either already past that date, branch doesn't exist, or description is bad
-    # 0: not enough money to pay fees or event already exists 
+    # 0: not enough money to pay fees or event already exists
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes):
     periodLength = BRANCHES.getPeriodLength(branch)
     if(periodLength && description!=0 && expDate>block.number):
@@ -70,12 +70,12 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     # send fee and bond
     if(CASH.balance(tx.origin)>=(42*2^64 + participationFactor*45)):
         if (!INFO.getCreator(eventID) && !EVENTS.getEventBranch(eventID) && CASH.send(eventID, 42*2^64) && CASH.send(branch, participationFactor*45)):
-            INFO.setInfo(eventID, description, tx.origin, participationFactor*45)
-            EVENTS.initializeEvent(eventID, branch, expirationDate, minValue, maxValue, numOutcomes)
             # see which future period it expires in && put the event in that bin
             # event voting periods - expDate / periodLength gives you the voting period #
             futurePeriod = (expDate / periodLength)
-            EXPEVENTS.addEvent(branch, futurePeriod, eventID)
-            return(eventID)
+            if(INFO.setInfo(eventID, description, tx.origin, participationFactor*45) && EVENTS.initializeEvent(eventID, branch, expirationDate, minValue, maxValue, numOutcomes) && EXPEVENTS.addEvent(branch, futurePeriod, eventID)):
+                return(eventID)
+            else:
+                return(0)
         else:
             return(0)
