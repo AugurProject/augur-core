@@ -24,7 +24,7 @@
 
 # Convert to fixed-point (base 2^64)
 macro fix($x):
-    $x * ONE
+    ONE * $x
 
 # Revert from fixed-point
 macro unfix($x):
