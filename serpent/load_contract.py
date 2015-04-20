@@ -19,52 +19,15 @@ And then finally you will have to unlock your account:
 This will prompt you for the password you chose earlier.
 '''
 import warnings; warnings.simplefilter('ignore')
+from colorama import init, Fore, Style
+from tests.gethrpc import GethRPC, dumps
 import serpent
-import socket
-import sys
-import json
 
-class GethRPC(object):
-    HOST, PORT = 'localhost', 8545
-    REQUEST = '''\
-POST / HTTP/1.1\r
-User-Agent: augur-loader/0.0\r
-Host: localhost:8545\r
-Accept: */*\r
-Content-Length: %d\r
-Content-Type: application/json\r
-\r
-%s'''
-    def __init__(self):
-        self.conn = socket.create_connection((GethRPC.HOST, GethRPC.PORT))
-        self._id = 1
-
-    def __json(self, name, args, kwds):
-        if 'sender' in kwds:
-            kwds['from'] = kwds.pop('sender')
-        params = []
-        if kwds: params.append(kwds)
-        if args: params.extend(list(args))
-        rpc_data = json.dumps({
-            'jsonrpc':'2.0',
-            'id': self._id,
-            'method': name,
-            'params': params})
-        request = GethRPC.REQUEST % (len(rpc_data), rpc_data)
-        self.conn.sendall(request)
-        response = self.conn.recv(4096)
-        self._id += 1
-        response_data = response.split('\r\n\r\n', 1)
-        return json.loads(response_data[1])
-
-    def __getattr__(self, name):
-        return lambda *args, **kwds: self.__json(name, args, kwds)
-
-if __name__ == '__main__':
-    rpc = GethRPC()
-    coinbase_data = rpc.eth_coinbase()
-    print json.dumps(coinbase_data, sort_keys=True, indent=4)
-    coinbase = coinbase_data['result']
-    evm = '0x' + serpent.compile(sys.argv[1]).encode('hex')
-    data = rpc.eth_sendTransaction(sender=coinbase, gas=hex(3000000), data=evm)
-    print json.dumps(data, sort_keys=True, indent=4)
+init()
+rpc = GethRPC()
+coinbase_data = rpc.eth_coinbase()
+print Style.BRIGHT + Fore.WHITE + dumps(coinbase_data)
+coinbase = coinbase_data['result']
+evm = '0x' + serpent.compile(sys.argv[1]).encode('hex')
+data = rpc.eth_sendTransaction(sender=coinbase, gas=hex(3000000), data=evm)
+print dumps(data)
