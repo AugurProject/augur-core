@@ -193,7 +193,7 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add event list to the market
-    save(self.Markets[marketID].events[0], events, items=eventNum)
+    save(self.Markets[marketID].events[0], events, items=len(events))
     self.Markets[marketID].lenEvents = len(events)
     self.Markets[marketID].tradingPeriod = tradingPeriod
     self.Markets[marketID].tradingFee = tradingFee
