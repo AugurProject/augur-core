@@ -76,13 +76,13 @@ def getWeightedCenteredData(branch, expDateIndex):
 	return(load(self.EventsExpDates[branch][expDateIndex].weightedCenteredData[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)
 
 def getCovarianceMatrixRow(branch, expDateIndex):
-    return(load(self.EventsExpDates[branch][expDateIndex].covarianceMatrixRow[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)
+    return(load(self.EventsExpDates[branch][expDateIndex].covarianceMatrixRow[0], items=self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
 
 def getDeflated(branch, expDateIndex):
     return(load(self.EventsExpDates[branch][expDateIndex].deflated[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)
 
 def getLoadingVector(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].loadingVector[0], items=self.EventsExpDates[branch][expDateIndex].numberEvents+1): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].loadingVector[0], items=self.EventsExpDates[branch][expDateIndex].numberEvents+2): arr)
 
 def getLatent(branch, expDateIndex):
     return(self.EventsExpDates[branch][expDateIndex].latent)
@@ -217,8 +217,8 @@ def setNewOne(branch, expDateIndex, newOne: arr):
 	return(1)
 
 def setNewTwo(branch, expDateIndex, newTwo: arr):
-	#if(!self.whitelist.check(msg.sender)):
-	#	return(-1)
+	# if(!self.whitelist.check(msg.sender)):
+	# 	return(-1)
 	save(self.EventsExpDates[branch][expDateIndex].new2[0], newTwo, items=len(newTwo))
 	return(1)
 

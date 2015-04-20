@@ -1,9 +1,8 @@
 #!/usr/bin/python
 import warnings; warnings.simplefilter('ignore')
-from load_contract import GethRPC
+from tests.gethrpc import GethRPC, dumps
 from pyepm.api import abi_data
 from colorama import init, Style, Fore
-import json
 import sys
 import re
 
@@ -44,11 +43,6 @@ if __name__ == '__main__':
     rpc = GethRPC()
     coinbase = rpc.eth_coinbase()['result']
     result = rpc.eth_sendTransaction(
-        sender=coinbase, gas=hex(3*10**4), to=c, data=data)
-    print json.dumps(result, sort_keys=True, indent=4)
-    print json.dumps(rpc.eth_getTransactionByHash(result['result']),
-                     sort_keys=True,
-                     indent=4)
-    print json.dumps(rpc.eth_call('pending', sender=coinbase, gas=3000000, to=c, data=data),
-                     sort_keys=True,
-                     indent=4)
+        sender=coinbase, gas=hex(3*10**6), to=c, data=data)
+    rpc.eth_getTransactionByHash(result['result'])
+    rpc.eth_call('pending', sender=coinbase, gas=hex(3*10**6), to=c, data=data)

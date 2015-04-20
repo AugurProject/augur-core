@@ -154,7 +154,7 @@ if __name__ == "__main__":
 
     print BR("Creating new test chain")
     s = t.state()
-    t.gas_limit = 100000000
+    t.gas_limit = 500000000
     s = t.state()
 
     # filename = "redeem_full.se"
@@ -167,7 +167,7 @@ if __name__ == "__main__":
 
     filename = r"../function files/dispatch.se"
     print(BG(filename))
-    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
+    c = s.abi_contract(os.path.join(ROOT, filename), gas=490000000)
     print "  - redeem"
     z = c.dispatch(branch)
     print z
