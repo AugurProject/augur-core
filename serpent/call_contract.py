@@ -19,6 +19,9 @@ contracts = {
     'createMarket' : '0x143ee2baa908ee3641e07c0bed464e7e2b1ad5a4',
 }
 
+contracts = {
+}
+
 def get_sym(arg):
     if type(arg) in (int, long):
         return 'i'
