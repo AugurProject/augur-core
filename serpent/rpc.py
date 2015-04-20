@@ -21,4 +21,3 @@ if __name__ == '__main__':
     rpc_call = sys.argv[1]
     args, kwds = parse_args()
     result = getattr(rpc, rpc_call)(*args, **kwds)
-    print dumps(result)

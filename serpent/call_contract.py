@@ -5,6 +5,9 @@ from pyepm.api import abi_data
 from colorama import init, Style, Fore
 import sys
 
+contracts = {
+}
+
 def get_sym(arg):
     if type(arg) in (int, long):
         return 'i'
