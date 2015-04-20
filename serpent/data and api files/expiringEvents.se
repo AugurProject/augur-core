@@ -4,7 +4,7 @@ data whitelist
 def init():
     self.whitelist = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation 
+# Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -33,7 +33,7 @@ def init():
 data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
 
 extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i]
-BRANCHES = 0x148a56efa88437f52b9b22020bf0e9fdc75350e1
+BRANCHES = 0xc00329685aceba16e4bb622c9afc38aee6aa19eb
 
 # @return all events in a branch and expiration period
 def getEvents(branch, expDateIndex):
@@ -154,7 +154,7 @@ def setReportsMask(branch, expDateIndex, reportsMask: arr):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
 	save(self.EventsExpDates[branch][expDateIndex].reportsMask[0], reportsMask, items=len(reportsMask))
-	return(1)	
+	return(1)
 
 def setWeightedCenteredData(branch, expDateIndex, weightedCenteredData: arr):
 	#if(!self.whitelist.check(msg.sender)):

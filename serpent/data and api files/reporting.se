@@ -2,7 +2,7 @@
 extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
 data whitelist
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation 
+# Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -23,7 +23,7 @@ data whitelist
 # Any questions please contact joey@augur.net
 
 extern branches.se: [addMarket:ii:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementStep:i:_, initializeBranch:iiii:i]
-BRANCHES = 0x148a56efa88437f52b9b22020bf0e9fdc75350e1
+BRANCHES = 0xc00329685aceba16e4bb622c9afc38aee6aa19eb
 
 # Reporting index is the branchID
 # Reporters index is the rep. address
@@ -53,7 +53,7 @@ def faucet():
 def getRepByIndex(branch, repIndex):
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
-# @return reputation value        
+# @return reputation value
 def getRepBalance(branch, address):
     repIndex = self.Reporting[branch].repIDtoIndex[address]
     if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
