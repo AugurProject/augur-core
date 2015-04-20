@@ -7,15 +7,15 @@ import sys
 import re
 
 contracts = {
-    'cash' : '0xc00329685aceba16e4bb622c9afc38aee6aa19eb',
-    'info' : '0xdff1e97c3d2885a843a985bcd9e0f078c20b24b9',
-    'branches' : '0xc00329685aceba16e4bb622c9afc38aee6aa19eb',
-    'events' : '0x947b07180469b17c6c299bc70c16fcd9ee9d5acc',
-    'expiringEvents' : '0x2491dee375afde12d3b443d0b3f9d686a1382158',
-    'fxpFunctions' : '0x82695a58b84bbcc90372d06e9b1d599ca2dd60cd',
-    'markets' : '0xdff1e97c3d2885a843a985bcd9e0f078c20b24b9',
-    'reporting' : '0x2491dee375afde12d3b443d0b3f9d686a1382158',
-    'createEvent' : '0x3c17de81765a65e39923084732697971dfa42071',
+    'cash' : '0xf1d413688a330839177173ce98c86529d0da6e5c',
+    'info' : '0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b',
+    'branches' : '0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe',
+    'events' : '0xb71464588fc19165cbdd1e6e8150c40df544467b',
+    'expiringEvents' : '0xd85f31c7688577f21af4dd278a1c0ce31174b0ef',
+    'fxpFunctions' : '0xdaf26192091449d14c03026f79272e410fce0908',
+    'markets' : '0x1be4396e7edf990dfda39f055b50a9df0a7ceccf',
+    'reporting' : '0xd1f7f020f24abca582366ec80ce2fef6c3c22233',
+    'createEvent' : '0x4bef64bebfe3acb7c1f6a67c1abd17aad77a103f',
     'createMarket' : '0x143ee2baa908ee3641e07c0bed464e7e2b1ad5a4',
 }
 

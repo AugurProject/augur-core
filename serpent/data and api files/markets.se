@@ -4,7 +4,7 @@ data whitelist
 def init():
     self.whitelist = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation 
+# Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -25,7 +25,7 @@ def init():
 # Any questions please contact joey@augur.net
 
 extern fx_macros.se: [fx_exp:i:i, fx_log:i:i]
-FXP = 0x82695a58b84bbcc90372d06e9b1d599ca2dd60cd
+FXP = 0xdaf26192091449d14c03026f79272e410fce0908
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market in the format of

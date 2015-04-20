@@ -33,7 +33,7 @@ def init():
 data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
 
 extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i]
-BRANCHES = 0xc00329685aceba16e4bb622c9afc38aee6aa19eb
+BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
 
 # @return all events in a branch and expiration period
 def getEvents(branch, expDateIndex):

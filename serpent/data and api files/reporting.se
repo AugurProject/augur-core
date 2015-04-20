@@ -23,7 +23,7 @@ data whitelist
 # Any questions please contact joey@augur.net
 
 extern branches.se: [addMarket:ii:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementStep:i:_, initializeBranch:iiii:i]
-BRANCHES = 0xc00329685aceba16e4bb622c9afc38aee6aa19eb
+BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
 
 # Reporting index is the branchID
 # Reporters index is the rep. address
