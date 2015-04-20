@@ -133,4 +133,6 @@ def score(scores:arr, lv:arr, wcd:arr, latent, num_reports, num_events):
         return(scores, items=num_reports)
 
 inset('../macros/constants.se')
+inset('../macros/fixed.se')
 inset('../macros/arrays.se')
+# inset('../macros/logging.se')

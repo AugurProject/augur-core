@@ -190,8 +190,8 @@ def lsLmsr(marketID):
 
 # check that msg.sender is one of our function contracts
 def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch):
-    if(!self.whitelist.check(msg.sender)):
-        return(-1)
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     # add event list to the market
     save(self.Markets[marketID].events[0], events, items=eventNum)
     self.Markets[marketID].lenEvents = len(events)
@@ -201,8 +201,8 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch):
     return(1)
 
 def addParticipant(market, address):
-    if(!self.whitelist.check(msg.sender)):
-        return(-1)
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     participantNumber = self.Markets[market].currentParticipant
     self.Markets[market].participants[participantNumber].participantID = address
     self.Markets[market].addr2participant[address] = participantNumber
@@ -210,20 +210,20 @@ def addParticipant(market, address):
     return(participantNumber)
 
 def modifyShares(marketID, outcome, amount):
-    if(!self.whitelist.check(msg.sender)):
-        return(-1)
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     sharesPurchased(marketID)[outcome] += amount
     return(1)
 
 def modifyParticipantShares(marketID, participantNumber, outcome, amount):
-    if(!self.whitelist.check(msg.sender)):
-        return(-1)
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     self.Markets[market].participants[participantNumber].shares[outcome] += amount
     return(1)
 
 def setWinningOutcomes(outcomes: arr):
-    if(!self.whitelist.check(msg.sender)):
-        return(-1)
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     # largest # of winning outcomes is 8
     i = 0
     while outcomes[i] != 0:
@@ -232,8 +232,8 @@ def setWinningOutcomes(outcomes: arr):
     return(1)
 
 def initialLiquiditySetup(marketID, alpha, cumScale, numOutcomes):
-    if(!self.whitelist.check(msg.sender)):
-        return(-1)
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     self.Markets[marketID].alpha = alpha
     self.Markets[marketID].cumulativeScale = cumScale
     self.Markets[marketID].numOutcomes = numOutcomes

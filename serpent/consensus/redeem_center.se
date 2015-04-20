@@ -40,9 +40,9 @@ EXPIRING = create("../data and api files/expiringEvents.se")
 REPORTING = create("../data and api files/reporting.se")
 CENTER = create("center.se")
 
-def center(branch, period, num_events, num_reports, v_size):
-    if !WHITELIST.check(msg.sender):
-        return(-1)
+def center(branch, period, num_events, num_reports, flatsize):
+    # if !WHITELIST.check(msg.sender):
+    #     return(-1)
     with reputation = array(num_reports):
         with i = 0:
             while i < num_reports:
@@ -54,7 +54,7 @@ def center(branch, period, num_events, num_reports, v_size):
                     with j = 0:
                         while j < num_events:
                             with event = EXPIRING.getEvent(branch, period, j):
-                                if EVENTS.getMaxValue(event) != YES:
+                                if fix(EVENTS.getMaxValue(event)) != YES:
                                     scaled[j] = 1
                                     scaled_min[j] = fix(EVENTS.getMinValue(event))
                                     scaled_max[j] = fix(EVENTS.getMaxValue(event))
@@ -63,26 +63,32 @@ def center(branch, period, num_events, num_reports, v_size):
                                     scaled_min[j] = NO
                                     scaled_max[j] = YES
                             j += 1
-                    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=v_size):
-                        with lflatsize = v_size + num_events + 1:
-                            with result = CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, outsz=lflatsize):
-                                EXPIRING.setWeightedCenteredData(branch, period, slice(result, items=0, items=v_size))
-                                EXPIRING.setLoadingVector(branch, period, slice(result, items=v_size, items=lflatsize))
+                    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=flatsize):
+                        with lflatsize = flatsize + num_events + 2:
+                            with result = CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, MAX_COMPONENTS, outsz=lflatsize):
+                                wcd = slice(result, items=0, items=flatsize)
+                                EXPIRING.setWeightedCenteredData(branch, period, wcd)
+                                loading_vector = slice(result, items=flatsize, items=lflatsize)
+                                EXPIRING.setLoadingVector(branch, period, loading_vector)
+                                # return(EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize):arr)
+                                # return(EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):arr)
                                 return(1)
 
-def covariance(branch, period, num_events, num_reports, v_size):
-    if !WHITELIST.check(msg.sender):
-        return(-1)
+def covariance(branch, period, num_events, num_reports, flatsize):
+    # if !WHITELIST.check(msg.sender):
+    #     return(-1)
     with reputation = array(num_reports):
         with i = 0:
             while i < num_reports:
                 reputation[i] = REPORTING.getRepByIndex(branch, i)
                 i += 1
         with reptokens = CENTER.tokenize(reputation, num_reports, outsz=num_reports):
-            with wcd = EXPIRING.getWeightedCenteredData(branch, period, outsz=v_size):
+            with wcd = EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize):
                 with covrow = CENTER.covariance(wcd, reptokens, num_reports, num_events, outsz=num_events):
                     EXPIRING.setCovarianceMatrixRow(branch, period, covrow)
                     EXPIRING.setDeflated(branch, period, wcd)
+                    # return(EXPIRING.getCovarianceMatrixRow(branch, period, outsz=num_events):arr)
+                    # return(EXPIRING.getDeflated(branch, period, outsz=flatsize):arr)
                     return(1)
 
 inset('../macros/constants.se')

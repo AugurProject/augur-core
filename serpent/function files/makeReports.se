@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation 
+# Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -20,19 +20,19 @@
 # Any questions please contact joey@augur.net
 
 extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i]
-BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
+BRANCHES = 0x148a56efa88437f52b9b22020bf0e9fdc75350e1
 
 extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getEvent:iii:i, getEvents:ii:a, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
-EXPEVENTS = 0xb7b617b776e66cbae79606d2b6221501ad110090
+EXPEVENTS = 0xf20cfeb17a3266f640077c7426b0d4c5081ecf43
 
 extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
-INFO = 0x84ad0e89dbbbdfb18a59954addf10ad501525a01
+INFO = 0x7f8bab7072ba2acc779dbb96d625bc73f6e6ccaf
 
 extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
-CASH = 0x559b098076d35ddc7f5057bf28eb20d9cf183a99
+CASH = 0x70e1ca88480a4b5f719a0add9b557779b9691764
 
 extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, subtractRep:iii:i]
-REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
+REPORTING = 0xaab1a136fc3f3fce92fa1f8fe740e5e45ce6cde6
 
 # a no vote is -2^64, a yes vote is 2^64 && a can't determine vote is 3*2^63 (a empty ballot is 0)
 # atm voters who do vote are req. to vote on all things in their respective ballots (rest just auto .5 them)
@@ -41,7 +41,7 @@ REPORTING = 0x175d90d83deec9e5b75cef6b0659958fe2fd24b1
     # ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[votePeriod].numberEvents
     # && loop through the events[] array fr2om 0 to numberEvents -1 for the votes list / order
 # people could report something like 16027*2^64 for a scalar
-# if people get behind on voting (e.g the redeem tx isn't called <1 period after it can be called) 
+# if people get behind on voting (e.g the redeem tx isn't called <1 period after it can be called)
     # voteperiod is an optional parameter only used in the scenario that we get behind on voting periods
     # so people will need to vote on periods that are upcoming even if our currentVotePeriod is a bit behind (e.g. if current expperiod is 7 you should vote on stuff from voteperiod 6 (and then upon period 8 you can't vote anymore))
 # @return 1 if success
@@ -83,8 +83,10 @@ def report(branch, report:arr, votePeriod, salt):
         reputation = REPORTING.getRepBalance(branch, tx.origin)
         # need to update stuff for quorem
         # && store the report && the rep value
-        EXPEVENTS.setReporterBallot(branch, votePeriod, tx.origin, report, reputation)
-        return(1)
+        if(EXPEVENTS.setReporterBallot(branch, votePeriod, tx.origin, report, reputation)):
+            return(1)
+        else:
+            return(0)
 
 # Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
 # Error -2: not in hash submitting timeframe
@@ -108,8 +110,10 @@ def submitReportHash(branch, reportHash, votePeriod):
         return(-1)
     if(residual < periodLength/2):
         # submit hash of (tx.origin, salt, Votes[])
-        EXPEVENTS.setReportHash(branch, votePeriod, tx.origin, reportHash)
-        return(1)
+        if(EXPEVENTS.setReportHash(branch, votePeriod, tx.origin, reportHash)):
+            return(1)
+        else:
+            return(0)
     else:
         return(-2)
 
@@ -156,7 +160,7 @@ def slashRep(branch, votePeriod, salt, report:arr, reporter):
 
             if(REPORTING.getReporterID(branch, reporterIndex)!=reporter):
                 return(-2)
-                
+
             reporterBalance = REPORTING.getRepBalance(branch, reporter)
 
             REPORTING.subtractRep(branch, reporterIndex, reporterBalance)

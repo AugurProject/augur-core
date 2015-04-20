@@ -39,9 +39,9 @@ EXPIRING = create("../data and api files/expiringEvents.se")
 REPORTING = create("../data and api files/reporting.se")
 RESOLVE = create("resolve.se")
 
-def smooth(branch, period, num_events, num_reports, v_size):
-    if !WHITELIST.check(msg.sender):
-        return(-1)
+def smooth(branch, period, num_events, num_reports, flatsize):
+    # if !WHITELIST.check(msg.sender):
+    #     return(-1)
     with reputation = array(num_reports):
         with i = 0:
             while i < num_reports:
@@ -50,12 +50,13 @@ def smooth(branch, period, num_events, num_reports, v_size):
             with adjusted_scores = EXPIRING.getAdjPrinComp(branch, period, outsz=num_reports):
                 with smooth_rep = RESOLVE.smooth(adjusted_scores, reputation, num_reports, num_events, outsz=num_reports):
                     EXPIRING.setSmoothRep(branch, period, smooth_rep)
+                    # return(EXPIRING.getSmoothRep(branch, period, outsz=num_reports):arr)
                     return(1)
 
-def resolve(branch, period, num_events, num_reports, v_size):
-    if !WHITELIST.check(msg.sender):
-        return(-1)
-    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=v_size):
+def resolve(branch, period, num_events, num_reports, flatsize):
+    # if !WHITELIST.check(msg.sender):
+    #     return(-1)
+    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=flatsize):
         with smooth_rep = EXPIRING.getSmoothRep(branch, period, outsz=num_reports):
             with scaled = array(num_events):
                 with scaled_max = array(num_events):
@@ -63,7 +64,7 @@ def resolve(branch, period, num_events, num_reports, v_size):
                         with j = 0:
                             while j < num_events:
                                 with event = EXPIRING.getEvent(branch, period, j):
-                                    if EVENTS.getMaxValue(event) != YES:
+                                    if fix(EVENTS.getMaxValue(event)) != YES:
                                         scaled[j] = 1
                                         scaled_min[j] = fix(EVENTS.getMinValue(event))
                                         scaled_max[j] = fix(EVENTS.getMaxValue(event))
@@ -74,9 +75,9 @@ def resolve(branch, period, num_events, num_reports, v_size):
                                 j += 1
                             with outcomes = RESOLVE.resolve(smooth_rep, reports_filled, scaled, scaled_max, scaled_min, num_reports, num_events, outsz=num_events):
                                 EXPIRING.setOutcomesFinal(branch, period, outcomes)
+                                # return(EXPIRING.getOutcomesFinal(branch, period, outsz=num_events):arr)
                                 return(1)
 
 inset('../macros/constants.se')
 inset('../macros/fixed.se')
 # inset('../macros/logging.se')
-# inset('../macros/mock.se')

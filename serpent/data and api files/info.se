@@ -2,7 +2,7 @@
 extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
 data whitelist
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation 
+# Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -53,8 +53,8 @@ def getCreationFee(ID):
 
 # @return 1 if success, 0 if creator already exists
 def setInfo(ID, description: str, creator, fee):
-	if(!self.whitelist.check(msg.sender)):
-		return(-1)
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	# check that msg.sender is one of our function contracts
 	if(self.Info[ID].creator == 0):
 		save(self.Info[ID].description[0], description, chars=len(description))

@@ -141,10 +141,11 @@ def tol(forecast, actual, fixed=True):
 if __name__ == "__main__":
     branch = 1
     period = 1    
-    reports, reputation, scaled, scaled_max, scaled_min = binary_input_example()
+    # reports, reputation, scaled, scaled_max, scaled_min = binary_input_example()
+    reports, reputation, scaled, scaled_max, scaled_min = scalar_input_example()
     num_reports = len(reputation)
     num_events = len(reports[0])
-    v_size = num_reports * num_events
+    flatsize = num_reports * num_events
 
     reputation_fixed = map(fix, reputation)
     reports_fixed = map(fix, reports.ravel())
@@ -153,11 +154,22 @@ if __name__ == "__main__":
 
     print BR("Creating new test chain")
     s = t.state()
-    t.gas_limit = 100000000
+    t.gas_limit = 500000000
     s = t.state()
 
-    filename = "redeem_interpolate.se"
+    # filename = "redeem_full.se"
+    # print(BG(filename))
+    # c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
+    # print "  - redeem"
+    # z = c.redeem(branch, period, num_events, num_reports, flatsize)
+    # print np.array(map(unfix, z))
+    # display(z, "Refolded:", refold=num_events)
+
+    filename = r"../function files/dispatch.se"
     print(BG(filename))
-    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
-    print "  - interpolate"
-    result = c.interpolate(branch, period, num_events, num_reports, v_size)
+    c = s.abi_contract(os.path.join(ROOT, filename), gas=490000000)
+    print "  - redeem"
+    z = c.dispatch(branch)
+    print z
+    # print np.array(map(unfix, z))
+    # display(z, "Refolded:", refold=num_events)

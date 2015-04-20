@@ -63,19 +63,20 @@ def getNumOutcomes(event):
 
 def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes):
 	# check that msg.sender is one of our function contracts
-	if(!self.whitelist.check(msg.sender)):
-		return(-1)
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	if(self.Events[ID].expirationDate==0):
 		self.Events[ID].branch = branch
 		self.Events[ID].expirationDate = expirationDate
 		self.Events[ID].minValue = minValue
 		self.Events[ID].maxValue = maxValue
 		self.Events[ID].numOutcomes = numOutcomes
+		return(1)
 	else:
 		return(0)
 
 def setOutcome(ID, outcome):
-	if(!self.whitelist.check(msg.sender)):
-		return(-1)
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	self.Events[ID].outcome = outcome
 	return(1)

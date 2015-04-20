@@ -45,11 +45,11 @@ CASH = create("../data and api files/cash.se")
 INFO = create("../data and api files/info.se")
 PAYOUT = create("payout.se")
 
-def payout(branch, period, num_events, num_reports, v_size):
-    if !WHITELIST.check(msg.sender):
-        return(-1)
+def payout(branch, period, num_events, num_reports, flatsize):
+    # if !WHITELIST.check(msg.sender):
+    #     return(-1)
     with smooth_rep = EXPIRING.getSmoothRep(branch, period, outsz=num_reports):
-        with reports_mask = EXPIRING.getReportsMask(branch, period, outsz=v_size):
+        with reports_mask = EXPIRING.getReportsMask(branch, period, outsz=flatsize):
             with outcomes = EXPIRING.getOutcomesFinal(branch, period, outsz=num_events):
                 with reporter_payouts = PAYOUT.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outsz=num_reports):
                     # get event ID for each event by taking the x index in the reports arrays
@@ -81,6 +81,7 @@ def payout(branch, period, num_events, num_reports, v_size):
                             CASH.addCash(REPORTING.getReporterID(branch, i), fixed_multiply(CASH.balance(branch), reporter_payouts[i]))
                             i += 1
                         CASH.subtractCash(branch, CASH.balance(branch))
+                        # return(reporter_payouts:arr)
                         return(1)
 
 inset('../macros/constants.se')

@@ -86,8 +86,8 @@ def getBranch(branchNumber):
 
 # check that msg.sender is one of our function contracts
 def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee):
-	if(!self.whitelist.check(msg.sender)):
-		return(-1)
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	if(self.Branches[ID].periodLength==0):
 		self.Branches[ID].currentVotePeriod = currentVotePeriod
 		self.Branches[ID].periodLength = periodLength
@@ -100,27 +100,27 @@ def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee):
 
 # check that msg.sender is one of our function contracts
 def incrementStep(branch):
-	if(!self.whitelist.check(msg.sender)):
-		return(-1)
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	self.Branches[branch].step += 1
 	return(1)
 
 def setStep(branch, step):
-	if(!self.whitelist.check(msg.sender)):
-		return(-1)
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	self.Branches[branch].step = step
 	return(1)
 
 def incrementPeriod(branch):
-	if(!self.whitelist.check(msg.sender)):
-		return(-1)
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	self.Branches[branch].currentVotePeriod += 1
 	return(1)
 
 # check that msg.sender is one of our function contracts
 def addMarket(branch, market):
-	if(!self.whitelist.check(msg.sender)):
-		return(-1)
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	numMarkets = self.Branches[branch].numMarkets
 	self.Branches[branch].markets[numMarkets] = market
 	self.Branches[branch].numMarkets += 1
@@ -130,13 +130,13 @@ def getSubstep(branch):
     return(self.Branches[branch].substep)
 
 def incrementSubstep(branch):
-    if(!self.whitelist.check(msg.sender)):
-        return(-1)
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     self.Branches[branch].substep += 1
     return(1)
 
 def setSubstep(branch, substep):
-    if(!self.whitelist.check(msg.sender)):
-        return(-1)
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     self.Branches[branch].substep = substep
     return(1)
