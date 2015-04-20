@@ -22,12 +22,11 @@ import warnings; warnings.simplefilter('ignore')
 from colorama import init, Fore, Style
 from tests.gethrpc import GethRPC, dumps
 import serpent
+import sys
 
 init()
 rpc = GethRPC()
 coinbase_data = rpc.eth_coinbase()
-print Style.BRIGHT + Fore.WHITE + dumps(coinbase_data)
 coinbase = coinbase_data['result']
 evm = '0x' + serpent.compile(sys.argv[1]).encode('hex')
 data = rpc.eth_sendTransaction(sender=coinbase, gas=hex(3000000), data=evm)
-print dumps(data)
