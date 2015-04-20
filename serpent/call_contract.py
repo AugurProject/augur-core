@@ -13,13 +13,10 @@ contracts = {
     'events' : '0xb71464588fc19165cbdd1e6e8150c40df544467b',
     'expiringEvents' : '0xd85f31c7688577f21af4dd278a1c0ce31174b0ef',
     'fxpFunctions' : '0xdaf26192091449d14c03026f79272e410fce0908',
-    'markets' : '0x1be4396e7edf990dfda39f055b50a9df0a7ceccf',
+    'markets' : '0x79652f18f281c113fac20e8434e223228340e383',
     'reporting' : '0xd1f7f020f24abca582366ec80ce2fef6c3c22233',
     'createEvent' : '0x4bef64bebfe3acb7c1f6a67c1abd17aad77a103f',
-    'createMarket' : '0x143ee2baa908ee3641e07c0bed464e7e2b1ad5a4',
-}
-
-contracts = {
+    'createMarket' : '0x79652f18f281c113fac20e8434e223228340e383',
 }
 
 def get_sym(arg):
@@ -46,6 +43,6 @@ if __name__ == '__main__':
     rpc = GethRPC()
     coinbase = rpc.eth_coinbase()['result']
     result = rpc.eth_sendTransaction(
-        sender=coinbase, gas=hex(3*10**6), to=c, data=data)
+        sender=coinbase, gas=hex(3000000), to=c, data=data)
     rpc.eth_getTransactionByHash(result['result'])
-    rpc.eth_call('pending', sender=coinbase, gas=hex(3*10**6), to=c, data=data)
+    rpc.eth_call('pending', sender=coinbase, gas=hex(7000000), to=c, data=data)
