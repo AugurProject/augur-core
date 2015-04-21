@@ -13,7 +13,7 @@ contracts = {
     'events' : '0xb71464588fc19165cbdd1e6e8150c40df544467b',
     'expiringEvents' : '0xd85f31c7688577f21af4dd278a1c0ce31174b0ef',
     'fxpFunctions' : '0xdaf26192091449d14c03026f79272e410fce0908',
-    'markets' : '0x79652f18f281c113fac20e8434e223228340e383',
+    'markets' : '0x65100915863c7c8d83cc3298d0b15880a01b1eda',
     'reporting' : '0xd1f7f020f24abca582366ec80ce2fef6c3c22233',
     'createEvent' : '0x4bef64bebfe3acb7c1f6a67c1abd17aad77a103f',
     'createMarket' : '0x79652f18f281c113fac20e8434e223228340e383',
@@ -45,4 +45,4 @@ if __name__ == '__main__':
     result = rpc.eth_sendTransaction(
         sender=coinbase, gas=hex(3000000), to=c, data=data)
     rpc.eth_getTransactionByHash(result['result'])
-    rpc.eth_call('pending', sender=coinbase, gas=hex(7000000), to=c, data=data)
+    rpc.eth_call('pending', sender=coinbase, gas=hex(3000000), to=c, data=data)
