@@ -75,38 +75,38 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                                         with active_reputation = array(num_present[i]):
                                                             with active_reports = array(num_present[i]):
                                                                 with nan_indices = array(num_reports - num_present[i]):
-                                                                    with nan_index = 0:
-                                                                        with active_index = 0:
-                                                                            with j = 0:
-                                                                                while j < num_reports:
-                                                                                    with idx = i + j*num_reports:
-                                                                                        if scaled_reports[idx] == NA:
-                                                                                            nan_indices[nan_index] = idx
-                                                                                            nan_index += 1
-                                                                                        else:
-                                                                                            total_active_reputation += reputation[j]
-                                                                                            active_reputation[active_index] = reputation[j]
-                                                                                            active_reports[active_index] = scaled_reports[idx]
-                                                                                            active_index += 1
-                                                                                    j += 1
-                                                                    with guess = 0:
-                                                                        if scaled[i] == 0:
-                                                                            with j = 0:
-                                                                                while j < num_present[i]:
-                                                                                    active_reputation[j] = fixed_divide(active_reputation[j], total_active_reputation)
-                                                                                    guess += fixed_multiply(active_reputation[j], active_reports[j])
-                                                                                    j += 1
-                                                                            guess = catch(guess)
+                                                                    nan_index = 0
+                                                                    active_index = 0
+                                                                    j = 0
+                                                                    while j < num_reports:
+                                                                        idx = i + j*num_reports
+                                                                        if scaled_reports[idx] == NA:
+                                                                            nan_indices[nan_index] = idx
+                                                                            nan_index += 1
                                                                         else:
-                                                                            with j = 0:
-                                                                                while j < num_present[i]:
-                                                                                    active_reputation[j] = fixed_divide(active_reputation[j], total_active_reputation)
-                                                                                    j += 1
-                                                                            guess = weighted_median(active_reports, active_reputation)
-                                                                        with j = 0:
-                                                                            while j < num_reports - num_present[i]:
-                                                                                reports_interp[nan_indices[j]] = guess
-                                                                                j += 1
+                                                                            total_active_reputation += reputation[j]
+                                                                            active_reputation[active_index] = reputation[j]
+                                                                            active_reports[active_index] = scaled_reports[idx]
+                                                                            active_index += 1
+                                                                        j += 1
+                                                                    guess = 0
+                                                                    if scaled[i] == 0:
+                                                                        j = 0
+                                                                        while j < num_present[i]:
+                                                                            active_reputation[j] = fixed_divide(active_reputation[j], total_active_reputation)
+                                                                            guess += fixed_multiply(active_reputation[j], active_reports[j])
+                                                                            j += 1
+                                                                        guess = catch(guess)
+                                                                    else:
+                                                                        j = 0
+                                                                        while j < num_present[i]:
+                                                                            active_reputation[j] = fixed_divide(active_reputation[j], total_active_reputation)
+                                                                            j += 1
+                                                                        guess = weighted_median(active_reports, active_reputation)
+                                                                    j = 0
+                                                                    while j < num_reports - num_present[i]:
+                                                                        reports_interp[nan_indices[j]] = guess
+                                                                        j += 1
                                                 i += 1
                                 else:
                                     with i = 0:
@@ -119,4 +119,4 @@ inset('../macros/constants.se')
 inset('../macros/fixed.se')
 inset('../macros/arrays.se')
 inset('../macros/wmedian.se')
-inset('../macros/logging.se')
+# inset('../macros/logging.se')

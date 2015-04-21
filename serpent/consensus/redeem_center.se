@@ -70,8 +70,6 @@ def center(branch, period, num_events, num_reports, flatsize):
                                 EXPIRING.setWeightedCenteredData(branch, period, wcd)
                                 loading_vector = slice(result, items=flatsize, items=lflatsize)
                                 EXPIRING.setLoadingVector(branch, period, loading_vector)
-                                # return(EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize):arr)
-                                # return(EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):arr)
                                 return(1)
 
 def covariance(branch, period, num_events, num_reports, flatsize):
@@ -87,11 +85,8 @@ def covariance(branch, period, num_events, num_reports, flatsize):
                 with covrow = CENTER.covariance(wcd, reptokens, num_reports, num_events, outsz=num_events):
                     EXPIRING.setCovarianceMatrixRow(branch, period, covrow)
                     EXPIRING.setDeflated(branch, period, wcd)
-                    # return(EXPIRING.getCovarianceMatrixRow(branch, period, outsz=num_events):arr)
-                    # return(EXPIRING.getDeflated(branch, period, outsz=flatsize):arr)
                     return(1)
 
 inset('../macros/constants.se')
 inset('../macros/fixed.se')
 # inset('../macros/logging.se')
-# inset('../macros/mock.se')

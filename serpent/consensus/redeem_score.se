@@ -48,14 +48,12 @@ def blank(branch, period, num_events, num_reports, flatsize):
         # - if element ne_plus_2 is zero, we're on the first component, so set the last
         #   element equal to MAX_COMPONENTS
         # - otherwise, decrement the last element
-        with components_remaining = EXPIRING.getComponentsRemaining(branch, period, num_events+1):
-            if components_remaining == 0:
-                components_remaining = MAX_COMPONENTS
+        with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+            if loading_vector[num_events+1] == 0:
+                EXPIRING.setLoadingVector(branch, period, SCORE.blank(MAX_COMPONENTS, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
             else:
-                components_remaining -= 1
-        with loading_vector = SCORE.blank(components_remaining, MAX_ITERATIONS, num_events, outsz=ne_plus_2):
-            EXPIRING.setLoadingVector(branch, period, loading_vector)
-            # return(EXPIRING.getLoadingVector(branch, period, outsz=ne_plus_2):arr)
+                EXPIRING.setLoadingVector(branch, period, SCORE.blank(loading_vector[num_events+1]-1, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
+            BRANCHES.incrementSubstep(branch)
             return(1)
 
 def loadings(branch, period, num_events, num_reports, flatsize):

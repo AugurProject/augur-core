@@ -87,9 +87,6 @@ def getLoadingVector(branch, expDateIndex):
 def getLatent(branch, expDateIndex):
     return(self.EventsExpDates[branch][expDateIndex].latent)
 
-def getComponentsRemaining(branch, expDateIndex, loadingVectorSize):
-    return(self.EventsExpDates[branch][expDateIndex].loadingVector[loadingVectorSize-1])
-
 def getScores(branch, expDateIndex):
 	return(load(self.EventsExpDates[branch][expDateIndex].scores[0], items=(self.EventsExpDates[branch][expDateIndex].vSize/self.EventsExpDates[branch][expDateIndex].numberEvents)): arr)
 

@@ -30,5 +30,5 @@ macro BAD: 3 * 2^63
 macro COINS: 10^6
 macro CATCH_TOLERANCE: 2^64 / 10
 macro MAX_ITERATIONS: 5
-macro MAX_COMPONENTS: 5
+macro MAX_COMPONENTS: 2
 macro BOND: 42 * ONE
