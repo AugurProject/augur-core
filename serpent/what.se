@@ -1,3 +1,0 @@
-def test(events: arr):
-	return(events[0])
-
