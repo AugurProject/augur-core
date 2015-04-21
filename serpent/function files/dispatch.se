@@ -34,6 +34,10 @@ extern redeem_adjust.se: [reputation_delta:iiiii:i, select_scores:iiiii:i, weigh
 extern redeem_resolve.se: [resolve:iiiii:i, smooth:iiiii:i]
 extern redeem_payout.se: [payout:iiiii:i]
 
+EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
+REPORTING = 0xd1f7f020f24abca582366ec80ce2fef6c3c22233
+BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
+
 EVENTS = create("../data and api files/events.se")
 EXPIRING = create("../data and api files/expiringEvents.se")
 REPORTING = create("../data and api files/reporting.se")

@@ -278,5 +278,3 @@ def moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod):
         # sub and set old period event to 0 poss.?
         x += 1
     return(1)
-
-inset('../macros/logging.se')

@@ -37,6 +37,19 @@ extern adjust.se: [reputation_delta:aii:a, select_scores:aaaaaaii:a, weighted_de
 extern resolve.se: [resolve:aaaaaii:a, smooth:aaii:a]
 extern payout.se: [payout:aaaii:a]
 
+# EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
+# EXPIRING = 
+# REPORTING = 0xd1f7f020f24abca582366ec80ce2fef6c3c22233
+# BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
+# CASH = 0xf1d413688a330839177173ce98c86529d0da6e5c
+# INFO = 0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b
+# INTERPOLATE =
+# CENTER =
+# SCORE =
+# ADJUST =
+# RESOLVE =
+# PAYOUT =
+
 EVENTS = create("../data and api files/events.se")
 EXPIRING = create("../data and api files/expiringEvents.se")
 REPORTING = create("../data and api files/reporting.se")
@@ -49,7 +62,6 @@ SCORE = create("../consensus/score.se")
 ADJUST = create("../consensus/adjust.se")
 RESOLVE = create("../consensus/resolve.se")
 PAYOUT = create("../consensus/payout.se")
-
 
 # - 50% of fees already distributed to market creators
 #   all remaining fees go to reporters
