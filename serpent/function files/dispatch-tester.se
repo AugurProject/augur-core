@@ -109,8 +109,6 @@ def dispatch(branchNumber):
                                                             reports_filled = slice(reports_interp, items=0, items=flatsize)
                                                             EXPIRING.setReportsFilled(branch, period, reports_filled)
                                                             EXPIRING.setReportsMask(branch, period, slice(reports_interp, items=flatsize, items=flatsize_x_2))
-                                                            # return(reports_filled:arr)
-                                                            # return(1)
 
                             #############
                             # center.se #
@@ -145,9 +143,6 @@ def dispatch(branchNumber):
                                                             EXPIRING.setWeightedCenteredData(branch, period, wcd)
                                                             loading_vector = slice(result, items=flatsize, items=lflatsize)
                                                             EXPIRING.setLoadingVector(branch, period, loading_vector)
-                                                            # return(EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize):arr)
-                                                            # return(EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):arr)
-                                                            # return(1)
 
                             # covariance
                             elif step == 2:
@@ -161,9 +156,6 @@ def dispatch(branchNumber):
                                             with covrow = CENTER.covariance(wcd, reptokens, num_reports, num_events, outsz=num_events):
                                                 EXPIRING.setCovarianceMatrixRow(branch, period, covrow)
                                                 EXPIRING.setDeflated(branch, period, wcd)
-                                                # return(EXPIRING.getCovarianceMatrixRow(branch, period, outsz=num_events):arr)
-                                                # return(EXPIRING.getDeflated(branch, period, outsz=flatsize):arr)
-                                                # return(1)
 
                             ############
                             # score.se #
@@ -176,7 +168,6 @@ def dispatch(branchNumber):
                                 # with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
                                 while BRANCHES.getSubstep(branch) < 5:
                                     substep = BRANCHES.getSubstep(branch)
-                                    log(step, substep)
                                     if substep == 4:
                                         # more = REDEEM_SCORE.score(branch, period, num_events, num_reports, flatsize)
                                         with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
@@ -198,7 +189,6 @@ def dispatch(branchNumber):
                                             # BRANCHES.setSubstep(branch, 0) # reset substep
                                             BRANCHES.incrementSubstep(branch) # exit loop (testing only)
                                             BRANCHES.incrementStep(branch) # next step
-                                            # return(4) # step
 
                                     elif substep == 0:
                                         # REDEEM_SCORE.blank(branch, period, num_events, num_reports, flatsize)
@@ -207,15 +197,11 @@ def dispatch(branchNumber):
                                             #   element equal to MAX_COMPONENTS
                                             # - otherwise, decrement the last element
                                             with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
-                                                with components_remaining = loading_vector[num_events+1]:
-                                                    if components_remaining == 0:
-                                                        components_remaining = MAX_COMPONENTS
-                                                    else:
-                                                        components_remaining -= 1
-                                                    loading_vector = SCORE.blank(components_remaining, MAX_ITERATIONS, num_events, outsz=ne_plus_2)
-                                                    EXPIRING.setLoadingVector(branch, period, loading_vector)
-                                                    BRANCHES.incrementSubstep(branch)
-                                                    # return(substep + 1)
+                                                if loading_vector[num_events+1] == 0:
+                                                    EXPIRING.setLoadingVector(branch, period, SCORE.blank(MAX_COMPONENTS, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
+                                                else:
+                                                    EXPIRING.setLoadingVector(branch, period, SCORE.blank(loading_vector[num_events+1]-1, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
+                                                BRANCHES.incrementSubstep(branch)
 
                                     #######################
                                     # loop MAX_ITERATIONS #
@@ -241,12 +227,8 @@ def dispatch(branchNumber):
                                                         else:
                                                             # return(1)
                                                             more = 1
-                                        if more == 1:
-                                            substep = 1
-                                            # return(1) # substep
-                                        else:
+                                        if more == 0:
                                             BRANCHES.incrementSubstep(branch)
-                                            # return(substep + 1)
 
                                     ############
                                     # end loop #
@@ -258,7 +240,6 @@ def dispatch(branchNumber):
                                                 EXPIRING.setLatent(branch, period, SCORE.latent(covrow, loading_vector, num_events))
                                                 EXPIRING.setCovarianceMatrixRow(branch, period, covrow)
                                                 BRANCHES.incrementSubstep(branch)
-                                                # return(substep + 1)
 
                                     elif substep == 3:
                                         # REDEEM_SCORE.deflate(branch, period, num_events, num_reports, flatsize)
@@ -267,7 +248,6 @@ def dispatch(branchNumber):
                                                 deflated = SCORE.deflate(loading_vector, deflated, num_reports, num_events, outsz=flatsize)
                                                 EXPIRING.setDeflated(branch, period, deflated)
                                                 BRANCHES.incrementSubstep(branch)
-                                                # return(substep + 1)
 
                             #############
                             # adjust.se #
@@ -280,9 +260,6 @@ def dispatch(branchNumber):
                                         with sets = ADJUST.reputation_delta(scores, num_reports, num_events, outsz=nr_x_2):
                                             EXPIRING.setSetOne(branch, period, slice(sets, items=0, items=num_reports))
                                             EXPIRING.setSetTwo(branch, period, slice(sets, items=num_reports, items=nr_x_2))
-                                            # return(EXPIRING.getSetOne(branch, period, outsz=num_reports):arr)
-                                            # return(EXPIRING.getSetTwo(branch, period, outsz=num_reports):arr)
-                                            # return(1)
 
                             elif step == 5:
                                 # weighted_delta
@@ -300,10 +277,6 @@ def dispatch(branchNumber):
                                                                 EXPIRING.setOld(branch, period, slice(wsets, items=0, items=num_events))
                                                                 EXPIRING.setNewOne(branch, period, slice(wsets, items=num_events, items=ne_x_2))
                                                                 EXPIRING.setNewTwo(branch, period, slice(wsets, items=ne_x_2, items=ne_x_3))
-                                                                # return(EXPIRING.returnOld(branch, period, outsz=num_events):arr)
-                                                                # return(EXPIRING.getNewOne(branch, period, outsz=num_events):arr)
-                                                                # return(EXPIRING.getNewTwo(branch, period, outsz=num_events):arr)
-                                                                # return(1)
 
                             elif step == 6:
                                 # select_scores
@@ -315,8 +288,6 @@ def dispatch(branchNumber):
                                                     with scores = EXPIRING.getScores(branch, period, outsz=num_reports):
                                                         with adjusted_scores = ADJUST.select_scores(old, new1, new2, set1, set2, scores, num_reports, num_events, outsz=num_reports):
                                                             EXPIRING.setAdjPrinComp(branch, period, adjusted_scores)
-                                                            # return(EXPIRING.getAdjPrinComp(branch, period, outsz=num_reports):arr)
-                                                            # return(1)
 
 
                             elif step == 7:
@@ -332,8 +303,6 @@ def dispatch(branchNumber):
                                         with adjusted_scores = EXPIRING.getAdjPrinComp(branch, period, outsz=num_reports):
                                             with smooth_rep = RESOLVE.smooth(adjusted_scores, reputation, num_reports, num_events, outsz=num_reports):
                                                 EXPIRING.setSmoothRep(branch, period, smooth_rep)
-                                                # return(EXPIRING.getSmoothRep(branch, period, outsz=num_reports):arr)
-                                                # return(1)
 
                             elif step == 8:
                                 with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=flatsize):
@@ -355,8 +324,6 @@ def dispatch(branchNumber):
                                                             j += 1
                                                         with outcomes = RESOLVE.resolve(smooth_rep, reports_filled, scaled, scaled_max, scaled_min, num_reports, num_events, outsz=num_events):
                                                             EXPIRING.setOutcomesFinal(branch, period, outcomes)
-                                                            # return(EXPIRING.getOutcomesFinal(branch, period, outsz=num_events):arr)
-                                                            # return(1)
 
                                 #############
                                 # payout.se #

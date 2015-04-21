@@ -77,21 +77,21 @@ def dispatch(branchNumber):
                                     with substep = loading_vector[num_events+1]:
                                         if substep == 4:
                                             more = REDEEM_SCORE.score(branch, period, num_events, num_reports, flatsize)
+                                            BRANCHES.setSubstep(branch, 0)
                                             if more == 1:
-                                                return(3) # step
+                                                return(step)
                                             else:
-                                                BRANCHES.setSubstep(branch, 0) # reset substep
-                                                BRANCHES.incrementStep(branch) # next step
-                                                return(4) # step
+                                                BRANCHES.incrementStep(branch)
+                                                return(step + 1)
                                         elif substep == 0:
                                             REDEEM_SCORE.blank(branch, period, num_events, num_reports, flatsize)
                                         #######################
                                         # loop MAX_ITERATIONS #
                                         #######################
                                         elif substep == 1:
-                                            more = REDEEM_SCORE.loadings(branch, period, num_events, num_reports, flatsize)
-                                            if more == 1:
-                                                return(1) # substep
+                                            if REDEEM_SCORE.loadings(branch, period, num_events, num_reports, flatsize) == 0:
+                                                BRANCHES.incrementSubstep(branch)
+                                            return(step)
                                         ############
                                         # end loop #
                                         ############
@@ -100,7 +100,7 @@ def dispatch(branchNumber):
                                         elif substep == 3:
                                             REDEEM_SCORE.deflate(branch, period, num_events, num_reports, flatsize)           
                                         BRANCHES.incrementSubstep(branch)
-                                        return(substep + 1)
+                                        return(step)
                             ############
                             # end loop #
                             ############
@@ -116,10 +116,3 @@ def dispatch(branchNumber):
                                 REDEEM_RESOLVE.resolve(branch, period, num_events, num_reports, flatsize)
                             BRANCHES.incrementStep(branch)
                             return(step + 1)
-
-inset('../macros/constants.se')
-inset('../macros/fixed.se')
-inset('../macros/arrays.se')
-inset('../macros/wmedian.se')
-inset('../macros/logging.se')
-inset('../macros/mock.se')
