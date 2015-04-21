@@ -120,3 +120,9 @@ macro weighted_median($data, $weights):
                                         else:
                                             wmedian = sorted_data[idx-1]
                 wmedian
+
+# Weighted median of an array
+def weighted_median(data:arr, weights:arr):
+    return(weighted_median(data, weights))
+
+inset('../macros/arrays.se')

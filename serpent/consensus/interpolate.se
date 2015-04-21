@@ -22,6 +22,10 @@
 #
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
+extern statistics.se: [weighted_median:aa:i]
+
+STATISTICS = create("statistics.se")
+
 def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
     # returns:
     #   reports_filled: [0, flatsize - 1]
@@ -102,7 +106,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                                                         while j < num_present[i]:
                                                                             active_reputation[j] = fixed_divide(active_reputation[j], total_active_reputation)
                                                                             j += 1
-                                                                        guess = weighted_median(active_reports, active_reputation)
+                                                                        guess = STATISTICS.weighted_median(active_reports, active_reputation)
                                                                     j = 0
                                                                     while j < num_reports - num_present[i]:
                                                                         reports_interp[nan_indices[j]] = guess
@@ -118,5 +122,3 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
 inset('../macros/constants.se')
 inset('../macros/fixed.se')
 inset('../macros/arrays.se')
-inset('../macros/wmedian.se')
-# inset('../macros/logging.se')

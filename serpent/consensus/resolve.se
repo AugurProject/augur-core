@@ -22,6 +22,10 @@
 #
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
+extern statistics.se: [weighted_median:aa:i]
+
+STATISTICS = create("statistics.se")
+
 # Absolute value of all array elements
 macro array_abs($a):
     with $len = len($a):
@@ -73,7 +77,7 @@ def resolve(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:
                                     while j < num_reports:
                                         active_reports[j] = reports[i + j*num_events]
                                         j += 1
-                                outcomes_raw[i] = weighted_median(active_reports, smooth_rep)
+                                outcomes_raw[i] = STATISTICS.weighted_median(active_reports, smooth_rep)
                         else:
                             with j = 0:
                                 while j < num_reports:
@@ -116,5 +120,3 @@ def resolve(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:
 inset('../macros/constants.se')
 inset('../macros/fixed.se')
 inset('../macros/arrays.se')
-inset('../macros/wmedian.se')
-# inset('../macros/logging.se')

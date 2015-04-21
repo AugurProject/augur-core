@@ -546,8 +546,7 @@ def test_dispatch(example):
     print(BG(filename))
     c = s.abi_contract(os.path.join(ROOT, filename), gas=690000000)
     print "  - dispatch"
-    z = c.dispatch(branch)
-    print z
+    c.dispatch(branch)
 
 def main():
     """
