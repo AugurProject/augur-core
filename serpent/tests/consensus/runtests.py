@@ -498,6 +498,57 @@ def test_consensus(example):
     if fails == 0:
         print BC("Tests passed!")
 
+def test_redeem(example):
+    reports, reputation, scaled, scaled_max, scaled_min = example()
+    branch = 1
+    period = 1
+    num_reports = len(reputation)
+    num_events = len(reports[0])
+    flatsize = num_reports * num_events
+
+    reputation_fixed = map(fix, reputation)
+    reports_fixed = map(fix, reports.ravel())
+    scaled_max_fixed = map(fix, scaled_max)
+    scaled_min_fixed = map(fix, scaled_min)
+
+    print BR("Creating new test chain")
+    s = t.state()
+    t.gas_limit = 750000000
+    s = t.state()
+
+    filename = "redeem_full.se"
+    print(BG(filename))
+    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
+    print "  - redeem"
+    z = c.redeem(branch, period, num_events, num_reports, flatsize)
+    print np.array(map(unfix, z))
+    display(z, "Refolded:", refold=num_events)
+
+def test_dispatch(example):
+    reports, reputation, scaled, scaled_max, scaled_min = example()
+    branch = 1
+    period = 1
+    num_reports = len(reputation)
+    num_events = len(reports[0])
+    flatsize = num_reports * num_events
+
+    reputation_fixed = map(fix, reputation)
+    reports_fixed = map(fix, reports.ravel())
+    scaled_max_fixed = map(fix, scaled_max)
+    scaled_min_fixed = map(fix, scaled_min)
+
+    print BR("Creating new test chain")
+    s = t.state()
+    t.gas_limit = 750000000
+    s = t.state()
+
+    filename = r"../function files/dispatch-tester.se"
+    print(BG(filename))
+    c = s.abi_contract(os.path.join(ROOT, filename), gas=690000000)
+    print "  - dispatch"
+    z = c.dispatch(branch)
+    print z
+
 def main():
     """
     To run consensus, call the Serpent functions in this order:
@@ -539,6 +590,8 @@ def main():
     )
     for example in examples:   
         test_consensus(example)
+        test_redeem(example)
+        test_dispatch(example)
 
 if __name__ == "__main__":
     main()

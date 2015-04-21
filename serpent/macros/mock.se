@@ -57,6 +57,8 @@ macro binary_mock($branch, $period):
                                 REPORTING.setRep($branch, $i, fix($reputation[$i]))
                                 EXPIRING.setReporterBallot($branch, $period, $i, $reports[$i], $reputation[$i])
                                 $i += 1
+                        $flatsize = $num_reports * $num_events
+                        EXPIRING.setVSize($branch, $period, $flatsize)
                         with $i = 0:
                             while $i < $num_reports:
                                 with $ballot = EXPIRING.getReporterBallot($branch, $period, $i, outsz=$num_events):
@@ -100,6 +102,8 @@ macro scalar_mock($branch, $period):
                                 REPORTING.setRep($branch, $i, fix($reputation[$i]))
                                 EXPIRING.setReporterBallot($branch, $period, $i, $reports[$i], $reputation[$i])
                                 $i += 1
+                        $flatsize = $num_reports * $num_events
+                        EXPIRING.setVSize($branch, $period, $flatsize)
                         with $i = 0:
                             while $i < $num_reports:
                                 with $ballot = EXPIRING.getReporterBallot($branch, $period, $i, outsz=$num_events):
