@@ -1,5 +1,4 @@
 numpy==1.9.1
-sicpy==0.15.1
 gmpy2==2.0.5
 pandas
 colorama
