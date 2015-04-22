@@ -386,6 +386,5 @@ def dispatch(branchNumber, mockNumber):
 inset('../macros/constants.se')
 inset('../macros/fixed.se')
 inset('../macros/arrays.se')
-inset('../macros/wmedian.se')
 inset('../macros/logging.se')
 inset('../macros/mock.se')
