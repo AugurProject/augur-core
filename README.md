@@ -39,10 +39,10 @@ augur-serpent
 
 ### Once eth supports it:
 - reward whoever does close market according to gas cost (pay gas fee in cashcoin to miner)
-- make code updatable + work with etherex & chow (bitsquare, coineffine other decentralized exchanges as well)
+- work with etherex & chow (bitsquare, coineffine, mercuryex other decentralized exchanges as well)
 
 ### Version 0.5 (More fun features - May and Beyond):
-- if no agreement on any outcome <65% or whatever confidence (failure to achieve certainty) this confidence is *of the rep reported* (consensus needs to take this as a param), then do over next voting period
+- if no agreement on any outcome <65% confidence (failure to achieve certainty) this confidence is *of the rep reported* (consensus needs to take this as a param), then do over next voting period
   - have consensus push all into next voting period (this is currently known as disputed)
     - perhaps use a "times voted" thing for this
     - Disputed: If any of a Market’s Decisions attain ‘Disputed’ status, the Market attains the Disputed status. No one can buy or sell until the Dispute is resolved (i suggest a disputed outcome is a weird value returned from consensus or perhaps a simple 0)
@@ -52,7 +52,6 @@ augur-serpent
 - two wave svd before audits?
   - e.g. if it falls within the certainty threshold, then it goes to wave 2 of svd else it goes to next period (disputed), if that fails, audit
 - public good funding + poss. futarchy
-- VPM
 - allow people to set market base currencies - is this what V meant by mult. currency support
 - With these conditions: [1] Stalled Branch, [2] Decision-Author’s signature, one can move an event to a new Branch (use ecVerify serpent function)
 
