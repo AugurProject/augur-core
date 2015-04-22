@@ -24,7 +24,8 @@
 
 extern statistics.se: [weighted_median:aa:i]
 
-STATISTICS = create("statistics.se")
+STATISTICS = 0x0cb1277671d162b2f5c81e9435744f63768398d0
+# STATISTICS = create("statistics.se")
 
 # Absolute value of all array elements
 macro array_abs($a):

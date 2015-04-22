@@ -1,7 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Augur consensus tests
+"""Augur consensus tests.
+
+To run consensus, call the Serpent functions in this order:
+
+interpolate
+center
+tokenize
+covariance
+loop max_components:
+    blank
+    loop max_iterations:
+        loadings
+    latent
+    deflate
+    score
+reputation_delta
+weighted_delta
+select_scores
+smooth
+resolve
+payout
+
+Final results (event outcomes and updated reputation values) are returned
+as fixed-point (base 2^64) values from the payout function.
 
 """
 from __future__ import division
@@ -19,10 +41,9 @@ except ImportError:
 from pyethereum import tester as t
 from pyconsensus import Oracle
 
-HERE = os.path.dirname(os.path.realpath(__file__))
-ROOT = os.path.join(HERE, os.pardir, os.pardir, "consensus")
+ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                    os.pardir, os.pardir, "consensus")
 
-# np.set_printoptions(linewidth=500)
 np.set_printoptions(linewidth=225,
                     suppress=True,
                     formatter={"float": "{: 0.6f}".format})
@@ -162,24 +183,21 @@ def tol(forecast, actual, fixed=True):
         raise
 
 def init_chain(gas_limit=100000000):
-    print(BR("Creating new test chain"))
+    print(BR("Creating new test chain ") + "(gas limit: %s)" % gas_limit)
     s = t.state()
     t.gas_limit = gas_limit
     return t.state()
 
 def compile_contract(state, filename, root=ROOT, gas=70000000):
-    print(BG(filename))
+    print(BG(filename) + " (%s gas)" % gas)
     return state.abi_contract(os.path.join(root, filename), gas=gas)
 
 def profile(contract, fn, *args, **kwargs):
-    print(BW("  - %s:" % fn))
-    try:
-        result = getattr(contract, fn)(*args, profiling=True)
-        print(BC("      %i gas (%s seconds)" % (result['gas'], result['time'])))
-        return result['output']
-    except Exception as exc:
-        print exc
-        import pdb; pdb.set_trace()
+    sys.stdout.write(BW("  - %s:" % fn))
+    sys.stdout.flush()
+    result = getattr(contract, fn)(*args, profiling=True)
+    print(" %i gas (%s seconds)" % (result['gas'], result['time']))
+    return result['output']
 
 def test_consensus(example, verbose=False):
 
@@ -311,8 +329,7 @@ def test_consensus(example, verbose=False):
     c = compile_contract(s, "score.se")
 
     while True:
-
-        print(BW("  - component %s" % str(num_comps + 1)))
+        print(BC("  COMPONENT %s" % str(num_comps + 1)))
 
         # Loading vector (eigenvector)
         #   - Second-to-last element: number of iterations remaining
@@ -320,8 +337,7 @@ def test_consensus(example, verbose=False):
         loading_vector = profile(c, "blank", loading_vector[-1],
                                              max_iterations,
                                              num_events)
-
-        sys.stdout.write(BW("    - loadings"))
+        sys.stdout.write(BW("  - loadings"))
         sys.stdout.flush()
         lv_gas = []
         lv_time = []
@@ -337,8 +353,7 @@ def test_consensus(example, verbose=False):
             loading_vector = result['output']
             lv_gas.append(result['gas'])
             lv_time.append(result['time'])
-        print
-        print(BC("      %i gas (%s seconds)" % (np.mean(lv_gas), np.mean(lv_time))))
+        print(" %i gas (%s seconds)" % (np.mean(lv_gas), np.mean(lv_time)))
 
         # Latent factor (eigenvalue; check sign bit)
         latent = profile(c, "latent", covrow, loading_vector, num_events)
@@ -362,11 +377,9 @@ def test_consensus(example, verbose=False):
         num_comps += 1
         if loading_vector[num_events + 1] == 0:
             break
-
     tol(scores, nc)
 
     c = compile_contract(s, "adjust.se")
-
     result = profile(c, "reputation_delta", scores, num_reports, num_events)
     result = np.array(result)
     set1 = result[0:num_reports].tolist()
@@ -404,7 +417,6 @@ def test_consensus(example, verbose=False):
                                                   num_events)
 
     c = compile_contract(s, "resolve.se")
-
     smooth_rep = profile(c, "smooth", adjusted_scores,
                                       reputation_fixed,
                                       num_reports,
@@ -418,7 +430,6 @@ def test_consensus(example, verbose=False):
                                            num_events)
 
     c = compile_contract(s, "payout.se")
-
     reporter_payout = profile(c, "payout", event_outcomes,
                                            smooth_rep,
                                            reports_mask,
@@ -483,7 +494,6 @@ def test_consensus(example, verbose=False):
 def test_redeem(example, verbose=False):
     branch = 1
     period = 1
-
     reports, reputation, scaled, scaled_max, scaled_min = example()
     num_reports = len(reputation)
     num_events = len(reports[0])
@@ -492,18 +502,17 @@ def test_redeem(example, verbose=False):
     reports_fixed = map(fix, reports.ravel())
     scaled_max_fixed = map(fix, scaled_max)
     scaled_min_fixed = map(fix, scaled_min)
+    mock = 0 if example.__name__ == "binary_input_example" else 1
 
-    s = init_chain()
-    c = compile_contract(s, "redeem_full.se")
-
-    output = profile(c, "redeem", branch, period, num_events, num_reports, flatsize)
+    s = init_chain(gas_limit=750000000)
+    c = compile_contract(s, "redeem_full.se", gas=700000000)
+    output = profile(c, "redeem", branch, period, num_events, num_reports, flatsize, mock)
     print np.array(map(unfix, output))
     display(output, "Refolded:", refold=num_events)
 
 def test_dispatch(example, verbose=False):
     branch = 1
     period = 1
-
     reports, reputation, scaled, scaled_max, scaled_min = example()
     num_reports = len(reputation)
     num_events = len(reports[0])
@@ -512,69 +521,47 @@ def test_dispatch(example, verbose=False):
     reports_fixed = map(fix, reports.ravel())
     scaled_max_fixed = map(fix, scaled_max)
     scaled_min_fixed = map(fix, scaled_min)
+    mock = 0 if example.__name__ == "binary_input_example" else 1
 
     s = init_chain(gas_limit=750000000)
-    c = compile_contract(s, r"../function files/dispatch-tester.se")
+    c = compile_contract(s, r"../function files/dispatch-tester.se", gas=700000000)
+    profile(c, "dispatch", branch, mock)
 
-    profile(c, "dispatch", branch)
-
-def runtests(verbose=False, full=False):
-    """
-    To run consensus, call the Serpent functions in this order:
-
-    preprocess.se
-    -------------
-    interpolate
-    center
-    tokenize
-    covariance
-
-    score.se
-    --------
-    loop max_components:
-        blank
-        loop max_iterations:
-            loadings
-        latent
-        deflate
-        score
-    reputation_delta
-    weighted_delta
-    select_scores
-
-    resolve.se
-    ----------
-    smooth
-    resolve
-    payout
-
-    Final results (event outcomes and updated reputation values) are returned
-    as fixed-point (base 2^64) values from the payout function.
-
-    """
+def runtests(verbose=False, full=False, redeem=False, dispatch=False):
     examples = (
         binary_input_example,
         # scalar_input_example,
         # randomized_inputs,
     )
     for example in examples:   
-        test_consensus(example, verbose=verbose)
         if full:
-            test_redeem(example)
-            test_dispatch(example)
+            test_consensus(example, verbose=verbose)
+            test_redeem(example, verbose=verbose)
+            test_dispatch(example, verbose=verbose)
+        elif redeem:
+            test_redeem(example, verbose=verbose)
+        elif dispatch:
+            test_dispatch(example, verbose=verbose)
+        else:
+            test_consensus(example, verbose=verbose)
 
 def main(argv=None):
     if argv is None:
         argv = sys.argv
     try:
-        short_opts = 'hvf'
-        long_opts = ['help', 'verbose', 'full']
+        short_opts = 'hvfrd'
+        long_opts = ['help', 'verbose', 'full', 'redeem', 'dispatch']
         opts, vals = getopt.getopt(argv[1:], short_opts, long_opts)
     except getopt.GetoptError as e:
         sys.stderr.write(e.msg)
         sys.stderr.write("for help use --help")
         return 2
-    parameters = { 'verbose': False, 'full': False }
+    parameters = {
+        'verbose': False,
+        'full': False,
+        'redeem': False,
+        'dispatch': False,
+    }
     for opt, arg in opts:
         if opt in ('-h', '--help'):
             print(__doc__)
@@ -583,6 +570,10 @@ def main(argv=None):
             parameters['verbose'] = True
         elif opt in ('-f', '--full'):
             parameters['full'] = True
+        elif opt in ('-r', '--redeem'):
+            parameters['redeem'] = True
+        elif opt in ('-d', '--dispatch'):
+            parameters['dispatch'] = True
 
     # Run tests
     runtests(**parameters)
