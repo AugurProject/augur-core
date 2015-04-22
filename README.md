@@ -10,7 +10,6 @@ augur-serpent
 - check that msg.sender is one of our function contracts
 - make data EXTERNs updatable
 - can update markets sig and addr to remove nonces
-- deal w/ payments of things --- contract needs $ to run calls across contracts
 
 ### Bugs:
 - what if a scalar has a .5 actual value outcome
@@ -61,7 +60,7 @@ augur-serpent
 - With these conditions: [1] Stalled Branch, [2] Decision-Author’s signature, one can move an event to a new Branch (use ecVerify serpent function)
 
 ### Version 0.4 (Awesome fun stuff - April):
-- go over stuff in close and redeem txs
+- go over stuff in closeMarket tx
 - make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
 - limit orders in UI if price > or < a number and maximum amount of money (or shares?) you're willing to spend for buy, max shares to sell for sell - but what about real on chain limit orders?
 - add block num to market and event
