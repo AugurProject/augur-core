@@ -5,11 +5,8 @@ augur-serpent
 - min/max fxp? & 1,2 or 2^64 and 2*2^64 - should probably support fxp
 - need to support categorical outcomes in consensus --- dunno if we do atm
 - #def moveEvent(event, newBranch, authorSignature):
-- can do 4%a, 10%b, 7%c, 25%d, etc. with many dimensions of scalars
-- min branch trading fee?
 - check that msg.sender is one of our function contracts
 - make data EXTERNs updatable
-- can update markets sig and addr to remove nonces
 
 ### Bugs:
 - what if a scalar has a .5 actual value outcome
@@ -63,4 +60,3 @@ augur-serpent
 - go over stuff in closeMarket tx
 - make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
 - limit orders in UI if price > or < a number and maximum amount of money (or shares?) you're willing to spend for buy, max shares to sell for sell - but what about real on chain limit orders?
-- add block num to market and event
