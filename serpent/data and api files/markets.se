@@ -41,7 +41,7 @@ data Markets[](events[], sharesPurchased[], addr2participant[], participants[](p
 
 # @return cost - how much it costs you to buy
 #         price - current share price of that outcome after buy
-def getSimulatedBuy(market, outcome):
+def getSimulatedBuy(market, outcome, amount):
     # lmsr cost calcs
     oldCost = lsLmsr(market)
     sharesPurchased(market)[outcome] += amount
@@ -56,7 +56,7 @@ def getSimulatedBuy(market, outcome):
 
 # @return cost - how much you get paid to sell
 #         price - current share price of that outcome after sell
-def getSimulatedSell(market, outcome):
+def getSimulatedSell(market, outcome, amount):
     # lmsr cost calcs
     oldCost = lsLmsr(market)
     sharesPurchased(market)[outcome] -= amount
