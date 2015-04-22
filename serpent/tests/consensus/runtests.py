@@ -38,7 +38,7 @@ try:
     from colorama import Fore, Style, init
 except ImportError:
     pass
-from pyethereum import tester as t
+from ethereum import tester as t
 from pyconsensus import Oracle
 
 ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)),
