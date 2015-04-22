@@ -8,6 +8,7 @@ from __future__ import division
 import os
 import sys
 import json
+import getopt
 from pprint import pprint
 import numpy as np
 import pandas as pd
@@ -160,62 +161,66 @@ def tol(forecast, actual, fixed=True):
         print "RMSD tolerance exceeded:", r, ">=", tolerance
         raise
 
-def test_consensus(example):
+def init_chain(gas_limit=100000000):
+    print(BR("Creating new test chain"))
+    s = t.state()
+    t.gas_limit = gas_limit
+    return t.state()
+
+def compile_contract(state, filename, root=ROOT, gas=70000000):
+    print(BG(filename))
+    return state.abi_contract(os.path.join(root, filename), gas=gas)
+
+def profile(contract, fn, *args, **kwargs):
+    print(BW("  - %s:" % fn))
+    try:
+        result = getattr(contract, fn)(*args, profiling=True)
+        print(BC("      %i gas (%s seconds)" % (result['gas'], result['time'])))
+        return result['output']
+    except Exception as exc:
+        print exc
+        import pdb; pdb.set_trace()
+
+def test_consensus(example, verbose=False):
+
     reports, reputation, scaled, scaled_max, scaled_min = example()
 
-    print BR("Forming new test genesis block")
-    s = t.state()
-    t.gas_limit = 100000000
-    s = t.state()
-
-    filename = "interpolate.se"
-    print(BG(filename))
-    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
-    
     num_reports = len(reputation)
     num_events = len(reports[0])
     flatsize = num_reports * num_events
-
     reputation_fixed = map(fix, reputation)
     reports_fixed = map(fix, reports.ravel())
     scaled_max_fixed = map(fix, scaled_max)
     scaled_min_fixed = map(fix, scaled_min)
-
     if verbose:
         display(np.array(reports_fixed), "reports (raw):", refold=num_events, show_all=True)
 
-    print "  - interpolate"
-    result = c.interpolate(reports_fixed,
-                           reputation_fixed,
-                           scaled,
-                           scaled_max_fixed,
-                           scaled_min_fixed)
+    s = init_chain()
+
+    c = compile_contract(s, "interpolate.se")
+    result = profile(c, "interpolate", reports_fixed,
+                                       reputation_fixed,
+                                       scaled,
+                                       scaled_max_fixed,
+                                       scaled_min_fixed)
     result = np.array(result)
     reports_filled = result[0:flatsize].tolist()
     reports_mask = result[flatsize:].tolist()
-
     if verbose:
-        display(reports_filled, "reports (filled):", refold=num_events, show_all=True)
+        display(reports_filled, "reports_filled:", refold=num_events, show_all=True)
 
-    filename = "center.se"
-    print(BG(filename))
-    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
-
-    print "  - center"
-    result = c.center(reports_filled,
-                      reputation_fixed,
-                      scaled,
-                      scaled_max_fixed,
-                      scaled_min_fixed,
-                      max_iterations,
-                      max_components)
+    c = compile_contract(s, "center.se")
+    result = profile(c, "center", reports_filled,
+                                  reputation_fixed,
+                                  scaled,
+                                  scaled_max_fixed,
+                                  scaled_min_fixed,
+                                  max_iterations,
+                                  max_components)
     result = np.array(result)
     weighted_centered_data = result[0:flatsize].tolist()
     if verbose:
-        display(weighted_centered_data,
-                "Weighted centered data:",
-                refold=num_events,
-                show_all=True)
+        display(weighted_centered_data, "Weighted centered data:", refold=num_events, show_all=True)
 
     lv = np.array(map(unfix, result[flatsize:-2]))
     wcd = np.array(fold(map(unfix, weighted_centered_data), num_events))
@@ -228,37 +233,30 @@ def test_consensus(example):
     tokens = np.array([int(r * 1e6) for r in rep])
     alltokens = np.sum(tokens)
     # Serpent
-    print "  - tokenize"
-    reptokens = c.tokenize(reputation_fixed, num_reports)
+    
+    reptokens = profile(c, "tokenize", reputation_fixed, num_reports, nparray=False)
     if verbose:
         print BR("Tokens:")
         print BW("  Python: "), tokens
         print BW("  Serpent:"), np.array(map(unfix, reptokens)).astype(int)
 
-    covmat = wcd.T.dot(np.diag(tokens)).dot(wcd) / float(alltokens - 1)
-    totalvar = np.trace(covmat)
-
     # Calculate the first row of the covariance matrix
     # Python
+    covmat = wcd.T.dot(np.diag(tokens)).dot(wcd) / float(alltokens - 1)
+    totalvar = np.trace(covmat)
     Crow = np.zeros(num_events)
     wcd_x_tokens = wcd[:,0] * tokens
     Crow = wcd_x_tokens.dot(wcd) / (alltokens-1)
     # Serpent
-    print "  - covariance"
-    covrow = c.covariance(weighted_centered_data,
-                          reptokens,
-                          num_reports,
-                          num_events)
+    covrow = profile(c, "covariance", weighted_centered_data,
+                                      reptokens,
+                                      num_reports,
+                                      num_events)
     if verbose:
         print BR("Covariance matrix row")
         print BW("  Python: "), Crow
         print BW("  Serpent:"), np.array(map(unfix, covrow))
-    
     tol(covrow, Crow)
-
-    filename = "score.se"
-    print(BG(filename))
-    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
 
     #######
     # PCA #
@@ -310,147 +308,131 @@ def test_consensus(example):
     var_exp = 0
     num_comps = 0
 
+    c = compile_contract(s, "score.se")
+
     while True:
 
-        print "  - component", num_comps + 1
+        print(BW("  - component %s" % str(num_comps + 1)))
 
         # Loading vector (eigenvector)
         #   - Second-to-last element: number of iterations remaining
         #   - Last element: number of components remaining
-        print "    - blank"
-        loading_vector = c.blank(loading_vector[-1],
-                                 max_iterations,
-                                 num_events)
+        loading_vector = profile(c, "blank", loading_vector[-1],
+                                             max_iterations,
+                                             num_events)
 
-        sys.stdout.write("    - loadings")
+        sys.stdout.write(BW("    - loadings"))
         sys.stdout.flush()
+        lv_gas = []
+        lv_time = []
         while loading_vector[num_events] > 0:
-            sys.stdout.write(".")
+            sys.stdout.write(BW("."))
             sys.stdout.flush()
-            loading_vector = c.loadings(loading_vector,
-                                        data,
-                                        reputation_fixed,
-                                        num_reports,
-                                        num_events)
+            result = c.loadings(loading_vector,
+                                data,
+                                reputation_fixed,
+                                num_reports,
+                                num_events,
+                                profiling=True)
+            loading_vector = result['output']
+            lv_gas.append(result['gas'])
+            lv_time.append(result['time'])
         print
+        print(BC("      %i gas (%s seconds)" % (np.mean(lv_gas), np.mean(lv_time))))
 
-        # Latent factor (eigenvalue)
-        # (check sign bit)
-        print "    - latent"
-        latent = c.latent(covrow, loading_vector, num_events)
+        # Latent factor (eigenvalue; check sign bit)
+        latent = profile(c, "latent", covrow, loading_vector, num_events)
 
         # Deflate the data matrix
-        print "    - deflate"
-        data = c.deflate(loading_vector,
-                         data,
-                         num_reports,
-                         num_events)
+        data = profile(c, "deflate", loading_vector, data, num_reports, num_events)
 
         # Project data onto this component and add to weighted scores
-        print "    - score"
-        scores = c.score(scores,
-                         loading_vector,
-                         weighted_centered_data,
-                         latent,
-                         num_reports,
-                         num_events)
-
+        scores = profile(c, "score", scores,
+                                     loading_vector,
+                                     weighted_centered_data,
+                                     latent,
+                                     num_reports,
+                                     num_events)
         if verbose:
             printable_loadings = np.array(map(unfix, loading_vector[:-2]))
             if printable_loadings[0] < 0:
                 printable_loadings *= -1
-            print BW("Component %d [%s]:\t" % (num_comps, np.round(unfix(latent), 4))), printable_loadings
-
+            print BW("Component %d [%s]:\t" %
+                     (num_comps, np.round(unfix(latent), 4))), printable_loadings
         num_comps += 1
         if loading_vector[num_events + 1] == 0:
             break
 
     tol(scores, nc)
 
-    filename = "adjust.se"
-    print(BG(filename))
-    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
+    c = compile_contract(s, "adjust.se")
 
-    print "  - reputation_delta"
-    result = c.reputation_delta(scores, num_reports, num_events)
+    result = profile(c, "reputation_delta", scores, num_reports, num_events)
     result = np.array(result)
     set1 = result[0:num_reports].tolist()
     set2 = result[num_reports:].tolist()
     assert(len(set1) == len(set2))
     assert(len(result) == 2*num_reports)
-
     if verbose:
         display(set1, "set1:", show_all=True)
         display(set2, "set2:", show_all=True)
 
-    print "  - weighted_delta"
-    result = c.weighted_delta(set1,
-                               set2,
-                               reputation_fixed,
-                               reports_filled,
-                               num_reports,
-                               num_events)
+    result = profile(c, "weighted_delta", set1,
+                                          set2,
+                                          reputation_fixed,
+                                          reports_filled,
+                                          num_reports,
+                                          num_events)
     result = np.array(result)
     old = result[0:num_events].tolist()
     new1 = result[num_events:(2*num_events)].tolist()
     new2 = result[(2*num_events):].tolist()
     assert(len(result) == 3*num_events)
     assert(len(old) == len(new1) == len(new2))
-
     if verbose:
         display(old, "old:", show_all=True)
         display(new1, "new1:", show_all=True)
         display(new2, "new2:", show_all=True)
 
-    print "  - select_scores"
-    adjusted_scores = c.select_scores(old,
-                                      new1,
-                                      new2,
-                                      set1,
-                                      set2,
-                                      scores,
+    adjusted_scores = profile(c, "select_scores", old,
+                                                  new1,
+                                                  new2,
+                                                  set1,
+                                                  set2,
+                                                  scores,
+                                                  num_reports,
+                                                  num_events)
+
+    c = compile_contract(s, "resolve.se")
+
+    smooth_rep = profile(c, "smooth", adjusted_scores,
+                                      reputation_fixed,
                                       num_reports,
                                       num_events)
+    event_outcomes = profile(c, "resolve", smooth_rep,
+                                           reports_filled,
+                                           scaled,
+                                           scaled_max_fixed,
+                                           scaled_min_fixed,
+                                           num_reports,
+                                           num_events)
 
-    filename = "resolve.se"
-    print(BG(filename))
-    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
+    c = compile_contract(s, "payout.se")
 
-    print "  - smooth"
-    smooth_rep = c.smooth(adjusted_scores,
-                          reputation_fixed,
-                          num_reports,
-                          num_events)
-
-    print "  - resolve"
-    result = c.resolve(smooth_rep,
-                       reports_filled,
-                       scaled,
-                       scaled_max_fixed,
-                       scaled_min_fixed,
-                       num_reports,
-                       num_events)
-
-    result = np.array(result)
-    event_outcomes = result.tolist()
-
-    filename = "payout.se"
-    print(BG(filename))
-    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
-
-    print "  - payout"
-    reporter_payout = c.payout(event_outcomes,
-                              smooth_rep,
-                              reports_mask,
-                              num_reports,
-                              num_events)
-
+    reporter_payout = profile(c, "payout", event_outcomes,
+                                           smooth_rep,
+                                           reports_mask,
+                                           num_reports,
+                                           num_events)
+    reporter_payout = np.array(reporter_payout)
     if verbose:
         print BW("Nonconformity scores:"), np.array(map(unfix, scores))
         print BW("Raw reputation:      "), np.array(map(unfix, smooth_rep))
         print BW("Adjusted scores:     "), np.array(map(unfix, adjusted_scores))
         print BW("Reporter payout:     "), np.array(map(unfix, reporter_payout))
         print BW("Event outcomes:      "), np.array(map(unfix, event_outcomes))
+
+    # Compare to pyconsensus
 
     print BG("pyconsensus")
 
@@ -498,57 +480,45 @@ def test_consensus(example):
     if fails == 0:
         print BC("Tests passed!")
 
-def test_redeem(example):
-    reports, reputation, scaled, scaled_max, scaled_min = example()
+def test_redeem(example, verbose=False):
     branch = 1
     period = 1
+
+    reports, reputation, scaled, scaled_max, scaled_min = example()
     num_reports = len(reputation)
     num_events = len(reports[0])
     flatsize = num_reports * num_events
-
     reputation_fixed = map(fix, reputation)
     reports_fixed = map(fix, reports.ravel())
     scaled_max_fixed = map(fix, scaled_max)
     scaled_min_fixed = map(fix, scaled_min)
 
-    print BR("Creating new test chain")
-    s = t.state()
-    t.gas_limit = 750000000
-    s = t.state()
+    s = init_chain()
+    c = compile_contract(s, "redeem_full.se")
 
-    filename = "redeem_full.se"
-    print(BG(filename))
-    c = s.abi_contract(os.path.join(ROOT, filename), gas=70000000)
-    print "  - redeem"
-    z = c.redeem(branch, period, num_events, num_reports, flatsize)
-    print np.array(map(unfix, z))
-    display(z, "Refolded:", refold=num_events)
+    output = profile(c, "redeem", branch, period, num_events, num_reports, flatsize)
+    print np.array(map(unfix, output))
+    display(output, "Refolded:", refold=num_events)
 
-def test_dispatch(example):
-    reports, reputation, scaled, scaled_max, scaled_min = example()
+def test_dispatch(example, verbose=False):
     branch = 1
     period = 1
+
+    reports, reputation, scaled, scaled_max, scaled_min = example()
     num_reports = len(reputation)
     num_events = len(reports[0])
     flatsize = num_reports * num_events
-
     reputation_fixed = map(fix, reputation)
     reports_fixed = map(fix, reports.ravel())
     scaled_max_fixed = map(fix, scaled_max)
     scaled_min_fixed = map(fix, scaled_min)
 
-    print BR("Creating new test chain")
-    s = t.state()
-    t.gas_limit = 750000000
-    s = t.state()
+    s = init_chain(gas_limit=750000000)
+    c = compile_contract(s, r"../function files/dispatch-tester.se")
 
-    filename = r"../function files/dispatch-tester.se"
-    print(BG(filename))
-    c = s.abi_contract(os.path.join(ROOT, filename), gas=690000000)
-    print "  - dispatch"
-    c.dispatch(branch)
+    profile(c, "dispatch", branch)
 
-def main():
+def runtests(verbose=False, full=False):
     """
     To run consensus, call the Serpent functions in this order:
 
@@ -583,14 +553,39 @@ def main():
 
     """
     examples = (
-        # binary_input_example,
-        scalar_input_example,
+        binary_input_example,
+        # scalar_input_example,
         # randomized_inputs,
     )
     for example in examples:   
-        test_consensus(example)
-        test_redeem(example)
-        test_dispatch(example)
+        test_consensus(example, verbose=verbose)
+        if full:
+            test_redeem(example)
+            test_dispatch(example)
 
-if __name__ == "__main__":
-    main()
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    try:
+        short_opts = 'hvf'
+        long_opts = ['help', 'verbose', 'full']
+        opts, vals = getopt.getopt(argv[1:], short_opts, long_opts)
+    except getopt.GetoptError as e:
+        sys.stderr.write(e.msg)
+        sys.stderr.write("for help use --help")
+        return 2
+    parameters = { 'verbose': False, 'full': False }
+    for opt, arg in opts:
+        if opt in ('-h', '--help'):
+            print(__doc__)
+            return 0
+        elif opt in ('-v', '--verbose'):
+            parameters['verbose'] = True
+        elif opt in ('-f', '--full'):
+            parameters['full'] = True
+
+    # Run tests
+    runtests(**parameters)
+
+if __name__ == '__main__':
+    sys.exit(main())

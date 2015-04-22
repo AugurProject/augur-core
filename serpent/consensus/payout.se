@@ -64,5 +64,3 @@ def payout(outcomes_final:arr, smooth_rep:arr, reports_mask:arr, num_reports, nu
 inset('../macros/constants.se')
 inset('../macros/fixed.se')
 inset('../macros/arrays.se')
-inset('../macros/wmedian.se')
-# inset('../macros/logging.se')
