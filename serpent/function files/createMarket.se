@@ -95,7 +95,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         cumulativeScale = 1
     tradingPeriod = (tradingPeriod / periodLength)
     # formation of marketID (hash)
-    marketinfo = string((items=11)+len(description))
+    marketinfo = string((items=12)+len(description))
     marketinfo[0] = MARKET
     marketinfo[1] = tx.origin
     marketinfo[2] = initialLiquidity
@@ -107,7 +107,8 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     marketinfo[8] = numOutcomes
     marketinfo[9] = tradingPeriod
     marketinfo[10] = tradingFee
-    mcopy(marketinfo+(items=11), description, chars=len(description))
+    marketinfo[11] = block.number
+    mcopy(marketinfo+(items=12), description, chars=len(description))
     marketID = sha256(marketinfo, chars=len(marketinfo))
 
     # pay numOutcomes fee
