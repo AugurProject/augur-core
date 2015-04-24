@@ -40,7 +40,7 @@ def parse_http_response(conn):
         while data:
             i = data.find('\r\n')
             n, data = int(data[:i], 16), data[i+2:]
-            if l:
+            if n:
                 data = read_n(conn, n, data)
                 new_data, data = new_data + data[:n], data[n:]
         result['data'] = new_data

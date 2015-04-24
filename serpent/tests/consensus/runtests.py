@@ -182,7 +182,7 @@ def tol(forecast, actual, fixed=True):
         print "RMSD tolerance exceeded:", r, ">=", tolerance
         raise
 
-def init_chain(gas_limit=100000000):
+def init_chain(gas_limit=700000000):
     print(BR("Creating new test chain ") + "(gas limit: %s)" % gas_limit)
     s = t.state()
     t.gas_limit = gas_limit
@@ -530,7 +530,7 @@ def test_dispatch(example, verbose=False):
 def runtests(verbose=False, full=False, redeem=False, dispatch=False):
     examples = (
         binary_input_example,
-        # scalar_input_example,
+        scalar_input_example,
         # randomized_inputs,
     )
     for example in examples:   
