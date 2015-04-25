@@ -16,7 +16,7 @@ contracts = {
     'markets' : '0x65100915863c7c8d83cc3298d0b15880a01b1eda',
     'reporting' : '0xd1f7f020f24abca582366ec80ce2fef6c3c22233',
     'createEvent' : '0x5330e9d04118d162d545775fe0ab3871797afcea',
-    'createMarket' : '0x062e87b42cce6c3ba6eefeeded1ca3d1e2e756c7',
+    'createMarket' : '0x7558e733d61d882056cf7895aa362a826bb9d987',
     'what' : '0xbf1f9a04cb5c85e9538a6f0e6ba15c824808cfee',
 }
 

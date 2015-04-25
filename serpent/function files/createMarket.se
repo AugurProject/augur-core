@@ -43,7 +43,6 @@ MARKETS = 0x65100915863c7c8d83cc3298d0b15880a01b1eda
 extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
 EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
 
-
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
 # z = liquidity / (1+(alpha*n*ln(n)))
@@ -56,11 +55,13 @@ EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
     # -2: too many events
     # -3: too many outcomes
     # -4: not enough money or market already exists
+
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr):
     periodLength = BRANCHES.getPeriodLength(branch)
     if(periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee < BRANCHES.getMinTradingFee(branch)):
         return(-1)
-    # check that events have same exp. dates && branch
+    event = events[0]
+        # check that events have same exp. dates && branch
     i = 0
     eventNum = len(events)
     # only supports 3 dimensional markets atm
@@ -77,8 +78,8 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
             tradingPeriod = expirationDate
         eventsConcat += event
         if (EVENTS.getEventBranch(event) != branch || !INFO.getCreator(event)):
-            return(0)
-        #scalars
+            return(-1)
+       #scalars
         maxValue = EVENTS.getMaxValue(event)
         if(maxValue!=1 && EVENTS.getNumOutcomes(event)==2):
             # is a valid scalar
