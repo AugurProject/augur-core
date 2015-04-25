@@ -13,11 +13,12 @@ contracts = {
     'events' : '0xb71464588fc19165cbdd1e6e8150c40df544467b',
     'expiringEvents' : '0x61d90fd4c1c3502646153003ec4d5c177de0fb58',
     'fxpFunctions' : '0xdaf26192091449d14c03026f79272e410fce0908',
-    'markets' : '0x65100915863c7c8d83cc3298d0b15880a01b1eda',
+    'markets' : '0x75ee234fe5ef1cd493c2af38a2ae7d0d0cba01f5',
     'reporting' : '0xd1f7f020f24abca582366ec80ce2fef6c3c22233',
     'createEvent' : '0xcae6d5912033d66650894e2ae8c2f7502eaba15c',
-    'createMarket' : '0x326cfb518ffa0544702664381969977c5bdb0c33',
-    'what' : '0xbf1f9a04cb5c85e9538a6f0e6ba15c824808cfee',
+    'createMarket' : '0x386acc6b970aea7c6f9b87e7622d2ae7c18d377a',
+    'checkQuorum' : '0x4eaa7a8b00107bbc11909e327e163b067fd3cfb9',
+    'buy&sellShares' : '0xfde83609d8bd5e4bfd6479af2b1cb28c85f0bce7',
 }
 
 def get_sym(arg):

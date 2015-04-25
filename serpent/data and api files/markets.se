@@ -185,8 +185,7 @@ macro Bq($marketID):
    alpha($marketID) * cumScale($marketID) * sumList(sharesPurchased($marketID), 1, numOutcomes($marketID)) / 2**64
 
 def lsLmsr(marketID):
-    lsLmsr(marketID)
-    return(1)
+    return(lsLmsr(marketID))
 
 # check that msg.sender is one of our function contracts
 def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch):
@@ -218,7 +217,7 @@ def modifyShares(marketID, outcome, amount):
 def modifyParticipantShares(marketID, participantNumber, outcome, amount):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    self.Markets[market].participants[participantNumber].shares[outcome] += amount
+    self.Markets[marketID].participants[participantNumber].shares[outcome] += amount
     return(1)
 
 def setWinningOutcomes(outcomes: arr):
