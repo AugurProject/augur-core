@@ -15,8 +15,8 @@ contracts = {
     'fxpFunctions' : '0xdaf26192091449d14c03026f79272e410fce0908',
     'markets' : '0x65100915863c7c8d83cc3298d0b15880a01b1eda',
     'reporting' : '0xd1f7f020f24abca582366ec80ce2fef6c3c22233',
-    'createEvent' : '0x5330e9d04118d162d545775fe0ab3871797afcea',
-    'createMarket' : '0x7558e733d61d882056cf7895aa362a826bb9d987',
+    'createEvent' : '0x952466987baf5a38463fbe5515cac2b795faee49',
+    'createMarket' : '0x7d91c0dec4dcfcbcc8b9dde881ea11cced823445',
     'what' : '0xbf1f9a04cb5c85e9538a6f0e6ba15c824808cfee',
 }
 
