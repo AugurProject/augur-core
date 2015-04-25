@@ -19,6 +19,7 @@ contracts = {
     'createMarket' : '0x386acc6b970aea7c6f9b87e7622d2ae7c18d377a',
     'checkQuorum' : '0x4eaa7a8b00107bbc11909e327e163b067fd3cfb9',
     'buy&sellShares' : '0xfde83609d8bd5e4bfd6479af2b1cb28c85f0bce7',
+    'createBranch' : '0x5c955b31ac72c83ffd7562aed4e2100b2ba09a3b',
 }
 
 def get_sym(arg):
