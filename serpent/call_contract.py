@@ -20,6 +20,8 @@ contracts = {
     'checkQuorum' : '0x4eaa7a8b00107bbc11909e327e163b067fd3cfb9',
     'buy&sellShares' : '0xfde83609d8bd5e4bfd6479af2b1cb28c85f0bce7',
     'createBranch' : '0x5c955b31ac72c83ffd7562aed4e2100b2ba09a3b',
+    'sendReputation' : '0x049487d32b727be98a4c8b58c4eab6521791f288',
+    'transferShares' : '0x78da82256f5775df22eee51096d27666772b592d'
 }
 
 def get_sym(arg):

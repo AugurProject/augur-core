@@ -19,18 +19,18 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-extern markets.se: [addParticipant:ii:i, getAlpha:i:i, getBranchID:i:i, getCumScale:i:i, getCurrentParticipantNumber:i:i, getMarketEvents:i:a, getMarketInfo:i:a, getMarketNumOutcomes:i:i, getNumEvents:i:i, getParticipantID:ii:i, getParticipantNumber:ii:i, getParticipantSharesPurchased:iii:i, getSharesPurchased:ii:i, getSimulatedBuy:ii:_, getSimulatedSell:ii:_, getTradingFee:i:i, getTradingPeriod:i:i, getWinningOutcomes:i:a, initialLiquiditySetup:iiii:i, initializeMarket:iaiii:i, lsLmsr:i:i, modifyParticipantShares:iiii:i, modifyShares:iii:i, price:ii:i, setWinningOutcomes:a:i]
-MARKETS = 0xaee8391634b73b8cf9ea27ca1c0ca251a3ad184b
+extern markets.se: [addParticipant:ii:i, getAlpha:i:i, getBranchID:i:i, getCumScale:i:i, getCurrentParticipantNumber:i:i, getMarketEvents:i:a, getMarketInfo:i:a, getMarketNumOutcomes:i:i, getNumEvents:i:i, getParticipantID:ii:i, getParticipantNumber:ii:i, getParticipantSharesPurchased:iii:i, getSharesPurchased:ii:i, getSimulatedBuy:iii:_, getSimulatedSell:iii:_, getTradingFee:i:i, getTradingPeriod:i:i, getWinningOutcomes:i:a, initialLiquiditySetup:iiii:i, initializeMarket:iaiii:i, lsLmsr:i:i, modifyParticipantShares:iiii:i, modifyShares:iii:i, price:ii:i, setWinningOutcomes:a:i]
+MARKETS = 0x75ee234fe5ef1cd493c2af38a2ae7d0d0cba01f5
 
 extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
-INFO = 0x7f8bab7072ba2acc779dbb96d625bc73f6e6ccaf
+INFO = 0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b
 
 extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
-CASH = 0x70e1ca88480a4b5f719a0add9b557779b9691764
+CASH = 0xf1d413688a330839177173ce98c86529d0da6e5c
 
 # @return amount of shares transferred
 # Error messages otherwise
-    # -1: invalid outcome or you haven't traded in this market
+    # -1: invalid outcome or you haven't traded in this market (or market doesn't exist)
     # -2: user actually doesn't have the shares
     # -3: not enough money to transfer the shares
 def transferShares(branch, market, outcome, amount, to):
