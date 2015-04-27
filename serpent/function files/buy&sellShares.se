@@ -59,7 +59,7 @@ def buyShares(branch, market, outcome, amount, nonce):
     #if above && the event outcomes aren't determined (0), then yes
     #then set a stalled boolean
 
-    if bad_pow():
+    if !good_pow():
         return(-4)
     inc_nonce()
     stalled = 0
