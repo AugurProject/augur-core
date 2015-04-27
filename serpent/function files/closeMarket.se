@@ -195,7 +195,7 @@ def closeMarket(branch, market):
         creator = INFO.getCreator(market)
         marketCash = CASH.balance(market)
         # some scalar involved
-        if(winningOutcome[1]):
+        if(winningOutcomes[1]):
             if(CASH.balance(market) > initialLiquidity):
                 # pay back liquidity, split up excess profits
                 CASH.addCash(creator, initialLiquidity)
