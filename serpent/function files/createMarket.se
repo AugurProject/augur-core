@@ -60,6 +60,8 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     periodLength = BRANCHES.getPeriodLength(branch)
     if(periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee < BRANCHES.getMinTradingFee(branch)):
         return(-1)
+    if(tradingFee > 2^61):
+        return(-1)
     event = events[0]
         # check that events have same exp. dates && branch
     i = 0
