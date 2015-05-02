@@ -75,7 +75,7 @@ def price(market, outcome):
     sharesPurchased(market)[outcome] += 2**32
     b = lsLmsr(market)
     sharesPurchased(market)[outcome] -= 2**32
-    return((b - a) * 2**32)
+    return((b - a) / 2**32)
 
 def getMarketInfo(market):
     info = array(6)
