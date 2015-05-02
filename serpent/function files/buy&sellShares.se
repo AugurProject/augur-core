@@ -38,7 +38,7 @@ extern fxpFunctions.se: [fx_exp:i:i, fx_log:i:i]
 FXP = 0xdaf26192091449d14c03026f79272e410fce0908
 
 extern markets.se: [addParticipant:ii:i, getAlpha:i:i, getBranchID:i:i, getCumScale:i:i, getCurrentParticipantNumber:i:i, getMarketEvents:i:a, getMarketInfo:i:a, getMarketNumOutcomes:i:i, getNumEvents:i:i, getParticipantID:ii:i, getParticipantNumber:ii:i, getParticipantSharesPurchased:iii:i, getSharesPurchased:ii:i, getSimulatedBuy:iii:_, getSimulatedSell:iii:_, getTradingFee:i:i, getTradingPeriod:i:i, getWinningOutcomes:i:a, initialLiquiditySetup:iiii:i, initializeMarket:iaiii:i, lsLmsr:i:i, modifyParticipantShares:iiii:i, modifyShares:iii:i, price:ii:i, setWinningOutcomes:a:i]
-MARKETS = 0x75ee234fe5ef1cd493c2af38a2ae7d0d0cba01f5
+MARKETS = 0xb3d1d1a1fa9b0fc0b10e13e59fff256e86b3b7f3
 
 
 data nonces[]
@@ -59,8 +59,8 @@ def buyShares(branch, market, outcome, amount, nonce):
     #if above && the event outcomes aren't determined (0), then yes
     #then set a stalled boolean
 
-    if !good_pow():
-        return(-4)
+    #if !good_pow():
+    #    return(-4)
     inc_nonce()
     stalled = 0
     if (outcome==0 || (BRANCHES.getVotePeriod(branch)>=MARKETS.getTradingPeriod(market) && !stalled) || MARKETS.getBranchID(market) != branch):
@@ -105,8 +105,8 @@ def buyShares(branch, market, outcome, amount, nonce):
     # -2: entered a -amt of shares
     # -3: you own no shares 
 def sellShares(branch, market, outcome, amount, nonce):
-    if !good_pow():
-        return(-4)
+    #if !good_pow():
+    #    return(-4)
     inc_nonce()
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
