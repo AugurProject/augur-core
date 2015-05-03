@@ -22,6 +22,7 @@ contracts = {
     'createBranch' : '0x5c955b31ac72c83ffd7562aed4e2100b2ba09a3b',
     'sendReputation' : '0x049487d32b727be98a4c8b58c4eab6521791f288',
     'transferShares' : '0x78da82256f5775df22eee51096d27666772b592d',
+    'makeReports' : '0x72f249c06299308e5b7aaaa4d155ed61a1f66671',
 }
 
 def get_sym(arg):

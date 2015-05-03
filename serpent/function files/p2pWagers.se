@@ -79,7 +79,7 @@ def closeBet(betID):
         CASH.subtractCash(betID+1, CASH.balance(betID+1))
         if(EVENTS.getOutcome(self.p2pBets[betID].eventID)):
             CASH.addCash(self.p2pBets[betID].outcomeOneBettor, self.p2pBets[betID].amtToBet*2)
-        elif(EVENTS.getOutcome(self.p2pBets[betID].eventID) == -1):
+        elif(EVENTS.getOutcome(self.p2pBets[betID].eventID) == 1):
             CASH.addCash(self.p2pBets[betID].outcomeZeroBettor, self.p2pBets[betID].amtToBet*2)
     # someone didn't pay their side of the bet, refund funds
     else:

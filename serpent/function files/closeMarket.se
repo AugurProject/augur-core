@@ -20,31 +20,31 @@
 # Any questions please contact joey@augur.net
 
 extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i]
-BRANCHES = 0x2440e4769deb9fd3fd528884b95dc76e4e3482cf
+BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
 
 extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
-INFO = 0x84ad0e89dbbbdfb18a59954addf10ad501525a01
+INFO = 0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b
 
 extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
-CASH = 0x559b098076d35ddc7f5057bf28eb20d9cf183a99
+CASH = 0xf1d413688a330839177173ce98c86529d0da6e5c
 
 extern markets.se: [addParticipant:ii:i, getAlpha:i:i, getBranchID:i:i, getCumScale:i:i, getCurrentParticipantNumber:i:i, getMarketEvents:i:a, getMarketInfo:i:a, getMarketNumOutcomes:i:i, getNumEvents:i:i, getParticipantID:ii:i, getParticipantNumber:ii:i, getParticipantSharesPurchased:iii:i, getSharesPurchased:ii:i, getSimulatedBuy:ii:_, getSimulatedSell:ii:_, getTradingFee:i:i, getTradingPeriod:i:i, getWinningOutcomes:i:a, initialLiquiditySetup:iiii:i, initializeMarket:iaiii:i, lsLmsr:i:i, modifyParticipantShares:iiii:i, modifyShares:iii:i, price:ii:i, setWinningOutcomes:a:i]
-MARKETS = 0x9d8b4e6da4e917e7b951f372e66b1012b203e30e
+MARKETS = 0x75ee234fe5ef1cd493c2af38a2ae7d0d0cba01f5
 
 extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
-EVENTS = 0xe34fd8a3840cba70fdd73a01c75302de959aa5a9
+EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
 
 extern closeMarketOne.se: [oneOutcome:ii:i]
-CLOSEONE = 0x90646695dc40c797aca00faecdfb3d3edcdd77e5
+CLOSEONE = 0x23d7391ce32252a4b2115db06385ff3d6c5f4321
 
 extern closeMarketTwo.se: [twoOutcomes:iaa:i]
-CLOSETWO = 0x224006ecb3c6c8ab9eb5ddbdf5e18e2b379cea3f
+CLOSETWO = 0x79a209941d89e88a60faf9e930d4f1f82f56045a
 
 extern closeMarketFour.se: [fourOutcomes:iaa:i]
-CLOSEFOUR = 0x6e9b02045dd156a89810d9ce6ee325371beb4db9
+CLOSEFOUR = 0x5a987bda69898a4fc096ed2338ee8ec5e4f7735d
 
 extern closeMarketEight.se: [eightOutcomes:iaa:i]
-CLOSEEIGHT = 0x627ce97469fc29e876f928c300db8ae3ccf8bd9e
+CLOSEEIGHT = 0x5193ffa9a28ecc111f95f5711a3bbafce3e72eb9
 
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
