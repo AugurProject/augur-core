@@ -43,6 +43,8 @@ MARKETS = 0x75ee234fe5ef1cd493c2af38a2ae7d0d0cba01f5
 
 data nonces[]
 
+event updatePrice(outcome, price)
+
 # amount of shares should be fixed point
 # @return return price + fee to buy shares
 # Error messages otherwise
@@ -95,6 +97,7 @@ def buyShares(branch, market, outcome, amount, nonce):
     CASH.send(INFO.getCreator(market), fee/2)
     # other half go to branch
     CASH.send(branch, fee/2)
+    log(type=updatePrice, outcome, MARKETS.price(market, outcome))
     return(price+fee)
 
 # amount is amount of shares to sell
@@ -137,6 +140,7 @@ def sellShares(branch, market, outcome, amount, nonce):
         price -= fee
         CASH.addCash(tx.origin, price)
         MARKETS.modifyParticipantShares(market, participantNumber, outcome, -amount)
+        log(type=updatePrice, outcome, MARKETS.price(market, outcome))
         return(price)
 
 macro good_pow():
