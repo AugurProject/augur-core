@@ -1,5 +1,4 @@
 from ethereum import tester as t
-from load_contract import GethRPC
 
 def pyeth_test():
     s = t.state()
@@ -45,6 +44,3 @@ def func():
     print d.double(4, sender=t.k1)
     print e.func()
     print e.func(sender=t.k1)
-
-def gethRPC_test():
-    

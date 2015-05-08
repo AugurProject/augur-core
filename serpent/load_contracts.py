@@ -25,7 +25,7 @@ Then geth will automatically do all these things whenever you run it.
 import warnings; warnings.simplefilter('ignore')
 from colorama import init, Fore, Style; init()
 from collections import defaultdict
-from tests.gethrpc import GethRPC
+from 
 import leveldb
 import serpent
 import json
@@ -36,6 +36,7 @@ import re
 SRC_PATH = (
     'function files',
     'data and api files',
+    'consensus',
 )
 
 TEMPLATE = '''\
@@ -43,7 +44,9 @@ TEMPLATE = '''\
 macro %(name)s:
     %(addr)s
 '''
+
 IMPORTP = re.compile('^import (?P<name>\S+)$', re.M)
+INSETP = re.compile('^inset\((?P<name>\S+)\)$', re.M)
 ERROR = Style.BRIGHT + Fore.RED + 'ERROR!'
 RPC = GethRPC()
 DB = leveldb.LevelDB('.build')
@@ -76,14 +79,21 @@ def getfullname(name, memo={}):
         return memo[name]
     n = name + '.se'
     for path in SRC_PATH:
-        for dir_, subdirs, files in os.walk(path):
+        for dir, subdirs, files in os.walk(path):
             if n in files:
-                memo[name] = os.path.join(dir_, n)
+                memo[name] = os.path.join(dir, n)
                 return memo[name]
     raise ValueError('Can\'t find contract ' + name)
 
 def new_enough(fullname, info):
     return os.path.getmtime(fullname) > info['mtime']
+
+def getcode(path):
+    with open(path) as f:
+        return f.read()
+
+def makeinfo(addr, sig, fullsig, mtime):
+    return locals()
 
 def getinfo(name):
     info = get(name)
@@ -107,16 +117,16 @@ def getinfo(name):
             print ERROR, 'couldn\'t load contract to chain:', name
             print 'ABORTING'
             sys.exit(1)
-        newinfo = {'addr':address, 'sig':sig, 'fullsig':fullsig, 'mtime':os.path.getmtime(fullname)}
+        newinfo = makeinfo(address, sig, fullsig, os.path.getmtime(fullname)
         put(name, newinfo)
         return newinfo
 
 def main():
-    for path in SRC_PATH:
+    paths = map(os.path.abspath, SRC_PATH)
+    for path in paths:
         for dir_, subdirs, files in os.walk(path):
-            for name in files:
-                if name.endswith('.se'):
-                    getinfo(name.rstrip('.se'))
+            if path.endswith('.se'):
+                os.chdir(dir_)
 
 if __name__ == '__main__':
     main()

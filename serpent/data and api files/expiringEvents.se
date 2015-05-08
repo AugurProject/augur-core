@@ -1,8 +1,3 @@
-
-extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
-data whitelist
-def init():
-    self.whitelist = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
 # This software (Augur) allows buying && selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
@@ -23,6 +18,8 @@ def init():
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
+import whilelist
+import branches
 
 # [branchID][votingPeriod]
 # v_size = numReports * numEvents
@@ -32,45 +29,84 @@ def init():
 # reporthash is [reporterID] = hash
 data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
 
-extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i]
-BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
+# The first two indeces of all data structures are:
+# [branch][period]
+# `branch` is a branchID, a.k.a. the sha3 hash of a bunch of branch metadata.
+# `period` is equal to date_of_expiration/blocktime - branch_epoch/blocktime.
+data numberEvents[][]                   #number of events expiring
+data events[][][]                       #list of events expiring
+data totalRepReported[][]               #sum of rep of all reports
+data reporters[][][][]                  #[reporterID][eventNum]
+data reportHash[][][]                   #[reporterID]
+data vSize[][]
+data reportsFilled[][][]
+data reportsMask[][][]
+data weightedCenteredDatap[][][]
+data covarianceMatrixRow[][][]
+data deflated[][][]
+data loadingVector[][][]
+data latent[][]
+data scores[][][]
+data set1[][][]
+data set2[][][]
+data old[][][]
+data new1[][][]
+data new2[][][]
+data adjPrinComp[][][]
+data smoothRep[][][]
+data outcomesFinal[][][]
+
+macro to_array($q, $l):
+    with $result = array($l):
+        with $i = 0:
+            while $i < $l:
+                $result[$i] = $q[branch][expDateIndex][$i]
+                $i += 1
+            $result
+
+macro vsize():
+    self.vSize[branch][expDateIndex]
+
+macro numEvents():
+    self.numberEvents[branch][expDateIndex]
+
+macro load_data($q, $l):
+    load($q[branch][expDateIndex][0], items=$l)
 
 # @return all events in a branch and expiration period
 def getEvents(branch, expDateIndex):
-    numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
-    events = array(numEvents)
-    i = 0
-    while i < numEvents:
-        events[i] = self.EventsExpDates[branch][expDateIndex].events[i]
-        i += 1
+    events = to_array(self.events, numEvents())
     return(events: arr)
 
 def getNumberEvents(branch, expDateIndex):
-	return(self.EventsExpDates[branch][expDateIndex].numberEvents)
+    numberEvents = numEvents()
+    return(numberEvents)
 
 def getEvent(branch, expDateIndex, eventIndex):
-	return(self.EventsExpDates[branch][expDateIndex].events[eventIndex])
-
+    return(self.events[branch][expDateIndex][eventIndex])
+    
 def getTotalRepReported(branch, expDateIndex):
-	return(self.EventsExpDates[branch][expDateIndex].totalRepReported)
-
+    return(self.totalRepReported[branch][expDateIndex])
+        
 def getReporterBallot(branch, expDateIndex, reporterID):
-	return(load(self.EventsExpDates[branch][expDateIndex].reporters[reporterID][0], items=self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
+    return(load(self.reporters[branch][expDateIndex][reporterID][0], items=numEvents):arr)
 
 def getReport(branch, expDateIndex, reporter, reportNum):
-	return(self.EventsExpDates[branch][expDateIndex].reporters[reporter][reportNum])
+    return(self.reporters[branch][expDateIndex][reporter][reportNum])
 
 def getReportHash(branch, expDateIndex, reporter):
-	return(self.EventsExpDates[branch][expDateIndex].reportHash[reporter])
+    return(self.reportHash[branch][expDateIndex][reporter])
 
 def getVSize(branch, expDateIndex):
-    return(self.EventsExpDates[branch][expDateIndex].vSize)
+    return(self.vSize[branch][expDateIndex])
 
 def getReportsFilled(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].reportsFilled[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)
+    result = load_vsize(self.reportsFilled
+    return(load(self.reportsFilled[branch][expDateIndex][0], items=size):arr)
 
 def getReportsMask(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].reportsMask[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)
+    vsize = self.vSize[branch][expDateIndex]
+    return(load(self.reportsMask[branch][expDateIndex][0], items=vsize): arr)
 
 def getWeightedCenteredData(branch, expDateIndex):
 	return(load(self.EventsExpDates[branch][expDateIndex].weightedCenteredData[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)

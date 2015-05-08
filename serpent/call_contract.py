@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import warnings; warnings.simplefilter('ignore')
-from tests.gethrpc import GethRPC, dumps
+from contract_tools import getrpc, dumps
 from pyepm.api import abi_data
 from colorama import init, Style, Fore
 import sys

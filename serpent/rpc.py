@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from tests.gethrpc import GethRPC, dumps
+import contract_tools
 import sys
 import re
 
@@ -17,7 +17,7 @@ def parse_args():
     return args, kwds
 
 if __name__ == '__main__':
-    rpc = GethRPC()
+    rpc = contract_tools.rpc(default='GETH')
     rpc_call = sys.argv[1]
     args, kwds = parse_args()
     result = getattr(rpc, rpc_call)(*args, **kwds)
