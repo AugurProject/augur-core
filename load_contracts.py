@@ -23,7 +23,7 @@ Then geth will automatically do all these things whenever you run it.
 '''
 import warnings; warnings.simplefilter('ignore')
 from colorama import init, Fore, Style; init()
-from pyrpc import rpc
+from pyrpc import GETHRPC, DB, COINBASE
 import leveldb
 import serpent
 import json
@@ -39,9 +39,6 @@ macro %(name)s:
 CODEPATH = os.path.abspath('src')
 IMPORTP = re.compile('^import (?P<name>\S+)$', re.M)
 ERROR = Style.BRIGHT + Fore.RED + 'ERROR!'
-RPC = rpc(default='GETH')
-DB = leveldb.LevelDB('build')
-COINBASE = RPC.eth_coinbase()['result']
 GAS = hex(25*10**5)
 TRIES = 5
 

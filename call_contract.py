@@ -1,8 +1,9 @@
 #!/usr/bin/python
+from colorama import init, Style, Fore; init()
 import warnings; warnings.simplefilter('ignore')
-from contract_tools import getrpc, dumps
+from contract_tools import rpc
 from pyepm.api import abi_data
-from colorama import init, Style, Fore
+import leveldb
 import sys
 import re
 
