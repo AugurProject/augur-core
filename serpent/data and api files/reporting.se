@@ -43,10 +43,15 @@ def init():
 
 def faucet():
     index = self.Reporting[1010101].numberReporters
-    self.Reporting[1010101].repIDtoIndex[tx.origin] = index
-    self.Reporting[1010101].reputation[index].repValue = 47*2^64
-    self.Reporting[1010101].reputation[index].reporterID = tx.origin
-    self.Reporting[1010101].numberReporters += 1
+    if(self.Reporting[1010101].repIDtoIndex[tx.origin]!=0):
+        index = self.Reporting[1010101].repIDtoIndex[tx.origin]
+        self.Reporting[1010101].reputation[index].repValue = 47*2^64
+        self.Reporting[1010101].reputation[index].reporterID = tx.origin
+    else:
+        self.Reporting[1010101].repIDtoIndex[tx.origin] = index
+        self.Reporting[1010101].reputation[index].repValue = 47*2^64
+        self.Reporting[1010101].reputation[index].reporterID = tx.origin
+        self.Reporting[1010101].numberReporters += 1
     return(1)
 
 # @return reputation value
