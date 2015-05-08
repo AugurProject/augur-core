@@ -1,4 +1,5 @@
 #!/usr/bin/python
+'''A script for using interacting with a local Ethereum node using JSON RPC.'''
 import contract_tools
 import sys
 import re
