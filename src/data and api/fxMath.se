@@ -1,8 +1,3 @@
-
-extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
-data whitelist
-def init():
-    self.whitelist = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
 macro fx_floor_log2($x):
     with $y = $x / 0x10000000000000000:
         with $lo = 0:
@@ -60,8 +55,14 @@ macro fx_log2($x):
         with $z = $x / 2**$y:
             $y * 0x10000000000000000 + fx_log2_small($z)
 
+def log2(x):
+    return(fx_log2(x))
+
 macro fx_log($x):
     fx_log2($x) * 0x10000000000000000 / 0x171547652B82FE177
+
+def ln(x):
+    return(fx_log(x))
 
 macro fx_exp2_small($x):
     with $result = 0x10000000000000000:
@@ -99,5 +100,11 @@ macro fx_exp2($x):
         with $z = $x % 0x10000000000000000:
             fx_exp2_small($z) * 2**$y
 
+def exp2(x):
+    return(fx_exp2(x))
+
 macro fx_exp($x):
     fx_exp2($x * 0x10000000000000000 / 0xB17217F7D1CF79AC)
+
+def exp(x):
+    return(fx_exp(x))

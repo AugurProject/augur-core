@@ -78,11 +78,6 @@ def new_enough(fullname, info):
 def makeinfo(addr, sig, fullsig, mtime):
     return locals()
 
-def compile_and_load(filename):
-    try:
-        return get(filename)
-    except:
-        pass
 
 if __name__ == '__main__':
     main()

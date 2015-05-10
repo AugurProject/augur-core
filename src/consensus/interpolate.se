@@ -21,11 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # If you have questions, please contact Jack Peterson (jack@augur.net).
-
-extern statistics.se: [weighted_median:aa:i]
-
-STATISTICS = 0x0cb1277671d162b2f5c81e9435744f63768398d0
-# STATISTICS = create("statistics.se")
+import statistics
 
 def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
     # returns:
@@ -107,7 +103,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                                                         while j < num_present[i]:
                                                                             active_reputation[j] = fixed_divide(active_reputation[j], total_active_reputation)
                                                                             j += 1
-                                                                        guess = STATISTICS.weighted_median(active_reports, active_reputation)
+                                                                        guess = statistics.weighted_median(active_reports, active_reputation)
                                                                     j = 0
                                                                     while j < num_reports - num_present[i]:
                                                                         reports_interp[nan_indices[j]] = guess
@@ -120,6 +116,6 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                             i += 1
                                 return(reports_interp, items=flatsize_x_2)
 
-inset('../macros/constants.se')
-inset('../macros/fixed.se')
-inset('../macros/arrays.se')
+inset('../../macros/constants.se')
+inset('../../macros/fixed.se')
+inset('../../macros/arrays.se')

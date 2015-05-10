@@ -1,6 +1,3 @@
-
-extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
-data whitelist
 # This software (Augur) allows buying && selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation 
 #    This program is free software; you can redistribute it &&/or modify

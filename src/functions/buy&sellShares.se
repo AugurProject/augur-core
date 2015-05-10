@@ -19,28 +19,13 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getSubstep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, initializeBranch:iiii:i, setStep:ii:i, setSubstep:ii:i]
-BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
-
-extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
-EXPEVENTS = 0x61d90fd4c1c3502646153003ec4d5c177de0fb58
-
-extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
-INFO = 0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b
-
-extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
-CASH = 0xf1d413688a330839177173ce98c86529d0da6e5c
-
-extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:i, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
-REPORTING = 0xd1f7f020f24abca582366ec80ce2fef6c3c22233
-
-extern fxpFunctions.se: [fx_exp:i:i, fx_log:i:i]
-FXP = 0xdaf26192091449d14c03026f79272e410fce0908
-
-extern markets.se: [addParticipant:ii:i, getAlpha:i:i, getBranchID:i:i, getCumScale:i:i, getCurrentParticipantNumber:i:i, getMarketEvents:i:a, getMarketInfo:i:a, getMarketNumOutcomes:i:i, getNumEvents:i:i, getParticipantID:ii:i, getParticipantNumber:ii:i, getParticipantSharesPurchased:iii:i, getSharesPurchased:ii:i, getSimulatedBuy:iii:_, getSimulatedSell:iii:_, getTradingFee:i:i, getTradingPeriod:i:i, getWinningOutcomes:i:a, initialLiquiditySetup:iiii:i, initializeMarket:iaiii:i, lsLmsr:i:i, modifyParticipantShares:iiii:i, modifyShares:iii:i, price:ii:i, setWinningOutcomes:a:i]
-MARKETS = 0x75ee234fe5ef1cd493c2af38a2ae7d0d0cba01f5
-
-
+import branches
+import expiringEvents
+import info
+import cash
+import reporting
+import fxMath
+import markets
 data nonces[]
 
 event updatePrice(outcome, price)
@@ -65,39 +50,39 @@ def buyShares(branch, market, outcome, amount, nonce):
     #    return(-4)
     inc_nonce()
     stalled = 0
-    if (outcome==0 || (BRANCHES.getVotePeriod(branch)>=MARKETS.getTradingPeriod(market) && !stalled) || MARKETS.getBranchID(market) != branch):
+    if (outcome==0 || (branches.getVotePeriod(branch)>=markets.getTradingPeriod(market) && !stalled) || markets.getBranchID(market) != branch):
         return(-1)
     # lmsr cost calcs
-    oldCost = MARKETS.lsLmsr(market)
-    MARKETS.modifyShares(market, outcome, amount)
-    newCost = MARKETS.lsLmsr(market)
+    oldCost = markets.lsLmsr(market)
+    markets.modifyShares(market, outcome, amount)
+    newCost = markets.lsLmsr(market)
     if newCost <= oldCost:
-        MARKETS.modifyShares(market, outcome, -amount)
+        markets.modifyShares(market, outcome, -amount)
         return(0)
     price = (newCost - oldCost)
     
-    if(CASH.balance(tx.origin) < price*(MARKETS.getTradingFee(market) + 2^64)/2^64):
-        MARKETS.modifyShares(market, outcome, -amount)
+    if(cash.balance(tx.origin) < price*(markets.getTradingFee(market) + 2^64)/2^64):
+        markets.modifyShares(market, outcome, -amount)
         return(-3)
 
-    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    participantNumber = markets.getParticipantNumber(market, tx.origin)
 
     # if participant doesn't exist in market, add them
-    if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
-        participantNumber = MARKETS.addParticipant(market, tx.origin)
+    if(tx.origin != markets.getParticipantID(market, participantNumber)):
+        participantNumber = markets.addParticipant(market, tx.origin)
 
-    MARKETS.modifyParticipantShares(market, participantNumber, outcome, amount)
+    markets.modifyParticipantShares(market, participantNumber, outcome, amount)
     # send shares of the event to user address
     # if user doesn't have enough money, revert
     # send money from user acc. to market address/account
     # cost for shares
-    CASH.send(market, price)
+    cash.send(market, price)
     # half of fees to market creator
-    fee = MARKETS.getTradingFee(market)*price/2^64
-    CASH.send(INFO.getCreator(market), fee/2)
+    fee = markets.getTradingFee(market)*price/2^64
+    cash.send(info.getCreator(market), fee/2)
     # other half go to branch
-    CASH.send(branch, fee/2)
-    log(type=updatePrice, outcome, MARKETS.price(market, outcome))
+    cash.send(branch, fee/2)
+    log(type=updatePrice, outcome, markets.price(market, outcome))
     return(price+fee)
 
 # amount is amount of shares to sell
@@ -112,35 +97,35 @@ def sellShares(branch, market, outcome, amount, nonce):
     #    return(-4)
     inc_nonce()
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
-    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
-    if (MARKETS.getParticipantID(market, participantNumber) != tx.origin || outcome==0 || BRANCHES.getVotePeriod(branch)>=MARKETS.getTradingPeriod(market) || MARKETS.getBranchID(market) != branch):
+    participantNumber = markets.getParticipantNumber(market, tx.origin)
+    if (markets.getParticipantID(market, participantNumber) != tx.origin || outcome==0 || branches.getVotePeriod(branch)>=markets.getTradingPeriod(market) || markets.getBranchID(market) != branch):
         return(-1)
     # lmsr cost calcs
-    oldCost = MARKETS.lsLmsr(market)
-    MARKETS.modifyShares(market, outcome, -amount)
-    newCost = MARKETS.lsLmsr(market)
+    oldCost = markets.lsLmsr(market)
+    markets.modifyShares(market, outcome, -amount)
+    newCost = markets.lsLmsr(market)
     if oldCost <= newCost:
-        MARKETS.modifyShares(market, outcome, amount)
+        markets.modifyShares(market, outcome, amount)
         return(-2)
     # these prices are in fixed point
     price = oldCost - newCost
     # remove shares from the user's account
     # if user actually doesn't have the shares, revert
-    if MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome) < amount:
-        MARKETS.modifyShares(market, outcome, amount)
+    if markets.getParticipantSharesPurchased(market, participantNumber, outcome) < amount:
+        markets.modifyShares(market, outcome, amount)
         return(-3)
     else:
         # send bitcoin from the market to the user acc.
-        CASH.subtractCash(market, price)
-        fee = MARKETS.getTradingFee(market)*price/2^64
+        cash.subtractCash(market, price)
+        fee = markets.getTradingFee(market)*price/2^64
         # half of fees go to market creator
-        CASH.addCash(INFO.getCreator(market), fee/2)
+        cash.addCash(info.getCreator(market), fee/2)
         # half go to branch
-        CASH.addCash(branch, fee/2)
+        cash.addCash(branch, fee/2)
         price -= fee
-        CASH.addCash(tx.origin, price)
-        MARKETS.modifyParticipantShares(market, participantNumber, outcome, -amount)
-        log(type=updatePrice, outcome, MARKETS.price(market, outcome))
+        cash.addCash(tx.origin, price)
+        markets.modifyParticipantShares(market, participantNumber, outcome, -amount)
+        log(type=updatePrice, outcome, markets.price(market, outcome))
         return(price)
 
 macro good_pow():

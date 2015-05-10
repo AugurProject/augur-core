@@ -1,6 +1,3 @@
-
-extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
-data whitelist
 # This software (Augur) allows buying && selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation 
 #    This program is free software; you can redistribute it &&/or modify
@@ -25,8 +22,6 @@ data whitelist
 data cashcoinBalances[]
 
 def init():
-    self.whitelist = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
-
     # test initial funds
     self.cashcoinBalances[tx.origin] = 100000*2^64
 
