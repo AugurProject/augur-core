@@ -45,19 +45,33 @@ class Code(object):
         self.filename = filename
         with open(filename) as f:
             self.code = f.read()
+        self.last_change = []
         
     def replace(self, s1, s2):
+        changes = []
+        while s1 in self.code:
+            i = self.code.find(s1)
+            changes.append(i)
+            self.code.replace(s1, s2, 1)
+        self.last_change.append(('replace', s1, s2))
         self.code = self.code.replace(s1, s2)
         
     def setline(self, line_num, s):
         c = self.code.split('\n')
+        self.last_change.append(('set_line', line_num, c[line_num]))
         c[line_num] = s
         self.code = '\n'.join(c)
 
     def rmlines(self, a, b):
         c = self.code.split('\n')
+        self.last_change.append(('rmlines', a, b, c[a:b]))
         del c[a:b]
         self.code = '\n'.join(c)
+
+    def undo(self):
+        lc = self.last_change.pop()
+        if lc[0] == 'replace':
+            self.code.replace(lc[2], ls[1])
 
     def show(self, highlight=None):
         h = None
