@@ -18,7 +18,7 @@ contracts = {
     'createEvent' : '0xcae6d5912033d66650894e2ae8c2f7502eaba15c',
     'createMarket' : '0xb8555091be5c8b8fc77449bb203717959079c29a',
     'checkQuorum' : '0x4eaa7a8b00107bbc11909e327e163b067fd3cfb9',
-    'buy&sellShares' : '0x9dff8b4278f05e37f00d7461b175e092ae611380',
+    'buy&sellShares' : '0xb25945b0e544cbe5cacd10fdfb68687b173e0845',
     'createBranch' : '0x5c955b31ac72c83ffd7562aed4e2100b2ba09a3b',
     'sendReputation' : '0x049487d32b727be98a4c8b58c4eab6521791f288',
     'transferShares' : '0x78da82256f5775df22eee51096d27666772b592d',
