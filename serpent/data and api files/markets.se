@@ -118,17 +118,6 @@ def getNumEvents(market):
 def getCurrentParticipantNumber(market):
     return(self.Markets[market].currentParticipant)
 
-def getWinningOutcomes(market):
-    # largest # of winning outcomes is 8
-    winningOutcomes = array(8)
-    i = 0
-    outcome = self.Markets[market].winningOutcomes[i]
-    while outcome != 0:
-        winningOutcomes[i] = outcome
-        i += 1
-        outcome = self.Markets[market].winningOutcomes[i]
-    return(winningOutcomes: arr)
-
 def getAlpha(market):
     return(self.Markets[market].alpha)
 
