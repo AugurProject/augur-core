@@ -100,7 +100,11 @@ def getSharesPurchased(market, outcome):
     return(self.Markets[market].sharesPurchased[outcome])
 
 def getParticipantNumber(market, address):
-    return(self.Markets[market].addr2participant[address])
+    participantNumber = self.Markets[market].addr2participant[address]
+    if(self.Markets[market].participants[participantNumber].participantID != tx.origin):
+        return(-1)
+    else:
+        return(participantNumber)
 
 def getParticipantID(market, participantNumber):
     return(self.Markets[market].participants[participantNumber].participantID)
