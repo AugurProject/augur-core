@@ -1,6 +1,6 @@
 # This software (Augur) allows buying and selling event options in Ethereum.
 #
-# Copyright (c) 2015 Forecast Foundation 
+# Copyright (c) 2015 Forecast Foundation
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,20 +23,12 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
-extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
-extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
-extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
-extern center.se: [center:aaaaaii:a, covariance:aaii:a, tokenize:ai:a]
+import events
+import expiringEvents
+import reporting
+import center
 
-EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
-EXPIRING = 0x61d90fd4c1c3502646153003ec4d5c177de0fb58
-REPORTING = 0xd1f7f020f24abca582366ec80ce2fef6c3c22233
-CENTER = 0xcff950797165df23550b6d79fa98e55d4c250fbe
 
-# EVENTS = create("../data and api files/events.se")
-# EXPIRING = create("../data and api files/expiringEvents.se")
-# REPORTING = create("../data and api files/reporting.se")
-# CENTER = create("center.se")
 
 def center(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
@@ -44,30 +36,30 @@ def center(branch, period, num_events, num_reports, flatsize):
     with reputation = array(num_reports):
         with i = 0:
             while i < num_reports:
-                reputation[i] = REPORTING.getRepByIndex(branch, i)
+                reputation[i] = reporting.getRepByIndex(branch, i)
                 i += 1
         with scaled = array(num_events):
             with scaled_max = array(num_events):
                 with scaled_min = array(num_events):
                     with j = 0:
                         while j < num_events:
-                            with event = EXPIRING.getEvent(branch, period, j):
-                                if fix(EVENTS.getMaxValue(event)) != YES:
+                            with event = expiringEvents.getEvent(branch, period, j):
+                                if fix(events.getMaxValue(event)) != YES:
                                     scaled[j] = 1
-                                    scaled_min[j] = fix(EVENTS.getMinValue(event))
-                                    scaled_max[j] = fix(EVENTS.getMaxValue(event))
+                                    scaled_min[j] = fix(events.getMinValue(event))
+                                    scaled_max[j] = fix(events.getMaxValue(event))
                                 else:
                                     scaled[j] = 0
                                     scaled_min[j] = NO
                                     scaled_max[j] = YES
                             j += 1
-                    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=flatsize):
+                    with reports_filled = expiringEvents.getReportsFilled(branch, period, outsz=flatsize):
                         with lflatsize = flatsize + num_events + 2:
-                            with result = CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, MAX_COMPONENTS, outsz=lflatsize):
+                            with result = center.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, MAX_COMPONENTS, outsz=lflatsize):
                                 wcd = slice(result, items=0, items=flatsize)
-                                EXPIRING.setWeightedCenteredData(branch, period, wcd)
+                                expiringEvents.setWeightedCenteredData(branch, period, wcd)
                                 loading_vector = slice(result, items=flatsize, items=lflatsize)
-                                EXPIRING.setLoadingVector(branch, period, loading_vector)
+                                expiringEvents.setLoadingVector(branch, period, loading_vector)
                                 return(1)
 
 def covariance(branch, period, num_events, num_reports, flatsize):
@@ -76,15 +68,15 @@ def covariance(branch, period, num_events, num_reports, flatsize):
     with reputation = array(num_reports):
         with i = 0:
             while i < num_reports:
-                reputation[i] = REPORTING.getRepByIndex(branch, i)
+                reputation[i] = reporting.getRepByIndex(branch, i)
                 i += 1
-        with reptokens = CENTER.tokenize(reputation, num_reports, outsz=num_reports):
-            with wcd = EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize):
-                with covrow = CENTER.covariance(wcd, reptokens, num_reports, num_events, outsz=num_events):
-                    EXPIRING.setCovarianceMatrixRow(branch, period, covrow)
-                    EXPIRING.setDeflated(branch, period, wcd)
+        with reptokens = center.tokenize(reputation, num_reports, outsz=num_reports):
+            with wcd = expiringEvents.getWeightedCenteredData(branch, period, outsz=flatsize):
+                with covrow = center.covariance(wcd, reptokens, num_reports, num_events, outsz=num_events):
+                    expiringEvents.setCovarianceMatrixRow(branch, period, covrow)
+                    expiringEvents.setDeflated(branch, period, wcd)
                     return(1)
 
-inset('../macros/constants.se')
-inset('../macros/fixed.se')
+inset('../../macros/constants.se')
+inset('../../macros/fixed.se')
 # inset('../macros/logging.se')

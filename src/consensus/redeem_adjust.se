@@ -1,6 +1,6 @@
 # This software (Augur) allows buying and selling event options in Ethereum.
 #
-# Copyright (c) 2015 Forecast Foundation 
+# Copyright (c) 2015 Forecast Foundation
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -74,7 +74,7 @@ def select_scores(branch, period, num_events, num_reports, flatsize):
                                 # return(expiringEvents.getAdjPrinComp(branch, period, outsz=num_reports):arr)
                                 return(1)
 
-inset('../macros/constants.se')
-inset('../macros/fixed.se')
+inset('../../macros/constants.se')
+inset('../../macros/fixed.se')
 # inset('../macros/logging.se')
 # inset('../macros/mock.se')

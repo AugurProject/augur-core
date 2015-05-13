@@ -1,5 +1,5 @@
 
-extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+import whitelist
 data whitelist
 # This software (Augur) allows buying && selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation
@@ -22,8 +22,7 @@ data whitelist
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getSubstep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, initializeBranch:iiii:i, setStep:ii:i, setSubstep:ii:i]
-BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
+import branches
 
 # Reporting index is the branchID
 # Reporters index is the rep. address
@@ -71,11 +70,11 @@ def getReporterID(branch, index):
 # will return 0s for array values after it's looped through all the ones you
 # have an actual balance in
 def getReputation(address):
-    branchListCount = BRANCHES.getNumBranches()
+    branchListCount = branches.getNumBranches()
     if(address):
         branches = array(2*branchListCount)
         branchList = array(branchListCount)
-        branchList = BRANCHES.getBranches(outsz=branchListCount)
+        branchList = branches.getBranches(outsz=branchListCount)
         i = 0
         b = 0
         while i < branchListCount:
@@ -90,7 +89,7 @@ def getReputation(address):
         address = tx.origin
         branches = array(2*branchListCount)
         branchList = array(branchListCount)
-        branchList = BRANCHES.getBranches(outsz=branchListCount)
+        branchList = branches.getBranches(outsz=branchListCount)
         i = 0
         b = 0
         while i < branchListCount:

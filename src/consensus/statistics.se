@@ -66,14 +66,14 @@ macro paired_qsort($a, $b):
                                             $x = $c[$h]
                                             $i = $l - 1
                                             $j = $l
-                                            
+
                                             while $j <= $h - 1:
                                                 if $c[$j] <= $x:
                                                     $i += 1
                                                     swap($c, $i, $j)
                                                     swap($c, $i + $len, $j + $len)
                                                 $j += 1
-                                            
+
                                             swap($c, $i+1, $h)
                                             swap($c, $i + $len + 1, $h + $len)
                                             if $i > $l:
@@ -113,7 +113,7 @@ macro weighted_median($data, $weights):
                                             idx += 1
                                             cumulative_weight += sorted_weights[idx-1]
                                         cumulative_weight -= sorted_weights[idx-1]
-                                        # conservative machine epsilon: 
+                                        # conservative machine epsilon:
                                         # 0x1197998 = 18446744 = ONE / 10^12
                                         if abs(cumulative_weight - midpoint) < 0x1197998:
                                             wmedian = (sorted_data[idx-2] + sorted_data[idx-1]) / 2
@@ -125,4 +125,4 @@ macro weighted_median($data, $weights):
 def weighted_median(data:arr, weights:arr):
     return(weighted_median(data, weights))
 
-inset('../macros/arrays.se')
+inset('../../macros/arrays.se')

@@ -1,8 +1,4 @@
 
-extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
-data whitelist
-def init():
-    self.whitelist = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
 # This software (Augur) allows buying && selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
@@ -24,8 +20,7 @@ def init():
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-extern fx_macros.se: [fx_exp:i:i, fx_log:i:i]
-FXP = 0xdaf26192091449d14c03026f79272e410fce0908
+import fxMath
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market in the format of
@@ -151,9 +146,9 @@ macro lsLmsr($marketID):
         with $i = 1:
             with $sumExp = 0:
                 while $i <= numOutcomes($marketID):
-                    $sumExp += FXP.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
+                    $sumExp += fxMath.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
                     $i += 1
-                $bq*FXP.fx_log($sumExp)/2**64
+                $bq*fxMath.fx_log($sumExp)/2**64
 
 macro sumList($q, $a, $b):
     $i = $a + 1

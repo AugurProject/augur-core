@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation 
+# Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -38,7 +38,7 @@ event updatePrice(outcome, price)
     # -3: not enough money
     # -4: bad nonce/hash
 def buyShares(branch, market, outcome, amount, nonce):
-    # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)  
+    # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     # if we have 3-4 cycles in a row of events getting pushed back market would already be closed even though events up to be decided on for a while yet never decided
     # technically this is a stalled branch and market should be open
     # if(currentPeriod + 3 >= currentVotePeriod) we're stalled
@@ -60,7 +60,7 @@ def buyShares(branch, market, outcome, amount, nonce):
         markets.modifyShares(market, outcome, -amount)
         return(0)
     price = (newCost - oldCost)
-    
+
     if(cash.balance(tx.origin) < price*(markets.getTradingFee(market) + 2^64)/2^64):
         markets.modifyShares(market, outcome, -amount)
         return(-3)
@@ -91,7 +91,7 @@ def buyShares(branch, market, outcome, amount, nonce):
 # Error messages otherwise
     # -1: invalid outcome, trading closed, or you haven't traded in this market
     # -2: entered a -amt of shares
-    # -3: you own no shares 
+    # -3: you own no shares
 def sellShares(branch, market, outcome, amount, nonce):
     #if !good_pow():
     #    return(-4)

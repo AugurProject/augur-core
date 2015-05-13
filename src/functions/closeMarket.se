@@ -19,32 +19,23 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i]
-BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
+import branches
 
-extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
-INFO = 0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b
+import info
 
-extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
-CASH = 0xf1d413688a330839177173ce98c86529d0da6e5c
+import cash
 
-extern markets.se: [addParticipant:ii:i, getAlpha:i:i, getBranchID:i:i, getCumScale:i:i, getCurrentParticipantNumber:i:i, getMarketEvents:i:a, getMarketInfo:i:a, getMarketNumOutcomes:i:i, getNumEvents:i:i, getParticipantID:ii:i, getParticipantNumber:ii:i, getParticipantSharesPurchased:iii:i, getSharesPurchased:ii:i, getSimulatedBuy:ii:_, getSimulatedSell:ii:_, getTradingFee:i:i, getTradingPeriod:i:i, getWinningOutcomes:i:a, initialLiquiditySetup:iiii:i, initializeMarket:iaiii:i, lsLmsr:i:i, modifyParticipantShares:iiii:i, modifyShares:iii:i, price:ii:i, setWinningOutcomes:a:i]
-MARKETS = 0x75ee234fe5ef1cd493c2af38a2ae7d0d0cba01f5
+import markets
 
-extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
-EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
+import events
 
-extern closeMarketOne.se: [oneOutcome:ii:i]
-CLOSEONE = 0x23d7391ce32252a4b2115db06385ff3d6c5f4321
+import closeMarketOne
 
-extern closeMarketTwo.se: [twoOutcomes:iaa:i]
-CLOSETWO = 0x79a209941d89e88a60faf9e930d4f1f82f56045a
+import closeMarketTwo
 
-extern closeMarketFour.se: [fourOutcomes:iaa:i]
-CLOSEFOUR = 0x5a987bda69898a4fc096ed2338ee8ec5e4f7735d
+import closeMarketFour
 
-extern closeMarketEight.se: [eightOutcomes:iaa:i]
-CLOSEEIGHT = 0x5193ffa9a28ecc111f95f5711a3bbafce3e72eb9
+import closeMarketEight
 
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
@@ -55,66 +46,66 @@ CLOSEEIGHT = 0x5193ffa9a28ecc111f95f5711a3bbafce3e72eb9
     # -2: 0 outcome
     # -3: Outcome indeterminable
 def closeMarket(branch, market):
-    if(CASH.balance(market)<=0):
+    if(cash.balance(market)<=0):
         return(-1)
-    numberEvents = MARKETS.getNumEvents(market)
-    tradingPeriod = MARKETS.getTradingPeriod(market)
+    numberEvents = markets.getNumEvents(market)
+    tradingPeriod = markets.getTradingPeriod(market)
     # check if any events in the market were pushed back and that market has expired
     # (as long as the latest expiring event wasn't pushed back, we know they all got reported on)
     # if it *was* pushed back, we'll just get an outcome of 0, return 0 until the event is actually reported on, then we can resolve the market
-    if(BRANCHES.getVotePeriod(branch) > tradingPeriod):
+    if(branches.getVotePeriod(branch) > tradingPeriod):
         # loop through events in the market, get their outcomes && use those to determine the winning events!
         n = 0
         # (max poss. winning outcomes is 200 outcomes total all scalar multidimensional)
         winningOutcomes = array(200)
         events = array(3)
-        events = MARKETS.getMarketEvents(market, outsz=3)
+        events = markets.getMarketEvents(market, outsz=3)
         while n < numberEvents:
-            fxpOutcome = EVENTS.getOutcome(events[n])
+            fxpOutcome = events.getOutcome(events[n])
             if(fxpOutcome==0):
                 return(-2)
             outcome = fxpOutcome/2^64
             # makes sure it's not a scalar
-            if(fxpOutcome==3*2^63 && numberEvents==1 && !(EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2)):
+            if(fxpOutcome==3*2^63 && numberEvents==1 && !(events.getMaxValue(events[n])!=1 && events.getNumOutcomes(events[n])==2)):
                 # return all the $$$ - (@ 50 cents a share)
                 i = 0
-                currentParticipant = MARKETS.getCurrentParticipantNumber(market)
+                currentParticipant = markets.getCurrentParticipantNumber(market)
                 while i < currentParticipant:
-                    sharesOwnedOne = MARKETS.getParticipantSharesPurchased(market, i, 1)
-                    sharesOwnedTwo = MARKETS.getParticipantSharesPurchased(market, i, 2)
-                    participant = MARKETS.getParticipantID(market, i)
-                    CASH.subtractCash(market, sharesOwnedOne*3*2^63 / 2^64)
-                    CASH.addCash(participant, sharesOwnedOne*3*2^63 / 2^64)
-                    CASH.subtractCash(market, sharesOwnedTwo*3*2^63 / 2^64)
-                    CASH.addCash(participant, sharesOwnedTwo*3*2^63 / 2^64)
+                    sharesOwnedOne = markets.getParticipantSharesPurchased(market, i, 1)
+                    sharesOwnedTwo = markets.getParticipantSharesPurchased(market, i, 2)
+                    participant = markets.getParticipantID(market, i)
+                    cash.subtractCash(market, sharesOwnedOne*3*2^63 / 2^64)
+                    cash.addCash(participant, sharesOwnedOne*3*2^63 / 2^64)
+                    cash.subtractCash(market, sharesOwnedTwo*3*2^63 / 2^64)
+                    cash.addCash(participant, sharesOwnedTwo*3*2^63 / 2^64)
                     i += 1
 
                 # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
                 # refund left over initial liquidity in market - half to market creator, other half to voters
                 # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
-                initialLiquidity = INFO.getCreationFee(market)
+                initialLiquidity = info.getCreationFee(market)
                 # split up excess profits & liquidity
-                marketCash = CASH.balance(market)
-                CASH.addCash(branch, marketCash/2)
-                CASH.addCash(INFO.getCreator(market), marketCash / 2)
-                CASH.subtractCash(market, marketCash)
+                marketCash = cash.balance(market)
+                cash.addCash(branch, marketCash/2)
+                cash.addCash(info.getCreator(market), marketCash / 2)
+                cash.subtractCash(market, marketCash)
 
                 winningOutcomes[0] = 1
                 winningOutcomes[1] = 2
-                MARKETS.setWinningOutcomes(winningOutcomes)
+                markets.setWinningOutcomes(winningOutcomes)
                 return(-3)
             elif(fxpOutcome==0):
                 return(-2)
             if(n==0):
                 #scalar or .5
-                if((EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
+                if((events.getMaxValue(events[n])!=1 && events.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
                     winningOutcomes[0] = 1
                     winningOutcomes[1] = 2
                 # anything besides scalar or .5
                 else:
                     winningOutcomes[0] += outcome
             elif(n==1):
-                if((EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
+                if((events.getMaxValue(events[n])!=1 && events.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
                     # scalar, scalar
                     if(winningOutcomes[1]):
                         winningOutcomes[2] = 3
@@ -122,16 +113,16 @@ def closeMarket(branch, market):
                     # nonscalar, scalar
                     else:
                       # winningOutcomes[0] = winningOutcomes[0]
-                        winningOutcomes[1] = winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-1])
+                        winningOutcomes[1] = winningOutcomes[0] + events.getNumOutcomes(events[n-1])
                 # scalar, nonscalar
                 elif(winningOutcomes[1]):
-                    winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
-                    winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
+                    winningOutcomes[0] += events.getNumOutcomes(events[n-1])*(outcome-1)
+                    winningOutcomes[1] += events.getNumOutcomes(events[n-1])*(outcome-1)
                 # nonscalar, nonscalar
                 else:
-                    winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
+                    winningOutcomes[0] += events.getNumOutcomes(events[n-1])*(outcome-1)
             elif(n==2):
-                if((EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
+                if((events.getMaxValue(events[n])!=1 && events.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
                     #scalar, scalar, scalar
                     if(winningOutcomes[3]):
                         winningOutcomes[4] = 5
@@ -143,27 +134,27 @@ def closeMarket(branch, market):
                     elif(winningOutcomes[1]):
                       # winningOutcomes[0] = winningOutcomes[0]
                       # winningOutcomes[1] = winningOutcomes[1]
-                        winningOutcomes[2] += winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
-                        winningOutcomes[3] += winningOutcomes[1] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
+                        winningOutcomes[2] += winningOutcomes[0] + events.getNumOutcomes(events[n-2]) * events.getNumOutcomes(events[n-1])
+                        winningOutcomes[3] += winningOutcomes[1] + events.getNumOutcomes(events[n-2]) * events.getNumOutcomes(events[n-1])
                     #nonscalar, nonscalar, scalar
                     elif(winningOutcomes[1]==0):
                       # winningOutcomes[0] = winningOutcomes[0]
-                        winningOutcomes[1] += winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
+                        winningOutcomes[1] += winningOutcomes[0] + events.getNumOutcomes(events[n-2]) * events.getNumOutcomes(events[n-1])
                 else:
                     #scalar, scalar, nonscalar
                     if(winningOutcomes[3]):
-                        winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                        winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                        winningOutcomes[2] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                        winningOutcomes[3] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+                        winningOutcomes[0] += events.getNumOutcomes(events[n-2]) * events.getNumOutcomes(events[n-1]) * (outcome-1)
+                        winningOutcomes[1] += events.getNumOutcomes(events[n-2]) * events.getNumOutcomes(events[n-1]) * (outcome-1)
+                        winningOutcomes[2] += events.getNumOutcomes(events[n-2]) * events.getNumOutcomes(events[n-1]) * (outcome-1)
+                        winningOutcomes[3] += events.getNumOutcomes(events[n-2]) * events.getNumOutcomes(events[n-1]) * (outcome-1)
                     #scalar, nonscalar, nonscalar
                     #nonscalar, scalar, nonscalar
                     elif(winningOutcomes[1]):
-                        winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                        winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+                        winningOutcomes[0] += events.getNumOutcomes(events[n-2]) * events.getNumOutcomes(events[n-1]) * (outcome-1)
+                        winningOutcomes[1] += events.getNumOutcomes(events[n-2]) * events.getNumOutcomes(events[n-1]) * (outcome-1)
                     #nonscalar, nonscalar, nonscalar
                     else:
-                        winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+                        winningOutcomes[0] += events.getNumOutcomes(events[n-2]) * events.getNumOutcomes(events[n-1]) * (outcome-1)
             n+=1
 
         pricePerShare1 = 0
@@ -176,46 +167,46 @@ def closeMarket(branch, market):
         pricePerShare8 = 0
 
         if(winningOutcomes[1]==0):
-            CLOSEONE.oneOutcome(market, winningOutcomes[0])
+            closeMarketOne.oneOutcome(market, winningOutcomes[0])
 
         elif(winningOutcomes[7]):
-            CLOSEEIGHT.eightOutcomes(market, winningOutcomes, events)
+            closeMarketEight.eightOutcomes(market, winningOutcomes, events)
 
         elif(winningOutcomes[3]):
-            CLOSEFOUR.fourOutcomes(market, winningOutcomes, events)
+            closeMarketFour.fourOutcomes(market, winningOutcomes, events)
 
         elif(winningOutcomes[1]):
-            CLOSETWO.twoOutcomes(market, winningOutcomes, events)
+            closeMarketTwo.twoOutcomes(market, winningOutcomes, events)
 
         # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
         # refund left over initial liquidity in market - half to market creator, other half to voters
         # *unless* it's a scaled decision, refund all initial liquidity left over to market creator
         # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
-        initialLiquidity = INFO.getCreationFee(market)
-        creator = INFO.getCreator(market)
-        marketCash = CASH.balance(market)
+        initialLiquidity = info.getCreationFee(market)
+        creator = info.getCreator(market)
+        marketCash = cash.balance(market)
         # some scalar involved
         if(winningOutcomes[1]):
-            if(CASH.balance(market) > initialLiquidity):
+            if(cash.balance(market) > initialLiquidity):
                 # pay back liquidity, split up excess profits
-                CASH.addCash(creator, initialLiquidity)
-                CASH.subtractCash(market, initialLiquidity)
-                CASH.addCash(branch, marketCash/2)
-                CASH.addCash(creator, marketCash/2)
-                CASH.subtractCash(market, marketCash)
+                cash.addCash(creator, initialLiquidity)
+                cash.subtractCash(market, initialLiquidity)
+                cash.addCash(branch, marketCash/2)
+                cash.addCash(creator, marketCash/2)
+                cash.subtractCash(market, marketCash)
             # send whatever's left of the initial liquidity to the creator
             else:
-                CASH.addCash(creator, marketCash)
-                CASH.subtractCash(market, marketCash)
+                cash.addCash(creator, marketCash)
+                cash.subtractCash(market, marketCash)
 
         # no scalars
         else:
             # split up excess profits & liquidity
-            CASH.addCash(branch, marketCash/2)
-            CASH.addCash(creator, marketCash/2)
-            CASH.subtractCash(market, marketCash)
+            cash.addCash(branch, marketCash/2)
+            cash.addCash(creator, marketCash/2)
+            cash.subtractCash(market, marketCash)
 
-        MARKETS.setWinningOutcomes(winningOutcomes)
+        markets.setWinningOutcomes(winningOutcomes)
         return(1)
     else:
         return(0)

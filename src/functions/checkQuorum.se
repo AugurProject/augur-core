@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation 
+# Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -19,18 +19,16 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i]
-BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
+import branches
 
-extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getEvent:iii:i, getEvents:ii:a, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
-EXPEVENTS = 0x61d90fd4c1c3502646153003ec4d5c177de0fb58
+import expiringEvents
 
 # returns whether a quorem has a matured event
 # if there aren't enough events in a vote period eventsexpdate, push them to the current period and increment the vote period
 # @return 0 if fail, 1 if success
 def checkQuorum(branch):
-    currentVotePeriod = BRANCHES.getVotePeriod(branch)
-    currentPeriod = (block.number / BRANCHES.getPeriodLength(branch))
+    currentVotePeriod = branches.getVotePeriod(branch)
+    currentPeriod = (block.number / branches.getPeriodLength(branch))
     # provided the currentPeriod is >=2 periods past the things we're going to rbcr on
     # we can then conclude it has matured && people have had time to vote
     matured = 0
@@ -44,18 +42,18 @@ def checkQuorum(branch):
     upcomingDecisions = 0
     b = currentPeriod
     while b < (currentPeriod+100):
-        upcomingDecisions += EXPEVENTS.getNumberEvents(branch, b)
+        upcomingDecisions += expiringEvents.getNumberEvents(branch, b)
         b += 1
     # normally < 30 and < 500 respectively, lowered for testing
-    if ((EXPEVENTS.getNumberEvents(branch, currentVotePeriod) < 5 || upcomingDecisions < 10) && matured):
-        BRANCHES.incrementPeriod(branch)
-        BRANCHES.setStep(branch, 0)
-        currentVotePeriod = BRANCHES.getVotePeriod(branch)
-        EXPEVENTS.moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod)
+    if ((expiringEvents.getNumberEvents(branch, currentVotePeriod) < 5 || upcomingDecisions < 10) && matured):
+        branches.incrementPeriod(branch)
+        branches.setStep(branch, 0)
+        currentVotePeriod = branches.getVotePeriod(branch)
+        expiringEvents.moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod)
     else:
         enoughEvents = 1
         enoughUpcoming = 1
-        
+
     if(matured && enoughEvents && enoughUpcoming):
         return(1)
     else:

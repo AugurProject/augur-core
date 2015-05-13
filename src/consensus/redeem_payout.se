@@ -1,6 +1,6 @@
 # This software (Augur) allows buying and selling event options in Ethereum.
 #
-# Copyright (c) 2015 Forecast Foundation 
+# Copyright (c) 2015 Forecast Foundation
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,67 +24,54 @@
 # Jack Peterson (jack@augur.net).
 
 # extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
-extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
-extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
-extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
-extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
-extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
-extern payout.se: [payout:aaaii:a]
+import events
+import expiringEvents
+import reporting
+import cash
+import info
+import payout
 
-# WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
-EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
-EXPIRING = 0x61d90fd4c1c3502646153003ec4d5c177de0fb58
-REPORTING = 0xd1f7f020f24abca582366ec80ce2fef6c3c22233
-CASH = 0xf1d413688a330839177173ce98c86529d0da6e5c
-INFO = 0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b
-PAYOUT = 0x0a4184e2bc58669fb78a9bcee0cc1ab0da9d3ce3
 
-# EVENTS = create("../data and api files/events.se")
-# EXPIRING = create("../data and api files/expiringEvents.se")
-# REPORTING = create("../data and api files/reporting.se")
-# CASH = create("../data and api files/cash.se")
-# INFO = create("../data and api files/info.se")
-# PAYOUT = create("payout.se")
 
 def payout(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
     #     return(-1)
-    with smooth_rep = EXPIRING.getSmoothRep(branch, period, outsz=num_reports):
-        with reports_mask = EXPIRING.getReportsMask(branch, period, outsz=flatsize):
-            with outcomes = EXPIRING.getOutcomesFinal(branch, period, outsz=num_events):
-                with reporter_payouts = PAYOUT.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outsz=num_reports):
+    with smooth_rep = expiringEvents.getSmoothRep(branch, period, outsz=num_reports):
+        with reports_mask = expiringEvents.getReportsMask(branch, period, outsz=flatsize):
+            with outcomes = expiringEvents.getOutcomesFinal(branch, period, outsz=num_events):
+                with reporter_payouts = payout.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outsz=num_reports):
                     # get event ID for each event by taking the x index in the reports arrays
                     # - shoving it in reporting.events[] && getting the cooresponding ID
                     with j = 0:
                         while j < num_events:
-                            with event = EXPIRING.getEvent(branch, period, j):
+                            with event = expiringEvents.getEvent(branch, period, j):
                                 # then take outcomes_final && set each event outcome
                                 # (BAD and BOND macros defined in consensus/constants.se)
-                                EVENTS.setOutcome(event, outcomes[j])
+                                events.setOutcome(event, outcomes[j])
                                 if outcomes[j] != BAD:
                                     # return bond
                                     # Q: should the subtractCash be from the event's ID?
-                                    CASH.subtractCash(event, BOND)
-                                    CASH.addCash(INFO.getCreator(event), BOND)
+                                    cash.subtractCash(event, BOND)
+                                    cash.addCash(info.getCreator(event), BOND)
                                 else:
                                     # give event bond money to reporters
-                                    CASH.subtractCash(event, BOND)
-                                    CASH.addCash(branch, BOND)
+                                    cash.subtractCash(event, BOND)
+                                    cash.addCash(branch, BOND)
                             j += 1
                     # - need to loop through rep holders && distribute 50% of branch fees to
-                    #   reporters' cashcoin addresses 
+                    #   reporters' cashcoin addresses
                     # - also need to take reporter_payouts && redistribute reputation in the
                     #   Reporting structure accordingly
                     with i = 0:
                         # TODO double-check that the cash in and out adds up to 0
                         while i < num_reports:
-                            REPORTING.setRep(branch, i, fixed_multiply(reporter_payouts[i], 21000000))
-                            CASH.addCash(REPORTING.getReporterID(branch, i), fixed_multiply(CASH.balance(branch), reporter_payouts[i]))
+                            reporting.setRep(branch, i, fixed_multiply(reporter_payouts[i], 21000000))
+                            cash.addCash(reporting.getReporterID(branch, i), fixed_multiply(cash.balance(branch), reporter_payouts[i]))
                             i += 1
-                        CASH.subtractCash(branch, CASH.balance(branch))
+                        cash.subtractCash(branch, cash.balance(branch))
                         # return(reporter_payouts:arr)
                         return(1)
 
-inset('../macros/constants.se')
-inset('../macros/fixed.se')
-inset('../macros/arrays.se')
+inset('../../macros/constants.se')
+inset('../../macros/fixed.se')
+inset('../../macros/arrays.se')

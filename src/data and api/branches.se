@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation 
+# Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -24,7 +24,6 @@
 # currentVotePeriod is a nonce that tells us which bucket of events up to be
 # voted on in the current vote period (should always be 1 behind block.number/periodlength or current EventsExpDates index)
 # period parameter for reporting
-# currentExpPeriod = (block.number / self.Branches[branch].periodLength)
 # currentExpPeriod - 1 is what's up for reporting at any given time
 data Branches[](currentVotePeriod, periodLength, step, substep, markets[], numMarkets, minTradingFee)
 
@@ -34,7 +33,7 @@ data branchListCount
 
 def init():
     self.whitelist = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
-    self.Branches[1010101].currentVotePeriod = (block.number / 403200) - 1 
+    self.Branches[1010101].currentVotePeriod = (block.number / 403200) - 1
     self.Branches[1010101].periodLength = 20
     self.Branches[1010101].minTradingFee = 2^57
     self.branchListCount = 1
@@ -66,7 +65,7 @@ def getMinTradingFee(branch):
 	return(self.Branches[branch].minTradingFee)
 
 # @return all branches
-def getBranches(): 
+def getBranches():
     b = 0
     numBranches = self.branchListCount
     branches = array(numBranches)

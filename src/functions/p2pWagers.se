@@ -21,11 +21,9 @@
 
 #p2p hasn't been tested
 
-extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
-EVENTS = 0x45b5293570e78207f1c6dc41ca3e171c76b3d6db
+import events
 
-extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
-CASH = 0x70e1ca88480a4b5f719a0add9b557779b9691764
+import cash
 
 data p2pBets[](eventID, amtToBet, outcomeOneBettor, outcomeZeroBettor)
 
@@ -57,8 +55,8 @@ def makeBet(eventID, amtToBet):
 # outcome is 0 or 1
 # @return 0 if fail, 1 if success
 def sendMoneytoBet(betID, outcome):
-    if(CASH.balance(betID+outcome)==0):
-        CASH.send(betID+outcome, self.p2pBets[betID].amtToBet)
+    if(cash.balance(betID+outcome)==0):
+        cash.send(betID+outcome, self.p2pBets[betID].amtToBet)
     else:
         return(0)
     if(outcome):
@@ -71,20 +69,20 @@ def sendMoneytoBet(betID, outcome):
 # @return 0 if fail, 1 if success
 def closeBet(betID):
     # outcome not determined yet
-    if(EVENTS.getOutcome(self.p2pBets[betID].eventID) == 0):
+    if(events.getOutcome(self.p2pBets[betID].eventID) == 0):
         return(0)
     # pay out depending on outcome
-    if(CASH.balance(betID+0)==self.p2pBets[betID].amtToBet && CASH.balance(betID+1)==self.p2pBets[betID].amtToBet):
-        CASH.subtractCash(betID+0, CASH.balance(betID+0))
-        CASH.subtractCash(betID+1, CASH.balance(betID+1))
-        if(EVENTS.getOutcome(self.p2pBets[betID].eventID)):
-            CASH.addCash(self.p2pBets[betID].outcomeOneBettor, self.p2pBets[betID].amtToBet*2)
-        elif(EVENTS.getOutcome(self.p2pBets[betID].eventID) == 1):
-            CASH.addCash(self.p2pBets[betID].outcomeZeroBettor, self.p2pBets[betID].amtToBet*2)
+    if(cash.balance(betID+0)==self.p2pBets[betID].amtToBet && cash.balance(betID+1)==self.p2pBets[betID].amtToBet):
+        cash.subtractCash(betID+0, cash.balance(betID+0))
+        cash.subtractCash(betID+1, cash.balance(betID+1))
+        if(events.getOutcome(self.p2pBets[betID].eventID)):
+            cash.addCash(self.p2pBets[betID].outcomeOneBettor, self.p2pBets[betID].amtToBet*2)
+        elif(events.getOutcome(self.p2pBets[betID].eventID) == 1):
+            cash.addCash(self.p2pBets[betID].outcomeZeroBettor, self.p2pBets[betID].amtToBet*2)
     # someone didn't pay their side of the bet, refund funds
     else:
-        CASH.addCash(self.p2pBets[betID].outcomeZeroBettor, CASH.balance(betID+0))
-        CASH.addCash(self.p2pBets[betID].outcomeOneBettor, CASH.balance(betID+1))
-        CASH.subtractCash(betID+0, CASH.balance(betID+0))
-        CASH.subtractCash(betID+1, CASH.balance(betID+1))
+        cash.addCash(self.p2pBets[betID].outcomeZeroBettor, cash.balance(betID+0))
+        cash.addCash(self.p2pBets[betID].outcomeOneBettor, cash.balance(betID+1))
+        cash.subtractCash(betID+0, cash.balance(betID+0))
+        cash.subtractCash(betID+1, cash.balance(betID+1))
     return(1)

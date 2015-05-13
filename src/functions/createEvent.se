@@ -19,23 +19,17 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i]
-BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
+import branches
 
-extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
-EXPEVENTS = 0x61d90fd4c1c3502646153003ec4d5c177de0fb58
+import expiringEvents
 
-extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
-INFO = 0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b
+import info
 
-extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
-CASH = 0xf1d413688a330839177173ce98c86529d0da6e5c
+import cash
 
-extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, subtractRep:iii:i]
-REPORTING = 0xd1f7f020f24abca582366ec80ce2fef6c3c22233
+import reporting
 
-extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
-EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
+import events
 
 # numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0
 # to 11.0 would be 11 outcomes (if incremented by 0.1)
@@ -45,7 +39,7 @@ EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
     # -1: we're either already past that date, branch doesn't exist, or description is bad
     # 0: not enough money to pay fees or event already exists
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes):
-    periodLength = BRANCHES.getPeriodLength(branch)
+    periodLength = branches.getPeriodLength(branch)
     if(periodLength && description!=0 && expDate>block.number):
         eventinfo = string((items=8)+len(description))
         eventinfo[0] = EVENT                                        #typecode
@@ -62,18 +56,18 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         return(-1)
 
     # fee to ask a question rises if voter participation (rep reported) falls, if it's really high, the fee is lowered (participationFactor is a fixedpoint number)
-    currentVotePeriod = BRANCHES.getVotePeriod(branch)
-    participationFactor = (EXPEVENTS.getTotalRepReported(branch, currentVotePeriod-2) * 2^64) / EXPEVENTS.getTotalRepReported(branch, currentVotePeriod-1)
+    currentVotePeriod = branches.getVotePeriod(branch)
+    participationFactor = (expiringEvents.getTotalRepReported(branch, currentVotePeriod-2) * 2^64) / expiringEvents.getTotalRepReported(branch, currentVotePeriod-1)
     if(participationFactor==0):
         participationFactor = 1
 
     # send fee and bond
-    if(CASH.balance(tx.origin)>=(42*2^64 + participationFactor*45)):
-        if (!INFO.getCreator(eventID) && !EVENTS.getEventBranch(eventID) && CASH.send(eventID, 42*2^64) && CASH.send(branch, participationFactor*45)):
+    if(cash.balance(tx.origin)>=(42*2^64 + participationFactor*45)):
+        if (!info.getCreator(eventID) && !events.getEventBranch(eventID) && cash.send(eventID, 42*2^64) && cash.send(branch, participationFactor*45)):
             # see which future period it expires in && put the event in that bin
             # event voting periods - expDate / periodLength gives you the voting period #
             futurePeriod = (expDate / periodLength)
-            if(INFO.setInfo(eventID, description, tx.origin, participationFactor*45) && EVENTS.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes) && EXPEVENTS.addEvent(branch, futurePeriod, eventID)):
+            if(info.setInfo(eventID, description, tx.origin, participationFactor*45) && events.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes) && expiringEvents.addEvent(branch, futurePeriod, eventID)):
                 return(eventID)
             else:
                 return(0)
