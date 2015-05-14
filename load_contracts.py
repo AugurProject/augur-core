@@ -29,7 +29,6 @@ import serpent
 import json
 import sys
 import os
-import re
 
 TEMPLATE = '''\
 %(sig)s
@@ -37,7 +36,6 @@ macro %(name)s:
     %(addr)s
 '''
 CODEPATH = os.path.abspath('src')
-IMPORTP = re.compile('^import (?P<name>\S+)$', re.M)
 ERROR = Style.BRIGHT + Fore.RED + 'ERROR!'
 GAS = hex(25*10**5)
 TRIES = 5
@@ -47,37 +45,70 @@ if COINBASE == '0x':
     print 'ABORTING'
     sys.exit(1)
 
-def errstr(string):
-    return ERROR + string + Style.RESET_ALL
+def memoize(func):
+    memo = {}
+    def new_func(x):
+        if x in memo:
+            return memo[x]
+        result = func(x)
+        memo[x] = result
+        return result
+    new_func.__name__ = func.__name__
+    return new_func
 
-def get(name):
-    return json.loads(DB.Get(name))
+@memoize
+def get_full_name(name):
+    for d, s, f in os.walk('src'):
+        for F in f:
+            if F[:-3] == name:
+                return os.path.join(d, F)
+    raise ValueError('No such name: '+name)
 
-def put(name, info):
-    DB.Put(name, json.dumps(info))
+def is_old_info(info):
+    return os.path.getmtime(get_full_name(info['name'])) > info['mtime']
 
-def import_repl(match):
-    name = match.groupdict()['result']
-    info = get(name)
-    info['name'] = name
-    return TEMPLATE % info
+def get_info(name):
+    try:
+        info = json.loads(DB.Get(name))
+    except:
+        compile(name)
+        return json.loads(DB.Get(name))
+    else:
+        if is_old_info(info):
+            compile(name)
+            return json.loads(DB.Get(name))
+        else:
+            return info
 
-def getfullname(name, memo={}):
-    if name in memo:
-        return memo[name]
-    n = name + '.se'
-    for dir, subdirs, files in os.walk(CODEPATH):
-        if n in files:
-            memo[name] = os.path.join(dir, n)
-            return memo[name]
-    raise ValueError(errstr('Can\'t find contract ' + name))
+def broadcast_code(evm):
+    return GETHRPC.eth_sendTransaction(sender=COINBASE, data=evm, gas=GAS)
 
-def new_enough(fullname, info):
-    return os.path.getmtime(fullname) > info['mtime']
-
-def makeinfo(addr, sig, fullsig, mtime):
-    return locals()
-
-
-if __name__ == '__main__':
-    main()
+def compile(name):
+    fullname = get_full_name(name)
+    new_code = []
+    for line in open(fullname):
+        if line.startswith('import'):
+            _, n = line.split(' ')
+            info = get_info(n)
+            new_code.append(info['sig'])
+            new_code.append(TEMPLATE % info)
+        else:
+            new_code.append(line.rstrip())
+    new_code = '\n'.join(new_code)
+    sig = serpent.mk_signature(new_code)
+    sig = sig.replace('main', name)
+    fullsig = serpent.mk_full_signature(new_code)
+    evm = '0x' + serpent.compile(new_code).encode('hex')
+    result = broadcast_code(evm)
+    if 'error' in result:
+        raise ValueError('Bad RPC response!: ' + json.dumps(result, indent=4))
+    address = result['result']
+    mtime = os.path.getmtime(fullname)
+    DB.Put(name,
+           json.dumps({
+               'sig':sig,
+               'fullsig':fullsig,
+               'address':address,
+               'mtime':mtime,
+               'name':name}))
+    
