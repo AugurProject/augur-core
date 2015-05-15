@@ -35,6 +35,12 @@ data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][],
 extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i]
 BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
 
+# atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
+# ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[w/eVotingPeriodShouldBe].numberEvents
+# w/ this function you can get the eventIDs and report on outcomes 
+ # make sure in this function to check that the report value is not >maxvalue or <minvalue for the event
+# ui will want to alert users of any hey we're behind but atm you should really be voting on this voting period situation (anything meeting the req. of vote if we were caught up)
+# @returns a ballot of events (UI needs to vote w/ a ballot of reports in this order per corresponding event)
 # @return all events in a branch and expiration period
 def getEvents(branch, expDateIndex):
     numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
@@ -242,15 +248,6 @@ def setReportHash(branch, expDateIndex, reporter, reportHash):
 	#	return(-1)
 	self.EventsExpDates[branch][expDateIndex].reportHash[reporter] = reportHash
 	return(1)
-
-# atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
-# ui should handle this ^
-# ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents
-# && loop through the events[] array from 0 to numberEvents -1 for the votes list / order
-# UI will need a function to get the items in that array above so it can make a report!
-# w/ this function you can get the eventIDs, look them up && report on outcomes (probably w/ another function to look them up) -- make sure in this function to check that the report value is not >maxvalue or <minvalue for the event
-# voteperiod is an optional parameter only used in the scenario that we get behind on voting periods - ui will want to alert users of this and say hey we're behind but atm you should really be voting on this voting period (anything meeting the req. of vote if we were caught up)
-# @returns a ballot of events (UI needs to vote w/ a ballot of reports in this order per corresponding event)
 
 def moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod):
     #if(!self.whitelist.check(msg.sender)):
