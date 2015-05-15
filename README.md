@@ -62,3 +62,4 @@ augur-serpent
 - Stop loss orders
 - update eventsExpDates so you can update & it not lose events from whatever your branch's last voting periods was, should just moveEventsToCurrentPeriod upon update perhaps have 2 vars in a contract for old addr and new, call old and get its events then move to new contract
 - consider implications of updating data/api contracts & data migration ^
+- make sure UI checks _current vote period_ not the one in branch but the actual one we _should_ be voting on even if we're behind 
