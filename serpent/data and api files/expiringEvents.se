@@ -259,6 +259,7 @@ def makeBallot(branch, votePeriod):
         while i < numEvents:
             eventID = self.EventsExpDates[branch][votePeriod].events[numEvents]
             eventArray[i] = eventID
+            i += 1
     else:
         numEvents = self.EventsExpDates[branch][BRANCHES.getVotePeriod(branch)].numberEvents
         eventArray = array(numEvents)
@@ -266,6 +267,7 @@ def makeBallot(branch, votePeriod):
         while i < numEvents:
             eventID = self.EventsExpDates[branch][BRANCHES.getVotePeriod(branch)].events[numEvents]
             eventArray[i] = eventID
+            i += 1
     return(eventArray: arr)
 
 def moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod):
