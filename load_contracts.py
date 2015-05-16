@@ -51,7 +51,7 @@ def memoize(func):
         if x in memo:
             return memo[x]
         result = func(x)
-        memo[x] = result
+        memo.__setitem__(x, result)
         return result
     new_func.__name__ = func.__name__
     return new_func
@@ -96,7 +96,7 @@ def compile(name):
             new_code.append(line.rstrip())
     new_code = '\n'.join(new_code)
     sig = serpent.mk_signature(new_code)
-    sig = sig.replace('main', name)
+    sig = sig.replace('main', name, 1)
     fullsig = serpent.mk_full_signature(new_code)
     evm = '0x' + serpent.compile(new_code).encode('hex')
     result = broadcast_code(evm)
@@ -112,3 +112,12 @@ def compile(name):
                'mtime':mtime,
                'name':name}))
     
+def main():
+    for d, s, f in os.walk('src'):
+        for F in f:
+            if F.endswith('.se'):
+                compile(F[:-3])
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
