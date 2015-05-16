@@ -24,7 +24,7 @@ Then geth will automatically do all these things whenever you run it.
 import warnings; warnings.simplefilter('ignore')
 from colorama import init, Fore, Style; init()
 from pyrpc import GETHRPC, DB, COINBASE
-import leveldb
+import bsddb
 import serpent
 import json
 import sys
