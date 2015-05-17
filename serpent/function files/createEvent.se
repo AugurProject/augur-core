@@ -26,13 +26,14 @@ extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMat
 EXPEVENTS = 0x61d90fd4c1c3502646153003ec4d5c177de0fb58
 
 extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
-INFO = 0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b
+# INFO = 0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b
+INFO = 0xbc30f07070198b4cc5981563cece6ea38226a08e # modified length calculation
 
 extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
 CASH = 0xf1d413688a330839177173ce98c86529d0da6e5c
 
 extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, subtractRep:iii:i]
-REPORTING = 0xd1f7f020f24abca582366ec80ce2fef6c3c22233
+REPORTING = 0xead0c9a9bd9546f476337a79e3d9bc8875241e61
 
 extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
 EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
@@ -46,8 +47,8 @@ EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
     # 0: not enough money to pay fees or event already exists
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes):
     periodLength = BRANCHES.getPeriodLength(branch)
-    if(periodLength && description!=0 && expDate>block.number):
-        eventinfo = string((items=8)+len(description))
+    if periodLength && description != 0 && expDate > block.number:
+        eventinfo = string(8*32 + len(description))
         eventinfo[0] = EVENT                                        #typecode
         eventinfo[1] = branch                                       #branchID
         eventinfo[2] = expDate                                      #expiration date
@@ -56,7 +57,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         eventinfo[5] = minValue                                     #minimum outcome value
         eventinfo[6] = maxValue                                     #maximum outcome value
         eventinfo[7] = numOutcomes                                  #number of outcomes
-        mcopy(eventinfo+(items=8), description, len(description))
+        mcopy(eventinfo + 8*32, description, len(description))
         eventID = sha256(eventinfo, chars=len(eventinfo))
     else:
         return(-1)
@@ -64,16 +65,16 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     # fee to ask a question rises if voter participation (rep reported) falls, if it's really high, the fee is lowered (participationFactor is a fixedpoint number)
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     participationFactor = (EXPEVENTS.getTotalRepReported(branch, currentVotePeriod-2) * 2^64) / EXPEVENTS.getTotalRepReported(branch, currentVotePeriod-1)
-    if(participationFactor==0):
+    if participationFactor == 0:
         participationFactor = 1
 
     # send fee and bond
-    if(CASH.balance(tx.origin)>=(42*2^64 + participationFactor*45)):
-        if (!INFO.getCreator(eventID) && !EVENTS.getEventBranch(eventID) && CASH.send(eventID, 42*2^64) && CASH.send(branch, participationFactor*45)):
+    if CASH.balance(tx.origin) >= (42*2^64 + participationFactor*45):
+        if !INFO.getCreator(eventID) && !EVENTS.getEventBranch(eventID) && CASH.send(eventID, 42*2^64) && CASH.send(branch, participationFactor*45):
             # see which future period it expires in && put the event in that bin
             # event voting periods - expDate / periodLength gives you the voting period #
-            futurePeriod = (expDate / periodLength)
-            if(INFO.setInfo(eventID, description, tx.origin, participationFactor*45) && EVENTS.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes) && EXPEVENTS.addEvent(branch, futurePeriod, eventID)):
+            futurePeriod = expDate / periodLength
+            if INFO.setInfo(eventID, description, tx.origin, participationFactor*45) && EVENTS.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes) && EXPEVENTS.addEvent(branch, futurePeriod, eventID):
                 return(eventID)
             else:
                 return(0)

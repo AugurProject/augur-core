@@ -23,13 +23,14 @@ extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:
 BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
 
 extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
-INFO = 0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b
+# INFO = 0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b
+INFO = 0xbc30f07070198b4cc5981563cece6ea38226a08e # modified length calculation
 
 extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
 CASH = 0xf1d413688a330839177173ce98c86529d0da6e5c
 
 extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, subtractRep:iii:i]
-REPORTING = 0xd1f7f020f24abca582366ec80ce2fef6c3c22233
+REPORTING = 0xead0c9a9bd9546f476337a79e3d9bc8875241e61
 
 extern fxpFunctions.se: [fx_exp:i:i, fx_log:i:i]
 FXP = 0xdaf26192091449d14c03026f79272e410fce0908
@@ -95,7 +96,8 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         cumulativeScale = 1
     tradingPeriod = (tradingPeriod / periodLength)
     # formation of marketID (hash)
-    marketinfo = string((items=11)+len(description))
+    # marketinfo = string((items=11)+len(description))
+    marketinfo = string(11*32 + len(description))
     marketinfo[0] = MARKET
     marketinfo[1] = tx.origin
     marketinfo[2] = initialLiquidity
@@ -107,7 +109,8 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     marketinfo[8] = numOutcomes
     marketinfo[9] = tradingPeriod
     marketinfo[10] = tradingFee
-    mcopy(marketinfo+(items=11), description, chars=len(description))
+    # mcopy(marketinfo+(items=11), description, chars=len(description))
+    mcopy(marketinfo + 11*32, description, chars=len(description))
     marketID = sha256(marketinfo, chars=len(marketinfo))
 
     # pay numOutcomes fee
