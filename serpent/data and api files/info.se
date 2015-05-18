@@ -1,4 +1,3 @@
-
 extern whitelist: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
 data whitelist
 # This software (Augur) allows buying && selling event outcomes in ethereum
@@ -57,11 +56,12 @@ def setInfo(ID, description: str, creator, fee):
 	#	return(-1)
 	# check that msg.sender is one of our function contracts
 	if(self.Info[ID].creator == 0):
-		sz = len(description)
-		save(self.Info[ID].description[0], description, chars=(sz + 32 - sz % 32))
-		self.Info[ID].descriptionLength = sz
+		save(self.Info[ID].description[0], description, chars=len(description))
+		# save(self.Info[ID].description[0], description, chars=(sz + 32 - sz % 32))
+		self.Info[ID].descriptionLength = len(description)
 		self.Info[ID].creationFee = fee
 		self.Info[ID].creator = creator
 		return(1)
 	else:
 		return(0)
+		# return(self.Info[ID].creator)
