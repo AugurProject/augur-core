@@ -53,7 +53,6 @@ EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
     # 0: not enough money to pay fees or event already exists
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes):
     periodLength = BRANCHES.getPeriodLength(branch)
-    periodLength = 1
     if periodLength && description != 0 && expDate > block.number:
         eventinfo = string((items=8) + len(description))
         eventinfo[0] = EVENT                                        #typecode
