@@ -26,7 +26,8 @@ extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMat
 EXPEVENTS = 0x61d90fd4c1c3502646153003ec4d5c177de0fb58
 
 extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
-INFO = 0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b
+# INFO = 0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b
+INFO = 0x3530bfdc65394687732d9c2becd6a3108271231b
 
 extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
 CASH = 0xf1d413688a330839177173ce98c86529d0da6e5c

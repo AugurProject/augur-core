@@ -23,20 +23,20 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
+# extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+# WHITELIST = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
+
 extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
-extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
-extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
-extern resolve.se: [resolve:aaaaaii:a, smooth:aaii:a]
-
 EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
-EXPIRING = 0x61d90fd4c1c3502646153003ec4d5c177de0fb58
-REPORTING = 0xd1f7f020f24abca582366ec80ce2fef6c3c22233
-RESOLVE = 0x82a0ce86301c4f1832f78a324c20dd981e21d57b
 
-# EVENTS = create("../data and api files/events.se")
-# EXPIRING = create("../data and api files/expiringEvents.se")
-# REPORTING = create("../data and api files/reporting.se")
-# RESOLVE = create("resolve.se")
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+EXPIRING = 0x61d90fd4c1c3502646153003ec4d5c177de0fb58
+
+extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
+REPORTING = 0xd1f7f020f24abca582366ec80ce2fef6c3c22233
+
+extern resolve.se: [resolve:aaaaaii:a, smooth:aaii:a]
+RESOLVE = 0x82a0ce86301c4f1832f78a324c20dd981e21d57b
 
 def smooth(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
@@ -49,7 +49,6 @@ def smooth(branch, period, num_events, num_reports, flatsize):
             with adjusted_scores = EXPIRING.getAdjPrinComp(branch, period, outsz=num_reports):
                 with smooth_rep = RESOLVE.smooth(adjusted_scores, reputation, num_reports, num_events, outsz=num_reports):
                     EXPIRING.setSmoothRep(branch, period, smooth_rep)
-                    # return(EXPIRING.getSmoothRep(branch, period, outsz=num_reports):arr)
                     return(1)
 
 def resolve(branch, period, num_events, num_reports, flatsize):
@@ -74,9 +73,7 @@ def resolve(branch, period, num_events, num_reports, flatsize):
                                 j += 1
                             with outcomes = RESOLVE.resolve(smooth_rep, reports_filled, scaled, scaled_max, scaled_min, num_reports, num_events, outsz=num_events):
                                 EXPIRING.setOutcomesFinal(branch, period, outcomes)
-                                # return(EXPIRING.getOutcomesFinal(branch, period, outsz=num_events):arr)
                                 return(1)
 
 inset('../macros/constants.se')
 inset('../macros/fixed.se')
-# inset('../macros/logging.se')

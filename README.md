@@ -60,3 +60,6 @@ augur-serpent
 - make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
 - limit orders in UI if price > or < a number and maximum amount of money (or shares?) you're willing to spend for buy, max shares to sell for sell - but what about real on chain limit orders?
 - Stop loss orders
+- update eventsExpDates so you can update & it not lose events from whatever your branch's last voting periods was, should just moveEventsToCurrentPeriod upon update perhaps have 2 vars in a contract for old addr and new, call old and get its events then move to new contract
+- consider implications of updating data/api contracts & data migration ^
+- make sure UI checks _current vote period_ not the one in branch but the actual one we _should_ be voting on even if we're behind, so if behind by 10 UI should still be asking people to vote on the what the current period should be 
