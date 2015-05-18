@@ -68,8 +68,8 @@ def createSubbranch(description:str, periodLength, parent, tradingFee):
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
     branchID = sha256(branchInfo, chars=len(branchInfo))
     currentVotePeriod = (block.number / periodLength) - 1
-
-    if(INFO.getCreator(parent) && CASH.send(parent, 47*2^64) && BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee) && INFO.setInfo(branchID, description, tx.origin, 47*2^64) && REPORTING.setInitialReporters(parent, branchID)):
+    BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee)
+    if(INFO.getCreator(parent) && CASH.send(parent, 47*2^64) && INFO.setInfo(branchID, description, tx.origin, 47*2^64) && REPORTING.setInitialReporters(parent, branchID)):
         return(branchID)
     else:
         return(-2)
