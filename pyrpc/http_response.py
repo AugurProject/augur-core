@@ -12,13 +12,16 @@ def recv_n(conn, n, data=''):
         data += conn.recv(n - len(data))
     return data
 
-def recv_until(conn, sym):
+def recv_until(conn, sym, split=True, n=1):
     '''Collects bytes by calling recv on conn until sym is in
     the bytes. Returns a list of bytes before and after sym.'''
     data = ''
     while sym not in data:
         data += conn.recv(CHUNK)
-    return data.split(sym, 1)
+    if split:
+        return data.split(sym, n)
+    else:
+        return data
 
 def raw_headers_to_dict(headers):
     '''Turns bytes containing header data into a dictionary.'''
@@ -45,11 +48,16 @@ def recv_chunks(conn, body):
     new_body = ''
     while body:
         chunklength, body = body.split(CRLF, 1)
+        if not chunklength and not body:
+            break
         chunklength = int(chunklength, 16)
         if len(body) < chunklength:
             body = recv_n(conn, chunklength, body)
         if chunklength:
-            new_body, body = new_body + body[:chunklength], body[chunklength:]
+            # len(CRLF) == 2
+            new_body, body = new_body + body[:chunklength], body[chunklength+2:]
+        if body == '':
+            body = recv_until(conn, CRLF)
     return new_body
 
 def is_too_short(headers, body):

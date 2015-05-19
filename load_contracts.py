@@ -24,21 +24,22 @@ Then geth will automatically do all these things whenever you run it.
 import warnings; warnings.simplefilter('ignore')
 from colorama import init, Fore, Style; init()
 from pyrpc import GETHRPC, DB, COINBASE
-import bsddb
 import serpent
 import json
+import time
 import sys
 import os
 
 TEMPLATE = '''\
 %(sig)s
 macro %(name)s:
-    %(addr)s
+    %(address)s
 '''
 CODEPATH = os.path.abspath('src')
 ERROR = Style.BRIGHT + Fore.RED + 'ERROR!'
-GAS = hex(25*10**5)
-TRIES = 5
+GAS = hex(3*10**6)
+TRIES = 10
+BLOCKTIME = 12
 
 if COINBASE == '0x':
     print ERROR, 'no coinbase address'
@@ -67,21 +68,32 @@ def get_full_name(name):
 def is_old_info(info):
     return os.path.getmtime(get_full_name(info['name'])) > info['mtime']
 
+def is_code_onchain(address):
+    i = 0
+    while i < TRIES:
+        time.sleep(BLOCKTIME)
+        result = GETHRPC.eth_getCode(address)
+        if result['result'] != '0x':
+            break
+        i += 1
+    return i != TRIES
+
 def get_info(name):
     try:
-        info = json.loads(DB.Get(name))
+        info = json.loads(DB[name])
     except:
         compile(name)
-        return json.loads(DB.Get(name))
+        return json.loads(DB[name])
     else:
         if is_old_info(info):
             compile(name)
-            return json.loads(DB.Get(name))
+            return json.loads(DB[name])
         else:
             return info
 
 def broadcast_code(evm):
     return GETHRPC.eth_sendTransaction(sender=COINBASE, data=evm, gas=GAS)
+    
 
 def compile(name):
     fullname = get_full_name(name)
@@ -89,6 +101,7 @@ def compile(name):
     for line in open(fullname):
         if line.startswith('import'):
             _, n = line.split(' ')
+            n = n.strip()
             info = get_info(n)
             new_code.append(info['sig'])
             new_code.append(TEMPLATE % info)
@@ -103,20 +116,24 @@ def compile(name):
     if 'error' in result:
         raise ValueError('Bad RPC response!: ' + json.dumps(result, indent=4))
     address = result['result']
+    if not is_code_onchain(address):
+        raise ValueError('CODE NOT ON CHAIN AFTER %d TRIES, ABORTING' % TRIES) 
     mtime = os.path.getmtime(fullname)
-    DB.Put(name,
-           json.dumps({
-               'sig':sig,
-               'fullsig':fullsig,
-               'address':address,
-               'mtime':mtime,
-               'name':name}))
-    
+    DB[name] = json.dumps({
+        'sig':sig,
+        'fullsig':fullsig,
+        'address':address,
+        'mtime':mtime,
+        'name':name})
+
+def pretty(dct):
+    return json.dumps(dct, indent=4, sort_keys=True)
+
 def main():
     for d, s, f in os.walk('src'):
         for F in f:
             if F.endswith('.se'):
-                compile(F[:-3])
+                print pretty(get_info(F[:-3]))
     return 0
 
 if __name__ == '__main__':

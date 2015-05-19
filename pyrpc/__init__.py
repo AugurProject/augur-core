@@ -1,5 +1,5 @@
 from rpc import rpc
-import leveldb
+import bsddb
 GETHRPC = rpc(default='GETH')
-DB = leveldb.LevelDB('build')
+DB = bsddb.hashopen('build')
 COINBASE = GETHRPC.eth_coinbase()['result']
