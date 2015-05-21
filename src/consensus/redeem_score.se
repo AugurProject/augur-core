@@ -23,12 +23,15 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
+# extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+
 import expiringEvents
+
 import reporting
+
 import branches
+
 import score
-
-
 
 def blank(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
@@ -77,8 +80,6 @@ def latent(branch, period, num_events, num_reports, flatsize):
         with covrow = expiringEvents.getCovarianceMatrixRow(branch, period, outsz=num_events):
             expiringEvents.setLatent(branch, period, score.latent(covrow, loading_vector, num_events))
             expiringEvents.setCovarianceMatrixRow(branch, period, covrow)
-            # log_fixed(expiringEvents.getLatent(branch, period))
-            # return(expiringEvents.getCovarianceMatrixRow(branch, period, outsz=num_events):arr)
             return(1)
 
 def deflate(branch, period, num_events, num_reports, flatsize):
@@ -88,7 +89,6 @@ def deflate(branch, period, num_events, num_reports, flatsize):
         with deflated = expiringEvents.getDeflated(branch, period, outsz=flatsize):
             deflated = score.deflate(loading_vector, deflated, num_reports, num_events, outsz=flatsize)
             expiringEvents.setDeflated(branch, period, deflated)
-            # return(expiringEvents.getDeflated(branch, period, outsz=flatsize):arr)
             return(1)
 
 def score(branch, period, num_events, num_reports, flatsize):
@@ -107,5 +107,3 @@ def score(branch, period, num_events, num_reports, flatsize):
 
 inset('../../macros/constants.se')
 inset('../../macros/fixed.se')
-# inset('../macros/logging.se')
-# inset('../macros/mock.se')

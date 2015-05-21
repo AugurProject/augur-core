@@ -21,7 +21,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # If you have questions, please contact Jack Peterson (jack@augur.net).
+
 import statistics
+
 
 def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
     # returns:

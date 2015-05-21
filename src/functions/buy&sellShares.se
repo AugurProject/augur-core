@@ -20,12 +20,19 @@
 # Any questions please contact joey@augur.net
 
 import branches
+
 import expiringEvents
+
 import info
+
 import cash
+
 import reporting
-import fxMath
+
+import fxpFunctions
+
 import markets
+
 data nonces[]
 
 event updatePrice(outcome, price)

@@ -3,9 +3,9 @@ import os
 import sys
 from colorama import Fore, Back, Style, init; init()
 from string import lower
-import leveldb
+import bsddb
 
-DB = leveldb.LevelDB('.translated')
+DB = bsddb.hashopen('.translated')
 
 NAMES = {
     'CLOSEEIGHT':'closeMarketEight',
@@ -33,6 +33,8 @@ def extern_to_import(line):
     name = line[7:i]
     if name.endswith('.se'):
         name = name[:-3]
+    if name in ['fx_macros', 'fxpFunctions']:
+        name = 'fxMath'
     return 'import ' + name
 
 def is_old_address(line):
@@ -45,7 +47,7 @@ def digits(num):
     return len(str(num))
 
 def linenum(num, w):
-    return Fore.GREEN + Back.BLUE + str(num).rjust(digits(w)) + Style.RESET_ALL + Style.BRIGHT + ' : ' + Style.RESET_ALL
+    return Fore.BLACK + Back.BLUE + str(num).rjust(digits(w)) + Style.RESET_ALL + Style.BRIGHT + ' : ' + Style.RESET_ALL
 
 def find_name(line):
     for name in NAMES.keys():
@@ -86,14 +88,10 @@ def bad_inset(line):
     return line.startswith('inset') and ('../macros/' in line) and not ('../../macros/' in line)
 
 def was_already_processed(name):
-    try:
-        DB.Get(name)
-    except:
-        return False
-    return True
+    return name in DB
 
 def mark_processed(name):
-    DB.Put(name, '1')
+    DB[name] = '1'
 
 for d, s, f in os.walk('src'):
     for F in f:
@@ -109,6 +107,8 @@ for d, s, f in os.walk('src'):
                 new_code.append(extern_to_import(line))
                 replacementses.append([(0,len(new_code[-1]))])
             elif is_old_address(line):
+                pass
+            elif line.startswith('data whitelist'):
                 pass
             elif bad_inset(line):
                 new_code.append(line.replace('../', '../../'))

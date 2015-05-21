@@ -23,12 +23,17 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
-import events
-import expiringEvents
-import reporting
-import branches
-import interpolate
+# extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
 
+import events
+
+import expiringEvents
+
+import reporting
+
+import branches
+
+import interpolate
 
 
 # - loop through reputation && check if in reporters, if so use their
@@ -80,7 +85,6 @@ def interpolate(branch, period, num_events, num_reports, flatsize):
                                 reports_filled = slice(reports_interp, items=0, items=flatsize)
                                 expiringEvents.setReportsFilled(branch, period, reports_filled)
                                 expiringEvents.setReportsMask(branch, period, slice(reports_interp, items=flatsize, items=flatsize_x_2))
-                                # return(reports_filled:arr)
                                 return(1)
 
 inset('../../macros/constants.se')

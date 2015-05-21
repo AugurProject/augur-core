@@ -18,8 +18,6 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
-import whitelist
-import branches
 
 # [branchID][votingPeriod]
 # reportsFilled, reportsMask, weightedCenteredData, loadingVector, scores, set1, set2, old,
@@ -27,84 +25,48 @@ import branches
 # reporters is [reporterID][eventNum]
 data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
 
-# The first two indeces of all data structures are:
-# [branch][period]
-# `branch` is a branchID, a.k.a. the sha3 hash of a bunch of branch metadata.
-# `period` is equal to date_of_expiration/blocktime - branch_epoch/blocktime.
-data numberEvents[][]                   #number of events expiring
-data events[][][]                       #list of events expiring
-data totalRepReported[][]               #sum of rep of all reports
-data reporters[][][][]                  #[reporterID][eventNum]
-data reportHash[][][]                   #[reporterID]
-data vSize[][]
-data reportsFilled[][][]
-data reportsMask[][][]
-data weightedCenteredDatap[][][]
-data covarianceMatrixRow[][][]
-data deflated[][][]
-data loadingVector[][][]
-data latent[][]
-data scores[][][]
-data set1[][][]
-data set2[][][]
-data old[][][]
-data new1[][][]
-data new2[][][]
-data adjPrinComp[][][]
-data smoothRep[][][]
-data outcomesFinal[][][]
-
-macro to_array($q, $l):
-    with $result = array($l):
-        with $i = 0:
-            while $i < $l:
-                $result[$i] = $q[branch][expDateIndex][$i]
-                $i += 1
-            $result
-
-macro vsize():
-    self.vSize[branch][expDateIndex]
-
-macro numEvents():
-    self.numberEvents[branch][expDateIndex]
-
-macro load_data($q, $l):
-    load($q[branch][expDateIndex][0], items=$l)
-
+# atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
+# ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[w/eVotingPeriodShouldBe].numberEvents
+# w/ this function you can get the eventIDs and report on outcomes
+ # make sure in this function to check that the report value is not >maxvalue or <minvalue for the event
+# ui will want to alert users of any hey we're behind but atm you should really be voting on this voting period situation (anything meeting the req. of vote if we were caught up)
+# @returns a ballot of events (UI needs to vote w/ a ballot of reports in this order per corresponding event)
 # @return all events in a branch and expiration period
 def getEvents(branch, expDateIndex):
-    events = to_array(self.events, numEvents())
+    numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
+    events = array(numEvents)
+    i = 0
+    while i < numEvents:
+        events[i] = self.EventsExpDates[branch][expDateIndex].events[i]
+        i += 1
     return(events: arr)
 
 def getNumberEvents(branch, expDateIndex):
-    numberEvents = numEvents()
-    return(numberEvents)
+	return(self.EventsExpDates[branch][expDateIndex].numberEvents)
 
 def getEvent(branch, expDateIndex, eventIndex):
-    return(self.events[branch][expDateIndex][eventIndex])
+	return(self.EventsExpDates[branch][expDateIndex].events[eventIndex])
 
 def getTotalRepReported(branch, expDateIndex):
-    return(self.totalRepReported[branch][expDateIndex])
+	return(self.EventsExpDates[branch][expDateIndex].totalRepReported)
 
 def getReporterBallot(branch, expDateIndex, reporterID):
-    return(load(self.reporters[branch][expDateIndex][reporterID][0], items=numEvents):arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].reporters[reporterID][0], items=self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
 
 def getReport(branch, expDateIndex, reporter, reportNum):
-    return(self.reporters[branch][expDateIndex][reporter][reportNum])
+	return(self.EventsExpDates[branch][expDateIndex].reporters[reporter][reportNum])
 
 def getReportHash(branch, expDateIndex, reporter):
-    return(self.reportHash[branch][expDateIndex][reporter])
+	return(self.EventsExpDates[branch][expDateIndex].reportHash[reporter])
 
 def getVSize(branch, expDateIndex):
-    return(self.vSize[branch][expDateIndex])
+    return(self.EventsExpDates[branch][expDateIndex].vSize)
 
 def getReportsFilled(branch, expDateIndex):
-    result = load_vsize(self.reportsFilled
-    return(load(self.reportsFilled[branch][expDateIndex][0], items=size):arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].reportsFilled[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)
 
 def getReportsMask(branch, expDateIndex):
-    vsize = self.vSize[branch][expDateIndex]
-    return(load(self.reportsMask[branch][expDateIndex][0], items=vsize): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].reportsMask[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)
 
 def getWeightedCenteredData(branch, expDateIndex):
 	return(load(self.EventsExpDates[branch][expDateIndex].weightedCenteredData[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)
@@ -150,48 +112,70 @@ def getOutcomesFinal(branch, expDateIndex):
 
 # check that msg.sender is one of our function contracts
 def addEvent(branch, futurePeriod, eventID):
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
 	self.EventsExpDates[branch][futurePeriod].numberEvents += 1
 	return(1)
 
 def setTotalRepReported(branch, expDateIndex, repReported):
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	self.EventsExpDates[branch][expDateIndex].totalRepReported = repReported
 	return(1)
 
 def setReporterBallot(branch, expDateIndex, reporterID, report: arr, reputation):
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	save(self.EventsExpDates[branch][expDateIndex].reporters[reporterID][0], report, items=len(report))
 	self.EventsExpDates[branch][expDateIndex].totalRepReported += reputation
 	return(1)
 
 def setVSize(branch, expDateIndex, vSize):
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	self.EventsExpDates[branch][expDateIndex].vSize = vSize
 	return(1)
 
 def setReportsFilled(branch, expDateIndex, reportsFilled: arr):
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	save(self.EventsExpDates[branch][expDateIndex].reportsFilled[0], reportsFilled, items=len(reportsFilled))
 	return(1)
 
 def setReportsMask(branch, expDateIndex, reportsMask: arr):
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	save(self.EventsExpDates[branch][expDateIndex].reportsMask[0], reportsMask, items=len(reportsMask))
 	return(1)
 
 def setWeightedCenteredData(branch, expDateIndex, weightedCenteredData: arr):
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	save(self.EventsExpDates[branch][expDateIndex].weightedCenteredData[0], weightedCenteredData, items=len(weightedCenteredData))
 	return(1)
 
 def setCovarianceMatrixRow(branch, expDateIndex, covarianceMatrixRow: arr):
+    #if !self.whitelist.check(msg.sender):
+     #   return(-1)
     save(self.EventsExpDates[branch][expDateIndex].covarianceMatrixRow[0], covarianceMatrixRow, items=len(covarianceMatrixRow))
     return(1)
 
 def setDeflated(branch, expDateIndex, deflated: arr):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     save(self.EventsExpDates[branch][expDateIndex].deflated[0], deflated, items=len(deflated))
     return(1)
 
 def setLoadingVector(branch, expDateIndex, loadingVector: arr):
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
 	save(self.EventsExpDates[branch][expDateIndex].loadingVector[0], loadingVector, items=len(loadingVector))
 	return(1)
 
 def setLatent(branch, expDateIndex, latent):
+    #if !self.whitelist.check(msg.sender):
+    #   return(-1)
     self.EventsExpDates[branch][expDateIndex].latent = latent
     return(1)
 
@@ -254,31 +238,6 @@ def setReportHash(branch, expDateIndex, reporter, reportHash):
 	#	return(-1)
 	self.EventsExpDates[branch][expDateIndex].reportHash[reporter] = reportHash
 	return(1)
-
-# atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
-# ui should handle this ^
-# ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[futurePeriod].numberEvents
-# && loop through the events[] array from 0 to numberEvents -1 for the votes list / order
-# UI will need a function to get the items in that array above so it can make a report!
-# w/ this function you can get the eventIDs, look them up && report on outcomes (probably w/ another function to look them up) -- make sure in this function to check that the report value is not >maxvalue or <minvalue for the event
-# voteperiod is an optional parameter only used in the scenario that we get behind on voting periods - ui will want to alert users of this and say hey we're behind but atm you should really be voting on this voting period (anything meeting the req. of vote if we were caught up)
-# @returns a ballot of events (UI needs to vote w/ a ballot of reports in this order per corresponding event)
-def makeBallot(branch, votePeriod):
-    if(votePeriod):
-        numEvents = self.EventsExpDates[branch][votePeriod].numberEvents
-        eventArray = array(numEvents)
-        i = 0
-        while i < numEvents:
-            eventID = self.EventsExpDates[branch][votePeriod].events[numEvents]
-            eventArray[i] = eventID
-    else:
-        numEvents = self.EventsExpDates[branch][branches.getVotePeriod(branch)].numberEvents
-        eventArray = array(numEvents)
-        i = 0
-        while i < numEvents:
-            eventID = self.EventsExpDates[branch][branches.getVotePeriod(branch)].events[numEvents]
-            eventArray[i] = eventID
-    return(eventArray: arr)
 
 def moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod):
     #if(!self.whitelist.check(msg.sender)):

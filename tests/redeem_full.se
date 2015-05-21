@@ -1,0 +1,378 @@
+# This software (Augur) allows buying and selling event options in Ethereum.
+#
+# Copyright (c) 2015 Forecast Foundation 
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# If you have questions, please contact Joey Krug (joey@augur.net) or
+# Jack Peterson (jack@augur.net).
+
+extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
+extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getSubstep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, initializeBranch:iiii:i, setStep:ii:i, setSubstep:ii:i]
+extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
+extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
+extern interpolate.se: [interpolate:aaaaa:a]
+extern center.se: [center:aaaaaii:a, covariance:aaii:a, tokenize:ai:a]
+extern score.se: [blank:iii:a, deflate:aaii:a, latent:aai:i, loadings:aaaii:a, score:aaaiii:a]
+extern adjust.se: [reputation_delta:aii:a, select_scores:aaaaaaii:a, weighted_delta:aaaaii:a]
+extern resolve.se: [resolve:aaaaaii:a, smooth:aaii:a]
+extern payout.se: [payout:aaaii:a]
+
+EVENTS = create("../data and api files/events.se")
+EXPIRING = create("../data and api files/expiringEvents.se")
+REPORTING = create("../data and api files/reporting.se")
+BRANCHES = create("../data and api files/branches.se")
+CASH = create("../data and api files/cash.se")
+INFO = create("../data and api files/info.se")
+INTERPOLATE = create("interpolate.se")
+CENTER = create("center.se")
+SCORE = create("score.se")
+ADJUST = create("adjust.se")
+RESOLVE = create("resolve.se")
+PAYOUT = create("payout.se")
+
+# EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
+# EXPIRING = 0x61d90fd4c1c3502646153003ec4d5c177de0fb58
+# REPORTING = 0xd1f7f020f24abca582366ec80ce2fef6c3c22233
+# BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
+# CASH = 0xf1d413688a330839177173ce98c86529d0da6e5c
+# INFO = 0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b
+# INFO = 0xbc30f07070198b4cc5981563cece6ea38226a08e # modified length calculation
+# INTERPOLATE = 0xeb51564b43068745ae80136fcefe3ca532617a87
+# CENTER = 0xcff950797165df23550b6d79fa98e55d4c250fbe
+# SCORE = 0x7e6a5373193e42e77133b44707e6dbce92adc6f4
+# ADJUST = 0xfd268b3d161e0af75e487950d44e23c91229eb7f
+# RESOLVE = 0x82a0ce86301c4f1832f78a324c20dd981e21d57b
+# PAYOUT = 0x0a4184e2bc58669fb78a9bcee0cc1ab0da9d3ce3
+
+# - loop through reputation && check if in reporters, if so use their
+#   report, if not use the fillin / not reported report (all zeroes)
+# - use this to make a giant array of reports to pass to self.consensus
+# - want to pass reports for each 0 indexed event in order (so we get
+#   reports from an actual reporter)
+# (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
+def redeem(branch, period, num_events, num_reports, flatsize, mockNumber):
+    # if !WHITELIST.check(msg.sender):
+    #     return(-1)
+    if mockNumber == 0:
+        binary_mock(branch, period)
+    else:
+        scalar_mock(branch, period)
+    with reputation = array(num_reports):
+        with reports = array(flatsize):
+            with flatsize_x_2 = flatsize * 2:
+                with i = 0:
+                    while i < num_reports:
+                        with reporterID = REPORTING.getReporterID(branch, i):
+                            reputation[i] = REPORTING.getRepBalance(branch, reporterID)
+                            # - checks to see if each reporter actually voted on events
+                            # - if they didn't vote (simply check if they voted on first event)
+                            #     do nothing (these values will be 0 by default due to Serpent array styles)
+                            #     else if the reporter did report on events put their ballot into the reports array
+                            with ballot = EXPIRING.getReporterBallot(branch, period, i, outsz=num_events):
+                                if ballot != 0:
+                                    with j = 0:
+                                        while j < num_events:
+                                            reports[i*num_events + j] = ballot[j]
+                                            j += 1
+                        i += 1
+                with scaled = array(num_events):
+                    with scaled_max = array(num_events):
+                        with scaled_min = array(num_events):
+                            with j = 0:
+                                while j < num_events:
+                                    with event = EXPIRING.getEvent(branch, period, j):
+                                        # YES, NO, ONE, etc. macros defined in consensus/constants.se
+                                        if fix(EVENTS.getMaxValue(event)) != YES:
+                                            scaled[j] = 1
+                                            # TODO convert maxValue and minValue to fixed-point in storage
+                                            scaled_max[j] = fix(EVENTS.getMaxValue(event))
+                                            scaled_min[j] = fix(EVENTS.getMinValue(event))
+                                        else:
+                                            scaled[j] = 0
+                                            scaled_min[j] = NO
+                                            scaled_max[j] = YES
+                                    j += 1
+                            with reports_interp = INTERPOLATE.interpolate(reports, reputation, scaled, scaled_max, scaled_min, outsz=flatsize_x_2):
+                                EXPIRING.setVSize(branch, period, flatsize)
+                                reports_filled = slice(reports_interp, items=0, items=flatsize)
+                                EXPIRING.setReportsFilled(branch, period, reports_filled)
+                                EXPIRING.setReportsMask(branch, period, slice(reports_interp, items=flatsize, items=flatsize_x_2))
+                                # return(reports_filled:arr)
+                                # return(1)
+
+    #############
+    # center.se #
+    #############
+
+    # center
+    with reputation = array(num_reports):
+        with i = 0:
+            while i < num_reports:
+                reputation[i] = REPORTING.getRepByIndex(branch, i)
+                i += 1
+        with scaled = array(num_events):
+            with scaled_max = array(num_events):
+                with scaled_min = array(num_events):
+                    with j = 0:
+                        while j < num_events:
+                            with event = EXPIRING.getEvent(branch, period, j):
+                                if fix(EVENTS.getMaxValue(event)) != YES:
+                                    scaled[j] = 1
+                                    scaled_min[j] = fix(EVENTS.getMinValue(event))
+                                    scaled_max[j] = fix(EVENTS.getMaxValue(event))
+                                else:
+                                    scaled[j] = 0
+                                    scaled_min[j] = NO
+                                    scaled_max[j] = YES
+                            j += 1
+                    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=flatsize):
+                        with lflatsize = flatsize + num_events + 2:
+                            with result = CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, MAX_COMPONENTS, outsz=lflatsize):
+                                wcd = slice(result, items=0, items=flatsize)
+                                EXPIRING.setWeightedCenteredData(branch, period, wcd)
+                                loading_vector = slice(result, items=flatsize, items=lflatsize)
+                                EXPIRING.setLoadingVector(branch, period, loading_vector)
+                                # return(EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize):arr)
+                                # return(EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):arr)
+                                # return(1)
+
+    # covariance
+    with reputation = array(num_reports):
+        with i = 0:
+            while i < num_reports:
+                reputation[i] = REPORTING.getRepByIndex(branch, i)
+                i += 1
+        with reptokens = CENTER.tokenize(reputation, num_reports, outsz=num_reports):
+            with wcd = EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize):
+                with covrow = CENTER.covariance(wcd, reptokens, num_reports, num_events, outsz=num_events):
+                    EXPIRING.setCovarianceMatrixRow(branch, period, covrow)
+                    EXPIRING.setDeflated(branch, period, wcd)
+                    # return(EXPIRING.getCovarianceMatrixRow(branch, period, outsz=num_events):arr)
+                    # return(EXPIRING.getDeflated(branch, period, outsz=flatsize):arr)
+                    # return(1)
+
+    ############
+    # score.se #
+    ############
+
+    m = 0
+    while m < MAX_COMPONENTS:
+
+        # blank
+        # loading vector (eigenvector) has num_events + 2 elements:
+        #   - second-to-last element: number of iterations remaining
+        #   - last element: number of components (eigenvectors) remaining
+        with ne_plus_2 = num_events + 2:
+            # - if element ne_plus_2 is zero, we're on the first component, so set the last
+            #   element equal to MAX_COMPONENTS
+            # - otherwise, decrement the last element
+            with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+                if loading_vector[num_events+1] == 0:
+                    EXPIRING.setLoadingVector(branch, period, SCORE.blank(MAX_COMPONENTS, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
+                else:
+                    EXPIRING.setLoadingVector(branch, period, SCORE.blank(loading_vector[num_events+1]-1, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
+                # BRANCHES.incrementSubstep(branch)
+                # return(EXPIRING.getLoadingVector(branch, period, outsz=ne_plus_2):arr)
+                # return(1)
+
+        # loadings
+        n = 0
+        while n < MAX_ITERATIONS:
+            with ne_plus_2 = num_events + 2:
+                with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=ne_plus_2):
+                    with deflated =  EXPIRING.getDeflated(branch, period, outsz=flatsize):
+                        with reputation = array(num_reports):
+                            with i = 0:
+                                while i < num_reports:
+                                    reputation[i] = REPORTING.getRepByIndex(branch, i)
+                                    i += 1
+                            # Iteratively diagonalize the weighted centered data matrix,
+                            # deflating (subtracting out the eigenvectors) the matrix after each
+                            # eigenvector is found
+                            loading_vector = SCORE.loadings(loading_vector, deflated, reputation, num_reports, num_events, outsz=ne_plus_2)
+                            EXPIRING.setLoadingVector(branch, period, loading_vector)
+                            # if loading_vector[num_events] == 0:
+                            #     return(0)
+                            # else:
+                            #     return(1)
+            n += 1
+        # return(EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):arr)
+
+        # latent
+        with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+            with covrow = EXPIRING.getCovarianceMatrixRow(branch, period, outsz=num_events):
+                EXPIRING.setLatent(branch, period, SCORE.latent(covrow, loading_vector, num_events))
+                EXPIRING.setCovarianceMatrixRow(branch, period, covrow)
+                # log_fixed(EXPIRING.getLatent(branch, period))
+                # return(EXPIRING.getCovarianceMatrixRow(branch, period, outsz=num_events):arr)
+                # return(1)
+
+        # deflate
+        with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+            with deflated = EXPIRING.getDeflated(branch, period, outsz=flatsize):
+                deflated = SCORE.deflate(loading_vector, deflated, num_reports, num_events, outsz=flatsize)
+                EXPIRING.setDeflated(branch, period, deflated)
+                # return(EXPIRING.getDeflated(branch, period, outsz=flatsize):arr)
+                # return(1)
+
+        # score
+        with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+            with wcd =  EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize):
+                with latent = EXPIRING.getLatent(branch, period):
+                    with scores = EXPIRING.getScores(branch, period, outsz=num_reports):
+                        scores = SCORE.score(scores, loading_vector, wcd, latent, num_reports, num_events, outsz=num_reports)
+                        EXPIRING.setScores(branch, period, scores)
+                        # if loading_vector[num_events+1] == 0:
+                        #     return(0)
+                        # else:
+                        #     return(1)
+        m += 1    
+    # return(EXPIRING.getScores(branch, period, outsz=num_reports):arr)
+
+    #############
+    # adjust.se #
+    #############
+
+    # reputation_delta
+    with scores = EXPIRING.getScores(branch, period, outsz=num_reports):
+        with nr_x_2 = num_reports * 2:
+            with sets = ADJUST.reputation_delta(scores, num_reports, num_events, outsz=nr_x_2):
+                EXPIRING.setSetOne(branch, period, slice(sets, items=0, items=num_reports))
+                EXPIRING.setSetTwo(branch, period, slice(sets, items=num_reports, items=nr_x_2))
+                # return(EXPIRING.getSetOne(branch, period, outsz=num_reports):arr)
+                # return(EXPIRING.getSetTwo(branch, period, outsz=num_reports):arr)
+                # return(1)
+
+    # weighted_delta
+    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=flatsize):
+        with reputation = array(num_reports):
+            with i = 0:
+                while i < num_reports:
+                    reputation[i] = REPORTING.getRepByIndex(branch, i)
+                    i += 1
+                with set1 = EXPIRING.getSetOne(branch, period, outsz=num_reports):
+                    with set2 = EXPIRING.getSetTwo(branch, period, outsz=num_reports):
+                        with ne_x_3 = num_events * 3:
+                            with ne_x_2 = num_events * 2:
+                                with wsets = ADJUST.weighted_delta(set1, set2, reputation, reports_filled, num_reports, num_events, outsz=ne_x_3):
+                                    EXPIRING.setOld(branch, period, slice(wsets, items=0, items=num_events))
+                                    EXPIRING.setNewOne(branch, period, slice(wsets, items=num_events, items=ne_x_2))
+                                    EXPIRING.setNewTwo(branch, period, slice(wsets, items=ne_x_2, items=ne_x_3))
+                                    # return(EXPIRING.returnOld(branch, period, outsz=num_events):arr)
+                                    # return(EXPIRING.getNewOne(branch, period, outsz=num_events):arr)
+                                    # return(EXPIRING.getNewTwo(branch, period, outsz=num_events):arr)
+                                    # return(1)
+
+    # select_scores
+    with old = EXPIRING.returnOld(branch, period, outsz=num_events):
+        with new1 = EXPIRING.getNewOne(branch, period, outsz=num_events):
+            with new2 = EXPIRING.getNewTwo(branch, period, outsz=num_events):
+                with set1 = EXPIRING.getSetOne(branch, period, outsz=num_reports):
+                    with set2 = EXPIRING.getSetTwo(branch, period, outsz=num_reports):
+                        with scores = EXPIRING.getScores(branch, period, outsz=num_reports):
+                            with adjusted_scores = ADJUST.select_scores(old, new1, new2, set1, set2, scores, num_reports, num_events, outsz=num_reports):
+                                EXPIRING.setAdjPrinComp(branch, period, adjusted_scores)
+                                # return(EXPIRING.getAdjPrinComp(branch, period, outsz=num_reports):arr)
+                                # return(1)
+
+    ##############
+    # resolve.se #
+    ##############
+
+    with reputation = array(num_reports):
+        with i = 0:
+            while i < num_reports:
+                reputation[i] = REPORTING.getRepByIndex(branch, i)
+                i += 1
+            with adjusted_scores = EXPIRING.getAdjPrinComp(branch, period, outsz=num_reports):
+                with smooth_rep = RESOLVE.smooth(adjusted_scores, reputation, num_reports, num_events, outsz=num_reports):
+                    EXPIRING.setSmoothRep(branch, period, smooth_rep)
+                    # return(EXPIRING.getSmoothRep(branch, period, outsz=num_reports):arr)
+                    # return(1)
+
+    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=flatsize):
+        with smooth_rep = EXPIRING.getSmoothRep(branch, period, outsz=num_reports):
+            with scaled = array(num_events):
+                with scaled_max = array(num_events):
+                    with scaled_min = array(num_events):
+                        with j = 0:
+                            while j < num_events:
+                                with event = EXPIRING.getEvent(branch, period, j):
+                                    if fix(EVENTS.getMaxValue(event)) != YES:
+                                        scaled[j] = 1
+                                        scaled_min[j] = fix(EVENTS.getMinValue(event))
+                                        scaled_max[j] = fix(EVENTS.getMaxValue(event))
+                                    else:
+                                        scaled[j] = 0
+                                        scaled_min[j] = NO
+                                        scaled_max[j] = YES
+                                j += 1
+                            with outcomes = RESOLVE.resolve(smooth_rep, reports_filled, scaled, scaled_max, scaled_min, num_reports, num_events, outsz=num_events):
+                                EXPIRING.setOutcomesFinal(branch, period, outcomes)
+                                # return(EXPIRING.getOutcomesFinal(branch, period, outsz=num_events):arr)
+                                # return(1)
+
+    #############
+    # payout.se #
+    #############
+
+    with smooth_rep = EXPIRING.getSmoothRep(branch, period, outsz=num_reports):
+        with reports_mask = EXPIRING.getReportsMask(branch, period, outsz=flatsize):
+            with outcomes = EXPIRING.getOutcomesFinal(branch, period, outsz=num_events):
+                with reporter_payouts = PAYOUT.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outsz=num_reports):
+                    # get event ID for each event by taking the x index in the reports arrays
+                    # - shoving it in reporting.events[] && getting the cooresponding ID
+                    with j = 0:
+                        while j < num_events:
+                            with event = EXPIRING.getEvent(branch, period, j):
+                                # then take outcomes_final && set each event outcome
+                                # (BAD and BOND macros defined in consensus/constants.se)
+                                EVENTS.setOutcome(event, outcomes[j])
+                                if outcomes[j] != BAD:
+                                    # return bond
+                                    # Q: should the subtractCash be from the event's ID?
+                                    CASH.subtractCash(event, BOND)
+                                    CASH.addCash(INFO.getCreator(event), BOND)
+                                else:
+                                    # give event bond money to reporters
+                                    CASH.subtractCash(event, BOND)
+                                    CASH.addCash(branch, BOND)
+                            j += 1
+                    # - need to loop through rep holders && distribute 50% of branch fees to
+                    #   reporters' cashcoin addresses 
+                    # - also need to take reporter_payouts && redistribute reputation in the
+                    #   Reporting structure accordingly
+                    with i = 0:
+                        # TODO double-check that the cash in and out adds up to 0
+                        while i < num_reports:
+                            REPORTING.setRep(branch, i, fixed_multiply(reporter_payouts[i], 21000000))
+                            CASH.addCash(REPORTING.getReporterID(branch, i), fixed_multiply(CASH.balance(branch), reporter_payouts[i]))
+                            i += 1
+                        CASH.subtractCash(branch, CASH.balance(branch))
+                        return(reporter_payouts:arr)
+                        # return(1)
+
+inset('../macros/constants.se')
+inset('../macros/fixed.se')
+inset('../macros/arrays.se')
+inset('../macros/logging.se')
+inset('../macros/mock.se')

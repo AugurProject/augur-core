@@ -24,14 +24,18 @@
 # Jack Peterson (jack@augur.net).
 
 # extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+
 import events
+
 import expiringEvents
+
 import reporting
+
 import cash
+
 import info
+
 import payout
-
-
 
 def payout(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
@@ -69,7 +73,6 @@ def payout(branch, period, num_events, num_reports, flatsize):
                             cash.addCash(reporting.getReporterID(branch, i), fixed_multiply(cash.balance(branch), reporter_payouts[i]))
                             i += 1
                         cash.subtractCash(branch, cash.balance(branch))
-                        # return(reporter_payouts:arr)
                         return(1)
 
 inset('../../macros/constants.se')

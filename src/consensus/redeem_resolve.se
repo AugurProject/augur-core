@@ -23,12 +23,15 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
+# extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+
 import events
+
 import expiringEvents
+
 import reporting
+
 import resolve
-
-
 
 def smooth(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
@@ -41,7 +44,6 @@ def smooth(branch, period, num_events, num_reports, flatsize):
             with adjusted_scores = expiringEvents.getAdjPrinComp(branch, period, outsz=num_reports):
                 with smooth_rep = resolve.smooth(adjusted_scores, reputation, num_reports, num_events, outsz=num_reports):
                     expiringEvents.setSmoothRep(branch, period, smooth_rep)
-                    # return(expiringEvents.getSmoothRep(branch, period, outsz=num_reports):arr)
                     return(1)
 
 def resolve(branch, period, num_events, num_reports, flatsize):
@@ -66,9 +68,7 @@ def resolve(branch, period, num_events, num_reports, flatsize):
                                 j += 1
                             with outcomes = resolve.resolve(smooth_rep, reports_filled, scaled, scaled_max, scaled_min, num_reports, num_events, outsz=num_events):
                                 expiringEvents.setOutcomesFinal(branch, period, outcomes)
-                                # return(expiringEvents.getOutcomesFinal(branch, period, outsz=num_events):arr)
                                 return(1)
 
 inset('../../macros/constants.se')
 inset('../../macros/fixed.se')
-# inset('../macros/logging.se')

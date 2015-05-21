@@ -23,12 +23,15 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
+# extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+
 import events
+
 import expiringEvents
+
 import reporting
+
 import center
-
-
 
 def center(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
@@ -79,4 +82,3 @@ def covariance(branch, period, num_events, num_reports, flatsize):
 
 inset('../../macros/constants.se')
 inset('../../macros/fixed.se')
-# inset('../macros/logging.se')
