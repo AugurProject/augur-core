@@ -71,8 +71,8 @@ def closeMarket(branch, market):
     if(BRANCHES.getVotePeriod(branch) > tradingPeriod):
         # loop through events in the market, get their outcomes && use those to determine the winning events!
         n = 0
-        # (max poss. winning outcomes is 200 outcomes total all scalar multidimensional)
-        winningOutcomes = array(200)
+        # (max poss. winning outcomes is 8 outcomes total all scalar multidimensional)
+        winningOutcomes = array(8)
         events = array(3)
         events = MARKETS.getMarketEvents(market, outsz=3)
         while n < numberEvents:
