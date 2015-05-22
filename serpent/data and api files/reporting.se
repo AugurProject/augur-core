@@ -115,7 +115,7 @@ def hashReport(report: arr, salt):
         hashInfo[1] = salt
         i = 2
         while i < (len(report) + 2):
-            hashInfo[i] = report[i]
+            hashInfo[i] = report[i-2]
             i += 1
         reportHash = sha256(hashInfo, items=len(hashInfo))
         return(reportHash)
