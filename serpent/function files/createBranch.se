@@ -33,7 +33,7 @@ extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:
 CASH = 0xf1d413688a330839177173ce98c86529d0da6e5c
 
 extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:i, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
-REPORTING = 0xd1f7f020f24abca582366ec80ce2fef6c3c22233
+REPORTING = 0xa9ff1dd752b6669884cd58b93a7bb0e75aab1a6b
 
 # period length is given in blocks
 # description format is branchName:description
