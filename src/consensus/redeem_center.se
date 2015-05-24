@@ -80,5 +80,5 @@ def covariance(branch, period, num_events, num_reports, flatsize):
                     expiringEvents.setDeflated(branch, period, wcd)
                     return(1)
 
-inset('../../macros/constants.se')
-inset('../../macros/fixed.se')
+inset('macros/constants.se')
+inset('macros/fixed.se')

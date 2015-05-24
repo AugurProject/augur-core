@@ -84,6 +84,6 @@ def covariance(wcd:arr, tokens:arr, num_reports, num_events):
                         i += 1
                     return(cov, items=num_events)
 
-inset('../../macros/constants.se')
-inset('../../macros/fixed.se')
-inset('../../macros/arrays.se')
+inset('macros/constants.se')
+inset('macros/fixed.se')
+inset('macros/arrays.se')

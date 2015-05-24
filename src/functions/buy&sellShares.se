@@ -29,9 +29,11 @@ import cash
 
 import reporting
 
-import fxpFunctions
+import fxMath
 
 import markets
+
+import events
 
 data nonces[]
 
@@ -46,7 +48,8 @@ event updatePrice(outcome, price)
     # -4: bad nonce/hash
 def buyShares(branch, market, outcome, amount, nonce):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
-    # if we have 3-4 cycles in a row of events getting pushed back market would already be closed even though events up to be decided on for a while yet never decided
+    # if we have 3-4 cycles in a row of events getting pushed back market would already be closed even though
+    # events up to be decided on for a while yet never decided
     # technically this is a stalled branch and market should be open
     # if(currentPeriod + 3 >= currentVotePeriod) we're stalled
     #the question is though --- are these events part of the set that were stalled?
@@ -57,7 +60,19 @@ def buyShares(branch, market, outcome, amount, nonce):
     #    return(-4)
     inc_nonce()
     stalled = 0
-    if (outcome==0 || (branches.getVotePeriod(branch)>=markets.getTradingPeriod(market) && !stalled) || markets.getBranchID(market) != branch):
+    currentPeriod = block.number / branches.getPeriodLength(branch)
+    currentVotePeriod = branches.getVotePeriod(branch)
+    numEvents = markets.getNumEvents(market)
+    events = markets.getMarketEvents(market, outsz=numEvents)
+    if((currentPeriod + 3) >= currentVotePeriod):
+        c = 0
+        while c < numEvents:
+            if(events.getOutcome(events[c])==0):
+                c += 1
+            else:
+                return(-1)
+        stalled = 1
+    if (outcome==0 || (currentVotePeriod>=markets.getTradingPeriod(market) && !stalled) || markets.getBranchID(market) != branch):
         return(-1)
     # lmsr cost calcs
     oldCost = markets.lsLmsr(market)
@@ -105,7 +120,20 @@ def sellShares(branch, market, outcome, amount, nonce):
     inc_nonce()
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     participantNumber = markets.getParticipantNumber(market, tx.origin)
-    if (markets.getParticipantID(market, participantNumber) != tx.origin || outcome==0 || branches.getVotePeriod(branch)>=markets.getTradingPeriod(market) || markets.getBranchID(market) != branch):
+    stalled = 0
+    currentPeriod = block.number / branches.getPeriodLength(branch)
+    currentVotePeriod = branches.getVotePeriod(branch)
+    numEvents = markets.getNumEvents(market)
+    events = markets.getMarketEvents(market, outsz=numEvents)
+    if((currentPeriod + 3) >= currentVotePeriod):
+        c = 0
+        while c < numEvents:
+            if(events.getOutcome(events[c])==0):
+                c += 1
+            else:
+                return(-1)
+        stalled = 1
+    if (markets.getParticipantID(market, participantNumber) != tx.origin || outcome==0 || (currentVotePeriod>=markets.getTradingPeriod(market) && !stalled) || markets.getBranchID(market) != branch):
         return(-1)
     # lmsr cost calcs
     oldCost = markets.lsLmsr(market)

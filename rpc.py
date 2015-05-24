@@ -1,6 +1,6 @@
 #!/usr/bin/python
 '''A script for using interacting with a local Ethereum node using JSON RPC.'''
-import contract_tools
+from pyrpctools import GETHRPC, COINBASE
 import sys
 import re
 
@@ -12,13 +12,14 @@ def parse_args():
         m = kwd_p.match(arg)
         if m:
             d = m.groupdict()
+            if d['val'] == 'COINBASE':
+                d['val'] = COINBASE
             kwds[d['key']] = d['val']
         else:
             args.append(arg)
     return args, kwds
 
 if __name__ == '__main__':
-    rpc = contract_tools.rpc(default='GETH')
-    rpc_call = sys.argv[1]
+    rpc_cmd = sys.argv[1]
     args, kwds = parse_args()
-    result = getattr(rpc, rpc_call)(*args, **kwds)
+    result = getattr(GETHRPC, rpc_cmd)(*args, **kwds)

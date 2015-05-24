@@ -23,23 +23,20 @@ Then geth will automatically do all these things whenever you run it.
 '''
 import warnings; warnings.simplefilter('ignore')
 from colorama import init, Fore, Style; init()
-from pyrpc import GETHRPC, DB, COINBASE
+from pyrpctools import GETHRPC, DB, COINBASE
+from translate_externs import replace_names, show
 import serpent
 import json
 import time
 import sys
 import os
 
-TEMPLATE = '''\
-%(sig)s
-macro %(name)s:
-    %(address)s
-'''
-CODEPATH = os.path.abspath('src')
+CODEPATHS = map(os.path.abspath, sys.argv[1:]) if sys.argv[1:] else ('src',)
 ERROR = Style.BRIGHT + Fore.RED + 'ERROR!'
 GAS = hex(3*10**6)
 TRIES = 10
 BLOCKTIME = 12
+INFO = {}
 
 if COINBASE == '0x':
     print ERROR, 'no coinbase address'
@@ -59,14 +56,12 @@ def memoize(func):
 
 @memoize
 def get_full_name(name):
-    for d, s, f in os.walk('src'):
-        for F in f:
-            if F[:-3] == name:
-                return os.path.join(d, F)
+    for path in CODEPATHS:
+        for d, s, f in os.walk(path):
+            for F in f:
+                if F[:-3] == name:
+                    return os.path.join(d, F)
     raise ValueError('No such name: '+name)
-
-def is_old_info(info):
-    return os.path.getmtime(get_full_name(info['name'])) > info['mtime']
 
 def is_code_onchain(address):
     i = 0
@@ -79,39 +74,47 @@ def is_code_onchain(address):
     return i != TRIES
 
 def get_info(name):
-    try:
-        info = json.loads(DB[name])
-    except:
-        compile(name)
-        return json.loads(DB[name])
+    if name in INFO:
+        return INFO[name]
     else:
-        if is_old_info(info):
-            compile(name)
-            return json.loads(DB[name])
-        else:
-            return info
+        compile(name)
+        return INFO[name]
 
 def broadcast_code(evm):
     return GETHRPC.eth_sendTransaction(sender=COINBASE, data=evm, gas=GAS)
-    
 
-def compile(name):
-    fullname = get_full_name(name)
+def translate_code(fullname):
     new_code = []
-    for line in open(fullname):
-        if line.startswith('import'):
+    imports = []
+    init = 0
+    for i, line in enumerate(open(fullname)):
+        if line.startswith('def init():'):
+            init = i
+            new_code.append(line)
+        elif line.startswith('import'):
             _, n = line.split(' ')
             n = n.strip()
             info = get_info(n)
-            new_code.append(info['sig'])
-            new_code.append(TEMPLATE % info)
+            new_code.append(info['sig'] + '\n' + 'data ' + n)
+            imports.append((n,info['address']))
         else:
+            line, _ = replace_names(line, [n[0] for n in imports], lambda n: 'self.'+n)
             new_code.append(line.rstrip())
+    if not init and not new_code[init].startswith('def init():') and imports:
+        new_code = ['def init():'] + new_code
+    new_code = new_code[:init+1]+[(' '*4+'self.%s = %s')%(n, a) for n, a in imports]+new_code[init+1:]
+    return new_code
+
+def compile(name):
+    fullname = get_full_name(name)
+    new_code = translate_code(fullname)
+    show(new_code)
+    print 'Processing', fullname
     new_code = '\n'.join(new_code)
+    evm = '0x' + serpent.compile(new_code).encode('hex')
     sig = serpent.mk_signature(new_code)
     sig = sig.replace('main', name, 1)
     fullsig = serpent.mk_full_signature(new_code)
-    evm = '0x' + serpent.compile(new_code).encode('hex')
     result = broadcast_code(evm)
     if 'error' in result:
         raise ValueError('Bad RPC response!: ' + json.dumps(result, indent=4))
@@ -119,21 +122,28 @@ def compile(name):
     if not is_code_onchain(address):
         raise ValueError('CODE NOT ON CHAIN AFTER %d TRIES, ABORTING' % TRIES) 
     mtime = os.path.getmtime(fullname)
-    DB[name] = json.dumps({
+    INFO[name] = {
         'sig':sig,
         'fullsig':fullsig,
         'address':address,
         'mtime':mtime,
-        'name':name})
+        'name':name}
 
 def pretty(dct):
     return json.dumps(dct, indent=4, sort_keys=True)
 
-def main():
-    for d, s, f in os.walk('src'):
+def serpent_files(path):
+    for d, s, f in os.walk(path):
         for F in f:
             if F.endswith('.se'):
-                print pretty(get_info(F[:-3]))
+                yield d, F
+
+def main():
+    for path in CODEPATHS:
+        for _, filename in serpent_files(path):
+            print pretty(get_info(filename[:-3]))
+    for name, info in INFO.items():
+        DB[name] = json.dumps(info)
     return 0
 
 if __name__ == '__main__':

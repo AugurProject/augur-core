@@ -88,6 +88,6 @@ def select_scores(old:arr, new1:arr, new2:arr, set1:arr, set2:arr, scores:arr, n
                         adjusted_scores = set2
                     return(adjusted_scores, items=num_reports)
 
-inset('../../macros/constants.se')
-inset('../../macros/fixed.se')
-inset('../../macros/arrays.se')
+inset('macros/constants.se')
+inset('macros/fixed.se')
+inset('macros/arrays.se')

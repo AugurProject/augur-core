@@ -87,6 +87,6 @@ def interpolate(branch, period, num_events, num_reports, flatsize):
                                 expiringEvents.setReportsMask(branch, period, slice(reports_interp, items=flatsize, items=flatsize_x_2))
                                 return(1)
 
-inset('../../macros/constants.se')
-inset('../../macros/fixed.se')
-inset('../../macros/arrays.se')
+inset('macros/constants.se')
+inset('macros/fixed.se')
+inset('macros/arrays.se')

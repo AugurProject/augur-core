@@ -110,7 +110,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     # buy some of all outcomes
     # ls-lmsr needs at least a very small initial liquidity
     y = 1
-    z = initialLiquidity * 2**64 / (2**64 + alpha*cumulativeScale*fxMath.fx_log(initialLiquidity)/2**64)
+    z = initialLiquidity * 2**64 / (2**64 + alpha*cumulativeScale*fxMath.log(initialLiquidity)/2**64)
     markets.initialLiquiditySetup(marketID, alpha, cumulativeScale, numOutcomes)
     while y <= numOutcomes:
         markets.modifyShares(marketID, y, z)

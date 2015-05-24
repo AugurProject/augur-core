@@ -1,5 +1,3 @@
-
-import whitelist
 # This software (Augur) allows buying && selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
@@ -32,8 +30,6 @@ import branches
 data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
 
 def init():
-    self.whitelist = 0xf1e4b1b0d357ded7a34c08dcac1a5d8d1eda795c
-
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
     self.Reporting[1010101].reputation[0].repValue = 470*2^64
     self.Reporting[1010101].reputation[0].reporterID = tx.origin

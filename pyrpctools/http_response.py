@@ -46,18 +46,19 @@ def recv_chunks(conn, body):
     '''Calls recv on conn until all chunks of body have been
     collected.'''
     new_body = ''
-    while body:
+    while True:
         chunklength, body = body.split(CRLF, 1)
-        if not chunklength and not body:
-            break
         chunklength = int(chunklength, 16)
-        if len(body) < chunklength:
-            body = recv_n(conn, chunklength, body)
-        if chunklength:
-            # len(CRLF) == 2
-            new_body, body = new_body + body[:chunklength], body[chunklength+2:]
-        if body == '':
-            body = recv_until(conn, CRLF)
+        if chunklength > 0:
+            if len(body) < chunklength:
+                # The + 2 is to account for the extra CRLF
+                # at the end of each chunk
+                body = recv_n(conn, chunklength + 2, body)
+                body += recv_until(conn, CRLF, split=False)
+            new_body += body[:chunklength]
+            body = body[chunklength + 2:]
+        else:
+            break
     return new_body
 
 def is_too_short(headers, body):
