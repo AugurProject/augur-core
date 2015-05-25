@@ -42,23 +42,22 @@ extern checkQuorum.se: [checkQuorum:i:i]
 QUORUM = 0xe9aaab4aff0cf06e62d2442ae0f68660882e5a67
 
 extern redeem_interpolate.se: [interpolate:iiiii:i]
-REDEEM_INTERPOLATE = 0x6e87d29e2b80d1cfeff57f782dcb57cd2cc15d2d
+REDEEM_INTERPOLATE = 0x2dbab29f11ee38383e36b2765437e0fbe898ee19
 
 extern redeem_center.se: [center:iiiii:i, covariance:iiiii:i]
-REDEEM_CENTER = 0x1f0571210c03efb7a616ed8a29d408a81cefe846
+REDEEM_CENTER = 0x8c44d6382e1f21c0be367f4de209c1fcfbe15939
 
 extern redeem_score.se: [blank:iiiii:i, deflate:iiiii:i, latent:iiiii:i, loadings:iiiii:i, score:iiiii:i]
-REDEEM_SCORE = 0xcd2f28fe067ea3cdc3b55f1a1e62cb347118b04c
+REDEEM_SCORE = 0xeb959b695fc70cbbad348479324b3d0c19fb04dd
 
 extern redeem_adjust.se: [reputation_delta:iiiii:i, select_scores:iiiii:i, weighted_delta:iiiii:i]
-REDEEM_ADJUST = 0x562cc65e8d901f03bbeb6d83011bbd48ad1d377e
+REDEEM_ADJUST = 0x9875948e728089fb79985b30f49b5249ca59be9d
 
 extern redeem_resolve.se: [resolve:iiiii:i, smooth:iiiii:i]
-REDEEM_RESOLVE = 0xa9b43b17ed17106f075960f9b9af38c330df9471
+REDEEM_RESOLVE = 0xdd0b52fb8aef2c6c3119ad69953fe8deca592259
 
 extern redeem_payout.se: [payout:iiiii:i]
-# REDEEM_PAYOUT = 0xe995724195e58489f75c2e12247ce28bf50a5245
-REDEEM_PAYOUT = 0x3975b52c75eb13ef6de3a5385afe6a1e5849812e
+REDEEM_PAYOUT = 0x888e6acb3f7a7a7f4d800e076ea461b43e2cc860
 
 # - 50% of fees already distributed to market creators
 #   all remaining fees go to reporters

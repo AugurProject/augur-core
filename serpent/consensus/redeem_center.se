@@ -36,7 +36,7 @@ extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberRepor
 REPORTING = 0xd1f7f020f24abca582366ec80ce2fef6c3c22233
 
 extern center.se: [center:aaaaaii:a, covariance:aaii:a, tokenize:ai:a]
-CENTER = 0xcff950797165df23550b6d79fa98e55d4c250fbe
+CENTER = 0xe581b997600f802a151d107b5f04ca2abaec194c
 
 def center(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):

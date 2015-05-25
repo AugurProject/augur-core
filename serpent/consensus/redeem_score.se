@@ -36,7 +36,7 @@ extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:
 BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
 
 extern score.se: [blank:iii:a, deflate:aaii:a, latent:aai:i, loadings:aaaii:a, score:aaaiii:a]
-SCORE = 0x7e6a5373193e42e77133b44707e6dbce92adc6f4
+SCORE = 0xa6f6ecff2011aa189eaa15010de5ec2375ebaa9a
 
 def blank(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
