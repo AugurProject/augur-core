@@ -39,11 +39,10 @@ extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:
 CASH = 0xf1d413688a330839177173ce98c86529d0da6e5c
 
 extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
-# INFO = 0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b
 INFO = 0x3530bfdc65394687732d9c2becd6a3108271231b
 
 extern payout.se: [payout:aaaii:a]
-PAYOUT = 0x0a4184e2bc58669fb78a9bcee0cc1ab0da9d3ce3
+PAYOUT = 0x226b26c312657341d8a9c845bc67fa03486dc2c0
 
 def payout(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
@@ -77,7 +76,7 @@ def payout(branch, period, num_events, num_reports, flatsize):
                     with i = 0:
                         # TODO double-check that the cash in and out adds up to 0
                         while i < num_reports:
-                            REPORTING.setRep(branch, i, fixed_multiply(reporter_payouts[i], 21000000))
+                            REPORTING.setRep(branch, i, fixed_multiply(reporter_payouts[i], 21000000 * ONE))
                             CASH.addCash(REPORTING.getReporterID(branch, i), fixed_multiply(CASH.balance(branch), reporter_payouts[i]))
                             i += 1
                         CASH.subtractCash(branch, CASH.balance(branch))

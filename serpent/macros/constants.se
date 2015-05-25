@@ -27,6 +27,7 @@ macro ONE: 2^64
 macro YES: 2^65
 macro NO: 2^64
 macro BAD: 3 * 2^63
+macro NA: 0
 macro COINS: 10^6
 macro CATCH_TOLERANCE: 2^64 / 10
 macro MAX_ITERATIONS: 5

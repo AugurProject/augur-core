@@ -36,7 +36,7 @@ extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberRepor
 REPORTING = 0xd1f7f020f24abca582366ec80ce2fef6c3c22233
 
 extern resolve.se: [resolve:aaaaaii:a, smooth:aaii:a]
-RESOLVE = 0x82a0ce86301c4f1832f78a324c20dd981e21d57b
+RESOLVE = 0xc8dfd6c888bbaee5073c62a50b6bb34e60d6da3c
 
 def smooth(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
