@@ -69,7 +69,7 @@ def payout(branch, period, num_events, num_reports, flatsize):
                     with i = 0:
                         # TODO double-check that the cash in and out adds up to 0
                         while i < num_reports:
-                            reporting.setRep(branch, i, fixed_multiply(reporter_payouts[i], 21000000))
+                            reporting.setRep(branch, i, fixed_multiply(reporter_payouts[i], 21000000 * ONE))
                             cash.addCash(reporting.getReporterID(branch, i), fixed_multiply(cash.balance(branch), reporter_payouts[i]))
                             i += 1
                         cash.subtractCash(branch, cash.balance(branch))
