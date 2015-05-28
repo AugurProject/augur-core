@@ -64,9 +64,9 @@ def center(branch, period, num_events, num_reports, flatsize):
                     with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=flatsize):
                         with lflatsize = flatsize + num_events + 2:
                             with result = CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, MAX_COMPONENTS, outsz=lflatsize):
-                                wcd = slice(result, items=0, items=flatsize)
+                                wcd = slice(result, chars=32*0, chars=32*flatsize)
                                 EXPIRING.setWeightedCenteredData(branch, period, wcd)
-                                loading_vector = slice(result, items=flatsize, items=lflatsize)
+                                loading_vector = slice(result, chars=32*flatsize, chars=32*lflatsize)
                                 EXPIRING.setLoadingVector(branch, period, loading_vector)
                                 return(1)
 

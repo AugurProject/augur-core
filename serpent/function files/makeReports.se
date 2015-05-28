@@ -69,7 +69,7 @@ def report(branch, report:arr, votePeriod, salt):
         while i < (len(report) + 2):
             hashInfo[i] = report[i-2]
             i += 1
-        reportHash = sha256(hashInfo, items=len(hashInfo))
+        reportHash = sha256(hashInfo, chars=32*len(hashInfo))
         if(reportHash!=realHash):
             (return(-3))
 
@@ -149,7 +149,7 @@ def slashRep(branch, votePeriod, salt, report:arr, reporter):
         while i < (len(report) + 2):
             hashInfo[i] = report[i]
             i += 1
-        reportHash = sha256(hashInfo, items=len(hashInfo))
+        reportHash = sha256(hashInfo, chars=32*len(hashInfo))
         if(reportHash!=realHash):
             return(0)
         else:

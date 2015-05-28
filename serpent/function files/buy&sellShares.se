@@ -188,11 +188,11 @@ macro good_pow():
         $data[1] = market
         $data[2] = tx.origin
         $data[3] = self.nonces[tx.origin]
-        with $firstHash = sha3($data, items=4):
+        with $firstHash = sha3($data, chars=4*32):
             with $data2 = array(2):
                 $data2[0] = $firstHash
                 $data2[1] = nonce
-                lt(sha3($data2, items=2), 2^254/10000)
+                lt(sha3($data2, chars=2*32), 2^254/10000)
 
 macro inc_nonce():
     self.nonces[tx.origin] += 1

@@ -8,22 +8,22 @@ import re
 
 contracts = {
     'cash' : '0xf1d413688a330839177173ce98c86529d0da6e5c',
-    'info' : '0x910b359bb5b2c2857c1d3b7f207a08f3f25c4a8b',
+    'info' : '0x3530bfdc65394687732d9c2becd6a3108271231b',
     'branches' : '0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe',
     'events' : '0xb71464588fc19165cbdd1e6e8150c40df544467b',
     'expiringEvents' : '0x61d90fd4c1c3502646153003ec4d5c177de0fb58',
     'fxpFunctions' : '0xdaf26192091449d14c03026f79272e410fce0908',
-    'markets' : '0x2303f6b69e1d7662320819af027d88a9e350ebfb',
-    'reporting' : '0xead0c9a9bd9546f476337a79e3d9bc8875241e61',
-    'createEvent' : '0xcae6d5912033d66650894e2ae8c2f7502eaba15c',
-    'createMarket' : '0x0568c631465eca542affb4bd3c72d1d2ee222c06',
-    'checkQuorum' : '0x4eaa7a8b00107bbc11909e327e163b067fd3cfb9',
-    'buy&sellShares' : '0xb8555091be5c8b8fc77449bb203717959079c29a',
-    'createBranch' : '0x00298dd4fcae1b6063e963048716aeeed853edb6',
+    'markets' : '0x3be9601854135c88bc085510a3abb7ea9c13e6cf',
+    'reporting' : '0xa9ff1dd752b6669884cd58b93a7bb0e75aab1a6b',
+    'createEvent' : '0xda062002b4cf172716e26b0dd4ef148b555a7087',
+    'createMarket' : '0x32361732443f0cfd3ba47f76edafb4d6bd4e9262',
+    'checkQuorum' : '0xe9aaab4aff0cf06e62d2442ae0f68660882e5a67',
+    'buy&sellShares' : '0xda8c4eb4d2893657ed2105a52fcc81501fb97db5',
+    'createBranch' : '0x4f61a99b4584d00243c3a23e0bad4a51f1018bc9',
     'sendReputation' : '0x049487d32b727be98a4c8b58c4eab6521791f288',
     'transferShares' : '0x78da82256f5775df22eee51096d27666772b592d',
-    'makeReports' : '0x32bfb5724874b209193aa0fca45b1f337b27e9b5',
-    'dispatch' : '0x662f95de5a6c500de0b35b73f4b48d740d267482',
+    'makeReports' : '0x4dbde1b0890904e4c1a61efde63473502903d75f',
+    'dispatch' : '0x3975c208cbab80321c14c845217fbf5a748e6d06',
 }
 
 def get_sym(arg):
@@ -50,6 +50,6 @@ if __name__ == '__main__':
     rpc = GethRPC()
     coinbase = rpc.eth_coinbase()['result']
     result = rpc.eth_sendTransaction(
-        sender=coinbase, gas=hex(3000000), to=c, data=data)
+        sender=coinbase, gas=hex(3140000), to=c, data=data)
     rpc.eth_getTransactionByHash(result['result'])
-    rpc.eth_call('pending', sender=coinbase, gas=hex(3000000), to=c, data=data)
+    rpc.eth_call('pending', sender=coinbase, gas=hex(3140000), to=c, data=data)

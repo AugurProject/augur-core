@@ -61,7 +61,7 @@ def getTotalRepReported(branch, expDateIndex):
 	return(self.EventsExpDates[branch][expDateIndex].totalRepReported)
 
 def getReporterBallot(branch, expDateIndex, reporterID):
-	return(load(self.EventsExpDates[branch][expDateIndex].reporters[reporterID][0], items=self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].reporters[reporterID][0], chars=32*self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
 
 def getReport(branch, expDateIndex, reporter, reportNum):
 	return(self.EventsExpDates[branch][expDateIndex].reporters[reporter][reportNum])
@@ -73,52 +73,52 @@ def getVSize(branch, expDateIndex):
     return(self.EventsExpDates[branch][expDateIndex].vSize)
 
 def getReportsFilled(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].reportsFilled[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].reportsFilled[0], chars=32*self.EventsExpDates[branch][expDateIndex].vSize): arr)
 
 def getReportsMask(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].reportsMask[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].reportsMask[0], chars=32*self.EventsExpDates[branch][expDateIndex].vSize): arr)
 
 def getWeightedCenteredData(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].weightedCenteredData[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].weightedCenteredData[0], chars=32*self.EventsExpDates[branch][expDateIndex].vSize): arr)
 
 def getCovarianceMatrixRow(branch, expDateIndex):
-    return(load(self.EventsExpDates[branch][expDateIndex].covarianceMatrixRow[0], items=self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
+    return(load(self.EventsExpDates[branch][expDateIndex].covarianceMatrixRow[0], chars=32*self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
 
 def getDeflated(branch, expDateIndex):
-    return(load(self.EventsExpDates[branch][expDateIndex].deflated[0], items=self.EventsExpDates[branch][expDateIndex].vSize): arr)
+    return(load(self.EventsExpDates[branch][expDateIndex].deflated[0], chars=32*self.EventsExpDates[branch][expDateIndex].vSize): arr)
 
 def getLoadingVector(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].loadingVector[0], items=self.EventsExpDates[branch][expDateIndex].numberEvents+2): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].loadingVector[0], chars=32*self.EventsExpDates[branch][expDateIndex].numberEvents+2): arr)
 
 def getLatent(branch, expDateIndex):
     return(self.EventsExpDates[branch][expDateIndex].latent)
 
 def getScores(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].scores[0], items=(self.EventsExpDates[branch][expDateIndex].vSize/self.EventsExpDates[branch][expDateIndex].numberEvents)): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].scores[0], chars=32*(self.EventsExpDates[branch][expDateIndex].vSize/self.EventsExpDates[branch][expDateIndex].numberEvents)): arr)
 
 def getSetOne(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].set1[0], items=(self.EventsExpDates[branch][expDateIndex].vSize/self.EventsExpDates[branch][expDateIndex].numberEvents)): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].set1[0], chars=32*(self.EventsExpDates[branch][expDateIndex].vSize/self.EventsExpDates[branch][expDateIndex].numberEvents)): arr)
 
 def getSetTwo(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].set2[0], items=(self.EventsExpDates[branch][expDateIndex].vSize/self.EventsExpDates[branch][expDateIndex].numberEvents)): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].set2[0], chars=32*(self.EventsExpDates[branch][expDateIndex].vSize/self.EventsExpDates[branch][expDateIndex].numberEvents)): arr)
 
 def returnOld(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].old[0], items=self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].old[0], chars=32*self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
 
 def getNewOne(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].new1[0], items=self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].new1[0], chars=32*self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
 
 def getNewTwo(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].new2[0], items=self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].new2[0], chars=32*self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
 
 def getAdjPrinComp(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].adjPrinComp[0], items=(self.EventsExpDates[branch][expDateIndex].vSize/self.EventsExpDates[branch][expDateIndex].numberEvents)): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].adjPrinComp[0], chars=32*(self.EventsExpDates[branch][expDateIndex].vSize/self.EventsExpDates[branch][expDateIndex].numberEvents)): arr)
 
 def getSmoothRep(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].smoothRep[0], items=(self.EventsExpDates[branch][expDateIndex].vSize/self.EventsExpDates[branch][expDateIndex].numberEvents)): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].smoothRep[0], chars=32*(self.EventsExpDates[branch][expDateIndex].vSize/self.EventsExpDates[branch][expDateIndex].numberEvents)): arr)
 
 def getOutcomesFinal(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].outcomesFinal[0], items=self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
+	return(load(self.EventsExpDates[branch][expDateIndex].outcomesFinal[0], chars=32*self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
 
 # check that msg.sender is one of our function contracts
 def addEvent(branch, futurePeriod, eventID):
@@ -137,7 +137,7 @@ def setTotalRepReported(branch, expDateIndex, repReported):
 def setReporterBallot(branch, expDateIndex, reporterID, report: arr, reputation):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	save(self.EventsExpDates[branch][expDateIndex].reporters[reporterID][0], report, items=len(report))
+	save(self.EventsExpDates[branch][expDateIndex].reporters[reporterID][0], report, chars=32*len(report))
 	self.EventsExpDates[branch][expDateIndex].totalRepReported += reputation
 	return(1)
 
@@ -150,37 +150,37 @@ def setVSize(branch, expDateIndex, vSize):
 def setReportsFilled(branch, expDateIndex, reportsFilled: arr):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	save(self.EventsExpDates[branch][expDateIndex].reportsFilled[0], reportsFilled, items=len(reportsFilled))
+	save(self.EventsExpDates[branch][expDateIndex].reportsFilled[0], reportsFilled, chars=32*len(reportsFilled))
 	return(1)
 
 def setReportsMask(branch, expDateIndex, reportsMask: arr):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	save(self.EventsExpDates[branch][expDateIndex].reportsMask[0], reportsMask, items=len(reportsMask))
+	save(self.EventsExpDates[branch][expDateIndex].reportsMask[0], reportsMask, chars=32*len(reportsMask))
 	return(1)
 
 def setWeightedCenteredData(branch, expDateIndex, weightedCenteredData: arr):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	save(self.EventsExpDates[branch][expDateIndex].weightedCenteredData[0], weightedCenteredData, items=len(weightedCenteredData))
+	save(self.EventsExpDates[branch][expDateIndex].weightedCenteredData[0], weightedCenteredData, chars=32*len(weightedCenteredData))
 	return(1)
 
 def setCovarianceMatrixRow(branch, expDateIndex, covarianceMatrixRow: arr):
     #if !self.whitelist.check(msg.sender):
      #   return(-1)
-    save(self.EventsExpDates[branch][expDateIndex].covarianceMatrixRow[0], covarianceMatrixRow, items=len(covarianceMatrixRow))
+    save(self.EventsExpDates[branch][expDateIndex].covarianceMatrixRow[0], covarianceMatrixRow, chars=32*len(covarianceMatrixRow))
     return(1)
 
 def setDeflated(branch, expDateIndex, deflated: arr):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    save(self.EventsExpDates[branch][expDateIndex].deflated[0], deflated, items=len(deflated))
+    save(self.EventsExpDates[branch][expDateIndex].deflated[0], deflated, chars=32*len(deflated))
     return(1)
 
 def setLoadingVector(branch, expDateIndex, loadingVector: arr):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	save(self.EventsExpDates[branch][expDateIndex].loadingVector[0], loadingVector, items=len(loadingVector))
+	save(self.EventsExpDates[branch][expDateIndex].loadingVector[0], loadingVector, chars=32*len(loadingVector))
 	return(1)
 
 def setLatent(branch, expDateIndex, latent):
@@ -192,55 +192,55 @@ def setLatent(branch, expDateIndex, latent):
 def setScores(branch, expDateIndex, scores: arr):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	save(self.EventsExpDates[branch][expDateIndex].scores[0], scores, items=len(scores))
+	save(self.EventsExpDates[branch][expDateIndex].scores[0], scores, chars=32*len(scores))
 	return(1)
 
 def setSetOne(branch, expDateIndex, setOne: arr):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	save(self.EventsExpDates[branch][expDateIndex].set1[0], setOne, items=len(setOne))
+	save(self.EventsExpDates[branch][expDateIndex].set1[0], setOne, chars=32*len(setOne))
 	return(1)
 
 def setSetTwo(branch, expDateIndex, setTwo: arr):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	save(self.EventsExpDates[branch][expDateIndex].set2[0], setTwo, items=len(setTwo))
+	save(self.EventsExpDates[branch][expDateIndex].set2[0], setTwo, chars=32*len(setTwo))
 	return(1)
 
 def setOld(branch, expDateIndex, setOld: arr):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	save(self.EventsExpDates[branch][expDateIndex].old[0], setOld, items=len(setOld))
+	save(self.EventsExpDates[branch][expDateIndex].old[0], setOld, chars=32*len(setOld))
 	return(1)
 
 def setNewOne(branch, expDateIndex, newOne: arr):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	save(self.EventsExpDates[branch][expDateIndex].new1[0], newOne, items=len(newOne))
+	save(self.EventsExpDates[branch][expDateIndex].new1[0], newOne, chars=32*len(newOne))
 	return(1)
 
 def setNewTwo(branch, expDateIndex, newTwo: arr):
 	# if(!self.whitelist.check(msg.sender)):
 	# 	return(-1)
-	save(self.EventsExpDates[branch][expDateIndex].new2[0], newTwo, items=len(newTwo))
+	save(self.EventsExpDates[branch][expDateIndex].new2[0], newTwo, chars=32*len(newTwo))
 	return(1)
 
 def setAdjPrinComp(branch, expDateIndex, adjPrinComp: arr):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	save(self.EventsExpDates[branch][expDateIndex].adjPrinComp[0], adjPrinComp, items=len(adjPrinComp))
+	save(self.EventsExpDates[branch][expDateIndex].adjPrinComp[0], adjPrinComp, chars=32*len(adjPrinComp))
 	return(1)
 
 def setSmoothRep(branch, expDateIndex, smoothRep: arr):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	save(self.EventsExpDates[branch][expDateIndex].smoothRep[0], smoothRep, items=len(smoothRep))
+	save(self.EventsExpDates[branch][expDateIndex].smoothRep[0], smoothRep, chars=32*len(smoothRep))
 	return(1)
 
 def setOutcomesFinal(branch, expDateIndex, outcomesFinal: arr):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	save(self.EventsExpDates[branch][expDateIndex].outcomesFinal[0], outcomesFinal, items=len(outcomesFinal))
+	save(self.EventsExpDates[branch][expDateIndex].outcomesFinal[0], outcomesFinal, chars=32*len(outcomesFinal))
 	return(1)
 
 def setReportHash(branch, expDateIndex, reporter, reportHash):

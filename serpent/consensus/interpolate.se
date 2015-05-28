@@ -118,7 +118,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                         while i < flatsize:
                                             reports_interp[i] = scaled_reports[i]
                                             i += 1
-                                return(reports_interp, items=flatsize_x_2)
+                                return(reports_interp, chars=32*flatsize_x_2)
 
 inset('../macros/constants.se')
 inset('../macros/fixed.se')

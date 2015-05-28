@@ -63,7 +63,7 @@ def smooth(adjusted_scores:arr, reputation:arr, num_reports, num_events):
                 while i < num_reports:
                     smooth_rep[i] = row_reward_weighted[i]/10 + reputation[i]*9/10
                     i += 1
-            return(smooth_rep, items=num_reports)
+            return(smooth_rep, chars=32*num_reports)
 
 def resolve(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports, num_events):
     with two_num_events = 2*num_events:
@@ -116,7 +116,7 @@ def resolve(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:
                                     certainty[i] = abs(certainty[i])
                                     total += certainty[i]
                                     i += 1
-                            return(outcomes_final, items=num_events)
+                            return(outcomes_final, chars=32*num_events)
 
 inset('../macros/constants.se')
 inset('../macros/fixed.se')

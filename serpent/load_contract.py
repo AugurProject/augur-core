@@ -29,4 +29,4 @@ rpc = GethRPC()
 coinbase_data = rpc.eth_coinbase()
 coinbase = coinbase_data['result']
 evm = '0x' + serpent.compile(sys.argv[1]).encode('hex')
-data = rpc.eth_sendTransaction(sender=coinbase, gas=hex(3141500), data=evm)
+data = rpc.eth_sendTransaction(sender=coinbase, gas=hex(3000000), data=evm)
