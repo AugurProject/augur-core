@@ -41,8 +41,8 @@ def reputation_delta(branch, period, num_events, num_reports, flatsize):
     with scores = EXPIRING.getScores(branch, period, outsz=num_reports):
         with nr_x_2 = num_reports * 2:
             with sets = ADJUST.reputation_delta(scores, num_reports, num_events, outsz=nr_x_2):
-                EXPIRING.setSetOne(branch, period, slice(sets, chars=32*0, chars=32*num_reports))
-                EXPIRING.setSetTwo(branch, period, slice(sets, chars=32*num_reports, chars=32*nr_x_2))
+                EXPIRING.setSetOne(branch, period, slice(sets, items=0, items=num_reports))
+                EXPIRING.setSetTwo(branch, period, slice(sets, items=num_reports, items=nr_x_2))
                 return(1)
 
 def weighted_delta(branch, period, num_events, num_reports, flatsize):
@@ -59,9 +59,9 @@ def weighted_delta(branch, period, num_events, num_reports, flatsize):
                         with ne_x_3 = num_events * 3:
                             with ne_x_2 = num_events * 2:
                                 with wsets = ADJUST.weighted_delta(set1, set2, reputation, reports_filled, num_reports, num_events, outsz=ne_x_3):
-                                    EXPIRING.setOld(branch, period, slice(wsets, chars=32*0, chars=32*num_events))
-                                    EXPIRING.setNewOne(branch, period, slice(wsets, chars=32*num_events, chars=32*ne_x_2))
-                                    EXPIRING.setNewTwo(branch, period, slice(wsets, chars=32*ne_x_2, chars=32*ne_x_3))
+                                    EXPIRING.setOld(branch, period, slice(wsets, items=0, items=num_events))
+                                    EXPIRING.setNewOne(branch, period, slice(wsets, items=num_events, items=ne_x_2))
+                                    EXPIRING.setNewTwo(branch, period, slice(wsets, items=ne_x_2, items=ne_x_3))
                                     return(1)
 
 def select_scores(branch, period, num_events, num_reports, flatsize):
