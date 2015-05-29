@@ -122,12 +122,13 @@ def get_func_name(line):
 def translate_code(fullname, whitelisted):
     new_code = []
     shared_code = []
+    sigs = []
     whitelisted_funcs = []
     is_whitelisted = fullname in whitelisted
     if is_whitelisted:
         new_code.append(WHITELIST_SIG)
     for line in open(fullname):
-        if line.startswith('#') or line.strip()=='':
+        if line.strip().startswith('#') or line.strip()=='':
             continue
         line = line.replace('\t', ' '*4).rstrip()
         if is_whitelisted and line.startswith('def set'):
@@ -144,15 +145,15 @@ def translate_code(fullname, whitelisted):
             if get_full_name(n) in whitelisted:
                 WHITELIST_CALLS[n].append(get_short_name(fullname))
             info = get_info(n, whitelisted)
-            new_code.append(info['sig'])
-            shared_code.append(' '*4+n+' = '+info['address'])
+            sigs.append(info['sig'])
+            shared_code.append(n+' = '+info['address'])
         else:
             new_code.append(line)
     if is_whitelisted:
-        shared_code.append('    whitelist = ' + WHITELIST_ADDR) 
+        shared_code.append('whitelist = ' + WHITELIST_ADDR) 
         shared_code = shared_code + WHITELIST_CODE
     if shared_code:
-        new_code = ['def code():'] + shared_code + new_code
+        new_code = sigs + shared_code + new_code
     return new_code, whitelisted_funcs
 
 def get_prefixes(funcs, fullsig):

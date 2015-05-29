@@ -117,3 +117,8 @@ class RPC(object):
         rpc_func.__name__ = name
         vars(self)[name] = rpc_func
         return rpc_func
+
+class RPC_Server(object):
+    @staticmethod
+    def __init__(self):
+        self.state = 1
