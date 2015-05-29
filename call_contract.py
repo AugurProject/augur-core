@@ -1,14 +1,14 @@
 #!/usr/bin/python
 from colorama import init, Style, Fore; init()
 import warnings; warnings.simplefilter('ignore')
-from pyrpctools import rpc, DB
+from pyrpctools import RPC, DB
 from pyepm.api import abi_data
 import json
 import time
 import sys
 import re
 
-GETHRPC = rpc(default='GETH')
+GETHRPC = RPC(default='GETH')
 COINBASE = GETHRPC.eth_coinbase()['result']
 
 def get_sym(arg):

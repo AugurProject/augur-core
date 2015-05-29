@@ -56,6 +56,7 @@ def getMaxValue(event):
 def getNumOutcomes(event):
 	return(self.Events[event].numOutcomes)
 
+@whitelisted
 def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes):
 	# check that msg.sender is one of our function contracts
 	#if(!self.whitelist.check(msg.sender)):

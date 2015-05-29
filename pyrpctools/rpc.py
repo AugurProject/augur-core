@@ -45,25 +45,25 @@ Content-Type: application/json\r
 class RPC(object):
     '''A class for sending arbitrary rpc calls to an Ethereum node.'''
     def __init__(self, address=None, default=None, verbose=True, debug=False):
-    '''
-    If default is specified it must be either 'GETH', 'ALETHZERO', or 'TESTRPC'.
-    If address is specified, it must be a tuple like ('localhost', 8080).
-    If verbose is True, then debugging info will be printed out
-    for every RPC call and response. It is True by default.
-    '''
-    if address is None and default is None:
-        raise TypeError('You must specify an address or a default!')
-    if default and default not in DEFAULTS:
-        raise ValueError('That default doesn\'t exist!')
-    if default in DEFAULTS:
-        self.info = DEFAULTS[default]
-    elif address:
-        self.info = address
+        '''
+        If default is specified it must be either 'GETH', 'ALETHZERO', or 'TESTRPC'.
+        If address is specified, it must be a tuple like ('localhost', 8080).
+        If verbose is True, then debugging info will be printed out
+        for every RPC call and response. It is True by default.
+        '''
+        if address is None and default is None:
+            raise TypeError('You must specify an address or a default!')
+        if default and default not in DEFAULTS:
+            raise ValueError('That default doesn\'t exist!')
+        if default in DEFAULTS:
+            self.info = DEFAULTS[default]
+        elif address:
+            self.info = address
     
-    self.conn = socket.create_connection(address)
-    self.id = 1
-    self.verbose = verbose
-    self.debug = debug
+        self.conn = socket.create_connection(self.info)
+        self.id = 1
+        self.verbose = verbose
+        self.debug = debug
 
     def _send_rpc(self, name, args, kwds):
         if 'sender' in kwds:
@@ -117,6 +117,3 @@ class RPC(object):
         rpc_func.__name__ = name
         vars(self)[name] = rpc_func
         return rpc_func
-
-def rpc(address=None, default=None, verbose=True):
-    

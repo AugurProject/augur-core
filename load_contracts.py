@@ -23,7 +23,7 @@ Then geth will automatically do all these things whenever you run it.
 '''
 import warnings; warnings.simplefilter('ignore')
 from colorama import init, Fore, Style; init()
-from pyrpctools import rpc, DB
+from pyrpctools import RPC, DB
 from translate_externs import replace_names, show
 from collections import defaultdict
 from pyepm.api import abi_data
@@ -45,7 +45,7 @@ def get_code_paths():
         return paths
     return [os.path.abspath('src')]
 
-GETHRPC = rpc(default='GETH')
+GETHRPC = RPC(default='GETH')
 COINBASE = GETHRPC.eth_coinbase()['result']
 CODEPATHS = get_code_paths()
 ERROR = Style.BRIGHT + Fore.RED + 'ERROR!'
@@ -133,7 +133,7 @@ def translate_code(fullname, whitelisted):
         if is_whitelisted and line.startswith('def set'):
             new_code.append(line)
             whitelisted_funcs.append(get_func_name(line))
-        elif new_code and new_code[-1].startswith('@whitelisted'):
+        elif is_whitelisted and new_code and new_code[-1].startswith('@whitelisted'):
             # the @whitelisted line should be above a def <name>(...) line
             new_code.pop()
             new_code.append(line)
@@ -167,13 +167,14 @@ def get_prefixes(funcs, fullsig):
 def compile(name, whitelisted):
     fullname = get_full_name(name)
     new_code, whitelisted_funcs = translate_code(fullname, whitelisted)
-    print 'Processing', fullname
+    show(new_code)
     new_code = '\n'.join(new_code)
     fullsig = serpent.mk_full_signature(new_code)
     prefixes = get_prefixes(whitelisted_funcs, fullsig)
-    print prefixes
-    new_code = new_code.replace('[]', prefixes, 1)
+    new_code = new_code.replace('functions = []', 'functions = ' + prefixes, 1)
     show(new_code.split('\n'))
+    print 'Processing', fullname
+    print whitelisted_funcs, prefixes
     evm = '0x' + serpent.compile(new_code).encode('hex')
     sig = serpent.mk_signature(new_code)
     sig = sig.replace('main', name, 1)
@@ -183,12 +184,10 @@ def compile(name, whitelisted):
     address = result['result']
     if not is_code_onchain(address):
         raise ValueError('CODE NOT ON CHAIN AFTER %d TRIES, ABORTING' % TRIES) 
-    mtime = os.path.getmtime(fullname)
     INFO[name] = {
         'sig':sig,
         'fullsig':fullsig,
         'address':address,
-        'mtime':mtime,
         'name':name}
 
 def pretty(dct):
@@ -198,7 +197,6 @@ def serpent_files(path):
     for d, s, f in os.walk(path):
         for F in f:
             if F.endswith('.se'):
-                print d, F
                 yield d, F
 
 def get_whitelisted():
@@ -212,14 +210,16 @@ def safe_call(contract, funcname, sig, args):
     rpc_args = {'sender':COINBASE, 'gas':hex(3000000), 'data':data, 'to':contract}
     txhash = GETHRPC.eth_sendTransaction(**rpc_args)['result']
     tries = 0
-    while tries < 10:
-        time.sleep(12)
+    while tries < TRIES:
+        time.sleep(BLOCKTIME)
         check = GETHRPC.eth_getTransactionByHash(txhash)
-        if check['result'] != None:
-            return True
+        if check['result'] == None:
+            return safe_call(contract, funcname, sig, args)
+        if check['result']['blockNumber'] != None:
+            break
         tries += 1
-    return False
-        
+    return tries < TRIES
+
 def add_to_whitelists():
     print 'CALLING WHITELIST'
     for contract in WHITELIST_CALLS:
@@ -242,16 +242,14 @@ def add_to_whitelists():
 
 def main():
     whitelisted = get_whitelisted()
-    print whitelisted
-    print CODEPATHS
     for path in CODEPATHS:
         for _, filename in serpent_files(path):
-            filename
-            print pretty(get_info(filename[:-3], whitelisted))
+            get_info(filename[:-3], whitelisted)
     print 'DUMPING INFO TO DB'
     for name, info in INFO.items():
+        print name + ':'
+        print pretty(info)
         DB[name] = json.dumps(info)
-        print whitelisted
     add_to_whitelists()
     return 0
 

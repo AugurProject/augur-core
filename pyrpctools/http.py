@@ -1,4 +1,7 @@
-'''Boiler plate code for parsing HTTP responses from an Ethereum client.'''
+'''Low level code for socket networking + HTTP'''
+import socket
+import select
+import sys
 
 CHUNK = 4096
 CRLF = '\r\n'
@@ -77,7 +80,7 @@ def read_full_body(conn, headers, body):
     #if we get here then there is nothing more to do to body
     return body
 
-def full_response(firstline, headers, body):
+def full_message(firstline, headers, body):
     '''Stuff all the data into a dict.'''
     result = {}
     result.update(firstline)
@@ -85,7 +88,7 @@ def full_response(firstline, headers, body):
     result['body'] = body
     return result
 
-def read_response(conn):
+def read_message(conn):
     '''Reads an HTTP response from the socket 'conn',
     and returns a dict with the fields 'vers', 'code',
     'msg', 'headers', and 'body'.'''
@@ -94,4 +97,34 @@ def read_response(conn):
     firstline = raw_firstline_to_dict(firstline)
     headers = raw_headers_to_dict(headers)
     body = read_full_body(conn, headers, body)
-    return full_response(firstline, headers, body)
+    return full_message(firstline, headers, body)
+
+def simple_server(ip, port, func):
+    '''A socket server bound to the given ip and port.
+    Requests are parsed into dictionaries and passed onto
+    func. Func must return a string, which is then sent
+    as a response to the connection.'''
+    listener = socket.socket()
+    listener.listen(100)
+    listener.bind((ip, port))
+    readmap = {listener.fileno():listener}
+    
+    try:
+        while True:
+            for read, _, _ in select.select(readmap.keys(), [], []):
+                for fd in read:
+                    if readmap[fd] == listener:
+                        conn, _ = listener.accept()
+                        readmap[conn.fileno()] = conn
+                    else:
+                        conn = readmap[fd]
+                        try:
+                            request = read_message(conn)
+                        except:
+                            readmap.pop(fd)
+                        else:
+                            conn.write(func(request))
+    except KeyboardInterrupt as exc:
+        print '\r'
+        for sock in readmap.values():
+            sock.close()
