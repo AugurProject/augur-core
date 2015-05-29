@@ -37,7 +37,7 @@ def reputation_delta(branch, period, num_events, num_reports, flatsize):
     with scores = expiringEvents.getScores(branch, period, outsz=num_reports):
         with nr_x_2 = num_reports * 2:
             with sets = ADJUST.reputation_delta(scores, num_reports, num_events, outsz=nr_x_2):
-                expiringEvents.setSetOne(branch, period, slice(sets, items=0, items=num_reports))
+                expiringEvents.setSetOne(branch, period, slice(sets, items=0, items=num_reports)
                 expiringEvents.setSetTwo(branch, period, slice(sets, items=num_reports, items=nr_x_2))
                 return(1)
 

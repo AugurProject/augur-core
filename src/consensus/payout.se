@@ -59,7 +59,7 @@ def payout(outcomes_final:arr, smooth_rep:arr, reports_mask:arr, num_reports, nu
                                         while i < num_reports:
                                             reporter_bonus[i] = fixed_multiply(na_bonus_reports[i], participation) + fixed_multiply(smooth_rep[i], ONE - participation)
                                             i += 1
-                                    return(reporter_bonus, items=num_reports)
+                                    return(reporter_bonus:arr)
 
 inset('macros/constants.se')
 inset('macros/fixed.se')

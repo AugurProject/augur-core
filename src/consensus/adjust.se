@@ -49,7 +49,7 @@ def reputation_delta(scores:arr, num_reports, num_events):
                         while i < two_num_reports:
                             sets[i] = scores[i - num_reports] - set2_compare
                             i += 1
-                        return(sets, items=two_num_reports)
+                        return(sets:arr)
 
 def weighted_delta(set1:arr, set2:arr, reputation:arr, reports:arr, num_reports, num_events):
     reputation = normalize(reputation)
@@ -68,7 +68,7 @@ def weighted_delta(set1:arr, set2:arr, reputation:arr, reports:arr, num_reports,
                                             wsets[i + two_num_events] += fixed_multiply(wset2[k], reports[pos])
                                         k += 1
                                 i += 1
-                            return(wsets, items=three_num_events)
+                            return(wsets:arr)
 
 def select_scores(old:arr, new1:arr, new2:arr, set1:arr, set2:arr, scores:arr, num_reports, num_events):
     # Difference in sum of squared errors. If > 0, then new1 had higher
@@ -86,7 +86,7 @@ def select_scores(old:arr, new1:arr, new2:arr, set1:arr, set2:arr, scores:arr, n
                         adjusted_scores = set1
                     else:
                         adjusted_scores = set2
-                    return(adjusted_scores, items=num_reports)
+                    return(adjusted_scores:arr)
 
 inset('macros/constants.se')
 inset('macros/fixed.se')
