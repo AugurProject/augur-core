@@ -80,58 +80,49 @@ def getBranch(branchNumber):
 	return(self.branchList[branchNumber])
 
 # check that msg.sender is one of our function contracts
+@whitelisted
 def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee):
-	#if(!self.whitelist.check(msg.sender)):
-	#	return(-1)
-	if(self.Branches[ID].periodLength==0):
-		self.Branches[ID].currentVotePeriod = currentVotePeriod
-		self.Branches[ID].periodLength = periodLength
-		self.Branches[ID].minTradingFee = minTradingFee
-		self.branchList[self.branchListCount] = ID
-		self.branchListCount += 1
-		return(1)
-	else:
-		return(0)
+    if(self.Branches[ID].periodLength==0):
+        self.Branches[ID].currentVotePeriod = currentVotePeriod
+        self.Branches[ID].periodLength = periodLength
+        self.Branches[ID].minTradingFee = minTradingFee
+        self.branchList[self.branchListCount] = ID
+        self.branchListCount += 1
+        return(1)
+    else:
+        return(0)
 
 # check that msg.sender is one of our function contracts
+@whitelisted
 def incrementStep(branch):
-	#if(!self.whitelist.check(msg.sender)):
-	#	return(-1)
-	self.Branches[branch].step += 1
-	return(1)
+    self.Branches[branch].step += 1
+    return(1)
 
 def setStep(branch, step):
-	#if(!self.whitelist.check(msg.sender)):
-	#	return(-1)
-	self.Branches[branch].step = step
-	return(1)
+    self.Branches[branch].step = step
+    return(1)
 
+@whitelisted
 def incrementPeriod(branch):
-	#if(!self.whitelist.check(msg.sender)):
-	#	return(-1)
-	self.Branches[branch].currentVotePeriod += 1
-	return(1)
+    self.Branches[branch].currentVotePeriod += 1
+    return(1)
 
 # check that msg.sender is one of our function contracts
+@whitelisted
 def addMarket(branch, market):
-	#if(!self.whitelist.check(msg.sender)):
-	#	return(-1)
-	numMarkets = self.Branches[branch].numMarkets
-	self.Branches[branch].markets[numMarkets] = market
-	self.Branches[branch].numMarkets += 1
-	return(1)
+    numMarkets = self.Branches[branch].numMarkets
+    self.Branches[branch].markets[numMarkets] = market
+    self.Branches[branch].numMarkets += 1
+    return(1)
 
 def getSubstep(branch):
     return(self.Branches[branch].substep)
 
+@whitelisted
 def incrementSubstep(branch):
-    #if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
     self.Branches[branch].substep += 1
     return(1)
 
 def setSubstep(branch, substep):
-    #if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
     self.Branches[branch].substep = substep
     return(1)

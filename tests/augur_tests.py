@@ -1,12 +1,14 @@
 #!/usr/bin/python2
-from test_utils import *
+from contract_test import ContractTest
 from collections import defaultdict
-import gmpy2
 import random
+import bsddb
+import gmpy2
 
-gmpy2.get_context().precision = 256
-
-FILE = '../augur.se'
+class AugurTest(ContractTest):
+    def __init__(self):
+        
+    def test_faucet
 
 with timer():
     print title('Starting Tests', dim=False)
@@ -68,7 +70,7 @@ with timer():
 "What will Jack's height be, from 60 to 72 inches, 
 at noon PST on April 1st, 2015?"''',
             5*5*1000,
-            60,                                                   #scalar event!
+            60,                                                  #scalar event!
             72,
             2,
             sender=key)

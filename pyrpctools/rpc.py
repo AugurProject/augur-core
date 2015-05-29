@@ -1,5 +1,5 @@
 from colorama import init, Fore, Style, Back; init()
-from http_response import read_response
+from http import read_message
 import traceback
 import socket
 import json
@@ -19,6 +19,10 @@ DEFAULTS = {
     'ALETHZERO' : (
         'localhost',
         8080,
+    ),
+    'TESTRPC' : (
+        'localhost',
+        8546,
     ),
 }
 
@@ -40,13 +44,28 @@ Content-Type: application/json\r
 
 class RPC(object):
     '''A class for sending arbitrary rpc calls to an Ethereum node.'''
-    def __init__(self, host_port, verbose=True):
-        self.info = host_port
-        self.conn = socket.create_connection(host_port)
-        self.id = 1
-        self.verbose = verbose
+    def __init__(self, address=None, default=None, verbose=True, debug=False):
+    '''
+    If default is specified it must be either 'GETH', 'ALETHZERO', or 'TESTRPC'.
+    If address is specified, it must be a tuple like ('localhost', 8080).
+    If verbose is True, then debugging info will be printed out
+    for every RPC call and response. It is True by default.
+    '''
+    if address is None and default is None:
+        raise TypeError('You must specify an address or a default!')
+    if default and default not in DEFAULTS:
+        raise ValueError('That default doesn\'t exist!')
+    if default in DEFAULTS:
+        self.info = DEFAULTS[default]
+    elif address:
+        self.info = address
+    
+    self.conn = socket.create_connection(address)
+    self.id = 1
+    self.verbose = verbose
+    self.debug = debug
 
-    def _rpc_call(self, name, args, kwds):
+    def _send_rpc(self, name, args, kwds):
         if 'sender' in kwds:
             kwds['from'] = kwds.pop('sender')
         params = []
@@ -69,8 +88,16 @@ class RPC(object):
             print INFO + 'Sending rpc:' + Style.RESET_ALL
             print pdumps(json.loads(rpc_data))
 
+        if self.debug:
+            print
+            print request
+            print
         self.conn.sendall(request)
-        response = read_response(self.conn)
+        response = read_message(self.conn)
+        if self.debug:
+            print
+            print pdumps(response)
+            print 
         self.id += 1
         try:
             result = json.loads(response['body'])
@@ -86,24 +113,10 @@ class RPC(object):
 
     def __getattr__(self, name):
         def rpc_func(*args, **kwds):
-            return self._rpc_call(name, args, kwds)
+            return self._send_rpc(name, args, kwds)
         rpc_func.__name__ = name
         vars(self)[name] = rpc_func
         return rpc_func
 
 def rpc(address=None, default=None, verbose=True):
-    '''
-    If default is specified it must be either 'GETH' or 'ALETHZERO'.
-    If address is specified, it must be a tuple like ('localhost', 8080).
-    If verbose is True, then debugging info will be printed out
-    for every RPC call and response. It is True by default.
-    '''
-    if address is None and default is None:
-        raise TypeError('You must specify an address or a default!')
-    if default and default not in DEFAULTS:
-        raise ValueError('That default doesn\'t exist!')
-    if default in DEFAULTS:
-        return RPC(DEFAULTS[default], verbose)
-    if address:
-        return RPC(address, verbose)
     

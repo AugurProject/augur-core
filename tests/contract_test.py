@@ -1,9 +1,7 @@
 import warnings; warnings.simplefilter('ignore')
-from collections import OrderedDict, namedtuple
 from colorama import init, Fore, Back, Style
 from types import FunctionType, MethodType
 from contextlib import contextmanager
-from ethereum import tester as _t
 from bitcoin import encode, decode
 from sha3 import sha3_256 as _sha3
 from cStringIO import StringIO
@@ -35,15 +33,6 @@ def named(wrapper):
     new_wrapper.__name__ = wrapper.__name__
     return new_wrapper
 
-IOParts = namedtuple('IOParts', 'stdout stderr proxyout proxyerr')
-
-@contextmanager
-def suppressed_output():
-    parts = IOParts(sys.stdout, sys.stderr, StringIO(), StringIO())
-    sys.stdout, sys.stderr = parts[2:]
-    yield parts
-    sys.stdout, sys.stderr = parts[:2]    
-
 @named
 def suppressify(func):
     def new_func(*args, **kwds):
@@ -63,89 +52,6 @@ def timer():
     yield
     print Fore.YELLOW + Style.BRIGHT + 'Done in %5.2f seconds.'%(clock() - start) + Style.RESET_ALL
 
-def make_dispatcher(state, contract, funcname):
-    def dispatch(*args, **kwds):
-        state.block.log_listeners.append(
-            contract._translator.listen)
-        o = state._send(
-            kwds.get('sender', _t.k0),
-            contract.address,
-            kwds.get('value', 0),
-            contract._translator.encode(funcname, args),
-            **_t.dict_without(
-                kwds,
-                'sender',
-                'value', 
-                'output'))
-        state.block.log_listeners.pop()
-        if kwds.get('output', '') == 'raw':
-            outdata = o['output']
-        elif not o['output']:
-            outdata = None
-        else:
-            outdata = contract._translator.decode(funcname, o['output'])
-            outdata = outdata[0] if len(outdata) == 1 \
-                      else outdata
-        # Format output
-        if kwds.get('profiling', ''):
-            return _t.dict_with(o, output=outdata)
-        else:
-            return outdata
-
-    dispatch.__name__ = funcname
-    return suppressify(dispatch)
-
-class Contract(object):
-    def __init__(self, state, code, sender, gas, endowment, language):
-        if language not in _t.languages:
-            _t.languages[language] = __import__(language)
-        language = _t.languages[language]
-        
-        if os.path.exists(code):
-            cache = code.replace('.se', '.sec')
-            if os.path.exists(cache):
-                cache_made = os.path.getmtime(cache)
-                code_made = os.path.getmtime(code)
-                if code_made > cache_made:
-                    with open(cache, 'wb') as f:
-                        print Fore.YELLOW + Style.BRIGHT + 'Stale cache, recompiling...' + Style.RESET_ALL
-                        with timer():
-                            evm = language.compile(code)
-                            sig = language.mk_full_signature(code)
-                            evm_len = encode(len(evm), 256, 2)
-                            sig_len = encode(len(sig), 256, 2)
-                            f.write(evm_len + evm + sig_len + sig)
-                else:
-                    print Fore.YELLOW + Style.BRIGHT + 'Loading from cache...' + Style.RESET_ALL
-                    with open(cache, 'rb') as f:
-                        with timer():
-                            evm_len = decode(f.read(2), 256)
-                            evm = f.read(evm_len)
-                            sig_len = decode(f.read(2), 256)
-                            sig = f.read(sig_len)
-            else:
-                with open(cache, 'wb') as f:
-                    print Fore.YELLOW + Style.BRIGHT + 'Generating cache...' + Style.RESET_ALL
-                    with timer():
-                        evm = language.compile(code)
-                        sig = language.mk_full_signature(code)
-                        evm_len = encode(len(evm), 256, 2)
-                        sig_len = encode(len(sig), 256, 2)
-                        f.write(evm_len + evm + sig_len + sig)
-
-            with suppressed_output():
-                self.address = _t.encode_hex(state.evm(evm, sender, endowment, gas))
-            self._translator = _t.abi.ContractTranslator(sig)
-            assert len(state.block.get_code(self.address)), "Contract code empty"
-            for funcname in self._translator.function_data:
-                vars(self)[funcname] = make_dispatcher(state, self, funcname)
-
-class State(_t.state):
-    '''A subclass of pyethereum.tester.state, with cached compiled code
-and creates silent functions'''
-    def abi_contract(self, code, sender=_t.k0, endowment=0, language='serpent', gas=None):
-        return Contract(self, code, sender, gas, endowment, language)
-
 def repl_addr(match):
     return Fore.CYAN + Style.BRIGHT + match.string.__getslice__(slice(*match.span()))[:4] + '...' + Fore.YELLOW
 
@@ -154,7 +60,6 @@ def repl_num(match):
 
 def repl_err(match):
     return Fore.RED + Style.BRIGHT + match.string.__getslice__(slice(*match.span())) + Fore.YELLOW
-
 
 addr_p = re.compile(r'0x[a-f0-9]+L')
 num_p = re.compile(r'-?(?!0x)(?![a-f]+)[0-9]+(?![a-f]+)L?|-?[0-9]+\.[0-9]+')
@@ -225,11 +130,7 @@ class ContractTest(object):
 
     def run(self):
         for name in self.test_order:
-            errstr = 'function ' + name + ' not implemented.'
             getattr(self, name, missing(name))()
-
-def run_tests():
-    for k, v in globals()
 
 def trade_pow(branch, market, address, trade_nonce, difficulty=10000):
     nonce = 0
@@ -244,9 +145,3 @@ def trade_pow(branch, market, address, trade_nonce, difficulty=10000):
         if h < target:
             return nonce
         nonce += 1
-
-if __name__ == '__main__':
-    name = 'echo.se'
-    s = State()
-    c = s.abi_contract(name)
-    print c.echo('Hello World!')
