@@ -113,9 +113,9 @@ def redeem(branch, period, num_events, num_reports, flatsize, mockNumber):
                                     j += 1
                             with reports_interp = INTERPOLATE.interpolate(reports, reputation, scaled, scaled_max, scaled_min, outsz=flatsize_x_2):
                                 EXPIRING.setVSize(branch, period, flatsize)
-                                reports_filled = slice(reports_interp, chars=0, chars=32*flatsize)
+                                reports_filled = slice(reports_interp, items=0, items=flatsize)
                                 EXPIRING.setReportsFilled(branch, period, reports_filled)
-                                EXPIRING.setReportsMask(branch, period, slice(reports_interp, chars=32*flatsize, chars=32*flatsize_x_2))
+                                EXPIRING.setReportsMask(branch, period, slice(reports_interp, items=flatsize, items=flatsize_x_2))
                                 # return(reports_filled:arr)
                                 # return(1)
 
@@ -147,9 +147,9 @@ def redeem(branch, period, num_events, num_reports, flatsize, mockNumber):
                     with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=flatsize):
                         with lflatsize = flatsize + num_events + 2:
                             with result = CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, MAX_COMPONENTS, outsz=lflatsize):
-                                wcd = slice(result, chars=0, chars=32*flatsize)
+                                wcd = slice(result, items=0, items=flatsize)
                                 EXPIRING.setWeightedCenteredData(branch, period, wcd)
-                                loading_vector = slice(result, chars=32*flatsize, chars=32*lflatsize)
+                                loading_vector = slice(result, items=flatsize, items=lflatsize)
                                 EXPIRING.setLoadingVector(branch, period, loading_vector)
                                 # return(EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize):arr)
                                 # return(EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):arr)
@@ -256,8 +256,8 @@ def redeem(branch, period, num_events, num_reports, flatsize, mockNumber):
     with scores = EXPIRING.getScores(branch, period, outsz=num_reports):
         with nr_x_2 = num_reports * 2:
             with sets = ADJUST.reputation_delta(scores, num_reports, num_events, outsz=nr_x_2):
-                EXPIRING.setSetOne(branch, period, slice(sets, chars=0, chars=32*num_reports))
-                EXPIRING.setSetTwo(branch, period, slice(sets, chars=32*num_reports, chars=32*nr_x_2))
+                EXPIRING.setSetOne(branch, period, slice(sets, items=0, items=num_reports))
+                EXPIRING.setSetTwo(branch, period, slice(sets, items=num_reports, items=nr_x_2))
                 # return(EXPIRING.getSetOne(branch, period, outsz=num_reports):arr)
                 # return(EXPIRING.getSetTwo(branch, period, outsz=num_reports):arr)
                 # return(1)
@@ -274,9 +274,9 @@ def redeem(branch, period, num_events, num_reports, flatsize, mockNumber):
                         with ne_x_3 = num_events * 3:
                             with ne_x_2 = num_events * 2:
                                 with wsets = ADJUST.weighted_delta(set1, set2, reputation, reports_filled, num_reports, num_events, outsz=ne_x_3):
-                                    EXPIRING.setOld(branch, period, slice(wsets, chars=32*0, chars=32*num_events))
-                                    EXPIRING.setNewOne(branch, period, slice(wsets, chars=32*num_events, chars=32*ne_x_2))
-                                    EXPIRING.setNewTwo(branch, period, slice(wsets, chars=32*ne_x_2, chars=32*ne_x_3))
+                                    EXPIRING.setOld(branch, period, slice(wsets, items=0, items=num_events))
+                                    EXPIRING.setNewOne(branch, period, slice(wsets, items=num_events, items=ne_x_2))
+                                    EXPIRING.setNewTwo(branch, period, slice(wsets, items=ne_x_2, items=ne_x_3))
                                     # return(EXPIRING.returnOld(branch, period, outsz=num_events):arr)
                                     # return(EXPIRING.getNewOne(branch, period, outsz=num_events):arr)
                                     # return(EXPIRING.getNewTwo(branch, period, outsz=num_events):arr)
