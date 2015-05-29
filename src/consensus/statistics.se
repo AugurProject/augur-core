@@ -24,8 +24,8 @@
 
 macro concat($a, $b):
     with $c = array(len($a)+len($b)):
-        mcopy($c, $a, items=len($a))
-        mcopy($c+(items=len($a)), $b, items=len($b))
+        mcopy($c, $a, chars=32*len($a))
+        mcopy($c+(chars=32*len($a)), $b, chars=32*len($b))
         $c
 
 macro swap($a, $i, $j):
