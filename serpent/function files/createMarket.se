@@ -125,13 +125,13 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     while y <= numOutcomes:
         MARKETS.modifyShares(marketID, y, z)
         y += 1
-    if(CASH.send(marketID, initialLiquidity) && INFO.setInfo(marketID, description, tx.origin, initialLiquidity) && BRANCHES.addMarket(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch)):
+    if(INFO.setInfo(marketID, description, tx.origin, initialLiquidity) && BRANCHES.addMarket(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch) && CASH.send(marketID, initialLiquidity)):
         return(marketID)
     else:
         # revert shares bought and other variables
         v = 1
         while v <= numOutcomes:
             MARKETS.modifyShares(marketID, v, -z)
-            y += 1
+            v += 1
         MARKETS.initialLiquiditySetup(marketID, 0, 0, 0)
         return(-4)
