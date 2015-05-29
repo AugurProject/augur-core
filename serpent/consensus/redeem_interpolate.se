@@ -93,9 +93,9 @@ def interpolate(branch, period, num_events, num_reports, flatsize):
                                     j += 1
                             with reports_interp = INTERPOLATE.interpolate(reports, reputation, scaled, scaled_max, scaled_min, outsz=flatsize_x_2):
                                 EXPIRING.setVSize(branch, period, flatsize)
-                                reports_filled = slice(reports_interp, chars=0, chars=32*flatsize)
+                                reports_filled = slice(reports_interp, items=0, items=flatsize)
                                 EXPIRING.setReportsFilled(branch, period, reports_filled)
-                                EXPIRING.setReportsMask(branch, period, slice(reports_interp, chars=32*flatsize, chars=32*flatsize_x_2))
+                                EXPIRING.setReportsMask(branch, period, slice(reports_interp, items=flatsize, items=flatsize_x_2))
                                 return(1)
 
 inset('../macros/constants.se')
