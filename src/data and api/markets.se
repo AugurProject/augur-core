@@ -46,7 +46,7 @@ def getSimulatedBuy(market, outcome, amount):
     cost = (newCost - oldCost)
     price = self.price(market, outcome)
     sharesPurchased(market)[outcome] -= amount
-    return([cost, price], items=2)
+    return([cost, price], chars=32*2)
 
 # @return cost - how much you get paid to sell
 #         price - current share price of that outcome after sell
@@ -62,7 +62,7 @@ def getSimulatedSell(market, outcome, amount):
     cost = oldCost - newCost
     price = self.price(market, outcome)
     sharesPurchased(market)[outcome] += amount
-    return([cost, price], items=2)
+    return([cost, price], chars=32*2)
 
 def getMarketInfo(market):
     info = array(6)
@@ -187,7 +187,7 @@ def lsLmsr(marketID):
 @whitelisted
 def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch):
     # add event list to the market
-    save(self.Markets[marketID].events[0], events, items=len(events))
+    save(self.Markets[marketID].events[0], events, chars=32*len(events))
     self.Markets[marketID].lenEvents = len(events)
     self.Markets[marketID].tradingPeriod = tradingPeriod
     self.Markets[marketID].tradingFee = tradingFee

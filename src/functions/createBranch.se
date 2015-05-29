@@ -50,7 +50,7 @@ def createSubbranch(description:str, periodLength, parent, tradingFee):
     #if(upcomingDecisions < 500):
     #    return(0)
 
-    branchInfo = string((items=7)+len(description))
+    branchInfo = string((chars=32*7)+len(description))
     branchInfo[0] = BRANCH                                      #typecode
     branchInfo[1] = tx.origin                                   #creator address
     branchInfo[2] = 47*2^64                                     #creation fee
@@ -58,7 +58,7 @@ def createSubbranch(description:str, periodLength, parent, tradingFee):
     branchInfo[4] = block.number                                #current block number
     branchInfo[5] = parent                                      #branchID of parent branch
     branchInfo[6] = tradingFee
-    mcopy(branchInfo+(items=7), description, len(description))
+    mcopy(branchInfo+(chars=32*7), description, len(description))
     # people can check that these characteristics hash to the ID if they want
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
     branchID = sha256(branchInfo, chars=len(branchInfo))

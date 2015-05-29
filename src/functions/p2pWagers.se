@@ -46,7 +46,7 @@ def makeBet(eventID, amtToBet):
     betData[0] = eventID
     betData[1] = block.number
     betData[2] = tx.origin
-    betID = sha256(branchinfo, items=3)
+    betID = sha256(branchinfo, chars=32*3)
     self.p2pBets[betID].eventID = betData[0]
     self.p2pBets[betID].amtToBet = amtToBet
     return(betID)
