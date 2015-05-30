@@ -24,40 +24,40 @@
 # Jack Peterson (jack@augur.net).
 
 # extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
-# WHITELIST = 0x21dbe4a05a9174e96e6c6bc1e05a7096338cb0d6
+# WHITELIST = 0xd93ea5e50aad9442574a5613e800ff9c8236622d
 
 extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
-EVENTS = 0xb71464588fc19165cbdd1e6e8150c40df544467b
+EVENTS = 0xfdefa42a3209d3f320b220a234cd0cdea5e761f8
 
 extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
-EXPIRING = 0x61d90fd4c1c3502646153003ec4d5c177de0fb58
+EXPIRING = 0xf97d9fdba23823b2796446d4a45e18a7a1fdf905
 
 extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
-REPORTING = 0xd1f7f020f24abca582366ec80ce2fef6c3c22233
+REPORTING = 0xbe774ec2c537ea1a4981529568060456a650d639
 
 extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getSubstep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, initializeBranch:iiii:i, setStep:ii:i, setSubstep:ii:i]
-BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
+BRANCHES = 0x3bc4532769424b380037df6f94ba52ed72636b7f
 
 extern checkQuorum.se: [checkQuorum:i:i]
-QUORUM = 0xe9aaab4aff0cf06e62d2442ae0f68660882e5a67
+QUORUM = 0x7c349cc8658e399a01f80019f46bd7644dc97adb
 
 extern redeem_interpolate.se: [interpolate:iiiii:i]
-REDEEM_INTERPOLATE = 0x2dbab29f11ee38383e36b2765437e0fbe898ee19
+REDEEM_INTERPOLATE = 0x3ecaed5949e121926991d9fde8ac0c212e6fbff4
 
 extern redeem_center.se: [center:iiiii:i, covariance:iiiii:i]
-REDEEM_CENTER = 0x8c44d6382e1f21c0be367f4de209c1fcfbe15939
+REDEEM_CENTER = 0x6621d0c3c37fea879ce067f5e85c80f08ffa5e7f
 
 extern redeem_score.se: [blank:iiiii:i, deflate:iiiii:i, latent:iiiii:i, loadings:iiiii:i, score:iiiii:i]
-REDEEM_SCORE = 0xeb959b695fc70cbbad348479324b3d0c19fb04dd
+REDEEM_SCORE = 
 
 extern redeem_adjust.se: [reputation_delta:iiiii:i, select_scores:iiiii:i, weighted_delta:iiiii:i]
-REDEEM_ADJUST = 0x9875948e728089fb79985b30f49b5249ca59be9d
+REDEEM_ADJUST = 
 
 extern redeem_resolve.se: [resolve:iiiii:i, smooth:iiiii:i]
-REDEEM_RESOLVE = 0xdd0b52fb8aef2c6c3119ad69953fe8deca592259
+REDEEM_RESOLVE = 0xcbc70f0a25977dc2e6dec54fd53769f755de4cd6
 
 extern redeem_payout.se: [payout:iiiii:i]
-REDEEM_PAYOUT = 0x888e6acb3f7a7a7f4d800e076ea461b43e2cc860
+REDEEM_PAYOUT = 0xb612eb2dc2be63445e541eaad4906580cff1557e
 
 # - 50% of fees already distributed to market creators
 #   all remaining fees go to reporters

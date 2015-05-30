@@ -47,6 +47,7 @@ def checkQuorum(branch):
     while b < (currentPeriod+100):
         upcomingDecisions += EXPEVENTS.getNumberEvents(branch, b)
         b += 1
+
     # normally < 30 and < 500 respectively, lowered for testing
     if ((EXPEVENTS.getNumberEvents(branch, currentVotePeriod) < 5 || upcomingDecisions < 10) && matured):
         BRANCHES.incrementPeriod(branch)
@@ -60,4 +61,5 @@ def checkQuorum(branch):
     if(matured && enoughEvents && enoughUpcoming):
         return(1)
     else:
-        return(0)
+        # return(0)
+        return([currentPeriod, currentVotePeriod, matured, EXPEVENTS.getNumberEvents(branch, currentVotePeriod), upcomingDecisions]:arr)
