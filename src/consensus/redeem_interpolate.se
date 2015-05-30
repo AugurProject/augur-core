@@ -1,6 +1,6 @@
 # This software (Augur) allows buying and selling event options in Ethereum.
 #
-# Copyright (c) 2015 Forecast Foundation
+# Copyright (c) 2015 Forecast Foundation 
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,18 +23,11 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
-# extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
-
-import events
-
-import expiringEvents
-
-import reporting
-
-import branches
-
-import interpolate
-
+import events as EVENTS
+import expiringEvents as EXPIRING
+import reporting as REPORTING
+import branches as BRANCHES
+import interpolate as INTERPOLATE
 
 # - loop through reputation && check if in reporters, if so use their
 #   report, if not use the fillin / not reported report (all zeroes)
@@ -50,13 +43,13 @@ def interpolate(branch, period, num_events, num_reports, flatsize):
             with flatsize_x_2 = flatsize * 2:
                 with i = 0:
                     while i < num_reports:
-                        with reporterID = reporting.getReporterID(branch, i):
-                            reputation[i] = reporting.getRepBalance(branch, reporterID)
+                        with reporterID = REPORTING.getReporterID(branch, i):
+                            reputation[i] = REPORTING.getRepBalance(branch, reporterID)
                             # - checks to see if each reporter actually voted on events
                             # - if they didn't vote (simply check if they voted on first event)
                             #     do nothing (these values will be 0 by default due to Serpent array styles)
                             #     else if the reporter did report on events put their ballot into the reports array
-                            with ballot = expiringEvents.getReporterBallot(branch, period, i, outsz=num_events):
+                            with ballot = EXPIRING.getReporterBallot(branch, period, i, outsz=num_events):
                                 if ballot != 0:
                                     with j = 0:
                                         while j < num_events:
@@ -68,23 +61,23 @@ def interpolate(branch, period, num_events, num_reports, flatsize):
                         with scaled_min = array(num_events):
                             with j = 0:
                                 while j < num_events:
-                                    with event = expiringEvents.getEvent(branch, period, j):
+                                    with event = EXPIRING.getEvent(branch, period, j):
                                         # YES, NO, ONE, etc. macros defined in consensus/constants.se
-                                        if fix(events.getMaxValue(event)) != YES:
+                                        if fix(EVENTS.getMaxValue(event)) != YES:
                                             scaled[j] = 1
                                             # TODO convert maxValue and minValue to fixed-point in storage
-                                            scaled_max[j] = fix(events.getMaxValue(event))
-                                            scaled_min[j] = fix(events.getMinValue(event))
+                                            scaled_max[j] = fix(EVENTS.getMaxValue(event))
+                                            scaled_min[j] = fix(EVENTS.getMinValue(event))
                                         else:
                                             scaled[j] = 0
                                             scaled_min[j] = NO
                                             scaled_max[j] = YES
                                     j += 1
-                            with reports_interp = interpolate.interpolate(reports, reputation, scaled, scaled_max, scaled_min, outsz=flatsize_x_2):
-                                expiringEvents.setVSize(branch, period, flatsize)
+                            with reports_interp = INTERPOLATE.interpolate(reports, reputation, scaled, scaled_max, scaled_min, outsz=flatsize_x_2):
+                                EXPIRING.setVSize(branch, period, flatsize)
                                 reports_filled = slice(reports_interp, items=0, items=flatsize)
-                                expiringEvents.setReportsFilled(branch, period, reports_filled)
-                                expiringEvents.setReportsMask(branch, period, slice(reports_interp, items=flatsize, items=flatsize_x_2))
+                                EXPIRING.setReportsFilled(branch, period, reports_filled)
+                                EXPIRING.setReportsMask(branch, period, slice(reports_interp, items=flatsize, items=flatsize_x_2))
                                 return(1)
 
 inset('macros/constants.se')

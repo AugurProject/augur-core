@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation
+# Copyright (C) 2015 Forecast Foundation 
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -56,7 +56,6 @@ def getMaxValue(event):
 def getNumOutcomes(event):
 	return(self.Events[event].numOutcomes)
 
-@whitelisted
 def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes):
 	# check that msg.sender is one of our function contracts
 	#if(!self.whitelist.check(msg.sender)):

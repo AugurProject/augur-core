@@ -1,22 +1,20 @@
-import markets
-
-import cash
-
-import events
+import markets as MARKETS
+import cash as CASH
+import events as EVENTS
 
 # # of winningOutcomes is 2
 def twoOutcomes(market, winningOutcome: arr, events: arr):
     # look for the scalar
     scalar = 0
-    if((events.getMaxValue(events[0])!=1 && events.getNumOutcomes(events[0])==2) || events.getOutcome(events[0])==3*2^63):
+    if((EVENTS.getMaxValue(events[0])!=1 && EVENTS.getNumOutcomes(events[0])==2) || EVENTS.getOutcome(events[0])==3*2^63):
         scalar = 0
-    elif((events.getMaxValue(events[1])!=1 && events.getNumOutcomes(events[1])==2) || events.getOutcome(events[1])==3*2^63):
+    elif((EVENTS.getMaxValue(events[1])!=1 && EVENTS.getNumOutcomes(events[1])==2) || EVENTS.getOutcome(events[1])==3*2^63):
         scalar = 1
-    elif((events.getMaxValue(events[2])!=1 && events.getNumOutcomes(events[2])==2) || events.getOutcome(events[2])==3*2^63):
+    elif((EVENTS.getMaxValue(events[2])!=1 && EVENTS.getNumOutcomes(events[2])==2) || EVENTS.getOutcome(events[2])==3*2^63):
         scalar = 2
-    outcome = events.getOutcome(events[scalar])
-    minValue = events.getMinValue(events[scalar])
-    maxValue = events.getMaxValue(events[scalar])
+    outcome = EVENTS.getOutcome(events[scalar])
+    minValue = EVENTS.getMinValue(events[scalar])
+    maxValue = EVENTS.getMaxValue(events[scalar])
     if(outcome>maxValue):
         outcome = maxValue
     elif(outcome<minValue):
@@ -28,21 +26,21 @@ def twoOutcomes(market, winningOutcome: arr, events: arr):
     pricePerShare1 = 2^64 - pricePerShare1
     # distribute cashcoin to the people who won money by holding winning shares
     i = 0
-    currentParticipant = markets.getCurrentParticipantNumber(market)
+    currentParticipant = MARKETS.getCurrentParticipantNumber(market)
     while i < currentParticipant:
         # for each winning outcome do...
         n = 0
         while(winningOutcome[n]!=0):
-            sharesOwned = markets.getParticipantSharesPurchased(market, i, winningOutcome[n])
-            participant = markets.getParticipantID(market, i)
+            sharesOwned = MARKETS.getParticipantSharesPurchased(market, i, winningOutcome[n])
+            participant = MARKETS.getParticipantID(market, i)
             # low side
             if(n==0):
-                cash.subtractCash(market, sharesOwned*pricePerShare1/2^64)
-                cash.addCash(participant, sharesOwned*pricePerShare1/2^64)
+                CASH.subtractCash(market, sharesOwned*pricePerShare1/2^64)
+                CASH.addCash(participant, sharesOwned*pricePerShare1/2^64)
             # high side (of the scalar part)
             elif(n==1):
-                cash.subtractCash(market, sharesOwned*pricePerShare2/2^64)
-                cash.addCash(participant, sharesOwned*pricePerShare2/2^64)
+                CASH.subtractCash(market, sharesOwned*pricePerShare2/2^64)
+                CASH.addCash(participant, sharesOwned*pricePerShare2/2^64)
             n+=1
         i += 1
     return(1)

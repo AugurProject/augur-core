@@ -55,7 +55,7 @@ def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scale
                                             wcd[lflatsize - 1] = max_components
                                         else:
                                             wcd[lflatsize - 1] = num_events
-                                        return(wcd:arr)
+                                        return(wcd: arr)
 
 def tokenize(reputation:arr, num_reports):
     with tokens = array(num_reports):
@@ -63,7 +63,7 @@ def tokenize(reputation:arr, num_reports):
             while i < num_reports:
                 tokens[i] = reputation[i] * COINS
                 i += 1
-            return(tokens:arr)
+            return(tokens: arr)
 
 # First row of the covariance matrix
 def covariance(wcd:arr, tokens:arr, num_reports, num_events):
@@ -82,7 +82,7 @@ def covariance(wcd:arr, tokens:arr, num_reports, num_events):
                                 j += 1
                         cov[i] = fixed_divide(cov[i], alltokens - ONE)
                         i += 1
-                    return(cov:arr)
+                    return(cov: arr)
 
 inset('macros/constants.se')
 inset('macros/fixed.se')

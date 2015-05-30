@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation
+# Copyright (C) 2015 Forecast Foundation 
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -19,16 +19,15 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-import branches
-
-import expiringEvents
+import branches as BRANCHES
+import expiringEvents as EXPEVENTS
 
 # returns whether a quorem has a matured event
 # if there aren't enough events in a vote period eventsexpdate, push them to the current period and increment the vote period
 # @return 0 if fail, 1 if success
 def checkQuorum(branch):
-    currentVotePeriod = branches.getVotePeriod(branch)
-    currentPeriod = (block.number / branches.getPeriodLength(branch))
+    currentVotePeriod = BRANCHES.getVotePeriod(branch)
+    currentPeriod = (block.number / BRANCHES.getPeriodLength(branch))
     # provided the currentPeriod is >=2 periods past the things we're going to rbcr on
     # we can then conclude it has matured && people have had time to vote
     matured = 0
@@ -43,18 +42,18 @@ def checkQuorum(branch):
     upcomingDecisions = 0
     b = currentPeriod
     while b < (currentPeriod+100):
-        upcomingDecisions += expiringEvents.getNumberEvents(branch, b)
+        upcomingDecisions += EXPEVENTS.getNumberEvents(branch, b)
         b += 1
     # normally < 30 and < 500 respectively, lowered for testing
-    if ((expiringEvents.getNumberEvents(branch, currentVotePeriod) < 5 || upcomingDecisions < 10) && matured):
-        branches.incrementPeriod(branch)
-        branches.setStep(branch, 0)
-        currentVotePeriod = branches.getVotePeriod(branch)
-        expiringEvents.moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod)
+    if ((EXPEVENTS.getNumberEvents(branch, currentVotePeriod) < 5 || upcomingDecisions < 10) && matured):
+        BRANCHES.incrementPeriod(branch)
+        BRANCHES.setStep(branch, 0)
+        currentVotePeriod = BRANCHES.getVotePeriod(branch)
+        EXPEVENTS.moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod)
     else:
         enoughEvents = 1
         enoughUpcoming = 1
-
+        
     if(matured && enoughEvents && enoughUpcoming):
         return(1)
     else:

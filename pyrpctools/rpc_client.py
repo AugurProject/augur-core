@@ -42,7 +42,7 @@ Content-Type: application/json\r
 \r
 {rpc_data}'''
 
-class RPC(object):
+class RPC_Client(object):
     '''A class for sending arbitrary rpc calls to an Ethereum node.'''
     def __init__(self, address=None, default=None, verbose=True, debug=False):
         '''
@@ -117,8 +117,3 @@ class RPC(object):
         rpc_func.__name__ = name
         vars(self)[name] = rpc_func
         return rpc_func
-
-class RPC_Server(object):
-    @staticmethod
-    def __init__(self):
-        self.state = 1

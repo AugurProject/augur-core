@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation
+# Copyright (C) 2015 Forecast Foundation 
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -19,25 +19,21 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-import branches
-
-import expiringEvents
-
-import info
-
-import cash
-
-import reporting
-
-import fxMath
-
-import markets
-
-import events
+import branches as BRANCHES
+import expiringEvents as EXPEVENTS
+import info as INFO
+import cash as CASH
+import reporting as REPORTING
+import fxpFunctions as FXP
+import markets as MARKETS
+import events as EVENTS
 
 data nonces[]
 
-event updatePrice(outcome, price)
+event updatePrice(user, market, outcome, price)
+event pricePaid(user, market, outcome, paid)
+event priceSold(user, market, outcome, paid)
+
 
 # amount of shares should be fixed point
 # @return return price + fee to buy shares
@@ -47,7 +43,7 @@ event updatePrice(outcome, price)
     # -3: not enough money
     # -4: bad nonce/hash
 def buyShares(branch, market, outcome, amount, nonce):
-    # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
+    # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)  
     # if we have 3-4 cycles in a row of events getting pushed back market would already be closed even though
     # events up to be decided on for a while yet never decided
     # technically this is a stalled branch and market should be open
@@ -60,51 +56,54 @@ def buyShares(branch, market, outcome, amount, nonce):
     #    return(-4)
     inc_nonce()
     stalled = 0
-    currentPeriod = block.number / branches.getPeriodLength(branch)
-    currentVotePeriod = branches.getVotePeriod(branch)
-    numEvents = markets.getNumEvents(market)
-    events = markets.getMarketEvents(market, outsz=numEvents)
+    currentPeriod = block.number / BRANCHES.getPeriodLength(branch)
+    currentVotePeriod = BRANCHES.getVotePeriod(branch)
+    numEvents = MARKETS.getNumEvents(market)
+    events = MARKETS.getMarketEvents(market, outsz=numEvents)
     if((currentPeriod + 3) >= currentVotePeriod):
         c = 0
         while c < numEvents:
-            if(events.getOutcome(events[c])==0):
+            if(EVENTS.getOutcome(events[c])==0):
                 c += 1
             else:
                 return(-1)
         stalled = 1
-    if (outcome==0 || (currentVotePeriod>=markets.getTradingPeriod(market) && !stalled) || markets.getBranchID(market) != branch):
+    if (outcome==0 || (currentVotePeriod>=MARKETS.getTradingPeriod(market) && !stalled) || MARKETS.getBranchID(market) != branch):
         return(-1)
     # lmsr cost calcs
-    oldCost = markets.lsLmsr(market)
-    markets.modifyShares(market, outcome, amount)
-    newCost = markets.lsLmsr(market)
+    oldCost = MARKETS.lsLmsr(market)
+    MARKETS.modifyShares(market, outcome, amount)
+    newCost = MARKETS.lsLmsr(market)
     if newCost <= oldCost:
-        markets.modifyShares(market, outcome, -amount)
+        MARKETS.modifyShares(market, outcome, -amount)
         return(0)
     price = (newCost - oldCost)
-
-    if(cash.balance(tx.origin) < price*(markets.getTradingFee(market) + 2^64)/2^64):
-        markets.modifyShares(market, outcome, -amount)
+    
+    if(CASH.balance(tx.origin) < price*(MARKETS.getTradingFee(market) + 2^64)/2^64):
+        MARKETS.modifyShares(market, outcome, -amount)
         return(-3)
 
-    participantNumber = markets.getParticipantNumber(market, tx.origin)
+    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
 
     # if participant doesn't exist in market, add them
-    if(tx.origin != markets.getParticipantID(market, participantNumber)):
-        participantNumber = markets.addParticipant(market, tx.origin)
+    if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
+        participantNumber = MARKETS.addParticipant(market, tx.origin)
 
-    markets.modifyParticipantShares(market, participantNumber, outcome, amount)
+    MARKETS.modifyParticipantShares(market, participantNumber, outcome, amount)
     # send shares of the event to user address
     # if user doesn't have enough money, revert
     # send money from user acc. to market address/account
     # cost for shares
-    cash.send(market, price)
+    CASH.send(market, price)
     # half of fees to market creator
-    fee = markets.getTradingFee(market)*price/2^64
-    cash.send(info.getCreator(market), fee/2)
+    fee = MARKETS.getTradingFee(market)*price/2^64
+    CASH.send(INFO.getCreator(market), fee/2)
     # other half go to branch
-    cash.send(branch, fee/2)
-    log(type=updatePrice, outcome, markets.price(market, outcome))
+    CASH.send(branch, fee/2)
+    # log new price
+    log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome))
+    # log avg. price paid / share
+    log(type=pricePaid, tx.origin, market, outcome, price*2^64/amount)
     return(price+fee)
 
 # amount is amount of shares to sell
@@ -113,54 +112,57 @@ def buyShares(branch, market, outcome, amount, nonce):
 # Error messages otherwise
     # -1: invalid outcome, trading closed, or you haven't traded in this market
     # -2: entered a -amt of shares
-    # -3: you own no shares
+    # -3: you own no shares 
 def sellShares(branch, market, outcome, amount, nonce):
     #if !good_pow():
     #    return(-4)
     inc_nonce()
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
-    participantNumber = markets.getParticipantNumber(market, tx.origin)
+    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
     stalled = 0
-    currentPeriod = block.number / branches.getPeriodLength(branch)
-    currentVotePeriod = branches.getVotePeriod(branch)
-    numEvents = markets.getNumEvents(market)
-    events = markets.getMarketEvents(market, outsz=numEvents)
+    currentPeriod = block.number / BRANCHES.getPeriodLength(branch)
+    currentVotePeriod = BRANCHES.getVotePeriod(branch)
+    numEvents = MARKETS.getNumEvents(market)
+    events = MARKETS.getMarketEvents(market, outsz=numEvents)
     if((currentPeriod + 3) >= currentVotePeriod):
         c = 0
         while c < numEvents:
-            if(events.getOutcome(events[c])==0):
+            if(EVENTS.getOutcome(events[c])==0):
                 c += 1
             else:
                 return(-1)
         stalled = 1
-    if (markets.getParticipantID(market, participantNumber) != tx.origin || outcome==0 || (currentVotePeriod>=markets.getTradingPeriod(market) && !stalled) || markets.getBranchID(market) != branch):
+    if (MARKETS.getParticipantID(market, participantNumber) != tx.origin || outcome==0 || (currentVotePeriod>=MARKETS.getTradingPeriod(market) && !stalled) || MARKETS.getBranchID(market) != branch):
         return(-1)
     # lmsr cost calcs
-    oldCost = markets.lsLmsr(market)
-    markets.modifyShares(market, outcome, -amount)
-    newCost = markets.lsLmsr(market)
+    oldCost = MARKETS.lsLmsr(market)
+    MARKETS.modifyShares(market, outcome, -amount)
+    newCost = MARKETS.lsLmsr(market)
     if oldCost <= newCost:
-        markets.modifyShares(market, outcome, amount)
+        MARKETS.modifyShares(market, outcome, amount)
         return(-2)
     # these prices are in fixed point
     price = oldCost - newCost
     # remove shares from the user's account
     # if user actually doesn't have the shares, revert
-    if markets.getParticipantSharesPurchased(market, participantNumber, outcome) < amount:
-        markets.modifyShares(market, outcome, amount)
+    if MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome) < amount:
+        MARKETS.modifyShares(market, outcome, amount)
         return(-3)
     else:
         # send bitcoin from the market to the user acc.
-        cash.subtractCash(market, price)
-        fee = markets.getTradingFee(market)*price/2^64
+        CASH.subtractCash(market, price)
+        fee = MARKETS.getTradingFee(market)*price/2^64
         # half of fees go to market creator
-        cash.addCash(info.getCreator(market), fee/2)
+        CASH.addCash(INFO.getCreator(market), fee/2)
         # half go to branch
-        cash.addCash(branch, fee/2)
+        CASH.addCash(branch, fee/2)
         price -= fee
-        cash.addCash(tx.origin, price)
-        markets.modifyParticipantShares(market, participantNumber, outcome, -amount)
-        log(type=updatePrice, outcome, markets.price(market, outcome))
+        CASH.addCash(tx.origin, price)
+        MARKETS.modifyParticipantShares(market, participantNumber, outcome, -amount)
+        # log new price
+        log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome))
+        # log avg. price sold / share
+        log(type=priceSold, tx.origin, market, outcome, price*2^64/amount)
         return(price)
 
 macro good_pow():
@@ -169,11 +171,11 @@ macro good_pow():
         $data[1] = market
         $data[2] = tx.origin
         $data[3] = self.nonces[tx.origin]
-        with $firstHash = sha3($data, chars=32*4):
+        with $firstHash = sha3($data, chars=4*32):
             with $data2 = array(2):
                 $data2[0] = $firstHash
                 $data2[1] = nonce
-                lt(sha3($data2, chars=32*2), 2^254/10000)
+                lt(sha3($data2, chars=2*32), 2^254/10000)
 
 macro inc_nonce():
     self.nonces[tx.origin] += 1

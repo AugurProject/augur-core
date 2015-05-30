@@ -1,6 +1,6 @@
 # This software (Augur) allows buying and selling event options in Ethereum.
 #
-# Copyright (c) 2015 Forecast Foundation
+# Copyright (c) 2015 Forecast Foundation 
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,15 +23,10 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
-# extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
-
-import expiringEvents
-
-import reporting
-
-import branches
-
-import score
+import expiringEvents as EXPIRING
+import reporting as REPORTING
+import branches as BRANCHES
+import score as SCORE
 
 def blank(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
@@ -44,30 +39,30 @@ def blank(branch, period, num_events, num_reports, flatsize):
         # - if element ne_plus_2 is zero, we're on the first component, so set the last
         #   element equal to MAX_COMPONENTS
         # - otherwise, decrement the last element
-        with loading_vector = expiringEvents.getLoadingVector(branch, period, outsz=num_events+2):
+        with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
             if loading_vector[num_events+1] == 0:
-                expiringEvents.setLoadingVector(branch, period, score.blank(MAX_COMPONENTS, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
+                EXPIRING.setLoadingVector(branch, period, SCORE.blank(MAX_COMPONENTS, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
             else:
-                expiringEvents.setLoadingVector(branch, period, score.blank(loading_vector[num_events+1]-1, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
-            branches.incrementSubstep(branch)
+                EXPIRING.setLoadingVector(branch, period, SCORE.blank(loading_vector[num_events+1]-1, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
+            BRANCHES.incrementSubstep(branch)
             return(1)
 
 def loadings(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
     #     return(-1)
     with ne_plus_2 = num_events + 2:
-        with loading_vector = expiringEvents.getLoadingVector(branch, period, outsz=ne_plus_2):
-            with deflated =  expiringEvents.getDeflated(branch, period, outsz=flatsize):
+        with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=ne_plus_2):
+            with deflated =  EXPIRING.getDeflated(branch, period, outsz=flatsize):
                 with reputation = array(num_reports):
                     with i = 0:
                         while i < num_reports:
-                            reputation[i] = reporting.getRepByIndex(branch, i)
+                            reputation[i] = REPORTING.getRepByIndex(branch, i)
                             i += 1
                     # Iteratively diagonalize the weighted centered data matrix,
                     # deflating (subtracting out the eigenvectors) the matrix after each
                     # eigenvector is found
-                    loading_vector = score.loadings(loading_vector, deflated, reputation, num_reports, num_events, outsz=ne_plus_2)
-                    expiringEvents.setLoadingVector(branch, period, loading_vector)
+                    loading_vector = SCORE.loadings(loading_vector, deflated, reputation, num_reports, num_events, outsz=ne_plus_2)
+                    EXPIRING.setLoadingVector(branch, period, loading_vector)
                     if loading_vector[num_events] == 0:
                         return(0)
                     else:
@@ -76,30 +71,30 @@ def loadings(branch, period, num_events, num_reports, flatsize):
 def latent(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
     #     return(-1)
-    with loading_vector = expiringEvents.getLoadingVector(branch, period, outsz=num_events+2):
-        with covrow = expiringEvents.getCovarianceMatrixRow(branch, period, outsz=num_events):
-            expiringEvents.setLatent(branch, period, score.latent(covrow, loading_vector, num_events))
-            expiringEvents.setCovarianceMatrixRow(branch, period, covrow)
+    with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+        with covrow = EXPIRING.getCovarianceMatrixRow(branch, period, outsz=num_events):
+            EXPIRING.setLatent(branch, period, SCORE.latent(covrow, loading_vector, num_events))
+            EXPIRING.setCovarianceMatrixRow(branch, period, covrow)
             return(1)
 
 def deflate(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
     #     return(-1)
-    with loading_vector = expiringEvents.getLoadingVector(branch, period, outsz=num_events+2):
-        with deflated = expiringEvents.getDeflated(branch, period, outsz=flatsize):
-            deflated = score.deflate(loading_vector, deflated, num_reports, num_events, outsz=flatsize)
-            expiringEvents.setDeflated(branch, period, deflated)
+    with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+        with deflated = EXPIRING.getDeflated(branch, period, outsz=flatsize):
+            deflated = SCORE.deflate(loading_vector, deflated, num_reports, num_events, outsz=flatsize)
+            EXPIRING.setDeflated(branch, period, deflated)
             return(1)
 
 def score(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
     #     return(-1)
-    with loading_vector = expiringEvents.getLoadingVector(branch, period, outsz=num_events+2):
-        with wcd =  expiringEvents.getWeightedCenteredData(branch, period, outsz=flatsize):
-            with latent = expiringEvents.getLatent(branch, period):
-                with scores = expiringEvents.getScores(branch, period, outsz=num_reports):
-                    scores = score.score(scores, loading_vector, wcd, latent, num_reports, num_events, outsz=num_reports)
-                    expiringEvents.setScores(branch, period, scores)
+    with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+        with wcd =  EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize):
+            with latent = EXPIRING.getLatent(branch, period):
+                with scores = EXPIRING.getScores(branch, period, outsz=num_reports):
+                    scores = SCORE.score(scores, loading_vector, wcd, latent, num_reports, num_events, outsz=num_reports)
+                    EXPIRING.setScores(branch, period, scores)
                     if loading_vector[num_events+1] == 0:
                         return(0)
                     else:

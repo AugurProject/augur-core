@@ -1,6 +1,6 @@
 # This software (Augur) allows buying and selling event options in Ethereum.
 #
-# Copyright (c) 2015 Forecast Foundation
+# Copyright (c) 2015 Forecast Foundation 
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,28 +24,19 @@
 # Jack Peterson (jack@augur.net).
 
 # extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
+# WHITELIST = 0x21dbe4a05a9174e96e6c6bc1e05a7096338cb0d6
 
-import events
-
-import expiringEvents
-
-import reporting
-
-import branches
-
-import checkQuorum
-
-import redeem_interpolate
-
-import redeem_center
-
-import redeem_score
-
-import redeem_adjust
-
-import redeem_resolve
-
-import redeem_payout
+import events as EVENTS
+import expiringEvents as EXP
+import reporting as REPORTING
+import branches as BRANCHES
+import checkQuorum as QUORUM
+import redeem_interpolate as REDEEM_INTERPOLATE
+import redeem_center as REDEEM_CENTER
+import redeem_score as REDEEM_SCORE
+import redeem_adjust as REDEEM_ADJUST
+import redeem_resolve as REDEEM_RESOLVE
+import redeem_payout as REDEEM_PAYOUT
 
 # - 50% of fees already distributed to market creators
 #   all remaining fees go to reporters
@@ -54,68 +45,68 @@ import redeem_payout
 def dispatch(branch):
     # if !WHITELIST.check(msg.sender):
     #     return(-1)
-    if !checkQuorum.checkQuorum(branch):
+    if !QUORUM.checkQuorum(branch):
         return(-1)
-    with period = branches.getVotePeriod(branch):
-        with num_events = expiringEvents.getNumberEvents(branch, period):
-            with flatsize = expiringEvents.getVSize(branch, period):
+    with period = BRANCHES.getVotePeriod(branch):
+        with num_events = EXPIRING.getNumberEvents(branch, period):
+            with flatsize = EXPIRING.getVSize(branch, period):
                 with num_reports = flatsize / num_events:
-                    with step = branches.getStep(branch):
+                    with step = BRANCHES.getStep(branch):
                         if step == 9:
-                            redeem_payout.payout(branch, period, num_events, num_reports, flatsize)
-                            branches.setStep(branch, 0) # reset step
-                            branches.incrementPeriod(branch)
+                            REDEEM_PAYOUT.payout(branch, period, num_events, num_reports, flatsize)
+                            BRANCHES.setStep(branch, 0) # reset step
+                            BRANCHES.incrementPeriod(branch)
                             return(period + 1)
                         elif step == 0:
-                            redeem_interpolate.interpolate(branch, period, num_events, num_reports, flatsize)
+                            REDEEM_INTERPOLATE.interpolate(branch, period, num_events, num_reports, flatsize)
                         elif step == 1:
-                            redeem_center.center(branch, period, num_events, num_reports, flatsize)
+                            REDEEM_CENTER.center(branch, period, num_events, num_reports, flatsize)
                         elif step == 2:
-                            redeem_center.covariance(branch, period, num_events, num_reports, flatsize)
+                            REDEEM_CENTER.covariance(branch, period, num_events, num_reports, flatsize)
                         #######################
                         # loop MAX_COMPONENTS #
                         #######################
                         elif step == 3:
-                            with loading_vector = expiringEvents.getLoadingVector(branch, period, outsz=num_events+2):
+                            with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
                                 with substep = loading_vector[num_events+1]:
                                     if substep == 4:
-                                        more = redeem_score.score(branch, period, num_events, num_reports, flatsize)
-                                        branches.setSubstep(branch, 0)
+                                        more = REDEEM_SCORE.score(branch, period, num_events, num_reports, flatsize)
+                                        BRANCHES.setSubstep(branch, 0)
                                         if more == 1:
                                             return(step)
                                         else:
-                                            branches.incrementStep(branch)
+                                            BRANCHES.incrementStep(branch)
                                             return(step + 1)
                                     elif substep == 0:
-                                        redeem_score.blank(branch, period, num_events, num_reports, flatsize)
+                                        REDEEM_SCORE.blank(branch, period, num_events, num_reports, flatsize)
                                     #######################
                                     # loop MAX_ITERATIONS #
                                     #######################
                                     elif substep == 1:
-                                        if redeem_score.loadings(branch, period, num_events, num_reports, flatsize) == 0:
-                                            branches.incrementSubstep(branch)
+                                        if REDEEM_SCORE.loadings(branch, period, num_events, num_reports, flatsize) == 0:
+                                            BRANCHES.incrementSubstep(branch)
                                         return(step)
                                     ############
                                     # end loop #
                                     ############
                                     elif substep == 2:
-                                        redeem_score.latent(branch, period, num_events, num_reports, flatsize)
+                                        REDEEM_SCORE.latent(branch, period, num_events, num_reports, flatsize)
                                     elif substep == 3:
-                                        redeem_score.deflate(branch, period, num_events, num_reports, flatsize)
-                                    branches.incrementSubstep(branch)
+                                        REDEEM_SCORE.deflate(branch, period, num_events, num_reports, flatsize)           
+                                    BRANCHES.incrementSubstep(branch)
                                     return(step)
                         ############
                         # end loop #
                         ############
                         elif step == 4:
-                            redeem_adjust.reputation_delta(branch, period, num_events, num_reports, flatsize)
+                            REDEEM_ADJUST.reputation_delta(branch, period, num_events, num_reports, flatsize)
                         elif step == 5:
-                            redeem_adjust.weighted_delta(branch, period, num_events, num_reports, flatsize)
+                            REDEEM_ADJUST.weighted_delta(branch, period, num_events, num_reports, flatsize)
                         elif step == 6:
-                            redeem_adjust.select_scores(branch, period, num_events, num_reports, flatsize)
+                            REDEEM_ADJUST.select_scores(branch, period, num_events, num_reports, flatsize)
                         elif step == 7:
-                            redeem_resolve.smooth(branch, period, num_events, num_reports, flatsize)
+                            REDEEM_RESOLVE.smooth(branch, period, num_events, num_reports, flatsize)
                         elif step == 8:
-                            redeem_resolve.resolve(branch, period, num_events, num_reports, flatsize)
-                        branches.incrementStep(branch)
+                            REDEEM_RESOLVE.resolve(branch, period, num_events, num_reports, flatsize)
+                        BRANCHES.incrementStep(branch)
                         return(step + 1)

@@ -22,8 +22,7 @@
 #
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
-import statistics
-
+import statistics as STATISTICS
 
 def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
     # returns:
@@ -105,7 +104,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                                                         while j < num_present[i]:
                                                                             active_reputation[j] = fixed_divide(active_reputation[j], total_active_reputation)
                                                                             j += 1
-                                                                        guess = statistics.weighted_median(active_reports, active_reputation)
+                                                                        guess = STATISTICS.weighted_median(active_reports, active_reputation)
                                                                     j = 0
                                                                     while j < num_reports - num_present[i]:
                                                                         reports_interp[nan_indices[j]] = guess
@@ -116,7 +115,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                         while i < flatsize:
                                             reports_interp[i] = scaled_reports[i]
                                             i += 1
-                                return(reports_interp:arr)
+                                return(reports_interp: arr)
 
 inset('macros/constants.se')
 inset('macros/fixed.se')

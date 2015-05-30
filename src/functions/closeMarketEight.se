@@ -1,28 +1,26 @@
-import cash
-
-import markets
-
-import events
+import cash as CASH
+import markets as MARKETS
+import events as EVENTS
 
 # eight winning outcomes
 def eightOutcomes(market, winningOutcome: arr, events: arr):
-    outcomeOne = events.getOutcome(events[0])
-    minValueOne = events.getMinValue(events[0])
-    maxValueOne = events.getMaxValue(events[0])
+    outcomeOne = EVENTS.getOutcome(events[0])
+    minValueOne = EVENTS.getMinValue(events[0])
+    maxValueOne = EVENTS.getMaxValue(events[0])
     if(outcomeOne>maxValueOne):
         outcomeOne = maxValueOne
     elif(outcomeOne<minValueOne):
         outcomeOne = minValueOne
-    outcomeTwo = events.getOutcome(events[1])
-    minValueTwo = events.getMinValue(events[1])
-    maxValueTwo = events.getMaxValue(events[1])
+    outcomeTwo = EVENTS.getOutcome(events[1])
+    minValueTwo = EVENTS.getMinValue(events[1])
+    maxValueTwo = EVENTS.getMaxValue(events[1])
     if(outcomeTwo>maxValueTwo):
         outcomeTwo = maxValueTwo
     elif(outcomeTwo<minValueTwo):
         outcomeTwo = minValueTwo
-    outcomeThree = events.getOutcome(events[2])
-    minValueThree = events.getMinValue(events[2])
-    maxValueThree = events.getMaxValue(events[0])
+    outcomeThree = EVENTS.getOutcome(events[2])
+    minValueThree = EVENTS.getMinValue(events[2])
+    maxValueThree = EVENTS.getMaxValue(events[0])
     if(outcomeThree>maxValueThree):
         outcomeThree = maxValueThree
     elif(outcomeThree<minValueThree):
@@ -34,7 +32,7 @@ def eightOutcomes(market, winningOutcome: arr, events: arr):
     outcomeTwoLowSidePercent = 2^64 - outcomeTwoHighSidePercent
     outcomeThreeHighSidePercent = 2^64*(outcomeThree - 2^64*minValueThree) / (2^64*maxValueThree - 2^64*minValueThree)
     outcomeThreeLowSidePercent = 2^64 - outcomeThreeHighSidePercent
-
+            
     # price is in fixed point
     # first is low low low, 2 is high low low, 3 is low high low, 4 is high high low, 5 is low low high, 6 is high low high, 7 is low high high, 8 is high high high
     pricePerShare1 = outcomeOneLowSidePercent * outcomeTwoLowSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
@@ -48,30 +46,30 @@ def eightOutcomes(market, winningOutcome: arr, events: arr):
 
     # distribute cashcoin to the people who won money by holding winning shares
     i = 0
-    currentParticipant = markets.getCurrentParticipantNumber(market)
+    currentParticipant = MARKETS.getCurrentParticipantNumber(market)
     while i < currentParticipant:
         # for each winning outcome do...
         sharesOwned = array(8)
         while(winningOutcome[n]!=0):
-            sharesOwned[n] = markets.getParticipantSharesPurchased(market, i, winningOutcome[n])
+            sharesOwned[n] = MARKETS.getParticipantSharesPurchased(market, i, winningOutcome[n])
             n+=1
-        participant = markets.getParticipantID(market, i)
-        cash.subtractCash(market, sharesOwned[0]*pricePerShare1/2^64)
-        cash.addCash(participant, sharesOwned[0]*pricePerShare1/2^64)
-        cash.subtractCash(market, sharesOwned[1]*pricePerShare2/2^64)
-        cash.addCash(participant, sharesOwned[1]*pricePerShare2/2^64)
-        cash.subtractCash(market, sharesOwned[2]*pricePerShare3/2^64)
-        cash.addCash(participant, sharesOwned[2]*pricePerShare3/2^64)
-        cash.subtractCash(market, sharesOwned[3]*pricePerShare4/2^64)
-        cash.addCash(participant, sharesOwned[3]*pricePerShare4/2^64)
-        cash.subtractCash(market, sharesOwned[4]*pricePerShare5/2^64)
-        cash.addCash(participant, sharesOwned[4]*pricePerShare5/2^64)
-        cash.subtractCash(market, sharesOwned[5]*pricePerShare6/2^64)
-        cash.addCash(participant, sharesOwned[5]*pricePerShare6/2^64)
-        cash.subtractCash(market, sharesOwned[6]*pricePerShare7/2^64)
-        cash.addCash(participant, sharesOwned[6]*pricePerShare7/2^64)
-        cash.subtractCash(market, sharesOwned[7]*pricePerShare8/2^64)
-        cash.addCash(participant, sharesOwned[7]*pricePerShare8/2^64)
+        participant = MARKETS.getParticipantID(market, i)
+        CASH.subtractCash(market, sharesOwned[0]*pricePerShare1/2^64)
+        CASH.addCash(participant, sharesOwned[0]*pricePerShare1/2^64)
+        CASH.subtractCash(market, sharesOwned[1]*pricePerShare2/2^64)
+        CASH.addCash(participant, sharesOwned[1]*pricePerShare2/2^64)
+        CASH.subtractCash(market, sharesOwned[2]*pricePerShare3/2^64)
+        CASH.addCash(participant, sharesOwned[2]*pricePerShare3/2^64)
+        CASH.subtractCash(market, sharesOwned[3]*pricePerShare4/2^64)
+        CASH.addCash(participant, sharesOwned[3]*pricePerShare4/2^64)
+        CASH.subtractCash(market, sharesOwned[4]*pricePerShare5/2^64)
+        CASH.addCash(participant, sharesOwned[4]*pricePerShare5/2^64)
+        CASH.subtractCash(market, sharesOwned[5]*pricePerShare6/2^64)
+        CASH.addCash(participant, sharesOwned[5]*pricePerShare6/2^64)
+        CASH.subtractCash(market, sharesOwned[6]*pricePerShare7/2^64)
+        CASH.addCash(participant, sharesOwned[6]*pricePerShare7/2^64)
+        CASH.subtractCash(market, sharesOwned[7]*pricePerShare8/2^64)
+        CASH.addCash(participant, sharesOwned[7]*pricePerShare8/2^64)
         i+=1
 
     return(1)

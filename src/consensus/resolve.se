@@ -22,8 +22,7 @@
 #
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
-import statistics
-
+import statistics as STATISTICS
 
 # Absolute value of all array elements
 macro array_abs($a):
@@ -61,7 +60,7 @@ def smooth(adjusted_scores:arr, reputation:arr, num_reports, num_events):
                 while i < num_reports:
                     smooth_rep[i] = row_reward_weighted[i]/10 + reputation[i]*9/10
                     i += 1
-            return(smooth_rep, items=num_reports)
+            return(smooth_rep: arr)
 
 def resolve(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports, num_events):
     with two_num_events = 2*num_events:
@@ -76,7 +75,7 @@ def resolve(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:
                                     while j < num_reports:
                                         active_reports[j] = reports[i + j*num_events]
                                         j += 1
-                                outcomes_raw[i] = statistics.weighted_median(active_reports, smooth_rep)
+                                outcomes_raw[i] = STATISTICS.weighted_median(active_reports, smooth_rep)
                         else:
                             with j = 0:
                                 while j < num_reports:
@@ -114,7 +113,7 @@ def resolve(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:
                                     certainty[i] = abs(certainty[i])
                                     total += certainty[i]
                                     i += 1
-                            return(outcomes_final, items=num_events)
+                            return(outcomes_final: arr)
 
 inset('macros/constants.se')
 inset('macros/fixed.se')

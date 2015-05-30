@@ -19,7 +19,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-import fxMath
+import fxpFunctions as FXP
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market in the format of
@@ -46,7 +46,7 @@ def getSimulatedBuy(market, outcome, amount):
     cost = (newCost - oldCost)
     price = self.price(market, outcome)
     sharesPurchased(market)[outcome] -= amount
-    return([cost, price], chars=32*2)
+    return([cost, price], chars=64)
 
 # @return cost - how much you get paid to sell
 #         price - current share price of that outcome after sell
@@ -62,7 +62,7 @@ def getSimulatedSell(market, outcome, amount):
     cost = oldCost - newCost
     price = self.price(market, outcome)
     sharesPurchased(market)[outcome] += amount
-    return([cost, price], chars=32*2)
+    return([cost, price], chars=64)
 
 def getMarketInfo(market):
     info = array(6)
@@ -131,9 +131,9 @@ macro lsLmsr($marketID):
         with $i = 1:
             with $sumExp = 0:
                 while $i <= numOutcomes($marketID):
-                    $sumExp += fxMath.exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
+                    $sumExp += FXP.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
                     $i += 1
-                $bq*fxMath.log($sumExp)/2**64
+                $bq*FXP.fx_log($sumExp)/2**64
 
 macro sumList($q, $a, $b):
     $i = $a + 1
@@ -164,28 +164,31 @@ macro particpant($marketID, $addr):
 macro Bq($marketID):
    alpha($marketID) * cumScale($marketID) * sumList(sharesPurchased($marketID), 1, numOutcomes($marketID)) / 2**64
 
-def price(marketID, outcome):
-    B = Bq(marketID)
-    exps = array(numOutcomes(marketID))
-    t22 = 0
-    i = 0
-    while i < numOutcomes(marketID):
-        exps[i] = fxMath.exp(sharesPurchased(marketID)[i+1] * 2^64 / B)
-        t22 += sharesPurchased(marketID)[i + 1] * exps[i] / 2^64
-        i += 1
-    sum_exps = sumList(exps, 0, numOutcomes(marketID))
-    sum_shares = sumList(sharesPurchased(marketID), 1, numOutcomes(marketID)+1)
-    t1 = alpha(marketID) * cumScale(marketID) * fxMath.log(sum_exps) / 2^64
-    t21 = exps[outcome - 1]*sum_shares / 2^64
-    t23 = sum_exps * sum_shares
-    return(t1 + (t21 - t22)*2^64 / t23)
-
 def lsLmsr(marketID):
     return(lsLmsr(marketID))
 
+def price(marketID, outcome):
+    sum_q = sumList(sharesPurchased(marketID), 1, numOutcomes(marketID))
+    a = alpha(marketID)*cumScale(marketID)
+    B = a * sum_q / 2**64
+    exps = array(numOutcomes(marketID))
+    i = 0
+    t22 = 0
+    sum_exps = 0
+    while i < numOutcomes(marketID):
+        exps[i] = FXP.fx_exp(sharesPurchased(marketID)[i+1] * 2**64 / B)
+        t22 += exps[i] * sharesPurchased(marketID)[i+1]
+        sum_exps += exps[i]
+        i += 1
+    t1 = a * FXP.fx_log(sum_exps) / 2**64
+    t21 = exps[i] * sum_q / 2**64
+    t23 = sum_q * sum_exps / 2**64
+    return(t1 + (t21 - t22) * 2**64 / t23)
+
 # check that msg.sender is one of our function contracts
-@whitelisted
 def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     # add event list to the market
     save(self.Markets[marketID].events[0], events, chars=32*len(events))
     self.Markets[marketID].lenEvents = len(events)
@@ -194,21 +197,24 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch):
     self.Markets[marketID].branch = branch
     return(1)
 
-@whitelisted
 def addParticipant(market, address):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     participantNumber = self.Markets[market].currentParticipant
     self.Markets[market].participants[participantNumber].participantID = address
     self.Markets[market].addr2participant[address] = participantNumber
     self.Markets[market].currentParticipant += 1
     return(participantNumber)
 
-@whitelisted
 def modifyShares(marketID, outcome, amount):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     sharesPurchased(marketID)[outcome] += amount
     return(1)
 
-@whitelisted
 def modifyParticipantShares(marketID, participantNumber, outcome, amount):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     self.Markets[marketID].participants[participantNumber].shares[outcome] += amount
     return(1)
 
@@ -222,8 +228,9 @@ def setWinningOutcomes(outcomes: arr):
         i += 1
     return(1)
 
-@whitelisted
 def initialLiquiditySetup(marketID, alpha, cumScale, numOutcomes):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     self.Markets[marketID].alpha = alpha
     self.Markets[marketID].cumulativeScale = cumScale
     self.Markets[marketID].numOutcomes = numOutcomes

@@ -97,14 +97,8 @@ macro fx_exp2($x):
 macro fx_exp($x):
     fx_exp2($x * 0x10000000000000000 / 0xB17217F7D1CF79AC)
 
-def log2(x):
-    return(fx_log2(x))
+def fx_exp(x):
+	return(fx_exp(x))
 
-def log(x):
-    return(fx_log(x))
-
-def exp2(x):
-    return(fx_exp2(x))
-
-def exp(x):
-    return(fx_exp(x))
+def fx_log(x):
+	return(fx_log(x))

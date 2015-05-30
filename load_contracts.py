@@ -128,25 +128,23 @@ def translate_code(fullname, whitelisted):
     if is_whitelisted:
         new_code.append(WHITELIST_SIG)
     for line in open(fullname):
-        if line.strip().startswith('#') or line.strip()=='':
-            continue
         line = line.replace('\t', ' '*4).rstrip()
         if is_whitelisted and line.startswith('def set'):
             new_code.append(line)
             whitelisted_funcs.append(get_func_name(line))
-        elif is_whitelisted and new_code and new_code[-1].startswith('@whitelisted'):
+        elif is_whitelisted and new_code and new_code[-1] == '@whitelisted':
             # the @whitelisted line should be above a def <name>(...) line
             new_code.pop()
             new_code.append(line)
             whitelisted_funcs.append(get_func_name(line))
         elif line.startswith('import'):
-            _, n = line.split(' ')
-            n = n.strip()
-            if get_full_name(n) in whitelisted:
-                WHITELIST_CALLS[n].append(get_short_name(fullname))
-            info = get_info(n, whitelisted)
+            line = line.split(' ')
+            name, sub = line[1], line[3]
+            if get_full_name(name) in whitelisted:
+                WHITELIST_CALLS[name].append(get_short_name(fullname))
+            info = get_info(name, whitelisted)
             sigs.append(info['sig'])
-            shared_code.append(n+' = '+info['address'])
+            shared_code.append(sub+' = '+info['address'])
         else:
             new_code.append(line)
     if is_whitelisted:
@@ -168,14 +166,16 @@ def get_prefixes(funcs, fullsig):
 def compile(name, whitelisted):
     fullname = get_full_name(name)
     new_code, whitelisted_funcs = translate_code(fullname, whitelisted)
-    show(new_code)
     new_code = '\n'.join(new_code)
     fullsig = serpent.mk_full_signature(new_code)
     prefixes = get_prefixes(whitelisted_funcs, fullsig)
     new_code = new_code.replace('functions = []', 'functions = ' + prefixes, 1)
-    show(new_code.split('\n'))
+    with open(fullname.replace('src', 'dump'), 'w') as F:
+        F.write(new_code)
     print 'Processing', fullname
-    print whitelisted_funcs, prefixes
+    if prefixes:
+        print 'whitelisted:', whitelisted_funcs
+        print 'prefixes:', prefixes
     evm = '0x' + serpent.compile(new_code).encode('hex')
     sig = serpent.mk_signature(new_code)
     sig = sig.replace('main', name, 1)

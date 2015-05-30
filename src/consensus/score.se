@@ -55,7 +55,7 @@ def blank(components_remaining, max_iterations, num_events):
             iv[0] = ONE
             iv[num_events] = max_iterations
             iv[num_events + 1] = components_remaining - 1
-            return(iv, items=ne_plus_2)
+            return(iv: arr)
 
 def loadings(iv:arr, X:arr, reputation:arr, num_reports, num_events):
     # R.dot(wcd).dot(lv).dot(wcd)
@@ -92,7 +92,7 @@ def loadings(iv:arr, X:arr, reputation:arr, num_reports, num_events):
                             j += 1
             lv[num_events] = iv[num_events] - 1
             lv[num_events + 1] = iv[num_events + 1]
-            return(lv, items=lvsize)
+            return(lv: arr)
 
 def latent(covrow:arr, loadings:arr, num_events):
     with lf = 0:
@@ -115,7 +115,7 @@ def deflate(ev:arr, wcd:arr, num_reports, num_events):
                         while i < dsz:
                             ddata[i] = wcd[i] - data_x_evop[i]
                             i += 1
-                    return(ddata, items=dsz)
+                    return(ddata: arr)
 
 def score(scores:arr, lv:arr, wcd:arr, latent, num_reports, num_events):
     if lv[0] < 0:
@@ -130,7 +130,7 @@ def score(scores:arr, lv:arr, wcd:arr, latent, num_reports, num_events):
                     scores[i] += fixed_multiply(wcd[i*num_events + k], latent * lv[k] / ONE)
                     k += 1
             i += 1
-        return(scores, items=num_reports)
+        return(scores: arr)
 
 inset('macros/constants.se')
 inset('macros/fixed.se')

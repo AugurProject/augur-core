@@ -19,7 +19,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-import branches
+import branches as BRANCHES
 
 # Reporting index is the branchID
 # Reporters index is the rep. address
@@ -65,11 +65,11 @@ def getReporterID(branch, index):
 # will return 0s for array values after it's looped through all the ones you
 # have an actual balance in
 def getReputation(address):
-    branchListCount = branches.getNumBranches()
+    branchListCount = BRANCHES.getNumBranches()
     if(address):
         branches = array(2*branchListCount)
         branchList = array(branchListCount)
-        branchList = branches.getBranches(outsz=branchListCount)
+        branchList = BRANCHES.getBranches(outsz=branchListCount)
         i = 0
         b = 0
         while i < branchListCount:
@@ -84,7 +84,7 @@ def getReputation(address):
         address = tx.origin
         branches = array(2*branchListCount)
         branchList = array(branchListCount)
-        branchList = branches.getBranches(outsz=branchListCount)
+        branchList = BRANCHES.getBranches(outsz=branchListCount)
         i = 0
         b = 0
         while i < branchListCount:
@@ -109,13 +109,15 @@ def hashReport(report: arr, salt):
         hashInfo[1] = salt
         i = 2
         while i < (len(report) + 2):
-            hashInfo[i] = report[i]
+            hashInfo[i] = report[i-2]
             i += 1
         reportHash = sha256(hashInfo, chars=32*len(hashInfo))
         return(reportHash)
 
 # check that msg.sender is one of our function contracts
 def setInitialReporters(parent, branchID):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     # first vote period won't be until after the current (in this case first) basket of things has expired
         # if floor(blockNum / periodLength) is say 5 and eventsExpDates[5]
         # the current vote period should be on things from eventsExpDates 4 (when making a new branch this vote period will just fail quorem, and current vote period will be incrememented)
@@ -132,8 +134,9 @@ def setInitialReporters(parent, branchID):
     self.Reporting[branchID].numberReporters = i
     return(1)
 
-@whitelisted
 def addReporter(branch, sender):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     reporterIndex = self.Reporting[branch].numberReporters
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
     self.Reporting[branch].reputation[reporterIndex].repValue = 0
@@ -141,16 +144,20 @@ def addReporter(branch, sender):
     self.Reporting[branch].numberReporters += 1
     return(1)
 
-@whitelisted
 def addRep(branch, index, value):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     self.Reporting[branch].reputation[index].repValue += value
     return(1)
 
-@whitelisted
 def subtractRep(branch, index, value):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
     self.Reporting[branch].reputation[index].repValue -= value
     return(1)
 
 def setRep(branch, index, value):
+    #if !self.whitelist.check(msg.sender):
+    #    return(-1)
     self.Reporting[branch].reputation[index].repValue = value
     return(1)
