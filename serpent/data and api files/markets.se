@@ -224,7 +224,7 @@ def modifyParticipantShares(marketID, participantNumber, outcome, amount):
     self.Markets[marketID].participants[participantNumber].shares[outcome] += amount
     return(1)
 
-def setWinningOutcomes(outcomes: arr):
+def setWinningOutcomes(market, outcomes: arr):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # largest # of winning outcomes is 8
@@ -233,6 +233,12 @@ def setWinningOutcomes(outcomes: arr):
         self.Markets[market].winningOutcomes[i] = outcomes[i]
         i += 1
     return(1)
+    
+def getWinningOutcomes(market):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    # largest # of winning outcomes is 8
+    return(load(self.Markets[market].winningOutcomes[0], chars=32*8): arr)
 
 def initialLiquiditySetup(marketID, alpha, cumScale, numOutcomes):
     #if(!self.whitelist.check(msg.sender)):
