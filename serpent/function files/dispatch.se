@@ -42,16 +42,16 @@ extern checkQuorum.se: [checkQuorum:i:i]
 QUORUM = 0x7c349cc8658e399a01f80019f46bd7644dc97adb
 
 extern redeem_interpolate.se: [interpolate:iiiii:i]
-REDEEM_INTERPOLATE = 0x3ecaed5949e121926991d9fde8ac0c212e6fbff4
+REDEEM_INTERPOLATE = 0xd09627a5ce73b992ebfba7b365c0f4d3fa8d2313
 
 extern redeem_center.se: [center:iiiii:i, covariance:iiiii:i]
 REDEEM_CENTER = 0x6621d0c3c37fea879ce067f5e85c80f08ffa5e7f
 
 extern redeem_score.se: [blank:iiiii:i, deflate:iiiii:i, latent:iiiii:i, loadings:iiiii:i, score:iiiii:i]
-REDEEM_SCORE = 
+REDEEM_SCORE = 0x238ea089e5f7bdc776d7a995f4c0a4e37c36ea37
 
 extern redeem_adjust.se: [reputation_delta:iiiii:i, select_scores:iiiii:i, weighted_delta:iiiii:i]
-REDEEM_ADJUST = 
+REDEEM_ADJUST = 0x448045e770a235d10afd9c6012c4a557755c1a9b
 
 extern redeem_resolve.se: [resolve:iiiii:i, smooth:iiiii:i]
 REDEEM_RESOLVE = 0xcbc70f0a25977dc2e6dec54fd53769f755de4cd6
@@ -70,8 +70,8 @@ def dispatch(branch):
         return(-1)
     with period = BRANCHES.getVotePeriod(branch):
         with num_events = EXPIRING.getNumberEvents(branch, period):
-            with flatsize = EXPIRING.getVSize(branch, period):
-                with num_reports = flatsize / num_events:
+            with num_reports = REPORTING.getNumberReporters(branch):
+                with flatsize = num_events * num_reports:
                     with step = BRANCHES.getStep(branch):
                         if step == 9:
                             REDEEM_PAYOUT.payout(branch, period, num_events, num_reports, flatsize)
@@ -89,7 +89,7 @@ def dispatch(branch):
                         #######################
                         elif step == 3:
                             with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
-                                with substep = loading_vector[num_events+1]:
+                                with substep = BRANCHES.getSubstep(branch):
                                     if substep == 4:
                                         more = REDEEM_SCORE.score(branch, period, num_events, num_reports, flatsize)
                                         BRANCHES.setSubstep(branch, 0)
