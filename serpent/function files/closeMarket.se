@@ -107,7 +107,7 @@ def closeMarket(branch, market):
 
                 winningOutcomes[0] = 1
                 winningOutcomes[1] = 2
-                MARKETS.setWinningOutcomes(winningOutcomes)
+                MARKETS.setWinningOutcomes(market, winningOutcomes)
                 return(-3)
             elif(fxpOutcome==0):
                 return(-2)
@@ -221,7 +221,7 @@ def closeMarket(branch, market):
             CASH.addCash(creator, marketCash/2)
             CASH.subtractCash(market, marketCash)
 
-        MARKETS.setWinningOutcomes(winningOutcomes)
+        MARKETS.setWinningOutcomes(market, winningOutcomes)
         return(1)
     else:
         return(0)
