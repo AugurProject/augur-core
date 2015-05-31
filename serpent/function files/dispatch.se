@@ -42,7 +42,7 @@ extern checkQuorum.se: [checkQuorum:i:i]
 QUORUM = 0x7c349cc8658e399a01f80019f46bd7644dc97adb
 
 extern redeem_interpolate.se: [interpolate:iiiii:i]
-REDEEM_INTERPOLATE = 0xd09627a5ce73b992ebfba7b365c0f4d3fa8d2313
+REDEEM_INTERPOLATE = 0x499bee78b5799ede28a437467601cdfd5f9f2076
 
 extern redeem_center.se: [center:iiiii:i, covariance:iiiii:i]
 REDEEM_CENTER = 0x6621d0c3c37fea879ce067f5e85c80f08ffa5e7f
@@ -51,10 +51,10 @@ extern redeem_score.se: [blank:iiiii:i, deflate:iiiii:i, latent:iiiii:i, loading
 REDEEM_SCORE = 0x238ea089e5f7bdc776d7a995f4c0a4e37c36ea37
 
 extern redeem_adjust.se: [reputation_delta:iiiii:i, select_scores:iiiii:i, weighted_delta:iiiii:i]
-REDEEM_ADJUST = 0x448045e770a235d10afd9c6012c4a557755c1a9b
+REDEEM_ADJUST = 0x6d5793203371b50670aa62a558a44d99aceb1404
 
 extern redeem_resolve.se: [resolve:iiiii:i, smooth:iiiii:i]
-REDEEM_RESOLVE = 0xcbc70f0a25977dc2e6dec54fd53769f755de4cd6
+REDEEM_RESOLVE = 0x081f48cd8ba8eaef5c7ade0d8e771555fccaeb4b
 
 extern redeem_payout.se: [payout:iiiii:i]
 REDEEM_PAYOUT = 0xb612eb2dc2be63445e541eaad4906580cff1557e
@@ -106,6 +106,7 @@ def dispatch(branch):
                                     elif substep == 1:
                                         if REDEEM_SCORE.loadings(branch, period, num_events, num_reports, flatsize) == 0:
                                             BRANCHES.incrementSubstep(branch)
+                                        # return(EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):arr)
                                         return(step)
                                     ############
                                     # end loop #

@@ -52,7 +52,10 @@ def reputation_delta(scores:arr, num_reports, num_events):
                         return(sets: arr)
 
 def weighted_delta(set1:arr, set2:arr, reputation:arr, reports:arr, num_reports, num_events):
-    reputation = normalize(reputation)
+    with i = 0:
+        while i < num_reports:
+            reputation[i] = fixed_divide(reputation[i], TOTAL_REPUTATION)
+            i += 1
     with three_num_events = 3*num_events:
         with wsets = array(three_num_events):
             with wset1 = normalize(set1):
