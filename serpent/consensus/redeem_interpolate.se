@@ -68,7 +68,7 @@ def interpolate(branch, period, num_events, num_reports, flatsize):
                             #     do nothing (these values will be 0 by default due to Serpent array styles)
                             #     else if the reporter did report on events put their ballot into the reports array
                             with ballot = EXPIRING.getReporterBallot(branch, period, reporterID, outsz=num_events):
-                                if ballot != 0:
+                                if ballot[0] != 0:
                                     with j = 0:
                                         while j < num_events:
                                             reports[i*num_events + j] = ballot[j]
