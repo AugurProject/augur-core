@@ -38,7 +38,10 @@ def smooth(adjusted_scores:arr, reputation:arr, num_reports, num_events):
     # Weighted sum of old and new reputation vectors.
     # New: row_reward_weighted
     # Old: reputation
-    reputation = normalize(reputation)
+    with i = 0:
+        while i < num_reports:
+            reputation[i] = fixed_divide(reputation[i], TOTAL_REPUTATION)
+            i += 1
     with row_reward_weighted = array(num_reports):
         with i = 0:
             while i < num_reports:

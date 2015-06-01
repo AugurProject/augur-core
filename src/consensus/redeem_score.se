@@ -44,7 +44,6 @@ def blank(branch, period, num_events, num_reports, flatsize):
                 EXPIRING.setLoadingVector(branch, period, SCORE.blank(MAX_COMPONENTS, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
             else:
                 EXPIRING.setLoadingVector(branch, period, SCORE.blank(loading_vector[num_events+1]-1, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
-            BRANCHES.incrementSubstep(branch)
             return(1)
 
 def loadings(branch, period, num_events, num_reports, flatsize):

@@ -28,8 +28,12 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
     # returns:
     #   reports_filled: [0, flatsize - 1]
     #   reports_mask: [flatsize, 2*flatsize - 1]
-    reputation = normalize(reputation)
+    # reputation = normalize(reputation)
     with num_reports = len(reputation):
+        with i = 0:
+            while i < num_reports:
+                reputation[i] = fixed_divide(reputation[i], TOTAL_REPUTATION)
+                i += 1
         with flatsize = len(reports):
             with flatsize_x_2 = 2*flatsize:
                 with num_events = flatsize / num_reports:

@@ -1,0 +1,22 @@
+extern markets.se: [addParticipant:ii:i, getAlpha:i:i, getBranchID:i:i, getCumScale:i:i, getCurrentParticipantNumber:i:i, getMarketEvents:i:a, getMarketInfo:i:a, getMarketNumOutcomes:i:i, getNumEvents:i:i, getParticipantID:ii:i, getParticipantNumber:ii:i, getParticipantSharesPurchased:iii:i, getSharesPurchased:ii:i, getSimulatedBuy:ii:_, getSimulatedSell:ii:_, getTradingFee:i:i, getTradingPeriod:i:i, getWinningOutcomes:i:a, initialLiquiditySetup:iiii:i, initializeMarket:iaiii:i, lsLmsr:i:i, modifyParticipantShares:iiii:i, modifyShares:iii:i, price:ii:i, setWinningOutcomes:a:i]
+# MARKETS = 0x75ee234fe5ef1cd493c2af38a2ae7d0d0cba01f5
+MARKETS = 0x3be9601854135c88bc085510a3abb7ea9c13e6cf
+
+extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
+CASH = 0xf1d413688a330839177173ce98c86529d0da6e5c
+
+# mutex result non scalar not .5
+# one winning outcome
+def oneOutcome(market, winningOutcome):
+    pricePerShare1 = 2^64
+
+    # distribute cashcoin to the people who won money by holding winning shares
+    i = 0
+    particpantNumber = MARKETS.getCurrentParticipantNumber(market)
+    while i < particpantNumber:
+        sharesOwned = MARKETS.getParticipantSharesPurchased(market, i, winningOutcome)
+        participant = MARKETS.getParticipantID(market, i)
+        CASH.subtractCash(market, sharesOwned*pricePerShare1/2^64)
+        CASH.addCash(participant, sharesOwned*pricePerShare1/2^64)
+        i += 1
+    return(1)
