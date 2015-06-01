@@ -53,20 +53,6 @@ GAS = hex(3*10**6)
 TRIES = 10
 BLOCKTIME = 12
 INFO = {}
-WHITELIST_CODE = '''\
-    functions = []
-    hash = div(calldataload(0), 2**224)
-    i = 0
-    l = len(functions)
-    while i < l:
-        if functions[i] == hash:
-            if not whitelist.getAccess(self, msg.sender):
-                return(text("PERMISSION DENIED"):str)
-        i += 1
-'''.split('\n')
-WHITELIST_CALLS = defaultdict(list)
-WHITELIST_ADDR = "0xb391d1f291dfa4874ced620ba0ad5f3e63fae0c9"
-WHITELIST_SIG = 'extern whitelist: [getAccess:ii:i, getOwner:i:i, setAccess:iii:s, setOwner:i:s]'
 
 if COINBASE == '0x':
     print ERROR, 'no coinbase address'
@@ -86,6 +72,7 @@ def memoize(func):
 
 @memoize
 def get_full_name(name):
+    '''Takes a short name from an import statement and returns a real path to that contract.'''
     for path in CODEPATHS:
         for d, s, f in os.walk(path):
             for F in f:
@@ -93,165 +80,71 @@ def get_full_name(name):
                     return os.path.join(d, F)
     raise ValueError('No such name: '+name)
 
-def get_short_name(fullname):
-    return os.path.split(fullname)[-1][:-3]
-
-def is_code_onchain(address):
-    i = 0
-    while i < TRIES:
-        time.sleep(BLOCKTIME)
-        result = GETHRPC.eth_getCode(address)
-        if result['result'] != '0x':
-            break
-        i += 1
-    return i != TRIES
-
-def get_info(name, whitelisted):
+def get_info(name):
+    '''Returns metadata about a contract.'''
     if name in INFO:
         return INFO[name]
     else:
-        compile(name, whitelisted)
+        compile(name)
         return INFO[name]
 
 def broadcast_code(evm):
-    return GETHRPC.eth_sendTransaction(sender=COINBASE, data=evm, gas=GAS)
+    '''Sends compiled code to the network, and returns the address.'''
+    address = GETHRPC.eth_sendTransaction(sender=COINBASE, data=evm, gas=GAS)['result']
+    tries = 0
+    while tries < TRIES:
+        check = GETHRPC.eth_getCode(address)['result']
+        if check != '0x':
+            return address
+        time.sleep(BLOCKTIME)
+    raise ValueError('CODE COULD NOT GET ON CHAIN!!!')
 
-def get_func_name(line):
-    return line.split(' ', 1)[1].split('(', 1)[0]
-
-def translate_code(fullname, whitelisted):
+def translate_code(fullname):
     new_code = []
     shared_code = []
     sigs = []
-    whitelisted_funcs = []
-    is_whitelisted = fullname in whitelisted
-    if is_whitelisted:
-        new_code.append(WHITELIST_SIG)
     for line in open(fullname):
         line = line.replace('\t', ' '*4).rstrip()
-        if is_whitelisted and line.startswith('def set'):
-            new_code.append(line)
-            whitelisted_funcs.append(get_func_name(line))
-        elif is_whitelisted and new_code and new_code[-1] == '@whitelisted':
-            # the @whitelisted line should be above a def <name>(...) line
-            new_code.pop()
-            new_code.append(line)
-            whitelisted_funcs.append(get_func_name(line))
-        elif line.startswith('import'):
+        if line.startswith('import'):
             line = line.split(' ')
             name, sub = line[1], line[3]
-            if get_full_name(name) in whitelisted:
-                WHITELIST_CALLS[name].append(get_short_name(fullname))
-            info = get_info(name, whitelisted)
+            info = get_info(name)
             sigs.append(info['sig'])
-            shared_code.append(sub+' = '+info['address'])
+            shared_code.append(sub + ' = ' + info['address'])
         else:
             new_code.append(line)
-    if is_whitelisted:
-        shared_code.append('whitelist = ' + WHITELIST_ADDR) 
-        shared_code = shared_code + WHITELIST_CODE
     if shared_code:
         new_code = sigs + shared_code + new_code
-    return new_code, whitelisted_funcs
+    return new_code
 
-def get_prefixes(funcs, fullsig):
-    fullsig = json.loads(fullsig)
-    prefixes = []
-    for func in funcs:
-        for funcsig in fullsig:
-            if funcsig['name'].startswith(func):
-                prefixes.append('0x' + sha3_256(str(funcsig['name'])).hexdigest()[:8])
-    return '[' + ', '.join(prefixes) + ']'
-
-def compile(name, whitelisted):
+def compile(name):
     fullname = get_full_name(name)
-    new_code, whitelisted_funcs = translate_code(fullname, whitelisted)
-    new_code = '\n'.join(new_code)
-    fullsig = serpent.mk_full_signature(new_code)
-    prefixes = get_prefixes(whitelisted_funcs, fullsig)
-    new_code = new_code.replace('functions = []', 'functions = ' + prefixes, 1)
-#    with open(fullname.replace('src', 'dump'), 'w') as F:
-#        F.write(new_code)
     print 'Processing', fullname
-    if prefixes:
-        print 'whitelisted:', whitelisted_funcs
-        print 'prefixes:', prefixes
+    new_code = '\n'.join(translate_code(fullname))
+    fullsig = serpent.mk_full_signature(new_code)
     evm = '0x' + serpent.compile(new_code).encode('hex')
-    sig = serpent.mk_signature(new_code)
-    sig = sig.replace('main', name, 1)
-    result = broadcast_code(evm)
-    if 'error' in result:
-        raise ValueError('Bad RPC response!: ' + json.dumps(result, indent=4))
-    address = result['result']
-    if not is_code_onchain(address):
-        raise ValueError('CODE NOT ON CHAIN AFTER %d TRIES, ABORTING' % TRIES) 
+    sig = serpent.mk_signature(new_code).replace('main', name, 1)
+    address = broadcast_code(evm)
     INFO[name] = {
         'sig':sig,
         'fullsig':fullsig,
         'address':address,
         'name':name}
 
-def pretty(dct):
-    return json.dumps(dct, indent=4, sort_keys=True)
-
-def serpent_files(path):
-    for d, s, f in os.walk(path):
-        for F in f:
-            if F.endswith('.se'):
-                yield d, F
-
-def get_whitelisted():
-    for arg in sys.argv:
-        if arg.startswith('--whitelisted='):
-            return map(os.path.abspath, open(arg.split('=')[1]).read().split('\n'))
-    return []
-
-def safe_call(contract, funcname, sig, args):
-    data = abi_data(funcname, sig, args)
-    rpc_args = {'sender':COINBASE, 'gas':hex(3000000), 'data':data, 'to':contract}
-    txhash = GETHRPC.eth_sendTransaction(**rpc_args)['result']
-    tries = 0
-    while tries < TRIES:
-        time.sleep(BLOCKTIME)
-        check = GETHRPC.eth_getTransactionByHash(txhash)
-        if check['result'] == None:
-            return safe_call(contract, funcname, sig, args)
-        if check['result']['blockNumber'] != None:
-            break
-        tries += 1
-    return tries < TRIES
-
-def add_to_whitelists():
-    print 'CALLING WHITELIST'
-    for contract in WHITELIST_CALLS:
-        print 'CREATING WHITELIST FOR ', contract
-        contract_info = get_info(contract, [])
-        check = safe_call(WHITELIST_ADDR, 'setOwner', 'i', [contract_info['address']])
-        if not check:
-            raise ValueError('Could not claim address: '+str(contract_info))
-        for accessor in WHITELIST_CALLS[contract]:
-            accessor_info = get_info(accessor, [])
-            check2 = safe_call(WHITELIST_ADDR,
-                               'setAccess',
-                               'iii',
-                               [contract_info['address'],
-                                accessor_info['address'],
-                                1])
-            if not check2:
-                raise ValueError(
-                    'Could not set accessor permission: '+str(contract_info)+' '+str(accessor_info))
+def serpent_files():
+    for path in CODEPATHS:
+        for d, s, f in os.walk(path):
+            for F in f:
+                if F.endswith('.se'):
+                    yield d, F
 
 def main():
-    whitelisted = get_whitelisted()
-    for path in CODEPATHS:
-        for _, filename in serpent_files(path):
-            get_info(filename[:-3], whitelisted)
+    for d, f in serpent_files():
+        get_info(f[:-3])
     print 'DUMPING INFO TO DB'
     for name, info in INFO.items():
-        print name + ':'
-        print pretty(info)
+        print 'DUMPING', name, 'INFO TO DB'
         DB[name] = json.dumps(info)
-    add_to_whitelists()
     return 0
 
 if __name__ == '__main__':
