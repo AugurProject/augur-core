@@ -1,0 +1,76 @@
+import cash as CASH
+import markets as MARKETS
+import events as EVENTS
+
+# four winning outcomes
+def fourOutcomes(market, winningOutcome: arr, events: arr):
+    # first is low-low && whatever, second is high-low, third is low-high, fourth is high-high
+    scalarOne = -1
+    scalarTwo = -1
+    if((EVENTS.getMaxValue(events[0])!=1 && EVENTS.getNumOutcomes(events[0])==2) || EVENTS.getOutcome(events[0])==3*2^63):
+        scalarOne = 0
+    if((EVENTS.getMaxValue(events[1])!=1 && EVENTS.getNumOutcomes(events[1])==2) || EVENTS.getOutcome(events[1])==3*2^63):
+        if(scalarOne == -1):
+            scalarOne = 1
+        else:
+            scalarTwo = 1
+    elif((EVENTS.getMaxValue(events[2])!=1 && EVENTS.getNumOutcomes(events[2])==2) || EVENTS.getOutcome(events[2])==3*2^63):
+        scalarTwo = 2
+    outcomeOne = EVENTS.getOutcome(events[scalarOne])
+    minValueOne = EVENTS.getMinValue(events[scalarOne])
+    maxValueOne = EVENTS.getMaxValue(events[scalarOne])
+    if(outcomeOne>maxValueOne):
+        outcomeOne = maxValueOne
+    elif(outcomeOne<minValueOne):
+        outcomeOne = minValueOne
+    outcomeTwo = EVENTS.getOutcome(events[scalarTwo])
+    minValueTwo = EVENTS.getMinValue(events[scalarTwo])
+    maxValueTwo = EVENTS.getMaxValue(events[scalarTwo])
+    if(outcomeTwo>maxValueTwo):
+        outcomeTwo = maxValueTwo
+    elif(outcomeTwo<minValueTwo):
+        outcomeTwo = minValueTwo
+
+    outcomeOneHighSidePercent = 2^64*(outcomeOne - 2^64*minValueOne) / (2^64*maxValueOne - 2^64*minValueOne)
+    outcomeOneLowSidePercent = 2^64 - outcomeOneHighSidePercent
+    outcomeTwoHighSidePercent = 2^64*(outcomeTwo - 2^64*minValueTwo) / (2^64*maxValueTwo - 2^64*minValueTwo)
+    outcomeTwoLowSidePercent = 2^64 - outcomeTwoHighSidePercent
+
+    # price is in fixed point
+    # share four goes with the high-high side
+    pricePerShare4 = outcomeOneHighSidePercent * outcomeTwoHighSidePercent / 2^64
+    # share three goes with the low-high side
+    pricePerShare3 = outcomeOneLowSidePercent * outcomeTwoHighSidePercent / 2^64
+    # share two goes with the high-low side
+    pricePerShare2 = outcomeOneHighSidePercent * outcomeTwoLowSidePercent / 2^64
+    # share one goes with the low-low
+    # both fixed point so div by 2^64 to keep in fixed point
+    pricePerShare1 = outcomeOneLowSidePercent * outcomeTwoLowSidePercent / 2^64
+    # distribute cashcoin to the people who won money by holding winning shares
+    i = 0
+    currentParticipant = MARKETS.getCurrentParticipantNumber(market)
+    while i < currentParticipant:
+        # for each winning outcome do...
+        n = 0
+        while(winningOutcome[n]!=0):
+            sharesOwned = MARKETS.getParticipantSharesPurchased(market, i, winningOutcome[n])
+            participant = MARKETS.getParticipantID(market, i)
+            # low-low
+            if(n==0):
+                CASH.subtractCash(market, sharesOwned*pricePerShare1/2^64)
+                CASH.addCash(participant, sharesOwned*pricePerShare1/2^64)
+            # high-low
+            elif(n==1):
+                CASH.subtractCash(market, sharesOwned*pricePerShare2/2^64)
+                CASH.addCash(participant, sharesOwned*pricePerShare2/2^64)
+            # low-high
+            elif(n==2):
+                CASH.subtractCash(market, sharesOwned*pricePerShare3/2^64)
+                CASH.addCash(participant, sharesOwned*pricePerShare3/2^64)
+            # high-high
+            elif(n==3):
+                CASH.subtractCash(market, sharesOwned*pricePerShare4/2^64)
+                CASH.addCash(participant, sharesOwned*pricePerShare4/2^64)
+            n+=1
+        i+=1
+    return(1)

@@ -1,0 +1,163 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+import branches as BRANCHES
+
+# Reporting index is the branchID
+# Reporters index is the rep. address
+# We 0 index reputation so can walk thru for consensus
+# EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
+# RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
+# Events is 0 indexed as well
+data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
+
+def init():
+    self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
+    self.Reporting[1010101].reputation[0].repValue = 470*2^64
+    self.Reporting[1010101].reputation[0].reporterID = tx.origin
+    self.Reporting[1010101].numberReporters = 1
+
+def faucet(branch):
+    index = self.Reporting[branch].numberReporters
+    if(self.Reporting[branch].repIDtoIndex[tx.origin]!=0):
+        index = self.Reporting[branch].repIDtoIndex[tx.origin]
+        self.Reporting[branch].reputation[index].repValue = 47*2^64
+        self.Reporting[branch].reputation[index].reporterID = tx.origin
+    else:
+        self.Reporting[branch].repIDtoIndex[tx.origin] = index
+        self.Reporting[branch].reputation[index].repValue = 47*2^64
+        self.Reporting[branch].reputation[index].reporterID = tx.origin
+        self.Reporting[branch].numberReporters += 1
+    return(1)
+
+# @return reputation value
+def getRepByIndex(branch, repIndex):
+    return(self.Reporting[branch].reputation[repIndex].repValue)
+
+# @return reputation value
+def getRepBalance(branch, address):
+    repIndex = self.Reporting[branch].repIDtoIndex[address]
+    if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
+        return(0)
+    return(self.Reporting[branch].reputation[repIndex].repValue)
+
+def getReporterID(branch, index):
+    return(self.Reporting[branch].reputation[index].reporterID)
+
+# will return 0s for array values after it's looped through all the ones you
+# have an actual balance in
+def getReputation(address):
+    branchListCount = BRANCHES.getNumBranches()
+    if(address):
+        branches = array(2*branchListCount)
+        branchList = array(branchListCount)
+        branchList = BRANCHES.getBranches(outsz=branchListCount)
+        i = 0
+        b = 0
+        while i < branchListCount:
+            branch = branchList[i]
+            balance = self.getRepBalance(branch, address)
+            if(balance!=0):
+                branches[b] = branch
+                branches[b+1] = balance
+                b += 2
+            i += 1
+    else:
+        address = tx.origin
+        branches = array(2*branchListCount)
+        branchList = array(branchListCount)
+        branchList = BRANCHES.getBranches(outsz=branchListCount)
+        i = 0
+        b = 0
+        while i < branchListCount:
+            branch = branchList[i]
+            balance = self.getRepBalance(branch, address)
+            if(balance!=0):
+                branches[b] = branch
+                branches[b+1] = balance
+                b += 2
+            i += 1
+    return(branches: arr)
+
+def getNumberReporters(branch):
+    return(self.Reporting[branch].numberReporters)
+
+def repIDToIndex(branch, repID):
+    return(self.Reporting[branch].repIDtoIndex[repID])
+
+def hashReport(report: arr, salt):
+        hashInfo = array(len(report) + 2)
+        hashInfo[0] = tx.origin
+        hashInfo[1] = salt
+        i = 2
+        while i < (len(report) + 2):
+            hashInfo[i] = report[i-2]
+            i += 1
+        reportHash = sha256(hashInfo, chars=32*len(hashInfo))
+        return(reportHash)
+
+# check that msg.sender is one of our function contracts
+def setInitialReporters(parent, branchID):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    # first vote period won't be until after the current (in this case first) basket of things has expired
+        # if floor(blockNum / periodLength) is say 5 and eventsExpDates[5]
+        # the current vote period should be on things from eventsExpDates 4 (when making a new branch this vote period will just fail quorem, and current vote period will be incrememented)
+        # then once blockNum / periodLength is say 6 and eventsExpDates[6]
+        # votePeriod 4 should close and the currentVotePeriod should be from
+        # eventsExpDates 5 (anyone can call the consensus function for voteperiod 4 at this point)
+    i = 0
+    while i < self.Reporting[parent].numberReporters:
+        reporterID = self.Reporting[parent].reputation[i].reporterID
+        self.Reporting[branchID].reputation[i].reporterID = reporterID
+        self.Reporting[branchID].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
+        self.Reporting[branchID].repIDtoIndex[reporterID] = i
+        i+=1
+    self.Reporting[branchID].numberReporters = i
+    return(1)
+
+def addReporter(branch, sender):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    reporterIndex = self.Reporting[branch].numberReporters
+    self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
+    self.Reporting[branch].reputation[reporterIndex].repValue = 0
+    self.Reporting[branch].reputation[reporterIndex].reporterID = sender
+    self.Reporting[branch].numberReporters += 1
+    return(1)
+
+def addRep(branch, index, value):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Reporting[branch].reputation[index].repValue += value
+    return(1)
+
+def subtractRep(branch, index, value):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Reporting[branch].reputation[index].repValue -= value
+    return(1)
+
+def setRep(branch, index, value):
+    #if !self.whitelist.check(msg.sender):
+    #    return(-1)
+    self.Reporting[branch].reputation[index].repValue = value
+    return(1)

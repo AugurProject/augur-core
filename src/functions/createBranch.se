@@ -1,0 +1,66 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation 
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+import branches as BRANCHES
+import expiringEvents as EXPEVENTS
+import info as INFO
+import cash as CASH
+import reporting as REPORTING
+
+# period length is given in blocks
+# description format is branchName:description
+# is there some way we can include the description bytes in the sha256 hash?
+# @return branchID if success
+# error messages otherwise
+    # -1: bad input or parent doesn't exist
+    # -2: no money for creation fee or branch already exists
+def createSubbranch(description:str, periodLength, parent, tradingFee):
+    if(periodLength<=0 || !BRANCHES.getPeriodLength(parent) || description==0):
+        return(-1)
+
+    #upcomingDecisions = 0
+    #a = (block.number / BRANCHES.getPeriodLength(parent))
+    #b = a
+    #while b < (a+100):
+    #    upcomingDecisions += EXPEVENTS.getNumberEvents(parent, a)
+    #    b += 1
+    # turned off for testing
+    #if(upcomingDecisions < 500):
+    #    return(0)
+
+    branchInfo = string(7*32+len(description))
+    branchInfo[0] = BRANCH                                      #typecode
+    branchInfo[1] = tx.origin                                   #creator address
+    branchInfo[2] = 47*2^64                                     #creation fee
+    branchInfo[3] = periodLength                                #length of voting cycle
+    branchInfo[4] = block.number                                #current block number
+    branchInfo[5] = parent                                      #branchID of parent branch
+    branchInfo[6] = tradingFee
+    mcopy(branchInfo+ 7*32, description, len(description))
+    # people can check that these characteristics hash to the ID if they want
+    # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
+    branchID = sha256(branchInfo, chars=len(branchInfo))
+    currentVotePeriod = (block.number / periodLength) - 1
+    BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee)
+    if(INFO.getCreator(parent) && CASH.send(parent, 47*2^64) && INFO.setInfo(branchID, description, tx.origin, 47*2^64) && REPORTING.setInitialReporters(parent, branchID)):
+        return(branchID)
+    else:
+        return(-2)

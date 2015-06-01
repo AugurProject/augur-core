@@ -1,0 +1,56 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+import markets as MARKETS
+import info as INFO
+import cash as CASH
+
+# @return amount of shares transferred
+# Error messages otherwise
+    # -1: invalid outcome or you haven't traded in this market (or market doesn't exist)
+    # -2: user actually doesn't have the shares
+    # -3: not enough money to transfer the shares
+def transferShares(branch, market, outcome, amount, to):
+    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    receiverNumber = MARKETS.getParticipantNumber(market, to)
+    if (outcome==0 || MARKETS.getParticipantID(market, participantNumber) != tx.origin):
+        return(-1)
+    if(to != MARKETS.getParticipantID(market, receiverNumber)):
+        receiverNumber = MARKETS.addParticipant(market, to)
+    # remove shares from the user's account
+    # if user actually doesn't have the shares, return -2
+    if(MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome) < amount):
+        return(-2)
+    MARKETS.modifyParticipantShares(market, participantNumber, outcome, -amount)
+    MARKETS.modifyParticipantShares(market, receiverNumber, outcome, amount)
+
+    # half of fees to market creator
+    # other half go to branch
+    oldCost = MARKETS.lsLmsr(market)
+    MARKETS.modifyShares(market, outcome, 2^32)
+    newCost = MARKETS.lsLmsr(market)
+    price = 2^32*(newCost - oldCost)
+    fee = MARKETS.getTradingFee(market)*price/2^64
+    MARKETS.modifyShares(market, outcome, -2^32)
+    if((CASH.balance(tx.origin) >= fee) && CASH.send(INFO.getCreator(market), fee/2) && CASH.send(branch, fee/2)):
+        return(amount)
+    else:
+        return(-3)

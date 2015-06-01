@@ -1,0 +1,73 @@
+# This software (Augur) allows buying and selling event options in Ethereum.
+#
+# Copyright (c) 2015 Forecast Foundation 
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# If you have questions, please contact Joey Krug (joey@augur.net) or
+# Jack Peterson (jack@augur.net).
+
+import events as EVENTS
+import expiringEvents as EXPIRING
+import reporting as REPORTING
+import cash as CASH
+import info as INFO
+import payout as PAYOUT
+
+def payout(branch, period, num_events, num_reports, flatsize):
+    # if !WHITELIST.check(msg.sender):
+    #     return(-1)
+    with smooth_rep = EXPIRING.getSmoothRep(branch, period, outsz=num_reports):
+        with reports_mask = EXPIRING.getReportsMask(branch, period, outsz=flatsize):
+            with outcomes = EXPIRING.getOutcomesFinal(branch, period, outsz=num_events):
+                with reporter_payouts = PAYOUT.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outsz=num_reports):
+                    # get event ID for each event by taking the x index in the reports arrays
+                    # - shoving it in reporting.events[] && getting the cooresponding ID
+                    with j = 0:
+                        while j < num_events:
+                            with event = EXPIRING.getEvent(branch, period, j):
+                                # then take outcomes_final && set each event outcome
+                                # (BAD and BOND macros defined in consensus/constants.se)
+                                EVENTS.setOutcome(event, outcomes[j])
+                                if outcomes[j] != BAD:
+                                    # return bond
+                                    # Q: should the subtractCash be from the event's ID?
+                                    CASH.subtractCash(event, BOND)
+                                    CASH.addCash(INFO.getCreator(event), BOND)
+                                else:
+                                    # give event bond money to reporters
+                                    CASH.subtractCash(event, BOND)
+                                    CASH.addCash(branch, BOND)
+                            j += 1
+                    # - need to loop through rep holders && distribute 50% of branch fees to
+                    #   reporters' cashcoin addresses 
+                    # - also need to take reporter_payouts && redistribute reputation in the
+                    #   Reporting structure accordingly
+                    with i = 0:
+                        # TODO double-check that the cash in and out adds up to 0
+                        while i < num_reports:
+                            REPORTING.setRep(branch, i, fixed_multiply(reporter_payouts[i], 21000000 * ONE))
+                            CASH.addCash(REPORTING.getReporterID(branch, i), fixed_multiply(CASH.balance(branch), reporter_payouts[i]))
+                            i += 1
+                        CASH.subtractCash(branch, CASH.balance(branch))
+                        return(1)
+
+inset('macros/constants.se')
+inset('macros/fixed.se')
+inset('macros/arrays.se')

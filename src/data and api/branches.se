@@ -1,0 +1,138 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation 
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+# CurrentVotePeriod is the current index in eventsExpDates
+# Branches' index is the hash of the branch (aka branchID)
+# currentVotePeriod is a nonce that tells us which bucket of events up to be
+# voted on in the current vote period (should always be 1 behind block.number/periodlength or current EventsExpDates index)
+# period parameter for reporting
+# currentExpPeriod = (block.number / self.Branches[branch].periodLength)
+# currentExpPeriod - 1 is what's up for reporting at any given time
+data Branches[](currentVotePeriod, periodLength, step, substep, markets[], numMarkets, minTradingFee)
+
+data branchList[]
+
+data branchListCount
+
+def init():
+    self.Branches[1010101].currentVotePeriod = (block.number / 20) - 1 
+    self.Branches[1010101].periodLength = 20
+    self.Branches[1010101].minTradingFee = 2^57
+    self.branchListCount = 1
+    self.branchList[0] = 1010101
+
+def getVotePeriod(branch):
+	return(self.Branches[branch].currentVotePeriod)
+
+def getPeriodLength(branch):
+	return(self.Branches[branch].periodLength)
+
+def getStep(branch):
+	return(self.Branches[branch].step)
+
+# @return all markets in a branch
+def getMarkets(branch):
+    numMarkets = self.Branches[branch].numMarkets
+    markets = array(numMarkets)
+    i = 0
+    while i < numMarkets:
+        markets[i] = self.Branches[branch].markets[i]
+        i += 1
+    return(markets: arr)
+
+def getNumMarkets(branch):
+	return(self.Branches[branch].numMarkets)
+
+def getMinTradingFee(branch):
+	return(self.Branches[branch].minTradingFee)
+
+# @return all branches
+def getBranches(): 
+    b = 0
+    numBranches = self.branchListCount
+    branches = array(numBranches)
+    while b < numBranches:
+        branches[b] = self.branchList[b]
+        b += 1
+    return(branches: arr)
+
+def getNumBranches():
+	return(self.branchListCount)
+
+def getBranch(branchNumber):
+	return(self.branchList[branchNumber])
+
+# check that msg.sender is one of our function contracts
+def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee):
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
+	if(self.Branches[ID].periodLength==0):
+		self.Branches[ID].currentVotePeriod = currentVotePeriod
+		self.Branches[ID].periodLength = periodLength
+		self.Branches[ID].minTradingFee = minTradingFee
+		self.branchList[self.branchListCount] = ID
+		self.branchListCount += 1
+		return(1)
+	else:
+		return(0)
+
+# check that msg.sender is one of our function contracts
+def incrementStep(branch):
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
+	self.Branches[branch].step += 1
+	return(1)
+
+def setStep(branch, step):
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
+	self.Branches[branch].step = step
+	return(1)
+
+def incrementPeriod(branch):
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
+	self.Branches[branch].currentVotePeriod += 1
+	return(1)
+
+# check that msg.sender is one of our function contracts
+def addMarket(branch, market):
+	#if(!self.whitelist.check(msg.sender)):
+	#	return(-1)
+	numMarkets = self.Branches[branch].numMarkets
+	self.Branches[branch].markets[numMarkets] = market
+	self.Branches[branch].numMarkets += 1
+	return(1)
+
+def getSubstep(branch):
+    return(self.Branches[branch].substep)
+
+def incrementSubstep(branch):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Branches[branch].substep += 1
+    return(1)
+
+def setSubstep(branch, substep):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Branches[branch].substep = substep
+    return(1)

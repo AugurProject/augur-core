@@ -1,0 +1,204 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+import branches as BRANCHES
+import info as INFO
+import cash as CASH
+import markets as MARKETS
+import events as EVENTS
+import closeMarketOne as CLOSEONE
+import closeMarketTwo as CLOSETWO
+import closeMarketFour as CLOSEFOUR
+import closeMarketEight as CLOSEEIGHT
+
+# loop through events in the market, get their outcomes && use those to determine the winning events!
+# distribute coins among winning events
+# when multidimen fancy payouts we report on the events separately per usual, but combine them to determine winning state of a fancy market && then payout that state
+# @return 0 if fail, if success 1
+# Error messages otherwise
+    # -1: Market has no cash anyway
+    # -2: 0 outcome
+    # -3: Outcome indeterminable
+def closeMarket(branch, market):
+    if(CASH.balance(market)<=0):
+        return(-1)
+    numberEvents = MARKETS.getNumEvents(market)
+    tradingPeriod = MARKETS.getTradingPeriod(market)
+    # check if any events in the market were pushed back and that market has expired
+    # (as long as the latest expiring event wasn't pushed back, we know they all got reported on)
+    # if it *was* pushed back, we'll just get an outcome of 0, return 0 until the event is actually reported on, then we can resolve the market
+    if(BRANCHES.getVotePeriod(branch) > tradingPeriod):
+        # loop through events in the market, get their outcomes && use those to determine the winning events!
+        n = 0
+        # (max poss. winning outcomes is 8 outcomes total all scalar multidimensional)
+        winningOutcomes = array(8)
+        events = array(3)
+        events = MARKETS.getMarketEvents(market, outsz=3)
+        while n < numberEvents:
+            fxpOutcome = EVENTS.getOutcome(events[n])
+            if(fxpOutcome==0):
+                return(-2)
+            outcome = fxpOutcome/2^64
+            # makes sure it's not a scalar
+            if(fxpOutcome==3*2^63 && numberEvents==1 && !(EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2)):
+                # return all the $$$ - (@ 50 cents a share)
+                i = 0
+                currentParticipant = MARKETS.getCurrentParticipantNumber(market)
+                while i < currentParticipant:
+                    sharesOwnedOne = MARKETS.getParticipantSharesPurchased(market, i, 1)
+                    sharesOwnedTwo = MARKETS.getParticipantSharesPurchased(market, i, 2)
+                    participant = MARKETS.getParticipantID(market, i)
+                    CASH.subtractCash(market, sharesOwnedOne*3*2^63 / 2^64)
+                    CASH.addCash(participant, sharesOwnedOne*3*2^63 / 2^64)
+                    CASH.subtractCash(market, sharesOwnedTwo*3*2^63 / 2^64)
+                    CASH.addCash(participant, sharesOwnedTwo*3*2^63 / 2^64)
+                    i += 1
+
+                # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
+                # refund left over initial liquidity in market - half to market creator, other half to voters
+                # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
+                initialLiquidity = INFO.getCreationFee(market)
+                # split up excess profits & liquidity
+                marketCash = CASH.balance(market)
+                CASH.addCash(branch, marketCash/2)
+                CASH.addCash(INFO.getCreator(market), marketCash / 2)
+                CASH.subtractCash(market, marketCash)
+
+                winningOutcomes[0] = 1
+                winningOutcomes[1] = 2
+                MARKETS.setWinningOutcomes(market, winningOutcomes)
+                return(-3)
+            elif(fxpOutcome==0):
+                return(-2)
+            if(n==0):
+                #scalar or .5
+                if((EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
+                    winningOutcomes[0] = 1
+                    winningOutcomes[1] = 2
+                # anything besides scalar or .5
+                else:
+                    winningOutcomes[0] += outcome
+            elif(n==1):
+                if((EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
+                    # scalar, scalar
+                    if(winningOutcomes[1]):
+                        winningOutcomes[2] = 3
+                        winningOutcomes[3] = 4
+                    # nonscalar, scalar
+                    else:
+                      # winningOutcomes[0] = winningOutcomes[0]
+                        winningOutcomes[1] = winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-1])
+                # scalar, nonscalar
+                elif(winningOutcomes[1]):
+                    winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
+                    winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
+                # nonscalar, nonscalar
+                else:
+                    winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
+            elif(n==2):
+                if((EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
+                    #scalar, scalar, scalar
+                    if(winningOutcomes[3]):
+                        winningOutcomes[4] = 5
+                        winningOutcomes[5] = 6
+                        winningOutcomes[6] = 7
+                        winningOutcomes[7] = 8
+                    #scalar, nonscalar, scalar
+                    #nonscalar, scalar, scalar
+                    elif(winningOutcomes[1]):
+                      # winningOutcomes[0] = winningOutcomes[0]
+                      # winningOutcomes[1] = winningOutcomes[1]
+                        winningOutcomes[2] += winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
+                        winningOutcomes[3] += winningOutcomes[1] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
+                    #nonscalar, nonscalar, scalar
+                    elif(winningOutcomes[1]==0):
+                      # winningOutcomes[0] = winningOutcomes[0]
+                        winningOutcomes[1] += winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
+                else:
+                    #scalar, scalar, nonscalar
+                    if(winningOutcomes[3]):
+                        winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+                        winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+                        winningOutcomes[2] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+                        winningOutcomes[3] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+                    #scalar, nonscalar, nonscalar
+                    #nonscalar, scalar, nonscalar
+                    elif(winningOutcomes[1]):
+                        winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+                        winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+                    #nonscalar, nonscalar, nonscalar
+                    else:
+                        winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+            n+=1
+
+        pricePerShare1 = 0
+        pricePerShare2 = 0
+        pricePerShare3 = 0
+        pricePerShare4 = 0
+        pricePerShare5 = 0
+        pricePerShare6 = 0
+        pricePerShare7 = 0
+        pricePerShare8 = 0
+
+        if(winningOutcomes[1]==0):
+            CLOSEONE.oneOutcome(market, winningOutcomes[0])
+
+        elif(winningOutcomes[7]):
+            CLOSEEIGHT.eightOutcomes(market, winningOutcomes, events)
+
+        elif(winningOutcomes[3]):
+            CLOSEFOUR.fourOutcomes(market, winningOutcomes, events)
+
+        elif(winningOutcomes[1]):
+            CLOSETWO.twoOutcomes(market, winningOutcomes, events)
+
+        # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
+        # refund left over initial liquidity in market - half to market creator, other half to voters
+        # *unless* it's a scaled decision, refund all initial liquidity left over to market creator
+        # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
+        initialLiquidity = INFO.getCreationFee(market)
+        creator = INFO.getCreator(market)
+        marketCash = CASH.balance(market)
+        # some scalar involved
+        if(winningOutcomes[1]):
+            if(CASH.balance(market) > initialLiquidity):
+                # pay back liquidity, split up excess profits
+                CASH.addCash(creator, initialLiquidity)
+                CASH.subtractCash(market, initialLiquidity)
+                CASH.addCash(branch, marketCash/2)
+                CASH.addCash(creator, marketCash/2)
+                CASH.subtractCash(market, marketCash)
+            # send whatever's left of the initial liquidity to the creator
+            else:
+                CASH.addCash(creator, marketCash)
+                CASH.subtractCash(market, marketCash)
+
+        # no scalars
+        else:
+            # split up excess profits & liquidity
+            CASH.addCash(branch, marketCash/2)
+            CASH.addCash(creator, marketCash/2)
+            CASH.subtractCash(market, marketCash)
+
+        MARKETS.setWinningOutcomes(market, winningOutcomes)
+        return(1)
+    else:
+        return(0)

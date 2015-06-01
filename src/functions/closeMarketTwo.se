@@ -1,0 +1,46 @@
+import markets as MARKETS
+import cash as CASH
+import events as EVENTS
+
+# # of winningOutcomes is 2
+def twoOutcomes(market, winningOutcome: arr, events: arr):
+    # look for the scalar
+    scalar = 0
+    if((EVENTS.getMaxValue(events[0])!=1 && EVENTS.getNumOutcomes(events[0])==2) || EVENTS.getOutcome(events[0])==3*2^63):
+        scalar = 0
+    elif((EVENTS.getMaxValue(events[1])!=1 && EVENTS.getNumOutcomes(events[1])==2) || EVENTS.getOutcome(events[1])==3*2^63):
+        scalar = 1
+    elif((EVENTS.getMaxValue(events[2])!=1 && EVENTS.getNumOutcomes(events[2])==2) || EVENTS.getOutcome(events[2])==3*2^63):
+        scalar = 2
+    outcome = EVENTS.getOutcome(events[scalar])
+    minValue = EVENTS.getMinValue(events[scalar])
+    maxValue = EVENTS.getMaxValue(events[scalar])
+    if(outcome>maxValue):
+        outcome = maxValue
+    elif(outcome<minValue):
+        outcome = minValue
+    # price is in fixed point
+    # share two goes with the high side
+    pricePerShare2 = 2^64*(outcome - 2^64*minValue) / (2^64*maxValue - 2^64*minValue)
+    #share one goes with the low side of the calc
+    pricePerShare1 = 2^64 - pricePerShare1
+    # distribute cashcoin to the people who won money by holding winning shares
+    i = 0
+    currentParticipant = MARKETS.getCurrentParticipantNumber(market)
+    while i < currentParticipant:
+        # for each winning outcome do...
+        n = 0
+        while(winningOutcome[n]!=0):
+            sharesOwned = MARKETS.getParticipantSharesPurchased(market, i, winningOutcome[n])
+            participant = MARKETS.getParticipantID(market, i)
+            # low side
+            if(n==0):
+                CASH.subtractCash(market, sharesOwned*pricePerShare1/2^64)
+                CASH.addCash(participant, sharesOwned*pricePerShare1/2^64)
+            # high side (of the scalar part)
+            elif(n==1):
+                CASH.subtractCash(market, sharesOwned*pricePerShare2/2^64)
+                CASH.addCash(participant, sharesOwned*pricePerShare2/2^64)
+            n+=1
+        i += 1
+    return(1)

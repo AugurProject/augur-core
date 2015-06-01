@@ -1,0 +1,79 @@
+# This software (Augur) allows buying and selling event options in Ethereum.
+#
+# Copyright (c) 2015 Forecast Foundation 
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# If you have questions, please contact Joey Krug (joey@augur.net) or
+# Jack Peterson (jack@augur.net).
+
+import events as EVENTS
+import expiringEvents as EXPIRING
+import reporting as REPORTING
+import center as CENTER
+
+def center(branch, period, num_events, num_reports, flatsize):
+    # if !WHITELIST.check(msg.sender):
+    #     return(-1)
+    with reputation = array(num_reports):
+        with i = 0:
+            while i < num_reports:
+                reputation[i] = REPORTING.getRepByIndex(branch, i)
+                i += 1
+        with scaled = array(num_events):
+            with scaled_max = array(num_events):
+                with scaled_min = array(num_events):
+                    with j = 0:
+                        while j < num_events:
+                            with event = EXPIRING.getEvent(branch, period, j):
+                                if fix(EVENTS.getMaxValue(event)) != YES:
+                                    scaled[j] = 1
+                                    scaled_min[j] = fix(EVENTS.getMinValue(event))
+                                    scaled_max[j] = fix(EVENTS.getMaxValue(event))
+                                else:
+                                    scaled[j] = 0
+                                    scaled_min[j] = NO
+                                    scaled_max[j] = YES
+                            j += 1
+                    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=flatsize):
+                        with lflatsize = flatsize + num_events + 2:
+                            with result = CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, MAX_COMPONENTS, outsz=lflatsize):
+                                wcd = slice(result, items=0, items=flatsize)
+                                EXPIRING.setWeightedCenteredData(branch, period, wcd)
+                                loading_vector = slice(result, items=flatsize, items=lflatsize)
+                                EXPIRING.setLoadingVector(branch, period, loading_vector)
+                                return(1)
+
+def covariance(branch, period, num_events, num_reports, flatsize):
+    # if !WHITELIST.check(msg.sender):
+    #     return(-1)
+    with reputation = array(num_reports):
+        with i = 0:
+            while i < num_reports:
+                reputation[i] = REPORTING.getRepByIndex(branch, i)
+                i += 1
+        with reptokens = CENTER.tokenize(reputation, num_reports, outsz=num_reports):
+            with wcd = EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize):
+                with covrow = CENTER.covariance(wcd, reptokens, num_reports, num_events, outsz=num_events):
+                    EXPIRING.setCovarianceMatrixRow(branch, period, covrow)
+                    EXPIRING.setDeflated(branch, period, wcd)
+                    return(1)
+
+inset('macros/constants.se')
+inset('macros/fixed.se')

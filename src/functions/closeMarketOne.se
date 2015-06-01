@@ -1,0 +1,18 @@
+import markets as MARKETS
+import cash as CASH
+
+# mutex result non scalar not .5
+# one winning outcome
+def oneOutcome(market, winningOutcome):
+    pricePerShare1 = 2^64
+
+    # distribute cashcoin to the people who won money by holding winning shares
+    i = 0
+    particpantNumber = MARKETS.getCurrentParticipantNumber(market)
+    while i < particpantNumber:
+        sharesOwned = MARKETS.getParticipantSharesPurchased(market, i, winningOutcome)
+        participant = MARKETS.getParticipantID(market, i)
+        CASH.subtractCash(market, sharesOwned*pricePerShare1/2^64)
+        CASH.addCash(participant, sharesOwned*pricePerShare1/2^64)
+        i += 1
+    return(1)
