@@ -23,7 +23,7 @@ Then geth will automatically do all these things whenever you run it.
 '''
 import warnings; warnings.simplefilter('ignore')
 from colorama import init, Fore, Style; init()
-from pyrpctools import RPC, DB
+from pyrpctools import RPC_Client, DB
 from translate_externs import replace_names, show
 from collections import defaultdict
 from pyepm.api import abi_data
@@ -45,7 +45,7 @@ def get_code_paths():
         return paths
     return [os.path.abspath('src')]
 
-GETHRPC = RPC(default='GETH')
+GETHRPC = RPC_Client(default='GETH')
 COINBASE = GETHRPC.eth_coinbase()['result']
 CODEPATHS = get_code_paths()
 ERROR = Style.BRIGHT + Fore.RED + 'ERROR!'
@@ -170,8 +170,8 @@ def compile(name, whitelisted):
     fullsig = serpent.mk_full_signature(new_code)
     prefixes = get_prefixes(whitelisted_funcs, fullsig)
     new_code = new_code.replace('functions = []', 'functions = ' + prefixes, 1)
-    with open(fullname.replace('src', 'dump'), 'w') as F:
-        F.write(new_code)
+#    with open(fullname.replace('src', 'dump'), 'w') as F:
+#        F.write(new_code)
     print 'Processing', fullname
     if prefixes:
         print 'whitelisted:', whitelisted_funcs
