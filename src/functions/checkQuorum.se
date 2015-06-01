@@ -19,8 +19,14 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-import branches as BRANCHES
-import expiringEvents as EXPEVENTS
+# import branches as BRANCHES
+# import expiringEvents as EXPEVENTS
+
+extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, initializeBranch:iiii:i, setStep:ii:i, setSubstep:ii:i]
+BRANCHES = 0x13dc5836cd5638d0b81a1ba8377a7852d41b5bbe
+
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getEvent:iii:i, getEvents:ii:a, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+EXPEVENTS = 0x61d90fd4c1c3502646153003ec4d5c177de0fb58
 
 # returns whether a quorem has a matured event
 # if there aren't enough events in a vote period eventsexpdate, push them to the current period and increment the vote period
@@ -49,6 +55,7 @@ def checkQuorum(branch):
     if ((EXPEVENTS.getNumberEvents(branch, currentVotePeriod) < 5 || upcomingDecisions < 10) && matured):
         BRANCHES.incrementPeriod(branch)
         BRANCHES.setStep(branch, 0)
+        BRANCHES.setSubstep(branch, 0)
         currentVotePeriod = BRANCHES.getVotePeriod(branch)
         EXPEVENTS.moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod)
     else:
@@ -58,5 +65,5 @@ def checkQuorum(branch):
     if(matured && enoughEvents && enoughUpcoming):
         return(1)
     else:
-        # return(0)
-        return([currentPeriod, currentVotePeriod, matured, EXPEVENTS.getNumberEvents(branch, currentVotePeriod), upcomingDecisions]:arr)
+        return(0)
+        # return([currentPeriod, currentVotePeriod, matured, EXPEVENTS.getNumberEvents(branch, currentVotePeriod), upcomingDecisions]:arr)

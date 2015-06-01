@@ -22,7 +22,12 @@
 #
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
-import statistics as STATISTICS
+# import statistics as STATISTICS
+
+extern statistics.se: [weighted_median:aa:i]
+
+STATISTICS = 0x0cb1277671d162b2f5c81e9435744f63768398d0
+# STATISTICS = create("statistics.se")
 
 def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
     # returns:
@@ -121,6 +126,9 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                             i += 1
                                 return(reports_interp: arr)
 
-inset('macros/constants.se')
-inset('macros/fixed.se')
-inset('macros/arrays.se')
+# inset('macros/constants.se')
+# inset('macros/fixed.se')
+# inset('macros/arrays.se')
+inset('../../macros/constants.se')
+inset('../../macros/fixed.se')
+inset('../../macros/arrays.se')

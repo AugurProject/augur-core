@@ -23,20 +23,50 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
-# extern whitelist.se: [addAddress:ii:s, check:i:i, checkaddr:ii:i, replaceAddress:iii:s]
-# WHITELIST = 0x21dbe4a05a9174e96e6c6bc1e05a7096338cb0d6
+# import events as EVENTS
+# import expiringEvents as EXP
+# import reporting as REPORTING
+# import branches as BRANCHES
+# import checkQuorum as QUORUM
+# import redeem_interpolate as REDEEM_INTERPOLATE
+# import redeem_center as REDEEM_CENTER
+# import redeem_score as REDEEM_SCORE
+# import redeem_adjust as REDEEM_ADJUST
+# import redeem_resolve as REDEEM_RESOLVE
+# import redeem_payout as REDEEM_PAYOUT
 
-import events as EVENTS
-import expiringEvents as EXP
-import reporting as REPORTING
-import branches as BRANCHES
-import checkQuorum as QUORUM
-import redeem_interpolate as REDEEM_INTERPOLATE
-import redeem_center as REDEEM_CENTER
-import redeem_score as REDEEM_SCORE
-import redeem_adjust as REDEEM_ADJUST
-import redeem_resolve as REDEEM_RESOLVE
-import redeem_payout as REDEEM_PAYOUT
+extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
+EVENTS = 0xfdefa42a3209d3f320b220a234cd0cdea5e761f8
+
+extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+EXPIRING = 0xf97d9fdba23823b2796446d4a45e18a7a1fdf905
+
+extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
+REPORTING = 0xbe774ec2c537ea1a4981529568060456a650d639
+
+extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getSubstep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, initializeBranch:iiii:i, setStep:ii:i, setSubstep:ii:i]
+BRANCHES = 0x3bc4532769424b380037df6f94ba52ed72636b7f
+
+extern checkQuorum.se: [checkQuorum:i:i]
+QUORUM = 0x9f163b10bde1af5fbf4440c2b2767a7c5d4381b6
+
+extern redeem_interpolate.se: [interpolate:iiiii:i]
+REDEEM_INTERPOLATE = 0x03fb53ae8a4373f6b9d6b4778288fb5d3dfbd4be
+
+extern redeem_center.se: [center:iiiii:i, covariance:iiiii:i]
+REDEEM_CENTER = 0x6621d0c3c37fea879ce067f5e85c80f08ffa5e7f
+
+extern redeem_score.se: [blank:iiiii:i, deflate:iiiii:i, latent:iiiii:i, loadings:iiiii:i, score:iiiii:i]
+REDEEM_SCORE = 0x238ea089e5f7bdc776d7a995f4c0a4e37c36ea37
+
+extern redeem_adjust.se: [reputation_delta:iiiii:i, select_scores:iiiii:i, weighted_delta:iiiii:i]
+REDEEM_ADJUST = 0x6d5793203371b50670aa62a558a44d99aceb1404
+
+extern redeem_resolve.se: [resolve:iiiii:i, smooth:iiiii:i]
+REDEEM_RESOLVE = 0xdbce345525ca39d17fe5527bdbfdd435ee6976d6
+
+extern redeem_payout.se: [payout:iiiii:i]
+REDEEM_PAYOUT = 0xb612eb2dc2be63445e541eaad4906580cff1557e
 
 # - 50% of fees already distributed to market creators
 #   all remaining fees go to reporters
