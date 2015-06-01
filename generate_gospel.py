@@ -2,7 +2,7 @@ import bsddb
 import json
 
 db = bsddb.hashopen('build')
-data_and_api = 'cash info branches events expiringEvents fxMath markets reporting whitelist'.split(' ')
+data_and_api = 'cash info branches events expiringEvents fxpFunctions markets reporting'.split(' ')
 functions = 'checkQuorum buy&sellShares createBranch p2pWagers sendReputation transferShares makeReports createEvent createMarket closeMarket closeMarketOne closeMarketTwo closeMarketFour closeMarketEight dispatch'.split(' ')
 consensus = 'statistics interpolate center score adjust resolve payout redeem_interpolate redeem_center redeem_score redeem_adjust redeem_resolve redeem_payout'.split(' ')
 
