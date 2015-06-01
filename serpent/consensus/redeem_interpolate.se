@@ -39,7 +39,7 @@ extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:
 BRANCHES = 0x3bc4532769424b380037df6f94ba52ed72636b7f
 
 extern interpolate.se: [interpolate:aaaaa:a]
-INTERPOLATE = 0x554bb0bafa1760d17ebec20c667773f5a86f0ce4
+INTERPOLATE = 0x3f4cdadf653406b872a9128731cd903e4a424ac7
 
 # EVENTS = create("../data and api files/events.se")
 # EXPIRING = create("../data and api files/expiringEvents.se")

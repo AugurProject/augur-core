@@ -55,3 +55,9 @@ target/
 # Emacs auto saves
 *~
 \#*\#
+
+bower_components
+serpent/ui
+.gitstats
+*.mw
+serpent/old-tests

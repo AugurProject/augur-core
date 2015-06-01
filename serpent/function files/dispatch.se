@@ -42,7 +42,7 @@ extern checkQuorum.se: [checkQuorum:i:i]
 QUORUM = 0x7c349cc8658e399a01f80019f46bd7644dc97adb
 
 extern redeem_interpolate.se: [interpolate:iiiii:i]
-REDEEM_INTERPOLATE = 0x499bee78b5799ede28a437467601cdfd5f9f2076
+REDEEM_INTERPOLATE = 0xc9964954e096d79675f3da5f2d4415c410b45528
 
 extern redeem_center.se: [center:iiiii:i, covariance:iiiii:i]
 REDEEM_CENTER = 0x6621d0c3c37fea879ce067f5e85c80f08ffa5e7f
