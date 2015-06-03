@@ -58,5 +58,5 @@ def checkQuorum(branch):
     if(matured && enoughEvents && enoughUpcoming):
         return(1)
     else:
-        # return(0)
-        return([currentPeriod, currentVotePeriod, matured, EXPEVENTS.getNumberEvents(branch, currentVotePeriod), upcomingDecisions]:arr)
+        return(0)
+        # return([currentPeriod, currentVotePeriod, matured, EXPEVENTS.getNumberEvents(branch, currentVotePeriod), upcomingDecisions]:arr)
