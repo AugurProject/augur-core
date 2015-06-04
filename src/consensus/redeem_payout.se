@@ -30,6 +30,24 @@ import cash as CASH
 import info as INFO
 import payout as PAYOUT
 
+# extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
+# EVENTS = 0xfdefa42a3209d3f320b220a234cd0cdea5e761f8
+
+# extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
+# EXPIRING = 0xf97d9fdba23823b2796446d4a45e18a7a1fdf905
+
+# extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
+# REPORTING = 0xbe774ec2c537ea1a4981529568060456a650d639
+
+# extern cash.se: [addCash:ii:i, balance:i:i, faucet:_:i, send:ii:i, sendFrom:iii:i, subtractCash:ii:i]
+# CASH = 0x3c99d4851b17df03655a42a3046035519f75469d
+
+# extern info.se: [getCreationFee:i:i, getCreator:i:i, getDescription:i:s, getDescriptionLength:i:i, setInfo:isii:i]
+# INFO = 0xd46714c7b4bc8dc8af40ec8ea23207221c31c841
+
+# extern payout.se: [payout:aaaii:a]
+# PAYOUT = 0x07e41da61e7c629ae33982df4c01f087a08642a5
+
 def payout(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
     #     return(-1)
@@ -71,3 +89,6 @@ def payout(branch, period, num_events, num_reports, flatsize):
 inset('macros/constants.se')
 inset('macros/fixed.se')
 inset('macros/arrays.se')
+# inset('../../macros/constants.se')
+# inset('../../macros/fixed.se')
+# inset('../../macros/arrays.se')
