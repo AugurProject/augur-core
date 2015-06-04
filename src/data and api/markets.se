@@ -181,7 +181,7 @@ def price(marketID, outcome):
         sum_exps += exps[i]
         i += 1
     t1 = a * FXP.fx_log(sum_exps) / 2**64
-    t21 = exps[i] * sum_q / 2**64
+    t21 = exps[outcome - 1] * sum_q / 2**64
     t23 = sum_q * sum_exps / 2**64
     return(t1 + (t21 - t22) * 2**64 / t23)
 
