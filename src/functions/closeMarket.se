@@ -66,10 +66,10 @@ def closeMarket(branch, market):
                     sharesOwnedOne = MARKETS.getParticipantSharesPurchased(market, i, 1)
                     sharesOwnedTwo = MARKETS.getParticipantSharesPurchased(market, i, 2)
                     participant = MARKETS.getParticipantID(market, i)
-                    CASH.subtractCash(market, sharesOwnedOne*3*2^63 / 2^64)
-                    CASH.addCash(participant, sharesOwnedOne*3*2^63 / 2^64)
-                    CASH.subtractCash(market, sharesOwnedTwo*3*2^63 / 2^64)
-                    CASH.addCash(participant, sharesOwnedTwo*3*2^63 / 2^64)
+                    CASH.subtractCash(market, sharesOwnedOne*2^63 / 2^64)
+                    CASH.addCash(participant, sharesOwnedOne*2^63 / 2^64)
+                    CASH.subtractCash(market, sharesOwnedTwo*2^63 / 2^64)
+                    CASH.addCash(participant, sharesOwnedTwo*2^63 / 2^64)
                     i += 1
 
                 # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
@@ -183,6 +183,7 @@ def closeMarket(branch, market):
                 # pay back liquidity, split up excess profits
                 CASH.addCash(creator, initialLiquidity)
                 CASH.subtractCash(market, initialLiquidity)
+                marketCash -= initialLiquidity
                 CASH.addCash(branch, marketCash/2)
                 CASH.addCash(creator, marketCash/2)
                 CASH.subtractCash(market, marketCash)
