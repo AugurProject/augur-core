@@ -120,10 +120,11 @@ def simple_server(ip, port, func):
                         conn = readmap[fd]
                         try:
                             request = read_message(conn)
-                        except:
+                        except: #this should only happen when the connection is closed
                             readmap.pop(fd)
+                            conn.close()
                         else:
-                            conn.write(func(request))
+                            conn.sendall(func(request))
     except KeyboardInterrupt as exc:
         print '\r'
         for sock in readmap.values():

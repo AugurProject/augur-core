@@ -1,10 +1,10 @@
 #!/usr/bin/python
 '''A script for using interacting with a local Ethereum node using JSON RPC.'''
-from pyrpctools import RPC
+from pyrpctools import RPC_Client
 import sys
 import re
 
-GETHRPC = RPC(default='GETH')
+GETHRPC = RPC_Client(default='GETH', debug=True)
 COINBASE = GETHRPC.eth_coinbase()['result']
 
 kwd_p = re.compile(r'--(?P<key>\D{2,})=(?P<val>.*)')
