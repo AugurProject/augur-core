@@ -1,10 +1,10 @@
 import serpent
 from pyrpctools import RPC_Client, DB
-from collection import defaultdict
+from collections import defaultdict
 import os
 import sys
 import json
-from load_contracts import get_fullname, broadcast_code
+from load_contracts import get_full_name, broadcast_code
 
 RPC = RPC_Client(default='GETH')
 COINBASE = RPC.eth_coinbase()['result']
@@ -15,7 +15,7 @@ def build_dependencies():
     for d, s, fs in os.walk('src'):
         for f in fs:
             for line in open(os.path.join(d, f)):
-                if line.startwith('import'):
+                if line.startswith('import'):
                     name = line.split(' ')[1]
                     deps[name].append(f[:-3])
     return deps
