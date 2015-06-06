@@ -82,7 +82,7 @@ def getDeflated(branch, expDateIndex):
     return(load(self.EventsExpDates[branch][expDateIndex].deflated[0], chars=32*self.EventsExpDates[branch][expDateIndex].vSize): arr)
 
 def getLoadingVector(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].loadingVector[0], chars=32*self.EventsExpDates[branch][expDateIndex].numberEvents+2): arr)
+    return(load(self.EventsExpDates[branch][expDateIndex].loadingVector[0], chars=32*(self.EventsExpDates[branch][expDateIndex].numberEvents+2)): arr)
 
 def getLatent(branch, expDateIndex):
     return(self.EventsExpDates[branch][expDateIndex].latent)
