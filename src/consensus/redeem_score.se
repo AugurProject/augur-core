@@ -51,12 +51,12 @@ def blank(branch, period, num_events, num_reports, flatsize):
         # - if element ne_plus_2 is zero, we're on the first component, so set the last
         #   element equal to MAX_COMPONENTS
         # - otherwise, decrement the last element
-        with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
-            if loading_vector[num_events+1] == 0:
-                EXPIRING.setLoadingVector(branch, period, SCORE.blank(MAX_COMPONENTS, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
+        with substep = BRANCHES.getSubstep(branch):
+            if substep == 0:
+                loading_vector = SCORE.blank(MAX_COMPONENTS, MAX_ITERATIONS, num_events, outsz=ne_plus_2)
             else:
-                EXPIRING.setLoadingVector(branch, period, SCORE.blank(loading_vector[num_events+1]-1, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
-            return(1)
+                loading_vector = SCORE.blank(substep - 1, MAX_ITERATIONS, num_events, outsz=ne_plus_2)
+            return(loading_vector: arr)
 
 def loadings(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
@@ -84,18 +84,14 @@ def latent(branch, period, num_events, num_reports, flatsize):
     #     return(-1)
     with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
         with covrow = EXPIRING.getCovarianceMatrixRow(branch, period, outsz=num_events):
-            EXPIRING.setLatent(branch, period, SCORE.latent(covrow, loading_vector, num_events))
-            EXPIRING.setCovarianceMatrixRow(branch, period, covrow)
-            return(1)
+            return(SCORE.latent(covrow, loading_vector, num_events))
 
 def deflate(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
     #     return(-1)
     with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
         with deflated = EXPIRING.getDeflated(branch, period, outsz=flatsize):
-            deflated = SCORE.deflate(loading_vector, deflated, num_reports, num_events, outsz=flatsize)
-            EXPIRING.setDeflated(branch, period, deflated)
-            return(1)
+            return(SCORE.deflate(loading_vector, deflated, num_reports, num_events, outsz=flatsize):arr)
 
 def score(branch, period, num_events, num_reports, flatsize):
     # if !WHITELIST.check(msg.sender):
