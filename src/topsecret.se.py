@@ -1,5 +1,4 @@
 data cluster_node[](left, right, vec[], id, distance)
-data distances[]
 data lenCluster
 data i
 data j
@@ -74,17 +73,16 @@ def cluster(features: arr):
             mergevec[o] = (self.cluster_node[i].vec[o] + self.cluster_node[j].vec[o]) / 2
             o += 1
 
-        self.cluster_node[lenCluster].id = currentclustid
-        self.cluster_node[lenCluster].distance = closest
-        save(self.cluster_node[lenCluster].vec[0], mergevec, chars=32*numEvents)
-        self.cluster_node[lenCluster].left = i
-        self.cluster_node[lenCluster].right = j
-        self.lenCluster -= 1
+        self.cluster_node[self.lenCluster].id = currentclustid
+        self.cluster_node[self.lenCluster].distance = closest
+        save(self.cluster_node[self.lenCluster].vec[0], mergevec, chars=32*numEvents)
+        self.cluster_node[self.lenCluster].left = i
+        self.cluster_node[self.lenCluster].right = j
         lenCluster -= 1
         # del i and j
         # del clust[lowestpair[1]]
         # del clust[lowestpair[0]]
-
+        self.lenCluster += 1
         currentclustid -= 1
     return(1)
 
@@ -112,6 +110,50 @@ def get_cluster_elements(nodeIndex):
             self.get_cluster_elements(self.cluster_node[nodeIndex].right)
     return(1)
 
+def get_extractionLen():
+    return(self.extractionLen)
+
+def get_elementsLen():
+    return(self.elementsLen)
+
+def get_numEvents():
+    return(self.numEvents)
+
+def get_i():
+    return(self.i)
+
+def get_j():
+    return(self.j)
+
+def get_lenCluster():
+    return(self.lenCluster)
+
+def get_extracted_clusters(x):
+    return(self.extracted_clusters[x])
+
+def get_cluster_elementss(x):
+    return(self.cluster_elements[x])
+
+def get_distances(x,y):
+    return(self.distances[x][y])
+
+def get_cluster_node_left(nodeIndex):
+    return(self.cluster_node[nodeIndex].left)
+
+def get_cluster_node_right(nodeIndex):
+    return(self.cluster_node[nodeIndex].right)
+
+def get_cluster_node_id(nodeIndex):
+    return(self.cluster_node[nodeIndex].id)
+
+def get_cluster_node_distance(nodeIndex):
+    return(self.cluster_node[nodeIndex].distance)
+
+def get_cluster_node_vec(nodeIndex):
+    return(self.cluster_node[nodeIndex].vec[nodeIndex])
+
+def set_numEvents(num):
+    self.numEvents = num
 
 # loop through every pair looking for the smallest distance
     # bug if dist is 0
