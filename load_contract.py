@@ -1,15 +1,18 @@
+#!/usr/bin/python2
 import serpent
 from pyrpctools import RPC_Client, DB
 from collections import defaultdict
 import os
 import sys
 import json
+import time 
 
 RPC = RPC_Client(default='GETH')
 COINBASE = RPC.eth_coinbase()['result']
 TRIES = 10
 BLOCKTIME = 12
 SRCPATH = 'src'
+GAS = hex(3*10**6)
 
 def memoize(func):
     memo = {}
@@ -51,7 +54,7 @@ def build_dependencies():
     for directory, subdirs, files in os.walk(SRCPATH):
         for f in files:
             for line in open(os.path.join(directory, f)):
-                if line.startwith('import'):
+                if line.startswith('import'):
                     name = line.split(' ')[1]
                     deps[name].append(f[:-3])
     return deps
