@@ -14,18 +14,6 @@ BLOCKTIME = 12
 SRCPATH = 'src'
 GAS = hex(3*10**6)
 
-def memoize(func):
-    memo = {}
-    def new_func(x):
-        if x in memo:
-            return memo[x]
-        result = func(x)
-        memo.__setitem__(x, result)
-        return result
-    new_func.__name__ = func.__name__
-    return new_func
-
-@memoize
 def get_fullname(name):
     '''
     Takes a short name from an import statement and
@@ -37,6 +25,9 @@ def get_fullname(name):
                 return os.path.join(directory, f)
     raise ValueError('No such name: '+name)
 
+def get_shortname(fullname):
+    return os.path.split(fullname)[-1][:-3]
+
 def broadcast_code(evm):
     '''Sends compiled code to the network, and returns the address.'''
     address = RPC.eth_sendTransaction(sender=COINBASE, data=evm, gas=GAS)['result']
@@ -47,17 +38,35 @@ def broadcast_code(evm):
             return address
         time.sleep(BLOCKTIME)
         tries += 1
-    raise ValueError('CODE COULD NOT GET ON CHAIN!!!')
+    return broadcast_code(evm)
 
-def build_dependencies():
-    deps = defaultdict(list)
-    for directory, subdirs, files in os.walk(SRCPATH):
+def get_compile_order():
+    # topological sorting! :3
+    nodes = {}
+    avail = []
+    # for each node, build a list of it's incoming edges
+    for directory, subdirs, files in os.walk('src'):
         for f in files:
+            incoming_edges = [] 
             for line in open(os.path.join(directory, f)):
                 if line.startswith('import'):
                     name = line.split(' ')[1]
-                    deps[name].append(f[:-3])
-    return deps
+                    incoming_edges.append(name)
+            if incoming_edges:
+                nodes[f[:-3]] = incoming_edges
+            else:
+                avail.append(f[:-3])
+    sorted_nodes = []
+    while avail:
+        curr = avail.pop()
+        sorted_nodes.append(curr)
+        for item, edges in nodes.items():
+            if curr in edges:
+                edges.remove(curr)
+            if not edges:
+                avail.append(item)
+                nodes.pop(item)
+    return sorted_nodes
 
 def translate_code(fullname):
     new_code = []
@@ -73,7 +82,7 @@ def translate_code(fullname):
             new_code.append(line)
     return '\n'.join(new_code)
 
-def compile(fullname, deps):
+def compile(fullname):
     new_code = translate_code(fullname)
     evm = '0x' + serpent.compile(new_code).encode('hex')
     new_address = broadcast_code(evm)
@@ -82,14 +91,14 @@ def compile(fullname, deps):
     fullsig = serpent.mk_full_signature(new_code)
     new_info = {'address':new_address, 'sig':new_sig, 'fullsig':fullsig}
     DB[short_name] = json.dumps(new_info)
-    if short_name in deps:
-        for dep in deps[short_name]:
-            dep_fullname = get_fullname(dep)
-            compile(dep_fullname, deps)
 
-def main(contract_path):
-    deps = build_dependencies()
-    compile(contract_path, deps)
+def main(contract):
+    deps = get_compile_order()
+    start = deps.index(contract)
+    for contract in deps[start:]:
+        fullname = get_fullname(contract)
+        compile(fullname)
+    return 0
 
 if __name__ == '__main__':
     main(sys.argv[1])

@@ -34,51 +34,33 @@ import time
 import sys
 import os
 
-def get_code_paths():
-    paths = []
-    for arg in sys.argv[1:]:
-        if arg.startswith('--'):
-            continue
-        else:
-            paths.append(os.path.abspath(arg))
-    if paths:
-        return paths
-    return [os.path.abspath('src')]
-
-GETHRPC = RPC_Client(default='GETH')
-COINBASE = GETHRPC.eth_coinbase()['result']
-CODEPATHS = get_code_paths()
+RPC = RPC_Client(default='GETH')
+COINBASE = RPC.eth_coinbase()['result']
+SRCPATH = 'src'
 ERROR = Style.BRIGHT + Fore.RED + 'ERROR!'
 GAS = hex(3*10**6)
 TRIES = 10
 BLOCKTIME = 12
 INFO = {}
 
-if COINBASE == '0x':
-    print ERROR, 'no coinbase address'
+def error(msg):
+    print ERROR, msg
     print 'ABORTING'
     sys.exit(1)
 
-def memoize(func):
-    memo = {}
-    def new_func(x):
-        if x in memo:
-            return memo[x]
-        result = func(x)
-        memo.__setitem__(x, result)
-        return result
-    new_func.__name__ = func.__name__
-    return new_func
+if COINBASE == '0x':
+    error('no coinbase address')
 
-@memoize
-def get_full_name(name):
-    '''Takes a short name from an import statement and returns a real path to that contract.'''
-    for path in CODEPATHS:
-        for d, s, f in os.walk(path):
-            for F in f:
-                if F[:-3] == name:
-                    return os.path.join(d, F)
-    raise ValueError('No such name: '+name)
+def get_fullname(name):
+    '''
+    Takes a short name from an import statement and
+    returns a real path to that contract.
+    '''
+    for directory, subdirs, files in os.walk(SRCPATH):
+        for f in files:
+            if f[:-3] == name:
+                return os.path.join(directory, f)
+    error('No contract with that name: '+name)
 
 def get_info(name):
     '''Returns metadata about a contract.'''
@@ -88,15 +70,24 @@ def get_info(name):
         compile(name)
         return INFO[name]
 
+def wait(seconds):
+    sys.stdout.write('Waiting %d seconds' % seconds)
+    sys.stdout.flush()
+    for i in range(seconds):
+        sys.stdout.write('.')
+        sys.stdout.flush()
+        time.sleep(1)
+    print
+
 def broadcast_code(evm):
     '''Sends compiled code to the network, and returns the address.'''
-    address = GETHRPC.eth_sendTransaction(sender=COINBASE, data=evm, gas=GAS)['result']
+    address = RPC.eth_sendTransaction(sender=COINBASE, data=evm, gas=GAS)['result']
     tries = 0
     while tries < TRIES:
-        check = GETHRPC.eth_getCode(address)['result']
-        if check != '0x':
+        wait(BLOCKTIME)
+        check = RPC.eth_getCode(address)['result']
+        if check != '0x' and check[2:] in evm:
             return address
-        time.sleep(BLOCKTIME)
         tries += 1
     return broadcast_code(evm)
 
@@ -119,7 +110,7 @@ def translate_code(fullname):
     return new_code
 
 def compile(name):
-    fullname = get_full_name(name)
+    fullname = get_fullname(name)
     print 'Processing', fullname
     new_code = '\n'.join(translate_code(fullname))
     fullsig = serpent.mk_full_signature(new_code)
@@ -129,24 +120,18 @@ def compile(name):
     INFO[name] = {
         'sig':sig,
         'fullsig':fullsig,
-        'address':address,
-        'name':name}
-
-def serpent_files():
-    for path in CODEPATHS:
-        for d, s, f in os.walk(path):
-            for F in f:
-                if F.endswith('.se'):
-                    yield d, F
+        'address':address}
 
 def main():
-    for d, f in serpent_files():
-        get_info(f[:-3])
+    for directory, subdirs, files in os.walk(SRCPATH):
+        for f in files:
+            get_info(f[:-3])
+
     print 'DUMPING INFO TO DB'
     for name, info in INFO.items():
         print 'DUMPING', name, 'INFO TO DB'
         DB[name] = json.dumps(info)
-    return 0
+    sys.exit(0)
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
