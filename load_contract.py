@@ -1,6 +1,6 @@
 import serpent
 from pyrpctools import RPC_Client, DB
-from collection import defaultdict
+from collections import defaultdict
 import os
 import sys
 import json
