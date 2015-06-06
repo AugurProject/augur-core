@@ -30,10 +30,8 @@ def safe_eval(thing):
     try:
         thing = eval(thing)
     except:
-        print thing
         return thing
     else:
-        print thing
         if type(thing) in (int, str, long):
             return thing
         elif type(thing) == list:
@@ -64,8 +62,8 @@ def confirmed_send(**kwds):
 if __name__ == '__main__':
     contract_name = sys.argv[1]
     contract_addr = json.loads(DB[contract_name])['address']
-    args = get_args(); print args
-    sig = get_sig(args); print sig
+    args = get_args()
+    sig = get_sig(args)
     funcname = sys.argv[2]
     abi = abi_data(funcname, sig, args)
     if '--call' in sys.argv:

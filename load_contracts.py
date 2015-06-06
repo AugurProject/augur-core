@@ -97,7 +97,8 @@ def broadcast_code(evm):
         if check != '0x':
             return address
         time.sleep(BLOCKTIME)
-    raise ValueError('CODE COULD NOT GET ON CHAIN!!!')
+        tries += 1
+    return broadcast_code(evm)
 
 def translate_code(fullname):
     new_code = []
