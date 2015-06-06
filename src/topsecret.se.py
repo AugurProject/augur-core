@@ -5,6 +5,10 @@ data i
 data j
 data numEvents
 data distances[][]
+data cluster_elements[]
+data elementsLen
+data extracted_clusters[]
+data extractionLen
 
 def sqrt(n):
     approx = n/2.0
@@ -29,7 +33,7 @@ def cluster(features: arr):
     currentclustid = -1
     numEvents = self.numEvents
 
-    # initial clusters are the rows (individually)
+    # initial clusters are the rows (individually) (will have pos. id)
     i = 0
     while i < (len(features)/numEvents):
         cluster_node[i].id = i
@@ -78,10 +82,35 @@ def cluster(features: arr):
         lenCluster += 1
 
         currentclustid -= 1
+    return(1)
+
+def extract_clusters(nodeIndex, dist):
+    if self.cluster_node[nodeIndex].distance < dist:
+        self.extract_clusters[extractionLen] = nodeIndex
+        extractionLen += 1
+    else:
+        if(self.cluster_node[nodeIndex].left!=0):
+            self.extract_clusters(self.cluster_node[nodeIndex].left, dist)
+        if(self.extract_clusters[nodeIndex].right!=0):
+            self.get_cluster_elements(self.cluster_node[nodeIndex].right, dist)
+    return(1)
 
 
+def get_cluster_elements(nodeIndex):
+    id = self.cluster_node[nodeIndex].id 
+    if id >= 0:
+        self.cluster_elements[elementsLen] = id
+        elementsLen += 1
+    else:
+        if(self.cluster_node[nodeIndex].left!=0):
+            self.get_cluster_elements(self.cluster_node[nodeIndex].left)
+        if(self.cluster_node[nodeIndex].right!=0):
+            self.get_cluster_elements(self.cluster_node[nodeIndex].right)
+    return(1)
 
 
+# we'll need to extract the distance for the list of sub-tree clusters as well b/c lower dist is a better reporter no?
 
 # loop through every pair looking for the smallest distance
     # bug if dist is 0
+    # if cluster.left or right is 0 there's a bug, b/c check is if none not if 0
