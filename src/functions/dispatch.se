@@ -24,7 +24,7 @@
 # Jack Peterson (jack@augur.net).
 
 import events as EVENTS
-import expiringEvents as EXP
+import expiringEvents as EXPIRING
 import reporting as REPORTING
 import branches as BRANCHES
 import checkQuorum as QUORUM
@@ -73,6 +73,7 @@ import redeem_payout as REDEEM_PAYOUT
 # - what if not enough consensus or not enough events expiring upcoming
 # @return next step or loop index (see below), for final call return new voting period
 def dispatch(branch):
+# def dispatch(branch, period):
     # if !WHITELIST.check(msg.sender):
     #     return(-1)
     if !QUORUM.checkQuorum(branch):
@@ -97,35 +98,41 @@ def dispatch(branch):
                         # loop MAX_COMPONENTS #
                         #######################
                         elif step == 3:
-                            with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
-                                with substep = BRANCHES.getSubstep(branch):
-                                    if substep == 4:
-                                        more = REDEEM_SCORE.score(branch, period, num_events, num_reports, flatsize)
-                                        BRANCHES.setSubstep(branch, 0)
-                                        if more == 1:
-                                            return(step)
-                                        else:
-                                            BRANCHES.incrementStep(branch)
-                                            return(step + 1)
-                                    elif substep == 0:
-                                        REDEEM_SCORE.blank(branch, period, num_events, num_reports, flatsize)
-                                    #######################
-                                    # loop MAX_ITERATIONS #
-                                    #######################
-                                    elif substep == 1:
-                                        if REDEEM_SCORE.loadings(branch, period, num_events, num_reports, flatsize) == 0:
-                                            BRANCHES.incrementSubstep(branch)
-                                        # return(EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):arr)
+                            with substep = BRANCHES.getSubstep(branch):
+                                if substep == 4:
+                                    more = REDEEM_SCORE.score(branch, period, num_events, num_reports, flatsize)
+                                    BRANCHES.setSubstep(branch, 0)
+                                    if more == 1:
                                         return(step)
-                                    ############
-                                    # end loop #
-                                    ############
-                                    elif substep == 2:
-                                        REDEEM_SCORE.latent(branch, period, num_events, num_reports, flatsize)
-                                    elif substep == 3:
-                                        REDEEM_SCORE.deflate(branch, period, num_events, num_reports, flatsize)           
-                                    BRANCHES.incrementSubstep(branch)
+                                    else:
+                                        BRANCHES.incrementStep(branch)
+                                        return(step + 1)
+                                elif substep == 0:
+                                    loading_vector = REDEEM_SCORE.blank(branch, period, num_events, num_reports, flatsize, outsz=num_events+2)
+                                    EXPIRING.setLoadingVector(branch, period, loading_vector)
+                                    return(loading_vector: arr)
+                                    return(EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):arr)
+                                #######################
+                                # loop MAX_ITERATIONS #
+                                #######################
+                                elif substep == 1:
+                                    if REDEEM_SCORE.loadings(branch, period, num_events, num_reports, flatsize) == 0:
+                                        BRANCHES.incrementSubstep(branch)
                                     return(step)
+                                ############
+                                # end loop #
+                                ############
+                                elif substep == 2:
+                                    latent = REDEEM_SCORE.latent(branch, period, num_events, num_reports, flatsize)
+                                    EXPIRING.setLatent(branch, period, latent)
+                                elif substep == 3:
+                                    deflated = REDEEM_SCORE.deflate(branch, period, num_events, num_reports, flatsize)
+                                    EXPIRING.setDeflated(branch, period, deflated)
+                                
+                                return(EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):arr)
+                                
+                                BRANCHES.incrementSubstep(branch)
+                                return(step)
                         ############
                         # end loop #
                         ############
