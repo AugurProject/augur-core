@@ -1,4 +1,5 @@
 #!/usr/bin/python2
+import warnings; warnings.simplefilter('ignore')
 import serpent
 from pyrpctools import RPC_Client, DB
 from collections import defaultdict
@@ -28,15 +29,24 @@ def get_fullname(name):
 def get_shortname(fullname):
     return os.path.split(fullname)[-1][:-3]
 
+def wait(seconds):
+    sys.stdout.write('Waiting %d seconds' % seconds)
+    sys.stdout.flush()
+    for i in range(seconds):
+        sys.stdout.write('.')
+        sys.stdout.flush()
+        time.sleep(1)
+    print
+
 def broadcast_code(evm):
     '''Sends compiled code to the network, and returns the address.'''
     address = RPC.eth_sendTransaction(sender=COINBASE, data=evm, gas=GAS)['result']
     tries = 0
     while tries < TRIES:
+        wait(BLOCKTIME)
         check = RPC.eth_getCode(address)['result']
-        if check != '0x':
+        if check != '0x' and check[2:] in evm:
             return address
-        time.sleep(BLOCKTIME)
         tries += 1
     return broadcast_code(evm)
 
