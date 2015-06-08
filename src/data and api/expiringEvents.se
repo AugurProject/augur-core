@@ -27,7 +27,7 @@ import branches as BRANCHES
 # new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
 # reporters is [reporterID][eventNum]
 # reporthash is [reporterID] = hash
-data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
+data EventsExpDates[][](numberEvents, events[], totalRepReported, totalReputation, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
 
 # atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
 # ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[w/eVotingPeriodShouldBe].numberEvents
@@ -50,6 +50,9 @@ def getNumberEvents(branch, expDateIndex):
 
 def getEvent(branch, expDateIndex, eventIndex):
 	return(self.EventsExpDates[branch][expDateIndex].events[eventIndex])
+
+def getTotalReputation(branch, expDateIndex):
+    return(self.EventsExpDates[branch][expDateIndex].totalReputation)
 
 def getTotalRepReported(branch, expDateIndex):
 	return(self.EventsExpDates[branch][expDateIndex].totalRepReported)
@@ -127,6 +130,10 @@ def setTotalRepReported(branch, expDateIndex, repReported):
 	#	return(-1)
 	self.EventsExpDates[branch][expDateIndex].totalRepReported = repReported
 	return(1)
+
+def setTotalReputation(branch, expDateIndex, totalReputation):
+    self.EventsExpDates[branch][expDateIndex].totalReputation = totalReputation
+    return(1)
 
 def setReporterBallot(branch, expDateIndex, reporterID, report: arr, reputation):
 	#if(!self.whitelist.check(msg.sender)):

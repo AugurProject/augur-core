@@ -64,6 +64,9 @@ def getRepBalance(branch, address):
 def getReporterID(branch, index):
     return(self.Reporting[branch].reputation[index].reporterID)
 
+def getTotalRep(branch):
+    return(self.Reporting[branch].totalRep)
+
 # will return 0s for array values after it's looped through all the ones you
 # have an actual balance in
 def getReputation(address):

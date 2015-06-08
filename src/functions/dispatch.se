@@ -53,6 +53,7 @@ def dispatch(branch):
                             BRANCHES.incrementPeriod(branch)
                             return(period + 1)
                         elif step == 0:
+                            EXPIRING.setTotalReputation(branch, period, REPORTING.getTotalRep(branch))
                             REDEEM_INTERPOLATE.interpolate(branch, period, num_events, num_reports, flatsize)
                         elif step == 1:
                             REDEEM_CENTER.center(branch, period, num_events, num_reports, flatsize)

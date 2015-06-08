@@ -30,7 +30,7 @@ import cash as CASH
 import info as INFO
 import payout as PAYOUT
 
-def payout(branch, period, num_events, num_reports, flatsize, total_reputation):
+def payout(branch, period, num_events, num_reports, flatsize):
     with smooth_rep = array(num_reports):
         smooth_rep = slice(EXPIRING.getSmoothRep(branch, period, outsz=num_reports), items=0, items=num_reports)
         with reports_mask = array(flatsize):
@@ -64,7 +64,7 @@ def payout(branch, period, num_events, num_reports, flatsize, total_reputation):
                     with i = 0:
                         # TODO double-check that the cash in and out adds up to 0
                         while i < num_reports:
-                            REPORTING.setRep(branch, i, reporter_payouts[i]*EXPIRING.getTotalRepReported(branch, period))
+                            REPORTING.setRep(branch, i, reporter_payouts[i]*EXPIRING.getTotalReputation(branch, period))
                             CASH.addCash(REPORTING.getReporterID(branch, i), fixed_multiply(CASH.balance(branch), reporter_payouts[i]))
                             i += 1
                         CASH.subtractCash(branch, CASH.balance(branch))

@@ -34,7 +34,7 @@ macro array_abs($a):
                     $i += 1
                 $absval
 
-def smooth(adjusted_scores:arr, reputation:arr, total_reputation, num_reports, num_events):
+def smooth(adjusted_scores:arr, reputation:arr, num_reports, num_events):
     # Weighted sum of old and new reputation vectors.
     # New: row_reward_weighted
     # Old: reputation

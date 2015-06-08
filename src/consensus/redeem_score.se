@@ -40,7 +40,10 @@ def blank(branch, period, num_events, num_reports, flatsize):
         with loading_vector = array(ne_plus_2):
             loading_vector = slice(EXPIRING.getLoadingVector(branch, period, outsz=ne_plus_2), items=0, items=ne_plus_2)
             if loading_vector[num_events+1] == 0:
-                loading_vector = slice(SCORE.blank(MAX_COMPONENTS-1, MAX_ITERATIONS, num_events, outsz=ne_plus_2), items=0, items=ne_plus_2)
+                if num_events >= MAX_COMPONENTS:
+                    loading_vector = slice(SCORE.blank(MAX_COMPONENTS-1, MAX_ITERATIONS, num_events, outsz=ne_plus_2), items=0, items=ne_plus_2)
+                else:
+                    loading_vector = slice(SCORE.blank(num_events-1, MAX_ITERATIONS, num_events, outsz=ne_plus_2), items=0, items=ne_plus_2)
             else:
                 loading_vector = slice(SCORE.blank(loading_vector[num_events+1]-1, MAX_ITERATIONS, num_events, outsz=ne_plus_2), items=0, items=ne_plus_2)
             EXPIRING.setLoadingVector(branch, period, loading_vector)
