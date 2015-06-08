@@ -34,14 +34,11 @@ macro array_abs($a):
                     $i += 1
                 $absval
 
-def smooth(adjusted_scores:arr, reputation:arr, num_reports, num_events):
+def smooth(adjusted_scores:arr, reputation:arr, total_reputation, num_reports, num_events):
     # Weighted sum of old and new reputation vectors.
     # New: row_reward_weighted
     # Old: reputation
-    with i = 0:
-        while i < num_reports:
-            reputation[i] = fixed_divide(reputation[i], TOTAL_REPUTATION)
-            i += 1
+    reputation = normalize(reputation)
     with row_reward_weighted = array(num_reports):
         with i = 0:
             while i < num_reports:
@@ -56,13 +53,14 @@ def smooth(adjusted_scores:arr, reputation:arr, num_reports, num_events):
                         row_reward_weighted[i] = adjusted_scores[i] * row_reward_weighted[i] / mean_weight
                         i += 1
             row_reward_weighted = normalize(row_reward_weighted)
-        # Freshly-calculated reward (in reputation) using exponential smoothing
+        # Freshly-calculated reward (in reputation)
         # (0.1 is the adjustable parameter "alpha", hard-coding it for now)
         with smooth_rep = array(num_reports):
             with i = 0:
                 while i < num_reports:
                     smooth_rep[i] = row_reward_weighted[i]/10 + reputation[i]*9/10
                     i += 1
+            smooth_rep = normalize(smooth_rep)
             return(smooth_rep, items=num_reports)
 
 def resolve(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports, num_events):

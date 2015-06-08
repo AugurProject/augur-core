@@ -31,13 +31,13 @@ data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoInd
 
 def init():
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
-    self.Reporting[1010101].reputation[0].repValue = 470*2^64
+    self.Reporting[1010101].reputation[0].repValue = 47*2^64
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
     self.Reporting[1010101].numberReporters = 1
 
 def faucet(branch):
     index = self.Reporting[branch].numberReporters
-    if(self.Reporting[branch].repIDtoIndex[tx.origin]!=0):
+    if self.Reporting[branch].repIDtoIndex[tx.origin] != 0 or self.Reporting[branch].reputation[0].reporterID == tx.origin:
         index = self.Reporting[branch].repIDtoIndex[tx.origin]
         self.Reporting[branch].reputation[index].repValue = 47*2^64
         self.Reporting[branch].reputation[index].reporterID = tx.origin

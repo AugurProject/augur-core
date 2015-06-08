@@ -32,19 +32,7 @@ def reputation_delta(branch, period, num_events, num_reports, flatsize):
         scores = slice(EXPIRING.getScores(branch, period, outsz=num_reports), items=0, items=num_reports)
         with nr_x_2 = num_reports * 2:
             with sets = array(nr_x_2):
-                sets = slice(ADJUST.reputation_delta(scores, num_reports, num_events, outsz=nr_x_2), items=0, items=nr_x_2)
-                # with setOne = array(num_reports):
-                #     with k = 0:
-                #         while k < num_reports:
-                #             setOne[k] = sets[k]
-                #             k += 1
-                #     with setTwo = array(num_reports):
-                #         with k = 0:
-                #             while k < num_reports:
-                #                 setTwo[k] = sets[k + num_reports]
-                #                 k += 1
-                #         EXPIRING.setSetOne(branch, period, setOne)
-                #         EXPIRING.setSetTwo(branch, period, setTwo)                        
+                sets = slice(ADJUST.reputation_delta(scores, num_reports, num_events, outsz=nr_x_2), items=0, items=nr_x_2)                      
                 EXPIRING.setSetOne(branch, period, slice(sets, items=0, items=num_reports))
                 EXPIRING.setSetTwo(branch, period, slice(sets, items=num_reports, items=nr_x_2))
                 return(1)
@@ -65,24 +53,6 @@ def weighted_delta(branch, period, num_events, num_reports, flatsize):
                             with ne_x_2 = num_events * 2:
                                 with wsets = array(ne_x_3):
                                     wsets = slice(ADJUST.weighted_delta(set1, set2, reputation, reports_filled, num_reports, num_events, outsz=ne_x_3), items=0, items=ne_x_3)
-                                    # with old = array(num_events):
-                                    #     with k = 0:
-                                    #         while k < num_events:
-                                    #             old[k] = wsets[k]
-                                    #             k += 1
-                                    #     with newOne = array(num_events):
-                                    #         with k = 0:
-                                    #             while k < num_events:
-                                    #                 newOne[k] = wsets[k + num_events]
-                                    #                 k += 1
-                                    #         with newTwo = array(num_events):
-                                    #             with k = 0:
-                                    #                 while k < num_events:
-                                    #                     newTwo[k] = wsets[k + 2*num_events]
-                                    #                     k += 1
-                                    #             EXPIRING.setOld(branch, period, old)
-                                    #             EXPIRING.setNewOne(branch, period, newOne)
-                                    #             EXPIRING.setNewTwo(branch, period, newTwo)
                                     EXPIRING.setOld(branch, period, slice(wsets, items=0, items=num_events))
                                     EXPIRING.setNewOne(branch, period, slice(wsets, items=num_events, items=ne_x_2))
                                     EXPIRING.setNewTwo(branch, period, slice(wsets, items=ne_x_2, items=ne_x_3))

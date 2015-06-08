@@ -77,18 +77,6 @@ def interpolate(branch, period, num_events, num_reports, flatsize):
                                 EXPIRING.setVSize(branch, period, flatsize)
                                 EXPIRING.setReportsFilled(branch, period, slice(reports_interp, items=0, items=flatsize))
                                 EXPIRING.setReportsMask(branch, period, slice(reports_interp, items=flatsize, items=flatsize_x_2))
-                                # with reports_filled = array(flatsize):
-                                #     with k = 0:
-                                #         while k < flatsize:
-                                #             reports_filled[k] = reports_interp[k]
-                                #             k += 1
-                                #     EXPIRING.setReportsFilled(branch, period, reports_filled)
-                                #     with reports_mask = array(flatsize):
-                                #         with k = 0:
-                                #             while k < flatsize:
-                                #                 reports_mask[k] = reports_interp[k + flatsize]
-                                #                 k += 1
-                                #         EXPIRING.setReportsMask(branch, period, reports_mask)
                                 return(1)
 
 inset('macros/constants.se')

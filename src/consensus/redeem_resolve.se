@@ -35,9 +35,9 @@ def smooth(branch, period, num_events, num_reports, flatsize):
                 reputation[i] = REPORTING.getRepByIndex(branch, i)
                 i += 1
             with adjusted_scores = array(num_reports):
-                adjusted_scores = EXPIRING.getAdjPrinComp(branch, period, outsz=num_reports)
+                adjusted_scores = slice(EXPIRING.getAdjPrinComp(branch, period, outsz=num_reports), items=0, items=num_reports)
                 with smooth_rep = array(num_reports):
-                    smooth_rep = RESOLVE.smooth(adjusted_scores, reputation, num_reports, num_events, outsz=num_reports)
+                    smooth_rep = slice(RESOLVE.smooth(adjusted_scores, reputation, EXPIRING.getTotalRepReported(branch, period), num_reports, num_events, outsz=num_reports), items=0, items=num_reports)
                     EXPIRING.setSmoothRep(branch, period, smooth_rep)
                     return(1)
 
