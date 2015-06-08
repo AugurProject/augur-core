@@ -39,8 +39,8 @@ COINBASE = RPC.eth_coinbase()['result']
 SRCPATH = 'src'
 ERROR = Style.BRIGHT + Fore.RED + 'ERROR!'
 GAS = hex(3*10**6)
-TRIES = 10
-BLOCKTIME = 12
+TRIES = 20
+BLOCKTIME = 2
 INFO = {}
 
 def error(msg):

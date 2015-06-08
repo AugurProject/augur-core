@@ -70,7 +70,7 @@ def checkQuorum(branch):
         else:
             enoughEvents = 1
             enoughUpcoming = 1
-        
+
     if(matured && enoughEvents && enoughUpcoming):
         return(1)
     else:

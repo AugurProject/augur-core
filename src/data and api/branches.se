@@ -123,7 +123,7 @@ def addMarket(branch, market):
 	return(1)
 
 def getSubstep(branch):
-    return(self.Branches[branch].substep)
+	return(self.Branches[branch].substep)
 
 def incrementSubstep(branch):
     #if(!self.whitelist.check(msg.sender)):

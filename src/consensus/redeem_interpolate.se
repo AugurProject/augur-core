@@ -29,21 +29,6 @@ import reporting as REPORTING
 import branches as BRANCHES
 import interpolate as INTERPOLATE
 
-# extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
-# EVENTS = 0xfdefa42a3209d3f320b220a234cd0cdea5e761f8
-
-# extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
-# EXPIRING = 0xf97d9fdba23823b2796446d4a45e18a7a1fdf905
-
-# extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
-# REPORTING = 0xbe774ec2c537ea1a4981529568060456a650d639
-
-# extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getSubstep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, initializeBranch:iiii:i, setStep:ii:i, setSubstep:ii:i]
-# BRANCHES = 0x3bc4532769424b380037df6f94ba52ed72636b7f
-
-# extern interpolate.se: [interpolate:aaaaa:a]
-# INTERPOLATE = 0x64354b74c50bc19f953d77c88f97da8ecd69c537
-
 # - loop through reputation && check if in reporters, if so use their
 #   report, if not use the fillin / not reported report (all zeroes)
 # - use this to make a giant array of reports to pass to self.consensus
@@ -51,8 +36,6 @@ import interpolate as INTERPOLATE
 #   reports from an actual reporter)
 # (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
 def interpolate(branch, period, num_events, num_reports, flatsize):
-    # if !WHITELIST.check(msg.sender):
-    #     return(-1)
     with reputation = array(num_reports):
         with reports = array(flatsize):
             with flatsize_x_2 = flatsize * 2:
@@ -64,7 +47,8 @@ def interpolate(branch, period, num_events, num_reports, flatsize):
                             # - if they didn't vote (simply check if they voted on first event)
                             #     do nothing (these values will be 0 by default due to Serpent array styles)
                             #     else if the reporter did report on events put their ballot into the reports array
-                            with ballot = EXPIRING.getReporterBallot(branch, period, reporterID, outsz=num_events):
+                            with ballot = array(num_events):
+                                ballot = slice(EXPIRING.getReporterBallot(branch, period, reporterID, outsz=num_events), items=0, items=num_events)
                                 if ballot[0] != 0:
                                     with j = 0:
                                         while j < num_events:
@@ -78,7 +62,7 @@ def interpolate(branch, period, num_events, num_reports, flatsize):
                                 while j < num_events:
                                     with event = EXPIRING.getEvent(branch, period, j):
                                         # YES, NO, ONE, etc. macros defined in consensus/constants.se
-                                        if fix(EVENTS.getMaxValue(event)) != YES:
+                                        if fix(EVENTS.getMaxValue(event)) != YES and EVENTS.getNumOutcomes(event) == 2:
                                             scaled[j] = 1
                                             # TODO convert maxValue and minValue to fixed-point in storage
                                             scaled_max[j] = fix(EVENTS.getMaxValue(event))
@@ -88,16 +72,25 @@ def interpolate(branch, period, num_events, num_reports, flatsize):
                                             scaled_min[j] = NO
                                             scaled_max[j] = YES
                                     j += 1
-                            with reports_interp = INTERPOLATE.interpolate(reports, reputation, scaled, scaled_max, scaled_min, outsz=flatsize_x_2):
+                            with reports_interp = array(flatsize_x_2):
+                                reports_interp = slice(INTERPOLATE.interpolate(reports, reputation, scaled, scaled_max, scaled_min, outsz=flatsize_x_2), items=0, items=flatsize_x_2)
                                 EXPIRING.setVSize(branch, period, flatsize)
-                                reports_filled = slice(reports_interp, items=0, items=flatsize)
-                                EXPIRING.setReportsFilled(branch, period, reports_filled)
+                                EXPIRING.setReportsFilled(branch, period, slice(reports_interp, items=0, items=flatsize))
                                 EXPIRING.setReportsMask(branch, period, slice(reports_interp, items=flatsize, items=flatsize_x_2))
+                                # with reports_filled = array(flatsize):
+                                #     with k = 0:
+                                #         while k < flatsize:
+                                #             reports_filled[k] = reports_interp[k]
+                                #             k += 1
+                                #     EXPIRING.setReportsFilled(branch, period, reports_filled)
+                                #     with reports_mask = array(flatsize):
+                                #         with k = 0:
+                                #             while k < flatsize:
+                                #                 reports_mask[k] = reports_interp[k + flatsize]
+                                #                 k += 1
+                                #         EXPIRING.setReportsMask(branch, period, reports_mask)
                                 return(1)
 
 inset('macros/constants.se')
 inset('macros/fixed.se')
 inset('macros/arrays.se')
-# inset('../../macros/constants.se')
-# inset('../../macros/fixed.se')
-# inset('../../macros/arrays.se')
