@@ -27,13 +27,14 @@ import branches as BRANCHES
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
-data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[])
+data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep)
 
 def init():
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
     self.Reporting[1010101].reputation[0].repValue = 47*2^64
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
     self.Reporting[1010101].numberReporters = 1
+    self.Reporting[1010101].totalRep += 47*2^64
 
 def faucet(branch):
     index = self.Reporting[branch].numberReporters
@@ -45,6 +46,7 @@ def faucet(branch):
         self.Reporting[branch].repIDtoIndex[tx.origin] = index
         self.Reporting[branch].reputation[index].repValue = 47*2^64
         self.Reporting[branch].reputation[index].reporterID = tx.origin
+        self.Reporting[branch].totalRep += 47*2^64
         self.Reporting[branch].numberReporters += 1
     return(1)
 

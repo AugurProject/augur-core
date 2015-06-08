@@ -19,6 +19,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+import branches as BRANCHES
+
 # [branchID][votingPeriod]
 # v_size = numReports * numEvents
 # reportsFilled, reportsMask, weightedCenteredData, loadingVector, scores, set1, set2, old,
@@ -26,8 +28,6 @@
 # reporters is [reporterID][eventNum]
 # reporthash is [reporterID] = hash
 data EventsExpDates[][](numberEvents, events[], totalRepReported, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
-
-import branches as BRANCHES
 
 # atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
 # ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[w/eVotingPeriodShouldBe].numberEvents
