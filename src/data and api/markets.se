@@ -167,23 +167,12 @@ macro Bq($marketID):
 def lsLmsr(marketID):
     return(lsLmsr(marketID))
 
-def price(marketID, outcome):
-    sum_q = sumList(sharesPurchased(marketID), 1, numOutcomes(marketID))
-    a = alpha(marketID)*cumScale(marketID)
-    B = a * sum_q / 2**64
-    exps = array(numOutcomes(marketID))
-    i = 0
-    t22 = 0
-    sum_exps = 0
-    while i < numOutcomes(marketID):
-        exps[i] = FXP.fx_exp(sharesPurchased(marketID)[i+1] * 2**64 / B)
-        t22 += exps[i] * sharesPurchased(marketID)[i+1] / 2**64
-        sum_exps += exps[i]
-        i += 1
-    t1 = a * FXP.fx_log(sum_exps) / 2**64
-    t21 = exps[outcome - 1] * sum_q / 2**64
-    t23 = sum_q * sum_exps / 2**64
-    return(t1 + (t21 - t22) * 2**64 / t23)
+def price(market, outcome):
+    a = lsLmsr(market)
+    sharesPurchased(market)[outcome] += 2**60
+    b = lsLmsr(market)
+    sharesPurchased(market)[outcome] -= 2**60
+    return(((b - a) * 2**64)/2**60)
 
 # check that msg.sender is one of our function contracts
 def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch):
