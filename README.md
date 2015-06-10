@@ -16,11 +16,7 @@ augur-serpent
 - for scalar events, how do you distinguish a 0 numerical response from a no-response (usually 0)?
   - idea: store answer/no-answer for each reporter separate from the report values
 
-### Redeem/consensus optimizations:
-- we will ultimately want to combine the redeem functions with their consensus counterparts! (it is inefficient to have two function calls for each step)
-- store iterations/components as contract data, instead of inside the loading vector
-
-### Scalability optimizations (hopefully these become an issue!) ... Curse you gas issues (too soon):
+### Scalability optimizations:
 - http://lightning.network/lightning-network.pdf
 - sidechains
 - randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot (V presentation on a similar strat.)
@@ -41,7 +37,7 @@ augur-serpent
 - reward whoever does close market according to gas cost (pay gas fee in cashcoin to miner)
 - work with etherex & chow (bitsquare, coineffine, mercuryex other decentralized exchanges as well)
 
-### Version 0.5 (More fun features - May and Beyond):
+### Version 0.5 (More fun features):
 - if no agreement on any outcome <65% confidence (failure to achieve certainty) this confidence is *of the rep reported* (consensus needs to take this as a param), then do over next voting period
   - have consensus push all into next voting period (this is currently known as disputed)
     - perhaps use a "times voted" thing for this
@@ -55,11 +51,8 @@ augur-serpent
 - allow people to set market base currencies - is this what V meant by mult. currency support
 - With these conditions: [1] Stalled Branch, [2] Decision-Author’s signature, one can move an event to a new Branch (use ecVerify serpent function)
 
-### Version 0.4 (Awesome fun stuff - April):
-- go over stuff in closeMarket tx
-- make sure we're not printing money anywhere on accident (e.g. event payouts and trading fees)
+### Version 0.4 (Awesome fun stuff):
 - limit orders in UI if price > or < a number and maximum amount of money (or shares?) you're willing to spend for buy, max shares to sell for sell - but what about real on chain limit orders?
 - Stop loss orders
 - update eventsExpDates so you can update & it not lose events from whatever your branch's last voting periods was, should just moveEventsToCurrentPeriod upon update perhaps have 2 vars in a contract for old addr and new, call old and get its events then move to new contract
 - consider implications of updating data/api contracts & data migration ^
-- make sure UI checks _current vote period_ not the one in branch but the actual one we _should_ be voting on even if we're behind, so if behind by 10 UI should still be asking people to vote on the what the current period should be 

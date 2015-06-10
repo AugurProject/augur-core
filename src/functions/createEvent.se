@@ -36,7 +36,7 @@ import events as EVENTS
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes):
     periodLength = BRANCHES.getPeriodLength(branch)
     if periodLength && description != 0 && expDate > block.number:
-        eventinfo = string(8*32 + len(description))
+        eventinfo = string(9*32 + len(description))
         eventinfo[0] = EVENT                                        #typecode
         eventinfo[1] = branch                                       #branchID
         eventinfo[2] = expDate                                      #expiration date
@@ -45,7 +45,8 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         eventinfo[5] = minValue                                     #minimum outcome value
         eventinfo[6] = maxValue                                     #maximum outcome value
         eventinfo[7] = numOutcomes                                  #number of outcomes
-        mcopy(eventinfo + 8*32, description, len(description))
+        eventinfo[8] = block.number
+        mcopy(eventinfo + 9*32, description, len(description))
         eventID = sha256(eventinfo, chars=len(eventinfo))
     else:
         return(-1)
