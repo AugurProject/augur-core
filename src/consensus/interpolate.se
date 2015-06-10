@@ -24,21 +24,12 @@
 
 import statistics as STATISTICS
 
-# extern statistics.se: [weighted_median:aa:i]
-
-# STATISTICS = 0x0cb1277671d162b2f5c81e9435744f63768398d0
-# # STATISTICS = create("statistics.se")
-
 def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
     # returns:
     #   reports_filled: [0, flatsize - 1]
     #   reports_mask: [flatsize, 2*flatsize - 1]
-    # reputation = normalize(reputation)
+    reputation = normalize(reputation)
     with num_reports = len(reputation):
-        with i = 0:
-            while i < num_reports:
-                reputation[i] = fixed_divide(reputation[i], TOTAL_REPUTATION)
-                i += 1
         with flatsize = len(reports):
             with flatsize_x_2 = 2*flatsize:
                 with num_events = flatsize / num_reports:
@@ -129,6 +120,3 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
 inset('macros/constants.se')
 inset('macros/fixed.se')
 inset('macros/arrays.se')
-# inset('../../macros/constants.se')
-# inset('../../macros/fixed.se')
-# inset('../../macros/arrays.se')

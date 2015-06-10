@@ -14,7 +14,6 @@ TRIES = 10
 BLOCKTIME = 12
 SRCPATH = 'src'
 GAS = hex(3*10**6)
-USE_JACKS_LAME_SHIT = False
 
 def get_fullname(name):
     '''
