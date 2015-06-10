@@ -1,55 +1,20 @@
-#!/usr/bin/python
-'''
-This script loads all serpent contracts onto the block chain using JSON RPC
-    ./load_contracts.py
-In order to use this script successfully, you need to prepare your geth node.
-Start up a geth console using:
-    geth --loglevel 0 --rpc console
-Once there, make a new account if needed:
-    admin.newAccount()
-This will ask you to set a password, which you must remember!!!
-If you don't have any money, you will have to mine for it (n is the
-number of threads you wish to use for mining):
-    admin.miner.start(n)
-And then finally you will have to unlock your account:
-    admin.unlock(eth.coinbase, undefined, 60*60*24*30*12)
-This will prompt you for the password you chose earlier.
-
-To simplify this process, you can add this alias to the appropriate file
-(your .bashrc, .bash_profile, .profile, or .bash_aliases):
-    alias geth='geth --loglevel 0 --rpc --unlock primary'
-
-Then geth will automatically do all these things whenever you run it.
-'''
+#!/usr/bin/python2
 import warnings; warnings.simplefilter('ignore')
-from colorama import init, Fore, Style; init()
-from pyrpctools import RPC_Client, DB
-from translate_externs import replace_names, show
-from collections import defaultdict
-from pyepm.api import abi_data
-from sha3 import sha3_256
 import serpent
+from pyrpctools import RPC_Client, DB
+from collections import defaultdict
+import os
+import sys
 import json
 import time
-import sys
-import os
 
 RPC = RPC_Client(default='GETH')
 COINBASE = RPC.eth_coinbase()['result']
+TRIES = 10
+BLOCKTIME = 12
 SRCPATH = 'src'
-ERROR = Style.BRIGHT + Fore.RED + 'ERROR!'
 GAS = hex(3*10**6)
-TRIES = 20
-BLOCKTIME = 2
-INFO = {}
-
-def error(msg):
-    print ERROR, msg
-    print 'ABORTING'
-    sys.exit(1)
-
-if COINBASE == '0x':
-    error('no coinbase address')
+USE_JACKS_LAME_SHIT = False
 
 def get_fullname(name):
     '''
@@ -60,28 +25,33 @@ def get_fullname(name):
         for f in files:
             if f[:-3] == name:
                 return os.path.join(directory, f)
-    error('No contract with that name: '+name)
+    raise ValueError('No such name: '+name)
 
-def get_info(name):
-    '''Returns metadata about a contract.'''
-    if name in INFO:
-        return INFO[name]
-    else:
-        compile(name)
-        return INFO[name]
+def get_shortname(fullname):
+    return os.path.split(fullname)[-1][:-3]
 
 def wait(seconds):
-    sys.stdout.write('Waiting %d seconds' % seconds)
+    sys.stdout.write('Waiting %f seconds' % seconds)
     sys.stdout.flush()
-    for i in range(seconds):
+    for i in range(10):
         sys.stdout.write('.')
         sys.stdout.flush()
-        time.sleep(1)
+        time.sleep(seconds/10.)
     print
 
-def broadcast_code(evm):
+def broadcast_code(evm, address=None):
     '''Sends compiled code to the network, and returns the address.'''
-    address = RPC.eth_sendTransaction(sender=COINBASE, data=evm, gas=GAS)['result']
+    while True:
+        response = RPC.eth_sendTransaction(sender=COINBASE, data=evm, gas=GAS)
+        if 'result' in response:
+            address = response['result']
+            break
+        else:
+            assert 'error' in response and response['error']['code'] == -32603, 'Weird JSONRPC response: ' + str(response)
+            if address is None:
+                wait(BLOCKTIME)
+            else:
+                break
     tries = 0
     while tries < TRIES:
         wait(BLOCKTIME)
@@ -89,49 +59,75 @@ def broadcast_code(evm):
         if check != '0x' and check[2:] in evm:
             return address
         tries += 1
-    return broadcast_code(evm)
+    return broadcast_code(evm, address)
+
+def get_compile_order():
+    # topological sorting! :3
+    nodes = {}
+    avail = set()
+    # for each node, build a list of it's incoming edges
+    for directory, subdirs, files in os.walk('src'):
+        for f in files:
+            incoming_edges = set() 
+            for line in open(os.path.join(directory, f)):
+                if line.startswith('import'):
+                    name = line.split(' ')[1]
+                    incoming_edges.add(name)
+            if incoming_edges:
+                nodes[f[:-3]] = incoming_edges
+            else:
+                avail.add(f[:-3])
+    sorted_nodes = []
+    while avail:
+        curr = avail.pop()
+        sorted_nodes.append(curr)
+        for item, edges in nodes.items():
+            if curr in edges:
+                edges.remove(curr)
+            if not edges:
+                avail.add(item)
+                nodes.pop(item)
+    return sorted_nodes
 
 def translate_code(fullname):
     new_code = []
-    shared_code = []
-    sigs = []
     for line in open(fullname):
-        line = line.replace('\t', ' '*4).rstrip()
+        line = line.rstrip()
         if line.startswith('import'):
             line = line.split(' ')
             name, sub = line[1], line[3]
-            info = get_info(name)
-            sigs.append(info['sig'])
-            shared_code.append(sub + ' = ' + info['address'])
+            info = json.loads(DB[name])
+            new_code.append(info['sig'])
+            new_code.append(sub + ' = ' + info['address'])
         else:
             new_code.append(line)
-    if shared_code:
-        new_code = sigs + shared_code + new_code
-    return new_code
+    return '\n'.join(new_code)
 
-def compile(name):
-    fullname = get_fullname(name)
-    print 'Processing', fullname
-    new_code = '\n'.join(translate_code(fullname))
-    fullsig = serpent.mk_full_signature(new_code)
+def compile(fullname):
+    new_code = translate_code(fullname)
     evm = '0x' + serpent.compile(new_code).encode('hex')
-    sig = serpent.mk_signature(new_code).replace('main', name, 1)
-    address = broadcast_code(evm)
-    INFO[name] = {
-        'sig':sig,
-        'fullsig':fullsig,
-        'address':address}
+    new_address = broadcast_code(evm)
+    short_name = os.path.split(fullname)[-1][:-3]
+    new_sig = serpent.mk_signature(new_code).replace('main', short_name, 1)
+    fullsig = serpent.mk_full_signature(new_code)
+    new_info = {'address':new_address, 'sig':new_sig, 'fullsig':fullsig}
+    DB[short_name] = json.dumps(new_info)
+    DB.sync()
 
 def main():
-    for directory, subdirs, files in os.walk(SRCPATH):
-        for f in files:
-            get_info(f[:-3])
-
-    print 'DUMPING INFO TO DB'
-    for name, info in INFO.items():
-        print 'DUMPING', name, 'INFO TO DB'
-        DB[name] = json.dumps(info)
-    sys.exit(0)
+    global BLOCKTIME
+    deps = get_compile_order()
+    start = 0
+    for arg in sys.argv:
+        if arg.startswith('--BLOCKTIME='):
+            BLOCKTIME = float(arg.split('=')[1])
+        if arg.startswith('--contract='):
+            start = deps.index(arg.split('=')[1])
+    for i in range(start, len(deps)):
+        fullname = get_fullname(deps[i])
+        print "compiling", fullname
+        compile(fullname)
+    return 0
 
 if __name__ == '__main__':
     main()
