@@ -10,7 +10,7 @@ import time
 
 RPC = RPC_Client(default='GETH')
 COINBASE = RPC.eth_coinbase()['result']
-TRIES = 50
+TRIES = 20
 BLOCKTIME = 12
 SRCPATH = 'src'
 GAS = hex(3*10**6)

@@ -27,7 +27,7 @@ import branches as BRANCHES
 # new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
 # reporters is [reporterID][eventNum]
 # reporthash is [reporterID] = hash
-data EventsExpDates[][](numberEvents, events[], totalRepReported, totalReputation, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[])
+data EventsExpDates[][](numberEvents, events[], totalRepReported, totalReputation, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[], reporterPayouts[])
 
 # atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
 # ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[w/eVotingPeriodShouldBe].numberEvents
@@ -116,6 +116,9 @@ def getSmoothRep(branch, expDateIndex):
 
 def getOutcomesFinal(branch, expDateIndex):
 	return(load(self.EventsExpDates[branch][expDateIndex].outcomesFinal[0], chars=32*self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
+
+def getReporterPayouts(branch, expDateIndex):
+    return(load(self.EventsExpDates[branch][expDateIndex].reporterPayouts[0], chars=32*self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
 
 # check that msg.sender is one of our function contracts
 def addEvent(branch, futurePeriod, eventID):
@@ -243,6 +246,12 @@ def setOutcomesFinal(branch, expDateIndex, outcomesFinal: arr):
 	#	return(-1)
 	save(self.EventsExpDates[branch][expDateIndex].outcomesFinal[0], outcomesFinal, chars=32*len(outcomesFinal))
 	return(1)
+
+def setReporterPayouts(branch, expDateIndex, reporterPayouts: arr):
+    #if(!self.whitelist.check(msg.sender)):
+    #   return(-1)
+    save(self.EventsExpDates[branch][expDateIndex].reporterPayouts[0], reporterPayouts, chars=32*len(reporterPayouts))
+    return(1)
 
 def setReportHash(branch, expDateIndex, reporter, reportHash):
 	#if(!self.whitelist.check(msg.sender)):
