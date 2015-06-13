@@ -1,10 +1,9 @@
 #!/usr/bin/python
 import sys
-import bsddb
+from pyrpctools import DB
 import json
 import os
 
-DB = bsddb.hashopen('build')
 SRCPATH = 'src'
 
 def error(msg):
@@ -29,7 +28,7 @@ def main():
         if line.startswith('import'):
             line = line.split(' ')
             name, sub = line[1], line[3]
-            info = json.loads(DB[name])
+            info = json.loads(DB.Get(name))
             print info['sig']
             print sub, '=', info['address']
             print

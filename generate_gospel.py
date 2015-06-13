@@ -3,9 +3,8 @@
 import sys
 import getopt
 import json
-import bsddb
+from pyrpctools import DB
 
-db = bsddb.hashopen('build')
 data_and_api = 'cash info branches events expiringEvents fxpFunctions markets reporting'.split(' ')
 functions = 'checkQuorum buy&sellShares createBranch p2pWagers sendReputation transferShares makeReports createEvent createMarket closeMarket closeMarketOne closeMarketTwo closeMarketFour closeMarketEight dispatch'.split(' ')
 consensus = 'statistics interpolate center score adjust resolve payout redeem_interpolate redeem_center redeem_score redeem_adjust redeem_resolve redeem_payout'.split(' ')
@@ -17,7 +16,7 @@ def gospelify(output="md"):
         if type(value) == list:
             if output == "json":
                 for i, contract in enumerate(value):
-                    address = json.loads(db[contract])['address']
+                    address = json.loads(DB.Get(contract))['address']
                     if contract == "buy&sellShares":
                         contract = "buyAndSellShares"
                     outstr = '    "' + contract + '": "' + address + '"'
@@ -35,7 +34,7 @@ def gospelify(output="md"):
                 print 'contract | address'
                 print '---------|--------'
                 for contract in value:
-                    print contract, '|', json.loads(db[contract])['address']
+                    print contract, '|', json.loads(DB.Get(contract))['address']
                 print
     if output == "json":
         print "}"

@@ -61,7 +61,7 @@ def confirmed_send(**kwds):
 
 if __name__ == '__main__':
     contract_name = sys.argv[1]
-    contract_addr = json.loads(DB[contract_name])['address']
+    contract_addr = json.loads(DB.Get(contract_name))['address']
     args = get_args()
     sig = get_sig(args)
     funcname = sys.argv[2]

@@ -8,6 +8,7 @@ import sys
 import json
 import time
 
+FROM_DB = False
 RPC = None
 COINBASE = None
 TRIES = 10
@@ -71,7 +72,10 @@ def get_compile_order():
         for f in files:
             incoming_edges = set() 
             for line in open(os.path.join(directory, f)):
-                if line.startswith('import'):
+                if USE_EXTERNS and line.startswith('extern'):
+                    name = line[line.find(' ')+1:line.find(':')]
+                    incoming_edges.add(name)
+                if not USE_EXTERNS and line.startswith('import'):
                     name = line.split(' ')[1]
                     incoming_edges.add(name)
             if incoming_edges:
@@ -90,6 +94,18 @@ def get_compile_order():
                 nodes.pop(item)
     return sorted_nodes
 
+def get_info(name):
+    if FROM_DB:
+        return json.loads(DB.Get(name))
+    else:
+        return INFO[name]
+
+def set_info(name, val):
+    if FROM_DB:
+        DB.Put(name, json.dumps(val))
+    else:
+        INFO[name] = val
+
 def translate_code_with_imports(fullname):
     new_code = []
     for line in open(fullname):
@@ -97,49 +113,51 @@ def translate_code_with_imports(fullname):
         if line.startswith('import'):
             line = line.split(' ')
             name, sub = line[1], line[3]
-            info = INFO[name]
+            info = get_info(name)
             new_code.append(info['sig'])
             new_code.append(sub + ' = ' + info['address'])
         else:
             new_code.append(line)
     return '\n'.join(new_code)
 
-def translate_code_wth_externs(fullname):
+def translate_code_with_externs(fullname):
     new_code = []
     last_extern = float('+inf')
     for i, line in enumerate(open(fullname)):
         line = line.rstrip()
         if line.startswith('extern'):
+            print line
             last_extern = i
             name = line[line.find(' ')+1:line.find(':')][:-3]
-            info = INFO[name]
+            info = get_info(name)
             new_code.append(info['sig'])
         elif i == last_extern + 1:
             sub = line.split(' ')[0]
             new_code.append(sub + ' = ' + info['address'])
         else:
             new_code.append(line)
-    return '\n'.join(code)
+    return '\n'.join(new_code)
 
 def compile(fullname):
     if USE_EXTERNS:
         new_code = translate_code_with_externs(fullname)
     else:
         new_code = translate_code_with_imports(fullname)
+#    print new_code
     evm = '0x' + serpent.compile(new_code).encode('hex')
     new_address = broadcast_code(evm)
     short_name = os.path.split(fullname)[-1][:-3]
     new_sig = serpent.mk_signature(new_code).replace('main', short_name, 1)
     fullsig = serpent.mk_full_signature(new_code)
     new_info = {'address':new_address, 'sig':new_sig, 'fullsig':fullsig}
-    INFO[short_name] = new_info
+    set_info(short_name, new_info)
 
 def main():
     global BLOCKTIME
     global USE_EXTERNS
     global RPC
     global COINBASE
-    deps = get_compile_order()
+    global FROM_DB
     start = 0
     verbose = False
     debug = False
@@ -147,26 +165,31 @@ def main():
         if arg.startswith('--BLOCKTIME='):
             BLOCKTIME = float(arg.split('=')[1])
         if arg.startswith('--contract='):
-            start = deps.index(arg.split('=')[1])
+            FROM_DB = True
+            start = arg.split('=')[1]
         if arg == '--use-externs':
             USE_EXTERNS = True
         if arg == '--verbose':
             verbose = True
         if arg == '--debug':
             debug = True
+    deps = get_compile_order()
+    if type(start) == str:
+        start = deps.index(start)
     RPC = RPC_Client(default='GETH', verbose=verbose, debug=debug)
     COINBASE = RPC.eth_coinbase()['result']
     for i in range(start, len(deps)):
         fullname = get_fullname(deps[i])
         print "compiling", fullname
         compile(fullname)
-    sys.stdout.write('dumping new addresses to DB')
-    sys.stdout.flush()
-    for k, v in INFO.items():
-        DB[k] = json.dumps(v)
-        sys.stdout.write('.')
+    if not FROM_DB:
+        sys.stdout.write('dumping new addresses to DB')
         sys.stdout.flush()
-    print
+        for k, v in INFO.items():
+            DB[k] = json.dumps(v)
+            sys.stdout.write('.')
+            sys.stdout.flush()
+        print
     return 0
 
 if __name__ == '__main__':
