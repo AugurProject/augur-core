@@ -186,7 +186,7 @@ def main():
         sys.stdout.write('dumping new addresses to DB')
         sys.stdout.flush()
         for k, v in INFO.items():
-            DB[k] = json.dumps(v)
+            DB.Put(k, json.dumps(v))
             sys.stdout.write('.')
             sys.stdout.flush()
         print
