@@ -40,8 +40,8 @@ import redeem_payout as REDEEM_PAYOUT
 # - what if not enough consensus or not enough events expiring upcoming
 # @return next step or loop index (see below), for final call return new voting period
 def dispatch(branch):
-    # if !BRANCHES.getStep(branch) and !QUORUM.checkQuorum(branch):
-    #     return(-1)
+    if !BRANCHES.getStep(branch) and !QUORUM.checkQuorum(branch):
+        return(-1)
     with period = BRANCHES.getVotePeriod(branch):
         with num_events = EXPIRING.getNumberEvents(branch, period):
             with num_reports = REPORTING.getNumberReporters(branch):
