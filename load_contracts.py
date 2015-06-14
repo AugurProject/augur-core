@@ -17,6 +17,7 @@ ROOT = os.path.dirname(os.path.realpath(__file__))
 SRCPATH = os.path.join(ROOT, 'src')
 GAS = hex(3*10**6)
 USE_EXTERNS = False
+PROGRESS = False
 INFO = {}
 
 os.chdir(ROOT)
@@ -54,12 +55,18 @@ def broadcast_code(evm, address=None):
         else:
             assert 'error' in response and response['error']['code'] == -32603, 'Weird JSONRPC response: ' + str(response)
             if address is None:
-                wait(BLOCKTIME)
+                if PROGRESS:
+                    wait(BLOCKTIME)
+                else:
+                    time.sleep(BLOCKTIME)
             else:
                 break
     tries = 0
     while tries < TRIES:
-        wait(BLOCKTIME)
+        if PROGRESS:
+            wait(BLOCKTIME)
+        else:
+            time.sleep(BLOCKTIME)
         check = RPC.eth_getCode(address)['result']
         if check != '0x' and check[2:] in evm:
             return address
@@ -161,6 +168,7 @@ def main():
     global RPC
     global COINBASE
     global FROM_DB
+    global PROGRESS
     start = 0
     verbose = False
     debug = False
@@ -176,6 +184,8 @@ def main():
             verbose = True
         if arg == '--debug':
             debug = True
+        if arg == '--progress':
+            PROGRESS = True
     deps = get_compile_order()
     if type(start) == str:
         start = deps.index(start)
