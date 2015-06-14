@@ -13,10 +13,13 @@ RPC = None
 COINBASE = None
 TRIES = 10
 BLOCKTIME = 12
-SRCPATH = 'src'
+ROOT = os.path.dirname(os.path.realpath(__file__))
+SRCPATH = os.path.join(ROOT, 'src')
 GAS = hex(3*10**6)
 USE_EXTERNS = False
 INFO = {}
+
+os.chdir(ROOT)
 
 def get_fullname(name):
     '''
@@ -68,7 +71,7 @@ def get_compile_order():
     nodes = {}
     avail = set()
     # for each node, build a list of it's incoming edges
-    for directory, subdirs, files in os.walk('src'):
+    for directory, subdirs, files in os.walk(SRCPATH):
         for f in files:
             incoming_edges = set() 
             for line in open(os.path.join(directory, f)):
@@ -143,7 +146,7 @@ def compile(fullname):
         new_code = translate_code_with_externs(fullname)
     else:
         new_code = translate_code_with_imports(fullname)
-#    print new_code
+    # print new_code
     evm = '0x' + serpent.compile(new_code).encode('hex')
     new_address = broadcast_code(evm)
     short_name = os.path.split(fullname)[-1][:-3]
