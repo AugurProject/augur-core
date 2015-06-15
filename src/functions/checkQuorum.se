@@ -46,8 +46,8 @@ def checkQuorum(branch):
     # push events into current period and hopefully more people will create decisions so it can actually be voted on, else repeat)
     # should 0 out stuff in if statement here
     upcomingDecisions = 0
-    b = currentPeriod
-    while b < (currentPeriod+100):
+    b = currentVotePeriod
+    while b < (currentVotePeriod+100):
         upcomingDecisions += EXPEVENTS.getNumberEvents(branch, b)
         b += 1
 
