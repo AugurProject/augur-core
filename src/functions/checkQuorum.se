@@ -59,7 +59,7 @@ def checkQuorum(branch):
         currentVotePeriod = BRANCHES.getVotePeriod(branch)
         EXPEVENTS.moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod)
     else:
-        if(EXPEVENTS.getTotalRepReported(branch, currentVotePeriod)==0):
+        if(EXPEVENTS.getTotalRepReported(branch, currentVotePeriod)==0 && matured):
             BRANCHES.incrementPeriod(branch)
             BRANCHES.setStep(branch, 0)
             BRANCHES.setSubstep(branch, 0)
