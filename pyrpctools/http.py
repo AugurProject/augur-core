@@ -1,4 +1,5 @@
 '''Low level code for socket networking + HTTP'''
+from collections import namedtuple
 import socket
 import select
 import sys

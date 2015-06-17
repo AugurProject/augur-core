@@ -13,14 +13,10 @@ RPC = None
 COINBASE = None
 TRIES = 10
 BLOCKTIME = 12
-ROOT = os.path.dirname(os.path.realpath(__file__))
-SRCPATH = os.path.join(ROOT, 'src')
+SRCPATH = 'src'
 GAS = hex(3*10**6)
 USE_EXTERNS = False
-PROGRESS = False
 INFO = {}
-
-os.chdir(ROOT)
 
 def get_fullname(name):
     '''
@@ -55,18 +51,12 @@ def broadcast_code(evm, address=None):
         else:
             assert 'error' in response and response['error']['code'] == -32603, 'Weird JSONRPC response: ' + str(response)
             if address is None:
-                if PROGRESS:
-                    wait(BLOCKTIME)
-                else:
-                    time.sleep(BLOCKTIME)
+                wait(BLOCKTIME)
             else:
                 break
     tries = 0
     while tries < TRIES:
-        if PROGRESS:
-            wait(BLOCKTIME)
-        else:
-            time.sleep(BLOCKTIME)
+        wait(BLOCKTIME)
         check = RPC.eth_getCode(address)['result']
         if check != '0x' and check[2:] in evm:
             return address
@@ -76,9 +66,11 @@ def broadcast_code(evm, address=None):
 def get_compile_order():
     # topological sorting! :3
     nodes = {}
+    nodes_copy = {}
     avail = set()
     # for each node, build a list of it's incoming edges
-    for directory, subdirs, files in os.walk(SRCPATH):
+    # incoming edges are dependencies
+    for directory, subdirs, files in os.walk('src'):
         for f in files:
             incoming_edges = set() 
             for line in open(os.path.join(directory, f)):
@@ -88,10 +80,12 @@ def get_compile_order():
                 if not USE_EXTERNS and line.startswith('import'):
                     name = line.split(' ')[1]
                     incoming_edges.add(name)
+            nodes_copy[f[:-3]] = incoming_edges.copy()
             if incoming_edges:
                 nodes[f[:-3]] = incoming_edges
             else:
                 avail.add(f[:-3])
+    
     sorted_nodes = []
     while avail:
         curr = avail.pop()
@@ -102,7 +96,7 @@ def get_compile_order():
             if not edges:
                 avail.add(item)
                 nodes.pop(item)
-    return sorted_nodes
+    return sorted_nodes, nodes_copy
 
 def get_info(name):
     if FROM_DB:
@@ -153,7 +147,7 @@ def compile(fullname):
         new_code = translate_code_with_externs(fullname)
     else:
         new_code = translate_code_with_imports(fullname)
-    # print new_code
+#    print new_code
     evm = '0x' + serpent.compile(new_code).encode('hex')
     new_address = broadcast_code(evm)
     short_name = os.path.split(fullname)[-1][:-3]
@@ -162,13 +156,22 @@ def compile(fullname):
     new_info = {'address':new_address, 'sig':new_sig, 'fullsig':fullsig}
     set_info(short_name, new_info)
 
+def optimize_deps(deps, contract_nodes, contract):
+    new_deps = [contract]
+    for i in range(deps.index(contract) + 1, len(deps)):
+        node = deps[i]
+        for new_dep in new_deps:
+            if new_dep in contract_nodes[node]:
+                new_deps.append(node)
+                break
+    return new_deps
+
 def main():
     global BLOCKTIME
     global USE_EXTERNS
     global RPC
     global COINBASE
     global FROM_DB
-    global PROGRESS
     start = 0
     verbose = False
     debug = False
@@ -184,11 +187,10 @@ def main():
             verbose = True
         if arg == '--debug':
             debug = True
-        if arg == '--progress':
-            PROGRESS = True
-    deps = get_compile_order()
+    deps, nodes = get_compile_order()
     if type(start) == str:
-        start = deps.index(start)
+        deps = optimize_deps(deps, nodes, start)
+        start = 0
     RPC = RPC_Client(default='GETH', verbose=verbose, debug=debug)
     COINBASE = RPC.eth_coinbase()['result']
     for i in range(start, len(deps)):
