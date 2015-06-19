@@ -27,7 +27,7 @@ import branches as BRANCHES
 # new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
 # reporters is [reporterID][eventNum]
 # reporthash is [reporterID] = hash
-data EventsExpDates[][](numberEvents, events[], totalRepReported, totalReputation, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[], reporterPayouts[])
+data EventsExpDates[][](numberEvents, events[], totalRepReported, totalReputation, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[], reporterPayouts[], numberReporters, reputation[])
 
 # atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
 # ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[w/eVotingPeriodShouldBe].numberEvents
@@ -126,6 +126,16 @@ def addEvent(branch, futurePeriod, eventID):
 	#	return(-1)
 	self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
 	self.EventsExpDates[branch][futurePeriod].numberEvents += 1
+	return(1)
+
+def getReputationVector(branch, expDateIndex):
+	return(load(self.EventsExpDates[branch][expDateIndex].reputation[0], chars=32*self.EventsExpDates[branch][expDateIndex].numberReporters): arr)
+
+def setReputationVector(branch, expDateIndex, reputation: arr):
+	#if(!self.whitelist.check(msg.sender)):
+	#   return(-1)
+	self.EventsExpDates[branch][expDateIndex].numberReporters = len(reputation)
+	save(self.EventsExpDates[branch][expDateIndex].reputation[0], reputation, chars=32*len(reputation))
 	return(1)
 
 def setTotalRepReported(branch, expDateIndex, repReported):
