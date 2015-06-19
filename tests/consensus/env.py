@@ -59,22 +59,40 @@ s = t.state()
 reports = np.array([[ YES, YES, YES, YES, YES, YES ],
                     [ YES, YES, YES,  NO,  NO,  NO ],
                     [  NA,  NA,  NA,  NA,  NA,  NA ]])
-reputation = [47, 47, 47]
+reports = np.array([[ YES, YES, YES, YES, YES, YES ],
+                    [ YES, YES, YES,  NO,  NO,  NO ],
+                    [  NA,  NA,  NA,  NA,  NA,  NA ],
+                    [  NA,  NA,  NA,  NA,  NA,  NA ],
+                    [  NA,  NA,  NA,  NA,  NA,  NA ],
+                    [  NA,  NA,  NA,  NA,  NA,  NA ],
+                    [  NA,  NA,  NA,  NA,  NA,  NA ],
+                    [  NA,  NA,  NA,  NA,  NA,  NA ],
+                    [  NA,  NA,  NA,  NA,  NA,  NA ],
+                    [  NA,  NA,  NA,  NA,  NA,  NA ],
+                    [  NA,  NA,  NA,  NA,  NA,  NA ],
+                    [  NA,  NA,  NA,  NA,  NA,  NA ],
+                    [  NA,  NA,  NA,  NA,  NA,  NA ],
+                    [  NA,  NA,  NA,  NA,  NA,  NA ]])
+
+# reports = np.array([[ YES, YES, YES, YES, YES, YES ],
+#                     [ YES, YES, YES,  NO,  NO,  NO ],
+#                     [ YES, YES, YES, YES, YES, YES ]])
+reputation = [47] * len(reports)
 scaled = [0, 0, 0, 0, 0, 0]
 scaled_max = np.array([YES, YES, YES, YES, YES, YES]).astype(int).tolist()
 scaled_min = np.array([ NO,  NO,  NO,  NO,  NO,  NO]).astype(int).tolist()
 
 # bigger!
-reports = np.array([#[ YES, YES, YES, YES, YES, YES,  YES, YES, YES, YES, YES, YES,  YES, YES, YES, YES, YES, YES,  YES, YES, YES, YES, YES, YES,  YES, YES, YES, YES, YES, YES,  YES, YES, YES, YES, YES, YES ],
-                    # [ YES, YES, YES,  NO,  NO,  NO,  YES, YES, YES,  NO,  NO,  NO,  YES, YES, YES,  NO,  NO,  NO,  YES, YES, YES,  NO,  NO,  NO,  YES, YES, YES,  NO,  NO,  NO,  YES, YES, YES,  NO,  NO,  NO ],
-                    [  NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA ],
-                    [  NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA ],
-                    [  NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA ],
-                    [  NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA ]])
-reputation = [47, 47, 47, 47]
-scaled = np.zeros(36).astype(int).tolist()
-scaled_max = (np.zeros(36) + 2).astype(int).tolist()
-scaled_min = (np.zeros(36) + 1).astype(int).tolist()
+# reports = np.array([[ YES, YES, YES, YES, YES, YES,  YES, YES, YES, YES, YES, YES,  YES, YES, YES, YES, YES, YES,  YES, YES, YES, YES, YES, YES,  YES, YES, YES, YES, YES, YES,  YES, YES, YES, YES, YES, YES ],
+#                     [ YES, YES, YES,  NO,  NO,  NO,  YES, YES, YES,  NO,  NO,  NO,  YES, YES, YES,  NO,  NO,  NO,  YES, YES, YES,  NO,  NO,  NO,  YES, YES, YES,  NO,  NO,  NO,  YES, YES, YES,  NO,  NO,  NO ],
+#                     [  NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA ],
+#                     [  NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA ],
+#                     [  NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA ],
+#                     [  NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA ]])
+# reputation = [47, 47, 47, 47]
+# scaled = np.zeros(36).astype(int).tolist()
+# scaled_max = (np.zeros(36) + 2).astype(int).tolist()
+# scaled_min = (np.zeros(36) + 1).astype(int).tolist()
 
 num_events = len(reports[0])
 num_reports = len(reputation)
@@ -91,22 +109,29 @@ reports = map(fix, reports.ravel())
 reputation = map(fix, reputation)
 
 c = s.abi_contract(os.path.join(ROOT, "consensus", "interpolate.se"))
-reports_interp = c.interpolate(reports, reputation, scaled, scaled_max, scaled_min, profiling=True)
-reports_interp = np.array(reports_interp)
+results = c.interpolate(reports, reputation, scaled, scaled_max, scaled_min, profiling=True)
+reports_interp = np.array(results["output"])
+gas_used = results["gas"]
+time_elapsed = results["time"]
 
 print "Interpolate:"
-print reports_interp
+print "Gas used:    ", gas_used
+print "Time elapsed:", time_elapsed 
 print
 
-# reports_filled = np.array(fold(map(unfix, reports_interp[:flatsize]), num_events))
-# reports_mask = np.array(fold(reports_interp[flatsize:], num_events)).astype(float)
+print "Output:"
+print pprint(reports_interp)
+print
 
-# print "Reports filled:"
-# print reports_filled
-# print
-# print "Reports mask:"
-# print reports_mask
-# print
+reports_filled = np.array(fold(map(unfix, reports_interp[:flatsize]), num_events))
+reports_mask = np.array(fold(reports_interp[flatsize:], num_events)).astype(float)
+
+print "Reports filled:"
+print reports_filled
+print
+print "Reports mask:"
+print reports_mask
+print
 
 # outcomes_final = np.array([ 1.0000000, 1.0000000, 1.0000000,  0.50000000,  0.50000000,  0.50000000 ])
 # smooth_rep = np.array([ 0.3666667, 0.3000000, 0.3333333 ])
