@@ -46,15 +46,14 @@ def read_ballots(branch, period, num_events, num_reports, flatsize):
                         # - if they didn't vote (simply check if they voted on first event)
                         #     do nothing (these values will be 0 by default due to Serpent array styles)
                         #     else if the reporter did report on events put their ballot into the reports array
-                        with first_ballot = slice(EXPIRING.getReporterBallot(branch, period, reporterID, outsz=num_events), items=0, items=1):
-                            if first_ballot != 0:
-                                reports[i*num_events] = first_ballot
-                                with ballot = array(num_events - 1):
-                                    ballot = slice(EXPIRING.getReporterBallot(branch, period, reporterID, outsz=num_events), items=1, items=num_events)
-                                    with j = 1:
-                                        while j < num_events:
-                                            reports[i*num_events + j] = ballot[j - 1]
-                                            j += 1
+                        reports[i*num_events] = slice(EXPIRING.getReporterBallot(branch, period, reporterID, outsz=num_events), items=0, items=1)
+                        if reports[i*num_events] != 0:
+                            with ballot = array(num_events - 1):
+                                ballot = slice(EXPIRING.getReporterBallot(branch, period, reporterID, outsz=num_events), items=1, items=num_events)
+                                with j = 1:
+                                    while j < num_events:
+                                        reports[i*num_events + j] = ballot[j - 1]
+                                        j += 1
                     i += 1
                 EXPIRING.setReportsFilled(branch, period, reports)
                 EXPIRING.setReputationVector(branch, period, reputation)
@@ -64,31 +63,32 @@ def interpolate(branch, period, num_events, num_reports, flatsize):
     with reputation = array(num_reports):
         reputation = slice(EXPIRING.getReputationVector(branch, period, outsz=num_reports), items=0, items=num_reports)
         with reports = array(flatsize):
-            reports = slice(EXPIRING.getReportsFilled(branch, period, outsz=flatsize), items=0, items=flatisze)
+            reports = slice(EXPIRING.getReportsFilled(branch, period, outsz=flatsize), items=0, items=flatsize)
             with flatsize_x_2 = flatsize * 2:
-                with scaled = array(num_events):
-                    with scaled_max = array(num_events):
-                        with scaled_min = array(num_events):
-                            with j = 0:
-                                while j < num_events:
-                                    with event = EXPIRING.getEvent(branch, period, j):
-                                        # YES, NO, ONE, etc. macros defined in consensus/constants.se
-                                        if fix(EVENTS.getMaxValue(event)) != YES and EVENTS.getNumOutcomes(event) == 2:
-                                            scaled[j] = 1
-                                            # TODO convert maxValue and minValue to fixed-point in storage
-                                            scaled_max[j] = fix(EVENTS.getMaxValue(event))
-                                            scaled_min[j] = fix(EVENTS.getMinValue(event))
-                                        # else:
-                                        #     scaled[j] = 0
-                                        #     scaled_min[j] = NO
-                                        #     scaled_max[j] = YES
-                                    j += 1
-                            with reports_interp = array(flatsize_x_2):
-                                reports_interp = slice(INTERPOLATE.interpolate(reports, reputation, scaled, scaled_max, scaled_min, outsz=flatsize_x_2), items=0, items=flatsize_x_2)
-                                EXPIRING.setVSize(branch, period, flatsize)
-                                EXPIRING.setReportsFilled(branch, period, slice(reports_interp, items=0, items=flatsize))
-                                EXPIRING.setReportsMask(branch, period, slice(reports_interp, items=flatsize, items=flatsize_x_2))
-                                return(1)
+                # with scaled = array(num_events):
+                #     with scaled_max = array(num_events):
+                #         with scaled_min = array(num_events):
+                #             with j = 0:
+                #                 while j < num_events:
+                #                     with event = EXPIRING.getEvent(branch, period, j):
+                #                         # YES, NO, ONE, etc. macros defined in consensus/constants.se
+                #                         if fix(EVENTS.getMaxValue(event)) != YES and EVENTS.getNumOutcomes(event) == 2:
+                #                             scaled[j] = 1
+                #                             # TODO convert maxValue and minValue to fixed-point in storage
+                #                             scaled_max[j] = fix(EVENTS.getMaxValue(event))
+                #                             scaled_min[j] = fix(EVENTS.getMinValue(event))
+                #                         # else:
+                #                         #     scaled[j] = 0
+                #                         #     scaled_min[j] = NO
+                #                         #     scaled_max[j] = YES
+                #                     j += 1
+                with reports_interp = array(flatsize_x_2):
+                    reports_interp = slice(INTERPOLATE.interpolate(reports, reputation, outsz=flatsize_x_2), items=0, items=flatsize_x_2)
+                    # reports_interp = slice(INTERPOLATE.interpolate(reports, reputation, scaled, scaled_max, scaled_min, outsz=flatsize_x_2), items=0, items=flatsize_x_2)
+                    EXPIRING.setVSize(branch, period, flatsize)
+                    EXPIRING.setReportsFilled(branch, period, slice(reports_interp, items=0, items=flatsize))
+                    EXPIRING.setReportsMask(branch, period, slice(reports_interp, items=flatsize, items=flatsize_x_2))
+                    return(1)
 
 inset('macros/constants.se')
 inset('macros/fixed.se')
