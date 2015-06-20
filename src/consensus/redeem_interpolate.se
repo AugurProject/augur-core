@@ -29,6 +29,18 @@ import reporting as REPORTING
 import branches as BRANCHES
 import interpolate as INTERPOLATE
 
+data Interpolate[][](numberReporters, reputation[])
+
+def get_reputation_vector(branch, period):
+    return(load(self.Interpolate[branch][period].reputation[0], chars=32*self.Interpolate[branch][period].numberReporters): arr)
+
+def set_reputation_vector(branch, period, reputation: arr):
+    #if(!self.whitelist.check(msg.sender)):
+    #   return(-1)
+    self.Interpolate[branch][period].numberReporters = len(reputation)
+    save(self.Interpolate[branch][period].reputation[0], reputation, chars=32*len(reputation))
+    return(1)
+
 # - loop through reputation && check if in reporters, if so use their
 #   report, if not use the fillin / not reported report (all zeroes)
 # - use this to make a giant array of reports to pass to self.consensus
@@ -56,12 +68,12 @@ def read_ballots(branch, period, num_events, num_reports, flatsize):
                                         j += 1
                     i += 1
                 EXPIRING.setReportsFilled(branch, period, reports)
-                EXPIRING.setReputationVector(branch, period, reputation)
+                self.set_reputation_vector(branch, period, reputation)
                 return(1)
 
 def interpolate(branch, period, num_events, num_reports, flatsize):
     with reputation = array(num_reports):
-        reputation = slice(EXPIRING.getReputationVector(branch, period, outsz=num_reports), items=0, items=num_reports)
+        reputation = slice(self.get_reputation_vector(branch, period, outsz=num_reports), items=0, items=num_reports)
         with reports = array(flatsize):
             reports = slice(EXPIRING.getReportsFilled(branch, period, outsz=flatsize), items=0, items=flatsize)
             with flatsize_x_2 = flatsize * 2:

@@ -128,16 +128,6 @@ def addEvent(branch, futurePeriod, eventID):
 	self.EventsExpDates[branch][futurePeriod].numberEvents += 1
 	return(1)
 
-def getReputationVector(branch, expDateIndex):
-	return(load(self.EventsExpDates[branch][expDateIndex].reputation[0], chars=32*self.EventsExpDates[branch][expDateIndex].numberReporters): arr)
-
-def setReputationVector(branch, expDateIndex, reputation: arr):
-	#if(!self.whitelist.check(msg.sender)):
-	#   return(-1)
-	self.EventsExpDates[branch][expDateIndex].numberReporters = len(reputation)
-	save(self.EventsExpDates[branch][expDateIndex].reputation[0], reputation, chars=32*len(reputation))
-	return(1)
-
 def setTotalRepReported(branch, expDateIndex, repReported):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
