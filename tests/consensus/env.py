@@ -109,7 +109,8 @@ reports = map(fix, reports.ravel())
 reputation = map(fix, reputation)
 
 c = s.abi_contract(os.path.join(ROOT, "consensus", "interpolate.se"))
-results = c.interpolate(reports, reputation, scaled, scaled_max, scaled_min, profiling=True)
+# results = c.interpolate(reports, reputation, scaled, scaled_max, scaled_min, profiling=True)
+results = c.interpolate(reports, reputation, profiling=True)
 reports_interp = np.array(results["output"])
 gas_used = results["gas"]
 time_elapsed = results["time"]

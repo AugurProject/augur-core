@@ -55,72 +55,115 @@ def interpolate(reports:arr, reputation:arr):
                         with reports_interp = array(flatsize_x_2):
                             with missing_values = 0:
 
-                                # set up reports mask
-                                i = 0
-                                while i < flatsize:
-                                    reports_interp[i] = reports[i]
-                                    if reports[i] == 0:
-                                        reports_interp[i + flatsize] = 1
-                                        missing_values += 1
-                                    i += 1
-                                if missing_values > 0:
-                                    num_present = array(num_events)
-                                    i = 0
-                                    while i < num_events:
-                                        j = 0
-                                        while j < num_reports:
-                                            if reports[i + j*num_events] != 0:
-                                                num_present[i] += 1
-                                            j += 1
+                                # # set up reports mask
+                                # i = 0
+                                # while i < flatsize:
+                                #     reports_interp[i] = reports[i]
+                                #     if reports[i] == 0:
+                                #         reports_interp[i + flatsize] = 1
+                                #         missing_values += 1
+                                #     i += 1
+                                
+                                with i = 0:
+                                    while i < flatsize:
+                                        reports_interp[i] = reports[i]
+                                        if reports[i] == 0:
+                                            reports_interp[i + flatsize] = 1
+                                            missing_values = 1
                                         i += 1
-                                    i = 0
-                                    while i < num_events:
-                                        if num_present[i] < num_reports:
-                                            total_active_reputation = 0
-                                            active_reputation = array(num_present[i])
-                                            active_reports = array(num_present[i])
-                                            active_index = 0
-                                            nan_indices = array(num_reports)
-                                            j = 0
+                                # every event must be calculated, if any missing values
+                                # b/c can only be missing ALL values
+                                if missing_values:
+                                    with active_rep = 0:
+                                        with j = 0:
                                             while j < num_reports:
-                                                nan_indices[j] = num_reports
+                                                if reports[j*num_events] != 0:
+                                                    active_rep += reputation[j]
                                                 j += 1
-                                            j = 0
-                                            while j < num_reports:
-                                                idx = i + j*num_events
-                                                if reports[idx] != 0:
-                                                    total_active_reputation += reputation[j]
-                                                    active_reputation[active_index] = reputation[j]
-                                                    active_reports[active_index] = reports[idx]
-                                                    active_index += 1
-                                                else:
-                                                    nan_indices[j] = j
-                                                j += 1
-                                            guess = 0
-                                            # if scaled[i] == 0:
-                                            j = 0
-                                            while j < num_present[i]:
-                                                active_reputation[j] = fixed_divide(active_reputation[j], total_active_reputation)
-                                                guess += fixed_multiply(active_reputation[j], active_reports[j])
-                                                j += 1
-                                            guess = catch(guess)
-                                            # else:
-                                            #     j = 0
-                                            #     while j < num_present[i]:
-                                            #         active_reputation[j] = fixed_divide(active_reputation[j], total_active_reputation)
-                                            #         j += 1
-                                            #     guess = STATISTICS.weighted_median(active_reports, active_reputation)
-                                            j = 0
-                                            while j < num_reports:
-                                                if nan_indices[j] < num_reports:
-                                                    reports_interp[i + nan_indices[j]*num_events] = guess
-                                                j += 1
-                                        i += 1
+                                        with replacements = array(num_events):
+                                            with i = 0:
+                                                while i < num_events:
+                                                    # weighted average of other reports
+                                                    j = 0
+                                                    while j < num_reports:
+                                                        replacements[i] += reputation[j] * reports[i + j*num_events] / active_rep
+                                                        j += 1
+                                                    replacements[i] = catch(replacements[i])
+                                                    i += 1
+                                                with j = 0:
+                                                    while j < num_reports:
+                                                        idx = j * num_events
+                                                        if reports[idx] == 0:
+                                                            i = 0
+                                                            while i < num_events:
+                                                                reports_interp[i + idx] = replacements[i]
+                                                                i += 1
+                                                        j += 1
                                 else:
                                     i = 0
                                     while i < flatsize:
                                         reports_interp[i] = reports[i]
                                         i += 1
+
+
+                                # if missing_values > 0:
+                                #     num_present = array(num_events)
+                                #     i = 0
+                                #     while i < num_events:
+                                #         j = 0
+                                #         while j < num_reports:
+                                #             if reports[i + j*num_events] != 0:
+                                #                 num_present[i] += 1
+                                #             j += 1
+                                #         i += 1
+                                #     i = 0
+                                #     while i < num_events:
+                                #         if num_present[i] < num_reports:
+                                #             total_active_reputation = 0
+                                #             active_reputation = array(num_present[i])
+                                #             active_reports = array(num_present[i])
+                                #             active_index = 0
+                                #             nan_indices = array(num_reports)
+                                #             j = 0
+                                #             while j < num_reports:
+                                #                 nan_indices[j] = num_reports
+                                #                 j += 1
+                                #             j = 0
+                                #             while j < num_reports:
+                                #                 idx = i + j*num_events
+                                #                 if reports[idx] != 0:
+                                #                     total_active_reputation += reputation[j]
+                                #                     active_reputation[active_index] = reputation[j]
+                                #                     active_reports[active_index] = reports[idx]
+                                #                     active_index += 1
+                                #                 else:
+                                #                     nan_indices[j] = j
+                                #                 j += 1
+                                #             guess = 0
+                                #             # if scaled[i] == 0:
+                                #             j = 0
+                                #             while j < num_present[i]:
+                                #                 active_reputation[j] = fixed_divide(active_reputation[j], total_active_reputation)
+                                #                 guess += fixed_multiply(active_reputation[j], active_reports[j])
+                                #                 j += 1
+                                #             guess = catch(guess)
+                                #             # else:
+                                #             #     j = 0
+                                #             #     while j < num_present[i]:
+                                #             #         active_reputation[j] = fixed_divide(active_reputation[j], total_active_reputation)
+                                #             #         j += 1
+                                #             #     guess = STATISTICS.weighted_median(active_reports, active_reputation)
+                                #             j = 0
+                                #             while j < num_reports:
+                                #                 if nan_indices[j] < num_reports:
+                                #                     reports_interp[i + nan_indices[j]*num_events] = guess
+                                #                 j += 1
+                                #         i += 1
+                                # else:
+                                #     i = 0
+                                #     while i < flatsize:
+                                #         reports_interp[i] = reports[i]
+                                #         i += 1
                                 return(reports_interp: arr)
 
 inset('macros/constants.se')
