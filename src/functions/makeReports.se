@@ -40,6 +40,7 @@ import reporting as REPORTING
     # -1: report isn't long enough
     # -2: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
     # -3: hash doesn't match
+    # -4: no rep
 def report(branch, report:arr, votePeriod, salt):
     # make sure the branch exists
     repIndex = REPORTING.repIDToIndex(branch, tx.origin)
@@ -50,6 +51,8 @@ def report(branch, report:arr, votePeriod, salt):
         # need report length to be same as number of items in the current eventexpdates voting period events!
         if(len(report)!=EXPEVENTS.getNumberEvents(branch, votePeriod)):
             return(-1)
+        if(REPORTING.getRepBalance(branch, tx.origin)==0):
+            return(-4)
 
         realHash = EXPEVENTS.getReportHash(branch, votePeriod, tx.origin)
         hashInfo = array(len(report) + 2)
