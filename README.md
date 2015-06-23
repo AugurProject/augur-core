@@ -7,6 +7,7 @@ augur-serpent
 - #def moveEvent(event, newBranch, authorSignature):
 - check that msg.sender is one of our function contracts
 - make data EXTERNs updatable
+- allow Chinese chars
 
 ### Bugs:
 - what if a scalar has a .5 actual value outcome
@@ -35,7 +36,7 @@ augur-serpent
 
 ### Once eth supports it:
 - reward whoever does close market according to gas cost (pay gas fee in cashcoin to miner)
-- work with etherex & chow (bitsquare, coineffine, mercuryex other decentralized exchanges as well)
+- work with etherex & chow (bitsquare, coineffine, mercuryex other decentralized exchanges as well) / stablecoins
 
 ### Version 0.5 (More fun features):
 - if no agreement on any outcome <65% confidence (failure to achieve certainty) this confidence is *of the rep reported* (consensus needs to take this as a param), then do over next voting period
