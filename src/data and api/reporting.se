@@ -74,7 +74,7 @@ def getReputation(address):
     if(address):
         branches = array(2*branchListCount)
         branchList = array(branchListCount)
-        branchList = BRANCHES.getBranches(outsz=branchListCount)
+        branchList = BRANCHES.getBranches(outitems=branchListCount)
         i = 0
         b = 0
         while i < branchListCount:
@@ -89,7 +89,7 @@ def getReputation(address):
         address = tx.origin
         branches = array(2*branchListCount)
         branchList = array(branchListCount)
-        branchList = BRANCHES.getBranches(outsz=branchListCount)
+        branchList = BRANCHES.getBranches(outitems=branchListCount)
         i = 0
         b = 0
         while i < branchListCount:

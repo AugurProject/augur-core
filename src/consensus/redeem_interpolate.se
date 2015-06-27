@@ -47,11 +47,11 @@ def read_ballots(branch, period, num_events, num_reports, flatsize):
                         # - if they didn't vote (simply check if they voted on first event)
                         #     do nothing (these values will be 0 by default due to Serpent array styles)
                         #     else if the reporter did report on events put their ballot into the reports array
-                        # reports[i*num_events] = slice(EXPIRING.getReporterBallot(branch, period, reporterID, outsz=num_events), items=0, items=1)
+                        # reports[i*num_events] = slice(EXPIRING.getReporterBallot(branch, period, reporterID, outitems=num_events), items=0, items=1)
                         reports[i*num_events] = EXPIRING.getReport(branch, period, reporterID, 0)
                         if reports[i*num_events] != 0:
                             with ballot = array(num_events - 1):
-                                ballot = slice(EXPIRING.getReporterBallot(branch, period, reporterID, outsz=num_events), items=1, items=num_events)
+                                ballot = slice(EXPIRING.getReporterBallot(branch, period, reporterID, outitems=num_events), items=1, items=num_events)
                                 with j = 1:
                                     while j < num_events:
                                         reports[i*num_events + j] = ballot[j - 1]

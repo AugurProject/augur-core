@@ -50,10 +50,10 @@ def center(branch, period, num_events, num_reports, flatsize):
                                     scaled_max[j] = YES
                             j += 1
                     with reports_filled = array(flatsize):
-                        reports_filled = slice(EXPIRING.getReportsFilled(branch, period, outsz=flatsize), items=0, items=flatsize)
+                        reports_filled = slice(EXPIRING.getReportsFilled(branch, period, outitems=flatsize), items=0, items=flatsize)
                         with lflatsize = flatsize + num_events + 2:
                             with result = array(lflatsize):
-                                result = slice(CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, MAX_COMPONENTS, outsz=lflatsize), items=0, items=lflatsize)
+                                result = slice(CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, MAX_COMPONENTS, outitems=lflatsize), items=0, items=lflatsize)
                                 with wcd = array(flatsize):
                                     wcd = slice(result, items=0, items=flatsize)
                                     EXPIRING.setWeightedCenteredData(branch, period, wcd)
@@ -69,12 +69,12 @@ def covariance(branch, period, num_events, num_reports, flatsize):
                 reputation[i] = REPORTING.getRepByIndex(branch, i)
                 i += 1
         with reptokens = array(num_reports):
-            reptokens = slice(CENTER.tokenize(reputation, num_reports, outsz=num_reports), items=0, items=num_reports)
+            reptokens = slice(CENTER.tokenize(reputation, num_reports, outitems=num_reports), items=0, items=num_reports)
             with wcd = array(flatsize):
-                wcd = slice(EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize), items=0, items=flatsize)
+                wcd = slice(EXPIRING.getWeightedCenteredData(branch, period, outitems=flatsize), items=0, items=flatsize)
                 EXPIRING.setDeflated(branch, period, wcd)
                 with covrow = array(num_events):
-                    covrow = slice(CENTER.covariance(wcd, reptokens, num_reports, num_events, outsz=num_events), items=0, items=num_events)
+                    covrow = slice(CENTER.covariance(wcd, reptokens, num_reports, num_events, outitems=num_events), items=0, items=num_events)
                     EXPIRING.setCovarianceMatrixRow(branch, period, covrow)
                     return(1)
 

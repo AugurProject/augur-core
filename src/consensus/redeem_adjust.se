@@ -29,30 +29,30 @@ import adjust as ADJUST
 
 def reputation_delta(branch, period, num_events, num_reports, flatsize):
     with scores = array(num_reports):
-        scores = slice(EXPIRING.getScores(branch, period, outsz=num_reports), items=0, items=num_reports)
+        scores = slice(EXPIRING.getScores(branch, period, outitems=num_reports), items=0, items=num_reports)
         with nr_x_2 = num_reports * 2:
             with sets = array(nr_x_2):
-                sets = slice(ADJUST.reputation_delta(scores, num_reports, num_events, outsz=nr_x_2), items=0, items=nr_x_2)                      
+                sets = slice(ADJUST.reputation_delta(scores, num_reports, num_events, outitems=nr_x_2), items=0, items=nr_x_2)                      
                 EXPIRING.setSetOne(branch, period, slice(sets, items=0, items=num_reports))
                 EXPIRING.setSetTwo(branch, period, slice(sets, items=num_reports, items=nr_x_2))
                 return(1)
 
 def weighted_delta(branch, period, num_events, num_reports, flatsize):
     with reports_filled = array(flatsize):
-        reports_filled = slice(EXPIRING.getReportsFilled(branch, period, outsz=flatsize), items=0, items=flatsize)
+        reports_filled = slice(EXPIRING.getReportsFilled(branch, period, outitems=flatsize), items=0, items=flatsize)
         with reputation = array(num_reports):
             with i = 0:
                 while i < num_reports:
                     reputation[i] = REPORTING.getRepByIndex(branch, i)
                     i += 1
                 with set1 = array(num_reports):
-                    set1 = slice(EXPIRING.getSetOne(branch, period, outsz=num_reports), items=0, items=num_reports)
+                    set1 = slice(EXPIRING.getSetOne(branch, period, outitems=num_reports), items=0, items=num_reports)
                     with set2 = array(num_reports):
-                        set2 = slice(EXPIRING.getSetTwo(branch, period, outsz=num_reports), items=0, items=num_reports)
+                        set2 = slice(EXPIRING.getSetTwo(branch, period, outitems=num_reports), items=0, items=num_reports)
                         with ne_x_3 = num_events * 3:
                             with ne_x_2 = num_events * 2:
                                 with wsets = array(ne_x_3):
-                                    wsets = slice(ADJUST.weighted_delta(set1, set2, reputation, reports_filled, num_reports, num_events, outsz=ne_x_3), items=0, items=ne_x_3)
+                                    wsets = slice(ADJUST.weighted_delta(set1, set2, reputation, reports_filled, num_reports, num_events, outitems=ne_x_3), items=0, items=ne_x_3)
                                     EXPIRING.setOld(branch, period, slice(wsets, items=0, items=num_events))
                                     EXPIRING.setNewOne(branch, period, slice(wsets, items=num_events, items=ne_x_2))
                                     EXPIRING.setNewTwo(branch, period, slice(wsets, items=ne_x_2, items=ne_x_3))
@@ -60,19 +60,19 @@ def weighted_delta(branch, period, num_events, num_reports, flatsize):
 
 def select_scores(branch, period, num_events, num_reports, flatsize):
     with old = array(num_events):
-        old = slice(EXPIRING.returnOld(branch, period, outsz=num_events), items=0, items=num_events)
+        old = slice(EXPIRING.returnOld(branch, period, outitems=num_events), items=0, items=num_events)
         with new1 = array(num_events):
-            new1 = slice(EXPIRING.getNewOne(branch, period, outsz=num_events), items=0, items=num_events)
+            new1 = slice(EXPIRING.getNewOne(branch, period, outitems=num_events), items=0, items=num_events)
             with new2 = array(num_events):
-                new2 = slice(EXPIRING.getNewTwo(branch, period, outsz=num_events), items=0, items=num_events)
+                new2 = slice(EXPIRING.getNewTwo(branch, period, outitems=num_events), items=0, items=num_events)
                 with set1 = array(num_reports):
-                    set1 = slice(EXPIRING.getSetOne(branch, period, outsz=num_reports), items=0, items=num_reports)
+                    set1 = slice(EXPIRING.getSetOne(branch, period, outitems=num_reports), items=0, items=num_reports)
                     with set2 = array(num_reports):
-                        set2 = slice(EXPIRING.getSetTwo(branch, period, outsz=num_reports), items=0, items=num_reports)
+                        set2 = slice(EXPIRING.getSetTwo(branch, period, outitems=num_reports), items=0, items=num_reports)
                         with scores = array(num_reports):
-                            scores = slice(EXPIRING.getScores(branch, period, outsz=num_reports), items=0, items=num_reports)
+                            scores = slice(EXPIRING.getScores(branch, period, outitems=num_reports), items=0, items=num_reports)
                             with adjusted_scores = array(num_reports):
-                                adjusted_scores = slice(ADJUST.select_scores(old, new1, new2, set1, set2, scores, num_reports, num_events, outsz=num_reports), items=0, items=num_reports)
+                                adjusted_scores = slice(ADJUST.select_scores(old, new1, new2, set1, set2, scores, num_reports, num_events, outitems=num_reports), items=0, items=num_reports)
                                 EXPIRING.setAdjPrinComp(branch, period, adjusted_scores)
                                 return(1)
 

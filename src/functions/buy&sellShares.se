@@ -59,7 +59,7 @@ def buyShares(branch, market, outcome, amount, nonce):
     currentPeriod = block.number / BRANCHES.getPeriodLength(branch)
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     numEvents = MARKETS.getNumEvents(market)
-    events = MARKETS.getMarketEvents(market, outsz=numEvents)
+    events = MARKETS.getMarketEvents(market, outitems=numEvents)
     if(currentPeriod >= (currentVotePeriod+3)):
         c = 0
         while c < numEvents:
@@ -123,7 +123,7 @@ def sellShares(branch, market, outcome, amount, nonce):
     currentPeriod = block.number / BRANCHES.getPeriodLength(branch)
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     numEvents = MARKETS.getNumEvents(market)
-    events = MARKETS.getMarketEvents(market, outsz=numEvents)
+    events = MARKETS.getMarketEvents(market, outitems=numEvents)
     if((currentPeriod + 3) >= currentVotePeriod):
         c = 0
         while c < numEvents:

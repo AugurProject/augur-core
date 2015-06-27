@@ -51,7 +51,7 @@ def closeMarket(branch, market):
         # (max poss. winning outcomes is 8 outcomes total all scalar multidimensional)
         winningOutcomes = array(8)
         events = array(3)
-        events = MARKETS.getMarketEvents(market, outsz=3)
+        events = MARKETS.getMarketEvents(market, outitems=3)
         while n < numberEvents:
             fxpOutcome = EVENTS.getOutcome(events[n])
             if(fxpOutcome==0):

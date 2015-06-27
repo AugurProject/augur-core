@@ -61,7 +61,7 @@ macro binary_mock($branch, $period):
                         EXPIRING.setVSize($branch, $period, $flatsize)
                         with $i = 0:
                             while $i < $num_reports:
-                                with $ballot = EXPIRING.getReporterBallot($branch, $period, $i, outsz=$num_events):
+                                with $ballot = EXPIRING.getReporterBallot($branch, $period, $i, outitems=$num_events):
                                     with $j = 0:
                                         while $j < $num_events:
                                             if $reports[$i][$j] != $ballot[$j]:
@@ -106,7 +106,7 @@ macro scalar_mock($branch, $period):
                         EXPIRING.setVSize($branch, $period, $flatsize)
                         with $i = 0:
                             while $i < $num_reports:
-                                with $ballot = EXPIRING.getReporterBallot($branch, $period, $i, outsz=$num_events):
+                                with $ballot = EXPIRING.getReporterBallot($branch, $period, $i, outitems=$num_events):
                                     with $j = 0:
                                         while $j < $num_events:
                                             if $reports[$i][$j] != $ballot[$j]:

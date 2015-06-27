@@ -87,7 +87,7 @@ def redeem(branch, period, num_events, num_reports, flatsize, mockNumber):
                             # - if they didn't vote (simply check if they voted on first event)
                             #     do nothing (these values will be 0 by default due to Serpent array styles)
                             #     else if the reporter did report on events put their ballot into the reports array
-                            with ballot = EXPIRING.getReporterBallot(branch, period, i, outsz=num_events):
+                            with ballot = EXPIRING.getReporterBallot(branch, period, i, outitems=num_events):
                                 if ballot != 0:
                                     with j = 0:
                                         while j < num_events:
@@ -111,7 +111,7 @@ def redeem(branch, period, num_events, num_reports, flatsize, mockNumber):
                                             scaled_min[j] = NO
                                             scaled_max[j] = YES
                                     j += 1
-                            with reports_interp = INTERPOLATE.interpolate(reports, reputation, scaled, scaled_max, scaled_min, outsz=flatsize_x_2):
+                            with reports_interp = INTERPOLATE.interpolate(reports, reputation, scaled, scaled_max, scaled_min, outitems=flatsize_x_2):
                                 EXPIRING.setVSize(branch, period, flatsize)
                                 reports_filled = slice(reports_interp, items=0, items=flatsize)
                                 EXPIRING.setReportsFilled(branch, period, reports_filled)
@@ -144,15 +144,15 @@ def redeem(branch, period, num_events, num_reports, flatsize, mockNumber):
                                     scaled_min[j] = NO
                                     scaled_max[j] = YES
                             j += 1
-                    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=flatsize):
+                    with reports_filled = EXPIRING.getReportsFilled(branch, period, outitems=flatsize):
                         with lflatsize = flatsize + num_events + 2:
-                            with result = CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, MAX_COMPONENTS, outsz=lflatsize):
+                            with result = CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, MAX_COMPONENTS, outitems=lflatsize):
                                 wcd = slice(result, items=0, items=flatsize)
                                 EXPIRING.setWeightedCenteredData(branch, period, wcd)
                                 loading_vector = slice(result, items=flatsize, items=lflatsize)
                                 EXPIRING.setLoadingVector(branch, period, loading_vector)
-                                # return(EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize):arr)
-                                # return(EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):arr)
+                                # return(EXPIRING.getWeightedCenteredData(branch, period, outitems=flatsize):arr)
+                                # return(EXPIRING.getLoadingVector(branch, period, outitems=num_events+2):arr)
                                 # return(1)
 
     # covariance
@@ -161,13 +161,13 @@ def redeem(branch, period, num_events, num_reports, flatsize, mockNumber):
             while i < num_reports:
                 reputation[i] = REPORTING.getRepByIndex(branch, i)
                 i += 1
-        with reptokens = CENTER.tokenize(reputation, num_reports, outsz=num_reports):
-            with wcd = EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize):
-                with covrow = CENTER.covariance(wcd, reptokens, num_reports, num_events, outsz=num_events):
+        with reptokens = CENTER.tokenize(reputation, num_reports, outitems=num_reports):
+            with wcd = EXPIRING.getWeightedCenteredData(branch, period, outitems=flatsize):
+                with covrow = CENTER.covariance(wcd, reptokens, num_reports, num_events, outitems=num_events):
                     EXPIRING.setCovarianceMatrixRow(branch, period, covrow)
                     EXPIRING.setDeflated(branch, period, wcd)
-                    # return(EXPIRING.getCovarianceMatrixRow(branch, period, outsz=num_events):arr)
-                    # return(EXPIRING.getDeflated(branch, period, outsz=flatsize):arr)
+                    # return(EXPIRING.getCovarianceMatrixRow(branch, period, outitems=num_events):arr)
+                    # return(EXPIRING.getDeflated(branch, period, outitems=flatsize):arr)
                     # return(1)
 
     ############
@@ -185,21 +185,21 @@ def redeem(branch, period, num_events, num_reports, flatsize, mockNumber):
             # - if element ne_plus_2 is zero, we're on the first component, so set the last
             #   element equal to MAX_COMPONENTS
             # - otherwise, decrement the last element
-            with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+            with loading_vector = EXPIRING.getLoadingVector(branch, period, outitems=num_events+2):
                 if loading_vector[num_events+1] == 0:
-                    EXPIRING.setLoadingVector(branch, period, SCORE.blank(MAX_COMPONENTS, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
+                    EXPIRING.setLoadingVector(branch, period, SCORE.blank(MAX_COMPONENTS, MAX_ITERATIONS, num_events, outitems=ne_plus_2))
                 else:
-                    EXPIRING.setLoadingVector(branch, period, SCORE.blank(loading_vector[num_events+1]-1, MAX_ITERATIONS, num_events, outsz=ne_plus_2))
+                    EXPIRING.setLoadingVector(branch, period, SCORE.blank(loading_vector[num_events+1]-1, MAX_ITERATIONS, num_events, outitems=ne_plus_2))
                 # BRANCHES.incrementSubstep(branch)
-                # return(EXPIRING.getLoadingVector(branch, period, outsz=ne_plus_2):arr)
+                # return(EXPIRING.getLoadingVector(branch, period, outitems=ne_plus_2):arr)
                 # return(1)
 
         # loadings
         n = 0
         while n < MAX_ITERATIONS:
             with ne_plus_2 = num_events + 2:
-                with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=ne_plus_2):
-                    with deflated =  EXPIRING.getDeflated(branch, period, outsz=flatsize):
+                with loading_vector = EXPIRING.getLoadingVector(branch, period, outitems=ne_plus_2):
+                    with deflated =  EXPIRING.getDeflated(branch, period, outitems=flatsize):
                         with reputation = array(num_reports):
                             with i = 0:
                                 while i < num_reports:
@@ -208,90 +208,90 @@ def redeem(branch, period, num_events, num_reports, flatsize, mockNumber):
                             # Iteratively diagonalize the weighted centered data matrix,
                             # deflating (subtracting out the eigenvectors) the matrix after each
                             # eigenvector is found
-                            loading_vector = SCORE.loadings(loading_vector, deflated, reputation, num_reports, num_events, outsz=ne_plus_2)
+                            loading_vector = SCORE.loadings(loading_vector, deflated, reputation, num_reports, num_events, outitems=ne_plus_2)
                             EXPIRING.setLoadingVector(branch, period, loading_vector)
                             # if loading_vector[num_events] == 0:
                             #     return(0)
                             # else:
                             #     return(1)
             n += 1
-        # return(EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):arr)
+        # return(EXPIRING.getLoadingVector(branch, period, outitems=num_events+2):arr)
 
         # latent
-        with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
-            with covrow = EXPIRING.getCovarianceMatrixRow(branch, period, outsz=num_events):
+        with loading_vector = EXPIRING.getLoadingVector(branch, period, outitems=num_events+2):
+            with covrow = EXPIRING.getCovarianceMatrixRow(branch, period, outitems=num_events):
                 EXPIRING.setLatent(branch, period, SCORE.latent(covrow, loading_vector, num_events))
                 EXPIRING.setCovarianceMatrixRow(branch, period, covrow)
                 # log_fixed(EXPIRING.getLatent(branch, period))
-                # return(EXPIRING.getCovarianceMatrixRow(branch, period, outsz=num_events):arr)
+                # return(EXPIRING.getCovarianceMatrixRow(branch, period, outitems=num_events):arr)
                 # return(1)
 
         # deflate
-        with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
-            with deflated = EXPIRING.getDeflated(branch, period, outsz=flatsize):
-                deflated = SCORE.deflate(loading_vector, deflated, num_reports, num_events, outsz=flatsize)
+        with loading_vector = EXPIRING.getLoadingVector(branch, period, outitems=num_events+2):
+            with deflated = EXPIRING.getDeflated(branch, period, outitems=flatsize):
+                deflated = SCORE.deflate(loading_vector, deflated, num_reports, num_events, outitems=flatsize)
                 EXPIRING.setDeflated(branch, period, deflated)
-                # return(EXPIRING.getDeflated(branch, period, outsz=flatsize):arr)
+                # return(EXPIRING.getDeflated(branch, period, outitems=flatsize):arr)
                 # return(1)
 
         # score
-        with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
-            with wcd =  EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize):
+        with loading_vector = EXPIRING.getLoadingVector(branch, period, outitems=num_events+2):
+            with wcd =  EXPIRING.getWeightedCenteredData(branch, period, outitems=flatsize):
                 with latent = EXPIRING.getLatent(branch, period):
-                    with scores = EXPIRING.getScores(branch, period, outsz=num_reports):
-                        scores = SCORE.score(scores, loading_vector, wcd, latent, num_reports, num_events, outsz=num_reports)
+                    with scores = EXPIRING.getScores(branch, period, outitems=num_reports):
+                        scores = SCORE.score(scores, loading_vector, wcd, latent, num_reports, num_events, outitems=num_reports)
                         EXPIRING.setScores(branch, period, scores)
                         # if loading_vector[num_events+1] == 0:
                         #     return(0)
                         # else:
                         #     return(1)
         m += 1    
-    # return(EXPIRING.getScores(branch, period, outsz=num_reports):arr)
+    # return(EXPIRING.getScores(branch, period, outitems=num_reports):arr)
 
     #############
     # adjust.se #
     #############
 
     # reputation_delta
-    with scores = EXPIRING.getScores(branch, period, outsz=num_reports):
+    with scores = EXPIRING.getScores(branch, period, outitems=num_reports):
         with nr_x_2 = num_reports * 2:
-            with sets = ADJUST.reputation_delta(scores, num_reports, num_events, outsz=nr_x_2):
+            with sets = ADJUST.reputation_delta(scores, num_reports, num_events, outitems=nr_x_2):
                 EXPIRING.setSetOne(branch, period, slice(sets, items=0, items=num_reports))
                 EXPIRING.setSetTwo(branch, period, slice(sets, items=num_reports, items=nr_x_2))
-                # return(EXPIRING.getSetOne(branch, period, outsz=num_reports):arr)
-                # return(EXPIRING.getSetTwo(branch, period, outsz=num_reports):arr)
+                # return(EXPIRING.getSetOne(branch, period, outitems=num_reports):arr)
+                # return(EXPIRING.getSetTwo(branch, period, outitems=num_reports):arr)
                 # return(1)
 
     # weighted_delta
-    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=flatsize):
+    with reports_filled = EXPIRING.getReportsFilled(branch, period, outitems=flatsize):
         with reputation = array(num_reports):
             with i = 0:
                 while i < num_reports:
                     reputation[i] = REPORTING.getRepByIndex(branch, i)
                     i += 1
-                with set1 = EXPIRING.getSetOne(branch, period, outsz=num_reports):
-                    with set2 = EXPIRING.getSetTwo(branch, period, outsz=num_reports):
+                with set1 = EXPIRING.getSetOne(branch, period, outitems=num_reports):
+                    with set2 = EXPIRING.getSetTwo(branch, period, outitems=num_reports):
                         with ne_x_3 = num_events * 3:
                             with ne_x_2 = num_events * 2:
-                                with wsets = ADJUST.weighted_delta(set1, set2, reputation, reports_filled, num_reports, num_events, outsz=ne_x_3):
+                                with wsets = ADJUST.weighted_delta(set1, set2, reputation, reports_filled, num_reports, num_events, outitems=ne_x_3):
                                     EXPIRING.setOld(branch, period, slice(wsets, items=0, items=num_events))
                                     EXPIRING.setNewOne(branch, period, slice(wsets, items=num_events, items=ne_x_2))
                                     EXPIRING.setNewTwo(branch, period, slice(wsets, items=ne_x_2, items=ne_x_3))
-                                    # return(EXPIRING.returnOld(branch, period, outsz=num_events):arr)
-                                    # return(EXPIRING.getNewOne(branch, period, outsz=num_events):arr)
-                                    # return(EXPIRING.getNewTwo(branch, period, outsz=num_events):arr)
+                                    # return(EXPIRING.returnOld(branch, period, outitems=num_events):arr)
+                                    # return(EXPIRING.getNewOne(branch, period, outitems=num_events):arr)
+                                    # return(EXPIRING.getNewTwo(branch, period, outitems=num_events):arr)
                                     # return(1)
 
     # select_scores
-    with old = EXPIRING.returnOld(branch, period, outsz=num_events):
-        with new1 = EXPIRING.getNewOne(branch, period, outsz=num_events):
-            with new2 = EXPIRING.getNewTwo(branch, period, outsz=num_events):
-                with set1 = EXPIRING.getSetOne(branch, period, outsz=num_reports):
-                    with set2 = EXPIRING.getSetTwo(branch, period, outsz=num_reports):
-                        with scores = EXPIRING.getScores(branch, period, outsz=num_reports):
-                            with adjusted_scores = ADJUST.select_scores(old, new1, new2, set1, set2, scores, num_reports, num_events, outsz=num_reports):
+    with old = EXPIRING.returnOld(branch, period, outitems=num_events):
+        with new1 = EXPIRING.getNewOne(branch, period, outitems=num_events):
+            with new2 = EXPIRING.getNewTwo(branch, period, outitems=num_events):
+                with set1 = EXPIRING.getSetOne(branch, period, outitems=num_reports):
+                    with set2 = EXPIRING.getSetTwo(branch, period, outitems=num_reports):
+                        with scores = EXPIRING.getScores(branch, period, outitems=num_reports):
+                            with adjusted_scores = ADJUST.select_scores(old, new1, new2, set1, set2, scores, num_reports, num_events, outitems=num_reports):
                                 EXPIRING.setAdjPrinComp(branch, period, adjusted_scores)
-                                # return(EXPIRING.getAdjPrinComp(branch, period, outsz=num_reports):arr)
+                                # return(EXPIRING.getAdjPrinComp(branch, period, outitems=num_reports):arr)
                                 # return(1)
 
     ##############
@@ -303,14 +303,14 @@ def redeem(branch, period, num_events, num_reports, flatsize, mockNumber):
             while i < num_reports:
                 reputation[i] = REPORTING.getRepByIndex(branch, i)
                 i += 1
-            with adjusted_scores = EXPIRING.getAdjPrinComp(branch, period, outsz=num_reports):
-                with smooth_rep = RESOLVE.smooth(adjusted_scores, reputation, num_reports, num_events, outsz=num_reports):
+            with adjusted_scores = EXPIRING.getAdjPrinComp(branch, period, outitems=num_reports):
+                with smooth_rep = RESOLVE.smooth(adjusted_scores, reputation, num_reports, num_events, outitems=num_reports):
                     EXPIRING.setSmoothRep(branch, period, smooth_rep)
-                    # return(EXPIRING.getSmoothRep(branch, period, outsz=num_reports):arr)
+                    # return(EXPIRING.getSmoothRep(branch, period, outitems=num_reports):arr)
                     # return(1)
 
-    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=flatsize):
-        with smooth_rep = EXPIRING.getSmoothRep(branch, period, outsz=num_reports):
+    with reports_filled = EXPIRING.getReportsFilled(branch, period, outitems=flatsize):
+        with smooth_rep = EXPIRING.getSmoothRep(branch, period, outitems=num_reports):
             with scaled = array(num_events):
                 with scaled_max = array(num_events):
                     with scaled_min = array(num_events):
@@ -326,19 +326,19 @@ def redeem(branch, period, num_events, num_reports, flatsize, mockNumber):
                                         scaled_min[j] = NO
                                         scaled_max[j] = YES
                                 j += 1
-                            with outcomes = RESOLVE.resolve(smooth_rep, reports_filled, scaled, scaled_max, scaled_min, num_reports, num_events, outsz=num_events):
+                            with outcomes = RESOLVE.resolve(smooth_rep, reports_filled, scaled, scaled_max, scaled_min, num_reports, num_events, outitems=num_events):
                                 EXPIRING.setOutcomesFinal(branch, period, outcomes)
-                                # return(EXPIRING.getOutcomesFinal(branch, period, outsz=num_events):arr)
+                                # return(EXPIRING.getOutcomesFinal(branch, period, outitems=num_events):arr)
                                 # return(1)
 
     #############
     # payout.se #
     #############
 
-    with smooth_rep = EXPIRING.getSmoothRep(branch, period, outsz=num_reports):
-        with reports_mask = EXPIRING.getReportsMask(branch, period, outsz=flatsize):
-            with outcomes = EXPIRING.getOutcomesFinal(branch, period, outsz=num_events):
-                with reporter_payouts = PAYOUT.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outsz=num_reports):
+    with smooth_rep = EXPIRING.getSmoothRep(branch, period, outitems=num_reports):
+        with reports_mask = EXPIRING.getReportsMask(branch, period, outitems=flatsize):
+            with outcomes = EXPIRING.getOutcomesFinal(branch, period, outitems=num_events):
+                with reporter_payouts = PAYOUT.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outitems=num_reports):
                     # get event ID for each event by taking the x index in the reports arrays
                     # - shoving it in reporting.events[] && getting the cooresponding ID
                     with j = 0:

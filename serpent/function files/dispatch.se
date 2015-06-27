@@ -88,7 +88,7 @@ def dispatch(branch):
                         # loop MAX_COMPONENTS #
                         #######################
                         elif step == 3:
-                            with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
+                            with loading_vector = EXPIRING.getLoadingVector(branch, period, outitems=num_events+2):
                                 with substep = BRANCHES.getSubstep(branch):
                                     if substep == 4:
                                         more = REDEEM_SCORE.score(branch, period, num_events, num_reports, flatsize)
@@ -106,7 +106,7 @@ def dispatch(branch):
                                     elif substep == 1:
                                         if REDEEM_SCORE.loadings(branch, period, num_events, num_reports, flatsize) == 0:
                                             BRANCHES.incrementSubstep(branch)
-                                        # return(EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):arr)
+                                        # return(EXPIRING.getLoadingVector(branch, period, outitems=num_events+2):arr)
                                         return(step)
                                     ############
                                     # end loop #

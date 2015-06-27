@@ -32,13 +32,13 @@ import payout as PAYOUT
 
 def payout(branch, period, num_events, num_reports, flatsize):
     with smooth_rep = array(num_reports):
-        smooth_rep = slice(EXPIRING.getSmoothRep(branch, period, outsz=num_reports), items=0, items=num_reports)
+        smooth_rep = slice(EXPIRING.getSmoothRep(branch, period, outitems=num_reports), items=0, items=num_reports)
         with reports_mask = array(flatsize):
-            reports_mask = slice(EXPIRING.getReportsMask(branch, period, outsz=flatsize), items=0, items=flatsize)
+            reports_mask = slice(EXPIRING.getReportsMask(branch, period, outitems=flatsize), items=0, items=flatsize)
             with outcomes = array(num_events):
-                outcomes = slice(EXPIRING.getOutcomesFinal(branch, period, outsz=num_events), items=0, items=num_events)
+                outcomes = slice(EXPIRING.getOutcomesFinal(branch, period, outitems=num_events), items=0, items=num_events)
                 with reporter_payouts = array(num_reports):
-                    reporter_payouts = slice(PAYOUT.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outsz=num_reports), items=0, items=num_reports)
+                    reporter_payouts = slice(PAYOUT.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outitems=num_reports), items=0, items=num_reports)
 
                     # get event ID for each event by taking the x index in the reports arrays
                     # - shoving it in reporting.events[] and getting the corresponding ID
