@@ -8,6 +8,7 @@ augur-serpent
 - check that msg.sender is one of our function contracts
 - make data EXTERNs updatable
 - allow Chinese chars
+- investigate https://www.seas.upenn.edu/~hoda/HLPV.pdf
 
 ### Bugs:
 - what if a scalar has a .5 actual value outcome
@@ -28,11 +29,12 @@ augur-serpent
 	   	you got picked / won the rng!
 - max number of owners in a branch of rep. issues w/ sending rep etc
 - zeroing of array values (e.g. people in the rep index after they have 0 rep left)
-- consensus bond mechanism cheaper
+- consensus bond mechanism cheaper + reporting on outcome + if not certain onchain as fallback
 - possibly enable people to choose their own resolution scripts
 - lazy evaluation
 - metadata off chain
 - events
+- reporting / consensus scaling
 
 ### Once eth supports it:
 - reward whoever does close market according to gas cost (pay gas fee in cashcoin to miner)
@@ -48,12 +50,15 @@ augur-serpent
   - audits have a fee
 - two wave svd before audits?
   - e.g. if it falls within the certainty threshold, then it goes to wave 2 of svd else it goes to next period (disputed), if that fails, audit
-- public good funding + poss. futarchy
+- public good funding (dominant assurance contracts) + poss. futarchy
 - allow people to set market base currencies - is this what V meant by mult. currency support
 - With these conditions: [1] Stalled Branch, [2] Decision-Author’s signature, one can move an event to a new Branch (use ecVerify serpent function)
+- frontrunning prevention - spows
 
 ### Version 0.4 (Awesome fun stuff):
 - limit orders in UI if price > or < a number and maximum amount of money (or shares?) you're willing to spend for buy, max shares to sell for sell - but what about real on chain limit orders?
 - Stop loss orders
 - update eventsExpDates so you can update & it not lose events from whatever your branch's last voting periods was, should just moveEventsToCurrentPeriod upon update perhaps have 2 vars in a contract for old addr and new, call old and get its events then move to new contract
 - consider implications of updating data/api contracts & data migration ^
+- make cash faucet once per acc.
+- add an ether faucet
