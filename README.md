@@ -15,6 +15,7 @@ augur-serpent
   - jack idea for this
 - for scalar events, how do you distinguish a 0 numerical response from a no-response (usually 0)?
   - idea: store answer/no-answer for each reporter separate from the report values
+- https://github.com/ethereum/wiki/wiki/HPOC_2015#anti-pre-revelation
 
 ### Scalability optimizations:
 - http://lightning.network/lightning-network.pdf
@@ -32,6 +33,7 @@ augur-serpent
 - lazy evaluation
 - metadata off chain
 - events
+- https://github.com/ethereum/wiki/wiki/Problems#3-arbitrary-proof-of-computation (to 11)
 
 ### Once eth supports it:
 - reward whoever does close market according to gas cost (pay gas fee in cashcoin to miner)
