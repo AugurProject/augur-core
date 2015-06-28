@@ -40,6 +40,7 @@ augur-serpent
 - work with etherex & chow (bitsquare, coineffine, mercuryex other decentralized exchanges as well)
 
 ### Version 0.5 (More fun features):
+- play w/ fed. peg on eth
 - if no agreement on any outcome <65% confidence (failure to achieve certainty) this confidence is *of the rep reported* (consensus needs to take this as a param), then do over next voting period
   - have consensus push all into next voting period (this is currently known as disputed)
     - perhaps use a "times voted" thing for this
