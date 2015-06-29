@@ -27,6 +27,9 @@ import fxpFunctions as FXP
 import markets as MARKETS
 import events as EVENTS
 
+event priceSold(user indexed addr, market indexed marketid, outcome indexed outcomeNum, paid indexed amount)
+event creationBlock(blockNum indexed num)
+
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
 # z = liquidity / (1+(alpha*n*ln(n)))
@@ -53,6 +56,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     # only supports 3 dimensional markets atm
     if(eventNum > 3):
         return(-2)
+    log(type=creationBlock, block.number)
     numOutcomes = 0
     eventsConcat = 0
     cumulativeScale = 0
