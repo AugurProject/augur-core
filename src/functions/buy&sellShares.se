@@ -30,9 +30,7 @@ import events as EVENTS
 
 data nonces[]
 
-event updatePrice(user indexed addr, market indexed marketid, outcome indexed outcomeNum, price indexed currentPrice)
-event pricePaid(user indexed addr, market indexed marketid, outcome indexed outcomeNum, paid indexed amount)
-event priceSold(user indexed addr, market indexed marketid, outcome indexed outcomeNum, paid indexed amount)
+event updatePrice(user:indexed, market:indexed, outcome:indexed, price, paid, sold)
 
 
 # amount of shares should be fixed point
@@ -100,10 +98,8 @@ def buyShares(branch, market, outcome, amount, nonce):
     CASH.send(INFO.getCreator(market), fee/2)
     # other half go to branch
     CASH.send(branch, fee/2)
-    # log new price
-    log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome))
-    # log avg. price paid / share
-    log(type=pricePaid, tx.origin, market, outcome, price*2^64/amount)
+    # log new price & avg price paid/share
+    log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), price*2^64/amount, 0)
     return(price+fee)
 
 # amount is amount of shares to sell
@@ -159,10 +155,8 @@ def sellShares(branch, market, outcome, amount, nonce):
         price -= fee
         CASH.addCash(tx.origin, price)
         MARKETS.modifyParticipantShares(market, participantNumber, outcome, -amount)
-        # log new price
-        log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome))
-        # log avg. price sold / share
-        log(type=priceSold, tx.origin, market, outcome, price*2^64/amount)
+        # log new price and avg. price sold / share
+        log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), 0, price*2^64/amount)
         return(price)
 
 macro good_pow():
