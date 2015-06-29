@@ -65,13 +65,27 @@ def getSimulatedSell(market, outcome, amount):
     return([cost, price], chars=64)
 
 def getMarketInfo(market):
-    info = array(6)
+    lenEvents = self.Markets[market].lenEvents
+    info = array(14+lenEvents)
     info[0] = self.Markets[market].currentParticipant
     info[1] = self.Markets[market].alpha
-    info[2] = self.Markets[market].cumulativeScale
+    #info[2] = self.Markets[market].cumulativeScale
+    info[2] = self.Markets[market].addr2participant[tx.origin]
     info[3] = self.Markets[market].numOutcomes
     info[4] = self.Markets[market].tradingPeriod
     info[5] = self.Markets[market].tradingFee
+    i = 0
+    while i < lenEvents:
+        info[6+i] = self.Markets[market].events[i]
+        i += 1
+    info[6+i] = self.Markets[market].winningOutcomes[0]
+    info[7+i] = self.Markets[market].winningOutcomes[1]
+    info[8+i] = self.Markets[market].winningOutcomes[2]
+    info[9+i] = self.Markets[market].winningOutcomes[3]
+    info[10+i] = self.Markets[market].winningOutcomes[4]
+    info[11+i] = self.Markets[market].winningOutcomes[5]
+    info[12+i] = self.Markets[market].winningOutcomes[6]
+    info[13+i] = self.Markets[market].winningOutcomes[7]
     return(info: arr)
 
 def getMarketEvents(market):
