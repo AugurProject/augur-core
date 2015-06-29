@@ -30,9 +30,9 @@ import events as EVENTS
 
 data nonces[]
 
-event updatePrice(user, market, outcome, price)
-event pricePaid(user, market, outcome, paid)
-event priceSold(user, market, outcome, paid)
+event updatePrice(user indexed addr, market indexed marketid, outcome indexed outcomeNum, price indexed currentPrice)
+event pricePaid(user indexed addr, market indexed marketid, outcome indexed outcomeNum, paid indexed amount)
+event priceSold(user indexed addr, market indexed marketid, outcome indexed outcomeNum, paid indexed amount)
 
 
 # amount of shares should be fixed point
