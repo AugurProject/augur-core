@@ -17,6 +17,7 @@ augur-serpent
   - jack idea for this
 - for scalar events, how do you distinguish a 0 numerical response from a no-response (usually 0)?
   - idea: store answer/no-answer for each reporter separate from the report values
+- https://github.com/ethereum/wiki/wiki/HPOC_2015#anti-pre-revelation
 
 ### Scalability optimizations:
 - http://lightning.network/lightning-network.pdf
@@ -34,6 +35,7 @@ augur-serpent
 - lazy evaluation
 - metadata off chain
 - events
+- https://github.com/ethereum/wiki/wiki/Problems#3-arbitrary-proof-of-computation (to 11)
 - reporting / consensus scaling
 
 ### Once eth supports it:
@@ -41,6 +43,8 @@ augur-serpent
 - work with etherex & chow (bitsquare, coineffine, mercuryex other decentralized exchanges as well) / stablecoins
 
 ### Version 0.5 (More fun features):
+- play w/ fed. peg on eth
+- poss. upvotes on markets
 - if no agreement on any outcome <65% confidence (failure to achieve certainty) this confidence is *of the rep reported* (consensus needs to take this as a param), then do over next voting period
   - have consensus push all into next voting period (this is currently known as disputed)
     - perhaps use a "times voted" thing for this
@@ -56,6 +60,8 @@ augur-serpent
 - frontrunning prevention - spows
 
 ### Version 0.4 (Awesome fun stuff):
+- logs for market creation + any other important logs
+- update ui api getters
 - limit orders in UI if price > or < a number and maximum amount of money (or shares?) you're willing to spend for buy, max shares to sell for sell - but what about real on chain limit orders?
 - Stop loss orders
 - update eventsExpDates so you can update & it not lose events from whatever your branch's last voting periods was, should just moveEventsToCurrentPeriod upon update perhaps have 2 vars in a contract for old addr and new, call old and get its events then move to new contract

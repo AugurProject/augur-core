@@ -27,6 +27,8 @@ import fxpFunctions as FXP
 import markets as MARKETS
 import events as EVENTS
 
+event creationBlock(market:indexed)
+
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
 # z = liquidity / (1+(alpha*n*ln(n)))
@@ -97,7 +99,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     marketinfo[11] = blockNumber
     mcopy(marketinfo + 12*32, description, chars=len(description))
     marketID = sha256(marketinfo, chars=len(marketinfo))
-
+    log(type=creationBlock, marketID)
     # pay numOutcomes fee
     # if it's already been created return 0
     if(!CASH.send(branch, numOutcomes*2^63) || INFO.getCreator(marketID) || MARKETS.getMarketNumOutcomes(marketID)):
