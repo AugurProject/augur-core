@@ -42,7 +42,7 @@ event creationBlock(market:indexed)
     # -3: too many outcomes
     # -4: not enough money or market already exists
 
-def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr):
+def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, blockNumber):
     periodLength = BRANCHES.getPeriodLength(branch)
     if(periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee < BRANCHES.getMinTradingFee(branch)):
         return(-1)
@@ -96,7 +96,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     marketinfo[8] = numOutcomes
     marketinfo[9] = tradingPeriod
     marketinfo[10] = tradingFee
-    marketinfo[11] = block.number
+    marketinfo[11] = blockNumber
     mcopy(marketinfo + 12*32, description, chars=len(description))
     marketID = sha256(marketinfo, chars=len(marketinfo))
     log(type=creationBlock, marketID)

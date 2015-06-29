@@ -38,10 +38,7 @@ def smooth(adjusted_scores:arr, reputation:arr, num_reports, num_events):
     # Weighted sum of old and new reputation vectors.
     # New: row_reward_weighted
     # Old: reputation
-    with i = 0:
-        while i < num_reports:
-            reputation[i] = fixed_divide(reputation[i], TOTAL_REPUTATION)
-            i += 1
+    reputation = normalize(reputation)
     with row_reward_weighted = array(num_reports):
         with i = 0:
             while i < num_reports:
@@ -56,14 +53,15 @@ def smooth(adjusted_scores:arr, reputation:arr, num_reports, num_events):
                         row_reward_weighted[i] = adjusted_scores[i] * row_reward_weighted[i] / mean_weight
                         i += 1
             row_reward_weighted = normalize(row_reward_weighted)
-        # Freshly-calculated reward (in reputation) using exponential smoothing
+        # Freshly-calculated reward (in reputation)
         # (0.1 is the adjustable parameter "alpha", hard-coding it for now)
         with smooth_rep = array(num_reports):
             with i = 0:
                 while i < num_reports:
                     smooth_rep[i] = row_reward_weighted[i]/10 + reputation[i]*9/10
                     i += 1
-            return(smooth_rep: arr)
+            smooth_rep = normalize(smooth_rep)
+            return(smooth_rep, items=num_reports)
 
 def resolve(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports, num_events):
     with two_num_events = 2*num_events:
@@ -116,8 +114,11 @@ def resolve(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:
                                     certainty[i] = abs(certainty[i])
                                     total += certainty[i]
                                     i += 1
-                            return(outcomes_final: arr)
+                            return(outcomes_final, items=num_events)
 
 inset('macros/constants.se')
 inset('macros/fixed.se')
 inset('macros/arrays.se')
+# inset('../../macros/constants.se')
+# inset('../../macros/fixed.se')
+# inset('../../macros/arrays.se')

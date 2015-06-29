@@ -47,6 +47,7 @@ def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scale
                                 with wcd = array(lflatsize):
                                     with i = 0:
                                         while i < flatsize:
+                                            # 0 if num_reports = 1
                                             wcd[i] = reports_filled[i] - weighted_means[i % num_events]
                                             i += 1
                                         wcd[i] = ONE

@@ -23,26 +23,12 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
-# import events as EVENTS
-# import expiringEvents as EXPIRING
-# import reporting as REPORTING
-# import center as CENTER
-
-extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
-EVENTS = 0xfdefa42a3209d3f320b220a234cd0cdea5e761f8
-
-extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
-EXPIRING = 0xf97d9fdba23823b2796446d4a45e18a7a1fdf905
-
-extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
-REPORTING = 0xbe774ec2c537ea1a4981529568060456a650d639
-
-extern center.se: [center:aaaaaii:a, covariance:aaii:a, tokenize:ai:a]
-CENTER = 0x357938a55923451c8485fab9f7d148f53fa1005d
+import events as EVENTS
+import expiringEvents as EXPIRING
+import reporting as REPORTING
+import center as CENTER
 
 def center(branch, period, num_events, num_reports, flatsize):
-    # if !WHITELIST.check(msg.sender):
-    #     return(-1)
     with reputation = array(num_reports):
         with i = 0:
             while i < num_reports:
@@ -54,7 +40,7 @@ def center(branch, period, num_events, num_reports, flatsize):
                     with j = 0:
                         while j < num_events:
                             with event = EXPIRING.getEvent(branch, period, j):
-                                if fix(EVENTS.getMaxValue(event)) != YES:
+                                if fix(EVENTS.getMaxValue(event)) != YES and EVENTS.getNumOutcomes(event) == 2:
                                     scaled[j] = 1
                                     scaled_min[j] = fix(EVENTS.getMinValue(event))
                                     scaled_max[j] = fix(EVENTS.getMaxValue(event))
@@ -63,31 +49,34 @@ def center(branch, period, num_events, num_reports, flatsize):
                                     scaled_min[j] = NO
                                     scaled_max[j] = YES
                             j += 1
-                    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=flatsize):
+                    with reports_filled = array(flatsize):
+                        reports_filled = slice(EXPIRING.getReportsFilled(branch, period, outitems=flatsize), items=0, items=flatsize)
                         with lflatsize = flatsize + num_events + 2:
-                            with result = CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, MAX_COMPONENTS, outsz=lflatsize):
-                                wcd = slice(result, items=0, items=flatsize)
-                                EXPIRING.setWeightedCenteredData(branch, period, wcd)
-                                loading_vector = slice(result, items=flatsize, items=lflatsize)
-                                EXPIRING.setLoadingVector(branch, period, loading_vector)
-                                return(1)
+                            with result = array(lflatsize):
+                                result = slice(CENTER.center(reports_filled, reputation, scaled, scaled_max, scaled_min, MAX_ITERATIONS, MAX_COMPONENTS, outitems=lflatsize), items=0, items=lflatsize)
+                                with wcd = array(flatsize):
+                                    wcd = slice(result, items=0, items=flatsize)
+                                    EXPIRING.setWeightedCenteredData(branch, period, wcd)
+                                    with loading_vector = array(num_events + 2):
+                                        loading_vector = slice(result, items=flatsize, items=lflatsize)
+                                        EXPIRING.setLoadingVector(branch, period, loading_vector)
+                                        return(1)
 
 def covariance(branch, period, num_events, num_reports, flatsize):
-    # if !WHITELIST.check(msg.sender):
-    #     return(-1)
     with reputation = array(num_reports):
         with i = 0:
             while i < num_reports:
                 reputation[i] = REPORTING.getRepByIndex(branch, i)
                 i += 1
-        with reptokens = CENTER.tokenize(reputation, num_reports, outsz=num_reports):
-            with wcd = EXPIRING.getWeightedCenteredData(branch, period, outsz=flatsize):
-                with covrow = CENTER.covariance(wcd, reptokens, num_reports, num_events, outsz=num_events):
+        with reptokens = array(num_reports):
+            reptokens = slice(CENTER.tokenize(reputation, num_reports, outitems=num_reports), items=0, items=num_reports)
+            with wcd = array(flatsize):
+                wcd = slice(EXPIRING.getWeightedCenteredData(branch, period, outitems=flatsize), items=0, items=flatsize)
+                EXPIRING.setDeflated(branch, period, wcd)
+                with covrow = array(num_events):
+                    covrow = slice(CENTER.covariance(wcd, reptokens, num_reports, num_events, outitems=num_events), items=0, items=num_events)
                     EXPIRING.setCovarianceMatrixRow(branch, period, covrow)
-                    EXPIRING.setDeflated(branch, period, wcd)
                     return(1)
 
-# inset('macros/constants.se')
-# inset('macros/fixed.se')
-inset('../../macros/constants.se')
-inset('../../macros/fixed.se')
+inset('macros/constants.se')
+inset('macros/fixed.se')

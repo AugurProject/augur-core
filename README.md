@@ -7,6 +7,8 @@ augur-serpent
 - #def moveEvent(event, newBranch, authorSignature):
 - check that msg.sender is one of our function contracts
 - make data EXTERNs updatable
+- allow Chinese chars
+- investigate https://www.seas.upenn.edu/~hoda/HLPV.pdf
 
 ### Bugs:
 - what if a scalar has a .5 actual value outcome
@@ -28,16 +30,17 @@ augur-serpent
 	   	you got picked / won the rng!
 - max number of owners in a branch of rep. issues w/ sending rep etc
 - zeroing of array values (e.g. people in the rep index after they have 0 rep left)
-- consensus bond mechanism cheaper
+- consensus bond mechanism cheaper + reporting on outcome + if not certain onchain as fallback
 - possibly enable people to choose their own resolution scripts
 - lazy evaluation
 - metadata off chain
 - events
 - https://github.com/ethereum/wiki/wiki/Problems#3-arbitrary-proof-of-computation (to 11)
+- reporting / consensus scaling
 
 ### Once eth supports it:
 - reward whoever does close market according to gas cost (pay gas fee in cashcoin to miner)
-- work with etherex & chow (bitsquare, coineffine, mercuryex other decentralized exchanges as well)
+- work with etherex & chow (bitsquare, coineffine, mercuryex other decentralized exchanges as well) / stablecoins
 
 ### Version 0.5 (More fun features):
 - play w/ fed. peg on eth
@@ -51,9 +54,10 @@ augur-serpent
   - audits have a fee
 - two wave svd before audits?
   - e.g. if it falls within the certainty threshold, then it goes to wave 2 of svd else it goes to next period (disputed), if that fails, audit
-- public good funding + poss. futarchy
+- public good funding (dominant assurance contracts) + poss. futarchy
 - allow people to set market base currencies - is this what V meant by mult. currency support
 - With these conditions: [1] Stalled Branch, [2] Decision-Author’s signature, one can move an event to a new Branch (use ecVerify serpent function)
+- frontrunning prevention - spows
 
 ### Version 0.4 (Awesome fun stuff):
 - logs for market creation + any other important logs
@@ -62,3 +66,5 @@ augur-serpent
 - Stop loss orders
 - update eventsExpDates so you can update & it not lose events from whatever your branch's last voting periods was, should just moveEventsToCurrentPeriod upon update perhaps have 2 vars in a contract for old addr and new, call old and get its events then move to new contract
 - consider implications of updating data/api contracts & data migration ^
+- make cash faucet once per acc.
+- add an ether faucet

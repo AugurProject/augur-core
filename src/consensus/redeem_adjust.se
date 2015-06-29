@@ -23,62 +23,58 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
-# import reporting as REPORTING
-# import expiringEvents as EXPIRING
-# import adjust as ADJUST
-
-extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
-EXPIRING = 0xf97d9fdba23823b2796446d4a45e18a7a1fdf905
-
-extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
-REPORTING = 0xbe774ec2c537ea1a4981529568060456a650d639
-
-extern adjust.se: [reputation_delta:aii:a, select_scores:aaaaaaii:a, weighted_delta:aaaaii:a]
-ADJUST = 0x5fb166f1c390f7c48253876abe9a342a4a4ad9bd
+import reporting as REPORTING
+import expiringEvents as EXPIRING
+import adjust as ADJUST
 
 def reputation_delta(branch, period, num_events, num_reports, flatsize):
-    # if !WHITELIST.check(msg.sender):
-    #     return(-1)
-    with scores = EXPIRING.getScores(branch, period, outsz=num_reports):
+    with scores = array(num_reports):
+        scores = slice(EXPIRING.getScores(branch, period, outitems=num_reports), items=0, items=num_reports)
         with nr_x_2 = num_reports * 2:
-            with sets = ADJUST.reputation_delta(scores, num_reports, num_events, outsz=nr_x_2):
+            with sets = array(nr_x_2):
+                sets = slice(ADJUST.reputation_delta(scores, num_reports, num_events, outitems=nr_x_2), items=0, items=nr_x_2)                      
                 EXPIRING.setSetOne(branch, period, slice(sets, items=0, items=num_reports))
                 EXPIRING.setSetTwo(branch, period, slice(sets, items=num_reports, items=nr_x_2))
                 return(1)
 
 def weighted_delta(branch, period, num_events, num_reports, flatsize):
-    # if !WHITELIST.check(msg.sender):
-    #     return(-1)
-    with reports_filled = EXPIRING.getReportsFilled(branch, period, outsz=flatsize):
+    with reports_filled = array(flatsize):
+        reports_filled = slice(EXPIRING.getReportsFilled(branch, period, outitems=flatsize), items=0, items=flatsize)
         with reputation = array(num_reports):
             with i = 0:
                 while i < num_reports:
                     reputation[i] = REPORTING.getRepByIndex(branch, i)
                     i += 1
-                with set1 = EXPIRING.getSetOne(branch, period, outsz=num_reports):
-                    with set2 = EXPIRING.getSetTwo(branch, period, outsz=num_reports):
+                with set1 = array(num_reports):
+                    set1 = slice(EXPIRING.getSetOne(branch, period, outitems=num_reports), items=0, items=num_reports)
+                    with set2 = array(num_reports):
+                        set2 = slice(EXPIRING.getSetTwo(branch, period, outitems=num_reports), items=0, items=num_reports)
                         with ne_x_3 = num_events * 3:
                             with ne_x_2 = num_events * 2:
-                                with wsets = ADJUST.weighted_delta(set1, set2, reputation, reports_filled, num_reports, num_events, outsz=ne_x_3):
+                                with wsets = array(ne_x_3):
+                                    wsets = slice(ADJUST.weighted_delta(set1, set2, reputation, reports_filled, num_reports, num_events, outitems=ne_x_3), items=0, items=ne_x_3)
                                     EXPIRING.setOld(branch, period, slice(wsets, items=0, items=num_events))
                                     EXPIRING.setNewOne(branch, period, slice(wsets, items=num_events, items=ne_x_2))
                                     EXPIRING.setNewTwo(branch, period, slice(wsets, items=ne_x_2, items=ne_x_3))
                                     return(1)
 
 def select_scores(branch, period, num_events, num_reports, flatsize):
-    # if !WHITELIST.check(msg.sender):
-    #     return(-1)
-    with old = EXPIRING.returnOld(branch, period, outsz=num_events):
-        with new1 = EXPIRING.getNewOne(branch, period, outsz=num_events):
-            with new2 = EXPIRING.getNewTwo(branch, period, outsz=num_events):
-                with set1 = EXPIRING.getSetOne(branch, period, outsz=num_reports):
-                    with set2 = EXPIRING.getSetTwo(branch, period, outsz=num_reports):
-                        with scores = EXPIRING.getScores(branch, period, outsz=num_reports):
-                            with adjusted_scores = ADJUST.select_scores(old, new1, new2, set1, set2, scores, num_reports, num_events, outsz=num_reports):
+    with old = array(num_events):
+        old = slice(EXPIRING.returnOld(branch, period, outitems=num_events), items=0, items=num_events)
+        with new1 = array(num_events):
+            new1 = slice(EXPIRING.getNewOne(branch, period, outitems=num_events), items=0, items=num_events)
+            with new2 = array(num_events):
+                new2 = slice(EXPIRING.getNewTwo(branch, period, outitems=num_events), items=0, items=num_events)
+                with set1 = array(num_reports):
+                    set1 = slice(EXPIRING.getSetOne(branch, period, outitems=num_reports), items=0, items=num_reports)
+                    with set2 = array(num_reports):
+                        set2 = slice(EXPIRING.getSetTwo(branch, period, outitems=num_reports), items=0, items=num_reports)
+                        with scores = array(num_reports):
+                            scores = slice(EXPIRING.getScores(branch, period, outitems=num_reports), items=0, items=num_reports)
+                            with adjusted_scores = array(num_reports):
+                                adjusted_scores = slice(ADJUST.select_scores(old, new1, new2, set1, set2, scores, num_reports, num_events, outitems=num_reports), items=0, items=num_reports)
                                 EXPIRING.setAdjPrinComp(branch, period, adjusted_scores)
                                 return(1)
 
-# inset('macros/constants.se')
-# inset('macros/fixed.se')
-inset('../../macros/constants.se')
-inset('../../macros/fixed.se')
+inset('macros/constants.se')
+inset('macros/fixed.se')

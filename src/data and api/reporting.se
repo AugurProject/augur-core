@@ -31,14 +31,14 @@ data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoInd
 
 def init():
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
-    self.Reporting[1010101].reputation[0].repValue = 470*2^64
+    self.Reporting[1010101].reputation[0].repValue = 47*2^64
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
     self.Reporting[1010101].numberReporters = 1
-    self.Reporting[1010101].totalRep += 470*2^64
+    self.Reporting[1010101].totalRep += 47*2^64
 
 def faucet(branch):
     index = self.Reporting[branch].numberReporters
-    if(self.Reporting[branch].repIDtoIndex[tx.origin]!=0):
+    if self.Reporting[branch].repIDtoIndex[tx.origin] != 0 or self.Reporting[branch].reputation[0].reporterID == tx.origin:
         index = self.Reporting[branch].repIDtoIndex[tx.origin]
         self.Reporting[branch].reputation[index].repValue = 47*2^64
         self.Reporting[branch].reputation[index].reporterID = tx.origin
@@ -64,6 +64,9 @@ def getRepBalance(branch, address):
 def getReporterID(branch, index):
     return(self.Reporting[branch].reputation[index].reporterID)
 
+def getTotalRep(branch):
+    return(self.Reporting[branch].totalRep)
+
 # will return 0s for array values after it's looped through all the ones you
 # have an actual balance in
 def getReputation(address):
@@ -71,7 +74,7 @@ def getReputation(address):
     if(address):
         branches = array(2*branchListCount)
         branchList = array(branchListCount)
-        branchList = BRANCHES.getBranches(outsz=branchListCount)
+        branchList = BRANCHES.getBranches(outitems=branchListCount)
         i = 0
         b = 0
         while i < branchListCount:
@@ -86,7 +89,7 @@ def getReputation(address):
         address = tx.origin
         branches = array(2*branchListCount)
         branchList = array(branchListCount)
-        branchList = BRANCHES.getBranches(outsz=branchListCount)
+        branchList = BRANCHES.getBranches(outitems=branchListCount)
         i = 0
         b = 0
         while i < branchListCount:

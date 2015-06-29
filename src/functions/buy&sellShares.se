@@ -45,7 +45,7 @@ def buyShares(branch, market, outcome, amount, nonce):
     # if we have 3-4 cycles in a row of events getting pushed back market would already be closed even though
     # events up to be decided on for a while yet never decided
     # technically this is a stalled branch and market should be open
-    # if(currentPeriod + 3 >= currentVotePeriod) we're stalled
+    # if(currentPeriod >= currentVotePeriod +3) we're stalled
     #the question is though --- are these events part of the set that were stalled?
     #if above && the event outcomes aren't determined (0), then yes
     #then set a stalled boolean
@@ -57,8 +57,8 @@ def buyShares(branch, market, outcome, amount, nonce):
     currentPeriod = block.number / BRANCHES.getPeriodLength(branch)
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     numEvents = MARKETS.getNumEvents(market)
-    events = MARKETS.getMarketEvents(market, outsz=numEvents)
-    if((currentPeriod + 3) >= currentVotePeriod):
+    events = MARKETS.getMarketEvents(market, outitems=numEvents)
+    if(currentPeriod >= (currentVotePeriod+3)):
         c = 0
         while c < numEvents:
             if(EVENTS.getOutcome(events[c])==0):
@@ -119,7 +119,7 @@ def sellShares(branch, market, outcome, amount, nonce):
     currentPeriod = block.number / BRANCHES.getPeriodLength(branch)
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     numEvents = MARKETS.getNumEvents(market)
-    events = MARKETS.getMarketEvents(market, outsz=numEvents)
+    events = MARKETS.getMarketEvents(market, outitems=numEvents)
     if((currentPeriod + 3) >= currentVotePeriod):
         c = 0
         while c < numEvents:

@@ -23,121 +23,85 @@
 # If you have questions, please contact Joey Krug (joey@augur.net) or
 # Jack Peterson (jack@augur.net).
 
-# import events as EVENTS
-# import expiringEvents as EXP
-# import reporting as REPORTING
-# import branches as BRANCHES
-# import checkQuorum as QUORUM
-# import redeem_interpolate as REDEEM_INTERPOLATE
-# import redeem_center as REDEEM_CENTER
-# import redeem_score as REDEEM_SCORE
-# import redeem_adjust as REDEEM_ADJUST
-# import redeem_resolve as REDEEM_RESOLVE
-# import redeem_payout as REDEEM_PAYOUT
-
-extern events.se: [getEventBranch:i:i, getEventInfo:i:a, getExpiration:i:i, getMaxValue:i:i, getMinValue:i:i, getNumOutcomes:i:i, getOutcome:i:i, initializeEvent:iiiiii:i, setOutcome:ii:i]
-EVENTS = 0xfdefa42a3209d3f320b220a234cd0cdea5e761f8
-
-extern expiringEvents.se: [addEvent:iii:i, getAdjPrinComp:ii:a, getCovarianceMatrixRow:ii:a, getDeflated:ii:a, getEvent:iii:i, getEvents:ii:a, getLatent:ii:i, getLoadingVector:ii:a, getNewOne:ii:a, getNewTwo:ii:a, getNumberEvents:ii:i, getOutcomesFinal:ii:a, getReport:iiii:i, getReportHash:iii:i, getReporterBallot:iii:a, getReportsFilled:ii:a, getReportsMask:ii:a, getScores:ii:a, getSetOne:ii:a, getSetTwo:ii:a, getSmoothRep:ii:a, getTotalRepReported:ii:i, getVSize:ii:i, getWeightedCenteredData:ii:a, makeBallot:ii:a, moveEventsToCurrentPeriod:iii:i, returnOld:ii:a, setAdjPrinComp:iia:i, setCovarianceMatrixRow:iia:i, setDeflated:iia:i, setLatent:iii:i, setLoadingVector:iia:i, setNewOne:iia:i, setNewTwo:iia:i, setOld:iia:i, setOutcomesFinal:iia:i, setReportHash:iiii:i, setReporterBallot:iiiai:i, setReportsFilled:iia:i, setReportsMask:iia:i, setScores:iia:i, setSetOne:iia:i, setSetTwo:iia:i, setSmoothRep:iia:i, setTotalRepReported:iii:i, setVSize:iii:i, setWeightedCenteredData:iia:i]
-EXPIRING = 0xf97d9fdba23823b2796446d4a45e18a7a1fdf905
-
-extern reporting.se: [addRep:iii:i, addReporter:ii:i, faucet:_:_, getNumberReporters:i:i, getRepBalance:ii:i, getRepByIndex:ii:i, getReporterID:ii:i, getReputation:i:a, hashReport:ai:i, repIDToIndex:ii:i, setInitialReporters:ii:i, setRep:iii:i, subtractRep:iii:i]
-REPORTING = 0xbe774ec2c537ea1a4981529568060456a650d639
-
-extern branches.se: [addMarket:ii:i, getBranch:i:i, getBranches:_:a, getMarkets:i:a, getMinTradingFee:i:i, getNumBranches:_:i, getNumMarkets:i:i, getPeriodLength:i:i, getStep:i:i, getSubstep:i:i, getVotePeriod:i:i, incrementPeriod:i:i, incrementStep:i:i, incrementSubstep:i:i, initializeBranch:iiii:i, setStep:ii:i, setSubstep:ii:i]
-BRANCHES = 0x3bc4532769424b380037df6f94ba52ed72636b7f
-
-extern checkQuorum.se: [checkQuorum:i:i]
-QUORUM = 0x9f163b10bde1af5fbf4440c2b2767a7c5d4381b6
-
-extern redeem_interpolate.se: [interpolate:iiiii:i]
-REDEEM_INTERPOLATE = 0x03fb53ae8a4373f6b9d6b4778288fb5d3dfbd4be
-
-extern redeem_center.se: [center:iiiii:i, covariance:iiiii:i]
-REDEEM_CENTER = 0x6621d0c3c37fea879ce067f5e85c80f08ffa5e7f
-
-extern redeem_score.se: [blank:iiiii:i, deflate:iiiii:i, latent:iiiii:i, loadings:iiiii:i, score:iiiii:i]
-REDEEM_SCORE = 0x238ea089e5f7bdc776d7a995f4c0a4e37c36ea37
-
-extern redeem_adjust.se: [reputation_delta:iiiii:i, select_scores:iiiii:i, weighted_delta:iiiii:i]
-REDEEM_ADJUST = 0x6d5793203371b50670aa62a558a44d99aceb1404
-
-extern redeem_resolve.se: [resolve:iiiii:i, smooth:iiiii:i]
-REDEEM_RESOLVE = 0xdbce345525ca39d17fe5527bdbfdd435ee6976d6
-
-extern redeem_payout.se: [payout:iiiii:i]
-REDEEM_PAYOUT = 0xb612eb2dc2be63445e541eaad4906580cff1557e
+import events as EVENTS
+import expiringEvents as EXPIRING
+import reporting as REPORTING
+import branches as BRANCHES
+import checkQuorum as QUORUM
+import redeem_interpolate as REDEEM_INTERPOLATE
+import redeem_center as REDEEM_CENTER
+import redeem_score as REDEEM_SCORE
+import redeem_adjust as REDEEM_ADJUST
+import redeem_resolve as REDEEM_RESOLVE
+import redeem_payout as REDEEM_PAYOUT
 
 # - 50% of fees already distributed to market creators
 #   all remaining fees go to reporters
 # - what if not enough consensus or not enough events expiring upcoming
 # @return next step or loop index (see below), for final call return new voting period
 def dispatch(branch):
-    # if !WHITELIST.check(msg.sender):
-    #     return(-1)
-    if !QUORUM.checkQuorum(branch):
+    if !BRANCHES.getStep(branch) and !QUORUM.checkQuorum(branch):
         return(-1)
     with period = BRANCHES.getVotePeriod(branch):
         with num_events = EXPIRING.getNumberEvents(branch, period):
             with num_reports = REPORTING.getNumberReporters(branch):
                 with flatsize = num_events * num_reports:
                     with step = BRANCHES.getStep(branch):
-                        if step == 9:
+                        if step == 10:
                             REDEEM_PAYOUT.payout(branch, period, num_events, num_reports, flatsize)
                             BRANCHES.setStep(branch, 0) # reset step
                             BRANCHES.incrementPeriod(branch)
                             return(period + 1)
                         elif step == 0:
-                            REDEEM_INTERPOLATE.interpolate(branch, period, num_events, num_reports, flatsize)
+                            EXPIRING.setTotalReputation(branch, period, REPORTING.getTotalRep(branch))
+                            REDEEM_INTERPOLATE.read_ballots(branch, period, num_events, num_reports, flatsize)
                         elif step == 1:
-                            REDEEM_CENTER.center(branch, period, num_events, num_reports, flatsize)
+                            REDEEM_INTERPOLATE.interpolate(branch, period, num_events, num_reports, flatsize)
                         elif step == 2:
-                            REDEEM_CENTER.covariance(branch, period, num_events, num_reports, flatsize)
-                        #######################
-                        # loop MAX_COMPONENTS #
-                        #######################
+                            REDEEM_CENTER.center(branch, period, num_events, num_reports, flatsize)
                         elif step == 3:
-                            with loading_vector = EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):
-                                with substep = BRANCHES.getSubstep(branch):
-                                    if substep == 4:
-                                        more = REDEEM_SCORE.score(branch, period, num_events, num_reports, flatsize)
+                            REDEEM_CENTER.covariance(branch, period, num_events, num_reports, flatsize)
+                        
+                        # loop MAX_COMPONENTS
+                        elif step == 4:
+                            with substep = BRANCHES.getSubstep(branch):
+                                if substep == 0:
+                                    REDEEM_SCORE.blank(branch, period, num_events, num_reports, flatsize)
+                                    BRANCHES.incrementSubstep(branch)
+                                    return(step)
+                                
+                                # loop MAX_ITERATIONS
+                                elif substep == 1:
+                                    if REDEEM_SCORE.loadings(branch, period, num_events, num_reports, flatsize) == 0:
+                                        BRANCHES.incrementSubstep(branch)
+                                    return(step)
+
+                                elif substep == 2:
+                                    REDEEM_SCORE.latent(branch, period, num_events, num_reports, flatsize)
+                                    BRANCHES.incrementSubstep(branch)
+                                    return(step)
+                                elif substep == 3:
+                                    REDEEM_SCORE.deflate(branch, period, num_events, num_reports, flatsize)
+                                    BRANCHES.incrementSubstep(branch)
+                                    return(step)
+                                else:
+                                    with more = REDEEM_SCORE.score(branch, period, num_events, num_reports, flatsize):
                                         BRANCHES.setSubstep(branch, 0)
                                         if more == 1:
                                             return(step)
                                         else:
                                             BRANCHES.incrementStep(branch)
                                             return(step + 1)
-                                    elif substep == 0:
-                                        REDEEM_SCORE.blank(branch, period, num_events, num_reports, flatsize)
-                                    #######################
-                                    # loop MAX_ITERATIONS #
-                                    #######################
-                                    elif substep == 1:
-                                        if REDEEM_SCORE.loadings(branch, period, num_events, num_reports, flatsize) == 0:
-                                            BRANCHES.incrementSubstep(branch)
-                                        # return(EXPIRING.getLoadingVector(branch, period, outsz=num_events+2):arr)
-                                        return(step)
-                                    ############
-                                    # end loop #
-                                    ############
-                                    elif substep == 2:
-                                        REDEEM_SCORE.latent(branch, period, num_events, num_reports, flatsize)
-                                    elif substep == 3:
-                                        REDEEM_SCORE.deflate(branch, period, num_events, num_reports, flatsize)           
-                                    BRANCHES.incrementSubstep(branch)
-                                    return(step)
-                        ############
-                        # end loop #
-                        ############
-                        elif step == 4:
-                            REDEEM_ADJUST.reputation_delta(branch, period, num_events, num_reports, flatsize)
+
                         elif step == 5:
-                            REDEEM_ADJUST.weighted_delta(branch, period, num_events, num_reports, flatsize)
+                            REDEEM_ADJUST.reputation_delta(branch, period, num_events, num_reports, flatsize)
                         elif step == 6:
-                            REDEEM_ADJUST.select_scores(branch, period, num_events, num_reports, flatsize)
+                            REDEEM_ADJUST.weighted_delta(branch, period, num_events, num_reports, flatsize)
                         elif step == 7:
-                            REDEEM_RESOLVE.smooth(branch, period, num_events, num_reports, flatsize)
+                            REDEEM_ADJUST.select_scores(branch, period, num_events, num_reports, flatsize)
                         elif step == 8:
+                            REDEEM_RESOLVE.smooth(branch, period, num_events, num_reports, flatsize)
+                        elif step == 9:
                             REDEEM_RESOLVE.resolve(branch, period, num_events, num_reports, flatsize)
                         BRANCHES.incrementStep(branch)
                         return(step + 1)
