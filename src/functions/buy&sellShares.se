@@ -30,7 +30,7 @@ import events as EVENTS
 
 data nonces[]
 
-event updatePrice(user:indexed, market:indexed, outcome:indexed, price, paid, sold)
+event updatePrice(user:indexed, market:indexed, outcome:indexed, price, cost)
 
 
 # amount of shares should be fixed point
@@ -99,7 +99,7 @@ def buyShares(branch, market, outcome, amount, nonce):
     # other half go to branch
     CASH.send(branch, fee/2)
     # log new price & avg price paid/share
-    log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), price*2^64/amount, 0)
+    log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), -price*2^64/amount)
     return(price+fee)
 
 # amount is amount of shares to sell
@@ -156,7 +156,7 @@ def sellShares(branch, market, outcome, amount, nonce):
         CASH.addCash(tx.origin, price)
         MARKETS.modifyParticipantShares(market, participantNumber, outcome, -amount)
         # log new price and avg. price sold / share
-        log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), 0, price*2^64/amount)
+        log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), price*2^64/amount)
         return(price)
 
 macro good_pow():
