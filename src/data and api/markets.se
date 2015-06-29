@@ -246,18 +246,19 @@ def initialLiquiditySetup(marketID, alpha, cumScale, numOutcomes):
     return(1)
 
 def getMarketOutcomeInfo(market, outcome):
-    info = array(12)
+    info = array(13)
     participantNumber = self.Markets[market].addr2participant[tx.origin]
     info[0] = self.getSharesPurchased(market, outcome)
     info[1] = self.getParticipantSharesPurchased(market, participantNumber, outcome)
     info[2] = self.price(market, outcome)
-    info[3] = self.getCurrentParticipantNumber(market)
-    info[4] = self.Markets[market].winningOutcomes[0]
-    info[5] = self.Markets[market].winningOutcomes[1]
-    info[6] = self.Markets[market].winningOutcomes[2]
-    info[7] = self.Markets[market].winningOutcomes[3]
-    info[8] = self.Markets[market].winningOutcomes[4]
-    info[9] = self.Markets[market].winningOutcomes[5]
-    info[10] = self.Markets[market].winningOutcomes[6]
-    info[11] = self.Markets[market].winningOutcomes[7]
+    info[3] = participantNumber
+    info[4] = self.getCurrentParticipantNumber(market)
+    info[5] = self.Markets[market].winningOutcomes[0]
+    info[6] = self.Markets[market].winningOutcomes[1]
+    info[7] = self.Markets[market].winningOutcomes[2]
+    info[8] = self.Markets[market].winningOutcomes[3]
+    info[9] = self.Markets[market].winningOutcomes[4]
+    info[10] = self.Markets[market].winningOutcomes[5]
+    info[11] = self.Markets[market].winningOutcomes[6]
+    info[12] = self.Markets[market].winningOutcomes[7]
     return(info: arr)
