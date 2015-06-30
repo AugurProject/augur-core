@@ -75,6 +75,7 @@ def get_compile_order():
     # incoming edges are dependencies
     for directory, subdirs, files in os.walk('src'):
         for f in files:
+            if not f.endswith('.se'): continue
             incoming_edges = set() 
             for line in open(os.path.join(directory, f)):
                 if USE_EXTERNS and line.startswith('extern'):
@@ -150,11 +151,11 @@ def compile(fullname):
         new_code = translate_code_with_externs(fullname)
     else:
         new_code = translate_code_with_imports(fullname)
-#    print new_code
+    print new_code
     evm = '0x' + serpent.compile(new_code).encode('hex')
     new_address = broadcast_code(evm)
     short_name = os.path.split(fullname)[-1][:-3]
-    new_sig = serpent.mk_signature(new_code).replace('main', short_name, 1)
+    new_sig = serpent.mk_signature(new_code).replace('main', short_name, 1).replace(':,', ':_,').replace(':]', ':_]')
     fullsig = serpent.mk_full_signature(new_code)
     new_info = {'address':new_address, 'sig':new_sig, 'fullsig':fullsig}
     set_info(short_name, new_info)
