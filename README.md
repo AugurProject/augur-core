@@ -56,8 +56,6 @@ augur-serpent
 - With these conditions: [1] Stalled Branch, [2] Decision-Author’s signature, one can move an event to a new Branch (use ecVerify serpent function)
 
 ### Version 0.4 (Awesome fun stuff):
-- logs for market creation + any other important logs
-- update ui api getters
 - limit orders in UI if price > or < a number and maximum amount of money (or shares?) you're willing to spend for buy, max shares to sell for sell - but what about real on chain limit orders?
 - Stop loss orders
 - update eventsExpDates so you can update & it not lose events from whatever your branch's last voting periods was, should just moveEventsToCurrentPeriod upon update perhaps have 2 vars in a contract for old addr and new, call old and get its events then move to new contract
