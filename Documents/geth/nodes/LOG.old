@@ -1,7 +1,0 @@
-=============== Jun 29, 2015 (PDT) ===============
-16:49:22.963490 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
-16:49:22.963746 db@open opening
-16:49:22.963812 journal@recovery F·1
-16:49:22.963884 journal@recovery recovering @3
-16:49:22.964939 db@janitor F·3 G·0
-16:49:22.964972 db@open done T·1.215ms

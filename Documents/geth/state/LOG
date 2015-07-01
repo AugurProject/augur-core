@@ -1,8 +1,0 @@
-=============== Jun 30, 2015 (PDT) ===============
-22:56:28.964038 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
-22:56:28.964917 db@open opening
-22:56:28.964989 journal@recovery F·1
-22:56:28.965617 journal@recovery recovering @6
-22:56:28.967228 mem@flush created L0@8 N·77 S·1KiB "\x03\vV..\xac\xe2\xbf,v213":"\xde-v..Ӣ\x1e,v178"
-22:56:28.971339 db@janitor F·5 G·0
-22:56:28.971364 db@open done T·6.433427ms
