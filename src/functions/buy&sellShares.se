@@ -38,9 +38,9 @@ event updatePrice(user:indexed, market:indexed, outcome:indexed, price, cost)
 # Error messages otherwise
     # -1: invalid outcome or trading closed
     # -2: entered a -amt of shares
-    # -3: not enough money
+    # -3: not enough money / limit order too low
     # -4: bad nonce/hash
-def buyShares(branch, market, outcome, amount, nonce):
+def buyShares(branch, market, outcome, amount, nonce, limit):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)  
     # if we have 3-4 cycles in a row of events getting pushed back market would already be closed even though
     # events up to be decided on for a while yet never decided
@@ -77,7 +77,7 @@ def buyShares(branch, market, outcome, amount, nonce):
         return(0)
     price = (newCost - oldCost)
     
-    if(CASH.balance(tx.origin) < price*(MARKETS.getTradingFee(market) + 2^64)/2^64):
+    if(CASH.balance(tx.origin) < price*(MARKETS.getTradingFee(market) + 2^64)/2^64 or (limit!=0 and (price*2^64/amount)>limit)):
         MARKETS.modifyShares(market, outcome, -amount)
         return(-3)
 
@@ -108,8 +108,8 @@ def buyShares(branch, market, outcome, amount, nonce):
 # Error messages otherwise
     # -1: invalid outcome, trading closed, or you haven't traded in this market
     # -2: entered a -amt of shares
-    # -3: you own no shares 
-def sellShares(branch, market, outcome, amount, nonce):
+    # -3: you own no shares / limit price too high
+def sellShares(branch, market, outcome, amount, nonce, limit):
     #if !good_pow():
     #    return(-4)
     inc_nonce()
@@ -141,7 +141,7 @@ def sellShares(branch, market, outcome, amount, nonce):
     price = oldCost - newCost
     # remove shares from the user's account
     # if user actually doesn't have the shares, revert
-    if MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome) < amount:
+    if (MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome) < amount or (price*2^64/amount)<limit)):
         MARKETS.modifyShares(market, outcome, amount)
         return(-3)
     else:

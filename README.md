@@ -6,8 +6,6 @@ augur-serpent
 - need to support categorical outcomes in consensus --- dunno if we do atm
 - #def moveEvent(event, newBranch, authorSignature):
 - check that msg.sender is one of our function contracts
-- make data EXTERNs updatable
-- allow Chinese chars
 - investigate https://www.seas.upenn.edu/~hoda/HLPV.pdf
 
 ### Bugs:
@@ -21,7 +19,6 @@ augur-serpent
 
 ### Scalability optimizations:
 - http://lightning.network/lightning-network.pdf
-- sidechains
 - randomized voter selection? - first x events expiring vote on in one ballot - random selection, then another ballot (V presentation on a similar strat.)
 - ethereum rng:
   - probability 0 1 ... 100
@@ -44,7 +41,6 @@ augur-serpent
 
 ### Version 0.5 (More fun features):
 - play w/ fed. peg on eth
-- poss. upvotes on markets
 - if no agreement on any outcome <65% confidence (failure to achieve certainty) this confidence is *of the rep reported* (consensus needs to take this as a param), then do over next voting period
   - have consensus push all into next voting period (this is currently known as disputed)
     - perhaps use a "times voted" thing for this
@@ -60,7 +56,6 @@ augur-serpent
 - frontrunning prevention - spows
 
 ### Version 0.4 (Awesome fun stuff):
-- limit orders in UI if price > or < a number and maximum amount of money (or shares?) you're willing to spend for buy, max shares to sell for sell - but what about real on chain limit orders?
 - Stop loss orders
 - update eventsExpDates so you can update & it not lose events from whatever your branch's last voting periods was, should just moveEventsToCurrentPeriod upon update perhaps have 2 vars in a contract for old addr and new, call old and get its events then move to new contract
 - consider implications of updating data/api contracts & data migration ^
