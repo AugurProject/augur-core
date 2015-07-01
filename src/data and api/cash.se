@@ -25,8 +25,11 @@ def init():
     # test initial funds
     self.cashcoinBalances[tx.origin] = 100000*2^64
 
+# Error -1: Hey, you're not broke!
 def faucet():
     sender = tx.origin
+    if(self.cashcoinBalances[sender]!=0):
+        return(-1)
     self.cashcoinBalances[sender] = 10000*2^64
     return(1)
 
