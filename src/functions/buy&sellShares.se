@@ -141,7 +141,7 @@ def sellShares(branch, market, outcome, amount, nonce, limit):
     price = oldCost - newCost
     # remove shares from the user's account
     # if user actually doesn't have the shares, revert
-    if (MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome) < amount or (price*2^64/amount)<limit)):
+    if (MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome) < amount or (price*2^64/amount)<limit):
         MARKETS.modifyShares(market, outcome, amount)
         return(-3)
     else:
