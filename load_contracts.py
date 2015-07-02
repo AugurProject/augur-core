@@ -151,7 +151,7 @@ def compile(fullname):
         new_code = translate_code_with_externs(fullname)
     else:
         new_code = translate_code_with_imports(fullname)
-    print new_code
+    # print new_code
     evm = '0x' + serpent.compile(new_code).encode('hex')
     new_address = broadcast_code(evm)
     short_name = os.path.split(fullname)[-1][:-3]
