@@ -24,16 +24,16 @@
 
 # Convert to fixed-point (base 2^64)
 macro fix($x):
-    ONE * $x
+    2^64 * $x
 
 # Revert from fixed-point
 macro unfix($x):
-    $x / ONE
+    $x / 2^64
 
 # Fixed-point multiplication
 macro fixed_multiply($x, $y):
-    $x * $y / ONE
+    $x * $y / 2^64
 
 # Fixed-point division
 macro fixed_divide($x, $y):
-    $x * ONE / $y
+    $x * 2^64 / $y

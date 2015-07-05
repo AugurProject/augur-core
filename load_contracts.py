@@ -202,13 +202,11 @@ def main():
         print "compiling", fullname
         compile(fullname)
     if not FROM_DB:
-        sys.stdout.write('dumping new addresses to DB')
-        sys.stdout.flush()
+        print "dumping new addresses to build.dat & build.json..."
+        with open(os.path.join(ROOT, "build.json"), "w") as json_file:
+            print >> json_file, json.dumps(INFO, sort_keys=True, indent=4)
         for k, v in INFO.items():
             DB.Put(k, json.dumps(v))
-            sys.stdout.write('.')
-            sys.stdout.flush()
-        print
     return 0
 
 if __name__ == '__main__':

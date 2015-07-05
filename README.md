@@ -1,5 +1,5 @@
-augur-serpent
--------------
+augur-core
+----------
 
 ### To do:
 - min/max fxp? & 1,2 or 2^64 and 2*2^64 - should probably support fxp

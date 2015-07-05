@@ -20,16 +20,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# If you have questions, please contact Jack Peterson (jack@augur.net).
+# If you have questions, please contact jack@augur.net or joey@augur.net.
 
-# Constant macros
-macro ONE: 2^64
-macro YES: 2^65
-macro NO: 2^64
-macro BAD: 3 * 2^63
-macro NA: 0
-macro COINS: 10^6
-macro CATCH_TOLERANCE: 2^64 / 10
-macro MAX_ITERATIONS: 5
-macro MAX_COMPONENTS: 2
-macro BOND: 42 * ONE
+import cash as CASH
+import reporting as REPORTING
+
+# Error -1: Hey, you're not broke!
+def cashFaucet():
+    if CASH.balance(tx.origin) > fix(5):
+        return(-1)
+    CASH.setCash(tx.origin, fix(10000))
+    return(1)
+
+def reputationFaucet(branch):
+    if REPORTING.repIDToIndex(branch, tx.origin) != 0 or REPORTING.getReporterID(branch, 0) == tx.origin:
+        index = REPORTING.repIDToIndex(branch, tx.origin)
+    else:
+        index = REPORTING.getNumberReporters(branch)
+        REPORTING.addReporter(branch, tx.origin)
+    REPORTING.setRep(branch, index, fix(47))
+    return(1)
+
+inset("macros/fixed.se")
