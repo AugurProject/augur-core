@@ -1,0 +1,440 @@
+# can you atk clustering w/ ordering atk if so use mbsas instead of bsas
+
+A consensus spec:
+i) check report validity (1-2 binary, if someone gives a value > or < scalar range or > or < categorical num outcomes, round up/down to 1 or 2 respectively)
+    i.i) make sure no blank reports in a ballot
+ii) convert scalar / categorical to range 1-2 when submitting report
+    iia) if scalar is a real .5 convert to .5*2^64+1, if indeterminate keep as .5*2^64
+    iib) if scalar is a real 0 convert to 0*2^64+1, else if no response, keep as 0
+1) do clustering
+    1a) completely missing ballots should just be not clustered - find distance for one of them, penalize the rest accordingly
+2) normalize to 1 and get new "this" rep vector
+    2a) prior to this, multiply by prev. rep vector over mean
+    2b) take old rep multiply by .80 add to new rep *.2 (smoothing part)
+3) using this, calc. outcomes 1, 1.5, 2 for binary using weighed avg / catch param (.1 or .15)
+    3a) scalar outcomes & categoricals use weighted median
+    3b) if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome (or we could audit here or do certainty based audits)
+    3c) detect b via a "times voted on" var
+    3d) when doing outcomes, only do weighted avg / median on people who actually reported on that event, i.e. don't include people who reported 0 / no report
+    note: do outcomes w/ smooth rep (not just "new rep"), and calculate using tolerance, use weighted med. for scalars
+    3e) then scale scaled back up to w/e value - ditto for categorical (need to mult by range and add min i think)
+    3f) save outcomes
+4) Payout reporters & event bonds
+
+Params:
+Smoothing param
+Catch param
+
+def dispatch(branch):
+    if !BRANCHES.getStep(branch) and !QUORUM.checkQuorum(branch):
+        return(-1)
+    with period = BRANCHES.getVotePeriod(branch):
+        with num_events = EXPIRING.getNumberEvents(branch, period):
+            with num_reports = REPORTING.getNumberReporters(branch):
+                with flatsize = num_events * num_reports:
+                    with step = BRANCHES.getStep(branch):
+                        if step == 4:
+                            REDEEM_PAYOUT.payout(branch, period, num_events, num_reports, flatsize)
+                            BRANCHES.setStep(branch, 0) # reset step
+                            BRANCHES.incrementPeriod(branch)
+                            return(period + 1)
+                        elif step == 0:
+                            EXPIRING.setTotalReputation(branch, period, REPORTING.getTotalRep(branch))
+                            REDEEM_INTERPOLATE.read_ballots(branch, period, num_events, num_reports, flatsize)
+                        elif step == 1:
+                            REDEEM_CENTER.clustering(branch, period, num_events, num_reports, flatsize)
+                        elif step == 2:
+                            REDEEM_RESOLVE.smooth(branch, period, num_events, num_reports, flatsize)
+                        elif step == 3:
+                            REDEEM_RESOLVE.resolve(branch, period, num_events, num_reports, flatsize)
+                        BRANCHES.incrementStep(branch)
+                        return(step + 1)
+
+# - loop through reputation && check if in reporters, if so use their
+#   report, if not use the fillin / not reported report (all zeroes)
+# - use this to make a giant array of reports to pass to self.consensus
+# - want to pass reports for each 0 indexed event in order (so we get
+#   reports from an actual reporter)
+# (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
+def read_ballots(branch, period, num_events, num_reports, flatsize):
+    with reputation = array(num_reports):
+        with reports = array(flatsize):
+            with i = 0:
+                while i < num_reports:
+                    with reporterID = REPORTING.getReporterID(branch, i):
+                        reputation[i] = REPORTING.getRepBalance(branch, reporterID)
+                        # - checks to see if each reporter actually voted on events
+                        # - if they didn't vote (simply check if they voted on first event)
+                        #     do nothing (these values will be 0 by default due to Serpent array styles)
+                        #     else if the reporter did report on events put their ballot into the reports array
+                        # reports[i*num_events] = slice(EXPIRING.getReporterBallot(branch, period, reporterID, outitems=num_events), items=0, items=1)
+                        reports[i*num_events] = EXPIRING.getReport(branch, period, reporterID, 0)
+                        if reports[i*num_events] != 0:
+                            with ballot = array(num_events - 1):
+                                ballot = slice(EXPIRING.getReporterBallot(branch, period, reporterID, outitems=num_events), items=1, items=num_events)
+                                with j = 1:
+                                    while j < num_events:
+                                        reports[i*num_events + j] = ballot[j - 1]
+                                        j += 1
+                    i += 1
+                reputation = normalize(reputation)
+                save(self.Interpolate[branch][period].reports[0], reports, chars=32*flatsize)
+                save(self.Interpolate[branch][period].reputation[0], reputation, chars=32*num_reports)
+                return(1)
+
+def payout(branch, period, num_events, num_reports, flatsize):
+    with smooth_rep = array(num_reports):
+        smooth_rep = slice(EXPIRING.getSmoothRep(branch, period, outitems=num_reports), items=0, items=num_reports)
+        with reports_mask = array(flatsize):
+            reports_mask = slice(EXPIRING.getReportsMask(branch, period, outitems=flatsize), items=0, items=flatsize)
+            with outcomes = array(num_events):
+                outcomes = slice(EXPIRING.getOutcomesFinal(branch, period, outitems=num_events), items=0, items=num_events)
+                with reporter_payouts = array(num_reports):
+                    reporter_payouts = slice(PAYOUT.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outitems=num_reports), items=0, items=num_reports)
+
+                    # get event ID for each event by taking the x index in the reports arrays
+                    # - shoving it in reporting.events[] and getting the corresponding ID
+                    with j = 0:
+                        while j < num_events:
+                            with event = EXPIRING.getEvent(branch, period, j):
+
+                                # then take outcomes_final and set each event outcome
+                                # (BAD and BOND macros defined in consensus/constants.se)
+                                EVENTS.setOutcome(event, outcomes[j])
+                                if outcomes[j] != BAD:
+
+                                    # return bond
+                                    CASH.subtractCash(event, BOND)
+                                    CASH.addCash(INFO.getCreator(event), BOND)
+                                else:
+
+                                    # give event bond money to reporters
+                                    CASH.subtractCash(event, BOND)
+                                    CASH.addCash(branch, BOND)
+                            j += 1
+                    # - need to loop through rep holders and distribute 50% of branch fees to
+                    #   reporters' cashcoin addresses 
+                    # - also need to take reporter_payouts and redistribute reputation in the
+                    #   Reporting structure accordingly
+                    EXPIRING.setReporterPayouts(branch, period, reporter_payouts)
+                    with i = 0:
+                        while i < num_reports:
+                            REPORTING.setRep(branch, i, fixed_multiply(reporter_payouts[i], EXPIRING.getTotalReputation(branch, period)))
+                            CASH.addCash(REPORTING.getReporterID(branch, i), fixed_multiply(CASH.balance(branch), reporter_payouts[i]))
+                            i += 1
+                        CASH.subtractCash(branch, CASH.balance(branch))
+                        return(1)
+
+def smooth(adjusted_scores:arr, reputation:arr, num_reports, num_events):
+    # Weighted sum of old and new reputation vectors.
+    # New: row_reward_weighted
+    # Old: reputation
+    reputation = normalize(reputation)
+    with row_reward_weighted = array(num_reports):
+        with i = 0:
+            while i < num_reports:
+                row_reward_weighted[i] = reputation[i]
+                i += 1
+
+        # Overwrite the inital declaration IFF there wasn't perfect consensus.
+        if maximum(array_abs(adjusted_scores)) != 0:
+            with mean_weight = mean(row_reward_weighted):
+                with i = 0:
+                    while i < num_reports:
+                        row_reward_weighted[i] = adjusted_scores[i] * row_reward_weighted[i] / mean_weight
+                        i += 1
+            row_reward_weighted = normalize(row_reward_weighted)
+        # Freshly-calculated reward (in reputation)
+        # (0.1 is the adjustable parameter "alpha", hard-coding it for now)
+        with smooth_rep = array(num_reports):
+            with i = 0:
+                while i < num_reports:
+                    smooth_rep[i] = row_reward_weighted[i]/10 + reputation[i]*9/10
+                    i += 1
+            smooth_rep = normalize(smooth_rep)
+            return(smooth_rep, items=num_reports)
+
+def resolve(branch, period, num_events, num_reports, flatsize):
+    with reports_filled = array(flatsize):
+        reports_filled = slice(EXPIRING.getReportsFilled(branch, period, outitems=flatsize), items=0, items=flatsize)
+        with smooth_rep = array(num_reports):
+            smooth_rep = slice(EXPIRING.getSmoothRep(branch, period, outitems=num_reports), items=0, items=num_reports)
+            with scaled = array(num_events):
+                with scaled_max = array(num_events):
+                    with scaled_min = array(num_events):
+                        with j = 0:
+                            while j < num_events:
+                                with event = EXPIRING.getEvent(branch, period, j):
+                                    if fix(EVENTS.getMaxValue(event)) != YES and EVENTS.getNumOutcomes(event) == 2:
+                                        scaled[j] = 1
+                                        scaled_min[j] = fix(EVENTS.getMinValue(event))
+                                        scaled_max[j] = fix(EVENTS.getMaxValue(event))
+                                    else:
+                                        scaled[j] = 0
+                                        scaled_min[j] = NO
+                                        scaled_max[j] = YES
+                                j += 1
+                            with outcomes = array(num_events):
+                                outcomes = slice(consensus(smooth_rep, reports_filled, scaled, scaled_max, scaled_min, num_reports, num_events, outitems=num_events), items=0, items=num_events)
+                                EXPIRING.setOutcomesFinal(branch, period, outcomes)
+                                return(1)
+
+def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports, num_events):
+    with two_num_events = 2*num_events:
+        with outcomes_final = array(num_events):
+            # discriminate based on contract type
+            with outcomes_raw = array(num_events):
+                with i = 0:
+                    while i < num_events:
+                        if scaled[i] == 1:
+                            with active_reports = array(num_reports):
+                                with j = 0:
+                                    while j < num_reports:
+                                        active_reports[j] = reports[i + j*num_events]
+                                        j += 1
+                                outcomes_raw[i] = weighted_median(active_reports, smooth_rep)
+                        else:
+                            with j = 0:
+                                while j < num_reports:
+                                    outcomes_raw[i] += fixed_multiply(smooth_rep[j], reports[j*num_events + i])
+                                    j += 1
+                        i += 1
+                with outcomes_adj = array(num_events):
+                    with i = 0:
+                        while i < num_events:
+                            if scaled[i] == 1:
+                                outcomes_adj[i] = outcomes_raw[i]
+                            else:
+                                outcomes_adj[i] = catch(outcomes_raw[i])
+                            i += 1
+                    with i = 0:
+                        while i < num_events:
+                            if scaled[i] == 1:
+                                outcomes_final[i] = fixed_multiply(outcomes_adj[i], scaled_max[i] - scaled_min[i]) + scaled_min[i]
+                            else:
+                                outcomes_final[i] = outcomes_adj[i]
+                            i += 1
+                    return(outcomes_final, items=num_events)
+
+
+macro ONE: 2^64
+
+macro YES: 2^65
+macro NO: 2^64
+macro BAD: 3 * 2^63
+
+macro COINS: 10^6
+
+macro CATCH_TOLERANCE: 2^64 / 10
+
+# Sum elements of array
+macro sum($a):
+    with $len = len($a):
+        with $total = 0:
+            with $i = 0:
+                while $i < $len:
+                    $total += $a[$i]
+                    $i += 1
+                $total
+
+# Arithmetic mean
+macro mean($a):
+    sum($a) / len($a)
+
+# Absolute value
+macro abs($n):
+    if($n<0, -$n, $n)
+
+# Proportional distance from zero, inputs are fixed point
+macro get_weight($a):
+    with $len = len($a):
+        with $total = 0:
+            with $i = 0:
+                while $i < $len:
+                    $a[$i] = abs($a[$i])
+                    $total += $a[$i]
+                    $i += 1
+                with $wt = array($len):
+                    with $i = 0:
+                        while $i < $len:
+                            $wt[$i] = $a[$i] * ONE / $total
+                            $i += 1
+                        $wt
+
+# Bins values to 1, 1.5, 2
+macro catch($x):
+    if($x < (BAD - CATCH_TOLERANCE), NO, if($x > BAD + CATCH_TOLERANCE, YES, BAD))
+    # if $x < BAD - CATCH_TOLERANCE:
+    #     c = NO
+    # elif $x > BAD + CATCH_TOLERANCE:
+    #     c = YES
+    # else:
+    #     c = BAD
+    # c
+
+# Absolute value of all array elements
+macro array_abs($a):
+    with $len = len($a):
+        with $absval = array($len):
+            with $i = 0:
+                while $i < $len:
+                    $absval[$i] = abs($a[$i])
+                    $i += 1
+                $absval
+
+# Minimum value of array
+macro minimum($a):
+    with $min = $a[0]:
+        with $i = 1:
+            with $len = len($a):
+                while $i < $len:
+                    if $a[$i] < $min:
+                        $min = $a[$i]
+                    $i += 1
+                $min
+
+# Maximum value of array
+macro maximum($a):
+    with $max = $a[0]:
+        with $i = 1:
+            with $len = len($a):
+                while $i < $len:
+                    if $a[$i] > $max:
+                        $max = $a[$i]
+                    $i += 1
+                $max
+
+# Find index corresponding to the maximum value of an array
+macro findmax($a):
+    with $len = len($a):
+        with $max = $a[0]:
+            with $maxidx = 0:
+                with $i = 1:
+                    while $i < $len:
+                        if $a[$i] > $max:
+                            $maxval = $a[$i]
+                            $maxidx = $i
+                        $i += 1
+                    $maxidx        
+
+# Fixed-point multiplication
+macro fixed_multiply($x, $y):
+    $x * $y / ONE
+
+# Fixed-point division
+macro fixed_divide($x, $y):
+    $x * ONE / $y
+
+macro concat($a, $b):
+    with $c = array(len($a)+len($b)):
+        mcopy($c, $a, items=len($a))
+        mcopy($c+(items=len($a)), $b, items=len($b))
+        $c
+
+macro swap($a, $i, $j):
+    with $t = $a[$i]:
+        $a[$i] = $a[$j]
+        $a[$j] = $t
+
+macro paired_qsort($a, $b):
+    with $len = len($a):
+        with $c = concat($a, $b):
+            with $stack = array($len):
+                with $top = 0:
+                    with $h = 0:
+                        with $l = 0:
+                            with $x = 0:
+                                with $i = 0:
+                                    with $j = 0:
+                                        $stack[0] = 0
+                                        $stack[1] = $len - 1
+                                        $top = 1
+                                        while $top >= 0:
+                                            $h = $stack[$top]
+                                            $l = $stack[$top - 1]
+                                            $top -= 2
+                                            $x = $c[$h]
+                                            $i = $l - 1
+                                            $j = $l
+                                            
+                                            while $j <= $h - 1:
+                                                if $c[$j] <= $x:
+                                                    $i += 1
+                                                    swap($c, $i, $j)
+                                                    swap($c, $i + $len, $j + $len)
+                                                $j += 1
+                                            
+                                            swap($c, $i+1, $h)
+                                            swap($c, $i + $len + 1, $h + $len)
+                                            if $i > $l:
+                                                $stack[$top + 1] = $l
+                                                $stack[$top + 2] = $i
+                                                $top += 2
+                                            if $i + 2 < $h:
+                                                $stack[$top + 1] = $i + 2
+                                                $stack[$top + 2] = $h
+                                                $top += 2
+                                        $c
+
+# Weighted median of an array
+macro weighted_median($data, $weights):
+    with n = len($data):
+        with done = 0:
+            with midpoint = sum($weights) / 2:
+                with j = 0:
+                    while j < num_present[i]:
+                        if $weights[j] > midpoint:
+                            with maxidx = findmax($weights):
+                                wmedian = $data[maxidx]
+                            done = 1
+                        j += 1
+                if done == 0:
+                    with sorted = paired_qsort($data, $weights):
+                        with sorted_data = array(n):
+                            with sorted_weights = array(n):
+                                with j = 0:
+                                    while j < n:
+                                        sorted_data[j] = sorted[j]
+                                        sorted_weights[j] = sorted[j + n]
+                                        j += 1
+                                with cumulative_weight = 0:
+                                    with idx = 0:
+                                        while cumulative_weight <= midpoint:
+                                            idx += 1
+                                            cumulative_weight += sorted_weights[idx-1]
+                                        cumulative_weight -= sorted_weights[idx-1]
+                                        # conservative machine epsilon: 
+                                        # 0x1197998 = 18446744 = ONE / 10^12
+                                        if abs(cumulative_weight - midpoint) < 0x1197998:
+                                            wmedian = (sorted_data[idx-2] + sorted_data[idx-1]) / 2
+                                        else:
+                                            wmedian = sorted_data[idx-1]
+                wmedian
+
+# Outer product of vectors
+macro outer_product($u, $v):
+    with $usz = len($u):
+        with $p = array($usz^2):
+            with $i = 0:
+                while $i < $usz:
+                    with $j = 0:
+                        while $j < $usz:
+                            $p[$i*$usz + $j] += $u[$i] * $v[$j] / ONE
+                            $j += 1
+                    $i += 1
+                $p
+
+# Flattened fixed-point matrix multiplication
+macro matrix_multiply($a, $arows, $acols, $b, $brows, $bcols):
+    with $c = array($arows*$bcols):
+        with $i = 0:
+            while $i < $arows:
+                with $j = 0:
+                    while $j < $bcols:
+                        with $k = 0:
+                            while $k < $acols:
+                                $c[$i*$bcols + $j] += $a[$i*$acols + $k] * $b[$k*$bcols + $j] / ONE
+                                $k += 1
+                        $j += 1
+                $i += 1
+            $c
