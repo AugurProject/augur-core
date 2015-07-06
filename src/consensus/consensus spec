@@ -1,11 +1,11 @@
 # can you atk clustering w/ ordering atk if so use mbsas instead of bsas
 
 A consensus spec:
-i) check report validity (1-2 binary, if someone gives a value > or < scalar range or > or < categorical num outcomes, round up/down to 1 or 2 respectively)
-    i.i) make sure no blank reports in a ballot
-ii) convert scalar / categorical to range 1-2 when submitting report
-    iia) if scalar is a real .5 convert to .5*2^64+1, if indeterminate keep as .5*2^64
-    iib) if scalar is a real 0 convert to 0*2^64+1, else if no response, keep as 0
+i) check report validity (1-2 binary, if someone gives a value > or < scalar range or > or < categorical num outcomes, round up/down to 0 or 1 respectively) - done
+    i.i) make sure no blank reports in a ballot - done
+ii) convert scalar / categorical to range 0-1 when submitting report
+    iia) if scalar/categorical is a real .5 convert to .5*2^64+1, if indeterminate keep as .5*2^64 - in UI
+    iib) if scalar/categorical is a real 0 convert to 0*2^64+1, else if no response, keep as 0 - in UI
 1) do clustering
     1a) completely missing ballots should just be not clustered - find distance for one of them, penalize the rest accordingly
 2) normalize to 1 and get new "this" rep vector
@@ -17,7 +17,7 @@ ii) convert scalar / categorical to range 1-2 when submitting report
     3c) detect b via a "times voted on" var
     3d) when doing outcomes, only do weighted avg / median on people who actually reported on that event, i.e. don't include people who reported 0 / no report
     note: do outcomes w/ smooth rep (not just "new rep"), and calculate using tolerance, use weighted med. for scalars
-    3e) then scale scaled back up to w/e value - ditto for categorical (need to mult by range and add min i think)
+    3e) then scale scaled back up to w/e value - ditto for categorical (need to mult by range and add min i think) for categorical range is numOutcomes - 1, min is 1
     3f) save outcomes
 4) Payout reporters & event bonds
 

@@ -103,9 +103,9 @@ def report(branch, report:arr, votePeriod, salt):
                     return(-5)
                 minValue = EVENTS.getMinValue(events[i])
                 range = maxValue*2^64 - minValue*2^64
-                if((report[i]*range/2^64 + minValue) > maxValue):
+                if((report[i]*range/2^64 + minValue*2^64) > maxValue*2^64):
                     report[i] = 2^64
-                if((report[i]*range/2^64 + minValue) < minValue):
+                if((report[i]*range/2^64 + minValue*2^64) < minValue*2^64):
                     # 1 == really close to 0, but not a "no report"
                     report[i] = 1
         reputation = REPORTING.getRepBalance(branch, tx.origin)
