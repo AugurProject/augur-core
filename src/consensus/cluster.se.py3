@@ -2,58 +2,73 @@ data best = -1
 data bestDist = 2^255
 # list of clusterIDs
 data bestClusters[]
+data step
 
 import expiringEvents as EXPEVENTS
 import reporting as REPORTING
+import clusterhelper as CLUSTER
+import fxpFunctions as FXP
 
-# vect should either be a list of ballots or a list of reporters
+# vec should either be a list of ballots or a list of reporters
 # meanVec is numEvents long
 # vec is numEvents*numReporters long
 # could get rep vector from our list of reporters
 # or could just use reporterIndex vec to get both rep & ballots
-data clusternodes[](vec[], numReporters, meanVec[], repInCluster, repVector, reporterIndexVec, distance)
 
-def cluster():
+# overwriting of data issues etc
+data clusternodes[](meanVec[], numReporters, reporterIndexVec[], repVector[], repInCluster, distance)
+data numClusters
 
-def L2dist(x:arr, y:arr, numEvents):
-    i = 0
-    distSquare = 0
-    while i < numEvents:
-        distSquare += (x[i] - y[i])^2
-        i += 1
-    return(self.sqrt(distSquare))
+def initCluster(branch, votePeriod, numEvents, numReporters):
+	threshold = (FXP.fx_log(numEvents*2^64)*2^64/42475197863169474560)*2^64 / 32650737010465906688
+	if(threshold==0):
+		threshold = 5534023222112865280
+	self.best = -1
+	self.bestDist = 2**255
+	self.numClusters = 0
+	self.step = 0
+	return(cluster(branch, votePeriod, numEvents, numReporters))
 
-def sqrt(n):
-    approx = n/2
-    better = (approx + n/approx)/2
-    i = 0
-    while i < 11:
-        approx = better
-        better = (approx + n/approx)/2
-        i += 1
-    return approx
-
-def newMean(cluster, numEvents, branch, reportingPeriod):
-	numReporters = self.clusternodes[cluster].numReporters
-	weighted = array(numReporters)
+def cluster(branch, votePeriod, numEvents, numReporters):
+	currentclustid = -1
 	i = 0
 	while i < numReporters:
-		weighted[i] = array(numReporters)
-		reporterID = REPORTING.getReporterID(branch, reporterIndexVec[i]):
-		weighted[i] = EXPEVENTS.getReporterBallot(branch, reportingPeriod, reporterID, outitems=numEvents)
-		e = 0
-		while e < numEvents:
-			weighted[i][e] *= REPORTING.getRepBalance(branch, reporterID)
-			e += 1
-		i += 1
-	mean = array(numEvents)
-	i = 0
-	totalRep = self.clusternodes[cluster].repInCluster
-	while i < numEvents:
-		r = 0
-		while r < numReporters:
-			mean[i] += weighted[r][i]
-			r += 1
-		mean[i] /= totalRep
-		i += 1
-	return(mean: arr)
+		cmax = -1
+		shortestDist = 2**255
+		n = 0
+		while n < numClusters:
+			if(n!=0):
+				dist = CLUSTER.L2dist(reportorsomething, self.clusternodes[n].meanVec)
+				if dist<shortestDist:
+					cmax = n
+					shortestDist = dist
+			n += 1
+		if(cmax!=-1 and shortestDist<threshold):
+			self.clusternodes[cmax].reporterIndexVec[self.clusternodes[cmax].numReporters] = i
+			self.clusternodes[cmax].repInCluster += getreporterrep
+			self.clusternodes[cmax].repVector[self.clusternodes[cmax].numReporters] = getreporterreps
+			self.clusternodes[cmax].numReporters += 1
+			self.clusternodes[cmax].meanVec[] = array(mean(cmax))
+        else:
+        	self.clusternodes[self.numClusters].meanVec[] = reporterreport
+        	self.clusternodes[self.numClusters].numReporters = 1
+        	self.clusternodes[self.numClusters].repInCluster = getreporterrep
+        	self.clusternodes[self.numClusters].reporterIndexVec[0] = i
+        	self.clusternodes[self.numClusters].repVector[0] = getreporterrep
+    #clusters = process(clusters, len(features), times, features, rep, threshold)
+    return clusters
+
+# Proportional distance from zero (fixed-point input)
+macro normalize($a):
+    with $len = len($a):
+        with $total = 0:
+            with $i = 0:
+                while $i < $len:
+                    $total += $a[$i]
+                    $i += 1
+                with $wt = array($len):
+                    with $i = 0:
+                        while $i < $len:
+                            $wt[$i] = $a[$i] * 2^64 / $total
+                            $i += 1
+                        $wt

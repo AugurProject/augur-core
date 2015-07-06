@@ -1,0 +1,48 @@
+import expiringEvents as EXPEVENTS
+import reporting as REPORTING
+
+data clusternodes[](vec[], numReporters, meanVec[], repInCluster, repVector, reporterIndexVec[], distance)
+data numClusters
+
+def L2dist(x:arr, y:arr, numEvents):
+    i = 0
+    distSquare = 0
+    while i < numEvents:
+        distSquare += ((x[i] - y[i])^2)/2^64
+        i += 1
+    return(self.sqrt(distSquare))
+
+def sqrt(n):
+    approx = n/2
+    better = (approx + n*2^64/approx)/2
+    i = 0
+    while i < 11:
+        approx = better
+        better = (approx + n*2^64/approx)/2
+        i += 1
+    return approx
+
+def newMean(cluster, numEvents, branch, reportingPeriod):
+	numReporters = self.clusternodes[cluster].numReporters
+	weighted = array(numReporters)
+	i = 0
+	while i < numReporters:
+		weighted[i] = array(numReporters)
+		reporterID = REPORTING.getReporterID(branch, self.clusternodes[cluster]reporterIndexVec[i]):
+		weighted[i] = EXPEVENTS.getReporterBallot(branch, reportingPeriod, reporterID, outitems=numEvents)
+		e = 0
+		while e < numEvents:
+			weighted[i][e] = weighted[i][e] * REPORTING.getRepBalance(branch, reporterID) / 2^64
+			e += 1
+		i += 1
+	mean = array(numEvents)
+	i = 0
+	totalRep = self.clusternodes[cluster].repInCluster
+	while i < numEvents:
+		r = 0
+		while r < numReporters:
+			mean[i] += weighted[r][i]
+			r += 1
+		mean[i] = mean[i]*2^64 / totalRep
+		i += 1
+	return(mean: arr)
