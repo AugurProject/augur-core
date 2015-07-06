@@ -23,6 +23,7 @@ import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import info as INFO
 import cash as CASH
+import events as EVENTS
 import reporting as REPORTING
 
 # a no vote is -2^64, a yes vote is 2^64 && a can't determine vote is 3*2^63 (a empty ballot is 0)
@@ -41,6 +42,7 @@ import reporting as REPORTING
     # -2: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
     # -3: hash doesn't match
     # -4: no rep
+    # -5: bad report
 def report(branch, report:arr, votePeriod, salt):
     # make sure the branch exists
     repIndex = REPORTING.repIDToIndex(branch, tx.origin)
@@ -75,6 +77,37 @@ def report(branch, report:arr, votePeriod, salt):
         if (REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
             return(-2)
 
+        # check report validity
+        events = array(len(report))
+        events = EXPEVENTS.getEvents(branch, votePeriod, outitems=len(report))
+        i = 0
+        numOutcomes = 2
+        while i < len(report):
+            numOutcomes = EVENTS.getNumOutcomes(events[i])
+            maxValue = EVENTS.getMaxValue(events[i])
+            # binary
+            if(numOutcomes==2 and maxValue==1):
+                if(report[i]>2*2^64 or report[i]<2^64 or report[i]==0):
+                    return(-5)
+            # categorical
+            elif(numOutcomes>2):
+                minValue = 2^64
+                range = numOutcomes*2^64 - minValue
+                if(report[i]<=0):
+                    return(-5)
+                if((report[i]*range/2^64 + minValue)>numOutcomes*2^64):
+                    report[i] = 2^64
+            # scalar
+            else:
+                if(report[i]==0):
+                    return(-5)
+                minValue = EVENTS.getMinValue(events[i])
+                range = maxValue*2^64 - minValue*2^64
+                if((report[i]*range/2^64 + minValue) > maxValue):
+                    report[i] = 2^64
+                if((report[i]*range/2^64 + minValue) < minValue):
+                    # 1 == really close to 0, but not a "no report"
+                    report[i] = 1
         reputation = REPORTING.getRepBalance(branch, tx.origin)
         # need to update stuff for quorem
         # && store the report && the rep value
