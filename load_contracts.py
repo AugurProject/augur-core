@@ -44,27 +44,29 @@ def wait(seconds):
         time.sleep(seconds/10.)
     print
 
-def broadcast_code(evm, address=None):
+def broadcast_code(evm, txhash=None):
     '''Sends compiled code to the network, and returns the address.'''
     while True:
         response = RPC.eth_sendTransaction(sender=COINBASE, data=evm, gas=GAS)
         if 'result' in response:
-            address = response['result']
+            txhash = response['result']
             break
         else:
             assert 'error' in response and response['error']['code'] == -32603, 'Weird JSONRPC response: ' + str(response)
-            if address is None:
+            if txhash is None:
                 wait(BLOCKTIME)
             else:
                 break
     tries = 0
     while tries < TRIES:
         wait(BLOCKTIME)
-        check = RPC.eth_getCode(address)['result']
-        if check != '0x' and check[2:] in evm:
-            return address
-        tries += 1
-    return broadcast_code(evm, address)
+        receipt = RPC.eth_getTransactionReceipt(txhash)["result"]
+        if receipt is not None and "contractAddress" in receipt:
+            check = RPC.eth_getCode(receipt["contractAddress"])['result']
+            if check != '0x' and check[2:] in evm:
+                return receipt["contractAddress"]
+            tries += 1
+    return broadcast_code(evm, txhash=txhash)
 
 def get_compile_order():
     # topological sorting! :3
