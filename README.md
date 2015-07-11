@@ -6,6 +6,7 @@ augur-core
 - check that msg.sender is one of our function contracts
 - investigate https://www.seas.upenn.edu/~hoda/HLPV.pdf
 - consider implications of updating data/api contracts & data migration
+- cfd stable
 
 ### Bugs:
 - https://github.com/ethereum/wiki/wiki/HPOC_2015#anti-pre-revelation + reddit post /r/augur

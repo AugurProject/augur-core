@@ -1,8 +1,28 @@
 import expiringEvents as EXPEVENTS
 import reporting as REPORTING
+import clusterhelper as CLUSTER
+import fxpFunctions as FXP
+
+data best = -1
+data bestDist = 2^255
+# list of clusterIDs
+data bestClusters[]
+data i
 
 data clusternodes[](vec[], numReporters, meanVec[], repInCluster, repVector, reporterIndexVec[], distance)
 data numClusters
+
+def setBest(best):
+    self.best = best
+    return(1)
+
+def setBestDist(dist):
+    self.bestDist = dist
+    return(1)
+
+def setNumClusters(num):
+    self.numClusters = num
+    return(1)
 
 def L2dist(x:arr, y:arr, numEvents):
     i = 0
@@ -46,3 +66,97 @@ def newMean(cluster, numEvents, branch, reportingPeriod):
 		mean[i] = mean[i]*2^64 / totalRep
 		i += 1
 	return(mean: arr)
+
+def cluster(branch, votePeriod, numEvents, numReporters, fresh):
+    if(fresh):
+        self.i = 0
+    memI = self.i
+    while (memI < numReporters and tx.gas>200000):
+        cmax = -1
+        shortestDist = 2**255
+        n = 0
+        report = array(numEvents)
+        reporterID = REPORTING.getReporterID(branch, memI)
+        report = EXPEVENTS.getReporterBallot(branch, votePeriod, reporterID, outitems=numEvents)
+        while n < numClusters:
+            if(n!=0):
+                dist = CLUSTER.L2dist(report, self.clusternodes[n].meanVec)
+                if dist<shortestDist:
+                    cmax = n
+                    shortestDist = dist
+            n += 1
+        rep = REPORTING.getRepBalance(branch, reporterID)
+        if(cmax!=-1 and shortestDist<threshold):
+            self.clusternodes[cmax].reporterIndexVec[self.clusternodes[cmax].numReporters] = i
+            self.clusternodes[cmax].repInCluster += rep
+            self.clusternodes[cmax].repVector[self.clusternodes[cmax].numReporters] = rep
+            self.clusternodes[cmax].numReporters += 1
+            self.clusternodes[cmax].meanVec[] = array(mean(cmax))
+        else:
+            save(self.clusternodes[self.numClusters].meanVec[0], report, chars=32*numEvents)
+            self.clusternodes[self.numClusters].numReporters = 1
+            self.clusternodes[self.numClusters].repInCluster = rep
+            self.clusternodes[self.numClusters].reporterIndexVec[0] = i
+            self.clusternodes[self.numClusters].repVector[0] = rep
+        memI += 1
+    self.i = memI
+    if(self.i!=numReporters):
+        return(0)
+    #clusters = process(clusters, len(features), times, features, rep, threshold)
+    # save this.rep to somewhere
+    return(1)
+
+def process(clusters, numReporters, times, features, rep, threshold):
+    mode = None
+    numInMode = 0
+    global best
+    global bestClusters
+    global bestDist
+    for i in range(len(clusters)):
+        if(clusters[i].rep > numInMode):
+            numInMode = clusters[i].rep
+            #! if two modes (e.g. _exact same # of rep on both, so 2 equal sized clusters w/ same magnitude)
+                # and pick the one as the mode cluster which is more similar to outcomes
+            mode = clusters[i]
+
+    outcomes = np.ma.average(features, axis=0, weights=rep)
+
+    # detect how far the "truthers" are away from actual outcomes
+    # then choose closer mode as final truth cluster
+    if(L2dist(mode.meanVec, outcomes)<bestDist):
+        bestDist = L2dist(mode.meanVec, outcomes)
+        best = mode
+        bestClusters = clusters
+    if(L2dist(mode.meanVec,outcomes)>1.07 and times==1):
+        possAltCluster = cluster(features,rep,2,threshold*3)
+        return(possAltCluster)
+
+    for x in range(len(bestClusters)):
+        bestClusters[x].dist = L2dist(best.meanVec,bestClusters[x].meanVec)
+
+    distMatrix = zeros([numReporters, 1]).astype(float)
+    for x in range(len(bestClusters)):
+        for i in range(bestClusters[x].numItems):
+            distMatrix[bestClusters[x].reporterIndexVec[i]] = bestClusters[x].dist
+    repVector = zeros([numReporters, 1]).astype(float)
+    for x in range(len(distMatrix)):
+        # add to julia
+        repVector[x] = 1 - distMatrix[x]/(amax(distMatrix)+0.00000001)
+    logging.warning(normalize(repVector))
+    logging.warning(distMatrix)
+    return(normalize(repVector))
+
+# Proportional distance from zero (fixed-point input)
+macro normalize($a):
+    with $len = len($a):
+        with $total = 0:
+            with $i = 0:
+                while $i < $len:
+                    $total += $a[$i]
+                    $i += 1
+                with $wt = array($len):
+                    with $i = 0:
+                        while $i < $len:
+                            $wt[$i] = $a[$i] * 2^64 / $total
+                            $i += 1
+                        $wt
