@@ -11,7 +11,7 @@ SRCPATH = os.path.join(ROOT, 'src')
 
 data_and_api = 'cash info branches events expiringEvents fxpFunctions markets reporting'.split(' ')
 functions = 'checkQuorum buy&sellShares createBranch p2pWagers sendReputation transferShares makeReports createEvent createMarket closeMarket closeMarketOne closeMarketTwo closeMarketFour closeMarketEight dispatch faucets'.split(' ')
-consensus = 'statistics interpolate center score adjust resolve payout redeem_interpolate redeem_center redeem_score redeem_adjust redeem_resolve redeem_payout'.split(' ')
+consensus = 'statistics center score adjust resolve payout redeem_interpolate redeem_center redeem_score redeem_adjust redeem_resolve redeem_payout'.split(' ')
 
 def read_gospel(gospel_path):
     with open(gospel_path) as json_file:
