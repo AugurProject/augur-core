@@ -1,6 +1,5 @@
 import expiringEvents as EXPEVENTS
 import reporting as REPORTING
-import clusterhelper as CLUSTER
 import fxpFunctions as FXP
 
 data best = -1
@@ -12,7 +11,6 @@ data i
 data clusternodes[](vec[], numReporters, meanVec[], repInCluster, repVector[], reporterIndexVec[], distance)
 data numClusters
 
-# what happens if someone makes a new rep acc. during consensus
 data repVector[]
 
 def setBest(best):
@@ -106,7 +104,7 @@ def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
     self.i = memI
     if(self.i!=numReporters):
         return(0)
-    if(process(len(features), times, thresholdm numEvents)):
+    if(process(len(features), times, threshold, numEvents)):
         return(2)
     return(1)
 
@@ -150,13 +148,15 @@ def process(numReporters, times, threshold, numEvents):
     repVector = array(numReporters)
     maxDist = maximum(distVector)
     i = 0
-    while i < self.numReporters:
+    while i < numReporters:
         repVector[i] = 2^64 - distVector[i]*2^64/(maxDist + 1)
         i+=1
 
-    save()
+    save(self.repVector[0], repVector, chars=32*numReporters)
+    return(1)
 
-    return(normalize(repVector): arr)
+def getRepVector():
+    return(load(self.repVector[0], chars=32*numReporters): arr)
 
 # Maximum value of array
 macro maximum($a):
@@ -168,18 +168,3 @@ macro maximum($a):
                         $max = $a[$i]
                     $i += 1
                 $max
-
-# Proportional distance from zero (fixed-point input)
-macro normalize($a):
-    with $len = len($a):
-        with $total = 0:
-            with $i = 0:
-                while $i < $len:
-                    $total += $a[$i]
-                    $i += 1
-                with $wt = array($len):
-                    with $i = 0:
-                        while $i < $len:
-                            $wt[$i] = $a[$i] * 2^64 / $total
-                            $i += 1
-                        $wt
