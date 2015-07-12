@@ -7,19 +7,24 @@ ii) convert scalar / categorical to range 0-1 when submitting report
     iia) if scalar/categorical is a real .5 convert to .5*2^64+1, if indeterminate keep as .5*2^64 - in UI
     iib) if scalar/categorical is a real 0 convert to 0*2^64+1, else if no response, keep as 0 - in UI
 1) do clustering
-    1a) completely missing ballots should just be not clustered - find distance for one of them, penalize the rest accordingly
+    1a) completely missing ballots should just be not clustered - find distance for one of them, penalize the rest accordingly - not done yet
 2) normalize to 1 and get new "this" rep vector
     2a) prior to this, multiply by prev. rep vector over mean
     2b) take old rep multiply by .80 add to new rep *.2 (smoothing part)
 3) using this, calc. outcomes 1, 1.5, 2 for binary using weighed avg / catch param (.1 or .15)
-    3a) scalar outcomes & categoricals use weighted median
-    3b) if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome (or we could audit here or do certainty based audits)
+    3a) scalar outcomes & categoricals use weighted median - done
+    3b) if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, # that's the outcome (or we could audit here or do certainty based audits)
     3c) detect b via a "times voted on" var
-    3d) when doing outcomes, only do weighted avg / median on people who actually reported on that event, i.e. don't include people who reported 0 / no report
+    3d) when doing outcomes, only do weighted avg / median on people who actually reported on that event, i.e. # don't include people who reported 0 / no report
     note: do outcomes w/ smooth rep (not just "new rep"), and calculate using tolerance, use weighted med. for scalars
     3e) then scale scaled back up to w/e value - ditto for categorical (need to mult by range and add min i think) for categorical range is numOutcomes - 1, min is 1
     3f) save outcomes
 4) Payout reporters & event bonds
+
+
+# what if someone doesn't report + sends their rep to a different account
+# or what if someone makes a new account entirely during reporting period
+# or what if an acc has 0 rep
 
 Params:
 Smoothing param
@@ -49,38 +54,6 @@ def dispatch(branch):
                             REDEEM_RESOLVE.resolve(branch, period, num_events, num_reports, flatsize)
                         BRANCHES.incrementStep(branch)
                         return(step + 1)
-
-# - loop through reputation && check if in reporters, if so use their
-#   report, if not use the fillin / not reported report (all zeroes)
-# - use this to make a giant array of reports to pass to self.consensus
-# - want to pass reports for each 0 indexed event in order (so we get
-#   reports from an actual reporter)
-# (if they didn't vote we set their array for each event to 0,0,0,0,0,0, etc...)
-def read_ballots(branch, period, num_events, num_reports, flatsize):
-    with reputation = array(num_reports):
-        with reports = array(flatsize):
-            with i = 0:
-                while i < num_reports:
-                    with reporterID = REPORTING.getReporterID(branch, i):
-                        reputation[i] = REPORTING.getRepBalance(branch, reporterID)
-                        # - checks to see if each reporter actually voted on events
-                        # - if they didn't vote (simply check if they voted on first event)
-                        #     do nothing (these values will be 0 by default due to Serpent array styles)
-                        #     else if the reporter did report on events put their ballot into the reports array
-                        # reports[i*num_events] = slice(EXPIRING.getReporterBallot(branch, period, reporterID, outitems=num_events), items=0, items=1)
-                        reports[i*num_events] = EXPIRING.getReport(branch, period, reporterID, 0)
-                        if reports[i*num_events] != 0:
-                            with ballot = array(num_events - 1):
-                                ballot = slice(EXPIRING.getReporterBallot(branch, period, reporterID, outitems=num_events), items=1, items=num_events)
-                                with j = 1:
-                                    while j < num_events:
-                                        reports[i*num_events + j] = ballot[j - 1]
-                                        j += 1
-                    i += 1
-                reputation = normalize(reputation)
-                save(self.Interpolate[branch][period].reports[0], reports, chars=32*flatsize)
-                save(self.Interpolate[branch][period].reputation[0], reputation, chars=32*num_reports)
-                return(1)
 
 def payout(branch, period, num_events, num_reports, flatsize):
     with smooth_rep = array(num_reports):
@@ -125,96 +98,6 @@ def payout(branch, period, num_events, num_reports, flatsize):
                         CASH.subtractCash(branch, CASH.balance(branch))
                         return(1)
 
-def smooth(adjusted_scores:arr, reputation:arr, num_reports, num_events):
-    # Weighted sum of old and new reputation vectors.
-    # New: row_reward_weighted
-    # Old: reputation
-    reputation = normalize(reputation)
-    with row_reward_weighted = array(num_reports):
-        with i = 0:
-            while i < num_reports:
-                row_reward_weighted[i] = reputation[i]
-                i += 1
-
-        # Overwrite the inital declaration IFF there wasn't perfect consensus.
-        if maximum(array_abs(adjusted_scores)) != 0:
-            with mean_weight = mean(row_reward_weighted):
-                with i = 0:
-                    while i < num_reports:
-                        row_reward_weighted[i] = adjusted_scores[i] * row_reward_weighted[i] / mean_weight
-                        i += 1
-            row_reward_weighted = normalize(row_reward_weighted)
-        # Freshly-calculated reward (in reputation)
-        # (0.1 is the adjustable parameter "alpha", hard-coding it for now)
-        with smooth_rep = array(num_reports):
-            with i = 0:
-                while i < num_reports:
-                    smooth_rep[i] = row_reward_weighted[i]/10 + reputation[i]*9/10
-                    i += 1
-            smooth_rep = normalize(smooth_rep)
-            return(smooth_rep, items=num_reports)
-
-def resolve(branch, period, num_events, num_reports, flatsize):
-    with reports_filled = array(flatsize):
-        reports_filled = slice(EXPIRING.getReportsFilled(branch, period, outitems=flatsize), items=0, items=flatsize)
-        with smooth_rep = array(num_reports):
-            smooth_rep = slice(EXPIRING.getSmoothRep(branch, period, outitems=num_reports), items=0, items=num_reports)
-            with scaled = array(num_events):
-                with scaled_max = array(num_events):
-                    with scaled_min = array(num_events):
-                        with j = 0:
-                            while j < num_events:
-                                with event = EXPIRING.getEvent(branch, period, j):
-                                    if fix(EVENTS.getMaxValue(event)) != YES and EVENTS.getNumOutcomes(event) == 2:
-                                        scaled[j] = 1
-                                        scaled_min[j] = fix(EVENTS.getMinValue(event))
-                                        scaled_max[j] = fix(EVENTS.getMaxValue(event))
-                                    else:
-                                        scaled[j] = 0
-                                        scaled_min[j] = NO
-                                        scaled_max[j] = YES
-                                j += 1
-                            with outcomes = array(num_events):
-                                outcomes = slice(consensus(smooth_rep, reports_filled, scaled, scaled_max, scaled_min, num_reports, num_events, outitems=num_events), items=0, items=num_events)
-                                EXPIRING.setOutcomesFinal(branch, period, outcomes)
-                                return(1)
-
-def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports, num_events):
-    with two_num_events = 2*num_events:
-        with outcomes_final = array(num_events):
-            # discriminate based on contract type
-            with outcomes_raw = array(num_events):
-                with i = 0:
-                    while i < num_events:
-                        if scaled[i] == 1:
-                            with active_reports = array(num_reports):
-                                with j = 0:
-                                    while j < num_reports:
-                                        active_reports[j] = reports[i + j*num_events]
-                                        j += 1
-                                outcomes_raw[i] = weighted_median(active_reports, smooth_rep)
-                        else:
-                            with j = 0:
-                                while j < num_reports:
-                                    outcomes_raw[i] += fixed_multiply(smooth_rep[j], reports[j*num_events + i])
-                                    j += 1
-                        i += 1
-                with outcomes_adj = array(num_events):
-                    with i = 0:
-                        while i < num_events:
-                            if scaled[i] == 1:
-                                outcomes_adj[i] = outcomes_raw[i]
-                            else:
-                                outcomes_adj[i] = catch(outcomes_raw[i])
-                            i += 1
-                    with i = 0:
-                        while i < num_events:
-                            if scaled[i] == 1:
-                                outcomes_final[i] = fixed_multiply(outcomes_adj[i], scaled_max[i] - scaled_min[i]) + scaled_min[i]
-                            else:
-                                outcomes_final[i] = outcomes_adj[i]
-                            i += 1
-                    return(outcomes_final, items=num_events)
 
 
 macro ONE: 2^64

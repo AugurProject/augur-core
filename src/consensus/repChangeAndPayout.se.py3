@@ -54,7 +54,50 @@ def smooth(reputation:arr, num_reports, num_events):
                 with totalRep = REPORTING.getTotalRep(branch):
                     while i < num_reports:
                         REPORTING.setRep(branch, i, smooth_rep[i]*totalRep)
-            return(smooth_rep, items=num_reports)
+            return(1)
+
+def payout(branch, period, num_events, num_reports, flatsize):
+    with smooth_rep = array(num_reports):
+        smooth_rep = slice(EXPIRING.getSmoothRep(branch, period, outitems=num_reports), items=0, items=num_reports)
+        with reports_mask = array(flatsize):
+            reports_mask = slice(EXPIRING.getReportsMask(branch, period, outitems=flatsize), items=0, items=flatsize)
+            with outcomes = array(num_events):
+                outcomes = slice(EXPIRING.getOutcomesFinal(branch, period, outitems=num_events), items=0, items=num_events)
+                with reporter_payouts = array(num_reports):
+                    reporter_payouts = slice(PAYOUT.payout(outcomes, smooth_rep, reports_mask, num_reports, num_events, outitems=num_reports), items=0, items=num_reports)
+
+                    # get event ID for each event by taking the x index in the reports arrays
+                    # - shoving it in reporting.events[] and getting the corresponding ID
+                    with j = 0:
+                        while j < num_events:
+                            with event = EXPIRING.getEvent(branch, period, j):
+
+                                # then take outcomes_final and set each event outcome
+                                # (BAD and BOND macros defined in consensus/constants.se)
+                                EVENTS.setOutcome(event, outcomes[j])
+                                if outcomes[j] != BAD:
+
+                                    # return bond
+                                    CASH.subtractCash(event, BOND)
+                                    CASH.addCash(INFO.getCreator(event), BOND)
+                                else:
+
+                                    # give event bond money to reporters
+                                    CASH.subtractCash(event, BOND)
+                                    CASH.addCash(branch, BOND)
+                            j += 1
+                    # - need to loop through rep holders and distribute 50% of branch fees to
+                    #   reporters' cashcoin addresses 
+                    # - also need to take reporter_payouts and redistribute reputation in the
+                    #   Reporting structure accordingly
+                    EXPIRING.setReporterPayouts(branch, period, reporter_payouts)
+                    with i = 0:
+                        while i < num_reports:
+                            REPORTING.setRep(branch, i, fixed_multiply(reporter_payouts[i], EXPIRING.getTotalReputation(branch, period)))
+                            CASH.addCash(REPORTING.getReporterID(branch, i), fixed_multiply(CASH.balance(branch), reporter_payouts[i]))
+                            i += 1
+                        CASH.subtractCash(branch, CASH.balance(branch))
+                        return(1)
 
 # Maximum value of array
 macro maximum($a):
