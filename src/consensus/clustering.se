@@ -25,6 +25,10 @@ def setNumClusters(num):
     self.numClusters = num
     return(1)
 
+def setI(i):
+    self.i = i
+    return(1)
+
 def L2dist(x:arr, y:arr, numEvents):
     i = 0
     distSquare = 0

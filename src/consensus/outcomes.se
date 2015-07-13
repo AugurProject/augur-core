@@ -3,72 +3,54 @@ import reporting as REPORTING
 import fxpFunctions as FXP
 import events as EVENTS
 
-def resolve(branch, period, num_events, num_reports, flatsize):
-    with reports_filled = array(flatsize):
-        reports_filled = slice(EXPIRING.getReportsFilled(branch, period, outitems=flatsize), items=0, items=flatsize)
-        with smooth_rep = array(num_reports):
-            smooth_rep = slice(EXPIRING.getSmoothRep(branch, period, outitems=num_reports), items=0, items=num_reports)
-            with scaled = array(num_events):
-                with scaled_max = array(num_events):
-                    with scaled_min = array(num_events):
-                        with j = 0:
-                            while j < num_events:
-                                with event = EXPIRING.getEvent(branch, period, j):
-                                    if 2^64*EVENTS.getMaxValue(event) != YES and EVENTS.getNumOutcomes(event) == 2:
-                                        scaled[j] = 1
-                                        scaled_min[j] = 2^64*EVENTS.getMinValue(event)
-                                        scaled_max[j] = 2^64*EVENTS.getMaxValue(event)
-                                    # categorical, but we can make it behave as a scalar for all intents and purposes here
-                                    elif(EVENTS.getNumOutcomes(event)>2):
-                                        scaled[j] = 1
-                                        scaled_min[j] = 2^64
-                                        scaled_max[j] = 2^64*EVENTS.getNumOutcomes(event)
-                                    else:
-                                        scaled[j] = 0
-                                        scaled_min[j] = NO
-                                        scaled_max[j] = YES
-                                j += 1
-                            with outcomes = array(num_events):
-                                outcomes = slice(consensus(smooth_rep, reports_filled, scaled, scaled_max, scaled_min, num_reports, num_events, outitems=num_events), items=0, items=num_events)
-                                EXPIRING.setOutcomesFinal(branch, period, outcomes)
-                                return(1)
+def resolve(branch, period, num_events, num_reports):
+    with scaled = array(num_events):
+        with scaled_max = array(num_events):
+            with scaled_min = array(num_events):
+                with j = 0:
+                    while j < num_events:
+                        with event = EXPIRING.getEvent(branch, period, j):
+                            if 2^64*EVENTS.getMaxValue(event) != YES and EVENTS.getNumOutcomes(event) == 2:
+                                scaled[j] = 1
+                                scaled_min[j] = 2^64*EVENTS.getMinValue(event)
+                                scaled_max[j] = 2^64*EVENTS.getMaxValue(event)
+                            # categorical, but we can make it behave as a scalar for all intents and purposes here
+                            elif(EVENTS.getNumOutcomes(event)>2):
+                                scaled[j] = 1
+                                scaled_min[j] = 2^64
+                                scaled_max[j] = 2^64*EVENTS.getNumOutcomes(event)
+                            else:
+                                scaled[j] = 0
+                                scaled_min[j] = NO
+                                scaled_max[j] = YES
+                        j += 1
+                    with outcomes = array(num_events):
+                        outcomes = slice(self.consensus(branch, scaled, scaled_max, scaled_min, num_reports, num_events, period, outitems=num_events), items=0, items=num_events)
+                        EXPIRING.setOutcomesFinal(branch, period, outcomes)
+                        return(1)
 
-def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports, num_events):
-    with two_num_events = 2*num_events:
-        with outcomes_final = array(num_events):
-            # discriminate based on contract type
+def consensus(branch, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports, num_events, period):
             with outcomes_raw = array(num_events):
-                with i = 0:
-                    while i < num_events:
-                        if scaled[i] == 1:
-                            with active_reports = array(num_reports):
+                with smooth_rep = array(num_reports):
+                    n = 0
+                    while n < num_reports:
+                        smooth_rep[n] = REPORTING.getRepByIndex(branch, n)
+                    with i = 0:
+                        while i < num_events:
+                            if scaled[i] == 1:
+                                with active_reports = array(num_reports):
+                                    with j = 0:
+                                        while j < num_reports:
+                                            active_reports[j] = EXPEVENTS.getReport(branch, period, REPORTING.getReporterID(branch, j), i)
+                                            j += 1
+                                    outcomes_raw[i] = fixed_multiply(weighted_median(active_reports, smooth_rep), scaled_max[i] - scaled_min[i]) + scaled_min[i]
+                            else:
                                 with j = 0:
                                     while j < num_reports:
-                                        active_reports[j] = reports[i + j*num_events]
+                                        outcomes_raw[i] += catch(fixed_multiply(smooth_rep[j], reports[j*num_events + i]))
                                         j += 1
-                                outcomes_raw[i] = weighted_median(active_reports, smooth_rep)
-                        else:
-                            with j = 0:
-                                while j < num_reports:
-                                    outcomes_raw[i] += fixed_multiply(smooth_rep[j], reports[j*num_events + i])
-                                    j += 1
-                        i += 1
-                with outcomes_adj = array(num_events):
-                    with i = 0:
-                        while i < num_events:
-                            if scaled[i] == 1:
-                                outcomes_adj[i] = outcomes_raw[i]
-                            else:
-                                outcomes_adj[i] = catch(outcomes_raw[i])
                             i += 1
-                    with i = 0:
-                        while i < num_events:
-                            if scaled[i] == 1:
-                                outcomes_final[i] = fixed_multiply(outcomes_adj[i], scaled_max[i] - scaled_min[i]) + scaled_min[i]
-                            else:
-                                outcomes_final[i] = outcomes_adj[i]
-                            i += 1
-                    return(outcomes_final, items=num_events)
+                        return(outcomes_raw, items=num_events)
 
 macro ONE: 2^64
 

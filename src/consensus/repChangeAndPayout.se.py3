@@ -36,6 +36,7 @@ def initCluster(branch, votePeriod, numEvents, numReporters, fresh):
     CLUSTER.setBest(-1)
     CLUSTER.setBestDist(2**255)
     CLUSTER.setNumClusters(0)
+    CLUSTER.setI(0)
     return(CLUSTER.cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold))
 
 def smooth(reputation:arr, num_reports, num_events):
