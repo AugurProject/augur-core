@@ -1,0 +1,19 @@
+data best
+data bestDist
+# list of clusterIDs
+data bestClusters[]
+data i
+
+data clusternodes[](vec[], numReporters, meanVec[], repInCluster, repVector[], reporterIndexVec[], distance)
+data numClusters
+
+data repVector[]
+
+
+def setBestDist(dist):
+    self.bestDist = dist
+    return(1)
+
+def setNumClusters(num):
+    self.numClusters = num
+    return(1)

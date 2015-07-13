@@ -2,8 +2,8 @@ import expiringEvents as EXPEVENTS
 import reporting as REPORTING
 import fxpFunctions as FXP
 
-data best = -1
-data bestDist = 2^255
+data best
+data bestDist
 # list of clusterIDs
 data bestClusters[]
 data i
@@ -48,35 +48,36 @@ def sqrt(n):
     return approx
 
 def newMean(cluster, numEvents, branch, reportingPeriod):
-	numReporters = self.clusternodes[cluster].numReporters
-	weighted = array(numReporters)
-	i = 0
-	while i < numReporters:
-		weighted[i] = array(numReporters)
-		reporterID = REPORTING.getReporterID(branch, self.clusternodes[cluster]reporterIndexVec[i]):
-		weighted[i] = EXPEVENTS.getReporterBallot(branch, reportingPeriod, reporterID, outitems=numEvents)
-		e = 0
-		while e < numEvents:
-			weighted[i][e] = weighted[i][e] * REPORTING.getRepBalance(branch, reporterID) / 2^64
-			e += 1
-		i += 1
-	mean = array(numEvents)
-	i = 0
-	totalRep = self.clusternodes[cluster].repInCluster
-	while i < numEvents:
-		r = 0
-		while r < numReporters:
-			mean[i] += weighted[r][i]
-			r += 1
-		mean[i] = mean[i]*2^64 / totalRep
-		i += 1
-	return(mean: arr)
+    numReporters = self.clusternodes[cluster].numReporters
+    weighted = array(numReporters)
+    i = 0
+    while i < numReporters:
+        weighted[i] = array(numEvents)
+        reporterID = REPORTING.getReporterID(branch, self.clusternodes[cluster].reporterIndexVec[i])
+        weighted[i] = EXPEVENTS.getReporterBallot(branch, reportingPeriod, reporterID, outitems=numEvents)
+        e = 0
+        rep = REPORTING.getRepBalance(branch, reporterID)
+        while e < numEvents:
+            weighted[i][e] = weighted[i][e] * rep / 2^64
+            e += 1
+        i += 1
+    mean = array(numEvents)
+    i = 0
+    totalRep = self.clusternodes[cluster].repInCluster
+    while i < numEvents:
+        r = 0
+        while r < numReporters:
+            mean[i] += weighted[r][i]
+            r += 1
+        mean[i] = mean[i]*2^64 / totalRep
+        i += 1
+    return(mean: arr)
 
 def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
     if(fresh):
         self.i = 0
     memI = self.i
-    while (memI < numReporters and tx.gas>200000):
+    while (memI < numReporters and msg.gas>200000):
         cmax = -1
         shortestDist = 2**255
         n = 0
@@ -85,7 +86,8 @@ def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
         report = EXPEVENTS.getReporterBallot(branch, votePeriod, reporterID, outitems=numEvents)
         while n < numClusters:
             if(n!=0):
-                dist = CLUSTER.L2dist(report, self.clusternodes[n].meanVec)
+                dist = 3
+                dist = self.L2dist(report, load(self.clusternodes[n].meanVec[0], chars=32*numEvents), numEvents)
                 if dist<shortestDist:
                     cmax = n
                     shortestDist = dist
@@ -96,7 +98,7 @@ def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
             self.clusternodes[cmax].repInCluster += rep
             self.clusternodes[cmax].repVector[self.clusternodes[cmax].numReporters] = rep
             self.clusternodes[cmax].numReporters += 1
-            self.clusternodes[cmax].meanVec[] = array(mean(cmax))
+            save(self.clusternodes[cmax].meanVec[0], self.newMean(cmax, numEvents, branch, votePeriod, outitems=numEvents), chars=32*numEvents)
         else:
             save(self.clusternodes[self.numClusters].meanVec[0], report, chars=32*numEvents)
             self.clusternodes[self.numClusters].numReporters = 1
@@ -108,7 +110,7 @@ def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
     self.i = memI
     if(self.i!=numReporters):
         return(0)
-    if(process(len(features), times, threshold, numEvents)):
+    if(self.process(len(features), times, threshold, numEvents)):
         return(2)
 
 def process(numReporters, times, threshold, numEvents):
@@ -137,14 +139,14 @@ def process(numReporters, times, threshold, numEvents):
 
     i = 0
     while i < self.numClusters:
-        self.clusternodes[i].dist = self.L2dist(load(self.clusternodes[i].meanVec[0], chars=32*numEvents),load(self.clusternodes[mode].meanVec[0], chars=32*numEvents))
+        self.clusternodes[i].distance = self.L2dist(load(self.clusternodes[i].meanVec[0], chars=32*numEvents),load(self.clusternodes[mode].meanVec[0], chars=32*numEvents))
         i+=1
     distVector = array(numReporters)
     i = 0
     while i < self.numClusters:
         n = 0
         while n < self.clusternodes[i].numReporters:
-            distVector[self.clusternodes[i].reporterIndexVec[n]] = self.clusternodes[i].dist
+            distVector[self.clusternodes[i].reporterIndexVec[n]] = self.clusternodes[i].distance
             n+=1
         i+=1
 
@@ -159,7 +161,7 @@ def process(numReporters, times, threshold, numEvents):
     return(1)
 
 def getRepVector(numReporters):
-    return(load(self.repVector[0], chars=32*numReporters): arr)
+    return(load(self.repVector[0], items=numReporters): arr)
 
 # Maximum value of array
 macro maximum($a):
