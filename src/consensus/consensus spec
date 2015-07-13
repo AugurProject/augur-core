@@ -31,3 +31,5 @@ Smoothing param
 Catch param
 
 # implement second pass of clustering in serpent
+# consensus scaling to work w/ unlimited numbers
+# then lazy eval scaling
