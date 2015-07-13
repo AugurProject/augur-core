@@ -181,6 +181,7 @@ def main():
     start = 0
     verbose = False
     debug = False
+    address = None
     for arg in sys.argv:
         if arg.startswith('--BLOCKTIME='):
             BLOCKTIME = float(arg.split('=')[1])
@@ -193,11 +194,13 @@ def main():
             verbose = True
         if arg == '--debug':
             debug = True
+        if arg.startswith("--port="):
+            address = ("127.0.0.1", int(arg.split('=')[1]))
     deps, nodes = get_compile_order()
     if type(start) == str:
         deps = optimize_deps(deps, nodes, start)
         start = 0
-    RPC = RPC_Client(default='GETH', verbose=verbose, debug=debug)
+    RPC = RPC_Client(default='GETH', verbose=verbose, debug=debug, address=address)
     COINBASE = RPC.eth_coinbase()['result']
     for i in range(start, len(deps)):
         fullname = get_fullname(deps[i])

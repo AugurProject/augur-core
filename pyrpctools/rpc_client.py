@@ -51,15 +51,15 @@ class RPC_Client(object):
         If verbose is True, then debugging info will be printed out
         for every RPC call and response. It is True by default.
         '''
-        if address is None and default is None:
-            raise TypeError('You must specify an address or a default!')
-        if default and default not in DEFAULTS:
-            raise ValueError('That default doesn\'t exist!')
-        if default in DEFAULTS:
-            self.info = DEFAULTS[default]
-        elif address:
+        if address is None:
+            if default is None:
+                raise TypeError('You must specify an address or a default!')
+            elif default in DEFAULTS:
+                self.info = DEFAULTS[default]
+            else:
+                raise ValueError('That default doesn\'t exist!')
+        else:
             self.info = address
-    
         self.conn = socket.create_connection(self.info)
         self.id = 1
         self.verbose = verbose
