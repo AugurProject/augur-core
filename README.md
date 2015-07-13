@@ -24,7 +24,7 @@ augur-core
 - possibly enable people to choose their own resolution scripts
 - metadata off chain
 - https://github.com/ethereum/wiki/wiki/Problems#3-arbitrary-proof-of-computation (to 11)
-- reporting / consensus scaling
+- reporting / consensus scaling & optimization
 
 ### Once eth supports it:
 - reward whoever does close market according to gas cost (pay gas fee in cashcoin to miner)
