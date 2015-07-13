@@ -110,7 +110,6 @@ def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
         return(0)
     if(process(len(features), times, threshold, numEvents)):
         return(2)
-    return(1)
 
 def process(numReporters, times, threshold, numEvents):
     mode = 0
@@ -159,7 +158,7 @@ def process(numReporters, times, threshold, numEvents):
     save(self.repVector[0], repVector, chars=32*numReporters)
     return(1)
 
-def getRepVector():
+def getRepVector(numReporters):
     return(load(self.repVector[0], chars=32*numReporters): arr)
 
 # Maximum value of array

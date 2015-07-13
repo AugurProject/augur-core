@@ -1,7 +1,8 @@
 import expiringEvents as EXPEVENTS
 import reporting as REPORTING
-import clusterhelper as CLUSTER
+import clustering as CLUSTER
 import fxpFunctions as FXP
+import outcomes as OUTCOMES
 
 def dispatch(branch):
     if !BRANCHES.getStep(branch) and !QUORUM.checkQuorum(branch):
@@ -9,24 +10,28 @@ def dispatch(branch):
     with period = BRANCHES.getVotePeriod(branch):
         with num_events = EXPIRING.getNumberEvents(branch, period):
             with num_reports = REPORTING.getNumberReporters(branch):
-                with flatsize = num_events * num_reports:
-                    with step = BRANCHES.getStep(branch):
-                        if step == 4:
-                            REDEEM_PAYOUT.payout(branch, period, num_events, num_reports, flatsize)
-                            BRANCHES.setStep(branch, 0) # reset step
-                            BRANCHES.incrementPeriod(branch)
-                            return(period + 1)
-                        elif step == 0:
-                            EXPIRING.setTotalReputation(branch, period, REPORTING.getTotalRep(branch))
-                            REDEEM_INTERPOLATE.read_ballots(branch, period, num_events, num_reports, flatsize)
-                        elif step == 1:
-                            REDEEM_CENTER.clustering(branch, period, num_events, num_reports, flatsize)
-                        elif step == 2:
-                            REDEEM_RESOLVE.smooth(branch, period, num_events, num_reports, flatsize)
-                        elif step == 3:
-                            REDEEM_RESOLVE.resolve(branch, period, num_events, num_reports, flatsize)
-                        BRANCHES.incrementStep(branch)
-                        return(step + 1)
+                with step = BRANCHES.getStep(branch):
+                    if step == 4:
+                        self.payout(branch, period, num_events, num_reports)
+                        BRANCHES.setStep(branch, 0) # reset step
+                        BRANCHES.incrementPeriod(branch)
+                        return(period + 1)
+                    elif step == 0:
+                        EXPIRING.setTotalReputation(branch, period, REPORTING.getTotalRep(branch))
+                    elif step == 1:
+                        self.initCluster(branch, period, num_events, num_reports, 1)
+                    elif step == 2:
+                        threshold = (FXP.fx_log(numEvents*2^64)*2^64/42475197863169474560)*2^64 / 32650737010465906688
+                        if(threshold==0):
+                            threshold = 5534023222112865280
+                        if(!CLUSTER.cluster(branch, period, num_events, num_reports, 0, threshold)):
+                            return(2)
+                    elif step == 3:
+                        self.smooth(num_reports, num_events)
+                    elif step == 4:
+                        OUTCOMES.resolve(branch, period, num_events, num_reports)
+                    BRANCHES.incrementStep(branch)
+                    return(step + 1)
 
 # first call in a consensus cycle is fresh, else 0
 def initCluster(branch, votePeriod, numEvents, numReporters, fresh):
@@ -39,12 +44,12 @@ def initCluster(branch, votePeriod, numEvents, numReporters, fresh):
     CLUSTER.setI(0)
     return(CLUSTER.cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold))
 
-def smooth(reputation:arr, num_reports, num_events):
+def smooth(num_reports, num_events):
     # Weighted sum of old and new reputation vectors.
     # New: row_reward_weighted
     # Old: reputation
     adjusted_scores = array(num_reports)
-    adjusted_scores = CLUSTER.getRepVector(outitems=num_reports)
+    adjusted_scores = CLUSTER.getRepVector(num_reports, outitems=num_reports)
 
     reputation = array(num_reports)
     i = 0
@@ -82,7 +87,7 @@ def smooth(reputation:arr, num_reports, num_events):
                         REPORTING.setRep(branch, i, smooth_rep[i]*totalRep)
             return(1)
 
-def payout(branch, period, num_events, num_reports, flatsize):
+def payout(branch, period, num_events, num_reports):
         with outcomes = array(num_events):
             outcomes = slice(EXPIRING.getOutcomesFinal(branch, period, outitems=num_events), items=0, items=num_events)
             # get event ID for each event by taking the x index in the reports arrays
