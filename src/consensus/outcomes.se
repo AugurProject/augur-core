@@ -1,4 +1,4 @@
-import expiringEvents as EXPEVENTS
+import expiringEvents as EXPIRING
 import reporting as REPORTING
 import fxpFunctions as FXP
 import events as EVENTS
@@ -25,32 +25,35 @@ def resolve(branch, period, num_events, num_reports):
                                 scaled_max[j] = YES
                         j += 1
                     with outcomes = array(num_events):
-                        outcomes = slice(self.consensus(branch, scaled, scaled_max, scaled_min, num_reports, num_events, period, outitems=num_events), items=0, items=num_events)
+                        outcomes = slice(self.calcOutcomes(branch, scaled, scaled_max, scaled_min, num_reports, num_events, period, outitems=num_events), items=0, items=num_events)
                         EXPIRING.setOutcomesFinal(branch, period, outcomes)
                         return(1)
 
-def consensus(branch, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports, num_events, period):
-            with outcomes_raw = array(num_events):
-                with smooth_rep = array(num_reports):
-                    n = 0
-                    while n < num_reports:
-                        smooth_rep[n] = REPORTING.getRepByIndex(branch, n)
-                    with i = 0:
-                        while i < num_events:
-                            if scaled[i] == 1:
-                                with active_reports = array(num_reports):
-                                    with j = 0:
-                                        while j < num_reports:
-                                            active_reports[j] = EXPEVENTS.getReport(branch, period, REPORTING.getReporterID(branch, j), i)
-                                            j += 1
-                                    outcomes_raw[i] = fixed_multiply(weighted_median(active_reports, smooth_rep), scaled_max[i] - scaled_min[i]) + scaled_min[i]
-                            else:
-                                with j = 0:
-                                    while j < num_reports:
-                                        outcomes_raw[i] += catch(fixed_multiply(smooth_rep[j], reports[j*num_events + i]))
-                                        j += 1
-                            i += 1
-                        return(outcomes_raw, items=num_events)
+def calcOutcomes(branch, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports, num_events, period):
+    with outcomes_raw = array(num_events):
+        with smooth_rep = array(num_reports):
+            n = 0
+            while n < num_reports:
+                smooth_rep[n] = REPORTING.getRepByIndex(branch, n)
+                n += 1
+            smooth_rep = normalize(smooth_rep)
+            with i = 0:
+                while i < num_events:
+                    if scaled[i] == 1:
+                        with active_reports = array(num_reports):
+                            with j = 0:
+                                while j < num_reports:
+                                    active_reports[j] = EXPIRING.getReport(branch, period, REPORTING.getReporterID(branch, j), i)
+                                    j += 1
+                            outcomes_raw[i] = fixed_multiply(weighted_median(active_reports, smooth_rep), scaled_max[i] - scaled_min[i]) + scaled_min[i]
+                    else:
+                        with j = 0:
+                            while j < num_reports:
+                                outcomes_raw[i] += fixed_multiply(smooth_rep[j], reports[j*num_events + i])
+                                j += 1
+                        outcomes_raw[i] = catch(outcomes_raw[i])
+                    i += 1
+                return(outcomes_raw, items=num_events)
 
 macro ONE: 2^64
 
@@ -224,3 +227,18 @@ macro weighted_median($data, $weights):
                                         else:
                                             wmedian = sorted_data[idx-1]
                 wmedian
+
+# Proportional distance from zero (fixed-point input)
+macro normalize($a):
+    with $len = len($a):
+        with $total = 0:
+            with $i = 0:
+                while $i < $len:
+                    $total += $a[$i]
+                    $i += 1
+                with $wt = array($len):
+                    with $i = 0:
+                        while $i < $len:
+                            $wt[$i] = $a[$i] * 2^64 / $total
+                            $i += 1
+                        $wt

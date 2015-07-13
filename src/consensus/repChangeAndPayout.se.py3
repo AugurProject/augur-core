@@ -1,12 +1,21 @@
-import expiringEvents as EXPEVENTS
+import expiringEvents as EXPIRING
 import reporting as REPORTING
 import clustering as CLUSTER
 import fxpFunctions as FXP
 import outcomes as OUTCOMES
+import branches as BRANCHES
+import checkQuorum as QUORUM
+import events as EVENTS
+import cash as CASH
+import info as INFO
+
+macro ONE: 2^64
+macro BAD: 3 * 2^63
+macro BOND: 42 * ONE
 
 def dispatch(branch):
-    if !BRANCHES.getStep(branch) and !QUORUM.checkQuorum(branch):
-        return(-1)
+    #if !BRANCHES.getStep(branch) and !QUORUM.checkQuorum(branch):
+    #    return(-1)
     with period = BRANCHES.getVotePeriod(branch):
         with num_events = EXPIRING.getNumberEvents(branch, period):
             with num_reports = REPORTING.getNumberReporters(branch):
@@ -19,11 +28,15 @@ def dispatch(branch):
                     elif step == 0:
                         EXPIRING.setTotalReputation(branch, period, REPORTING.getTotalRep(branch))
                     elif step == 1:
-                        self.initCluster(branch, period, num_events, num_reports, 1)
+                        x = self.initCluster(branch, period, num_events, num_reports, 1)
+                        if(x):
+                            # increment 2x if it gets all done in 1st call, else go to step 2
+                            BRANCHES.incrementStep(branch)
                     elif step == 2:
                         threshold = (FXP.fx_log(numEvents*2^64)*2^64/42475197863169474560)*2^64 / 32650737010465906688
                         if(threshold==0):
                             threshold = 5534023222112865280
+                        # if not done, keep doing step two before incrementing the step
                         if(!CLUSTER.cluster(branch, period, num_events, num_reports, 0, threshold)):
                             return(2)
                     elif step == 3:
@@ -54,8 +67,7 @@ def smooth(num_reports, num_events):
     reputation = array(num_reports)
     i = 0
     while i < num_reports:
-        reporterID = REPORTING.getReporterID(branch, i)
-        reputation[i] = REPORTING.getRepBalance(branch, reporterID)
+        reputation[i] = REPORTING.getRepByIndex(branch, i)
         i += 1
 
     reputation = normalize(reputation)
@@ -65,8 +77,8 @@ def smooth(num_reports, num_events):
             while i < num_reports:
                 row_reward_weighted[i] = reputation[i]
                 i += 1
-        # Overwrite the inital declaration IFF there wasn't perfect consensus.
-        if maximum(array_abs(adjusted_scores)) != 1:
+        # Overwrite the inital declaration IF there wasn't perfect consensus.
+        if minimum(adjusted_scores) != 2^64:
             with mean_weight = mean(row_reward_weighted):
                 with i = 0:
                     while i < num_reports:
@@ -82,7 +94,7 @@ def smooth(num_reports, num_events):
                     i += 1
             smooth_rep = normalize(smooth_rep)
             with i = 0:
-                with totalRep = REPORTING.getTotalRep(branch):
+                with totalRep = EXPIRING.getTotalReputation(branch):
                     while i < num_reports:
                         REPORTING.setRep(branch, i, smooth_rep[i]*totalRep)
             return(1)
@@ -108,9 +120,7 @@ def payout(branch, period, num_events, num_reports):
                             CASH.addCash(branch, BOND)
                     j += 1
             # - need to loop through rep holders and distribute 50% of branch fees to
-            #   reporters' cashcoin addresses 
-            # - also need to take reporter_payouts and redistribute reputation in the
-            #   Reporting structure accordingly
+            #   reporters' cashcoin addresses
             with totalRep = REPORTING.getTotalRep(branch):
                 with i = 0:
                     while i < num_reports:
@@ -144,3 +154,14 @@ macro normalize($a):
                             $wt[$i] = $a[$i] * 2^64 / $total
                             $i += 1
                         $wt
+
+# Minimum value of array
+macro minimum($a):
+    with $min = $a[0]:
+        with $i = 1:
+            with $len = len($a):
+                while $i < $len:
+                    if $a[$i] < $min:
+                        $min = $a[$i]
+                    $i += 1
+                $min
