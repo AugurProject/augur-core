@@ -35,7 +35,9 @@ import reporting as REPORTING
 def createSubbranch(description:str, periodLength, parent, tradingFee):
     if(periodLength<=0 || !BRANCHES.getPeriodLength(parent) || description==0):
         return(-1)
-
+    
+    if(tradingFee>2^62):
+        return(-1)
     #upcomingDecisions = 0
     #a = (block.number / BRANCHES.getPeriodLength(parent))
     #b = a
