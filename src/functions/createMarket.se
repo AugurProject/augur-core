@@ -48,6 +48,8 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         return(-1)
     if(tradingFee > 2^61):
         return(-1)
+    if(block.number > blockNumber):
+        return(-1)
     event = events[0]
         # check that events have same exp. dates && branch
     i = 0
