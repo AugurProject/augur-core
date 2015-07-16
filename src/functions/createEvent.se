@@ -31,10 +31,13 @@ import events as EVENTS
 # need to make sure these values are ok
 # @return eventID if success
 # error messages otherwise
+    # -2: min > max
     # -1: we're either already past that date, branch doesn't exist, or description is bad
     # 0: not enough money to pay fees or event already exists
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes, blockNumber):
     periodLength = BRANCHES.getPeriodLength(branch)
+    if(minValue > maxValue):
+        return(-2)
     if periodLength && description != 0 && expDate > block.number:
         eventinfo = string(9*32 + len(description))
         eventinfo[0] = EVENT                                        #typecode
