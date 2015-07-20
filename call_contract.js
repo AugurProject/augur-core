@@ -17,19 +17,18 @@ var log = console.log;
 Augur.options.BigNumberOnly = false;
 Augur.connect();
 
-var tx = Augur.tx[process.argv[3]];
-
-tx.send = process.argv[2] === "send";
-tx.params = process.argv.slice(4);
-
 function echo(label, output) {
     log(label);
-    if (output && output.constructor === Object || output.constructor === Array) {
+    if (output && (output.constructor === Object || output.constructor === Array)) {
         log(JSON.stringify(output, null, 2));
     } else {
         log(output);
     }
 }
+
+var tx = Augur.tx[process.argv[3]];
+tx.send = process.argv[2] === "send";
+tx.params = process.argv.slice(4);
 
 echo("TX:", tx);
 
