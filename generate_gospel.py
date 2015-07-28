@@ -31,6 +31,7 @@ def test_leveldbify(gospel):
 def gospelify(output="md"):
     if output == "json":
         print "{"
+        print '    "namereg": "0xc6d9d2cd449a754c494264e1809c50e34d64562b",'
     for name, value in reversed(sorted(globals().items())):
         if type(value) == list:
             if output == "json":
