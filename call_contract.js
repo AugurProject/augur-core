@@ -34,7 +34,7 @@ tx.params = process.argv.slice(5);
 echo("TX:", tx);
 
 if (tx.send) {
-    Augur.send_call_confirm(tx,
+    Augur.transact(tx,
         function (output) { echo("SENT:", output); },
         function (output) { echo("SUCCESS:", output); },
         function (output) { echo("FAILED:", output); }
