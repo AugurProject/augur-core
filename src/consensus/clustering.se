@@ -38,14 +38,12 @@ def L2dist(x:arr, y:arr, numEvents):
     return(self.sqrt(distSquare))
 
 def sqrt(n):
-    approx = n/2
-    better = (approx + n*2^64/approx)/2
+    val = n
     i = 0
     while i < 11:
-        approx = better
-        better = (approx + n*2^64/approx)/2
+        val = (val + n*2^64/val)/2
         i += 1
-    return approx
+    return val
 
 def newMean(cluster, numEvents, branch, reportingPeriod):
     numReporters = self.clusternodes[cluster].numReporters
@@ -86,7 +84,6 @@ def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
         report = EXPEVENTS.getReporterBallot(branch, votePeriod, reporterID, outitems=numEvents)
         while n < numClusters:
             if(n!=0):
-                dist = 3
                 dist = self.L2dist(report, load(self.clusternodes[n].meanVec[0], chars=32*numEvents), numEvents)
                 if dist<shortestDist:
                     cmax = n

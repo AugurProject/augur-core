@@ -32,6 +32,7 @@ augur-core
 
 ### Version 0.6:
   - new consensus implementation
+  - conditional markets
   - min/max fxp? & 1,2 or 2^64 and 2*2^64 - should probably support fxp
   - should think about switching binary back to 0-1 since scalars are that way now too
 
