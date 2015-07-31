@@ -1,35 +1,18 @@
-from colorama import init, Fore, Style, Back; init()
+from colorama import Fore, Back, Style, init; init()
 from http import read_message
 import traceback
 import socket
 import json
 import sys
-import re
 
-def pdumps(rpc):
+# this helps keep code the right width
+################################################################################
+#        1         2         3         4         5         6         7         8
+
+
+def pretty_dumps(rpc):
     '''Turns an rpc dict into a pretty string.'''
     return json.dumps(rpc, sort_keys=True, indent=4) 
-
-#Default info for the most common Ethereum clients.
-DEFAULTS = {
-    'GETH' : (
-        'localhost',
-        8545,
-    ),
-    'ALETHZERO' : (
-        'localhost',
-        8080,
-    ),
-    'TESTRPC' : (
-        'localhost',
-        8546,
-    ),
-}
-
-#color schemes for messages
-TRACE = Style.BRIGHT + Fore.BLACK + Back.RED
-ERROR = Style.BRIGHT + Fore.RED + 'ERROR:'
-INFO = Style.BRIGHT + Fore.BLACK + Back.WHITE
 
 #Template for interacting with nodes via JSONRPC
 REQUEST = '''\
@@ -44,26 +27,19 @@ Content-Type: application/json\r
 
 class RPC_Client(object):
     '''A class for sending arbitrary rpc calls to an Ethereum node.'''
-    def __init__(self, address=None, default=None, verbose=True, debug=False):
+    def __init__(self, address=('localhost', 8545), verbosity=0):
         '''
-        If default is specified it must be either 'GETH', 'ALETHZERO', or 'TESTRPC'.
-        If address is specified, it must be a tuple like ('localhost', 8080).
-        If verbose is True, then debugging info will be printed out
-        for every RPC call and response. It is True by default.
+        `address` is the address of the RPC node you want to connect to. It 
+        should be a tuple, like ('localhost', 8545) or ('127.0.0.1', 8080).
+        `verbosity` changes how much is printed out while handling rpc requests.
+        If it is set to 1, then the request and response json opbjects will be
+        pretty printed. If it is set to 2, the HTTP request will be printed, 
+        along with a json object containing the parsed HTTP response.
         '''
-        if address is None:
-            if default is None:
-                raise TypeError('You must specify an address or a default!')
-            elif default in DEFAULTS:
-                self.info = DEFAULTS[default]
-            else:
-                raise ValueError('That default doesn\'t exist!')
-        else:
-            self.info = address
+        self.verbosity = verbosity
+        self.info = address
         self.conn = socket.create_connection(self.info)
-        self.id = 1
-        self.verbose = verbose
-        self.debug = debug
+        self._id = 1
 
     def _send_rpc(self, name, args, kwds):
         if 'sender' in kwds:
@@ -75,43 +51,48 @@ class RPC_Client(object):
 
         rpc_data = json.dumps({
             'jsonrpc':'2.0',
-            'id': self.id,
+            'id': self._id,
             'method': name,
             'params': params})
+
+        self._id += 1
 
         request = REQUEST.format(
             length=len(rpc_data),
             rpc_data=rpc_data,
-            info=self.info,
-        )
-        if self.verbose:
-            print INFO + 'Sending rpc:' + Style.RESET_ALL
-            print pdumps(json.loads(rpc_data))
+            info=self.info)
 
-        if self.debug:
+        if self.verbosity > 0:
+            print Fore.BLACK + Back.WHITE + 'Sending rpc:' + Style.RESET_ALL
+            print pretty_dumps(json.loads(rpc_data))
+
+        if self.verbosity > 1:
             print
             print request
             print
+
         self.conn.sendall(request)
         response = read_message(self.conn)
-        if self.debug:
+
+        if self.verbosity > 1:
             print
-            print pdumps(response)
+            print pretty_dumps(response)
             print 
-        self.id += 1
+
         try:
             result = json.loads(response['body'])
-            if self.verbose:
-                print INFO + 'Result:' + Style.RESET_ALL
-                print pdumps(result)
+            if self.verbosity > 0:
+                print Fore.BLACK + Back.WHITE + 'Result:' + Style.RESET_ALL
+                print pretty_dumps(result)
             return result
         except Exception as exc:
-            print TRACE + traceback.format_exc() + Style.RESET_ALL
-            print ERROR, 'COULDN\'T LOAD RESPONSE DATA'
-            print dumps(response)
+            print Fore.RED + Style.BOLD + 'COULDN\'T PARSE RESPONSE'
+            print traceback.format_exc()
+            print dumps(response) + Style.RESET_ALL
             sys.exit(1)
 
     def __getattr__(self, name):
+        # generate rpc functions on the fly!
         def rpc_func(*args, **kwds):
             return self._send_rpc(name, args, kwds)
         rpc_func.__name__ = name
