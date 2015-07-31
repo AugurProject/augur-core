@@ -23,8 +23,14 @@ def init():
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
     self.Reporting[1010101].numberReporters = 1
     self.Reporting[1010101].totalRep += 47*2^64
-    log("lll")
 
+def makeEvent():
+    description = text("lol")
+    # expires in period 0
+    x = self.createEvent(1010101, description, 1, 0, 1, 2, 1)
+    # now at period 0 after this
+    self.incrementPeriod(1010101)
+    return(x)
 
 def dispatch(branch):
     #if !self.getStep(branch) and !QUORUM.checkQuorum(branch):
@@ -71,7 +77,6 @@ def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
     if(fresh):
         self.i = 0
     memI = self.i
-    log(5)
     while (memI < numReporters and msg.gas>200000):
         cmax = -1
         shortestDist = 2**255
@@ -79,33 +84,85 @@ def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
         report = array(numEvents)
         reporterID = self.getReporterID(branch, memI)
         report = self.getReporterBallot(branch, votePeriod, reporterID, outitems=numEvents)
-        while n < numClusters:
+        while n < self.numClusters:
             if(n!=0):
-                dist = self.L2dist(report, load(self.clusternodes[n].meanVec[0], chars=32*numEvents), numEvents)
+                dist = self.L2dist(report, load(self.clusternodes[n].meanVec[0], items=numEvents), numEvents)
                 if dist<shortestDist:
                     cmax = n
                     shortestDist = dist
             n += 1
         rep = self.getRepBalance(branch, reporterID)
         if(cmax!=-1 and shortestDist<threshold):
-            self.clusternodes[cmax].reporterIndexVec[self.clusternodes[cmax].numReporters] = i
+            self.clusternodes[cmax].reporterIndexVec[self.clusternodes[cmax].numReporters] = memI
             self.clusternodes[cmax].repInCluster += rep
             self.clusternodes[cmax].repVector[self.clusternodes[cmax].numReporters] = rep
             self.clusternodes[cmax].numReporters += 1
-            save(self.clusternodes[cmax].meanVec[0], self.newMean(cmax, numEvents, branch, votePeriod, outitems=numEvents), chars=32*numEvents)
+            newMean = array(numEvents)
+            newMean = self.newMean(cmax, numEvents, branch, votePeriod, outitems=numEvents)
+            save(self.clusternodes[cmax].meanVec[0], newMean, items=numEvents)
         else:
-            save(self.clusternodes[self.numClusters].meanVec[0], report, chars=32*numEvents)
+            save(self.clusternodes[self.numClusters].meanVec[0], report, items=numEvents)
             self.clusternodes[self.numClusters].numReporters = 1
             self.clusternodes[self.numClusters].repInCluster = rep
-            self.clusternodes[self.numClusters].reporterIndexVec[0] = i
+            self.clusternodes[self.numClusters].reporterIndexVec[0] = memI
             self.clusternodes[self.numClusters].repVector[0] = rep
             self.numClusters += 1
         memI += 1
     self.i = memI
     if(self.i!=numReporters):
         return(0)
-    if(self.process(len(features), times, threshold, numEvents)):
+    if(self.process(numReporters, 0, threshold, numEvents)):
         return(2)
+    else:
+        return(0)
+
+def process(numReporters, times, threshold, numEvents):
+    mode = 0
+    numInMode = 0
+    i = 0
+    while i < self.numClusters:
+        if(self.clusternodes[i].repInCluster > numInMode):
+            numInMode = self.clusternodes[i].repInCluster
+            #! if two modes (e.g. _exact same # of rep on both, so 2 equal sized clusters w/ same magnitude)
+                # and pick the one as the mode cluster which is more similar to outcomes
+            mode = i
+        i += 1
+
+    #outcomes = np.ma.average(features, axis=0, weights=rep)
+
+    # detect how far the "truthers" are away from actual outcomes
+    # then choose closer mode as final truth cluster
+    #if(self.L2dist(load(self.clusternodes[mode].meanVec[0], chars=32*numEvents), outcomes)<bestDist):
+    #    bestDist = L2dist(mode.meanVec, outcomes)
+    #    best = mode
+    #    bestClusters = clusters
+    #if(L2dist(mode.meanVec,outcomes)>1.07 and times==1):
+    #    possAltCluster = cluster(features,rep,2,threshold*3)
+    #    return(possAltCluster)
+
+    i = 0
+    while i < self.numClusters:
+        self.clusternodes[i].distance = self.L2dist(load(self.clusternodes[i].meanVec[0], chars=32*numEvents),load(self.clusternodes[mode].meanVec[0], chars=32*numEvents))
+        i+=1
+    distVector = array(numReporters)
+    i = 0
+    while i < self.numClusters:
+        n = 0
+        while n < self.clusternodes[i].numReporters:
+            distVector[self.clusternodes[i].reporterIndexVec[n]] = self.clusternodes[i].distance
+            n+=1
+        i+=1
+
+    repVector = array(numReporters)
+    maxDist = maximum(distVector)
+    i = 0
+    while i < numReporters:
+        repVector[i] = 2^64 - distVector[i]*2^64/(maxDist + 1)
+        i+=1
+
+    save(self.repVector[0], repVector, chars=32*numReporters)
+    return(1)
+
 
 def smooth(num_reports, num_events):
     # Weighted sum of old and new reputation vectors.
@@ -531,54 +588,6 @@ def newMean(cluster, numEvents, branch, reportingPeriod):
         mean[i] = mean[i]*2^64 / totalRep
         i += 1
     return(mean: arr)
-
-
-def process(numReporters, times, threshold, numEvents):
-    mode = 0
-    numInMode = 0
-    i = 0
-    while i < self.numClusters:
-        if(self.clusternodes[i].repInCluster > numInMode):
-            numInMode = self.clusternodes[i].repInCluster
-            #! if two modes (e.g. _exact same # of rep on both, so 2 equal sized clusters w/ same magnitude)
-                # and pick the one as the mode cluster which is more similar to outcomes
-            mode = i
-        i += 1
-
-    #outcomes = np.ma.average(features, axis=0, weights=rep)
-
-    # detect how far the "truthers" are away from actual outcomes
-    # then choose closer mode as final truth cluster
-    #if(self.L2dist(load(self.clusternodes[mode].meanVec[0], chars=32*numEvents), outcomes)<bestDist):
-    #    bestDist = L2dist(mode.meanVec, outcomes)
-    #    best = mode
-    #    bestClusters = clusters
-    #if(L2dist(mode.meanVec,outcomes)>1.07 and times==1):
-    #    possAltCluster = cluster(features,rep,2,threshold*3)
-    #    return(possAltCluster)
-
-    i = 0
-    while i < self.numClusters:
-        self.clusternodes[i].distance = self.L2dist(load(self.clusternodes[i].meanVec[0], chars=32*numEvents),load(self.clusternodes[mode].meanVec[0], chars=32*numEvents))
-        i+=1
-    distVector = array(numReporters)
-    i = 0
-    while i < self.numClusters:
-        n = 0
-        while n < self.clusternodes[i].numReporters:
-            distVector[self.clusternodes[i].reporterIndexVec[n]] = self.clusternodes[i].distance
-            n+=1
-        i+=1
-
-    repVector = array(numReporters)
-    maxDist = maximum(distVector)
-    i = 0
-    while i < numReporters:
-        repVector[i] = 2^64 - distVector[i]*2^64/(maxDist + 1)
-        i+=1
-
-    save(self.repVector[0], repVector, chars=32*numReporters)
-    return(1)
 
 def getRepVector(numReporters):
     return(load(self.repVector[0], items=numReporters): arr)

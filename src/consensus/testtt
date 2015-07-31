@@ -1,0 +1,3 @@
+def start(description: str):
+    # expires in period 0
+    return(description:str)
