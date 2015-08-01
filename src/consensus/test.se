@@ -39,7 +39,7 @@ def dispatch(branch):
         with num_events = self.getNumberEvents(branch, period):
             with num_reports = self.getNumberReporters(branch):
                 with step = self.getStep(branch):
-                    if step == 4:
+                    if step == 5:
                         self.payout(branch, period, num_events, num_reports)
                         self.setStep(branch, 0) # reset step
                         self.incrementPeriod(branch)
