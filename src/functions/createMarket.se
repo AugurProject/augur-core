@@ -27,6 +27,8 @@ import fxpFunctions as FXP
 import markets as MARKETS
 import events as EVENTS
 
+data creationBlockNumbers[]
+
 event creationBlock(market:indexed)
 
 # alpha is a fixedpoint number / calc. it in UI
@@ -36,27 +38,28 @@ event creationBlock(market:indexed)
 # tradingFee is a percent in fixedPoint
 # same for these values
 # @return marketID if success
-# error messages otherwise
-    # -1: bad input or parent doesn't exist
-    # -2: too many events
-    # -3: too many outcomes
-    # -4: not enough money or market already exists
+# error messages otherwise:
+#   -1: bad input or parent doesn't exist
+#   -2: too many events
+#   -3: too many outcomes
+#   -4: not enough money or market already exists
 
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, blockNumber):
     periodLength = BRANCHES.getPeriodLength(branch)
-    if(periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee < BRANCHES.getMinTradingFee(branch)):
+    if(periodLength==0 or len(description)==0 or initialLiquidity==0 or alpha <= 2^57 or tradingFee < BRANCHES.getMinTradingFee(branch)):
         return(-1)
     if(tradingFee > 2^61):
         return(-1)
-    if(block.number > blockNumber):
-        return(-1)
     event = events[0]
-        # check that events have same exp. dates && branch
+
+    # check that events have same exp. dates && branch
     i = 0
     eventNum = len(events)
+
     # only supports 3 dimensional markets atm
     if(eventNum > 3):
         return(-2)
+
     numOutcomes = 0
     eventsConcat = 0
     cumulativeScale = 0
@@ -69,7 +72,8 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         eventsConcat += event
         if (EVENTS.getEventBranch(event) != branch || !INFO.getCreator(event)):
             return(-1)
-       #scalars
+
+        # scalars
         maxValue = EVENTS.getMaxValue(event)
         if(maxValue!=1 && EVENTS.getNumOutcomes(event)==2):
             # is a valid scalar
@@ -85,6 +89,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     if(cumulativeScale==0):
         cumulativeScale = 1
     tradingPeriod = (tradingPeriod / periodLength)
+
     # formation of marketID (hash)
     marketinfo = string(12*32 + len(description))
     marketinfo[0] = MARKET
@@ -102,6 +107,13 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     mcopy(marketinfo + 12*32, description, chars=len(description))
     marketID = sha256(marketinfo, chars=len(marketinfo))
     log(type=creationBlock, marketID)
+
+    # save block.number to contract data
+    if self.creationBlockNumbers[marketID] == 0:
+        self.creationBlockNumbers[marketID] = block.number
+    elif self.creationBlockNumbers[marketID] != blockNumber:
+        return(-1)
+
     # pay numOutcomes fee
     # if it's already been created return 0
     if(!CASH.send(branch, numOutcomes*2^63) || INFO.getCreator(marketID) || MARKETS.getMarketNumOutcomes(marketID)):
@@ -115,10 +127,12 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     while y <= numOutcomes:
         MARKETS.modifyShares(marketID, y, z)
         y += 1
+
     if(INFO.setInfo(marketID, description, tx.origin, initialLiquidity) && BRANCHES.addMarket(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch) && CASH.send(marketID, initialLiquidity)):
         return(marketID)
+
+    # revert shares bought and other variables
     else:
-        # revert shares bought and other variables
         v = 1
         while v <= numOutcomes:
             MARKETS.modifyShares(marketID, v, -z)
