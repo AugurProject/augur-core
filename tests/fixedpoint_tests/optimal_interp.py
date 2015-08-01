@@ -1,6 +1,6 @@
 #!/usr/bin/python2
 import gmpy2
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import os
 import bisect
 from numpy import linspace
@@ -127,13 +127,7 @@ def fx_relative_random_error(fx_func, ref_func, trials, a, b):
         if max_err < diff:
             max_err = diff
         bisect.insort(errors, diff*100/expected)
-    return (
-        sum(map(abs, errors[trials/4:3*trials/4]))*4/trials,
-        min(errors),
-        max(errors),
-        errors[len(errors)/2],
-        max_err,
-        min_err)
+    return sum(map(abs, errors[trials/4:3*trials/4]))*4/trials, min(errors), max(errors), errors[len(errors)/2], max_err, min_err
 
 def fx_floor_log2(x):
     y = x >> 64
@@ -323,5 +317,5 @@ macro fx_log($x):
         f.close()
 
 if __name__ == '__main__':
-    graph_errors(15, 21)
-#    generate_serpent(15, 21)
+#    graph_errors(15, 21)
+    generate_serpent(15, 21)

@@ -4,7 +4,7 @@ from pyrpctools import RPC_Client
 import sys
 import re
 
-GETHRPC = RPC_Client(('localhost', 8545), 2)
+GETHRPC = RPC_Client(default='GETH', debug=True)
 COINBASE = GETHRPC.eth_coinbase()['result']
 
 kwd_p = re.compile(r'--(?P<key>\D{2,})=(?P<val>.*)')
