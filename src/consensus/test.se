@@ -124,7 +124,7 @@ def process(numReporters, times, threshold, numEvents):
         if(self.clusternodes[i].repInCluster > numInMode):
             numInMode = self.clusternodes[i].repInCluster
             #! if two modes (e.g. _exact same # of rep on both, so 2 equal sized clusters w/ same magnitude)
-                # and pick the one as the mode cluster which is more similar to outcomes
+            # and pick the one as the mode cluster which is more similar to outcomes
             mode = i
         i += 1
 
@@ -142,7 +142,7 @@ def process(numReporters, times, threshold, numEvents):
 
     i = 0
     while i < self.numClusters:
-        self.clusternodes[i].distance = self.L2dist(load(self.clusternodes[i].meanVec[0], chars=32*numEvents),load(self.clusternodes[mode].meanVec[0], chars=32*numEvents))
+        self.clusternodes[i].distance = self.L2dist(load(self.clusternodes[i].meanVec[0], items=numEvents),load(self.clusternodes[mode].meanVec[0], items=numEvents))
         i+=1
     distVector = array(numReporters)
     i = 0
@@ -157,10 +157,12 @@ def process(numReporters, times, threshold, numEvents):
     maxDist = maximum(distVector)
     i = 0
     while i < numReporters:
+        # should not be 1 but 2^64
+        # try fetching distance from the cluster
         repVector[i] = 2^64 - distVector[i]*2^64/(maxDist + 1)
         i+=1
 
-    save(self.repVector[0], repVector, chars=32*numReporters)
+    save(self.repVector[0], repVector, items=numReporters)
     return(1)
 
 
@@ -204,6 +206,7 @@ def smooth(num_reports, num_events):
                 with totalRep = self.getTotalReputation(branch):
                     while i < num_reports:
                         self.setRep(branch, i, smooth_rep[i]*totalRep)
+                        i += 1
             return(1)
 
 def payout(branch, period, num_events, num_reports):
@@ -375,17 +378,6 @@ macro array_abs($a):
                     $absval[$i] = abs($a[$i])
                     $i += 1
                 $absval
-
-# Minimum value of array
-macro minimum($a):
-    with $min = $a[0]:
-        with $i = 1:
-            with $len = len($a):
-                while $i < $len:
-                    if $a[$i] < $min:
-                        $min = $a[$i]
-                    $i += 1
-                $min
 
 # Maximum value of array
 macro maximum($a):
