@@ -28,7 +28,6 @@ def makeEvent():
     description = text("lol")
     # expires in period 0
     x = self.createEvent(1010101, description, 1, 0, 1, 2, 1)
-    # now at period 0 after this
     self.incrementPeriod(1010101)
     return(x)
 
@@ -115,6 +114,9 @@ def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
         return(2)
     else:
         return(0)
+
+def getMeanVec():
+    return(load(self.clusternodes[0].meanVec[0], items=3): arr)
 
 def process(numReporters, times, threshold, numEvents):
     mode = 0
@@ -310,6 +312,7 @@ def resolve(branch, period, num_events, num_reports):
                         return(1)
 
 def calcOutcomes(branch, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports, num_events, period):
+    totalRep = self.getTotalReputation(branch)
     with outcomes_raw = array(num_events):
         with smooth_rep = array(num_reports):
             n = 0
@@ -329,11 +332,15 @@ def calcOutcomes(branch, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports
                     else:
                         with j = 0:
                             while j < num_reports:
-                                outcomes_raw[i] += fixed_multiply(smooth_rep[j], reports[j*num_events + i])
+                                outcomes_raw[i] += fixed_multiply(smooth_rep[j], self.getReport(branch, period, self.getReporterID(branch, j), i))
                                 j += 1
-                        outcomes_raw[i] = catch(outcomes_raw[i])
+                        # weighted avg
+                        outcomes_raw[i] = catch((outcomes_raw[i]/totalRep))
                     i += 1
                 return(outcomes_raw, items=num_events)
+
+def getReport(branch, expDateIndex, reporter, reportNum):
+    return(self.EventsExpDates[branch][expDateIndex].reporters[reporter][reportNum])
 
 macro ONE: 2^64
 
@@ -518,7 +525,7 @@ data bestDist
 data bestClusters[]
 data i
 
-data clusternodes[](vec[], numReporters, meanVec[], repInCluster, repVector[], reporterIndexVec[], distance)
+data clusternodes[](numReporters, meanVec[], repInCluster, repVector[], reporterIndexVec[], distance)
 data numClusters
 
 data repVector[]
