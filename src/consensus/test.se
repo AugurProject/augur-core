@@ -27,7 +27,7 @@ def init():
 def makeEvent():
     description = text("lol")
     # expires in period 0
-    x = self.createEvent(1010101, description, 1, 0, 1, 2, 1)
+    x = self.createEvent(1010101, description, 1, 1, 2, 2, 1)
     self.incrementPeriod(1010101)
     return(x)
 
@@ -320,27 +320,31 @@ def calcOutcomes(branch, scaled:arr, scaled_max:arr, scaled_min:arr, num_reports
                 smooth_rep[n] = self.getRepByIndex(branch, n)
                 n += 1
             smooth_rep = normalize(smooth_rep)
+            reportMatrix = array(num_reports)
+            i = 0
+            while i < num_reports:
+                reporter = self.getReporterID(1010101,i)
+                reportMatrix[i] = array(num_events)
+                reportMatrix[i] = self.getReporterBallot(1010101, period, reporter, outitems=num_events)
+                i += 1
             with i = 0:
                 while i < num_events:
                     if scaled[i] == 1:
                         with active_reports = array(num_reports):
                             with j = 0:
                                 while j < num_reports:
-                                    active_reports[j] = self.getReport(branch, period, self.getReporterID(branch, j), i)
+                                    active_reports[j] = reportMatrix[j][i]
                                     j += 1
                             outcomes_raw[i] = fixed_multiply(weighted_median(active_reports, smooth_rep), scaled_max[i] - scaled_min[i]) + scaled_min[i]
                     else:
                         with j = 0:
                             while j < num_reports:
-                                outcomes_raw[i] += fixed_multiply(smooth_rep[j], self.getReport(branch, period, self.getReporterID(branch, j), i))
+                                outcomes_raw[i] += fixed_multiply(smooth_rep[j], reportMatrix[j][i])
                                 j += 1
                         # weighted avg
-                        outcomes_raw[i] = catch((outcomes_raw[i]/totalRep))
+                        outcomes_raw[i] = catch(outcomes_raw[i])
                     i += 1
-                return(outcomes_raw, items=num_events)
-
-def getReport(branch, expDateIndex, reporter, reportNum):
-    return(self.EventsExpDates[branch][expDateIndex].reporters[reporter][reportNum])
+                return(outcomes_raw: arr)
 
 macro ONE: 2^64
 
@@ -348,6 +352,7 @@ macro YES: 2^65
 macro NO: 2^64
 macro BAD: 3 * 2^63
 
+# this is 10%, should be 15% in final version
 macro CATCH_TOLERANCE: 2^64 / 10
 
 # Sum elements of array
@@ -717,10 +722,10 @@ def getTotalRepReported(branch, expDateIndex):
     return(self.EventsExpDates[branch][expDateIndex].totalRepReported)
 
 def getReporterBallot(branch, expDateIndex, reporterID):
-    return(load(self.EventsExpDates[branch][expDateIndex].reporters[reporterID][0], chars=32*self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
+    return(load(self.EventsExpDates[branch][expDateIndex].reporters[reporterID][0], items=self.EventsExpDates[branch][expDateIndex].numberEvents): arr)
 
-def getReport(branch, expDateIndex, reporter, reportNum):
-    return(self.EventsExpDates[branch][expDateIndex].reporters[reporter][reportNum])
+def getReport(branch, expDateIndex, reporterID, reportNum):
+    return(self.EventsExpDates[branch][expDateIndex].reporters[reporterID][reportNum])
 
 def getReportHash(branch, expDateIndex, reporter):
     return(self.EventsExpDates[branch][expDateIndex].reportHash[reporter])
@@ -800,7 +805,7 @@ def setTotalReputation(branch, expDateIndex, totalReputation):
 def setReporterBallot(branch, expDateIndex, reporterID, report: arr, reputation):
     #if(!self.whitelist.check(msg.sender)):
     #   return(-1)
-    save(self.EventsExpDates[branch][expDateIndex].reporters[reporterID][0], report, chars=32*len(report))
+    save(self.EventsExpDates[branch][expDateIndex].reporters[reporterID][0], report, items=len(report))
     self.EventsExpDates[branch][expDateIndex].totalRepReported += reputation
     return(1)
 

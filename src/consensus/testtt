@@ -1,3 +1,5 @@
-def start(description: str):
-    # expires in period 0
-    return(description:str)
+def start():
+    x = array(5)
+    x[0] = array(3)
+    x[0][0] = 1
+    return(x[0][0])
