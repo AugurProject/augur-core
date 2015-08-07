@@ -41,4 +41,4 @@ def reputationFaucet(branch):
     REPORTING.setRep(branch, index, fix(47))
     return(1)
 
-inset("macros/fixed.se")
+inset("../../macros/fixed.sm")

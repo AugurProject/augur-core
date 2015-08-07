@@ -26,6 +26,8 @@
 # period parameter for reporting
 # currentExpPeriod = (block.number / self.Branches[branch].periodLength)
 # currentExpPeriod - 1 is what's up for reporting at any given time
+import reporting as REP
+
 data Branches[](currentVotePeriod, periodLength, step, substep, markets[], numMarkets, minTradingFee)
 
 data branchList[]
@@ -79,6 +81,42 @@ def getNumBranches():
 
 def getBranch(branchNumber):
 	return(self.branchList[branchNumber])
+
+# will return 0s for array values after it's looped through all the ones you
+# have an actual balance in
+def getReputation(address):
+    branchListCount = self.branchListCount
+    if(address):
+        branches = array(2*branchListCount)
+        branchList = array(branchListCount)
+        branchList = self.getBranches(outitems=branchListCount)
+        i = 0
+        b = 0
+        while i < branchListCount:
+            branch = branchList[i]
+            balance = REP.getRepBalance(branch, address)
+            if(balance!=0):
+                branches[b] = branch
+                branches[b+1] = balance
+                b += 2
+            i += 1
+    else:
+        address = tx.origin
+        branches = array(2*branchListCount)
+        branchList = array(branchListCount)
+        branchList = self.getBranches(outitems=branchListCount)
+        i = 0
+        b = 0
+        while i < branchListCount:
+            branch = branchList[i]
+            balance = REP.getRepBalance(branch, address)
+            if(balance!=0):
+                branches[b] = branch
+                branches[b+1] = balance
+                b += 2
+            i += 1
+    return(branches: arr)
+
 
 # check that msg.sender is one of our function contracts
 def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee):

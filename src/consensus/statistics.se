@@ -125,4 +125,4 @@ macro weighted_median($data, $weights):
 def weighted_median(data:arr, weights:arr):
     return(weighted_median(data, weights))
 
-inset('macros/arrays.se')
+inset('../../macros/arrays.sm')

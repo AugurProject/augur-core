@@ -106,5 +106,5 @@ def score(branch, period, num_events, num_reports, flatsize):
                         else:
                             return(1)
 
-inset('macros/constants.se')
-inset('macros/fixed.se')
+inset('../../macros/constants.sm')
+inset('../../macros/fixed.sm')

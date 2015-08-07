@@ -9,6 +9,8 @@ Options:
 
   [-H | --host] "localhost"     Specifies the host to use for the node's rpc.
 
+  [-h | --help]                 Shows this help message.
+
   [-l | --log]                  Specify a file to redirect the node's stdout
                                 and stderr to.
 
@@ -18,6 +20,7 @@ Options:
 '''
 ################################################################################
 #        1         2         3         4         5         6         7         8
+from colorama import Style, init; init()
 import subprocess
 import socket
 import signal
@@ -27,11 +30,11 @@ import sys
 import os
 
 HOST = 'localhost'
-PORT = "9696" #default rpc port value is different from standard geth
+PORT = '9696' #default rpc port value is different from standard geth
               #to avoid port conflicts
 LOG = None
-GENESIS_NONCE = "27"
-NETWORKID = "1337"
+GENESIS_NONCE = '27'
+NETWORKID = '1337'
 
 def read_options():
     global HOST
@@ -70,7 +73,7 @@ def read_options():
             HOST = val
 
         elif opt in ('-l', '--log'):
-            LOG = val
+            LOG = open(val, 'w')
 
         elif opt in ('-g', '--genesis-nonce'):
             try:
@@ -97,8 +100,9 @@ def setup_environment():
     global GETH_PATH
     global DATA_DIR
     global PASSWORD
+    global COMMAND
     
-    print 'Setting up node environment.'
+    print Style.BRIGHT + 'Setting up node environment.'
     null = open(os.devnull, 'w')
     old_dir = os.getcwd()
 
@@ -132,14 +136,6 @@ def setup_environment():
     if (not os.path.isfile(GETH_PATH)) or ('--genesisnonce' not in subprocess.check_output([GETH_PATH, '-h'])):
         print '  Building geth'
         subprocess.call(['make', 'geth'], stdout=null, stderr=null)
-    
-    os.chdir(old_dir)
-    null.close()
-    print '  Done'
-
-def main():
-    read_options()
-    setup_environment()
 
     COMMAND = [GETH_PATH,
                '--rpc',
@@ -151,33 +147,56 @@ def main():
                '--password', PASSWORD,
                '--genesisnonce', GENESIS_NONCE,
                '--networkid', NETWORKID,
-               '--port', '40404'] #hard coded alternative network port
-                                  #lets a legit geth node run simultaneously
+               #hard coded alternative network port
+               #lets a legit geth node run simultaneously
+               '--port', '40404']
 
-    MAKE_ACCOUNT = COMMAND + ['account', 'new']
-    RUN_NODE = COMMAND + [
+    os.chdir(old_dir)
+    null.close()
+    print '  Done' + Style.RESET_ALL
+
+def get_kwds():
+    kwds = {}
+    if LOG:
+        kwds['stdout'] = LOG
+        kwds['stderr'] = LOG
+    return kwds
+
+def make_address():
+    subprocess.call(COMMAND + ['account', 'new'],
+                    **get_kwds())
+
+def start_node():
+    START_NODE = COMMAND + [
         '--mine',
         '--minerthreads', '2',
         '--unlock', '0',
         '--etherbase', '0']
+    msg = 'Starting node. Connect to rpc at {}:{}'
+    print Style.BRIGHT + msg.format(HOST, PORT) + Style.RESET_ALL
+    node = subprocess.Popen(START_NODE, **get_kwds())
+    while True:
+        try:
+            socket.create_connection((HOST, PORT), 0.5)
+        except:
+            pass
+        else:
+            break
+    return node
 
-    print 'Starting node. Connect to rpc at {}:{}'.format(HOST, PORT)
+def main():
+    read_options()
+    setup_environment()
+    make_address()
+    node = start_node()
 
-    if LOG:
-        log = open(LOG, 'w')
-        subprocess.call(MAKE_ACCOUNT, stdout=log, stderr=log)
-        node = subprocess.Popen(RUN_NODE, stdout=log, stderr=log)
-    else:
-        subprocess.call(MAKE_ACCOUNT)
-        node = subprocess.Popen(RUN_NODE)
-    
     try:
         node.wait()
-    except KeyboardInterrupt:
+    except:
         sys.stdout.write('\r')
         sys.stdout.flush()
         node.send_signal(signal.SIGINT)
         node.wait()
-    
+
 if __name__ == '__main__':
     main()

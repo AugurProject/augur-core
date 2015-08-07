@@ -5,26 +5,11 @@ import socket
 import json
 import sys
 import re
+import os
 
 def pdumps(rpc):
     '''Turns an rpc dict into a pretty string.'''
     return json.dumps(rpc, sort_keys=True, indent=4) 
-
-#Default info for the most common Ethereum clients.
-DEFAULTS = {
-    'GETH' : (
-        'localhost',
-        8545,
-    ),
-    'ALETHZERO' : (
-        'localhost',
-        8080,
-    ),
-    'TESTRPC' : (
-        'localhost',
-        8546,
-    ),
-}
 
 #color schemes for messages
 TRACE = Style.BRIGHT + Fore.BLACK + Back.RED
@@ -44,26 +29,20 @@ Content-Type: application/json\r
 
 class RPC_Client(object):
     '''A class for sending arbitrary rpc calls to an Ethereum node.'''
-    def __init__(self, address=None, default=None, verbose=True, debug=False):
+    def __init__(self, address, verbosity):
         '''
         If default is specified it must be either 'GETH', 'ALETHZERO', or 'TESTRPC'.
         If address is specified, it must be a tuple like ('localhost', 8080).
         If verbose is True, then debugging info will be printed out
         for every RPC call and response. It is True by default.
         '''
-        if address is None:
-            if default is None:
-                raise TypeError('You must specify an address or a default!')
-            elif default in DEFAULTS:
-                self.info = DEFAULTS[default]
-            else:
-                raise ValueError('That default doesn\'t exist!')
-        else:
-            self.info = address
+        
+        self.info = address
         self.conn = socket.create_connection(self.info)
         self.id = 1
-        self.verbose = verbose
-        self.debug = debug
+        self.verbose = verbosity > 0
+        self.debug = verbosity > 1
+        self.suffix = os.urandom(5).encode('hex')
 
     def _send_rpc(self, name, args, kwds):
         if 'sender' in kwds:
@@ -75,7 +54,7 @@ class RPC_Client(object):
 
         rpc_data = json.dumps({
             'jsonrpc':'2.0',
-            'id': self.id,
+            'id': self.suffix + '-' + str(self.id),
             'method': name,
             'params': params})
 

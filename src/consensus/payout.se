@@ -63,9 +63,9 @@ def payout(outcomes_final:arr, smooth_rep:arr, reports_mask:arr, num_reports, nu
                                         i += 1
                                 return(reporter_bonus: arr)
 
-inset('macros/constants.se')
-inset('macros/fixed.se')
-inset('macros/arrays.se')
-# inset('../../macros/constants.se')
-# inset('../../macros/fixed.se')
-# inset('../../macros/arrays.se')
+# inset('macros/constants.se')
+# inset('macros/fixed.se')
+# inset('macros/arrays.se')
+inset('../../macros/constants.sm')
+inset('../../macros/fixed.sm')
+inset('../../macros/arrays.sm')
