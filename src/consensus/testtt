@@ -1,5 +1,13 @@
+data stuff[](otherstuff[], numStuff)
+
 def start():
-    x = array(5)
-    x[0] = array(3)
-    x[0][0] = 1
-    return(x[0][0])
+    self.stuff[0].otherstuff[0] = 4
+    self.stuff[0].otherstuff[1] = 5
+    self.stuff[0].numStuff = 2
+    return(1)
+
+def getStuff(hmmtest):
+    return(load(self.stuff[hmmtest].otherstuff[0], items=self.stuff[0].numStuff): arr)
+
+def woah():
+    return(self.stuff[0].otherstuff[1])

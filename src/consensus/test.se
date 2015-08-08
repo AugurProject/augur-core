@@ -48,7 +48,7 @@ def dispatch(branch):
                     elif step == 1:
                         self.initCluster(branch, period, num_events, num_reports, 1)
                     elif step == 2:
-                        threshold = (self.fx_log(numEvents*2^64)*2^64/42475197863169474560)*2^64 / 32650737010465906688
+                        threshold = (self.fx_log(num_events*2^64)*2^64/42475197863169474560)*2^64 / 32650737010465906688
                         if(threshold==0):
                             threshold = 5534023222112865280
                         # if not done, keep doing step two before incrementing the step
@@ -67,10 +67,18 @@ def initCluster(branch, votePeriod, numEvents, numReporters, fresh):
     if(threshold==0):
         threshold = 5534023222112865280
     self.setBest(-1)
-    self.setBestDist(2**255)
+    self.setBestDist(2**254)
     self.setNumClusters(0)
     self.setI(0)
     return(1)
+
+macro fetch($a, $n):
+    with $memarray = array($n):
+        with $i = 0:
+            while $i < $n:
+                $memarray[$i] = $a[$i]
+                $i += 1
+            $memarray
 
 def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
     if(fresh):
@@ -78,13 +86,13 @@ def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
     memI = self.i
     while (memI < numReporters and msg.gas>200000):
         cmax = -1
-        shortestDist = 2**255
+        shortestDist = 2**254
         n = 0
         report = array(numEvents)
         reporterID = self.getReporterID(branch, memI)
         report = self.getReporterBallot(branch, votePeriod, reporterID, outitems=numEvents)
         while n < self.numClusters:
-            if(n!=0):
+            if(memI!=0):
                 dist = self.L2dist(report, load(self.clusternodes[n].meanVec[0], items=numEvents), numEvents)
                 if dist<shortestDist:
                     cmax = n
@@ -114,9 +122,6 @@ def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
         return(2)
     else:
         return(0)
-
-def getMeanVec():
-    return(load(self.clusternodes[0].meanVec[0], items=3): arr)
 
 def process(numReporters, times, threshold, numEvents):
     mode = 0
@@ -534,6 +539,24 @@ data clusternodes[](numReporters, meanVec[], repInCluster, repVector[], reporter
 data numClusters
 
 data repVector[]
+
+def getNumReportersCluster(id):
+    return(self.clusternodes[id].numReporters)
+
+def getMeanVec(id, length):
+    return(load(self.clusternodes[id].meanVec[0], items=length): arr)
+
+def getRepInCluster(id):
+    return(self.clusternodes[id].repInCluster)
+
+def getClusterRepVector(id):
+    return(fetch(self.clusternodes[id].repVector, self.clusternodes[id].numReporters): arr)
+
+def getReporterIndexVec(id):
+    return(fetch(self.clusternodes[id].reporterIndexVec, self.clusternodes[id].numReporters): arr)
+
+def getDist(id):
+    return(self.clusternodes[id].distance)
 
 def setBest(best):
     self.best = best
