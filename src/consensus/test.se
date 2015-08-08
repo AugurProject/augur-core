@@ -55,7 +55,7 @@ def dispatch(branch):
                         if(!self.cluster(branch, period, num_events, num_reports, 0, threshold)):
                             return(2)
                     elif step == 3:
-                        self.smooth(num_reports, num_events)
+                        self.smooth(branch, num_reports, num_events)
                     elif step == 4:
                         self.resolve(branch, period, num_events, num_reports)
                     self.incrementStep(branch)
@@ -173,7 +173,7 @@ def process(numReporters, times, threshold, numEvents):
     return(1)
 
 
-def smooth(num_reports, num_events):
+def smooth(branch, num_reports, num_events):
     # Weighted sum of old and new reputation vectors.
     # New: row_reward_weighted
     # Old: reputation
@@ -212,7 +212,7 @@ def smooth(num_reports, num_events):
             with i = 0:
                 with totalRep = self.getTotalReputation(branch):
                     while i < num_reports:
-                        self.setRep(branch, i, smooth_rep[i]*totalRep)
+                        self.setRep(branch, i, smooth_rep[i]*totalRep/2**64)
                         i += 1
             return(1)
 
@@ -238,7 +238,7 @@ def payout(branch, period, num_events, num_reports):
                 j += 1
         # - need to loop through rep holders and distribute 50% of branch fees to
         #   reporters' cashcoin addresses
-        with totalRep = self.getTotalRep(branch):
+        with totalRep = self.getTotalReputation(branch):
             with i = 0:
                 while i < num_reports:
                     self.addCash(self.getReporterID(branch, i), fixed_multiply(self.balance(branch), self.getRepByIndex(branch, i)*2^64/totalRep))
