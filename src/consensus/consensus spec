@@ -19,7 +19,7 @@ A consensus spec:
     #note: do outcomes w/ smooth rep (not just "new rep"), and calculate using tolerance, use weighted med. for scalars
     #3e) then scale scaled back up to w/e value - ditto for categorical (need to mult by range and add min i think) for categorical range is numOutcomes - 1, min is 1 - done
     #3f) save outcomes - done
-4) Payout reporters & event bonds
+#4) Payout reporters & event bonds
 
 
 # what if someone doesn't report + sends their rep to a different account
