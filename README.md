@@ -7,6 +7,7 @@ augur-core
 - investigate https://www.seas.upenn.edu/~hoda/HLPV.pdf
 - consider implications of updating data/api contracts & data migration
 - cfd stable
+- chars/items outitems outchars stuff
 
 ### Bugs:
 - https://github.com/ethereum/wiki/wiki/HPOC_2015#anti-pre-revelation + reddit post /r/augur
@@ -32,6 +33,7 @@ augur-core
 
 ### Version 0.6:
   - new consensus implementation
+  - freeloader prevention - separate "other contracts branch" - others can't get # shares held (log it, don't return it when buying or selling shares) or outcomes - what about buying outcome / balances, getmarketoutcome
   - conditional markets
   - min/max fxp? & 1,2 or 2^64 and 2*2^64 - should probably support fxp
   - should think about switching binary back to 0-1 since scalars are that way now too
@@ -42,3 +44,4 @@ augur-core
 - allow people to set market base currencies - is this what V meant by mult. currency support
 - With these conditions: [1] Stalled Branch, [2] Decision-Author’s signature, one can move an event to a new Branch (use ecVerify serpent function)
 - frontrunning prevention - spows
+- should we normalize prices into probabilities?
