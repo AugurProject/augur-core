@@ -4,7 +4,7 @@ def start():
     self.stuff[0].otherstuff[0] = 4
     self.stuff[0].otherstuff[1] = 5
     self.stuff[0].numStuff = 2
-    return(1)
+    return(self.stuff[0].otherstuff[4])
 
 def getStuff(hmmtest):
     return(load(self.stuff[hmmtest].otherstuff[0], items=self.stuff[0].numStuff): arr)
