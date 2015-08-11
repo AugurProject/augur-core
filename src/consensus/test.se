@@ -92,7 +92,10 @@ def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
         reporterID = self.getReporterID(branch, memI)
         report = self.getReporterBallot(branch, votePeriod, reporterID, outitems=numEvents)
         while n < self.numClusters:
+            # is it cheaper to load the meanvec and then calc? or might it be cheaper to pull it one item at a time
+            # instead of loading into mem
             dist = self.L2dist(report, load(self.clusternodes[n].meanVec[0], items=numEvents), numEvents)
+            # if dist is 0 we can break here
             if dist<shortestDist:
                 cmax = n
                 shortestDist = dist
@@ -103,10 +106,10 @@ def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
             self.clusternodes[cmax].repInCluster += rep
             self.clusternodes[cmax].repVector[self.clusternodes[cmax].numReporters] = rep
             self.clusternodes[cmax].numReporters += 1
-            newMean = array(numEvents)
-            newMean = self.newMean(cmax, numEvents, branch, votePeriod, outitems=numEvents)
-            save(self.clusternodes[cmax].meanVec[0], newMean, items=numEvents)
+            # pass report to mean function to make cheaper
+            save(self.clusternodes[cmax].meanVec[0], self.newMean(cmax, numEvents, branch, votePeriod, outitems=numEvents), items=numEvents)
         else:
+            # most expensive is saving
             save(self.clusternodes[self.numClusters].meanVec[0], report, items=numEvents)
             self.clusternodes[self.numClusters].numReporters = 1
             self.clusternodes[self.numClusters].repInCluster = rep
@@ -591,6 +594,7 @@ def sqrt(n):
     return val
 
 def newMean(cluster, numEvents, branch, reportingPeriod):
+    # if it's the same we can cut some time here
     numReporters = self.clusternodes[cluster].numReporters
     totalRep = self.clusternodes[cluster].repInCluster
     weighted = array(numEvents)
