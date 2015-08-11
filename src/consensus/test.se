@@ -92,11 +92,10 @@ def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
         reporterID = self.getReporterID(branch, memI)
         report = self.getReporterBallot(branch, votePeriod, reporterID, outitems=numEvents)
         while n < self.numClusters:
-            if(memI!=0):
-                dist = self.L2dist(report, load(self.clusternodes[n].meanVec[0], items=numEvents), numEvents)
-                if dist<shortestDist:
-                    cmax = n
-                    shortestDist = dist
+            dist = self.L2dist(report, load(self.clusternodes[n].meanVec[0], items=numEvents), numEvents)
+            if dist<shortestDist:
+                cmax = n
+                shortestDist = dist
             n += 1
         rep = self.getRepBalance(branch, reporterID)
         if(cmax!=-1 and shortestDist<threshold):
@@ -121,7 +120,7 @@ def cluster(branch, votePeriod, numEvents, numReporters, fresh, threshold):
     if(self.process(numReporters, 0, threshold, numEvents)):
         return(2)
     else:
-        return(0)
+        return(47)
 
 def process(numReporters, times, threshold, numEvents):
     mode = 0
@@ -172,7 +171,8 @@ def process(numReporters, times, threshold, numEvents):
     save(self.repVector[0], repVector, items=numReporters)
     return(1)
 
-
+# if someone doesn't report + sends their rep to a different account if this is done in mult steps
+# they could atk by sending in between steps - will need to account for this
 def smooth(branch, num_reports, num_events):
     # Weighted sum of old and new reputation vectors.
     # New: row_reward_weighted
@@ -592,28 +592,20 @@ def sqrt(n):
 
 def newMean(cluster, numEvents, branch, reportingPeriod):
     numReporters = self.clusternodes[cluster].numReporters
-    weighted = array(numReporters)
-    i = 0
-    while i < numReporters:
-        weighted[i] = array(numEvents)
-        reporterID = self.getReporterID(branch, self.clusternodes[cluster].reporterIndexVec[i])
-        weighted[i] = self.getReporterBallot(branch, reportingPeriod, reporterID, outitems=numEvents)
-        e = 0
-        rep = self.getRepBalance(branch, reporterID)
-        while e < numEvents:
-            weighted[i][e] = weighted[i][e] * rep / 2^64
-            e += 1
-        i += 1
-    mean = array(numEvents)
-    i = 0
     totalRep = self.clusternodes[cluster].repInCluster
-    while i < numEvents:
-        r = 0
-        while r < numReporters:
-            mean[i] += weighted[r][i]
-            r += 1
-        mean[i] = mean[i]*2^64 / totalRep
-        i += 1
+    weighted = array(numEvents)
+    reporterID = self.getReporterID(branch, self.clusternodes[cluster].reporterIndexVec[i])
+    weighted = self.getReporterBallot(branch, reportingPeriod, reporterID, outitems=numEvents)
+    rep = self.getRepBalance(branch, reporterID)
+    meanVec = array(numEvents)
+    meanVec = self.getMeanVec(cluster, numEvents, outitems=numEvents)
+    newTotalRep = totalRep + rep
+    mean = array(numEvents)
+    e = 0
+    while e < numEvents:
+        mean[e] = (totalRep*meanVec[e] + (weighted[e] * rep / 2^64))/newTotalRep
+        e += 1
+
     return(mean: arr)
 
 def getRepVector(numReporters):
