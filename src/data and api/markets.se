@@ -225,17 +225,14 @@ def setWinningOutcomes(market, outcomes: arr):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # largest # of winning outcomes is 8
-    i = 0
-    while outcomes[i] != 0:
-        self.Markets[market].winningOutcomes[i] = outcomes[i]
-        i += 1
+    save(self.Markets[market].winningOutcomes[0], outcomes, items=len(outcomes))
     return(1)
     
 def getWinningOutcomes(market):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # largest # of winning outcomes is 8
-    return(load(self.Markets[market].winningOutcomes[0], chars=32*8): arr)
+    return(load(self.Markets[market].winningOutcomes[0], items=8): arr)
 
 def initialLiquiditySetup(marketID, alpha, cumScale, numOutcomes):
     #if(!self.whitelist.check(msg.sender)):
