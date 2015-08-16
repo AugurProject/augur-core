@@ -52,6 +52,7 @@ Options:
 #        1         2         3         4         5         6         7         8
 import warnings; warnings.simplefilter('ignore')
 import serpent
+from ethereum import tester as t
 import pyrpctools as rpc
 from collections import defaultdict
 import os
@@ -217,14 +218,39 @@ def wait(seconds):
         time.sleep(seconds/10.)
     print
 
-def broadcast_code(evm):
+def cost_estimate(code):
+    s = t.state()
+    c = s.abi_contract(code)
+    return s.block.gas_used
+
+def broadcast_code(evm, code, fullname):
     '''Sends compiled code to the network, and returns the address.'''
     result = RPC.eth_sendTransaction(
         sender=COINBASE,
         data=evm,
         gas=rpc.MAXGAS)
 
-    assert 'error' not in result, json.dumps(result, indent=4, sort_keys=True)
+    if 'error' in result:
+        code = result['error']['code']
+        message = result['error']['message']
+        if code == -32603 and message == 'Exceeds gas block limit':
+            if cost_estimate(code) < rpc.MAXGAS:
+                time.sleep(BLOCKTIME)
+                return broadcast_code(evm, code, fullname)
+            else:
+                print '%s costs too much to compile!' % fullname
+        else:
+            print 'UNKNOWN ERROR'
+            print json.dumps(result, indent=4, sort_keys=True)
+        print 'ABORTING'
+        print 'code:'
+        print code
+        print 'DB:'
+        print json.dumps(DB, indent=4, sort_keys=True)
+        dump = open('load_contracts_FATAL_dump.json', 'w')
+        print>>dump, json.dumps(DB, indent=4, sort_keys=True)
+        sys.exit(1)
+            
     txhash = result['result']
     tries = 0
     while tries < TRIES:
@@ -415,8 +441,8 @@ def compile(fullname):
         print 'DB dump:'
         print json.dumps(DB, indent=4, sort_keys=True)
         sys.exit(1)
-
-    address = broadcast_code(evm)
+    
+    address = broadcast_code(evm, code, fullname)
     sig = serpent.mk_signature(code)
     # serpent makes the contract name in the sig "main"
     # if the code it compiles is in a string instead of a file.

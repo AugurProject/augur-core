@@ -25,13 +25,32 @@
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
+# The root branch, 1010101, is used for votes to change the whitelists.
 data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep)
 
-#accessibles[address]
-#stores the contracts which address can access
-#i.e., for every contract in accessibles[address].contracts,
-#whitelists[contract][address] == 1
-data accessibles[](contracts[], len_contracts, index[])
+macro ROOT_BRANCH: self.Reporting[1010101]
+macro rep($address): ROOT_BRANCH.reputation[ROOT_BRANCH.repIDtoIndex[$address]].repValue
+macro this_rep: rep(tx.origin)
+
+# accessibles[address]
+# stores the contracts which address can access
+# i.e., for every contract in accessibles[address].contracts,
+# whitelists[contract][address] == 1
+data accessibles[](contracts[], len_contracts)
+
+macro accessibles($address):
+    self.accessibles[$address]
+
+macro num_accessible($address):
+    accessibles($address).len_contracts
+
+macro accessible_contracts($address):
+    load(accessibles($address).contracts[0], items=num_accessible($address))
+
+macro add_to_accessibles($address, $contract):
+    with $old_contracts = accessible_contracts($address):
+        with $new_contracts = 
+
 #whitelists[contract][address]
 #if `address` is in `contract`'s whitelist, then
 #self.whitelists[contract][address] == 1
@@ -39,16 +58,26 @@ data accessibles[](contracts[], len_contracts, index[])
 #This is just to keep track of whether or not a contract's
 #whitelist exists.
 data whitelists[][]
+
+macro whitelists($contract): self.whitelists[$contract]
+
 #votes[period]
 #each period has a ballot, a list of hashes of ballot items.
 #votes are allowed for each item, and rep totals for each
 #item are kept in a mapping from ballot_item_hash -> rep totals.
-data votes[](ballot[], ballot_len, index[],voters[][], rep_totals[])
+data votes[](ballot[], ballot_len, voters[][], rep_totals[])
 
-#the index for each ot the folowing four data structures
-#is the hash of the type, voteperiod, and contract in question.
-#the types map keeps track of which kind of change the ballot item
-#proposes.
+#the first block number of this contract's existence
+data EPOCH
+
+macro votes($period): self.votes[$period]
+macro PERIODLEN: 1800
+macro CURRENTPERIOD: (block.number - self.EPOCH) / PERIODLEN
+macro LASTPERIOD: (block.number - self.EPOCH - 1) / PERIODLEN
+macro current_vote: votes(CURRENTPERIOD)
+
+# The index for each of the folowing four data structures
+# is the ballot item hash.
 data types[]
 data replacements[](from_addr, to_addr)
 data additions[](address, contracts[], len_contracts)
@@ -57,9 +86,39 @@ data deletions[]
 macro REPLACEMENT: 1
 macro ADDITION: 2
 macro DELETION: 4
-macro VOTEPERIOD: block.number / 1800
-macro votes($period): self.votes[$period]
-macro current_vote: votes(VOTEPERIOD)
+
+
+
+macro add_to_accessible_contracts($address, $contract):
+    with $old_contracts = accessible_contracts($address):
+        with $new_contracts = array(len($old_contracts) + 1):
+            mcopy(
+            $new_contracts[len($old_contracts)] = $contract
+            accessibles($address).len_contracts += 1
+            save(accessibles($address).contracts[0], $new_contracts, items=len($new_contracts))
+macro remove_from_accessible_contracts($address), $contract):
+    with $old_contracts = accessible_contracts($address):
+        with $new_contracts = array(len($old_contracts) - 1):
+            with $index = accessibles($address).index[$contract]:
+                mcopy($new_contracts, $old_contracts, items=$index)
+                mcopy($new_contracts + (items=$index), $old_contracts+
+macro add_to_whitelist($contract, $address):
+    whitelist($contract)[$address] = 1
+    accessibles($address).len_contracts += 1
+    accessibles($address).contracts[accessibles($address).len_contracts] = $contract
+    accessibles($address).index[$contract] = accessibles($address).len_contracts
+
+macro remove_from_whitelist($contract, $address):
+    whitelist($contract)[$address] = 0
+    accessibles($address).contracts[accessibles($address).index[$contract]] = 0
+    accessibles($address).index[$contract] = 0
+    
+macro replacements($hash): self.replacements[$hash]
+macro replace_in_whitelists($from_addr, $to_addr):
+    add_to_whitelist($to_addr, $to_addr)
+    with $i = 2:
+        with $l = accessibles($from_addr):
+            while $i < $l:
 
 def init():
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
@@ -67,7 +126,18 @@ def init():
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
     self.Reporting[1010101].numberReporters = 1
     self.Reporting[1010101].totalRep += 47*2^64
+    self.EPOCH = block.number
 
+def shared():
+    if((CURRENTPERIOD != 0)&&(CURRENTPERIOD > LASTPERIOD)):
+        with i = 1:
+            with last_ballot_len = votes(LASTPERIOD).len_ballot:
+                while i <= last_ballot_len:
+                    with item = votes(LASTPERIOD).ballot[i]:
+                        if votes(LASTPERIOD).rep_totals[item] > (ROOT_BRANCH.totalRep / 2):
+                            if types[item] == REPLACEMENT:
+                                with j = 1:
+                                    
 def checkWhitelist(address):
     return(self.whitelists[msg.sender].addresses[address])
 
@@ -78,16 +148,30 @@ def setWhitelist(contract, addresses:arr):
     if self.whitelists[contract][contract]:
         return(text("ERROR: you have to vote to change a whitelist"):str)
     else:
-        self.whitelists[contract][contract] = 1
-        self.accessibles[contract]
+        add_to_whitelist(contract, contract)
         i = 0
         l = len(addresses)
-        while i <l:
+        while(i < l):
             address = addresses[i]
-            self.whitelists[contract].addresses[addresses] = 1
-            self.accessibles[address].
+            add_to_whitelist(contract, address)
             i += 1
         return(text("SUCCESS"):str)
+
+def hasVoted(address):
+    with i = 0:
+        with result = 0:
+            while(i < current_vote.len_ballot):
+                result |= current_vote.votes[current_vote.ballot[i]][tx.origin]
+            return(result)
+
+def whitelistVote(hash):
+    if current_vote.voters[hash][tx.origin]:
+        return(text("ERROR: You already voted for that!"):str)
+    elif not current_vote.index[hash]:
+        return(text("ERROR: That hash is not on the ballot!"):str)
+    else:
+        current_vote.voters[hash][tx.origin] = 1
+        current_vote.rep_totals[hash] += this_rep #this_rep is a macro!
 
 macro add_to_current_ballot($hash):
     current_vote.len_ballot += 1
