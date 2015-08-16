@@ -233,7 +233,7 @@ def broadcast_code(evm, code, fullname):
     if 'error' in result:
         code = result['error']['code']
         message = result['error']['message']
-        if code == -32603 and message == 'Exceeds gas block limit':
+        if code == -32603 and message == 'Exceeds block gas limit':
             if cost_estimate(code) < rpc.MAXGAS:
                 time.sleep(BLOCKTIME)
                 return broadcast_code(evm, code, fullname)
