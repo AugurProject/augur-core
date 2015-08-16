@@ -35,7 +35,7 @@ def gospelify(output):
                 if contract == "buy&sellShares":
                     contract = "buyAndSellShares"
                 outstr = '    "' + contract + '": "' + address + '"'
-                if name != "consensus" or i < len(value) - 1:
+                if i < len(value) - 1:
                     outstr += ","
                 outstr += "\n"
                 sys.stdout.write(outstr)
