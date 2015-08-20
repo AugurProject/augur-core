@@ -28,97 +28,65 @@
 # The root branch, 1010101, is used for votes to change the whitelists.
 data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep)
 
-macro ROOT_BRANCH: self.Reporting[1010101]
-macro rep($address): ROOT_BRANCH.reputation[ROOT_BRANCH.repIDtoIndex[$address]].repValue
-macro this_rep: rep(tx.origin)
-
-# accessibles[address]
+# self.accessibles[address]
 # stores the contracts which address can access
 # i.e., for every contract in accessibles[address].contracts,
 # whitelists[contract][address] == 1
-data accessibles[](contracts[], len_contracts)
-
-macro accessibles($address):
-    self.accessibles[$address]
-
-macro num_accessible($address):
-    accessibles($address).len_contracts
-
-macro accessible_contracts($address):
-    load(accessibles($address).contracts[0], items=num_accessible($address))
-
-macro add_to_accessibles($address, $contract):
-    with $old_contracts = accessible_contracts($address):
-        with $new_contracts = 
-
-#whitelists[contract][address]
-#if `address` is in `contract`'s whitelist, then
-#self.whitelists[contract][address] == 1
-#Every contract's whitelist contains it's own address.
-#This is just to keep track of whether or not a contract's
-#whitelist exists.
+#
+# self.whitelists[contract][address]
+# if `address` is in `contract`'s whitelist, then
+# self.whitelists[contract][address] == 1
+# Every contract's whitelist contains it's own address.
+# This is just to keep track of whether or not a contract's
+# whitelist exists.
+#
+# self.votes[period]
+# each period has a ballot, a list of hashes of ballot items.
+# each item in the ballot list is a hash of info on the vote.
+# voters for each ballot item are kept track of in a map from
+# ballot_item -> voter_address -> {0, 1}
+# Rep totals for each ballot_item are kept in a mapping from
+# ballot_item_hash -> rep totals.
+# The status of the voting round is kept as a value called completed.
+# It is set to true when all of the proposed changes have either been
+# accepted or rejected
+#
+# self.EPOCH is the block this contract was created in
+#
+# self.types[ballot_item]
+# keeps track of which type of whitelist change is being voted on.
+#
+# self.replacements[ballot_item]
+# replace all occurences of of from_addr to to_addr in every whitelist.
+#
+# self.additions[ballot_item]
+# add an address to the whitelists of one or more contracts
+#
+# self.deletions[ballot_item]
+# an address to remove from all whitelists.
+data accessibles[](contracts[], length)
 data whitelists[][]
-
-macro whitelists($contract): self.whitelists[$contract]
-
-#votes[period]
-#each period has a ballot, a list of hashes of ballot items.
-#votes are allowed for each item, and rep totals for each
-#item are kept in a mapping from ballot_item_hash -> rep totals.
-data votes[](ballot[], ballot_len, voters[][], rep_totals[])
-
-#the first block number of this contract's existence
-data EPOCH
-
-macro votes($period): self.votes[$period]
-macro PERIODLEN: 1800
-macro CURRENTPERIOD: (block.number - self.EPOCH) / PERIODLEN
-macro LASTPERIOD: (block.number - self.EPOCH - 1) / PERIODLEN
-macro current_vote: votes(CURRENTPERIOD)
-
-# The index for each of the folowing four data structures
-# is the ballot item hash.
+data votes[](ballot[], ballot_len, voters[][], rep_totals[], completed)
 data types[]
-data replacements[](from_addr, to_addr)
+#data replacements[](from_addr, to_addr)
+data replacements[][]
 data additions[](address, contracts[], len_contracts)
 data deletions[]
+data EPOCH
 
-macro REPLACEMENT: 1
-macro ADDITION: 2
-macro DELETION: 4
+macro REPLACE: 1
+macro ADD: 2
+macro DELETE: 4
+macro PERIOD: 1800
 
-
-
-macro add_to_accessible_contracts($address, $contract):
-    with $old_contracts = accessible_contracts($address):
-        with $new_contracts = array(len($old_contracts) + 1):
-            mcopy(
-            $new_contracts[len($old_contracts)] = $contract
-            accessibles($address).len_contracts += 1
-            save(accessibles($address).contracts[0], $new_contracts, items=len($new_contracts))
-macro remove_from_accessible_contracts($address), $contract):
-    with $old_contracts = accessible_contracts($address):
-        with $new_contracts = array(len($old_contracts) - 1):
-            with $index = accessibles($address).index[$contract]:
-                mcopy($new_contracts, $old_contracts, items=$index)
-                mcopy($new_contracts + (items=$index), $old_contracts+
-macro add_to_whitelist($contract, $address):
-    whitelist($contract)[$address] = 1
-    accessibles($address).len_contracts += 1
-    accessibles($address).contracts[accessibles($address).len_contracts] = $contract
-    accessibles($address).index[$contract] = accessibles($address).len_contracts
-
-macro remove_from_whitelist($contract, $address):
-    whitelist($contract)[$address] = 0
-    accessibles($address).contracts[accessibles($address).index[$contract]] = 0
-    accessibles($address).index[$contract] = 0
-    
-macro replacements($hash): self.replacements[$hash]
-macro replace_in_whitelists($from_addr, $to_addr):
-    add_to_whitelist($to_addr, $to_addr)
-    with $i = 2:
-        with $l = accessibles($from_addr):
-            while $i < $l:
+macro REPORTING: 0
+macro ACCESSIBLES: 1
+macro WHITELISTS: 2
+macro VOTES: 3
+macro TYPES: 4
+macro REPLACEMENTS: 5
+macro ADDITIONS: 6
+macro DELETIONS: 7
 
 def init():
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
@@ -129,15 +97,83 @@ def init():
     self.EPOCH = block.number
 
 def shared():
-    if((CURRENTPERIOD != 0)&&(CURRENTPERIOD > LASTPERIOD)):
-        with i = 1:
-            with last_ballot_len = votes(LASTPERIOD).len_ballot:
-                while i <= last_ballot_len:
-                    with item = votes(LASTPERIOD).ballot[i]:
-                        if votes(LASTPERIOD).rep_totals[item] > (ROOT_BRANCH.totalRep / 2):
-                            if types[item] == REPLACEMENT:
-                                with j = 1:
-                                    
+    # don't check for votes during the 0th period,
+    # and only check for votes in the first block of a new period.
+    if((block.number - self.EPOCH)/PERIOD && (not (block.number - self.EPOCH)%PERIOD)):
+        #allocate memory for storage key generation
+        with temp = alloc(160):
+            temp[0] = REPORTING
+            temp[1] = 1010101 # root branch
+            temp[2] = 3 # total rep, 4th member of self.Reporting
+            # need more than half the rep for branch 1010101
+            with required_rep = sload(sha3(temp, items=3))/2:
+                temp[0] = VOTES
+                temp[1] = (block.number - self.EPOCH - 1) / PERIOD:
+                temp[2] = 0 #ballot is the 1st member in votes
+                #temp[3] = 0 #start of the ballot list
+                #data is automatically zero-ed out by alloc
+                #so i can save a few opcodes here! :)
+                with ballot_key = sha3(temp, items=4):
+                    temp[2] = 1 #ballot_len in self.votes
+                    with ballot_len = sload(sha3(temp, items=3)):
+                        with i = 0:
+                            while(i < ballot_len):
+                                temp[0] = VOTES
+                                temp[1] = (block.number - self.EPOCH - 1) / PERIOD:
+                                temp[2] = 3 # rep_totals, 4th member of self.votes
+                                temp[3] = sload(ballot_key + i) #ith ballot item
+                                with rep_total = sload(sha3(temp, items=4)):
+                                    if rep_total > required_rep: #majority vote
+                                        temp[0] = TYPES
+                                        temp[1] = sload(ballot_key + i)
+                                        with ballot_type = sload(sha3(temp, items=2)):
+                                            if ballot_type == REPLACE: #data replacements[][2]
+                                                temp[0] = REPLACEMENTS
+                                                #temp[1] = sload(ballot_key + i) #the ith ballot hash
+                                                temp[2] = 0
+                                                with repl_key = sha3(temp, items=3):
+                                                    temp[0] = ACCESSIBLES
+                                                    temp[1] = sload(repl_key) #from_addr
+                                                    temp[2] = 0 #contracts, 1st member of self.accessibles
+                                                    temp[3] = 0
+                                                    with old_contracts = sha3(temp, items=4):
+                                                        temp[2] = 1 #len_contracts, 2nd member of self.accessibles
+                                                        with old_len_key = sha3(temp, items=3):
+                                                            with len_contracts = sload(old_len_key):
+                                                                temp[1] = sload(repl_key + 1) #to_addr
+                                                                temp[2] = 0 #contracts
+                                                                temp[3] = 0
+                                                                with new_contracts = sha3(temp, items=4):
+                                                                    with j = 0:
+                                                                        temp[0] = WHITELISTS
+                                                                        while j < len_contracts:
+                                                                            # copy the jth accessible contract to the new address's list
+                                                                            sstore(new_contracts + j, sload(old_contracts + j))
+                                                                            # delete the old contract's spot in storage
+                                                                            sstore(old_contracts + j, 0)
+                                                                            # delete from_addr in the jth contract's whitelist 
+                                                                            temp[1] = sload(new_contracts + j) #contract
+                                                                            temp[2] = sload(repl_key) #from_addr
+                                                                            sstore(sha3(temp, items=3), 0) # set it to 0
+                                                                            # add to_add to the jth contract's whitelist
+                                                                            temp[2] = sload(repl_key + 1) #to_addr
+                                                                            sstore(sha3(temp, items=3), 1) #set it to 1
+                                                                            j += 1
+                                                                        temp[0] = ACCESSIBLES
+                                                                        temp[1] = sload(repl_key + 1)
+                                                                        temp[2] = 1
+                                                                        sstore(old_len_key, 0) #delete the old address's len_contracts
+                                                                        sstore(sha3(temp, items=3), len_contracts) #and store the new one!
+                                            elif ballot_type == DELETE:
+                                                temp[0] = DELETIONS
+                                                temp[1] = sload(ballot_key + i)
+                                                with address_to_remove = sload(sha3(temp, items=2)):
+                                                    
+                                                    
+                                                                        
+                                                                                    
+
+
 def checkWhitelist(address):
     return(self.whitelists[msg.sender].addresses[address])
 
