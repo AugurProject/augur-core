@@ -1,13 +1,17 @@
 #!/usr/bin/env python
+from colorama import Style, Fore, init; init()
+from pyrpctools import RPC_Client, MAXGAS
+import subprocess
+import test_node
+import signal
+import shutil
 import time
-import os
 import json
 import sha3
-import signal
-import test_node
-import subprocess
-from pyrpctools import RPC_Client, MAXGAS
-from colorama import Style, Fore, init; init()
+import os
+
+
+
 
 test_code = {'foobar':{'sqrt.se':'''\
 def sqrt(x):
@@ -92,17 +96,17 @@ def rm_tree(file_tree):
         elif type(data) in (str, unicode):
             os.remove(name)
 
-def start_test_node():
-    test_node.LOG = open("test_load_contracts_node.log", 'w')
-    test_node.setup_environment()
-    test_node.make_address()
-    return test_node.start_node()
-
 def test_compile_imports():
-    make_tree(test_code)
-    node = start_test_node()
 
-    rpc = RPC_Client((test_node.HOST, test_node.PORT), 0)
+    try:
+        make_tree(test_code)
+    except:
+        shutil.rmtree('foobar')
+        make_tree(test_code)
+
+    node = test_node.TestNode(log=open('test_compile_imports.log', 'w'))
+    node.start()
+    rpc = RPC_Client((node.rpchost, node.rpcport), 0)
     coinbase = rpc.eth_coinbase()['result']
     gas_price = int(rpc.eth_gasPrice()['result'], 16)
     balance = 0
@@ -136,8 +140,8 @@ def test_compile_imports():
     else:
         print 'TEST FAILED: <r1 {}> <r2 {}>'.format(r1, r2)
     rm_tree(test_code)
-    node.send_signal(signal.SIGINT)
-    node.wait()
-    
+    node.shutdown()
+    node.cleanup()
+
 if __name__ == '__main__':
     test_compile_imports()

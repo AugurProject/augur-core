@@ -42,7 +42,7 @@ Options:
 
   [-p | --rpcport] "8545"        Port to use for rpc.
 
-  [-s | --source]                Path to search for contracts.
+  [-s | --source]  "./src"       Path to search for contracts.
 
   [-v | --verbosity] "0"         The next argument should be 1 to see
                                  the RPC messages, or 2 to see the HTTP

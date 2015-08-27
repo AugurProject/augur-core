@@ -27,18 +27,17 @@
 # Events is 0 indexed as well
 # The root branch, 1010101, is used for votes to change the whitelists.
 data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep)
-
-# self.accessibles[address]
-# stores the contracts which address can access
-# i.e., for every contract in accessibles[address].contracts,
-# whitelists[contract][address] == 1
+macro rep($branch): self.Reporting[$branch].reputation[self.Reporting[$branch].repIDtoIndex[tx.origin]].repValue
+# self.accessibles[address][]
+# stores the contracts' with `address` in their whitelists.
+# contracts are stored like an array, where self.accessibles[address][0]
+# is the length, and then incrementing the ref gets you the contracts that
+# have `address` in their whitelists.
 #
-# self.whitelists[contract][address]
-# if `address` is in `contract`'s whitelist, then
-# self.whitelists[contract][address] == 1
-# Every contract's whitelist contains it's own address.
-# This is just to keep track of whether or not a contract's
-# whitelist exists.
+# self.whitelists[contract][]
+# a list similar to self.accessibles: self.whitelists[contract][0]
+# is the length of the whitelist, and addresses in these lists are
+# allowed to call protected functions in the contracts.
 #
 # self.votes[period]
 # each period has a ballot, a list of hashes of ballot items.
@@ -64,29 +63,24 @@ data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoInd
 #
 # self.deletions[ballot_item]
 # an address to remove from all whitelists.
-data accessibles[](contracts[], length)
+data accessibles[][]
 data whitelists[][]
-data votes[](ballot[], ballot_len, voters[][], rep_totals[], completed)
+data votes[](completed, ballot[], voters[][], repTotals[])
 data types[]
-#data replacements[](from_addr, to_addr)
-data replacements[][]
-data additions[](address, contracts[], len_contracts)
+data replacements[](from_addr, to_addr)
+data additions[](address, contracts[])
 data deletions[]
 data EPOCH
 
-macro REPLACE: 1
-macro ADD: 2
-macro DELETE: 4
-macro PERIOD: 1800
+macro REPLACEMENT: 1
+macro ADDITION: 2
+macro DELETION: 4
 
-macro REPORTING: 0
-macro ACCESSIBLES: 1
-macro WHITELISTS: 2
-macro VOTES: 3
-macro TYPES: 4
-macro REPLACEMENTS: 5
-macro ADDITIONS: 6
-macro DELETIONS: 7
+macro PERIOD: 1800
+macro CURRENT_PERIOD: ((block.number - self.EPOCH)/PERIOD)
+macro LAST_PERIOD: ((block.number - self.EPOCH - 1)/PERIOD)
+macro IS_FIRST_BLOCK: (not (block.number - self.EPOCH)%PERIOD)
+macro current_vote: self.votes[CURRENT_PERIOD]
 
 def init():
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
@@ -96,172 +90,225 @@ def init():
     self.Reporting[1010101].totalRep += 47*2^64
     self.EPOCH = block.number
 
-def shared():
-    # don't check for votes during the 0th period,
-    # and only check for votes in the first block of a new period.
-    if((block.number - self.EPOCH)/PERIOD && (not (block.number - self.EPOCH)%PERIOD)):
-        #allocate memory for storage key generation
-        with temp = alloc(160):
-            temp[0] = REPORTING
-            temp[1] = 1010101 # root branch
-            temp[2] = 3 # total rep, 4th member of self.Reporting
-            # need more than half the rep for branch 1010101
-            with required_rep = sload(sha3(temp, items=3))/2:
-                temp[0] = VOTES
-                temp[1] = (block.number - self.EPOCH - 1) / PERIOD:
-                temp[2] = 0 #ballot is the 1st member in votes
-                #temp[3] = 0 #start of the ballot list
-                #data is automatically zero-ed out by alloc
-                #so i can save a few opcodes here! :)
-                with ballot_key = sha3(temp, items=4):
-                    temp[2] = 1 #ballot_len in self.votes
-                    with ballot_len = sload(sha3(temp, items=3)):
-                        with i = 0:
-                            while(i < ballot_len):
-                                temp[0] = VOTES
-                                temp[1] = (block.number - self.EPOCH - 1) / PERIOD:
-                                temp[2] = 3 # rep_totals, 4th member of self.votes
-                                temp[3] = sload(ballot_key + i) #ith ballot item
-                                with rep_total = sload(sha3(temp, items=4)):
-                                    if rep_total > required_rep: #majority vote
-                                        temp[0] = TYPES
-                                        temp[1] = sload(ballot_key + i)
-                                        with ballot_type = sload(sha3(temp, items=2)):
-                                            if ballot_type == REPLACE: #data replacements[][2]
-                                                temp[0] = REPLACEMENTS
-                                                #temp[1] = sload(ballot_key + i) #the ith ballot hash
-                                                temp[2] = 0
-                                                with repl_key = sha3(temp, items=3):
-                                                    temp[0] = ACCESSIBLES
-                                                    temp[1] = sload(repl_key) #from_addr
-                                                    temp[2] = 0 #contracts, 1st member of self.accessibles
-                                                    temp[3] = 0
-                                                    with old_contracts = sha3(temp, items=4):
-                                                        temp[2] = 1 #len_contracts, 2nd member of self.accessibles
-                                                        with old_len_key = sha3(temp, items=3):
-                                                            with len_contracts = sload(old_len_key):
-                                                                temp[1] = sload(repl_key + 1) #to_addr
-                                                                temp[2] = 0 #contracts
-                                                                temp[3] = 0
-                                                                with new_contracts = sha3(temp, items=4):
-                                                                    with j = 0:
-                                                                        temp[0] = WHITELISTS
-                                                                        while j < len_contracts:
-                                                                            # copy the jth accessible contract to the new address's list
-                                                                            sstore(new_contracts + j, sload(old_contracts + j))
-                                                                            # delete the old contract's spot in storage
-                                                                            sstore(old_contracts + j, 0)
-                                                                            # delete from_addr in the jth contract's whitelist 
-                                                                            temp[1] = sload(new_contracts + j) #contract
-                                                                            temp[2] = sload(repl_key) #from_addr
-                                                                            sstore(sha3(temp, items=3), 0) # set it to 0
-                                                                            # add to_add to the jth contract's whitelist
-                                                                            temp[2] = sload(repl_key + 1) #to_addr
-                                                                            sstore(sha3(temp, items=3), 1) #set it to 1
-                                                                            j += 1
-                                                                        temp[0] = ACCESSIBLES
-                                                                        temp[1] = sload(repl_key + 1)
-                                                                        temp[2] = 1
-                                                                        sstore(old_len_key, 0) #delete the old address's len_contracts
-                                                                        sstore(sha3(temp, items=3), len_contracts) #and store the new one!
-                                            elif ballot_type == DELETE:
-                                                temp[0] = DELETIONS
-                                                temp[1] = sload(ballot_key + i)
-                                                with address_to_remove = sload(sha3(temp, items=2)):
-                                                    
-                                                    
-                                                                        
-                                                                                    
+macro replace($outer, $inner, $from, $to):
+    with $outer_start = ref($outer[$from][0]):
+        with $outer_len = sload($outer_start):
+            if($outer_len):
+                sstore($outer_start, 0)
+                with $new_outer_start = ref($outer[$to][0]):
+                    sstore($new_outer_start, $outer_len)
+                    with $i = 1:
+                        while($i <= $outer_len):
+                            with $datum = sload($outer_start + $i):
+                                sstore($outer_start + $i, 0)
+                                sstore($new_outer_start + $i, $datum)
+                                with $j = 1:
+                                    with $inner_start = ref($inner[sload($new_outer_start + $i)][0]):
+                                        while(sload($inner_start + $j) != $from):
+                                            $j += 1
+                                        sstore($inner_start + $j, $to)
+                                        $i += 1
 
+macro delete($outer, $inner, $addr):
+    with $outer_start = ref($outer[$from][0]):
+        with $outer_len = sload($outer_start):
+            if($outer_len):
+                sstore($outer_start, 0) #delete the length
+                with $i = 1:
+                    while($i <= $outer_len):
+                        #for address in outer list
+                        #find $addr in that address's list, and delete it
+                        with $j = 1:
+                            with $inner_start = ref($inner[sload($outer_start + $i)][0]):
+                                while(sload($inner_start + $j) != $addr):
+                                    $j += 1
+                                sstore($inner_start + $j, 0) #delete from inner list
+                                sstore($outer_start + $i, 0) #delete entry in outer list        
+                                $i += 1
+
+macro add_address($ballot_item):
+    with $address = self.additions[$ballot_item].address:
+        with $contracts_start = ref(self.additions[$ballot_item].contracts[0]):
+            with $contracts_len = sload($contracts_start):
+                with $accessibles_start = ref(self.accessibles[$address][0]):
+                    sstore($accessibles_start, $contracts_len)
+                    with $i = 1:
+                        while($i <= $contracts_len):
+                            # store each contract in $address's "accessibles"
+                            sstore($accessibles_start + $i, sload($contracts_start + $i))
+                            with $j = 1:
+                                with $whitelist_start = ref(self.whitelists[$contract][0]):
+                                    # then add $address to the contracts' whitelists
+                                    # in the first open spot, increasing the length if necessary.
+                                    while(sload($whitelist_start + $j) != 0):
+                                        $j += 1
+                                    sstore($whitelist_start + $j, $address)
+                                    if(sload($whitelist_start) < $j):
+                                        sstore($whitelist_start, $j)
+
+def shared():
+    if(CURRENT_PERIOD && IS_FIRST_BLOCK && not self.votes[LAST_PERIOD].completed):
+        self.votes[LAST_PERIOD].completed = 1
+        with i = 1:
+            with ballot_start = ref(self.votes[LAST_PERIOD].ballot[0]):
+                with ballotLen = sload(ballot_start):
+                    while i <= ballotLen:
+                        with ballot_item = sload(ballot_start + i):
+                            with ballot_item_type = self.types[ballot_item]:
+                                if(ballot_item_type == REPLACEMENT):
+                                    with from_addr = self.replacements[ballot_item].from_addr:
+                                        with to_addr = self.replacements[ballot_item].to_addr:
+                                            self.whitelists[from_addr][from_addr] = 0
+                                            self.whitelists[to_addr][to_addr] = 1
+                                            replace(self.accessibles, self.whitelists, from_addr, to_addr)
+                                            replace(self.whitelists, self.accessibles, from_addr, to_addr)
+                                elif ballot_item_type == DELETION:
+                                    with addr = self.deletions[ballot_item]:
+                                        self.whitelists[addr][addr] = 0
+                                        delete(self.accessibles, self.whitelists, addr)
+                                        delete(self.whitelists, self.accessibles, addr)
+                                elif ballot_item_type == ADDITION:
+                                    add_address(ballot_item)
 
 def checkWhitelist(address):
-    return(self.whitelists[msg.sender].addresses[address])
+    if self.whitelists[msg.sender][msg.sender]:
+        with addr = address:
+            with whitelist_start = ref(self.whitelists[msg.sender][0]):
+                with length = sload(whitelist_start):
+                    with i = 1:
+                        while(i <= length):
+                            if(sload(whitelist_start + i) == addr):
+                                return(1)
+                            i += 1
+                        return(0)
+    else:
+        return(1)
 
 def checkContractWhitelist(contract, address):
-    return(self.whitelists[contract].addresses[address])
+    if self.whitelists[contract][contract]:
+        with addr = address:
+            with whitelist_start = ref(self.whitelists[contract][0]):
+                with length = sload(whitelist_start):
+                    with i = 1:
+                        while(i <= length):
+                            if(sload(whitelist_start + i) == addr):
+                                return(1)
+                            i += 1
+                        return(0)
+    else:
+        return(1)
 
 def setWhitelist(contract, addresses:arr):
     if self.whitelists[contract][contract]:
-        return(text("ERROR: you have to vote to change a whitelist"):str)
+        return(0)
     else:
-        add_to_whitelist(contract, contract)
-        i = 0
-        l = len(addresses)
-        while(i < l):
-            address = addresses[i]
-            add_to_whitelist(contract, address)
-            i += 1
-        return(text("SUCCESS"):str)
+        self.whitelists[contract][contract] = 1
+        with whitelist_start = ref(self.whitelists[contract][0]):
+            sstore(whitelist_start, len(addresses))
+            whitelist_start += 1
+            with i = 0:
+                while i < len(addresses):
+                    with addr = addresses[i]:
+                        # add addr to contract whitelist
+                        sstore(whitelist_start + i, addr)
+                        with j = 1:
+                            with access_start = ref(self.accessibles[addr][0]):
+                                while(sload(access_start + j) != 0):
+                                    j += 1
+                                sstore(access_start + j, contract)
+                                if(j > sload(access_start)):
+                                   sstore(acces_start, j)
+                                i += 1
+                return(1)
 
+# returns 1 if address has voted at all this vote period
 def hasVoted(address):
-    with i = 0:
-        with result = 0:
-            while(i < current_vote.len_ballot):
-                result |= current_vote.votes[current_vote.ballot[i]][tx.origin]
-            return(result)
+    with ballot_start = ref(current_vote.ballot[0]):
+        with ballot_len = sload(ballot_start):
+            with i = 1:
+                while(i <= ballot_len):
+                    if(current_vote.voters[sload(ballot_start + i)][tx.origin]):
+                        return(1)
+                    i += 1
+                return(0)
 
+# tallies your vote
 def whitelistVote(hash):
-    if current_vote.voters[hash][tx.origin]:
-        return(text("ERROR: You already voted for that!"):str)
-    elif not current_vote.index[hash]:
-        return(text("ERROR: That hash is not on the ballot!"):str)
-    else:
-        current_vote.voters[hash][tx.origin] = 1
-        current_vote.rep_totals[hash] += this_rep #this_rep is a macro!
+    with ballot_start = ref(current_vote.ballot[0]):
+        with ballot_len = sload(ballot_start):
+            with i = 1:
+                while((i <= ballot_len) && (sload(ballot_start + i)!=hash)):
+                    i += 1
+                if(i <= ballot_len):
+                    current_vote.voters[hash][tx.origin] = 1
+                    current_vote.repTotals[hash] += rep(1010101)
+                    return(1)
+                else:
+                    return(0)
 
 macro add_to_current_ballot($hash):
-    current_vote.len_ballot += 1
-    current_vote.ballot[current_vote.len_ballot] = $hash
-    current_vote.index[$hash] = current_vote.len_ballot
+    with $ballot_start = ref(current_vote.ballot[0]):
+        with $len_ballot = sload($ballot_start):
+            with $i = 1:
+                while(($i <= $len_ballot) && (sload($ballot_start + $i) != $hash)):
+                    $i += 1
+                if($i > $len_ballot):
+                    sstore($ballot_start + $i, $hash)
+                    sstore($ballot_start, $i)
+                else: # the hash was already in the ballot
+                    return(0)
 
 def propose_replacement(from_addr,to_addr):
     info = array(4)
     info[0] = REPLACEMENT
-    info[1] = VOTEPERIOD
+    info[1] = CURRENT_PERIOD
     info[2] = from_addr
     info[3] = to_addr
-    hash = sha256(info, items=4)
+    hash = sha3(info, items=4)
 
-    if current_vote.index[hash]:
-        return(text("ERROR: replacement already in ballot!"):str)
-
-    self.types[hash] = REPLACEMENT
-    self.replacements[from_addr] = to_addr
     add_to_current_ballot(hash)
+    self.types[hash] = REPLACEMENT
+    self.replacements[hash].from_addr = from_addr
+    self.replacements[hash].to_addr = to_addr
     return(hash)
 
 def propose_addition(address, contracts:arr):
     info = array(3 + len(contracts))
     info[0] = ADDITION
-    info[1] = VOTEPERIOD
+    info[1] = CURRENT_PERIOD
     info[2] = address
     mcopy(info+(items=3), contracts, items=len(contracts))
-    hash = sha256(info, items=len(info))
+    hash = sha3(info, items=len(info))
 
-    if current_vote.index[hash]:
-        return(text("ERROR: addition already in ballot!"):str)
-
+    add_to_current_ballot(hash)
     self.types[hash] = ADDITION
     self.additions[hash].address = address
-    self.additions[hash].len_contracts = len(contracts)
-    save(self.additions[hash].contracts[0], contracts, items=len(contracts))
-    add_to_current_ballot(hash)
+    with addition_start = ref(self.additions[hash].contracts[0]):
+        sstore(addition_start, len(contracts))
+        addition_start += 1
+        with i = 0:
+            while(i < len(contracts)):
+                sstore(addition_start + i, contracts[i])
+                i += 1
     return(hash)
 
 def propose_deletion(address):
     info = array(3)
     info[0] = DELETION
-    info[1] = VOTEPERIOD
+    info[1] = CURRENT_PERIOD
     info[2] = address
-    hash = sha256(info, item=3)
-    
-    if current_vote.index[hash]:
-        return(text("ERROR: deletion already in ballot!"):str)
+    hash = sha3(info, items=3)
 
-    self.types[hash] = DELETION
-    self.deletions[hash] = address
     add_to_current_ballot(hash)
+    self.types[hash] = DELETE
+    self.deletions[hash] = address
     return(hash)
+
+def getCurrentVotePeriod():
+    return(CURRENT_PERIOD)
+
+def getEpoch():
+    return(self.EPOCH)
 
 # @return reputation value
 def getRepByIndex(branch, repIndex):
