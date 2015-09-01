@@ -59,7 +59,7 @@ def make_tree(file_tree, dirname=os.getcwd()):
                 datafile.write(data)
 
 def test_compile_imports():
-    test_dir = os.path.dirname(__file__)
+    test_dir = os.path.dirname(os.path.realpath(__file__))
 
     try:
         make_tree(test_code, dirname=test_dir)
