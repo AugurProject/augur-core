@@ -14,6 +14,12 @@ Options:
                                  If this option is ommited, all contracts
                                  are recompiled.
 
+  [-C | --chdir] <path>          Tells the script to run as if from the given
+                                 directory. Relative paths for options -d and -s
+                                 will be treated as relative to this directory.
+                                 By default, this script uses it's location as
+                                 its cwd.
+
   [-d | --dbfile] "build.json"   The name of the file to use as the database.
                                  When used with -c, the file must already exist
                                  and contain info on all of the dependencies
@@ -92,6 +98,28 @@ def read_options():
     bad_floats = map(float, (0, 'nan', '-inf', '+inf'))
     verb_vals = 1, 2
 
+
+    #gotta make sure to catch -C before other args
+    for a in ('-C', '--chdir'):
+        if a in opts:
+            i = opts.index(a)
+            if i == len(opts) - 1:
+                print 'Invalid option use!', opts[i]
+                print __doc__
+                sys.exit(1)
+    
+            d = opts[i + 1]
+            d = os.path.realpath(d)
+            if not os.path.isdir(d):
+                print 'Invalid option use!', opts[i]
+                print __doc__
+                sys.exit(1)
+    
+            rpc.ROOT = d
+            opts.pop(i) #remove -C
+            opts.pop(i) #and the dir from opts
+            break
+
     while i < len(opts):
 
         if opts[i] in ('-e', '--exports'):
@@ -146,7 +174,7 @@ def read_options():
             i += 2
 
         elif opts[i] in ('-s', '--source'):
-            val = os.path.realpath(opts[i + 1])
+            val = os.path.realpath(os.path.join(rpc.ROOT, opts[i + 1]))
             if not os.path.isdir(val):
                 print "Invalid options for --source:", val
                 print "You must give a directory"

@@ -40,9 +40,7 @@ def cmd(args):
         return subprocess.check_output(args, stderr=NULL)
 
 class TestNode(object):
-    '''Starts a geth node with on private chain, useful for dapp testing.
-
-'''
+    '''Starts a geth node with on private chain, useful for dapp testing.'''
 
     def __init__(self, rpchost='localhost', rpcport='9696',
                  log=sys.stdout, genesis_nonce="27", netport='40404',
@@ -136,7 +134,7 @@ Starting node. To open a console:
              '--etherbase', '0'],
             stdout=self.log,
             stderr=self.log)
-        with open(self.pidfile) as pf:
+        with open(self.pidfile, 'w') as pf:
             print>>pf, self.proc.pid
 
         while True:
