@@ -59,12 +59,13 @@ def make_tree(file_tree, dirname=os.getcwd()):
                 datafile.write(data)
 
 def test_compile_imports():
+    test_dir = os.path.dirname(__file__)
 
     try:
-        make_tree(test_code)
+        make_tree(test_code, dirname=test_dir)
     except:
-        shutil.rmtree('foobar')
-        make_tree(test_code)
+        shutil.rmtree(os.path.join(test_dir, 'foobar'))
+        make_tree(test_code, dirname=test_dir)
 
     node = test_node.TestNode(log=open('test_compile_imports.log', 'w'))
     node.start()
@@ -78,15 +79,16 @@ def test_compile_imports():
         balance = int(rpc.eth_getBalance(coinbase)['result'], 16)
         time.sleep(1)
 
+    load_contracts = os.path.join(os.path.dirname(test_dir), 'load_contracts.py')
     subprocess.check_call(['python',
-                           '../load_contracts.py',
-                           '-C', 'tests',
+                           load_contracts,
+                           '-C', test_dir,
                            '-p', '9696',
                            '-b', '2',
                            '-d', 'test_load_contracts.json',
                            '-s', 'foobar'])
 
-    db = json.load(open("test_load_contracts.json"))
+    db = json.load(open(os.path.join(test_dir, "test_load_contracts.json")))
     func1 = db['foo']['fullsig'][0]['name']
     prefix = sha3.sha3_256(func1.encode('ascii')).hexdigest()[:8]
     arg = 8
@@ -106,8 +108,9 @@ def test_compile_imports():
     #but the answers should be approximately the same.
     result = round(float(result)/2**64, 6)
 
-    shutil.rmtree('foobar')
-    os.remove('math_macros.sm')
+    shutil.rmtree(os.path.join(test_dir, 'foobar'))
+    os.remove(os.path.join(test_dir, 'math_macros.sm'))
+    os.remove(os.path.join(test_dir, 'test_load_contracts.json'))
     node.shutdown()
     node.cleanup()
 
