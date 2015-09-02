@@ -66,6 +66,7 @@ import sys
 import sha3
 import json
 import time
+import traceback
 
 os.chdir(rpc.ROOT)
 SOURCE = os.path.join(rpc.ROOT, 'src')
