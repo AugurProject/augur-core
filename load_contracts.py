@@ -72,6 +72,8 @@ import sha3
 import json
 import time
 import shutil
+import traceback
+
 
 os.chdir(rpc.ROOT)
 SOURCE = os.path.join(rpc.ROOT, 'src')
@@ -554,6 +556,7 @@ def main():
         deps = optimize_deps(deps, nodes)
     for fullname in map(get_fullname, deps):
         print "compiling", fullname
+        sys.stdout.flush()
         compile(fullname)
     rpc.save_db(DB)
 
