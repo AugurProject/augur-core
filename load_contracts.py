@@ -50,6 +50,11 @@ Options:
 
   [-s | --source]  "./src"       Path to search for contracts.
 
+  [-t | --translate] <new_src>   Translates the import syntax of the code in
+                                 --source directory into extern syntax in the
+                                 given directory. This option does not compile
+                                 the code!
+
   [-v | --verbosity] "0"         The next argument should be 1 to see
                                  the RPC messages, or 2 to see the HTTP
                                  as well as the RPC messages.
@@ -66,6 +71,7 @@ import sys
 import sha3
 import json
 import time
+import shutil
 
 os.chdir(rpc.ROOT)
 SOURCE = os.path.join(rpc.ROOT, 'src')
@@ -79,6 +85,7 @@ RPC = None
 COINBASE = None
 CONTRACT = None
 TRIES = 10
+TRANSLATE = None
 
 def read_options():
     '''Reads user options and set's globals.'''
@@ -92,6 +99,7 @@ def read_options():
     global COINBASE
     global CONTRACT
     global SOURCE
+    global TRANSLATE
 
     opts = sys.argv[1:]
     i = 0
@@ -195,6 +203,12 @@ def read_options():
                 VERBOSITY = v
             i += 2
 
+        elif opts[i] in ('-t', '--translate'):
+            val = os.path.join(rpc.ROOT, opts[i + 1])
+            val = os.path.realpath(val)
+            TRANSLATE = val
+            i += 2
+
         else:
             print 'Invalid option!', opts[i]
             print __doc__
@@ -215,8 +229,11 @@ def read_options():
             print __doc__
             sys.exit(1)
 
-    RPC = rpc.RPC_Client((RPCHOST, RPCPORT), VERBOSITY)
-    COINBASE = RPC.eth_coinbase()['result']
+    if TRANSLATE is None:
+        RPC = rpc.RPC_Client((RPCHOST, RPCPORT), VERBOSITY)
+        COINBASE = RPC.eth_coinbase()['result']
+    else:
+        DB = rpc.get_db()
 
 def get_fullname(shortname):
     '''
@@ -523,6 +540,16 @@ def optimize_deps(deps, contract_nodes):
 def main():
     read_options()
     deps, nodes = get_compile_order()
+    if TRANSLATE:
+        global SOURCE
+        shutil.copytree(SOURCE, TRANSLATE)
+        SOURCE = TRANSLATE
+        for fullname in map(get_fullname, deps):
+            print 'translating', fullname
+            new_code = process_imports(fullname)
+            with open(fullname, 'w') as f:
+                f.write(new_code)
+        sys.exit(0)
     if CONTRACT is not None:
         deps = optimize_deps(deps, nodes)
     for fullname in map(get_fullname, deps):
