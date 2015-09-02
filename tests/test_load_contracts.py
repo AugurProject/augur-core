@@ -80,13 +80,23 @@ def test_compile_imports():
         time.sleep(1)
 
     load_contracts = os.path.join(os.path.dirname(test_dir), 'load_contracts.py')
-    subprocess.check_call(['python',
-                           load_contracts,
-                           '-C', test_dir,
-                           '-p', '9696',
-                           '-b', '2',
-                           '-d', 'test_load_contracts.json',
-                           '-s', 'foobar'])
+
+    try:
+        subprocess.check_call(['python',
+                               load_contracts,
+                               '-C', test_dir,
+                               '-p', '9696',
+                               '-b', '2',
+                               '-d', 'test_load_contracts.json',
+                               '-s', 'foobar'])
+    except CalledProcessError as exc:
+        # clean up files and shutdown node gracefully
+        shutil.rmtree(os.path.join(test_dir, 'foobar'))
+        os.remove(os.path.join(test_dir, 'math_macros.sm'))
+        os.remove(os.path.join(test_dir, 'test_load_contracts.json'))
+        node.shutdown()
+        node.cleanup()
+        raise exc
 
     db = json.load(open(os.path.join(test_dir, "test_load_contracts.json")))
     func1 = db['foo']['fullsig'][0]['name']

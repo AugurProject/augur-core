@@ -1,6 +1,9 @@
 '''Class for easy interaction with contracts via rpc.'''
+from warnings import simplefilter; simplefilter('ignore')
 import time
 import json
+import sha3
+import sys
 
 def int2abi(n):
     return hex(n % 2**256)[2:].rstrip('L').zfill(64)
@@ -43,19 +46,21 @@ class Contract(object):
                 prefix = sha3.sha3_256(item['name'].encode('ascii')).hexdigest()[:8]
                 prefixes[name] = prefix
                 argtypes = argtypes.strip(')').split(',')
-                if argtypes:
+                if argtypes == ['']:
+                    types[name] = ()
+                else:
                     newtypes = []
                     for a in argtypes:
                         if '[' in a and ']' in a:
                             newtypes.append(list)
                         elif 'string' in a or 'bytes' in a or 'address' in a:
                             newtypes.append(str)
-                        else:
+                        elif 'int' in a or 'real' in a:
                             newtypes.append(int)
-                        types[name] = tuple(newtypes)
-                else:
-                    types[name] = None
-        
+                        else:
+                            raise ValueError('Unsupported type! {}'.format(a))
+                    types[name] = tuple(newtypes)
+
         self.types = types
         self.prefixes = prefixes
 
@@ -66,7 +71,7 @@ class Contract(object):
 
             def call(*args, **kwds):
                 if len(args) != len(types) or not all(map(isinstance, args, types)):
-                    raise TypeError('Bad argument types!')
+                    raise TypeError('Bad argument types! <args {}> <types {}>'.format(args, types))
 
                 if 'gas' in kwds:
                     gas = kwds['gas']
@@ -82,20 +87,30 @@ class Contract(object):
 
                 if kwds.get('call', False):
                     result = self.rpc.eth_call(**tx)
-                    assert 'error' not in result, json.dumps(resutl,
+                    assert 'error' not in result, json.dumps(result,
                                                              indent=4, 
                                                              sort_keys=True)
+                    return result
                 elif kwds.get('fastsend', False):
-                    return self.rpc.eth_sendTransaction(**tx)
+                    result = self.rpc.eth_sendTransaction(**tx)
+                    assert 'error' not in result, json.dumps(result,
+                                                             indent=4, 
+                                                             sort_keys=True)
+                    return result
                 else:
-                    txhash = self.rpc.eth_sendTransaction(**tx)
+                    result = self.rpc.eth_sendTransaction(**tx)
+                    assert 'error' not in result, json.dumps(result,
+                                                             indent=4, 
+                                                             sort_keys=True)
+                    txhash = result['result']
+
                     while True:
                         receipt = self.rpc.eth_getTransactionReceipt(txhash)
                         if receipt['result'] is not None:
                             return receipt
                         time.sleep(0.5)
 
-            call.__name__ == name
+            call.__name__ = name
             setattr(self, name, call)
             return call
         raise ValueError('No function with that name in this contract!')
@@ -108,7 +123,7 @@ def main():
     import serpent
     import time
 
-    code = '''\
+    svcoin = '''\
 def init():
     sstore({my_address}, 10**10)
 
@@ -126,13 +141,15 @@ def myBalance():
 def getBalance(address):
     return(sload(address))
 '''
+#    print serpent.mk_full_signature(svcoin)
+#    sys.exit(0)
     node = TestNode(log=open('test_contract.log', 'w'))
     node.start()
     rpc = RPC_Client((node.rpchost, node.rpcport), 0)
     my_address = rpc.eth_coinbase()['result']
-    code = code.format(my_address=my_address)
-    compiled_code = serpent.compile(code).encode('hex')
-    fullsig = json.loads(serpent.mk_full_signature(code))
+    svcoin = svcoin.format(my_address=my_address)
+    compiled_code = serpent.compile(svcoin).encode('hex')
+    fullsig = json.loads(serpent.mk_full_signature(svcoin))
 
     print Style.BRIGHT + 'Mining coins...' + Style.RESET_ALL
 
@@ -145,14 +162,17 @@ def getBalance(address):
     txhash = rpc.eth_sendTransaction(sender=my_address,
                                      data=('0x' + compiled_code),
                                      gas=MAXGAS)['result']
-    time.sleep(4)
+    time.sleep(8)
     receipt = rpc.eth_getTransactionReceipt(txhash)['result']
     contract_address = receipt['contractAddress']
     contract = Contract(contract_address, my_address, fullsig, rpc, MAXGAS)
-    print contract.myBalance(call=True)
-    print contract.send(2, 100)
-    print contract.myBalance(call=True)
-    print contract.getBalance(2, call=True)
- 
+    print 'contract.myBalance() ->', int(contract.myBalance(call=True)['result'], 16)
+    print 'contract.send(2, 100) ->', contract.send(2, 100)['result']
+    print 'contract.myBalance() ->', int(contract.myBalance(call=True)['result'], 16)
+    print 'contract.getBalance(2) ->', int(contract.getBalance(2, call=True)['result'], 16)
+
+    node.shutdown()
+    node.cleanup()
+
 if __name__ == '__main__':
     main()
