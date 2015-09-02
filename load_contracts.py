@@ -132,7 +132,7 @@ def read_options():
 
     while i < len(opts):
 
-        if opts[i] in ('-e', '--exports'):
+        if opts[i] in ('-e', '--externs'):
             IMPORTS = False
             i += 1
 
