@@ -41,6 +41,8 @@ Options:
                                  preprocessing. Address variables need to have
                                  a space around the equal sign, and need to be
                                  right beneath their corresponding extern line.
+                                 This option updates the signatures and
+                                 addresses in the source code.
 
   [-h | --help]                  Shows this help message.
 
@@ -470,6 +472,8 @@ def compile(fullname):
         code = process_imports(fullname)
     else:
         code = process_externs(fullname)
+        with open(fullname, 'w') as f:
+            f.write(code)
 
     fullsig = json.loads(serpent.mk_full_signature(code))
     shortname = get_shortname(fullname)
