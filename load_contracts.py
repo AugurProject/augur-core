@@ -394,7 +394,9 @@ def process_externs(fullname):
         if line.startswith('extern'):
             print line
             last_extern = i
-            name = line[line.find(' ')+1:line.find(':')][:-3]
+            name = line[line.find(' ')+1:line.find(':')]
+            if name.endswith('.se'):
+                name = name[:-3]
             info = DB[name]
             new_code.append(info['sig'])
         elif i == last_extern + 1:
