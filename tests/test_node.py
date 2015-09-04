@@ -30,6 +30,7 @@ import shutil
 import socket
 import signal
 import time
+import json
 import sys
 import os
 
@@ -44,7 +45,7 @@ class TestNode(object):
 
     def __init__(self, rpchost='localhost', rpcport='9696',
                  log=sys.stdout, genesis_nonce="27", netport='40404',
-                 networkid="1337", datadir='~/.geth_test_node',
+                 networkid="1337", datadir=os.path.expanduser('~/.geth_test_node'),
                  verbose=True):
         
         self.name = 'node-{}'.format(os.urandom(4).encode('hex'))
@@ -52,7 +53,8 @@ class TestNode(object):
         self.verbose = verbose
         self.rpcport = rpcport
         self.rpchost = rpchost
-        datadir = os.path.expanduser(datadir)
+
+        datadir = os.path.realpath(datadir)
 
         if verbose:
             print Style.BRIGHT + 'Setting up node environment.'
@@ -60,20 +62,26 @@ class TestNode(object):
         if not os.path.isdir(datadir):
             os.mkdir(datadir)
 
-        passfile = os.path.join(datadir,
-                                self.name + '-account0-pass.txt')
-        if not os.path.isfile(passfile):
-            with open(passfile, 'w') as pf:
-                print >>pf, os.urandom(32).encode('hex')
-                
         node_data = os.path.join(datadir, self.name + '-data')
         os.mkdir(node_data)
-        
         pidfile = os.path.join(datadir, self.name + '.pid')
 
-        self.passfile = passfile
         self.node_data = node_data
         self.pidfile = pidfile
+
+        genesis_block_path = os.path.join(node_data, 'genesis_block.json')
+        with open(genesis_block_path, 'w') as f:
+            block_data = {
+                "nonce": '0x' + genesis_nonce.zfill(16),
+                "difficulty": "0x01",
+                "alloc":{},
+                "mixhash":'0x0000000000000000000000000000000000000000000000000000000000000000',
+                "coinbase":'0x0000000000000000000000000000000000000000',
+                "timestamp":"0x00",
+                "parentHash":'0x0000000000000000000000000000000000000000000000000000000000000000',
+                "extraData":"0xcafebabe",
+                "gasLimit":"0x2fefd8"}
+            json.dump(block_data, f)
 
         geth_repo = os.path.join(datadir, 'go-ethereum')
         try:
@@ -92,12 +100,12 @@ class TestNode(object):
             print '    Using fallback geth-repo. Cross your fingers!'
             shutil.copytree(other_geth_repo, geth_repo)
         
-        if cmd(['git', '-C', geth_repo, 'branch']) != 'release/0.9.36\n':
-            cmd(['git', '-C', geth_repo, 'checkout', 'release/0.9.36'])
+        if cmd(['git', '-C', geth_repo, 'branch']) != 'release/1.1.0\n':
+            cmd(['git', '-C', geth_repo, 'checkout', 'release/1.1.0'])
 
         geth_bin = os.path.join(geth_repo, 'build', 'bin', 'geth')
         if not (os.path.isfile(geth_bin) and
-                '0.9.36' in cmd([geth_bin, '-h'])):
+                ('1.1.0' in cmd([geth_bin, '-h']))):
             if verbose:
                 print '  Building geth'
             cmd(['make', '-C', geth_repo, 'geth'])
@@ -108,13 +116,11 @@ class TestNode(object):
             '--rpcport', rpcport,
             '--rpcaddr', rpchost,
             '--rpcapi','admin,db,eth,debug,miner,net,shh,txpool,personal,web3',
+            '--ipcdisable',
             '--datadir', node_data,
-            '--password', passfile,
-            '--genesisnonce', genesis_nonce,
             '--networkid', networkid,
-            '--port', netport]
-
-        cmd(self.popen_args + ['account', 'new'])
+            '--port', netport,
+            '--genesis', genesis_block_path]
 
         if verbose:
             print '  Done' + Style.RESET_ALL
@@ -127,13 +133,10 @@ Starting node. To open a console:
             msg = msg.format(self.rpchost, self.rpcport)
             print Style.BRIGHT + msg + Style.RESET_ALL
         self.proc = subprocess.Popen(
-            self.popen_args + 
-            ['--mine',
-             '--minerthreads', '2',
-             '--unlock', '0',
-             '--etherbase', '0'],
+            self.popen_args,
             stdout=self.log,
             stderr=self.log)
+
         with open(self.pidfile, 'w') as pf:
             print>>pf, self.proc.pid
 
@@ -152,7 +155,6 @@ Starting node. To open a console:
         self.proc.wait()
 
     def cleanup(self):
-        os.remove(self.passfile)
         os.remove(self.pidfile)
         shutil.rmtree(self.node_data)
 

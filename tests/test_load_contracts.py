@@ -2,8 +2,9 @@
 from warnings import simplefilter; simplefilter('ignore')
 from colorama import Style, Fore, init; init()
 from pyrpctools import RPC_Client, MAXGAS
+from test_node import TestNode
 import subprocess
-import test_node
+import traceback
 import signal
 import shutil
 import time
@@ -67,21 +68,28 @@ def test_compile_imports():
         shutil.rmtree(os.path.join(test_dir, 'foobar'))
         make_tree(test_code, dirname=test_dir)
 
-    node = test_node.TestNode(log=open('test_compile_imports.log', 'w'))
+    node = TestNode(log=open(os.path.join(test_dir,
+                                          'test_compile_imports.log'), 
+                             'w'))
     node.start()
-    rpc = RPC_Client((node.rpchost, node.rpcport), 0)
-    coinbase = rpc.eth_coinbase()['result']
-    gas_price = int(rpc.eth_gasPrice()['result'], 16)
-    balance = 0
-
-    print Style.BRIGHT + 'Mining coins...' + Style.RESET_ALL
-    while balance/gas_price < int(MAXGAS, 16):
-        balance = int(rpc.eth_getBalance(coinbase)['result'], 16)
-        time.sleep(1)
-
-    load_contracts = os.path.join(os.path.dirname(test_dir), 'load_contracts.py')
 
     try:
+        rpc = RPC_Client((node.rpchost, node.rpcport), 0)
+        password = os.urandom(32).encode('hex')
+        coinbase = rpc.personal_newAccount(password)['result']
+        rpc.personal_unlockAccount(coinbase, password, 10**10)
+        rpc.miner_start(2)
+
+        gas_price = int(rpc.eth_gasPrice()['result'], 16)
+        balance = 0
+
+        print Style.BRIGHT + 'Mining coins...' + Style.RESET_ALL
+        while balance/gas_price < int(MAXGAS, 16):
+            balance = int(rpc.eth_getBalance(coinbase)['result'], 16)
+            time.sleep(1)
+
+        load_contracts = os.path.join(os.path.dirname(test_dir), 'load_contracts.py')
+
         subprocess.check_call(['python',
                                load_contracts,
                                '-C', test_dir,
@@ -89,45 +97,40 @@ def test_compile_imports():
                                '-b', '2',
                                '-d', 'test_load_contracts.json',
                                '-s', 'foobar'])
-    except CalledProcessError as exc:
-        # clean up files and shutdown node gracefully
+
+        db = json.load(open(os.path.join(test_dir, "test_load_contracts.json")))
+        func1 = db['foo']['fullsig'][0]['name']
+        prefix = sha3.sha3_256(func1.encode('ascii')).hexdigest()[:8]
+        arg = 8
+        expected = round((2 * 8**0.5) / (8**0.5 - 1), 6)
+        encoded_arg = hex(arg*2**64)[2:].strip('L').rjust(64, '0')
+        result = rpc.eth_call(sender=coinbase,
+                              to=db['foo']['address'],
+                              data=('0x' + prefix + encoded_arg),
+                              gas=hex(3*10**6))['result']
+
+        result = int(result, 16)
+        if result > 2**255:
+            result -= 2**256
+    
+        #the different internal representations
+        #used in the calculations lead to some difference,
+        #but the answers should be approximately the same.
+        result = round(float(result)/2**64, 6)
+
+
+        if result == expected:
+            print 'TEST PASSED'
+        else:
+            print 'TEST FAILED: <expected {}> <result {}>'.format(expected, result)
+    except Exception as exc:
+        traceback.print_exc()
+    finally:
         shutil.rmtree(os.path.join(test_dir, 'foobar'))
         os.remove(os.path.join(test_dir, 'math_macros.sm'))
         os.remove(os.path.join(test_dir, 'test_load_contracts.json'))
         node.shutdown()
         node.cleanup()
-        raise exc
-
-    db = json.load(open(os.path.join(test_dir, "test_load_contracts.json")))
-    func1 = db['foo']['fullsig'][0]['name']
-    prefix = sha3.sha3_256(func1.encode('ascii')).hexdigest()[:8]
-    arg = 8
-    expected = round((2 * 8**0.5) / (8**0.5 - 1), 6)
-    encoded_arg = hex(arg*2**64)[2:].strip('L').rjust(64, '0')
-    result = rpc.eth_call(sender=coinbase,
-                      to=db['foo']['address'],
-                      data=('0x' + prefix + encoded_arg),
-                      gas=hex(3*10**6))['result']
-
-    result = int(result, 16)
-    if result > 2**255:
-        result -= 2**256
-    
-    #the different internal representations
-    #used in the calculations lead to some difference,
-    #but the answers should be approximately the same.
-    result = round(float(result)/2**64, 6)
-
-    shutil.rmtree(os.path.join(test_dir, 'foobar'))
-    os.remove(os.path.join(test_dir, 'math_macros.sm'))
-    os.remove(os.path.join(test_dir, 'test_load_contracts.json'))
-    node.shutdown()
-    node.cleanup()
-
-    if result == expected:
-        print 'TEST PASSED'
-    else:
-        print 'TEST FAILED: <expected {}> <result {}>'.format(expected, result)
 
 
 if __name__ == '__main__':

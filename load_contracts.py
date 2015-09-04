@@ -394,7 +394,6 @@ def process_externs(fullname):
     for i, line in enumerate(open(fullname)):
         line = line.rstrip()
         if line.startswith('extern'):
-            print line
             last_extern = i
             name = line[line.find(' ')+1:line.find(':')]
             if name.endswith('.se'):
