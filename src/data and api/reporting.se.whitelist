@@ -221,6 +221,19 @@ def setWhitelist(contract, addresses:arr):
                                 i += 1
                 return(1)
 
+def getWhitelist(contract):
+    if not self.whitelists[contract][contract]:
+        return(-1)
+    with start = ref(self.whitelists[contract][0]):
+        with length = sload(start):
+            with result = array(length):
+                with i = 0:
+                    start += 1
+                    while i < length:
+                        result[i] = sload(start + i)
+                        i += 1
+                    return(result:arr)
+
 # returns 1 if address has voted at all this vote period
 def hasVoted(address):
     with ballot_start = ref(current_vote.ballot[0]):

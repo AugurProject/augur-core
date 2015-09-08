@@ -35,6 +35,21 @@ def encode(args):
                 dynamic.append('0'*(64 - 2*(len(arg)%32)))
     return ''.join(static + dynamic)
 
+def decode(result):
+    if result.startswith('0x'):
+        result = result[2:]
+    if len(result) == 0:
+        return None
+    if len(result) == 64:
+        return int(result, 16)
+    if len(result) > 64:
+        array_len = int(result[:64], 16)
+        result = result[64:]
+        if array_len == len(result)/64:
+            return [int(result[i:i+64], 16) for i in range(0, len(result), 64)]
+        else:
+            return result[:array_len].decode('hex')
+
 class Contract(object):
     def __init__(self, contract_address, fullsig, coinbase, rpc, node, default_gas, verbose):
         self.contract_address = contract_address
@@ -154,17 +169,12 @@ class Contract(object):
             def call(*args, **kwds):
                 if len(args) != len(types) or not all(map(isinstance, args, types)):
                     raise TypeError('Bad argument types! <args {}> <types {}>'.format(args, types))
-
-                if 'gas' in kwds:
-                    gas = kwds['gas']
-                else:
-                    gas = self.default_gas
                 
                 tx = {
                     'to':self.contract_address,
-                    'sender':self.coinbase,
+                    'sender':kwds.get('sender', self.coinbase),
                     'data':'0x' + prefix + encode(args),
-                    'gas':hex(self.default_gas),
+                    'gas':hex(kwds.get('gas', self.default_gas)),
                 }
                 if verbose:
                     print 'calling', name
@@ -176,28 +186,27 @@ class Contract(object):
                     assert 'error' not in result, json.dumps(result,
                                                              indent=4, 
                                                              sort_keys=True)
-                    return result
-                elif kwds.get('fastsend', False):
-                    result = self.rpc.eth_sendTransaction(**tx)
-                    assert 'error' not in result, json.dumps(result,
-                                                             indent=4, 
-                                                             sort_keys=True)
-                    return result
-                else:
+                    return decode(result['result'])
+                
+                elif kwds.get('send', False):
                     result = self.rpc.eth_sendTransaction(**tx)
                     assert 'error' not in result, json.dumps(result,
                                                              indent=4, 
                                                              sort_keys=True)
                     txhash = result['result']
-
-                    while True:
-                        receipt = self.rpc.eth_getTransactionReceipt(txhash)
-                        if receipt['result'] is not None:
-                            result = receipt['result']
-                            if isinstance(result, dict):
-                                if result.get('blockNumber', False):
-                                    return receipt
-                        time.sleep(0.5)
+                    if kwds.get('receipt', False):
+                        while True:
+                            receipt = self.rpc.eth_getTransactionReceipt(txhash)
+                            if receipt['result'] is not None:
+                                result = receipt['result']
+                                if isinstance(result, dict):
+                                    if result.get('blockNumber', False):
+                                        return result
+                            time.sleep(0.5)
+                    else:
+                        return txhash
+                else:
+                    raise ValueError('Must use `call` or `send` keyword!')
 
             call.__name__ = name
             setattr(self, name, call)
@@ -232,11 +241,11 @@ def getSVCoinBalance(address):
     return(sload(address))
 '''
     contract = Contract.from_code(svcoin)
-    print 'contract.SVCoinFaucet() ->', contract.SVCoinFaucet()['result']
-    print 'contract.mySVCoinBalance() ->', contract.mySVCoinBalance(call=True)['result']
-    print 'contract.sendSVCoins(2, 100) ->', contract.sendSVCoins(2, 100)['result']
-    print 'contract.mySVCoinBalance() ->', contract.mySVCoinBalance(call=True)['result']
-    print 'contract.getSVCoinBalance(2) ->', contract.getSVCoinBalance(2, call=True)['result']
+    print 'contract.SVCoinFaucet() ->', contract.SVCoinFaucet(send=True, receipt=True)
+    print 'contract.mySVCoinBalance() ->', contract.mySVCoinBalance(call=True)
+    print 'contract.sendSVCoins(2, 100) ->', contract.sendSVCoins(2, 100, send=True, receipt=True)
+    print 'contract.mySVCoinBalance() ->', contract.mySVCoinBalance(call=True)
+    print 'contract.getSVCoinBalance(2) ->', contract.getSVCoinBalance(2, call=True)
     contract.__del__()
 
 if __name__ == '__main__':

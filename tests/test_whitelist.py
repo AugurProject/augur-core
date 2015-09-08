@@ -28,44 +28,43 @@ def unlock_accounts(rpc, accounts, duration):
     
 def test_whitelist():
     test_dir = os.path.dirname(os.path.realpath(__file__))
-    log_file = os.path.join(test_dir, 'test_whitelist_node.log')
-    whitelist_code = os.path.join(os.path.dirname(test_dir),
-                                  os.path.join('src',
-                                               'data and api',
-                                               'reporting.se.whitelist'))
-
-    node = TestNode(log=open(log_file, 'w'))
+    whitelist_code = open(os.path.join(os.path.dirname(test_dir),
+                                       'src',
+                                       'data and api',
+                                       'reporting.se.whitelist')).read().split('\n')
+    old_period = whitelist_code.index('macro PERIOD: 1800')
+    whitelist_code[old_period] = 'macro PERIOD: 50'
+    node = TestNode(log=open(os.path.join(test_dir, 'test_whitelist.log'), 'w'))
     node.start()
     rpc = RPC_Client((node.rpchost, node.rpcport), 0)
     accounts = make_accounts(rpc)
-    unlock_accounts(rpc, accounts, 600)
-
-    code = serpent.compile(whitelist_code).encode('hex')
-    fullsig = json.loads(serpent.mk_full_signature(whitelist_code))
-    my_address = rpc.eth_coinbase()['result']
+    unlock_accounts(rpc, accounts, 3600)
+    contract = Contract.from_code('\n'.join(whitelist_code), node=node, rpc=rpc, verbose=1)
     
-    balance = int(rpc.eth_getBalance(my_address)['result'], 16)
-    gas_price = int(rpc.eth_gasPrice()['result'], 16)
-
-    print Style.BRIGHT + 'Mining coins...' + Style.RESET_ALL
-    while balance/gas_price < int(MAXGAS, 16):
-        balance = int(rpc.eth_getBalance(my_address)['result'], 16)
+    for account in accounts:
+        contract.addReporter(1010101,
+                             int(account, 16),
+                             send=True,
+                             sender=account,
+                             receipt=True) #this option forces blocking until included in a block
+        index = contract.repIDToIndex(1010101, int(account, 16), call=True)
+        contract.setRep(1010101, index, 10000*2**64, send=True, sender=account, receipt=True)
+        
+    contract.setWhitelist(2, [1,3,4,5], send=True, receipt=True)
+    ballot_hash = contract.propose_replacement(5, 6, call=True)
+    contract.propose_replacement(5, 6, send=True, receipt=True)
+    
+    for account, _ in zip(accounts, range(6)):
+        contract.whitelistVote(ballot_hash, sender=account)
+    
+    last_period = contract.getPeriod()
+    while contract.getPeriod() == last_period:
         time.sleep(1)
 
-    txhash = rpc.eth_sendTransaction(sender=my_address,
-                                     data=('0x'+code),
-                                     gas=MAXGAS)['result']
-    time.sleep(8)
-    receipt = rpc.eth_getTransactionReceipt(txhash)['result']
-    contract_address = receipt['contractAddress']
+    if contract.getWhitelist(2) == [1,3,4,6]:
+        print 'TEST PASSED'
+    else:
+        print 'TEST FAILED'
 
-    contract = Contract(contract_address, my_address, fullsig, rpc, MAXGAS)
-    
-    # TODO test code here!!!
-
-    node.shutdown()
-    node.cleanup()
-    os.remove(log_file)
-    
 if __name__ == '__main__':
     test_whitelist()
