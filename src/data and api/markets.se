@@ -259,3 +259,7 @@ def getMarketOutcomeInfo(market, outcome):
     info[11] = self.Markets[market].winningOutcomes[6]
     info[12] = self.Markets[market].winningOutcomes[7]
     return(info: arr)
+
+def setTradingFee(market, fee):
+    self.Markets[market].tradingFee = fee
+    return(fee)

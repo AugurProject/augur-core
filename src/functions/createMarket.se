@@ -123,3 +123,10 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
             v += 1
         MARKETS.initialLiquiditySetup(marketID, 0, 0, 0)
         return(-4)
+
+def updateTradingFee(branch, market, tradingFee):
+    if(tradingFee < BRANCHES.getMinTradingFee(branch)):
+        return(-1)
+    if(tradingFee > 2^61):
+        return(-1)
+    return(MARKETS.setTradingFee(market, tradingFee))
