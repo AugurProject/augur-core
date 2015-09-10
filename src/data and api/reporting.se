@@ -154,3 +154,22 @@ def setRep(branch, index, newRep):
     self.Reporting[branch].reputation[index].repValue = newRep
     self.Reporting[branch].totalRep += newRep - oldRep
     return(1)
+
+# check that msg.sender is one of our function contracts
+def setSaleDistribution(addresses: arr, balances: arr):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    # first vote period won't be until after the current (in this case first) basket of things has expired
+        # if floor(blockNum / periodLength) is say 5 and eventsExpDates[5]
+        # the current vote period should be on things from eventsExpDates 4 (when making a new branch this vote period will just fail quorem, and current vote period will be incrememented)
+        # then once blockNum / periodLength is say 6 and eventsExpDates[6]
+        # votePeriod 4 should close and the currentVotePeriod should be from
+        # eventsExpDates 5 (anyone can call the consensus function for voteperiod 4 at this point)
+    i = 0
+    while i < len(addresses):
+        self.Reporting[branchID].reputation[self.Reporting[branchID].numberReporters].reporterID = addresses[i]
+        self.Reporting[branchID].reputation[self.Reporting[branchID].numberReporters].repValue = balances[i]
+        self.Reporting[branchID].repIDtoIndex[addresses[i]] = self.Reporting[branchID].numberReporters
+        self.Reporting[branchID].numberReporters += 1
+        i+=1
+    return(1)
