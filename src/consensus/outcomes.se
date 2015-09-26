@@ -3,6 +3,7 @@ import reporting as REPORTING
 import fxpFunctions as FXP
 import events as EVENTS
 
+# these stay the same but on event by event basis as opposed to all at once
 def resolve(branch, period, num_events, num_reports):
     with scaled = array(num_events):
         with scaled_max = array(num_events):

@@ -37,11 +37,3 @@ Catch param
 # then lazy eval scaling - not done
 
 # ordering atk if so use mbsas instead of bsas - not done
-
-# if an acc has 0 rep
-# attack by just making 1000s of rep accounts
-# need to have a separate rep holdings/accounts
-# and a separate thing which has "active reporters"
-# only an account with some minimum non-dust level of rep should have a slot in the "active reporters"
-# any acc. w/ 0 should be removed from active, shouldn't be clustered, and shouldn't be used to determine outcomes
-# sorted data structure in serpent - someone made one somewhere jchow

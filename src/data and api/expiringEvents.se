@@ -20,6 +20,7 @@
 # Any questions please contact joey@augur.net
 
 import branches as BRANCHES
+import events as EVENTS
 
 # [branchID][votingPeriod]
 # v_size = numReports * numEvents
@@ -27,7 +28,7 @@ import branches as BRANCHES
 # new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
 # reporters is [reporterID][eventNum]
 # reporthash is [reporterID] = hash
-data EventsExpDates[][](numberEvents, events[], totalRepReported, totalReputation, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[], reporterPayouts[])
+data EventsExpDates[][](numberEvents, events[], totalRepReported, totalReputation, numEventsToReportOn, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[], reporterPayouts[], periodVolume)
 
 # atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
 # ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[w/eVotingPeriodShouldBe].numberEvents
@@ -44,6 +45,45 @@ def getEvents(branch, expDateIndex):
         events[i] = self.EventsExpDates[branch][expDateIndex].events[i]
         i += 1
     return(events: arr)
+
+# we should probably make this bonded too
+# -1: voting not started
+def setNumEventsToReportOn(branch, expDateIndex): 
+	# after voting has started
+	if(block.number/1800>=MARKETS.getTradingPeriod(marketID)):
+		numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
+#		n = 0
+#		totalVol = EXPEVENTS.getPeriodVolume(branch, expDateIndex)
+#		while n < numEvents:
+#		    eventID = self.getEvent(branch, expDateIndex, n)
+#		    i = 0
+#		    numMarkets = EVENTS.getNumMarkets(eventID)
+#		    markets = array(numMarkets)
+#		    markets = EVENTS.getMarkets(eventID, outitems=numMarkets)
+#		    volume = 0
+#		    while i < numMarkets:
+#		        volume += MARKETS.getVolume(markets[i])
+#		    numberToReportOnEstimate += self.sqrt(volume*2**64/totalVol)
+
+		numberToReportOnEstimate = numEvents*40
+		self.EventsExpDates[branch][expDateIndex].numEventsToReportOn = numberToReportOnEstimate
+		return(1)
+	else:
+		return(-1)
+
+def sqrt(n):
+    val = n
+    i = 0
+    while i < 11:
+        val = (val + n*2^64/val)/2
+        i += 1
+    return val
+
+def getNumEventsToReportOn(branch, expDateIndex):
+	return(self.EventsExpDates[branch][expDateIndex].numEventsToReportOn)
+
+def getPeriodVolume(branch, expIndex):
+	return(self.EventsExpDates[branch][expIndex].periodVolumeself.Events[event].numMarkets)
 
 def getNumberEvents(branch, expDateIndex):
 	return(self.EventsExpDates[branch][expDateIndex].numberEvents)
@@ -197,6 +237,10 @@ def setScores(branch, expDateIndex, scores: arr):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
 	save(self.EventsExpDates[branch][expDateIndex].scores[0], scores, chars=32*len(scores))
+	return(1)
+
+def addPeriodVolume(branch, expIndex, volume):
+	self.EventxExpDates[branch][expIndex].periodVolume += volume
 	return(1)
 
 def setSetOne(branch, expDateIndex, setOne: arr):

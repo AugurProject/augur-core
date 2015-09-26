@@ -20,6 +20,8 @@
 # Any questions please contact joey@augur.net
 
 import fxpFunctions as FXP
+import expiringEvents as EXPEVENTS
+import branches as BRANCHES
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market in the format of
@@ -31,7 +33,7 @@ import fxpFunctions as FXP
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume)
 
 # @return cost - how much it costs you to buy
 #         price - current share price of that outcome after buy
@@ -99,6 +101,9 @@ def getMarketEvents(market):
 
 def getSharesPurchased(market, outcome):
     return(self.Markets[market].sharesPurchased[outcome])
+
+def getVolume(market):
+    return(self.Markets[market].volume)
 
 def getParticipantNumber(market, address):
     participantNumber = self.Markets[market].addr2participant[address]
@@ -215,11 +220,18 @@ def modifyShares(marketID, outcome, amount):
     sharesPurchased(marketID)[outcome] += amount
     return(1)
 
-def modifyParticipantShares(marketID, participantNumber, outcome, amount):
+def modifyParticipantShares(branch, marketID, participantNumber, outcome, amount):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Markets[marketID].participants[participantNumber].shares[outcome] += amount
-    return(1)
+    if(block.number/1800>=MARKETS.getTradingPeriod(marketID)):
+        return(1)
+    else:
+        if(amount<0):
+            amount = amount*-1
+        self.Markets[marketID].volume += amount
+        EXPEVENTS.addPeriodVolume(branch, self.getTradingPeriod(marketID), amount)
+        return(1)
 
 def setWinningOutcomes(market, outcomes: arr):
     #if(!self.whitelist.check(msg.sender)):

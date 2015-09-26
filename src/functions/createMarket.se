@@ -67,7 +67,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         eventsConcat += event
         if (EVENTS.getEventBranch(event) != branch || !INFO.getCreator(event)):
             return(-1)
-       #scalars
+        #scalars
         maxValue = EVENTS.getMaxValue(event)
         if(maxValue!=1 && EVENTS.getNumOutcomes(event)==2):
             # is a valid scalar
@@ -114,6 +114,9 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         MARKETS.modifyShares(marketID, y, z)
         y += 1
     if(INFO.setInfo(marketID, description, tx.origin, initialLiquidity) && BRANCHES.addMarket(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch) && CASH.send(marketID, initialLiquidity)):
+        i = 0
+        while i < len(events):
+            EVENTS.addMarket(events[i], marketID)
         return(marketID)
     else:
         # revert shares bought and other variables

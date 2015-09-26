@@ -26,7 +26,7 @@
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
 # need outcomes returned as 1*2^64, 2*2^64, etc... indeterminate as 3*2^63
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes)
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets)
 
 def getEventInfo(event):
     info = array(6)
@@ -70,8 +70,22 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes)
 	else:
 		return(0)
 
+def addMarket(event, marketID):
+	self.Events[event].markets[self.Events[event].numMarkets] = marketID
+	self.Events[event].numMarkets += 1
+	return(1)
+
+def getMarkets(event):
+	return(load(self.Events[event].markets[0], items=self.Events[event].numMarkets))
+
+def getNumMarkets(event):
+	return(self.Events[event].numMarkets)
+
 def setOutcome(ID, outcome):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
 	self.Events[ID].outcome = outcome
 	return(1)
+
+#In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold.
+def setReportingThreshold():

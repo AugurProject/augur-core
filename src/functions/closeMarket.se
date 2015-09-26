@@ -29,6 +29,7 @@ import closeMarketTwo as CLOSETWO
 import closeMarketFour as CLOSEFOUR
 import closeMarketEight as CLOSEEIGHT
 
+# lazy eval this or reward closer
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
 # when multidimen fancy payouts we report on the events separately per usual, but combine them to determine winning state of a fancy market && then payout that state

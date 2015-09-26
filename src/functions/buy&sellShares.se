@@ -87,7 +87,7 @@ def buyShares(branch, market, outcome, amount, nonce, limit):
     if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
         participantNumber = MARKETS.addParticipant(market, tx.origin)
 
-    MARKETS.modifyParticipantShares(market, participantNumber, outcome, amount)
+    MARKETS.modifyParticipantShares(branch, market, participantNumber, outcome, amount)
     # send shares of the event to user address
     # if user doesn't have enough money, revert
     # send money from user acc. to market address/account
@@ -154,7 +154,7 @@ def sellShares(branch, market, outcome, amount, nonce, limit):
         CASH.addCash(branch, fee/2)
         price -= fee
         CASH.addCash(tx.origin, price)
-        MARKETS.modifyParticipantShares(market, participantNumber, outcome, -amount)
+        MARKETS.modifyParticipantShares(branch, market, participantNumber, outcome, -amount)
         # log new price and avg. price sold / share
         log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), price*2^64/amount)
         return(price)

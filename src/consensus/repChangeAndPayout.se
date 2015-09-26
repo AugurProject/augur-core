@@ -13,6 +13,8 @@ macro ONE: 2^64
 macro BAD: 3 * 2^63
 macro BOND: 42 * ONE
 
+# core ideas the same, needs drastic changes to implementation
+
 def dispatch(branch):
     #if !BRANCHES.getStep(branch) and !QUORUM.checkQuorum(branch):
     #    return(-1)
