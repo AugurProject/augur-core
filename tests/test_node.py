@@ -161,6 +161,10 @@ Starting node. To open a console:
     def wait(self):
         self.proc.wait()
 
+    def __del__(self):
+        self.shutdown()
+        self.cleanup()
+
 def read_options():
     options = {}
     opts = sys.argv[1:]

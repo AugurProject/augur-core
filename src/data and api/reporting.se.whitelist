@@ -90,6 +90,34 @@ def init():
     self.Reporting[1010101].totalRep += 47*2^64
     self.EPOCH = block.number
 
+# arrays are stored with sstore, starting from the
+# the ref of their 0 index, and incrementing.
+# The length of an array is stored at the start.
+# the functions sstore and sload are used instead
+# of the usual self.myStuff[key].myArray[i] syntax,
+# because that syntax requires allocating memory
+# and doing a sha3 each time you use it. It is
+# equivalent to something like:
+#
+# with temp = alloc(128):
+#     temp[0] = 0 # this means the first data structure defined
+#     temp[2] = key
+#     temp[3] = 0 # the first member of the array
+#     temp[4] = i
+#     sload(sha3(temp, items=4))
+#
+# So instead of doing that every single time something
+# is accessed or changed, I try to do it as few times
+# as possible.
+
+# When a contract address changes,
+# you have to first go through the list
+# of contracts that use it and change
+# their whitelists. Then you must go through
+# the address's own whitelist, and change
+# the 'accessibles' list of each contract
+# there. Both cases use an identitcal loop
+# structure, and this macro is used for both.
 macro replace($outer, $inner, $from, $to):
     with $outer_start = ref($outer[$from][0]):
         with $outer_len = sload($outer_start):
@@ -109,6 +137,16 @@ macro replace($outer, $inner, $from, $to):
                                         sstore($inner_start + $j, $to)
                                         $i += 1
 
+# The story for this macro is similar to
+# that for the replace macro. In order to
+# remove an address from each whitelist it
+# is in, you must first go through the list
+# of contracts that use it and remove the
+# address from their whitelists, then you
+# must go through the address's whitelist
+# and remove it from the 'accessibles' list
+# of each contract there. Again, the loop
+# structure is identical in both cases.
 macro delete($outer, $inner, $addr):
     with $outer_start = ref($outer[$from][0]):
         with $outer_len = sload($outer_start):
@@ -126,6 +164,14 @@ macro delete($outer, $inner, $addr):
                                 sstore($outer_start + $i, 0) #delete entry in outer list        
                                 $i += 1
 
+# For each contract in a list of contracts,
+# this macro adds an address to their
+# whitelists. It also adds the contract to
+# the address's list of accessible contracts.
+# Unlike the other cases, this macro is used
+# once because setting a new whitelist in the
+# contract doesn't affect existing whitelists,
+# and therefore does not require a vote.
 macro add_address($ballot_item):
     with $address = self.additions[$ballot_item].address:
         with $contracts_start = ref(self.additions[$ballot_item].contracts[0]):
@@ -170,40 +216,37 @@ def shared():
                                 elif ballot_item_type == ADDITION:
                                     add_address(ballot_item)
 
-def checkWhitelist(address):
-    if self.whitelists[msg.sender][msg.sender]:
-        with addr = address:
-            with whitelist_start = ref(self.whitelists[msg.sender][0]):
-                with length = sload(whitelist_start):
-                    with i = 1:
-                        while(i <= length):
-                            if(sload(whitelist_start + i) == addr):
-                                return(1)
-                            i += 1
-                        return(0)
-    else:
-        return(1)
+# checks the caller's whitelist for addr.
+def checkWhitelist(addr):
+    with whitelist_start = ref(self.whitelists[msg.sender][0]):
+        with length = sload(whitelist_start):
+            with i = 1:
+                while(i <= length):
+                    if(sload(whitelist_start + i) == addr):
+                        return(1)
+                    i += 1
+                return(0)
 
+# checks the given contract's whitelist for addr.
 def checkContractWhitelist(contract, address):
-    if self.whitelists[contract][contract]:
-        with addr = address:
-            with whitelist_start = ref(self.whitelists[contract][0]):
-                with length = sload(whitelist_start):
-                    with i = 1:
-                        while(i <= length):
-                            if(sload(whitelist_start + i) == addr):
-                                return(1)
-                            i += 1
-                        return(0)
-    else:
-        return(1)
+    with whitelist_start = ref(self.whitelists[contract][0]):
+        with length = sload(whitelist_start):
+            with i = 1:
+                while(i <= length):
+                    if(sload(whitelist_start + i) == addr):
+                        return(1)
+                    i += 1
+                return(0)
 
+# sets the given contract's whitelist to the
+# given list of addresses. Returns -1 if the
+# contract already has a whitelist, and 1 if
+# successful.
 def setWhitelist(contract, addresses:arr):
-    if self.whitelists[contract][contract]:
-        return(0)
-    else:
-        self.whitelists[contract][contract] = 1
-        with whitelist_start = ref(self.whitelists[contract][0]):
+    with whitelist_start = ref(self.whitelists[contract][0]):
+        if sload(whitelist_start):
+            return(-1)
+        else:
             sstore(whitelist_start, len(addresses))
             whitelist_start += 1
             with i = 0:
@@ -221,20 +264,58 @@ def setWhitelist(contract, addresses:arr):
                                 i += 1
                 return(1)
 
+# returns the whitelist for the given contract
 def getWhitelist(contract):
-    if not self.whitelists[contract][contract]:
-        return(-1)
-    with start = ref(self.whitelists[contract][0]):
-        with length = sload(start):
+    with whiteslist_start = ref(self.whitelists[contract][0]):
+        with length = sload(whitelist_start):
+            whitelist_start += 1
             with result = array(length):
                 with i = 0:
-                    start += 1
                     while i < length:
-                        result[i] = sload(start + i)
+                        result[i] = sload(whiteslist_start + i)
                         i += 1
                     return(result:arr)
 
+# returns the list of contracts with whitelists
+# that contain address.
+def getAccessibles(address):
+    with accessibles_start = ref(self.accessibles[address][0]):
+        with length = sload(accessibles_start):
+            with result = array(length):
+                with i = 0:
+                    accessibles_start += 1
+                    while i < length:
+                        result[i] = sload(accessibles_start + i)
+                        i += 1
+                    return(result:arr)
+
+# returns the ballot for the given period
+# (a list of the period's ballotItems)
+def getBallot(period):
+    with ballot_start = ref(self.votes[period].ballot[0]):
+        with length = sload(ballot_start):
+            with resullt = array(length):
+                with i = 0:
+                    ballot_start += 1
+                    while i < length:
+                        result[i] = sload(ballot_start + i)
+                        i += 1
+                    return(result)
+
+# returns the type of a given ballotItem
+def getBallotItemType(ballotItem):
+    type = self.types[ballotItem]
+    if type == REPLACEMENT:
+        return(text("REPLACEMENT"):str)
+    elif type == ADDITION:
+        return(text("ADDITION"):str)
+    elif type == DELETION:
+        return(text("DELETION"):str)
+    else:
+        return(text(""):str) # consistent return type!
+
 # returns 1 if address has voted at all this vote period
+# use this to stop people from sending rep after voting
 def hasVoted(address):
     with ballot_start = ref(current_vote.ballot[0]):
         with ballot_len = sload(ballot_start):
@@ -244,6 +325,56 @@ def hasVoted(address):
                         return(1)
                     i += 1
                 return(0)
+
+# returns a list of ballotItems (a.k.a. hashes)
+# that address voted for in the given period.
+def getVotes(address, period):
+    with ballot_start = ref(self.votes[period].ballot[0]):
+        with length = sload(ballot_start):
+            with i = 0:
+                with j = 0:
+                    with result = array(length):
+                        ballot_start += 1
+                        while i < length:
+                            if self.votes[period].voters[sload(ballot_start + i)][address] == address:
+                                result[j] = sload(ballot_start + i)
+                                j += 1
+                            i += 1
+                        return(result, items=j)
+
+# returns the replacement info for ballotItem as an array.
+# first item is the from_addr, second item is to_addr.
+def getReplacement(ballotItem):
+    with from_addr = self.replacements[ballotItem].from_addr:
+        with to_addr = self.replacements[ballotItem].to_addr:
+            return([from_addr, to_addr]:arr)
+
+# returns the address that the ballotItem proposes to delete.
+def getDeletion(ballotItem):
+    return(self.deletions[ballotItem])
+
+# returns an array containing the addition type ballotItem's
+# info. The first element is the address being added, the
+# rest are the contracts it is being added to.
+def getAddition(ballotItem):
+    with address = self.additions[ballotItem].address:
+        with contracts_start = ref(self.additions[ballotItem].contracts[0]):
+            with length = sload(contracts_start):
+                with result = array(length + 1):
+                    with i = 1:
+                        result[0] = address
+                        while i <= length:
+                            result[i] = sload(contracts_start + i)
+                            i += 1
+                        return(result:arr)
+
+# returns the current vote period
+def getCurrentVotePeriod():
+    return(CURRENT_PERIOD)
+
+# returns the block number of this contract's creation
+def getEpoch():
+    return(self.EPOCH)
 
 # tallies your vote
 def whitelistVote(hash):
@@ -316,12 +447,6 @@ def propose_deletion(address):
     self.types[hash] = DELETE
     self.deletions[hash] = address
     return(hash)
-
-def getCurrentVotePeriod():
-    return(CURRENT_PERIOD)
-
-def getEpoch():
-    return(self.EPOCH)
 
 # @return reputation value
 def getRepByIndex(branch, repIndex):
