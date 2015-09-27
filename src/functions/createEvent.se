@@ -28,6 +28,7 @@ import events as EVENTS
 
 # numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0
 # to 11.0 would be 11 outcomes (if incremented by 0.1)
+#Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
 # need to make sure these values are ok
 # @return eventID if success
 # error messages otherwise

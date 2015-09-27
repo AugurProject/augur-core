@@ -29,6 +29,8 @@ def init():
 def balance(address):
     return(self.cashcoinBalances[address])
 
+#We still need to make support for generic subcurrencies as opposed to cash.  This simply involves generalizing our current play cash functions to allow the market creator to set a subcurrency and use that cash function whenever specified.  Also need to add regular ether support for buying/selling.
+
 # should send values as fixed point in UI (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
 # so cashcoin fees could just go to root branch, or we could not have fees besides 
 # gas fee to do a send transaction

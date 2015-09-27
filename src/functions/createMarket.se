@@ -29,6 +29,7 @@ import events as EVENTS
 
 event creationBlock(market:indexed)
 
+#Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
 # z = liquidity / (1+(alpha*n*ln(n)))
@@ -44,7 +45,7 @@ event creationBlock(market:indexed)
 
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, blockNumber):
     periodLength = BRANCHES.getPeriodLength(branch)
-    if(periodLength==0 or len(description)==0 or initialLiquidity==0 || alpha <= 2^57 || tradingFee < BRANCHES.getMinTradingFee(branch)):
+    if(periodLength==0 or len(description)==0 or initialLiquidity<50*2**64 || alpha <= 2^57 || tradingFee < BRANCHES.getMinTradingFee(branch)):
         return(-1)
     if(tradingFee > 2^61):
         return(-1)
@@ -133,3 +134,6 @@ def updateTradingFee(branch, market, tradingFee):
     if(tradingFee > 2^61):
         return(-1)
     return(MARKETS.setTradingFee(market, tradingFee))
+
+#Add def moveMarket(market, newBranch, marketAuthor) in case of a fork
+def moveMarket(market, newBranch, marketAuthor):

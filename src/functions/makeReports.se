@@ -47,6 +47,7 @@ data numReports[]
     # -3: hash doesn't match
     # -4: no rep
     # -5: bad report
+# We should consider making the second half of the reporting period a few days or week long period every two months to allow trading more.  The reason being, you cannot trade rep after submitting your plaintext ballot and salt, so limiting this portion of the period is best for liquidity.  Since you’ve already created your ballot in the first part of the period, you can simply log in to an Augur client and it’ll auto submit your plaintext report + salt when the time comes.  
 def report(branch, report:arr, votePeriod, salt):
     # make sure the branch exists
     repIndex = REPORTING.repIDToIndex(branch, tx.origin)
@@ -184,6 +185,7 @@ def submitReport(branch, votePeriod, eventIndex):
     volFraction = volume*2**64/totalVol
     # in fxp (2**192) == 2**256 / 2**64
     reportingThreshold = (40*(-(267*(volFraction**2)/(2*2**64) + (533*volFraction)/2 +1)*repConstant/2**64) * (2**192)
+    # need a precomputing fix add another item
     if(sha3(x, items=1) < reportingThreshold):
         # submit report
         self.numReports[tx.origin] += 1
@@ -193,9 +195,18 @@ def submitReport(branch, votePeriod, eventIndex):
     else:
         return(0)
 
-def penalize(branch, votePeriod):
+#So you could start off with 5000 rep, never report, and you’d “have” 5000 rep up until you tried to send it or get the balance, the dentist guys going to Vienna is gone as the villain and all of a sudden, like Schrodinger’s cat, it’s gone (dead)!  People could ping the network to ding dead accounts (although they wouldn’t need to do so for any good reason).
+# Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account, and distributed like trading fees are except each person would make their own lazy claim on it.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
+#Q: Can we do lazy eval claiming of trading fees?
+#A: Yes:
+#      if(addrWasInThisConsensusPeriod):
+#          send them cash of amount equal to fees from that period * rep owned by addr in that period / total #rep in that period
+def penalizeNotEnoughReports(branch, votePeriod):
     if(self.getNumEventsToReportOn(branch, votePeriod)/(2*2**64) > self.numReports):
         # penalize people
+        newRep = .2*self.numReports / self.getNumEventsToReportOn(branch, votePeriod)/(2*2**64) * REPORTING.getRepBalance(branch, tx.origin)
+        oldRep = REPORTING.getRepBalance(branch, tx.origin)*.8
+        REPORTING.setRep(branch, REPORTING.repIDToIndex(branch, tx.origin), oldRep+newRep)
     else:
         # you're good!
         return(47)

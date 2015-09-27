@@ -18,22 +18,3 @@ A consensus guide:
     #3e) then scale scaled back up to w/e value - ditto for categorical (need to mult by range and add min i think) for categorical range is numOutcomes - 1, min is 1 - done
     #3f) save outcomes - done
 #4) Payout reporters & event bonds - done
-
-Params:
-Smoothing param
-Catch param
-
-# Nota bene: you can send rep as long as you haven't submitted a plaintext report yet (and you can receive as long as you haven't either) - the thing is - if you plan to receive rep during the "reveal" phase of the reporting period, you need to have submitted a report in the submitreporthash phase.  New rep accounts (or any account that hasn't submitted a report hash) shouldn't have rep sent to them during the reveal phase because they won't be able to reveal and will thus lose money.  Protip to not lose funds: just don't trade during the reveal period - should perhaps shorten this to a few days / 2 months instead of 1 mo out of 2 months
-
-# cost:
-	x reporters y events
-	y*constant for l2dist
-	constant*x for process
-	constant*numEvents*numReporters for newMean
-		- fixed to constant*numEvents
-
-# implement second pass of clustering in serpent - not done
-# consensus scaling to work w/ unlimited numbers - not done
-# then lazy eval scaling - not done
-
-# ordering atk if so use mbsas instead of bsas - not done
