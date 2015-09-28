@@ -277,7 +277,7 @@ def getWhitelist(contract):
                     return(result:arr)
 
 # returns the list of contracts with whitelists
-# that contain address.
+# that contain address
 def getAccessibles(address):
     with accessibles_start = ref(self.accessibles[address][0]):
         with length = sload(accessibles_start):
