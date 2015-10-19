@@ -258,15 +258,6 @@ def get_shortname(fullname):
     # the [:-3] is because all file names end in ".se"
     return os.path.basename(fullname)[:-3]
 
-def wait(seconds):
-    sys.stdout.write('Waiting %f seconds' % seconds)
-    sys.stdout.flush()
-    for i in range(10):
-        sys.stdout.write('.')
-        sys.stdout.flush()
-        time.sleep(seconds/10.)
-    print
-
 def cost_estimate(code):
     s = t.state()
     c = s.abi_contract(code)
@@ -339,7 +330,6 @@ def get_compile_order():
         for f in files:
             if f.endswith('.se'):
                 contract_fullnames.append(os.path.join(directory, f))
-
 
     line_check, dependency_extractor = get_dep_extractors()
     # topological sorting! :3

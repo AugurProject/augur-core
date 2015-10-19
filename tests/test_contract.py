@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-'''Class for easy interaction with contracts via rpc.'''
+'''Class for easy interaction with ethereum contracts via rpc.'''
 from warnings import simplefilter; simplefilter('ignore')
 from colorama import Style, Fore, Back, init; init()
 from pyrpctools import RPC_Client, MAXGAS
@@ -11,22 +11,25 @@ import sha3
 import sys
 import os
 
+__all__ = ["Contract"]
+
+MAX = 2**256
 def int2abi(n):
     '''Encode a python int according to the Ethereum ABI spec.'''
-    return hex(n % 2**256)[2:].rstrip('L').zfill(64)
+    return hex(n % MAX)[2:-1].zfill(64)
 
 def encode(args):
     '''Encodes all arguments according to the Ethereum ABI spec.'''
     static = []
     dynamic = []
     for arg in args:
-        if isinstance(arg, int):
+        if isinstance(arg, (int, long)):
             static.append(int2abi(arg))
         if isinstance(arg, (list, str)):
             static.append(int2abi(32*len(args) + sum(map(len, dynamic))/2))
             dynamic.append(int2abi(len(arg)))
         if isinstance(arg, list):
-            assert all(isinstance(e, int) for e in arg), 'Only lists of ints are supported!'
+            assert all(isinstance(e, (int, long)) for e in arg), 'Only lists of ints are supported!'
             dynamic.extend(map(int2abi, arg))
         if isinstance(arg, str):
             dynamic.append(arg.encode('hex'))
@@ -36,6 +39,7 @@ def encode(args):
     return ''.join(static + dynamic)
 
 def decode(result):
+    '''Decodes the result of a contract call into the appropriate python type.'''
     if result.startswith('0x'):
         result = result[2:]
     if len(result) == 0:
@@ -45,186 +49,157 @@ def decode(result):
     if len(result) > 64:
         array_len = int(result[:64], 16)
         result = result[64:]
-        if array_len == len(result)/64:
+        if array_len == len(result)/64: #array_len is the number of 32 byte chunks.
             return [int(result[i:i+64], 16) for i in range(0, len(result), 64)]
+        else: #array_len is the number of bytes, and each char is a half byte.
+            return result[:2*array_len].decode('hex')
+
+INT = (int, long)
+def process_fullsig(fullsig):
+    '''Transforms a signature to help with type checking
+
+The full signature of a contract looks something like:
+[{"type":"function",
+  "name":"foo(int256)",
+  ... ,
+ }]
+
+The Contract class uses the type information in the signature,
+so that my_contract.foo(1) will work, but my_contract.foo('bar')
+will not. After the transformation, the signature looks like this:
+
+{"foo":[("4c970b2f",      # prefix
+         ((int, long),),  # types
+         "foo(int256)")]} # full name
+
+A contract might have multiple functions with the same name, but
+different input types, so the result dictionary maps a name to a list
+of info for each function with that name.
+'''
+    names_to_info = {}
+    for item in filter(lambda i: i['type']=='function', fullsig):
+        sig_start = item['name'].find('(')
+        if sig_start == -1:
+            raise ValueError('Bad function name in fullsig: {}'.format(item['name']))
+
+        name = item['name'][:sig_start]
+        if name not in names_to_info:
+            names_to_info[name] = []
+
+        prefix = sha3.sha3_256(item['name'].encode('ascii')).hexdigest()[:8]
+        if item['name'][sig_start + 1] == ')': #empty sig
+            names_to_info[name].append((prefix, (), item['name']))
         else:
-            return result[:array_len].decode('hex')
+            sig = item['name'][sig_start + 1:-1].split(',')
+            pysig = []
+            for t in sig:
+                if '[]' in t:
+                    pysig.append(list)
+                elif t.startswith('bytes') or t.startswith('string') or t=='address':
+                    pysig.append(str)
+                elif 'int' in t:
+                    pysig.append(INT)
+                else:
+                    raise TypeError('unsupported type in fullsig: {}'.format(t))
+            names_to_info[name].append((prefix, tuple(pysig), item['name']))
+    return names_to_info
+
+def gen_doc_from_info(name, address, info):
+    '''Creates a doc string from the result of `process_fullsig`.
+
+The Contract class generates functions for calling contract functions
+"on the fly", and those functions need documentation! If the result
+of `process_fullsig` looks like this:
+
+{"foo":[("4c970b2f",      # prefix
+         ((int, long),),  # types
+         "foo(int256)")]} # full name
+
+Then the docstring will look like this:
+"""Calls functions named `foo` in the contract at address "address".
+
+Contract functions:
+  foo(int256) "4c970b2f" ((<type 'int'>, <type 'long'>),)
+"""
+'''
+    start = '''\
+Calls functions named `{name}` in the contract at address "{address}".
+
+Contract functions::
+'''.format(name=name, address=address)
+    widths = [max(map(len, map(str, col))) for col in zip(*info)] 
+    fmt = '  {2:<{widths[2]}} "{0:<{widths[0]}}" {1:<{widths[1]}}'
+    return start + '\n'.join(fmt.format(a, b, c, widths=widths) for a,b,c in info) + '\n'
 
 class Contract(object):
-    def __init__(self, contract_address, fullsig, coinbase, rpc, node, default_gas, verbose):
+
+    def __init__(self, contract_address, fullsig, rpc_client):
         self.contract_address = contract_address
-        self.fullsig = fullsig
-        self.coinbase = coinbase
-        self.rpc = rpc
-        self.node = node
-        self.default_gas = default_gas
-        self.verbose = verbose
-
-        self.prefixes = {}
-        self.types = {}
-        for item in self.fullsig:
-            if item['type'] == 'function':
-                name, argtypes = item['name'].split('(')
-                prefix = sha3.sha3_256(item['name'].encode('ascii')).hexdigest()[:8]
-                self.prefixes[name] = prefix
-                argtypes = argtypes.strip(')').split(',')
-                if argtypes == ['']:
-                    self.types[name] = ()
-                else:
-                    newtypes = []
-                    for a in argtypes:
-                        if '[' in a and ']' in a:
-                            newtypes.append(list)
-                        elif 'string' in a or 'bytes' in a or 'address' in a:
-                            newtypes.append(str)
-                        elif 'int' in a or 'real' in a:
-                            newtypes.append(int)
-                        else:
-                            raise ValueError('Unsupported type! {}'.format(a))
-                    self.types[name] = tuple(newtypes)
-                if self.verbose:
-                    print item['name']
-                    print 'short name:', name
-                    print 'types:', self.types[name]
-                    print 'prefix:', self.prefixes[name]
-
-    @staticmethod
-    def __setup_env(rpc, node, default_gas, verbose):
-
-        if node is None:
-            node = TestNode(log=open(os.devnull, 'w'))
-            node.start()
-
-        if rpc is None:
-            rpc = RPC_Client((node.rpchost, node.rpcport), verbose)
-
-        if default_gas is None:
-            default_gas = int(MAXGAS, 16)
-        assert isinstance(default_gas, int), 'default_gas must be an int!'
-
-        coinbase = rpc.eth_coinbase()['result']
-        if not coinbase:
-            password = os.urandom(32).encode('hex')
-            coinbase = rpc.personal_newAccount(password)['result']
-            rpc.personal_unlockAccount(coinbase, password, 365*24*60*60)
-
-        mining = rpc.eth_mining()['result']
-        if not mining:
-            rpc.miner_start(2)
-
-        gas_price = int(rpc.eth_gasPrice()['result'], 16)
-        balance = int(rpc.eth_getBalance(coinbase)['result'], 16)
-
-        if verbose:
-            print Style.BRIGHT + 'Mining coins...' + Style.RESET_ALL
-
-        while balance < default_gas * gas_price:
-            time.sleep(0.5)
-            balance = int(rpc.eth_getBalance(coinbase)['result'], 16)
-
-        return (coinbase, rpc, node, default_gas, verbose)
-    
-    @classmethod
-    def from_code(cls, filename, rpc=None, node=None, default_gas=None, verbose=0):
-        args = cls.__setup_env(rpc, node, default_gas, verbose)
-        coinbase, rpc, node, default_gas, verbose = args
-
-        if verbose:
-            print Style.BRIGHT + 'Submitting contract...' + Style.RESET_ALL
-        
-        code = serpent.compile(filename).encode('hex')
-        txhash = rpc.eth_sendTransaction(sender=coinbase,
-                                         data=('0x'+code),
-                                         gas=hex(default_gas))['result']
-
-        while True:
-            receipt = rpc.eth_getTransactionReceipt(txhash)
-            if receipt.get('result', False):
-                if isinstance(receipt['result'], dict):
-                    result = receipt['result']
-                    if result.get('contractAddress', False) and result.get('blockNumber', False):
-                        contract_address = receipt['result']['contractAddress']
-                        break
-            time.sleep(0.5)
-
-        chain_code = rpc.eth_getCode(contract_address)['result']
-        if chain_code[2:] not in code:
-            raise ValueError('Code did not compile correctly!!!')
-
-        if verbose:
-            print ' '*4 + Style.BRIGHT + 'done.' + Style.RESET_ALL
-
-        fullsig = json.loads(serpent.mk_full_signature(filename))
-        if verbose:
-            print json.dumps(fullsig, indent=4, sort_keys=True)
-
-        return cls(*((contract_address, fullsig) + args))
+        self.names_to_info = process_fullsig(fullsig)
+        self.rpc = rpc_client
+        self.default_sender = self.rpc.eth_coinbase()['result']
+        self.default_gas = int(MAXGAS, 16)
 
     def __getattr__(self, name):
-        if name in self.prefixes:
-            prefix = self.prefixes[name]
-            types = self.types[name]
-            verbose = self.verbose
+        if name not in self.names_to_info:
+            raise ValueError('{name} is not a function in the fullsig!'.format(name=name))
+            
+        info = self.names_to_info[name]
+        default_sender = self.default_sender
+        contract_address = self.contract_address
+        default_gas = self.default_gas
+        rpc = self.rpc
+        def call(*args, **kwds):
+            for prefix, types, fullname in info:
+                if len(args) == len(types) and all(map(isinstance, args, types)):
+                    break
+            else:
+                raise TypeError('''Bad argument types!
+given: {args}
+                expected: {info}'''.format(args=args, info=info))
 
-            def call(*args, **kwds):
-                if len(args) != len(types) or not all(map(isinstance, args, types)):
-                    raise TypeError('Bad argument types! <args {}> <types {}>'.format(args, types))
+            tx = {
+                'to':contract_address,
+                'sender':kwds.get('sender', default_sender),
+                'data':'0x' + prefix + encode(args),
+                'gas':hex(kwds.get('gas', default_gas)),
+            }
+
+            if kwds.get('call', False):
+                result = rpc.eth_call(**tx)
+                assert 'error' not in result, json.dumps(result,
+                                                         indent=4, 
+                                                         sort_keys=True)
+                return decode(result['result'])
                 
-                tx = {
-                    'to':self.contract_address,
-                    'sender':kwds.get('sender', self.coinbase),
-                    'data':'0x' + prefix + encode(args),
-                    'gas':hex(kwds.get('gas', self.default_gas)),
-                }
-                if verbose:
-                    print 'calling', name
-                    print 'prefix:', prefix
-                    print 'args:', args
-                    print 'call data:', tx['data']
-                if kwds.get('call', False):
-                    result = self.rpc.eth_call(**tx)
-                    assert 'error' not in result, json.dumps(result,
-                                                             indent=4, 
-                                                             sort_keys=True)
-                    return decode(result['result'])
-                
-                elif kwds.get('send', False):
-                    result = self.rpc.eth_sendTransaction(**tx)
-                    assert 'error' not in result, json.dumps(result,
-                                                             indent=4, 
-                                                             sort_keys=True)
-                    txhash = result['result']
-                    if kwds.get('receipt', False):
-                        while True:
-                            receipt = self.rpc.eth_getTransactionReceipt(txhash)
-                            if receipt['result'] is not None:
-                                result = receipt['result']
-                                if isinstance(result, dict):
-                                    if result.get('blockNumber', False):
-                                        return result
-                            time.sleep(0.5)
-                    else:
-                        return txhash
+            elif kwds.get('send', False):
+                result = self.rpc.eth_sendTransaction(**tx)
+                assert 'error' not in result, json.dumps(result,
+                                                         indent=4, 
+                                                         sort_keys=True)
+                txhash = result['result']
+                if kwds.get('receipt', False):
+                    while True:
+                        receipt = self.rpc.eth_getTransactionReceipt(txhash)
+                        if receipt['result'] is not None:
+                            result = receipt['result']
+                            if isinstance(result, dict):
+                                if result.get('blockNumber', False):
+                                    return result
+                        time.sleep(0.5)
                 else:
-                    raise ValueError('Must use `call` or `send` keyword!')
+                    return txhash
+            else:
+                raise ValueError('Must use `call` or `send` keyword!')
 
-            call.__name__ = name
-            setattr(self, name, call)
-            return call
-        raise ValueError('No function with that name in this contract! <name: {}> <valid-names: {}>'.format(name, self.prefixes.keys()))
-
-    def __del__(self):
-        self.node.shutdown()
-        self.node.cleanup()
+        call.__name__ = name
+        call.__doc__ = gen_doc_from_info(name, contract_address, info)
+        return call
 
 def main():
     svcoin = '''\
-def SVCoinFaucet():
-    sstore(tx.origin, 10**10)
-
-def setSVCoinBalance(amount):
-    sstore(tx.origin, amount)
-    return(1)
+def init():
+    sstore(tx.origin, 21*10**9)
 
 def sendSVCoins(to, amount):
     with my_bal = sload(msg.sender):
@@ -240,13 +215,40 @@ def mySVCoinBalance():
 def getSVCoinBalance(address):
     return(sload(address))
 '''
-    contract = Contract.from_code(svcoin)
-    print 'contract.SVCoinFaucet() ->', contract.SVCoinFaucet(send=True, receipt=True)
-    print 'contract.mySVCoinBalance() ->', contract.mySVCoinBalance(call=True)
-    print 'contract.sendSVCoins(2, 100) ->', contract.sendSVCoins(2, 100, send=True, receipt=True)
-    print 'contract.mySVCoinBalance() ->', contract.mySVCoinBalance(call=True)
-    print 'contract.getSVCoinBalance(2) ->', contract.getSVCoinBalance(2, call=True)
-    contract.__del__()
+
+    evm = '0x' + serpent.compile(svcoin).encode('hex')
+    fullsig = json.loads(serpent.mk_full_signature(svcoin))
+
+    node = TestNode(log=open(os.devnull, 'w'), verbose=False)
+    node.start()
+
+    rpc = RPC_Client((node.rpchost, node.rpcport), 0)
+    password = os.urandom(32).encode('hex')
+    account = rpc.personal_newAccount(password)['result']
+    rpc.personal_unlockAccount(account, password, hex(500))
+    rpc.miner_start(2)
+    
+    balance = 0
+    while balance < int(MAXGAS, 16):
+        balance = int(rpc.eth_getBalance(account)['result'], 16)
+    
+    txhash = rpc.eth_sendTransaction(sender=account, data=evm, gas=MAXGAS)['result']
+
+    while True:
+        response = rpc.eth_getTransactionReceipt(txhash)
+        receipt = response.get('result', False)
+        if receipt:
+            blocknumber = receipt.get('blockNumber', False)
+            if blocknumber:
+                address = receipt['contractAddress']
+                break
+
+    contract = Contract(address, fullsig, rpc)
+    print 'My balance is', contract.mySVCoinBalance(call=True)
+    receipt = contract.sendSVCoins(2, 10000, send=True, receipt=True)
+    print 'Sent coins to address 2, receipt:'
+    print json.dumps(receipt, indent=4, sort_keys=True)
+    print 'Balance at address 2 is', contract.getSVCoinBalance(2, call=True)
 
 if __name__ == '__main__':
     main()

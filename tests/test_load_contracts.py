@@ -118,7 +118,6 @@ def test_compile_imports():
         #but the answers should be approximately the same.
         result = round(float(result)/2**64, 6)
 
-
         if result == expected:
             print 'TEST PASSED'
         else:
@@ -129,9 +128,6 @@ def test_compile_imports():
         shutil.rmtree(os.path.join(test_dir, 'foobar'))
         os.remove(os.path.join(test_dir, 'math_macros.sm'))
         os.remove(os.path.join(test_dir, 'test_load_contracts.json'))
-        node.shutdown()
-        node.cleanup()
-
 
 if __name__ == '__main__':
     test_compile_imports()
