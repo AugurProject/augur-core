@@ -186,7 +186,8 @@ def submitReport(branch, votePeriod, eventIndex):
     # in fxp (2**192) == 2**256 / 2**64
     reportingThreshold = (40*(-(267*(volFraction**2)/(2*2**64) + (533*volFraction)/2 +1)*repConstant/2**64) * (2**192)
     # need a precomputing fix add another item
-    if(sha3(x, items=1) < reportingThreshold):
+    shaHash = sha3(x, items=1)
+    if(shaHash < reportingThreshold || shaHash<EVENTS.getThreshold(eventID)):
         # submit report
         self.numReports[tx.origin] += 1
         # outcome should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)

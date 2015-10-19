@@ -26,8 +26,6 @@ import cash as CASH
 import reporting as REPORTING
 
 # period length is given in blocks
-# description format is branchName:description
-# is there some way we can include the description bytes in the sha256 hash?
 # @return branchID if success
 # error messages otherwise
     # -1: bad input or parent doesn't exist

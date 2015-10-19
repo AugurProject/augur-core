@@ -26,7 +26,9 @@
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
 # need outcomes returned as 1*2^64, 2*2^64, etc... indeterminate as 3*2^63
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets)
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports)
+
+import branches as BRANCHES
 
 def getEventInfo(event):
     info = array(6)
@@ -88,4 +90,21 @@ def setOutcome(ID, outcome):
 	return(1)
 
 #In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold.
-def setReportingThreshold():
+def setReportingThreshold(event):
+	# first check is if event expDate is in the current vote period and second is if blockNum is near expiration of voting period (within 7200 blocks or 24 hr.)
+	# final check is if < 25 reports so far
+	if(BRANCHES.getVotePeriod(self.Events[event].branch)==self.Events[event].expirationDate/BRANCHES.getPeriodLength(self.Events[event].branch) and (((block.number+7200) / BRANCHES.getPeriodLength(branch)) - 1)==(BRANCHES.getVotePeriod(self.Events[event].branch)+1) and self.Events[event].numReports<25):
+		self.Events[event].threshold = 2**256
+		return(1)
+	else:
+		return(0)
+
+def getNumReports(event):
+	return(self.Events[event].numReports)
+
+def addNumReports(event):
+	self.Events[event].numReports += 1
+	return(1)
+
+def getReportingThreshold(event):
+	return(self.Events[event].threshold)lop;.[]
