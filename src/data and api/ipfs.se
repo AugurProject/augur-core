@@ -1,0 +1,8 @@
+data marketsDirectoryHash[]
+
+def setMarketsDirectoryHash(name, marketsDirectoryHash):
+    self.marketsDirectoryHash[name] = marketsDirectoryHash
+    return(1)
+
+def getMarketsDirectoryHash(name):
+    return(self.marketsDirectoryHash[name])
