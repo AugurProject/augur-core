@@ -1,0 +1,19 @@
+# Support for generic subcurrencies
+# This simply involves generalizing our current play cash functions to allow the market creator to set a subcurrency and use that cash function whenever specified. 
+
+extern currency: [addCash:[int256,int256]:int256, balance:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256]
+
+def sendSubCurrency(recver, value, subcurrency):
+    return(subcurrency.send(recver, value))
+
+def sendFromSubCurrency(recver, value, from, subcurrency):
+	return(subcurrency.sendFrom(recver, value, from))
+
+def subtractSubCurrency(address, amount, subcurrency):
+	return(subcurrency.subtractCash(recver, amount))
+
+def addSubCurrency(address, amount, subcurrency):
+	return(subcurrency.addCash(recver, amount))
+
+def subCurrencyBalance(address, subcurrency):
+	return(subcurrency.balance(address))
