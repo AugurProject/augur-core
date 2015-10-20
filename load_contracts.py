@@ -76,7 +76,6 @@ import time
 import shutil
 import traceback
 
-
 os.chdir(rpc.ROOT)
 SOURCE = os.path.join(rpc.ROOT, 'src')
 IMPORTS = True
@@ -88,7 +87,7 @@ DB = {}
 RPC = None
 COINBASE = None
 CONTRACT = None
-TRIES = 10
+TRIES = 25
 TRANSLATE = None
 
 def read_options():
@@ -294,7 +293,6 @@ def broadcast_code(evm, code, fullname):
     txhash = result['result']
     tries = 0
     while tries < TRIES:
-        #wait(BLOCKTIME)
         time.sleep(BLOCKTIME)
         receipt = RPC.eth_getTransactionReceipt(txhash)["result"]
         if receipt is not None:
@@ -302,9 +300,9 @@ def broadcast_code(evm, code, fullname):
             if check != '0x' and check[2:] in evm:
                 return receipt["contractAddress"]
         tries += 1
-    user_input = raw_input("broadcast failed after %d tries! Try again? [Y/n]")
+    user_input = raw_input("broadcast failed after %d tries! Try again? [Y/n]" % tries)
     if user_input in 'Yy':
-        return broadcast_code(evm)
+        return broadcast_code(evm, code, fullname)
     print 'ABORTING'
     print json.dumps(DB, indent=4, sort_keys=True)
     sys.exit(1)
@@ -468,6 +466,7 @@ def compile(fullname):
     shortname = get_shortname(fullname)
 
     if 'WHITELIST' in code:
+        print "SHITS GETTING WHITELISTED BITCH"
         whitelist_line = code.find('\n',
                                    code.find('WHITELIST'))
         prefixes = get_prefixes(fullname, fullsig)
@@ -486,9 +485,11 @@ def compile(fullname):
     
     address = broadcast_code(evm, code, fullname)
     sig = serpent.mk_signature(code)
+
     # serpent makes the contract name in the sig "main"
     # if the code it compiles is in a string instead of a file.
     sig = sig.replace('main', shortname, 1)
+
     # Also, there is a serpent bug which can't handle multiple
     # return types in a function signature, which causes compilation
     # to fail. This is a workaround...
@@ -546,7 +547,7 @@ def main():
             new_code = process_imports(fullname)
             with open(fullname, 'w') as f:
                 f.write(new_code)
-        sys.exit(0)
+        return 0
     if CONTRACT is not None:
         deps = optimize_deps(deps, nodes)
     for fullname in map(get_fullname, deps):
@@ -556,4 +557,4 @@ def main():
     rpc.save_db(DB)
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
