@@ -477,10 +477,10 @@ def compile(fullname):
         evm = '0x' + serpent.compile(code).encode('hex')
     except:
         traceback.print_exc()
-        print 'Code that broke everything:'
-        print code
-        print 'DB dump:'
-        print json.dumps(DB, indent=4, sort_keys=True)
+        # print 'Code that broke everything:'
+        # print code
+        # print 'DB dump:'
+        # print json.dumps(DB, indent=4, sort_keys=True)
         sys.exit(1)
     
     address = broadcast_code(evm, code, fullname)

@@ -20,6 +20,11 @@
 # Any questions please contact joey@augur.net
 
 import fxpFunctions as FXP
+import info as INFO
+import events as EVENTS
+
+# Uncomment this event for debugging logs
+# event stdout(data)
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market in the format of
@@ -32,6 +37,67 @@ import fxpFunctions as FXP
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
 data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch)
+
+macro TRADER_FIELDS: 3
+macro EVENTS_FIELDS: 6
+macro OUTCOMES_FIELDS: 11
+macro WINNING_OUTCOMES_FIELDS: 8
+
+def getFullMarketInfo(marketID):
+    with fields = 11:
+        with participantNumber = self.Markets[marketID].addr2participant[tx.origin]:
+            with info = array(fields + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS):
+                info[0] = self.Markets[marketID].currentParticipant
+                info[1] = self.Markets[marketID].alpha
+                info[2] = participantNumber
+                info[3] = self.Markets[marketID].numOutcomes
+                info[4] = self.Markets[marketID].tradingPeriod
+                info[5] = self.Markets[marketID].tradingFee
+                info[6] = self.Markets[marketID].branch
+                info[7] = self.Markets[marketID].lenEvents
+                info[8] = self.Markets[marketID].cumulativeScale
+                info[9] = INFO.getCreationFee(marketID)
+                info[10] = INFO.getCreator(marketID)
+
+                # gather trader(s) info: [trader ID, yes shares, no shares]
+                with t = 0:
+                    while t < self.Markets[marketID].currentParticipant*TRADER_FIELDS:
+                        info[fields + t] = self.Markets[marketID].participants[t].participantID
+                        info[fields + t + 1] = self.Markets[marketID].participants[t].shares[0]
+                        info[fields + t + 2] = self.Markets[marketID].participants[t].shares[1]
+                        t += TRADER_FIELDS
+                    fields += t
+
+                # gather event(s) info:
+                # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
+                with i = 0:
+                    while i < self.Markets[marketID].lenEvents*EVENTS_FIELDS:
+                        with event = self.Markets[marketID].events[i]:
+                            with eventInfo = EVENTS.getEventInfo(event, outitems=EVENTS_FIELDS):
+                                info[fields + i] = event
+                                with j = 1:
+                                    while j < EVENTS_FIELDS:
+                                        info[fields + i + j] = eventInfo[j]
+                                        j += 1
+                        i += EVENTS_FIELDS
+                    fields += i
+
+                # gather outcomes info:
+                # [sharesPurchased, shares, price, participantNumber, winningOutcomes...]
+                with k = 0:
+                    while k < self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS:
+                        fields += k
+                        with outcome = k + 1:
+                            info[fields] = self.Markets[marketID].sharesPurchased[outcome]
+                            info[fields + 1] = self.Markets[marketID].participants[participantNumber].shares[outcome]
+                            info[fields + 2] = self.price(market, outcome)
+                            with w = 0:
+                                while w < WINNING_OUTCOMES_FIELDS:
+                                    info[fields + w + 2] = self.Markets[marketID].winningOutcomes[w]
+                                    w += 1
+                            k += OUTCOMES_FIELDS
+
+                    return(info: arr)
 
 # @return cost - how much it costs you to buy
 #         price - current share price of that outcome after buy
@@ -262,3 +328,5 @@ def getMarketOutcomeInfo(market, outcome):
     info[11] = self.Markets[market].winningOutcomes[6]
     info[12] = self.Markets[market].winningOutcomes[7]
     return(info: arr)
+
+# inset("../../macros/logging.sm")

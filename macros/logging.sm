@@ -1,54 +1,45 @@
-# This software (Augur) allows buying and selling event options in Ethereum.
+# This file is part of augur-core: https://github.com/AugurProject/augur-core
 #
-# Copyright (c) 2015 Forecast Foundation
+# Log to stdout, just like the good old days.  To use these macros,
+# you must include a "stdout" event at the top of your contract:
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# event stdout(data)
 #
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-# If you have questions, please contact Jack Peterson (jack@augur.net).
+# @author Jack Peterson (jack@augur.net)
+
+# prints an array to stdout
+# $a: array
+# $n: array length
+macro print_array($a, $n):
+    with $i = 0:
+        while $i < $n:
+            log(type=stdout, $a[$i])
+            $i += 1
+
+# print to stdout
+macro print($x):
+    log(type=stdout, $x)
 
 # Prints an array.  Logs either contain a single entry (for integer values)
 # or two entries (for fixed point numbers, the first entry is the integer
 # and the second is the decimal).
-macro log_array($a):
+macro print_fixed_array($a):
     with $n = len($a):
         with $i = 0:
             while $i < $n:
                 # print 8 decimal points (adjustable)
-                with $decimal = ($a[$i] & (ONE - 1)) * 10^8 / ONE:
+                with $decimal = ($a[$i] & (2^64 - 1)) * 10^8 / 2^64:
                     if $decimal > 0:
-                        log($a[$i] / ONE, $decimal)
+                        log(type=stdout, $a[$i] / 2^64, $decimal)
                     else:
-                        log($a[$i] / ONE)
+                        log(type=stdout, $a[$i] / 2^64)
                     $i += 1
-
-macro log_unfixed_array($a):
-    with $n = len($a):
-        with $i = 0:
-            while $i < $n:
-                log($a[$i])
-                $i += 1
 
 # Prints a single entry (for integer values) or two entries (for fixed point
 # numbers, the first entry is the integer and the second is the decimal).
-macro log_fixed($x):
-    with $d = ($x & (ONE - 1)) * 10^8 / ONE:
+macro print_fixed($x):
+    with $d = ($x & (2^64 - 1)) * 10^8 / 2^64:
         if $d > 0:
-            log($x / ONE, $d)
+            log(type=stdout, $x / 2^64, $d)
         else:
-            log($x / ONE)
+            log(type=stdout, $x / 2^64)
