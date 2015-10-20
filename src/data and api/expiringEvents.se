@@ -50,21 +50,20 @@ def getEvents(branch, expDateIndex):
 # -1: voting not started
 def setNumEventsToReportOn(branch, expDateIndex): 
 	# after voting has started
-	if(block.number/1800>=MARKETS.getTradingPeriod(marketID)):
-		numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
-#		n = 0
-#		totalVol = EXPEVENTS.getPeriodVolume(branch, expDateIndex)
-#		while n < numEvents:
-#		    eventID = self.getEvent(branch, expDateIndex, n)
-#		    i = 0
-#		    numMarkets = EVENTS.getNumMarkets(eventID)
-#		    markets = array(numMarkets)
-#		    markets = EVENTS.getMarkets(eventID, outitems=numMarkets)
-#		    volume = 0
-#		    while i < numMarkets:
-#		        volume += MARKETS.getVolume(markets[i])
-#		    numberToReportOnEstimate += self.sqrt(volume*2**64/totalVol)
-
+	if(expDateIndex==BRANCHES.getVotePeriod(branch)):
+			numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
+	#		n = 0
+	#		totalVol = EXPEVENTS.getPeriodVolume(branch, expDateIndex)
+	#		while n < numEvents:
+	#		    eventID = self.getEvent(branch, expDateIndex, n)
+	#		    i = 0
+	#		    numMarkets = EVENTS.getNumMarkets(eventID)
+	#		    markets = array(numMarkets)
+	#		    markets = EVENTS.getMarkets(eventID, outitems=numMarkets)
+	#		    volume = 0
+	#		    while i < numMarkets:
+	#		        volume += MARKETS.getVolume(markets[i])
+	#		    numberToReportOnEstimate += self.sqrt(volume*2**64/totalVol)
 		numberToReportOnEstimate = numEvents*40
 		self.EventsExpDates[branch][expDateIndex].numEventsToReportOn = numberToReportOnEstimate
 		return(1)

@@ -153,6 +153,16 @@ def submitReportHash(branch, reportHash, votePeriod):
 #a^b=exp(b*ln(a))=e^(b*ln(a)).
 #eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
 # returns num events to report on in fxp
+        est = numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001)
+ 
+        repConstant = (reporterList[n]/totalRep)**1.2+.001
+        if(est < 30):
+            # min. of 30 events no matter how little rep you have
+            repConstant = 30/numberReportEstimate
+            eventsExpected.append(30)
+        else:
+            eventsExpected.append(numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
+
 def getNumEventsToReportOn(branch, votePeriod):
     prelim = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
     log = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch))
@@ -191,6 +201,9 @@ def submitReport(branch, votePeriod, eventIndex):
         # submit report
         self.numReports[tx.origin] += 1
         # outcome should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
+        # add 1 report to the event
+        #def fx_exp(x)
+        #def fx_log(x)
         report();
         return(1)
     else:
