@@ -17,3 +17,6 @@ def addSubCurrency(address, amount, subcurrency):
 
 def subCurrencyBalance(address, subcurrency):
 	return(subcurrency.balance(address))
+
+def initiateOwner(account, subcurrency):
+	return(subcurrency.initiateOwner(account))
