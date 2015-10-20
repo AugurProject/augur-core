@@ -153,19 +153,10 @@ def submitReportHash(branch, reportHash, votePeriod):
 #a^b=exp(b*ln(a))=e^(b*ln(a)).
 #eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
 # returns num events to report on in fxp
-        est = numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001)
- 
-        repConstant = (reporterList[n]/totalRep)**1.2+.001
-        if(est < 30):
-            # min. of 30 events no matter how little rep you have
-            repConstant = 30/numberReportEstimate
-            eventsExpected.append(30)
-        else:
-            eventsExpected.append(numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
-
 def getNumEventsToReportOn(branch, votePeriod):
     prelim = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
-    log = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch))
+    repConstant = REPORTING.getRepBalance(branch, msg.sender)*2**64/REPORTING.getTotalRep(branch)
+    log = FXP.fx_log(repConstant)
     exp = FXP.fx_exp(22136092888451461120*log/2**64)
     exp += 18446744073709552
     return(exp*prelim)
@@ -175,7 +166,8 @@ def getNumEventsToReportOn(branch, votePeriod):
 def submitReport(branch, votePeriod, eventIndex):
     if(REPORTING.getRepBalance(branch, tx.origin)<10*2**64):
         return(0)
-    if(EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)==0):
+    numEvents = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
+    if(numEvents==0):
         return(-5)
     x = array(1)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
@@ -193,6 +185,8 @@ def submitReport(branch, votePeriod, eventIndex):
     repConstant = FXP.fx_exp(22136092888451461120*log/2**64)
     repConstant += 18446744073709552
     volFraction = volume*2**64/totalVol
+    if(self.getNumEventsToReportOn(branch, votePeriod) < 30*2**64):
+        repConstant = 30*2**64/numEvents
     # in fxp (2**192) == 2**256 / 2**64
     reportingThreshold = (40*(-(267*(volFraction**2)/(2*2**64) + (533*volFraction)/2 +1)*repConstant/2**64) * (2**192)
     # need a precomputing fix add another item
@@ -216,7 +210,11 @@ def submitReport(branch, votePeriod, eventIndex):
 #      if(addrWasInThisConsensusPeriod):
 #          send them cash of amount equal to fees from that period * rep owned by addr in that period / total #rep in that period
 def penalizeNotEnoughReports(branch, votePeriod):
-    if(self.getNumEventsToReportOn(branch, votePeriod)/(2*2**64) > self.numReports):
+    numEvents = self.getNumEventsToReportOn(branch, votePeriod)
+    # min. of 30 events no matter how little rep you have
+    if(numEvents < 30*2**64):
+        numEvents = 30*2**64
+    if(numEvents/(2*2**64) > self.numReports):
         # penalize people
         newRep = .2*self.numReports / self.getNumEventsToReportOn(branch, votePeriod)/(2*2**64) * REPORTING.getRepBalance(branch, tx.origin)
         oldRep = REPORTING.getRepBalance(branch, tx.origin)*.8
