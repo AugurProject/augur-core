@@ -28,7 +28,7 @@ import events as EVENTS
 # new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
 # reporters is [reporterID][eventNum]
 # reporthash is [reporterID] = hash
-data EventsExpDates[][](numberEvents, events[], reports[], totalRepReported, totalReputation, numEventsToReportOn, reporters[][], reportHash[], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[], reporterPayouts[], periodVolume)
+data EventsExpDates[][](numberEvents, events[], reports[], totalRepReported, totalReputation, numEventsToReportOn, reporters[][], reportHash[][], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[], reporterPayouts[], periodVolume)
 
 # atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
 # ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[w/eVotingPeriodShouldBe].numberEvents
@@ -102,8 +102,8 @@ def getReporterBallot(branch, expDateIndex, reporterID):
 def getReport(branch, expDateIndex, reporter, reportNum):
 	return(self.EventsExpDates[branch][expDateIndex].reporters[reporter][reportNum])
 
-def getReportHash(branch, expDateIndex, reporter):
-	return(self.EventsExpDates[branch][expDateIndex].reportHash[reporter])
+def getReportHash(branch, expDateIndex, reporter, index):
+	return(self.EventsExpDates[branch][expDateIndex].reportHash[reporter][index])
 
 def getVSize(branch, expDateIndex):
     return(self.EventsExpDates[branch][expDateIndex].vSize)
@@ -296,10 +296,10 @@ def setReporterPayouts(branch, expDateIndex, reporterPayouts: arr):
     save(self.EventsExpDates[branch][expDateIndex].reporterPayouts[0], reporterPayouts, chars=32*len(reporterPayouts))
     return(1)
 
-def setReportHash(branch, expDateIndex, reporter, reportHash):
+def setReportHash(branch, expDateIndex, reporter, reportHash, index):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	self.EventsExpDates[branch][expDateIndex].reportHash[reporter] = reportHash
+	self.EventsExpDates[branch][expDateIndex].reportHash[reporter][index] = reportHash
 	return(1)
 
 def moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod):

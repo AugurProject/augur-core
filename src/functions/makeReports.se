@@ -28,7 +28,8 @@ import markets as MARKETS
 import reporting as REPORTING
 import fxpFunctions as FXP
 
-data numReports[]
+# branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID
+data branches[](numReportsHash[][], numReportsActual[][], numReportsEvent[][], hasReported[])
 
 
 # Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
@@ -44,6 +45,7 @@ data numReports[]
     #    else:
     #        return hashed
 def submitReportHash(branch, reportHash, votePeriod):
+    reportIndex = self.branches[branch].numReportsHash[msg.sender][votePeriod]
     # make sure the branch exists
     repIndex = REPORTING.repIDToIndex(branch, tx.origin)
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -53,7 +55,8 @@ def submitReportHash(branch, reportHash, votePeriod):
         return(-1)
     if(residual < periodLength/2):
         # submit hash of (tx.origin, salt, Votes[])
-        if(EXPEVENTS.setReportHash(branch, votePeriod, tx.origin, reportHash)):
+        if(EXPEVENTS.setReportHash(branch, votePeriod, tx.origin, reportHash, reportIndex)):
+            self.branches[branch].numReportsHash[msg.sender][votePeriod] += 1
             return(1)
         else:
             return(0)
@@ -79,14 +82,17 @@ def getNumEventsToReportOn(branch, votePeriod):
     # so people will need to vote on periods that are upcoming even if our currentVotePeriod is a bit behind (e.g. if current expperiod is 7 you should vote on stuff from voteperiod 6 (and then upon period 8 you can't vote anymore))
 # @return 1 if success
 # Error messages otherwise
+    # -1: has already reported
     # -2: reporter (you) doesn't (don't) exist, or voting period over or hasn't started yet
     # -3: hash doesn't match
     # -4: no rep
     # -5: bad report
-def submitReport(branch, votePeriod, eventIndex, salt):
+def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIndex):
     if(REPORTING.getRepBalance(branch, tx.origin)<10*2**64):
         return(-4)
     numEvents = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
+    if(self.branches[branch].hasReported[eventID]==1):
+        return(-1)
     if(numEvents==0):
         return(-5)
     x = array(1)
@@ -116,13 +122,59 @@ def submitReport(branch, votePeriod, eventIndex, salt):
         periodLength = BRANCHES.getPeriodLength(branch)
         residual = block.number % periodLength
         if(residual > periodLength/2):
+            realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, reportIndex)
+            hashInfo = array(4)
+            hashInfo[0] = tx.origin
+            hashInfo[1] = salt
+            hashInfo[2] = report
+            hashInfo[3] = eventID
+            reportHash = sha256(hashInfo, chars=32*len(hashInfo))
+            if(reportHash!=realHash):
+                (return(-3))
+            # if currentExpPeriod is more than 2 periods past the current vote period
+            # then there can be no more voting for that voting period
+            # (reasoning being: >=1 period past means all the events in that period have expired)
+            # (>=2 periods past mean the events have exp. & people have had 1 full period to vote)
+            # currently requires events to expire to vote
+            currentExpPeriod = (block.number / periodLength)
+            if (REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
+                return(-2)
 
-            # submit report
-            self.numReports[tx.origin] += 1
-            # outcome should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
+            # check report validity
+            numOutcomes = 2
+            numOutcomes = EVENTS.getNumOutcomes(eventID)
+            maxValue = EVENTS.getMaxValue(eventID)
+            # binary
+            if(numOutcomes==2 and maxValue==1):
+                if(report>2*2^64 or report<2^64 or report==0):
+                    return(-5)
+            # categorical
+            elif(numOutcomes>2):
+                minValue = 2^64
+                range = numOutcomes*2^64 - minValue
+                if(report<=0):
+                    return(-5)
+                if((report*range/2^64 + minValue)>numOutcomes*2^64):
+                    report = 2^64
+            # scalar
+            else:
+                if(report==0):
+                    return(-5)
+                minValue = EVENTS.getMinValue(events[i])
+                range = maxValue*2^64 - minValue*2^64
+                if((report*range/2^64 + minValue*2^64) > maxValue*2^64):
+                    report = 2^64
+                if((report*range/2^64 + minValue*2^64) < minValue*2^64):
+                    # 1 == really close to 0, but not a "no report"
+                    report = 1
+            # reporter has reported for 1 more event
+            self.branches[branch].numReportsActual[tx.origin][votePeriod] += 1
             # add 1 report to the event
-            #def fx_exp(x)
-            #def fx_log(x)
+            self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
+            # record that reporter has reported for this event
+            self.branches[branch].hasReported[eventID] = 1
+            # submit report
+            # outcome should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
             report();
         return(1)
     else:
@@ -139,9 +191,9 @@ def penalizeNotEnoughReports(branch, votePeriod):
     # min. of 30 events no matter how little rep you have
     if(numEvents < 30*2**64):
         numEvents = 30*2**64
-    if(numEvents/(2*2**64) > self.numReports):
+    if(numEvents/(2*2**64) > self.branches[branch].numReportsActual[msg.sender][votePeriod]):
         # penalize people
-        newRep = .2*self.numReports / self.getNumEventsToReportOn(branch, votePeriod)/(2*2**64) * REPORTING.getRepBalance(branch, tx.origin)
+        newRep = .2*self.branches[branch].numReportsActual[msg.sender][votePeriod] / self.getNumEventsToReportOn(branch, votePeriod)/(2*2**64) * REPORTING.getRepBalance(branch, tx.origin)
         oldRep = REPORTING.getRepBalance(branch, tx.origin)*.8
         REPORTING.setRep(branch, REPORTING.repIDToIndex(branch, tx.origin), oldRep+newRep)
     else:
@@ -177,15 +229,14 @@ def checkReportValidity(branch, report:arr, votePeriod):
             return(1)
 
 # anti cheat provide ballot and randomNum mechanism steal deposit
-def slashRep(branch, votePeriod, salt, report:arr, reporter):
-        realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter)
+def slashRep(branch, votePeriod, salt, report, reporter, reportIndex, eventID):
+        realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, reportIndex)
         hashInfo = array(len(report) + 2)
         hashInfo[0] = reporter
         hashInfo[1] = salt
-        i = 2
-        while i < (len(report) + 2):
-            hashInfo[i] = report[i]
-            i += 1
+        hashInfo[2] = report
+        hashInfo[3] = eventID
+        
         reportHash = sha256(hashInfo, chars=32*len(hashInfo))
         if(reportHash!=realHash):
             return(0)
