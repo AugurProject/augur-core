@@ -43,6 +43,7 @@ event creationBlock(market:indexed)
     # -3: too many outcomes
     # -4: not enough money or market already exists
 
+# need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, blockNumber):
     periodLength = BRANCHES.getPeriodLength(branch)
     if(periodLength==0 or len(description)==0 or initialLiquidity<50*2**64 || alpha <= 2^57 || tradingFee < BRANCHES.getMinTradingFee(branch)):
@@ -137,3 +138,14 @@ def updateTradingFee(branch, market, tradingFee):
 
 #Add def moveMarket(market, newBranch, marketAuthor) in case of a fork
 def moveMarket(market, newBranch, marketAuthor):
+    if(msg.sender==marketAuthor && stuffForked()):
+        # set market branch
+        # move event
+        # move market as well
+    else:
+        return(0)
+
+
+
+
+
