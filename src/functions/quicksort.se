@@ -1,0 +1,41 @@
+def quicksort(stuff: arr):
+	if(len(stuff)<=1):
+		return(stuff: arr)
+	else:
+		less = array(len(stuff))
+		lsz = 0
+		more = array(len(stuff))
+		msz = 0
+		esz = 0
+		equal = array(len(stuff))
+		pivot = stuff[0]
+		i = 0
+		while i < len(stuff):
+			if stuff[i] < pivot:
+				less[lsz] = stuff[i]
+				lsz += 1
+			elif stuff[i] > pivot:
+				more[msz] = stuff[i]
+				msz += 1
+			else:
+				equal[esz] = stuff[i]
+				esz += 1
+			i += 1
+		less = self.quicksort(slice(less, items=0, items=lsz), outitems=lsz)
+		more = self.quicksort(slice(more, items=0, items=msz), outitems=msz)
+		newArr = array(lsz+esz+msz)
+		n = 0
+		while n < lsz:
+			newArr[n] = less[n]
+			n+=1
+		z = 0
+		while n < lsz+esz:
+			newArr[n] = equal[z]
+			z += 1
+			n+=1
+		j = 0
+		while n < msz+lsz+esz:
+			newArr[n] = more[j]
+			j+=1
+			n+=1
+		return(newArr: arr)
