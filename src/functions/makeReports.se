@@ -190,7 +190,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
         return(-6)
 
 
-#So you could start off with 5000 rep, never report, and you’d “have” 5000 rep up until you tried to send it or get the balance, the dentist guys going to Vienna is gone as the villain and all of a sudden, like Schrodinger’s cat, it’s gone (dead)!  People could ping the network to ding dead accounts (although they wouldn’t need to do so for any good reason).
+#So you could start off with 5000 rep, never report, and you’d “have” 5000 rep up until you tried to send it or get the balance, and all of a sudden, like Schrodinger’s cat, it’s gone (dead)!  People could ping the network to ding dead accounts (although they wouldn’t need to do so for any good reason).
 # Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account, and distributed like trading fees are except each person would make their own lazy claim on it.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
 #Q: Can we do lazy eval claiming of trading fees?
 #A: Yes:
