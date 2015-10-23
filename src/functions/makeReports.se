@@ -87,6 +87,7 @@ def getNumEventsToReportOn(branch, votePeriod):
     # -3: hash doesn't match
     # -4: no rep
     # -5: bad report
+    # -6: hash not low enough
 def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIndex):
     if(REPORTING.getRepBalance(branch, tx.origin)<10*2**64):
         return(-4)
@@ -148,6 +149,10 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
             if(numOutcomes==2 and maxValue==1):
                 if(report>2*2^64 or report<2^64 or report==0):
                     return(-5)
+                # submit report
+                # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
+                outcome = (EVENTS.getOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
+                EVENTS.setOutcome(eventID, outcome)
             # categorical
             elif(numOutcomes>2):
                 minValue = 2^64
@@ -156,6 +161,9 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
                     return(-5)
                 if((report*range/2^64 + minValue)>numOutcomes*2^64):
                     report = 2^64
+                # submit report
+                # outcome should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
+                # for scalars and categoricals... if < 200 reports est. for an event use quicksort at the end, if more use order statistic tree contract way
             # scalar
             else:
                 if(report==0):
@@ -167,19 +175,19 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
                 if((report*range/2^64 + minValue*2^64) < minValue*2^64):
                     # 1 == really close to 0, but not a "no report"
                     report = 1
+                # submit report
+                # outcome should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
+                # for scalars and categoricals... if < 200 reports est. for an event use quicksort at the end, if more use order statistic tree contract way
             # reporter has reported for 1 more event
             self.branches[branch].numReportsActual[tx.origin][votePeriod] += 1
             # add 1 report to the event
             self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
             # record that reporter has reported for this event
             self.branches[branch].hasReported[eventID] = 1
-            # submit report
-            # outcome should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-            # for scalars and categoricals... if < 200 reports est. for an event use quicksort at the end, if more use order statistic tree contract way
-            report();
-        return(1)
+            return(1)
+        return(-2)
     else:
-        return(0)
+        return(-6)
 
 
 #So you could start off with 5000 rep, never report, and you’d “have” 5000 rep up until you tried to send it or get the balance, the dentist guys going to Vienna is gone as the villain and all of a sudden, like Schrodinger’s cat, it’s gone (dead)!  People could ping the network to ding dead accounts (although they wouldn’t need to do so for any good reason).
