@@ -46,3 +46,16 @@ def fork():
 
 #  only resolve ones that had odds <99% for one of the outcomes. 
 # We should probably still have an option to pay to resolve in case something somehow goes wrong here.  This also doesn't work for scalar markets (although it does for categorical).  
+
+
+
+
+# 3b) if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, # that's the outcome (or we could audit here or do certainty based audits) - not done yet
+#    3c) detect b via a "times voted on" var - not done yet
+
+
+
+#Q: Can we do lazy eval claiming of trading fees?
+#A: Yes:
+#      if(addrWasInThisConsensusPeriod):
+#          send them cash of amount equal to fees from that period * rep owned by addr in that period / total #rep in that period

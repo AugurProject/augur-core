@@ -107,4 +107,4 @@ def addNumReports(event):
 	return(1)
 
 def getReportingThreshold(event):
-	return(self.Events[event].threshold)lop;.[]
+	return(self.Events[event].threshold)
