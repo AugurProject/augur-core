@@ -6,15 +6,14 @@ def quicksort(stuff: arr):
 		lsz = 0
 		more = array(len(stuff))
 		msz = 0
-		esz = 0
 		equal = array(len(stuff))
-		pivot = stuff[0]
+		esz = 0
 		i = 0
 		while i < len(stuff):
-			if stuff[i] < pivot:
+			if stuff[i] < stuff[0]:
 				less[lsz] = stuff[i]
 				lsz += 1
-			elif stuff[i] > pivot:
+			elif stuff[i] > stuff[0]:
 				more[msz] = stuff[i]
 				msz += 1
 			else:
@@ -27,15 +26,15 @@ def quicksort(stuff: arr):
 		n = 0
 		while n < lsz:
 			newArr[n] = less[n]
-			n+=1
+			n += 1
 		z = 0
 		while n < lsz+esz:
 			newArr[n] = equal[z]
 			z += 1
-			n+=1
-		j = 0
+			n += 1
+		z = 0
 		while n < msz+lsz+esz:
-			newArr[n] = more[j]
-			j+=1
-			n+=1
+			newArr[n] = more[z]
+			z += 1
+			n += 1
 		return(newArr: arr)
