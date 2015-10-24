@@ -29,6 +29,16 @@ import closeMarketTwo as CLOSETWO
 import closeMarketFour as CLOSEFOUR
 import closeMarketEight as CLOSEEIGHT
 
+macro YES: 2^65
+macro NO: 2^64
+macro BAD: 3 * 2^63
+
+macro CATCH_TOLERANCE: 2^64 / 10
+
+# Bins values to 1, 1.5, 2
+macro catch($x):
+    if($x < (BAD - CATCH_TOLERANCE), NO, if($x > BAD + CATCH_TOLERANCE, YES, BAD))
+
 # lazy eval this or reward closer
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
@@ -59,6 +69,9 @@ def closeMarket(branch, market):
         events = MARKETS.getMarketEvents(market, outitems=3)
         while n < numberEvents:
             fxpOutcome = EVENTS.getOutcome(events[n])
+            # if binary, catch the outcome
+            if(EVENTS.getNumOutcomes(events[n])==2 and 2**64*EVENTS.getMaxValue(events[n])==2**65):
+                fxpOutcome = catch(fxpOutcome)
             if(fxpOutcome==0):
                 return(-2)
             outcome = fxpOutcome/2^64
