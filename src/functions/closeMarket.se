@@ -73,28 +73,27 @@ def closeMarket(branch, market):
             if(EVENTS.getNumOutcomes(events[n])==2 and 2**64*EVENTS.getMaxValue(events[n])==2**65):
                 fxpOutcome = catch(fxpOutcome)
             # scalar
-            elif(2^64*EVENTS.getMaxValue(event) != YES and EVENTS.getNumOutcomes(event) == 2):
+            elif(2^64*EVENTS.getMaxValue(events[n]) != YES and EVENTS.getNumOutcomes(events[n]) == 2):
+                # if outcome/median aren't set
                 if(EVENTS.getMedian(events[n])==0):
-                    set median
-                    set event outcome to below
-                    set fxpoutcome per median
-                    scaled_min[j] = 2^64*EVENTS.getMinValue(event)
-                    scaled_max[j] = 2^64*EVENTS.getMaxValue(event)
-                    fxpoutcome = outcomes_raw[i] = median * (scaled_max[i] - scaled_min[i]) + scaled_min[i]
+                    median = MEDIAN.calculateMedian(events[n])
+                    EVENTS.setMedian(events[n], median)
+                    scaled_min = 2^64*EVENTS.getMinValue(events[n])
+                    scaled_max = 2^64*EVENTS.getMaxValue(events[n])
+                    fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
+                    EVENTS.setOutcome(events[n], fxpOutcome)
                 else:
                     get outcome
             # categorical, but we can make it behave as a scalar for all intents and purposes here
             elif(EVENTS.getNumOutcomes(event)>2):
+                # if outcome/median aren't set
                 if(EVENTS.getMedian(events[n])==0):
-                    set median
-                    set event outcome to below
-                    set fxpoutcome per median
-                    scaled_min[j] = 2^64*EVENTS.getMinValue(event)
-                    scaled_max[j] = 2^64*EVENTS.getMaxValue(event)
-                    fxpoutcome = outcomes_raw[i] = median * (scaled_max[i] - scaled_min[i]) + scaled_min[i]
-                else:
-                    get outcome
-
+                    median = MEDIAN.calculateMedian(events[n])
+                    EVENTS.setMedian(events[n], median)
+                    scaled_min = 2^64*EVENTS.getMinValue(events[n])
+                    scaled_max = 2^64*EVENTS.getMaxValue(events[n])
+                    fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
+                    EVENTS.setOutcome(events[n], fxpOutcome)
             if(fxpOutcome==0):
                 return(-2)
             outcome = fxpOutcome/2^64

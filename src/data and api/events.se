@@ -26,7 +26,7 @@
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
 # need outcomes returned as 1*2^64, 2*2^64, etc... indeterminate as 3*2^63
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports)
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, median)
 
 import branches as BRANCHES
 
@@ -108,3 +108,10 @@ def addNumReports(event):
 
 def getReportingThreshold(event):
 	return(self.Events[event].threshold)
+
+def getMedian(event):
+	return(self.Events[event].median)
+
+def setMedian(event, median):
+	self.Events[event].median = median
+	return(1)
