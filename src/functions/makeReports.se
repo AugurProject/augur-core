@@ -29,7 +29,7 @@ import reporting as REPORTING
 import fxpFunctions as FXP
 
 # branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID
-data branches[](numReportsHash[][], numReportsActual[][], numReportsEvent[][], hasReported[])
+data branches[](numReportsHash[][], numReportsActual[][], numReportsEvent[][], hasReported[], repReported[])
 
 
 # Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
@@ -184,6 +184,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
             self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
             # record that reporter has reported for this event
             self.branches[branch].hasReported[eventID] = 1
+            self.branches[branch].repReported[eventID] += REPORTING.getRepBalance(branch, tx.origin)
             return(1)
         return(-2)
     else:

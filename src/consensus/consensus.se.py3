@@ -11,26 +11,39 @@ data proportionCorrect[]
 
 #if event gets pushed back due to 65% thing make so people can still buy / sell
 
-# 4\cdot x-4\cdot x^2 is parabolic function
 def penalizeWrong(event):
 	p = self.getProportionCorrect(event)
 	outcome = EVENTS.getOutcome(event)
 	for all reporters:
 		if(reportValue > outcome+.01 or reportValue < outcome-.01):
-			newRep = oldRep*(2*p -1)	
+			newRep = oldRep*(2*p -1)
 		else:
 			newRep = 1 + oldRep*(2*(1-p)**2 / p)
 		smoothedRep = oldRep*.8 + newRep*.2
 	normalize(smoothedRep)
+	# must add up to repreported on event or less
 	for all reporters:
 		updateRepValues();
 
-def rewardRight(event)
+def rewardRight(event):
 
 def proportionCorrect():
+	calc proportion correct
 
 def getProportionCorrect(event):
 	return(self.proportionCorrect[event])
+
+# payout function (lazily evaluate it)
+def collectFees():
+	# - need to loop through rep holders and distribute 50% of branch fees to
+	# except instead, do it on a per report basis
+    #   reporters' cashcoin addresses
+        with totalRep = REPORTING.getTotalRep(branch):
+            with i = 0:
+                while i < num_reports:
+                    CASH.addCash(REPORTING.getReporterID(branch, i), fixed_multiply(CASH.balance(branch), REPORTING.getRepByIndex(branch, i)*2^64/totalRep))
+                    i += 1
+                CASH.subtractCash(branch, CASH.balance(branch))
 
 #essentially anyone can pay a bond to have an event put up for reporting on again, but this time by all reporters.  If the second round returns the same result, the bond is lost.  If the previous decision is overruled, then whoever posted the bond would get double the bond back.  To not have to deal with conversion issues, it’s simplest to keep the bond as a rep bond.  The rep to reward the bonded challenger would come from the people who reported wrong in level 1.  
 # The easiest way to set the bond would be to make a flat cost, say.. 100 rep.  There can’t be an extremely low minimum (i.e. 5 cents) because then you could spam the system by paying to put a bunch of events up for re-adjudication cheaply and repeatedly.  100 is large enough not to get spammed, and small enough that people could create a dominant assurance contract to put something up for re-adjudication if no one with >100 rep is willing to step up.  
@@ -59,3 +72,33 @@ def fork():
 #A: Yes:
 #      if(addrWasInThisConsensusPeriod):
 #          send them cash of amount equal to fees from that period * rep owned by addr in that period / total #rep in that period
+
+
+def incrementPeriodAfterReporting():
+	# do this after reporting is finished
+	#BRANCHES.incrementPeriod(branch)
+
+# Proportional distance from zero (fixed-point input)
+macro normalize($a):
+    with $len = len($a):
+        with $total = 0:
+            with $i = 0:
+                while $i < $len:
+                    $total += $a[$i]
+                    $i += 1
+                with $wt = array($len):
+                    with $i = 0:
+                        while $i < $len:
+                            $wt[$i] = $a[$i] * 2^64 / $total
+                            $i += 1
+                        $wt
+
+# Sum elements of array
+macro sum($a):
+    with $len = len($a):
+        with $total = 0:
+            with $i = 0:
+                while $i < $len:
+                    $total += $a[$i]
+                    $i += 1
+                $total
