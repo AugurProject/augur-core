@@ -22,6 +22,7 @@
 import fxpFunctions as FXP
 import info as INFO
 import events as EVENTS
+import branches as BRANCHES
 
 # Uncomment this event for debugging logs
 # event stdout(data)
@@ -42,62 +43,112 @@ macro TRADER_FIELDS: 3
 macro EVENTS_FIELDS: 6
 macro OUTCOMES_FIELDS: 11
 macro WINNING_OUTCOMES_FIELDS: 8
+macro FIELDS: 12
 
-def getFullMarketInfo(marketID):
-    with fields = 11:
-        with participantNumber = self.Markets[marketID].addr2participant[tx.origin]:
-            with info = array(fields + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS):
-                info[0] = self.Markets[marketID].currentParticipant
-                info[1] = self.Markets[marketID].alpha
-                info[2] = participantNumber
-                info[3] = self.Markets[marketID].numOutcomes
-                info[4] = self.Markets[marketID].tradingPeriod
-                info[5] = self.Markets[marketID].tradingFee
-                info[6] = self.Markets[marketID].branch
-                info[7] = self.Markets[marketID].lenEvents
-                info[8] = self.Markets[marketID].cumulativeScale
-                info[9] = INFO.getCreationFee(marketID)
-                info[10] = INFO.getCreator(marketID)
+# Gets all non-string information about all markets on the specified branch and
+# returns it as a giant array.  getMarketsInfo requires a great deal of gas.
+# Invoke using eth_call with gas=9999999999999 (or other very large number).
+# @param {int} branch Branch ID that we're retrieving markets on.
+# @param {int} offset Starting market index (0=full load).
+# @param {int} numMarketsToLoad How many markets to load (0=all markets).
+# @return array Array containing all (non-string) data for all markets:
+#            [N, length_1, length_2, ..., length_N, info_1, info_2, ..., info_N]
+#           where length_j is the number of elements stored for market j,
+#           info_j is the information array for market j, and N is the total
+#           number of markets in this branch.
+def getMarketsInfo(branch, offset, numMarketsToLoad):
+    numMarkets = BRANCHES.getNumMarkets(branch)
+    if numMarketsToLoad > 0 and numMarketsToLoad < numMarkets:
+        numMarkets = numMarketsToLoad
+    marketIDs = BRANCHES.getMarkets(branch, outitems=numMarkets)
+    marketsMatrix = array(numMarkets)
+    marketArrayLength = array(numMarkets)
+    m = offset
+    while m < numMarkets + offset:
+        onset = m - offset
+        marketID = marketIDs[m]
+        participantNumber = self.Markets[marketID].addr2participant[tx.origin]
+        index = FIELDS
 
-                # gather trader(s) info: [trader ID, yes shares, no shares]
-                with t = 0:
-                    while t < self.Markets[marketID].currentParticipant*TRADER_FIELDS:
-                        info[fields + t] = self.Markets[marketID].participants[t].participantID
-                        info[fields + t + 1] = self.Markets[marketID].participants[t].shares[0]
-                        info[fields + t + 2] = self.Markets[marketID].participants[t].shares[1]
-                        t += TRADER_FIELDS
-                    fields += t
+        marketsMatrix[onset] = array(FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS)
+        marketsMatrix[onset][0] = marketID
+        marketsMatrix[onset][1] = self.Markets[marketID].currentParticipant
+        marketsMatrix[onset][2] = self.Markets[marketID].alpha
+        marketsMatrix[onset][3] = participantNumber
+        marketsMatrix[onset][4] = self.Markets[marketID].numOutcomes
+        marketsMatrix[onset][5] = self.Markets[marketID].tradingPeriod
+        marketsMatrix[onset][6] = self.Markets[marketID].tradingFee
+        marketsMatrix[onset][7] = self.Markets[marketID].branch
+        marketsMatrix[onset][8] = self.Markets[marketID].lenEvents
+        marketsMatrix[onset][9] = self.Markets[marketID].cumulativeScale
+        marketsMatrix[onset][10] = INFO.getCreationFee(marketID)
+        marketsMatrix[onset][11] = INFO.getCreator(marketID)
 
-                # gather event(s) info:
-                # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
-                with i = 0:
-                    while i < self.Markets[marketID].lenEvents*EVENTS_FIELDS:
-                        with event = self.Markets[marketID].events[i]:
-                            with eventInfo = EVENTS.getEventInfo(event, outitems=EVENTS_FIELDS):
-                                info[fields + i] = event
-                                with j = 1:
-                                    while j < EVENTS_FIELDS:
-                                        info[fields + i + j] = eventInfo[j]
-                                        j += 1
-                        i += EVENTS_FIELDS
-                    fields += i
+        # gather trader(s) info: [trader ID, yes shares, no shares]
+        t = 0
+        while t < self.Markets[marketID].currentParticipant*TRADER_FIELDS:
+            marketsMatrix[onset][index + t] = self.Markets[marketID].participants[t].participantID
+            marketsMatrix[onset][index + t + 1] = self.Markets[marketID].participants[t].shares[0]
+            marketsMatrix[onset][index + t + 2] = self.Markets[marketID].participants[t].shares[1]
+            t += TRADER_FIELDS
+        index += t
 
-                # gather outcomes info:
-                # [sharesPurchased, shares, price, participantNumber, winningOutcomes...]
-                with k = 0:
-                    while k < self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS:
-                        fields += k
-                        with outcome = k + 1:
-                            info[fields] = self.Markets[marketID].sharesPurchased[outcome]
-                            info[fields + 1] = self.Markets[marketID].participants[participantNumber].shares[outcome]
-                            info[fields + 2] = self.price(market, outcome)
-                            with w = 0:
-                                while w < WINNING_OUTCOMES_FIELDS:
-                                    info[fields + w + 2] = self.Markets[marketID].winningOutcomes[w]
-                                    w += 1
-                            k += OUTCOMES_FIELDS
+        # gather event(s) info:
+        # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
+        i = 0
+        while i < self.Markets[marketID].lenEvents*EVENTS_FIELDS:
+            event = self.Markets[marketID].events[i]
+            eventInfo = EVENTS.getEventInfo(event, outitems=EVENTS_FIELDS)
+            marketsMatrix[onset][index + i] = event
+            j = 1
+            while j < EVENTS_FIELDS:
+                marketsMatrix[onset][index + i + j] = eventInfo[j]
+                j += 1
+            i += EVENTS_FIELDS
+        index += i
 
-                    return(info: arr)
+        # gather outcomes info:
+        # [sharesPurchased, shares, price, participantNumber, winningOutcomes...]
+        k = 0
+        while k < self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS:
+            index += k
+            outcome = k + 1
+            marketsMatrix[onset][index] = self.Markets[marketID].sharesPurchased[outcome]
+            marketsMatrix[onset][index + 1] = self.Markets[marketID].participants[participantNumber].shares[outcome]
+            marketsMatrix[onset][index + 2] = self.price(market, outcome)
+            w = 0
+            while w < WINNING_OUTCOMES_FIELDS:
+                marketsMatrix[onset][index + w + 2] = self.Markets[marketID].winningOutcomes[w]
+                w += 1
+            k += OUTCOMES_FIELDS
+
+        marketArrayLength[onset] = index + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS
+        m += 1
+
+    # flatten the markets info matrix so it can be returned
+    # (data offset by 1+numMarkets so length data can be prepended)
+    totalFlatLength = 1 + numMarkets
+    m = 0
+    while m < numMarkets:
+        totalFlatLength += marketArrayLength[m]
+        m += 1
+    flattened = array(totalFlatLength)
+    flattened[0] = numMarkets
+    m = 0
+    while m < numMarkets:
+        flattened[m + 1] = marketArrayLength[m]
+        m += 1
+    currentFlatLength = 1 + numMarkets
+    row = 0
+    while row < numMarkets:
+        col = 0
+        while col < marketArrayLength[row]:
+            flattened[currentFlatLength + col] = marketsMatrix[row][col]
+            col += 1
+        currentFlatLength += col
+        row += 1
+
+    return(flattened: arr)
 
 # @return cost - how much it costs you to buy
 #         price - current share price of that outcome after buy
@@ -129,30 +180,6 @@ def getSimulatedSell(market, outcome, amount):
     price = self.price(market, outcome)
     sharesPurchased(market)[outcome] += amount
     return([cost, price], chars=64)
-
-def getMarketInfo(market):
-    lenEvents = self.Markets[market].lenEvents
-    info = array(14+lenEvents)
-    info[0] = self.Markets[market].currentParticipant
-    info[1] = self.Markets[market].alpha
-    #info[2] = self.Markets[market].cumulativeScale
-    info[2] = self.Markets[market].addr2participant[tx.origin]
-    info[3] = self.Markets[market].numOutcomes
-    info[4] = self.Markets[market].tradingPeriod
-    info[5] = self.Markets[market].tradingFee
-    i = 0
-    while i < lenEvents:
-        info[6+i] = self.Markets[market].events[i]
-        i += 1
-    info[6+i] = self.Markets[market].winningOutcomes[0]
-    info[7+i] = self.Markets[market].winningOutcomes[1]
-    info[8+i] = self.Markets[market].winningOutcomes[2]
-    info[9+i] = self.Markets[market].winningOutcomes[3]
-    info[10+i] = self.Markets[market].winningOutcomes[4]
-    info[11+i] = self.Markets[market].winningOutcomes[5]
-    info[12+i] = self.Markets[market].winningOutcomes[6]
-    info[13+i] = self.Markets[market].winningOutcomes[7]
-    return(info: arr)
 
 def getMarketEvents(market):
     i = 0
