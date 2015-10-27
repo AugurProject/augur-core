@@ -33,6 +33,10 @@ def sendReputation(branch, recver, value):
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     if(value<=0 || !CASH.send(branch, 5*2^64) || EXPEVENTS.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, recver, 0) != 0):
         return(0)
+    if(hasntDoneRRForEventsAndWrongAns):
+        doIt()
+        self.RRDone = true
+
     sender = tx.origin
     senderIndex = REPORTING.repIDToIndex(branch, sender)
     receiverIndex = REPORTING.repIDToIndex(branch, recver)
