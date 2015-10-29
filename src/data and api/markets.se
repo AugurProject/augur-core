@@ -41,7 +41,7 @@ data Markets[](events[], sharesPurchased[], addr2participant[], participants[](p
 
 macro TRADER_FIELDS: 3
 macro EVENTS_FIELDS: 6
-macro OUTCOMES_FIELDS: 11
+macro OUTCOMES_FIELDS: 2
 macro WINNING_OUTCOMES_FIELDS: 8
 macro FIELDS: 12
 
@@ -71,7 +71,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
                     descriptionLength = INFO.getDescriptionLength(marketID)
                     index = FIELDS
 
-                    marketsMatrix[onset] = array(FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + descriptionLength)
+                    marketsMatrix[onset] = array(FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength)
                     marketsMatrix[onset][0] = marketID
                     marketsMatrix[onset][1] = self.Markets[marketID].currentParticipant
                     marketsMatrix[onset][2] = self.Markets[marketID].alpha
@@ -99,40 +99,40 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
                     i = 0
                     while i < self.Markets[marketID].lenEvents*EVENTS_FIELDS:
                         event = self.Markets[marketID].events[i]
-                        eventInfo = EVENTS.getEventInfo(event, outitems=EVENTS_FIELDS)
-                        marketsMatrix[onset][index + i] = event
-                        j = 1
-                        while j < EVENTS_FIELDS:
-                            marketsMatrix[onset][index + i + j] = eventInfo[j]
-                            j += 1
+                        with eventInfo = EVENTS.getEventInfo(event, outitems=EVENTS_FIELDS):
+                            marketsMatrix[onset][index + i] = event
+                            j = 1
+                            while j < EVENTS_FIELDS:
+                                marketsMatrix[onset][index + i + j] = eventInfo[j]
+                                j += 1
                         i += EVENTS_FIELDS
                     index += i
 
                     # gather outcomes info:
-                    # [sharesPurchased, shares, price, participantNumber, winningOutcomes...]
+                    # [sharesPurchased, price, winningOutcomes...]
                     k = 0
                     while k < self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS:
                         index += k
                         outcome = k + 1
                         marketsMatrix[onset][index] = self.Markets[marketID].sharesPurchased[outcome]
-                        marketsMatrix[onset][index + 1] = self.Markets[marketID].participants[participantNumber].shares[outcome]
-                        marketsMatrix[onset][index + 2] = self.price(market, outcome)
-                        w = 0
-                        while w < WINNING_OUTCOMES_FIELDS:
-                            marketsMatrix[onset][index + w + 2] = self.Markets[marketID].winningOutcomes[w]
-                            w += 1
+                        marketsMatrix[onset][index + 1] = self.price(market, outcome)
                         k += OUTCOMES_FIELDS
-
                     index += self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS
+                    k = 0
+                    while k < WINNING_OUTCOMES_FIELDS:
+                        marketsMatrix[onset][index + k + 2] = self.Markets[marketID].winningOutcomes[k]
+                        k += 1
+                    index += WINNING_OUTCOMES_FIELDS
 
                     # append description character codes
+                    marketsMatrix[onset][index] = descriptionLength
                     with description = INFO.getDescription(marketID, outchars=descriptionLength):
                         c = 0
                         while c < descriptionLength:
-                            marketsMatrix[onset][index + c] = getch(description, c)
+                            marketsMatrix[onset][index + c + 1] = getch(description, c)
                             c += 1
 
-                    marketArrayLength[onset] = index + descriptionLength
+                    marketArrayLength[onset] = index + descriptionLength + 1
                     m += 1
 
                 # flatten the markets info matrix so it can be returned
