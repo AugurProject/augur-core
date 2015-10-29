@@ -15,20 +15,46 @@ def penalizeWrong(event):
 	p = self.getProportionCorrect(event)
 	outcome = EVENTS.getOutcome(event)
 	for all reporters:
+		# wrong
 		if(reportValue > outcome+.01 or reportValue < outcome-.01):
 			newRep = oldRep*(2*p -1)
+			# if scalar
+			newRep = 
+			# if categorical
+			newRep = 
+		# right
 		else:
 			newRep = 1 + oldRep*(2*(1-p)**2 / p)
+			# if scalar
+			newRep = reportValue - EVENTS.getMedian(event)
+			# if categorical
+			newRep = 
 		smoothedRep = oldRep*.8 + newRep*.2
 	normalize(smoothedRep)
 	# must add up to repreported on event or less
 	for all reporters:
 		updateRepValues();
 
-def rewardRight(event):
-
-def proportionCorrect():
-	calc proportion correct
+def proportionCorrect(event):
+	# p is proportion of correct responses
+	p = 0
+	# real answer is outcome
+	outcome = EVENTS.getOutcome(event)
+	if(outcome!=0):
+		# binary
+		if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65):
+			avgOutcome = EVENTS.getUncaughtOutcome(event)
+			# say we have outcome of 0, avg is .4, what is p?
+			# p is .6 or 60%
+			if(outcome == 2**64):
+				p = 1 - avgOutcome
+			# say we have outcome of 1, avg is .8, what is p (proportion correct)?
+				# p is .8 or 80%
+			if(outcome == 2 * 2**64):
+				p = avgOutcome
+			# say we have outcome of .5, avg is .55, what is p?
+			if(outcome == 3 * 2**63):
+	return(p)
 
 def getProportionCorrect(event):
 	return(self.proportionCorrect[event])
@@ -37,7 +63,7 @@ def getProportionCorrect(event):
 def collectFees():
 	# - need to loop through rep holders and distribute 50% of branch fees to
 	# except instead, do it on a per report basis
-    #   reporters' cashcoin addresses
+    # reporters' cashcoin addresses
         with totalRep = REPORTING.getTotalRep(branch):
             with i = 0:
                 while i < num_reports:

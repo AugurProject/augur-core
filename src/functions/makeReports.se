@@ -152,7 +152,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
                 # submit report
                 # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
                 outcome = (EVENTS.getOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
-                EVENTS.setOutcome(eventID, outcome)
+                EVENTS.setUncaughtOutcome(eventID, outcome)
             # categorical
             elif(numOutcomes>2):
                 minValue = 2^64
@@ -185,6 +185,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
             # record that reporter has reported for this event
             self.branches[branch].hasReported[eventID] = 1
             self.branches[branch].repReported[eventID] += REPORTING.getRepBalance(branch, tx.origin)
+            # store report for each event
             return(1)
         return(-2)
     else:
@@ -257,7 +258,6 @@ def slashRep(branch, votePeriod, salt, report, reporter, reportIndex, eventID):
 
             if(REPORTING.getReporterID(branch, reporterIndex)!=reporter):
                 return(-2)
-
 
             reporterBalance = REPORTING.getRepBalance(branch, reporter)
 

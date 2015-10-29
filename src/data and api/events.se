@@ -26,7 +26,7 @@
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
 # need outcomes returned as 1*2^64, 2*2^64, etc... indeterminate as 3*2^63
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, median)
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, median, uncaughtOutcome)
 
 import branches as BRANCHES
 
@@ -57,6 +57,13 @@ def getMaxValue(event):
 
 def getNumOutcomes(event):
 	return(self.Events[event].numOutcomes)
+
+def setUncaughtOutcome(event):
+	self.Events[event].uncaughtOutcome = event
+	return(1)
+
+def getUncaughtOutcome(event):
+	return(self.Events[event].uncaughtOutcome)
 
 def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes):
 	# check that msg.sender is one of our function contracts

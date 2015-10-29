@@ -73,7 +73,7 @@ def closeMarket(branch, market):
             if(EVENTS.getNumOutcomes(events[n])==2 and 2**64*EVENTS.getMaxValue(events[n])==2**65):
                 # if outcome not set
                 if(fxpOutcome==0):
-                    fxpOutcome = catch(fxpOutcome)
+                    fxpOutcome = catch(EVENTS.getUncaughtOutcome(events[n]))
                     EVENTS.setOutcome(events[n], fxpOutcome)
                     if(fxpOutcome==2**63):
                         # give event bond money to reporters
@@ -103,13 +103,13 @@ def closeMarket(branch, market):
                         CASH.subtractCash(events[n], 42*2**64)
                         CASH.addCash(INFO.getCreator(events[n]), 42*2**64)
             # categorical, but we can make it behave as a scalar for all intents and purposes here
-            elif(EVENTS.getNumOutcomes(event)>2):
+            elif(EVENTS.getNumOutcomes(events[n])>2):
                 # if outcome/median aren't set
                 if(EVENTS.getMedian(events[n])==0):
                     median = MEDIAN.calculateMedian(events[n])
                     EVENTS.setMedian(events[n], median)
-                    scaled_min = 2^64*EVENTS.getMinValue(events[n])
-                    scaled_max = 2^64*EVENTS.getMaxValue(events[n])
+                    scaled_min[j] = 2^64
+                    scaled_max[j] = 2^64*EVENTS.getNumOutcomes(event)
                     fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
                     EVENTS.setOutcome(events[n], fxpOutcome)
                     if(fxpOutcome==2**63):
