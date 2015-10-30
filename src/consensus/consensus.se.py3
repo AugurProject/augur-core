@@ -17,23 +17,24 @@ def penalizeWrong(event):
 	for all reporters:
 		# wrong
 		if(reportValue > outcome+.01 or reportValue < outcome-.01):
+			if(scalar or categorical):
+				p = -(abs(reportValue - EVENTS.getMedian(event))) + 1.5
 			newRep = oldRep*(2*p -1)
-			# if scalar
-			newRep = 
-			# if categorical
-			newRep = 
 		# right
 		else:
+			if(scalar or categorical):
+				p = -(abs(reportValue - EVENTS.getMedian(event))) + 1.5
 			newRep = 1 + oldRep*(2*(1-p)**2 / p)
-			# if scalar
-			newRep = reportValue - EVENTS.getMedian(event)
-			# if categorical
-			newRep = 
 		smoothedRep = oldRep*.8 + newRep*.2
 	normalize(smoothedRep)
 	# must add up to repreported on event or less
 	for all reporters:
 		updateRepValues();
+
+macro abs($a):
+	if($a<0):
+		$a = -$a
+	$a
 
 def proportionCorrect(event):
 	# p is proportion of correct responses
