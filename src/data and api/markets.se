@@ -24,9 +24,6 @@ import info as INFO
 import events as EVENTS
 import branches as BRANCHES
 
-# Uncomment this event for debugging logs
-# event stdout(data)
-
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market in the format of
     # [1, event, event, 2, event, 3, event, event, event]
@@ -45,13 +42,79 @@ macro OUTCOMES_FIELDS: 2
 macro WINNING_OUTCOMES_FIELDS: 8
 macro FIELDS: 12
 
-# Gets all non-string information about all markets on the specified branch and
+def getMarketInfo(marketID):
+    index = FIELDS
+    participantNumber = self.Markets[marketID].addr2participant[tx.origin]
+    descriptionLength = INFO.getDescriptionLength(marketID)
+    with info = array(FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength):
+        info[0] = marketID
+        info[1] = self.Markets[marketID].currentParticipant
+        info[2] = self.Markets[marketID].alpha
+        info[3] = participantNumber
+        info[4] = self.Markets[marketID].numOutcomes
+        info[5] = self.Markets[marketID].tradingPeriod
+        info[6] = self.Markets[marketID].tradingFee
+        info[7] = self.Markets[marketID].branch
+        info[8] = self.Markets[marketID].lenEvents
+        info[9] = self.Markets[marketID].cumulativeScale
+        info[10] = INFO.getCreationFee(marketID)
+        info[11] = INFO.getCreator(marketID)
+
+        # gather trader(s) info: [trader ID, yes shares, no shares]
+        t = 0
+        while t < self.Markets[marketID].currentParticipant*TRADER_FIELDS:
+            info[index + t] = self.Markets[marketID].participants[t].participantID
+            info[index + t + 1] = self.Markets[marketID].participants[t].shares[0]
+            info[index + t + 2] = self.Markets[marketID].participants[t].shares[1]
+            t += TRADER_FIELDS
+        index += t
+
+        # gather event(s) info:
+        # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
+        i = 0
+        while i < self.Markets[marketID].lenEvents*EVENTS_FIELDS:
+            event = self.Markets[marketID].events[i]
+            with eventInfo = EVENTS.getEventInfo(event, outitems=EVENTS_FIELDS):
+                info[index + i] = event
+                j = 1
+                while j < EVENTS_FIELDS:
+                    info[index + i + j] = eventInfo[j]
+                    j += 1
+            i += EVENTS_FIELDS
+        index += i
+
+        # gather outcomes info:
+        # [sharesPurchased, price, winningOutcomes...]
+        k = 0
+        while k < self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS:
+            index += k
+            outcome = k + 1
+            info[index] = self.Markets[marketID].sharesPurchased[outcome]
+            info[index + 1] = self.price(market, outcome)
+            k += OUTCOMES_FIELDS
+        index += self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS
+        k = 0
+        while k < WINNING_OUTCOMES_FIELDS:
+            info[index + k + 2] = self.Markets[marketID].winningOutcomes[k]
+            k += 1
+        index += WINNING_OUTCOMES_FIELDS
+
+        # append description character codes
+        info[index] = descriptionLength
+        with description = INFO.getDescription(marketID, outchars=descriptionLength):
+            c = 0
+            while c < descriptionLength:
+                info[index + c + 1] = getch(description, c)
+                c += 1
+        return(info: arr)
+
+# Gets all information about all markets on the specified branch and
 # returns it as a giant array.  getMarketsInfo requires a great deal of gas.
 # Invoke using eth_call with gas=9999999999999 (or other very large number).
 # @param {int} branch Branch ID that we're retrieving markets on.
 # @param {int} offset Starting market index (0=full load).
 # @param {int} numMarketsToLoad How many markets to load (0=all markets).
-# @return array Array containing all (non-string) data for all markets:
+# @return array Array containing all data for all markets:
 #            [N, length_1, length_2, ..., length_N, info_1, info_2, ..., info_N]
 #           where length_j is the number of elements stored for market j,
 #           info_j is the information array for market j, and N is the total
@@ -69,70 +132,8 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
                     marketID = marketIDs[m]
                     participantNumber = self.Markets[marketID].addr2participant[tx.origin]
                     descriptionLength = INFO.getDescriptionLength(marketID)
-                    index = FIELDS
-
-                    marketsMatrix[onset] = array(FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength)
-                    marketsMatrix[onset][0] = marketID
-                    marketsMatrix[onset][1] = self.Markets[marketID].currentParticipant
-                    marketsMatrix[onset][2] = self.Markets[marketID].alpha
-                    marketsMatrix[onset][3] = participantNumber
-                    marketsMatrix[onset][4] = self.Markets[marketID].numOutcomes
-                    marketsMatrix[onset][5] = self.Markets[marketID].tradingPeriod
-                    marketsMatrix[onset][6] = self.Markets[marketID].tradingFee
-                    marketsMatrix[onset][7] = self.Markets[marketID].branch
-                    marketsMatrix[onset][8] = self.Markets[marketID].lenEvents
-                    marketsMatrix[onset][9] = self.Markets[marketID].cumulativeScale
-                    marketsMatrix[onset][10] = INFO.getCreationFee(marketID)
-                    marketsMatrix[onset][11] = INFO.getCreator(marketID)
-
-                    # gather trader(s) info: [trader ID, yes shares, no shares]
-                    t = 0
-                    while t < self.Markets[marketID].currentParticipant*TRADER_FIELDS:
-                        marketsMatrix[onset][index + t] = self.Markets[marketID].participants[t].participantID
-                        marketsMatrix[onset][index + t + 1] = self.Markets[marketID].participants[t].shares[0]
-                        marketsMatrix[onset][index + t + 2] = self.Markets[marketID].participants[t].shares[1]
-                        t += TRADER_FIELDS
-                    index += t
-
-                    # gather event(s) info:
-                    # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
-                    i = 0
-                    while i < self.Markets[marketID].lenEvents*EVENTS_FIELDS:
-                        event = self.Markets[marketID].events[i]
-                        with eventInfo = EVENTS.getEventInfo(event, outitems=EVENTS_FIELDS):
-                            marketsMatrix[onset][index + i] = event
-                            j = 1
-                            while j < EVENTS_FIELDS:
-                                marketsMatrix[onset][index + i + j] = eventInfo[j]
-                                j += 1
-                        i += EVENTS_FIELDS
-                    index += i
-
-                    # gather outcomes info:
-                    # [sharesPurchased, price, winningOutcomes...]
-                    k = 0
-                    while k < self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS:
-                        index += k
-                        outcome = k + 1
-                        marketsMatrix[onset][index] = self.Markets[marketID].sharesPurchased[outcome]
-                        marketsMatrix[onset][index + 1] = self.price(market, outcome)
-                        k += OUTCOMES_FIELDS
-                    index += self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS
-                    k = 0
-                    while k < WINNING_OUTCOMES_FIELDS:
-                        marketsMatrix[onset][index + k + 2] = self.Markets[marketID].winningOutcomes[k]
-                        k += 1
-                    index += WINNING_OUTCOMES_FIELDS
-
-                    # append description character codes
-                    marketsMatrix[onset][index] = descriptionLength
-                    with description = INFO.getDescription(marketID, outchars=descriptionLength):
-                        c = 0
-                        while c < descriptionLength:
-                            marketsMatrix[onset][index + c + 1] = getch(description, c)
-                            c += 1
-
-                    marketArrayLength[onset] = index + descriptionLength + 1
+                    marketArrayLength[onset] = FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength
+                    marketsMatrix[onset] = self.getMarketInfo(marketID, outitems=marketArrayLength[onset])
                     m += 1
 
                 # flatten the markets info matrix so it can be returned
@@ -346,23 +347,3 @@ def initialLiquiditySetup(marketID, alpha, cumScale, numOutcomes):
     self.Markets[marketID].cumulativeScale = cumScale
     self.Markets[marketID].numOutcomes = numOutcomes
     return(1)
-
-def getMarketOutcomeInfo(market, outcome):
-    info = array(13)
-    participantNumber = self.Markets[market].addr2participant[tx.origin]
-    info[0] = self.getSharesPurchased(market, outcome)
-    info[1] = self.getParticipantSharesPurchased(market, participantNumber, outcome)
-    info[2] = self.price(market, outcome)
-    info[3] = participantNumber
-    info[4] = self.getCurrentParticipantNumber(market)
-    info[5] = self.Markets[market].winningOutcomes[0]
-    info[6] = self.Markets[market].winningOutcomes[1]
-    info[7] = self.Markets[market].winningOutcomes[2]
-    info[8] = self.Markets[market].winningOutcomes[3]
-    info[9] = self.Markets[market].winningOutcomes[4]
-    info[10] = self.Markets[market].winningOutcomes[5]
-    info[11] = self.Markets[market].winningOutcomes[6]
-    info[12] = self.Markets[market].winningOutcomes[7]
-    return(info: arr)
-
-# inset("../../macros/logging.sm")
