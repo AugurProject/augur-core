@@ -64,8 +64,8 @@ def getMarketInfo(marketID):
         t = 0
         while t < self.Markets[marketID].currentParticipant:
             info[index + t*TRADER_FIELDS] = self.Markets[marketID].participants[t].participantID
-            info[index + t*TRADER_FIELDS + 1] = self.Markets[marketID].participants[t].shares[0]
-            info[index + t*TRADER_FIELDS + 2] = self.Markets[marketID].participants[t].shares[1]
+            info[index + t*TRADER_FIELDS + 1] = self.Markets[marketID].participants[t].shares[1]
+            info[index + t*TRADER_FIELDS + 2] = self.Markets[marketID].participants[t].shares[2]
             t += 1
         index += self.Markets[marketID].currentParticipant*TRADER_FIELDS
 
