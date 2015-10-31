@@ -26,7 +26,7 @@
 # period parameter for reporting
 # currentExpPeriod = (block.number / self.Branches[branch].periodLength)
 # currentExpPeriod - 1 is what's up for reporting at any given time
-data Branches[](currentVotePeriod, periodLength, step, substep, markets[], numMarkets, minTradingFee)
+data Branches[](currentVotePeriod, periodLength, step, substep, markets[], numMarkets, minTradingFee, balance[])
 
 data branchList[]
 
@@ -47,6 +47,13 @@ def getPeriodLength(branch):
 
 def getStep(branch):
 	return(self.Branches[branch].step)
+
+# branch cash balance at start of period
+def setInitialBalance(branch, period, balance):
+	self.Branches[branch].balance[period] = balance
+
+def getInitialBalance(branch, period):
+	return(self.Branches[branch].balance[period])
 
 # @return all markets in a branch
 def getMarkets(branch):

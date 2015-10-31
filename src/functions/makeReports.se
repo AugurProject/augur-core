@@ -91,6 +91,9 @@ def getNumEventsToReportOn(branch, votePeriod):
 def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIndex):
     if(REPORTING.getRepBalance(branch, tx.origin)<10*2**64):
         return(-4)
+    if(hasntDoneRRForLazyEventsAndWrongAnsForPastPeriods):
+        doIt()
+        self.RRDone = true
     numEvents = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
     if(self.branches[branch].hasReported[eventID]==1):
         return(-1)
@@ -140,6 +143,9 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
             currentExpPeriod = (block.number / periodLength)
             if (REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
                 return(-2)
+
+            if(reportIsFirstReportInNetwork):
+                BRANCHES.setInitialBalance(branch, votePeriod, CASH.balance(branch))
 
             # check report validity
             numOutcomes = 2
@@ -204,9 +210,10 @@ def penalizeNotEnoughReports(branch, votePeriod):
         newRep = .2*self.branches[branch].numReportsActual[msg.sender][votePeriod] / self.getNumEventsToReportOn(branch, votePeriod)/(2*2**64) * REPORTING.getRepBalance(branch, tx.origin)
         oldRep = REPORTING.getRepBalance(branch, tx.origin)*.8
         REPORTING.setRep(branch, REPORTING.repIDToIndex(branch, tx.origin), oldRep+newRep)
-    else:
-        # you're good!
-        return(47)
+    # deal with total rep reported for a given period (i.e. how and specifically when to calculate it)
+    repReported = EXPEVENTS.getTotalRepReported(branch)
+    repReported += REPORTING.getRepBalance(branch, tx.origin)
+    return(1)
 
 def sqrt(n):
     val = n

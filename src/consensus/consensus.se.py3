@@ -60,17 +60,27 @@ def proportionCorrect(event):
 def getProportionCorrect(event):
 	return(self.proportionCorrect[event])
 
+def collectPenaltyRep():
+
+#Q: Can we do lazy eval claiming of trading fees?
+#A: Yes:
+#      if(addrWasInThisConsensusPeriod):
+#          send them cash of amount equal to fees from that period * rep owned by addr in that period / total #rep in that period
 # payout function (lazily evaluate it)
-def collectFees():
+def collectFees(branch):
 	# - need to loop through rep holders and distribute 50% of branch fees to
 	# except instead, do it on a per report basis
     # reporters' cashcoin addresses
-        with totalRep = REPORTING.getTotalRep(branch):
-            with i = 0:
-                while i < num_reports:
-                    CASH.addCash(REPORTING.getReporterID(branch, i), fixed_multiply(CASH.balance(branch), REPORTING.getRepByIndex(branch, i)*2^64/totalRep))
-                    i += 1
-                CASH.subtractCash(branch, CASH.balance(branch))
+    if(hasntDoneRRForLazyEventsAndWrongAnsForPast+CurrentPeriods):
+        doIt()
+        self.RRDone = true
+    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    repReported = EXPEVENTS.getTotalRepReported(branch, lastPeriod)
+    if(feesNotAlreadyCollected && periodOver && hasReported)
+	    totalRep = EXPEVENTS.getTotalRepReported(branch)
+		CASH.addCash(msg.sender, fixed_multiply(BRANCHES.getInitialBalance(branch, lastPeriod), REPORTING.getReputation(msg.sender)*2^64/repReported))
+		CASH.subtractCash(branch, CASH.balance(branch))
+	return(1)
 
 #essentially anyone can pay a bond to have an event put up for reporting on again, but this time by all reporters.  If the second round returns the same result, the bond is lost.  If the previous decision is overruled, then whoever posted the bond would get double the bond back.  To not have to deal with conversion issues, it’s simplest to keep the bond as a rep bond.  The rep to reward the bonded challenger would come from the people who reported wrong in level 1.  
 # The easiest way to set the bond would be to make a flat cost, say.. 100 rep.  There can’t be an extremely low minimum (i.e. 5 cents) because then you could spam the system by paying to put a bunch of events up for re-adjudication cheaply and repeatedly.  100 is large enough not to get spammed, and small enough that people could create a dominant assurance contract to put something up for re-adjudication if no one with >100 rep is willing to step up.  
@@ -95,15 +105,15 @@ def fork():
 
 
 
-#Q: Can we do lazy eval claiming of trading fees?
-#A: Yes:
-#      if(addrWasInThisConsensusPeriod):
-#          send them cash of amount equal to fees from that period * rep owned by addr in that period / total #rep in that period
 
 
 def incrementPeriodAfterReporting():
 	# do this after reporting is finished
-	#BRANCHES.incrementPeriod(branch)
+	if(reportingPeriodOver/finished):
+		BRANCHES.incrementPeriod(branch)
+		return(1)
+	else:
+		return(0)
 
 # Proportional distance from zero (fixed-point input)
 macro normalize($a):
