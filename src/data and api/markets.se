@@ -120,19 +120,18 @@ def getMarketInfo(marketID):
 #           number of markets in this branch.
 def getMarketsInfo(branch, offset, numMarketsToLoad):
     numMarkets = BRANCHES.getNumMarkets(branch)
-    if numMarketsToLoad > 0 and numMarketsToLoad < numMarkets:
-        numMarkets = numMarketsToLoad
     with marketIDs = BRANCHES.getMarkets(branch, outitems=numMarkets):
+        if numMarketsToLoad > 0 and numMarketsToLoad < numMarkets:
+            numMarkets = numMarketsToLoad
         with marketsMatrix = array(numMarkets):
             with marketArrayLength = array(numMarkets):
-                m = offset
-                while m < numMarkets + offset:
-                    onset = m - offset
-                    marketID = marketIDs[m]
+                m = 0
+                while m < numMarkets:
+                    marketID = marketIDs[m + offset]
                     participantNumber = self.Markets[marketID].addr2participant[tx.origin]
                     descriptionLength = INFO.getDescriptionLength(marketID)
-                    marketArrayLength[onset] = FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength
-                    marketsMatrix[onset] = self.getMarketInfo(marketID, outitems=marketArrayLength[onset])
+                    marketArrayLength[m] = FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength
+                    marketsMatrix[m] = self.getMarketInfo(marketID, outitems=marketArrayLength[m])
                     m += 1
 
                 # flatten the markets info matrix so it can be returned
