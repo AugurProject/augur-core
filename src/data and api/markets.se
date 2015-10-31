@@ -130,7 +130,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
                     marketID = marketIDs[m + offset]
                     participantNumber = self.Markets[marketID].addr2participant[tx.origin]
                     descriptionLength = INFO.getDescriptionLength(marketID)
-                    marketArrayLength[m] = FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength
+                    marketArrayLength[m] = FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1
                     marketsMatrix[m] = self.getMarketInfo(marketID, outitems=marketArrayLength[m])
                     m += 1
 
