@@ -62,34 +62,34 @@ def getMarketInfo(marketID):
 
         # gather trader(s) info: [trader ID, yes shares, no shares]
         t = 0
-        while t < self.Markets[marketID].currentParticipant*TRADER_FIELDS:
-            info[index + t] = self.Markets[marketID].participants[t].participantID
-            info[index + t + 1] = self.Markets[marketID].participants[t].shares[0]
-            info[index + t + 2] = self.Markets[marketID].participants[t].shares[1]
-            t += TRADER_FIELDS
-        index += t
+        while t < self.Markets[marketID].currentParticipant:
+            info[index + t*TRADER_FIELDS] = self.Markets[marketID].participants[t].participantID
+            info[index + t*TRADER_FIELDS + 1] = self.Markets[marketID].participants[t].shares[0]
+            info[index + t*TRADER_FIELDS + 2] = self.Markets[marketID].participants[t].shares[1]
+            t += 1
+        index += self.Markets[marketID].currentParticipant*TRADER_FIELDS
 
         # gather event(s) info:
         # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
         i = 0
-        while i < self.Markets[marketID].lenEvents*EVENTS_FIELDS:
+        while i < self.Markets[marketID].lenEvents:
             event = self.Markets[marketID].events[i]
             with eventInfo = EVENTS.getEventInfo(event, outitems=EVENTS_FIELDS):
-                info[index + i] = event
+                info[index + i*EVENTS_FIELDS] = event
                 j = 1
                 while j < EVENTS_FIELDS:
-                    info[index + i + j] = eventInfo[j]
+                    info[index + i*EVENTS_FIELDS + j] = eventInfo[j]
                     j += 1
-            i += EVENTS_FIELDS
-        index += i
+            i += 1
+        index += self.Markets[marketID].lenEvents*EVENTS_FIELDS
 
         # gather outcomes info:
         # [sharesPurchased, price, winningOutcomes...]
         k = 0
-        while k < self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS:
-            info[index + k] = self.Markets[marketID].sharesPurchased[k + 1]
-            info[index + k + 1] = self.price(market, k + 1)
-            k += OUTCOMES_FIELDS
+        while k < self.Markets[marketID].numOutcomes:
+            info[index + k*OUTCOMES_FIELDS] = self.Markets[marketID].sharesPurchased[k + 1]
+            info[index + k*OUTCOMES_FIELDS + 1] = self.price(marketID, k + 1)
+            k += 1
         index += self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS
         k = 0
         while k < WINNING_OUTCOMES_FIELDS:
