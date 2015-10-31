@@ -46,7 +46,7 @@ def getMarketInfo(marketID):
     index = FIELDS
     participantNumber = self.Markets[marketID].addr2participant[tx.origin]
     descriptionLength = INFO.getDescriptionLength(marketID)
-    with info = array(FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength):
+    with info = array(FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1):
         info[0] = marketID
         info[1] = self.Markets[marketID].currentParticipant
         info[2] = self.Markets[marketID].alpha
@@ -87,24 +87,23 @@ def getMarketInfo(marketID):
         # [sharesPurchased, price, winningOutcomes...]
         k = 0
         while k < self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS:
-            index += k
-            outcome = k + 1
-            info[index] = self.Markets[marketID].sharesPurchased[outcome]
-            info[index + 1] = self.price(market, outcome)
+            info[index + k] = self.Markets[marketID].sharesPurchased[k + 1]
+            info[index + k + 1] = self.price(market, k + 1)
             k += OUTCOMES_FIELDS
         index += self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS
         k = 0
         while k < WINNING_OUTCOMES_FIELDS:
-            info[index + k + 2] = self.Markets[marketID].winningOutcomes[k]
+            info[index + k] = self.Markets[marketID].winningOutcomes[k]
             k += 1
         index += WINNING_OUTCOMES_FIELDS
 
         # append description character codes
         info[index] = descriptionLength
+        index += 1
         with description = INFO.getDescription(marketID, outchars=descriptionLength):
             c = 0
             while c < descriptionLength:
-                info[index + c + 1] = getch(description, c)
+                info[index + c] = getch(description, c)
                 c += 1
         return(info: arr)
 
