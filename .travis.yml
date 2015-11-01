@@ -9,17 +9,16 @@ python:
 addons:
   apt:
     packages:
+    - libmpc-dev
     - libmpfr-dev
-    - libmpfr-doc
     - libmpfr4
-    - libmpfr4-dbg
     - libgmp-dev
     - libblas-dev
     - liblapack-dev
     - gfortran
     - python-numpy
     - python-scipy
-    - python-gmpy2
+    - python-gmpy
 
 install:
   - pip install -U pip
