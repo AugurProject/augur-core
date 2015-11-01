@@ -27,8 +27,6 @@ Method/Madness:
 
 # disable warning crud about eggs and whatnot
 from warnings import simplefilter; simplefilter('ignore')
-# platform independent output coloring
-from colorama import Fore, Back, Style, init; init()
 # tester module!
 from ethereum import tester
 import serpent
@@ -40,7 +38,7 @@ t = tester
 STDOUT = sys.stdout
 REDIRECT = StringIO()
 PASSED = 'TEST PASSED'
-FAILED = Fore.RED + 'TEST FAILED' + Style.RESET_ALL
+FAILED = 'TEST FAILED'
 sys.stdout = REDIRECT #avoids nonsense when calling contract functions
 TAB = ' '*3
 

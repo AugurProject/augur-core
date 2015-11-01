@@ -1,7 +1,3 @@
-numpy
-gmpy2==2.0.5
-pandas
 colorama
-pyethereum
-matplotlib
-pyconsensus
+ethereum
+https://github.com/ethereum/serpent/tarball/develop

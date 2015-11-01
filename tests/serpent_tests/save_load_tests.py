@@ -94,7 +94,7 @@ def doubleData(key):
             save(self.junk[key].data[0], vals, items=len(vals))
 '''
 
-def test_code(code, name):
+def code_test(code, name):
     s = t.state()
     c = s.abi_contract(code)
     key = 0xCAFEBABE
@@ -112,15 +112,13 @@ def test_code(code, name):
     table.add_row(['doubleData', r4['gas'], r4['output'], r4['time']])
     return table
 
-def main():
+def test_save_load():
     s = t.state()
     for i, code in enumerate((code1, code2, code3)):
         name = 'code%d'%(i+1)
-        table = test_code(code, name)
+        table = code_test(code, name)
         table.print_table()
-        PRINT()
-        
+        PRINT()        
 
 if __name__ == '__main__':
-    main()
-    
+    test_save_load()

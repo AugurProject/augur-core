@@ -1,6 +1,8 @@
 augur-core
 ----------
 
+[![Build Status](https://travis-ci.org/AugurProject/augur-core.svg)](https://travis-ci.org/AugurProject/augur-core)
+
 ### To do:
 - #def moveEvent(event, newBranch, authorSignature):
 - check that msg.sender is one of our function contracts
