@@ -5,10 +5,9 @@ notifications:
 python:
   - "2.7"
 install:
-  - export DEBIAN_FRONTEND=noninteractive
   - sudo apt-get update -qq
   - sudo apt-get upgrade -y -qq
-  - sudo apt-get install build-essential python-gmpy2 python-numpy python-matplotlib python-scipy -y -qq
+  - sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" install build-essential python-gmpy2 python-numpy python-matplotlib python-scipy -qq
   - pip install --upgrade pip
   - pip install -r requirements.txt
   - pip install -r test_requirements.txt
