@@ -9,6 +9,7 @@ python:
 addons:
   apt:
     packages:
+    - libgmp-dev
     - libblas-dev
     - liblapack-dev
     - gfortran
