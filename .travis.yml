@@ -1,15 +1,23 @@
 sudo: true
+
 language: python
+
 notifications:
   email: false
+
 python:
   - "2.7"
-install:
+
+before_install:
+  - "export DEBIAN_FRONTEND=noninteractive"
   - sudo apt-get update -qq
   - sudo apt-get upgrade -y -qq
-  - sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" install build-essential python-gmpy2 python-numpy python-matplotlib python-scipy -qq
+  - sudo apt-get install python-gmpy2 python-numpy python-scipy -y -qq
+
+install:
   - pip install --upgrade pip
   - pip install -r requirements.txt
   - pip install -r test_requirements.txt
+
 script:
   - ./runtests.sh
