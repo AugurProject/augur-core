@@ -18,7 +18,6 @@ addons:
     - gfortran
     - python-numpy
     - python-scipy
-    - python-gmpy
 
 install:
   - pip install -U pip

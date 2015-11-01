@@ -3,4 +3,3 @@ ethereum
 https://github.com/ethereum/serpent/tarball/develop
 numpy
 scipy
-gmpy2
