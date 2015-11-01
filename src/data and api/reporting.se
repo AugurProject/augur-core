@@ -27,13 +27,15 @@ import branches as BRANCHES
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
-data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep)
+data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, balance[])
 
 def init():
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
     self.Reporting[1010101].reputation[0].repValue = 47*2^64
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
-    self.Reporting[1010101].numberReporters = 1
+    self.Reporting[1010101].numberReporters = 2
+    self.Reporting[1010101].reputation[1].repValue = 0
+    self.Reporting[1010101].reputation[1].reporterID = branch
     self.Reporting[1010101].totalRep += 47*2^64
 
 # @return reputation value
@@ -52,6 +54,12 @@ def getReporterID(branch, index):
 
 def getTotalRep(branch):
     return(self.Reporting[branch].totalRep)
+
+def setInitialRep(branch, period, balance):
+    self.Reporting[branch].balance[period] = balance
+
+def getInitialRep(branch, period):
+    return(self.Reporting[branch].balance[period])
 
 # will return 0s for array values after it's looped through all the ones you
 # have an actual balance in
@@ -116,13 +124,17 @@ def setInitialReporters(parent, branchID):
         # votePeriod 4 should close and the currentVotePeriod should be from
         # eventsExpDates 5 (anyone can call the consensus function for voteperiod 4 at this point)
     i = 0
-    while i < self.Reporting[parent].numberReporters:
+    while i < self.Reporting[parent].numberReporters:            
         reporterID = self.Reporting[parent].reputation[i].reporterID
         self.Reporting[branchID].reputation[i].reporterID = reporterID
         self.Reporting[branchID].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
         self.Reporting[branchID].repIDtoIndex[reporterID] = i
         i+=1
-    self.Reporting[branchID].numberReporters = i
+    # add branch as a "reporter"
+    self.Reporting[branchID].numberReporters = i+1
+    self.Reporting[branch].repIDtoIndex[branch] = i
+    self.Reporting[branch].reputation[i].repValue = 0
+    self.Reporting[branch].reputation[0].reporterID = branch
     return(1)
 
 def addReporter(branch, sender):

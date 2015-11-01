@@ -2,8 +2,10 @@ import expiringEvents as EXPIRING
 import reporting as REPORTING
 import fxpFunctions as FXP
 import events as EVENTS
+import makeReports as REPORTS
 
 data proportionCorrect[]
+# normalize lazily if you don't do it next send you get docked
 
 #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
 
@@ -12,6 +14,7 @@ data proportionCorrect[]
 #if event gets pushed back due to 65% thing make so people can still buy / sell
 
 def penalizeWrong(event):
+	if(notDoneForEvent)
 	p = self.getProportionCorrect(event)
 	outcome = EVENTS.getOutcome(event)
 	for all reporters:
@@ -60,7 +63,25 @@ def proportionCorrect(event):
 def getProportionCorrect(event):
 	return(self.proportionCorrect[event])
 
-def collectPenaltyRep():
+# rep claiming similar to fee claiming
+# person didn't report enough
+def collectPenaltyRep(branch, votePeriod):
+	# if reported not enough for this period, don't allow collection
+	numEvents = REPORTS.getNumEventsToReportOn(branch, votePeriod)
+	if(numEvents < 30*2**64):
+        numEvents = 30*2**64
+    if(numEvents/(2*2**64) > REPORTS.getNumReportsActual(branch, votePeriod)):
+    	return(-1)
+    if(hasntDoneRRForLazyEventsAndWrongAnsForPast+CurrentPeriods):
+        doIt()
+        self.RRDone = true
+    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    repReported = EXPEVENTS.getTotalRepReported(branch, lastPeriod)
+    if(penaltyNotAlreadyCollected && periodOver && hasReported)
+    	rep = fixed_multiply(REPORTING.getInitialRep(branch, lastPeriod), REPORTING.getReputation(msg.sender)*2**64/repReported)
+    	REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), rep)
+		REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), rep)
+	return(1)
 
 #Q: Can we do lazy eval claiming of trading fees?
 #A: Yes:
@@ -68,6 +89,12 @@ def collectPenaltyRep():
 #          send them cash of amount equal to fees from that period * rep owned by addr in that period / total #rep in that period
 # payout function (lazily evaluate it)
 def collectFees(branch):
+	# if reported not enough for this period, don't allow collection
+	numEvents = REPORTS.getNumEventsToReportOn(branch, votePeriod)
+	if(numEvents < 30*2**64):
+        numEvents = 30*2**64
+    if(numEvents/(2*2**64) > REPORTS.getNumReportsActual(branch, votePeriod)):
+    	return(-1)
 	# - need to loop through rep holders and distribute 50% of branch fees to
 	# except instead, do it on a per report basis
     # reporters' cashcoin addresses
@@ -77,9 +104,9 @@ def collectFees(branch):
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     repReported = EXPEVENTS.getTotalRepReported(branch, lastPeriod)
     if(feesNotAlreadyCollected && periodOver && hasReported)
-	    totalRep = EXPEVENTS.getTotalRepReported(branch)
-		CASH.addCash(msg.sender, fixed_multiply(BRANCHES.getInitialBalance(branch, lastPeriod), REPORTING.getReputation(msg.sender)*2^64/repReported))
-		CASH.subtractCash(branch, CASH.balance(branch))
+		cash = fixed_multiply(BRANCHES.getInitialBalance(branch, lastPeriod), REPORTING.getReputation(msg.sender)*2^64/repReported)
+		CASH.addCash(msg.sender, cash)
+		CASH.subtractCash(branch, cash)
 	return(1)
 
 #essentially anyone can pay a bond to have an event put up for reporting on again, but this time by all reporters.  If the second round returns the same result, the bond is lost.  If the previous decision is overruled, then whoever posted the bond would get double the bond back.  To not have to deal with conversion issues, it’s simplest to keep the bond as a rep bond.  The rep to reward the bonded challenger would come from the people who reported wrong in level 1.  

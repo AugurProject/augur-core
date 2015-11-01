@@ -29,7 +29,7 @@ import reporting as REPORTING
 import fxpFunctions as FXP
 
 # branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID
-data branches[](numReportsHash[][], numReportsActual[][], numReportsEvent[][], hasReported[], repReported[])
+data branches[](numReportsHash[][], numReportsActual[][], numReportsEvent[][], hasReported[][], repReported[], reportedPeriod[][])
 
 
 # Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
@@ -95,7 +95,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
         doIt()
         self.RRDone = true
     numEvents = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
-    if(self.branches[branch].hasReported[eventID]==1):
+    if(self.branches[branch].hasReported[eventID][tx.origin]==1):
         return(-1)
     if(numEvents==0):
         return(-5)
@@ -146,6 +146,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
 
             if(reportIsFirstReportInNetwork):
                 BRANCHES.setInitialBalance(branch, votePeriod, CASH.balance(branch))
+                REPORTING.setInitialRep(branch, votePeriod, REPORTING.getRepBalance(branch, branch))
 
             # check report validity
             numOutcomes = 2
@@ -189,8 +190,13 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
             # add 1 report to the event
             self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
             # record that reporter has reported for this event
-            self.branches[branch].hasReported[eventID] = 1
+            self.branches[branch].hasReported[eventID][tx.origin] = 1
             self.branches[branch].repReported[eventID] += REPORTING.getRepBalance(branch, tx.origin)
+            # if 1st report of the period for a reporter
+            if(!self.branches[branch].reportedPeriod[votePeriod][tx.origin]):
+                repReported = EXPEVENTS.getTotalRepReported(branch)
+                repReported += REPORTING.getRepBalance(branch, tx.origin)
+                EXPEVENTS.setTotalRepReported(branch, votePeriod, repReported)
             # store report for each event
             return(1)
         return(-2)
@@ -201,18 +207,25 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
 # Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account, and distributed like trading fees are except each person would make their own lazy claim on it.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
 # dormant/active rep
 def penalizeNotEnoughReports(branch, votePeriod):
+    if(alreadyPenalized):
+        return(-1)
     numEvents = self.getNumEventsToReportOn(branch, votePeriod)
     # min. of 30 events no matter how little rep you have
+    if(hasReported):
+        # if has reported, don't count in rep reported for fee or rep redistrib. claims
+        repReported = EXPEVENTS.getTotalRepReported(branch)
+        repReported -= REPORTING.getRepBalance(branch, tx.origin)
+        EXPEVENTS.setTotalRepReported(branch, votePeriod, repReported)
     if(numEvents < 30*2**64):
         numEvents = 30*2**64
     if(numEvents/(2*2**64) > self.branches[branch].numReportsActual[msg.sender][votePeriod]):
+        originalRep = REPORTING.getRepBalance(branch, tx.origin)
         # penalize people
-        newRep = .2*self.branches[branch].numReportsActual[msg.sender][votePeriod] / self.getNumEventsToReportOn(branch, votePeriod)/(2*2**64) * REPORTING.getRepBalance(branch, tx.origin)
+        newRep = .2*self.branches[branch].numReportsActual[msg.sender][votePeriod] / self.getNumEventsToReportOn(branch, votePeriod)/(2*2**64) * originalRep
         oldRep = REPORTING.getRepBalance(branch, tx.origin)*.8
         REPORTING.setRep(branch, REPORTING.repIDToIndex(branch, tx.origin), oldRep+newRep)
-    # deal with total rep reported for a given period (i.e. how and specifically when to calculate it)
-    repReported = EXPEVENTS.getTotalRepReported(branch)
-    repReported += REPORTING.getRepBalance(branch, tx.origin)
+        # adds the rep to the branch's pool
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), originalRep - (oldRep+newRep))
     return(1)
 
 def sqrt(n):
@@ -271,3 +284,6 @@ def slashRep(branch, votePeriod, salt, report, reporter, reportIndex, eventID):
             REPORTING.subtractRep(branch, reporterIndex, reporterBalance)
             REPORTING.addRep(branch, trutherIndex, reporterBalance*2^58 / 2^64)
         return(reporterBalance)
+
+def getNumReportsActual(branch, votePeriod):
+    return(self.branches[branch].numReportsActual[msg.sender][votePeriod])
