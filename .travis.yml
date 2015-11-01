@@ -9,6 +9,10 @@ python:
 addons:
   apt:
     packages:
+    - libmpfr-dev
+    - libmpfr-doc
+    - libmpfr4
+    - libmpfr4-dbg
     - libgmp-dev
     - libblas-dev
     - liblapack-dev
