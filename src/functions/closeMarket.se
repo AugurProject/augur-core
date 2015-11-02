@@ -49,6 +49,7 @@ macro catch($x):
     # -1: Market has no cash anyway
     # -2: 0 outcome
     # -3: Outcome indeterminable
+    # -4: Outcome .5 once, pushback and retry
 # Make sure there are no "while loop out of gas" issues
 #Need to make sure we close out markets where one doesn’t happen (i.e. Hillary or Bush? and GDP>3% growth 2017?) properly.
 #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
@@ -75,7 +76,12 @@ def closeMarket(branch, market):
                 if(fxpOutcome==0):
                     fxpOutcome = catch(EVENTS.getUncaughtOutcome(events[n]))
                     EVENTS.setOutcome(events[n], fxpOutcome)
-                    if(fxpOutcome==2**63):
+                    # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
+                    if(fxpOutcome==2**63 && !pushedBack):
+                        push back event
+                        set outcome to 0
+                        return(-4)
+                    if(fxpOutcome==2**63 && pushedBack):
                         # give event bond money to reporters
                         CASH.subtractCash(events[n], 42*2**64)
                         CASH.addCash(branch, 42*2**64)
@@ -94,7 +100,12 @@ def closeMarket(branch, market):
                     scaled_max = 2^64*EVENTS.getMaxValue(events[n])
                     fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
                     EVENTS.setOutcome(events[n], fxpOutcome)
-                    if(fxpOutcome==2**63):
+                    # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
+                    if(fxpOutcome==2**63 && !pushedBack):
+                        push back event
+                        set outcome to 0
+                        return(-4)
+                    if(fxpOutcome==2**63 && pushedBack):
                         # give event bond money to reporters
                         CASH.subtractCash(events[n], 42*2**64)
                         CASH.addCash(branch, 42*2**64)
@@ -112,7 +123,12 @@ def closeMarket(branch, market):
                     scaled_max[j] = 2^64*EVENTS.getNumOutcomes(event)
                     fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
                     EVENTS.setOutcome(events[n], fxpOutcome)
-                    if(fxpOutcome==2**63):
+                    # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
+                    if(fxpOutcome==2**63 && !pushedBack):
+                        push back event
+                        set outcome to 0
+                        return(-4)
+                    if(fxpOutcome==2**63 && pushedBack):
                         # give event bond money to reporters
                         CASH.subtractCash(events[n], 42*2**64)
                         CASH.addCash(branch, 42*2**64)

@@ -60,6 +60,15 @@ def buyShares(branch, market, outcome, amount, nonce, limit):
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     numEvents = MARKETS.getNumEvents(market)
     events = MARKETS.getMarketEvents(market, outitems=numEvents)
+    n = 0
+    #if event gets pushed back people can still buy / sell
+    pushedBack = 0
+    while n < numEvents:
+        if(EVENTS.getPushedBack(events[c])==0):
+            n += 1
+        else:
+            pushedBack = 1
+            n = numEvents
     if(currentPeriod >= (currentVotePeriod+3)):
         c = 0
         while c < numEvents:
@@ -68,7 +77,7 @@ def buyShares(branch, market, outcome, amount, nonce, limit):
             else:
                 return(-1)
         stalled = 1
-    if (outcome==0 || (currentVotePeriod>=MARKETS.getTradingPeriod(market) && !stalled) || MARKETS.getBranchID(market) != branch):
+    if (outcome==0 || (currentVotePeriod>=MARKETS.getTradingPeriod(market) && !stalled && !pushedBack) || MARKETS.getBranchID(market) != branch):
         return(-1)
     # lmsr cost calcs
     oldCost = MARKETS.lsLmsr(market)
@@ -122,6 +131,15 @@ def sellShares(branch, market, outcome, amount, nonce, limit):
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     numEvents = MARKETS.getNumEvents(market)
     events = MARKETS.getMarketEvents(market, outitems=numEvents)
+    n = 0
+    #if event gets pushed back people can still buy / sell
+    pushedBack = 0
+    while n < numEvents:
+        if(EVENTS.getPushedBack(events[c])==0):
+            n += 1
+        else:
+            pushedBack = 1
+            n = numEvents
     if((currentPeriod + 3) >= currentVotePeriod):
         c = 0
         while c < numEvents:
@@ -130,7 +148,7 @@ def sellShares(branch, market, outcome, amount, nonce, limit):
             else:
                 return(-1)
         stalled = 1
-    if (MARKETS.getParticipantID(market, participantNumber) != tx.origin || outcome==0 || (currentVotePeriod>=MARKETS.getTradingPeriod(market) && !stalled) || MARKETS.getBranchID(market) != branch):
+    if (MARKETS.getParticipantID(market, participantNumber) != tx.origin || outcome==0 || (currentVotePeriod>=MARKETS.getTradingPeriod(market) && !stalled && !pushedBack) || MARKETS.getBranchID(market) != branch):
         return(-1)
     # lmsr cost calcs
     oldCost = MARKETS.lsLmsr(market)
