@@ -136,7 +136,7 @@ def updateTradingFee(branch, market, tradingFee):
         return(-1)
     return(MARKETS.setTradingFee(market, tradingFee))
 
-#Add def moveMarket(market, newBranch, marketAuthor) in case of a fork
+#Add def moveMarket(market, newBranch, marketAuthor) in case of a fork or some other issue
 def moveMarket(market, newBranch, marketAuthor):
     if(msg.sender==marketAuthor && stuffForked()):
         # set market branch

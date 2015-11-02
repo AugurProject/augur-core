@@ -46,6 +46,10 @@ def getEventBranch(event):
 def getExpiration(event):
 	return(self.Events[event].expirationDate)
 
+def setExpiration(event, date):
+	self.Events[event].expirationDate = date
+	return(1)
+
 def getOutcome(event):
 	return(self.Events[event].outcome)
 

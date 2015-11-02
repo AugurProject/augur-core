@@ -28,6 +28,7 @@ import closeMarketOne as CLOSEONE
 import closeMarketTwo as CLOSETWO
 import closeMarketFour as CLOSEFOUR
 import closeMarketEight as CLOSEEIGHT
+import expiringEvents as EXPEVENTS
 
 macro YES: 2^65
 macro NO: 2^64
@@ -68,18 +69,32 @@ def closeMarket(branch, market):
         winningOutcomes = array(8)
         events = array(3)
         events = MARKETS.getMarketEvents(market, outitems=3)
+        periodLength = BRANCHES.getPeriodLength(branch)
+        residual = block.number % periodLength
+        period = BRANCHES.getVotePeriod(branch)
         while n < numberEvents:
             fxpOutcome = EVENTS.getOutcome(events[n])
+            pushedBack = EVENTS.getPushedBack(events[n])
             # if binary, catch the outcome
             if(EVENTS.getNumOutcomes(events[n])==2 and 2**64*EVENTS.getMaxValue(events[n])==2**65):
                 # if outcome not set
-                if(fxpOutcome==0):
+                if(fxpOutcome==0 && block.number > EVENTS.getExpiration(events[n])):
                     fxpOutcome = catch(EVENTS.getUncaughtOutcome(events[n]))
                     EVENTS.setOutcome(events[n], fxpOutcome)
                     # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
-                    if(fxpOutcome==2**63 && !pushedBack):
-                        push back event
-                        set outcome to 0
+                    if(fxpOutcome==2**63 && !pushedBack && residual < periodLength/2):
+                        #push back event
+                        EXPEVENTS.addEvent(branch, period, events[n])
+                        #set outcome to 0
+                        EVENTS.setOutcome(events[n], 0)
+                        #set uncaughtoutcome to 0
+                        EVENTS.setUncaughtOutcome(events[n], 0)
+                        #set pushedback to true
+                        EVENTS.setPushedBack(events[n])
+                        #set event expiration date to be after the current reporting period ends
+                        #expDate / periodLength == period+1 would mean it's being reported on
+                        # == period + 2 would mean that the reporting period is over, which is what we want to guarantee here for events which have been pushed backfbghnbg
+                        EVENTS.setExpiration(events[n], (period+2)*periodLength)
                         return(-4)
                     if(fxpOutcome==2**63 && pushedBack):
                         # give event bond money to reporters
@@ -93,7 +108,7 @@ def closeMarket(branch, market):
             # scalar
             elif(2^64*EVENTS.getMaxValue(events[n]) != YES and EVENTS.getNumOutcomes(events[n]) == 2):
                 # if outcome/median aren't set
-                if(EVENTS.getMedian(events[n])==0):
+                if(EVENTS.getMedian(events[n])==0 && block.number > EVENTS.getExpiration(events[n])):
                     median = MEDIAN.calculateMedian(events[n])
                     EVENTS.setMedian(events[n], median)
                     scaled_min = 2^64*EVENTS.getMinValue(events[n])
@@ -101,9 +116,19 @@ def closeMarket(branch, market):
                     fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
                     EVENTS.setOutcome(events[n], fxpOutcome)
                     # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
-                    if(fxpOutcome==2**63 && !pushedBack):
-                        push back event
-                        set outcome to 0
+                    if(fxpOutcome==2**63 && !pushedBack && residual < periodLength/2):
+                        #push back event
+                        EXPEVENTS.addEvent(branch, period, events[n])
+                        #set outcome to 0
+                        EVENTS.setOutcome(events[n], 0)
+                        #set pushedback to true
+                        EVENTS.setPushedBack(events[n])
+                        # set median to 0
+                        EVENTS.setMedian(events[n], 0)
+                        #set event expiration date to be after the current reporting period ends
+                        #expDate / periodLength == period+1 would mean it's being reported on
+                        # == period + 2 would mean that the reporting period is over, which is what we want to guarantee here for events which have been pushed backfbghnbg
+                        EVENTS.setExpiration(events[n], (period+2)*periodLength)
                         return(-4)
                     if(fxpOutcome==2**63 && pushedBack):
                         # give event bond money to reporters
@@ -116,7 +141,7 @@ def closeMarket(branch, market):
             # categorical, but we can make it behave as a scalar for all intents and purposes here
             elif(EVENTS.getNumOutcomes(events[n])>2):
                 # if outcome/median aren't set
-                if(EVENTS.getMedian(events[n])==0):
+                if(EVENTS.getMedian(events[n])==0 && block.number > EVENTS.getExpiration(events[n])):
                     median = MEDIAN.calculateMedian(events[n])
                     EVENTS.setMedian(events[n], median)
                     scaled_min[j] = 2^64
@@ -124,9 +149,19 @@ def closeMarket(branch, market):
                     fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
                     EVENTS.setOutcome(events[n], fxpOutcome)
                     # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
-                    if(fxpOutcome==2**63 && !pushedBack):
-                        push back event
-                        set outcome to 0
+                    if(fxpOutcome==2**63 && !pushedBack && residual < periodLength/2):
+                        #push back event
+                        EXPEVENTS.addEvent(branch, period, events[n])
+                        #set outcome to 0
+                        EVENTS.setOutcome(events[n], 0)
+                        #set pushedback to true
+                        EVENTS.setPushedBack(events[n])
+                        # set median to 0
+                        EVENTS.setMedian(events[n], 0)
+                        #set event expiration date to be after the current(read: next b/c it's the very beginning of it) reporting period ends
+                        #expDate / periodLength == period+1 would mean it's being reported on
+                        # == period + 2 would mean that the reporting period is over, which is what we want to guarantee here for events which have been pushed backfbghnbg
+                        EVENTS.setExpiration(events[n], (period+2)*periodLength)
                         return(-4)
                     if(fxpOutcome==2**63 && pushedBack):
                         # give event bond money to reporters

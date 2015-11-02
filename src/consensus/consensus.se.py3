@@ -6,12 +6,12 @@ import makeReports as REPORTS
 
 data proportionCorrect[]
 # normalize lazily if you don't do it next send you get docked, but how do we know you didn't penalize for being wrong, perhaps record what you submitted reports for, then check
+# .5 reports
+# penalize all at once or 1 by 1?
 
 #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
+# while loops
 
-#if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that’s the final outcome
-
-#if event gets pushed back due to 65% thing make so people can still buy / sell
 
 # should prob. make per event penalty significantly lower
 def penalizeWrong(event):
@@ -120,21 +120,12 @@ def roundTwoBond():
 
 #Essentially, we could allow anyone to pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.*  In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep would be redistributed accordingly.  In the other class/branch, the other outcome would be considered right and rep would be redistributed accordingly.  Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets.  Market makers should then be able to move their market to whichever fork they want, if they fail to act, it'd go to the most voluminous fork by default after a couple weeks.
 
-# "On the fork where the chosen answer is equal to the original voted answer, the alarm raiser loses their rep bond. On the other form, the alarm raiser gets back a reward of 2x the deposit, paid out from incorrect voters’ deposits. Additionally, the rewards for all other answerers are made more extreme: “correct” answerers get 5*P and “incorrect” answerers lose 10*P."
+# "On the fork where the chosen answer is equal to the original voted answer, the alarm raiser loses their rep bond. On the other fork, the alarm raiser gets back a reward of 2x the deposit, paid out from incorrect voters’ deposits. Additionally, the rewards for all other answerers are made more extreme: “correct” answerers get 5*P and “incorrect” answerers lose 10*P."
 def fork():
 
 
 #  only resolve ones that had odds <99% for one of the outcomes. 
-# We should probably still have an option to pay to resolve in case something somehow goes wrong here.  This also doesn't work for scalar markets (although it does for categorical).  
-
-
-
-
-# 3b) if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, # that's the outcome (or we could audit here or do certainty based audits) - not done yet
-#    3c) detect b via a "times voted on" var - not done yet
-
-
-
+# We should probably still have an option to pay to resolve in case something somehow goes wrong here (or if not enough reports).  This also doesn't work for scalar markets (although it does for categorical).
 
 
 def incrementPeriodAfterReporting():
