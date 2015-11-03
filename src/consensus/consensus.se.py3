@@ -5,15 +5,27 @@ import events as EVENTS
 import makeReports as REPORTS
 
 data proportionCorrect[]
-# normalize lazily if you don't do it next send you get docked, but how do we know you didn't penalize for being wrong, perhaps record what you submitted reports for, then check
-# .5 reports
-# penalize all at once or 1 by 1?
+# separate voting unethical and event outcome for .5 reports
 
 #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
 # while loops
 
+#Anti leeching - if whitelist return (shares held / outcome) else log. If an oracle system branch, always return, buy/sell shares need to return no indication of success except for through log
+
+#Two initial branches - one only for oracle system no markets
+#- on all branches besides oracle branch, if an event isn’t in a market, it shouldn’t be reported on at all
 
 # should prob. make per event penalty significantly lower
+
+#1. Record rep at start of report period
+#2. Penalize for each event
+#	- subtract from 1 and store in another variable if a loss
+#	- add to 1 and store in another variable if win rep
+#3. Always keep updated the current denominator, so totalRep + delta from 2
+#4. Do 2 and 3 for each reporter (note: each reporter needs to do this for all events they reported on, if not get docked)
+#5. At the end of some period make so users have to claim rep (win/loss var for a user / 3(aka current denominator) * totalRepInPeriod)
+#6. If you don't do it for all events, autolose 20% rep (b/c you're trying to cheat)
+#7. what if don't claim rep
 def penalizeWrong(event):
 	if(notDoneForEvent)
 	p = self.getProportionCorrect(event)
@@ -28,7 +40,7 @@ def penalizeWrong(event):
 		else:
 			if(scalar or categorical):
 				p = -(abs(reportValue - EVENTS.getMedian(event))) + 1.5
-			newRep = 1 + oldRep*(2*(1-p)**2 / p)
+			newRep = oldRep*(2*(1-p)**2 / p + 1)
 		smoothedRep = oldRep*.8 + newRep*.2
 	normalize(smoothedRep)
 	# must add up to repreported on event or less
@@ -114,6 +126,9 @@ def collectFees(branch):
 # The easiest way to set the bond would be to make a flat cost, say.. 100 rep.  There can’t be an extremely low minimum (i.e. 5 cents) because then you could spam the system by paying to put a bunch of events up for re-adjudication cheaply and repeatedly.  100 is large enough not to get spammed, and small enough that people could create a dominant assurance contract to put something up for re-adjudication if no one with >100 rep is willing to step up.  
 #We can’t simply pay out 2x though, since there theoretically may not be that much rep which reported on an event, so the easiest way to code things is probably to a) return the bond and b) reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest.  
 # concept of event finality and time periods
+# need a way to penalize by round 2 as well
+# dynamic challenge bond cost
+# https://www.reddit.com/r/Augur/comments/3mco9m/dynamic_vs_fixed_bond_amount_for_readjudication/
 def roundTwoBond():
 
 

@@ -42,6 +42,10 @@ event updatePrice(user:indexed, market:indexed, outcome:indexed, price, cost)
     # -2: entered a -amt of shares
     # -3: not enough money / limit order too low
     # -4: bad nonce/hash
+#TODO:
+#calc loss based on both positions you own
+#i.e. worst case loss sequestering per market
+# limit order ls-lmsr
 def buyShares(branch, market, outcome, amount, nonce, limit):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)  
     # if we have 3-4 cycles in a row of events getting pushed back market would already be closed even though
