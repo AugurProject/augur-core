@@ -5,27 +5,29 @@ import events as EVENTS
 import makeReports as REPORTS
 
 data proportionCorrect[]
+
 # separate voting unethical and event outcome for .5 reports
 
-#Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
+# Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
+
 # while loops
 
-#Anti leeching - if whitelist return (shares held / outcome) else log. If an oracle system branch, always return, buy/sell shares need to return no indication of success except for through log
+# Anti leeching - if whitelist return (shares held / outcome) else log. If an oracle system branch, always return outcome, buy/sell shares need to return no indication of success except for through log
 
-#Two initial branches - one only for oracle system no markets
-#- on all branches besides oracle branch, if an event isn’t in a market, it shouldn’t be reported on at all
-
-# should prob. make per event penalty significantly lower
+# Two initial branches - one only for oracle system no markets
+	# - on all branches besides oracle branch, if an event isn’t in a market, it shouldn’t be reported on at all
 
 #1. Record rep at start of report period
 #2. Penalize for each event
 #	- subtract from 1 and store in another variable if a loss
 #	- add to 1 and store in another variable if win rep
 #3. Always keep updated the current denominator, so totalRep + delta from 2
+	#3a. Make it so a user has to do this for all events they reported on _before_ updating the denominator
 #4. Do 2 and 3 for each reporter (note: each reporter needs to do this for all events they reported on, if not get docked)
 #5. At the end of some period make so users have to claim rep (win/loss var for a user / 3(aka current denominator) * totalRepInPeriod)
 #6. If you don't do it for all events, autolose 20% rep (b/c you're trying to cheat)
-#7. what if don't claim rep
+#7. what if don't claim rep, nothing, it just doesn't formally exist until you claim it or try to send it somewhere (upon which it claims your old rep)
+# make sure user has always done this up to current period before doing current period
 def penalizeWrong(event):
 	if(notDoneForEvent)
 	p = self.getProportionCorrect(event)
@@ -34,12 +36,12 @@ def penalizeWrong(event):
 		# wrong
 		if(reportValue > outcome+.01 or reportValue < outcome-.01):
 			if(scalar or categorical):
-				p = -(abs(reportValue - EVENTS.getMedian(event))) + 1.5
+				p = -(abs(reportValue - EVENTS.getMedian(event))/2) + 1
 			newRep = oldRep*(2*p -1)
 		# right
 		else:
 			if(scalar or categorical):
-				p = -(abs(reportValue - EVENTS.getMedian(event))) + 1.5
+				p = -(abs(reportValue - EVENTS.getMedian(event))/2) + 1
 			newRep = oldRep*(2*(1-p)**2 / p + 1)
 		smoothedRep = oldRep*.8 + newRep*.2
 	normalize(smoothedRep)
