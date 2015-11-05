@@ -1,0 +1,40 @@
+# 32*4 non-message fields
+macro OFFSET: 128
+
+# Comment logger.
+event comment(commentID: indexed, market: indexed, author: indexed, parent, block, message: str)
+
+# sha256 hash comment data to create the comment ID.
+# @param {int} market Market ID (sha256 digest)
+# @param {int} author Ethereum address of the author
+# @param {int} parent ID of the comment replied to (0 for none)
+# @param {bytes} message Comment text
+# @return int 1 complete
+def hash(market, author, parent, message: str):
+    messageLength = len(message)
+    info = string(OFFSET + messageLength)
+    info[0] = market
+    info[1] = author
+    info[2] = parent
+    info[3] = block.number
+    mcopy(info + OFFSET, message, chars=messageLength)
+    commentID = sha256(info, chars=len(info))
+    log(type=comment, commentID, market, author, parent, info[3], message)
+    return 1
+
+# Post (log) a new comment.
+# @param {int} market Market ID (sha256 digest)
+# @param {int} author Ethereum address of the author
+# @param {bytes} message Comment text
+# @return int 1 complete
+def speak(market, author, message: str):
+    return self.hash(market, author, 0, message)
+
+# Reply to an existing comment.
+# @param {int} market Market ID (sha256 digest)
+# @param {int} author Ethereum address of the author
+# @param {int} parent ID of the comment replied to
+# @param {bytes} message Comment text
+# @return int 1 complete
+def reply(market, author, parent, message: str):
+    return self.hash(market, author, parent, message)
