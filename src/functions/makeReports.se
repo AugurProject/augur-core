@@ -228,6 +228,8 @@ def penalizeNotEnoughReports(branch, votePeriod):
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), originalRep - (oldRep+newRep))
     return(1)
 
+def penalizeNotEnoughRoundTwoReports(branch, votePeriod):
+
 def sqrt(n):
     val = n
     i = 0
