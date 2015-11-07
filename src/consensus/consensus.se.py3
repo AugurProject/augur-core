@@ -1,3 +1,11 @@
+#separate sets of rep
+#After a user has started doing pen calcs but before they've gotten new normalized rep, don't allow sending of rep
+#Also don't allow conversion of rep after selection of events for a voting period has started, otherwise you can report on 1-2 but reap rewards as if it's a lot of rep.  So it can't be used until next period (ie there's a holding period)
+
+#Futarchy autonocoin style updates or reporter votes
+
+#Abe limit order writeup
+
 import expiringEvents as EXPIRING
 import reporting as REPORTING
 import fxpFunctions as FXP
@@ -11,8 +19,6 @@ data proportionCorrect[]
 # Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
 
 # while loops
-
-# Anti leeching - if whitelist return (shares held / outcome) else log. If an oracle system branch, always return outcome, buy/sell shares need to return no indication of success except for through log
 
 # Two initial branches - one only for oracle system no markets
 	# - on all branches besides oracle branch, if an event isn’t in a market, it shouldn’t be reported on at all
@@ -136,6 +142,7 @@ def roundTwoBond():
 
 
 #Essentially, we could allow anyone to pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.*  In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep would be redistributed accordingly.  In the other class/branch, the other outcome would be considered right and rep would be redistributed accordingly.  Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets.  Market makers should then be able to move their market to whichever fork they want, if they fail to act, it'd go to the most voluminous fork by default after a couple weeks.
+# given a reporter wrong in which round what happens
 
 # "On the fork where the chosen answer is equal to the original voted answer, the alarm raiser loses their rep bond. On the other fork, the alarm raiser gets back a reward of 2x the deposit, paid out from incorrect voters’ deposits. Additionally, the rewards for all other answerers are made more extreme: “correct” answerers get 5*P and “incorrect” answerers lose 10*P."
 def fork():

@@ -51,6 +51,7 @@ def setExpiration(event, date):
 	return(1)
 
 def getOutcome(event):
+	# do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
 	return(self.Events[event].outcome)
 
 def getFinal(event):
@@ -70,6 +71,7 @@ def setUncaughtOutcome(event):
 	return(1)
 
 def getUncaughtOutcome(event):
+	# do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
 	return(self.Events[event].uncaughtOutcome)
 
 def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes):
@@ -124,6 +126,7 @@ def getReportingThreshold(event):
 	return(self.Events[event].threshold)
 
 def getMedian(event):
+	# do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
 	return(self.Events[event].median)
 
 def setMedian(event, median):

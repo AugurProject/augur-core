@@ -80,6 +80,7 @@ def getMarketInfo(market):
     while i < lenEvents:
         info[6+i] = self.Markets[market].events[i]
         i += 1
+    # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
     info[6+i] = self.Markets[market].winningOutcomes[0]
     info[7+i] = self.Markets[market].winningOutcomes[1]
     info[8+i] = self.Markets[market].winningOutcomes[2]
@@ -241,6 +242,7 @@ def setWinningOutcomes(market, outcomes: arr):
     return(1)
     
 def getWinningOutcomes(market):
+    # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # largest # of winning outcomes is 8
@@ -262,6 +264,7 @@ def getMarketOutcomeInfo(market, outcome):
     info[2] = self.price(market, outcome)
     info[3] = participantNumber
     info[4] = self.getCurrentParticipantNumber(market)
+    # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
     info[5] = self.Markets[market].winningOutcomes[0]
     info[6] = self.Markets[market].winningOutcomes[1]
     info[7] = self.Markets[market].winningOutcomes[2]
