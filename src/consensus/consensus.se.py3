@@ -37,12 +37,11 @@ data denominator[][]
 #7. what if don't claim rep, nothing, it just doesn't formally exist until you claim it or try to send it somewhere (upon which it claims your old rep)
 # make sure user has always done this up to current period before doing current period
 def penalizeWrong(branch, period, event):
-	if(notDoneForEvent && periodOver && reported)
-	p = self.getProportionCorrect(event)
-	outcome = EVENTS.getOutcome(event)
-	reportValue = REPORTS.getReport(branch,period,event)
-	oldRep = REPORTS.getBeforeRep(branch, period)
-	for all reporters:
+	if(notDoneForEvent && periodOver && reported):
+		p = self.getProportionCorrect(event)
+		outcome = EVENTS.getOutcome(event)
+		reportValue = REPORTS.getReport(branch,period,event)
+		oldRep = REPORTS.getBeforeRep(branch, period)
 		# wrong
 		if(reportValue > outcome+.01 or reportValue < outcome-.01):
 			if(scalar or categorical):
@@ -55,13 +54,12 @@ def penalizeWrong(branch, period, event):
 			newRep = oldRep*(2*(1-p)**2 / p + 1)
 		smoothedRep = oldRep*.8 + newRep*.2
 		REPORTS.setAfterRep(branch, period, oldRep + (smoothedRep - oldRep))
-	if(doneForAllEventsUserReportedOn):
-		totalRepReported = EXPIRING.getTotalRepReported(branch, votePeriod)
-		self.denominator[branch][period] = totalRepReported + (smoothedRep - oldRep)
-	normalize(smoothedRep)
-	# must add up to repreported on event or less
-	for all reporters:
-		updateRepValues();
+		if(doneForAllEventsUserReportedOn):
+			totalRepReported = EXPIRING.getTotalRepReported(branch, votePeriod)
+			self.denominator[branch][period] = totalRepReported + (smoothedRep - oldRep)
+		return(1)
+	else:
+		return(0)
 
 macro abs($a):
 	if($a<0):
@@ -69,26 +67,28 @@ macro abs($a):
 	$a
 
 def proportionCorrect(event):
-	if(notDoneForEvent && periodOver && reported)
-	# p is proportion of correct responses
-	p = 0
-	# real answer is outcome
-	outcome = EVENTS.getOutcome(event)
-	if(outcome!=0):
-		# binary
-		if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65):
-			avgOutcome = EVENTS.getUncaughtOutcome(event)
-			# say we have outcome of 0, avg is .4, what is p?
-			# p is .6 or 60%
-			if(outcome == 2**64):
-				p = 1 - avgOutcome
-			# say we have outcome of 1, avg is .8, what is p (proportion correct)?
-				# p is .8 or 80%
-			if(outcome == 2 * 2**64):
-				p = avgOutcome
-			# say we have outcome of .5, avg is .55, what is p?
-			if(outcome == 3 * 2**63):
-	return(p)
+	if(notDoneForEvent && periodOver && reported):
+		# p is proportion of correct responses
+		p = 0
+		# real answer is outcome
+		outcome = EVENTS.getOutcome(event)
+		if(outcome!=0):
+			# binary
+			if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65):
+				avgOutcome = EVENTS.getUncaughtOutcome(event)
+				# say we have outcome of 0, avg is .4, what is p?
+				# p is .6 or 60%
+				if(outcome == 2**64):
+					p = 1 - avgOutcome
+				# say we have outcome of 1, avg is .8, what is p (proportion correct)?
+					# p is .8 or 80%
+				if(outcome == 2 * 2**64):
+					p = avgOutcome
+				# say we have outcome of .5, avg is .55, what is p?
+				if(outcome == 3 * 2**63):
+		return(p)
+	else:
+		return(0)
 
 def getProportionCorrect(event):
 	return(self.proportionCorrect[event])
@@ -125,6 +125,7 @@ def collectPenaltyRep(branch, votePeriod):
     if(oldPeriodsTooLateToPenalize && userDidntPenalizeForAllInOldPeriods):
     	# dock rep by 20% for each period they didn't
     	smoothedRep = oldRep*.8
+    	# and send it to branch for penalty rep collection
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     repReported = EXPEVENTS.getTotalRepReported(branch, lastPeriod)
     if(penaltyNotAlreadyCollected && periodOver && hasReported && collectedRepForPeriod)
