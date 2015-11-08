@@ -19,6 +19,8 @@ import events as EVENTS
 import makeReports as REPORTS
 
 data proportionCorrect[]
+# takes branch, votePeriod
+data denominator[][]
 
 # separate voting unethical and event outcome for .5 reports
 
@@ -30,14 +32,16 @@ data proportionCorrect[]
 #3. Always keep updated the current denominator, so totalRep + delta from 2
 	#3a. Make it so a user has to do this for all events they reported on _before_ updating the denominator
 #4. Do 2 and 3 for each reporter (note: each reporter needs to do this for all events they reported on, if not get docked)
-#5. At the end of some period make so users have to claim rep (win/loss var for a user / 3(aka current denominator) * totalRepInPeriod)
+#5. At the end of some period make so users have to claim rep (win/loss var for a user / (current denominator) * totalRepInPeriod)
 #6. If you don't do it for all events, autolose 20% rep (b/c you're trying to cheat)
 #7. what if don't claim rep, nothing, it just doesn't formally exist until you claim it or try to send it somewhere (upon which it claims your old rep)
 # make sure user has always done this up to current period before doing current period
-def penalizeWrong(event):
-	if(notDoneForEvent)
+def penalizeWrong(branch, period, event):
+	if(notDoneForEvent && periodOver && reported)
 	p = self.getProportionCorrect(event)
 	outcome = EVENTS.getOutcome(event)
+	reportValue = REPORTS.getReport(branch,period,event)
+	oldRep = REPORTS.getBeforeRep(branch, period)
 	for all reporters:
 		# wrong
 		if(reportValue > outcome+.01 or reportValue < outcome-.01):
@@ -50,6 +54,10 @@ def penalizeWrong(event):
 				p = -(abs(reportValue - EVENTS.getMedian(event))/2) + 1
 			newRep = oldRep*(2*(1-p)**2 / p + 1)
 		smoothedRep = oldRep*.8 + newRep*.2
+		REPORTS.setAfterRep(branch, period, oldRep + (smoothedRep - oldRep))
+	if(doneForAllEventsUserReportedOn):
+		totalRepReported = EXPIRING.getTotalRepReported(branch, votePeriod)
+		self.denominator[branch][period] = totalRepReported + (smoothedRep - oldRep)
 	normalize(smoothedRep)
 	# must add up to repreported on event or less
 	for all reporters:
@@ -61,6 +69,7 @@ macro abs($a):
 	$a
 
 def proportionCorrect(event):
+	if(notDoneForEvent && periodOver && reported)
 	# p is proportion of correct responses
 	p = 0
 	# real answer is outcome
@@ -84,6 +93,23 @@ def proportionCorrect(event):
 def getProportionCorrect(event):
 	return(self.proportionCorrect[event])
 
+# At the end of some period make so users have to claim rep (win/loss var for a user / (current denominator) * totalRepInPeriod)
+# what is window to do this?
+def collectRegularRep(branch, votePeriod):
+	if(periodOver && reportedEnough && claimedProportionCorrectEnough && hasDoneRRForLazyEventsAndWrongAnsForPastOrGottenPenaltyBelow && hasn'tDoneThisAlready):
+		totalRepReported = EXPIRING.getTotalRepReported(branch, votePeriod)
+		# denominator (so it is normalized rep)
+		denominator = REPORTS.getAfterRep(branch, period)
+		# new rep pre normalization
+		newRep = REPORTS.getAfterRep(branch, period)
+		# after normalization
+		newRep =  newRep * 2**64 / denominator * totalRepReported / 2**64
+		REPORTING.setRep(branch, REPORTING.repIDToIndex(branch, tx.origin), newRep)
+		return(1)
+	else:
+		return(0)
+
+
 # rep claiming similar to fee claiming
 # person didn't report enough
 def collectPenaltyRep(branch, votePeriod):
@@ -96,9 +122,12 @@ def collectPenaltyRep(branch, votePeriod):
     if(hasntDoneRRForLazyEventsAndWrongAnsForPast+CurrentPeriods):
         doIt()
         self.RRDone = true
+    if(oldPeriodsTooLateToPenalize && userDidntPenalizeForAllInOldPeriods):
+    	# dock rep by 20% for each period they didn't
+    	smoothedRep = oldRep*.8
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     repReported = EXPEVENTS.getTotalRepReported(branch, lastPeriod)
-    if(penaltyNotAlreadyCollected && periodOver && hasReported)
+    if(penaltyNotAlreadyCollected && periodOver && hasReported && collectedRepForPeriod)
     	rep = fixed_multiply(REPORTING.getInitialRep(branch, lastPeriod), REPORTING.getReputation(msg.sender)*2**64/repReported)
     	REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), rep)
 		REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), rep)

@@ -29,8 +29,24 @@ import reporting as REPORTING
 import fxpFunctions as FXP
 
 # branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID
-data branches[](numReportsHash[][], numReportsActual[][], numReportsEvent[][], hasReported[][], repReported[], reportedPeriod[][])
+data branches[](numReportsHash[][], numReportsActual[][], numReportsEvent[][], hasReported[][], repReported[], reportedPeriod[][], beforeRep[][], afterRep[][], report[][](event[]))
 
+def getReport(branch, period, event):
+    return(self.branches[branch].report[period][tx.origin].event[event])
+
+def getBeforeRep(branch,period):
+    return(self.branches[branch].beforeRep[period][tx.origin])
+
+def getAfterRep(branch, period):
+    return(self.branches[branch].afterRep[period][tx.origin])
+
+def setBeforeRep(branch, period, rep):
+    self.branches[branch].beforeRep[period][tx.origin] = rep
+    return(rep)
+
+def setAfterRep(branch, period, rep):
+    self.branches[branch].afterRep[period][tx.origin] = rep
+    return(rep)
 
 # Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't starred yet
 # Error -2: not in hash submitting timeframe
@@ -192,11 +208,17 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
             # record that reporter has reported for this event
             self.branches[branch].hasReported[eventID][tx.origin] = 1
             self.branches[branch].repReported[eventID] += REPORTING.getRepBalance(branch, tx.origin)
+            # set report value for event
+            self.branches[branch].report[period][tx.origin].event[event] = report
             # if 1st report of the period for a reporter
             if(!self.branches[branch].reportedPeriod[votePeriod][tx.origin]):
                 repReported = EXPEVENTS.getTotalRepReported(branch)
-                repReported += REPORTING.getRepBalance(branch, tx.origin)
+                balance = REPORTING.getRepBalance(branch, tx.origin)
+                repReported += balance
                 EXPEVENTS.setTotalRepReported(branch, votePeriod, repReported)
+                #1. Record rep at start of report period
+                self.branches[branch].beforeRep[votePeriod][tx.origin] = balance
+                self.branches[branch].afterRep[votePeriod][tx.origin] = balance
             # store report for each event
             return(1)
         return(-2)
