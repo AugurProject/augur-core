@@ -211,7 +211,10 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
             # set report value for event
             self.branches[branch].report[period][tx.origin].event[event] = report
             # set ethics value for event TODO:
-            
+            if(ethics!=2**64 || ethics!=0):
+                ethics = 2**64
+            ethics = (EVENTS.getEthics(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
+            EVENTS.setEthics(eventID, ethics)
             # if 1st report of the period for a reporter
             if(!self.branches[branch].reportedPeriod[votePeriod][tx.origin]):
                 repReported = EXPEVENTS.getTotalRepReported(branch)

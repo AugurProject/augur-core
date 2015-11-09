@@ -57,8 +57,9 @@ def getOutcome(event):
 def getEthics(event):
 	return(self.Events[event].ethical)
 
-def setEthics(event):
-	return(self.Events[event].ethical)
+def setEthics(event, ethicality):
+	self.Events[event].ethical = ethicality
+	return(ethicality)
 
 def getFinal(event):
 	return(self.Events[event].final)

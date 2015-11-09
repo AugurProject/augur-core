@@ -22,9 +22,6 @@ data proportionCorrect[]
 # takes branch, votePeriod
 data denominator[][]
 
-# separate voting unethical and event outcome for .5 reports
-
-
 #1. Record rep at start of report period
 #2. Penalize for each event
 #	- subtract from 1 and store in another variable if a loss
@@ -96,7 +93,7 @@ def getProportionCorrect(event):
 # At the end of some period make so users have to claim rep (win/loss var for a user / (current denominator) * totalRepInPeriod)
 # what is window to do this?
 def collectRegularRep(branch, votePeriod):
-	if(periodOver && reportedEnough && claimedProportionCorrectEnough && hasDoneRRForLazyEventsAndWrongAnsForPastOrGottenPenaltyBelow && hasn'tDoneThisAlready):
+	if(periodOver && reportedEnough && claimedProportionCorrectEnough && hasDoneRRForLazyEventsAndWrongAnsForPastOrGottenPenaltyBelow && hasntDoneThisAlready):
 		totalRepReported = EXPIRING.getTotalRepReported(branch, votePeriod)
 		# denominator (so it is normalized rep)
 		denominator = REPORTS.getAfterRep(branch, period)
