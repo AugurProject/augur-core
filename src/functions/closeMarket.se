@@ -51,6 +51,7 @@ macro catch($x):
     # -2: 0 outcome
     # -3: Outcome indeterminable
     # -4: Outcome .5 once, pushback and retry
+        # if mult events call this fun again to make sure no more to push back
 # Make sure there are no "while loop out of gas" issues
 #Need to make sure we close out markets where one doesn’t happen (i.e. Hillary or Bush? and GDP>3% growth 2017?) properly.
 #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
@@ -75,6 +76,7 @@ def closeMarket(branch, market):
         while n < numberEvents:
             fxpOutcome = EVENTS.getOutcome(events[n])
             pushedBack = EVENTS.getPushedBack(events[n])
+            ethical = catch(EVENTS.getEthical(events[n]))
             # if binary, catch the outcome
             if(EVENTS.getNumOutcomes(events[n])==2 and 2**64*EVENTS.getMaxValue(events[n])==2**65):
                 # if outcome not set
@@ -96,10 +98,12 @@ def closeMarket(branch, market):
                         # == period + 2 would mean that the reporting period is over, which is what we want to guarantee here for events which have been pushed backfbghnbg
                         EVENTS.setExpiration(events[n], (period+2)*periodLength)
                         return(-4)
-                    if(fxpOutcome==2**63 && pushedBack):
+                    if((fxpOutcome==2**63 && pushedBack) || !ethical):
                         # give event bond money to reporters
                         CASH.subtractCash(events[n], 42*2**64)
                         CASH.addCash(branch, 42*2**64)
+                        # not ethical is same as .5 outcome
+                        fxpOutcome = 2**63
                     else:
                         # return bond
                         CASH.subtractCash(events[n], 42*2**64)
@@ -130,10 +134,12 @@ def closeMarket(branch, market):
                         # == period + 2 would mean that the reporting period is over, which is what we want to guarantee here for events which have been pushed backfbghnbg
                         EVENTS.setExpiration(events[n], (period+2)*periodLength)
                         return(-4)
-                    if(fxpOutcome==2**63 && pushedBack):
+                    if((fxpOutcome==2**63 && pushedBack) || !ethical):
                         # give event bond money to reporters
                         CASH.subtractCash(events[n], 42*2**64)
                         CASH.addCash(branch, 42*2**64)
+                        # not ethical is same as .5 outcome
+                        fxpOutcome = 2**63
                     else:
                         # return bond
                         CASH.subtractCash(events[n], 42*2**64)
@@ -163,14 +169,17 @@ def closeMarket(branch, market):
                         # == period + 2 would mean that the reporting period is over, which is what we want to guarantee here for events which have been pushed backfbghnbg
                         EVENTS.setExpiration(events[n], (period+2)*periodLength)
                         return(-4)
-                    if(fxpOutcome==2**63 && pushedBack):
+                    if((fxpOutcome==2**63 && pushedBack) || !ethical):
                         # give event bond money to reporters
                         CASH.subtractCash(events[n], 42*2**64)
                         CASH.addCash(branch, 42*2**64)
+                        # not ethical is same as .5 outcome
+                        fxpOutcome = 2**63
                     else:
                         # return bond
                         CASH.subtractCash(events[n], 42*2**64)
                         CASH.addCash(INFO.getCreator(events[n]), 42*2**64)
+            # events not expired yet
             if(fxpOutcome==0):
                 return(-2)
 

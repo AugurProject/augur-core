@@ -104,7 +104,7 @@ def getNumEventsToReportOn(branch, votePeriod):
     # -4: no rep
     # -5: bad report
     # -6: hash not low enough
-def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIndex):
+def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIndex, ethics):
     if(REPORTING.getRepBalance(branch, tx.origin)<10*2**64):
         return(-4)
     if(hasntDoneRRForLazyEventsAndWrongAnsForPastPeriods):
@@ -210,6 +210,8 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
             self.branches[branch].repReported[eventID] += REPORTING.getRepBalance(branch, tx.origin)
             # set report value for event
             self.branches[branch].report[period][tx.origin].event[event] = report
+            # set ethics value for event TODO:
+            
             # if 1st report of the period for a reporter
             if(!self.branches[branch].reportedPeriod[votePeriod][tx.origin]):
                 repReported = EXPEVENTS.getTotalRepReported(branch)

@@ -26,7 +26,7 @@
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
 # need outcomes returned as 1*2^64, 2*2^64, etc... indeterminate as 3*2^63
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, median, uncaughtOutcome, final)
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, median, uncaughtOutcome, final, ethical)
 
 import branches as BRANCHES
 
@@ -53,6 +53,12 @@ def setExpiration(event, date):
 def getOutcome(event):
 	# do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
 	return(self.Events[event].outcome)
+
+def getEthics(event):
+	return(self.Events[event].ethical)
+
+def setEthics(event):
+	return(self.Events[event].ethical)
 
 def getFinal(event):
 	return(self.Events[event].final)
