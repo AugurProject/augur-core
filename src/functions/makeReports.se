@@ -111,6 +111,8 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
         doIt()
         self.RRDone = true
     numEvents = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
+    #if(event'sMarketOdds>=.99):
+        #don't report
     if(self.branches[branch].hasReported[eventID][tx.origin]==1):
         return(-1)
     if(numEvents==0):
@@ -245,6 +247,7 @@ def penalizeNotEnoughReports(branch, votePeriod):
         EXPEVENTS.setTotalRepReported(branch, votePeriod, repReported)
     if(numEvents < 30*2**64):
         numEvents = 30*2**64
+    # what _if_ there are actually <30 events in augur?
     if(numEvents/(2*2**64) > self.branches[branch].numReportsActual[msg.sender][votePeriod]):
         originalRep = REPORTING.getRepBalance(branch, tx.origin)
         # penalize people

@@ -44,7 +44,7 @@ event creationBlock(market:indexed)
     # -4: not enough money or market already exists
 
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
-def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, blockNumber):
+def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, blockNumber, forkSelection):
     periodLength = BRANCHES.getPeriodLength(branch)
     if(periodLength==0 or len(description)==0 or initialLiquidity<50*2**64 || alpha <= 2^57 || tradingFee < BRANCHES.getMinTradingFee(branch)):
         return(-1)
@@ -115,7 +115,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     while y <= numOutcomes:
         MARKETS.modifyShares(marketID, y, z)
         y += 1
-    if(INFO.setInfo(marketID, description, tx.origin, initialLiquidity) && BRANCHES.addMarket(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch) && CASH.send(marketID, initialLiquidity)):
+    if(INFO.setInfo(marketID, description, tx.origin, initialLiquidity) && BRANCHES.addMarket(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, forkSelection) && CASH.send(marketID, initialLiquidity)):
         i = 0
         while i < len(events):
             EVENTS.addMarket(events[i], marketID)
@@ -137,10 +137,42 @@ def updateTradingFee(branch, market, tradingFee):
     return(MARKETS.setTradingFee(market, tradingFee))
 
 #Add def moveMarket(market, newBranch, marketAuthor) in case of a fork or some other issue
-def moveMarket(market, newBranch, marketAuthor):
-    if(msg.sender==marketAuthor && stuffForked()):
+#In event of fork:  
+#1) Market Maker chooses the fork
+#2) Market is closed at current prices
+#3) The market is unable to go to adjudication upon close date and closes at final prices.
+#4) All traders currently involved in this market are asked which fork to participate in. At market close, this vote is used to determine the fork this market moves to before adjudication.
+#5) market is moved to the fork with a higher rep market cap at the end of time period x as defined by etherex
+#6) market is moved to the fork with a higher market cap as defined by centralized exchange y 
+def moveMarket(market, fork):
+    if(stuffForked()):
+        forkChoice = MARKETS.getForkSelection(market)
+
         # set market branch
         # move event
-        # move market as well
+        # move market as well to whichever fork
+
+        #1) Market Maker chooses the fork
+        if(forkChoice==1):
+            if(INFO.getCreator(market)==msg.sender):
+
+        #2) Market is closed at current prices
+        elif(forkChoice==2):
+
+        #3) The market is unable to go to adjudication upon close date and closes at final prices.
+        elif(forkChoice==3):
+
+        #4) All traders currently involved in this market are asked which fork to participate in. At market close, this vote is used to determine the fork this market moves to before adjudication.
+        # should this be weighted by capital in the market? hmm
+        elif(forkChoice==4):
+
+        #5) market is moved to the fork with a higher rep market cap at the end of time period x as defined by etherex
+        elif(forkChoice==5):
+
+        #6) market is moved to the fork with a higher market cap as defined by centralized exchange y 
+        elif(forkChoice==6):
+
+        #7) autonocoin style bet which fork it should go on and that's the one (like futarchy, except you don't get a refund)
+        elif(forkChoice==7):
     else:
         return(0)

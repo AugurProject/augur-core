@@ -33,7 +33,7 @@ import branches as BRANCHES
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, forkSelection)
 
 # @return cost - how much it costs you to buy
 #         price - current share price of that outcome after buy
@@ -49,6 +49,9 @@ def getSimulatedBuy(market, outcome, amount):
     price = self.price(market, outcome)
     sharesPurchased(market)[outcome] -= amount
     return([cost, price], chars=64)
+
+def getForkSelection(market):
+    return(self.Markets[market].forkSelection)
 
 # @return cost - how much you get paid to sell
 #         price - current share price of that outcome after sell
@@ -195,7 +198,7 @@ def price(market, outcome):
     return(((b - a) * 2**64)/2**60)
 
 # check that msg.sender is one of our function contracts
-def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch):
+def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, forkSelection):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add event list to the market
@@ -204,6 +207,7 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch):
     self.Markets[marketID].tradingPeriod = tradingPeriod
     self.Markets[marketID].tradingFee = tradingFee
     self.Markets[marketID].branch = branch
+    self.Markets[marketID].forkSelection = forkSelection
     return(1)
 
 def addParticipant(market, address):
