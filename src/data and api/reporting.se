@@ -19,6 +19,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+import makeReports as REPORTS
 import branches as BRANCHES
 
 # Reporting index is the branchID
@@ -114,7 +115,7 @@ def hashReport(report: arr, salt):
         return(reportHash)
 
 # check that msg.sender is one of our function contracts
-def setInitialReporters(parent, branchID):
+def setInitialReporters(parent, branchID, period):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # first vote period won't be until after the current (in this case first) basket of things has expired
@@ -123,19 +124,28 @@ def setInitialReporters(parent, branchID):
         # then once blockNum / periodLength is say 6 and eventsExpDates[6]
         # votePeriod 4 should close and the currentVotePeriod should be from
         # eventsExpDates 5 (anyone can call the consensus function for voteperiod 4 at this point)
-    i = 0
-    while i < self.Reporting[parent].numberReporters:            
-        reporterID = self.Reporting[parent].reputation[i].reporterID
-        self.Reporting[branchID].reputation[i].reporterID = reporterID
-        self.Reporting[branchID].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
-        self.Reporting[branchID].repIDtoIndex[reporterID] = i
-        i+=1
     # add branch as a "reporter"
-    self.Reporting[branchID].numberReporters = i+1
-    self.Reporting[branch].repIDtoIndex[branch] = i
-    self.Reporting[branch].reputation[i].repValue = 0
-    self.Reporting[branch].reputation[0].reporterID = branch
+    self.Reporting[branchID].numberReporters = 1
+    self.Reporting[branchID].repIDtoIndex[branch] = 0
+    self.Reporting[branchID].reputation[0].repValue = 0
+    self.Reporting[branchID].reputation[0].reporterID = branch
     return(1)
+
+def claimInitialRep(parent, branchID, period):
+    # have 1 month to claim
+    if(self.repIDToIndex(branchID, msg.sender)==0 && block.number < (BRANCHES.getCreationDate(branchID) + 216000)):
+        i = self.Reporting[branchID].numberReporters
+        rep = REPORTS.getBeforeRep(parent, period)
+        reporterID = msg.sender
+        self.Reporting[branchID].reputation[i].reporterID = reporterID
+        self.Reporting[branchID].reputation[i].repValue = rep
+        self.Reporting[branchID].repIDtoIndex[reporterID] = i
+        self.Reporting[branchID].numberReporters += 1
+        self.Reporting[branch].totalRep += rep
+        return(1)
+    else:
+        # already claimed or too late
+        return(0)
 
 def addReporter(branch, sender):
     #if(!self.whitelist.check(msg.sender)):

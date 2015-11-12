@@ -44,6 +44,9 @@ def createSubbranch(description:str, periodLength, parent, tradingFee):
     #if(upcomingDecisions < 500):
     #    return(0)
 
+    parentPeriod = BRANCHES.getPeriodLength(parent)
+    parentCurrentVotePeriod = (block.number / periodLength) - 1
+
     branchInfo = string(7*32+len(description))
     branchInfo[0] = BRANCH                                      #typecode
     branchInfo[1] = tx.origin                                   #creator address
@@ -58,7 +61,7 @@ def createSubbranch(description:str, periodLength, parent, tradingFee):
     branchID = sha256(branchInfo, chars=len(branchInfo))
     currentVotePeriod = (block.number / periodLength) - 1
     BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee)
-    if(INFO.getCreator(parent) && CASH.send(parent, 47*2^64) && INFO.setInfo(branchID, description, tx.origin, 47*2^64) && REPORTING.setInitialReporters(parent, branchID)):
+    if(INFO.getCreator(parent) && CASH.send(parent, 47*2^64) && INFO.setInfo(branchID, description, tx.origin, 47*2^64) && REPORTING.setInitialReporters(parent, branchID, parentCurrentVotePeriod)):
         return(branchID)
     else:
         return(-2)

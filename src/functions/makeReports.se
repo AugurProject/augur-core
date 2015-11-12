@@ -122,6 +122,8 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
     x[0] = tx.origin + eventID
     i = 0
     numMarkets = EVENTS.getNumMarkets(eventID)
+    if(numMarkets>100):
+        numMarkets = 100
     markets = array(numMarkets)
     markets = EVENTS.getMarkets(eventID, outitems=numMarkets)
     volume = 0

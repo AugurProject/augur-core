@@ -26,7 +26,7 @@
 # period parameter for reporting
 # currentExpPeriod = (block.number / self.Branches[branch].periodLength)
 # currentExpPeriod - 1 is what's up for reporting at any given time
-data Branches[](currentVotePeriod, periodLength, step, substep, markets[], numMarkets, minTradingFee, balance[])
+data Branches[](currentVotePeriod, periodLength, step, substep, markets[], numMarkets, minTradingFee, balance[], creationDate)
 
 data branchList[]
 
@@ -87,6 +87,9 @@ def getNumBranches():
 def getBranch(branchNumber):
 	return(self.branchList[branchNumber])
 
+def getCreationDate(ID):
+	return(self.Branches[ID].creationDate)
+
 # check that msg.sender is one of our function contracts
 def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee):
 	#if(!self.whitelist.check(msg.sender)):
@@ -97,6 +100,7 @@ def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee):
 		self.Branches[ID].minTradingFee = minTradingFee
 		self.branchList[self.branchListCount] = ID
 		self.branchListCount += 1
+		self.Branches[ID].creationDate = block.number
 		return(1)
 	else:
 		return(0)
