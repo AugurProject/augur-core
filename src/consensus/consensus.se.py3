@@ -1,13 +1,8 @@
 # Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
 
-# while loops -> lazy eval
-	# close market
-
 #separate sets of rep
 #After a user has started doing pen calcs but before they've gotten new normalized rep, don't allow sending of rep
 #Also don't allow conversion of rep after selection of events for a voting period has started, otherwise you can report on 1-2 but reap rewards as if it's a lot of rep.  So it can't be used until next period (ie there's a holding period)
-
-#Abe limit order writeup
 
 #  only resolve ones that had odds <99% for one of the outcomes.
 # We should probably still have an option to pay to resolve in case something somehow goes wrong here (or if not enough reports).  This also doesn't work for scalar markets (although it does for categorical).
