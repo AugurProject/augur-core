@@ -10,6 +10,10 @@
 # Two initial branches - one only for oracle system no markets
 	# - on all branches besides oracle branch, if an event isn’t in a market, it shouldn’t be reported on at all
 
+# fork scenario with scalars (1 fork has outcome, the other reports on it again is a soln)
+
+# outcome logging is dangerous, people can use the receipts root to cheat
+
 import expiringEvents as EXPIRING
 import reporting as REPORTING
 import fxpFunctions as FXP

@@ -32,8 +32,15 @@ data nonces[]
 
 event updatePrice(user:indexed, market:indexed, outcome:indexed, price, cost)
 
-# We need to implement the new market fee structure described by evand, making fees at the edges less insane.  
+# TODO: We need to implement the new market fee structure described by evand, making fees at the edges less insane.  
 
+# market, reporter
+data trades[][](hash, block)
+
+def commitTrade(market, hash):
+    self.trades[market][tx.origin].hash = hash
+    self.trades[market][tx.origin].block = block.number
+    return(1)
 
 # amount of shares should be fixed point
 # @return return price + fee to buy shares
@@ -42,6 +49,7 @@ event updatePrice(user:indexed, market:indexed, outcome:indexed, price, cost)
     # -2: entered a -amt of shares
     # -3: not enough money / limit order too low
     # -4: bad nonce/hash
+    # -5: bad commitment or no commitment
 #TODO:
 #calc loss based on both positions you own
 #i.e. worst case loss sequestering per market
@@ -58,6 +66,16 @@ def buyShares(branch, market, outcome, amount, nonce, limit):
     #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
     #if !good_pow():
     #    return(-4)
+
+    buyInfo = array(4)
+    buyInfo[0] = market
+    buyInfo[1] = outcome
+    buyInfo[2] = amount
+    buyInfo[3] = limit
+    buyHash = sha256(buyInfo, items=4)
+    if(self.trades[market][tx.origin].hash != buyHash || block.number == self.trades[market][tx.origin].block):
+        return(-5)
+
     inc_nonce()
     stalled = 0
     currentPeriod = block.number / BRANCHES.getPeriodLength(branch)
@@ -124,9 +142,20 @@ def buyShares(branch, market, outcome, amount, nonce, limit):
     # -1: invalid outcome, trading closed, or you haven't traded in this market
     # -2: entered a -amt of shares
     # -3: you own no shares / limit price too high
+    # -4: bad nonce/hash
+    # -5: bad commitment or no commitment
 def sellShares(branch, market, outcome, amount, nonce, limit):
     #if !good_pow():
     #    return(-4)
+    sellInfo = array(4)
+    sellInfo[0] = market
+    sellInfo[1] = outcome
+    sellInfo[2] = amount
+    sellInfo[3] = limit
+    sellHash = sha256(sellInfo, items=4)
+    if(self.trades[market][tx.origin].hash != sellHash || block.number == self.trades[market][tx.origin].block):
+        return(-5)
+
     inc_nonce()
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
