@@ -6,6 +6,7 @@
 		#Also don't allow conversion of rep after selection of events for a voting period has started,
 		 #otherwise you can report on 1-2 but reap rewards as if it's a lot of rep.  
 		 #So it can't be used until next period (ie there's a holding period)
+		# benny comment
 
 	# only resolve markets that have odds <99% for one of the outcomes.
 		# We should probably still have an option to pay to resolve in case something somehow goes wrong here (or if not enough reports).  This also doesn't work for scalar markets (although it does for categorical).
@@ -13,8 +14,6 @@
 	# https://www.reddit.com/r/Augur/comments/3ow0us/need_a_method_to_end_a_market_early/
 
 	# https://www.reddit.com/r/Augur/comments/3orgb3/minimum_market_maker_fee/
-
-	# When a market achieves its minimum requirement for number of reporters, the market is eligible to be resolved
 
 	# https://github.com/AugurProject/augur-core/commit/add5357230c82e2c65da81308877e27b9757e43c & need a way to actually update contracts / externs too
 

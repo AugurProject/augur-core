@@ -29,6 +29,7 @@ import closeMarketTwo as CLOSETWO
 import closeMarketFour as CLOSEFOUR
 import closeMarketEight as CLOSEEIGHT
 import expiringEvents as EXPEVENTS
+import makeReports as MAKEREPORTS
 
 # first param is the market, second param is the subcurrency contract
 data cash[][]
@@ -50,7 +51,7 @@ macro catch($x):
 #Whoever “closes” the market should get a small portion of fees to simply cover the gas cost to close the market and do payouts. (or lazily eval this)
 # @return 0 if fail, if success 1
 # Error messages otherwise
-    # -1: Market has no cash anyway
+    # -1: Market has no cash anyway / already closed
     # -2: 0 outcome
     # -3: Outcome indeterminable
     # -4: Outcome .5 once, pushback and retry
@@ -58,25 +59,36 @@ macro catch($x):
 # Make sure there are no "while loop out of gas" issues
 #Need to make sure we close out markets where one doesn’t happen (i.e. Hillary or Bush? and GDP>3% growth 2017?) properly.
 #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
+
+# need to make sure market / events actually resolved not just expired
+
 def closeMarket(branch, market):
     if(CASH.balance(market)<=0):
         return(-1)
     numberEvents = MARKETS.getNumEvents(market)
     tradingPeriod = MARKETS.getTradingPeriod(market)
+    events = array(3)
+    events = MARKETS.getMarketEvents(market, outitems=3)
+    i = 0
+    reportingDone = 1
+    while i < numberEvents:
+        if(MAKEREPORTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i]) != MAKEREPORTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])):
+            reportingDone = 0
+        i += 1
     # check if any events in the market were pushed back and that market has expired
     # (as long as the latest expiring event wasn't pushed back, we know they all got reported on)
     # if it *was* pushed back, we'll just get an outcome of 0, return 0 until the event is actually reported on, then we can resolve the market
-    if(BRANCHES.getVotePeriod(branch) > tradingPeriod):
+    if(BRANCHES.getVotePeriod(branch) > tradingPeriod || reportingDone):
         # loop through events in the market, get their outcomes && use those to determine the winning events!
         n = 0
         # (max poss. winning outcomes is 8 outcomes total all scalar multidimensional)
         winningOutcomes = array(8)
-        events = array(3)
-        events = MARKETS.getMarketEvents(market, outitems=3)
+
         periodLength = BRANCHES.getPeriodLength(branch)
         residual = block.number % periodLength
         period = BRANCHES.getVotePeriod(branch)
         while n < numberEvents:
+            votingPeriodEvent = EVENTS.getExpiration(events[n])/BRANCHES.getPeriodLength(branch)
             fxpOutcome = EVENTS.getOutcome(events[n])
             pushedBack = EVENTS.getPushedBack(events[n])
             ethical = catch(EVENTS.getEthical(events[n]))
@@ -89,6 +101,9 @@ def closeMarket(branch, market):
                     # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
                     if(fxpOutcome==2**63 && !pushedBack && residual < periodLength/2):
                         #push back event
+                        MAKEREPORTS.setNumReportsExpectedEvent(branch, votingPeriodEvent, events[n], 0)
+                        MAKEREPORTS.setNumReportsEvent(branch, votingPeriodEvent, events[n], 0)
+                        EVENTS.setEthics(events[n], 0)
                         EXPEVENTS.addEvent(branch, period, events[n])
                         #set outcome to 0
                         EVENTS.setOutcome(events[n], 0)
@@ -98,7 +113,7 @@ def closeMarket(branch, market):
                         EVENTS.setPushedBack(events[n])
                         #set event expiration date to be after the current reporting period ends
                         #expDate / periodLength == period+1 would mean it's being reported on
-                        # == period + 2 would mean that the reporting period is over, which is what we want to guarantee here for events which have been pushed backfbghnbg
+                        # == period + 2 would mean that the reporting period is over, which is what we want to guarantee here for events which have been pushed back
                         EVENTS.setExpiration(events[n], (period+2)*periodLength)
                         return(-4)
                     if((fxpOutcome==2**63 && pushedBack) || !ethical):
@@ -125,6 +140,10 @@ def closeMarket(branch, market):
                     # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
                     if(fxpOutcome==2**63 && !pushedBack && residual < periodLength/2):
                         #push back event
+                        # wrong period?
+                        MAKEREPORTS.setNumReportsExpectedEvent(branch, votingPeriodEvent, events[n], 0)
+                        MAKEREPORTS.setNumReportsEvent(branch, votingPeriodEvent, events[n], 0)
+                        EVENTS.setEthics(events[n], 0)
                         EXPEVENTS.addEvent(branch, period, events[n])
                         #set outcome to 0
                         EVENTS.setOutcome(events[n], 0)
@@ -134,7 +153,7 @@ def closeMarket(branch, market):
                         EVENTS.setMedian(events[n], 0)
                         #set event expiration date to be after the current reporting period ends
                         #expDate / periodLength == period+1 would mean it's being reported on
-                        # == period + 2 would mean that the reporting period is over, which is what we want to guarantee here for events which have been pushed backfbghnbg
+                        # == period + 2 would mean that the reporting period is over, which is what we want to guarantee here for events which have been pushed back
                         EVENTS.setExpiration(events[n], (period+2)*periodLength)
                         return(-4)
                     if((fxpOutcome==2**63 && pushedBack) || !ethical):
@@ -160,6 +179,8 @@ def closeMarket(branch, market):
                     # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
                     if(fxpOutcome==2**63 && !pushedBack && residual < periodLength/2):
                         #push back event
+                        MAKEREPORTS.setNumReportsExpectedEvent(branch, votingPeriodEvent, events[n], 0)
+                        MAKEREPORTS.setNumReportsEvent(branch, votingPeriodEvent, events[n], 0)
                         EXPEVENTS.addEvent(branch, period, events[n])
                         #set outcome to 0
                         EVENTS.setOutcome(events[n], 0)
@@ -167,9 +188,10 @@ def closeMarket(branch, market):
                         EVENTS.setPushedBack(events[n])
                         # set median to 0
                         EVENTS.setMedian(events[n], 0)
+                        EVENTS.setEthics(events[n], 0)
                         #set event expiration date to be after the current(read: next b/c it's the very beginning of it) reporting period ends
                         #expDate / periodLength == period+1 would mean it's being reported on
-                        # == period + 2 would mean that the reporting period is over, which is what we want to guarantee here for events which have been pushed backfbghnbg
+                        # == period + 2 would mean that the reporting period is over, which is what we want to guarantee here for events which have been pushed back
                         EVENTS.setExpiration(events[n], (period+2)*periodLength)
                         return(-4)
                     if((fxpOutcome==2**63 && pushedBack) || !ethical):
