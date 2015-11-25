@@ -30,7 +30,7 @@ import reporting as REPORTING
 # error messages otherwise
     # -1: bad input or parent doesn't exist
     # -2: no money for creation fee or branch already exists
-def createSubbranch(description:str, periodLength, parent, tradingFee):
+def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnly):
     if(periodLength<=0 || !BRANCHES.getPeriodLength(parent) || description==0):
         return(-1)
 
@@ -60,7 +60,7 @@ def createSubbranch(description:str, periodLength, parent, tradingFee):
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
     branchID = sha256(branchInfo, chars=len(branchInfo))
     currentVotePeriod = (block.number / periodLength) - 1
-    BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee)
+    BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee, oracleOnly)
     if(INFO.getCreator(parent) && CASH.send(parent, 47*2^64) && INFO.setInfo(branchID, description, tx.origin, 47*2^64) && REPORTING.setInitialReporters(parent, branchID, parentCurrentVotePeriod)):
         return(branchID)
     else:

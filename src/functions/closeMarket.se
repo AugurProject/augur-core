@@ -30,6 +30,9 @@ import closeMarketFour as CLOSEFOUR
 import closeMarketEight as CLOSEEIGHT
 import expiringEvents as EXPEVENTS
 
+# first param is the market, second param is the subcurrency contract
+data cash[][]
+
 macro YES: 2^65
 macro NO: 2^64
 macro BAD: 3 * 2^63

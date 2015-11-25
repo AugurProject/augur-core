@@ -104,6 +104,7 @@ def getNumEventsToReportOn(branch, votePeriod):
     # -4: no rep
     # -5: bad report
     # -6: hash not low enough
+    # -7: if an event isn’t in a market, it shouldn’t be reported on at all
 def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIndex, ethics):
     if(REPORTING.getRepBalance(branch, tx.origin)<10*2**64):
         return(-4)
@@ -111,7 +112,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
         doIt()
         self.RRDone = true
     numEvents = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
-    #if(event'sMarketOdds>=.99):
+    #if(event'sMarketOdds>=.99 && evenHasOnly1Market):
         #don't report
     if(self.branches[branch].hasReported[eventID][tx.origin]==1):
         return(-1)
@@ -122,6 +123,8 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
     x[0] = tx.origin + eventID
     i = 0
     numMarkets = EVENTS.getNumMarkets(eventID)
+    if(numMarkets==0):
+        return(-7)
     if(numMarkets>100):
         numMarkets = 100
     markets = array(numMarkets)

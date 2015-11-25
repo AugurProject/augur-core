@@ -26,6 +26,7 @@ import reporting as REPORTING
 import fxpFunctions as FXP
 import markets as MARKETS
 import events as EVENTS
+import expiringEvents as EXPEVENTS
 
 event creationBlock(market:indexed)
 
@@ -46,9 +47,13 @@ event creationBlock(market:indexed)
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, blockNumber, forkSelection):
     periodLength = BRANCHES.getPeriodLength(branch)
-    if(periodLength==0 or len(description)==0 or initialLiquidity<50*2**64 || alpha <= 2^57 || tradingFee < BRANCHES.getMinTradingFee(branch)):
+    # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
+    if(periodLength==0 or len(description)==0 or (initialLiquidity<50*2**64 and !BRANCHES.getOracleOnly(branch)) || alpha <= 2^57 || tradingFee < BRANCHES.getMinTradingFee(branch)):
         return(-1)
     if(tradingFee > 2^61):
+        return(-1)
+    # minimum initial liquidity for "oracle only" branches is less (half is a fee, half returned)
+    if(initialLiquidity<2*2**64):
         return(-1)
     event = events[0]
         # check that events have same exp. dates && branch
@@ -64,6 +69,8 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     while i < eventNum:
         event = events[i]
         expirationDate = EVENTS.getExpiration(event)
+        futurePeriod = expDate / periodLength
+        EXPEVENTS.addEvent(branch, futurePeriod, event)
         if(expirationDate > tradingPeriod):
             tradingPeriod = expirationDate
         eventsConcat += event

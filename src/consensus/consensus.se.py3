@@ -2,17 +2,14 @@
 
 #separate sets of rep
 #After a user has started doing pen calcs but before they've gotten new normalized rep, don't allow sending of rep
-#Also don't allow conversion of rep after selection of events for a voting period has started, otherwise you can report on 1-2 but reap rewards as if it's a lot of rep.  So it can't be used until next period (ie there's a holding period)
+#Also don't allow conversion of rep after selection of events for a voting period has started,
+ #otherwise you can report on 1-2 but reap rewards as if it's a lot of rep.  
+ #So it can't be used until next period (ie there's a holding period)
 
 #  only resolve ones that had odds <99% for one of the outcomes.
 # We should probably still have an option to pay to resolve in case something somehow goes wrong here (or if not enough reports).  This also doesn't work for scalar markets (although it does for categorical).
 
-# Two initial branches - one only for oracle system no markets
-	# - on all branches besides oracle branch, if an event isn’t in a market, it shouldn’t be reported on at all
-
-# fork scenario with scalars (1 fork has outcome, the other reports on it again is a soln)
-
-# outcome logging is dangerous, people can use the receipts root to cheat
+# When a market achieves its minimum requirement for number of reporters, the market is eligible to be resolved
 
 import expiringEvents as EXPIRING
 import reporting as REPORTING
@@ -182,6 +179,7 @@ def roundTwoBond(event):
 # Errors:
 	# -1: round two hasn't happened yet
 # what about ethics forking?
+# fork scenario with scalars (1 fork has outcome, the other reports on it again is a soln)
 def fork(event):
 	if(!EVENTS.getRoundTwo(event)):
 		return(-1)

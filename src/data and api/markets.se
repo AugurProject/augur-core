@@ -70,6 +70,7 @@ def getSimulatedSell(market, outcome, amount):
     return([cost, price], chars=64)
 
 def getMarketInfo(market):
+    # whitelist
     lenEvents = self.Markets[market].lenEvents
     info = array(14+lenEvents)
     info[0] = self.Markets[market].currentParticipant
@@ -261,6 +262,7 @@ def initialLiquiditySetup(marketID, alpha, cumScale, numOutcomes):
     return(1)
 
 def getMarketOutcomeInfo(market, outcome):
+    # whitelist
     info = array(13)
     participantNumber = self.Markets[market].addr2participant[tx.origin]
     info[0] = self.getSharesPurchased(market, outcome)

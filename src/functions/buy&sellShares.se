@@ -50,6 +50,7 @@ def commitTrade(market, hash):
     # -3: not enough money / limit order too low
     # -4: bad nonce/hash
     # -5: bad commitment or no commitment
+    # -6: oracle only branch, no trading
 #TODO:
 #calc loss based on both positions you own
 #i.e. worst case loss sequestering per market
@@ -66,6 +67,9 @@ def buyShares(branch, market, outcome, amount, nonce, limit):
     #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
     #if !good_pow():
     #    return(-4)
+
+    if(BRANCHES.getOracleOnly(branch)):
+        return(-6)
 
     buyInfo = array(4)
     buyInfo[0] = market
@@ -144,9 +148,12 @@ def buyShares(branch, market, outcome, amount, nonce, limit):
     # -3: you own no shares / limit price too high
     # -4: bad nonce/hash
     # -5: bad commitment or no commitment
+    # -6: oracle only branch, no trading
 def sellShares(branch, market, outcome, amount, nonce, limit):
     #if !good_pow():
     #    return(-4)
+    if(BRANCHES.getOracleOnly(branch)):
+        return(-6)
     sellInfo = array(4)
     sellInfo[0] = market
     sellInfo[1] = outcome
