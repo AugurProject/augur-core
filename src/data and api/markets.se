@@ -141,6 +141,10 @@ def getMarketNumOutcomes(market):
 def getTradingPeriod(market):
     return(self.Markets[market].tradingPeriod)
 
+def setTradingPeriod(market, period):
+    self.Markets[market].tradingPeriod = period
+    return(1)
+
 def getTradingFee(market):
     return(self.Markets[market].tradingFee)
 
@@ -245,7 +249,7 @@ def setWinningOutcomes(market, outcomes: arr):
     # largest # of winning outcomes is 8
     save(self.Markets[market].winningOutcomes[0], outcomes, items=len(outcomes))
     return(1)
-    
+
 def getWinningOutcomes(market):
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
     #if(!self.whitelist.check(msg.sender)):
