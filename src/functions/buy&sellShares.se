@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation 
+# Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -32,7 +32,7 @@ data nonces[]
 
 event updatePrice(user:indexed, market:indexed, outcome:indexed, price, cost)
 
-# TODO: We need to implement the new market fee structure described by evand, making fees at the edges less insane.  
+# TODO: We need to implement the new market fee structure described by evand, making fees at the edges less insane.
 
 # market, reporter
 data trades[][](hash, block)
@@ -56,7 +56,7 @@ def commitTrade(market, hash):
 #i.e. worst case loss sequestering per market
 # limit order ls-lmsr
 def buyShares(branch, market, outcome, amount, nonce, limit):
-    # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)  
+    # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     # if we have 3-4 cycles in a row of events getting pushed back market would already be closed even though
     # events up to be decided on for a while yet never decided
     # technically this is a stalled branch and market should be open
@@ -90,11 +90,14 @@ def buyShares(branch, market, outcome, amount, nonce, limit):
     #if event gets pushed back people can still buy / sell
     pushedBack = 0
     while n < numEvents:
-        if(EVENTS.getPushedBack(events[c])==0):
+        if(EVENTS.getPushedBack(events[n])==0):
             n += 1
-        else:
+        # pushed back and not resolved
+        elif(EVENTS.getOutcome(events[n])==0):
             pushedBack = 1
             n = numEvents
+        else:
+          n += 1
     if(currentPeriod >= (currentVotePeriod+3)):
         c = 0
         while c < numEvents:
@@ -103,7 +106,7 @@ def buyShares(branch, market, outcome, amount, nonce, limit):
             else:
                 return(-1)
         stalled = 1
-    if (outcome==0 || (currentVotePeriod>=MARKETS.getTradingPeriod(market) && !stalled && !pushedBack) || MARKETS.getBranchID(market) != branch):
+    if (outcome==0 || (currentVotePeriod>MARKETS.getTradingPeriod(market) && !stalled && !pushedBack) || MARKETS.getBranchID(market) != branch):
         return(-1)
     # lmsr cost calcs
     oldCost = MARKETS.lsLmsr(market)
@@ -113,7 +116,7 @@ def buyShares(branch, market, outcome, amount, nonce, limit):
         MARKETS.modifyShares(market, outcome, -amount)
         return(0)
     price = (newCost - oldCost)
-    
+
     if(CASH.balance(tx.origin) < price*(MARKETS.getTradingFee(market) + 2^64)/2^64 or (limit!=0 and (price*2^64/amount)>limit)):
         MARKETS.modifyShares(market, outcome, -amount)
         return(-3)
@@ -175,11 +178,14 @@ def sellShares(branch, market, outcome, amount, nonce, limit):
     #if event gets pushed back people can still buy / sell
     pushedBack = 0
     while n < numEvents:
-        if(EVENTS.getPushedBack(events[c])==0):
+        if(EVENTS.getPushedBack(events[n])==0):
             n += 1
-        else:
+        # pushed back and not resolved
+        elif(EVENTS.getOutcome(events[n])==0):
             pushedBack = 1
             n = numEvents
+        else:
+          n += 1
     if((currentPeriod + 3) >= currentVotePeriod):
         c = 0
         while c < numEvents:
@@ -188,7 +194,7 @@ def sellShares(branch, market, outcome, amount, nonce, limit):
             else:
                 return(-1)
         stalled = 1
-    if (MARKETS.getParticipantID(market, participantNumber) != tx.origin || outcome==0 || (currentVotePeriod>=MARKETS.getTradingPeriod(market) && !stalled && !pushedBack) || MARKETS.getBranchID(market) != branch):
+    if (MARKETS.getParticipantID(market, participantNumber) != tx.origin || outcome==0 || (currentVotePeriod>MARKETS.getTradingPeriod(market) && !stalled && !pushedBack) || MARKETS.getBranchID(market) != branch):
         return(-1)
     # lmsr cost calcs
     oldCost = MARKETS.lsLmsr(market)

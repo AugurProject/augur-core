@@ -99,7 +99,7 @@ def closeMarket(branch, market):
                     # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
                     if(fxpOutcome==2**63 && !pushedBack && residual < periodLength/2):
                         #push back event
-                        MAKEREPORTS.setNumReportsExpectedEvent(branch, votingPeriodEvent, events[n], 0)
+                        MAKEREPORTS.setNumReportsExpectedEvent(branch, votingPeriodEvent, events[n], 0)`
                         MAKEREPORTS.setNumReportsEvent(branch, votingPeriodEvent, events[n], 0)
                         EVENTS.setEthics(events[n], 0)
                         EXPEVENTS.addEvent(branch, period+1, events[n])
