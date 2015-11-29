@@ -93,7 +93,7 @@ def closeMarket(branch, market):
             # if binary, catch the outcome
             if(EVENTS.getNumOutcomes(events[n])==2 and 2**64*EVENTS.getMaxValue(events[n])==2**65):
                 # if outcome not set
-                if(fxpOutcome==0 && block.number > EVENTS.getExpiration(events[n])):
+                if(fxpOutcome==0 && period > votingPeriodEvent):
                     fxpOutcome = catch(EVENTS.getUncaughtOutcome(events[n]))
                     EVENTS.setOutcome(events[n], fxpOutcome)
                     # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
@@ -127,7 +127,7 @@ def closeMarket(branch, market):
             # scalar
             elif(2^64*EVENTS.getMaxValue(events[n]) != YES and EVENTS.getNumOutcomes(events[n]) == 2):
                 # if outcome/median aren't set
-                if(EVENTS.getMedian(events[n])==0 && block.number > EVENTS.getExpiration(events[n])):
+                if(EVENTS.getMedian(events[n])==0 && period > votingPeriodEvent):
                     median = MEDIAN.calculateMedian(events[n])
                     EVENTS.setMedian(events[n], median)
                     scaled_min = 2^64*EVENTS.getMinValue(events[n])
@@ -164,7 +164,7 @@ def closeMarket(branch, market):
             # categorical, but we can make it behave as a scalar for all intents and purposes here
             elif(EVENTS.getNumOutcomes(events[n])>2):
                 # if outcome/median aren't set
-                if(EVENTS.getMedian(events[n])==0 && block.number > EVENTS.getExpiration(events[n])):
+                if(EVENTS.getMedian(events[n])==0 && period > votingPeriodEvent):
                     median = MEDIAN.calculateMedian(events[n])
                     EVENTS.setMedian(events[n], median)
                     scaled_min[j] = 2^64
