@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation 
+# Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -18,6 +18,10 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
+
+
+# change everything involving cash to use generic subcurrencies that supports new API whenever it's finalized
+
 
 data cashcoinBalances[]
 
@@ -41,7 +45,7 @@ def initiateOwner(account):
         return(0)
 
 # should send values as fixed point in UI (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
-# so cashcoin fees could just go to root branch, or we could not have fees besides 
+# so cashcoin fees could just go to root branch, or we could not have fees besides
 # gas fee to do a send transaction
 # @return: value sent, 0 if fails
 def send(recver, value):
