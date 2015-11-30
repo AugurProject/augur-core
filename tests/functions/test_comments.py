@@ -21,49 +21,21 @@ class TestComments(ContractTest):
 
     def setUp(self):
         ContractTest.setUp(self, "functions", "comments.se")
-        self.event_fields = {"commentID", "message", "_event_type",
-                             "market", "parent", "block", "author"}
+        self.event_fields = {"_event_type", "market", "ipfsHash"}
         self.params = {
-            "speak": {
-                "market": 0xdeadbeef,
-                "author": 0x05ae1d0ca6206c6168b42efcd1fbe0ed144e821b,
-                "message": "why hello, world!  could I interest you in a comment?",
-            },
-            "reply": {
-                "market": 0xdeadbeef,
-                "author": 0x639b41c4d3d399894f2a57894278e1653e7cd24c,
-                "message": "WORLD: no thx, comments make me violently ill",
-            },
+            "market": 0xdeadbeef,
+            "ipfsHash": 0x9476f29817610e62188f562d329d4f8e2327467f74c6c682dd914c3222d77285,
         }
 
-    def test_speak(self):
+    def test_addComment(self):
         with self.capture_stdout() as output:
-            retval = self.contract.speak(self.params["speak"]["market"],
-                                         self.params["speak"]["author"],
-                                         self.params["speak"]["message"])
+            retval = self.contract.addComment(self.params["market"],
+                                              self.params["ipfsHash"])
         assert(retval == 1)
         output = self.parse_log(output)
         assert(set(output.keys()) == self.event_fields)
-        for k in self.params["speak"]:
-            assert(output[k] == self.params["speak"][k])
-
-    def test_reply(self):
-        with self.capture_stdout() as output:
-            self.contract.speak(self.params["speak"]["market"],
-                                self.params["speak"]["author"],
-                                self.params["speak"]["message"])
-        self.params["reply"]["parent"] = self.parse_log(output)["commentID"]
-        with self.capture_stdout() as reply_output:
-            retval = self.contract.reply(self.params["reply"]["market"],
-                                         self.params["reply"]["author"],
-                                         self.params["reply"]["parent"],
-                                         self.params["reply"]["message"])
-        assert(retval == 1)
-        reply_output = self.parse_log(reply_output)
-        assert(set(reply_output.keys()) == self.event_fields)
-        for k in self.params["reply"]:
-            assert(reply_output[k] == self.params["reply"][k])
-        assert(reply_output["parent"] == self.params["reply"]["parent"])
+        for k in self.params:
+            assert(self.params[k] == output[k] % 2**256)
 
 
 if __name__ == "__main__":
