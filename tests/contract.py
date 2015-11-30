@@ -34,14 +34,17 @@ class ContractTest(unittest.TestCase):
         del self.state
 
     def format_json(self, jsonstr):
+        print "format json:", jsonstr
         return jsonstr.replace("'", "\"").replace("L,", ",").replace("L}", "}")
 
     def parse_log(self, log):
+        print "parse log:", log.getvalue()
         return json.loads(self.format_json(log.getvalue()))
 
     @contextmanager
     def capture_stdout(self):
         self.buf = sys.stdout
         sys.stdout = self.logger = StringIO()
+        print "capturing stdout"
         yield self.logger
         sys.stdout = self.buf

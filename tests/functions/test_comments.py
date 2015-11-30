@@ -33,6 +33,7 @@ class TestComments(ContractTest):
                                               self.params["ipfsHash"])
         assert(retval == 1)
         output = self.parse_log(output)
+        print "output:", output
         assert(set(output.keys()) == self.event_fields)
         for k in self.params:
             assert(self.params[k] == output[k] % 2**256)
