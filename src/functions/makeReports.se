@@ -29,7 +29,7 @@ import reporting as REPORTING
 import fxpFunctions as FXP
 
 # branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID
-data branches[](hasCommitted[][], commitIndex[][], numReportsHash[][], numReportsActual[][], numReportsEvent[][], numReportsExpectedEvent[][], hasReported[][](reported[]), repReported[], reportedPeriod[][], beforeRep[][], afterRep[][], report[][](event[]))
+data branches[](submittedHash[][], hasCommitted[][], commitIndex[][], numReportsHash[][], numReportsActual[][], numReportsEvent[][], numReportsExpectedEvent[][], hasReported[][](reported[]), repReported[], reportedPeriod[][], beforeRep[][], afterRep[][], report[][](event[]), dormantRep[][])
 
 def getNumReportsExpectedEvent(branch, votePeriod, eventID):
     return(self.branches[branch].numReportsExpectedEvent[votePeriod][eventID])
@@ -62,6 +62,12 @@ def setAfterRep(branch, period, rep):
     self.branches[branch].afterRep[period][tx.origin] = rep
     return(rep)
 
+def getDormantRep(branch, period):
+    return(self.branches[branch].dormantRep[period][tx.origin])
+
+def getSubmittedHash(branch, period, reporter):
+    return(self.branches[branch].submittedHash[period][reporter])
+
 # Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't started yet
 # Error -2: not in hash submitting timeframe
 # Error -3: not a valid event expiring then
@@ -91,6 +97,9 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.number % periodLength
     currentExpPeriod = (block.number / periodLength)
+    # if first report commitment this period
+    if(self.branches[branch].submittedHash[period][msg.sender]==0):
+      self.branches[branch].submittedHash[period][msg.sender] = 1
     if (REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
         return(-1)
     if(residual < periodLength/2):
@@ -266,6 +275,8 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
                 #1. Record rep at start of report period
                 self.branches[branch].beforeRep[votePeriod][tx.origin] = balance
                 self.branches[branch].afterRep[votePeriod][tx.origin] = balance
+                self.branches[branch].dormantRep[votePeriod][tx.origin] = REPORTING.getDormantRepBalance(branch, tx.origin)
+
             # store report for each event
             return(1)
         return(-2)
@@ -336,7 +347,7 @@ def slashRep(branch, votePeriod, salt, report, reporter, reportIndex, eventID):
         hashInfo[1] = salt
         hashInfo[2] = report
         hashInfo[3] = eventID
-        
+
         reportHash = sha256(hashInfo, chars=32*len(hashInfo))
         if(reportHash!=realHash):
             return(0)

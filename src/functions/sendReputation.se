@@ -23,6 +23,7 @@ import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import cash as CASH
 import reporting as REPORTING
+import makeReports as REPORTS
 import consensus as CONSENSUS
 
 # @return value of reputation sent, 0 if not enough reputation
@@ -34,7 +35,7 @@ def sendReputation(branch, recver, value):
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     if(value<=0 || !CASH.send(branch, 5*2^64) || EXPEVENTS.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, recver, 0) != 0):
         return(0)
-    if(hasntDoneRRForEventsAndWrongAns):
+    if(hasntDoneRRForEventsAndWrongAnsAndReportedEnoughRRForAllPeriods):
         doIt()
         self.RRDone = true
     if(hasReported(lastPeriod) && periodOver):
@@ -55,6 +56,109 @@ def sendReputation(branch, recver, value):
     senderBalance = REPORTING.getRepBalance(branch, sender)
     if(senderBalance >= value):
         if(REPORTING.subtractRep(branch, senderIndex, value) && REPORTING.addRep(branch, receiverIndex, value)):
+            return(value)
+        else:
+            return(0)
+    else:
+        return(0)
+
+# @return value of reputation sent, 0 if not enough reputation
+# error messages otherwise
+    # -1: "Your reputation account was just created, earn some rep. before you can send to others"
+    # -2: "Receiving address doesn't exist"
+def sendDormantRep(branch, recver, value):
+    currentVotePeriod = BRANCHES.getVotePeriod(branch)
+    if(value<=0 || !CASH.send(branch, 5*2^64)):
+        return(0)
+
+    sender = tx.origin
+    senderIndex = REPORTING.repIDToIndex(branch, sender)
+    receiverIndex = REPORTING.repIDToIndex(branch, recver)
+
+    # if the sender's rep. account doesn't exist, make one
+    if(REPORTING.getReporterID(branch, senderIndex)!=tx.origin):
+        REPORTING.addReporter(branch, sender)
+        return(-1)
+
+    if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
+        return(-2)
+
+    senderBalance = REPORTING.getRepBalance(branch, sender)
+    if(senderBalance >= value):
+        if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, receiverIndex, value)):
+            return(value)
+        else:
+            return(0)
+    else:
+        return(0)
+
+# error messages
+    # -1: not in first half of reporting period
+def convertToDormantRep(branch, value):
+    # if not in first half of reporting period
+    periodLength = BRANCHES.getPeriodLength(branch)
+    residual = block.number % periodLength
+    if(residual > periodLength/2):
+      return(-1)
+		# benny comment:
+      #```Maybe still have this sort-of variable "power" to it, but REP initially doesn't have "full-power", or REP that hasn't been used to report over the past week has now let it's "power-meter" drop to only 20% earning power (it's kind-of dormant), that then ramps back up to 100% power once it gets used a bit. Could there be an element of this type of time-decay programmed into the REP that's helps incentive? Something like this would make the system more automatic, rather than relying on the user to manually switch "on" or switch "off" the REP. If a user knows, "I better report this week or my REP's power meter goes down to 20% again, and it's gonna take extra effort to get it back to full-power", well that's pretty good incentive to keep the user active, without actually taking it from them.```
+
+    if(value<=0 || !CASH.send(branch, 5*2^64) || REPORTS.getSubmittedHash(branch, period)):
+        return(0)
+
+    if(hasntDoneRRForEventsAndWrongAnsAndReportedEnoughRRForAllPeriods):
+        doIt()
+        self.RRDone = true
+
+    if(hasReported(lastPeriod) && periodOver):
+        CONSENSUS.collectFees(lastPeriod)
+
+    sender = tx.origin
+    senderIndex = REPORTING.repIDToIndex(branch, sender)
+
+    # if the sender's rep. account doesn't exist, make one
+    if(REPORTING.getReporterID(branch, senderIndex)!=tx.origin):
+        REPORTING.addReporter(branch, sender)
+        return(-1)
+
+    senderBalance = REPORTING.getRepBalance(branch, sender)
+    if(senderBalance >= value):
+        if(REPORTING.subtractRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, senderIndex, value)):
+            return(value)
+        else:
+            return(0)
+    else:
+        return(0)
+
+# error messages
+    # -1: not in first half of reporting period
+def convertToActiveRep(branch, value):
+    # if not in first half of reporting period
+    periodLength = BRANCHES.getPeriodLength(branch)
+    residual = block.number % periodLength
+    if(residual > periodLength/2):
+      return(-1)
+
+    if(value<=0 || !CASH.send(branch, 5*2^64) || REPORTS.getSubmittedHash(branch, period)):
+        return(0)
+
+    if(hasntDoneRRForEventsAndWrongAnsAndReportedEnoughRRForAllPeriods):
+        doIt()
+        self.RRDone = true
+    if(hasReported(lastPeriod) && periodOver):
+        CONSENSUS.collectFees(lastPeriod)
+
+    sender = tx.origin
+    senderIndex = REPORTING.repIDToIndex(branch, sender)
+
+    # if the sender's rep. account doesn't exist, make one
+    if(REPORTING.getReporterID(branch, senderIndex)!=tx.origin):
+        REPORTING.addReporter(branch, sender)
+        return(-1)
+
+    senderBalance = REPORTING.getRepBalance(branch, sender)
+    if(senderBalance >= value):
+        if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addRep(branch, senderIndex, value)):
             return(value)
         else:
             return(0)

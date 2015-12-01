@@ -28,7 +28,7 @@ import branches as BRANCHES
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
-data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, balance[])
+data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, balance[], dormantRep[](repValue, reporterID))
 
 def init():
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
@@ -49,6 +49,16 @@ def getRepBalance(branch, address):
     if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
         return(0)
     return(self.Reporting[branch].reputation[repIndex].repValue)
+
+def getDormantRepByIndex(branch, repIndex):
+    return(self.Reporting[branch].dormantRep[repIndex].repValue)
+
+# @return reputation value
+def getDormantRepBalance(branch, address):
+    repIndex = self.Reporting[branch].repIDtoIndex[address]
+    if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
+        return(0)
+    return(self.Reporting[branch].dormantRep[repIndex].repValue)
 
 def getReporterID(branch, index):
     return(self.Reporting[branch].reputation[index].reporterID)
@@ -131,17 +141,19 @@ def setInitialReporters(parent, branchID, period):
     self.Reporting[branchID].reputation[0].reporterID = branch
     return(1)
 
-def claimInitialRep(parent, branchID, period):
+def claimInitialRep(parent, branchID):
     # have 1 month to claim
     if(self.repIDToIndex(branchID, msg.sender)==0 && block.number < (BRANCHES.getCreationDate(branchID) + 216000)):
         i = self.Reporting[branchID].numberReporters
-        rep = REPORTS.getBeforeRep(parent, period)
+        rep = REPORTS.getBeforeRep(parent, BRANCHES.getParentPeriod(branchID))
         reporterID = msg.sender
         self.Reporting[branchID].reputation[i].reporterID = reporterID
         self.Reporting[branchID].reputation[i].repValue = rep
         self.Reporting[branchID].repIDtoIndex[reporterID] = i
+        self.Reporting[branchID].dormantRep[i].reporterID = reporterID
+        self.Reporting[branchID].dormantRep[i].repValue = REPORTS.getDormantRep(parent, BRANCHES.getParentPeriod(branchID))
         self.Reporting[branchID].numberReporters += 1
-        self.Reporting[branch].totalRep += rep
+        self.Reporting[branchID].totalRep += rep
         return(1)
     else:
         # already claimed or too late
@@ -154,6 +166,7 @@ def addReporter(branch, sender):
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
     self.Reporting[branch].reputation[reporterIndex].repValue = 0
     self.Reporting[branch].reputation[reporterIndex].reporterID = sender
+    self.Reporting[branch].dormantRep[reporterIndex].reporterID = reporterID
     self.Reporting[branch].numberReporters += 1
     return(1)
 
@@ -177,14 +190,27 @@ def setRep(branch, index, newRep):
     self.Reporting[branch].totalRep += newRep - oldRep
     return(1)
 
+def addDormantRep(branch, index, value):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Reporting[branch].dormantRep[index].repValue += value
+    return(1)
+
+def subtractDormantRep(branch, index, value):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Reporting[branch].dormantRep[index].repValue -= value
+    return(1)
+
 # check that msg.sender is one of our function contracts
-def setSaleDistribution(addresses: arr, balances: arr):
+def setSaleDistribution(addresses: arr, balances: arr, branchID):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     i = 0
     while i < len(addresses):
         self.Reporting[branchID].reputation[self.Reporting[branchID].numberReporters].reporterID = addresses[i]
         self.Reporting[branchID].reputation[self.Reporting[branchID].numberReporters].repValue = balances[i]
+        self.Reporting[branchID].dormantRep[self.Reporting[branchID].numberReporters].reporterID = addresses[i]
         self.Reporting[branchID].repIDtoIndex[addresses[i]] = self.Reporting[branchID].numberReporters
         self.Reporting[branchID].numberReporters += 1
         i+=1

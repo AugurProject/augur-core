@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation 
+# Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -44,7 +44,7 @@ def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnl
     #if(upcomingDecisions < 500):
     #    return(0)
 
-    parentPeriod = BRANCHES.getPeriodLength(parent)
+    parentPeriod = BRANCHES.getVotePeriod(parent)
     parentCurrentVotePeriod = (block.number / periodLength) - 1
 
     branchInfo = string(7*32+len(description))
@@ -60,7 +60,7 @@ def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnl
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
     branchID = sha256(branchInfo, chars=len(branchInfo))
     currentVotePeriod = (block.number / periodLength) - 1
-    BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee, oracleOnly)
+    BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee, oracleOnly, parentPeriod)
     if(INFO.getCreator(parent) && CASH.send(parent, 47*2^64) && INFO.setInfo(branchID, description, tx.origin, 47*2^64) && REPORTING.setInitialReporters(parent, branchID, parentCurrentVotePeriod)):
         return(branchID)
     else:

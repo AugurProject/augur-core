@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation 
+# Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -28,7 +28,7 @@
 # currentExpPeriod - 1 is what's up for reporting at any given time
 # should add a min initial liquidity property, for non pm branches it'd be low and .5*minInitialLiquidity is == fee for event
 # could also add an event fee parameter
-data Branches[](currentVotePeriod, periodLength, step, substep, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly)
+data Branches[](currentVotePeriod, periodLength, step, substep, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod)
 
 # first param is the branch, second param is the subcurrency contract
 data cash[][]
@@ -38,7 +38,7 @@ data branchList[]
 data branchListCount
 
 def init():
-    self.Branches[1010101].currentVotePeriod = (block.number / 1800) - 1 
+    self.Branches[1010101].currentVotePeriod = (block.number / 1800) - 1
     self.Branches[1010101].periodLength = 1800
     self.Branches[1010101].minTradingFee = 2^57
     self.branchListCount = 1
@@ -80,7 +80,7 @@ def getMinTradingFee(branch):
 	return(self.Branches[branch].minTradingFee)
 
 # @return all branches
-def getBranches(): 
+def getBranches():
     b = 0
     numBranches = self.branchListCount
     branches = array(numBranches)
@@ -99,7 +99,7 @@ def getCreationDate(ID):
 	return(self.Branches[ID].creationDate)
 
 # check that msg.sender is one of our function contracts
-def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleOnly):
+def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleOnly, parentPeriod):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
 	if(self.Branches[ID].periodLength==0):
@@ -109,10 +109,14 @@ def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleO
 		self.branchList[self.branchListCount] = ID
 		self.branchListCount += 1
 		self.Branches[ID].creationDate = block.number
+    self.Branches[ID].parentPeriod = parentPeriod
 		self.Branches[ID].oracleOnly = oracleOnly
 		return(1)
 	else:
 		return(0)
+
+def getParentPeriod(branch):
+    return(self.Branches[ID].parentPeriod)
 
 # check that msg.sender is one of our function contracts
 def incrementStep(branch):

@@ -3,13 +3,6 @@
 
 	# https://github.com/AugurProject/augur-core/commit/add5357230c82e2c65da81308877e27b9757e43c & need a way to actually update contracts / externs too
 
-  #separate sets of rep
-		#After a user has started doing pen calcs but before they've gotten new normalized rep, don't allow sending of rep
-		#Also don't allow conversion of rep after selection of events for a voting period has started,
-		 #otherwise you can report on 1-2 but reap rewards as if it's a lot of rep.
-		 #So it can't be used until next period (ie there's a holding period)
-		# benny comment
-
 	# only resolve markets that have odds <99% for one of the outcomes.
 		# We should probably still have an option to pay to resolve in case something somehow goes wrong here (or if not enough reports).  This also doesn't work for scalar markets (although it does for categorical).
 
