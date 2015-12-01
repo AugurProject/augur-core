@@ -9,7 +9,9 @@ Unit tests for data and api/comments.se.
 """
 import sys
 import os
+import json
 import unittest
+import iocapture
 from ethereum import tester
 
 HERE = os.path.dirname(os.path.realpath(__file__))
@@ -28,12 +30,12 @@ class TestComments(ContractTest):
         }
 
     def test_addComment(self):
-        with self.capture_stdout() as output:
+        with iocapture.capture() as captured:
             retval = self.contract.addComment(self.params["market"],
                                               self.params["ipfsHash"])
+            output = captured.stdout.strip()
+            output = json.loads(output.replace("'", '"').replace("L", ""))
         assert(retval == 1)
-        output = self.parse_log(output)
-        print "output:", output
         assert(set(output.keys()) == self.event_fields)
         for k in self.params:
             assert(self.params[k] == output[k] % 2**256)
