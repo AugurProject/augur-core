@@ -33,8 +33,9 @@ class TestComments(ContractTest):
         with iocapture.capture() as captured:
             retval = self.contract.addComment(self.params["market"],
                                               self.params["ipfsHash"])
-            output = captured.stdout.strip()
-            output = json.loads(output.replace("'", '"').replace("L", ""))
+            output = json.loads(captured.stdout.replace("'", '"')
+                                               .replace("L", "")
+                                               .replace('u"', '"'))
         assert(retval == 1)
         assert(set(output.keys()) == self.event_fields)
         for k in self.params:
