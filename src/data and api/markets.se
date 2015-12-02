@@ -33,7 +33,19 @@ import branches as BRANCHES
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, forkSelection)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, forkSelection, pushingForward, bondsMan, originalPeriod)
+
+def getTotalSharesPurchased(market):
+    total = 0
+    n = self.Markets[market].numOutcomes
+    i = 0
+    while i < n:
+      total += self.Markets[market].sharesPurchased[i]
+      i += 1
+    return(total)
+
+def getEvent(market, index):
+    return(self.Markets[market].events[index])
 
 # @return cost - how much it costs you to buy
 #         price - current share price of that outcome after buy
@@ -141,6 +153,9 @@ def getMarketNumOutcomes(market):
 def getTradingPeriod(market):
     return(self.Markets[market].tradingPeriod)
 
+def getOriginalTradingPeriod(market):
+    return(self.Markets[market].originalPeriod)
+
 def setTradingPeriod(market, period):
     self.Markets[market].tradingPeriod = period
     return(1)
@@ -210,6 +225,7 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, f
     save(self.Markets[marketID].events[0], events, chars=32*len(events))
     self.Markets[marketID].lenEvents = len(events)
     self.Markets[marketID].tradingPeriod = tradingPeriod
+    self.Markets[marketID].originalPeriod = tradingPeriod
     self.Markets[marketID].tradingFee = tradingFee
     self.Markets[marketID].branch = branch
     self.Markets[marketID].forkSelection = forkSelection
@@ -288,3 +304,14 @@ def getMarketOutcomeInfo(market, outcome):
 def setTradingFee(market, fee):
     self.Markets[market].tradingFee = fee
     return(fee)
+
+def setPushedForward(market, bool):
+    self.Markets[market].pushingForward = bool
+    self.Markets[market].bondsMan = msg.sender
+    return(1)
+
+def getPushedForward(market):
+    return(self.Markets[market].pushingForward)
+
+def getBondsMan(market):
+    return(self.Markets[market].bondsMan)

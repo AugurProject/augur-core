@@ -28,11 +28,11 @@ import events as EVENTS
 # new1, new2, adjPrinComp, smoothRep, outcomesFinal, consensusReward is all consensus data
 # reporters is [reporterID][eventNum]
 # reporthash is [reporterID] = hash
-data EventsExpDates[][](numberEvents, events[], reports[], totalRepReported, totalReputation, numEventsToReportOn, reporters[][], reportHash[][], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[], reporterPayouts[], periodVolume)
+data EventsExpDates[][](numberEvents, numberRemoved, events[], reports[], totalRepReported, totalReputation, numEventsToReportOn, reporters[][], reportHash[][], vSize, reportsFilled[], reportsMask[], weightedCenteredData[], covarianceMatrixRow[], deflated[], loadingVector[], latent, scores[], set1[], set2[], old[], new1[], new2[], adjPrinComp[], smoothRep[], outcomesFinal[], reporterPayouts[], periodVolume)
 
 # atm voters who do vote are req. to vote on all things in their respective ballots (even if just a 0 / no vote)
 # ballot should be all votes for events in order of the events from self.Reporting[branch].eventsExpDates[w/eVotingPeriodShouldBe].numberEvents
-# w/ this function you can get the eventIDs and report on outcomes 
+# w/ this function you can get the eventIDs and report on outcomes
  # make sure in this function to check that the report value is not >maxvalue or <minvalue for the event
 # ui will want to alert users of any hey we're behind but atm you should really be voting on this voting period situation (anything meeting the req. of vote if we were caught up)
 # @returns a ballot of events (UI needs to vote w/ a ballot of reports in this order per corresponding event)
@@ -48,7 +48,7 @@ def getEvents(branch, expDateIndex):
 
 # we should probably make this bonded too
 # -1: voting not started
-def setNumEventsToReportOn(branch, expDateIndex): 
+def setNumEventsToReportOn(branch, expDateIndex):
 	# after voting has started
 	if(expDateIndex==BRANCHES.getVotePeriod(branch)):
 			numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
@@ -64,7 +64,7 @@ def setNumEventsToReportOn(branch, expDateIndex):
 	#		    while i < numMarkets:
 	#		        volume += MARKETS.getVolume(markets[i])
 	#		    numberToReportOnEstimate += self.sqrt(volume*2**64/totalVol)
-		numberToReportOnEstimate = numEvents*40
+		numberToReportOnEstimate = (numEvents-self.EventsExpDates[branch][expDateIndex].numberRemoved)*40
 		self.EventsExpDates[branch][expDateIndex].numEventsToReportOn = numberToReportOnEstimate
 		return(1)
 	else:
@@ -167,6 +167,10 @@ def addEvent(branch, futurePeriod, eventID):
 		self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
 		self.EventsExpDates[branch][futurePeriod].numberEvents += 1
 	return(1)
+
+def removeEvent(branch, period):
+		self.EventsExpDates[branch][period].numberRemoved += 1
+    return(1)
 
 def setTotalRepReported(branch, expDateIndex, repReported):
 	#if(!self.whitelist.check(msg.sender)):

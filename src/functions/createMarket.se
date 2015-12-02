@@ -214,3 +214,29 @@ def moveMarket(market, fork):
         elif(forkChoice==7):
     else:
         return(0)
+
+
+  #•Anyone can post an "Early Resolution Bond"
+  #•This bond is equal to 0.5 * Market_Fee * Market_Value
+  #•This amount is the amount needed to pay the reporters in case this was frivolous.
+  #•The market goes up for early resolution and reporters place claim to what is truth, however for early resolution, they have an additional option: 'Market is not ready to resolve'
+    # this addl option is just the normal indeterminate (except here it's a bit of a special case, see below)
+  #•In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
+    # and market remains with old expiration dateevent
+  #•In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
+  def pushMarketForward(branch, market):
+    numEvents = MARKETS.getNumEvents(market)
+    if(CASH.send(market, numEvents*MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*2^64))==0):
+        return(0)
+    i = 0
+    # for each event in market
+    while i < numEvents:
+        event = MARKETS.getEvent(market, i)
+        # push into next vote period
+        period = BRANCHES.getVotePeriod(branch)
+        EXPEVENTS.addEvent(branch, period+1, event)
+        # set event expiration date to be after the current reporting period ends
+        EVENTS.setExpiration(event, block.number)
+        MARKETS.setTradingPeriod(market, period+1)
+        MARKETS.setPushedForward(market, 1)
+    return(1)

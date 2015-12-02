@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation 
+# Copyright (C) 2015 Forecast Foundation
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -26,7 +26,7 @@
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
 # need outcomes returned as 1*2^64, 2*2^64, etc... indeterminate as 3*2^63
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, median, uncaughtOutcome, final, ethical)
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, median, uncaughtOutcome, final, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught)
 
 import branches as BRANCHES
 
@@ -45,6 +45,9 @@ def getEventBranch(event):
 
 def getExpiration(event):
 	return(self.Events[event].expirationDate)
+
+def getOriginalExp(event):
+  return(self.Events[event].originalExp)
 
 def setExpiration(event, date):
 	self.Events[event].expirationDate = date
@@ -88,6 +91,7 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes)
 	if(self.Events[ID].expirationDate==0):
 		self.Events[ID].branch = branch
 		self.Events[ID].expirationDate = expirationDate
+    self.Events[ID].originalExp = expirationDate
 		self.Events[ID].minValue = minValue
 		self.Events[ID].maxValue = maxValue
 		self.Events[ID].numOutcomes = numOutcomes
@@ -143,3 +147,18 @@ def setMedian(event, median):
 def setFinal(event, final):
 	self.Events[event].final = 1
 	return(1)
+
+def setRejected(event, period, uncaughtOutcome):
+  self.Events[event].rejected = 1
+  self.Events[event].rejectedPeriod = period
+  self.Events[event].rejectedUncaught = uncaughtOutcome
+  return(1)
+
+def getRejected(event):
+  return(self.Events[event].rejected)
+
+def getRejectedPeriod(event):
+  return(self.Events[event].rejectedPeriod)
+
+def getRejectedUncaught(event):
+  return(self.Events[event].rejectedUncaught)

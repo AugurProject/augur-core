@@ -6,14 +6,13 @@
 	# only resolve markets that have odds <99% for one of the outcomes.
 		# We should probably still have an option to pay to resolve in case something somehow goes wrong here (or if not enough reports).  This also doesn't work for scalar markets (although it does for categorical).
 
-	# https://www.reddit.com/r/Augur/comments/3ow0us/need_a_method_to_end_a_market_early/
-
 
 import expiringEvents as EXPIRING
 import reporting as REPORTING
 import fxpFunctions as FXP
 import events as EVENTS
 import makeReports as REPORTS
+import branches as BRANCHES
 
 data proportionCorrect[]
 # takes branch, votePeriod
@@ -30,8 +29,14 @@ data denominator[][]
 #6. If you don't do it for all events, autolose 20% rep (b/c you're trying to cheat)
 #7. what if don't claim rep, nothing, it just doesn't formally exist until you claim it or try to send it somewhere (upon which it claims your old rep)
 # make sure user has always done this up to current period before doing current period
+# Errors:
+  # -1: pushed back event already resolved, so can't redistribute rep based off of its original expected expiration period
 def penalizeWrong(branch, period, event):
-	if(notDoneForEvent && periodOver && reported):
+  if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event)):
+    if(period==EVENTS.getOriginalExpiration(event)/BRANCHES.getPeriodLength(branch)):
+      return(-1)
+
+	if(notDoneForEvent && periodOver && reported && eventResolvedInCloseMarket && eventInPeriod):
 		p = self.getProportionCorrect(event)
 		outcome = EVENTS.getOutcome(event)
 		reportValue = REPORTS.getReport(branch,period,event)
@@ -39,6 +44,7 @@ def penalizeWrong(branch, period, event):
 		# wrong
 		if(reportValue > outcome+.01 or reportValue < outcome-.01):
 			if(scalar or categorical):
+        # should be outcome since median is the same
 				p = -(abs(reportValue - EVENTS.getMedian(event))/2) + 1
 			newRep = oldRep*(2*p -1)
 		# right
@@ -52,16 +58,63 @@ def penalizeWrong(branch, period, event):
 			totalRepReported = EXPIRING.getTotalRepReported(branch, votePeriod)
 			self.denominator[branch][period] = totalRepReported + (smoothedRep - oldRep)
 		return(1)
-	else:
-		return(0)
+
+  if(rejected && rejectedPeriod periodOver && reported && eventResolvedInCloseMarket && notDoneForRejectedEvent):
+    outcome = 2**63
+    median = 2**63
+		p = self.getProportionCorrect(event, rejected)
+		reportValue = REPORTS.getReport(branch,period,event)
+		oldRep = REPORTS.getBeforeRep(branch, period)
+		# wrong
+		if(reportValue > outcome+.01 or reportValue < outcome-.01):
+			if(scalar or categorical):
+        # should be outcome since median is the same
+				p = -(abs(reportValue - median)/2) + 1
+			newRep = oldRep*(2*p -1)
+		# right
+		else:
+			if(scalar or categorical):
+				p = -(abs(reportValue - median)/2) + 1
+			newRep = oldRep*(2*(1-p)**2 / p + 1)
+		smoothedRep = oldRep*.8 + newRep*.2
+		REPORTS.setAfterRep(branch, period, oldRep + (smoothedRep - oldRep))
+		if(doneForAllEventsUserReportedOn):
+			totalRepReported = EXPIRING.getTotalRepReported(branch, votePeriod)
+			self.denominator[branch][period] = totalRepReported + (smoothedRep - oldRep)
+		return(1)
+
+  else:
+    return(0)
 
 macro abs($a):
 	if($a<0):
 		$a = -$a
 	$a
 
-def proportionCorrect(event):
-	if(notDoneForEvent && periodOver && reported):
+def proportionCorrect(event, rejected):
+  if(rejected && eventActuallyRejected && rejectedPeriod && periodOver && reported && eventResolvedInCloseMarket):
+		# real answer is outcome
+    outcome = 2**63
+    # p is proportion of correct responses
+		p = 0
+		if(outcome!=0):
+			# binary
+			if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65):
+        # need to fetch uncaught outcome for rejectedperiod separately
+        avgOutcome = EVENTS.getRejectedPeriodUncaught(event)
+				# say we have outcome of 0, avg is .4, what is p?
+        # p is .6 or 60%
+				if(outcome == 2**64):
+					p = 1 - avgOutcome
+				# say we have outcome of 1, avg is .8, what is p (proportion correct)?
+					# p is .8 or 80%
+				if(outcome == 2 * 2**64):
+					p = avgOutcome
+				# say we have outcome of .5, avg is .55, what is p?
+				if(outcome == 3 * 2**63):
+		return(p)
+
+	if(notDoneForEvent && periodOver && reported && eventResolvedInCloseMarket):
 		# p is proportion of correct responses
 		p = 0
 		# real answer is outcome
@@ -71,7 +124,7 @@ def proportionCorrect(event):
 			if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65):
 				avgOutcome = EVENTS.getUncaughtOutcome(event)
 				# say we have outcome of 0, avg is .4, what is p?
-				# p is .6 or 60%
+        # p is .6 or 60%
 				if(outcome == 2**64):
 					p = 1 - avgOutcome
 				# say we have outcome of 1, avg is .8, what is p (proportion correct)?
@@ -157,6 +210,13 @@ def collectFees(branch):
 # concept of event finality and time periods
 # need a way to penalize by round 2 as well
 # https://www.reddit.com/r/Augur/comments/3mco9m/dynamic_vs_fixed_bond_amount_for_readjudication/
+#For this option I propose the appeal bond be set to:
+    Appeal_Bond = Market_Value * (0.01 + Market_Fee / 2) + Average_Adjudication_Cost
+
+
+    The point of Average_Adjudication_Cost is to set a floor to the appeal bond cost such that micro volume markets have a minimum appeal cost that cant be abused.
+    Where:
+    Average_Adjudication_Cost = Total fees paid to reporters for all markets in this reporting round   /   number of markets in this reporting round.
 def roundTwoBond(event):
 	bond == 100 rep
 	# penalize wrong same as above
