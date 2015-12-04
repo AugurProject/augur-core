@@ -105,7 +105,7 @@ def addMarket(event, marketID):
 	return(1)
 
 def getMarkets(event):
-	return(load(self.Events[event].markets[0], items=self.Events[event].numMarkets))
+	return(load(self.Events[event].markets[0], items=self.Events[event].numMarkets): arr)
 
 def getNumMarkets(event):
 	return(self.Events[event].numMarkets)

@@ -6,6 +6,13 @@
 	# only resolve markets that have odds <99% for one of the outcomes.
 		# We should probably still have an option to pay to resolve in case something somehow goes wrong here (or if not enough reports).  This also doesn't work for scalar markets (although it does for categorical).
 
+  # would be nice if the reporting floor was dynamic based on appeal
+
+  # "I am thinking a reporting period should be 2 months minus 24 hours.   This 24 hours allows for the appeals to take place before the next reporting round begins."
+
+  # - If at anytime after expiry a market's odds are <.99, someone can prove it and push it into next reporting period and this overrides the point directly below (and don't allow rbrr for original exp period of this market, actually, don't allow this regardless)
+	# - Should probably still have an option to pay to resolve in case something somehow goes wrong here or people really want a market resolved.
+
 
 import expiringEvents as EXPIRING
 import reporting as REPORTING

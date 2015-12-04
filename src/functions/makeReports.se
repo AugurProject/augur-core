@@ -31,6 +31,11 @@ import fxpFunctions as FXP
 # branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID
 data branches[](submittedHash[][], hasCommitted[][], commitIndex[][], numReportsHash[][], numReportsActual[][], numReportsEvent[][], numReportsExpectedEvent[][], hasReported[][](reported[]), repReported[], reportedPeriod[][], beforeRep[][], afterRep[][], report[][](event[]), dormantRep[][])
 
+data reportable[][]
+
+def getReportable(votePeriod, eventID):
+  return(self.reportable[votePeriod][eventID])
+
 def getNumReportsExpectedEvent(branch, votePeriod, eventID):
     return(self.branches[branch].numReportsExpectedEvent[votePeriod][eventID])
 
@@ -72,6 +77,7 @@ def getSubmittedHash(branch, period, reporter):
 # Error -2: not in hash submitting timeframe
 # Error -3: not a valid event expiring then
 # Error -4: already resolved
+# Error -5: .99 market
 # Python code to get the hash:
     #from bitcoin import encode
     #from hashlib import sha256
@@ -84,6 +90,17 @@ def getSubmittedHash(branch, period, reporter):
     #        return hashed
 def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
     reportIndex = self.branches[branch].numReportsHash[msg.sender][votePeriod]
+    if(self.reportable[votePeriod][eventID]==-1):
+        return(-5)
+    # Whoever the first person to try to submit a report for period x on market y with events events checks if it needs to be reported on or not.
+    if(self.reportable[votePeriod][eventID]==0):
+        needsReportingOn = self.needsReportingOn(eventID)
+        # If not, then no one can report on this market's event(s) and the event is "removed" from expEvents.
+        # if yes, the value is 1 and everything proceeds normally
+        self.reportable[votePeriod][eventID] = needsReportingOn
+        if(needsReportingOn==-1):
+            EXPEVENTS.removeEvent(branch, votePeriod)
+
     if(EVENTS.getOutcome(eventID)!=0):
         return(-4)
     # make sure event is in the given branch...
@@ -103,7 +120,7 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
     # if first report commitment this period
     if(self.branches[branch].submittedHash[period][msg.sender]==0):
       self.branches[branch].submittedHash[period][msg.sender] = 1
-    if (REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
+    if(REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
         return(-1)
     if(residual < periodLength/2):
         # submit hash of (tx.origin, salt, Votes[])
@@ -119,6 +136,33 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
             return(0)
     else:
         return(-2)
+
+def needsReportingOn(event):
+# This only works for categorical and binary markets, not scalar
+  if(eventIsScalar):
+    return(1)
+  # To determine whether a market needs to be resolved or not, the events can only have one market associated with them or all markets associated with the event fulfill the .99 qualification.
+  numMarkets = EVENTS.getNumMarkets(event)
+  markets = array(numMarkets)
+  markets = EVENTS.getMarkets(event, outitems=numMarkets)
+  if(numMarkets>100):
+    return(1)
+  i = 0
+  while i < numMarkets:
+    numOutcomes = MARKETS.getMarketNumOutcomes(markets[i])
+    n = 0
+    ninetynine = 0
+    while n < numOutcomes:
+      if(MARKETS.getSimulatedBuy(markets[i], n, 2**64) > 18262276632972456099):
+        ninetynine = 1
+        n = numOutcomes
+      n += 1
+    if(ninetynine == 0):
+      return(1)
+    i += 1
+  # doesn't need reporting on, meets the .99 qualification
+  return(-1)
+
 
 #a^b=exp(b*ln(a))=e^(b*ln(a)).
 #eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))

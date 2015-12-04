@@ -58,6 +58,7 @@ macro catch($x):
         # if mult events call this fun again to make sure no more to push back
     # -5: event not expired
     # -6: bonded pushed forward market not ready to be resolved
+    # -7: event not reportable >.99
 # Make sure there are no "while loop out of gas" issues
 #Need to make sure we close out markets where one doesn’t happen (i.e. Hillary or Bush? and GDP>3% growth 2017?) properly.
 #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
@@ -78,7 +79,7 @@ def closeMarket(branch, market):
     # check if any events in the market were pushed back and that market has expired
     # (as long as the latest expiring event wasn't pushed back, we know they all got reported on)
     # if it *was* pushed back, we'll just get an outcome of 0, return 0 until the event is actually reported on, then we can resolve the market
-    if(BRANCHES.getVotePeriod(branch) > tradingPeriod || reportingDone):
+    if((BRANCHES.getVotePeriod(branch) > tradingPeriod || reportingDone)):
         # loop through events in the market, get their outcomes && use those to determine the winning events!
         n = 0
         # (max poss. winning outcomes is 8 outcomes total all scalar multidimensional)
@@ -89,6 +90,8 @@ def closeMarket(branch, market):
         period = BRANCHES.getVotePeriod(branch)
         while n < numberEvents:
             votingPeriodEvent = EVENTS.getExpiration(events[n])/BRANCHES.getPeriodLength(branch)
+            if(MAKEREPORTS.getReportable(votingPeriodEvent, events[n])==-1):
+                return(-7)
             fxpOutcome = EVENTS.getOutcome(events[n])
             pushedBack = EVENTS.getPushedBack(events[n])
             ethical = catch(EVENTS.getEthical(events[n]))
@@ -121,7 +124,7 @@ def closeMarket(branch, market):
                     # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
                     if(fxpOutcome==2**63 && !pushedBack && residual < periodLength/2):
                         #push back event
-                        MAKEREPORTS.setNumReportsExpectedEvent(branch, votingPeriodEvent, events[n], 0)`
+                        MAKEREPORTS.setNumReportsExpectedEvent(branch, votingPeriodEvent, events[n], 0)
                         MAKEREPORTS.setNumReportsEvent(branch, votingPeriodEvent, events[n], 0)
                         EVENTS.setEthics(events[n], 0)
                         EXPEVENTS.addEvent(branch, period+1, events[n])
