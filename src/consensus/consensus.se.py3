@@ -13,6 +13,11 @@
   # - If at anytime after expiry a market's odds are <.99, someone can prove it and push it into next reporting period and this overrides the point directly below (and don't allow rbrr for original exp period of this market, actually, don't allow this regardless)
 	# - Should probably still have an option to pay to resolve in case something somehow goes wrong here or people really want a market resolved.
 
+  # if readjudication says a, on fork b when rereporting, a is not a reporting option
+
+  # what if multiple things need to be forked?
+
+  # ok so the problem with a fork bond queue at all even in theory is that they're going to be forking in a worthless network.  i.e. we have parent a with child b, then b forks into b and c,  if someone in a finally gets out of the queue, they're forking a, which is a worthless network, so the markets ​_have_​ to be transferred to winning forks after some period of time.  Then, in the "winning" fork, a market could either fork the network right away again, ​_or_​ simply be readjudicated again (the latter is a cheaper option, although not guaranteed to be secure, b/c someone could be doing a long play attack per all discussion above with 10s of millions of dollars).  So if we say, ok, the market is readjudicated since it's cheaper, if ​_that_​ fails, then the network can be forked again, and so on.  This allows the long play security stuff to play out if need be, allows markets to be resolved at probably the fastest rate of these options, and still allows a sort of implicit fork queue if the network keeps forking due to a really pocket heavy attacker.(
 
 import expiringEvents as EXPIRING
 import reporting as REPORTING
