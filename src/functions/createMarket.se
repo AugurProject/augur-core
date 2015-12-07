@@ -23,6 +23,7 @@ import branches as BRANCHES
 import info as INFO
 import cash as CASH
 import reporting as REPORTING
+import makeReports as MAKEREPORTS
 import fxpFunctions as FXP
 import markets as MARKETS
 import events as EVENTS
@@ -226,6 +227,8 @@ def moveMarket(market, fork):
   #•In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
   def pushMarketForward(branch, market):
     numEvents = MARKETS.getNumEvents(market)
+    if(marketClosed):
+        return(0)
     if(CASH.send(market, numEvents*MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*2^64))==0):
         return(0)
     i = 0
@@ -239,4 +242,43 @@ def moveMarket(market, fork):
         EVENTS.setExpiration(event, block.number)
         MARKETS.setTradingPeriod(market, period+1)
         MARKETS.setPushedForward(market, 1)
+        MAKEREPORTS.setReportable(period+1, event)
+    return(1)
+
+
+  # - If at anytime after expiry an event's market's odds are <.99, someone can prove it and push it into next reporting period
+    # (and don't allow rbrr for original exp period of this market, actually, don't allow this regardless)
+	# - Should probably still have an option to pay to resolve in case something somehow goes wrong here or people really want a market resolved.
+  def resolve99Market(branch, market, resolveRegardless):
+    if(eventIsScalar || marketClosed):
+      return(-1)
+    if(marketNotExpired):
+      return(-2)
+    numOutcomes = MARKETS.getMarketNumOutcomes(market)
+    n = 0
+    ninetynine = 0
+    while n < numOutcomes:
+      if(MARKETS.getSimulatedBuy(markets, n, 2**64) > 18262276632972456099):
+        ninetynine = 1
+          n = numOutcomes
+        n += 1
+
+    if(ninetynine==0 || resolveRegardless):
+      if(resolveRegardless):
+        if(CASH.send(branch, 100*2**64)==0):
+            return(0)
+
+    numEvents = MARKETS.getNumEvents(market)
+    i = 0
+    # for each event in market
+    while i < numEvents:
+      event = MARKETS.getEvent(market, i)
+      # push into next vote period
+      period = BRANCHES.getVotePeriod(branch)
+      EXPEVENTS.addEvent(branch, period+1, event)
+      # set event expiration date to be after the current reporting period ends
+      EVENTS.setExpiration(event, block.number)
+      MARKETS.setTradingPeriod(market, period+1)
+      MAKEREPORTS.setReportable(period+1, event)
+      i += 1
     return(1)

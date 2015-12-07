@@ -3,21 +3,8 @@
 
 	# https://github.com/AugurProject/augur-core/commit/add5357230c82e2c65da81308877e27b9757e43c & need a way to actually update contracts / externs too
 
-	# only resolve markets that have odds <99% for one of the outcomes.
-		# We should probably still have an option to pay to resolve in case something somehow goes wrong here (or if not enough reports).  This also doesn't work for scalar markets (although it does for categorical).
-
   # would be nice if the reporting floor was dynamic based on appeal
 
-  # "I am thinking a reporting period should be 2 months minus 24 hours.   This 24 hours allows for the appeals to take place before the next reporting round begins."
-
-  # - If at anytime after expiry a market's odds are <.99, someone can prove it and push it into next reporting period and this overrides the point directly below (and don't allow rbrr for original exp period of this market, actually, don't allow this regardless)
-	# - Should probably still have an option to pay to resolve in case something somehow goes wrong here or people really want a market resolved.
-
-  # if readjudication says a, on fork b when rereporting, a is not a reporting option
-
-  # what if multiple things need to be forked?
-
-  # ok so the problem with a fork bond queue at all even in theory is that they're going to be forking in a worthless network.  i.e. we have parent a with child b, then b forks into b and c,  if someone in a finally gets out of the queue, they're forking a, which is a worthless network, so the markets ​_have_​ to be transferred to winning forks after some period of time.  Then, in the "winning" fork, a market could either fork the network right away again, ​_or_​ simply be readjudicated again (the latter is a cheaper option, although not guaranteed to be secure, b/c someone could be doing a long play attack per all discussion above with 10s of millions of dollars).  So if we say, ok, the market is readjudicated since it's cheaper, if ​_that_​ fails, then the network can be forked again, and so on.  This allows the long play security stuff to play out if need be, allows markets to be resolved at probably the fastest rate of these options, and still allows a sort of implicit fork queue if the network keeps forking due to a really pocket heavy attacker.(
 
 import expiringEvents as EXPIRING
 import reporting as REPORTING
@@ -224,11 +211,10 @@ def collectFees(branch):
 # https://www.reddit.com/r/Augur/comments/3mco9m/dynamic_vs_fixed_bond_amount_for_readjudication/
 #For this option I propose the appeal bond be set to:
     Appeal_Bond = Market_Value * (0.01 + Market_Fee / 2) + Average_Adjudication_Cost
-
-
     The point of Average_Adjudication_Cost is to set a floor to the appeal bond cost such that micro volume markets have a minimum appeal cost that cant be abused.
     Where:
     Average_Adjudication_Cost = Total fees paid to reporters for all markets in this reporting round   /   number of markets in this reporting round.
+# "I am thinking a reporting period should be 2 months minus 24 hours.   This 24 hours allows for the appeals to take place before the next reporting round begins."
 def roundTwoBond(event):
 	bond == 100 rep
 	# penalize wrong same as above
@@ -250,6 +236,43 @@ def roundTwoBond(event):
 	# -1: round two hasn't happened yet
 # what about ethics forking?
 # fork scenario with scalars (1 fork has outcome, the other reports on it again is a soln)
+# if readjudication says a, on fork b when rereporting, a is not a reporting option
+# what if multiple things need to be forked?
+# ok so the problem with a fork bond queue at all even in theory is that they're going to be forking in a worthless network.  i.e. we have parent a with child b, then b forks into b and c,  if someone in a finally gets out of the queue, they're forking a, which is a worthless network, so the markets ​_have_​ to be transferred to winning forks after some period of time.  Then, in the "winning" fork, a market could either fork the network right away again, ​_or_​ simply be readjudicated again (the latter is a cheaper option, although not guaranteed to be secure, b/c someone could be doing a long play attack per all discussion above with 10s of millions of dollars).  So if we say, ok, the market is readjudicated since it's cheaper, if ​_that_​ fails, then the network can be forked again, and so on.  This allows the long play security stuff to play out if need be, allows markets to be resolved at probably the fastest rate of these options, and still allows a sort of implicit fork queue if the network keeps forking due to a really pocket heavy attacker.
+# take 20% of rep away from liars in fork, don't distribute to truthtellers until a new truthful outcome is resolved / reported
+
+
+​To talk about the smaller fork bond posted:​
+The fork bond is paid. Saved along with it is the current consensus that is being contested.
+The bonds exist in both forks.
+The market either waits for a fork or goes to back to re-adjudication, possibly more than once.
+The market gets a consensus that no one appeals on the 24 hour period eventually, and the consensus is made final.
+This final consensus is compared with the consensus the fork was initially done over.
+a) If the final truth/consensus  is different than the one that was contested, then we know for sure the bond poster was justified in posting the fork bond, and it is handled at this point in time, paying the poster back, and collecting from the reporters that committed to the consensus the bond poster correctly identified as liars.
+b) If the final truth/consensus is the same as the one that was contested, then we know for sure the bond poster contested a consensus that we know for sure was truth, and the fork bond posted was malicious. The fork bond is paid to the reporters for their additional labor.
+
+​
+12:44
+has to be done on each fork too
+​
+12:44
+i guess not if we actually assign a "final truth" --- but that's not how the fork is supposed to work
+​
+12:46
+so each time a fork happens in one fork the cycle ends and there's an "outcome" (but the market might not be there haha) and the bond is paid or taken in that fork, and it's done differently in the other side of the fork
+​
+12:50
+it honestly seems 100x easier to just take 80% of the rep from the liars and keep the system simple as opposed to having a tree of fork bonds...
+​
+12:50
+on the off chance the fork gets it wrong, can just fork again
+​
+12:52
+it's essentially what ends up happening if you keep having recursive fork bonds anyway and the work required to implement it is way less
+​
+12:55
+
+paying back all the bond raisers is nice and all, but there's another lot simpler way to achieve the same effect: give the original bond raiser the right of first refusal to make another fork on the new fork after a market has been readjudicated
 def fork(event):
 	if(!EVENTS.getRoundTwo(event)):
 		return(-1)

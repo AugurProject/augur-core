@@ -36,6 +36,10 @@ data reportable[][]
 def getReportable(votePeriod, eventID):
   return(self.reportable[votePeriod][eventID])
 
+def setReportable(votePeriod, eventID):
+  self.reportable[votePeriod][eventID] = 1
+  return(1)
+
 def getNumReportsExpectedEvent(branch, votePeriod, eventID):
     return(self.branches[branch].numReportsExpectedEvent[votePeriod][eventID])
 
