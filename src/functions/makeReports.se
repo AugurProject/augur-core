@@ -33,12 +33,26 @@ data branches[](submittedHash[][], hasCommitted[][], commitIndex[][], numReports
 
 data reportable[][]
 
+data requiredEvents[]
+
+# branch, period as params
+data numReqEvents[][]
+
 def getReportable(votePeriod, eventID):
   return(self.reportable[votePeriod][eventID])
 
 def setReportable(votePeriod, eventID):
   self.reportable[votePeriod][eventID] = 1
   return(1)
+
+# Return 0 means already required
+def setEventRequired(branch, period, event):
+  if(self.requiredEvents[event]==0):
+    self.requiredEvents[event] = 1
+    self.numReqEvents[branch][period] += 1
+    return(1)
+  else:
+    return(0)
 
 def getNumReportsExpectedEvent(branch, votePeriod, eventID):
     return(self.branches[branch].numReportsExpectedEvent[votePeriod][eventID])
@@ -177,7 +191,7 @@ def getNumEventsToReportOn(branch, votePeriod):
     log = FXP.fx_log(repConstant)
     exp = FXP.fx_exp(22136092888451461120*log/2**64)
     exp += 18446744073709552
-    return(exp*prelim)
+    return(exp*prelim + self.numReqEvents[branch][votePeriod]*2**64)
 
 # a no vote is -2^64, a yes vote is 2^64 && a can't determine vote is 3*2^63
 # -5: set num events to report on first
@@ -196,6 +210,7 @@ def getNumEventsToReportOn(branch, votePeriod):
     # -7: if an event isn’t in a market, it shouldn’t be reported on at all
     # -8: invalid event
     # -9: already resolved
+    # -10: <24 hr left in period, too late to report, able to put up readj. bonds though
 def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIndex, ethics):
     if(EVENTS.getOutcome(eventID)!=0):
         return(-9)
@@ -203,6 +218,8 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
         return(-4)
     if(BRANCHES.getVotePeriod(branch)!=votePeriod):
         return(-2)
+    if(block.number/BRANCHES.getPeriodLength(branch)!=((block.number + 4800)/BRANCHES.getPeriodLength(branch))):
+        return(-10)
     if(hasntDoneRRForLazyEventsAndWrongAnsForPastPeriods):
         doIt()
         self.RRDone = true
@@ -215,8 +232,8 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
         return(-5)
     x = array(1)
     # make sure event is in the given branch and vote period...
-    eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
-    if(eventID==0):
+    event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
+    if(event==0 || eventID!=event):
         return(-8)
     x[0] = tx.origin + eventID
     i = 0
@@ -368,9 +385,9 @@ def penalizeNotEnoughReports(branch, votePeriod):
         REPORTING.setRep(branch, REPORTING.repIDToIndex(branch, tx.origin), oldRep+newRep)
         # adds the rep to the branch's pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), originalRep - (oldRep+newRep))
+    # todo: separate heavier penalty for not reporting on a round 2 / readjudicated event
     return(1)
 
-def penalizeNotEnoughRoundTwoReports(branch, votePeriod):
 
 def sqrt(n):
     val = n

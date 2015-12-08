@@ -234,6 +234,7 @@ def moveMarket(market, fork):
     i = 0
     # for each event in market
     while i < numEvents:
+      if(eventNotResolved && eventNotInRound2Adj):
         event = MARKETS.getEvent(market, i)
         # push into next vote period
         period = BRANCHES.getVotePeriod(branch)
@@ -272,13 +273,14 @@ def moveMarket(market, fork):
     i = 0
     # for each event in market
     while i < numEvents:
-      event = MARKETS.getEvent(market, i)
-      # push into next vote period
-      period = BRANCHES.getVotePeriod(branch)
-      EXPEVENTS.addEvent(branch, period+1, event)
-      # set event expiration date to be after the current reporting period ends
-      EVENTS.setExpiration(event, block.number)
-      MARKETS.setTradingPeriod(market, period+1)
-      MAKEREPORTS.setReportable(period+1, event)
+      if(eventNotResolved && eventNotInRound2Adj):
+        event = MARKETS.getEvent(market, i)
+        # push into next vote period
+        period = BRANCHES.getVotePeriod(branch)
+        EXPEVENTS.addEvent(branch, period+1, event)
+        # set event expiration date to be after the current reporting period ends
+        EVENTS.setExpiration(event, block.number)
+        MARKETS.setTradingPeriod(market, period+1)
+        MAKEREPORTS.setReportable(period+1, event)
       i += 1
     return(1)

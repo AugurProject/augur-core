@@ -1,21 +1,16 @@
-# TODO:
-	# Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
-
-	# https://github.com/AugurProject/augur-core/commit/add5357230c82e2c65da81308877e27b9757e43c & need a way to actually update contracts / externs too
-
-  # would be nice if the reporting floor was dynamic based on appeal
-
-
 import expiringEvents as EXPIRING
 import reporting as REPORTING
 import fxpFunctions as FXP
 import events as EVENTS
 import makeReports as REPORTS
 import branches as BRANCHES
+import sendReputation as SENDREP
 
 data proportionCorrect[]
 # takes branch, votePeriod
 data denominator[][]
+
+data roundTwo[]
 
 #1. Record rep at start of report period
 #2. Penalize for each event
@@ -206,29 +201,52 @@ def collectFees(branch):
 		CASH.subtractCash(branch, cash)
 	return(1)
 
-# concept of event finality and time periods
-# need a way to penalize by round 2 as well
-# https://www.reddit.com/r/Augur/comments/3mco9m/dynamic_vs_fixed_bond_amount_for_readjudication/
-#For this option I propose the appeal bond be set to:
+
+# "For this option I propose the appeal bond be set to":
     Appeal_Bond = Market_Value * (0.01 + Market_Fee / 2) + Average_Adjudication_Cost
     The point of Average_Adjudication_Cost is to set a floor to the appeal bond cost such that micro volume markets have a minimum appeal cost that cant be abused.
     Where:
     Average_Adjudication_Cost = Total fees paid to reporters for all markets in this reporting round   /   number of markets in this reporting round.
-# "I am thinking a reporting period should be 2 months minus 24 hours.   This 24 hours allows for the appeals to take place before the next reporting round begins."
-def roundTwoBond(event):
-	bond == 100 rep
-	# penalize wrong same as above
-	# penalize not enough separately
+# Reporting period is 2 months minus 24 hours.  This 24 hours allows for the appeals to take place before the next reporting round begins.
+def roundTwoBond(branch, event, eventIndex, resolving, votePeriod):
+	bond = 100*2**64
+  if(!self.roundTwo[event]):
+    if(SENDREP.sendReputation(branch, event, bond)==0):
+      return(0)
+  if(BRANCHES.getVotePeriod(branch)!=votePeriod || self.roundTwo[event]):
+    return(0)
+  eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
+  # if so, we're in the final 24 hours and event is in this branch + votePeriod
+  if(!resolving && block.number/BRANCHES.getPeriodLength(branch)!=((block.number + 4800)/BRANCHES.getPeriodLength(branch)) && eventID!=0 && event==eventID):
+    # makes event required reporting in round 2 (the next period) as well
+    REPORTS.setEventRequired(branch, period, event)
 
-	# 2 week voting period
+    # push event into next period
+    period = BRANCHES.getVotePeriod(branch)
+    EXPIRING.addEvent(branch, period+1, event)
+    # set event expiration date to be after the current reporting period ends
+    EVENTS.setExpiration(event, block.number)
+    MAKEREPORTS.setReportable(period+1, event)
 
-	if(overruled && votedOnAgain):
+    # set round two to true so can't be done again
+    self.roundTwo[event] = 1
+
+  # else too early or too late
+  else:
+    return(0)
+
+
+	if(resolving && overruled && votedOnAgain):
 		#a) return the bond
-		#b) reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest.
+		#b) reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting
+      # so should say (if appealed don't allow rbcr until after the appeal process is over)
 		return(2*bond)
-	elif(votedOnAgain):
+	elif(votedOnAgain && resolving):
 		lose bond
-	# set round two to true
+    # rbcr from original period stands, rbcr from round 2 happens as usual as well
+  # not voted on again yet
+  else:
+    return(0)
 
 
 #Essentially, we could allow anyone to pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.  In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep would be redistributed accordingly.  In the other class/branch, the other outcome would be considered right and rep would be redistributed accordingly.  Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets.  Market makers should then be able to move their market to whichever fork they want, if they fail to act, it'd go to the most voluminous fork by default after a couple weeks.
@@ -273,6 +291,41 @@ it's essentially what ends up happening if you keep having recursive fork bonds 
 12:55
 
 paying back all the bond raisers is nice and all, but there's another lot simpler way to achieve the same effect: give the original bond raiser the right of first refusal to make another fork on the new fork after a market has been readjudicated
+
+So.... a way to do your idea but not make it open to abuse, is to charge a non refundable cost that is the same as an appeal up to re-adjudication, along with 1% of reputation
+​
+5:22
+this pays the reporters who have to redo the market
+​
+5:23
+and if  the 1%  rep does not win the fork bond biding, it is returned, but the market is still contested and lives on to see another adjudication instead of resolving as is.(edited)
+joeykrug
+5:23 PM when do you charge that cost?
+imkharn
+5:24 PM Make it a pre-requisiste to sending the 1% of reputation to the fork bond contract
+​
+5:25
+unlike all the other funds we throw at reporters however, it would have to be held in a special place while we wait for a new reporting round to begin
+​
+5:25
+then moved into the reporters fees for that round
+​
+5:28
+the bond paid to move from adjudication to readjudication is approximately the cost of doing a re-adjudcation full attendance report gathering.
+​
+5:29
+oh, i see why you ask when it is charged, because one of the bids for forking will win
+​
+5:29
+perhaps even the one paid along with the winning bid go to reporters
+​
+5:29
+or in that case it could be refunded
+​
+5:29
+if it is the winning fork bid
+
+# what to do if market forked - readj. - forked again what do w/ orig readj. rep?  never happened b/c it wasn't the main fork market
 def fork(event):
 	if(!EVENTS.getRoundTwo(event)):
 		return(-1)
