@@ -95,6 +95,7 @@ def closeMarket(branch, market):
             fxpOutcome = EVENTS.getOutcome(events[n])
             pushedBack = EVENTS.getPushedBack(events[n])
             ethical = catch(EVENTS.getEthical(events[n]))
+            # TODO: if round 2 event && notFinal return 0
             # if binary, catch the outcome
             if(EVENTS.getNumOutcomes(events[n])==2 and 2**64*EVENTS.getMaxValue(events[n])==2**65):
                 # if outcome not set

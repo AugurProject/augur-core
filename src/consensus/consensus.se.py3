@@ -10,7 +10,7 @@ data proportionCorrect[]
 # takes branch, votePeriod
 data denominator[][]
 
-data roundTwo[]
+data roundTwo[](roundTwo, originalVotePeriod, originalOutcome)
 
 #1. Record rep at start of report period
 #2. Penalize for each event
@@ -210,14 +210,14 @@ def collectFees(branch):
 # Reporting period is 2 months minus 24 hours.  This 24 hours allows for the appeals to take place before the next reporting round begins.
 def roundTwoBond(branch, event, eventIndex, resolving, votePeriod):
 	bond = 100*2**64
-  if(!self.roundTwo[event]):
+  if(!self.roundTwo[event].roundTwo):
     if(SENDREP.sendReputation(branch, event, bond)==0):
       return(0)
-  if(BRANCHES.getVotePeriod(branch)!=votePeriod || self.roundTwo[event]):
+  if(BRANCHES.getVotePeriod(branch)!=votePeriod && !resolving):
     return(0)
   eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
   # if so, we're in the final 24 hours and event is in this branch + votePeriod
-  if(!resolving && block.number/BRANCHES.getPeriodLength(branch)!=((block.number + 4800)/BRANCHES.getPeriodLength(branch)) && eventID!=0 && event==eventID):
+  if(!resolving && block.number/BRANCHES.getPeriodLength(branch)!=((block.number + 4800)/BRANCHES.getPeriodLength(branch)) && eventID!=0 && event==eventID && self.roundTwo[event].roundTwo==0):
     # makes event required reporting in round 2 (the next period) as well
     REPORTS.setEventRequired(branch, period, event)
 
@@ -229,21 +229,46 @@ def roundTwoBond(branch, event, eventIndex, resolving, votePeriod):
     MAKEREPORTS.setReportable(period+1, event)
 
     # set round two to true so can't be done again
-    self.roundTwo[event] = 1
+    self.roundTwo[event].roundTwo = 1
+    self.roundTwo[event].originalVotePeriod = votePeriod
+    if(scalar or categorical):
+      self.roundTwo[event].originalOutcome = EVENTS.getMedian(event)
+    else:
+      self.roundTwo[event].originalOutcome = catch(EVENTS.getUncaughtOutcome(event))
 
   # else too early or too late
   else:
     return(0)
 
+  overruled = 1
 
-	if(resolving && overruled && votedOnAgain):
+  if(scalar or categorical):
+    if(self.roundTwo[event].originalOutcome == EVENTS.getMedian(event)):
+      overruled = 0
+  else:
+    if(self.roundTwo[event].originalOutcome == catch(EVENTS.getUncaughtOutcome(event)):
+       overruled = 0
+
+  votedOnAgain = 0
+
+  if(BRANCHES>getVotePeriod(branch) > EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch)):
+    votedOnAgain = 1
+
+	if(resolving && overruled && votedOnAgain && self.roundTwo[event].roundTwo && votePeriod!=self.roundTwo[event].originalVotePeriod && eventID!=0 && event==eventID):
 		#a) return the bond
+    # set final outcome
 		#b) reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting
+    # need to save old original outcome as well
       # so should say (if appealed don't allow rbcr until after the appeal process is over)
-		return(2*bond)
+		setFinal
+    return(2*bond)
+
 	elif(votedOnAgain && resolving):
 		lose bond
     # rbcr from original period stands, rbcr from round 2 happens as usual as well
+    setFinal
+    # and set final outcome
+
   # not voted on again yet
   else:
     return(0)
