@@ -145,6 +145,7 @@ def closeMarket(branch, market):
                         CASH.addCash(branch, 42*2**64)
                         # not ethical is same as .5 outcome
                         fxpOutcome = 2**63
+                        EVENTS.setOutcome(events[n], fxpOutcome)
                     else:
                         # return bond
                         CASH.subtractCash(events[n], 42*2**64)
@@ -163,6 +164,7 @@ def closeMarket(branch, market):
                 if(EVENTS.getMedian(events[n])==0 && period > votingPeriodEvent):
                     median = MEDIAN.calculateMedian(events[n])
                     EVENTS.setMedian(events[n], median)
+                    EVENTS.setOutcome(events[n], fxpOutcome)
                     scaled_min = 2^64*EVENTS.getMinValue(events[n])
                     scaled_max = 2^64*EVENTS.getMaxValue(events[n])
                     fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
@@ -211,6 +213,8 @@ def closeMarket(branch, market):
                         CASH.addCash(branch, 42*2**64)
                         # not ethical is same as .5 outcome
                         fxpOutcome = 2**63
+                        EVENTS.setOutcome(events[n], fxpOutcome)
+                        EVENTS.setMedian(events[n], fxpOutcome)
                     else:
                         # return bond
                         CASH.subtractCash(events[n], 42*2**64)
@@ -276,6 +280,8 @@ def closeMarket(branch, market):
                         CASH.addCash(branch, 42*2**64)
                         # not ethical is same as .5 outcome
                         fxpOutcome = 2**63
+                        EVENTS.setOutcome(events[n], fxpOutcome)
+                        EVENTS.setMedian(events[n], fxpOutcome)
                     else:
                         # return bond
                         CASH.subtractCash(events[n], 42*2**64)

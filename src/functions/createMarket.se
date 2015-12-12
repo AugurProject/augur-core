@@ -168,6 +168,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         MARKETS.initialLiquiditySetup(marketID, 0, 0, 0)
         return(-4)
 
+# needs to comply w/ new trading fee rules
 def updateTradingFee(branch, market, tradingFee):
     if(tradingFee < BRANCHES.getMinTradingFee(branch)):
         return(-1)

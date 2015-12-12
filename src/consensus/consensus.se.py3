@@ -1,5 +1,8 @@
+# rep not reporting mult. periods lose how much
+
 import expiringEvents as EXPIRING
 import reporting as REPORTING
+import events as EVENTS
 import fxpFunctions as FXP
 import events as EVENTS
 import makeReports as REPORTS
@@ -10,7 +13,7 @@ data proportionCorrect[]
 # takes branch, votePeriod
 data denominator[][]
 
-data roundTwo[](roundTwo, originalVotePeriod, originalOutcome)
+data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, final)
 
 #1. Record rep at start of report period
 #2. Penalize for each event
@@ -207,6 +210,7 @@ def collectFees(branch):
     The point of Average_Adjudication_Cost is to set a floor to the appeal bond cost such that micro volume markets have a minimum appeal cost that cant be abused.
     Where:
     Average_Adjudication_Cost = Total fees paid to reporters for all markets in this reporting round   /   number of markets in this reporting round.
+    # needs an abs min of like 100 rep.
 # Reporting period is 2 months minus 24 hours.  This 24 hours allows for the appeals to take place before the next reporting round begins.
 def roundTwoBond(branch, event, eventIndex, resolving, votePeriod):
 	bond = 100*2**64
@@ -232,7 +236,7 @@ def roundTwoBond(branch, event, eventIndex, resolving, votePeriod):
     self.roundTwo[event].roundTwo = 1
     self.roundTwo[event].originalVotePeriod = votePeriod
     if(scalar or categorical):
-      self.roundTwo[event].originalOutcome = EVENTS.getMedian(event)
+      self.roundTwo[event].originalOutcome = MEDIAN.calculateMedian(event)
     else:
       self.roundTwo[event].originalOutcome = catch(EVENTS.getUncaughtOutcome(event))
 
@@ -243,7 +247,7 @@ def roundTwoBond(branch, event, eventIndex, resolving, votePeriod):
   overruled = 1
 
   if(scalar or categorical):
-    if(self.roundTwo[event].originalOutcome == EVENTS.getMedian(event)):
+    if(self.roundTwo[event].originalOutcome == MEDIAN.calculateMedian(event)):
       overruled = 0
   else:
     if(self.roundTwo[event].originalOutcome == catch(EVENTS.getUncaughtOutcome(event)):
@@ -256,18 +260,29 @@ def roundTwoBond(branch, event, eventIndex, resolving, votePeriod):
 
 	if(resolving && overruled && votedOnAgain && self.roundTwo[event].roundTwo && votePeriod!=self.roundTwo[event].originalVotePeriod && eventID!=0 && event==eventID):
 		#a) return the bond
-    # set final outcome
-		#b) reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting
-    # need to save old original outcome as well
+    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
+    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), bond)
+
+    # and set final outcome / event bond, etc
+    self.resolve(branch, event)
+
+    #b) reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting
       # so should say (if appealed don't allow rbcr until after the appeal process is over)
-		setFinal
+
+    self.roundTwo[event].final = 1
     return(2*bond)
 
 	elif(votedOnAgain && resolving):
-		lose bond
-    # rbcr from original period stands, rbcr from round 2 happens as usual as well
-    setFinal
-    # and set final outcome
+		# lose bond
+    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
+    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), bond)
+
+    # and set final outcome / event bond, etc
+    self.resolve(branch, event)
+
+    # rbcr from original period/orig. outcome stands, rbcr from round 2 happens as usual as well
+
+    self.roundTwo[event].final = 1
 
   # not voted on again yet
   else:
@@ -283,7 +298,7 @@ def roundTwoBond(branch, event, eventIndex, resolving, votePeriod):
 # what if multiple things need to be forked?
 # ok so the problem with a fork bond queue at all even in theory is that they're going to be forking in a worthless network.  i.e. we have parent a with child b, then b forks into b and c,  if someone in a finally gets out of the queue, they're forking a, which is a worthless network, so the markets ​_have_​ to be transferred to winning forks after some period of time.  Then, in the "winning" fork, a market could either fork the network right away again, ​_or_​ simply be readjudicated again (the latter is a cheaper option, although not guaranteed to be secure, b/c someone could be doing a long play attack per all discussion above with 10s of millions of dollars).  So if we say, ok, the market is readjudicated since it's cheaper, if ​_that_​ fails, then the network can be forked again, and so on.  This allows the long play security stuff to play out if need be, allows markets to be resolved at probably the fastest rate of these options, and still allows a sort of implicit fork queue if the network keeps forking due to a really pocket heavy attacker.
 # take 20% of rep away from liars in fork, don't distribute to truthtellers until a new truthful outcome is resolved / reported
-
+# 1% of rep or highest bidder
 
 ​To talk about the smaller fork bond posted:​
 The fork bond is paid. Saved along with it is the current consensus that is being contested.
@@ -395,3 +410,74 @@ macro sum($a):
                     $total += $a[$i]
                     $i += 1
                 $total
+
+def resolve(branch, event):
+    fxpOutcome = EVENTS.getOutcome(event)
+    pushedBack = EVENTS.getPushedBack(event)
+    ethical = catch(EVENTS.getEthical(event))
+
+    # set final outcome / median / event bond, etc
+
+    # binary
+    if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65):
+      # if outcome not set
+      if(fxpOutcome==0):
+        fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
+        EVENTS.setOutcome(event, fxpOutcome)
+
+        if(fxpOutcome==2**63 || !ethical):
+          # give event bond money to reporters
+          CASH.subtractCash(event, 42*2**64)
+          CASH.addCash(branch, 42*2**64)
+          # not ethical is same as .5 outcome
+          fxpOutcome = 2**63
+          EVENTS.setOutcome(event, fxpOutcome)
+        else:
+          # return bond
+          CASH.subtractCash(event, 42*2**64)
+          CASH.addCash(INFO.getCreator(event), 42*2**64)
+
+    # scalar
+    elif(2^64*EVENTS.getMaxValue(event) != YES and EVENTS.getNumOutcomes(event) == 2):
+      median = MEDIAN.calculateMedian(event)
+      EVENTS.setMedian(event, median)
+      scaled_min = 2^64*EVENTS.getMinValue(event)
+      scaled_max = 2^64*EVENTS.getMaxValue(event)
+      fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
+      EVENTS.setOutcome(event, fxpOutcome)
+
+      if(fxpOutcome==2**63 || !ethical):
+        # give event bond money to reporters
+        CASH.subtractCash(event, 42*2**64)
+        CASH.addCash(branch, 42*2**64)
+        # not ethical is same as .5 outcome
+        fxpOutcome = 2**63
+        EVENTS.setOutcome(event, fxpOutcome)
+        EVENTS.setMedian(event, fxpOutcome)
+      else:
+        # return bond
+        CASH.subtractCash(event, 42*2**64)
+        CASH.addCash(INFO.getCreator(event), 42*2**64)
+
+    # categorical
+    elif(EVENTS.getNumOutcomes(event)>2):
+      median = MEDIAN.calculateMedian(event)
+      EVENTS.setMedian(event, median)
+      scaled_min[j] = 2^64
+      scaled_max[j] = 2^64*EVENTS.getNumOutcomes(event)
+      fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
+      EVENTS.setOutcome(event, fxpOutcome)
+
+      if(fxpOutcome==2**63 || !ethical):
+        # give event bond money to reporters
+        CASH.subtractCash(event, 42*2**64)
+        CASH.addCash(branch, 42*2**64)
+        # not ethical is same as .5 outcome
+        fxpOutcome = 2**63
+        EVENTS.setOutcome(event, fxpOutcome)
+        EVENTS.setMedian(event, fxpOutcome)
+      else:
+        # return bond
+        CASH.subtractCash(event, 42*2**64)
+        CASH.addCash(INFO.getCreator(event), 42*2**64)
+    return(1)
