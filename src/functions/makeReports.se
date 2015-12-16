@@ -115,9 +115,12 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
         needsReportingOn = self.needsReportingOn(eventID)
         # If not, then no one can report on this market's event(s) and the event is "removed" from expEvents.
         # if yes, the value is 1 and everything proceeds normally
+        if(BRANCHES.getOracleOnly(branch):
+          needsReportingOn = 1
         self.reportable[votePeriod][eventID] = needsReportingOn
         if(needsReportingOn==-1):
             EXPEVENTS.removeEvent(branch, votePeriod)
+            return(-5)
 
     if(EVENTS.getOutcome(eventID)!=0):
         return(-4)
@@ -140,7 +143,33 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
       self.branches[branch].submittedHash[period][msg.sender] = 1
     if(REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
         return(-1)
-    if(residual < periodLength/2):
+
+    x = array(1)
+    x[0] = tx.origin + eventID
+    i = 0
+    numMarkets = EVENTS.getNumMarkets(eventID)
+    if(numMarkets==0):
+        return(-7)
+    if(numMarkets>100):
+        numMarkets = 100
+    markets = array(numMarkets)
+    markets = EVENTS.getMarkets(eventID, outitems=numMarkets)
+    volume = 0
+    while i < numMarkets:
+        volume += MARKETS.getVolume(markets[i])
+    totalVol = EXPEVENTS.getPeriodVolume(branch, votePeriod)
+    # if odds of reporting are >1, then 2**256 (we don't want to wrap around), so div by 2**64
+    log = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch))
+    repConstant = FXP.fx_exp(22136092888451461120*log/2**64)
+    repConstant += 18446744073709552
+    volFraction = volume*2**64/totalVol
+    # maybe this should be > 30
+    if(self.getNumEventsToReportOn(branch, votePeriod) < 30*2**64):
+        repConstant = 30*2**64/numEvents
+    # in fxp (2**192) == 2**256 / 2**64
+    reportingThreshold = (40*(-(267*(volFraction**2)/(2*2**64) + (533*volFraction)/2 +1)*repConstant/2**64) * (2**192)
+    shaHash = sha3(x, items=1)
+    if(residual < periodLength/2 && shaHash < (reportingThreshold || shaHash<EVENTS.getThreshold(eventID))):
         # submit hash of (tx.origin, salt, Votes[])
         if(EXPEVENTS.setReportHash(branch, votePeriod, tx.origin, reportHash, reportIndex)):
             # if so, don't want to increment num reports expected or numreportshash per reporter for updated commitment, just the first time
@@ -377,6 +406,7 @@ def penalizeNotEnoughReports(branch, votePeriod):
     if(numEvents < 30*2**64):
         numEvents = 30*2**64
     # what _if_ there are actually <30 events in augur?
+      # perhaps we should have all reporters in that period report on all of them
     if(numEvents/(2*2**64) > self.branches[branch].numReportsActual[msg.sender][votePeriod]):
         originalRep = REPORTING.getRepBalance(branch, tx.origin)
         # penalize people

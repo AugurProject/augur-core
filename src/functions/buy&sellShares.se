@@ -80,6 +80,7 @@ def buyShares(branch, market, outcome, amount, nonce, limit):
     if(self.trades[market][tx.origin].hash != buyHash || block.number == self.trades[market][tx.origin].block):
         return(-5)
 
+    # make it so trader has locked in fee from buy, so if they sell and they bought when fee was low, they can sell with that low fee as opposed to a high one
     inc_nonce()
     stalled = 0
     currentPeriod = block.number / BRANCHES.getPeriodLength(branch)
