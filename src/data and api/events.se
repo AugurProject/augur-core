@@ -47,7 +47,7 @@ def getExpiration(event):
 	return(self.Events[event].expirationDate)
 
 def getOriginalExp(event):
-  return(self.Events[event].originalExp)
+	return(self.Events[event].originalExp)
 
 def setExpiration(event, date):
 	self.Events[event].expirationDate = date
@@ -149,16 +149,16 @@ def setFinal(event, final):
 	return(1)
 
 def setRejected(event, period, uncaughtOutcome):
-  self.Events[event].rejected = 1
-  self.Events[event].rejectedPeriod = period
-  self.Events[event].rejectedUncaught = uncaughtOutcome
-  return(1)
+	self.Events[event].rejected = 1
+	self.Events[event].rejectedPeriod = period
+	self.Events[event].rejectedUncaught = uncaughtOutcome
+	return(1)
 
 def getRejected(event):
-  return(self.Events[event].rejected)
+	return(self.Events[event].rejected)
 
 def getRejectedPeriod(event):
-  return(self.Events[event].rejectedPeriod)
+	return(self.Events[event].rejectedPeriod)
 
 def getRejectedUncaught(event):
-  return(self.Events[event].rejectedUncaught)
+	return(self.Events[event].rejectedUncaught)

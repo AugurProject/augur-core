@@ -28,7 +28,7 @@
 # currentExpPeriod - 1 is what's up for reporting at any given time
 # should add a min initial liquidity property, for non pm branches it'd be low and .5*minInitialLiquidity is == fee for event
 # could also add an event fee parameter
-data Branches[](currentVotePeriod, periodLength, step, substep, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod)
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod)
 
 # first param is the branch, second param is the subcurrency contract
 data cash[][]
@@ -52,9 +52,6 @@ def getVotePeriod(branch):
 
 def getPeriodLength(branch):
 	return(self.Branches[branch].periodLength)
-
-def getStep(branch):
-	return(self.Branches[branch].step)
 
 # branch cash balance at start of period
 def setInitialBalance(branch, period, balance):
@@ -118,19 +115,6 @@ def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleO
 def getParentPeriod(branch):
     return(self.Branches[ID].parentPeriod)
 
-# check that msg.sender is one of our function contracts
-def incrementStep(branch):
-	#if(!self.whitelist.check(msg.sender)):
-	#	return(-1)
-	self.Branches[branch].step += 1
-	return(1)
-
-def setStep(branch, step):
-	#if(!self.whitelist.check(msg.sender)):
-	#	return(-1)
-	self.Branches[branch].step = step
-	return(1)
-
 def incrementPeriod(branch):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
@@ -145,18 +129,3 @@ def addMarket(branch, market):
 	self.Branches[branch].markets[numMarkets] = market
 	self.Branches[branch].numMarkets += 1
 	return(1)
-
-def getSubstep(branch):
-	return(self.Branches[branch].substep)
-
-def incrementSubstep(branch):
-    #if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
-    self.Branches[branch].substep += 1
-    return(1)
-
-def setSubstep(branch, substep):
-    #if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
-    self.Branches[branch].substep = substep
-    return(1)
