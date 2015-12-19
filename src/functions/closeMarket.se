@@ -97,7 +97,7 @@ def closeMarket(branch, market):
             ethical = catch(EVENTS.getEthical(events[n]))
             # TODO: if round 2 event && notFinal return 0
             # if binary, catch the outcome
-            if(EVENTS.getNumOutcomes(events[n])==2 and 2**64*EVENTS.getMaxValue(events[n])==2**65):
+            if(EVENTS.getNumOutcomes(events[n])==2 and 2**64*EVENTS.getMaxValue(events[n])==2**65 and EVENTS.getMinValue(events[n])==1):
                 # if outcome not set
                 if(fxpOutcome==0 && period > votingPeriodEvent):
                     fxpOutcome = catch(EVENTS.getUncaughtOutcome(events[n]))
@@ -159,7 +159,7 @@ def closeMarket(branch, market):
                     return(-5)
 
             # scalar
-            elif(2^64*EVENTS.getMaxValue(events[n]) != YES and EVENTS.getNumOutcomes(events[n]) == 2):
+            elif((2^64*EVENTS.getMaxValue(events[n]) != YES || 2**64*EVENTS.getMinValue(events[n]) != NO) and EVENTS.getNumOutcomes(events[n]) == 2):
                 # if outcome/median aren't set
                 if(EVENTS.getMedian(events[n])==0 && period > votingPeriodEvent):
                     median = MEDIAN.calculateMedian(events[n])
@@ -299,7 +299,7 @@ def closeMarket(branch, market):
 
             outcome = fxpOutcome/2^64
             # makes sure it's not a scalar
-            if(fxpOutcome==3*2^63 && numberEvents==1 && !(EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2)):
+            if(fxpOutcome==3*2^63 && numberEvents==1 && !((EVENTS.getMaxValue(events[n])!=2 || EVENTS.getMinValue(events[n])!=1) && EVENTS.getNumOutcomes(events[n])==2)):
                 # return all the $$$ - (@ 50 cents a share)
                 i = 0
                 currentParticipant = MARKETS.getCurrentParticipantNumber(market)
@@ -331,14 +331,14 @@ def closeMarket(branch, market):
                 return(-2)
             if(n==0):
                 #scalar or .5
-                if((EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
+                if(((EVENTS.getMaxValue(events[n])!=2 || EVENTS.getMinValue(events[n])!=1) && EVENTS.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
                     winningOutcomes[0] = 1
                     winningOutcomes[1] = 2
                 # anything besides scalar or .5
                 else:
                     winningOutcomes[0] += outcome
             elif(n==1):
-                if((EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
+                if(((EVENTS.getMaxValue(events[n])!=2 || EVENTS.getMinValue(events[n])!=1) && EVENTS.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
                     # scalar, scalar
                     if(winningOutcomes[1]):
                         winningOutcomes[2] = 3
@@ -355,7 +355,7 @@ def closeMarket(branch, market):
                 else:
                     winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
             elif(n==2):
-                if((EVENTS.getMaxValue(events[n])!=1 && EVENTS.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
+                if(((EVENTS.getMaxValue(events[n])!=2 || EVENTS.getMinValue(events[n])!=1) && EVENTS.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
                     #scalar, scalar, scalar
                     if(winningOutcomes[3]):
                         winningOutcomes[4] = 5

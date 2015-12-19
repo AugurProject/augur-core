@@ -160,7 +160,7 @@ def proportionCorrect(event, rejected):
 		p = 0
 		if(outcome!=0):
 			# binary
-			if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65):
+			if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65 and 2**64*EVENTS.getMinValue(event)==2**64):
         # need to fetch uncaught outcome for rejectedperiod separately
         avgOutcome = EVENTS.getRejectedPeriodUncaught(event)
 				# say we have outcome of 0, avg is .4, what is p?
@@ -182,7 +182,7 @@ def proportionCorrect(event, rejected):
 		outcome = EVENTS.getOutcome(event)
 		if(outcome!=0):
 			# binary
-			if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65):
+			if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65 and 2**64*EVENTS.getMaxValue(event)==2**64):
 				avgOutcome = EVENTS.getUncaughtOutcome(event)
 				# say we have outcome of 0, avg is .4, what is p?
         # p is .6 or 60%
@@ -489,7 +489,7 @@ def resolve(branch, event):
     # set final outcome / median / event bond, etc
 
     # binary
-    if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65):
+    if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65 and 2**64*EVENTS.getMaxValue(event)==2**64):
       # if outcome not set
       if(fxpOutcome==0):
         fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
@@ -508,7 +508,7 @@ def resolve(branch, event):
           CASH.addCash(INFO.getCreator(event), 42*2**64)
 
     # scalar
-    elif(2^64*EVENTS.getMaxValue(event) != YES and EVENTS.getNumOutcomes(event) == 2):
+    elif((2^64*EVENTS.getMaxValue(event) != YES || 2**64*EVENTS.getMinValue(event)!=NO) and EVENTS.getNumOutcomes(event) == 2):
       median = MEDIAN.calculateMedian(event)
       EVENTS.setMedian(event, median)
       scaled_min = 2^64*EVENTS.getMinValue(event)

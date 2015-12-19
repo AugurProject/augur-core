@@ -6,11 +6,11 @@ import events as EVENTS
 def twoOutcomes(market, winningOutcome: arr, events: arr):
     # look for the scalar
     scalar = 0
-    if((EVENTS.getMaxValue(events[0])!=1 && EVENTS.getNumOutcomes(events[0])==2) || EVENTS.getOutcome(events[0])==3*2^63):
+    if(((EVENTS.getMaxValue(events[0])!=2 || EVENTS.getMinValue(events[0])!=1) && EVENTS.getNumOutcomes(events[0])==2) || EVENTS.getOutcome(events[0])==3*2^63):
         scalar = 0
-    elif((EVENTS.getMaxValue(events[1])!=1 && EVENTS.getNumOutcomes(events[1])==2) || EVENTS.getOutcome(events[1])==3*2^63):
+    elif(((EVENTS.getMaxValue(events[1])!=2 || EVENTS.getMinValue(events[0])!=1) && EVENTS.getNumOutcomes(events[1])==2) || EVENTS.getOutcome(events[1])==3*2^63):
         scalar = 1
-    elif((EVENTS.getMaxValue(events[2])!=1 && EVENTS.getNumOutcomes(events[2])==2) || EVENTS.getOutcome(events[2])==3*2^63):
+    elif(((EVENTS.getMaxValue(events[2])!=2 || EVENTS.getMinValue(events[0])!=1) && EVENTS.getNumOutcomes(events[2])==2) || EVENTS.getOutcome(events[2])==3*2^63):
         scalar = 2
     outcome = EVENTS.getOutcome(events[scalar])
     minValue = EVENTS.getMinValue(events[scalar])

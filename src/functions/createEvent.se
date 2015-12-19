@@ -52,7 +52,8 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         eventID = sha256(eventinfo, chars=len(eventinfo))
     else:
         return(-1)
-
+    if(numOutcomes < 2 || numOutcomes > 50):
+        return(0)
     # fee to ask a question rises if voter participation (rep reported) falls, if it's really high, the fee is lowered (participationFactor is a fixedpoint number)
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     participationFactor = (EXPEVENTS.getTotalRepReported(branch, currentVotePeriod-2) * 2^64) / EXPEVENTS.getTotalRepReported(branch, currentVotePeriod-1)

@@ -326,7 +326,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
             numOutcomes = EVENTS.getNumOutcomes(eventID)
             maxValue = EVENTS.getMaxValue(eventID)
             # binary
-            if(numOutcomes==2 and maxValue==1):
+            if(numOutcomes==2 and maxValue==2 && minValue==1):
                 if(report>2*2^64 or report<2^64 or report==0):
                     return(-5)
                 # submit report
