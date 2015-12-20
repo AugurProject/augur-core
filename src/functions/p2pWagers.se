@@ -41,6 +41,9 @@ def getOutcomeZeroBettor(ID):
 ### P2P parimutuel betting
 # @return betID
 def makeBet(eventID, amtToBet):
+    # if not binary, not allowed
+    if(!(EVENTS.getNumOutcomes(events[n])==2 and 2**64*EVENTS.getMaxValue(events[n])==2**65 and EVENTS.getMinValue(events[n])==1)):
+        return(0)
     betData = array(3)
     betData[0] = eventID
     betData[1] = block.number
