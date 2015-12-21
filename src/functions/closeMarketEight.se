@@ -35,41 +35,28 @@ def eightOutcomes(market, winningOutcome: arr, events: arr):
             
     # price is in fixed point
     # first is low low low, 2 is high low low, 3 is low high low, 4 is high high low, 5 is low low high, 6 is high low high, 7 is low high high, 8 is high high high
-    pricePerShare1 = outcomeOneLowSidePercent * outcomeTwoLowSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
-    pricePerShare2 = outcomeOneHighSidePercent * outcomeTwoLowSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
-    pricePerShare3 = outcomeOneLowSidePercent * outcomeTwoHighSidePercent * outcomeOneLowSidePercent / (2^64 * 2^64)
-    pricePerShare4 = outcomeOneHighSidePercent * outcomeTwoHighSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
-    pricePerShare5 = outcomeOneLowSidePercent * outcomeTwoLowSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
-    pricePerShare6 = outcomeOneHighSidePercent * outcomeTwoLowSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
-    pricePerShare7 = outcomeOneLowSidePercent * outcomeTwoHighSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
-    pricePerShare8 = outcomeOneHighSidePercent * outcomeTwoHighSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
+    pricePerShare = array(7)
+    pricePerShare[0] = outcomeOneLowSidePercent * outcomeTwoLowSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
+    pricePerShare[1] = outcomeOneHighSidePercent * outcomeTwoLowSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
+    pricePerShare[2] = outcomeOneLowSidePercent * outcomeTwoHighSidePercent * outcomeOneLowSidePercent / (2^64 * 2^64)
+    pricePerShare[3] = outcomeOneHighSidePercent * outcomeTwoHighSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
+    pricePerShare[4] = outcomeOneLowSidePercent * outcomeTwoLowSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
+    pricePerShare[5] = outcomeOneHighSidePercent * outcomeTwoLowSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
+    pricePerShare[6] = outcomeOneLowSidePercent * outcomeTwoHighSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
+    pricePerShare[7] = outcomeOneHighSidePercent * outcomeTwoHighSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
 
     # distribute cashcoin to the people who won money by holding winning shares
     i = 0
     currentParticipant = MARKETS.getCurrentParticipantNumber(market)
+    # todo lazy eval
     while i < currentParticipant:
         # for each winning outcome do...
-        sharesOwned = array(8)
+        n = 0
         while(winningOutcome[n]!=0):
-            sharesOwned[n] = MARKETS.getParticipantSharesPurchased(market, i, winningOutcome[n])
+            sharesOwned = MARKETS.getParticipantSharesPurchased(market, i, winningOutcome[n])
+            CASH.subtractCash(market, sharesOwned*pricePerShare[n]/2^64)
+            CASH.addCash(MARKETS.getParticipantID(market, i), sharesOwned*pricePerShare[n]/2^64)
             n+=1
-        participant = MARKETS.getParticipantID(market, i)
-        CASH.subtractCash(market, sharesOwned[0]*pricePerShare1/2^64)
-        CASH.addCash(participant, sharesOwned[0]*pricePerShare1/2^64)
-        CASH.subtractCash(market, sharesOwned[1]*pricePerShare2/2^64)
-        CASH.addCash(participant, sharesOwned[1]*pricePerShare2/2^64)
-        CASH.subtractCash(market, sharesOwned[2]*pricePerShare3/2^64)
-        CASH.addCash(participant, sharesOwned[2]*pricePerShare3/2^64)
-        CASH.subtractCash(market, sharesOwned[3]*pricePerShare4/2^64)
-        CASH.addCash(participant, sharesOwned[3]*pricePerShare4/2^64)
-        CASH.subtractCash(market, sharesOwned[4]*pricePerShare5/2^64)
-        CASH.addCash(participant, sharesOwned[4]*pricePerShare5/2^64)
-        CASH.subtractCash(market, sharesOwned[5]*pricePerShare6/2^64)
-        CASH.addCash(participant, sharesOwned[5]*pricePerShare6/2^64)
-        CASH.subtractCash(market, sharesOwned[6]*pricePerShare7/2^64)
-        CASH.addCash(participant, sharesOwned[6]*pricePerShare7/2^64)
-        CASH.subtractCash(market, sharesOwned[7]*pricePerShare8/2^64)
-        CASH.addCash(participant, sharesOwned[7]*pricePerShare8/2^64)
         i+=1
 
     return(1)

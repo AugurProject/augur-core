@@ -49,6 +49,7 @@ def fourOutcomes(market, winningOutcome: arr, events: arr):
     # distribute cashcoin to the people who won money by holding winning shares
     i = 0
     currentParticipant = MARKETS.getCurrentParticipantNumber(market)
+    # todo change to lazy eval
     while i < currentParticipant:
         # for each winning outcome do...
         n = 0
