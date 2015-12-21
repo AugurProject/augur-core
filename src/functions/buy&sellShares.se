@@ -28,8 +28,6 @@ import fxpFunctions as FXP
 import markets as MARKETS
 import events as EVENTS
 
-data nonces[]
-
 event updatePrice(user:indexed, market:indexed, outcome:indexed, price, cost)
 
 # TODO: We need to implement the new market fee structure described by evand, making fees at the edges less insane.
@@ -55,7 +53,7 @@ def commitTrade(market, hash):
 #calc loss based on both positions you own
 #i.e. worst case loss sequestering per market
 # limit order ls-lmsr
-def buyShares(branch, market, outcome, amount, nonce, limit):
+def buyShares(branch, market, outcome, amount, limit):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     # if we have 3-4 cycles in a row of events getting pushed back market would already be closed even though
     # events up to be decided on for a while yet never decided
@@ -65,8 +63,6 @@ def buyShares(branch, market, outcome, amount, nonce, limit):
     #if above && the event outcomes aren't determined (0), then yes
     #then set a stalled boolean
     #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
-    #if !good_pow():
-    #    return(-4)
 
     if(BRANCHES.getOracleOnly(branch)):
         return(-6)
@@ -81,7 +77,6 @@ def buyShares(branch, market, outcome, amount, nonce, limit):
         return(-5)
 
     # make it so trader has locked in fee from buy, so if they sell and they bought when fee was low, they can sell with that low fee as opposed to a high one
-    inc_nonce()
     stalled = 0
     currentPeriod = block.number / BRANCHES.getPeriodLength(branch)
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
@@ -153,9 +148,7 @@ def buyShares(branch, market, outcome, amount, nonce, limit):
     # -4: bad nonce/hash
     # -5: bad commitment or no commitment
     # -6: oracle only branch, no trading
-def sellShares(branch, market, outcome, amount, nonce, limit):
-    #if !good_pow():
-    #    return(-4)
+def sellShares(branch, market, outcome, amount, limit):
     if(BRANCHES.getOracleOnly(branch)):
         return(-6)
     sellInfo = array(4)
@@ -167,7 +160,6 @@ def sellShares(branch, market, outcome, amount, nonce, limit):
     if(self.trades[market][tx.origin].hash != sellHash || block.number == self.trades[market][tx.origin].block):
         return(-5)
 
-    inc_nonce()
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
     stalled = 0
@@ -225,21 +217,3 @@ def sellShares(branch, market, outcome, amount, nonce, limit):
         # log new price and avg. price sold / share
         log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), (price+fee)*2^64/amount)
         return(1)
-
-macro good_pow():
-    with $data = array(4):
-        $data[0] = branch
-        $data[1] = market
-        $data[2] = tx.origin
-        $data[3] = self.nonces[tx.origin]
-        with $firstHash = sha3($data, chars=4*32):
-            with $data2 = array(2):
-                $data2[0] = $firstHash
-                $data2[1] = nonce
-                lt(sha3($data2, chars=2*32), 2^254/10000)
-
-macro inc_nonce():
-    self.nonces[tx.origin] += 1
-
-def getNonce(ID):
-    return(self.nonces[ID])
