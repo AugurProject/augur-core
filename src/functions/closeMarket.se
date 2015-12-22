@@ -44,11 +44,8 @@ macro CATCH_TOLERANCE: 2^64 / 10
 macro catch($x):
     if($x < (BAD - CATCH_TOLERANCE), NO, if($x > BAD + CATCH_TOLERANCE, YES, BAD))
 
-# lazy eval this or reward closer
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
-# when multidimen fancy payouts we report on the events separately per usual, but combine them to determine winning state of a fancy market && then payout that state
-#Whoever “closes” the market should get a small portion of fees to simply cover the gas cost to close the market and do payouts. (or lazily eval this)
 # @return 0 if fail, if success 1
 # Error messages otherwise
     # -1: Market has no cash anyway / already closed
@@ -59,8 +56,6 @@ macro catch($x):
     # -5: event not expired
     # -6: bonded pushed forward market not ready to be resolved
     # -7: event not reportable >.99
-# Make sure there are no "while loop out of gas" issues
-#Need to make sure we close out markets where one doesn’t happen (i.e. Hillary or Bush? and GDP>3% growth 2017?) properly.
 #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
 # call mult. times if a multidimensional market
 def closeMarket(branch, market):
