@@ -91,7 +91,7 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes)
 	if(self.Events[ID].expirationDate==0):
 		self.Events[ID].branch = branch
 		self.Events[ID].expirationDate = expirationDate
-    self.Events[ID].originalExp = expirationDate
+    	self.Events[ID].originalExp = expirationDate
 		self.Events[ID].minValue = minValue
 		self.Events[ID].maxValue = maxValue
 		self.Events[ID].numOutcomes = numOutcomes
@@ -120,6 +120,9 @@ def setOutcome(ID, outcome):
 def setReportingThreshold(event):
 	# first check is if event expDate is in the current vote period and second is if blockNum is near expiration of voting period (within 7200 blocks or 24 hr.)
 	# final check is if < 25 reports so far
+	# (block.number+7200) / BRANCHES.getPeriodLength(branch) -1 is what we're reporting on in 24 hr
+	# vote period + 1 is the next vote period
+	# so if in 24 hr we'd be in the next vote period, we're within 24 hr of the end of this one
 	if(BRANCHES.getVotePeriod(self.Events[event].branch)==self.Events[event].expirationDate/BRANCHES.getPeriodLength(self.Events[event].branch) and (((block.number+7200) / BRANCHES.getPeriodLength(branch)) - 1)==(BRANCHES.getVotePeriod(self.Events[event].branch)+1) and self.Events[event].numReports<25):
 		self.Events[event].threshold = 2**256
 		return(1)
