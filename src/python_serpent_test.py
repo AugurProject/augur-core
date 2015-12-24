@@ -1,4 +1,5 @@
 from ethereum import tester as t
+import math
 
 initial_gas = 0
 
@@ -88,6 +89,17 @@ def test_log_exp():
     assert(c.fx_exp(2**64) == 50143449209799256664), "Exp broken"
     assert(c.fx_log(2**64) == 7685), "Log broken"
     print "LOG EXP OK"
+    xs = [2**64, 2**80, 2**68, 2**70]
+    maximum = max(xs)
+    sum = 0
+    original_method_sum = 0
+    i = 0
+    while i < len(xs):
+        sum += c.fx_exp(xs[i] - maximum)
+        original_method_sum += c.fx_exp(xs[i])
+        i += 1
+    print maximum + c.fx_log(sum)
+    print c.fx_log(original_method_sum)
     gas_use(s)
 
 def gas_use(s):
@@ -95,6 +107,7 @@ def gas_use(s):
     print "Gas Used:"
     print s.block.gas_used - initial_gas
     initial_gas = s.block.gas_used
+
 
 if __name__ == '__main__':
     test_cash()
@@ -116,4 +129,3 @@ if __name__ == '__main__':
     #make_report_tests()
     #consensus_tests()
     #p2p_wager_tests()
-    
