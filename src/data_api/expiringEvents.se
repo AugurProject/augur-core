@@ -79,9 +79,8 @@ def getReportHash(branch, expDateIndex, reporter, index):
 def addEvent(branch, futurePeriod, eventID):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	if(!self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents]):
-		self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
-		self.EventsExpDates[branch][futurePeriod].numberEvents += 1
+	self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
+	self.EventsExpDates[branch][futurePeriod].numberEvents += 1
 	return(1)
 
 def removeEvent(branch, period):
@@ -95,7 +94,7 @@ def setTotalRepReported(branch, expDateIndex, repReported):
 	return(1)
 
 def addPeriodVolume(branch, expIndex, volume):
-	self.EventxExpDates[branch][expIndex].periodVolume += volume
+	self.EventsExpDates[branch][expIndex].periodVolume += volume
 	return(1)
 
 def setReportHash(branch, expDateIndex, reporter, reportHash, index):
