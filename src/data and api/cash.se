@@ -73,3 +73,15 @@ def setCash(address, balance):
     #    return(-1)
     self.cashcoinBalances[address] = balance
     return(1)
+
+def depositEther():
+    self.cashcoinBalances[msg.sender] += msg.value * 2^64 / 10^18
+    return msg.value
+
+def withdrawEther(to, value):
+    if self.cashcoinBalances[msg.sender] >= value * 2^64 / 10^18:
+        self.cashcoinBalances[msg.sender] -= value * 2^64 / 10^18
+        send(to, value)
+        return 1
+    else:
+        return 0
