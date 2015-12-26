@@ -22,15 +22,7 @@
 #
 # If you have questions, please contact jack@augur.net or joey@augur.net.
 
-import cash as CASH
 import reporting as REPORTING
-
-# Error -1: Hey, you're not broke!
-def cashFaucet():
-    if CASH.balance(tx.origin) > fix(5):
-        return(-1)
-    CASH.setCash(tx.origin, fix(10000))
-    return(1)
 
 def reputationFaucet(branch):
     if REPORTING.repIDToIndex(branch, tx.origin) != 0 or REPORTING.getReporterID(branch, 0) == tx.origin:
