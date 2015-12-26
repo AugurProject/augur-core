@@ -71,16 +71,16 @@ def getMarketInfo(marketID):
 
         # gather event(s) info:
         # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
-        i = 0
-        while i < self.Markets[marketID].lenEvents:
-            event = self.Markets[marketID].events[i]
-            with eventInfo = EVENTS.getEventInfo(event, outitems=EVENTS_FIELDS):
-                info[index + i*EVENTS_FIELDS] = event
-                j = 1
-                while j < EVENTS_FIELDS:
-                    info[index + i*EVENTS_FIELDS + j] = eventInfo[j]
-                    j += 1
-            i += 1
+        with events = load(self.Markets[market].events[0], chars=32*self.Markets[market].lenEvents):
+            i = 0
+            while i < self.Markets[marketID].lenEvents:
+                with eventInfo = EVENTS.getEventInfo(events[i], outitems=EVENTS_FIELDS):
+                    info[index + i*EVENTS_FIELDS] = events[i]
+                    j = 1
+                    while j < EVENTS_FIELDS:
+                        info[index + i*EVENTS_FIELDS + j] = eventInfo[j]
+                        j += 1
+                i += 1
         index += self.Markets[marketID].lenEvents*EVENTS_FIELDS
 
         # gather outcomes info:
@@ -190,13 +190,7 @@ def getSimulatedSell(market, outcome, amount):
     return([cost, price], chars=64)
 
 def getMarketEvents(market):
-    i = 0
-    lenEvents = self.Markets[market].lenEvents
-    events = array(lenEvents)
-    while i < lenEvents:
-        events[i] = self.Markets[market].events[i]
-        i += 1
-    return(events: arr)
+    return(load(self.Markets[market].events[0], chars=32*self.Markets[market].lenEvents): arr)
 
 def getSharesPurchased(market, outcome):
     return(self.Markets[market].sharesPurchased[outcome])
