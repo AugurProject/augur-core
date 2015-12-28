@@ -19,9 +19,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-import fxpFunctions as FXP
-import expiringEvents as EXPEVENTS
-import branches as BRANCHES
+#import fxpFunctions as FXP
+#import expiringEvents as EXPEVENTS
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market in the format of
@@ -108,13 +107,7 @@ def getMarketInfo(market):
     return(info: arr)
 
 def getMarketEvents(market):
-    i = 0
-    lenEvents = self.Markets[market].lenEvents
-    events = array(lenEvents)
-    while i < lenEvents:
-        events[i] = self.Markets[market].events[i]
-        i += 1
-    return(events: arr)
+    return(load(self.Markets[market].events[0], items=self.Markets[market].lenEvents): arr)
 
 def getSharesPurchased(market, outcome):
     return(self.Markets[market].sharesPurchased[outcome])
@@ -175,9 +168,10 @@ macro lsLmsr($marketID):
         with $i = 1:
             with $sumExp = 0:
                 while $i <= numOutcomes($marketID):
-                    $sumExp += FXP.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
+                    #$sumExp += FXP.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
                     $i += 1
-                $bq*FXP.fx_log($sumExp)/2**64
+                #$bq*FXP.fx_log($sumExp)/2**64
+                1
 
 macro sumList($q, $a, $b):
     $i = $a + 1
@@ -223,7 +217,7 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, f
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add event list to the market
-    save(self.Markets[marketID].events[0], events, chars=32*len(events))
+    save(self.Markets[marketID].events[0], events, items=len(events))
     self.Markets[marketID].lenEvents = len(events)
     self.Markets[marketID].tradingPeriod = tradingPeriod
     self.Markets[marketID].originalPeriod = tradingPeriod
@@ -251,13 +245,13 @@ def modifyParticipantShares(branch, marketID, participantNumber, outcome, amount
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Markets[marketID].participants[participantNumber].shares[outcome] += amount
-    if(block.number/1800>=MARKETS.getTradingPeriod(marketID)):
+    if(block.number/1800>=self.getTradingPeriod(marketID)):
         return(1)
     else:
         if(amount<0):
             amount = amount*-1
         self.Markets[marketID].volume += amount
-        EXPEVENTS.addPeriodVolume(branch, self.getTradingPeriod(marketID), amount)
+        #EXPEVENTS.addPeriodVolume(branch, self.getTradingPeriod(marketID), amount)
         return(1)
 
 def setWinningOutcomes(market, outcomes: arr):

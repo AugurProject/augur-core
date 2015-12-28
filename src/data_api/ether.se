@@ -9,6 +9,7 @@ def depositEther():
 def withdrawEther(to, value):
 	if(self.cashcoinBalances[msg.sender]>=value):
 		send(to, value)
+		self.cashcoinBalances[msg.sender] -= value
 		return(1)
 	else:
 		return(0)

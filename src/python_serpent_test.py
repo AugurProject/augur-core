@@ -102,6 +102,27 @@ def test_log_exp():
     print c.fx_log(original_method_sum)
     gas_use(s)
 
+def test_markets():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('data_api/markets.se')
+    gas_use(s)
+    c.initializeMarket(444, [445, 446, 447], 1, 2**57, 1010101, 2)
+    c.initialLiquiditySetup(444, 2**55, 1, 2)
+    c.setWinningOutcomes(444, [2])
+    assert(c.getWinningOutcomes(444)[0] == 2), "Winning outcomes wrong"
+    assert(c.addParticipant(444, s.block.coinbase)==0), "Participant adding issue"
+    #modifyShares(market, outcome, amount)
+    #modifyParticipantShares(branch, marketID, participantNumber, outcome, amount)
+    #lsLmsr(marketID)
+    #c.getParticipantSharesPurchased(market, participantNumber, outcome)
+    assert(c.getParticipantNumber(444, s.block.coinbase)==0), "Participant number issue"
+    assert(c.getParticipantID(444, 0)==745948140856946866108753121277737810491401257713), "Participant ID issue"
+    assert(c.getMarketEvents(444) == [445,446,447]), "Market events load/save broken"
+    print "MARKETS OK"
+    
 def gas_use(s):
     global initial_gas
     print "Gas Used:"
@@ -110,15 +131,16 @@ def gas_use(s):
 
 
 if __name__ == '__main__':
-    test_cash()
-    test_ether()
-    test_quicksort()
-    test_insertionsort()
-    test_log_exp()
-    #exp_tests()
-    #markets_tests()
-    #reporting_tests()
-    #faucet_tests()
+    # data/api tests
+    #test_cash()
+    #test_ether()
+    #test_quicksort()
+    #test_insertionsort()
+    #test_log_exp()
+    #test_exp()
+    test_markets()
+    #test_reporting()
+    
     #create_branch_tests()
     #send_rep_tests()
     #create_event_tests()
