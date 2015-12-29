@@ -75,7 +75,8 @@ def buyShares(branch, market, outcome, amount, limit):
     #if event gets pushed back people can still buy / sell
     pushedBack = 0
     while n < numEvents:
-        if(EVENTS.getPushedBack(events[n])==0):
+        #if(EVENTS.getPushedBack(events[n])==0):
+        if(1):
             n += 1
         # pushed back and not resolved
         elif(EVENTS.getOutcome(events[n])==0):
@@ -149,7 +150,8 @@ def sellShares(branch, market, outcome, amount, limit):
     #if event gets pushed back people can still buy / sell
     pushedBack = 0
     while n < numEvents:
-        if(EVENTS.getPushedBack(events[n])==0):
+        #if(EVENTS.getPushedBack(events[n])==0):
+        if(1):
             n += 1
         # pushed back and not resolved
         elif(EVENTS.getOutcome(events[n])==0):

@@ -27,9 +27,9 @@ import reporting as REPORTING
 
 # Error -1: Hey, you're not broke!
 def cashFaucet():
-    if CASH.balance(tx.origin) > fix(5):
+    if CASH.balance(tx.origin) > 5*2**64:
         return(-1)
-    CASH.setCash(tx.origin, fix(10000))
+    CASH.setCash(tx.origin, 10000*2**64)
     return(1)
 
 def reputationFaucet(branch):
@@ -38,7 +38,5 @@ def reputationFaucet(branch):
     else:
         index = REPORTING.getNumberReporters(branch)
         REPORTING.addReporter(branch, tx.origin)
-    REPORTING.setRep(branch, index, fix(47))
+    REPORTING.setRep(branch, index, 47*2**64)
     return(1)
-
-inset("macros/fixed.se")

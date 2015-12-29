@@ -19,6 +19,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+import branches as BRANCHES
+
 # Events' index is the eventID
 # a binary outcome has 0 for min && 1 for max value, but consensus will return 2^64 and 2^65 respectively
 # so for voting 1 and 2 in fxp. need to be given for binaries, not 0 & 1
@@ -27,8 +29,6 @@
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
 # need outcomes returned as 1*2^64, 2*2^64, etc... indeterminate as 3*2^63
 data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, median, uncaughtOutcome, final, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught)
-
-import branches as BRANCHES
 
 def getEventInfo(event):
     info = array(6)
@@ -91,7 +91,7 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes)
 	if(self.Events[ID].expirationDate==0):
 		self.Events[ID].branch = branch
 		self.Events[ID].expirationDate = expirationDate
-    	self.Events[ID].originalExp = expirationDate
+		self.Events[ID].originalExp = originalExp
 		self.Events[ID].minValue = minValue
 		self.Events[ID].maxValue = maxValue
 		self.Events[ID].numOutcomes = numOutcomes

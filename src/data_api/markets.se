@@ -43,7 +43,7 @@ def getTotalSharesPurchased(market):
       i += 1
     return(total)
 
-def getEvent(market, index):
+def getMarketEvent(market, index):
     return(self.Markets[market].events[index])
 
 # @return cost - how much it costs you to buy

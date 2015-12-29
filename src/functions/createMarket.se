@@ -154,7 +154,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     while y <= numOutcomes:
         MARKETS.modifyShares(marketID, y, z)
         y += 1
-    if(INFO.setInfo(marketID, description, tx.origin, initialLiquidity) && BRANCHES.addMarket(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, forkSelection) && CASH.send(marketID, initialLiquidity)):
+    if(INFO.setInfo(marketID, description, tx.origin, initialLiquidity) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, forkSelection) && CASH.send(marketID, initialLiquidity)):
         i = 0
         while i < len(events):
             EVENTS.addMarket(events[i], marketID)
@@ -185,7 +185,8 @@ def updateTradingFee(branch, market, tradingFee):
 #5) market is moved to the fork with a higher rep market cap at the end of time period x as defined by etherex
 #6) market is moved to the fork with a higher market cap as defined by centralized exchange y
 def moveMarket(market, fork):
-    if(stuffForked()):
+    #if(self.stuffForked()):
+    if(1):
         forkChoice = MARKETS.getForkSelection(market)
 
         # set market branch
@@ -195,38 +196,39 @@ def moveMarket(market, fork):
         #1) Market Maker chooses the fork
         if(forkChoice==1):
             if(INFO.getCreator(market)==msg.sender):
-
+                return(0)
         #2) Market is closed at current prices
         elif(forkChoice==2):
-
+            return(0)
         #3) The market is unable to go to adjudication upon close date and closes at final prices.
         elif(forkChoice==3):
-
+            return(0)
         #4) All traders currently involved in this market are asked which fork to participate in. At market close, this vote is used to determine the fork this market moves to before adjudication.
         # should this be weighted by capital in the market? hmm
         elif(forkChoice==4):
-
+            return(0)
         #5) market is moved to the fork with a higher rep market cap at the end of time period x as defined by etherex
         elif(forkChoice==5):
-
+            return(0)
         #6) market is moved to the fork with a higher market cap as defined by centralized exchange y
         elif(forkChoice==6):
-
+            return(0)
         #7) autonocoin style bet which fork it should go on and that's the one (like futarchy, except you don't get a refund)
         elif(forkChoice==7):
+            return(0)
     else:
         return(0)
 
 
-  #•Anyone can post an "Early Resolution Bond"
-  #•This bond is equal to 0.5 * Market_Fee * Market_Value
-  #•This amount is the amount needed to pay the reporters in case this was frivolous.
-  #•The market goes up for early resolution and reporters place claim to what is truth, however for early resolution, they have an additional option: 'Market is not ready to resolve'
+#•Anyone can post an "Early Resolution Bond"
+#•This bond is equal to 0.5 * Market_Fee * Market_Value
+#•This amount is the amount needed to pay the reporters in case this was frivolous.
+#•The market goes up for early resolution and reporters place claim to what is truth, however for early resolution, they have an additional option: 'Market is not ready to resolve'
     # this addl option is just the normal indeterminate (except here it's a bit of a special case, see below)
-  #•In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
+#•In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration dateevent
-  #•In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
-  def pushMarketForward(branch, market):
+#•In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
+def pushMarketForward(branch, market):
     numEvents = MARKETS.getNumEvents(market)
     if(marketClosed):
         return(0)
@@ -235,53 +237,54 @@ def moveMarket(market, fork):
     i = 0
     # for each event in market
     while i < numEvents:
-      if(eventNotResolved && eventNotInRound2Adj):
-        event = MARKETS.getEvent(market, i)
-        # push into next vote period
-        period = BRANCHES.getVotePeriod(branch)
-        EXPEVENTS.addEvent(branch, period+1, event)
-        # set event expiration date to be after the current reporting period ends
-        EVENTS.setExpiration(event, block.number)
-        MARKETS.setTradingPeriod(market, period+1)
-        MARKETS.setPushedForward(market, 1)
-        MAKEREPORTS.setReportable(period+1, event)
+        if(eventNotResolved && eventNotInRound2Adj):
+            event = MARKETS.getMarketEvent(market, i)
+            # push into next vote period
+            period = BRANCHES.getVotePeriod(branch)
+            EXPEVENTS.addEvent(branch, period+1, event)
+            # set event expiration date to be after the current reporting period ends
+            EVENTS.setExpiration(event, block.number)
+            MARKETS.setTradingPeriod(market, period+1)
+            MARKETS.setPushedForward(market, 1)
+            #MAKEREPORTS.setReportable(period+1, event)
+        i += 1
     return(1)
 
 
-  # - If at anytime after expiry an event's market's odds are <.99, someone can prove it and push it into next reporting period
-    # (and don't allow rbrr for original exp period of this market, actually, don't allow this regardless)
-	# - Should probably still have an option to pay to resolve in case something somehow goes wrong here or people really want a market resolved.
-  def resolve99Market(branch, market, resolveRegardless):
-    if(eventIsScalar || marketClosed):
-      return(-1)
-    if(marketNotExpired):
-      return(-2)
-    numOutcomes = MARKETS.getMarketNumOutcomes(market)
-    n = 0
-    ninetynine = 0
-    while n < numOutcomes:
-      if(MARKETS.getSimulatedBuy(markets, n, 2**64) > 18262276632972456099):
-        ninetynine = 1
-          n = numOutcomes
-        n += 1
+# - If at anytime after expiry an event's market's odds are <.99, someone can prove it and push it into next reporting period
+# (and don't allow rbrr for original exp period of this market, actually, don't allow this regardless)
+# - Should probably still have an option to pay to resolve in case something somehow goes wrong here or people really want a market resolved.
+#def resolve99Market(branch, market, resolveRegardless):
+#    if(eventIsScalar || marketClosed):
+#      return(-1)
+#    if(marketNotExpired):
+#      return(-2)
+#    numOutcomes = MARKETS.getMarketNumOutcomes(market)
+#    n = 0
+#    ninetynine = 0
+#    while n < numOutcomes:
+#      if(MARKETS.getSimulatedBuy(markets, n, 2**64) > 18262276632972456099):
+#        ninetynine = 1
+#        n = numOutcomes
+#        n += 1
 
-    if(ninetynine==0 || resolveRegardless):
-      if(resolveRegardless):
-        if(CASH.send(branch, 100*2**64)==0):
-            return(0)
+#    if(ninetynine==0 || resolveRegardless):
+#      if(resolveRegardless):
+#        if(CASH.send(branch, 100*2**64)==0):
+#            return(0)
 
-    numEvents = MARKETS.getNumEvents(market)
-    i = 0
-    # for each event in market
-    while i < numEvents:
-      if(eventNotResolved && eventNotInRound2Adj):
-        event = MARKETS.getEvent(market, i)
+#    numEvents = MARKETS.getNumEvents(market)
+#    i = 0
+#    # for each event in market
+#    while i < numEvents:
+#      if(eventNotResolved && eventNotInRound2Adj):
+#        event = MARKETS.getMarketEvent(market, i)
         # push into next vote period
-        period = BRANCHES.getVotePeriod(branch)
-        EXPEVENTS.addEvent(branch, period+1, event)
+#        period = BRANCHES.getVotePeriod(branch)
+#        EXPEVENTS.addEvent(branch, period+1, event)
         # set event expiration date to be after the current reporting period ends
-        EVENTS.setExpiration(event, block.number)
-        MARKETS.setTradingPeriod(market, period+1)
-        MAKEREPORTS.setReportable(period+1, event)
-      i += 1
-    return(1)
+#        EVENTS.setExpiration(event, block.number)
+#        MARKETS.setTradingPeriod(market, period+1)
+#        MAKEREPORTS.setReportable(period+1, event)
+#      i += 1
+#    return(1)

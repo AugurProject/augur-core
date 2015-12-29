@@ -85,7 +85,7 @@ def addEvent(branch, futurePeriod, eventID):
 
 def removeEvent(branch, period):
 	self.EventsExpDates[branch][period].numberRemoved += 1
-    return(1)
+	return(1)
 
 def setTotalRepReported(branch, expDateIndex, repReported):
 	#if(!self.whitelist.check(msg.sender)):

@@ -172,14 +172,15 @@ if __name__ == '__main__':
     #test_reporting()
     
     # function tests
-    #create_branch_tests()
-    #send_rep_tests()
     #create_event_tests()
     #create_market_tests()
     #buy_sell_shares_tests()
     #transfer_shares_tests()
+
+    #p2p_wager_tests()
+    #create_branch_tests()
     #close_market_tests()
     #make_report_tests()
     #consensus_tests()
-    #p2p_wager_tests()
+    #send_rep_tests()
     print "DONE TESTING"

@@ -62,7 +62,7 @@ def getInitialBalance(branch, period):
 	return(self.Branches[branch].balance[period])
 
 # @return all markets in a branch
-def getMarkets(branch):
+def getMarketsInBranch(branch):
     numMarkets = self.Branches[branch].numMarkets
     markets = array(numMarkets)
     i = 0
@@ -71,7 +71,7 @@ def getMarkets(branch):
         i += 1
     return(markets: arr)
 
-def getNumMarkets(branch):
+def getNumMarketsBranch(branch):
 	return(self.Branches[branch].numMarkets)
 
 def getMinTradingFee(branch):
@@ -107,7 +107,7 @@ def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleO
 		self.branchList[self.branchListCount] = ID
 		self.branchListCount += 1
 		self.Branches[ID].creationDate = block.number
-    	self.Branches[ID].parentPeriod = parentPeriod
+		self.Branches[ID].parentPeriod = parentPeriod
 		self.Branches[ID].oracleOnly = oracleOnly
 		return(1)
 	else:
@@ -123,7 +123,7 @@ def incrementPeriod(branch):
 	return(1)
 
 # check that msg.sender is one of our function contracts
-def addMarket(branch, market):
+def addMarketToBranch(branch, market):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
 	numMarkets = self.Branches[branch].numMarkets

@@ -19,7 +19,8 @@ while(i < len(sys.argv)):
     foldercount += 1
 morefolders = 0
 foldercount -= 1
-#os.remove('/home/ubuntu/workspace/src/functions/output.se')
+if(os.path.isfile(str(sys.argv[i-1]) + '/output.se')):
+    os.remove(str(sys.argv[i-1]) + '/output.se')
 removeintro = 1
 
 	
@@ -71,6 +72,7 @@ while index < foldercount:												#loops all selected folders
             maindataline.append(rawdataline[indexline])                          #adds the modified line to the main data compilation
             indexline += 1
             #end of line loop
+        maindataline.append('\n')
         #end of file loop
     index += 1
     #end of folder loop
