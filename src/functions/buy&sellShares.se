@@ -84,6 +84,7 @@ def buyShares(branch, market, outcome, amount, limit):
             n = numEvents
         else:
           n += 1
+    # todo: check that the market actually has that outcome as a possible outcome
     if (outcome==0 || (BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market) && !pushedBack) || MARKETS.getBranchID(market) != branch):
         return(-1)
     # lmsr cost calcs
