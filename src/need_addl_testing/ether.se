@@ -34,8 +34,8 @@ def initiateOwner(account):
 def send(recver, value):
     if(self.owners[tx.origin]==0):
         self.owners[tx.origin] = tx.origin
-    if(self.owners[recver]==0):
-        return(0)
+    #if(self.owners[recver]==0):
+    #    return(0)
     sender = tx.origin
     senderBalance = self.cashcoinBalances[sender]
     if(senderBalance >= value):
@@ -51,8 +51,8 @@ def sendFrom(recver, value, from):
     # it's not owned by a regular account nor a contract owned account (i.e. a market's hash from markets.)
     if(from!=tx.origin and msg.sender!=self.owners[from]):
         return(0)
-    if(self.owners[recver]==0):
-        return(0)
+    #if(self.owners[recver]==0):
+    #    return(0)
     senderBalance = self.cashcoinBalances[from]
     if(senderBalance >= value):
         self.cashcoinBalances[from] -= value

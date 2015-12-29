@@ -59,7 +59,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     participationFactor = (EXPEVENTS.getTotalRepReported(branch, currentVotePeriod-2) * 2^64) / EXPEVENTS.getTotalRepReported(branch, currentVotePeriod-1)
     if participationFactor == 0:
         participationFactor = 1
-
+    CASH.initiateOwner(eventID)
     # send fee and bond
     if CASH.balance(tx.origin) >= (42*2^64 + participationFactor*45):
         if !INFO.getCreator(eventID) && !EVENTS.getEventBranch(eventID) && CASH.send(eventID, 42*2^64) && CASH.send(branch, participationFactor*45):

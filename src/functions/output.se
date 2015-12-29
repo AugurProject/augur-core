@@ -110,6 +110,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     mcopy(marketinfo + 12*32, description, chars=len(description))
     marketID = sha256(marketinfo, chars=len(marketinfo))
     log(type=creationBlock, marketID)
+    self.initiateOwner(marketID)
     # pay numOutcomes fee
     # if it's already been created return 0
     if(!self.send(branch, numOutcomes*2^63) || self.getCreator(marketID) || self.getMarketNumOutcomes(marketID)):
@@ -127,6 +128,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         i = 0
         while i < len(events):
             self.addMarket(events[i], marketID)
+            i += 1
         return(marketID)
     else:
         # revert shares bought and other variables
@@ -711,7 +713,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     participationFactor = (self.getTotalRepReported(branch, currentVotePeriod-2) * 2^64) / self.getTotalRepReported(branch, currentVotePeriod-1)
     if participationFactor == 0:
         participationFactor = 1
-
+    self.initiateOwner(eventID)
     # send fee and bond
     if self.balance(tx.origin) >= (42*2^64 + participationFactor*45):
         if !self.getCreator(eventID) && !self.getEventBranch(eventID) && self.send(eventID, 42*2^64) && self.send(branch, participationFactor*45):
@@ -828,6 +830,15 @@ def moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod):
         # sub and set old period event to 0 poss.?
         x += 1
     return(1)
+# CurrentVotePeriod is the current index in eventsExpDates
+# Branches' index is the hash of the branch (aka branchID)
+# currentVotePeriod is a nonce that tells us which bucket of events up to be
+# voted on in the current vote period (should always be 1 behind block.number/periodlength or current EventsExpDates index)
+# period parameter for reporting
+# currentExpPeriod = (block.number / self.Branches[branch].periodLength)
+# currentExpPeriod - 1 is what's up for reporting at any given time
+# should add a min initial liquidity property, for non pm branches it'd be low and .5*minInitialLiquidity is == fee for event
+# could also add an event fee parameter
 data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod)
 
 # first param is the branch, second param is the subcurrency contract
@@ -838,11 +849,19 @@ data branchList[]
 data branchListCount
 
 def init():
+    # test initial funds
+    self.cashcoinBalances[tx.origin] = 100000*2^64
     self.Branches[1010101].currentVotePeriod = (block.number / 1800) - 1
     self.Branches[1010101].periodLength = 1800
     self.Branches[1010101].minTradingFee = 2^57
     self.branchListCount = 1
     self.branchList[0] = 1010101
+    description = text("Root branch")
+    self.initiateOwner(1010101)
+    save(self.Info[1010101].description[0], description, chars=len(description))
+    self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
+    self.Info[1010101].creationFee = 10
+    self.Info[1010101].descriptionLength = len(description)
 
 def getOracleOnly(branch):
 	return(self.Branches[branch].oracleOnly)
@@ -909,6 +928,7 @@ def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleO
 		self.Branches[ID].creationDate = block.number
 		self.Branches[ID].parentPeriod = parentPeriod
 		self.Branches[ID].oracleOnly = oracleOnly
+		self.initiateOwner(ID)
 		return(1)
 	else:
 		return(0)
@@ -1187,9 +1207,6 @@ data cashcoinBalances[]
 
 data owners[]
 
-def init():
-    # test initial funds
-    self.cashcoinBalances[tx.origin] = 100000*2^64
 
 # @return: cash balance of address
 def balance(address):
@@ -1554,12 +1571,6 @@ def getBondsMan(market):
     return(self.Markets[market].bondsMan)
 data Info[](description[2048], descriptionLength, creator, creationFee)
 
-def init():
-    description = text("Root branch")
-    save(self.Info[1010101].description[0], description, chars=len(description))
-    self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
-    self.Info[1010101].creationFee = 10
-    self.Info[1010101].descriptionLength = len(description)
 
 def getDescription(ID):
 	length=self.Info[ID].descriptionLength

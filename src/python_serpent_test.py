@@ -1,5 +1,6 @@
 from ethereum import tester as t
 import math
+import os
 
 initial_gas = 0
 
@@ -153,6 +154,33 @@ def test_reporting():
     assert(c.getReporterID(1010101, 6)==4444), "Sale distrib. reporter ID wrong"
     print "REPORTING OK"
 
+def test_create_event():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    gas_use(s)
+    c.initiateOwner(1010101)
+    assert(c.createEvent(1010101, "new event", 555, 1, 2, 2, 0)>2**64), "binary Event creation broken"
+    assert(c.createEvent(1010101, "new event", 555, 1, 5, 5, 0)>2**64), "categorical Event creation broken"
+    assert(c.createEvent(1010101, "new event", 555, 1, 200, 2, 0)<-2**64), "scalar Event creation broken"
+    gas_use(s)
+    print "EVENT CREATION OK"
+
+def test_create_market():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    gas_use(s)
+    c.initiateOwner(1010101)
+    event1 = c.createEvent(1010101, "new event", 555, 1, 2, 2, 0)
+    gas_use(s)
+    assert(c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 0, 1) > 2**64), "Market creation broken"
+    gas_use(s)
+    
 def gas_use(s):
     global initial_gas
     print "Gas Used:"
@@ -161,6 +189,7 @@ def gas_use(s):
 
 
 if __name__ == '__main__':
+    #os.system('python mk_test_file.py \'/home/ubuntu/workspace/src/functions\' \'/home/ubuntu/workspace/src/data_api\' \'/home/ubuntu/workspace/src/functions\'')
     # data/api tests
     #test_cash()
     #test_ether()
@@ -172,8 +201,8 @@ if __name__ == '__main__':
     #test_reporting()
     
     # function tests
-    #create_event_tests()
-    #create_market_tests()
+    #test_create_event()
+    test_create_market()
     #buy_sell_shares_tests()
     #transfer_shares_tests()
 

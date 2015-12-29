@@ -141,6 +141,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     mcopy(marketinfo + 12*32, description, chars=len(description))
     marketID = sha256(marketinfo, chars=len(marketinfo))
     log(type=creationBlock, marketID)
+    CASH.initiateOwner(marketID)
     # pay numOutcomes fee
     # if it's already been created return 0
     if(!CASH.send(branch, numOutcomes*2^63) || INFO.getCreator(marketID) || MARKETS.getMarketNumOutcomes(marketID)):
@@ -158,6 +159,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         i = 0
         while i < len(events):
             EVENTS.addMarket(events[i], marketID)
+            i += 1
         return(marketID)
     else:
         # revert shares bought and other variables
@@ -184,7 +186,7 @@ def updateTradingFee(branch, market, tradingFee):
 #4) All traders currently involved in this market are asked which fork to participate in. At market close, this vote is used to determine the fork this market moves to before adjudication.
 #5) market is moved to the fork with a higher rep market cap at the end of time period x as defined by etherex
 #6) market is moved to the fork with a higher market cap as defined by centralized exchange y
-def moveMarket(market, fork):
+def moveMarketAndAssocEvents(market, fork):
     #if(self.stuffForked()):
     if(1):
         forkChoice = MARKETS.getForkSelection(market)

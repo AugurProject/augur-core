@@ -19,6 +19,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+import cash as CASH
 # CurrentVotePeriod is the current index in eventsExpDates
 # Branches' index is the hash of the branch (aka branchID)
 # currentVotePeriod is a nonce that tells us which bucket of events up to be
@@ -43,6 +44,7 @@ def init():
     self.Branches[1010101].minTradingFee = 2^57
     self.branchListCount = 1
     self.branchList[0] = 1010101
+    CASH.initiateOwner(1010101)
 
 def getOracleOnly(branch):
 	return(self.Branches[branch].oracleOnly)
@@ -109,6 +111,7 @@ def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleO
 		self.Branches[ID].creationDate = block.number
 		self.Branches[ID].parentPeriod = parentPeriod
 		self.Branches[ID].oracleOnly = oracleOnly
+		CASH.initiateOwner(ID)
 		return(1)
 	else:
 		return(0)
