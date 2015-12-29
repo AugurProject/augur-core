@@ -40,7 +40,7 @@ def test_ether():
     gas_use(s)
     print "ETHER OK"
     
-'''def test_exp():
+def test_exp():
     global initial_gas
     initial_gas = 0
     t.gas_limit = 100000000
@@ -56,7 +56,7 @@ def test_ether():
     assert(c.getEvent(1010101, 2, 0) == 447), "Move events broken"
     assert(c.sqrt(25*2**64)==5*2**64), "Square root broken"
     print "EXPIRING EVENTS OK"
-    gas_use(s)'''
+    gas_use(s)
 
 def test_quicksort():
     global initial_gas
@@ -122,7 +122,37 @@ def test_markets():
     assert(c.getParticipantID(444, 0)==745948140856946866108753121277737810491401257713), "Participant ID issue"
     assert(c.getMarketEvents(444) == [445,446,447]), "Market events load/save broken"
     print "MARKETS OK"
-    
+
+def test_reporting():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('data_api/reporting.se')
+    gas_use(s)
+    assert(c.getRepByIndex(1010101, 0) == 47*2**64), "Get rep broken"
+    assert(c.getReporterID(1010101, 1)==1010101), "Get reporter ID broken"
+    #c.getReputation(address)
+    assert(c.repIDToIndex(1010101, 1010101)==1), "Rep ID to index wrong"
+    #c.claimInitialRep(parent, newBranch)
+    c.addReporter(1010101, 777)
+    c.addRep(1010101, 2, 55*2**64)
+    c.subtractRep(1010101, 2, 2**64)
+    assert(c.getRepByIndex(1010101, 2) == 54*2**64), "Get rep broken upon adding new reporter"
+    assert(c.getReporterID(1010101, 2)==777), "Get reporter ID broken upon adding new reporter"
+    assert(c.repIDToIndex(1010101, 777)==2), "Rep ID to index wrong upon adding new reporter"
+    c.setRep(1010101, 2, 5*2**64)
+    assert(c.getRepBalance(1010101, 777) == 5*2**64), "Get rep broken upon set rep"
+    c.addDormantRep(1010101, 2, 5)
+    c.subtractDormantRep(1010101, 2, 2)
+    assert(c.getDormantRepBalance(1010101, 777)==3), "Dormant rep balance broken"
+    assert(c.getDormantRepByIndex(1010101, 2)==3), "Dormant rep by index broken"
+    gas_use(s)
+    c.setSaleDistribution([4,44,444,4444,44444], [0, 1, 2, 3, 4], 1010101)
+    assert(c.getRepBalance(1010101, 4444)==3), "Rep Balance fetch broken w/ initial distrib."
+    assert(c.getReporterID(1010101, 6)==4444), "Sale distrib. reporter ID wrong"
+    print "REPORTING OK"
+
 def gas_use(s):
     global initial_gas
     print "Gas Used:"
@@ -138,9 +168,10 @@ if __name__ == '__main__':
     #test_insertionsort()
     #test_log_exp()
     #test_exp()
-    test_markets()
+    #test_markets()
     #test_reporting()
     
+    # function tests
     #create_branch_tests()
     #send_rep_tests()
     #create_event_tests()
@@ -151,3 +182,4 @@ if __name__ == '__main__':
     #make_report_tests()
     #consensus_tests()
     #p2p_wager_tests()
+    print "DONE TESTING"

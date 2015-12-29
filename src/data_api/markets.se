@@ -19,8 +19,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-#import fxpFunctions as FXP
-#import expiringEvents as EXPEVENTS
+import fxpFunctions as FXP
+import expiringEvents as EXPEVENTS
 
 # Markets' index is the marketID
 # Events is a 0 indexed array of events in the market in the format of
@@ -168,9 +168,9 @@ macro lsLmsr($marketID):
         with $i = 1:
             with $sumExp = 0:
                 while $i <= numOutcomes($marketID):
-                    #$sumExp += FXP.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
+                    $sumExp += FXP.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
                     $i += 1
-                #$bq*FXP.fx_log($sumExp)/2**64
+                $bq*FXP.fx_log($sumExp)/2**64
                 1
 
 macro sumList($q, $a, $b):
@@ -251,7 +251,7 @@ def modifyParticipantShares(branch, marketID, participantNumber, outcome, amount
         if(amount<0):
             amount = amount*-1
         self.Markets[marketID].volume += amount
-        #EXPEVENTS.addPeriodVolume(branch, self.getTradingPeriod(marketID), amount)
+        EXPEVENTS.addPeriodVolume(branch, self.getTradingPeriod(marketID), amount)
         return(1)
 
 def setWinningOutcomes(market, outcomes: arr):

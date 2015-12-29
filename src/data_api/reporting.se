@@ -19,8 +19,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-import makeReports as REPORTS
-import branches as BRANCHES
+#import makeReports as REPORTS
+#import branches as BRANCHES
 
 # Reporting index is the branchID
 # Reporters index is the rep. address
@@ -35,8 +35,9 @@ def init():
     self.Reporting[1010101].reputation[0].repValue = 47*2^64
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
     self.Reporting[1010101].numberReporters = 2
+    self.Reporting[1010101].repIDtoIndex[1010101] = 1
     self.Reporting[1010101].reputation[1].repValue = 0
-    self.Reporting[1010101].reputation[1].reporterID = branch
+    self.Reporting[1010101].reputation[1].reporterID = 1010101
     self.Reporting[1010101].totalRep += 47*2^64
 
 # @return reputation value
@@ -75,11 +76,11 @@ def getInitialRep(branch, period):
 # will return 0s for array values after it's looped through all the ones you
 # have an actual balance in
 def getReputation(address):
-    branchListCount = BRANCHES.getNumBranches()
+    #branchListCount = BRANCHES.getNumBranches()
     if(address):
         branches = array(2*branchListCount)
         branchList = array(branchListCount)
-        branchList = BRANCHES.getBranches(outitems=branchListCount)
+       # branchList = BRANCHES.getBranches(outitems=branchListCount)
         i = 0
         b = 0
         while i < branchListCount:
@@ -94,7 +95,7 @@ def getReputation(address):
         address = tx.origin
         branches = array(2*branchListCount)
         branchList = array(branchListCount)
-        branchList = BRANCHES.getBranches(outitems=branchListCount)
+       # branchList = BRANCHES.getBranches(outitems=branchListCount)
         i = 0
         b = 0
         while i < branchListCount:
@@ -136,22 +137,23 @@ def setInitialReporters(parent, branchID, period):
         # eventsExpDates 5 (anyone can call the consensus function for voteperiod 4 at this point)
     # add branch as a "reporter"
     self.Reporting[branchID].numberReporters = 1
-    self.Reporting[branchID].repIDtoIndex[branch] = 0
+    self.Reporting[branchID].repIDtoIndex[branchID] = 0
     self.Reporting[branchID].reputation[0].repValue = 0
-    self.Reporting[branchID].reputation[0].reporterID = branch
+    self.Reporting[branchID].reputation[0].reporterID = branchID
     return(1)
 
 def claimInitialRep(parent, branchID):
     # have 1 month to claim
-    if(self.repIDToIndex(branchID, msg.sender)==0 && block.number < (BRANCHES.getCreationDate(branchID) + 216000)):
+    #if(self.repIDToIndex(branchID, msg.sender)==0 && block.number < (BRANCHES.getCreationDate(branchID) + 216000)):
+    if(1):
         i = self.Reporting[branchID].numberReporters
-        rep = REPORTS.getBeforeRep(parent, BRANCHES.getParentPeriod(branchID))
+        #rep = REPORTS.getBeforeRep(parent, BRANCHES.getParentPeriod(branchID))
         reporterID = msg.sender
         self.Reporting[branchID].reputation[i].reporterID = reporterID
         self.Reporting[branchID].reputation[i].repValue = rep
         self.Reporting[branchID].repIDtoIndex[reporterID] = i
         self.Reporting[branchID].dormantRep[i].reporterID = reporterID
-        self.Reporting[branchID].dormantRep[i].repValue = REPORTS.getDormantRep(parent, BRANCHES.getParentPeriod(branchID))
+        #self.Reporting[branchID].dormantRep[i].repValue = REPORTS.getDormantRep(parent, BRANCHES.getParentPeriod(branchID))
         self.Reporting[branchID].numberReporters += 1
         self.Reporting[branchID].totalRep += rep
         return(1)
@@ -166,7 +168,7 @@ def addReporter(branch, sender):
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
     self.Reporting[branch].reputation[reporterIndex].repValue = 0
     self.Reporting[branch].reputation[reporterIndex].reporterID = sender
-    self.Reporting[branch].dormantRep[reporterIndex].reporterID = reporterID
+    self.Reporting[branch].dormantRep[reporterIndex].reporterID = sender
     self.Reporting[branch].numberReporters += 1
     return(1)
 
