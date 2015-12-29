@@ -73,7 +73,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
 
         # scalars
         maxValue = EVENTS.getMaxValue(event)
-        if(maxValue!=1 && EVENTS.getNumOutcomes(event)==2):
+        if((minValue!=1 || maxValue!=2) && EVENTS.getNumOutcomes(event)==2):
             # is a valid scalar
             cumulativeScale += maxValue - EVENTS.getMinValue(event)
         eventNumOutcomes = EVENTS.getNumOutcomes(event)
