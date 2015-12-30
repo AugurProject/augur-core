@@ -14,6 +14,7 @@ event creationBlock(market:indexed)
     # -3: too many outcomes
     # -4: not enough money or market already exists
     # -5: fee too low
+    # -6: duplicate events
 
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, blockNumber, forkSelection):
@@ -142,7 +143,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         self.initialLiquiditySetup(marketID, 0, 0, 0)
         return(-4)
 
-# needs to comply w/ new trading fee rules
+# todo: needs to comply w/ new trading fee rules
 def updateTradingFee(branch, market, tradingFee):
     if(tradingFee < self.getMinTradingFee(branch)):
         return(-1)
@@ -158,7 +159,7 @@ def updateTradingFee(branch, market, tradingFee):
 #4) All traders currently involved in this market are asked which fork to participate in. At market close, this vote is used to determine the fork this market moves to before adjudication.
 #5) market is moved to the fork with a higher rep market cap at the end of time period x as defined by etherex
 #6) market is moved to the fork with a higher market cap as defined by centralized exchange y
-def moveMarket(market, fork):
+def moveMarketAndAssocEvents(market, fork):
     #if(self.stuffForked()):
     if(1):
         forkChoice = self.getForkSelection(market)
@@ -473,7 +474,7 @@ def buyShares(branch, market, outcome, amount, limit):
     buyHash = sha256(buyInfo, items=4)
     if(self.trades[market][tx.origin].hash != buyHash || block.number == self.trades[market][tx.origin].block):
         return(-5)
-
+    self.trades[market][tx.origin].hash = 0
     # make it so trader has locked in fee from buy, so if they sell and they bought when fee was low, they can sell with that low fee as opposed to a high one
     numEvents = self.getNumEvents(market)
     events = self.getMarketEvents(market, outitems=numEvents)
@@ -490,6 +491,7 @@ def buyShares(branch, market, outcome, amount, limit):
             n = numEvents
         else:
           n += 1
+    # todo: check that the market actually has that outcome as a possible outcome
     if (outcome==0 || (self.getVotePeriod(branch)>self.getTradingPeriod(market) && !pushedBack) || self.getBranchID(market) != branch):
         return(-1)
     # lmsr cost calcs
@@ -547,6 +549,8 @@ def sellShares(branch, market, outcome, amount, limit):
     sellHash = sha256(sellInfo, items=4)
     if(self.trades[market][tx.origin].hash != sellHash || block.number == self.trades[market][tx.origin].block):
         return(-5)
+        
+    self.trades[market][tx.origin].hash = 0
 
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     participantNumber = self.getParticipantNumber(market, tx.origin)
@@ -861,19 +865,18 @@ data branchList[]
 data branchListCount
 
 def init():
-    # test initial funds
-    self.cashcoinBalances[tx.origin] = 100000*2^64
     self.Branches[1010101].currentVotePeriod = (block.number / 1800) - 1
     self.Branches[1010101].periodLength = 1800
     self.Branches[1010101].minTradingFee = 2^57
     self.branchListCount = 1
     self.branchList[0] = 1010101
-    description = text("Root branch")
     self.initiateOwner(1010101)
+    description = text("Root branch")
     save(self.Info[1010101].description[0], description, chars=len(description))
     self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
     self.Info[1010101].creationFee = 10
     self.Info[1010101].descriptionLength = len(description)
+    self.cashcoinBalances[tx.origin] = 100000*2^64
 
 def getOracleOnly(branch):
 	return(self.Branches[branch].oracleOnly)
@@ -1219,7 +1222,6 @@ data cashcoinBalances[]
 
 data owners[]
 
-
 # @return: cash balance of address
 def balance(address):
     return(self.cashcoinBalances[address])
@@ -1441,7 +1443,7 @@ macro lsLmsr($marketID):
                 while $i <= numOutcomes($marketID):
                     $sumExp += self.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
                     $i += 1
-                $bq*self.fx_log($sumExp)/2**64
+                $bq*cumScale($marketID)*self.fx_log($sumExp)/2**64
 
 macro sumList($q, $a, $b):
     $i = $a + 1
@@ -1470,7 +1472,7 @@ macro particpant($marketID, $addr):
     market($marketID).participants[$addr]
 
 macro Bq($marketID):
-   alpha($marketID) * cumScale($marketID) * sumList(sharesPurchased($marketID), 1, numOutcomes($marketID)) / 2**64
+   alpha($marketID) * sumList(sharesPurchased($marketID), 1, numOutcomes($marketID)) / 2**64
 
 def lsLmsr(marketID):
     return(lsLmsr(marketID))
@@ -1581,7 +1583,6 @@ def getPushedForward(market):
 def getBondsMan(market):
     return(self.Markets[market].bondsMan)
 data Info[](description[2048], descriptionLength, creator, creationFee)
-
 
 def getDescription(ID):
 	length=self.Info[ID].descriptionLength

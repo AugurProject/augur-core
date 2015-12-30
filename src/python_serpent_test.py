@@ -276,8 +276,23 @@ def test_buy_sell_shares():
     c.commitTrade(bin_market, c.makeMarketHash(bin_market, 2, 5*2**64, 0))
     s.mine(1)
     assert(c.sellShares(1010101, bin_market, 2, 5*2**64, 0)==1), "Buy shares issue"
+    
     # scalar market
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2], 0, 1)
+    a = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2], 0, 1)
+    bal = c.balance(s.block.coinbase)
+    c.commitTrade(a, c.makeMarketHash(a, 1, 15*2**64, 0))
+    s.mine(1)
+    # should cost ~200/share
+    c.buyShares(1010101, a, 1, 15*2**64,0)
+    bal_after = c.balance(s.block.coinbase)
+    assert((bal-bal_after) <= 3010*2**64 and (bal-bal_after) >= 2980*2**64), "Scalar buy off"
+    c.commitTrade(a, c.makeMarketHash(a, 2, 12*2**64, 0))
+    s.mine(1)
+    bal = c.balance(s.block.coinbase)
+    c.buyShares(1010101, a, 2, 12*2**64, 0)
+    bal_after = c.balance(s.block.coinbase)
+    assert(bal-bal_after < 20*2**64), "Scalar buy off"
+    
     # odd range scalar
     c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4], 0, 1)
     # categorical market
