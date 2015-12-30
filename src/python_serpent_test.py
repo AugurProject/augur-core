@@ -241,7 +241,81 @@ def test_create_market():
     assert(c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event5, event3], 0, 1)==-4), "Duplicate market check broken"
     assert(c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event3, event3, event3], 0, 1)==-6), "Duplicate event check broken"
     print "Market Creation OK"
+
+def test_buy_sell_shares():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    gas_use(s)
+    c.initiateOwner(1010101)
+    # binary
+    event1 = c.createEvent(1010101, "new event", 555, 1, 2, 2, 0)
+    # scalar
+    event2 = c.createEvent(1010101, "new event", 555, 1, 200, 2, 0)
+    # categorical
+    event3 = c.createEvent(1010101, "new event", 555, 1, 5, 5, 0)
+    # scalar
+    event4 = c.createEvent(1010101, "new event", 555, -100, 200, 2, 0)
+    # binary
+    event5 = c.createEvent(1010101, "new event", 557, 1, 2, 2, 0)
+    # scalar
+    event6 = c.createEvent(1010101, "new event", 557, 1, 25, 2, 0)
+
+    gas_use(s)
     
+    ### Single Markets
+    # binary market
+    bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 0, 1)
+    print c.getSharesPurchased(bin_market, 1)
+    print c.getSharesPurchased(bin_market, 2)
+    c.commitTrade(bin_market, c.makeMarketHash(bin_market, 2, 5*2**64, 0))
+    s.mine(1)
+    assert(c.buyShares(1010101, bin_market, 2, 5*2**64, 0)==1), "Buy shares issue"
+    c.commitTrade(bin_market, c.makeMarketHash(bin_market, 2, 5*2**64, 0))
+    s.mine(1)
+    assert(c.sellShares(1010101, bin_market, 2, 5*2**64, 0)==1), "Buy shares issue"
+    # scalar market
+    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2], 0, 1)
+    # odd range scalar
+    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4], 0, 1)
+    # categorical market
+    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event3], 0, 1)
+    print "1D Done"
+    
+    ### 2D Markets
+    # scalar + scalar market
+    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event4], 0, 1)
+    # nonscalar, scalar
+    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event2], 0, 1)
+    # scalar, nonscalar
+    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4, event1], 0, 1)
+    # nonscalar, nonscalar
+    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event5, event1], 0, 1)
+    print "2D Done"
+    
+    ### 3D Markets
+    # scalar, scalar, scalar
+    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event5, event2, event6], 0, 1)
+    # scalar, nonscalar, scalar
+    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event3, event4], 0, 1)
+    # nonscalar, scalar, scalar
+    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event2, event4], 0, 1)
+    # nonscalar, nonscalar, scalar
+    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event5, event3, event6], 0, 1)
+    # scalar, scalar, nonscalar
+    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event4, event5], 0, 1)
+    # scalar, nonscalar, nonscalar
+    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event1, event3], 0, 1)
+    # nonscalar, scalar, nonscalar
+    market = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event3, event2, event5], 0, 1)
+    # nonscalar, nonscalar, nonscalar
+    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event5, event3], 0, 1)
+    print "3D Done"
+    gas_use(s)
+    print "BUY AND SELL OK"
+
 def gas_use(s):
     global initial_gas
     print "Gas Used:"
@@ -263,8 +337,8 @@ if __name__ == '__main__':
     
     # function tests
     #test_create_event()
-    test_create_market()
-    #buy_sell_shares_tests()
+    #test_create_market()
+    test_buy_sell_shares()
     #transfer_shares_tests()
 
     #p2p_wager_tests()

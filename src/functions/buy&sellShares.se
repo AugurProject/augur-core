@@ -39,6 +39,15 @@ def commitTrade(market, hash):
     self.trades[market][tx.origin].hash = hash
     self.trades[market][tx.origin].block = block.number
     return(1)
+    
+def makeMarketHash(market, outcome, amount, limit):
+    buyInfo = array(4)
+    buyInfo[0] = market
+    buyInfo[1] = outcome
+    buyInfo[2] = amount
+    buyInfo[3] = limit
+    buyHash = sha256(buyInfo, items=4)
+    return(buyHash)
 
 # amount of shares should be fixed point
 # @return return price + fee to buy shares
@@ -67,7 +76,7 @@ def buyShares(branch, market, outcome, amount, limit):
     buyHash = sha256(buyInfo, items=4)
     if(self.trades[market][tx.origin].hash != buyHash || block.number == self.trades[market][tx.origin].block):
         return(-5)
-
+    self.trades[market][tx.origin].hash = 0
     # make it so trader has locked in fee from buy, so if they sell and they bought when fee was low, they can sell with that low fee as opposed to a high one
     numEvents = MARKETS.getNumEvents(market)
     events = MARKETS.getMarketEvents(market, outitems=numEvents)
@@ -142,6 +151,8 @@ def sellShares(branch, market, outcome, amount, limit):
     sellHash = sha256(sellInfo, items=4)
     if(self.trades[market][tx.origin].hash != sellHash || block.number == self.trades[market][tx.origin].block):
         return(-5)
+        
+    self.trades[market][tx.origin].hash = 0
 
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
@@ -173,7 +184,7 @@ def sellShares(branch, market, outcome, amount, limit):
     price = oldCost - newCost
     # remove shares from the user's account
     # if user actually doesn't have the shares, revert
-    if (MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome) < amount or (price*2^64/amount)<limit):
+    if (MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome) < amount or (limit!=0 and (price*2^64/amount)<limit)):
         MARKETS.modifyShares(market, outcome, amount)
         return(-3)
     else:

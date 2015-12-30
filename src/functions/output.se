@@ -436,6 +436,15 @@ def commitTrade(market, hash):
     self.trades[market][tx.origin].hash = hash
     self.trades[market][tx.origin].block = block.number
     return(1)
+    
+def makeMarketHash(market, outcome, amount, limit):
+    buyInfo = array(4)
+    buyInfo[0] = market
+    buyInfo[1] = outcome
+    buyInfo[2] = amount
+    buyInfo[3] = limit
+    buyHash = sha256(buyInfo, items=4)
+    return(buyHash)
 
 # amount of shares should be fixed point
 # @return return price + fee to buy shares
@@ -569,7 +578,7 @@ def sellShares(branch, market, outcome, amount, limit):
     price = oldCost - newCost
     # remove shares from the user's account
     # if user actually doesn't have the shares, revert
-    if (self.getParticipantSharesPurchased(market, participantNumber, outcome) < amount or (price*2^64/amount)<limit):
+    if (self.getParticipantSharesPurchased(market, participantNumber, outcome) < amount or (limit!=0 and (price*2^64/amount)<limit)):
         self.modifyShares(market, outcome, amount)
         return(-3)
     else:
@@ -1433,7 +1442,6 @@ macro lsLmsr($marketID):
                     $sumExp += self.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
                     $i += 1
                 $bq*self.fx_log($sumExp)/2**64
-                1
 
 macro sumList($q, $a, $b):
     $i = $a + 1

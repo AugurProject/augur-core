@@ -171,7 +171,6 @@ macro lsLmsr($marketID):
                     $sumExp += FXP.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
                     $i += 1
                 $bq*FXP.fx_log($sumExp)/2**64
-                1
 
 macro sumList($q, $a, $b):
     $i = $a + 1
