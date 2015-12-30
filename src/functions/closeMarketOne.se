@@ -10,7 +10,7 @@ def oneOutcome(market, winningOutcome):
     while i < particpantNumber:
         sharesOwned = MARKETS.getParticipantSharesPurchased(market, i, winningOutcome)
         participant = MARKETS.getParticipantID(market, i)
-        CASH.subtractCash(market, sharesOwned)
-        CASH.addCash(participant, sharesOwned)
+        CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market))
+        CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market))
         i += 1
     return(1)

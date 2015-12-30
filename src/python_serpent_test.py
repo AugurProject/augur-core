@@ -209,7 +209,9 @@ def test_create_market():
     # scalar + scalar market
     c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event4], 0, 1)
     # nonscalar, scalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event2], 0, 1)
+    x = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event2], 0, 1)
+    assert(c.getMarketNumOutcomes(x)==4), "Market num outcomes wrong"
+
     # scalar, nonscalar
     c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4, event1], 0, 1)
     # nonscalar, nonscalar
@@ -289,7 +291,9 @@ def test_buy_sell_shares():
     c.commitTrade(a, c.makeMarketHash(a, 2, 12*2**64, 0))
     s.mine(1)
     bal = c.balance(s.block.coinbase)
+    gas_use(s)
     c.buyShares(1010101, a, 2, 12*2**64, 0)
+    gas_use(s)
     bal_after = c.balance(s.block.coinbase)
     assert(bal-bal_after < 20*2**64), "Scalar buy off"
     
@@ -327,6 +331,7 @@ def test_buy_sell_shares():
     market = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event3, event2, event5], 0, 1)
     # nonscalar, nonscalar, nonscalar
     c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event5, event3], 0, 1)
+    # test one of these
     print "3D Done"
     gas_use(s)
     print "BUY AND SELL OK"

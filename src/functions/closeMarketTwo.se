@@ -36,12 +36,12 @@ def twoOutcomes(market, winningOutcome: arr, events: arr):
             participant = MARKETS.getParticipantID(market, i)
             # low side
             if(n==0):
-                CASH.subtractCash(market, sharesOwned*pricePerShare1/2^64)
-                CASH.addCash(participant, sharesOwned*pricePerShare1/2^64)
+                CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)*pricePerShare1/2^64)
+                CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)*pricePerShare1/2^64)
             # high side (of the scalar part)
             elif(n==1):
-                CASH.subtractCash(market, sharesOwned*pricePerShare2/2^64)
-                CASH.addCash(participant, sharesOwned*pricePerShare2/2^64)
+                CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)*pricePerShare2/2^64)
+                CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)*pricePerShare2/2^64)
             n+=1
         i += 1
     return(1)
