@@ -304,10 +304,7 @@ def test_buy_sell_shares():
     gas_use(s)
     bal_after = c.balance(s.block.coinbase)
     print "BAL AFTER"
-    print bal - bal_after
-    print bal
-    print bal_after
-    assert(bal-bal_after < 20*2**64), "Scalar sell off"
+    assert(bal-bal_after <= -590*2**64), "Scalar sell off"
     assert(c.price(a, 1) < 2**64), "Scalar sell off"
     assert(c.price(a, 2) > 198*2**64), "Scalar sell off"
 
@@ -336,11 +333,11 @@ def test_buy_sell_shares():
     print c.sellShares(1010101, b, 1, 15*2**64, 0)
     gas_use(s)
     bal_after = c.balance(s.block.coinbase)
-    print "BAL AFTER"
-    print bal - bal_after
-    assert(bal-bal_after < 20*2**64), "Scalar buy off"
     print c.price(b, 1)
     print c.price(b, 2)
+    assert(bal-bal_after <= -890*2**64), "Scalar sell off"
+    assert(c.price(b, 2) > 298*2**64), "Scalar sell off"
+    assert(c.price(b, 1) < 2**64), "Scalar sell off"
     
     # categorical market
     c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event3], 0, 1)
