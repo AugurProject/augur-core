@@ -31,6 +31,7 @@ import cash as CASH
 def transferShares(branch, market, outcome, amount, to):
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
     receiverNumber = MARKETS.getParticipantNumber(market, to)
+    # make sure outcome exists
     if (outcome==0 || MARKETS.getParticipantID(market, participantNumber) != tx.origin):
         return(-1)
     if(to != MARKETS.getParticipantID(market, receiverNumber)):
