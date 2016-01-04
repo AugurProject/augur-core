@@ -119,6 +119,7 @@ def test_markets():
     #modifyParticipantShares(branch, marketID, participantNumber, outcome, amount)
     #lsLmsr(marketID)
     #c.getParticipantSharesPurchased(market, participantNumber, outcome)
+    # getMarketEvent singular
     assert(c.getParticipantNumber(444, s.block.coinbase)==0), "Participant number issue"
     assert(c.getParticipantID(444, 0)==745948140856946866108753121277737810491401257713), "Participant ID issue"
     assert(c.getMarketEvents(444) == [445,446,447]), "Market events load/save broken"
@@ -377,7 +378,13 @@ def test_buy_sell_shares():
     # scalar + scalar market
     c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event4], 0, 1)
     # nonscalar, scalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event2], 0, 1)
+    f = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event2], 0, 1)
+    print "CUMSC"
+    print c.getCumScale(f)
+    print c.price(f, 1)
+    print c.price(f, 2)
+    print c.price(f, 3)
+    print c.price(f, 4)
     # scalar, nonscalar
     e = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4, event1], 0, 1)
     bal = c.balance(s.block.coinbase)
@@ -387,9 +394,9 @@ def test_buy_sell_shares():
     print c.price(e, 2)
     print c.price(e, 3)
     print c.price(e, 4)
-    print c.price(e, 5)
-    assert(c.price(d, 2) == c.price(d, 4) == c.price(d, 5)), "Categorical prices off"
-
+    print "CUMSC"
+    print c.getCumScale(e)
+    assert(c.price(e, 1) == c.price(e, 2) == c.price(e, 4) == c.price(e, 3)), "Categorical prices off"
     c.buyShares(1010101, e, 1, 15*2**64,0)
     bal_after = c.balance(s.block.coinbase)
     assert((bal-bal_after) <= 3010*2**64 and (bal-bal_after) >= 2980*2**64), "Scalar buy off"
