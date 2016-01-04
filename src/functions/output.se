@@ -123,7 +123,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     # buy some of all outcomes
     # ls-lmsr needs at least a very small initial liquidity
     y = 1
-    z = initialLiquidity * 2**64 / (2**64 + alpha*cumulativeScale*self.fx_log(initialLiquidity)/2**64)
+    z = initialLiquidity * 2**64 / (cumulativeScale*2**64 + alpha*numOutcomes*cumulativeScale*self.fx_log(numOutcomes)/2**64)
     self.initialLiquiditySetup(marketID, alpha, cumulativeScale, numOutcomes)
     while y <= numOutcomes:
         self.modifyShares(marketID, y, z)
@@ -525,7 +525,7 @@ def buyShares(branch, market, outcome, amount, limit):
     # other half go to branch
     self.send(branch, fee/2)
     # log new price & avg price paid/share
-    log(type=updatePrice, tx.origin, market, outcome, self.price(market, outcome), -(price+fee)*2^64/amount)
+    log(type=updatePrice, tx.origin, market, outcome, self.price(market, outcome), -(price+fee*price)*2^64/amount)
     return(1)
 
 # amount is amount of shares to sell
@@ -597,7 +597,7 @@ def sellShares(branch, market, outcome, amount, limit):
         self.addCash(tx.origin, price)
         self.modifyParticipantShares(branch, market, participantNumber, outcome, -amount)
         # log new price and avg. price sold / share
-        log(type=updatePrice, tx.origin, market, outcome, self.price(market, outcome), (price+fee)*2^64/amount)
+        log(type=updatePrice, tx.origin, market, outcome, self.price(market, outcome), (price+fee*price)*2^64/amount)
         return(1)
 # mutex result non scalar not .5
 # one winning outcome

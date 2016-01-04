@@ -287,7 +287,9 @@ def test_buy_sell_shares():
     # should cost ~200/share
     c.buyShares(1010101, a, 1, 15*2**64,0)
     bal_after = c.balance(s.block.coinbase)
-    assert((bal-bal_after) <= 3010*2**64 and (bal-bal_after) >= 2980*2**64), "Scalar buy off"
+    print "Delta"
+    print bal - bal_after
+    assert((bal-bal_after) <= 3015*2**64 and (bal-bal_after) >= 2980*2**64), "Scalar buy off"
     c.commitTrade(a, c.makeMarketHash(a, 2, 12*2**64, 0))
     s.mine(1)
     bal = c.balance(s.block.coinbase)
@@ -295,6 +297,10 @@ def test_buy_sell_shares():
     c.buyShares(1010101, a, 2, 12*2**64, 0)
     gas_use(s)
     bal_after = c.balance(s.block.coinbase)
+    print "Delta"
+    print bal - bal_after
+    print c.price(a, 1)
+    print c.price(a, 2)
     assert(bal-bal_after < 20*2**64), "Scalar buy off"
     c.commitTrade(a, c.makeMarketHash(a, 1, 15*2**64, 0))
     s.mine(1)
@@ -304,6 +310,9 @@ def test_buy_sell_shares():
     gas_use(s)
     bal_after = c.balance(s.block.coinbase)
     print "BAL AFTER"
+    print "Delta"
+    print bal - bal_after
+
     assert(bal-bal_after <= -590*2**64), "Scalar sell off"
     assert(c.price(a, 1) < 2**64), "Scalar sell off"
     assert(c.price(a, 2) > 198*2**64), "Scalar sell off"
