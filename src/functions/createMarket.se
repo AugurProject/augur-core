@@ -35,6 +35,7 @@ event creationBlock(market:indexed)
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
 # z = liquidity / (1+(alpha*n*ln(n)))
+    # n is num outcomes
 # initialLiquidity is initial number of cash in each outcome you want to buy/initialize/set
 # tradingFee is a percent in fixedPoint
 # same for these values
@@ -154,7 +155,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     # buy some of all outcomes
     # ls-lmsr needs at least a very small initial liquidity
     y = 1
-    z = initialLiquidity * 2**64 / (2**64 + alpha*cumulativeScale*FXP.fx_log(initialLiquidity)/2**64)
+    z = initialLiquidity * 2**64 / (cumulativeScale*2**64 + alpha*numOutcomes*cumulativeScale*FXP.fx_log(numOutcomes)/2**64)
     MARKETS.initialLiquiditySetup(marketID, alpha, cumulativeScale, numOutcomes)
     while y <= numOutcomes:
         MARKETS.modifyShares(marketID, y, z)
