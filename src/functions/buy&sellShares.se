@@ -127,7 +127,7 @@ def buyShares(branch, market, outcome, amount, limit):
     # other half go to branch
     CASH.send(branch, fee/2)
     # log new price & avg price paid/share
-    log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), -(price+fee*price/2**64)*2^64/amount)
+    log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), -(price+fee)*2^64/amount)
     return(1)
 
 # amount is amount of shares to sell
@@ -199,5 +199,5 @@ def sellShares(branch, market, outcome, amount, limit):
         CASH.addCash(tx.origin, price)
         MARKETS.modifyParticipantShares(branch, market, participantNumber, outcome, -amount)
         # log new price and avg. price sold / share
-        log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), (price+fee*price/2**64)*2^64/amount)
+        log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), (price)*2^64/amount)
         return(1)

@@ -290,6 +290,7 @@ def test_buy_sell_shares():
     print "Delta"
     print bal - bal_after
     assert((bal-bal_after) <= 3015*2**64 and (bal-bal_after) >= 2980*2**64), "Scalar buy off"
+    # resume here
     c.commitTrade(a, c.makeMarketHash(a, 2, 12*2**64, 0))
     s.mine(1)
     bal = c.balance(s.block.coinbase)
