@@ -206,10 +206,10 @@ def lsLmsr(marketID):
 
 def price(market, outcome):
     a = lsLmsr(market)
-    sharesPurchased(market)[outcome] += 2**60
+    sharesPurchased(market)[outcome] += 2**50
     b = lsLmsr(market)
-    sharesPurchased(market)[outcome] -= 2**60
-    return(((b - a) * 2**64)/2**60)
+    sharesPurchased(market)[outcome] -= 2**50
+    return(((b - a) * 2**64)/2**50)
 
 # check that msg.sender is one of our function contracts
 def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, forkSelection):
