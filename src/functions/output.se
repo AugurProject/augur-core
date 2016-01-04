@@ -525,7 +525,7 @@ def buyShares(branch, market, outcome, amount, limit):
     # other half go to branch
     self.send(branch, fee/2)
     # log new price & avg price paid/share
-    log(type=updatePrice, tx.origin, market, outcome, price+fee, -(price+fee)*2^64/amount)
+    log(type=updatePrice, tx.origin, market, outcome, self.price(market, outcome), -(price+fee)*2^64/amount)
     return(1)
 
 # amount is amount of shares to sell
