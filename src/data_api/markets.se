@@ -171,6 +171,17 @@ macro lsLmsr($marketID):
                     $sumExp += FXP.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
                     $i += 1
                 $bq*cumScale($marketID)*FXP.fx_log($sumExp)/2**64
+                
+# Maximum value of array
+macro maximum($a):
+    with $max = $a[0]:
+        with $i = 1:
+            with $len = len($a):
+                while $i < $len:
+                    if $a[$i] > $max:
+                        $max = $a[$i]
+                    $i += 1
+                $max
 
 macro sumList($q, $a, $b):
     $i = $a + 1

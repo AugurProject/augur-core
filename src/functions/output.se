@@ -124,7 +124,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     # buy some of all outcomes
     # ls-lmsr needs at least a very small initial liquidity
     y = 1
-    z = initialLiquidity * 2**64 / (cumulativeScale*2**64 + alpha*numOutcomes*cumulativeScale*self.fx_log(numOutcomes)/2**64)
+    z = initialLiquidity * 2**64 / (cumulativeScale*2**64 + alpha*numOutcomes*cumulativeScale*self.fx_log(numOutcomes*2**64)/2**64)
     self.initialLiquiditySetup(marketID, alpha, cumulativeScale, numOutcomes)
     while y <= numOutcomes:
         self.modifyShares(marketID, y, z)
@@ -1446,6 +1446,20 @@ macro lsLmsr($marketID):
                     $i += 1
                 $bq*cumScale($marketID)*self.fx_log($sumExp)/2**64
 
+def lsLmsr(marketID):
+    return(lsLmsr(marketID))
+
+# Maximum value of array
+macro maximum($a):
+    with $max = $a[0]:
+        with $i = 1:
+            with $len = len($a):
+                while $i < $len:
+                    if $a[$i] > $max:
+                        $max = $a[$i]
+                    $i += 1
+                $max
+
 macro sumList($q, $a, $b):
     $i = $a + 1
     $result = $q[$a]
@@ -1475,8 +1489,6 @@ macro particpant($marketID, $addr):
 macro Bq($marketID):
    alpha($marketID) * sumList(sharesPurchased($marketID), 1, numOutcomes($marketID)) / 2**64
 
-def lsLmsr(marketID):
-    return(lsLmsr(marketID))
 
 def price(market, outcome):
     a = lsLmsr(market)
