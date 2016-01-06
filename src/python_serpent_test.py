@@ -581,7 +581,16 @@ def test_create_branch():
     assert(c.getParentPeriod(b)==c.getVotePeriod(1010101)), "Parent period saving broken"
     print "Test branch OK"
 
-def gas_use:
+def test_send_rep():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    gas_use(s)
+    c.initiateOwner(1010101)
+
+def gas_use(s):
     global initial_gas
     print "Gas Used:"
     print s.block.gas_used - initial_gas
@@ -606,17 +615,9 @@ if __name__ == '__main__':
     #test_buy_sell_shares()
     #test_transfer_shares()
     #test_create_branch()
-
+    test_send_rep()
     
-
-
-
-
-
-
-
-
-    send_rep()
+    #p2p_wager_tests()
     #close_market_tests()
     #make_report_tests()
     #consensus_tests()
