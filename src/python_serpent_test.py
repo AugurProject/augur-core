@@ -541,6 +541,29 @@ def test_buy_sell_shares():
     print "3D Done"
     print "BUY AND SELL OK"
 
+def test_transfer_shares():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    gas_use(s)
+    c.initiateOwner(1010101)
+    # binary
+    event1 = c.createEvent(1010101, "new event", 555, 1, 2, 2, 0)
+
+    ### Single Markets
+    # binary market
+    bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 0, 1)
+    c.commitTrade(bin_market, c.makeMarketHash(bin_market, 1, 15*2**64, 0))
+    s.mine(1)
+    c.buyShares(1010101, bin_market, 1, 15*2**64,0)
+    # -1: invalid outcome or you haven't traded in this market (or market doesn't exist)
+    assert(c.transferShares(1010101, bin_market, 1, 15*2**64, 444)==15*2**64), "Transfer shares fail"
+    assert(c.transferShares(1010101, bin_market, 1, 15*2**64, 444)==-2), "Check for not having shares fail"
+    assert(c.transferShares(1010101, 222, 1, 15*2**64, 444)==-1), "Check for invalid market fail"
+    print "Transfer shares OK"
+    
 def gas_use(s):
     global initial_gas
     print "Gas Used:"
@@ -563,8 +586,8 @@ if __name__ == '__main__':
     # function tests
     #test_create_event()
     #test_create_market()
-    test_buy_sell_shares()
-    #transfer_shares_tests()
+    #test_buy_sell_shares()
+    test_transfer_shares()
 
     #p2p_wager_tests()
     #create_branch_tests()

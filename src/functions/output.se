@@ -280,8 +280,8 @@ def transferShares(branch, market, outcome, amount, to):
     # if user actually doesn't have the shares, return -2
     if(self.getParticipantSharesPurchased(market, participantNumber, outcome) < amount):
         return(-2)
-    self.modifyParticipantShares(market, participantNumber, outcome, -amount)
-    self.modifyParticipantShares(market, receiverNumber, outcome, amount)
+    self.modifyParticipantShares(branch, market, participantNumber, outcome, -amount)
+    self.modifyParticipantShares(branch, market, receiverNumber, outcome, amount)
 
     # half of fees to market creator
     # other half go to branch
