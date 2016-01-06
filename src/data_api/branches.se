@@ -117,7 +117,7 @@ def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleO
 		return(0)
 
 def getParentPeriod(branch):
-    return(self.Branches[ID].parentPeriod)
+    return(self.Branches[branch].parentPeriod)
 
 def incrementPeriod(branch):
 	#if(!self.whitelist.check(msg.sender)):

@@ -35,7 +35,6 @@ def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnl
         return(-1)
 
     parentPeriod = BRANCHES.getVotePeriod(parent)
-    parentCurrentVotePeriod = (block.number / periodLength) - 1
 
     branchInfo = string(8*32+len(description))
     branchInfo[0] = BRANCH                                      #typecode
@@ -51,8 +50,11 @@ def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnl
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
     branchID = sha256(branchInfo, chars=len(branchInfo))
     currentVotePeriod = (block.number / periodLength) - 1
-    BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee, oracleOnly, parentPeriod)
-    if(INFO.getCreator(parent) && CASH.send(parent, 47*2^64) && INFO.setInfo(branchID, description, tx.origin, 47*2^64) && REPORTING.setInitialReporters(parent, branchID, parentCurrentVotePeriod)):
+    if(INFO.getCreator(branchID)==0):
+        BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee, oracleOnly, parentPeriod)
+    else:
+        return(-2)
+    if(INFO.getCreator(parent) && CASH.send(parent, 47*2^64) && INFO.setInfo(branchID, description, tx.origin, 47*2^64) && REPORTING.setInitialReporters(parent, branchID)):
         return(branchID)
     else:
         return(-2)

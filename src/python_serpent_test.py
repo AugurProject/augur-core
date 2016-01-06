@@ -194,8 +194,10 @@ def test_create_market():
     
     ### Single Markets
     # binary market
+    gas_use(s)
     bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 0, 1)
     print bin_market
+    gas_use(s)
     print c.getSharesPurchased(bin_market, 1)
     print c.getSharesPurchased(bin_market, 2)
     # scalar market
@@ -572,9 +574,14 @@ def test_create_branch():
     c = s.abi_contract('functions/output.se')
     gas_use(s)
     c.initiateOwner(1010101)
-    print c.createSubbranch("new branch", 100, 1010101, 2**55, 0)
+    b = c.createSubbranch("new branch", 100, 1010101, 2**55, 0)
+    assert(b<-3 or b>3), "Branch creation fail"
+    assert(c.createSubbranch("new branch", 100, 1010101, 2**55, 0)==-2), "Branch already exist fail"
+    assert(c.createSubbranch("new branch", 100, 10101, 2**55, 0)==-1), "Branch doesn't exist check fail"
+    assert(c.getParentPeriod(b)==c.getVotePeriod(1010101)), "Parent period saving broken"
+    print "Test branch OK"
 
-def gas_use(s):
+def gas_use:
     global initial_gas
     print "Gas Used:"
     print s.block.gas_used - initial_gas
@@ -598,10 +605,18 @@ if __name__ == '__main__':
     #test_create_market()
     #test_buy_sell_shares()
     #test_transfer_shares()
+    #test_create_branch()
 
-    #p2p_wager_tests()
-    test_create_branch()
-    #send_rep_tests()
+    
+
+
+
+
+
+
+
+
+    send_rep()
     #close_market_tests()
     #make_report_tests()
     #consensus_tests()

@@ -126,7 +126,7 @@ def hashReport(report: arr, salt):
         return(reportHash)
 
 # check that msg.sender is one of our function contracts
-def setInitialReporters(parent, branchID, period):
+def setInitialReporters(parent, branchID):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # first vote period won't be until after the current (in this case first) basket of things has expired

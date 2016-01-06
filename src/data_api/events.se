@@ -110,6 +110,9 @@ def getMarkets(event):
 	while i < self.Events[event].numMarkets:
 		markets[i] = self.Events[event].markets[i]
 	return(markets: arr)
+	
+def getMarket(event, marketIndex):
+	return(self.Events[event].markets[marketIndex])
 
 def getNumMarkets(event):
 	return(self.Events[event].numMarkets)

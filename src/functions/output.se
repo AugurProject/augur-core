@@ -304,10 +304,9 @@ def transferShares(branch, market, outcome, amount, to):
     # -2: no money for creation fee or branch already exists
 def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnly):
     if(periodLength<=0 || !self.getPeriodLength(parent) || description==0):
-        return([periodLength, self.getPeriodLength(parent)]: arr)
+        return(-1)
 
     parentPeriod = self.getVotePeriod(parent)
-    parentCurrentVotePeriod = (block.number / periodLength) - 1
 
     branchInfo = string(8*32+len(description))
     branchInfo[0] = BRANCH                                      #typecode
@@ -323,11 +322,15 @@ def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnl
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
     branchID = sha256(branchInfo, chars=len(branchInfo))
     currentVotePeriod = (block.number / periodLength) - 1
-    self.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee, oracleOnly, parentPeriod)
-    if(self.getCreator(parent) && self.send(parent, 47*2^64) && self.setInfo(branchID, description, tx.origin, 47*2^64) && self.setInitialReporters(parent, branchID, parentCurrentVotePeriod)):
+    if(self.getCreator(branchID)==0):
+        self.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee, oracleOnly, parentPeriod)
+    else:
+        return(-2)
+    if(self.getCreator(parent) && self.send(parent, 47*2^64) && self.setInfo(branchID, description, tx.origin, 47*2^64) && self.setInitialReporters(parent, branchID)):
         return(branchID)
     else:
         return(-2)
+        
 # eight winning outcomes
 def eightOutcomes(market, winningOutcome: arr, events: arr):
     outcomeOne = self.getOutcome(events[0])
@@ -972,7 +975,7 @@ def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleO
 		return(0)
 
 def getParentPeriod(branch):
-    return(self.Branches[ID].parentPeriod)
+    return(self.Branches[branch].parentPeriod)
 
 def incrementPeriod(branch):
 	#if(!self.whitelist.check(msg.sender)):
@@ -1359,7 +1362,7 @@ def hashReport(report: arr, salt):
         return(reportHash)
 
 # check that msg.sender is one of our function contracts
-def setInitialReporters(parent, branchID, period):
+def setInitialReporters(parent, branchID):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # first vote period won't be until after the current (in this case first) basket of things has expired
