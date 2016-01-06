@@ -459,7 +459,7 @@ def test_buy_sell_shares():
     c.buyShares(1010101, h, 15, 15*2**64,0)
     bal_after = c.balance(s.block.coinbase)
     print bal - bal_after
-    assert((bal-bal_after) <= 7600*2**64 and (bal-bal_after) >= 7500*2**64), "Scalar buy off"
+    assert((bal-bal_after) <= 7600*2**64 and (bal-bal_after) >= 7500*2**64), "3d buy off"
     c.commitTrade(h, c.makeMarketHash(h, 2, 12*2**64, 0))
     s.mine(1)
     bal = c.balance(s.block.coinbase)
@@ -467,7 +467,7 @@ def test_buy_sell_shares():
     c.buyShares(1010101, h, 2, 12*2**64, 0)
     gas_use(s)
     bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < 20*2**64), "Scalar buy off"
+    assert(bal-bal_after < 20*2**64), "3d buy off"
     c.commitTrade(h, c.makeMarketHash(h, 15, 12*2**64, 0))
     s.mine(1)
     bal = c.balance(s.block.coinbase)
@@ -475,7 +475,7 @@ def test_buy_sell_shares():
     c.sellShares(1010101, h, 15, 12*2**64, 0)
     gas_use(s)
     bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < 20*2**64), "Scalar sell off"
+    assert(bal-bal_after < 20*2**64), "3d sell off"
     # nonscalar, scalar, scalar
     c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event2, event4], 0, 1)
     # nonscalar, nonscalar, scalar
@@ -494,7 +494,7 @@ def test_buy_sell_shares():
     c.buyShares(1010101, g, 8, 15*2**64,0)
     bal_after = c.balance(s.block.coinbase)
     print bal - bal_after
-    assert((bal-bal_after) <= 3010*2**64 and (bal-bal_after) >= 2960*2**64), "Scalar buy off"
+    assert((bal-bal_after) <= 3010*2**64 and (bal-bal_after) >= 2960*2**64), "3d buy off"
     c.commitTrade(g, c.makeMarketHash(g, 2, 12*2**64, 0))
     s.mine(1)
     bal = c.balance(s.block.coinbase)
@@ -502,7 +502,7 @@ def test_buy_sell_shares():
     c.buyShares(1010101, g, 2, 12*2**64, 0)
     gas_use(s)
     bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < 20*2**64), "Scalar buy off"
+    assert(bal-bal_after < 20*2**64), "3d buy off"
     c.commitTrade(g, c.makeMarketHash(g, 2, 12*2**64, 0))
     s.mine(1)
     bal = c.balance(s.block.coinbase)
@@ -510,9 +510,34 @@ def test_buy_sell_shares():
     c.sellShares(1010101, g, 2, 12*2**64, 0)
     gas_use(s)
     bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < 20*2**64), "Scalar sell off"
+    assert(bal-bal_after < 20*2**64), "3d sell off"
     # nonscalar, nonscalar, nonscalar
     i = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event5, event3], 0, 1)
+    bal = c.balance(s.block.coinbase)
+    assert(c.getMarketNumOutcomes(i) == 20), "3d number outcomes wrong"
+    c.commitTrade(i, c.makeMarketHash(i, 20, 15*2**64, 0))
+    s.mine(1)
+    assert(c.getCumScale(i) == 1), "3d cumscale wrong"
+    c.buyShares(1010101, i, 20, 15*2**64,0)
+    bal_after = c.balance(s.block.coinbase)
+    print bal - bal_after
+    assert((bal-bal_after) <= .13*15*2**64 and (bal-bal_after) >= .12*15*2**64), "3d buy off"
+    c.commitTrade(i, c.makeMarketHash(i, 2, 12*2**64, 0))
+    s.mine(1)
+    bal = c.balance(s.block.coinbase)
+    gas_use(s)
+    c.buyShares(1010101, i, 2, 12*2**64, 0)
+    gas_use(s)
+    bal_after = c.balance(s.block.coinbase)
+    assert(bal-bal_after < .12*12*2**64), "3d buy off"
+    c.commitTrade(i, c.makeMarketHash(i, 20, 11*2**64, 0))
+    s.mine(1)
+    bal = c.balance(s.block.coinbase)
+    gas_use(s)
+    c.sellShares(1010101, i, 20, 11*2**64, 0)
+    gas_use(s)
+    bal_after = c.balance(s.block.coinbase)
+    assert(bal-bal_after < -1.2*2**64 and bal-bal_after > -1.5*2**64), "3d sell off"
     print "3D Done"
     print "BUY AND SELL OK"
 
