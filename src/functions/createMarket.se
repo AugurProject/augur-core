@@ -125,7 +125,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         else:
             numOutcomes *= eventNumOutcomes
         i += 1
-    if(numOutcomes > 200):
+    if(numOutcomes > 80):
         return(-3)
     if(cumulativeScale==0):
         cumulativeScale = 1
