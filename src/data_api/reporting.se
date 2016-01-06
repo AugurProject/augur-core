@@ -142,23 +142,23 @@ def setInitialReporters(parent, branchID, period):
     self.Reporting[branchID].reputation[0].reporterID = branchID
     return(1)
 
-def claimInitialRep(parent, branchID):
+#def claimInitialRep(parent, branchID):
     # have 1 month to claim
-    if(self.repIDToIndex(branchID, msg.sender)==0 && block.number < (BRANCHES.getCreationDate(branchID) + 216000)):
-        i = self.Reporting[branchID].numberReporters
-        rep = REPORTS.getBeforeRep(parent, BRANCHES.getParentPeriod(branchID))
-        reporterID = msg.sender
-        self.Reporting[branchID].reputation[i].reporterID = reporterID
-        self.Reporting[branchID].reputation[i].repValue = rep
-        self.Reporting[branchID].repIDtoIndex[reporterID] = i
-        self.Reporting[branchID].dormantRep[i].reporterID = reporterID
-        self.Reporting[branchID].dormantRep[i].repValue = REPORTS.getDormantRep(parent, BRANCHES.getParentPeriod(branchID))
-        self.Reporting[branchID].numberReporters += 1
-        self.Reporting[branchID].totalRep += rep
-        return(1)
-    else:
+#    if(self.repIDToIndex(branchID, msg.sender)==0 && block.number < (BRANCHES.getCreationDate(branchID) + 216000)):
+#        i = self.Reporting[branchID].numberReporters
+ #       rep = REPORTS.getBeforeRep(parent, BRANCHES.getParentPeriod(branchID))
+  #      reporterID = msg.sender
+   #     self.Reporting[branchID].reputation[i].reporterID = reporterID
+    #    self.Reporting[branchID].reputation[i].repValue = rep
+     #   self.Reporting[branchID].repIDtoIndex[reporterID] = i
+      #  self.Reporting[branchID].dormantRep[i].reporterID = reporterID
+       # self.Reporting[branchID].dormantRep[i].repValue = REPORTS.getDormantRep(parent, BRANCHES.getParentPeriod(branchID))
+        #self.Reporting[branchID].numberReporters += 1
+        #self.Reporting[branchID].totalRep += rep
+        #return(1)
+    #else:
         # already claimed or too late
-        return(0)
+     #   return(0)
 
 def addReporter(branch, sender):
     #if(!self.whitelist.check(msg.sender)):

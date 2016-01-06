@@ -4,6 +4,7 @@ event creationBlock(market:indexed)
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
 # z = liquidity / (1+(alpha*n*ln(n)))
+    # n is num outcomes
 # initialLiquidity is initial number of cash in each outcome you want to buy/initialize/set
 # tradingFee is a percent in fixedPoint
 # same for these values
@@ -93,7 +94,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         else:
             numOutcomes *= eventNumOutcomes
         i += 1
-    if(numOutcomes > 200):
+    if(numOutcomes > 80):
         return(-3)
     if(cumulativeScale==0):
         cumulativeScale = 1
@@ -272,6 +273,7 @@ def pushMarketForward(branch, market):
 def transferShares(branch, market, outcome, amount, to):
     participantNumber = self.getParticipantNumber(market, tx.origin)
     receiverNumber = self.getParticipantNumber(market, to)
+    # make sure outcome exists
     if (outcome==0 || self.getParticipantID(market, participantNumber) != tx.origin):
         return(-1)
     if(to != self.getParticipantID(market, receiverNumber)):
@@ -295,6 +297,37 @@ def transferShares(branch, market, outcome, amount, to):
         return(amount)
     else:
         return(-3)
+# period length is given in blocks
+# @return branchID if success
+# error messages otherwise
+    # -1: bad input or parent doesn't exist
+    # -2: no money for creation fee or branch already exists
+def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnly):
+    if(periodLength<=0 || !self.getPeriodLength(parent) || description==0):
+        return([periodLength, self.getPeriodLength(parent)]: arr)
+
+    parentPeriod = self.getVotePeriod(parent)
+    parentCurrentVotePeriod = (block.number / periodLength) - 1
+
+    branchInfo = string(8*32+len(description))
+    branchInfo[0] = BRANCH                                      #typecode
+    branchInfo[1] = tx.origin                                   #creator address
+    branchInfo[2] = 47*2^64                                     #creation fee
+    branchInfo[3] = periodLength                                #length of voting cycle
+    branchInfo[4] = block.number                                #current block number
+    branchInfo[5] = parent                                      #branchID of parent branch
+    branchInfo[6] = tradingFee
+    branchInfo[7] = oracleOnly
+    mcopy(branchInfo+ 8*32, description, len(description))
+    # people can check that these characteristics hash to the ID if they want
+    # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
+    branchID = sha256(branchInfo, chars=len(branchInfo))
+    currentVotePeriod = (block.number / periodLength) - 1
+    self.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee, oracleOnly, parentPeriod)
+    if(self.getCreator(parent) && self.send(parent, 47*2^64) && self.setInfo(branchID, description, tx.origin, 47*2^64) && self.setInitialReporters(parent, branchID, parentCurrentVotePeriod)):
+        return(branchID)
+    else:
+        return(-2)
 # eight winning outcomes
 def eightOutcomes(market, winningOutcome: arr, events: arr):
     outcomeOne = self.getOutcome(events[0])
@@ -347,8 +380,8 @@ def eightOutcomes(market, winningOutcome: arr, events: arr):
         n = 0
         while(winningOutcome[n]!=0):
             sharesOwned = self.getParticipantSharesPurchased(market, i, winningOutcome[n])
-            self.subtractCash(market, sharesOwned*pricePerShare[n]/2^64)
-            self.addCash(self.getParticipantID(market, i), sharesOwned*pricePerShare[n]/2^64)
+            self.subtractCash(market, sharesOwned*pricePerShare[n]*self.getCumScale(market)/2^64)
+            self.addCash(self.getParticipantID(market, i), sharesOwned*self.getCumScale(market)*pricePerShare[n]/2^64)
             n+=1
         i+=1
 
@@ -409,20 +442,20 @@ def fourOutcomes(market, winningOutcome: arr, events: arr):
             participant = self.getParticipantID(market, i)
             # low-low
             if(n==0):
-                self.subtractCash(market, sharesOwned*pricePerShare1/2^64)
-                self.addCash(participant, sharesOwned*pricePerShare1/2^64)
+                self.subtractCash(market, sharesOwned*self.getCumScale(market)*pricePerShare1/2^64)
+                self.addCash(participant, sharesOwned*self.getCumScale(market)*pricePerShare1/2^64)
             # high-low
             elif(n==1):
-                self.subtractCash(market, sharesOwned*pricePerShare2/2^64)
-                self.addCash(participant, sharesOwned*pricePerShare2/2^64)
+                self.subtractCash(market, sharesOwned*self.getCumScale(market)*pricePerShare2/2^64)
+                self.addCash(participant, sharesOwned*self.getCumScale(market)*pricePerShare2/2^64)
             # low-high
             elif(n==2):
-                self.subtractCash(market, sharesOwned*pricePerShare3/2^64)
-                self.addCash(participant, sharesOwned*pricePerShare3/2^64)
+                self.subtractCash(market, sharesOwned*self.getCumScale(market)*pricePerShare3/2^64)
+                self.addCash(participant, sharesOwned*self.getCumScale(market)*pricePerShare3/2^64)
             # high-high
             elif(n==3):
-                self.subtractCash(market, sharesOwned*pricePerShare4/2^64)
-                self.addCash(participant, sharesOwned*pricePerShare4/2^64)
+                self.subtractCash(market, sharesOwned*self.getCumScale(market)*pricePerShare4/2^64)
+                self.addCash(participant, sharesOwned*self.getCumScale(market)*pricePerShare4/2^64)
             n+=1
         i+=1
     return(1)
@@ -609,8 +642,8 @@ def oneOutcome(market, winningOutcome):
     while i < particpantNumber:
         sharesOwned = self.getParticipantSharesPurchased(market, i, winningOutcome)
         participant = self.getParticipantID(market, i)
-        self.subtractCash(market, sharesOwned)
-        self.addCash(participant, sharesOwned)
+        self.subtractCash(market, sharesOwned*self.getCumScale(market))
+        self.addCash(participant, sharesOwned*self.getCumScale(market))
         i += 1
     return(1)
 
@@ -648,12 +681,12 @@ def twoOutcomes(market, winningOutcome: arr, events: arr):
             participant = self.getParticipantID(market, i)
             # low side
             if(n==0):
-                self.subtractCash(market, sharesOwned*pricePerShare1/2^64)
-                self.addCash(participant, sharesOwned*pricePerShare1/2^64)
+                self.subtractCash(market, sharesOwned*self.getCumScale(market)*pricePerShare1/2^64)
+                self.addCash(participant, sharesOwned*self.getCumScale(market)*pricePerShare1/2^64)
             # high side (of the scalar part)
             elif(n==1):
-                self.subtractCash(market, sharesOwned*pricePerShare2/2^64)
-                self.addCash(participant, sharesOwned*pricePerShare2/2^64)
+                self.subtractCash(market, sharesOwned*self.getCumScale(market)*pricePerShare2/2^64)
+                self.addCash(participant, sharesOwned*self.getCumScale(market)*pricePerShare2/2^64)
             n+=1
         i += 1
     return(1)
@@ -706,8 +739,11 @@ def quicksort(stuff: arr):
 # error messages otherwise
     # -1: we're either already past that date, branch doesn't exist, or description is bad
     # 0: not enough money to pay fees or event already exists
+    # -2: max value < min value
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes, blockNumber):
     periodLength = self.getPeriodLength(branch)
+    if(maxValue < minValue):
+        return(-2)
     if periodLength && description != 0 && expDate > block.number:
         eventinfo = string(9*32 + len(description))
         eventinfo[0] = EVENT                                        #typecode
@@ -864,20 +900,6 @@ data cash[][]
 data branchList[]
 
 data branchListCount
-
-def init():
-    self.Branches[1010101].currentVotePeriod = (block.number / 1800) - 1
-    self.Branches[1010101].periodLength = 1800
-    self.Branches[1010101].minTradingFee = 2^57
-    self.branchListCount = 1
-    self.branchList[0] = 1010101
-    self.initiateOwner(1010101)
-    description = text("Root branch")
-    save(self.Info[1010101].description[0], description, chars=len(description))
-    self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
-    self.Info[1010101].creationFee = 10
-    self.Info[1010101].descriptionLength = len(description)
-    self.cashcoinBalances[tx.origin] = 10000000000*2^64
 
 def getOracleOnly(branch):
 	return(self.Branches[branch].oracleOnly)
@@ -1219,9 +1241,218 @@ def getRejectedPeriod(event):
 
 def getRejectedUncaught(event):
 	return(self.Events[event].rejectedUncaught)
+# Reporting index is the branchID
+# Reporters index is the rep. address
+# We 0 index reputation so can walk thru for consensus
+# EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
+# RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
+# Events is 0 indexed as well
+data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, balance[], dormantRep[](repValue, reporterID))
+
+def init():
+    self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
+    self.Reporting[1010101].reputation[0].repValue = 47*2^64
+    self.Reporting[1010101].reputation[0].reporterID = tx.origin
+    self.Reporting[1010101].numberReporters = 2
+    self.Reporting[1010101].repIDtoIndex[1010101] = 1
+    self.Reporting[1010101].reputation[1].repValue = 0
+    self.Reporting[1010101].reputation[1].reporterID = 1010101
+    self.Reporting[1010101].totalRep += 47*2^64
+    self.Branches[1010101].currentVotePeriod = (block.number / 1800) - 1
+    self.Branches[1010101].periodLength = 1800
+    self.Branches[1010101].minTradingFee = 2^57
+    self.branchListCount = 1
+    self.branchList[0] = 1010101
+    self.initiateOwner(1010101)
+    description = text("Root branch")
+    save(self.Info[1010101].description[0], description, chars=len(description))
+    self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
+    self.Info[1010101].creationFee = 10
+    self.Info[1010101].descriptionLength = len(description)
+    # test initial funds
+    self.cashcoinBalances[tx.origin] = 100000*2^64
+
+
+# @return reputation value
+def getRepByIndex(branch, repIndex):
+    return(self.Reporting[branch].reputation[repIndex].repValue)
+
+# @return reputation value
+def getRepBalance(branch, address):
+    repIndex = self.Reporting[branch].repIDtoIndex[address]
+    if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
+        return(0)
+    return(self.Reporting[branch].reputation[repIndex].repValue)
+
+def getDormantRepByIndex(branch, repIndex):
+    return(self.Reporting[branch].dormantRep[repIndex].repValue)
+
+# @return reputation value
+def getDormantRepBalance(branch, address):
+    repIndex = self.Reporting[branch].repIDtoIndex[address]
+    if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
+        return(0)
+    return(self.Reporting[branch].dormantRep[repIndex].repValue)
+
+def getReporterID(branch, index):
+    return(self.Reporting[branch].reputation[index].reporterID)
+
+def getTotalRep(branch):
+    return(self.Reporting[branch].totalRep)
+
+def setInitialRep(branch, period, balance):
+    self.Reporting[branch].balance[period] = balance
+
+def getInitialRep(branch, period):
+    return(self.Reporting[branch].balance[period])
+
+# will return 0s for array values after it's looped through all the ones you
+# have an actual balance in
+def getReputation(address):
+    branchListCount = self.getNumBranches()
+    if(address):
+        branches = array(2*branchListCount)
+        branchList = array(branchListCount)
+        branchList = self.getBranches(outitems=branchListCount)
+        i = 0
+        b = 0
+        while i < branchListCount:
+            branch = branchList[i]
+            balance = self.getRepBalance(branch, address)
+            if(balance!=0):
+                branches[b] = branch
+                branches[b+1] = balance
+                b += 2
+            i += 1
+    else:
+        address = tx.origin
+        branches = array(2*branchListCount)
+        branchList = array(branchListCount)
+        branchList = self.getBranches(outitems=branchListCount)
+        i = 0
+        b = 0
+        while i < branchListCount:
+            branch = branchList[i]
+            balance = self.getRepBalance(branch, address)
+            if(balance!=0):
+                branches[b] = branch
+                branches[b+1] = balance
+                b += 2
+            i += 1
+    return(branches: arr)
+
+def getNumberReporters(branch):
+    return(self.Reporting[branch].numberReporters)
+
+def repIDToIndex(branch, repID):
+    return(self.Reporting[branch].repIDtoIndex[repID])
+
+def hashReport(report: arr, salt):
+        hashInfo = array(len(report) + 2)
+        hashInfo[0] = tx.origin
+        hashInfo[1] = salt
+        i = 2
+        while i < (len(report) + 2):
+            hashInfo[i] = report[i-2]
+            i += 1
+        reportHash = sha256(hashInfo, chars=32*len(hashInfo))
+        return(reportHash)
+
+# check that msg.sender is one of our function contracts
+def setInitialReporters(parent, branchID, period):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    # first vote period won't be until after the current (in this case first) basket of things has expired
+        # if floor(blockNum / periodLength) is say 5 and eventsExpDates[5]
+        # the current vote period should be on things from eventsExpDates 4 (when making a new branch this vote period will just fail quorem, and current vote period will be incrememented)
+        # then once blockNum / periodLength is say 6 and eventsExpDates[6]
+        # votePeriod 4 should close and the currentVotePeriod should be from
+        # eventsExpDates 5 (anyone can call the consensus function for voteperiod 4 at this point)
+    # add branch as a "reporter"
+    self.Reporting[branchID].numberReporters = 1
+    self.Reporting[branchID].repIDtoIndex[branchID] = 0
+    self.Reporting[branchID].reputation[0].repValue = 0
+    self.Reporting[branchID].reputation[0].reporterID = branchID
+    return(1)
+
+#def claimInitialRep(parent, branchID):
+    # have 1 month to claim
+#    if(self.repIDToIndex(branchID, msg.sender)==0 && block.number < (self.getCreationDate(branchID) + 216000)):
+#        i = self.Reporting[branchID].numberReporters
+ #       rep = self.getBeforeRep(parent, self.getParentPeriod(branchID))
+  #      reporterID = msg.sender
+   #     self.Reporting[branchID].reputation[i].reporterID = reporterID
+    #    self.Reporting[branchID].reputation[i].repValue = rep
+     #   self.Reporting[branchID].repIDtoIndex[reporterID] = i
+      #  self.Reporting[branchID].dormantRep[i].reporterID = reporterID
+       # self.Reporting[branchID].dormantRep[i].repValue = self.getDormantRep(parent, self.getParentPeriod(branchID))
+        #self.Reporting[branchID].numberReporters += 1
+        #self.Reporting[branchID].totalRep += rep
+        #return(1)
+    #else:
+        # already claimed or too late
+     #   return(0)
+
+def addReporter(branch, sender):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    reporterIndex = self.Reporting[branch].numberReporters
+    self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
+    self.Reporting[branch].reputation[reporterIndex].repValue = 0
+    self.Reporting[branch].reputation[reporterIndex].reporterID = sender
+    self.Reporting[branch].dormantRep[reporterIndex].reporterID = sender
+    self.Reporting[branch].numberReporters += 1
+    return(1)
+
+def addRep(branch, index, value):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Reporting[branch].reputation[index].repValue += value
+    return(1)
+
+def subtractRep(branch, index, value):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Reporting[branch].reputation[index].repValue -= value
+    return(1)
+
+def setRep(branch, index, newRep):
+    #if !self.whitelist.check(msg.sender):
+    #    return(-1)
+    oldRep = self.Reporting[branch].reputation[index].repValue
+    self.Reporting[branch].reputation[index].repValue = newRep
+    self.Reporting[branch].totalRep += newRep - oldRep
+    return(1)
+
+def addDormantRep(branch, index, value):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Reporting[branch].dormantRep[index].repValue += value
+    return(1)
+
+def subtractDormantRep(branch, index, value):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Reporting[branch].dormantRep[index].repValue -= value
+    return(1)
+
+# check that msg.sender is one of our function contracts
+def setSaleDistribution(addresses: arr, balances: arr, branchID):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    i = 0
+    while i < len(addresses):
+        self.Reporting[branchID].reputation[self.Reporting[branchID].numberReporters].reporterID = addresses[i]
+        self.Reporting[branchID].reputation[self.Reporting[branchID].numberReporters].repValue = balances[i]
+        self.Reporting[branchID].dormantRep[self.Reporting[branchID].numberReporters].reporterID = addresses[i]
+        self.Reporting[branchID].repIDtoIndex[addresses[i]] = self.Reporting[branchID].numberReporters
+        self.Reporting[branchID].numberReporters += 1
+        i+=1
+    return(1)
 data cashcoinBalances[]
 
 data owners[]
+
 
 # @return: cash balance of address
 def balance(address):
@@ -1445,10 +1676,7 @@ macro lsLmsr($marketID):
                     $sumExp += self.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
                     $i += 1
                 $bq*cumScale($marketID)*self.fx_log($sumExp)/2**64
-
-def lsLmsr(marketID):
-    return(lsLmsr(marketID))
-
+                
 # Maximum value of array
 macro maximum($a):
     with $max = $a[0]:
@@ -1489,6 +1717,8 @@ macro particpant($marketID, $addr):
 macro Bq($marketID):
    alpha($marketID) * sumList(sharesPurchased($marketID), 1, numOutcomes($marketID)) / 2**64
 
+def lsLmsr(marketID):
+    return(lsLmsr(marketID))
 
 def price(market, outcome):
     a = lsLmsr(market)
@@ -1596,6 +1826,7 @@ def getPushedForward(market):
 def getBondsMan(market):
     return(self.Markets[market].bondsMan)
 data Info[](description[2048], descriptionLength, creator, creationFee)
+
 
 def getDescription(ID):
 	length=self.Info[ID].descriptionLength

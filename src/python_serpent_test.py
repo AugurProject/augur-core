@@ -563,7 +563,17 @@ def test_transfer_shares():
     assert(c.transferShares(1010101, bin_market, 1, 15*2**64, 444)==-2), "Check for not having shares fail"
     assert(c.transferShares(1010101, 222, 1, 15*2**64, 444)==-1), "Check for invalid market fail"
     print "Transfer shares OK"
-    
+
+def test_create_branch():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    gas_use(s)
+    c.initiateOwner(1010101)
+    print c.createSubbranch("new branch", 100, 1010101, 2**55, 0)
+
 def gas_use(s):
     global initial_gas
     print "Gas Used:"
@@ -587,10 +597,10 @@ if __name__ == '__main__':
     #test_create_event()
     #test_create_market()
     #test_buy_sell_shares()
-    test_transfer_shares()
+    #test_transfer_shares()
 
     #p2p_wager_tests()
-    #create_branch_tests()
+    test_create_branch()
     #send_rep_tests()
     #close_market_tests()
     #make_report_tests()
