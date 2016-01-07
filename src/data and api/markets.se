@@ -237,6 +237,7 @@ def getBranchID(market):
 # alpha is equal to v/(n*log(n)) where v is the max percent commission
 # && n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
+# todo: sum trick
 macro lsLmsr($marketID):
     with $bq = Bq($marketID):
         with $i = 1:
@@ -244,7 +245,7 @@ macro lsLmsr($marketID):
                 while $i <= numOutcomes($marketID):
                     $sumExp += FXP.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
                     $i += 1
-                $bq*FXP.fx_log($sumExp)/2**64
+                $bq*cumScale($marketID)*FXP.fx_log($sumExp)/2**64
 
 macro sumList($q, $a, $b):
     $i = $a + 1
@@ -273,7 +274,7 @@ macro particpant($marketID, $addr):
     market($marketID).participants[$addr]
 
 macro Bq($marketID):
-   alpha($marketID) * cumScale($marketID) * sumList(sharesPurchased($marketID), 1, numOutcomes($marketID)) / 2**64
+   alpha($marketID) * sumList(sharesPurchased($marketID), 1, numOutcomes($marketID)) / 2**64
 
 def lsLmsr(marketID):
     return(lsLmsr(marketID))
