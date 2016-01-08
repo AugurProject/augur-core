@@ -72,8 +72,8 @@ def getEvent(branch, expDateIndex, eventIndex):
 def getTotalRepReported(branch, expDateIndex):
 	return(self.EventsExpDates[branch][expDateIndex].totalRepReported)
 
-def getReportHash(branch, expDateIndex, reporter, index):
-	return(self.EventsExpDates[branch][expDateIndex].reportHash[reporter][index])
+def getReportHash(branch, expDateIndex, reporter, event):
+	return(self.EventsExpDates[branch][expDateIndex].reportHash[reporter][event])
 
 # check that msg.sender is one of our function contracts
 def addEvent(branch, futurePeriod, eventID):
@@ -97,10 +97,10 @@ def addPeriodVolume(branch, expIndex, volume):
 	self.EventsExpDates[branch][expIndex].periodVolume += volume
 	return(1)
 
-def setReportHash(branch, expDateIndex, reporter, reportHash, index):
+def setReportHash(branch, expDateIndex, reporter, reportHash, event):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
-	self.EventsExpDates[branch][expDateIndex].reportHash[reporter][index] = reportHash
+	self.EventsExpDates[branch][expDateIndex].reportHash[reporter][event] = reportHash
 	return(1)
 
 def moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod):

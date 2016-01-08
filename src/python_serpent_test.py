@@ -615,10 +615,13 @@ if __name__ == '__main__':
     #test_buy_sell_shares()
     #test_transfer_shares()
     #test_create_branch()
-    test_send_rep()
     
-    #p2p_wager_tests()
+    
+    #test_send_rep()
     #close_market_tests()
     #make_report_tests()
     #consensus_tests()
+
+
+    #p2p_wager_tests()
     print "DONE TESTING"

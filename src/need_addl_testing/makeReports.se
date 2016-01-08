@@ -29,7 +29,7 @@ import reporting as REPORTING
 import fxpFunctions as FXP
 
 # branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID
-data branches[](submittedHash[][], hasCommitted[][], commitIndex[][], numReportsHash[][], numReportsActual[][], numReportsEvent[][], numReportsExpectedEvent[][], hasReported[][](reported[]), repReported[], reportedPeriod[][], beforeRep[][], afterRep[][], report[][](event[]), dormantRep[][])
+data branches[](submittedHash[][], commitIndex[][], numReportsHash[][], numReportsActual[][], numReportsEvent[][], numReportsExpectedEvent[][], hasReported[][](reported[]), repReported[], reportedPeriod[][], beforeRep[][], afterRep[][], report[][](event[]), dormantRep[][])
 
 data reportable[][]
 
@@ -131,7 +131,7 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
     if(BRANCHES.getVotePeriod(branch)!=votePeriod):
         return(-1)
     # if updating commitment, use old commitment index
-    if(self.branches[branch].hasCommitted[msg.sender][eventID]):
+    if(EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, eventID)):
         reportIndex = self.branches[branch].commitIndex[msg.sender][eventID]
     # make sure the branch exists
     repIndex = REPORTING.repIDToIndex(branch, tx.origin)
@@ -173,11 +173,10 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
         # submit hash of (tx.origin, salt, Votes[])
         if(EXPEVENTS.setReportHash(branch, votePeriod, tx.origin, reportHash, reportIndex)):
             # if so, don't want to increment num reports expected or numreportshash per reporter for updated commitment, just the first time
-            if(self.branches[branch].hasCommitted[msg.sender][eventID]==0):
+            if(EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, eventID)==0):
                 self.branches[branch].numReportsHash[msg.sender][votePeriod] += 1
                 self.branches[branch].numReportsExpectedEvent[votePeriod][eventID] += 1
                 self.branches[branch].commitIndex[msg.sender][eventID] = reportIndex
-                self.branches[branch].hasCommitted[msg.sender][eventID] = 1
             return(1)
         else:
             return(0)
