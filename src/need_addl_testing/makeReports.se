@@ -29,7 +29,7 @@ import reporting as REPORTING
 import fxpFunctions as FXP
 
 # branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID
-data branches[](submittedHash[][], numReportsActual[][], hasReported[][](reported[]), reportedPeriod[][], beforeRep[][], afterRep[][], report[][](event[]), dormantRep[][], numReportsEvent[][], numReportsExpectedEvent[][])
+data branches[](submittedHash[][], numReportsActual[][], hasReported[][](reported[]), beforeRep[][], afterRep[][], report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], reportedPeriod[][])
 
 data reportable[][]
 
@@ -84,9 +84,6 @@ def setBeforeRep(branch, period, rep):
 def setAfterRep(branch, period, rep):
     self.branches[branch].afterRep[period][tx.origin] = rep
     return(rep)
-
-def getDormantRep(branch, period):
-    return(self.branches[branch].dormantRep[period][tx.origin])
 
 def getSubmittedHash(branch, period, reporter):
     return(self.branches[branch].submittedHash[period][reporter])
@@ -376,7 +373,6 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
                 #1. Record rep at start of report period
                 self.branches[branch].beforeRep[votePeriod][tx.origin] = balance
                 self.branches[branch].afterRep[votePeriod][tx.origin] = balance
-                self.branches[branch].dormantRep[votePeriod][tx.origin] = REPORTING.getDormantRepBalance(branch, tx.origin)
 
             # store report for each event
             return(1)
