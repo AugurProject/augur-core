@@ -29,7 +29,7 @@ import reporting as REPORTING
 import fxpFunctions as FXP
 
 # branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID
-data branches[](submittedHash[][], numReportsActual[][], numReportsEvent[][], numReportsExpectedEvent[][], hasReported[][](reported[]), repReported[], reportedPeriod[][], beforeRep[][], afterRep[][], report[][](event[]), dormantRep[][])
+data branches[](submittedHash[][], numReportsActual[][], hasReported[][](reported[]), reportedPeriod[][], beforeRep[][], afterRep[][], report[][](event[]), dormantRep[][], numReportsEvent[][], numReportsExpectedEvent[][])
 
 data reportable[][]
 
@@ -360,7 +360,6 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
             self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
             # record that reporter has reported for this event
             self.branches[branch].hasReported[eventID][tx.origin].reported[votePeriod] = 1
-            self.branches[branch].repReported[eventID] += REPORTING.getRepBalance(branch, tx.origin)
             # set report value for event
             self.branches[branch].report[period][tx.origin].event[event] = report
             # set ethics value for event TODO:
