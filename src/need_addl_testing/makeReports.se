@@ -29,7 +29,7 @@ import reporting as REPORTING
 import fxpFunctions as FXP
 
 # branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID
-data branches[](submittedHash[][], commitIndex[][], numReportsHash[][], numReportsActual[][], numReportsEvent[][], numReportsExpectedEvent[][], hasReported[][](reported[]), repReported[], reportedPeriod[][], beforeRep[][], afterRep[][], report[][](event[]), dormantRep[][])
+data branches[](submittedHash[][], numReportsHash[][], numReportsActual[][], numReportsEvent[][], numReportsExpectedEvent[][], hasReported[][](reported[]), repReported[], reportedPeriod[][], beforeRep[][], afterRep[][], report[][](event[]), dormantRep[][])
 
 data reportable[][]
 
@@ -130,9 +130,7 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
         return(-2)
     if(BRANCHES.getVotePeriod(branch)!=votePeriod):
         return(-1)
-    # if updating commitment, use old commitment index
-    if(EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, eventID)):
-        reportIndex = self.branches[branch].commitIndex[msg.sender][eventID]
+
     # make sure the branch exists
     repIndex = REPORTING.repIDToIndex(branch, tx.origin)
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -171,12 +169,11 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
     shaHash = sha3(x, items=1)
     if(residual < periodLength/2 && shaHash < (reportingThreshold || shaHash<EVENTS.getThreshold(eventID))):
         # submit hash of (tx.origin, salt, Votes[])
-        if(EXPEVENTS.setReportHash(branch, votePeriod, tx.origin, reportHash, reportIndex)):
+        if(EXPEVENTS.setReportHash(branch, votePeriod, tx.origin, reportHash, eventID)):
             # if so, don't want to increment num reports expected or numreportshash per reporter for updated commitment, just the first time
             if(EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, eventID)==0):
                 self.branches[branch].numReportsHash[msg.sender][votePeriod] += 1
                 self.branches[branch].numReportsExpectedEvent[votePeriod][eventID] += 1
-                self.branches[branch].commitIndex[msg.sender][eventID] = reportIndex
             return(1)
         else:
             return(0)
@@ -298,7 +295,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIn
         periodLength = BRANCHES.getPeriodLength(branch)
         residual = block.number % periodLength
         if(residual > periodLength/2):
-            realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, reportIndex)
+            realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, eventID)
             hashInfo = array(4)
             hashInfo[0] = tx.origin
             hashInfo[1] = salt
@@ -448,7 +445,7 @@ def checkReportValidity(branch, report:arr, votePeriod):
 
 # anti cheat provide ballot and randomNum mechanism steal deposit
 def slashRep(branch, votePeriod, salt, report, reporter, reportIndex, eventID):
-        realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, reportIndex)
+        realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, eventID)
         hashInfo = array(len(report) + 2)
         hashInfo[0] = reporter
         hashInfo[1] = salt
