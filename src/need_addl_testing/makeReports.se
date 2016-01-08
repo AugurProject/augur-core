@@ -107,7 +107,6 @@ def getSubmittedHash(branch, period, reporter):
     #    else:
     #        return hashed
 def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
-    reportIndex = self.branches[branch].numReportsHash[msg.sender][votePeriod]
     if(self.reportable[votePeriod][eventID]==-1):
         return(-5)
     # Whoever the first person to try to submit a report for period x on market y with events events checks if it needs to be reported on or not.
@@ -136,9 +135,7 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.number % periodLength
     currentExpPeriod = (block.number / periodLength)
-    # if first report commitment this period
-    if(self.branches[branch].submittedHash[period][msg.sender]==0):
-      self.branches[branch].submittedHash[period][msg.sender] = 1
+
     if(REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
         return(-1)
 
@@ -168,12 +165,16 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
     reportingThreshold = (40*(-(267*(volFraction**2)/(2*2**64) + (533*volFraction)/2 +1)*repConstant/2**64) * (2**192)
     shaHash = sha3(x, items=1)
     if(residual < periodLength/2 && shaHash < (reportingThreshold || shaHash<EVENTS.getThreshold(eventID))):
+        # if so, don't want to increment num reports expected or numreportshash per reporter for updated commitment, just the first time
+        if(EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, eventID)==0):
+            self.branches[branch].numReportsHash[msg.sender][votePeriod] += 1
+            self.branches[branch].numReportsExpectedEvent[votePeriod][eventID] += 1
+
         # submit hash of (tx.origin, salt, Votes[])
         if(EXPEVENTS.setReportHash(branch, votePeriod, tx.origin, reportHash, eventID)):
-            # if so, don't want to increment num reports expected or numreportshash per reporter for updated commitment, just the first time
-            if(EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, eventID)==0):
-                self.branches[branch].numReportsHash[msg.sender][votePeriod] += 1
-                self.branches[branch].numReportsExpectedEvent[votePeriod][eventID] += 1
+            # if first report commitment this period
+            if(self.branches[branch].submittedHash[period][msg.sender]==0):
+                self.branches[branch].submittedHash[period][msg.sender] = 1
             return(1)
         else:
             return(0)
@@ -236,7 +237,7 @@ def getNumEventsToReportOn(branch, votePeriod):
     # -8: invalid event
     # -9: already resolved
     # -10: <24 hr left in period, too late to report, able to put up readj. bonds though
-def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, reportIndex, ethics):
+def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
     if(EVENTS.getOutcome(eventID)!=0):
         return(-9)
     if(REPORTING.getRepBalance(branch, tx.origin)<10*2**64):
@@ -444,7 +445,7 @@ def checkReportValidity(branch, report:arr, votePeriod):
             return(1)
 
 # anti cheat provide ballot and randomNum mechanism steal deposit
-def slashRep(branch, votePeriod, salt, report, reporter, reportIndex, eventID):
+def slashRep(branch, votePeriod, salt, report, reporter, eventID):
         realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, eventID)
         hashInfo = array(len(report) + 2)
         hashInfo[0] = reporter
