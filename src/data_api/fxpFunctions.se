@@ -104,3 +104,11 @@ def fx_exp(x):
 
 def fx_log(x):
 	return(fx_log(x))
+
+def sqrt(n):
+    val = n
+    i = 0
+    while i < 11:
+        val = (val + n*2^64/val)/2
+        i += 1
+    return val

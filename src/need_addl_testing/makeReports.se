@@ -97,6 +97,7 @@ def makeHash(salt, report, eventID):
     reportHash = sha256(hashInfo, chars=32*len(hashInfo))
     return(reportHash)
 
+# Error 0: couldn't set report hash
 # Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't started yet
 # Error -2: not in hash submitting timeframe
 # Error -3: not a valid event expiring then
@@ -139,11 +140,10 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
     if(reportingThreshold==-6):
         return(-6)
     shaHash = sha3(x, items=1)
-    if(residual < periodLength/2 && shaHash < (reportingThreshold || shaHash<EVENTS.getThreshold(eventID))):
-        # if so, don't want to increment num reports expected or numreportshash per reporter for updated commitment, just the first time
+    if(residual < periodLength/2 && shaHash < reportingThreshold || shaHash<EVENTS.getThreshold(eventID)):
+        # don't increment num reports expected or numreportshash per reporter for updated commitment, just the first time
         if(EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, eventID)==0):
             self.branches[branch].numReportsExpectedEvent[votePeriod][eventID] += 1
-
         # submit hash of (tx.origin, salt, Votes[])
         if(EXPEVENTS.setReportHash(branch, votePeriod, tx.origin, reportHash, eventID)):
             # if first report commitment this period
@@ -385,16 +385,14 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
     else:
         return(-6)
 
-#So you could start off with 5000 rep, never report, and you’d “have” 5000 rep up until you tried to send it or get the balance, and all of a sudden, like Schrodinger’s cat, it’s gone (dead)!  People could ping the network to ding dead accounts (although they wouldn’t need to do so for any good reason).
 # Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account, and distributed like trading fees are except each person would make their own lazy claim on it.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
-# dormant/active rep
 def penalizeNotEnoughReports(branch, votePeriod):
     if(alreadyPenalized):
         return(-1)
     numEvents = self.getNumEventsToReportOn(branch, votePeriod)
     # min. of 30 events no matter how little rep you have
     # whats going on here
-    if(hasReported):
+    if(self.reportedPeriod[votePeriod][msg.sender]):
         # if has reported, don't count in rep reported for fee or rep redistrib. claims
         repReported = EXPEVENTS.getTotalRepReported(branch)
         repReported -= REPORTING.getRepBalance(branch, tx.origin)
@@ -413,15 +411,6 @@ def penalizeNotEnoughReports(branch, votePeriod):
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), originalRep - (oldRep+newRep))
     # todo: separate heavier penalty for not reporting on a round 2 / readjudicated event
     return(1)
-
-
-def sqrt(n):
-    val = n
-    i = 0
-    while i < 11:
-        val = (val + n*2^64/val)/2
-        i += 1
-    return val
 
 # for ui client side
 # @return 1 if success
