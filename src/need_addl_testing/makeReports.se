@@ -33,8 +33,8 @@ data branches[](submittedHash[][], numReportsActual[][], hasReported[][](reporte
 
 data reportable[][]
 
+# need to finish this req. events stuff
 data requiredEvents[]
-
 # branch, period as params
 data numReqEvents[][]
 
@@ -88,21 +88,20 @@ def setAfterRep(branch, period, rep):
 def getSubmittedHash(branch, period, reporter):
     return(self.branches[branch].submittedHash[period][reporter])
 
+def makeHash(salt, report, eventID):
+    hashInfo = array(4)
+    hashInfo[0] = tx.origin
+    hashInfo[1] = salt
+    hashInfo[2] = report
+    hashInfo[3] = eventID
+    reportHash = sha256(hashInfo, chars=32*len(hashInfo))
+    return(reportHash)
+
 # Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't started yet
 # Error -2: not in hash submitting timeframe
 # Error -3: not a valid event expiring then
 # Error -4: already resolved
 # Error -5: .99 market
-# Python code to get the hash:
-    #from bitcoin import encode
-    #from hashlib import sha256
-    #def sha256list(xs):
-    #    data = ''.join(encode(x, 256, 32) for x in xs)
-    #    hashed = int(sha256(data).hexdigest(), 16)
-    #    if hashed > 2**255:
-    #        return hashed - 2**256
-    #    else:
-    #        return hashed
 def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
     if(self.reportable[votePeriod][eventID]==-1):
         return(-5)
