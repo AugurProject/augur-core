@@ -84,6 +84,9 @@ def setBeforeRep(branch, period, rep):
 def setAfterRep(branch, period, rep):
     self.branches[branch].afterRep[period][tx.origin] = rep
     return(rep)
+    
+def getNumReportsActual(branch, votePeriod):
+    return(self.branches[branch].numReportsActual[msg.sender][votePeriod])
 
 def getSubmittedHash(branch, period, reporter):
     return(self.branches[branch].submittedHash[period][reporter])
@@ -412,26 +415,6 @@ def penalizeNotEnoughReports(branch, votePeriod):
     # todo: separate heavier penalty for not reporting on a round 2 / readjudicated event
     return(1)
 
-# for ui client side
-# @return 1 if success
-# Error messages otherwise
-    # -1: report isn't long enough
-    # -2: reporter (you) doesn't (don't) exist, or voting period over or hasn't started yet
-def checkReportValidity(branch, report:arr, votePeriod):
-       if(len(report)!=EXPEVENTS.getNumberEvents(branch, votePeriod)):
-        return(-1)
-
-        # if currentExpPeriod is more than 2 periods past the current vote period
-        # then there can be no more voting for that voting period
-        # (reasoning being: >=1 period past means all the events in that period have expired)
-        # (>=2 periods past mean the events have exp. & people have had 1 full period to vote)
-        # currently requires events to expire to vote
-        currentExpPeriod = (block.number / BRANCHES.getPeriodLength(branch))
-        if (REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
-            return(-2)
-        else:
-            return(1)
-
 # anti cheat provide ballot and randomNum mechanism steal deposit
 def slashRep(branch, votePeriod, salt, report, reporter, eventID):
         realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, eventID)
@@ -460,6 +443,3 @@ def slashRep(branch, votePeriod, salt, report, reporter, eventID):
             REPORTING.subtractRep(branch, reporterIndex, reporterBalance)
             REPORTING.addRep(branch, trutherIndex, reporterBalance*2^58 / 2^64)
         return(reporterBalance)
-
-def getNumReportsActual(branch, votePeriod):
-    return(self.branches[branch].numReportsActual[msg.sender][votePeriod])
