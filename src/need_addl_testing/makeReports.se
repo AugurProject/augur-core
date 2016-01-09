@@ -186,30 +186,30 @@ def calculateReportingThreshold(branch, eventID):
     return(reportingThreshold)
 
 def needsReportingOn(event):
-# This only works for categorical and binary markets, not scalar
-  if(eventIsScalar):
-    return(1)
-  # To determine whether a market needs to be resolved or not, the events can only have one market associated with them or all markets associated with the event fulfill the .99 qualification.
-  numMarkets = EVENTS.getNumMarkets(event)
-  markets = array(numMarkets)
-  markets = EVENTS.getMarkets(event, outitems=numMarkets)
-  if(numMarkets>100):
-    return(1)
-  i = 0
-  while i < numMarkets:
-    numOutcomes = MARKETS.getMarketNumOutcomes(markets[i])
-    n = 0
-    ninetynine = 0
-    while n < numOutcomes:
-      if(MARKETS.getSimulatedBuy(markets[i], n, 2**64) > 18262276632972456099):
-        ninetynine = 1
-        n = numOutcomes
-      n += 1
-    if(ninetynine == 0):
-      return(1)
-    i += 1
-  # doesn't need reporting on, meets the .99 qualification
-  return(-1)
+    # This only works for categorical and binary markets, not scalar
+    if(2^64*EVENTS.getMaxValue(events[n]) != 2*2**64 || 2^64*EVENTS.getMinValue(events[n]) != 2**64) and EVENTS.getNumOutcomes(events[n]) == 2):
+        return(1)
+    # To determine whether a market needs to be resolved or not, the events can only have one market associated with them or all markets associated with the event fulfill the .99 qualification.
+    numMarkets = EVENTS.getNumMarkets(event)
+    markets = array(numMarkets)
+    markets = EVENTS.getMarkets(event, outitems=numMarkets)
+    if(numMarkets>100):
+        return(1)
+    i = 0
+    while i < numMarkets:
+        numOutcomes = MARKETS.getMarketNumOutcomes(markets[i])
+        n = 0
+        ninetynine = 0
+        while n < numOutcomes:
+            if(MARKETS.getSimulatedBuy(markets[i], n, 2**64) > 18262276632972456099):
+                ninetynine = 1
+                n = numOutcomes
+            n += 1
+        if(ninetynine == 0):
+            return(1)
+        i += 1
+    # doesn't need reporting on, meets the .99 qualification
+    return(-1)
 
 
 #a^b=exp(b*ln(a))=e^(b*ln(a)).
@@ -248,14 +248,20 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
         return(-4)
     if(BRANCHES.getVotePeriod(branch)!=votePeriod):
         return(-2)
+    # if currentExpPeriod is more than 2 periods past the current vote period
+    # then there can be no more voting for that voting period
+    # (reasoning being: >=1 period past means all the events in that period have expired)
+    # (>=2 periods past mean the events have exp. & people have had 1 full period to vote)
+    # currently requires events to expire to vote
+    currentExpPeriod = (block.number / periodLength)
+    if (REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
+        return(-2)
     if(block.number/BRANCHES.getPeriodLength(branch)!=((block.number + 4800)/BRANCHES.getPeriodLength(branch))):
         return(-10)
     if(hasntDoneRRForLazyEventsAndWrongAnsForPastPeriods):
         doIt()
         self.RRDone = true
     numEvents = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
-    #if(event'sMarketOdds>=.99 && evenHasOnly1Market):
-        #don't report
     if(self.branches[branch].hasReported[eventID][tx.origin].reported[votePeriod]==1):
         return(-1)
     if(numEvents==0):
@@ -266,25 +272,9 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
     if(event==0 || eventID!=event):
         return(-8)
     x[0] = tx.origin + eventID
-    i = 0
-    numMarkets = EVENTS.getNumMarkets(eventID)
-    if(numMarkets==0):
+    reportingThreshold = self.calculateReportingThreshold(branch, eventID)
+    if(reportingThreshold==-6):
         return(-7)
-    if(numMarkets>100):
-        numMarkets = 100
-    markets = array(numMarkets)
-    markets = EVENTS.getMarkets(eventID, outitems=numMarkets)
-    volume = 0
-    while i < numMarkets:
-        volume += MARKETS.getVolume(markets[i])
-    totalVol = EXPEVENTS.getPeriodVolume(branch, votePeriod)
-    # if odds of reporting are >1, then 2**256 (we don't want to wrap around), so div by 2**64
-    log = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch))
-    repConstant = FXP.fx_exp(22136092888451461120*log/2**64)
-    repConstant += 18446744073709552
-    volFraction = volume*2**64/totalVol
-    if(self.getNumEventsToReportOn(branch, votePeriod) < 30*2**64):
-        repConstant = 30*2**64/numEvents
     # in fxp (2**192) == 2**256 / 2**64
     # TODO / need:
         # coefficient for reporting minimum based off of appeals
@@ -292,8 +282,6 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
         #This keeps the base reporter amount 3-10 until it starts getting over 1%, it makes 2% 67 and 3% 219
         #Calculated as opposed to a global variable that slowly changes over time that is.
         #I think perhaps the target number of reports per reporter could be something like   150+Base_Reporter_Amount
-    reportingThreshold = (40*(-(267*(volFraction**2)/(2*2**64) + (533*volFraction)/2 +1)*repConstant/2**64) * (2**192)
-    # need a precomputing fix add another item
     shaHash = sha3(x, items=1)
     if(shaHash < reportingThreshold || shaHash<EVENTS.getThreshold(eventID)):
         repIndex = REPORTING.repIDToIndex(branch, tx.origin)
@@ -301,22 +289,10 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
         residual = block.number % periodLength
         if(residual > periodLength/2):
             realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, eventID)
-            hashInfo = array(4)
-            hashInfo[0] = tx.origin
-            hashInfo[1] = salt
-            hashInfo[2] = report
-            hashInfo[3] = eventID
-            reportHash = sha256(hashInfo, chars=32*len(hashInfo))
+            reportHash = self.makeHash(salt, report, eventID)
+
             if(reportHash!=realHash):
                 (return(-3))
-            # if currentExpPeriod is more than 2 periods past the current vote period
-            # then there can be no more voting for that voting period
-            # (reasoning being: >=1 period past means all the events in that period have expired)
-            # (>=2 periods past mean the events have exp. & people have had 1 full period to vote)
-            # currently requires events to expire to vote
-            currentExpPeriod = (block.number / periodLength)
-            if (REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
-                return(-2)
 
             if(reportIsFirstReportInNetwork):
                 BRANCHES.setInitialBalance(branch, votePeriod, CASH.balance(branch))
