@@ -76,8 +76,8 @@ def getMaxValue(event):
 def getNumOutcomes(event):
 	return(self.Events[event].numOutcomes)
 
-def setUncaughtOutcome(event):
-	self.Events[event].uncaughtOutcome = event
+def setUncaughtOutcome(event, outcome):
+	self.Events[event].uncaughtOutcome = outcome
 	return(1)
 
 def getUncaughtOutcome(event):

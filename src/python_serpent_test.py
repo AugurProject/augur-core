@@ -589,6 +589,7 @@ def test_send_rep():
     c = s.abi_contract('functions/output.se')
     gas_use(s)
     c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
 
 def gas_use(s):
     global initial_gas
@@ -598,7 +599,7 @@ def gas_use(s):
 
 
 if __name__ == '__main__':
-    #os.system('python mk_test_file.py \'/home/ubuntu/workspace/src/functions\' \'/home/ubuntu/workspace/src/data_api\' \'/home/ubuntu/workspace/src/functions\'')
+    os.system('python mk_test_file.py \'/home/ubuntu/workspace/src/functions\' \'/home/ubuntu/workspace/src/data_api\' \'/home/ubuntu/workspace/src/functions\'')
     # data/api tests
     #test_cash()
     #test_ether()
@@ -615,13 +616,11 @@ if __name__ == '__main__':
     #test_buy_sell_shares()
     #test_transfer_shares()
     #test_create_branch()
-    
-    
     #test_send_rep()
+
     #close_market_tests()
     #make_report_tests()
     #consensus_tests()
-
 
     #p2p_wager_tests()
     print "DONE TESTING"

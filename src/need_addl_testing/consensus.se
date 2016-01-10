@@ -229,7 +229,7 @@ def collectRegularRep(branch, votePeriod):
 # person didn't report enough
 def collectPenaltyRep(branch, votePeriod):
 	# if reported not enough for this period, don't allow collection
-	numEvents = REPORTS.getNumEventsToReportOn(branch, votePeriod)
+	numEvents = REPORTS.getNumEventsToReport(branch, votePeriod)
 	if(numEvents < 30*2**64):
         numEvents = 30*2**64
     if(numEvents/(2*2**64) > REPORTS.getNumReportsActual(branch, votePeriod)):
@@ -256,7 +256,7 @@ def collectPenaltyRep(branch, votePeriod):
 # payout function (lazily evaluate it)
 def collectFees(branch):
 	# if reported not enough for this period, don't allow collection
-	numEvents = REPORTS.getNumEventsToReportOn(branch, votePeriod)
+	numEvents = REPORTS.getNumEventsToReport(branch, votePeriod)
 	if(numEvents < 30*2**64):
         numEvents = 30*2**64
     if(numEvents/(2*2**64) > REPORTS.getNumReportsActual(branch, votePeriod)):

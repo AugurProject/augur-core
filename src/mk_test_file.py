@@ -29,6 +29,8 @@ removeintro = 1
 #----------------------------------------------------------------	
 	
 maindataline = []
+initline = []
+initcount = 0
 index = 0
 while index < foldercount:												#loops all selected folders
     for filename in glob.glob(os.path.join(folderpath[index], '*.se')):		#loops all files in current folder
@@ -69,13 +71,30 @@ while index < foldercount:												#loops all selected folders
                     rawdataline[indexline] = rawdataline[indexline][:(indexchar)] + "self" + rawdataline[indexline][(indexchar):]
                 indexchar += 1
                 #end of character loop
+            initfound = 0
+            if rawdataline[indexline][:9] == "def init(":                   #removes def init lines
+                initfound = 1
+                rawdataline.pop(indexline)
+            while initfound:                                                #removes lines below def init lines and stores it in separate list
+                if rawdataline[indexline][0] == '	' or rawdataline[indexline][0] == ' ' or rawdataline[indexline][0] == '#':
+                    initline.append(rawdataline[indexline])
+                    initcount += 1
+                    rawdataline.pop(indexline)
+                else:
+                    initfound = 0
+            #end of line loop
             maindataline.append(rawdataline[indexline])                          #adds the modified line to the main data compilation
             indexline += 1
-            #end of line loop
         maindataline.append('\n')
         #end of file loop
     index += 1
     #end of folder loop
+maindataline.insert(0, '\n')
+indexinit = 0
+while indexinit < initcount:
+    maindataline.insert(0, str(initline[indexinit]))
+    indexinit += 1
+maindataline.insert(0, "def init():\n")
 savepath = folderpath[foldercount] + "/output.se"
 file = open(savepath, "w")
 file.seek(0, 2)
