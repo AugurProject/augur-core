@@ -590,6 +590,7 @@ def test_send_rep():
     gas_use(s)
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
+    print c.sendReputation(1010101, 111, 444)
 
 def gas_use(s):
     global initial_gas
@@ -599,7 +600,7 @@ def gas_use(s):
 
 
 if __name__ == '__main__':
-    os.system('python mk_test_file.py \'/home/ubuntu/workspace/src/functions\' \'/home/ubuntu/workspace/src/data_api\' \'/home/ubuntu/workspace/src/functions\'')
+    #os.system('python mk_test_file.py \'/home/ubuntu/workspace/src/functions\' \'/home/ubuntu/workspace/src/data_api\' \'/home/ubuntu/workspace/src/functions\'')
     # data/api tests
     #test_cash()
     #test_ether()
@@ -616,7 +617,7 @@ if __name__ == '__main__':
     #test_buy_sell_shares()
     #test_transfer_shares()
     #test_create_branch()
-    #test_send_rep()
+    test_send_rep()
 
     #close_market_tests()
     #make_report_tests()

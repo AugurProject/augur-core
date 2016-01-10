@@ -91,6 +91,7 @@ while index < foldercount:												#loops all selected folders
     #end of folder loop
 maindataline.insert(0, '\n')
 indexinit = 0
+initline.reverse()
 while indexinit < initcount:
     maindataline.insert(0, str(initline[indexinit]))
     indexinit += 1
