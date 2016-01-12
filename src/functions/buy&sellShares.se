@@ -30,8 +30,6 @@ import events as EVENTS
 
 event updatePrice(user:indexed, market:indexed, outcome:indexed, price, cost)
 
-# TODO: We need to implement the new market fee structure described by evand, making fees at the edges less insane.
-
 # market, reporter
 data trades[][](hash, block)
 
@@ -57,13 +55,8 @@ def makeMarketHash(market, outcome, amount, limit):
     # -3: not enough money / limit order too low
     # -5: bad commitment or no commitment
     # -6: oracle only branch, no trading
-#TODO:
-# calc loss based on both positions you own
-# i.e. worst case loss sequestering per market
-# limit order ls-lmsr
 def buyShares(branch, market, outcome, amount, limit):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
-    #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
 
     if(BRANCHES.getOracleOnly(branch)):
         return(-6)
@@ -93,7 +86,6 @@ def buyShares(branch, market, outcome, amount, limit):
             n = numEvents
         else:
           n += 1
-    # todo: check that the market actually has that outcome as a possible outcome
     if (outcome==0 || (BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market) && !pushedBack) || MARKETS.getBranchID(market) != branch):
         return(-1)
     # lmsr cost calcs

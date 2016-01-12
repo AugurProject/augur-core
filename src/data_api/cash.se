@@ -19,10 +19,6 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-
-# change everything involving cash to use generic subcurrencies that supports new API whenever it's finalized
-
-
 data cashcoinBalances[]
 
 data owners[]
@@ -45,8 +41,6 @@ def initiateOwner(account):
         return(0)
 
 # should send values as fixed point in UI (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
-# so cashcoin fees could just go to root branch, or we could not have fees besides
-# gas fee to do a send transaction
 # @return: value sent, 0 if fails
 # If you've never used cash in augur, to initiate your account call this with value as 0
 def send(recver, value):

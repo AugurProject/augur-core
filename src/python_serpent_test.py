@@ -590,7 +590,7 @@ def test_send_rep():
     gas_use(s)
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
-    print c.sendReputation(1010101, 111, 444)
+    print c.sendReputation(1010101, s.block.coinbase, 444)
 
 def gas_use(s):
     global initial_gas

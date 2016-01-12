@@ -31,7 +31,7 @@ import expiringEvents as EXPEVENTS
 
 event creationBlock(market:indexed)
 
-#Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
+
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
 # z = liquidity / (1+(alpha*n*ln(n)))
@@ -177,6 +177,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         return(-4)
 
 # todo: needs to comply w/ new trading fee rules
+# perhaps don't allow raising of trading fee
 def updateTradingFee(branch, market, tradingFee):
     if(tradingFee < BRANCHES.getMinTradingFee(branch)):
         return(-1)

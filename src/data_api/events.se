@@ -27,7 +27,6 @@ import branches as BRANCHES
 # S&P 500 scalar would be say 0 && 4700, respectively
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
-# need outcomes returned as 1*2^64, 2*2^64, etc... indeterminate as 3*2^63
 data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, median, uncaughtOutcome, final, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught)
 
 def getEventInfo(event):

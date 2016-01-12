@@ -2,14 +2,16 @@ data cashcoinBalances[]
 
 data owners[]
 
+# deposit in wei, when goes to cash, converted to fixed point
 def depositEther():
-	self.cashcoinBalances[msg.sender] += msg.value
-	return(msg.value)
+	self.cashcoinBalances[msg.sender] += msg.value * 2^64 / 10^18
+	return(msg.value * 2^64 / 10^18)
 
+# value is in wei
 def withdrawEther(to, value):
-	if(self.cashcoinBalances[msg.sender]>=value):
+	if(self.cashcoinBalances[msg.sender]>=value * 2^64 / 10^18):
 		send(to, value)
-		self.cashcoinBalances[msg.sender] -= value
+		self.cashcoinBalances[msg.sender] -= value * 2^64 / 10^18
 		return(1)
 	else:
 		return(0)
