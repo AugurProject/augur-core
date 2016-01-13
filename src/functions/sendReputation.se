@@ -83,7 +83,7 @@ def sendDormantRep(branch, recver, value):
     if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
         return(-2)
 
-    senderBalance = REPORTING.getRepBalance(branch, sender)
+    senderBalance = REPORTING.getDormantRepBalance(branch, sender)
     if(senderBalance >= value):
         if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, receiverIndex, value)):
             return(value)
@@ -156,7 +156,7 @@ def convertToActiveRep(branch, value):
         REPORTING.addReporter(branch, sender)
         return(-1)
 
-    senderBalance = REPORTING.getRepBalance(branch, sender)
+    senderBalance = REPORTING.getDormantRepBalance(branch, sender)
     if(senderBalance >= value):
         if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addRep(branch, senderIndex, value)):
             return(value)

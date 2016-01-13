@@ -590,7 +590,12 @@ def test_send_rep():
     gas_use(s)
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
-    print c.sendReputation(1010101, s.block.coinbase, 444)
+    assert(c.sendReputation(1010101, s.block.coinbase, 444)==444), "Send rep failure"
+    assert(c.convertToDormantRep(1010101, 500*2**64)==0), "Allowed converting a bunch of rep to dormant that user didn't have"
+    assert(c.convertToDormantRep(1010101, 444)==444), "Dormant rep conversion unsuccessful"
+    assert(c.convertToActiveRep(1010101, 500*2**64)==0), "Allowed converting a bunch of rep to active that user didn't have"
+    assert(c.convertToActiveRep(1010101, 444)==444), "Active rep conversion unsuccessful"
+    print "Test send rep OK"
 
 def gas_use(s):
     global initial_gas
