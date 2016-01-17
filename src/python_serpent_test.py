@@ -617,9 +617,11 @@ def test_make_reports():
     assert(c.submitReportHash(1010101, 3232, -1, 222, 0)==-2), "Nonexistant event check broken"
     event1 = c.createEvent(1010101, "new event", 555, 1, 2, 2, 0)
     bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 0, 1)
+    print bin_market
     s.mine(1805)
     c.incrementPeriod(1010101)
-
+    print c.calculateReportingThreshold(1010101, event1)
+    print submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex)
     
     print "Test make reports OK"
 

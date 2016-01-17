@@ -26,6 +26,8 @@ import events as EVENTS
 # reporthash is [reporterID] = hash
 data EventsExpDates[][](numberEvents, numberRemoved, events[], totalRepReported, numEventsToReportOn, reportHash[][], periodVolume)
 
+data EventIDToIndex[][]
+
 # With this function you can get the eventIDs and report on outcomes
 # @return all events in a branch and expiration period
 def getEvents(branch, expDateIndex):
@@ -36,6 +38,9 @@ def getEvents(branch, expDateIndex):
         events[i] = self.EventsExpDates[branch][expDateIndex].events[i]
         i += 1
     return(events: arr)
+    
+def getEventIndex(period, eventID):
+	return(self.EventIDToIndex[period][eventID])
 
 # we should probably make this bonded too
 # -1: voting not started
@@ -73,6 +78,7 @@ def addEvent(branch, futurePeriod, eventID):
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
 	self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
+	self.EventIDToIndex[futurePeriod][eventID] = self.EventsExpDates[branch][futurePeriod].numberEvents
 	self.EventsExpDates[branch][futurePeriod].numberEvents += 1
 	return(1)
 
@@ -102,6 +108,7 @@ def moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod):
     x = 0
     while(x < self.EventsExpDates[branch][currentVotePeriod-1].numberEvents):
         self.EventsExpDates[branch][currentPeriod].events[self.EventsExpDates[branch][currentPeriod].numberEvents] = self.EventsExpDates[branch][currentVotePeriod-1].events[x]
+        self.eventIDToIndex[currentPeriod][self.EventsExpDates[branch][currentVotePeriod-1].events[x]] = self.EventsExpDates[branch][futurePeriod].numberEvents
         self.EventsExpDates[branch][currentPeriod].numberEvents += 1
         # sub and set old period event to 0 poss.?
         x += 1
