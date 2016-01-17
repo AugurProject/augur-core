@@ -551,3 +551,5 @@ def resolve(branch, event):
         CASH.subtractCash(event, 42*2**64)
         CASH.addCash(INFO.getCreator(event), 42*2**64)
     return(1)
+
+# test penalize not enough reports and slash rep

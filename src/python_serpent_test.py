@@ -605,6 +605,25 @@ def test_send_rep():
     assert(c.getRepBalance(1010101, s.block.coinbase)==866996971464348925464), "Rep balance off"
     print "Test send rep OK"
 
+def test_make_reports():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    gas_use(s)
+    c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
+    assert(c.submitReportHash(1010101, 3232, -1, 222, 0)==-2), "Nonexistant event check broken"
+    event1 = c.createEvent(1010101, "new event", 555, 1, 2, 2, 0)
+    bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 0, 1)
+    s.mine(1805)
+    c.incrementPeriod(1010101)
+
+    
+    print "Test make reports OK"
+
+
 def gas_use(s):
     global initial_gas
     print "Gas Used:"
@@ -630,10 +649,10 @@ if __name__ == '__main__':
     #test_buy_sell_shares()
     #test_transfer_shares()
     #test_create_branch()
-    test_send_rep()
+    #test_send_rep()
+    test_make_reports()
 
     #close_market_tests()
-    #make_report_tests()
     #consensus_tests()
 
     #p2p_wager_tests()

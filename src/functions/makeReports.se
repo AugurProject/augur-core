@@ -111,7 +111,7 @@ def makeHash(salt, report, eventID):
 
 # Error 0: couldn't set report hash
 # Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't started yet
-# Error -2: not in hash submitting timeframe
+# Error -2: not in hash submitting timeframe or event doesn't exist
 # Error -3: not a valid event expiring then
 # Error -4: already resolved
 # Error -5: .99 market
@@ -151,6 +151,8 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
     reportingThreshold = self.calculateReportingThreshold(branch, eventID)
     if(reportingThreshold==-6):
         return(-6)
+    x = array(1)
+    x[0] = tx.origin + eventID
     shaHash = sha3(x, items=1)
     if(residual < periodLength/2 && shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(eventID)):
         # don't increment num reports expected or numreportshash per reporter for updated commitment, just the first time
@@ -173,8 +175,6 @@ def calculateReportingThreshold(branch, eventID):
         return(-6)
     if(numMarkets>100):
         numMarkets = 100
-    x = array(1)
-    x[0] = tx.origin + eventID
     markets = array(numMarkets)
     markets = EVENTS.getMarkets(eventID, outitems=numMarkets)
     volume = 0
@@ -308,42 +308,9 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
                 BRANCHES.setInitialBalance(branch, votePeriod, CASH.balance(branch))
                 REPORTING.setInitialRep(branch, votePeriod, REPORTING.getRepBalance(branch, branch))
 
-            # check report validity
-            numOutcomes = EVENTS.getNumOutcomes(eventID)
-            maxValue = EVENTS.getMaxValue(eventID)
-            # binary
-            if(numOutcomes==2 and maxValue==2 && minValue==1):
-                if(report>2*2^64 or report<2^64 or report==0):
-                    return(-5)
-                # submit report
-                # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-                outcome = (EVENTS.getOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
-                EVENTS.setUncaughtOutcome(eventID, outcome)
-            # categorical
-            elif(numOutcomes>2):
-                minValue = 2^64
-                range = numOutcomes*2^64 - minValue
-                if(report<=0):
-                    return(-5)
-                if((report*range/2^64 + minValue)>numOutcomes*2^64):
-                    report = 2^64
-                # submit report
-                # outcome (uncaught and median) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-                # for scalars and categoricals... if < 200 reports est. for an event use quicksort at the end, if more use order statistic tree contract way
-            # scalar
-            else:
-                if(report==0):
-                    return(-5)
-                minValue = EVENTS.getMinValue(events[i])
-                range = maxValue*2^64 - minValue*2^64
-                if((report*range/2^64 + minValue*2^64) > maxValue*2^64):
-                    report = 2^64
-                if((report*range/2^64 + minValue*2^64) < minValue*2^64):
-                    # 1 == really close to 0, but not a "no report"
-                    report = 1
-                # submit report
-                # outcome should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-                # for scalars and categoricals... if < 200 reports est. for an event use quicksort at the end, if more use order statistic tree contract way
+            report = self.validateReport(eventID, branch, votePeriod, report)
+            if(report == -5):
+                return(-5)
             # reporter has reported for 1 more event
             self.branches[branch].numReportsActual[tx.origin][votePeriod] += 1
             # add 1 report to the event
@@ -351,7 +318,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
             # record that reporter has reported for this event
             self.branches[branch].hasReported[eventID][tx.origin].reported[votePeriod] = 1
             # set report value for event
-            self.branches[branch].report[period][tx.origin].event[event] = report
+            self.branches[branch].report[period][tx.origin].event[eventID] = report
             # set ethics value for event TODO:
             if(ethics!=2**64 || ethics!=0):
                 ethics = 2**64
@@ -363,15 +330,55 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
                 balance = REPORTING.getRepBalance(branch, tx.origin)
                 repReported += balance
                 EXPEVENTS.setTotalRepReported(branch, votePeriod, repReported)
-                #1. Record rep at start of report period
+                #Record rep at start of report period
                 self.branches[branch].beforeRep[votePeriod][tx.origin] = balance
                 self.branches[branch].afterRep[votePeriod][tx.origin] = balance
-
-            # store report for each event
             return(1)
         return(-2)
     else:
         return(-6)
+
+def validateReport(eventID, branch, votePeriod, report):
+    # check report validity
+    numOutcomes = EVENTS.getNumOutcomes(eventID)
+    maxValue = EVENTS.getMaxValue(eventID)
+    minValue = EVENTS.getMinValue(eventID)
+    # binary
+    if(numOutcomes==2 and maxValue==2 && minValue==1):
+        if(report>2*2^64 or report<2^64 or report==0):
+            return(-5)
+        # submit report
+        # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
+        outcome = (EVENTS.getOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
+        EVENTS.setUncaughtOutcome(eventID, outcome)
+    # categorical
+    elif(numOutcomes>2):
+        minValue = 2^64
+        range = numOutcomes*2^64 - minValue
+        if(report<0):
+            return(-5)
+        if((report*range/2^64 + minValue)>numOutcomes*2^64):
+            report = 2^64
+        # submit report
+        # outcome (uncaught and median) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
+        # for scalars and categoricals... if < 200 reports est. for an event use quicksort at the end, if more use order statistic tree contract way
+        # returns -5 until we add support for median calcs
+        return(-5)
+    # scalar
+    else:
+        if(report<0):
+            return(-5)
+        range = maxValue*2^64 - minValue*2^64
+        if((report*range/2^64 + minValue*2^64) > maxValue*2^64):
+            report = 2^64
+        if((report*range/2^64 + minValue*2^64) < minValue*2^64):
+            report = 0
+        # submit report
+        # outcome should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
+        # for scalars and categoricals... if < 200 reports est. for an event use quicksort at the end, if more use order statistic tree contract way
+        # returns -5 until we add support for median calcs
+        return(-5)
+    return(report)
 
 # Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account, and distributed like trading fees are except each person would make their own lazy claim on it.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
 def penalizeNotEnoughReports(branch, votePeriod):
