@@ -268,7 +268,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
     if(block.number/BRANCHES.getPeriodLength(branch)!=((block.number + 4800)/BRANCHES.getPeriodLength(branch))):
         return(-10)
     if(!self.upToDateOnRR[msg.sender]):
-        # TODO: calls to consensus functions
+        # TODO: calls to consensus functions and in send rep
         #doIt()
         self.upToDateOnRR[msg.sender] = 1
     numEvents = EXPEVENTS.getNumEventsToReport(branch, votePeriod)

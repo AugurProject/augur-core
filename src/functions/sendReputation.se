@@ -40,6 +40,7 @@ def sendReputation(branch, recver, value):
     #    self.RRDone = true
     #if(hasReported(lastPeriod) && periodOver):
     #    CONSENSUS.collectFees(lastPeriod)
+    
 
     sender = tx.origin
     senderIndex = REPORTING.repIDToIndex(branch, sender)
