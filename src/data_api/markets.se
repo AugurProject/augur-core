@@ -162,6 +162,7 @@ def getBranchID(market):
 # alpha is equal to v/(n*log(n)) where v is the max percent commission
 # && n is the number of outcomes people can trade. Alpha is set when
 # a market is created.
+# todo: sum trick
 macro lsLmsr($marketID):
     with $bq = Bq($marketID):
         with $i = 1:
