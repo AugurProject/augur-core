@@ -605,7 +605,7 @@ def gas_use(s):
 
 
 if __name__ == '__main__':
-    #os.system('python mk_test_file.py \'/home/ubuntu/workspace/src/functions\' \'/home/ubuntu/workspace/src/data_api\' \'/home/ubuntu/workspace/src/functions\'')
+    os.system('python mk_test_file.py \'/home/ubuntu/workspace/src/functions\' \'/home/ubuntu/workspace/src/data_api\' \'/home/ubuntu/workspace/src/functions\'')
     # data/api tests
     #test_cash()
     #test_ether()

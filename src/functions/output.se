@@ -23,7 +23,7 @@ def init():
 
 event creationBlock(market:indexed)
 
-#Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
+
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
 # z = liquidity / (1+(alpha*n*ln(n)))
@@ -39,6 +39,7 @@ event creationBlock(market:indexed)
     # -4: not enough money or market already exists
     # -5: fee too low
     # -6: duplicate events
+    # -7: event already expired
 
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, blockNumber, forkSelection):
@@ -99,6 +100,8 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
                 return(-6)
         expirationDate = self.getExpiration(event)
         futurePeriod = expDate / periodLength
+        if(expirationDate < block.number):
+            return(-7)    
         self.addEvent(branch, futurePeriod, event)
         if(expirationDate > tradingPeriod):
             tradingPeriod = expirationDate
@@ -169,6 +172,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         return(-4)
 
 # todo: needs to comply w/ new trading fee rules
+# perhaps don't allow raising of trading fee
 def updateTradingFee(branch, market, tradingFee):
     if(tradingFee < self.getMinTradingFee(branch)):
         return(-1)
@@ -502,8 +506,6 @@ def fourOutcomes(market, winningOutcome: arr, events: arr):
 
 event updatePrice(user:indexed, market:indexed, outcome:indexed, price, cost)
 
-# TODO: We need to implement the new market fee structure described by evand, making fees at the edges less insane.
-
 # market, reporter
 data trades[][](hash, block)
 
@@ -527,15 +529,11 @@ def makeMarketHash(market, outcome, amount, limit):
     # -1: invalid outcome or trading closed
     # -2: entered a -amt of shares
     # -3: not enough money / limit order too low
+    # -4: invalid outcome
     # -5: bad commitment or no commitment
     # -6: oracle only branch, no trading
-#TODO:
-# calc loss based on both positions you own
-# i.e. worst case loss sequestering per market
-# limit order ls-lmsr
 def buyShares(branch, market, outcome, amount, limit):
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
-    #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
 
     if(self.getOracleOnly(branch)):
         return(-6)
@@ -552,6 +550,8 @@ def buyShares(branch, market, outcome, amount, limit):
     # make it so trader has locked in fee from buy, so if they sell and they bought when fee was low, they can sell with that low fee as opposed to a high one
     numEvents = self.getNumEvents(market)
     events = self.getMarketEvents(market, outitems=numEvents)
+    if(outcome > self.getMarketNumOutcomes(market) or outcome < 1):
+        return(-4)
     n = 0
     #if event gets pushed back people can still buy / sell
     pushedBack = 0
@@ -565,7 +565,6 @@ def buyShares(branch, market, outcome, amount, limit):
             n = numEvents
         else:
           n += 1
-    # todo: check that the market actually has that outcome as a possible outcome
     if (outcome==0 || (self.getVotePeriod(branch)>self.getTradingPeriod(market) && !pushedBack) || self.getBranchID(market) != branch):
         return(-1)
     # lmsr cost calcs
@@ -609,7 +608,7 @@ def buyShares(branch, market, outcome, amount, limit):
     # -1: invalid outcome, trading closed, or you haven't traded in this market
     # -2: entered a -amt of shares
     # -3: you own no shares / limit price too high
-    # -4: bad nonce/hash
+    # -4: invalid outcome
     # -5: bad commitment or no commitment
     # -6: oracle only branch, no trading
 def sellShares(branch, market, outcome, amount, limit):
@@ -630,6 +629,8 @@ def sellShares(branch, market, outcome, amount, limit):
     participantNumber = self.getParticipantNumber(market, tx.origin)
     numEvents = self.getNumEvents(market)
     events = self.getMarketEvents(market, outitems=numEvents)
+    if(outcome > self.getMarketNumOutcomes(market) or outcome < 1):
+        return(-4)
     n = 0
     #if event gets pushed back people can still buy / sell
     pushedBack = 0
@@ -1010,7 +1011,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
     if(block.number/self.getPeriodLength(branch)!=((block.number + 4800)/self.getPeriodLength(branch))):
         return(-10)
     if(!self.upToDateOnRR[msg.sender]):
-        # TODO: calls to consensus functions
+        # TODO: calls to consensus functions and in send rep
         #doIt()
         self.upToDateOnRR[msg.sender] = 1
     numEvents = self.getNumEventsToReport(branch, votePeriod)
@@ -1172,9 +1173,6 @@ def slashRep(branch, votePeriod, salt, report, reporter, eventID):
         return(reporterBalance)
 # numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0
 # to 11.0 would be 11 outcomes (if incremented by 0.1)
-#Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
-# need to make sure these values are ok
-# can we have a negative min? i think so
 # @return eventID if success
 # error messages otherwise
     # -1: we're either already past that date, branch doesn't exist, or description is bad
@@ -1246,6 +1244,7 @@ def sendReputation(branch, recver, value):
     #    self.RRDone = true
     #if(hasReported(lastPeriod) && periodOver):
     #    self.collectFees(lastPeriod)
+    #getRRUpToDate()
 
     sender = tx.origin
     senderIndex = self.repIDToIndex(branch, sender)
@@ -1289,7 +1288,7 @@ def sendDormantRep(branch, recver, value):
     if(self.getReporterID(branch, receiverIndex)!=recver):
         return(-2)
 
-    senderBalance = self.getRepBalance(branch, sender)
+    senderBalance = self.getDormantRepBalance(branch, sender)
     if(senderBalance >= value):
         if(self.subtractDormantRep(branch, senderIndex, value) && self.addDormantRep(branch, receiverIndex, value)):
             return(value)
@@ -1362,7 +1361,7 @@ def convertToActiveRep(branch, value):
         self.addReporter(branch, sender)
         return(-1)
 
-    senderBalance = self.getRepBalance(branch, sender)
+    senderBalance = self.getDormantRepBalance(branch, sender)
     if(senderBalance >= value):
         if(self.subtractDormantRep(branch, senderIndex, value) && self.addRep(branch, senderIndex, value)):
             return(value)
@@ -1679,7 +1678,6 @@ def sqrt(n):
 # S&P 500 scalar would be say 0 && 4700, respectively
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
-# need outcomes returned as 1*2^64, 2*2^64, etc... indeterminate as 3*2^63
 data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, median, uncaughtOutcome, final, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught)
 
 def getEventInfo(event):
@@ -1922,12 +1920,6 @@ def hashReport(report: arr, salt):
 def setInitialReporters(parent, branchID):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    # first vote period won't be until after the current (in this case first) basket of things has expired
-        # if floor(blockNum / periodLength) is say 5 and eventsExpDates[5]
-        # the current vote period should be on things from eventsExpDates 4 (when making a new branch this vote period will just fail quorem, and current vote period will be incrememented)
-        # then once blockNum / periodLength is say 6 and eventsExpDates[6]
-        # votePeriod 4 should close and the currentVotePeriod should be from
-        # eventsExpDates 5 (anyone can call the consensus function for voteperiod 4 at this point)
     # add branch as a "reporter"
     self.Reporting[branchID].numberReporters = 1
     self.Reporting[branchID].repIDtoIndex[branchID] = 0
@@ -2028,8 +2020,6 @@ def initiateOwner(account):
         return(0)
 
 # should send values as fixed point in UI (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
-# so cashcoin fees could just go to root branch, or we could not have fees besides
-# gas fee to do a send transaction
 # @return: value sent, 0 if fails
 # If you've never used cash in augur, to initiate your account call this with value as 0
 def send(recver, value):

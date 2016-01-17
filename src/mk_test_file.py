@@ -35,7 +35,6 @@ index = 0
 while index < foldercount:												#loops all selected folders
     for filename in glob.glob(os.path.join(folderpath[index], '*.se')):		#loops all files in current folder
         rawdata = ""    #clears rawdata string
-        print filename
         with open(filename,"r") as rawdata:
             rawdataline = []                                            #List of lines in source file
             for line in rawdata: 										#loops all lines in current file
@@ -56,7 +55,7 @@ while index < foldercount:												#loops all selected folders
         indexline = 0
         while indexline < len(rawdataline):                                      #loop every line in rawdataline
             indexchar = 0
-            while indexchar < len(rawdataline[indexline]):                       #loop every character in current line
+            while indexchar < len(rawdataline[indexline]) - initcount:                       #loop every character in current line
                 capsfound = 0
                 if rawdataline[indexline][indexchar] == ".":
                     indexcap = 0    #number of capital letters found so far
@@ -71,27 +70,42 @@ while index < foldercount:												#loops all selected folders
                     rawdataline[indexline] = rawdataline[indexline][:(indexchar)] + "self" + rawdataline[indexline][(indexchar):]
                 indexchar += 1
                 #end of character loop
-            initfound = 0
-            if rawdataline[indexline][:9] == "def init(":                   #removes def init lines
-                initfound = 1
-                rawdataline.pop(indexline)
-            while initfound:                                                #removes lines below def init lines and stores it in separate list
-                if rawdataline[indexline][0] == '	' or rawdataline[indexline][0] == ' ' or rawdataline[indexline][0] == '#':
-                    initline.append(rawdataline[indexline])
-                    initcount += 1
-                    rawdataline.pop(indexline)
-                else:
-                    initfound = 0
-            #end of line loop
-            maindataline.append(rawdataline[indexline])                          #adds the modified line to the main data compilation
+            if rawdataline != []:                         #fixes list index out of range error in rare case rawdataline becomes empty
+                maindataline.append(rawdataline[indexline])                          #adds the modified line to the main data compilation
+            if rawdataline == []:
+                break                         #fixes list index out of range error in rare case rawdataline becomes empty
             indexline += 1
-        maindataline.append('\n')
+            #end of line loop
         #end of file loop
+        maindataline.append('\n')                                           #adds carriage return to end of each file added
     index += 1
     #end of folder loop
+
+#----------------------------------------------------------------
+#Erase init lines and move them to the top of the data
+#----------------------------------------------------------------	
+
+initline = []
+indexline = 0
+while indexline < len(maindataline):
+    initfound = 0
+    if maindataline[indexline][:9] == "def init(":                   #removes def init lines
+        initfound = 1
+        maindataline.pop(indexline)
+        while initfound:                                                #removes lines below def init lines and stores it in separate list
+            if maindataline != []:                         #fixes list index out of range error in rare case rawdataline becomes empty
+                if maindataline[indexline][0] == '	' or maindataline[indexline][0] == ' ' or maindataline[indexline][0] == '#':
+                    initline.append(maindataline[indexline])
+                    initcount += 1
+                    maindataline.pop(indexline)
+                else:
+                    initfound = 0
+            else:
+                initfound = 0
+    indexline += 1
 maindataline.insert(0, '\n')
-indexinit = 0
 initline.reverse()
+indexinit = 0
 while indexinit < initcount:
     maindataline.insert(0, str(initline[indexinit]))
     indexinit += 1
