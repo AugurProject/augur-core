@@ -108,7 +108,7 @@ def moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod):
     x = 0
     while(x < self.EventsExpDates[branch][currentVotePeriod-1].numberEvents):
         self.EventsExpDates[branch][currentPeriod].events[self.EventsExpDates[branch][currentPeriod].numberEvents] = self.EventsExpDates[branch][currentVotePeriod-1].events[x]
-        self.eventIDToIndex[currentPeriod][self.EventsExpDates[branch][currentVotePeriod-1].events[x]] = self.EventsExpDates[branch][futurePeriod].numberEvents
+        self.EventIDToIndex[currentPeriod][self.EventsExpDates[branch][currentVotePeriod-1].events[x]] = self.EventsExpDates[branch][futurePeriod].numberEvents
         self.EventsExpDates[branch][currentPeriod].numberEvents += 1
         # sub and set old period event to 0 poss.?
         x += 1

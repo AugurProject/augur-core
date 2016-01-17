@@ -127,6 +127,8 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
         return(-4)
     if(self.reportable[votePeriod][eventID]==-1):
         return(-5)
+    
+    #todo: if period isn't incremented, do it
 
     repIndex = REPORTING.repIDToIndex(branch, tx.origin)
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -135,6 +137,9 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
 
     if(REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1)):
         return(-1)
+
+    if(EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)==0):
+        EXPEVENTS.setNumEventsToReportOn(branch, votePeriod)
 
     # Whoever the first person to try to submit a report for period x on market y with events events checks if it needs to be reported on or not.
     if(self.reportable[votePeriod][eventID]==0):
@@ -148,7 +153,7 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
             EXPEVENTS.removeEvent(branch, votePeriod)
             return(-5)
 
-    reportingThreshold = self.calculateReportingThreshold(branch, eventID)
+    reportingThreshold = self.calculateReportingThreshold(branch, eventID, votePeriod)
     if(reportingThreshold==-6):
         return(-6)
     x = array(1)
@@ -169,7 +174,7 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
     else:
         return(-2)
 
-def calculateReportingThreshold(branch, eventID):
+def calculateReportingThreshold(branch, eventID, votePeriod):
     numMarkets = EVENTS.getNumMarkets(eventID)
     if(numMarkets==0):
         return(-6)
@@ -184,14 +189,16 @@ def calculateReportingThreshold(branch, eventID):
         i += 1
     totalVol = EXPEVENTS.getPeriodVolume(branch, votePeriod)
     # if odds of reporting are >1, then 2**256 (we don't want to wrap around), so div by 2**64
-    logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch))
+    logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch)
     repConstant = FXP.fx_exp(22136092888451461120*logOutput/2**64)
     repConstant += 18446744073709552
-    volFraction = volume*2**64/totalVol
+    volFraction = 0
+    if(totalVol!=0):
+        volFraction = volume*2**64/totalVol
     if(self.getNumEventsToReport(branch, votePeriod) < 30*2**64):
         repConstant = 30*2**64/numEvents
     # in fxp (2**192) == 2**256 / 2**64
-    reportingThreshold = (40*(-(267*(volFraction**2)/(2*2**64) + (533*volFraction)/2 +1)*repConstant/2**64) * (2**192))
+    reportingThreshold = 40*((-(267*volFraction**2)/(2*2**64) + (533*volFraction)/2 + 1*2**64)*repConstant/2**64) * (2**192)
     return(reportingThreshold)
 
 def needsReportingOn(event):
@@ -225,7 +232,7 @@ def needsReportingOn(event):
 #eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
 # returns num events to report on in fxp
 def getNumEventsToReport(branch, votePeriod):
-    prelim = EXPEVENTS.getNumEventsToReport(branch, votePeriod)
+    prelim = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
     repConstant = REPORTING.getRepBalance(branch, msg.sender)*2**64/REPORTING.getTotalRep(branch)
     logOutput = FXP.fx_log(repConstant)
     exp = FXP.fx_exp(22136092888451461120*logOutput/2**64)
@@ -282,7 +289,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
     if(event==0 || eventID!=event):
         return(-8)
     x[0] = tx.origin + eventID
-    reportingThreshold = self.calculateReportingThreshold(branch, eventID)
+    reportingThreshold = self.calculateReportingThreshold(branch, eventID, votePeriod)
     if(reportingThreshold==-6):
         return(-7)
     # in fxp (2**192) == 2**256 / 2**64

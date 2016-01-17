@@ -620,9 +620,7 @@ def test_make_reports():
     print bin_market
     s.mine(1805)
     c.incrementPeriod(1010101)
-    print c.calculateReportingThreshold(1010101, event1)
-    print submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex)
-    
+    assert(c.submitReportHash(1010101, 555, 0, event1, 0)==1), "Report hash submission failed"
     print "Test make reports OK"
 
 
@@ -634,7 +632,7 @@ def gas_use(s):
 
 
 if __name__ == '__main__':
-    os.system('python mk_test_file.py \'/home/ubuntu/workspace/src/functions\' \'/home/ubuntu/workspace/src/data_api\' \'/home/ubuntu/workspace/src/functions\'')
+    #os.system('python mk_test_file.py \'/home/ubuntu/workspace/src/functions\' \'/home/ubuntu/workspace/src/data_api\' \'/home/ubuntu/workspace/src/functions\'')
     # data/api tests
     #test_cash()
     #test_ether()
