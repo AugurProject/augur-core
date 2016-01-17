@@ -31,16 +31,15 @@ import consensus as CONSENSUS
     # -1: "Your reputation account was just created, earn some rep. before you can send to others"
     # -2: "Receiving address doesn't exist"
 def sendReputation(branch, recver, value):
-    # VoteCoins cannot be simultaneously spent (transferred) and used to vote
+    # Rep cannot be simultaneously spent (transferred) and used to vote
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     #if(value<=0 || !CASH.send(branch, 5*2^64) || EXPEVENTS.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, recver, 0) != 0):
     #    return(0)
-    #if(hasntDoneRRForEventsAndWrongAnsAndReportedEnoughRRForAllPeriods):
+    #if(REPORTS.getRRUpToDate()!=1):
     #    doIt()
     #    self.RRDone = true
     #if(hasReported(lastPeriod) && periodOver):
     #    CONSENSUS.collectFees(lastPeriod)
-    #getRRUpToDate()
 
     sender = tx.origin
     senderIndex = REPORTING.repIDToIndex(branch, sender)
@@ -102,17 +101,16 @@ def convertToDormantRep(branch, value):
     if(residual > periodLength/2):
       return(-1)
 		# benny comment:
-      #```Maybe still have this sort-of variable "power" to it, but REP initially doesn't have "full-power", or REP that hasn't been used to report over the past week has now let it's "power-meter" drop to only 20% earning power (it's kind-of dormant), that then ramps back up to 100% power once it gets used a bit. Could there be an element of this type of time-decay programmed into the REP that's helps incentive? Something like this would make the system more automatic, rather than relying on the user to manually switch "on" or switch "off" the REP. If a user knows, "I better report this week or my REP's power meter goes down to 20% again, and it's gonna take extra effort to get it back to full-power", well that's pretty good incentive to keep the user active, without actually taking it from them.```
+            #```Maybe still have this sort-of variable "power" to it, but REP initially doesn't have "full-power", or REP that hasn't been used to report over the past week has now let it's "power-meter" drop to only 20% earning power (it's kind-of dormant), that then ramps back up to 100% power once it gets used a bit. Could there be an element of this type of time-decay programmed into the REP that's helps incentive? Something like this would make the system more automatic, rather than relying on the user to manually switch "on" or switch "off" the REP. If a user knows, "I better report this week or my REP's power meter goes down to 20% again, and it's gonna take extra effort to get it back to full-power", well that's pretty good incentive to keep the user active, without actually taking it from them.```
 
     if(value<=0 || !CASH.send(branch, 5*2^64) || REPORTS.getSubmittedHash(branch, period, msg.sender)):
         return(0)
 
-    #if(hasntDoneRRForEventsAndWrongAnsAndReportedEnoughRRForAllPeriods):
+    #if(REPORTS.getRRUpToDate()!=1):
     #    doIt()
-     #   self.RRDone = true
 
-#    if(hasReported(lastPeriod) && periodOver):
- #       CONSENSUS.collectFees(lastPeriod)
+    #if(hasReported(lastPeriod) && periodOver):
+        #CONSENSUS.collectFees(lastPeriod)
 
     sender = tx.origin
     senderIndex = REPORTING.repIDToIndex(branch, sender)
@@ -143,11 +141,10 @@ def convertToActiveRep(branch, value):
     if(value<=0 || !CASH.send(branch, 5*2^64) || REPORTS.getSubmittedHash(branch, period, msg.sender)):
         return(0)
 
-  #  if(hasntDoneRRForEventsAndWrongAnsAndReportedEnoughRRForAllPeriods):
-   #     doIt()
-    #    self.RRDone = true
-#    if(hasReported(lastPeriod) && periodOver):
- #       CONSENSUS.collectFees(lastPeriod)
+    #if(REPORTS.getRRUpToDate()):
+        #doIt()
+    #if(hasReported(lastPeriod) && periodOver):
+        #CONSENSUS.collectFees(lastPeriod)
 
     sender = tx.origin
     senderIndex = REPORTING.repIDToIndex(branch, sender)

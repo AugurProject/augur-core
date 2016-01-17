@@ -591,10 +591,18 @@ def test_send_rep():
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
     assert(c.sendReputation(1010101, s.block.coinbase, 444)==444), "Send rep failure"
+    assert(c.sendReputation(1010101, 1010101, 444)==444), "Send rep failure"
+    assert(c.sendReputation(1010101, 999, 444)==-2), "Send rep to nonexistant receiver check failure"
+    assert(c.sendReputation(1010101, s.block.coinbase, 1000000*2**64)==0), "Send rep user doesn't have check failure"
     assert(c.convertToDormantRep(1010101, 500*2**64)==0), "Allowed converting a bunch of rep to dormant that user didn't have"
     assert(c.convertToDormantRep(1010101, 444)==444), "Dormant rep conversion unsuccessful"
     assert(c.convertToActiveRep(1010101, 500*2**64)==0), "Allowed converting a bunch of rep to active that user didn't have"
-    assert(c.convertToActiveRep(1010101, 444)==444), "Active rep conversion unsuccessful"
+    assert(c.convertToActiveRep(1010101, 400)==400), "Active rep conversion unsuccessful"
+    assert(c.sendDormantRep(1010101, s.block.coinbase, 444)==0), "Send dormant rep user didn't have check failure"
+    assert(c.sendDormantRep(1010101, s.block.coinbase, 10)==10), "Send dormant rep user failure"
+    assert(c.sendDormantRep(1010101, 999, 10)==-2), "Send dormant rep to nonexistant receiver check failure"
+    assert(c.getDormantRepBalance(1010101, s.block.coinbase)==44), "Dormant rep balance off"
+    assert(c.getRepBalance(1010101, s.block.coinbase)==866996971464348925464), "Rep balance off"
     print "Test send rep OK"
 
 def gas_use(s):
