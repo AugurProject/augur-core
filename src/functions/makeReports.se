@@ -194,6 +194,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
     # (>=2 periods past mean the events have exp. & people have had 1 full period to vote)
     # currently requires events to expire to vote
     currentExpPeriod = (block.number / periodLength)
+    repIndex = REPORTING.repIDToIndex(branch, tx.origin)
     if (REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1) || BRANCHES.getVotePeriod(branch)!=votePeriod):
         return(-2)
     if(REPORTING.getRepBalance(branch, tx.origin)<10*2**64):
@@ -222,7 +223,6 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
         #I think perhaps the target number of reports per reporter could be something like   150+Base_Reporter_Amount
     shaHash = sha3(x, items=1)
     if(shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(eventID)):
-        repIndex = REPORTING.repIDToIndex(branch, tx.origin)
         periodLength = BRANCHES.getPeriodLength(branch)
         residual = block.number % periodLength
         if(residual > periodLength/2):
@@ -337,7 +337,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
         i += 1
     totalVol = EXPEVENTS.getPeriodVolume(branch, votePeriod)
     # if odds of reporting are >1, then 2**256 (we don't want to wrap around), so div by 2**64
-    logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch)
+    logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch))
     repConstant = FXP.fx_exp(22136092888451461120*logOutput/2**64)
     repConstant += 18446744073709552
     volFraction = 0

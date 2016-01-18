@@ -622,6 +622,7 @@ def test_make_reports():
     c.incrementPeriod(1010101)
     report_hash = c.makeHash(0, 2**64, event1)
     assert(c.submitReportHash(1010101, report_hash, 0, event1, 0)==1), "Report hash submission failed"
+    print c.submitReport(1010101, 0, 0, 0, 2**64, event1, 2**64)
     print "Test make reports OK"
 
 
@@ -633,7 +634,7 @@ def gas_use(s):
 
 
 if __name__ == '__main__':
-    #os.system('python mk_test_file.py \'/home/ubuntu/workspace/src/functions\' \'/home/ubuntu/workspace/src/data_api\' \'/home/ubuntu/workspace/src/functions\'')
+    os.system('python mk_test_file.py \'/home/ubuntu/workspace/src/functions\' \'/home/ubuntu/workspace/src/data_api\' \'/home/ubuntu/workspace/src/functions\'')
     # data/api tests
     #test_cash()
     #test_ether()
