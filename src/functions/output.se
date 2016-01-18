@@ -1,6 +1,6 @@
 def init():
     self.Branches[1010101].currentVotePeriod = (block.number / 1800) - 1
-    self.Branches[1010101].periodLength = 1800
+    self.Branches[1010101].periodLength = 100
     self.Branches[1010101].minTradingFee = 2^57
     self.branchListCount = 1
     self.branchList[0] = 1010101
@@ -936,7 +936,9 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
     # (reasoning being: >=1 period past means all the events in that period have expired)
     # (>=2 periods past mean the events have exp. & people have had 1 full period to vote)
     # currently requires events to expire to vote
+    periodLength = self.getPeriodLength(branch)
     currentExpPeriod = (block.number / periodLength)
+    repIndex = self.repIDToIndex(branch, tx.origin)
     if (self.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1) || self.getVotePeriod(branch)!=votePeriod):
         return(-2)
     if(self.getRepBalance(branch, tx.origin)<10*2**64):
@@ -947,8 +949,8 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
         return(-8)
     if(self.getOutcome(eventID)!=0):
         return(-9)
-    if(block.number/self.getPeriodLength(branch)!=((block.number + 4800)/self.getPeriodLength(branch))):
-        return(-10)
+    #if(block.number/self.getPeriodLength(branch)!=((block.number + 4800)/self.getPeriodLength(branch))):
+    #    return(-10)
     if(!self.upToDateOnRR[msg.sender]):
         # TODO: calls to consensus functions and in send rep
         #doIt()
@@ -965,8 +967,6 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
         #I think perhaps the target number of reports per reporter could be something like   150+Base_Reporter_Amount
     shaHash = sha3(x, items=1)
     if(shaHash < reportingThreshold || shaHash<self.getReportingThreshold(eventID)):
-        repIndex = self.repIDToIndex(branch, tx.origin)
-        periodLength = self.getPeriodLength(branch)
         residual = block.number % periodLength
         if(residual > periodLength/2):
             realHash = self.getReportHash(branch, votePeriod, msg.sender, eventID)
@@ -985,6 +985,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
             # add 1 report to the event
             self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
             # record that reporter has reported for this event
+            # todo make sure this syntax works
             self.branches[branch].hasReported[eventID][tx.origin].reported[votePeriod] = 1
             # set report value for event
             self.branches[branch].report[period][tx.origin].event[eventID] = report

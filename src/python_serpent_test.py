@@ -618,10 +618,11 @@ def test_make_reports():
     event1 = c.createEvent(1010101, "new event", 555, 1, 2, 2, 0)
     bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 0, 1)
     print bin_market
-    s.mine(1805)
+    s.mine(105)
     c.incrementPeriod(1010101)
     report_hash = c.makeHash(0, 2**64, event1)
     assert(c.submitReportHash(1010101, report_hash, 0, event1, 0)==1), "Report hash submission failed"
+    s.mine(55)
     print c.submitReport(1010101, 0, 0, 0, 2**64, event1, 2**64)
     print "Test make reports OK"
 
