@@ -1,5 +1,5 @@
 def init():
-    self.Branches[1010101].currentVotePeriod = (block.number / 1800) - 1
+    self.Branches[1010101].currentVotePeriod = (block.number / 100) - 1
     self.Branches[1010101].periodLength = 100
     self.Branches[1010101].minTradingFee = 2^57
     self.branchListCount = 1
@@ -99,7 +99,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
             if(event==events[i-1]):
                 return(-6)
         expirationDate = self.getExpiration(event)
-        futurePeriod = expDate / periodLength
+        futurePeriod = expirationDate / periodLength
         if(expirationDate < block.number):
             return(-7)    
         self.addEvent(branch, futurePeriod, event)
@@ -688,6 +688,416 @@ def oneOutcome(market, winningOutcome):
         i += 1
     return(1)
 
+# first param is the market, second param is the subcurrency contract
+data cash[][]
+
+macro YES: 2^65
+macro NO: 2^64
+macro BAD: 3 * 2^63
+
+macro CATCH_TOLERANCE: 2^64 / 10
+
+# Bins values to 1, 1.5, 2
+macro catch($x):
+    if($x < (BAD - CATCH_TOLERANCE), NO, if($x > BAD + CATCH_TOLERANCE, YES, BAD))
+
+# loop through events in the market, get their outcomes && use those to determine the winning events!
+# distribute coins among winning events
+# @return 0 if fail, if success 1
+# Error messages otherwise
+    # -1: Market has no cash anyway / already closed
+    # -2: 0 outcome
+    # -3: Outcome indeterminable
+    # -4: Outcome .5 once, pushback and retry
+        # if mult events call this fun again to make sure no more to push back
+    # -5: event not expired
+    # -6: bonded pushed forward market not ready to be resolved
+    # -7: event not reportable >.99
+#Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
+# call mult. times if a multidimensional market
+def closeMarket(branch, market):
+    if(self.balance(market)<=0):
+        return(-1)
+    numberEvents = self.getNumEvents(market)
+    tradingPeriod = self.getTradingPeriod(market)
+    events = array(3)
+    events = self.getMarketEvents(market, outitems=3)
+    i = 0
+    reportingDone = 1
+    # todo: fix this
+    while i < numberEvents:
+        if(self.getNumReportsEvent(branch, self.getExpiration(events[i])/self.getPeriodLength(branch), events[i]) != self.getNumReportsExpectedEvent(branch, self.getExpiration(events[i])/self.getPeriodLength(branch), events[i])):
+            reportingDone = 0
+        i += 1
+    # check if any events in the market were pushed back and that market has expired
+    # (as long as the latest expiring event wasn't pushed back, we know they all got reported on)
+    # if it *was* pushed back, we'll just get an outcome of 0, return 0 until the event is actually reported on, then we can resolve the market
+    if((self.getVotePeriod(branch) > tradingPeriod || reportingDone)):
+        # loop through events in the market, get their outcomes && use those to determine the winning events!
+        n = 0
+        # (max poss. winning outcomes is 8 outcomes total all scalar multidimensional)
+        winningOutcomes = array(8)
+
+        periodLength = self.getPeriodLength(branch)
+        residual = block.number % periodLength
+        period = self.getVotePeriod(branch)
+        while n < numberEvents:
+            votingPeriodEvent = self.getExpiration(events[n])/self.getPeriodLength(branch)
+            if(self.getReportable(votingPeriodEvent, events[n])==-1):
+                return(-7)
+            fxpOutcome = self.getOutcome(events[n])
+            pushedBack = self.getPushedBack(events[n])
+            ethical = catch(self.getEthical(events[n]))
+            # TODO: if round 2 event && notFinal return 0
+            # if binary, catch the outcome
+            if(self.getNumOutcomes(events[n])==2 and 2**64*self.getMaxValue(events[n])==2**65 and self.getMinValue(events[n])==1):
+                # if outcome not set
+                if(fxpOutcome==0 && period > votingPeriodEvent):
+                    fxpOutcome = catch(self.getUncaughtOutcome(events[n]))
+                    self.setOutcome(events[n], fxpOutcome)
+                    #•In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
+                    # and market remains with old expiration date
+                    if(fxpOutcome == 2**63 && self.getPushedForward(market)):
+                        #set event expiration to be the old date prior to this bond process
+                        self.setExpiration(events[n], self.getOriginalExpiration(events[n]))
+                        self.setTradingPeriod(market, self.getOriginalTradingPeriod(market))
+                        self.addCash(branch, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+                        self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+                        self.setPushedForward(market, 0)
+                        self.setNumReportsExpectedEvent(branch, votingPeriodEvent, events[n], 0)
+                        self.setNumReportsEvent(branch, votingPeriodEvent, events[n], 0)
+                        #set outcome to 0
+                        self.setOutcome(events[n], 0)
+                        self.setMedian(events[n], 0)
+                        self.setEthics(events[n], 0)
+                        #set uncaughtoutcome to 0
+                        self.setUncaughtOutcome(events[n], 0)
+                        # need to store uncaught outcome for rejectedperiod separately as well as which period it was "rejected" in
+                        self.setRejected(events[n], self.getExpiration(events[n])/periodLength, fxpOutcome)
+                        return(-6)
+                    # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
+                    if(fxpOutcome==2**63 && !pushedBack && residual < periodLength/2):
+                        #push back event
+                        self.setNumReportsExpectedEvent(branch, votingPeriodEvent, events[n], 0)
+                        self.setNumReportsEvent(branch, votingPeriodEvent, events[n], 0)
+                        self.setEthics(events[n], 0)
+                        self.addEvent(branch, period+1, events[n])
+                        #set outcome to 0
+                        self.setOutcome(events[n], 0)
+                        #set uncaughtoutcome to 0
+                        self.setUncaughtOutcome(events[n], 0)
+                        #set pushedback to true
+                        self.setPushedBack(events[n])
+                        #set event expiration date to be after the current reporting period ends
+                        self.setExpiration(events[n], block.number)
+                        self.setTradingPeriod(market, period+1)
+                        return(-4)
+                    if((fxpOutcome==2**63 && pushedBack) || !ethical):
+                        # give event bond money to reporters
+                        self.subtractCash(events[n], 42*2**64)
+                        self.addCash(branch, 42*2**64)
+                        # not ethical is same as .5 outcome
+                        fxpOutcome = 2**63
+                        self.setOutcome(events[n], fxpOutcome)
+                    else:
+                        # return bond
+                        self.subtractCash(events[n], 42*2**64)
+                        self.addCash(self.getCreator(events[n]), 42*2**64)
+                        if(self.getPushedForward(market)):
+                            self.addCash(self.getBondsMan(market), self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+                            self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+                            # delete old event from future events exp
+                            self.removeEvent(branch, self.getOriginalExpiration(events[n])/periodLength)
+                else:
+                    return(-5)
+
+            # scalar
+            elif((2^64*self.getMaxValue(events[n]) != YES || 2**64*self.getMinValue(events[n]) != NO) and self.getNumOutcomes(events[n]) == 2):
+                # if outcome/median aren't set
+                if(self.getMedian(events[n])==0 && period > votingPeriodEvent):
+                    #median = self.calculateMedian(events[n])
+                    self.setMedian(events[n], median)
+                    self.setOutcome(events[n], fxpOutcome)
+                    scaled_min = 2^64*self.getMinValue(events[n])
+                    scaled_max = 2^64*self.getMaxValue(events[n])
+                    fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
+                    self.setOutcome(events[n], fxpOutcome)
+                    #•In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
+                    # and market remains with old expiration date
+                    if(fxpOutcome == 2**63 && self.getPushedForward(market)):
+                        #set event expiration to be the old date prior to this bond process
+                        self.setExpiration(events[n], self.getOriginalExpiration(events[n]))
+                        self.setTradingPeriod(market, self.getOriginalTradingPeriod(market))
+                        self.addCash(branch, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+                        self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+                        self.setPushedForward(market, 0)
+                        self.setNumReportsExpectedEvent(branch, votingPeriodEvent, events[n], 0)
+                        self.setNumReportsEvent(branch, votingPeriodEvent, events[n], 0)
+                        # need to store uncaught outcome for rejectedperiod separately as well as which period it was "rejected" in
+                        self.setRejected(events[n], self.getExpiration(events[n])/periodLength, fxpOutcome)
+                        #set outcome to 0
+                        self.setOutcome(events[n], 0)
+                        self.setMedian(events[n], 0)
+                        self.setEthics(events[n], 0)
+                        #set uncaughtoutcome to 0
+                        self.setUncaughtOutcome(events[n], 0)
+
+                        return(-6)
+                    # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
+                    if(fxpOutcome==2**63 && !pushedBack && residual < periodLength/2):
+                        #push back event
+                        self.setNumReportsExpectedEvent(branch, votingPeriodEvent, events[n], 0)
+                        self.setNumReportsEvent(branch, votingPeriodEvent, events[n], 0)
+                        self.setEthics(events[n], 0)
+                        self.addEvent(branch, period+1, events[n])
+                        #set outcome to 0
+                        self.setOutcome(events[n], 0)
+                        #set pushedback to true
+                        self.setPushedBack(events[n])
+                        # set median to 0
+                        self.setMedian(events[n], 0)
+                        #set event expiration date to be after the current reporting period ends
+                        self.setExpiration(events[n], block.number)
+                        self.setTradingPeriod(market, period+1)
+                        return(-4)
+                    if((fxpOutcome==2**63 && pushedBack) || !ethical):
+                        # give event bond money to reporters
+                        self.subtractCash(events[n], 42*2**64)
+                        self.addCash(branch, 42*2**64)
+                        # not ethical is same as .5 outcome
+                        fxpOutcome = 2**63
+                        self.setOutcome(events[n], fxpOutcome)
+                        self.setMedian(events[n], fxpOutcome)
+                    else:
+                        # return bond
+                        self.subtractCash(events[n], 42*2**64)
+                        self.addCash(self.getCreator(events[n]), 42*2**64)
+                        if(self.getPushedForward(market)):
+                            self.addCash(self.getBondsMan(market), self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+                            self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+                            # delete old event from future events exp
+                            self.removeEvent(branch, self.getOriginalExpiration(events[n])/periodLength)
+                else:
+                    return(-5)
+
+            # categorical, but we can make it behave as a scalar for all intents and purposes here
+            elif(self.getNumOutcomes(events[n])>2):
+                # if outcome/median aren't set
+                if(self.getMedian(events[n])==0 && period > votingPeriodEvent):
+                    #median = self.calculateMedian(events[n])
+                    self.setMedian(events[n], median)
+                    scaled_min[j] = 2^64
+                    scaled_max[j] = 2^64*self.getNumOutcomes(event)
+                    fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
+                    self.setOutcome(events[n], fxpOutcome)
+                    #•In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
+                    # and market remains with old expiration date
+                    if(fxpOutcome == 2**63 && self.getPushedForward(market)):
+                        #set event expiration to be the old date prior to this bond process
+                        self.setExpiration(events[n], self.getOriginalExpiration(events[n]))
+                        self.setTradingPeriod(market, self.getOriginalTradingPeriod(market))
+                        self.addCash(branch, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+                        self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+                        self.setPushedForward(market, 0)
+                        self.setNumReportsExpectedEvent(branch, votingPeriodEvent, events[n], 0)
+                        self.setNumReportsEvent(branch, votingPeriodEvent, events[n], 0)
+                        #set outcome to 0
+                        self.setOutcome(events[n], 0)
+                        self.setMedian(events[n], 0)
+                        self.setEthics(events[n], 0)
+                        #set uncaughtoutcome to 0
+                        self.setUncaughtOutcome(events[n], 0)
+                        # need to store uncaught outcome for rejectedperiod separately as well as which period it was "rejected" in
+                        self.setRejected(events[n], self.getExpiration(events[n])/periodLength, fxpOutcome)
+                        return(-6)
+
+                    # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
+                    if(fxpOutcome==2**63 && !pushedBack && residual < periodLength/2):
+                        #push back event
+                        self.setNumReportsExpectedEvent(branch, votingPeriodEvent, events[n], 0)
+                        self.setNumReportsEvent(branch, votingPeriodEvent, events[n], 0)
+                        self.addEvent(branch, period+1, events[n])
+                        #set outcome to 0
+                        self.setOutcome(events[n], 0)
+                        #set pushedback to true
+                        self.setPushedBack(events[n])
+                        # set median to 0
+                        self.setMedian(events[n], 0)
+                        self.setEthics(events[n], 0)
+                        self.setExpiration(events[n], block.number)
+                        self.setTradingPeriod(market, period+1)
+                        return(-4)
+                    if((fxpOutcome==2**63 && pushedBack) || !ethical):
+                        # give event bond money to reporters
+                        self.subtractCash(events[n], 42*2**64)
+                        self.addCash(branch, 42*2**64)
+                        # not ethical is same as .5 outcome
+                        fxpOutcome = 2**63
+                        self.setOutcome(events[n], fxpOutcome)
+                        self.setMedian(events[n], fxpOutcome)
+                    else:
+                        # return bond
+                        self.subtractCash(events[n], 42*2**64)
+                        self.addCash(self.getCreator(events[n]), 42*2**64)
+                        if(self.getPushedForward(market)):
+                            self.addCash(self.getBondsMan(market), self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+                            self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+                            # delete old event from future events exp
+                            self.removeEvent(branch, self.getOriginalExpiration(events[n])/periodLength)
+                else:
+                    return(-5)
+            # events not expired yet
+            if(fxpOutcome==0):
+                return(-2)
+
+            outcome = fxpOutcome/2^64
+            # makes sure it's not a scalar
+            if(fxpOutcome==3*2^63 && numberEvents==1 && !((self.getMaxValue(events[n])!=2 || self.getMinValue(events[n])!=1) && self.getNumOutcomes(events[n])==2)):
+                # return all the $$$ - (@ 50 cents a share)
+                i = 0
+                currentParticipant = self.getCurrentParticipantNumber(market)
+                while i < currentParticipant:
+                    sharesOwnedOne = self.getParticipantSharesPurchased(market, i, 1)
+                    sharesOwnedTwo = self.getParticipantSharesPurchased(market, i, 2)
+                    participant = self.getParticipantID(market, i)
+                    self.subtractCash(market, sharesOwnedOne*2^63 / 2^64)
+                    self.addCash(participant, sharesOwnedOne*2^63 / 2^64)
+                    self.subtractCash(market, sharesOwnedTwo*2^63 / 2^64)
+                    self.addCash(participant, sharesOwnedTwo*2^63 / 2^64)
+                    i += 1
+
+                # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
+                # refund left over initial liquidity in market - half to market creator, other half to voters
+                # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
+                initialLiquidity = self.getCreationFee(market)
+                # split up excess profits & liquidity
+                marketCash = self.balance(market)
+                self.addCash(branch, marketCash/2)
+                self.addCash(self.getCreator(market), marketCash / 2)
+                self.subtractCash(market, marketCash)
+
+                winningOutcomes[0] = 1
+                winningOutcomes[1] = 2
+                self.setWinningOutcomes(market, winningOutcomes)
+                return(-3)
+            elif(fxpOutcome==0):
+                return(-2)
+            if(n==0):
+                #scalar or .5
+                if(((self.getMaxValue(events[n])!=2 || self.getMinValue(events[n])!=1) && self.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
+                    winningOutcomes[0] = 1
+                    winningOutcomes[1] = 2
+                # anything besides scalar or .5
+                else:
+                    winningOutcomes[0] += outcome
+            elif(n==1):
+                if(((self.getMaxValue(events[n])!=2 || self.getMinValue(events[n])!=1) && self.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
+                    # scalar, scalar
+                    if(winningOutcomes[1]):
+                        winningOutcomes[2] = 3
+                        winningOutcomes[3] = 4
+                    # nonscalar, scalar
+                    else:
+                      # winningOutcomes[0] = winningOutcomes[0]
+                        winningOutcomes[1] = winningOutcomes[0] + self.getNumOutcomes(events[n-1])
+                # scalar, nonscalar
+                elif(winningOutcomes[1]):
+                    winningOutcomes[0] += self.getNumOutcomes(events[n-1])*(outcome-1)
+                    winningOutcomes[1] += self.getNumOutcomes(events[n-1])*(outcome-1)
+                # nonscalar, nonscalar
+                else:
+                    winningOutcomes[0] += self.getNumOutcomes(events[n-1])*(outcome-1)
+            elif(n==2):
+                if(((self.getMaxValue(events[n])!=2 || self.getMinValue(events[n])!=1) && self.getNumOutcomes(events[n])==2) || fxpOutcome==3*2^63):
+                    #scalar, scalar, scalar
+                    if(winningOutcomes[3]):
+                        winningOutcomes[4] = 5
+                        winningOutcomes[5] = 6
+                        winningOutcomes[6] = 7
+                        winningOutcomes[7] = 8
+                    #scalar, nonscalar, scalar
+                    #nonscalar, scalar, scalar
+                    elif(winningOutcomes[1]):
+                      # winningOutcomes[0] = winningOutcomes[0]
+                      # winningOutcomes[1] = winningOutcomes[1]
+                        winningOutcomes[2] += winningOutcomes[0] + self.getNumOutcomes(events[n-2]) * self.getNumOutcomes(events[n-1])
+                        winningOutcomes[3] += winningOutcomes[1] + self.getNumOutcomes(events[n-2]) * self.getNumOutcomes(events[n-1])
+                    #nonscalar, nonscalar, scalar
+                    elif(winningOutcomes[1]==0):
+                      # winningOutcomes[0] = winningOutcomes[0]
+                        winningOutcomes[1] += winningOutcomes[0] + self.getNumOutcomes(events[n-2]) * self.getNumOutcomes(events[n-1])
+                else:
+                    #scalar, scalar, nonscalar
+                    if(winningOutcomes[3]):
+                        winningOutcomes[0] += self.getNumOutcomes(events[n-2]) * self.getNumOutcomes(events[n-1]) * (outcome-1)
+                        winningOutcomes[1] += self.getNumOutcomes(events[n-2]) * self.getNumOutcomes(events[n-1]) * (outcome-1)
+                        winningOutcomes[2] += self.getNumOutcomes(events[n-2]) * self.getNumOutcomes(events[n-1]) * (outcome-1)
+                        winningOutcomes[3] += self.getNumOutcomes(events[n-2]) * self.getNumOutcomes(events[n-1]) * (outcome-1)
+                    #scalar, nonscalar, nonscalar
+                    #nonscalar, scalar, nonscalar
+                    elif(winningOutcomes[1]):
+                        winningOutcomes[0] += self.getNumOutcomes(events[n-2]) * self.getNumOutcomes(events[n-1]) * (outcome-1)
+                        winningOutcomes[1] += self.getNumOutcomes(events[n-2]) * self.getNumOutcomes(events[n-1]) * (outcome-1)
+                    #nonscalar, nonscalar, nonscalar
+                    else:
+                        winningOutcomes[0] += self.getNumOutcomes(events[n-2]) * self.getNumOutcomes(events[n-1]) * (outcome-1)
+            n+=1
+
+        pricePerShare1 = 0
+        pricePerShare2 = 0
+        pricePerShare3 = 0
+        pricePerShare4 = 0
+        pricePerShare5 = 0
+        pricePerShare6 = 0
+        pricePerShare7 = 0
+        pricePerShare8 = 0
+
+        if(winningOutcomes[1]==0):
+            self.oneOutcome(market, winningOutcomes[0])
+
+        elif(winningOutcomes[7]):
+            self.eightOutcomes(market, winningOutcomes, events)
+
+        elif(winningOutcomes[3]):
+            self.fourOutcomes(market, winningOutcomes, events)
+
+        elif(winningOutcomes[1]):
+            self.twoOutcomes(market, winningOutcomes, events)
+
+        # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
+        # refund left over initial liquidity in market - half to market creator, other half to voters
+        # *unless* it's a scaled decision, refund all initial liquidity left over to market creator
+        # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
+        initialLiquidity = self.getCreationFee(market)
+        creator = self.getCreator(market)
+        marketCash = self.balance(market)
+        # some scalar involved
+        if(winningOutcomes[1]):
+            if(self.balance(market) > initialLiquidity):
+                # pay back liquidity, split up excess profits
+                self.addCash(creator, initialLiquidity)
+                self.subtractCash(market, initialLiquidity)
+                marketCash -= initialLiquidity
+                self.addCash(branch, marketCash/2)
+                self.addCash(creator, marketCash/2)
+                self.subtractCash(market, marketCash)
+            # send whatever's left of the initial liquidity to the creator
+            else:
+                self.addCash(creator, marketCash)
+                self.subtractCash(market, marketCash)
+
+        # no scalars
+        else:
+            # split up excess profits & liquidity
+            self.addCash(branch, marketCash/2)
+            self.addCash(creator, marketCash/2)
+            self.subtractCash(market, marketCash)
+
+        self.setWinningOutcomes(market, winningOutcomes)
+        return(1)
+    else:
+        return(0)
+
 # # of winningOutcomes is 2
 def twoOutcomes(market, winningOutcome: arr, events: arr):
     # look for the scalar
@@ -863,8 +1273,8 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
     if(self.getVotePeriod(branch)!=votePeriod):
         return(-1)
     # make sure event is in the given branch...
-    eventID = self.getEvent(branch, votePeriod, eventIndex)
-    if(eventID==0):
+    eventsID = self.getEvent(branch, votePeriod, eventIndex)
+    if(eventsID!=eventID || eventID == 0 || eventsID == 0):
         return(-2)
     if(self.getOutcome(eventID)!=0):
         return(-4)
@@ -901,8 +1311,8 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
         return(-6)
     x = array(1)
     x[0] = tx.origin + eventID
-    shaHash = sha3(x, items=1)
-    if(residual < periodLength/2 && shaHash < reportingThreshold || shaHash<self.getReportingThreshold(eventID)):
+    shaHash = sha3(x, items=1)/2**64
+    if(residual < periodLength/2 && (shaHash < reportingThreshold || shaHash<self.getReportingThreshold(eventID))):
         # don't increment num reports expected or numreportshash per reporter for updated commitment, just the first time
         if(self.getReportHash(branch, votePeriod, msg.sender, eventID)==0):
             self.branches[branch].numReportsExpectedEvent[votePeriod][eventID] += 1
@@ -965,7 +1375,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
         #This keeps the base reporter amount 3-10 until it starts getting over 1%, it makes 2% 67 and 3% 219
         #Calculated as opposed to a global variable that slowly changes over time that is.
         #I think perhaps the target number of reports per reporter could be something like   150+Base_Reporter_Amount
-    shaHash = sha3(x, items=1)
+    shaHash = sha3(x, items=1)/2**64
     if(shaHash < reportingThreshold || shaHash<self.getReportingThreshold(eventID)):
         residual = block.number % periodLength
         if(residual > periodLength/2):
@@ -1031,6 +1441,9 @@ def penalizeNotEnoughReports(branch, votePeriod):
         #newRep = .2*self.branches[branch].numReportsActual[msg.sender][votePeriod] / self.getNumEventsToReport(branch, votePeriod)/(2*2**64) * originalRep
         #oldRep = self.getRepBalance(branch, tx.origin)*.8
         self.setRep(branch, self.repIDToIndex(branch, tx.origin), oldRep+newRep)
+        # need to decide whether to allow claiming of fees and redistrib. at lower rate or not
+            #repReported = self.getTotalRepReported(branch)
+            #self.setTotalRepReported(branch, votePeriod, repReported+oldRep+newRep)
         # adds the rep to the branch's pool
         self.addRep(branch, self.repIDToIndex(branch, branch), originalRep - (oldRep+newRep))
     # todo: separate heavier penalty for not reporting on a round 2 / readjudicated event
@@ -1077,6 +1490,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
     volume = 0
     i = 0
     while i < numMarkets:
+        # may be best to store vol here
         volume += self.getVolume(markets[i])
         i += 1
     totalVol = self.getPeriodVolume(branch, votePeriod)
@@ -1087,11 +1501,24 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
     volFraction = 0
     if(totalVol!=0):
         volFraction = volume*2**64/totalVol
-    if(self.getNumEventsToReport(branch, votePeriod) < 30*2**64):
-        repConstant = 30*2**64/numEvents
-    # in fxp (2**192) == 2**256 / 2**64
-    reportingThreshold = 40*((-(267*volFraction**2)/(2*2**64) + (533*volFraction)/2 + 1*2**64)*repConstant/2**64) * (2**192)
+    numEvents = self.getNumEventsToReport(branch, votePeriod)
+    if(numEvents < 30*2**64):
+        repConstant = 30*2**128/numEvents
+    # in fxp (2**128) == 2**192 / 2**64
+    reportingThreshold = 40*((-(267*volFraction**2)/(2*2**64) + (533*volFraction)/2 + 1*2**64)*repConstant/2**64) * (2**128)
     return(reportingThreshold)
+
+#a^b=exp(b*ln(a))=e^(b*ln(a)).
+#eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
+# returns num events to report on in fxp
+def getNumEventsToReport(branch, votePeriod):
+    prelim = self.getNumEventsToReportOn(branch, votePeriod)
+    repConstant = self.getRepBalance(branch, tx.origin)*2**64/self.getTotalRep(branch)
+    logOutput = self.fx_log(repConstant)
+    exp = self.fx_exp(22136092888451461120*logOutput/2**64)
+    exp += 18446744073709552
+    total = exp*prelim + self.numReqEvents[branch][votePeriod]*2**64
+    return(total)
 
 def needsReportingOn(event):
     # This only works for categorical and binary markets, not scalar
@@ -1104,6 +1531,7 @@ def needsReportingOn(event):
     if(numMarkets>100):
         return(1)
     i = 0
+    # todo optimize perf. here
     while i < numMarkets:
         numOutcomes = self.getMarketNumOutcomes(markets[i])
         n = 0
@@ -1118,17 +1546,6 @@ def needsReportingOn(event):
         i += 1
     # doesn't need reporting on, meets the .99 qualification
     return(-1)
-
-#a^b=exp(b*ln(a))=e^(b*ln(a)).
-#eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
-# returns num events to report on in fxp
-def getNumEventsToReport(branch, votePeriod):
-    prelim = self.getNumEventsToReportOn(branch, votePeriod)
-    repConstant = self.getRepBalance(branch, msg.sender)*2**64/self.getTotalRep(branch)
-    logOutput = self.fx_log(repConstant)
-    exp = self.fx_exp(22136092888451461120*logOutput/2**64)
-    exp += 18446744073709552
-    return(exp*prelim + self.numReqEvents[branch][votePeriod]*2**64)
 
 def validateReport(eventID, branch, votePeriod, report):
     # check report validity
@@ -1682,7 +2099,7 @@ def sqrt(n):
 # S&P 500 scalar would be say 0 && 4700, respectively
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, median, uncaughtOutcome, final, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught)
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, median, uncaughtOutcome, final, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught, pushedBack)
 
 def getEventInfo(event):
     info = array(6)
@@ -1697,10 +2114,13 @@ def getEventInfo(event):
 def getEventBranch(event):
 	return(self.Events[event].branch)
 
+def getPushedBack(event):
+	return(self.Events[event].pushedBack)
+
 def getExpiration(event):
 	return(self.Events[event].expirationDate)
 
-def getOriginalExp(event):
+def getOriginalExpiration(event):
 	return(self.Events[event].originalExp)
 
 def setExpiration(event, date):
@@ -1717,6 +2137,9 @@ def getEthics(event):
 def setEthics(event, ethicality):
 	self.Events[event].ethical = ethicality
 	return(ethicality)
+
+def getEthical(event):
+	return(self.Events[event].ethical)
 
 def getFinal(event):
 	return(self.Events[event].final)
@@ -1786,7 +2209,7 @@ def setReportingThreshold(event):
 	# vote period + 1 is the next vote period
 	# so if in 24 hr we'd be in the next vote period, we're within 24 hr of the end of this one
 	if(self.getVotePeriod(self.Events[event].branch)==self.Events[event].expirationDate/self.getPeriodLength(self.Events[event].branch) and (((block.number+7200) / self.getPeriodLength(branch)) - 1)==(self.getVotePeriod(self.Events[event].branch)+1) and self.Events[event].numReports<25):
-		self.Events[event].threshold = 2**256
+		self.Events[event].threshold = 2**192
 		return(1)
 	else:
 		return(0)
@@ -1817,6 +2240,10 @@ def setRejected(event, period, uncaughtOutcome):
 	self.Events[event].rejected = 1
 	self.Events[event].rejectedPeriod = period
 	self.Events[event].rejectedUncaught = uncaughtOutcome
+	return(1)
+	
+def setPushedBack(event):
+	self.Events[event].pushedBack = 1
 	return(1)
 
 def getRejected(event):

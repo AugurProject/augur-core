@@ -67,6 +67,7 @@ def closeMarket(branch, market):
     events = MARKETS.getMarketEvents(market, outitems=3)
     i = 0
     reportingDone = 1
+    # todo: fix this
     while i < numberEvents:
         if(MAKEREPORTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i]) != MAKEREPORTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])):
             reportingDone = 0
@@ -157,7 +158,7 @@ def closeMarket(branch, market):
             elif((2^64*EVENTS.getMaxValue(events[n]) != YES || 2**64*EVENTS.getMinValue(events[n]) != NO) and EVENTS.getNumOutcomes(events[n]) == 2):
                 # if outcome/median aren't set
                 if(EVENTS.getMedian(events[n])==0 && period > votingPeriodEvent):
-                    median = MEDIAN.calculateMedian(events[n])
+                    #median = MEDIAN.calculateMedian(events[n])
                     EVENTS.setMedian(events[n], median)
                     EVENTS.setOutcome(events[n], fxpOutcome)
                     scaled_min = 2^64*EVENTS.getMinValue(events[n])
@@ -226,7 +227,7 @@ def closeMarket(branch, market):
             elif(EVENTS.getNumOutcomes(events[n])>2):
                 # if outcome/median aren't set
                 if(EVENTS.getMedian(events[n])==0 && period > votingPeriodEvent):
-                    median = MEDIAN.calculateMedian(events[n])
+                    #median = MEDIAN.calculateMedian(events[n])
                     EVENTS.setMedian(events[n], median)
                     scaled_min[j] = 2^64
                     scaled_max[j] = 2^64*EVENTS.getNumOutcomes(event)

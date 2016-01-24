@@ -614,17 +614,47 @@ def test_make_reports():
     gas_use(s)
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
-    assert(c.submitReportHash(1010101, 3232, -1, 222, 0)==-2), "Nonexistant event check broken"
-    event1 = c.createEvent(1010101, "new event", 555, 1, 2, 2, 0)
+   # assert(c.submitReportHash(1010101, 3232, -1, 222, 0)==-2), "Nonexistant event check broken"
+    event1 = c.createEvent(1010101, "new event", 5, 1, 2, 2, 0)
     bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 0, 1)
-    print bin_market
+    s.mine(105)
+    gas_use(s)
+    c.incrementPeriod(1010101)
+    report_hash = c.makeHash(0, 2**64, event1)
+    gas_use(s)
+    print c.submitReportHash(1010101, report_hash, 0, event1, 0)
+    assert(c.submitReportHash(1010101, report_hash, 0, event1, 0)==1), "Report hash submission failed"
+    gas_use(s)
+    s.mine(55)
+    gas_use(s)
+    print c.submitReport(1010101, 0, 0, 0, 2**64, event1, 2**64)
+    gas_use(s)
+    print c.getUncaughtOutcome(event1)
+    gas_use(s)
+    print "Test make reports OK"
+
+def test_close_market():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
+    event1 = c.createEvent(1010101, "new event", 5, 1, 2, 2, 0)
+    bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 0, 1)
     s.mine(105)
     c.incrementPeriod(1010101)
     report_hash = c.makeHash(0, 2**64, event1)
     assert(c.submitReportHash(1010101, report_hash, 0, event1, 0)==1), "Report hash submission failed"
     s.mine(55)
     print c.submitReport(1010101, 0, 0, 0, 2**64, event1, 2**64)
-    print "Test make reports OK"
+    print c.getUncaughtOutcome(event1)
+    #assert(c.closeMarket(1010101, bin_market)==-5), "Not expired check broken"
+    s.mine(60)
+    c.incrementPeriod(1010101)
+    print c.closeMarket(1010101, bin_market)
+    print "Test close market OK"
 
 
 def gas_use(s):
@@ -654,9 +684,7 @@ if __name__ == '__main__':
     #test_create_branch()
     #test_send_rep()
     test_make_reports()
+    #test_close_market()
 
-    #close_market_tests()
     #consensus_tests()
-
-    #p2p_wager_tests()
     print "DONE TESTING"
