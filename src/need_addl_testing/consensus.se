@@ -553,3 +553,4 @@ def resolve(branch, event):
     return(1)
 
 # test penalize not enough reports and slash rep
+# test bonded pushed forward event though not ready to be resolved

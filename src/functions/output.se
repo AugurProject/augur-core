@@ -267,7 +267,7 @@ def pushMarketForward(branch, market):
 #    n = 0
 #    ninetynine = 0
 #    while n < numOutcomes:
-#      if(self.getSimulatedBuy(markets, n, 2**64) > 18262276632972456099):
+#      if(self.price(markets, n) > 18262276632972456099):
 #        ninetynine = 1
 #        n = numOutcomes
 #        n += 1
@@ -1563,10 +1563,9 @@ def needsReportingOn(event):
         n = 1
         ninetynine = 0
         while n <= numOutcomes:
-            if(self.getSimulatedBuy(markets[i], n, 2**64) > 18262276632972456099):
+            if(self.price(markets[i], n) > 18262276632972456099):
                 ninetynine = 1
                 n = numOutcomes+1
-            return([self.getSimulatedBuy(markets[i], 2, 2**64), self.getSimulatedBuy(markets[i], 1, 2**64)]: arr)
             n += 1
         if(ninetynine == 0):
             return(1)
