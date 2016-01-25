@@ -238,8 +238,6 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
                 return(-5)
             # reporter has reported for 1 more event
             self.branches[branch].numReportsActual[tx.origin][votePeriod] += 1
-            # add 1 report to the event
-            self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
             # record that reporter has reported for this event
             # todo make sure this syntax works
             self.branches[branch].hasReported[eventID][tx.origin].reported[votePeriod] = 1
@@ -250,6 +248,8 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
                 ethics = 2**64
             ethics = (EVENTS.getEthics(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
             EVENTS.setEthics(eventID, ethics)
+            # add 1 report to the event
+            self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
             # if 1st report of the period for a reporter
             if(!self.branches[branch].reportedPeriod[votePeriod][tx.origin]):
                 repReported = EXPEVENTS.getTotalRepReported(branch)
@@ -414,7 +414,7 @@ def validateReport(eventID, branch, votePeriod, report):
             return(-5)
         # submit report
         # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-        outcome = (EVENTS.getOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
+        outcome = (EVENTS.getUncaughtOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
         EVENTS.setUncaughtOutcome(eventID, outcome)
     # categorical
     elif(numOutcomes>2):

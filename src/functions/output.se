@@ -817,7 +817,7 @@ def closeMarket(branch, market):
                         self.addCash(branch, 42*2**64)
                         # not ethical is same as .5 outcome
                         fxpOutcome = 3*2**63
-                        return(555)
+                        return([ethical, self.getEthics(events[n])]: arr)
                         self.setOutcome(events[n], fxpOutcome)
                     else:
                         # return bond
@@ -1419,6 +1419,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
             if(ethics!=2**64 || ethics!=0):
                 ethics = 2**64
             ethics = (self.getEthics(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
+            
             self.setEthics(eventID, ethics)
             # if 1st report of the period for a reporter
             if(!self.branches[branch].reportedPeriod[votePeriod][tx.origin]):
@@ -1449,6 +1450,16 @@ def penalizeNotEnoughReports(branch, votePeriod):
         self.setTotalRepReported(branch, votePeriod, repReported)
     if(numEvents < 30*2**64):
         numEvents = 30*2**64
+    repConstant = self.getRepBalance(branch, tx.origin)*2**64/self.getTotalRep(branch)
+    logOutput = self.fx_log(repConstant)
+    exp = self.fx_exp(22136092888451461120*logOutput/2**64)
+    exp += 18446744073709552
+    total = exp*40
+    # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool)
+    #if(exp(ln(rep%)**1.2)*40 > 1):
+    if(total > 2**64):
+        numEvents = (self.getNumEventsToReportOn(branch, votePeriod)/40)*2**64
+    
     # what _if_ there are actually <30 events in augur?
       # perhaps we should have all reporters in that period report on all of them
     if(numEvents/(2*2**64) > self.branches[branch].numReportsActual[msg.sender][votePeriod]):
