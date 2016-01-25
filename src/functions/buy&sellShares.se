@@ -132,7 +132,7 @@ def buyShares(branch, market, outcome, amount, limit):
     # -1: invalid outcome, trading closed, or you haven't traded in this market
     # -2: entered a -amt of shares
     # -3: you own no shares / limit price too high
-    # -4: invalid outcome
+    
     # -5: bad commitment or no commitment
     # -6: oracle only branch, no trading
 def sellShares(branch, market, outcome, amount, limit):

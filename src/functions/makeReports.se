@@ -381,12 +381,12 @@ def needsReportingOn(event):
     # todo optimize perf. here
     while i < numMarkets:
         numOutcomes = MARKETS.getMarketNumOutcomes(markets[i])
-        n = 0
+        n = 1
         ninetynine = 0
-        while n < numOutcomes:
+        while n <= numOutcomes:
             if(MARKETS.getSimulatedBuy(markets[i], n, 2**64) > 18262276632972456099):
                 ninetynine = 1
-                n = numOutcomes
+                n = numOutcomes+1
             n += 1
         if(ninetynine == 0):
             return(1)

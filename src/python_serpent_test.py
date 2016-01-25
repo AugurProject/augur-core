@@ -627,7 +627,7 @@ def test_make_reports():
     gas_use(s)
     s.mine(55)
     gas_use(s)
-    print c.submitReport(1010101, 0, 0, 0, 2**64, event1, 2**64)
+    assert(c.submitReport(1010101, 0, 0, 0, 2**64, event1, 2**64)==1), "Report submission failed"
     gas_use(s)
     print c.getUncaughtOutcome(event1)
     gas_use(s)
@@ -643,17 +643,43 @@ def test_close_market():
     c.reputationFaucet(1010101)
     event1 = c.createEvent(1010101, "new event", 5, 1, 2, 2, 0)
     bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 0, 1)
+    event2 = c.createEvent(1010101, "new eventt", 5, 1, 2, 2, 0)
+    bin_market2 = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event2], 0, 1)
+    event3 = c.createEvent(1010101, "new eventtt", 5, 1, 2, 2, 0)
+    bin_market3 = c.createMarket(1010101, "new markett", 2**58, 100*2**64, 184467440737095516, [event3], 0, 1)
+    c.commitTrade(bin_market3, c.makeMarketHash(bin_market3, 2, 5000*2**64, 0))
+    s.mine(1)
+    c.buyShares(1010101, bin_market3, 2, 5000*2**64, 0)
     s.mine(105)
     c.incrementPeriod(1010101)
     report_hash = c.makeHash(0, 2**64, event1)
+    report_hash2 = c.makeHash(0, 2*2**64, event2)
+    report_hash3 = c.makeHash(0, 2*2**64, event3)
     assert(c.submitReportHash(1010101, report_hash, 0, event1, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(1010101, report_hash2, 0, event2, 1)==1), "Report hash submission failed"
+    assert(c.submitReportHash(1010101, report_hash3, 0, event3, 2)==1), "Report hash submission failed"
     s.mine(55)
-    print c.submitReport(1010101, 0, 0, 0, 2**64, event1, 2**64)
-    print c.getUncaughtOutcome(event1)
+    assert(c.submitReport(1010101, 0, 2, 0, 2*2**64, event3, 2**64)==1), "Report submission failed"
+    assert(c.submitReport(1010101, 0, 1, 0, 2*2**64, event2, 2**64)==1), "Report submission failed"
+    assert(c.submitReport(1010101, 0, 0, 0, 2**64, event1, 2**64)==1), "Report submission failed"
     #assert(c.closeMarket(1010101, bin_market)==-5), "Not expired check broken"
     s.mine(60)
     c.incrementPeriod(1010101)
-    print c.closeMarket(1010101, bin_market)
+    c.setUncaughtOutcome(event1, 0)
+    c.setOutcome(event1, 0)
+    #assert(c.closeMarket(1010101, bin_market)==-2), "No outcome on market yet"
+    # should be -7
+    # TODO: fix ethicality setting issue
+    print c.closeMarket(1010101, bin_market3)
+    #assert(c.closeMarket(1010101, bin_market3)==-7), ".99 market issue"
+    c.setUncaughtOutcome(event1, 3*2**63)
+    c.setOutcome(event1, 3*2**63)
+    # -3: Outcome indeterminable
+    assert(c.closeMarket(1010101, bin_market)==-3), "Indeterminate market check fail"
+    # should be 1
+    print c.closeMarket(1010101, bin_market2)
+    # TODO: still needs testing
+    # -4: Outcome .5 once, pushback and retry
     print "Test close market OK"
 
 
@@ -683,8 +709,8 @@ if __name__ == '__main__':
     #test_transfer_shares()
     #test_create_branch()
     #test_send_rep()
-    test_make_reports()
-    #test_close_market()
+    #test_make_reports()
+    test_close_market()
 
     #consensus_tests()
     print "DONE TESTING"
