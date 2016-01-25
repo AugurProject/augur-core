@@ -145,7 +145,7 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
         needsReportingOn = self.needsReportingOn(eventID)
         # if yes, the value is 1 and everything proceeds normally
         if(BRANCHES.getOracleOnly(branch)):
-          needsReportingOn = 1
+            needsReportingOn = 1
         self.reportable[votePeriod][eventID] = needsReportingOn
         # If not, then no one can report on this market's event(s) and the event is "removed" from expEvents.
         if(needsReportingOn==-1):
@@ -393,7 +393,7 @@ def needsReportingOn(event):
         n = 1
         ninetynine = 0
         while n <= numOutcomes:
-            if(MARKETS.getSimulatedBuy(markets[i], n, 2**64) > 18262276632972456099):
+            if(MARKETS.price(markets[i], n) > 18262276632972456099):
                 ninetynine = 1
                 n = numOutcomes+1
             n += 1

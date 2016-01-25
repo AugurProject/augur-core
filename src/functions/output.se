@@ -1315,7 +1315,7 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
         needsReportingOn = self.needsReportingOn(eventID)
         # if yes, the value is 1 and everything proceeds normally
         if(self.getOracleOnly(branch)):
-          needsReportingOn = 1
+            needsReportingOn = 1
         self.reportable[votePeriod][eventID] = needsReportingOn
         # If not, then no one can report on this market's event(s) and the event is "removed" from expEvents.
         if(needsReportingOn==-1):
@@ -1408,8 +1408,6 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
                 return(-5)
             # reporter has reported for 1 more event
             self.branches[branch].numReportsActual[tx.origin][votePeriod] += 1
-            # add 1 report to the event
-            self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
             # record that reporter has reported for this event
             # todo make sure this syntax works
             self.branches[branch].hasReported[eventID][tx.origin].reported[votePeriod] = 1
@@ -1419,8 +1417,9 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
             if(ethics!=2**64 || ethics!=0):
                 ethics = 2**64
             ethics = (self.getEthics(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
-            
             self.setEthics(eventID, ethics)
+            # add 1 report to the event
+            self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
             # if 1st report of the period for a reporter
             if(!self.branches[branch].reportedPeriod[votePeriod][tx.origin]):
                 repReported = self.getTotalRepReported(branch)
@@ -1567,6 +1566,7 @@ def needsReportingOn(event):
             if(self.getSimulatedBuy(markets[i], n, 2**64) > 18262276632972456099):
                 ninetynine = 1
                 n = numOutcomes+1
+            return([self.getSimulatedBuy(markets[i], 2, 2**64), self.getSimulatedBuy(markets[i], 1, 2**64)]: arr)
             n += 1
         if(ninetynine == 0):
             return(1)
@@ -1585,7 +1585,7 @@ def validateReport(eventID, branch, votePeriod, report):
             return(-5)
         # submit report
         # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-        outcome = (self.getOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
+        outcome = (self.getUncaughtOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
         self.setUncaughtOutcome(eventID, outcome)
     # categorical
     elif(numOutcomes>2):

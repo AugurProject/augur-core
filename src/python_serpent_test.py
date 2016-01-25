@@ -669,7 +669,8 @@ def test_close_market():
     c.setOutcome(event1, 0)
     #assert(c.closeMarket(1010101, bin_market)==-2), "No outcome on market yet"
     # should be -7
-    # TODO: fix ethicality setting issue
+    print c.needsReportingOn(event3)
+    print c.getNumMarkets(event3)
     print c.closeMarket(1010101, bin_market3)
     #assert(c.closeMarket(1010101, bin_market3)==-7), ".99 market issue"
     c.setUncaughtOutcome(event1, 3*2**63)
@@ -677,7 +678,7 @@ def test_close_market():
     # -3: Outcome indeterminable
     assert(c.closeMarket(1010101, bin_market)==-3), "Indeterminate market check fail"
     # should be 1
-    print c.closeMarket(1010101, bin_market2)
+    assert(c.closeMarket(1010101, bin_market2)==1), "Close market failure"
     # TODO: still needs testing
     # -4: Outcome .5 once, pushback and retry
     print "Test close market OK"
