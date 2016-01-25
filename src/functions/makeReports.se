@@ -111,8 +111,7 @@ def makeHash(salt, report, eventID):
 
 # Error 0: couldn't set report hash
 # Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't started yet
-# Error -2: not in hash submitting timeframe or event doesn't exist
-# Error -3: not a valid event expiring then
+# Error -2: not in hash submitting timeframe or event doesn't exist / not a valid event expiring then
 # Error -4: already resolved
 # Error -5: .99 market
 # Error -6: no markets
@@ -280,6 +279,16 @@ def penalizeNotEnoughReports(branch, votePeriod):
         EXPEVENTS.setTotalRepReported(branch, votePeriod, repReported)
     if(numEvents < 30*2**64):
         numEvents = 30*2**64
+    repConstant = REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch)
+    logOutput = FXP.fx_log(repConstant)
+    exp = FXP.fx_exp(22136092888451461120*logOutput/2**64)
+    exp += 18446744073709552
+    total = exp*40
+    # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool)
+    #if(exp(ln(rep%)**1.2)*40 > 1):
+    if(total > 2**64):
+        numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)/40)*2**64
+    
     # what _if_ there are actually <30 events in augur?
       # perhaps we should have all reporters in that period report on all of them
     if(numEvents/(2*2**64) > self.branches[branch].numReportsActual[msg.sender][votePeriod]):

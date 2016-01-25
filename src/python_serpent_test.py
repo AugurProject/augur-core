@@ -614,7 +614,7 @@ def test_make_reports():
     gas_use(s)
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
-   # assert(c.submitReportHash(1010101, 3232, -1, 222, 0)==-2), "Nonexistant event check broken"
+    assert(c.submitReportHash(1010101, 3232, -1, 222, 0)==-2), "Nonexistant event check broken"
     event1 = c.createEvent(1010101, "new event", 5, 1, 2, 2, 0)
     bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 0, 1)
     s.mine(105)

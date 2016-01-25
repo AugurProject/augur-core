@@ -1281,8 +1281,7 @@ def makeHash(salt, report, eventID):
 
 # Error 0: couldn't set report hash
 # Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't started yet
-# Error -2: not in hash submitting timeframe or event doesn't exist
-# Error -3: not a valid event expiring then
+# Error -2: not in hash submitting timeframe or event doesn't exist / not a valid event expiring then
 # Error -4: already resolved
 # Error -5: .99 market
 # Error -6: no markets
