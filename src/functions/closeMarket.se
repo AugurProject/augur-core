@@ -64,13 +64,10 @@ macro ethic_catch($x):
 # Error messages otherwise
     # -1: Market has no cash anyway / already closed
     # -2: 0 outcome
-    # -3: Outcome indeterminable
     # -4: Outcome .5 once, pushback and retry
-        # if mult events call this fun again to make sure no more to push back
     # -6: bonded pushed forward market not ready to be resolved
     # -7: event not reportable >.99
 #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
-# call mult. times if a multidimensional market
 def closeMarket(branch, market):
     if(CASH.balance(market)<=0):
         return(-1)
@@ -95,118 +92,37 @@ def closeMarket(branch, market):
     if((period > tradingPeriod || reportingDone) && !resolved):
         # loop through events in the market, get their outcomes && use those to determine the winning events!
         n = 0
-        # (max poss. winning outcomes is 8 outcomes total all scalar multidimensional)
-        winningOutcomes = array(8)
         outcomeFour = 0
         outcomeSix = 0
         while n < numberEvents:
             votingPeriodEvent = EVENTS.getExpiration(events[n])/BRANCHES.getPeriodLength(branch)
             fxpOutcome = EVENTS.getOutcome(events[n])
             resolution = 1
-            # events not expired yet
             if(EVENTS.getUncaughtOutcome(events[n])==0):
                 return(-2)
             if(MAKEREPORTS.getReportable(votingPeriodEvent, events[n])==-1):
                 return(-7)
             # TODO: if round 2 event && notFinal return 0
-            # if binary, catch the outcome
-            if(EVENTS.getNumOutcomes(events[n])==2 and 2**64*EVENTS.getMaxValue(events[n])==2**65 and EVENTS.getMinValue(events[n])==1):
-                # if outcome not set
-                if(fxpOutcome==0):
+            if(binary(events[n]) && fxpOutcome==0):
                     resolution = RESOLVE.resolveBinary(events[n], market, branch, votingPeriodEvent, period)
-            # scalar
-            elif(scalar(events[n])):
-                # if outcome/median aren't set
-                if(EVENTS.getMedian(events[n])==0):
-                    resolution = RESOLVE.resolveCategoricalOrScalar(2^64*EVENTS.getMinValue(events[n]), 2^64*EVENTS.getMaxValue(events[n]), scaled_min, scaled_max, event, market, branch, votingPeriodEvent, period)
-            # categorical, but we can make it behave as a scalar for all intents and purposes here
-            elif(EVENTS.getNumOutcomes(events[n])>2):
-                # if outcome/median aren't set
-                if(EVENTS.getMedian(events[n])==0):
-                    resolution = RESOLVE.resolveCategoricalOrScalar(2^64, 2^64*EVENTS.getNumOutcomes(events[n]), scaled_min, scaled_max, event, market, branch, votingPeriodEvent, period)
+            elif(scalar(events[n]) && EVENTS.getMedian(events[n])==0):
+                    resolution = RESOLVE.resolveCategoricalOrScalar(2^64*EVENTS.getMinValue(events[n]), 2^64*EVENTS.getMaxValue(events[n]), event, market, branch, votingPeriodEvent, period)
+            elif(categorical(events[n]) && EVENTS.getMedian(events[n])==0):
+                    resolution = RESOLVE.resolveCategoricalOrScalar(2^64, 2^64*EVENTS.getNumOutcomes(events[n]), event, market, branch, votingPeriodEvent, period)
             if(resolution==-4):
                 outcomeFour = 1
             elif(resolution==-6):
                 outcomeSix = 1
             n += 1
-
         if(outcomeFour):
             return(-4)
         elif(outcomeSix):
             return(-6)
-        
-        n = 0
-        while n < numberEvents:
-            fxpOutcome = EVENTS.getOutcome(events[n])
-            outcome = fxpOutcome/2^64
-            
-            # makes sure indeterminate outcome isn't a scalar --- do this somewhere else TODO
-            if(fxpOutcome==3*2^63 && numberEvents==1 && !scalar(events[n])):
-                self.closeIndeterminate(branch, market)
-                return(-3)
-            
-            if(n==0):
-                #scalar or .5
-                if(scalar(events[n]) || fxpOutcome==3*2^63):
-                    winningOutcomes[0] = 1
-                    winningOutcomes[1] = 2
-                # anything besides scalar or .5
-                else:
-                    winningOutcomes[0] += outcome
-            elif(n==1):
-                if(scalar(events[n]) || fxpOutcome==3*2^63):
-                    # scalar, scalar
-                    if(winningOutcomes[1]):
-                        winningOutcomes[2] = 3
-                        winningOutcomes[3] = 4
-                    # nonscalar, scalar
-                    else:
-                        #winningOutcomes[0] = winningOutcomes[0]
-                        winningOutcomes[1] = winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-1])
-                # scalar, nonscalar
-                elif(winningOutcomes[1]):
-                    winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
-                    winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
-                # nonscalar, nonscalar
-                else:
-                    winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
-            elif(n==2):
-                if(scalar(events[n]) || fxpOutcome==3*2^63):
-                    #scalar, scalar, scalar
-                    if(winningOutcomes[3]):
-                        winningOutcomes[4] = 5
-                        winningOutcomes[5] = 6
-                        winningOutcomes[6] = 7
-                        winningOutcomes[7] = 8
-                    #scalar, nonscalar, scalar
-                    #nonscalar, scalar, scalar
-                    elif(winningOutcomes[1]):
-                        #winningOutcomes[0] = winningOutcomes[0]
-                        #winningOutcomes[1] = winningOutcomes[1]
-                        winningOutcomes[2] += winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
-                        winningOutcomes[3] += winningOutcomes[1] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
-                    #nonscalar, nonscalar, scalar
-                    elif(winningOutcomes[1]==0):
-                        #winningOutcomes[0] = winningOutcomes[0]
-                        winningOutcomes[1] += winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
-                else:
-                    #scalar, scalar, nonscalar
-                    if(winningOutcomes[3]):
-                        winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                        winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                        winningOutcomes[2] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                        winningOutcomes[3] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                    #scalar, nonscalar, nonscalar
-                    #nonscalar, scalar, nonscalar
-                    elif(winningOutcomes[1]):
-                        winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                        winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                    #nonscalar, nonscalar, nonscalar
-                    else:
-                        winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-            n+=1
 
+        winningOutcomes = array(8)
+        winningOutcomes = RESOLVE.determineWinningOutcomes(events, numberEvents, branch, market, outitems=8)
         MARKETS.setWinningOutcomes(market, winningOutcomes)
+        
         self.returnLiquidity(branch, market, winningOutcomes)
 
     if(period > tradingPeriod || reportingDone):
@@ -225,35 +141,6 @@ def closeMarket(branch, market):
         return(0)
         
 ### Helper functions
-def closeIndeterminate(branch, market):
-    # return all the $$$ - (@ 50 cents a share)
-    i = 0
-    currentParticipant = MARKETS.getCurrentParticipantNumber(market)
-    while i < currentParticipant:
-        sharesOwnedOne = MARKETS.getParticipantSharesPurchased(market, i, 1)
-        sharesOwnedTwo = MARKETS.getParticipantSharesPurchased(market, i, 2)
-        participant = MARKETS.getParticipantID(market, i)
-        CASH.subtractCash(market, sharesOwnedOne*2^63 / 2^64)
-        CASH.addCash(participant, sharesOwnedOne*2^63 / 2^64)
-        CASH.subtractCash(market, sharesOwnedTwo*2^63 / 2^64)
-        CASH.addCash(participant, sharesOwnedTwo*2^63 / 2^64)
-        i += 1
-
-    # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
-    # refund left over initial liquidity in market - half to market creator, other half to voters
-    # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
-    initialLiquidity = INFO.getCreationFee(market)
-    # split up excess profits & liquidity
-    marketCash = CASH.balance(market)
-    CASH.addCash(branch, marketCash/2)
-    CASH.addCash(INFO.getCreator(market), marketCash / 2)
-    CASH.subtractCash(market, marketCash)
-    winningOutcomes = array(2)
-    winningOutcomes[0] = 1
-    winningOutcomes[1] = 2
-    MARKETS.setWinningOutcomes(market, winningOutcomes)
-    return(1)
-    
 def returnLiquidity(branch, market, winningOutcomes: arr):
     # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
     # refund left over initial liquidity in market - half to market creator, other half to voters
@@ -287,5 +174,11 @@ def returnLiquidity(branch, market, winningOutcomes: arr):
 macro scalar($event):
     ((EVENTS.getMaxValue($event)!=2 || EVENTS.getMinValue($event)!=1) && EVENTS.getNumOutcomes($event)==2)
     
+macro binary($event):
+    (EVENTS.getNumOutcomes($event)==2 and 2**64*EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==1)
+    
+macro categorical($event):
+    (EVENTS.getNumOutcomes($event)>2)
+
 #getSharesPurchased(market, outcome) --- return liquidity before claiming proceeds
 # lazy eval claiming funds

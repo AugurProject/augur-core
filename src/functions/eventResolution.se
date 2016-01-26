@@ -137,3 +137,71 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
             # delete old event from future events exp
             EXPEVENTS.removeEvent(branch, EVENTS.getOriginalExpiration(event)/periodLength)
     return(1)
+    
+def determineWinningOutcomes(events: arr, numberEvents, branch, market):
+    n = 0
+    winningOutcomes = array(8)
+    while n < numberEvents:
+        fxpOutcome = EVENTS.getOutcome(events[n])
+        outcome = fxpOutcome/2^64
+        if(n==0):
+            #scalar or .5
+            if(scalar(events[n]) || fxpOutcome==3*2^63):
+                winningOutcomes[0] = 1
+                winningOutcomes[1] = 2
+            # anything besides scalar or .5
+            else:
+                winningOutcomes[0] += outcome
+        elif(n==1):
+            if(scalar(events[n]) || fxpOutcome==3*2^63):
+                # scalar, scalar
+                if(winningOutcomes[1]):
+                    winningOutcomes[2] = 3
+                    winningOutcomes[3] = 4
+                # nonscalar, scalar
+                else:
+                    #winningOutcomes[0] = winningOutcomes[0]
+                    winningOutcomes[1] = winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-1])
+            # scalar, nonscalar
+            elif(winningOutcomes[1]):
+                winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
+                winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
+            # nonscalar, nonscalar
+            else:
+                winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
+        elif(n==2):
+            if(scalar(events[n]) || fxpOutcome==3*2^63):
+                #scalar, scalar, scalar
+                if(winningOutcomes[3]):
+                    winningOutcomes[4] = 5
+                    winningOutcomes[5] = 6
+                    winningOutcomes[6] = 7
+                    winningOutcomes[7] = 8
+                #scalar, nonscalar, scalar
+                #nonscalar, scalar, scalar
+                elif(winningOutcomes[1]):
+                    #winningOutcomes[0] = winningOutcomes[0]
+                    #winningOutcomes[1] = winningOutcomes[1]
+                    winningOutcomes[2] += winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
+                    winningOutcomes[3] += winningOutcomes[1] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
+                #nonscalar, nonscalar, scalar
+                elif(winningOutcomes[1]==0):
+                    #winningOutcomes[0] = winningOutcomes[0]
+                    winningOutcomes[1] += winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
+            else:
+                #scalar, scalar, nonscalar
+                if(winningOutcomes[3]):
+                    winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+                    winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+                    winningOutcomes[2] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+                    winningOutcomes[3] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+                #scalar, nonscalar, nonscalar
+                #nonscalar, scalar, nonscalar
+                elif(winningOutcomes[1]):
+                    winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+                    winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+                #nonscalar, nonscalar, nonscalar
+                else:
+                    winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
+        n+=1
+    return(winningOutcomes: arr)

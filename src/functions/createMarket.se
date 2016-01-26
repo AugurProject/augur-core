@@ -241,6 +241,7 @@ def moveMarketAndAssocEvents(market, fork):
     # and market remains with old expiration dateevent
 #•In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
 def pushMarketForward(branch, market):
+    # todo: if has been pushed forward in the past (see close market) don't allow it again
     numEvents = MARKETS.getNumEvents(market)
     if(marketClosed):
         return(0)
