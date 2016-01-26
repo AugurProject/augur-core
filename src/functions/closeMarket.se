@@ -148,27 +148,39 @@ def returnLiquidity(branch, market, winningOutcomes: arr):
     # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
     initialLiquidity = INFO.getCreationFee(market)
     creator = INFO.getCreator(market)
-    marketCash = CASH.balance(market)
+    winningOutcomes = array(8)
+    winningOutcomes = MARKET.getWinningOutcomes(market, outitems=8)
+    if(winningOutcomes[1]==0):
+        valueofShares = CLOSEONE.valueCalcOne(market, winningOutcomes[0])
+    elif(winningOutcomes[7]):
+        valueofShares = CLOSEEIGHT.valueCalcEight(market, winningOutcomes, events)
+    elif(winningOutcomes[3]):
+        valueofShares = CLOSEFOUR.valueCalcFour(market, winningOutcomes, events)
+    elif(winningOutcomes[1]):
+        valueofShares = CLOSETWO.valueCalcTwo(market, winningOutcomes, events)
+    liquidityRemaining = CASH.balance(market) - valueOfShares
+    if(liquidityRemaining<0):
+        return(-1)
     # some scalar involved
     if(winningOutcomes[1]):
-        if(CASH.balance(market) > initialLiquidity):
+        if(liquidityRemaining > initialLiquidity):
             # pay back liquidity, split up excess profits
             CASH.addCash(creator, initialLiquidity)
             CASH.subtractCash(market, initialLiquidity)
-            marketCash -= initialLiquidity
-            CASH.addCash(branch, marketCash/2)
-            CASH.addCash(creator, marketCash/2)
-            CASH.subtractCash(market, marketCash)
+            liquidityRemaining -= initialLiquidity
+            CASH.addCash(branch, liquidityRemaining/2)
+            CASH.addCash(creator, liquidityRemaining/2)
+            CASH.subtractCash(market, liquidityRemaining)
         # send whatever's left of the initial liquidity to the creator
         else:
-            CASH.addCash(creator, marketCash)
-            CASH.subtractCash(market, marketCash)
+            CASH.addCash(creator, liquidityRemaining)
+            CASH.subtractCash(market, liquidityRemaining)
     # no scalars
     else:
         # split up excess profits & liquidity
-        CASH.addCash(branch, marketCash/2)
-        CASH.addCash(creator, marketCash/2)
-        CASH.subtractCash(market, marketCash)
+        CASH.addCash(branch, liquidityRemaining/2)
+        CASH.addCash(creator, liquidityRemaining/2)
+        CASH.subtractCash(market, liquidityRemaining)
     return(1)
     
 macro scalar($event):
@@ -180,5 +192,4 @@ macro binary($event):
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)
 
-#getSharesPurchased(market, outcome) --- return liquidity before claiming proceeds
 # lazy eval claiming funds

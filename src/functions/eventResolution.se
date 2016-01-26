@@ -205,3 +205,6 @@ def determineWinningOutcomes(events: arr, numberEvents, branch, market):
                     winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
         n+=1
     return(winningOutcomes: arr)
+    
+macro scalar($event):
+    ((EVENTS.getMaxValue($event)!=2 || EVENTS.getMinValue($event)!=1) && EVENTS.getNumOutcomes($event)==2)

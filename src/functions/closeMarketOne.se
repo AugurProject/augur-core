@@ -14,3 +14,7 @@ def oneOutcome(market, winningOutcome):
         CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market))
         i += 1
     return(1)
+
+def valueCalcOne(market, winningOutcome):
+    sharesTotal = MARKETS.getSharesPurchased(market, winningOutcome)
+    return(sharesTotal*MARKETS.getCumScale(market))

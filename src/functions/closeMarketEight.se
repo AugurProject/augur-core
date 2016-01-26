@@ -60,3 +60,58 @@ def eightOutcomes(market, winningOutcome: arr, events: arr):
         i+=1
 
     return(1)
+    
+def valueCalcEight(market, winningOutcome: arr, events: arr):
+    outcomeOne = EVENTS.getOutcome(events[0])
+    minValueOne = EVENTS.getMinValue(events[0])
+    maxValueOne = EVENTS.getMaxValue(events[0])
+    if(outcomeOne>maxValueOne):
+        outcomeOne = maxValueOne
+    elif(outcomeOne<minValueOne):
+        outcomeOne = minValueOne
+    outcomeTwo = EVENTS.getOutcome(events[1])
+    minValueTwo = EVENTS.getMinValue(events[1])
+    maxValueTwo = EVENTS.getMaxValue(events[1])
+    if(outcomeTwo>maxValueTwo):
+        outcomeTwo = maxValueTwo
+    elif(outcomeTwo<minValueTwo):
+        outcomeTwo = minValueTwo
+    outcomeThree = EVENTS.getOutcome(events[2])
+    minValueThree = EVENTS.getMinValue(events[2])
+    maxValueThree = EVENTS.getMaxValue(events[0])
+    if(outcomeThree>maxValueThree):
+        outcomeThree = maxValueThree
+    elif(outcomeThree<minValueThree):
+        outcomeThree = minValueThree
+
+    outcomeOneHighSidePercent = 2^64*(outcomeOne - 2^64*minValueOne) / (2^64*maxValueOne - 2^64*minValueOne)
+    outcomeOneLowSidePercent = 2^64 - outcomeOneHighSidePercent
+    outcomeTwoHighSidePercent = 2^64*(outcomeTwo - 2^64*minValueTwo) / (2^64*maxValueTwo - 2^64*minValueTwo)
+    outcomeTwoLowSidePercent = 2^64 - outcomeTwoHighSidePercent
+    outcomeThreeHighSidePercent = 2^64*(outcomeThree - 2^64*minValueThree) / (2^64*maxValueThree - 2^64*minValueThree)
+    outcomeThreeLowSidePercent = 2^64 - outcomeThreeHighSidePercent
+            
+    # price is in fixed point
+    # first is low low low, 2 is high low low, 3 is low high low, 4 is high high low, 5 is low low high, 6 is high low high, 7 is low high high, 8 is high high high
+    pricePerShare = array(7)
+    pricePerShare[0] = outcomeOneLowSidePercent * outcomeTwoLowSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
+    pricePerShare[1] = outcomeOneHighSidePercent * outcomeTwoLowSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
+    pricePerShare[2] = outcomeOneLowSidePercent * outcomeTwoHighSidePercent * outcomeOneLowSidePercent / (2^64 * 2^64)
+    pricePerShare[3] = outcomeOneHighSidePercent * outcomeTwoHighSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
+    pricePerShare[4] = outcomeOneLowSidePercent * outcomeTwoLowSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
+    pricePerShare[5] = outcomeOneHighSidePercent * outcomeTwoLowSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
+    pricePerShare[6] = outcomeOneLowSidePercent * outcomeTwoHighSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
+    pricePerShare[7] = outcomeOneHighSidePercent * outcomeTwoHighSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
+    
+    cumScale = MARKETS.getCumScale(market)
+    sharesTotal1 = MARKETS.getSharesPurchased(market, winningOutcome[0])
+    sharesTotal2 = MARKETS.getSharesPurchased(market, winningOutcome[1])
+    sharesTotal3 = MARKETS.getSharesPurchased(market, winningOutcome[2])
+    sharesTotal4 = MARKETS.getSharesPurchased(market, winningOutcome[3])
+    sharesTotal5 = MARKETS.getSharesPurchased(market, winningOutcome[4])
+    sharesTotal6 = MARKETS.getSharesPurchased(market, winningOutcome[5])
+    sharesTotal7 = MARKETS.getSharesPurchased(market, winningOutcome[6])
+    sharesTotal8 = MARKETS.getSharesPurchased(market, winningOutcome[7])
+
+    value = sharesTotal1*cumScale*pricePerShare[0]/2**64 + sharesTotal2*cumScale*pricePerShare[1]/2**64 + sharesTotal3*cumScale*pricePerShare[2]/2**64 + sharesTotal4*cumScale*pricePerShare[3]/2**64 + sharesTotal5*cumScale*pricePerShare[4]/2**64 + sharesTotal6*cumScale*pricePerShare[5]/2**64 + sharesTotal7*cumScale*pricePerShare[6]/2**64 + sharesTotal8*cumScale*pricePerShare[7]/2**64
+    return(value)
