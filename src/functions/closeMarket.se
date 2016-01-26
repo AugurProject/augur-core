@@ -196,17 +196,17 @@ def closeMarket(branch, market):
                         winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
             n+=1
         MARKETS.setWinningOutcomes(market, winningOutcomes)
-        if(winningOutcomes[1]==0):
-            CLOSEONE.oneOutcome(market, winningOutcomes[0])
-        elif(winningOutcomes[7]):
-            CLOSEEIGHT.eightOutcomes(market, winningOutcomes, events)
-        elif(winningOutcomes[3]):
-            CLOSEFOUR.fourOutcomes(market, winningOutcomes, events)
-        elif(winningOutcomes[1]):
-            CLOSETWO.twoOutcomes(market, winningOutcomes, events)
-        
-
         self.returnLiquidity(branch, market, winningOutcomes)
+
+    if((period > tradingPeriod || reportingDone)):
+        if(winningOutcomes[1]==0):
+                CLOSEONE.oneOutcome(market, winningOutcomes[0])
+            elif(winningOutcomes[7]):
+                CLOSEEIGHT.eightOutcomes(market, winningOutcomes, events)
+            elif(winningOutcomes[3]):
+                CLOSEFOUR.fourOutcomes(market, winningOutcomes, events)
+            elif(winningOutcomes[1]):
+                CLOSETWO.twoOutcomes(market, winningOutcomes, events)
         return(1)
     else:
         return(0)
@@ -276,4 +276,3 @@ macro scalar($event):
     
 #getSharesPurchased(market, outcome) --- return liquidity before claiming proceeds
 # only have to call once for multidimen. market
-# set the winning outcomes once then fetch them
