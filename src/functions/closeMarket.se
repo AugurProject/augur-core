@@ -60,7 +60,7 @@ macro ethic_catch($x):
 
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
-# @return 0 if fail/trading not over yet/event not expired, if success 1
+# @return 0 if fail/trading not over yet/event not expired or closed already, if success 1
 # Error messages otherwise
     # -1: Market has no cash anyway / already closed
     # -2: 0 outcome
@@ -124,19 +124,45 @@ def closeMarket(branch, market):
         MARKETS.setWinningOutcomes(market, winningOutcomes)
         
         self.returnLiquidity(branch, market, winningOutcomes)
+    else:
+        return(0)
 
-    if(period > tradingPeriod || reportingDone):
+# @return 1 if success        
+# Errors:
+    # 0: reporting not done
+    # -1: trader doesn't exist
+def claimProceeds(branch, market):
+    numberEvents = MARKETS.getNumEvents(market)
+    tradingPeriod = MARKETS.getTradingPeriod(market)
+    period = BRANCHES.getVotePeriod(branch)
+    events = array(3)
+    events = MARKETS.getMarketEvents(market, outitems=3)
+    i = 0
+    reportingDone = 1
+    resolved = 1
+    while i < numberEvents:
+        numReports = MAKEREPORTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
+        numExpected = MAKEREPORTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
+        if(EVENTS.getOutcome(events[i])==0 && EVENTS.getMedian(events[i])==0):
+            resolved = 0
+        if(numReports != numExpected && numReports!=0 and numExpected!=0):
+            reportingDone = 0
+            i = numberEvents
+        i += 1
+
+    if((period > tradingPeriod || reportingDone) && resolved):
         winningOutcomes = array(8)
         winningOutcomes = MARKET.getWinningOutcomes(market, outitems=8)
+        outcome = 0
         if(winningOutcomes[1]==0):
-            CLOSEONE.oneOutcome(market, winningOutcomes[0])
+            outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0])
         elif(winningOutcomes[7]):
-            CLOSEEIGHT.eightOutcomes(market, winningOutcomes, events)
+            outcome = CLOSEEIGHT.eightOutcomes(market, winningOutcomes, events)
         elif(winningOutcomes[3]):
-            CLOSEFOUR.fourOutcomes(market, winningOutcomes, events)
+            outcome = CLOSEFOUR.fourOutcomes(market, winningOutcomes, events)
         elif(winningOutcomes[1]):
-            CLOSETWO.twoOutcomes(market, winningOutcomes, events)
-        return(1)
+            outcome = CLOSETWO.twoOutcomes(market, winningOutcomes, events)
+        return(outcome)
     else:
         return(0)
         
@@ -191,5 +217,5 @@ macro binary($event):
     
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)
-
-# lazy eval claiming funds
+    
+# in addn. to lazy eval, make so can only sell once

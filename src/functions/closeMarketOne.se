@@ -5,14 +5,13 @@ import cash as CASH
 # one winning outcome
 def oneOutcome(market, winningOutcome):
     # distribute cashcoin to the people who won money by holding winning shares
-    i = 0
-    particpantNumber = MARKETS.getCurrentParticipantNumber(market)
-    while i < particpantNumber:
-        sharesOwned = MARKETS.getParticipantSharesPurchased(market, i, winningOutcome)
-        participant = MARKETS.getParticipantID(market, i)
-        CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market))
-        CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market))
-        i += 1
+    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    if(participantNumber == -1):
+        return(-1)
+    sharesOwned = MARKETS.getParticipantSharesPurchased(market, participantNumber, winningOutcome)
+    participant = MARKETS.getParticipantID(market, participantNumber)
+    CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market))
+    CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market))
     return(1)
 
 def valueCalcOne(market, winningOutcome):

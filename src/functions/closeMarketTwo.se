@@ -25,25 +25,23 @@ def twoOutcomes(market, winningOutcome: arr, events: arr):
     #share one goes with the low side of the calc
     pricePerShare1 = 2^64 - pricePerShare1
     # distribute cashcoin to the people who won money by holding winning shares
-    i = 0
-    currentParticipant = MARKETS.getCurrentParticipantNumber(market)
-    # change to lazy eval
-    while i < currentParticipant:
-        # for each winning outcome do...
-        n = 0
-        while(winningOutcome[n]!=0):
-            sharesOwned = MARKETS.getParticipantSharesPurchased(market, i, winningOutcome[n])
-            participant = MARKETS.getParticipantID(market, i)
-            # low side
-            if(n==0):
-                CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)*pricePerShare1/2^64)
-                CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)*pricePerShare1/2^64)
-            # high side (of the scalar part)
-            elif(n==1):
-                CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)*pricePerShare2/2^64)
-                CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)*pricePerShare2/2^64)
-            n+=1
-        i += 1
+    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    if(participantNumber == -1):
+        return(-1)
+    participant = MARKETS.getParticipantID(market, participantNumber)
+    # for each winning outcome do...
+    n = 0
+    while(winningOutcome[n]!=0):
+        sharesOwned = MARKETS.getParticipantSharesPurchased(market, participantNumber, winningOutcome[n])
+        # low side
+        if(n==0):
+            CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)*pricePerShare1/2^64)
+            CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)*pricePerShare1/2^64)
+        # high side (of the scalar part)
+        elif(n==1):
+            CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)*pricePerShare2/2^64)
+            CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)*pricePerShare2/2^64)
+        n+=1
     return(1)
     
 def valueCalcTwo(market, winningOutcome: arr, events: arr):
