@@ -97,6 +97,8 @@ def closeMarket(branch, market):
         n = 0
         # (max poss. winning outcomes is 8 outcomes total all scalar multidimensional)
         winningOutcomes = array(8)
+        outcomeFour = 0
+        outcomeSix = 0
         while n < numberEvents:
             votingPeriodEvent = EVENTS.getExpiration(events[n])/BRANCHES.getPeriodLength(branch)
             fxpOutcome = EVENTS.getOutcome(events[n])
@@ -123,17 +125,25 @@ def closeMarket(branch, market):
                 if(EVENTS.getMedian(events[n])==0):
                     resolution = RESOLVE.resolveCategoricalOrScalar(2^64, 2^64*EVENTS.getNumOutcomes(events[n]), scaled_min, scaled_max, event, market, branch, votingPeriodEvent, period)
             if(resolution==-4):
-                return(-4)
+                outcomeFour = 1
             elif(resolution==-6):
-                return(-6)
-            
+                outcomeSix = 1
+            n += 1
+
+        if(outcomeFour):
+            return(-4)
+        elif(outcomeSix):
+            return(-6)
+        
+        n = 0
+        while n < numberEvents:
+            fxpOutcome = EVENTS.getOutcome(events[n])
             outcome = fxpOutcome/2^64
-            # makes sure indeterminate outcome isn't a scalar
+            
+            # makes sure indeterminate outcome isn't a scalar --- do this somewhere else TODO
             if(fxpOutcome==3*2^63 && numberEvents==1 && !scalar(events[n])):
                 self.closeIndeterminate(branch, market)
                 return(-3)
-            elif(fxpOutcome==0):
-                return(-2)
             
             if(n==0):
                 #scalar or .5
@@ -195,18 +205,21 @@ def closeMarket(branch, market):
                     else:
                         winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
             n+=1
+
         MARKETS.setWinningOutcomes(market, winningOutcomes)
         self.returnLiquidity(branch, market, winningOutcomes)
 
-    if((period > tradingPeriod || reportingDone)):
+    if(period > tradingPeriod || reportingDone):
+        winningOutcomes = array(8)
+        winningOutcomes = MARKET.getWinningOutcomes(market, outitems=8)
         if(winningOutcomes[1]==0):
-                CLOSEONE.oneOutcome(market, winningOutcomes[0])
-            elif(winningOutcomes[7]):
-                CLOSEEIGHT.eightOutcomes(market, winningOutcomes, events)
-            elif(winningOutcomes[3]):
-                CLOSEFOUR.fourOutcomes(market, winningOutcomes, events)
-            elif(winningOutcomes[1]):
-                CLOSETWO.twoOutcomes(market, winningOutcomes, events)
+            CLOSEONE.oneOutcome(market, winningOutcomes[0])
+        elif(winningOutcomes[7]):
+            CLOSEEIGHT.eightOutcomes(market, winningOutcomes, events)
+        elif(winningOutcomes[3]):
+            CLOSEFOUR.fourOutcomes(market, winningOutcomes, events)
+        elif(winningOutcomes[1]):
+            CLOSETWO.twoOutcomes(market, winningOutcomes, events)
         return(1)
     else:
         return(0)
@@ -275,4 +288,4 @@ macro scalar($event):
     ((EVENTS.getMaxValue($event)!=2 || EVENTS.getMinValue($event)!=1) && EVENTS.getNumOutcomes($event)==2)
     
 #getSharesPurchased(market, outcome) --- return liquidity before claiming proceeds
-# only have to call once for multidimen. market
+# lazy eval claiming funds
