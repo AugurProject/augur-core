@@ -82,11 +82,14 @@ def closeMarket(branch, market):
     events = MARKETS.getMarketEvents(market, outitems=3)
     i = 0
     reportingDone = 1
-    # todo: fix this
     while i < numberEvents:
-        if(MAKEREPORTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i]) != MAKEREPORTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])):
+        numReports = MAKEREPORTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
+        numExpected = MAKEREPORTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
+        if(numReports != numExpected && numReports!=0 and numExpected!=0):
             reportingDone = 0
+            i = numberEvents
         i += 1
+
     if((BRANCHES.getVotePeriod(branch) > tradingPeriod || reportingDone)):
         # loop through events in the market, get their outcomes && use those to determine the winning events!
         n = 0
@@ -127,6 +130,7 @@ def closeMarket(branch, market):
                 return(-4)
             elif(resolution==-6):
                 return(-6)
+            
             outcome = fxpOutcome/2^64
             # makes sure indeterminate outcome isn't a scalar
             if(fxpOutcome==3*2^63 && numberEvents==1 && !scalar(events[n])):
@@ -134,6 +138,7 @@ def closeMarket(branch, market):
                 return(-3)
             elif(fxpOutcome==0):
                 return(-2)
+            
             if(n==0):
                 #scalar or .5
                 if(scalar(events[n]) || fxpOutcome==3*2^63):
@@ -150,7 +155,7 @@ def closeMarket(branch, market):
                         winningOutcomes[3] = 4
                     # nonscalar, scalar
                     else:
-                      # winningOutcomes[0] = winningOutcomes[0]
+                        #winningOutcomes[0] = winningOutcomes[0]
                         winningOutcomes[1] = winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-1])
                 # scalar, nonscalar
                 elif(winningOutcomes[1]):
