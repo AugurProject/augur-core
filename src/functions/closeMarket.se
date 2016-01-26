@@ -60,7 +60,7 @@ macro ethic_catch($x):
 
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
-# @return 0 if fail, if success 1
+# @return 0 if fail/trading not over yet, if success 1
 # Error messages otherwise
     # -1: Market has no cash anyway / already closed
     # -2: 0 outcome
@@ -118,6 +118,10 @@ def closeMarket(branch, market):
                 # if outcome/median aren't set
                 if(EVENTS.getMedian(events[n])==0 && period > votingPeriodEvent):
                     resolution = RESOLVE.resolveCategoricalOrScalar(2^64*EVENTS.getMinValue(events[n]), 2^64*EVENTS.getMaxValue(events[n]), scaled_min, scaled_max, event, market, branch, votingPeriodEvent, period)
+                    if(resolution==-4):
+                        return(-4)
+                    elif(resolution==-6):
+                        return(-6)
                 elif(EVENTS.getMedian(events[n])==0):
                     return(-5)
 
@@ -126,38 +130,17 @@ def closeMarket(branch, market):
                 # if outcome/median aren't set
                 if(EVENTS.getMedian(events[n])==0 && period > votingPeriodEvent):
                     resolution = RESOLVE.resolveCategoricalOrScalar(2^64, 2^64*EVENTS.getNumOutcomes(events[n]), scaled_min, scaled_max, event, market, branch, votingPeriodEvent, period)
+                    if(resolution==-4):
+                        return(-4)
+                    elif(resolution==-6):
+                        return(-6)
                 elif(EVENTS.getMedian(events[n])==0):
                     return(-5)
 
             outcome = fxpOutcome/2^64
             # makes sure it's not a scalar
             if(fxpOutcome==3*2^63 && numberEvents==1 && !((EVENTS.getMaxValue(events[n])!=2 || EVENTS.getMinValue(events[n])!=1) && EVENTS.getNumOutcomes(events[n])==2)):
-                # return all the $$$ - (@ 50 cents a share)
-                i = 0
-                currentParticipant = MARKETS.getCurrentParticipantNumber(market)
-                while i < currentParticipant:
-                    sharesOwnedOne = MARKETS.getParticipantSharesPurchased(market, i, 1)
-                    sharesOwnedTwo = MARKETS.getParticipantSharesPurchased(market, i, 2)
-                    participant = MARKETS.getParticipantID(market, i)
-                    CASH.subtractCash(market, sharesOwnedOne*2^63 / 2^64)
-                    CASH.addCash(participant, sharesOwnedOne*2^63 / 2^64)
-                    CASH.subtractCash(market, sharesOwnedTwo*2^63 / 2^64)
-                    CASH.addCash(participant, sharesOwnedTwo*2^63 / 2^64)
-                    i += 1
-
-                # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
-                # refund left over initial liquidity in market - half to market creator, other half to voters
-                # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
-                initialLiquidity = INFO.getCreationFee(market)
-                # split up excess profits & liquidity
-                marketCash = CASH.balance(market)
-                CASH.addCash(branch, marketCash/2)
-                CASH.addCash(INFO.getCreator(market), marketCash / 2)
-                CASH.subtractCash(market, marketCash)
-
-                winningOutcomes[0] = 1
-                winningOutcomes[1] = 2
-                MARKETS.setWinningOutcomes(market, winningOutcomes)
+                self.closeIndeterminate(branch, market)
                 return(-3)
             elif(fxpOutcome==0):
                 return(-2)
@@ -243,36 +226,68 @@ def closeMarket(branch, market):
         elif(winningOutcomes[1]):
             CLOSETWO.twoOutcomes(market, winningOutcomes, events)
 
-        # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
-        # refund left over initial liquidity in market - half to market creator, other half to voters
-        # *unless* it's a scaled decision, refund all initial liquidity left over to market creator
-        # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
-        initialLiquidity = INFO.getCreationFee(market)
-        creator = INFO.getCreator(market)
-        marketCash = CASH.balance(market)
-        # some scalar involved
-        if(winningOutcomes[1]):
-            if(CASH.balance(market) > initialLiquidity):
-                # pay back liquidity, split up excess profits
-                CASH.addCash(creator, initialLiquidity)
-                CASH.subtractCash(market, initialLiquidity)
-                marketCash -= initialLiquidity
-                CASH.addCash(branch, marketCash/2)
-                CASH.addCash(creator, marketCash/2)
-                CASH.subtractCash(market, marketCash)
-            # send whatever's left of the initial liquidity to the creator
-            else:
-                CASH.addCash(creator, marketCash)
-                CASH.subtractCash(market, marketCash)
-
-        # no scalars
-        else:
-            # split up excess profits & liquidity
-            CASH.addCash(branch, marketCash/2)
-            CASH.addCash(creator, marketCash/2)
-            CASH.subtractCash(market, marketCash)
-
+        self.returnLiquidity(branch, market, winningOutcomes)
         MARKETS.setWinningOutcomes(market, winningOutcomes)
         return(1)
     else:
         return(0)
+        
+### Helper functions
+def closeIndeterminate(branch, market):
+    # return all the $$$ - (@ 50 cents a share)
+    i = 0
+    currentParticipant = MARKETS.getCurrentParticipantNumber(market)
+    while i < currentParticipant:
+        sharesOwnedOne = MARKETS.getParticipantSharesPurchased(market, i, 1)
+        sharesOwnedTwo = MARKETS.getParticipantSharesPurchased(market, i, 2)
+        participant = MARKETS.getParticipantID(market, i)
+        CASH.subtractCash(market, sharesOwnedOne*2^63 / 2^64)
+        CASH.addCash(participant, sharesOwnedOne*2^63 / 2^64)
+        CASH.subtractCash(market, sharesOwnedTwo*2^63 / 2^64)
+        CASH.addCash(participant, sharesOwnedTwo*2^63 / 2^64)
+        i += 1
+
+    # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
+    # refund left over initial liquidity in market - half to market creator, other half to voters
+    # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
+    initialLiquidity = INFO.getCreationFee(market)
+    # split up excess profits & liquidity
+    marketCash = CASH.balance(market)
+    CASH.addCash(branch, marketCash/2)
+    CASH.addCash(INFO.getCreator(market), marketCash / 2)
+    CASH.subtractCash(market, marketCash)
+    winningOutcomes = array(2)
+    winningOutcomes[0] = 1
+    winningOutcomes[1] = 2
+    MARKETS.setWinningOutcomes(market, winningOutcomes)
+    return(1)
+    
+def returnLiquidity(branch, market, winningOutcomes: arr):
+    # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
+    # refund left over initial liquidity in market - half to market creator, other half to voters
+    # *unless* it's a scaled decision, refund all initial liquidity left over to market creator
+    # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
+    initialLiquidity = INFO.getCreationFee(market)
+    creator = INFO.getCreator(market)
+    marketCash = CASH.balance(market)
+    # some scalar involved
+    if(winningOutcomes[1]):
+        if(CASH.balance(market) > initialLiquidity):
+            # pay back liquidity, split up excess profits
+            CASH.addCash(creator, initialLiquidity)
+            CASH.subtractCash(market, initialLiquidity)
+            marketCash -= initialLiquidity
+            CASH.addCash(branch, marketCash/2)
+            CASH.addCash(creator, marketCash/2)
+            CASH.subtractCash(market, marketCash)
+        # send whatever's left of the initial liquidity to the creator
+        else:
+            CASH.addCash(creator, marketCash)
+            CASH.subtractCash(market, marketCash)
+    # no scalars
+    else:
+        # split up excess profits & liquidity
+        CASH.addCash(branch, marketCash/2)
+        CASH.addCash(creator, marketCash/2)
+        CASH.subtractCash(market, marketCash)
+    return(1)

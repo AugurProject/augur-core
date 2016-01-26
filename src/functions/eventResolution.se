@@ -136,5 +136,4 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
             CASH.subtractCash(market, MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*2^64))
             # delete old event from future events exp
             EXPEVENTS.removeEvent(branch, EVENTS.getOriginalExpiration(event)/periodLength)
-            
     return(1)
