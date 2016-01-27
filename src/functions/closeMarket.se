@@ -132,6 +132,7 @@ def closeMarket(branch, market):
     # 0: reporting not done
     # -1: trader doesn't exist
 def claimProceeds(branch, market):
+    
     numberEvents = MARKETS.getNumEvents(market)
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
@@ -217,5 +218,3 @@ macro binary($event):
     
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)
-    
-# in addn. to lazy eval, make so can only sell once

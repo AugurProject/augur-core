@@ -255,7 +255,7 @@ def modifyParticipantShares(branch, marketID, participantNumber, outcome, amount
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Markets[marketID].participants[participantNumber].shares[outcome] += amount
-    if(block.number/1800>=self.getTradingPeriod(marketID)):
+    if(block.number/100>=self.getTradingPeriod(marketID)):
         return(1)
     else:
         if(amount<0):
