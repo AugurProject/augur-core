@@ -1069,11 +1069,13 @@ def closeMarket(branch, market):
     i = 0
     reportingDone = 1
     resolved = 1
+    # todo fix this
     while i < numberEvents:
         numReports = self.getNumReportsEvent(branch, self.getExpiration(events[i])/self.getPeriodLength(branch), events[i])
         numExpected = self.getNumReportsExpectedEvent(branch, self.getExpiration(events[i])/self.getPeriodLength(branch), events[i])
         if(self.getOutcome(events[i])==0 && self.getMedian(events[i])==0):
             resolved = 0
+        #if(num num == 0 for both then reporting not done either)
         if(numReports != numExpected && numReports!=0 && numExpected!=0):
             reportingDone = 0
             i = numberEvents
@@ -1111,7 +1113,7 @@ def closeMarket(branch, market):
         winningOutcomes = self.determineWinningOutcomes(events, numberEvents, branch, market, outitems=8)
         self.setWinningOutcomes(market, winningOutcomes)
         
-        #self.returnLiquidity(branch, market, winningOutcomes)
+        self.returnLiquidity(branch, market, winningOutcomes)
         return(1)
     else:
         return(0)

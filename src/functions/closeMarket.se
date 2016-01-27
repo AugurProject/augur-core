@@ -99,10 +99,10 @@ def closeMarket(branch, market):
             votingPeriodEvent = EVENTS.getExpiration(events[n])/BRANCHES.getPeriodLength(branch)
             fxpOutcome = EVENTS.getOutcome(events[n])
             resolution = 1
-            if(EVENTS.getUncaughtOutcome(events[n])==0):
-                return(-2)
             if(MAKEREPORTS.getReportable(votingPeriodEvent, events[n])==-1):
                 return(-7)
+            if(EVENTS.getUncaughtOutcome(events[n])==0):
+                return(-2)
             # TODO: if round 2 event && notFinal return 0
             if(binary(events[n]) && fxpOutcome==0):
                     resolution = RESOLVE.resolveBinary(events[n], market, branch, votingPeriodEvent, period)
