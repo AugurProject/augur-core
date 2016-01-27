@@ -45,7 +45,7 @@ macro CATCH_TOLERANCE: 2^64 / 10
 macro catch($x):
     if($x < (BAD - CATCH_TOLERANCE)):
         NO
-    if($x > (BAD + CATCH_TOLERANCE)):
+    elif($x > (BAD + CATCH_TOLERANCE)):
         YES
     else:
         BAD
@@ -53,7 +53,7 @@ macro catch($x):
 macro ethic_catch($x):
     if($x < 2^63):
         0
-    if($x > 2^63):
+    elif($x > 2^63):
         2^64
     else:
         0
@@ -79,16 +79,17 @@ def closeMarket(branch, market):
     i = 0
     reportingDone = 1
     resolved = 1
+    # todo fix this
     while i < numberEvents:
         numReports = MAKEREPORTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
         numExpected = MAKEREPORTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
         if(EVENTS.getOutcome(events[i])==0 && EVENTS.getMedian(events[i])==0):
             resolved = 0
-        if(numReports != numExpected && numReports!=0 and numExpected!=0):
+        #if(num num == 0 for both then reporting not done either)
+        if(numReports != numExpected && numReports!=0 && numExpected!=0):
             reportingDone = 0
             i = numberEvents
         i += 1
-
     if((period > tradingPeriod || reportingDone) && !resolved):
         # loop through events in the market, get their outcomes && use those to determine the winning events!
         n = 0
@@ -118,12 +119,12 @@ def closeMarket(branch, market):
             return(-4)
         elif(outcomeSix):
             return(-6)
-
         winningOutcomes = array(8)
         winningOutcomes = RESOLVE.determineWinningOutcomes(events, numberEvents, branch, market, outitems=8)
         MARKETS.setWinningOutcomes(market, winningOutcomes)
         
         self.returnLiquidity(branch, market, winningOutcomes)
+        return(1)
     else:
         return(0)
 
@@ -132,7 +133,6 @@ def closeMarket(branch, market):
     # 0: reporting not done
     # -1: trader doesn't exist
 def claimProceeds(branch, market):
-    
     numberEvents = MARKETS.getNumEvents(market)
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
@@ -150,7 +150,6 @@ def claimProceeds(branch, market):
             reportingDone = 0
             i = numberEvents
         i += 1
-
     if((period > tradingPeriod || reportingDone) && resolved):
         winningOutcomes = array(8)
         winningOutcomes = MARKET.getWinningOutcomes(market, outitems=8)
@@ -185,6 +184,7 @@ def returnLiquidity(branch, market, winningOutcomes: arr):
         valueofShares = CLOSEFOUR.valueCalcFour(market, winningOutcomes, events)
     elif(winningOutcomes[1]):
         valueofShares = CLOSETWO.valueCalcTwo(market, winningOutcomes, events)
+
     liquidityRemaining = CASH.balance(market) - valueOfShares
     if(liquidityRemaining<0):
         return(-1)

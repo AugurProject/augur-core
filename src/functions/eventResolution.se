@@ -6,6 +6,31 @@ import events as EVENTS
 import expiringEvents as EXPEVENTS
 import makeReports as MAKEREPORTS
 
+macro YES: 2^65
+macro NO: 2^64
+macro BAD: 3 * 2^63
+
+macro CATCH_TOLERANCE: 2^64 / 10
+
+# Bins values to 1, 1.5, 2
+macro catch($x):
+    if($x < (BAD - CATCH_TOLERANCE)):
+        NO
+    elif($x > (BAD + CATCH_TOLERANCE)):
+        YES
+    else:
+        BAD
+
+macro ethic_catch($x):
+    if($x < 2^63):
+        0
+    elif($x > 2^63):
+        2^64
+    else:
+        0
+
+def catch(x):
+    return(catch(x))
 
 ### helper functions:
 def resolveBinary(event, market, branch, votingPeriodEvent, period):
@@ -15,7 +40,6 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
     residual = block.number % periodLength
     ethical = ethic_catch(EVENTS.getEthical(event))
     EVENTS.setOutcome(event, fxpOutcome)
-
     #•In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration date
     if(fxpOutcome == 3*2**63 && MARKETS.getPushedForward(market)):
