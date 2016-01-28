@@ -77,17 +77,19 @@ def closeMarket(branch, market):
     events = array(3)
     events = MARKETS.getMarketEvents(market, outitems=3)
     i = 0
-    reportingDone = 1
+    reportingDone = 0
     resolved = 1
-    # todo fix this
+    while i < numberEvents:
+        if(EVENTS.getOutcome(events[i])==0 && EVENTS.getMedian(events[i])==0):
+            resolved = 0
+            i = numberEvents
+        i += 1
+    i = 0
     while i < numberEvents:
         numReports = MAKEREPORTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
         numExpected = MAKEREPORTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
-        if(EVENTS.getOutcome(events[i])==0 && EVENTS.getMedian(events[i])==0):
-            resolved = 0
-        #if(num num == 0 for both then reporting not done either)
-        if(numReports != numExpected && numReports!=0 && numExpected!=0):
-            reportingDone = 0
+        if(numReports == numExpected && numReports!=0 && numExpected!=0):
+            reportingDone = 1
             i = numberEvents
         i += 1
     if((period > tradingPeriod || reportingDone) && !resolved):
