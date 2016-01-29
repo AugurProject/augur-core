@@ -4,7 +4,7 @@ import math
 
 initialLiquidity = 50000000
 cumulativeScale = 1
-alpha = 0.007
+alpha = 0.0004
 numOutcomes = 2
 prior_vector = numpy.array([.53, .47])
 
