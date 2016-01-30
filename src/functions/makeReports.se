@@ -305,35 +305,6 @@ def penalizeNotEnoughReports(branch, votePeriod):
     # todo: separate heavier penalty for not reporting on a round 2 / readjudicated event
     return(1)
 
-# anti cheat provide ballot and randomNum mechanism steal deposit
-def slashRep(branch, votePeriod, salt, report, reporter, eventID):
-        realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, eventID)
-        hashInfo = array(len(report) + 2)
-        hashInfo[0] = reporter
-        hashInfo[1] = salt
-        hashInfo[2] = report
-        hashInfo[3] = eventID
-
-        reportHash = sha256(hashInfo, chars=32*len(hashInfo))
-        if(reportHash!=realHash):
-            return(0)
-        else:
-            reporterIndex = REPORTING.repIDToIndex(branch, reporter)
-            trutherIndex = REPORTING.repIDToIndex(branch, tx.origin)
-            # if the truther's rep. account doesn't exist, make one
-            if(REPORTING.getReporterID(branch, trutherIndex)!=tx.origin):
-                trutherIndex = REPORTING.getNumberReporters(branch)
-                REPORTING.addReporter(branch, tx.origin)
-
-            if(REPORTING.getReporterID(branch, reporterIndex)!=reporter):
-                return(-2)
-
-            reporterBalance = REPORTING.getRepBalance(branch, reporter)
-
-            REPORTING.subtractRep(branch, reporterIndex, reporterBalance)
-            REPORTING.addRep(branch, trutherIndex, reporterBalance*2^58 / 2^64)
-        return(reporterBalance)
-
 ### Helper functions:
 def calculateReportingThreshold(branch, eventID, votePeriod):
     numMarkets = EVENTS.getNumMarkets(eventID)
