@@ -19,7 +19,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-import makeReports as REPORTS
+# import makeReports as REPORTS
 import branches as BRANCHES
 
 # Reporting index is the branchID
@@ -29,6 +29,8 @@ import branches as BRANCHES
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
 data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, balance[], dormantRep[](repValue, reporterID))
+
+data whitelists[](addresses[], taken)
 
 def init():
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0

@@ -172,39 +172,8 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
                         row += 1
                     return(flattened: arr)
 
-# @return cost - how much it costs you to buy
-#         price - current share price of that outcome after buy
-def getSimulatedBuy(market, outcome, amount):
-    # lmsr cost calcs
-    oldCost = lsLmsr(market)
-    sharesPurchased(market)[outcome] += amount
-    newCost = lsLmsr(market)
-    if newCost <= oldCost:
-        sharesPurchased(market)[outcome] -= amount
-        return(-2)
-    cost = (newCost - oldCost)
-    price = self.price(market, outcome)
-    sharesPurchased(market)[outcome] -= amount
-    return([cost, price], chars=64)
-
 def getForkSelection(market):
     return(self.Markets[market].forkSelection)
-
-# @return cost - how much you get paid to sell
-#         price - current share price of that outcome after sell
-def getSimulatedSell(market, outcome, amount):
-    # lmsr cost calcs
-    oldCost = lsLmsr(market)
-    sharesPurchased(market)[outcome] -= amount
-    newCost = lsLmsr(market)
-    if oldCost <= newCost:
-        sharesPurchased(market)[outcome] += amount
-        return(-2)
-    # these prices are in fixed point
-    cost = oldCost - newCost
-    price = self.price(market, outcome)
-    sharesPurchased(market)[outcome] += amount
-    return([cost, price], chars=64)
 
 def getMarketEvents(market):
     with numEvents = self.Markets[market].lenEvents:
@@ -386,26 +355,6 @@ def initialLiquiditySetup(marketID, alpha, cumScale, numOutcomes):
     self.Markets[marketID].cumulativeScale = cumScale
     self.Markets[marketID].numOutcomes = numOutcomes
     return(1)
-
-def getMarketOutcomeInfo(market, outcome):
-    # whitelist
-    info = array(13)
-    participantNumber = self.Markets[market].addr2participant[tx.origin]
-    info[0] = self.getSharesPurchased(market, outcome)
-    info[1] = self.getParticipantSharesPurchased(market, participantNumber, outcome)
-    info[2] = self.price(market, outcome)
-    info[3] = participantNumber
-    info[4] = self.getCurrentParticipantNumber(market)
-    # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
-    info[5] = self.Markets[market].winningOutcomes[0]
-    info[6] = self.Markets[market].winningOutcomes[1]
-    info[7] = self.Markets[market].winningOutcomes[2]
-    info[8] = self.Markets[market].winningOutcomes[3]
-    info[9] = self.Markets[market].winningOutcomes[4]
-    info[10] = self.Markets[market].winningOutcomes[5]
-    info[11] = self.Markets[market].winningOutcomes[6]
-    info[12] = self.Markets[market].winningOutcomes[7]
-    return(info: arr)
 
 def setTradingFee(market, fee):
     self.Markets[market].tradingFee = fee

@@ -23,6 +23,7 @@
 # If you have questions, please contact jack@augur.net or joey@augur.net.
 
 import reporting as REPORTING
+import cash as CASH
 
 # Error -1: Hey, you're not broke!
 def cashFaucet():
