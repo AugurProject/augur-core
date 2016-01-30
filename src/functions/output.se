@@ -42,7 +42,7 @@ event creationBlock(market:indexed)
     # -7: event already expired
 
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
-def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, blockNumber, forkSelection):
+def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, forkSelection):
     periodLength = self.getPeriodLength(branch)
 
     # minimum fee 2% with initial liquidity >= $50 and < $100
@@ -1740,7 +1740,7 @@ def validateReport(eventID, branch, votePeriod, report):
     # -1: we're either already past that date, branch doesn't exist, or description is bad
     # 0: not enough money to pay fees or event already exists
     # -2: max value < min value
-def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes, blockNumber):
+def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes):
     periodLength = self.getPeriodLength(branch)
     if(maxValue < minValue):
         return(-2)
