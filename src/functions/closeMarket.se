@@ -176,8 +176,6 @@ def returnLiquidity(branch, market, winningOutcomes: arr):
     # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
     initialLiquidity = INFO.getCreationFee(market)
     creator = INFO.getCreator(market)
-    winningOutcomes = array(8)
-    winningOutcomes = MARKET.getWinningOutcomes(market, outitems=8)
     if(winningOutcomes[1]==0):
         valueofShares = CLOSEONE.valueCalcOne(market, winningOutcomes[0])
     elif(winningOutcomes[7]):

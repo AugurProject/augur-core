@@ -46,6 +46,7 @@ def penalizeWrong(branch, period, event):
 	#	○ Do the second (for each user), payback bond and subtract diff in rep from total rep reported b/c it goes to bonded challenger and not reporters who reported that round
 	#	○ Denominator is as normal, but totalRepReported is lower
   # if round 2 outcome is different
+  # does this work properly for scalars and binary and categorical re p and scalar 0-1 reports in fxp and binary 1 or 2 or 1.5 in fxp
   if(self.roundTwo[event].originalOutcome != EVENTS.getOutcome(event) && self.roundTwo[event].originalOutcome != EVENTS.getMedian(event) && notDoneForEvent && periodOver && reported && eventInPeriod):
     # submit later period, do rbcr on both
     if(period == (EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch))):
