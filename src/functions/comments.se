@@ -1,0 +1,5 @@
+event comment(market: indexed, ipfsHash)
+
+def addComment(market, ipfsHash):
+    log(type=comment, market, ipfsHash)
+    return(1)

@@ -22,7 +22,6 @@
 #
 # If you have questions, please contact jack@augur.net or joey@augur.net.
 
-import cash as CASH
 import reporting as REPORTING
 
 # Error -1: Hey, you're not broke!
