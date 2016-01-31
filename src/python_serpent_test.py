@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from ethereum import tester as t
 import math
 import os
@@ -8,8 +10,9 @@ def test_cash():
     t.gas_limit = 100000000
     s = t.state()
     c = s.abi_contract('data_api/cash.se')
-    
-    c.initiateOwner(111)
+
+    assert(c.initiateOwner(111)==1), "Assign owner to id=111"
+    assert(c.initiateOwner(111)==0), "Do not re-assign owner of id=111"
     c.setCash(111, 10)
     gas_use(s)
     c.addCash(111,5)
@@ -713,7 +716,7 @@ if __name__ == '__main__':
     src = os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace', 'src')
     os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
     # data/api tests
-    #test_cash()
+    test_cash()
     #test_ether()
     #test_quicksort()
     #test_insertionsort()
@@ -730,7 +733,7 @@ if __name__ == '__main__':
     #test_create_branch()
     #test_send_rep()
     #test_make_reports()
-    test_close_market()
+    # test_close_market()
 
     #consensus_tests()
     print "DONE TESTING"

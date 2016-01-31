@@ -44,7 +44,7 @@ def init():
     self.Branches[1010101].minTradingFee = 2^57
     self.branchListCount = 1
     self.branchList[0] = 1010101
-    # CASH.initiateOwner(1010101)
+    CASH.initiateOwner(1010101)
 
 def getOracleOnly(branch):
 	return(self.Branches[branch].oracleOnly)
