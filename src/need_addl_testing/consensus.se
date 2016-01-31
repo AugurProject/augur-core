@@ -289,18 +289,18 @@ def slashRep(branch, votePeriod, salt, report, reporter, eventID):
   if(reportHash!=realHash):
       return(0)
   else:
-      reporterIndex = REPORTING.repIDToIndex(branch, reporter)
-      trutherIndex = REPORTING.repIDToIndex(branch, tx.origin)
-      trutherBalance = REPORTING.getRepBalance(branch, tx.origin)
-      # if the truther's rep. account doesn't exist, make one
-      if(REPORTING.getReporterID(branch, trutherIndex)!=tx.origin):
-          trutherIndex = REPORTING.getNumberReporters(branch)
-          REPORTING.addReporter(branch, tx.origin)
-      if(REPORTING.getReporterID(branch, reporterIndex)!=reporter):
-          return(-2)
-      reporterBalance = REPORTING.getRepBalance(branch, reporter)
-      REPORTING.setRep(branch, reporterIndex, 0)
-      REPORTING.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*2**63 / 2**64))
+    reporterIndex = REPORTING.repIDToIndex(branch, reporter)
+    trutherIndex = REPORTING.repIDToIndex(branch, tx.origin)
+    trutherBalance = REPORTING.getRepBalance(branch, tx.origin)
+    # if the truther's rep. account doesn't exist, make one
+    if(REPORTING.getReporterID(branch, trutherIndex)!=tx.origin):
+        trutherIndex = REPORTING.getNumberReporters(branch)
+        REPORTING.addReporter(branch, tx.origin)
+    if(REPORTING.getReporterID(branch, reporterIndex)!=reporter):
+        return(-2)
+    reporterBalance = REPORTING.getRepBalance(branch, reporter)
+    REPORTING.setRep(branch, reporterIndex, 0)
+    REPORTING.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*2**63 / 2**64))
   return(reporterBalance)
 
 def incrementPeriodAfterReporting():
