@@ -125,7 +125,7 @@ def closeMarket(branch, market):
         winningOutcomes = RESOLVE.determineWinningOutcomes(events, numberEvents, branch, market, outitems=8)
         MARKETS.setWinningOutcomes(market, winningOutcomes)
         
-        self.returnLiquidity(branch, market, winningOutcomes)
+        self.returnLiquidity(branch, market)
         return(1)
     else:
         return(0)
@@ -169,21 +169,24 @@ def claimProceeds(branch, market):
         return(0)
         
 ### Helper functions
-def returnLiquidity(branch, market, winningOutcomes: arr):
+def returnLiquidity(branch, market):
     # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
     # refund left over initial liquidity in market - half to market creator, other half to voters
     # *unless* it's a scaled decision, refund all initial liquidity left over to market creator
     # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
     initialLiquidity = INFO.getCreationFee(market)
+    winningOutcomes = array(8)
+    winningOutcomes = MARKETS.getWinningOutcomes(market, outitems=8)
+    valueOfShares = 0
     creator = INFO.getCreator(market)
     if(winningOutcomes[1]==0):
-        valueofShares = CLOSEONE.valueCalcOne(market, winningOutcomes[0])
+        valueOfShares = CLOSEONE.valueCalcOne(market, winningOutcomes[0])
     elif(winningOutcomes[7]):
-        valueofShares = CLOSEEIGHT.valueCalcEight(market, winningOutcomes, events)
+        valueOfShares = CLOSEEIGHT.valueCalcEight(market, winningOutcomes, events)
     elif(winningOutcomes[3]):
-        valueofShares = CLOSEFOUR.valueCalcFour(market, winningOutcomes, events)
+        valueOfShares = CLOSEFOUR.valueCalcFour(market, winningOutcomes, events)
     elif(winningOutcomes[1]):
-        valueofShares = CLOSETWO.valueCalcTwo(market, winningOutcomes, events)
+        valueOfShares = CLOSETWO.valueCalcTwo(market, winningOutcomes, events)
 
     liquidityRemaining = CASH.balance(market) - valueOfShares
     if(liquidityRemaining<0):

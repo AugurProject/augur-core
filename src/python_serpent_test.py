@@ -685,27 +685,19 @@ def test_close_market():
     assert(c.closeMarket(1010101, bin_market)==0), "Already resolved indeterminate market check fail"
     assert(c.closeMarket(1010101, bin_market4)==-4), ".5 once, pushback and retry failure"
     orig = c.balance(s.block.coinbase)
-    print c.balance(bin_market2)
+    assert(c.balance(bin_market2)>=108*2**64)
     assert(c.balance(event2)==42*2**64)
-    assert(c.balance(bin_market2) >= 105*2**64)
     assert(c.closeMarket(1010101, bin_market2)==1), "Close market failure"
     new = c.balance(s.block.coinbase)
     # get 1/2 of liquidity (50) + 42 for event bond
-    #assert((new - orig)==92*2**64)
-    print c.balance(bin_market2)
-    #assert(c.balance(bin_market2)==0)
+    assert((new - orig)>=90*2**64 and (new - orig)<=95*2**65), "Liquidity and event bond not returned properly"
+    assert(c.balance(bin_market2)==10*2**64), "liquidity not returned properly, should only be winning shares remaining"
     assert(c.balance(event2)==0)
-    print c.claimProceeds(1010101, bin_market2)
-    newNew = c.balance(s.block.coinbase)
-    print orig
-    print new
-    print newNew
-    print c.balance(bin_market2)
-    print c.valueCalcOne(bin_market2)
-    print c.getSharesPurchased(bin_market2, 2)
-    print c.getCumScale(bin_market2)
-    print c.getWinningOutcomes(bin_market2)
     # ensure proceeds returned properly
+    assert(c.claimProceeds(1010101, bin_market2)==1)
+    newNew = c.balance(s.block.coinbase)
+    assert((newNew - new)==10*2**64), "Didn't get 10 back from selling winning shares"
+    assert(c.balance(bin_market2)==0), "Payouts not done successfully"
     print "Test close market OK"
 
 
@@ -721,23 +713,23 @@ if __name__ == '__main__':
     src = os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace', 'src')
     os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
     # data/api tests
-    test_cash()
-    # test_ether()
-    test_quicksort()
-    test_insertionsort()
-    test_log_exp()
-    test_exp()
-    test_markets()
-    test_reporting()
+    #test_cash()
+    #test_ether()
+    #test_quicksort()
+    #test_insertionsort()
+    #test_log_exp()
+    #test_exp()
+    #test_markets()
+    #test_reporting()
     
     # function tests
-    test_create_event()
-    test_create_market()
-    test_buy_sell_shares()
-    test_transfer_shares()
-    test_create_branch()
-    test_send_rep()
-    test_make_reports()
+    #test_create_event()
+    #test_create_market()
+    #test_buy_sell_shares()
+    #test_transfer_shares()
+    #test_create_branch()
+    #test_send_rep()
+    #test_make_reports()
     test_close_market()
 
     #consensus_tests()

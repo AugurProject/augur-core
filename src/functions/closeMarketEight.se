@@ -104,14 +104,14 @@ def valueCalcEight(market, winningOutcome: arr, events: arr):
     pricePerShare[7] = outcomeOneHighSidePercent * outcomeTwoHighSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
     
     cumScale = MARKETS.getCumScale(market)
-    sharesTotal1 = MARKETS.getSharesPurchased(market, winningOutcome[0])
-    sharesTotal2 = MARKETS.getSharesPurchased(market, winningOutcome[1])
-    sharesTotal3 = MARKETS.getSharesPurchased(market, winningOutcome[2])
-    sharesTotal4 = MARKETS.getSharesPurchased(market, winningOutcome[3])
-    sharesTotal5 = MARKETS.getSharesPurchased(market, winningOutcome[4])
-    sharesTotal6 = MARKETS.getSharesPurchased(market, winningOutcome[5])
-    sharesTotal7 = MARKETS.getSharesPurchased(market, winningOutcome[6])
-    sharesTotal8 = MARKETS.getSharesPurchased(market, winningOutcome[7])
+    sharesTotal1 = MARKETS.getSharesPurchased(market, winningOutcome[0]) - MARKETS.initialLiquidityAmount(market, winningOutcome[0])
+    sharesTotal2 = MARKETS.getSharesPurchased(market, winningOutcome[1]) - MARKETS.initialLiquidityAmount(market, winningOutcome[1])
+    sharesTotal3 = MARKETS.getSharesPurchased(market, winningOutcome[2]) - MARKETS.initialLiquidityAmount(market, winningOutcome[2])
+    sharesTotal4 = MARKETS.getSharesPurchased(market, winningOutcome[3]) - MARKETS.initialLiquidityAmount(market, winningOutcome[3])
+    sharesTotal5 = MARKETS.getSharesPurchased(market, winningOutcome[4]) - MARKETS.initialLiquidityAmount(market, winningOutcome[4])
+    sharesTotal6 = MARKETS.getSharesPurchased(market, winningOutcome[5]) - MARKETS.initialLiquidityAmount(market, winningOutcome[5])
+    sharesTotal7 = MARKETS.getSharesPurchased(market, winningOutcome[6]) - MARKETS.initialLiquidityAmount(market, winningOutcome[6])
+    sharesTotal8 = MARKETS.getSharesPurchased(market, winningOutcome[7]) - MARKETS.initialLiquidityAmount(market, winningOutcome[7])
 
     value = sharesTotal1*cumScale*pricePerShare[0]/2**64 + sharesTotal2*cumScale*pricePerShare[1]/2**64 + sharesTotal3*cumScale*pricePerShare[2]/2**64 + sharesTotal4*cumScale*pricePerShare[3]/2**64 + sharesTotal5*cumScale*pricePerShare[4]/2**64 + sharesTotal6*cumScale*pricePerShare[5]/2**64 + sharesTotal7*cumScale*pricePerShare[6]/2**64 + sharesTotal8*cumScale*pricePerShare[7]/2**64
     return(value)

@@ -119,9 +119,9 @@ def valueCalcFour(market, winningOutcome: arr, events: arr):
     pricePerShare1 = outcomeOneLowSidePercent * outcomeTwoLowSidePercent / 2^64
 
     cumScale = MARKETS.getCumScale(market)
-    sharesTotal1 = MARKETS.getSharesPurchased(market, winningOutcome[0])
-    sharesTotal2 = MARKETS.getSharesPurchased(market, winningOutcome[1])
-    sharesTotal3 = MARKETS.getSharesPurchased(market, winningOutcome[2])
-    sharesTotal4 = MARKETS.getSharesPurchased(market, winningOutcome[3])
+    sharesTotal1 = MARKETS.getSharesPurchased(market, winningOutcome[0]) - MARKETS.initialLiquidityAmount(market, winningOutcome[0])
+    sharesTotal2 = MARKETS.getSharesPurchased(market, winningOutcome[1]) - MARKETS.initialLiquidityAmount(market, winningOutcome[1])
+    sharesTotal3 = MARKETS.getSharesPurchased(market, winningOutcome[2]) - MARKETS.initialLiquidityAmount(market, winningOutcome[2])
+    sharesTotal4 = MARKETS.getSharesPurchased(market, winningOutcome[3]) - MARKETS.initialLiquidityAmount(market, winningOutcome[3])
     value = sharesTotal1*cumScale*pricePerShare1/2**64 + sharesTotal2*cumScale*pricePerShare2/2**64 + sharesTotal3*cumScale*pricePerShare3/2**64 + sharesTotal4*cumScale*pricePerShare4/2**64
     return(value)

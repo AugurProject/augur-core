@@ -30,7 +30,6 @@ import events as EVENTS
 # to 11.0 would be 11 outcomes (if incremented by 0.1)
 # @return eventID if success
 # error messages otherwise
-    # -2: min > max
     # -1: we're either already past that date, branch doesn't exist, or description is bad
     # 0: not enough money to pay fees or event already exists
     # -2: max value < min value
