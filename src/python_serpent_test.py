@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from ethereum import tester as t
 import math
 import os
@@ -8,8 +10,9 @@ def test_cash():
     t.gas_limit = 100000000
     s = t.state()
     c = s.abi_contract('data_api/cash.se')
-    
-    c.initiateOwner(111)
+
+    assert(c.initiateOwner(111)==1), "Assign owner to id=111"
+    assert(c.initiateOwner(111)==0), "Do not re-assign owner of id=111"
     c.setCash(111, 10)
     gas_use(s)
     c.addCash(111,5)
