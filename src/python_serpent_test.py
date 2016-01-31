@@ -700,6 +700,15 @@ def test_close_market():
     assert(c.balance(bin_market2)==0), "Payouts not done successfully"
     print "Test close market OK"
 
+def test_consensus():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
+    print "Test consensus OK"
 
 
 def gas_use(s):
@@ -707,7 +716,6 @@ def gas_use(s):
     print "Gas Used:"
     print s.block.gas_used - initial_gas
     initial_gas = s.block.gas_used
-
 
 if __name__ == '__main__':
     src = os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace', 'src')
@@ -730,7 +738,6 @@ if __name__ == '__main__':
     #test_create_branch()
     #test_send_rep()
     #test_make_reports()
-    test_close_market()
-
-    #consensus_tests()
+    #test_close_market()
+    test_consensus()
     print "DONE TESTING"
