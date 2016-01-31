@@ -35,7 +35,7 @@ import branches as BRANCHES
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, forkSelection, pushingForward, bondsMan, originalPeriod)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, forkSelection, pushingForward, bondsMan, originalPeriod, initialLiquidity[])
 
 def getTotalSharesPurchased(market):
     total = 0
@@ -134,7 +134,7 @@ def getMarketInfo(marketID):
 #           number of markets in this branch.
 def getMarketsInfo(branch, offset, numMarketsToLoad):
     numMarkets = BRANCHES.getNumMarkets(branch)
-    with marketIDs = BRANCHES.getMarkets(branch, outitems=numMarkets):
+    with marketIDs = BRANCHES.getMarketsInBranch(branch, outitems=numMarkets):
         if numMarketsToLoad > 0 and numMarketsToLoad < numMarkets:
             numMarkets = numMarketsToLoad
         with marketsMatrix = array(numMarkets):
@@ -176,8 +176,7 @@ def getForkSelection(market):
     return(self.Markets[market].forkSelection)
 
 def getMarketEvents(market):
-    with numEvents = self.Markets[market].lenEvents:
-        return(slice(load(self.Markets[market].events[0], chars=32*numEvents), items=0, items=numEvents): arr)
+    return(load(self.Markets[market].events[0], items=self.Markets[market].lenEvents): arr)
 
 def getSharesPurchased(market, outcome):
     return(self.Markets[market].sharesPurchased[outcome])
@@ -333,7 +332,14 @@ def modifyParticipantShares(branch, marketID, participantNumber, outcome, amount
         self.Markets[marketID].volume += amount
         EXPEVENTS.addPeriodVolume(branch, self.getTradingPeriod(marketID), amount)
         return(1)
+        
+def initialLiquidityAmount(market, outcome):
+    return(self.Markets[market].initialLiquidity[outcome])
 
+def setInitialLiquidityAmount(market, outcome, amount):
+    self.Markets[market].initialLiquidity[outcome] = amount
+    return(1)
+    
 def setWinningOutcomes(market, outcomes: arr):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)

@@ -166,6 +166,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     MARKETS.initialLiquiditySetup(marketID, alpha, cumulativeScale, numOutcomes)
     while y <= numOutcomes:
         MARKETS.modifyShares(marketID, y, z)
+        MARKETS.setInitialLiquidityAmount(marketID, y, z)
         y += 1
     if(INFO.setInfo(marketID, description, tx.origin, initialLiquidity) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, forkSelection) && CASH.send(marketID, initialLiquidity)):
         i = 0
