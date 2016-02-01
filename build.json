@@ -52,7 +52,7 @@
             "", 
             "# call once after uploading (externed method not allowed in init)", 
             "def initDefaultBranch():", 
-            "    CASH.initiateOwner(1010101)", 
+            "    return(CASH.initiateOwner(1010101))", 
             "", 
             "def getOracleOnly(branch):", 
             "\treturn(self.Branches[branch].oracleOnly)", 
@@ -368,7 +368,12 @@
             {
                 "inputs": [], 
                 "name": "initDefaultBranch()", 
-                "outputs": [], 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
                 "type": "function"
             }, 
             {
@@ -432,7 +437,7 @@
                 "type": "function"
             }
         ], 
-        "sig": "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:_, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]"
+        "sig": "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]"
     }, 
     "buy&sellShares": {
         "address": "0x9fe69262bbaa47f013b7dbd6ca5f01e17446c645", 
@@ -458,7 +463,7 @@
             "#    along with this program.  If not, see <http://www.gnu.org/licenses/>.", 
             "# Any questions please contact joey@augur.net", 
             "", 
-            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:_, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
+            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
             "BRANCHES = 0xbd19195b9e8a2d8ed14fc3a2823856b5c16f7f55", 
             "extern expiringEvents: [addEvent:[int256,int256,int256]:int256, addPeriodVolume:[int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getNumEventsToReportOn:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodVolume:[int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getTotalRepReported:[int256,int256]:int256, moveEventsToCurrentPeriod:[int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setNumEventsToReportOn:[int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setTotalRepReported:[int256,int256,int256]:int256]", 
             "EXPEVENTS = 0xe4714fcbdcdba49629bc408183ef40d120700b8d", 
@@ -1103,7 +1108,7 @@
             "#    along with this program.  If not, see <http://www.gnu.org/licenses/>.", 
             "# Any questions please contact joey@augur.net", 
             "", 
-            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:_, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
+            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
             "BRANCHES = 0xbd19195b9e8a2d8ed14fc3a2823856b5c16f7f55", 
             "extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256]", 
             "INFO = 0x5069d883e31429c6dd1325d961f443007747c7a2", 
@@ -2019,7 +2024,7 @@
             "#    along with this program.  If not, see <http://www.gnu.org/licenses/>.", 
             "# Any questions please contact joey@augur.net", 
             "", 
-            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:_, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
+            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
             "BRANCHES = 0xbd19195b9e8a2d8ed14fc3a2823856b5c16f7f55", 
             "extern expiringEvents: [addEvent:[int256,int256,int256]:int256, addPeriodVolume:[int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getNumEventsToReportOn:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodVolume:[int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getTotalRepReported:[int256,int256]:int256, moveEventsToCurrentPeriod:[int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setNumEventsToReportOn:[int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setTotalRepReported:[int256,int256,int256]:int256]", 
             "EXPEVENTS = 0xe4714fcbdcdba49629bc408183ef40d120700b8d", 
@@ -2124,7 +2129,7 @@
             "#    along with this program.  If not, see <http://www.gnu.org/licenses/>.", 
             "# Any questions please contact joey@augur.net", 
             "", 
-            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:_, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
+            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
             "BRANCHES = 0xbd19195b9e8a2d8ed14fc3a2823856b5c16f7f55", 
             "extern expiringEvents: [addEvent:[int256,int256,int256]:int256, addPeriodVolume:[int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getNumEventsToReportOn:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodVolume:[int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getTotalRepReported:[int256,int256]:int256, moveEventsToCurrentPeriod:[int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setNumEventsToReportOn:[int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setTotalRepReported:[int256,int256,int256]:int256]", 
             "EXPEVENTS = 0xe4714fcbdcdba49629bc408183ef40d120700b8d", 
@@ -2249,7 +2254,7 @@
             "#    along with this program.  If not, see <http://www.gnu.org/licenses/>.", 
             "# Any questions please contact joey@augur.net", 
             "", 
-            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:_, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
+            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
             "BRANCHES = 0xbd19195b9e8a2d8ed14fc3a2823856b5c16f7f55", 
             "extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256]", 
             "INFO = 0x5069d883e31429c6dd1325d961f443007747c7a2", 
@@ -2668,7 +2673,7 @@
     "eventResolution": {
         "address": "0x35152caa07026203a1add680771afb690d872d7d", 
         "code": [
-            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:_, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
+            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
             "BRANCHES = 0xbd19195b9e8a2d8ed14fc3a2823856b5c16f7f55", 
             "extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256]", 
             "INFO = 0x5069d883e31429c6dd1325d961f443007747c7a2", 
@@ -3053,7 +3058,7 @@
             "#    along with this program.  If not, see <http://www.gnu.org/licenses/>.", 
             "# Any questions please contact joey@augur.net", 
             "", 
-            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:_, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
+            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
             "BRANCHES = 0xbd19195b9e8a2d8ed14fc3a2823856b5c16f7f55", 
             "", 
             "# Events' index is the eventID", 
@@ -3850,7 +3855,7 @@
             "#    along with this program.  If not, see <http://www.gnu.org/licenses/>.", 
             "# Any questions please contact joey@augur.net", 
             "", 
-            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:_, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
+            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
             "BRANCHES = 0xbd19195b9e8a2d8ed14fc3a2823856b5c16f7f55", 
             "extern events: [addMarket:[int256,int256]:int256, addNumReports:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getExpiration:[int256]:int256, getFinal:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMedian:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getNumReports:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPushedBack:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getRejectedUncaught:[int256]:int256, getReportingThreshold:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256]:int256, setEthics:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setFinal:[int256,int256]:int256, setMedian:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setPushedBack:[int256]:int256, setRejected:[int256,int256,int256]:int256, setReportingThreshold:[int256]:int256, setUncaughtOutcome:[int256,int256]:int256]", 
             "EVENTS = 0x482c57abdce592b39434e3f619ffc3db62ab6d01", 
@@ -4758,7 +4763,7 @@
             "#    along with this program.  If not, see <http://www.gnu.org/licenses/>.", 
             "# Any questions please contact joey@augur.net", 
             "", 
-            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:_, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
+            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
             "BRANCHES = 0xbd19195b9e8a2d8ed14fc3a2823856b5c16f7f55", 
             "extern expiringEvents: [addEvent:[int256,int256,int256]:int256, addPeriodVolume:[int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getNumEventsToReportOn:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodVolume:[int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getTotalRepReported:[int256,int256]:int256, moveEventsToCurrentPeriod:[int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setNumEventsToReportOn:[int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setTotalRepReported:[int256,int256,int256]:int256]", 
             "EXPEVENTS = 0xe4714fcbdcdba49629bc408183ef40d120700b8d", 
@@ -5749,7 +5754,7 @@
             "INFO = 0x5069d883e31429c6dd1325d961f443007747c7a2", 
             "extern events: [addMarket:[int256,int256]:int256, addNumReports:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getExpiration:[int256]:int256, getFinal:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMedian:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getNumReports:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPushedBack:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getRejectedUncaught:[int256]:int256, getReportingThreshold:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256]:int256, setEthics:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setFinal:[int256,int256]:int256, setMedian:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setPushedBack:[int256]:int256, setRejected:[int256,int256,int256]:int256, setReportingThreshold:[int256]:int256, setUncaughtOutcome:[int256,int256]:int256]", 
             "EVENTS = 0x482c57abdce592b39434e3f619ffc3db62ab6d01", 
-            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:_, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
+            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
             "BRANCHES = 0xbd19195b9e8a2d8ed14fc3a2823856b5c16f7f55", 
             "", 
             "# Markets' index is the marketID", 
@@ -6897,7 +6902,7 @@
             "# Any questions please contact joey@augur.net", 
             "", 
             "# import makeReports as REPORTS", 
-            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:_, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
+            "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
             "BRANCHES = 0xbd19195b9e8a2d8ed14fc3a2823856b5c16f7f55", 
             "", 
             "# Reporting index is the branchID", 
