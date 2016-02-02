@@ -133,7 +133,7 @@ def getMarketInfo(marketID):
 #           info_j is the information array for market j, and N is the total
 #           number of markets in this branch.
 def getMarketsInfo(branch, offset, numMarketsToLoad):
-    numMarkets = BRANCHES.getNumMarkets(branch)
+    numMarkets = BRANCHES.getNumMarketsBranch(branch)
     with marketIDs = BRANCHES.getMarketsInBranch(branch, outitems=numMarkets):
         if numMarketsToLoad > 0 and numMarketsToLoad < numMarkets:
             numMarkets = numMarketsToLoad
