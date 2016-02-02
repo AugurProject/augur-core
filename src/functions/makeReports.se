@@ -1,5 +1,5 @@
 # This software (Augur) allows buying && selling event outcomes in ethereum
-# Copyright (C) 2015 Forecast Foundation
+# Copyright (C) 2015 Forecast Foundation OU
 #    This program is free software; you can redistribute it &&/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -126,7 +126,10 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
         return(-4)
     if(self.reportable[votePeriod][eventID]==-1):
         return(-5)
-    
+    if(!self.upToDateOnRR[msg.sender]):
+        # TODO: calls to consensus functions and in send rep
+        #doIt()
+        self.upToDateOnRR[msg.sender] = 1
     #todo: if period isn't incremented, do it
 
     repIndex = REPORTING.repIDToIndex(branch, tx.origin)
@@ -239,7 +242,6 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
             # reporter has reported for 1 more event
             self.branches[branch].numReportsActual[tx.origin][votePeriod] += 1
             # record that reporter has reported for this event
-            # todo make sure this syntax works
             self.branches[branch].hasReported[eventID][tx.origin].reported[votePeriod] = 1
             # set report value for event
             self.branches[branch].report[period][tx.origin].event[eventID] = report
@@ -273,7 +275,7 @@ def penalizeNotEnoughReports(branch, votePeriod):
     # min. of 30 events no matter how little rep you have
     # whats going on here
     if(self.branches[branch].reportedPeriod[votePeriod][msg.sender]):
-        # if has reported, don't count in rep reported for fee or rep redistrib. claims
+        # if has reported, don't count in rep reported for fee or rep redistrib. claims, should prob. not do this
         repReported = EXPEVENTS.getTotalRepReported(branch)
         repReported -= REPORTING.getRepBalance(branch, tx.origin)
         EXPEVENTS.setTotalRepReported(branch, votePeriod, repReported)
@@ -302,7 +304,14 @@ def penalizeNotEnoughReports(branch, votePeriod):
             #EXPEVENTS.setTotalRepReported(branch, votePeriod, repReported+oldRep+newRep)
         # adds the rep to the branch's pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), originalRep - (oldRep+newRep))
-    # todo: separate heavier penalty for not reporting on a round 2 / readjudicated event
+    self.penalizedNotEnoughReports[]
+            self.penalized[lastPeriod][tx.origin].doneAllEvents = 1
+        # find delta between this last period and last penalized up to
+        self.penalizedUpTo[branch][tx.origin] = lastPeriod
+        # dock 20% for each period they didn't penalize on
+  	    smoothedRep = oldRep*(14757395258967642112)/2**64
+  	    # and send it to branch for penalty rep collection
+
     return(1)
 
 ### Helper functions:

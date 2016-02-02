@@ -711,6 +711,7 @@ def test_consensus():
     c = s.abi_contract('functions/output.se')
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
+    # also test penalize not enough reports
     print "Test consensus OK"
 
 
