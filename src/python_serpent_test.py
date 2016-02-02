@@ -582,6 +582,10 @@ def test_create_branch():
     assert(c.createSubbranch("new branch", 100, 1010101, 2**55, 0)==-2), "Branch already exist fail"
     assert(c.createSubbranch("new branch", 100, 10101, 2**55, 0)==-1), "Branch doesn't exist check fail"
     assert(c.getParentPeriod(b)==c.getVotePeriod(1010101)), "Parent period saving broken"
+    event1 = c.createEvent(b, "new event", 555, 1, 2, 2)
+    print hex(event1)
+    bin_market = c.createMarket(b, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 1)
+    print hex(bin_market)
     print "Test branch OK"
 
 def test_send_rep():
@@ -739,9 +743,9 @@ if __name__ == '__main__':
     #test_create_market()
     #test_buy_sell_shares()
     #test_transfer_shares()
-    #test_create_branch()
+    test_create_branch()
     #test_send_rep()
     #test_make_reports()
     #test_close_market()
-    test_consensus()
+    # test_consensus()
     print "DONE TESTING"

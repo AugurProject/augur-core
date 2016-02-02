@@ -47,7 +47,7 @@ def init():
 
 # call once after uploading (externed method not allowed in init)
 def initDefaultBranch():
-    CASH.initiateOwner(1010101)
+    return(CASH.initiateOwner(1010101))
 
 def getOracleOnly(branch):
 	return(self.Branches[branch].oracleOnly)
