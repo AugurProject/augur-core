@@ -267,53 +267,6 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
     else:
         return(-6)
 
-# Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account, and distributed like trading fees are except each person would make their own lazy claim on it.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
-def penalizeNotEnoughReports(branch, votePeriod):
-    #if(alreadyPenalized):
-    #    return(-1)
-    numEvents = self.getNumEventsToReport(branch, votePeriod)
-    # min. of 30 events no matter how little rep you have
-    # whats going on here
-    if(self.branches[branch].reportedPeriod[votePeriod][msg.sender]):
-        # if has reported, don't count in rep reported for fee or rep redistrib. claims, should prob. not do this
-        repReported = EXPEVENTS.getTotalRepReported(branch)
-        repReported -= REPORTING.getRepBalance(branch, tx.origin)
-        EXPEVENTS.setTotalRepReported(branch, votePeriod, repReported)
-    if(numEvents < 30*2**64):
-        numEvents = 30*2**64
-    repConstant = REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch)
-    logOutput = FXP.fx_log(repConstant)
-    exp = FXP.fx_exp(22136092888451461120*logOutput/2**64)
-    exp += 18446744073709552
-    total = exp*40
-    # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool)
-    #if(exp(ln(rep%)**1.2)*40 > 1):
-    if(total > 2**64):
-        numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)/40)*2**64
-    
-    # what _if_ there are actually <30 events in augur?
-      # perhaps we should have all reporters in that period report on all of them
-    if(numEvents/(2*2**64) > self.branches[branch].numReportsActual[msg.sender][votePeriod]):
-        originalRep = REPORTING.getRepBalance(branch, tx.origin)
-        # penalize people
-        #newRep = .2*self.branches[branch].numReportsActual[msg.sender][votePeriod] / self.getNumEventsToReport(branch, votePeriod)/(2*2**64) * originalRep
-        #oldRep = REPORTING.getRepBalance(branch, tx.origin)*.8
-        REPORTING.setRep(branch, REPORTING.repIDToIndex(branch, tx.origin), oldRep+newRep)
-        # need to decide whether to allow claiming of fees and redistrib. at lower rate or not
-            #repReported = EXPEVENTS.getTotalRepReported(branch)
-            #EXPEVENTS.setTotalRepReported(branch, votePeriod, repReported+oldRep+newRep)
-        # adds the rep to the branch's pool
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), originalRep - (oldRep+newRep))
-    self.penalizedNotEnoughReports[]
-            self.penalized[lastPeriod][tx.origin].doneAllEvents = 1
-        # find delta between this last period and last penalized up to
-        self.penalizedUpTo[branch][tx.origin] = lastPeriod
-        # dock 20% for each period they didn't penalize on
-  	    smoothedRep = oldRep*(14757395258967642112)/2**64
-  	    # and send it to branch for penalty rep collection
-
-    return(1)
-
 ### Helper functions:
 def calculateReportingThreshold(branch, eventID, votePeriod):
     numMarkets = EVENTS.getNumMarkets(eventID)
