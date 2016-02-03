@@ -75,17 +75,14 @@ def penalizeWrong(branch, event):
     return(0)
 
 # Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account and distributed like trading fees.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
-def penalizeNotEnoughReports(branch, votePeriod):
-  #if(alreadyPenalized):
-  #    return(-1)
-  numEvents = self.getNumEventsToReport(branch, votePeriod)
+# Errors:
+  # -1: already done
+def penalizeNotEnoughReports(branch):
+  if(self.branches[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
+      return(-1)
+  lastPeriod = BRANCHES.getVotePeriod(branch)-1
+  numEvents = MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
   # min. of 30 events no matter how little rep you have
-  # whats going on here
-  if(self.branches[branch].reportedPeriod[votePeriod][msg.sender]):
-      # if has reported, don't count in rep reported for fee or rep redistrib. claims, should prob. not do this
-      repReported = EXPEVENTS.getTotalRepReported(branch)
-      repReported -= REPORTING.getRepBalance(branch, tx.origin)
-      EXPEVENTS.setTotalRepReported(branch, votePeriod, repReported)
   if(numEvents < 30*2**64):
       numEvents = 30*2**64
   repConstant = REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch)
@@ -93,25 +90,23 @@ def penalizeNotEnoughReports(branch, votePeriod):
   exp = FXP.fx_exp(22136092888451461120*logOutput/2**64)
   exp += 18446744073709552
   total = exp*40
-  # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool)
-  #if(exp(ln(rep%)**1.2)*40 > 1):
+  # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
   if(total > 2**64):
       numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)/40)*2**64
-  
   # what _if_ there are actually <30 events in augur?
     # perhaps we should have all reporters in that period report on all of them
-  if(numEvents/(2*2**64) > self.branches[branch].numReportsActual[msg.sender][votePeriod]):
+  numReportsActual = MAKEREPORTS.getNumReportsActual(branch, lastPeriod)
+  if(numEvents/(2*2**64) > MAKEREPORTS.getNumReportsActual(branch, lastPeriod)):
       originalRep = REPORTING.getRepBalance(branch, tx.origin)
       # penalize people
-      #newRep = .2*self.branches[branch].numReportsActual[msg.sender][votePeriod] / self.getNumEventsToReport(branch, votePeriod)/(2*2**64) * originalRep
-      #oldRep = REPORTING.getRepBalance(branch, tx.origin)*.8
-      REPORTING.setRep(branch, REPORTING.repIDToIndex(branch, tx.origin), oldRep+newRep)
-      # need to decide whether to allow claiming of fees and redistrib. at lower rate or not
-          #repReported = EXPEVENTS.getTotalRepReported(branch)
-          #EXPEVENTS.setTotalRepReported(branch, votePeriod, repReported+oldRep+newRep)
-      # adds the rep to the branch's pool
-      REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), originalRep - (oldRep+newRep))
-      ### need to update after rep and send to redistrib. pool
+      newRep = 3689348814741910528*numReportsActual*originalRep / MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
+      oldRep = REPORTING.getRepBalance(branch, tx.origin)*14757395258967642112 / 2**64
+      repChange = (oldRep+newRep) - originalRep
+      # removes rep from reporter who lost it
+      REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), repChange)
+      # sends that rep to the branch rep pool
+      REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -repChange)
+      MAKEREPORTS.setBeforeRep(branch, lastPeriod, oldRep+newRep)
   self.branches[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized = 1
   return(1)
 
@@ -158,6 +153,7 @@ def collectFees(branch):
   lastPeriod = BRANCHES.getVotePeriod(branch)-1
   repReported = EXPEVENTS.getTotalRepReported(branch, lastPeriod)
   if(!self.feesCollected[lastPeriod][msg.sender] && reportedThisPeriod)
+    # works if only people who did rbcr in that period [not catching up people who didn't report] are counted and the rep amount total doesn't change
     cash = BRANCHES.getInitialBalance(branch, lastPeriod) * REPORTING.getReputation(msg.sender) / repReported
 	  CASH.addCash(tx.origin, cash)
 	  CASH.subtractCash(branch, cash)

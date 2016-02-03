@@ -32,7 +32,10 @@ import fxpFunctions as FXP
 data branches[](submittedHash[][], numReportsActual[][], hasReported[][](reported[]), beforeRep[][], afterRep[][], report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], reportedPeriod[][], firstReport[])
 data reportable[][]
 
-# need to finish this req. events stuff
+# need to finish this req. events stuff for round 2 pushback _and_:
+    # what _if_ there are actually <30 events in augur?
+        # perhaps we should have all reporters in that period report on all of them
+
 data requiredEvents[]
 #self.Events[event].threshold = 2**256
 # branch, period as params
@@ -95,7 +98,7 @@ def setAfterRep(branch, period, rep):
     return(rep)
     
 def getNumReportsActual(branch, votePeriod):
-    return(self.branches[branch].numReportsActual[msg.sender][votePeriod])
+    return(self.branches[branch].numReportsActual[tx.origin][votePeriod])
 
 def getSubmittedHash(branch, period, reporter):
     return(self.branches[branch].submittedHash[period][reporter])
@@ -234,7 +237,6 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
                 (return(-3))
             if(self.branches[branch].firstReport[votePeriod]==0):
                 BRANCHES.setInitialBalance(branch, votePeriod, CASH.balance(branch))
-                REPORTING.setInitialRep(branch, votePeriod, REPORTING.getRepBalance(branch, branch))
                 self.branches[branch].firstReport[votePeriod] = 1
             report = self.validateReport(eventID, branch, votePeriod, report)
             if(report == -5):

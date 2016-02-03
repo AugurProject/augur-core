@@ -28,7 +28,7 @@ import branches as BRANCHES
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
-data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, balance[], dormantRep[](repValue, reporterID))
+data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID))
 
 data whitelists[](addresses[], taken)
 
@@ -87,12 +87,6 @@ def getReporterID(branch, index):
 
 def getTotalRep(branch):
     return(self.Reporting[branch].totalRep)
-
-def setInitialRep(branch, period, balance):
-    self.Reporting[branch].balance[period] = balance
-
-def getInitialRep(branch, period):
-    return(self.Reporting[branch].balance[period])
 
 # will return 0s for array values after it's looped through all the ones you
 # have an actual balance in

@@ -35,6 +35,7 @@ def sendReputation(branch, recver, value):
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     #if(value<=0 || !CASH.send(branch, 5*2^64) || EXPEVENTS.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, recver, 0) != 0):
     #    return(0)
+    # need to check all this for the person it's being sent to as well
     #if(REPORTS.getRRUpToDate()!=1):
     #    doIt()
     #    self.RRDone = true
