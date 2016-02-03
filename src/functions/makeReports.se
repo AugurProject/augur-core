@@ -42,6 +42,8 @@ data requiredEvents[]
 data numReqEvents[][]
 data upToDateOnRR[]
 
+def getReportedPeriod(branch, period, reporter):
+    return(self.branches[branch].reportedPeriod[period][reporter])
 
 def getReportable(votePeriod, eventID):
     return(self.reportable[votePeriod][eventID])

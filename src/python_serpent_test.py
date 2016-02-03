@@ -721,6 +721,7 @@ def test_consensus():
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
     # also test penalize not enough reports
+    # make sure no way for someone to get excess rep and rep total doesn't change
     print "Test consensus OK"
 
 
