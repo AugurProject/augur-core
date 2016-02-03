@@ -18,7 +18,7 @@ data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, final)
   # penalizedUpTo is the latest period a user has done the penalization for
   # fees collected states whether for a given period a user collected fees
   # rep collected states whether for a given period a user collected rep
-data branches[](denominator[], penalized[][](event[], num, notEnoughReportsPenalized), penalizedUpTo[], feesCollected[], repCollected[])
+data branches[](denominator[], penalized[][](event[], num, notEnoughReportsPenalized), penalizedUpTo[], feesCollected[], feesCollected[])
 
 #1. Record rep at start of report period [before rep in make reports]
 #2. Penalize for each event
@@ -80,6 +80,8 @@ def penalizeWrong(branch, event):
 def penalizeNotEnoughReports(branch):
   if(self.branches[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
       return(-1)
+  if(hasntReportedThisPeriod):
+      return(-2)
   lastPeriod = BRANCHES.getVotePeriod(branch)-1
   numEvents = MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
   # min. of 30 events no matter how little rep you have
@@ -112,7 +114,7 @@ def penalizeNotEnoughReports(branch):
 
 # -2: needs to be second half of reporting period to claim rep [1st half is when redistribution is done]
   # after this window, any unclaimed rep is pushed to the next period's redistrib. pool via the first make report submission
-def collectRep(branch):
+def collectFees(branch):
   periodLength = BRANCHES.getPeriodLength(branch)
   residual = block.number % periodLength
   if(residual < periodLength/2):
@@ -123,42 +125,20 @@ def collectRep(branch):
       redistributeRep(branch)
   lastPeriod = BRANCHES.getVotePeriod(branch)-1
   repReported = EXPEVENTS.getTotalRepReported(branch, lastPeriod)
-	if(!self.repCollected[lastPeriod][tx.origin] && reportedThisPeriod):
+	if(!self.branches[branch].feesCollected[lastPeriod][tx.origin] && reportedThisPeriodnotjustcaughtuponrbcr):
 		newRep = MAKEREPORTS.getAfterRep(branch, lastPeriod)
-    gainedRep = newRep * 2**64 / denominator * self.repInRedistribPool(period) / 2**64
-    if(lostRep):
-      newRep = MAKEREPORTS.getAfterRep(branch, period) + gainedRep
-    if(gainedRep):
-      newRep = MAKEREPORTS.getBeforeRep(branch, period) + gainedRep
-		REPORTING.setRep(branch, REPORTING.repIDToIndex(branch, tx.origin), newRep)
-	  self.repCollected[lastPeriod][tx.origin] = 1
-	  #REPORTING.getInitialRep(branch, lastPeriod) should really be rep in redistrib. pool at the time, initial rep will be too old and an invalid metric
-    rep = fixed_multiply(REPORTING.getInitialRep(branch, lastPeriod), REPORTING.getReputation(msg.sender)*2**64/repReported)
-    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), rep)
-	  REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), rep)
-	 
-	  initial rep 
-	  before rep
-	  after rep
-	  total rep reported
+    gainedRep = newRep * 2**64 / denominator * self.repInRedistribPool(period)akarepbalanceforbranch / 2**64
+    #if(lostRep) newRep should be == MAKEREPORTS.getAfterRep(branch, period) + gainedRep
+    #if(gainedRep) newRep should be == MAKEREPORTS.getBeforeRep(branch, period) + gainedRep
+    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), gainedRep)
+    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), gainedRep)
+	  cash = BRANCHES.getInitialBalance(branch, lastPeriod) * newRep / denominator
+	  CASH.addCash(tx.origin, cash)
+	  CASH.subtractCash(branch, cash)
+	  self.feesCollected[lastPeriod][tx.origin] = 1
 	 	return(1)
 	else:
 		return(0)
-
-
-#lazily evaluated claiming of trading fees
-def collectFees(branch):
-  if(!repRedistributionDone(branch, tx.origin)):
-      redistributeRep(branch)
-  lastPeriod = BRANCHES.getVotePeriod(branch)-1
-  repReported = EXPEVENTS.getTotalRepReported(branch, lastPeriod)
-  if(!self.feesCollected[lastPeriod][msg.sender] && reportedThisPeriod)
-    # works if only people who did rbcr in that period [not catching up people who didn't report] are counted and the rep amount total doesn't change
-    cash = BRANCHES.getInitialBalance(branch, lastPeriod) * REPORTING.getReputation(msg.sender) / repReported
-	  CASH.addCash(tx.origin, cash)
-	  CASH.subtractCash(branch, cash)
-	  self.feesCollected[lastPeriod][msg.sender] = 1
-	return(1)
 
 # anti cheat provide ballot and randomNum mechanism steal deposit
 # Returns:
@@ -239,6 +219,7 @@ macro redistributeRep($branch):
   	# and send it to branch for penalty rep collection
 
 # call when a user who hasn't reported for a while wants to start again and needs to catch up on penalizations
+# should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
 def penalizationCatchup(branch):
   # find delta between this last period and last penalized up to
   lastPeriodPenalized = self.penalizedUpTo[branch][tx.origin]
@@ -303,3 +284,5 @@ macro categorical($event):
     # self.penalized[lastPeriod][tx.origin].num += 1
   	#	return(1)
 # test .99 resolve push forward
+
+# make sure no way for someone to get excess rep and rep total doesn't change
