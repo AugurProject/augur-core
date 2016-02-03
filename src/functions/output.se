@@ -2785,7 +2785,7 @@ def getMarketInfo(marketID):
 #           info_j is the information array for market j, and N is the total
 #           number of markets in this branch.
 def getMarketsInfo(branch, offset, numMarketsToLoad):
-    numMarkets = self.getNumMarkets(branch)
+    numMarkets = self.getNumMarketsBranch(branch)
     with marketIDs = self.getMarketsInBranch(branch, outitems=numMarkets):
         if numMarketsToLoad > 0 and numMarketsToLoad < numMarkets:
             numMarkets = numMarketsToLoad
@@ -2823,6 +2823,37 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
                         currentFlatLength += col
                         row += 1
                     return(flattened: arr)
+
+# @return cost - how much it costs you to buy
+#         price - current share price of that outcome after buy
+def getSimulatedBuy(market, outcome, amount):
+    # lmsr cost calcs
+    oldCost = lsLmsr(market)
+    sharesPurchased(market)[outcome] += amount
+    newCost = lsLmsr(market)
+    if newCost <= oldCost:
+        sharesPurchased(market)[outcome] -= amount
+        return(-2)
+    cost = (newCost - oldCost)
+    price = self.price(market, outcome)
+    sharesPurchased(market)[outcome] -= amount
+    return([cost, price], chars=64)
+
+# @return cost - how much you get paid to sell
+#         price - current share price of that outcome after sell
+def getSimulatedSell(market, outcome, amount):
+    # lmsr cost calcs
+    oldCost = lsLmsr(market)
+    sharesPurchased(market)[outcome] -= amount
+    newCost = lsLmsr(market)
+    if oldCost <= newCost:
+        sharesPurchased(market)[outcome] += amount
+        return(-2)
+    # these prices are in fixed point
+    cost = oldCost - newCost
+    price = self.price(market, outcome)
+    sharesPurchased(market)[outcome] += amount
+    return([cost, price], chars=64)
 
 def getForkSelection(market):
     return(self.Markets[market].forkSelection)

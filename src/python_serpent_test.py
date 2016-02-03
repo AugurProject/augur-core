@@ -272,19 +272,25 @@ def test_buy_sell_shares():
     event6 = c.createEvent(1010101, "new event", 557, 1, 25, 2)
 
     gas_use(s)
-    
+
     ### Single Markets
     # binary market
     bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 1)
-    print c.getSharesPurchased(bin_market, 1)
-    print c.getSharesPurchased(bin_market, 2)
-    c.commitTrade(bin_market, c.makeMarketHash(bin_market, 2, 5*2**64, 0))
+    initialSharesPurchased1 = c.getSharesPurchased(bin_market, 1)
+    initialSharesPurchased2 = c.getSharesPurchased(bin_market, 2)
+    sharesToTrade = 5*2**64
+    c.commitTrade(bin_market, c.makeMarketHash(bin_market, 2, sharesToTrade, 0))
     s.mine(1)
-    assert(c.buyShares(1010101, bin_market, 2, 5*2**64, 0)==1), "Buy shares issue"
-    c.commitTrade(bin_market, c.makeMarketHash(bin_market, 2, 5*2**64, 0))
+    assert(c.buyShares(1010101, bin_market, 2, sharesToTrade, 0)==1), "Buy shares issue"
+    assert(c.getSharesPurchased(bin_market, 1) - initialSharesPurchased1 == 0), "Share storage issue"
+    print "shares traded:", (c.getSharesPurchased(bin_market, 2) - initialSharesPurchased2) / 2**64
+    assert(c.getSharesPurchased(bin_market, 2) - initialSharesPurchased2 == sharesToTrade), "Share storage issue"
+    c.commitTrade(bin_market, c.makeMarketHash(bin_market, 2, sharesToTrade, 0))
     s.mine(1)
-    assert(c.sellShares(1010101, bin_market, 2, 5*2**64, 0)==1), "Sell shares issue"
-    
+    assert(c.sellShares(1010101, bin_market, 2, sharesToTrade, 0)==1), "Sell shares issue"
+    assert(c.getSharesPurchased(bin_market, 1) - initialSharesPurchased1 == 0), "Share storage issue"
+    assert(c.getSharesPurchased(bin_market, 2) - initialSharesPurchased2 == 0), "Share storage issue"
+
     # scalar market
     a = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2], 1)
     bal = c.balance(s.block.coinbase)
@@ -313,7 +319,6 @@ def test_buy_sell_shares():
     assert(c.price(a, 1) < 2**64), "Scalar sell off"
     assert(c.price(a, 2) > 198*2**64), "Scalar sell off"
 
-    
     # odd range scalar
     b = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4], 1)
     bal = c.balance(s.block.coinbase)
@@ -729,23 +734,23 @@ if __name__ == '__main__':
     src = os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace', 'src')
     os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
     # data/api tests
-    #test_cash()
-    #test_ether()
-    #test_quicksort()
-    #test_insertionsort()
-    #test_log_exp()
-    #test_exp()
-    #test_markets()
-    #test_reporting()
-    
+    # test_cash()
+    # test_ether()
+    # test_quicksort()
+    # test_insertionsort()
+    # test_log_exp()
+    # test_exp()
+    # test_markets()
+    # test_reporting()
+
     # function tests
-    #test_create_event()
-    #test_create_market()
-    #test_buy_sell_shares()
-    #test_transfer_shares()
-    test_create_branch()
-    #test_send_rep()
-    #test_make_reports()
-    #test_close_market()
+    # test_create_event()
+    # test_create_market()
+    test_buy_sell_shares()
+    # test_transfer_shares()
+    # test_create_branch()
+    # test_send_rep()
+    # test_make_reports()
+    # test_close_market()
     # test_consensus()
     print "DONE TESTING"

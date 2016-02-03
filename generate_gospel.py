@@ -32,6 +32,8 @@ def gospelify(output):
         if output == "json":
             for i, contract in enumerate(value):
                 address = DB[contract]['address']
+                if contract == "buy&sellShares":
+                    contract = "buyAndSellShares"
                 outstr = '    "' + contract + '": "' + address + '"'
                 if name.lower() != "data_api" or i < len(value) - 1:
                     outstr += ","
