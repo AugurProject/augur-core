@@ -144,27 +144,29 @@ def collectFees(branch):
 # call when a user who hasn't reported for a while wants to start again and needs to catch up on penalizations
 # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
 def penalizationCatchup(branch):
-    if(oldPeriodsTooLateToPenalize && userDidntPenalizeForAllInOldPeriods):
     # find delta between this last period and last penalized up to
-    lastPeriodPenalized = self.penalizedUpTo[tx.origin]
-    # dock 10% for each period they didn't penalize on
+    lastPeriodPenalized = self.branches[branch].penalizedUpTo[tx.origin]
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     delta = lastPeriod - lastPeriodPenalized
-    smoothedRep = oldRep*(14757395258967642112/2)/2**64
-    i = 0
-    while i < delta:
+    oldRep = REPORTING.getRepBalance(branch, tx.origin)
+    if(lastPeriodPenalized!=lastPeriod && !hasReported(branch, lastPeriod)):
+        # dock 10% for each period they didn't penalize on
         smoothedRep = oldRep*(14757395258967642112/2)/2**64
-        i += 1
-    # and send it to branch for penalty rep collection
-    sendToPenaltyRep
-    
-    self.penalizedNotEnoughReports[]
-    self.penalized[lastPeriod][tx.origin].doneAllEvents = 1
-    # find delta between this last period and last penalized up to
-    self.penalizedUpTo[tx.origin] = lastPeriod
-    # dock 10% for each period they didn't penalize on
-    smoothedRep = oldRep*(14757395258967642112/2)/2**64
-    # and send it to branch for penalty rep collection
+        i = 0
+        while i < delta:
+            smoothedRep = smoothedRep*(14757395258967642112/2)/2**64
+            i += 1
+        # and send it to branch for penalty rep collection
+        repChange = oldRep - smoothedRep
+        # removes rep from reporter who lost it
+        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, tx.origin), repChange)
+        # sends that rep to the branch rep pool
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repChange)
+        self.branches[branch].penalizedUpTo[tx.origin] = lastPeriod
+        return(1)
+    else:
+        return(0)
+
 
 # anti cheat provide ballot and randomNum mechanism steal deposit
 # Returns:
