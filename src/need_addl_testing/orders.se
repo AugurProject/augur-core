@@ -9,6 +9,9 @@
 # EtherEx
 #
 
+# Credit also goes to https://www.cs.princeton.edu/~kroll/papers/weis14_prediction.pdf
+# On Decentralizing Prediction Markets and Order Books
+
 data markets[2^160](id, name, contract, decimals, precision, minimum, category, last_price, owner, block, total_trades, last_trade, trade_ids[](id, next_id, prev_id))
 data markets_id[2^160](id)  # Reverse Market ID lookup by contract address
 data markets_name[2^160](id)  # Reverse Market ID lookup by name
