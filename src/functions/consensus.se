@@ -1,0 +1,296 @@
+import expiringEvents as EXPIRING
+import reporting as REPORTING
+import events as EVENTS
+import fxpFunctions as FXP
+import events as EVENTS
+import makeReports as MAKEREPORTS
+import branches as BRANCHES
+import markets as MARKETS
+import sendReputation as SENDREP
+
+# round two consensus data
+data bondPaid[]
+data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, final)
+
+# branches takes a branchID
+    # denominator takes a vote period
+    # penalized takes for a given period a user / address reported for a certain event and num of events they reported on in that period in total
+    # penalizedUpTo is the latest period a user has done the penalization for
+    # fees collected states whether for a given period a user collected fees
+    # rep collected states whether for a given period a user collected rep
+data branches[](denominator[], penalized[][](event[], num, notEnoughReportsPenalized), penalizedUpTo[], feesCollected[][])
+
+#1. Record rep at start of report period [before rep in make reports]
+#2. Penalize for each event
+#3. Each reporter needs to do this for all events they reported on, if not get docked
+#4. For first half of the new period, people can do penalization for the last period, for the second half users have to claim rep then trading fees
+#5. If you don't do it for all events or don't penalize for not reporting enough, autolose 20% rep each period one does this (b/c they're trying to cheat)
+# Errors:
+    # -1: pushed back event already resolved, so can't redistribute rep based off of its original expected expiration period
+    # -2: already past first half of new period and needed to penalize before then
+    # -3: need to do not enough reports penalization [or lackthereof]
+def penalizeWrong(branch, event):
+    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    if(!self.branches[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
+        return(-3)
+    periodLength = BRANCHES.getPeriodLength(branch)
+    residual = block.number % periodLength
+    if(residual > periodLength/2):
+        return(-2)
+    if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event) && MARKETS.getPushedForward(market)):
+        if(lastPeriod==EVENTS.getOriginalExpiration(event)/BRANCHES.getPeriodLength(branch)):
+            return(-1)
+    outcome = EVENTS.getOutcome(event)
+    reportValue = MAKEREPORTS.getReport(branch, lastPeriod, event)
+    p = self.proportionCorrect(event)
+    oldRep = MAKEREPORTS.getBeforeRep(branch, period)
+    if(!self.branches[branch].penalized[lastPeriod][tx.origin].event[event] && BRANCHES.getVotePeriod(branch) > period && reportValue && outcome!=0):
+        # wrong
+        #184467440737095520 == 0.01 in fxp
+        if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
+            #if(scalar(event) or categorical(event) or outcome==3*2**64):
+                #p = -(abs(reportValue - EVENTS.getMedian(event))/2) + 2**64
+            newRep = oldRep*(2*p - 2**64)/2**64
+        # right
+        else:
+            #if(scalar(event) or categorical(event) or outcome==3*2**64):
+                #p = -(abs(reportValue - EVENTS.getMedian(event))/2) + 2**64
+            newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)
+        #smoothedRep = oldRep*.8 + newRep*.2
+        smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
+        MAKEREPORTS.setAfterRep(branch, lastPeriod, smoothedRep)
+        repChange = smoothedRep - oldRep
+        self.branches[branch].denominator[period] += smoothedRep
+        if(repChange < 0):
+            # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), repChange)
+            # sends that rep to the branch
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -repChange)
+        if(MAKEREPORTS.getNumReportsActual(branch, lastPeriod)==self.branches[branch].penalized[lastPeriod][tx.origin].num):
+            self.branches[branch].penalizedUpTo[tx.origin] = lastPeriod
+        self.branches[branch].penalized[lastPeriod][tx.origin].event[event] = 1
+        self.branches[branch].penalized[lastPeriod][tx.origin].num += 1
+        return(1)
+    else:
+        return(0)
+
+# Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account and distributed like trading fees.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
+# Errors:
+    # -1: already done
+    # -2: hasn't reported this period
+def penalizeNotEnoughReports(branch):
+    if(self.branches[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
+        return(-1)
+    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    if(!hasReported(branch, lastPeriod)):
+        return(-2)
+    numEvents = MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
+    # min. of 30 events no matter how little rep you have
+    if(numEvents < 30*2**64):
+        numEvents = 30*2**64
+    repConstant = REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch)
+    logOutput = FXP.fx_log(repConstant)
+    exp = FXP.fx_exp(22136092888451461120*logOutput/2**64)
+    exp += 18446744073709552
+    total = exp*40
+    # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
+    if(total > 2**64):
+        numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)/40)*2**64
+    # what _if_ there are actually <30 events in augur?
+        # perhaps we should have all reporters in that period report on all of them
+    numReportsActual = MAKEREPORTS.getNumReportsActual(branch, lastPeriod)
+    if(numEvents/(2*2**64) > MAKEREPORTS.getNumReportsActual(branch, lastPeriod)):
+        originalRep = REPORTING.getRepBalance(branch, tx.origin)
+        # penalize people
+        newRep = 3689348814741910528*numReportsActual*originalRep / MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
+        oldRep = REPORTING.getRepBalance(branch, tx.origin)*14757395258967642112 / 2**64
+        repChange = (oldRep+newRep) - originalRep
+        # removes rep from reporter who lost it
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), repChange)
+        # sends that rep to the branch rep pool
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -repChange)
+        MAKEREPORTS.setBeforeRep(branch, lastPeriod, oldRep+newRep)
+    self.branches[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized = 1
+    return(1)
+
+# -2: needs to be second half of reporting period to claim rep [1st half is when redistribution is done]
+    # after this window, any unclaimed rep is pushed to the next period's redistrib. pool via the first make report submission
+def collectFees(branch):
+    periodLength = BRANCHES.getPeriodLength(branch)
+    residual = block.number % periodLength
+    if(residual < periodLength/2):
+        return(-2)
+    if(!repRedistributionDone(branch, tx.origin)):
+        # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
+        return(-1)
+    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    repReported = EXPEVENTS.getTotalRepReported(branch, lastPeriod)
+    if(!self.branches[branch].feesCollected[lastPeriod][tx.origin] && hasReported(branch, lastPeriod)):
+        newRep = MAKEREPORTS.getAfterRep(branch, lastPeriod)
+        denominator = self.branches[branch].denominator[lastPeriod]
+        gainedRep = newRep * 2**64 / denominator * REPORTING.getRepBalance(branch, branch) / 2**64
+        #if(lostRep) newRep should be == MAKEREPORTS.getAfterRep(branch, period) + gainedRep
+        #if(gainedRep) newRep should be == MAKEREPORTS.getBeforeRep(branch, period) + gainedRep
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), gainedRep)
+        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), gainedRep)
+        cash = BRANCHES.getInitialBalance(branch, lastPeriod) * newRep / denominator
+        CASH.addCash(tx.origin, cash)
+        CASH.subtractCash(branch, cash)
+        self.branches[branch].feesCollected[lastPeriod][tx.origin] = 1
+        return(1)
+    else:
+        return(0)
+
+# call when a user who hasn't reported for a while wants to start again and needs to catch up on penalizations
+# should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
+def penalizationCatchup(branch):
+    if(oldPeriodsTooLateToPenalize && userDidntPenalizeForAllInOldPeriods):
+    # find delta between this last period and last penalized up to
+    lastPeriodPenalized = self.penalizedUpTo[tx.origin]
+    # dock 10% for each period they didn't penalize on
+    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    delta = lastPeriod - lastPeriodPenalized
+    smoothedRep = oldRep*(14757395258967642112/2)/2**64
+    i = 0
+    while i < delta:
+        smoothedRep = oldRep*(14757395258967642112/2)/2**64
+        i += 1
+    # and send it to branch for penalty rep collection
+    sendToPenaltyRep
+    
+    self.penalizedNotEnoughReports[]
+    self.penalized[lastPeriod][tx.origin].doneAllEvents = 1
+    # find delta between this last period and last penalized up to
+    self.penalizedUpTo[tx.origin] = lastPeriod
+    # dock 10% for each period they didn't penalize on
+    smoothedRep = oldRep*(14757395258967642112/2)/2**64
+    # and send it to branch for penalty rep collection
+
+# anti cheat provide ballot and randomNum mechanism steal deposit
+# Returns:
+    # 0: not a valid claim
+    # -2: reporter doesn't exist
+def slashRep(branch, votePeriod, salt, report, reporter, eventID):
+    realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, eventID)
+    hashInfo = array(4)
+    hashInfo[0] = reporter
+    hashInfo[1] = salt
+    hashInfo[2] = report
+    hashInfo[3] = eventID
+    reportHash = sha256(hashInfo, chars=32*len(hashInfo))
+    if(reportHash!=realHash):
+        return(0)
+    else:
+        reporterIndex = REPORTING.repIDToIndex(branch, reporter)
+        trutherIndex = REPORTING.repIDToIndex(branch, tx.origin)
+        trutherBalance = REPORTING.getRepBalance(branch, tx.origin)
+        # if the truther's rep. account doesn't exist, make one
+        if(REPORTING.getReporterID(branch, trutherIndex)!=tx.origin):
+            trutherIndex = REPORTING.getNumberReporters(branch)
+            REPORTING.addReporter(branch, tx.origin)
+        if(REPORTING.getReporterID(branch, reporterIndex)!=reporter):
+            return(-2)
+        reporterBalance = REPORTING.getRepBalance(branch, reporter)
+        REPORTING.setRep(branch, reporterIndex, 0)
+        REPORTING.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*2**63 / 2**64))
+    return(reporterBalance)
+
+def incrementPeriodAfterReporting(branch):
+    # do this after reporting is finished
+    if(periodOver(branch)):
+        BRANCHES.incrementPeriod(branch)
+        return(1)
+    else:
+        return(0)
+        
+### Helper functions:
+
+macro abs($a):
+    if($a<0):
+        $a = -$a
+    $a
+    
+def proportionCorrect(event, branch, period):
+    p = 0
+    outcome = EVENTS.getOutcome(event)
+    if(outcome!=0):
+        # binary
+        if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65 and 2**64*EVENTS.getMinValue(event)==2**64):
+            # subtract 1 to get it from 0 to 1
+            avgOutcome = EVENTS.getUncaughtOutcome(event) - 2**64
+            # say we have outcome of 0, avg is .4, what is p?
+            # p is .6 or 60%
+            if(outcome == 2**64):
+                p = 2**64 - avgOutcome
+            # say we have outcome of 1, avg is .8, what is p (proportion correct)?
+            # p is .8 or 80%
+            if(outcome == 2 * 2**64):
+                p = avgOutcome
+            if(outcome == 3 * 2**63):
+                return(0)
+        return(p)
+    else:
+        return(0)
+
+macro periodOver($branch):
+    # what the current vote period should be
+    currentVotePeriod = block.number / BRANCHES.getPeriodLength($branch) - 1
+    # if actual vote period is less than what the current one should be, return 1, it can be incremented
+    if(BRANCHES.getVotePeriod($branch) < currentVotePeriod):
+        1
+    else:
+        0
+    
+macro hasReported($branch, $period):
+    MAKEREPORTS.getReportedPeriod($branch, $period, tx.origin)
+
+macro repRedistributionDone($branch, $reporter):
+    lastPeriodPenalized = self.branches[$branch].penalizedUpTo[$reporter]
+    lastPeriod = BRANCHES.getVotePeriod($branch)-1
+    if(lastPeriod==lastPeriodPenalized):
+        1
+    else:
+        0
+
+
+macro scalar($event):
+    ((EVENTS.getMaxValue($event)!=2 || EVENTS.getMinValue($event)!=1) && EVENTS.getNumOutcomes($event)==2)
+        
+macro binary($event):
+    (EVENTS.getNumOutcomes($event)==2 and 2**64*EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==1)
+        
+macro categorical($event):
+    (EVENTS.getNumOutcomes($event)>2)
+
+# test bonded pushed forward event/market though not ready to be resolved
+    # code in penalize for that:
+        #elif(rejected && rejectedPeriodOver && && actuallyrejected && MAKEREPORTS.getReport(branch, lastPeriodperiod, event) && !self.penalized[lastPeriod][tx.origin].event[event] && outcome):
+        #  outcome = 2**63
+        #  median = 2**63
+        #   p = self.proportionCorrect(event, rejected)
+        #   oldRep = MAKEREPORTS.getBeforeRep(branch, period)
+        #   # wrong
+        #   if(reportValue > outcome+.01 or reportValue < outcome-.01):
+        #       if(scalar or categorical or .5):
+        #         # scalar/cat are 0 - 1, binary .5 are 1-2 and 1.5
+        #     # should be outcome since median is the same
+        #           p = -(abs(reportValue - median)/2) + 1
+        #       newRep = oldRep*(2*p -1)
+        #   # right
+        #   else:
+        #       if(scalar or categorical or .5):
+        #           p = -(abs(reportValue - median)/2) + 1
+        #       newRep = oldRep*(2*(1-p)**2 / p + 1)
+        #   smoothedRep = oldRep*.8 + newRep*.2
+        #   MAKEREPORTS.setAfterRep(branch, period, oldRep + (smoothedRep - oldRep))
+        # repChange = smoothedRep - oldRep
+        # if(repChange < 0):
+        #   sendToRedistribPool
+        # # need to except round two events from this when added
+        # if(MAKEREPORTS.getNumReportsActual(branch, lastPeriod)==self.penalized[lastPeriod][tx.origin].num):
+        #   self.totalRepPenalized[period] += oldRep
+        #   self.denominator[branch][period] = self.totalRepPenalized[period] + (smoothedRep - oldRep)
+        # self.penalized[lastPeriod][tx.origin].event[event] = 1
+        # self.penalized[lastPeriod][tx.origin].num += 1
+        #   return(1)
+# test .99 resolve push forward

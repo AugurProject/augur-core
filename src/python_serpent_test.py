@@ -747,11 +747,11 @@ if __name__ == '__main__':
     # function tests
     # test_create_event()
     # test_create_market()
-    test_buy_sell_shares()
+    #test_buy_sell_shares()
     # test_transfer_shares()
     # test_create_branch()
     # test_send_rep()
     # test_make_reports()
     # test_close_market()
-    # test_consensus()
+    test_consensus()
     print "DONE TESTING"

@@ -4,7 +4,6 @@ def init():
     self.Branches[1010101].minTradingFee = 2^57
     self.branchListCount = 1
     self.branchList[0] = 1010101
-    # self.initiateOwner(1010101)
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
     self.Reporting[1010101].reputation[0].repValue = 47*2^64
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
@@ -229,14 +228,14 @@ def moveMarketAndAssocEvents(market, fork):
         return(0)
 
 
-#•Anyone can post an "Early Resolution Bond"
-#•This bond is equal to 0.5 * Market_Fee * Market_Value
-#•This amount is the amount needed to pay the reporters in case this was frivolous.
-#•The market goes up for early resolution and reporters place claim to what is truth, however for early resolution, they have an additional option: 'Market is not ready to resolve'
+# Anyone can post an "Early Resolution Bond"
+# This bond is equal to 0.5 * Market_Fee * Market_Value
+# This amount is the amount needed to pay the reporters in case this was frivolous.
+# The market goes up for early resolution and reporters place claim to what is truth, however for early resolution, they have an additional option: 'Market is not ready to resolve'
     # this addl option is just the normal indeterminate (except here it's a bit of a special case, see below)
-#•In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
+# In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration dateevent
-#•In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
+# In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
 def pushMarketForward(branch, market):
     # todo: if has been pushed forward in the past (see close market) don't allow it again
     numEvents = self.getNumEvents(market)
@@ -302,7 +301,6 @@ def pushMarketForward(branch, market):
 macro YES: 2^65
 macro NO: 2^64
 macro BAD: 3 * 2^63
-
 macro CATCH_TOLERANCE: 2^64 / 10
 
 # Bins values to 1, 1.5, 2
@@ -322,10 +320,13 @@ macro ethic_catch($x):
     else:
         0
 
+macro scalar($event):
+    ((self.getMaxValue($event)!=2 || self.getMinValue($event)!=1) && self.getNumOutcomes($event)==2)
+
 def catch(x):
     return(catch(x))
 
-### helper functions:
+## helper functions:
 def resolveBinary(event, market, branch, votingPeriodEvent, period):
     fxpOutcome = catch(self.getUncaughtOutcome(event))
     pushedBack = self.getPushedBack(event)
@@ -333,7 +334,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
     residual = block.number % periodLength
     ethical = ethic_catch(self.getEthical(event))
     self.setOutcome(event, fxpOutcome)
-    #•In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
+    # In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration date
     if(fxpOutcome == 3*2**63 && self.getPushedForward(market)):
         #set event expiration to be the old date prior to this bond process
@@ -388,7 +389,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
             # delete old event from future events exp
             self.removeEvent(branch, self.getOriginalExpiration(event)/periodLength)
     return(1)
-    
+
 def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, votingPeriodEvent, period):
     #median = self.calculateMedian(event)
     self.setMedian(event, median)
@@ -399,7 +400,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     residual = block.number % periodLength
     ethical = ethic_catch(self.getEthical(event))
 
-    #•In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
+    # In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration date
     if(fxpOutcome == 3*2**63 && self.getPushedForward(market)):
         #set event expiration to be the old date prior to this bond process
@@ -454,7 +455,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
             # delete old event from future events exp
             self.removeEvent(branch, self.getOriginalExpiration(event)/periodLength)
     return(1)
-    
+
 def determineWinningOutcomes(events: arr, numberEvents, branch, market):
     n = 0
     winningOutcomes = array(8)
@@ -522,9 +523,7 @@ def determineWinningOutcomes(events: arr, numberEvents, branch, market):
                     winningOutcomes[0] += self.getNumOutcomes(events[n-2]) * self.getNumOutcomes(events[n-1]) * (outcome-1)
         n+=1
     return(winningOutcomes: arr)
-    
-macro scalar($event):
-    ((self.getMaxValue($event)!=2 || self.getMinValue($event)!=1) && self.getNumOutcomes($event)==2)
+
 # @return amount of shares transferred
 # Error messages otherwise
     # -1: invalid outcome or you haven't traded in this market (or market doesn't exist)
@@ -1332,13 +1331,18 @@ def quicksort(stuff: arr):
 data branches[](submittedHash[][], numReportsActual[][], hasReported[][](reported[]), beforeRep[][], afterRep[][], report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], reportedPeriod[][], firstReport[])
 data reportable[][]
 
-# need to finish this req. events stuff
+# need to finish this req. events stuff for round 2 pushback _and_:
+    # what _if_ there are actually <30 events in augur?
+        # perhaps we should have all reporters in that period report on all of them
+
 data requiredEvents[]
 #self.Events[event].threshold = 2**256
 # branch, period as params
 data numReqEvents[][]
 data upToDateOnRR[]
 
+def getReportedPeriod(branch, period, reporter):
+    return(self.branches[branch].reportedPeriod[period][reporter])
 
 def getReportable(votePeriod, eventID):
     return(self.reportable[votePeriod][eventID])
@@ -1395,7 +1399,7 @@ def setAfterRep(branch, period, rep):
     return(rep)
     
 def getNumReportsActual(branch, votePeriod):
-    return(self.branches[branch].numReportsActual[msg.sender][votePeriod])
+    return(self.branches[branch].numReportsActual[tx.origin][votePeriod])
 
 def getSubmittedHash(branch, period, reporter):
     return(self.branches[branch].submittedHash[period][reporter])
@@ -1426,7 +1430,10 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
         return(-4)
     if(self.reportable[votePeriod][eventID]==-1):
         return(-5)
-    
+    if(!self.upToDateOnRR[msg.sender]):
+        # TODO: calls to consensus functions and in send rep
+        #doIt()
+        self.upToDateOnRR[msg.sender] = 1
     #todo: if period isn't incremented, do it
 
     repIndex = self.repIDToIndex(branch, tx.origin)
@@ -1531,7 +1538,6 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
                 (return(-3))
             if(self.branches[branch].firstReport[votePeriod]==0):
                 self.setInitialBalance(branch, votePeriod, self.balance(branch))
-                self.setInitialRep(branch, votePeriod, self.getRepBalance(branch, branch))
                 self.branches[branch].firstReport[votePeriod] = 1
             report = self.validateReport(eventID, branch, votePeriod, report)
             if(report == -5):
@@ -1539,7 +1545,6 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
             # reporter has reported for 1 more event
             self.branches[branch].numReportsActual[tx.origin][votePeriod] += 1
             # record that reporter has reported for this event
-            # todo make sure this syntax works
             self.branches[branch].hasReported[eventID][tx.origin].reported[votePeriod] = 1
             # set report value for event
             self.branches[branch].report[period][tx.origin].event[eventID] = report
@@ -1564,46 +1569,6 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
         return(-2)
     else:
         return(-6)
-
-# Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account, and distributed like trading fees are except each person would make their own lazy claim on it.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
-def penalizeNotEnoughReports(branch, votePeriod):
-    #if(alreadyPenalized):
-    #    return(-1)
-    numEvents = self.getNumEventsToReport(branch, votePeriod)
-    # min. of 30 events no matter how little rep you have
-    # whats going on here
-    if(self.branches[branch].reportedPeriod[votePeriod][msg.sender]):
-        # if has reported, don't count in rep reported for fee or rep redistrib. claims
-        repReported = self.getTotalRepReported(branch)
-        repReported -= self.getRepBalance(branch, tx.origin)
-        self.setTotalRepReported(branch, votePeriod, repReported)
-    if(numEvents < 30*2**64):
-        numEvents = 30*2**64
-    repConstant = self.getRepBalance(branch, tx.origin)*2**64/self.getTotalRep(branch)
-    logOutput = self.fx_log(repConstant)
-    exp = self.fx_exp(22136092888451461120*logOutput/2**64)
-    exp += 18446744073709552
-    total = exp*40
-    # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool)
-    #if(exp(ln(rep%)**1.2)*40 > 1):
-    if(total > 2**64):
-        numEvents = (self.getNumEventsToReportOn(branch, votePeriod)/40)*2**64
-    
-    # what _if_ there are actually <30 events in augur?
-      # perhaps we should have all reporters in that period report on all of them
-    if(numEvents/(2*2**64) > self.branches[branch].numReportsActual[msg.sender][votePeriod]):
-        originalRep = self.getRepBalance(branch, tx.origin)
-        # penalize people
-        #newRep = .2*self.branches[branch].numReportsActual[msg.sender][votePeriod] / self.getNumEventsToReport(branch, votePeriod)/(2*2**64) * originalRep
-        #oldRep = self.getRepBalance(branch, tx.origin)*.8
-        self.setRep(branch, self.repIDToIndex(branch, tx.origin), oldRep+newRep)
-        # need to decide whether to allow claiming of fees and redistrib. at lower rate or not
-            #repReported = self.getTotalRepReported(branch)
-            #self.setTotalRepReported(branch, votePeriod, repReported+oldRep+newRep)
-        # adds the rep to the branch's pool
-        self.addRep(branch, self.repIDToIndex(branch, branch), originalRep - (oldRep+newRep))
-    # todo: separate heavier penalty for not reporting on a round 2 / readjudicated event
-    return(1)
 
 ### Helper functions:
 def calculateReportingThreshold(branch, eventID, votePeriod):
@@ -1774,6 +1739,267 @@ def insertionSort(stuff: arr):
 		i += 1
 		stuff[j+1] = key
 	return(stuff: arr)
+# round two consensus data
+data bondPaid[]
+data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, final)
+
+# branches takes a branchID
+    # denominator takes a vote period
+    # penalized takes for a given period a user / address reported for a certain event and num of events they reported on in that period in total
+    # penalizedUpTo is the latest period a user has done the penalization for
+    # fees collected states whether for a given period a user collected fees
+    # rep collected states whether for a given period a user collected rep
+data branches[](denominator[], penalized[][](event[], num, notEnoughReportsPenalized), penalizedUpTo[], feesCollected[][])
+
+#1. Record rep at start of report period [before rep in make reports]
+#2. Penalize for each event
+#3. Each reporter needs to do this for all events they reported on, if not get docked
+#4. For first half of the new period, people can do penalization for the last period, for the second half users have to claim rep then trading fees
+#5. If you don't do it for all events or don't penalize for not reporting enough, autolose 20% rep each period one does this (b/c they're trying to cheat)
+# Errors:
+    # -1: pushed back event already resolved, so can't redistribute rep based off of its original expected expiration period
+    # -2: already past first half of new period and needed to penalize before then
+    # -3: need to do not enough reports penalization [or lackthereof]
+def penalizeWrong(branch, event):
+    lastPeriod = self.getVotePeriod(branch)-1
+    if(!self.branches[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
+        return(-3)
+    periodLength = self.getPeriodLength(branch)
+    residual = block.number % periodLength
+    if(residual > periodLength/2):
+        return(-2)
+    if(self.getOriginalExpiration(event)!=self.getExpiration(event) && self.getPushedForward(market)):
+        if(lastPeriod==self.getOriginalExpiration(event)/self.getPeriodLength(branch)):
+            return(-1)
+    outcome = self.getOutcome(event)
+    reportValue = self.getReport(branch, lastPeriod, event)
+    p = self.proportionCorrect(event)
+    oldRep = self.getBeforeRep(branch, period)
+    if(!self.branches[branch].penalized[lastPeriod][tx.origin].event[event] && self.getVotePeriod(branch) > period && reportValue && outcome!=0):
+        # wrong
+        #184467440737095520 == 0.01 in fxp
+        if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
+            #if(scalar(event) or categorical(event) or outcome==3*2**64):
+                #p = -(abs(reportValue - self.getMedian(event))/2) + 2**64
+            newRep = oldRep*(2*p - 2**64)/2**64
+        # right
+        else:
+            #if(scalar(event) or categorical(event) or outcome==3*2**64):
+                #p = -(abs(reportValue - self.getMedian(event))/2) + 2**64
+            newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)
+        #smoothedRep = oldRep*.8 + newRep*.2
+        smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
+        self.setAfterRep(branch, lastPeriod, smoothedRep)
+        repChange = smoothedRep - oldRep
+        self.branches[branch].denominator[period] += smoothedRep
+        if(repChange < 0):
+            # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
+            self.addRep(branch, self.repIDToIndex(branch, tx.origin), repChange)
+            # sends that rep to the branch
+            self.addRep(branch, self.repIDToIndex(branch, branch), -repChange)
+        if(self.getNumReportsActual(branch, lastPeriod)==self.branches[branch].penalized[lastPeriod][tx.origin].num):
+            self.branches[branch].penalizedUpTo[tx.origin] = lastPeriod
+        self.branches[branch].penalized[lastPeriod][tx.origin].event[event] = 1
+        self.branches[branch].penalized[lastPeriod][tx.origin].num += 1
+        return(1)
+    else:
+        return(0)
+
+# Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account and distributed like trading fees.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
+# Errors:
+    # -1: already done
+    # -2: hasn't reported this period
+def penalizeNotEnoughReports(branch):
+    if(self.branches[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
+        return(-1)
+    lastPeriod = self.getVotePeriod(branch)-1
+    if(!hasReported(branch, lastPeriod)):
+        return(-2)
+    numEvents = self.getNumEventsToReport(branch, lastPeriod)
+    # min. of 30 events no matter how little rep you have
+    if(numEvents < 30*2**64):
+        numEvents = 30*2**64
+    repConstant = self.getRepBalance(branch, tx.origin)*2**64/self.getTotalRep(branch)
+    logOutput = self.fx_log(repConstant)
+    exp = self.fx_exp(22136092888451461120*logOutput/2**64)
+    exp += 18446744073709552
+    total = exp*40
+    # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
+    if(total > 2**64):
+        numEvents = (self.getNumEventsToReportOn(branch, votePeriod)/40)*2**64
+    # what _if_ there are actually <30 events in augur?
+        # perhaps we should have all reporters in that period report on all of them
+    numReportsActual = self.getNumReportsActual(branch, lastPeriod)
+    if(numEvents/(2*2**64) > self.getNumReportsActual(branch, lastPeriod)):
+        originalRep = self.getRepBalance(branch, tx.origin)
+        # penalize people
+        newRep = 3689348814741910528*numReportsActual*originalRep / self.getNumEventsToReport(branch, lastPeriod)
+        oldRep = self.getRepBalance(branch, tx.origin)*14757395258967642112 / 2**64
+        repChange = (oldRep+newRep) - originalRep
+        # removes rep from reporter who lost it
+        self.addRep(branch, self.repIDToIndex(branch, tx.origin), repChange)
+        # sends that rep to the branch rep pool
+        self.addRep(branch, self.repIDToIndex(branch, branch), -repChange)
+        self.setBeforeRep(branch, lastPeriod, oldRep+newRep)
+    self.branches[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized = 1
+    return(1)
+
+# -2: needs to be second half of reporting period to claim rep [1st half is when redistribution is done]
+    # after this window, any unclaimed rep is pushed to the next period's redistrib. pool via the first make report submission
+def collectFees(branch):
+    periodLength = self.getPeriodLength(branch)
+    residual = block.number % periodLength
+    if(residual < periodLength/2):
+        return(-2)
+    if(!repRedistributionDone(branch, tx.origin)):
+        # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
+        return(-1)
+    lastPeriod = self.getVotePeriod(branch)-1
+    repReported = self.getTotalRepReported(branch, lastPeriod)
+    if(!self.branches[branch].feesCollected[lastPeriod][tx.origin] && hasReported(branch, lastPeriod)):
+        newRep = self.getAfterRep(branch, lastPeriod)
+        denominator = self.branches[branch].denominator[lastPeriod]
+        gainedRep = newRep * 2**64 / denominator * self.getRepBalance(branch, branch) / 2**64
+        #if(lostRep) newRep should be == self.getAfterRep(branch, period) + gainedRep
+        #if(gainedRep) newRep should be == self.getBeforeRep(branch, period) + gainedRep
+        self.addRep(branch, self.repIDToIndex(branch, tx.origin), gainedRep)
+        self.subtractRep(branch, self.repIDToIndex(branch, branch), gainedRep)
+        cash = self.getInitialBalance(branch, lastPeriod) * newRep / denominator
+        self.addCash(tx.origin, cash)
+        self.subtractCash(branch, cash)
+        self.branches[branch].feesCollected[lastPeriod][tx.origin] = 1
+        return(1)
+    else:
+        return(0)
+
+# anti cheat provide ballot and randomNum mechanism steal deposit
+# Returns:
+    # 0: not a valid claim
+    # -2: reporter doesn't exist
+def slashRep(branch, votePeriod, salt, report, reporter, eventID):
+    realHash = self.getReportHash(branch, votePeriod, reporter, eventID)
+    hashInfo = array(4)
+    hashInfo[0] = reporter
+    hashInfo[1] = salt
+    hashInfo[2] = report
+    hashInfo[3] = eventID
+    reportHash = sha256(hashInfo, chars=32*len(hashInfo))
+    if(reportHash!=realHash):
+        return(0)
+    else:
+        reporterIndex = self.repIDToIndex(branch, reporter)
+        trutherIndex = self.repIDToIndex(branch, tx.origin)
+        trutherBalance = self.getRepBalance(branch, tx.origin)
+        # if the truther's rep. account doesn't exist, make one
+        if(self.getReporterID(branch, trutherIndex)!=tx.origin):
+            trutherIndex = self.getNumberReporters(branch)
+            self.addReporter(branch, tx.origin)
+        if(self.getReporterID(branch, reporterIndex)!=reporter):
+            return(-2)
+        reporterBalance = self.getRepBalance(branch, reporter)
+        self.setRep(branch, reporterIndex, 0)
+        self.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*2**63 / 2**64))
+    return(reporterBalance)
+
+def incrementPeriodAfterReporting(branch):
+    # do this after reporting is finished
+    if(periodOver(branch)):
+        self.incrementPeriod(branch)
+        return(1)
+    else:
+        return(0)
+        
+### Helper functions:
+
+macro abs($a):
+    if($a<0):
+        $a = -$a
+    $a
+    
+def proportionCorrect(event, branch, period):
+    p = 0
+    outcome = self.getOutcome(event)
+    if(outcome!=0):
+        # binary
+        if(self.getNumOutcomes(event)==2 and 2**64*self.getMaxValue(event)==2**65 and 2**64*self.getMinValue(event)==2**64):
+            # subtract 1 to get it from 0 to 1
+            avgOutcome = self.getUncaughtOutcome(event) - 2**64
+            # say we have outcome of 0, avg is .4, what is p?
+            # p is .6 or 60%
+            if(outcome == 2**64):
+                p = 2**64 - avgOutcome
+            # say we have outcome of 1, avg is .8, what is p (proportion correct)?
+            # p is .8 or 80%
+            if(outcome == 2 * 2**64):
+                p = avgOutcome
+            if(outcome == 3 * 2**63):
+                return(0)
+        return(p)
+    else:
+        return(0)
+
+macro periodOver($branch):
+    # what the current vote period should be
+    currentVotePeriod = block.number / self.getPeriodLength($branch) - 1
+    # if actual vote period is less than what the current one should be, return 1, it can be incremented
+    if(self.getVotePeriod($branch) < currentVotePeriod):
+        1
+    else:
+        0
+    
+macro hasReported($branch, $period):
+    self.getReportedPeriod($branch, $period, tx.origin)
+
+macro repRedistributionDone($branch, $reporter):
+    lastPeriodPenalized = self.branches[$branch].penalizedUpTo[$reporter]
+    lastPeriod = self.getVotePeriod($branch)-1
+    if(lastPeriod==lastPeriodPenalized):
+        1
+    else:
+        0
+
+
+macro scalar($event):
+    ((self.getMaxValue($event)!=2 || self.getMinValue($event)!=1) && self.getNumOutcomes($event)==2)
+        
+macro binary($event):
+    (self.getNumOutcomes($event)==2 and 2**64*self.getMaxValue($event)==2**65 and self.getMinValue($event)==1)
+        
+macro categorical($event):
+    (self.getNumOutcomes($event)>2)
+
+# test bonded pushed forward event/market though not ready to be resolved
+    # code in penalize for that:
+        #elif(rejected && rejectedPeriodOver && && actuallyrejected && self.getReport(branch, lastPeriodperiod, event) && !self.penalized[lastPeriod][tx.origin].event[event] && outcome):
+        #  outcome = 2**63
+        #  median = 2**63
+        #   p = self.proportionCorrect(event, rejected)
+        #   oldRep = self.getBeforeRep(branch, period)
+        #   # wrong
+        #   if(reportValue > outcome+.01 or reportValue < outcome-.01):
+        #       if(scalar or categorical or .5):
+        #         # scalar/cat are 0 - 1, binary .5 are 1-2 and 1.5
+        #     # should be outcome since median is the same
+        #           p = -(abs(reportValue - median)/2) + 1
+        #       newRep = oldRep*(2*p -1)
+        #   # right
+        #   else:
+        #       if(scalar or categorical or .5):
+        #           p = -(abs(reportValue - median)/2) + 1
+        #       newRep = oldRep*(2*(1-p)**2 / p + 1)
+        #   smoothedRep = oldRep*.8 + newRep*.2
+        #   self.setAfterRep(branch, period, oldRep + (smoothedRep - oldRep))
+        # repChange = smoothedRep - oldRep
+        # if(repChange < 0):
+        #   sendToRedistribPool
+        # # need to except round two events from this when added
+        # if(self.getNumReportsActual(branch, lastPeriod)==self.penalized[lastPeriod][tx.origin].num):
+        #   self.totalRepPenalized[period] += oldRep
+        #   self.denominator[branch][period] = self.totalRepPenalized[period] + (smoothedRep - oldRep)
+        # self.penalized[lastPeriod][tx.origin].event[event] = 1
+        # self.penalized[lastPeriod][tx.origin].num += 1
+        #   return(1)
+# test .99 resolve push forward
 event comment(market: indexed, ipfsHash)
 
 def addComment(market, ipfsHash):
@@ -1789,10 +2015,11 @@ def sendReputation(branch, recver, value):
     currentVotePeriod = self.getVotePeriod(branch)
     #if(value<=0 || !self.send(branch, 5*2^64) || self.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || self.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || self.getReport(branch, currentVotePeriod, recver, 0) != 0):
     #    return(0)
+    # need to check all this for the person it's being sent to as well
     #if(self.getRRUpToDate()!=1):
     #    doIt()
     #    self.RRDone = true
-    #if(hasReported(lastPeriod) && periodOver):
+    #if(hasReported(lastPeriod) && periodOver && hasntcollectedfees):
     #    self.collectFees(lastPeriod)
 
     sender = tx.origin
@@ -1808,7 +2035,7 @@ def sendReputation(branch, recver, value):
         return(-2)
 
     senderBalance = self.getRepBalance(branch, sender)
-    if(senderBalance >= value):
+    if(senderBalance >= value && value > 0):
         if(self.subtractRep(branch, senderIndex, value) && self.addRep(branch, receiverIndex, value)):
             return(value)
         else:
@@ -1838,7 +2065,7 @@ def sendDormantRep(branch, recver, value):
         return(-2)
 
     senderBalance = self.getDormantRepBalance(branch, sender)
-    if(senderBalance >= value):
+    if(senderBalance >= value && value > 0):
         if(self.subtractDormantRep(branch, senderIndex, value) && self.addDormantRep(branch, receiverIndex, value)):
             return(value)
         else:
@@ -2026,6 +2253,10 @@ data branchList[]
 
 data branchListCount
 
+
+# call once after uploading (externed method not allowed in init)
+def initDefaultBranch():
+    return(self.initiateOwner(1010101))
 
 def getOracleOnly(branch):
 	return(self.Branches[branch].oracleOnly)
@@ -2394,7 +2625,7 @@ def getRejectedUncaught(event):
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
-data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, balance[], dormantRep[](repValue, reporterID))
+data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID))
 
 data whitelists[](addresses[], taken)
 
@@ -2444,12 +2675,6 @@ def getReporterID(branch, index):
 
 def getTotalRep(branch):
     return(self.Reporting[branch].totalRep)
-
-def setInitialRep(branch, period, balance):
-    self.Reporting[branch].balance[period] = balance
-
-def getInitialRep(branch, period):
-    return(self.Reporting[branch].balance[period])
 
 # will return 0s for array values after it's looped through all the ones you
 # have an actual balance in
@@ -2617,7 +2842,7 @@ def send(recver, value):
         return(0)
     sender = tx.origin
     senderBalance = self.cashcoinBalances[sender]
-    if(senderBalance >= value):
+    if(senderBalance >= value && value > 0):
         self.cashcoinBalances[sender] -= value
         self.cashcoinBalances[recver] += value
         return(value)
@@ -2633,7 +2858,7 @@ def sendFrom(recver, value, from):
     if(self.owners[recver]==0):
         return(0)
     senderBalance = self.cashcoinBalances[from]
-    if(senderBalance >= value):
+    if(senderBalance >= value && value > 0):
         self.cashcoinBalances[from] -= value
         self.cashcoinBalances[recver] += value
         return(value)
@@ -2670,6 +2895,8 @@ def depositEther():
     return msg.value
 
 def withdrawEther(to, value):
+    if(value < 0):
+        return(-1)
     if self.cashcoinBalances[msg.sender] >= value * 2^64 / 10^18:
         self.cashcoinBalances[msg.sender] -= value * 2^64 / 10^18
         send(to, value)
@@ -2823,37 +3050,6 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
                         currentFlatLength += col
                         row += 1
                     return(flattened: arr)
-
-# @return cost - how much it costs you to buy
-#         price - current share price of that outcome after buy
-def getSimulatedBuy(market, outcome, amount):
-    # lmsr cost calcs
-    oldCost = lsLmsr(market)
-    sharesPurchased(market)[outcome] += amount
-    newCost = lsLmsr(market)
-    if newCost <= oldCost:
-        sharesPurchased(market)[outcome] -= amount
-        return(-2)
-    cost = (newCost - oldCost)
-    price = self.price(market, outcome)
-    sharesPurchased(market)[outcome] -= amount
-    return([cost, price], chars=64)
-
-# @return cost - how much you get paid to sell
-#         price - current share price of that outcome after sell
-def getSimulatedSell(market, outcome, amount):
-    # lmsr cost calcs
-    oldCost = lsLmsr(market)
-    sharesPurchased(market)[outcome] -= amount
-    newCost = lsLmsr(market)
-    if oldCost <= newCost:
-        sharesPurchased(market)[outcome] += amount
-        return(-2)
-    # these prices are in fixed point
-    cost = oldCost - newCost
-    price = self.price(market, outcome)
-    sharesPurchased(market)[outcome] += amount
-    return([cost, price], chars=64)
 
 def getForkSelection(market):
     return(self.Markets[market].forkSelection)
