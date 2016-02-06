@@ -720,7 +720,31 @@ def test_consensus():
     c = s.abi_contract('functions/output.se')
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
-    # also test penalize not enough reports
+    event1 = c.createEvent(1010101, "new event", 5, 1, 2, 2)
+    bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 1)
+    event2 = c.createEvent(1010101, "new eventt", 5, 1, 2, 2)
+    bin_market2 = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event2], 1)
+    s.mine(105)
+    c.incrementPeriod(1010101)
+    report_hash = c.makeHash(0, 2**64, event1)
+    report_hash2 = c.makeHash(0, 2*2**64, event2)
+    assert(c.submitReportHash(1010101, report_hash, 0, event1, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(1010101, report_hash2, 0, event2, 1)==1), "Report hash submission failed"
+    s.mine(55)
+    assert(c.submitReport(1010101, 0, 0, 0, 2**64, event1, 2**64)==1), "Report submission failed"
+    assert(c.submitReport(1010101, 0, 1, 0, 2*2**64, event2, 2**64)==1), "Report submission failed"
+    s.mine(60)
+    c.incrementPeriod(1010101)
+    assert(c.penalizeWrong(1010101, event1)==-3)
+    print c.penalizeNotEnoughReports(1010101)
+    # need to resolve event first
+    assert(c.closeMarket(1010101, bin_market)==1)
+    assert(c.closeMarket(1010101, bin_market2)==1)
+    print c.penalizeWrong(1010101, event1)
+    print c.penalizeWrong(1010101, event2)
+    s.mine(55)
+    print c.getReportedPeriod(1010101, 0, s.block.coinbase)
+    print c.collectFees(1010101)
     # make sure no way for someone to get excess rep and rep total doesn't change
     print "Test consensus OK"
 
