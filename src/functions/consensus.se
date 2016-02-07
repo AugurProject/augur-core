@@ -2,11 +2,9 @@ import expiringEvents as EXPIRING
 import reporting as REPORTING
 import events as EVENTS
 import fxpFunctions as FXP
-import events as EVENTS
 import makeReports as MAKEREPORTS
-import branch as BRANCHES
+import branches as BRANCHES
 import markets as MARKETS
-import sendReputation as SENDREP
 
 # round two consensus data
 data bondPaid[]
