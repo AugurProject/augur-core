@@ -736,16 +736,46 @@ def test_consensus():
     s.mine(60)
     c.incrementPeriod(1010101)
     assert(c.penalizeWrong(1010101, event1)==-3)
-    print c.penalizeNotEnoughReports(1010101)
+    branch = 1010101
+    period = 0
+    assert(c.getBeforeRep(branch, period)==c.getAfterRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==47*2**64)
+    assert(c.getRepBalance(branch, branch)==0)
+    assert(c.getTotalRep(branch)==47*2**64)
+    assert(c.getTotalRepReported(branch)==47*2**64)
+    
+    assert(c.penalizeNotEnoughReports(1010101)==1)
+    
+    # assumes user lost no rep after penalizing
+    assert(c.getBeforeRep(branch, period)==c.getAfterRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==47*2**64)
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    assert(c.getTotalRep(branch)==47*2**64)
+    assert(c.getTotalRepReported(branch)==47*2**64)
     # need to resolve event first
     assert(c.closeMarket(1010101, bin_market)==1)
     assert(c.closeMarket(1010101, bin_market2)==1)
-    print c.penalizeWrong(1010101, event1)
-    print c.penalizeWrong(1010101, event2)
+    
+    assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
+    assert(c.getAfterRep(branch, period) < int(47.1*2**64) and c.getAfterRep(branch, period) > int(46.9*2**64))
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    assert(c.penalizeWrong(1010101, event1)==1)
+    assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
+    assert(c.getAfterRep(branch, period) < int(47.1*2**64) and c.getAfterRep(branch, period) > int(46.9*2**64))
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    assert(c.penalizeWrong(1010101, event2)==1)
+    assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
+    assert(c.getAfterRep(branch, period) < int(47.1*2**64) and c.getAfterRep(branch, period) > int(46.9*2**64))
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     s.mine(55)
-    print c.getReportedPeriod(1010101, 0, s.block.coinbase)
-    print c.collectFees(1010101)
+    assert(c.collectFees(1010101)==1)
+    assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
+    assert(c.getAfterRep(branch, period) < int(47.1*2**64) and c.getAfterRep(branch, period) > int(46.9*2**64))
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+
     # make sure no way for someone to get excess rep and rep total doesn't change
+    
+    # other two functions in consensus test [slash rep and catchup functions]
+
+    # send rep during penalization consensus? or send to someone else during that?
     print "Test consensus OK"
 
 

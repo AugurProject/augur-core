@@ -1519,6 +1519,8 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
         # TODO: calls to consensus functions and in send rep
         #doIt()
         self.upToDateOnRR[msg.sender] = 1
+    #if(feesNotCollected && hasReportedLastPeriod):
+    #    doItOrReturn0
     x = array(1)
     x[0] = tx.origin + eventID
     reportingThreshold = self.calculateReportingThreshold(branch, eventID, votePeriod)
@@ -1775,8 +1777,8 @@ def penalizeWrong(branch, event):
     outcome = self.getOutcome(event)
     reportValue = self.getReport(branch, lastPeriod, event)
     p = self.proportionCorrect(event)
-    oldRep = self.getBeforeRep(branch, period)                               # hmmmm
-    if(!self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && self.getVotePeriod(branch) > period && reportValue && outcome!=0):
+    oldRep = self.getBeforeRep(branch, lastPeriod)
+    if(!self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && reportValue && outcome!=0):
         # wrong
         #184467440737095520 == 0.01 in fxp
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
@@ -1787,19 +1789,21 @@ def penalizeWrong(branch, event):
         else:
             #if(scalar(event) or categorical(event) or outcome==3*2**64):
                 #p = -(abs(reportValue - self.getMedian(event))/2) + 2**64
-            newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)
+            newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
         #smoothedRep = oldRep*.8 + newRep*.2
         smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
-        self.setAfterRep(branch, lastPeriod, smoothedRep)
         repChange = smoothedRep - oldRep
-        self.branch[branch].denominator[period] += smoothedRep
-        if(repChange < 0):
-            # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
-            self.addRep(branch, self.repIDToIndex(branch, tx.origin), repChange)
-            # sends that rep to the branch
-            self.addRep(branch, self.repIDToIndex(branch, branch), -repChange)
+        newAfterRep = self.getAfterRep(branch, lastPeriod) + repChange
+        self.setAfterRep(branch, lastPeriod, newAfterRep)
         if(self.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):
             self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod
+            self.branch[branch].denominator[lastPeriod] += newAfterRep
+            totalRepDifference = newAfterRep - oldRep
+            if(totalRepDifference<0):
+                # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
+                self.addRep(branch, self.repIDToIndex(branch, tx.origin), totalRepDifference)
+                # sends that rep to the branch
+                self.addRep(branch, self.repIDToIndex(branch, branch), -totalRepDifference)
         self.branch[branch].penalized[lastPeriod][tx.origin].event[event] = 1
         self.branch[branch].penalized[lastPeriod][tx.origin].num += 1
         return(1)
@@ -1842,6 +1846,7 @@ def penalizeNotEnoughReports(branch):
         # sends that rep to the branch rep pool
         self.addRep(branch, self.repIDToIndex(branch, branch), -repChange)
         self.setBeforeRep(branch, lastPeriod, oldRep+newRep)
+        self.setAfterRep(branch, lastPeriod, oldRep+newRep)
     self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized = 1
     return(1)
 
@@ -1856,8 +1861,6 @@ def collectFees(branch):
         # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
         return(-1)
     lastPeriod = self.getVotePeriod(branch) - 1
-    repReported = self.getTotalRepReported(branch, lastPeriod)
-    return(self.branch[branch].feesCollected[lastPeriod][tx.origin])
     if(!self.branch[branch].feesCollected[lastPeriod][tx.origin] && hasReported(branch, lastPeriod)):
         newRep = self.getAfterRep(branch, lastPeriod)
         denominator = self.branch[branch].denominator[lastPeriod]
@@ -1875,8 +1878,12 @@ def collectFees(branch):
         return(0)
 
 # call when a user who hasn't reported for a while wants to start again and needs to catch up on penalizations
-# should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
 def penalizationCatchup(branch):
+    # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
+    periodLength = self.getPeriodLength(branch)
+    residual = block.number % periodLength
+    if(residual > periodLength/2):
+        return(-2)
     # find delta between this last period and last penalized up to
     lastPeriodPenalized = self.branch[branch].penalizedUpTo[tx.origin]
     lastPeriod = self.getVotePeriod(branch)-1
