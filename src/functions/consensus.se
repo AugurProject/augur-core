@@ -61,9 +61,14 @@ def penalizeWrong(branch, event):
         newAfterRep = MAKEREPORTS.getAfterRep(branch, lastPeriod) + repChange
         MAKEREPORTS.setAfterRep(branch, lastPeriod, newAfterRep)
         if(MAKEREPORTS.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):
+            if(newAfterRep <= 0):
+                newAfterRep = 0
+            repBalance = REPORTING.getRepBalance(branch, msg.sender)
             self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod
             self.branch[branch].denominator[lastPeriod] += newAfterRep
             totalRepDifference = newAfterRep - oldRep
+            if(repBalance + totalRepDifference <= 0):
+                totalRepDifference = -1*repBalance
             if(totalRepDifference<0):
                 # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), totalRepDifference)
