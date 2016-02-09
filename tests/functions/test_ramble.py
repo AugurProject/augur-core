@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """augur-core unit tests
 
-Unit tests for data and api/comments.se.
+Unit tests for functions/ramble.se.
 
 @author Jack Peterson (jack@tinybike.net)
 
@@ -22,7 +22,7 @@ from contract import ContractTest
 class TestComments(ContractTest):
 
     def setUp(self):
-        ContractTest.setUp(self, "functions", "comments.se")
+        ContractTest.setUp(self, "functions", "ramble.se")
         self.event_fields = {"_event_type", "market", "ipfsHash"}
         self.params = {
             "market": 0xdeadbeef,
@@ -30,6 +30,18 @@ class TestComments(ContractTest):
         }
 
     def test_addComment(self):
+        with iocapture.capture() as captured:
+            retval = self.contract.addComment(self.params["market"],
+                                              self.params["ipfsHash"])
+            output = json.loads(captured.stdout.replace("'", '"')
+                                               .replace("L", "")
+                                               .replace('u"', '"'))
+        assert(retval == 1)
+        assert(set(output.keys()) == self.event_fields)
+        for k in self.params:
+            assert(self.params[k] == output[k] % 2**256)
+
+    def test_addMetadata(self):
         with iocapture.capture() as captured:
             retval = self.contract.addComment(self.params["market"],
                                               self.params["ipfsHash"])
