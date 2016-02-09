@@ -211,7 +211,6 @@ def slashRep(branch, salt, report, reporter, eventID):
     else:
         reporterIndex = REPORTING.repIDToIndex(branch, reporter)
         trutherIndex = REPORTING.repIDToIndex(branch, tx.origin)
-        trutherBalance = REPORTING.getRepBalance(branch, tx.origin)
         # if the truther's rep. account doesn't exist, make one
         if(REPORTING.getReporterID(branch, trutherIndex)!=tx.origin):
             trutherIndex = REPORTING.getNumberReporters(branch)
@@ -220,6 +219,7 @@ def slashRep(branch, salt, report, reporter, eventID):
             return(-2)
         reporterBalance = REPORTING.getRepBalance(branch, reporter)
         REPORTING.setRep(branch, reporterIndex, 0)
+        trutherBalance = REPORTING.getRepBalance(branch, tx.origin)
         REPORTING.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*2**63 / 2**64))
     return(reporterBalance)
 

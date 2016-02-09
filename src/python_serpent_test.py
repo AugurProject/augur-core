@@ -804,24 +804,18 @@ def test_slashrep():
     period = 0
     assert(c.getBeforeRep(branch, period)==c.getAfterRep(branch, period)==c.getRepBalance(branch, s.block.coinbase))
     assert(c.getRepBalance(branch, branch)==0)
-    print c.getTotalRep(branch)
-    print c.getTotalRepReported(branch)
+    assert(c.getTotalRep(branch)==c.getTotalRepReported(branch))
     
     assert(c.penalizeNotEnoughReports(1010101)==1)
     
     # assumes user lost no rep after penalizing
     assert(c.getBeforeRep(branch, period)==c.getAfterRep(branch, period)==c.getRepBalance(branch, s.block.coinbase))
     assert(c.getRepBalance(branch, branch)==0)
-    print c.getTotalRep(branch)
-    print c.getTotalRepReported(branch)
+    assert(c.getTotalRep(branch)==c.getTotalRepReported(branch))
     # need to resolve event first
     assert(c.closeMarket(1010101, bin_market)==1)
     assert(c.closeMarket(1010101, bin_market2)==1)
-    
-    # resume here
-    
-    assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
-    print c.getAfterRep(branch, period)
+
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     assert(c.penalizeWrong(1010101, event1)==1)
     assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
@@ -830,11 +824,12 @@ def test_slashrep():
     assert(c.penalizeWrong(1010101, event2)==1)
     assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
     print c.getAfterRep(branch, period)
+    print c.repBalance(branch, s.block.coinbase)
+    print c.repBalance(branch, branch)
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     s.mine(55)
     assert(c.collectFees(1010101)==1)
     assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
-    print c.getAfterRep(branch, period)
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     print "OK"
 
