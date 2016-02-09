@@ -40,9 +40,10 @@ def sendReputation(branch, recver, value):
     #if(REPORTS.getRRUpToDate()!=1):
     #    doIt()
     #    self.RRDone = true
-    #if(hasReported(lastPeriod) && periodOver && hasntcollectedfees):
+    #if(hasReported(lastPeriod) && periodOver && hasntcollectedfees && residual > periodLength/2):
     #    CONSENSUS.collectFees(lastPeriod)
-
+    # before rep, after rep, balance
+    # person you're sending to needs rr up to date / done as well
     sender = tx.origin
     senderIndex = REPORTING.repIDToIndex(branch, sender)
     receiverIndex = REPORTING.repIDToIndex(branch, recver)

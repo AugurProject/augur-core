@@ -166,9 +166,12 @@ def test_create_event():
     c = s.abi_contract('functions/output.se')
     gas_use(s)
     c.initiateOwner(1010101)
-    assert(c.createEvent(1010101, "new event", 555, 1, 2, 2)>2**64), "binary Event creation broken"
-    # assert(c.createEvent(1010101, "new event", 555, 1, 5, 5)>2**64), "categorical Event creation broken"
-    assert(c.createEvent(1010101, "new event", 555, 1, 200, 2)<-2**64), "scalar Event creation broken"
+    event_binary = c.createEvent(1010101, "new event", 555, 1, 2, 2)
+    event_categorical = c.createEvent(1010101, "new event", 555, 1, 5, 5)
+    event_scalar = c.createEvent(1010101, "new event", 555, 1, 200, 2)
+    assert(event_binary>2**64 or event_binary <-2**64), "binary Event creation broken"
+    assert(event_categorical>2**64 or event_categorical <-2**64), "categorical Event creation broken"
+    assert(event_scalar>2**64 or event_s <-2**64), "scalar Event creation broken"
     gas_use(s)
     print "EVENT CREATION OK"
 
@@ -204,45 +207,45 @@ def test_create_market():
     print c.getSharesPurchased(bin_market, 1)
     print c.getSharesPurchased(bin_market, 2)
     # scalar market
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2], 1) 
+    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2], 1) 
     # odd range scalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4], 1)
+    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4], 1)
     # categorical market
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event3], 1)
+    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event3], 1)
     print "1D Done"
     
     ### 2D Markets
     # scalar + scalar market
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event4], 1)
+    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event4], 1)
     # nonscalar, scalar
     x = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event2], 1)
     assert(c.getMarketNumOutcomes(x)==4), "Market num outcomes wrong"
 
     # scalar, nonscalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4, event1], 1)
+    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4, event1], 1)
     # nonscalar, nonscalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event5, event1], 1)
+    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event5, event1], 1)
     print "2D Done"
     
     ### 3D Markets
     # scalar, scalar, scalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event5, event2, event6], 1)
+    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event5, event2, event6], 1)
     # scalar, nonscalar, scalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event3, event4], 1)
+    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event3, event4], 1)
     # nonscalar, scalar, scalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event2, event4], 1)
+    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event2, event4], 1)
     # nonscalar, nonscalar, scalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event5, event3, event6], 1)
+    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event5, event3, event6], 1)
     # scalar, scalar, nonscalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event4, event5], 1)
+    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event4, event5], 1)
     # scalar, nonscalar, nonscalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event1, event3], 1)
+    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event1, event3], 1)
     # nonscalar, scalar, nonscalar
     market = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event3, event2, event5], 1)
     assert(c.getMarketNumOutcomes(market)==20), "Market num outcomes wrong"
     gas_use(s)
     # nonscalar, nonscalar, nonscalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event5, event3], 1)
+    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event5, event3], 1)
     print "3D Done"
     gas_use(s)
     assert(c.getNumMarkets(event2)==9), "Num markets for event wrong"
@@ -771,11 +774,9 @@ def test_consensus():
     assert(c.getAfterRep(branch, period) < int(47.1*2**64) and c.getAfterRep(branch, period) > int(46.9*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
 
-    # make sure no way for someone to get excess rep and rep total doesn't change
-    
     # other two functions in consensus test [slash rep and catchup functions]
-
-    # send rep during penalization consensus? or send to someone else during that?
+    # penalize not enough reports make sure no negative rep issues in general and with slash rep
+    
     print "Test consensus OK"
 
 
@@ -799,7 +800,7 @@ if __name__ == '__main__':
     # test_reporting()
 
     # function tests
-    # test_create_event()
+    test_create_event()
     # test_create_market()
     #test_buy_sell_shares()
     # test_transfer_shares()
@@ -807,5 +808,5 @@ if __name__ == '__main__':
     # test_send_rep()
     # test_make_reports()
     # test_close_market()
-    test_consensus()
+    #test_consensus()
     print "DONE TESTING"

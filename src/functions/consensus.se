@@ -182,7 +182,12 @@ def penalizationCatchup(branch):
 # Returns:
     # 0: not a valid claim
     # -2: reporter doesn't exist
-def slashRep(branch, votePeriod, salt, report, reporter, eventID):
+def slashRep(branch, salt, report, reporter, eventID):
+    periodLength = BRANCHES.getPeriodLength(branch)
+    residual = block.number % periodLength
+    if(residual > periodLength/2):
+        return(-2)
+    votePeriod = BRANCHES.getVotePeriod(branch)
     realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, eventID)
     hashInfo = array(4)
     hashInfo[0] = reporter

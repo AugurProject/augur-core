@@ -1796,9 +1796,14 @@ def penalizeWrong(branch, event):
         newAfterRep = self.getAfterRep(branch, lastPeriod) + repChange
         self.setAfterRep(branch, lastPeriod, newAfterRep)
         if(self.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):
+            if(newAfterRep <= 0):
+                newAfterRep = 0
+            repBalance = self.getRepBalance(branch, msg.sender)
             self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod
             self.branch[branch].denominator[lastPeriod] += newAfterRep
             totalRepDifference = newAfterRep - oldRep
+            if(repBalance + totalRepDifference <= 0):
+                totalRepDifference = -1*repBalance
             if(totalRepDifference<0):
                 # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
                 self.addRep(branch, self.repIDToIndex(branch, tx.origin), totalRepDifference)
@@ -1912,7 +1917,12 @@ def penalizationCatchup(branch):
 # Returns:
     # 0: not a valid claim
     # -2: reporter doesn't exist
-def slashRep(branch, votePeriod, salt, report, reporter, eventID):
+def slashRep(branch, salt, report, reporter, eventID):
+    periodLength = self.getPeriodLength(branch)
+    residual = block.number % periodLength
+    if(residual > periodLength/2):
+        return(-2)
+    votePeriod = self.getVotePeriod(branch)
     realHash = self.getReportHash(branch, votePeriod, reporter, eventID)
     hashInfo = array(4)
     hashInfo[0] = reporter
@@ -2050,14 +2060,16 @@ def sendReputation(branch, recver, value):
     # Rep cannot be simultaneously spent (transferred) and used to vote
     currentVotePeriod = self.getVotePeriod(branch)
     #if(value<=0 || !self.send(branch, 5*2^64) || self.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || self.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || self.getReport(branch, currentVotePeriod, recver, 0) != 0):
+    # self.getReportedPeriod(branch, current)
     #    return(0)
     # need to check all this for the person it's being sent to as well
     #if(self.getRRUpToDate()!=1):
     #    doIt()
     #    self.RRDone = true
-    #if(hasReported(lastPeriod) && periodOver && hasntcollectedfees):
+    #if(hasReported(lastPeriod) && periodOver && hasntcollectedfees && residual > periodLength/2):
     #    self.collectFees(lastPeriod)
-
+    # before rep, after rep, balance
+    # person you're sending to needs rr up to date / done as well
     sender = tx.origin
     senderIndex = self.repIDToIndex(branch, sender)
     receiverIndex = self.repIDToIndex(branch, recver)
