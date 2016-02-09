@@ -1,6 +1,6 @@
 {
     "branches": {
-        "address": "0xb777b0eefbe986ca0c511903e76bf21b1120599e", 
+        "address": "0x6e099c37d8d538243ad64c829f895483f378d740", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -24,7 +24,7 @@
             "# Any questions please contact joey@augur.net", 
             "", 
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "# CurrentVotePeriod is the current index in eventsExpDates", 
             "# Branches' index is the hash of the branch (aka branchID)", 
             "# currentVotePeriod is a nonce that tells us which bucket of events up to be", 
@@ -440,7 +440,7 @@
         "sig": "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]"
     }, 
     "buy&sellShares": {
-        "address": "0xf2f03c6e253be11ab35c07601c693b0e78cc8bc4", 
+        "address": "0xea9cb33592fb7b5c2b730fb4696b108f0ab3b6de", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -464,21 +464,21 @@
             "# Any questions please contact joey@augur.net", 
             "", 
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
-            "BRANCHES = 0xb777b0eefbe986ca0c511903e76bf21b1120599e", 
+            "BRANCHES = 0x6e099c37d8d538243ad64c829f895483f378d740", 
             "extern expiringEvents: [addEvent:[int256,int256,int256]:int256, addPeriodVolume:[int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getNumEventsToReportOn:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodVolume:[int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getTotalRepReported:[int256,int256]:int256, moveEventsToCurrentPeriod:[int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setNumEventsToReportOn:[int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setTotalRepReported:[int256,int256,int256]:int256]", 
-            "EXPEVENTS = 0xeee51df37e22f4458ff25fb3b230cc34f8ad38e3", 
+            "EXPEVENTS = 0xfe81801638055a798a5951561f568f7b4821fc04", 
             "extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256]", 
-            "INFO = 0x414c81818db9d4c92e57c3f16000614c055c388c", 
+            "INFO = 0x76d8477190c55b4a504531c0413a001e2356437c", 
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getDormantRepBalance:[int256,int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, hashReport:[int256[],int256]:int256, repIDToIndex:[int256,int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256]", 
-            "REPORTING = 0xd29caf0311436f56ee2d6ab36d806dfad2ef8807", 
+            "REPORTING = 0xb707b070a020fdc959496dd9e598d9f03cc2d02f", 
             "extern fxpFunctions: [fx_exp:[int256]:int256, fx_log:[int256]:int256, sqrt:[int256]:int256]", 
-            "FXP = 0xe35f2d19fbebc0dcd1d2ac7d94aa443ab16a197f", 
+            "FXP = 0x07cc411f282b977f2109df7087f4efd5286c5153", 
             "extern markets: [addParticipant:[int256,int256]:int256, getAlpha:[int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCumScale:[int256]:int256, getCurrentParticipantNumber:[int256]:int256, getForkSelection:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketInfo:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsInfo:[int256,int256,int256]:int256[], getNumEvents:[int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantID:[int256,int256]:int256, getParticipantNumber:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initialLiquidityAmount:[int256,int256]:int256, initialLiquiditySetup:[int256,int256,int256,int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256]:int256, lsLmsr:[int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, price:[int256,int256]:int256, setInitialLiquidityAmount:[int256,int256,int256]:int256, setPushedForward:[int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]", 
-            "MARKETS = 0x767b08e20f0c32ea4d2b7d9e46b8ffc69ac32996", 
+            "MARKETS = 0x9ea3e29dc2f202f59a8b4c2964e851358c0f1569", 
             "extern events: [addMarket:[int256,int256]:int256, addNumReports:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getExpiration:[int256]:int256, getFinal:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMedian:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getNumReports:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPushedBack:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getRejectedUncaught:[int256]:int256, getReportingThreshold:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256]:int256, setEthics:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setFinal:[int256,int256]:int256, setMedian:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setPushedBack:[int256]:int256, setRejected:[int256,int256,int256]:int256, setReportingThreshold:[int256]:int256, setUncaughtOutcome:[int256,int256]:int256]", 
-            "EVENTS = 0xf8d38aaa5f7b08de1d7feee20d136fa7f7e0eb91", 
+            "EVENTS = 0x8e884f6dd75c696024dd9739b9b6c5b6e5d0f01c", 
             "", 
             "event updatePrice(user:indexed, market:indexed, outcome:indexed, price, cost)", 
             "", 
@@ -800,7 +800,7 @@
         "sig": "extern buy&sellShares: [buyShares:[int256,int256,int256,int256,int256]:int256, commitTrade:[int256,int256]:int256, makeMarketHash:[int256,int256,int256,int256]:int256, sellShares:[int256,int256,int256,int256,int256]:int256]"
     }, 
     "cash": {
-        "address": "0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+        "address": "0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -1088,7 +1088,7 @@
         "sig": "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]"
     }, 
     "closeMarket": {
-        "address": "0xa8525b6e4b36f3400aadbd599d2881f495123269", 
+        "address": "0x0d7e621a192a10c3333a54ce916bdc8e0244c29d", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -1112,29 +1112,29 @@
             "# Any questions please contact joey@augur.net", 
             "", 
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
-            "BRANCHES = 0xb777b0eefbe986ca0c511903e76bf21b1120599e", 
+            "BRANCHES = 0x6e099c37d8d538243ad64c829f895483f378d740", 
             "extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256]", 
-            "INFO = 0x414c81818db9d4c92e57c3f16000614c055c388c", 
+            "INFO = 0x76d8477190c55b4a504531c0413a001e2356437c", 
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "extern markets: [addParticipant:[int256,int256]:int256, getAlpha:[int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCumScale:[int256]:int256, getCurrentParticipantNumber:[int256]:int256, getForkSelection:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketInfo:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsInfo:[int256,int256,int256]:int256[], getNumEvents:[int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantID:[int256,int256]:int256, getParticipantNumber:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initialLiquidityAmount:[int256,int256]:int256, initialLiquiditySetup:[int256,int256,int256,int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256]:int256, lsLmsr:[int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, price:[int256,int256]:int256, setInitialLiquidityAmount:[int256,int256,int256]:int256, setPushedForward:[int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]", 
-            "MARKETS = 0x767b08e20f0c32ea4d2b7d9e46b8ffc69ac32996", 
+            "MARKETS = 0x9ea3e29dc2f202f59a8b4c2964e851358c0f1569", 
             "extern events: [addMarket:[int256,int256]:int256, addNumReports:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getExpiration:[int256]:int256, getFinal:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMedian:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getNumReports:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPushedBack:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getRejectedUncaught:[int256]:int256, getReportingThreshold:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256]:int256, setEthics:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setFinal:[int256,int256]:int256, setMedian:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setPushedBack:[int256]:int256, setRejected:[int256,int256,int256]:int256, setReportingThreshold:[int256]:int256, setUncaughtOutcome:[int256,int256]:int256]", 
-            "EVENTS = 0xf8d38aaa5f7b08de1d7feee20d136fa7f7e0eb91", 
+            "EVENTS = 0x8e884f6dd75c696024dd9739b9b6c5b6e5d0f01c", 
             "extern closeMarketOne: [oneOutcome:[int256,int256]:int256, valueCalcOne:[int256,int256]:int256]", 
-            "CLOSEONE = 0xd48a4ef613a93ac6606640273f8e4b9752e876cc", 
+            "CLOSEONE = 0xb15baeac7c5c18a4ae1b8dcd24b349b18888d5ca", 
             "extern closeMarketTwo: [twoOutcomes:[int256,int256[],int256[]]:int256, valueCalcTwo:[int256,int256[],int256[]]:int256]", 
-            "CLOSETWO = 0x43d2d2cf722b72c6611384574a5b985e09a6026c", 
+            "CLOSETWO = 0x1ebe7f6f3bf5ed9276373ecbef5a09cb11af2f0f", 
             "extern closeMarketFour: [fourOutcomes:[int256,int256[],int256[]]:int256, valueCalcFour:[int256,int256[],int256[]]:int256]", 
-            "CLOSEFOUR = 0x0126deea7ed475b4261cce5dd3efa21e35cdf17a", 
+            "CLOSEFOUR = 0x3522016cab0793ebfd005c1808b23fba7fc1a0ac", 
             "extern closeMarketEight: [eightOutcomes:[int256,int256[],int256[]]:int256, valueCalcEight:[int256,int256[],int256[]]:int256]", 
-            "CLOSEEIGHT = 0x1868bcbdd69812349944de008e72c55a4fb50291", 
+            "CLOSEEIGHT = 0xa85e41e0d2efe7d9c3df9ff01ce42cd2182e9a21", 
             "extern expiringEvents: [addEvent:[int256,int256,int256]:int256, addPeriodVolume:[int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getNumEventsToReportOn:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodVolume:[int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getTotalRepReported:[int256,int256]:int256, moveEventsToCurrentPeriod:[int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setNumEventsToReportOn:[int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setTotalRepReported:[int256,int256,int256]:int256]", 
-            "EXPEVENTS = 0xeee51df37e22f4458ff25fb3b230cc34f8ad38e3", 
+            "EXPEVENTS = 0xfe81801638055a798a5951561f568f7b4821fc04", 
             "extern makeReports: [calculateReportingThreshold:[int256,int256,int256]:int256, getAfterRep:[int256,int256]:int256, getBeforeRep:[int256,int256]:int256, getNumEventsToReport:[int256,int256]:int256, getNumReportsActual:[int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumReportsExpectedEvent:[int256,int256,int256]:int256, getRRUpToDate:[]:int256, getReport:[int256,int256,int256]:int256, getReportable:[int256,int256]:int256, getReportedPeriod:[int256,int256,int256]:int256, getSubmittedHash:[int256,int256,int256]:int256, makeHash:[int256,int256,int256]:int256, needsReportingOn:[int256]:int256, setAfterRep:[int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setNumReportsExpectedEvent:[int256,int256,int256,int256]:int256, setRRUpToDate:[]:int256, setReportable:[int256,int256]:int256, submitReport:[int256,int256,int256,int256,int256,int256,int256]:int256, submitReportHash:[int256,int256,int256,int256,int256]:int256, validateReport:[int256,int256,int256,int256]:int256]", 
-            "MAKEREPORTS = 0xd16dab8cae757a5383ef949518883c2c583a43d9", 
+            "MAKEREPORTS = 0x33ee3ef2acb6c0aee2b2377ff70afff871555b1a", 
             "extern eventResolution: [catch:[int256]:int256, determineWinningOutcomes:[int256[],int256,int256,int256]:int256[], resolveBinary:[int256,int256,int256,int256,int256]:int256, resolveCategoricalOrScalar:[int256,int256,int256,int256,int256,int256,int256]:int256]", 
-            "RESOLVE = 0x2be5c8c3fa57487e398b05b05819f6ff2c43664d", 
+            "RESOLVE = 0xca1b25164975d13fc0acb721f0bd88f51675a0a4", 
             "", 
             "# first param is the market, second param is the subcurrency contract", 
             "data cash[][]", 
@@ -1391,14 +1391,14 @@
         "sig": "extern closeMarket: [claimProceeds:[int256,int256]:int256, closeMarket:[int256,int256]:int256, returnLiquidity:[int256,int256]:int256]"
     }, 
     "closeMarketEight": {
-        "address": "0x1868bcbdd69812349944de008e72c55a4fb50291", 
+        "address": "0xa85e41e0d2efe7d9c3df9ff01ce42cd2182e9a21", 
         "code": [
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "extern markets: [addParticipant:[int256,int256]:int256, getAlpha:[int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCumScale:[int256]:int256, getCurrentParticipantNumber:[int256]:int256, getForkSelection:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketInfo:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsInfo:[int256,int256,int256]:int256[], getNumEvents:[int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantID:[int256,int256]:int256, getParticipantNumber:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initialLiquidityAmount:[int256,int256]:int256, initialLiquiditySetup:[int256,int256,int256,int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256]:int256, lsLmsr:[int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, price:[int256,int256]:int256, setInitialLiquidityAmount:[int256,int256,int256]:int256, setPushedForward:[int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]", 
-            "MARKETS = 0x767b08e20f0c32ea4d2b7d9e46b8ffc69ac32996", 
+            "MARKETS = 0x9ea3e29dc2f202f59a8b4c2964e851358c0f1569", 
             "extern events: [addMarket:[int256,int256]:int256, addNumReports:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getExpiration:[int256]:int256, getFinal:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMedian:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getNumReports:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPushedBack:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getRejectedUncaught:[int256]:int256, getReportingThreshold:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256]:int256, setEthics:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setFinal:[int256,int256]:int256, setMedian:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setPushedBack:[int256]:int256, setRejected:[int256,int256,int256]:int256, setReportingThreshold:[int256]:int256, setUncaughtOutcome:[int256,int256]:int256]", 
-            "EVENTS = 0xf8d38aaa5f7b08de1d7feee20d136fa7f7e0eb91", 
+            "EVENTS = 0x8e884f6dd75c696024dd9739b9b6c5b6e5d0f01c", 
             "", 
             "# eight winning outcomes", 
             "def eightOutcomes(market, winningOutcome: arr, events: arr):", 
@@ -1567,14 +1567,14 @@
         "sig": "extern closeMarketEight: [eightOutcomes:[int256,int256[],int256[]]:int256, valueCalcEight:[int256,int256[],int256[]]:int256]"
     }, 
     "closeMarketFour": {
-        "address": "0x0126deea7ed475b4261cce5dd3efa21e35cdf17a", 
+        "address": "0x3522016cab0793ebfd005c1808b23fba7fc1a0ac", 
         "code": [
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "extern markets: [addParticipant:[int256,int256]:int256, getAlpha:[int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCumScale:[int256]:int256, getCurrentParticipantNumber:[int256]:int256, getForkSelection:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketInfo:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsInfo:[int256,int256,int256]:int256[], getNumEvents:[int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantID:[int256,int256]:int256, getParticipantNumber:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initialLiquidityAmount:[int256,int256]:int256, initialLiquiditySetup:[int256,int256,int256,int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256]:int256, lsLmsr:[int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, price:[int256,int256]:int256, setInitialLiquidityAmount:[int256,int256,int256]:int256, setPushedForward:[int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]", 
-            "MARKETS = 0x767b08e20f0c32ea4d2b7d9e46b8ffc69ac32996", 
+            "MARKETS = 0x9ea3e29dc2f202f59a8b4c2964e851358c0f1569", 
             "extern events: [addMarket:[int256,int256]:int256, addNumReports:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getExpiration:[int256]:int256, getFinal:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMedian:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getNumReports:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPushedBack:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getRejectedUncaught:[int256]:int256, getReportingThreshold:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256]:int256, setEthics:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setFinal:[int256,int256]:int256, setMedian:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setPushedBack:[int256]:int256, setRejected:[int256,int256,int256]:int256, setReportingThreshold:[int256]:int256, setUncaughtOutcome:[int256,int256]:int256]", 
-            "EVENTS = 0xf8d38aaa5f7b08de1d7feee20d136fa7f7e0eb91", 
+            "EVENTS = 0x8e884f6dd75c696024dd9739b9b6c5b6e5d0f01c", 
             "", 
             "# four winning outcomes", 
             "def fourOutcomes(market, winningOutcome: arr, events: arr):", 
@@ -1753,12 +1753,12 @@
         "sig": "extern closeMarketFour: [fourOutcomes:[int256,int256[],int256[]]:int256, valueCalcFour:[int256,int256[],int256[]]:int256]"
     }, 
     "closeMarketOne": {
-        "address": "0xd48a4ef613a93ac6606640273f8e4b9752e876cc", 
+        "address": "0xb15baeac7c5c18a4ae1b8dcd24b349b18888d5ca", 
         "code": [
             "extern markets: [addParticipant:[int256,int256]:int256, getAlpha:[int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCumScale:[int256]:int256, getCurrentParticipantNumber:[int256]:int256, getForkSelection:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketInfo:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsInfo:[int256,int256,int256]:int256[], getNumEvents:[int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantID:[int256,int256]:int256, getParticipantNumber:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initialLiquidityAmount:[int256,int256]:int256, initialLiquiditySetup:[int256,int256,int256,int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256]:int256, lsLmsr:[int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, price:[int256,int256]:int256, setInitialLiquidityAmount:[int256,int256,int256]:int256, setPushedForward:[int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]", 
-            "MARKETS = 0x767b08e20f0c32ea4d2b7d9e46b8ffc69ac32996", 
+            "MARKETS = 0x9ea3e29dc2f202f59a8b4c2964e851358c0f1569", 
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "", 
             "# mutex result non scalar not .5", 
             "# one winning outcome", 
@@ -1823,14 +1823,14 @@
         "sig": "extern closeMarketOne: [oneOutcome:[int256,int256]:int256, valueCalcOne:[int256,int256]:int256]"
     }, 
     "closeMarketTwo": {
-        "address": "0x43d2d2cf722b72c6611384574a5b985e09a6026c", 
+        "address": "0x1ebe7f6f3bf5ed9276373ecbef5a09cb11af2f0f", 
         "code": [
             "extern markets: [addParticipant:[int256,int256]:int256, getAlpha:[int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCumScale:[int256]:int256, getCurrentParticipantNumber:[int256]:int256, getForkSelection:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketInfo:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsInfo:[int256,int256,int256]:int256[], getNumEvents:[int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantID:[int256,int256]:int256, getParticipantNumber:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initialLiquidityAmount:[int256,int256]:int256, initialLiquiditySetup:[int256,int256,int256,int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256]:int256, lsLmsr:[int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, price:[int256,int256]:int256, setInitialLiquidityAmount:[int256,int256,int256]:int256, setPushedForward:[int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]", 
-            "MARKETS = 0x767b08e20f0c32ea4d2b7d9e46b8ffc69ac32996", 
+            "MARKETS = 0x9ea3e29dc2f202f59a8b4c2964e851358c0f1569", 
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "extern events: [addMarket:[int256,int256]:int256, addNumReports:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getExpiration:[int256]:int256, getFinal:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMedian:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getNumReports:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPushedBack:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getRejectedUncaught:[int256]:int256, getReportingThreshold:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256]:int256, setEthics:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setFinal:[int256,int256]:int256, setMedian:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setPushedBack:[int256]:int256, setRejected:[int256,int256,int256]:int256, setReportingThreshold:[int256]:int256, setUncaughtOutcome:[int256,int256]:int256]", 
-            "EVENTS = 0xf8d38aaa5f7b08de1d7feee20d136fa7f7e0eb91", 
+            "EVENTS = 0x8e884f6dd75c696024dd9739b9b6c5b6e5d0f01c", 
             "", 
             "# # of winningOutcomes is 2", 
             "def twoOutcomes(market, winningOutcome: arr, events: arr):", 
@@ -1955,7 +1955,7 @@
         "sig": "extern closeMarketTwo: [twoOutcomes:[int256,int256[],int256[]]:int256, valueCalcTwo:[int256,int256[],int256[]]:int256]"
     }, 
     "comments": {
-        "address": "0xc481d6fa93d41923ce44525b22ddc7e57f05b517", 
+        "address": "0x412d2febf4b4db21382d2b26e074e7b0c5780d5a", 
         "code": [
             "event comment(market: indexed, ipfsHash)", 
             "", 
@@ -2004,24 +2004,24 @@
         "sig": "extern comments: [addComment:[int256,int256]:int256]"
     }, 
     "consensus": {
-        "address": "0x96384c5f4d11972d519e7e8fa8a7aa8008526775", 
+        "address": "0xc59537470f1cf45ca1725fac10d389ea9a739885", 
         "code": [
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "extern expiringEvents: [addEvent:[int256,int256,int256]:int256, addPeriodVolume:[int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getNumEventsToReportOn:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodVolume:[int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getTotalRepReported:[int256,int256]:int256, moveEventsToCurrentPeriod:[int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setNumEventsToReportOn:[int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setTotalRepReported:[int256,int256,int256]:int256]", 
-            "EXPIRING = 0xeee51df37e22f4458ff25fb3b230cc34f8ad38e3", 
+            "EXPIRING = 0xfe81801638055a798a5951561f568f7b4821fc04", 
             "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getDormantRepBalance:[int256,int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, hashReport:[int256[],int256]:int256, repIDToIndex:[int256,int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256]", 
-            "REPORTING = 0xd29caf0311436f56ee2d6ab36d806dfad2ef8807", 
+            "REPORTING = 0xb707b070a020fdc959496dd9e598d9f03cc2d02f", 
             "extern events: [addMarket:[int256,int256]:int256, addNumReports:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getExpiration:[int256]:int256, getFinal:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMedian:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getNumReports:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPushedBack:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getRejectedUncaught:[int256]:int256, getReportingThreshold:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256]:int256, setEthics:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setFinal:[int256,int256]:int256, setMedian:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setPushedBack:[int256]:int256, setRejected:[int256,int256,int256]:int256, setReportingThreshold:[int256]:int256, setUncaughtOutcome:[int256,int256]:int256]", 
-            "EVENTS = 0xf8d38aaa5f7b08de1d7feee20d136fa7f7e0eb91", 
+            "EVENTS = 0x8e884f6dd75c696024dd9739b9b6c5b6e5d0f01c", 
             "extern fxpFunctions: [fx_exp:[int256]:int256, fx_log:[int256]:int256, sqrt:[int256]:int256]", 
-            "FXP = 0xe35f2d19fbebc0dcd1d2ac7d94aa443ab16a197f", 
+            "FXP = 0x07cc411f282b977f2109df7087f4efd5286c5153", 
             "extern makeReports: [calculateReportingThreshold:[int256,int256,int256]:int256, getAfterRep:[int256,int256]:int256, getBeforeRep:[int256,int256]:int256, getNumEventsToReport:[int256,int256]:int256, getNumReportsActual:[int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumReportsExpectedEvent:[int256,int256,int256]:int256, getRRUpToDate:[]:int256, getReport:[int256,int256,int256]:int256, getReportable:[int256,int256]:int256, getReportedPeriod:[int256,int256,int256]:int256, getSubmittedHash:[int256,int256,int256]:int256, makeHash:[int256,int256,int256]:int256, needsReportingOn:[int256]:int256, setAfterRep:[int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setNumReportsExpectedEvent:[int256,int256,int256,int256]:int256, setRRUpToDate:[]:int256, setReportable:[int256,int256]:int256, submitReport:[int256,int256,int256,int256,int256,int256,int256]:int256, submitReportHash:[int256,int256,int256,int256,int256]:int256, validateReport:[int256,int256,int256,int256]:int256]", 
-            "MAKEREPORTS = 0xd16dab8cae757a5383ef949518883c2c583a43d9", 
+            "MAKEREPORTS = 0x33ee3ef2acb6c0aee2b2377ff70afff871555b1a", 
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
-            "BRANCHES = 0xb777b0eefbe986ca0c511903e76bf21b1120599e", 
+            "BRANCHES = 0x6e099c37d8d538243ad64c829f895483f378d740", 
             "extern markets: [addParticipant:[int256,int256]:int256, getAlpha:[int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCumScale:[int256]:int256, getCurrentParticipantNumber:[int256]:int256, getForkSelection:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketInfo:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsInfo:[int256,int256,int256]:int256[], getNumEvents:[int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantID:[int256,int256]:int256, getParticipantNumber:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initialLiquidityAmount:[int256,int256]:int256, initialLiquiditySetup:[int256,int256,int256,int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256]:int256, lsLmsr:[int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, price:[int256,int256]:int256, setInitialLiquidityAmount:[int256,int256,int256]:int256, setPushedForward:[int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]", 
-            "MARKETS = 0x767b08e20f0c32ea4d2b7d9e46b8ffc69ac32996", 
+            "MARKETS = 0x9ea3e29dc2f202f59a8b4c2964e851358c0f1569", 
             "", 
             "# round two consensus data", 
             "data bondPaid[]", 
@@ -2058,8 +2058,8 @@
             "    outcome = EVENTS.getOutcome(event)", 
             "    reportValue = MAKEREPORTS.getReport(branch, lastPeriod, event)", 
             "    p = self.proportionCorrect(event)", 
-            "    oldRep = MAKEREPORTS.getBeforeRep(branch, period)                               # hmmmm", 
-            "    if(!self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && BRANCHES.getVotePeriod(branch) > period && reportValue && outcome!=0):", 
+            "    oldRep = MAKEREPORTS.getBeforeRep(branch, lastPeriod)", 
+            "    if(!self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && reportValue && outcome!=0):", 
             "        # wrong", 
             "        #184467440737095520 == 0.01 in fxp", 
             "        if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):", 
@@ -2070,19 +2070,26 @@
             "        else:", 
             "            #if(scalar(event) or categorical(event) or outcome==3*2**64):", 
             "                #p = -(abs(reportValue - EVENTS.getMedian(event))/2) + 2**64", 
-            "            newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)", 
+            "            newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64", 
             "        #smoothedRep = oldRep*.8 + newRep*.2", 
             "        smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64", 
-            "        MAKEREPORTS.setAfterRep(branch, lastPeriod, smoothedRep)", 
             "        repChange = smoothedRep - oldRep", 
-            "        self.branch[branch].denominator[period] += smoothedRep", 
-            "        if(repChange < 0):", 
-            "            # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]", 
-            "            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), repChange)", 
-            "            # sends that rep to the branch", 
-            "            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -repChange)", 
+            "        newAfterRep = MAKEREPORTS.getAfterRep(branch, lastPeriod) + repChange", 
+            "        MAKEREPORTS.setAfterRep(branch, lastPeriod, newAfterRep)", 
             "        if(MAKEREPORTS.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):", 
+            "            if(newAfterRep <= 0):", 
+            "                newAfterRep = 0", 
+            "            repBalance = REPORTING.getRepBalance(branch, msg.sender)", 
             "            self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod", 
+            "            self.branch[branch].denominator[lastPeriod] += newAfterRep", 
+            "            totalRepDifference = newAfterRep - oldRep", 
+            "            if(repBalance + totalRepDifference <= 0):", 
+            "                totalRepDifference = -1*repBalance", 
+            "            if(totalRepDifference<0):", 
+            "                # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]", 
+            "                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), totalRepDifference)", 
+            "                # sends that rep to the branch", 
+            "                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)", 
             "        self.branch[branch].penalized[lastPeriod][tx.origin].event[event] = 1", 
             "        self.branch[branch].penalized[lastPeriod][tx.origin].num += 1", 
             "        return(1)", 
@@ -2125,6 +2132,7 @@
             "        # sends that rep to the branch rep pool", 
             "        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -repChange)", 
             "        MAKEREPORTS.setBeforeRep(branch, lastPeriod, oldRep+newRep)", 
+            "        MAKEREPORTS.setAfterRep(branch, lastPeriod, oldRep+newRep)", 
             "    self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized = 1", 
             "    return(1)", 
             "", 
@@ -2139,7 +2147,6 @@
             "        # need to call penalize for all events and penalize for too lazy to report or catchup if necessary", 
             "        return(-1)", 
             "    lastPeriod = BRANCHES.getVotePeriod(branch) - 1", 
-            "    repReported = EXPEVENTS.getTotalRepReported(branch, lastPeriod)", 
             "    if(!self.branch[branch].feesCollected[lastPeriod][tx.origin] && hasReported(branch, lastPeriod)):", 
             "        newRep = MAKEREPORTS.getAfterRep(branch, lastPeriod)", 
             "        denominator = self.branch[branch].denominator[lastPeriod]", 
@@ -2157,8 +2164,12 @@
             "        return(0)", 
             "", 
             "# call when a user who hasn't reported for a while wants to start again and needs to catch up on penalizations", 
-            "# should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then", 
             "def penalizationCatchup(branch):", 
+            "    # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then", 
+            "    periodLength = BRANCHES.getPeriodLength(branch)", 
+            "    residual = block.number % periodLength", 
+            "    if(residual > periodLength/2):", 
+            "        return(-2)", 
             "    # find delta between this last period and last penalized up to", 
             "    lastPeriodPenalized = self.branch[branch].penalizedUpTo[tx.origin]", 
             "    lastPeriod = BRANCHES.getVotePeriod(branch)-1", 
@@ -2461,7 +2472,7 @@
         "sig": "extern consensus: [collectFees:[int256]:int256, incrementPeriodAfterReporting:[int256]:int256, penalizationCatchup:[int256]:int256, penalizeNotEnoughReports:[int256]:int256, penalizeWrong:[int256,int256]:int256, proportionCorrect:[int256,int256,int256]:int256, slashRep:[int256,int256,int256,int256,int256,int256]:int256]"
     }, 
     "createBranch": {
-        "address": "0xd36bc932117fe4fc98be0e48734c0e6b5e94590b", 
+        "address": "0x3bf0139b2281c5f13b6a43b3a3c020934ceb0897", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -2485,15 +2496,15 @@
             "# Any questions please contact joey@augur.net", 
             "", 
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
-            "BRANCHES = 0xb777b0eefbe986ca0c511903e76bf21b1120599e", 
+            "BRANCHES = 0x6e099c37d8d538243ad64c829f895483f378d740", 
             "extern expiringEvents: [addEvent:[int256,int256,int256]:int256, addPeriodVolume:[int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getNumEventsToReportOn:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodVolume:[int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getTotalRepReported:[int256,int256]:int256, moveEventsToCurrentPeriod:[int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setNumEventsToReportOn:[int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setTotalRepReported:[int256,int256,int256]:int256]", 
-            "EXPEVENTS = 0xeee51df37e22f4458ff25fb3b230cc34f8ad38e3", 
+            "EXPEVENTS = 0xfe81801638055a798a5951561f568f7b4821fc04", 
             "extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256]", 
-            "INFO = 0x414c81818db9d4c92e57c3f16000614c055c388c", 
+            "INFO = 0x76d8477190c55b4a504531c0413a001e2356437c", 
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getDormantRepBalance:[int256,int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, hashReport:[int256[],int256]:int256, repIDToIndex:[int256,int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256]", 
-            "REPORTING = 0xd29caf0311436f56ee2d6ab36d806dfad2ef8807", 
+            "REPORTING = 0xb707b070a020fdc959496dd9e598d9f03cc2d02f", 
             "", 
             "# period length is given in blocks", 
             "# @return branchID if success", 
@@ -2566,7 +2577,7 @@
         "sig": "extern createBranch: [createSubbranch:[bytes,int256,int256,int256,int256]:int256]"
     }, 
     "createEvent": {
-        "address": "0x83dfd526b463fd4595444ccc7328365bbc5b0cce", 
+        "address": "0x4ff5e87b13be9df2cf83a81aa971797f8f50f278", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -2590,17 +2601,17 @@
             "# Any questions please contact joey@augur.net", 
             "", 
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
-            "BRANCHES = 0xb777b0eefbe986ca0c511903e76bf21b1120599e", 
+            "BRANCHES = 0x6e099c37d8d538243ad64c829f895483f378d740", 
             "extern expiringEvents: [addEvent:[int256,int256,int256]:int256, addPeriodVolume:[int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getNumEventsToReportOn:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodVolume:[int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getTotalRepReported:[int256,int256]:int256, moveEventsToCurrentPeriod:[int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setNumEventsToReportOn:[int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setTotalRepReported:[int256,int256,int256]:int256]", 
-            "EXPEVENTS = 0xeee51df37e22f4458ff25fb3b230cc34f8ad38e3", 
+            "EXPEVENTS = 0xfe81801638055a798a5951561f568f7b4821fc04", 
             "extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256]", 
-            "INFO = 0x414c81818db9d4c92e57c3f16000614c055c388c", 
+            "INFO = 0x76d8477190c55b4a504531c0413a001e2356437c", 
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getDormantRepBalance:[int256,int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, hashReport:[int256[],int256]:int256, repIDToIndex:[int256,int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256]", 
-            "REPORTING = 0xd29caf0311436f56ee2d6ab36d806dfad2ef8807", 
+            "REPORTING = 0xb707b070a020fdc959496dd9e598d9f03cc2d02f", 
             "extern events: [addMarket:[int256,int256]:int256, addNumReports:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getExpiration:[int256]:int256, getFinal:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMedian:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getNumReports:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPushedBack:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getRejectedUncaught:[int256]:int256, getReportingThreshold:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256]:int256, setEthics:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setFinal:[int256,int256]:int256, setMedian:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setPushedBack:[int256]:int256, setRejected:[int256,int256,int256]:int256, setReportingThreshold:[int256]:int256, setUncaughtOutcome:[int256,int256]:int256]", 
-            "EVENTS = 0xf8d38aaa5f7b08de1d7feee20d136fa7f7e0eb91", 
+            "EVENTS = 0x8e884f6dd75c696024dd9739b9b6c5b6e5d0f01c", 
             "", 
             "# numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0", 
             "# to 11.0 would be 11 outcomes (if incremented by 0.1)", 
@@ -2691,7 +2702,7 @@
         "sig": "extern createEvent: [createEvent:[int256,bytes,int256,int256,int256,int256]:int256]"
     }, 
     "createMarket": {
-        "address": "0xc4249c21017b0c6c9edc8ede2a4452aca723678d", 
+        "address": "0xb8c2e4ba3971463a93b068e8b70285d3a5185796", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -2715,23 +2726,23 @@
             "# Any questions please contact joey@augur.net", 
             "", 
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
-            "BRANCHES = 0xb777b0eefbe986ca0c511903e76bf21b1120599e", 
+            "BRANCHES = 0x6e099c37d8d538243ad64c829f895483f378d740", 
             "extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256]", 
-            "INFO = 0x414c81818db9d4c92e57c3f16000614c055c388c", 
+            "INFO = 0x76d8477190c55b4a504531c0413a001e2356437c", 
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getDormantRepBalance:[int256,int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, hashReport:[int256[],int256]:int256, repIDToIndex:[int256,int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256]", 
-            "REPORTING = 0xd29caf0311436f56ee2d6ab36d806dfad2ef8807", 
+            "REPORTING = 0xb707b070a020fdc959496dd9e598d9f03cc2d02f", 
             "extern makeReports: [calculateReportingThreshold:[int256,int256,int256]:int256, getAfterRep:[int256,int256]:int256, getBeforeRep:[int256,int256]:int256, getNumEventsToReport:[int256,int256]:int256, getNumReportsActual:[int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumReportsExpectedEvent:[int256,int256,int256]:int256, getRRUpToDate:[]:int256, getReport:[int256,int256,int256]:int256, getReportable:[int256,int256]:int256, getReportedPeriod:[int256,int256,int256]:int256, getSubmittedHash:[int256,int256,int256]:int256, makeHash:[int256,int256,int256]:int256, needsReportingOn:[int256]:int256, setAfterRep:[int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setNumReportsExpectedEvent:[int256,int256,int256,int256]:int256, setRRUpToDate:[]:int256, setReportable:[int256,int256]:int256, submitReport:[int256,int256,int256,int256,int256,int256,int256]:int256, submitReportHash:[int256,int256,int256,int256,int256]:int256, validateReport:[int256,int256,int256,int256]:int256]", 
-            "MAKEREPORTS = 0xd16dab8cae757a5383ef949518883c2c583a43d9", 
+            "MAKEREPORTS = 0x33ee3ef2acb6c0aee2b2377ff70afff871555b1a", 
             "extern fxpFunctions: [fx_exp:[int256]:int256, fx_log:[int256]:int256, sqrt:[int256]:int256]", 
-            "FXP = 0xe35f2d19fbebc0dcd1d2ac7d94aa443ab16a197f", 
+            "FXP = 0x07cc411f282b977f2109df7087f4efd5286c5153", 
             "extern markets: [addParticipant:[int256,int256]:int256, getAlpha:[int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCumScale:[int256]:int256, getCurrentParticipantNumber:[int256]:int256, getForkSelection:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketInfo:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsInfo:[int256,int256,int256]:int256[], getNumEvents:[int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantID:[int256,int256]:int256, getParticipantNumber:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initialLiquidityAmount:[int256,int256]:int256, initialLiquiditySetup:[int256,int256,int256,int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256]:int256, lsLmsr:[int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, price:[int256,int256]:int256, setInitialLiquidityAmount:[int256,int256,int256]:int256, setPushedForward:[int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]", 
-            "MARKETS = 0x767b08e20f0c32ea4d2b7d9e46b8ffc69ac32996", 
+            "MARKETS = 0x9ea3e29dc2f202f59a8b4c2964e851358c0f1569", 
             "extern events: [addMarket:[int256,int256]:int256, addNumReports:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getExpiration:[int256]:int256, getFinal:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMedian:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getNumReports:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPushedBack:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getRejectedUncaught:[int256]:int256, getReportingThreshold:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256]:int256, setEthics:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setFinal:[int256,int256]:int256, setMedian:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setPushedBack:[int256]:int256, setRejected:[int256,int256,int256]:int256, setReportingThreshold:[int256]:int256, setUncaughtOutcome:[int256,int256]:int256]", 
-            "EVENTS = 0xf8d38aaa5f7b08de1d7feee20d136fa7f7e0eb91", 
+            "EVENTS = 0x8e884f6dd75c696024dd9739b9b6c5b6e5d0f01c", 
             "extern expiringEvents: [addEvent:[int256,int256,int256]:int256, addPeriodVolume:[int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getNumEventsToReportOn:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodVolume:[int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getTotalRepReported:[int256,int256]:int256, moveEventsToCurrentPeriod:[int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setNumEventsToReportOn:[int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setTotalRepReported:[int256,int256,int256]:int256]", 
-            "EXPEVENTS = 0xeee51df37e22f4458ff25fb3b230cc34f8ad38e3", 
+            "EXPEVENTS = 0xfe81801638055a798a5951561f568f7b4821fc04", 
             "", 
             "event creationBlock(market:indexed)", 
             "", 
@@ -3131,22 +3142,22 @@
         "sig": "extern createMarket: [createMarket:[int256,bytes,int256,int256,int256,int256[],int256]:int256, moveMarketAndAssocEvents:[int256,int256]:int256, pushMarketForward:[int256,int256]:int256, updateTradingFee:[int256,int256,int256]:int256]"
     }, 
     "eventResolution": {
-        "address": "0x2be5c8c3fa57487e398b05b05819f6ff2c43664d", 
+        "address": "0xca1b25164975d13fc0acb721f0bd88f51675a0a4", 
         "code": [
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
-            "BRANCHES = 0xb777b0eefbe986ca0c511903e76bf21b1120599e", 
+            "BRANCHES = 0x6e099c37d8d538243ad64c829f895483f378d740", 
             "extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256]", 
-            "INFO = 0x414c81818db9d4c92e57c3f16000614c055c388c", 
+            "INFO = 0x76d8477190c55b4a504531c0413a001e2356437c", 
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "extern markets: [addParticipant:[int256,int256]:int256, getAlpha:[int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCumScale:[int256]:int256, getCurrentParticipantNumber:[int256]:int256, getForkSelection:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketInfo:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsInfo:[int256,int256,int256]:int256[], getNumEvents:[int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantID:[int256,int256]:int256, getParticipantNumber:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initialLiquidityAmount:[int256,int256]:int256, initialLiquiditySetup:[int256,int256,int256,int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256]:int256, lsLmsr:[int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, price:[int256,int256]:int256, setInitialLiquidityAmount:[int256,int256,int256]:int256, setPushedForward:[int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]", 
-            "MARKETS = 0x767b08e20f0c32ea4d2b7d9e46b8ffc69ac32996", 
+            "MARKETS = 0x9ea3e29dc2f202f59a8b4c2964e851358c0f1569", 
             "extern events: [addMarket:[int256,int256]:int256, addNumReports:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getExpiration:[int256]:int256, getFinal:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMedian:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getNumReports:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPushedBack:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getRejectedUncaught:[int256]:int256, getReportingThreshold:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256]:int256, setEthics:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setFinal:[int256,int256]:int256, setMedian:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setPushedBack:[int256]:int256, setRejected:[int256,int256,int256]:int256, setReportingThreshold:[int256]:int256, setUncaughtOutcome:[int256,int256]:int256]", 
-            "EVENTS = 0xf8d38aaa5f7b08de1d7feee20d136fa7f7e0eb91", 
+            "EVENTS = 0x8e884f6dd75c696024dd9739b9b6c5b6e5d0f01c", 
             "extern expiringEvents: [addEvent:[int256,int256,int256]:int256, addPeriodVolume:[int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getNumEventsToReportOn:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodVolume:[int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getTotalRepReported:[int256,int256]:int256, moveEventsToCurrentPeriod:[int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setNumEventsToReportOn:[int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setTotalRepReported:[int256,int256,int256]:int256]", 
-            "EXPEVENTS = 0xeee51df37e22f4458ff25fb3b230cc34f8ad38e3", 
+            "EXPEVENTS = 0xfe81801638055a798a5951561f568f7b4821fc04", 
             "extern makeReports: [calculateReportingThreshold:[int256,int256,int256]:int256, getAfterRep:[int256,int256]:int256, getBeforeRep:[int256,int256]:int256, getNumEventsToReport:[int256,int256]:int256, getNumReportsActual:[int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumReportsExpectedEvent:[int256,int256,int256]:int256, getRRUpToDate:[]:int256, getReport:[int256,int256,int256]:int256, getReportable:[int256,int256]:int256, getReportedPeriod:[int256,int256,int256]:int256, getSubmittedHash:[int256,int256,int256]:int256, makeHash:[int256,int256,int256]:int256, needsReportingOn:[int256]:int256, setAfterRep:[int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setNumReportsExpectedEvent:[int256,int256,int256,int256]:int256, setRRUpToDate:[]:int256, setReportable:[int256,int256]:int256, submitReport:[int256,int256,int256,int256,int256,int256,int256]:int256, submitReportHash:[int256,int256,int256,int256,int256]:int256, validateReport:[int256,int256,int256,int256]:int256]", 
-            "MAKEREPORTS = 0xd16dab8cae757a5383ef949518883c2c583a43d9", 
+            "MAKEREPORTS = 0x33ee3ef2acb6c0aee2b2377ff70afff871555b1a", 
             "", 
             "macro YES: 2^65", 
             "macro NO: 2^64", 
@@ -3495,7 +3506,7 @@
         "sig": "extern eventResolution: [catch:[int256]:int256, determineWinningOutcomes:[int256[],int256,int256,int256]:int256[], resolveBinary:[int256,int256,int256,int256,int256]:int256, resolveCategoricalOrScalar:[int256,int256,int256,int256,int256,int256,int256]:int256]"
     }, 
     "events": {
-        "address": "0xf8d38aaa5f7b08de1d7feee20d136fa7f7e0eb91", 
+        "address": "0x8e884f6dd75c696024dd9739b9b6c5b6e5d0f01c", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -3519,7 +3530,7 @@
             "# Any questions please contact joey@augur.net", 
             "", 
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
-            "BRANCHES = 0xb777b0eefbe986ca0c511903e76bf21b1120599e", 
+            "BRANCHES = 0x6e099c37d8d538243ad64c829f895483f378d740", 
             "", 
             "# Events' index is the eventID", 
             "# a binary outcome has 0 for min && 1 for max value, but consensus will return 2^64 and 2^65 respectively", 
@@ -4292,7 +4303,7 @@
         "sig": "extern events: [addMarket:[int256,int256]:int256, addNumReports:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getExpiration:[int256]:int256, getFinal:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMedian:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getNumReports:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPushedBack:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getRejectedUncaught:[int256]:int256, getReportingThreshold:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256]:int256, setEthics:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setFinal:[int256,int256]:int256, setMedian:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setPushedBack:[int256]:int256, setRejected:[int256,int256,int256]:int256, setReportingThreshold:[int256]:int256, setUncaughtOutcome:[int256,int256]:int256]"
     }, 
     "expiringEvents": {
-        "address": "0xeee51df37e22f4458ff25fb3b230cc34f8ad38e3", 
+        "address": "0xfe81801638055a798a5951561f568f7b4821fc04", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -4316,9 +4327,9 @@
             "# Any questions please contact joey@augur.net", 
             "", 
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
-            "BRANCHES = 0xb777b0eefbe986ca0c511903e76bf21b1120599e", 
+            "BRANCHES = 0x6e099c37d8d538243ad64c829f895483f378d740", 
             "extern events: [addMarket:[int256,int256]:int256, addNumReports:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getExpiration:[int256]:int256, getFinal:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMedian:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getNumReports:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPushedBack:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getRejectedUncaught:[int256]:int256, getReportingThreshold:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256]:int256, setEthics:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setFinal:[int256,int256]:int256, setMedian:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setPushedBack:[int256]:int256, setRejected:[int256,int256,int256]:int256, setReportingThreshold:[int256]:int256, setUncaughtOutcome:[int256,int256]:int256]", 
-            "EVENTS = 0xf8d38aaa5f7b08de1d7feee20d136fa7f7e0eb91", 
+            "EVENTS = 0x8e884f6dd75c696024dd9739b9b6c5b6e5d0f01c", 
             "", 
             "# [branchID][votingPeriod]", 
             "# reporthash is [reporterID] = hash", 
@@ -4757,7 +4768,7 @@
         "sig": "extern expiringEvents: [addEvent:[int256,int256,int256]:int256, addPeriodVolume:[int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getNumEventsToReportOn:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodVolume:[int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getTotalRepReported:[int256,int256]:int256, moveEventsToCurrentPeriod:[int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setNumEventsToReportOn:[int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setTotalRepReported:[int256,int256,int256]:int256]"
     }, 
     "faucets": {
-        "address": "0x4d8eb59ec97e68ad381f1562fa20213476b9d259", 
+        "address": "0x072fbf825698f67eff41d145fab695f88272ad8f", 
         "code": [
             "# This software (Augur) allows buying and selling event options in Ethereum.", 
             "#", 
@@ -4784,9 +4795,9 @@
             "# If you have questions, please contact jack@augur.net or joey@augur.net.", 
             "", 
             "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getDormantRepBalance:[int256,int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, hashReport:[int256[],int256]:int256, repIDToIndex:[int256,int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256]", 
-            "REPORTING = 0xd29caf0311436f56ee2d6ab36d806dfad2ef8807", 
+            "REPORTING = 0xb707b070a020fdc959496dd9e598d9f03cc2d02f", 
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "", 
             "# Error -1: Hey, you're not broke!", 
             "def cashFaucet():", 
@@ -4836,7 +4847,7 @@
         "sig": "extern faucets: [cashFaucet:[]:int256, reputationFaucet:[int256]:int256]"
     }, 
     "fxpFunctions": {
-        "address": "0xe35f2d19fbebc0dcd1d2ac7d94aa443ab16a197f", 
+        "address": "0x07cc411f282b977f2109df7087f4efd5286c5153", 
         "code": [
             "macro fx_floor_log2($x):", 
             "    with $y = $x / 0x10000000000000000:", 
@@ -5004,7 +5015,7 @@
         "sig": "extern fxpFunctions: [fx_exp:[int256]:int256, fx_log:[int256]:int256, sqrt:[int256]:int256]"
     }, 
     "info": {
-        "address": "0x414c81818db9d4c92e57c3f16000614c055c388c", 
+        "address": "0x76d8477190c55b4a504531c0413a001e2356437c", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -5165,7 +5176,7 @@
         "sig": "extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256]"
     }, 
     "insertionsort": {
-        "address": "0x370ff7203a1263b8011f037d283e4628d5ab24b5", 
+        "address": "0x79fdce9ece6665c3b65d981772a9406a385fe4cf", 
         "code": [
             "def insertionSort(stuff: arr):", 
             "\ti = 1", 
@@ -5200,7 +5211,7 @@
         "sig": "extern insertionsort: [insertionSort:[int256[]]:int256[]]"
     }, 
     "makeReports": {
-        "address": "0xd16dab8cae757a5383ef949518883c2c583a43d9", 
+        "address": "0x33ee3ef2acb6c0aee2b2377ff70afff871555b1a", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -5224,21 +5235,21 @@
             "# Any questions please contact joey@augur.net", 
             "", 
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
-            "BRANCHES = 0xb777b0eefbe986ca0c511903e76bf21b1120599e", 
+            "BRANCHES = 0x6e099c37d8d538243ad64c829f895483f378d740", 
             "extern expiringEvents: [addEvent:[int256,int256,int256]:int256, addPeriodVolume:[int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getNumEventsToReportOn:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodVolume:[int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getTotalRepReported:[int256,int256]:int256, moveEventsToCurrentPeriod:[int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setNumEventsToReportOn:[int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setTotalRepReported:[int256,int256,int256]:int256]", 
-            "EXPEVENTS = 0xeee51df37e22f4458ff25fb3b230cc34f8ad38e3", 
+            "EXPEVENTS = 0xfe81801638055a798a5951561f568f7b4821fc04", 
             "extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256]", 
-            "INFO = 0x414c81818db9d4c92e57c3f16000614c055c388c", 
+            "INFO = 0x76d8477190c55b4a504531c0413a001e2356437c", 
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "extern events: [addMarket:[int256,int256]:int256, addNumReports:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getExpiration:[int256]:int256, getFinal:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMedian:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getNumReports:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPushedBack:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getRejectedUncaught:[int256]:int256, getReportingThreshold:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256]:int256, setEthics:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setFinal:[int256,int256]:int256, setMedian:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setPushedBack:[int256]:int256, setRejected:[int256,int256,int256]:int256, setReportingThreshold:[int256]:int256, setUncaughtOutcome:[int256,int256]:int256]", 
-            "EVENTS = 0xf8d38aaa5f7b08de1d7feee20d136fa7f7e0eb91", 
+            "EVENTS = 0x8e884f6dd75c696024dd9739b9b6c5b6e5d0f01c", 
             "extern markets: [addParticipant:[int256,int256]:int256, getAlpha:[int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCumScale:[int256]:int256, getCurrentParticipantNumber:[int256]:int256, getForkSelection:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketInfo:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsInfo:[int256,int256,int256]:int256[], getNumEvents:[int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantID:[int256,int256]:int256, getParticipantNumber:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initialLiquidityAmount:[int256,int256]:int256, initialLiquiditySetup:[int256,int256,int256,int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256]:int256, lsLmsr:[int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, price:[int256,int256]:int256, setInitialLiquidityAmount:[int256,int256,int256]:int256, setPushedForward:[int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]", 
-            "MARKETS = 0x767b08e20f0c32ea4d2b7d9e46b8ffc69ac32996", 
+            "MARKETS = 0x9ea3e29dc2f202f59a8b4c2964e851358c0f1569", 
             "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getDormantRepBalance:[int256,int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, hashReport:[int256[],int256]:int256, repIDToIndex:[int256,int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256]", 
-            "REPORTING = 0xd29caf0311436f56ee2d6ab36d806dfad2ef8807", 
+            "REPORTING = 0xb707b070a020fdc959496dd9e598d9f03cc2d02f", 
             "extern fxpFunctions: [fx_exp:[int256]:int256, fx_log:[int256]:int256, sqrt:[int256]:int256]", 
-            "FXP = 0xe35f2d19fbebc0dcd1d2ac7d94aa443ab16a197f", 
+            "FXP = 0x07cc411f282b977f2109df7087f4efd5286c5153", 
             "", 
             "# branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID", 
             "data branches[](submittedHash[][], numReportsActual[][], hasReported[][](reported[]), beforeRep[][], afterRep[][], report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], reportedPeriod[][], firstReport[])", 
@@ -5431,6 +5442,8 @@
             "        # TODO: calls to consensus functions and in send rep", 
             "        #doIt()", 
             "        self.upToDateOnRR[msg.sender] = 1", 
+            "    #if(feesNotCollected && hasReportedLastPeriod):", 
+            "    #    doItOrReturn0", 
             "    x = array(1)", 
             "    x[0] = tx.origin + eventID", 
             "    reportingThreshold = self.calculateReportingThreshold(branch, eventID, votePeriod)", 
@@ -6153,7 +6166,7 @@
         "sig": "extern makeReports: [calculateReportingThreshold:[int256,int256,int256]:int256, getAfterRep:[int256,int256]:int256, getBeforeRep:[int256,int256]:int256, getNumEventsToReport:[int256,int256]:int256, getNumReportsActual:[int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumReportsExpectedEvent:[int256,int256,int256]:int256, getRRUpToDate:[]:int256, getReport:[int256,int256,int256]:int256, getReportable:[int256,int256]:int256, getReportedPeriod:[int256,int256,int256]:int256, getSubmittedHash:[int256,int256,int256]:int256, makeHash:[int256,int256,int256]:int256, needsReportingOn:[int256]:int256, setAfterRep:[int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setNumReportsExpectedEvent:[int256,int256,int256,int256]:int256, setRRUpToDate:[]:int256, setReportable:[int256,int256]:int256, submitReport:[int256,int256,int256,int256,int256,int256,int256]:int256, submitReportHash:[int256,int256,int256,int256,int256]:int256, validateReport:[int256,int256,int256,int256]:int256]"
     }, 
     "markets": {
-        "address": "0x767b08e20f0c32ea4d2b7d9e46b8ffc69ac32996", 
+        "address": "0x9ea3e29dc2f202f59a8b4c2964e851358c0f1569", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -6177,15 +6190,15 @@
             "# Any questions please contact joey@augur.net", 
             "", 
             "extern fxpFunctions: [fx_exp:[int256]:int256, fx_log:[int256]:int256, sqrt:[int256]:int256]", 
-            "FXP = 0xe35f2d19fbebc0dcd1d2ac7d94aa443ab16a197f", 
+            "FXP = 0x07cc411f282b977f2109df7087f4efd5286c5153", 
             "extern expiringEvents: [addEvent:[int256,int256,int256]:int256, addPeriodVolume:[int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getNumEventsToReportOn:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodVolume:[int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getTotalRepReported:[int256,int256]:int256, moveEventsToCurrentPeriod:[int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setNumEventsToReportOn:[int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setTotalRepReported:[int256,int256,int256]:int256]", 
-            "EXPEVENTS = 0xeee51df37e22f4458ff25fb3b230cc34f8ad38e3", 
+            "EXPEVENTS = 0xfe81801638055a798a5951561f568f7b4821fc04", 
             "extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256]", 
-            "INFO = 0x414c81818db9d4c92e57c3f16000614c055c388c", 
+            "INFO = 0x76d8477190c55b4a504531c0413a001e2356437c", 
             "extern events: [addMarket:[int256,int256]:int256, addNumReports:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getExpiration:[int256]:int256, getFinal:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMedian:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getNumReports:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPushedBack:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getRejectedUncaught:[int256]:int256, getReportingThreshold:[int256]:int256, getUncaughtOutcome:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256]:int256, setEthics:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setFinal:[int256,int256]:int256, setMedian:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setPushedBack:[int256]:int256, setRejected:[int256,int256,int256]:int256, setReportingThreshold:[int256]:int256, setUncaughtOutcome:[int256,int256]:int256]", 
-            "EVENTS = 0xf8d38aaa5f7b08de1d7feee20d136fa7f7e0eb91", 
+            "EVENTS = 0x8e884f6dd75c696024dd9739b9b6c5b6e5d0f01c", 
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
-            "BRANCHES = 0xb777b0eefbe986ca0c511903e76bf21b1120599e", 
+            "BRANCHES = 0x6e099c37d8d538243ad64c829f895483f378d740", 
             "", 
             "# Markets' index is the marketID", 
             "# Events is a 0 indexed array of events in the market in the format of", 
@@ -6211,7 +6224,6 @@
             "def getMarketEvent(market, index):", 
             "    return(self.Markets[market].events[index])", 
             "", 
-            "macro TRADER_FIELDS: 3", 
             "macro EVENTS_FIELDS: 6", 
             "macro OUTCOMES_FIELDS: 2", 
             "macro WINNING_OUTCOMES_FIELDS: 8", 
@@ -6221,7 +6233,8 @@
             "    index = FIELDS", 
             "    participantNumber = self.Markets[marketID].addr2participant[tx.origin]", 
             "    descriptionLength = INFO.getDescriptionLength(marketID)", 
-            "    with info = array(FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1):", 
+            "    traderFields = 1 + self.Markets[marketID].numOutcomes", 
+            "    with info = array(FIELDS + self.Markets[marketID].currentParticipant*traderFields + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1):", 
             "        numEvents = self.Markets[marketID].lenEvents", 
             "        info[0] = marketID", 
             "        info[1] = self.Markets[marketID].currentParticipant", 
@@ -6236,14 +6249,16 @@
             "        info[10] = INFO.getCreationFee(marketID)", 
             "        info[11] = INFO.getCreator(marketID)", 
             "", 
-            "        # gather trader(s) info: [trader ID, yes shares, no shares]", 
+            "        # gather trader(s) info: [trader ID, 1 shares, 2 shares, 3 shares, ...]", 
             "        t = 0", 
             "        while t < self.Markets[marketID].currentParticipant:", 
-            "            info[index + t*TRADER_FIELDS] = self.Markets[marketID].participants[t].participantID", 
-            "            info[index + t*TRADER_FIELDS + 1] = self.Markets[marketID].participants[t].shares[1]", 
-            "            info[index + t*TRADER_FIELDS + 2] = self.Markets[marketID].participants[t].shares[2]", 
+            "            info[index + t*traderFields] = self.Markets[marketID].participants[t].participantID", 
+            "            o = 1", 
+            "            while o < self.Markets[marketID].numOutcomes + 1:", 
+            "                info[index + t*traderFields + o] = self.Markets[marketID].participants[t].shares[o]", 
+            "                o += 1", 
             "            t += 1", 
-            "        index += self.Markets[marketID].currentParticipant*TRADER_FIELDS", 
+            "        index += self.Markets[marketID].currentParticipant*traderFields", 
             "", 
             "        # gather event(s) info:", 
             "        # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]", 
@@ -6304,9 +6319,10 @@
             "                m = 0", 
             "                while m < numMarkets:", 
             "                    marketID = marketIDs[m + offset]", 
+            "                    traderFields = 1 + self.Markets[marketID].numOutcomes", 
             "                    participantNumber = self.Markets[marketID].addr2participant[tx.origin]", 
             "                    descriptionLength = INFO.getDescriptionLength(marketID)", 
-            "                    marketArrayLength[m] = FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1", 
+            "                    marketArrayLength[m] = FIELDS + self.Markets[marketID].currentParticipant*traderFields + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1", 
             "                    marketsMatrix[m] = self.getMarketInfo(marketID, outitems=marketArrayLength[m])", 
             "                    m += 1", 
             "", 
@@ -7244,7 +7260,7 @@
         "sig": "extern markets: [addParticipant:[int256,int256]:int256, getAlpha:[int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCumScale:[int256]:int256, getCurrentParticipantNumber:[int256]:int256, getForkSelection:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketInfo:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsInfo:[int256,int256,int256]:int256[], getNumEvents:[int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantID:[int256,int256]:int256, getParticipantNumber:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initialLiquidityAmount:[int256,int256]:int256, initialLiquiditySetup:[int256,int256,int256,int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256]:int256, lsLmsr:[int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, price:[int256,int256]:int256, setInitialLiquidityAmount:[int256,int256,int256]:int256, setPushedForward:[int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]"
     }, 
     "orderBook": {
-        "address": "0x3388ee0696227d128c9cae07012ee1bbb63f994c", 
+        "address": "0xbb2fcf76c09c07caa55eb9d4d96729e17b66395d", 
         "code": [
             "# Order logger.", 
             "event order(orderID: indexed, account: indexed, market: indexed, outcome, price, amount, expiration, cap, block)", 
@@ -7368,7 +7384,7 @@
         "sig": "extern orderBook: [createOrder:[int256,int256,int256,int256,int256,int256,int256]:int256]"
     }, 
     "quicksort": {
-        "address": "0xe40839bb175bcbe5d1131ade8263911e556ee315", 
+        "address": "0x99952d75c52b3bfd5ff961ecebd34bd4477f7d6b", 
         "code": [
             "def quicksort(stuff: arr):", 
             "\tif(len(stuff)<=1):", 
@@ -7431,8 +7447,98 @@
         ], 
         "sig": "extern quicksort: [quicksort:[int256[]]:int256[]]"
     }, 
+    "ramble": {
+        "address": "0xcce881fc29629e655df467f2ab55b4daa7c0785c", 
+        "code": [
+            "event comment(market: indexed, ipfsHash)", 
+            "event metadata(market: indexed, ipfsHash)", 
+            "", 
+            "def addComment(market, ipfsHash):", 
+            "    log(type=comment, market, ipfsHash)", 
+            "    return(1)", 
+            "", 
+            "def addMetadata(market, ipfsHash):", 
+            "    log(type=metadata, market, ipfsHash)", 
+            "    return(1)"
+        ], 
+        "fullsig": [
+            {
+                "inputs": [
+                    {
+                        "name": "market", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "ipfsHash", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "addComment(int256,int256)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "name": "market", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "ipfsHash", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "addMetadata(int256,int256)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "indexed": true, 
+                        "name": "market", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "ipfsHash", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "comment(int256,int256)", 
+                "type": "event"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "indexed": true, 
+                        "name": "market", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "ipfsHash", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "metadata(int256,int256)", 
+                "type": "event"
+            }
+        ], 
+        "sig": "extern ramble: [addComment:[int256,int256]:int256, addMetadata:[int256,int256]:int256]"
+    }, 
     "reporting": {
-        "address": "0xd29caf0311436f56ee2d6ab36d806dfad2ef8807", 
+        "address": "0xb707b070a020fdc959496dd9e598d9f03cc2d02f", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -7457,7 +7563,7 @@
             "", 
             "# import makeReports as REPORTS", 
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
-            "BRANCHES = 0xb777b0eefbe986ca0c511903e76bf21b1120599e", 
+            "BRANCHES = 0x6e099c37d8d538243ad64c829f895483f378d740", 
             "", 
             "# Reporting index is the branchID", 
             "# Reporters index is the rep. address", 
@@ -8096,7 +8202,7 @@
         "sig": "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getDormantRepBalance:[int256,int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, hashReport:[int256[],int256]:int256, repIDToIndex:[int256,int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256]"
     }, 
     "sendReputation": {
-        "address": "0x4c9c37e985734f9c86a2ca886a213473c0eab20e", 
+        "address": "0x378524f700f69ddf709a5fdb32d62ae9bd8f3100", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -8120,17 +8226,17 @@
             "# Any questions please contact joey@augur.net", 
             "", 
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBranch:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256]:int256, setInitialBalance:[int256,int256,int256]:int256]", 
-            "BRANCHES = 0xb777b0eefbe986ca0c511903e76bf21b1120599e", 
+            "BRANCHES = 0x6e099c37d8d538243ad64c829f895483f378d740", 
             "extern expiringEvents: [addEvent:[int256,int256,int256]:int256, addPeriodVolume:[int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getNumEventsToReportOn:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodVolume:[int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getTotalRepReported:[int256,int256]:int256, moveEventsToCurrentPeriod:[int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setNumEventsToReportOn:[int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setTotalRepReported:[int256,int256,int256]:int256]", 
-            "EXPEVENTS = 0xeee51df37e22f4458ff25fb3b230cc34f8ad38e3", 
+            "EXPEVENTS = 0xfe81801638055a798a5951561f568f7b4821fc04", 
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getDormantRepBalance:[int256,int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, hashReport:[int256[],int256]:int256, repIDToIndex:[int256,int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256]", 
-            "REPORTING = 0xd29caf0311436f56ee2d6ab36d806dfad2ef8807", 
+            "REPORTING = 0xb707b070a020fdc959496dd9e598d9f03cc2d02f", 
             "extern makeReports: [calculateReportingThreshold:[int256,int256,int256]:int256, getAfterRep:[int256,int256]:int256, getBeforeRep:[int256,int256]:int256, getNumEventsToReport:[int256,int256]:int256, getNumReportsActual:[int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumReportsExpectedEvent:[int256,int256,int256]:int256, getRRUpToDate:[]:int256, getReport:[int256,int256,int256]:int256, getReportable:[int256,int256]:int256, getReportedPeriod:[int256,int256,int256]:int256, getSubmittedHash:[int256,int256,int256]:int256, makeHash:[int256,int256,int256]:int256, needsReportingOn:[int256]:int256, setAfterRep:[int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setNumReportsExpectedEvent:[int256,int256,int256,int256]:int256, setRRUpToDate:[]:int256, setReportable:[int256,int256]:int256, submitReport:[int256,int256,int256,int256,int256,int256,int256]:int256, submitReportHash:[int256,int256,int256,int256,int256]:int256, validateReport:[int256,int256,int256,int256]:int256]", 
-            "REPORTS = 0xd16dab8cae757a5383ef949518883c2c583a43d9", 
+            "REPORTS = 0x33ee3ef2acb6c0aee2b2377ff70afff871555b1a", 
             "extern consensus: [collectFees:[int256]:int256, incrementPeriodAfterReporting:[int256]:int256, penalizationCatchup:[int256]:int256, penalizeNotEnoughReports:[int256]:int256, penalizeWrong:[int256,int256]:int256, proportionCorrect:[int256,int256,int256]:int256, slashRep:[int256,int256,int256,int256,int256,int256]:int256]", 
-            "CONSENSUS = 0x96384c5f4d11972d519e7e8fa8a7aa8008526775", 
+            "CONSENSUS = 0xc59537470f1cf45ca1725fac10d389ea9a739885", 
             "", 
             "# @return value of reputation sent, 0 if not enough reputation", 
             "# error messages otherwise", 
@@ -8140,6 +8246,7 @@
             "    # Rep cannot be simultaneously spent (transferred) and used to vote", 
             "    currentVotePeriod = BRANCHES.getVotePeriod(branch)", 
             "    #if(value<=0 || !CASH.send(branch, 5*2^64) || EXPEVENTS.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, recver, 0) != 0):", 
+            "    # MAKEREPORTS.getReportedPeriod(branch, current)", 
             "    #    return(0)", 
             "    # need to check all this for the person it's being sent to as well", 
             "    #if(REPORTS.getRRUpToDate()!=1):", 
@@ -8363,7 +8470,7 @@
         "sig": "extern sendReputation: [convertToActiveRep:[int256,int256]:int256, convertToDormantRep:[int256,int256]:int256, sendDormantRep:[int256,int256,int256]:int256, sendReputation:[int256,int256,int256]:int256]"
     }, 
     "transferShares": {
-        "address": "0x6a9e110ef71085f7cc31caee71ae7fb4dad22fa1", 
+        "address": "0x12bd588d040fbaaf40a8a4aec30f07a74a8aa55b", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -8387,11 +8494,11 @@
             "# Any questions please contact joey@augur.net", 
             "", 
             "extern markets: [addParticipant:[int256,int256]:int256, getAlpha:[int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCumScale:[int256]:int256, getCurrentParticipantNumber:[int256]:int256, getForkSelection:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketInfo:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsInfo:[int256,int256,int256]:int256[], getNumEvents:[int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantID:[int256,int256]:int256, getParticipantNumber:[int256,int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSharesPurchased:[int256,int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initialLiquidityAmount:[int256,int256]:int256, initialLiquiditySetup:[int256,int256,int256,int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256]:int256, lsLmsr:[int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, price:[int256,int256]:int256, setInitialLiquidityAmount:[int256,int256,int256]:int256, setPushedForward:[int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]", 
-            "MARKETS = 0x767b08e20f0c32ea4d2b7d9e46b8ffc69ac32996", 
+            "MARKETS = 0x9ea3e29dc2f202f59a8b4c2964e851358c0f1569", 
             "extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256]", 
-            "INFO = 0x414c81818db9d4c92e57c3f16000614c055c388c", 
+            "INFO = 0x76d8477190c55b4a504531c0413a001e2356437c", 
             "extern cash: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]", 
-            "CASH = 0xfe9676f369b47a5cba4bea20bd2280d81585983a", 
+            "CASH = 0x7863b30f2eaa3bd304dd6d3be014c77d7f9cd8c9", 
             "", 
             "# @return amount of shares transferred", 
             "# Error messages otherwise", 
