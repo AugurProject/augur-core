@@ -29,6 +29,7 @@ data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenaliz
     # -2: already past first half of new period and needed to penalize before then
     # -3: need to do not enough reports penalization [or lackthereof]
 def penalizeWrong(branch, event):
+    repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
         return(-3)
@@ -36,6 +37,12 @@ def penalizeWrong(branch, event):
     residual = block.number % periodLength
     if(residual > periodLength/2):
         return(-2)
+    # accounts for if no events in a period
+    if(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
+        self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod
+        self.branch[branch].denominator[lastPeriod] += repBalance
+        return(1)
+
     if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event) && MARKETS.getPushedForward(market)):
         if(lastPeriod==EVENTS.getOriginalExpiration(event)/BRANCHES.getPeriodLength(branch)):
             return(-1)
@@ -63,7 +70,6 @@ def penalizeWrong(branch, event):
         if(MAKEREPORTS.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):
             if(newAfterRep <= 0):
                 newAfterRep = 0
-            repBalance = REPORTING.getRepBalance(branch, msg.sender)
             self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod
             self.branch[branch].denominator[lastPeriod] += newAfterRep
             totalRepDifference = newAfterRep - oldRep
@@ -78,7 +84,7 @@ def penalizeWrong(branch, event):
         self.branch[branch].penalized[lastPeriod][tx.origin].num += 1
         return(1)
     else:
-        return(0)
+        return(lastPeriod)
 
 # Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account and distributed like trading fees.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
 # Errors:
@@ -88,6 +94,11 @@ def penalizeNotEnoughReports(branch):
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     if(self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
         return(-1)
+    # accounts for if no events in a period
+    if(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
+        self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized = 1
+        return(1)
+
     if(!hasReported(branch, lastPeriod)):
         return(-2)
     numEvents = MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
@@ -109,7 +120,7 @@ def penalizeNotEnoughReports(branch):
         originalRep = REPORTING.getRepBalance(branch, tx.origin)
         # penalize people
         newRep = 3689348814741910528*numReportsActual*originalRep / MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
-        oldRep = REPORTING.getRepBalance(branch, tx.origin)*14757395258967642112 / 2**64
+        oldRep = originalRep*14757395258967642112 / 2**64
         repChange = (oldRep+newRep) - originalRep
         # removes rep from reporter who lost it
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), repChange)
@@ -161,10 +172,10 @@ def penalizationCatchup(branch):
     oldRep = REPORTING.getRepBalance(branch, tx.origin)
     if(lastPeriodPenalized!=lastPeriod && !hasReported(branch, lastPeriod)):
         # dock 10% for each period they didn't penalize on
-        smoothedRep = oldRep*(14757395258967642112/2)/2**64
-        i = 0
+        smoothedRep = oldRep*16602069666338596864/2**64
+        i = 1
         while i < delta:
-            smoothedRep = smoothedRep*(14757395258967642112/2)/2**64
+            smoothedRep = smoothedRep*16602069666338596864/2**64
             i += 1
         # and send it to branch for penalty rep collection
         repChange = oldRep - smoothedRep

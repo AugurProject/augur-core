@@ -773,12 +773,149 @@ def test_consensus():
     assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
     assert(c.getAfterRep(branch, period) < int(47.1*2**64) and c.getAfterRep(branch, period) > int(46.9*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
-
-    # other two functions in consensus test [slash rep and catchup functions]
-    # penalize not enough reports make sure no negative rep issues in general and with slash rep
-    
     print "Test consensus OK"
 
+def test_slashrep():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
+    event1 = c.createEvent(1010101, "new event", 5, 1, 2, 2)
+    bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 1)
+    event2 = c.createEvent(1010101, "new eventt", 5, 1, 2, 2)
+    bin_market2 = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event2], 1)
+    s.mine(105)
+    c.incrementPeriod(1010101)
+    report_hash = c.makeHash(0, 2**64, event1)
+    report_hash2 = c.makeHash(0, 2*2**64, event2)
+    assert(c.submitReportHash(1010101, report_hash, 0, event1, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(1010101, report_hash2, 0, event2, 1)==1), "Report hash submission failed"
+    c.slashRep(1010101, 0, 2**64, s.block.coinbase, event1)
+    s.mine(55)
+    assert(c.submitReport(1010101, 0, 0, 0, 2**64, event1, 2**64)==1), "Report submission failed"
+    assert(c.submitReport(1010101, 0, 1, 0, 2*2**64, event2, 2**64)==1), "Report submission failed"
+    s.mine(60)
+    c.incrementPeriod(1010101)
+    assert(c.penalizeWrong(1010101, event1)==-3)
+    branch = 1010101
+    period = 0
+    assert(c.getBeforeRep(branch, period)==c.getAfterRep(branch, period)==c.getRepBalance(branch, s.block.coinbase))
+    assert(c.getRepBalance(branch, branch)==0)
+    print c.getTotalRep(branch)
+    print c.getTotalRepReported(branch)
+    
+    assert(c.penalizeNotEnoughReports(1010101)==1)
+    
+    # assumes user lost no rep after penalizing
+    assert(c.getBeforeRep(branch, period)==c.getAfterRep(branch, period)==c.getRepBalance(branch, s.block.coinbase))
+    assert(c.getRepBalance(branch, branch)==0)
+    print c.getTotalRep(branch)
+    print c.getTotalRepReported(branch)
+    # need to resolve event first
+    assert(c.closeMarket(1010101, bin_market)==1)
+    assert(c.closeMarket(1010101, bin_market2)==1)
+    
+    # resume here
+    
+    assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
+    print c.getAfterRep(branch, period)
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    assert(c.penalizeWrong(1010101, event1)==1)
+    assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
+    print c.getAfterRep(branch, period)
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    assert(c.penalizeWrong(1010101, event2)==1)
+    assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
+    print c.getAfterRep(branch, period)
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    s.mine(55)
+    assert(c.collectFees(1010101)==1)
+    assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
+    print c.getAfterRep(branch, period)
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    print "OK"
+
+def test_catchup():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
+    s.mine(400)
+    c.incrementPeriod(1010101)
+    c.incrementPeriod(1010101)
+    c.incrementPeriod(1010101)
+    c.incrementPeriod(1010101)
+    assert(c.penalizationCatchup(1010101)==1)
+    assert(c.getRepBalance(1010101, s.block.coinbase)==702267546886122664673)
+    event1 = c.createEvent(1010101, "new event", 405, 1, 2, 2)
+    bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 1)
+    event2 = c.createEvent(1010101, "new eventt", 405, 1, 2, 2)
+    bin_market2 = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event2], 1)
+    s.mine(105)
+    c.incrementPeriod(1010101)
+    # in vote period 4 now
+    assert(c.penalizeNotEnoughReports(1010101)==1)
+    assert(c.penalizeWrong(1010101, 444444)==1)
+    report_hash = c.makeHash(0, 2**64, event1)
+    report_hash2 = c.makeHash(0, 2*2**64, event2)
+    assert(c.submitReportHash(1010101, report_hash, 4, event1, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(1010101, report_hash2, 4, event2, 1)==1), "Report hash submission failed"
+    s.mine(55)
+    assert(c.submitReport(1010101, 4, 0, 0, 2**64, event1, 2**64)==1), "Report submission failed"
+    assert(c.submitReport(1010101, 4, 1, 0, 2*2**64, event2, 2**64)==1), "Report submission failed"
+    s.mine(60)
+    c.incrementPeriod(1010101)
+    assert(c.penalizeWrong(1010101, event1)==-3)
+    branch = 1010101
+    period = 4
+    assert(c.getBeforeRep(branch, period)==c.getAfterRep(branch, period)==c.getRepBalance(branch, s.block.coinbase))
+    assert(c.getRepBalance(branch, branch)==164729424578226261279)
+    assert(c.getTotalRep(branch)==866996971464348925952)
+    assert(c.getTotalRepReported(branch, period)==702267546886122664673)
+    
+    assert(c.penalizeNotEnoughReports(1010101)==1)
+    
+    # assumes user lost no rep after penalizing
+    assert(c.getBeforeRep(branch, period)==c.getAfterRep(branch, period)==c.getRepBalance(branch, s.block.coinbase))
+    assert(c.getRepBalance(branch, branch)==164729424578226261279)
+    assert(c.getTotalRep(branch)==866996971464348925952)
+    assert(c.getTotalRepReported(branch, period)==702267546886122664673)
+    
+    # need to resolve event first
+    assert(c.closeMarket(1010101, bin_market)==1)
+    assert(c.closeMarket(1010101, bin_market2)==1)
+    
+    assert(c.getBeforeRep(branch, period)==c.getAfterRep(branch, period)==c.getRepBalance(branch, s.block.coinbase))
+    assert(c.getRepBalance(branch, branch)==164729424578226261279)
+    assert(c.getTotalRep(branch)==866996971464348925952)
+    print c.penalizeWrong(1010101, event1)
+    print c.getReport(branch, period, event1)
+
+    print c.getBeforeRep(branch, period)
+    print c.getAfterRep(branch, period)
+    print c.getRepBalance(branch, s.block.coinbase)
+    print c.getRepBalance(branch, branch)
+    print c.getTotalRep(branch)
+    assert(c.penalizeWrong(1010101, event2)==1)
+    print c.getBeforeRep(branch, period)
+    print c.getAfterRep(branch, period)
+    print c.getRepBalance(branch, s.block.coinbase)
+    print c.getRepBalance(branch, branch)
+    print c.getTotalRep(branch)
+    s.mine(55)
+    assert(c.collectFees(1010101)==1)
+    print c.getBeforeRep(branch, period)
+    print c.getAfterRep(branch, period)
+    print c.getRepBalance(branch, s.block.coinbase)
+    print c.getRepBalance(branch, branch)
+    print c.getTotalRep(branch)
+    
 
 def gas_use(s):
     global initial_gas
@@ -808,5 +945,7 @@ if __name__ == '__main__':
     #test_send_rep()
     #test_make_reports()
     #test_close_market()
-    test_consensus()
+    #test_consensus()
+    test_catchup()
+    #test_slashrep()
     print "DONE TESTING"

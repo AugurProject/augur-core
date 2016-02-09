@@ -250,7 +250,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
             # record that reporter has reported for this event
             self.branches[branch].hasReported[eventID][tx.origin].reported[votePeriod] = 1
             # set report value for event
-            self.branches[branch].report[period][tx.origin].event[eventID] = report
+            self.branches[branch].report[votePeriod][tx.origin].event[eventID] = report
             # set ethics value for event
             if(ethics!=2**64 || ethics!=0):
                 ethics = 2**64

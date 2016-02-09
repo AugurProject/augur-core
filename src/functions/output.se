@@ -1550,7 +1550,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
             # record that reporter has reported for this event
             self.branches[branch].hasReported[eventID][tx.origin].reported[votePeriod] = 1
             # set report value for event
-            self.branches[branch].report[period][tx.origin].event[eventID] = report
+            self.branches[branch].report[votePeriod][tx.origin].event[eventID] = report
             # set ethics value for event
             if(ethics!=2**64 || ethics!=0):
                 ethics = 2**64
@@ -1764,6 +1764,7 @@ data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenaliz
     # -2: already past first half of new period and needed to penalize before then
     # -3: need to do not enough reports penalization [or lackthereof]
 def penalizeWrong(branch, event):
+    repBalance = self.getRepBalance(branch, msg.sender)
     lastPeriod = self.getVotePeriod(branch)-1
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
         return(-3)
@@ -1771,6 +1772,12 @@ def penalizeWrong(branch, event):
     residual = block.number % periodLength
     if(residual > periodLength/2):
         return(-2)
+    # accounts for if no events in a period
+    if(self.getNumberEvents(branch, lastPeriod)==0):
+        self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod
+        self.branch[branch].denominator[lastPeriod] += repBalance
+        return(1)
+
     if(self.getOriginalExpiration(event)!=self.getExpiration(event) && self.getPushedForward(market)):
         if(lastPeriod==self.getOriginalExpiration(event)/self.getPeriodLength(branch)):
             return(-1)
@@ -1798,7 +1805,6 @@ def penalizeWrong(branch, event):
         if(self.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):
             if(newAfterRep <= 0):
                 newAfterRep = 0
-            repBalance = self.getRepBalance(branch, msg.sender)
             self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod
             self.branch[branch].denominator[lastPeriod] += newAfterRep
             totalRepDifference = newAfterRep - oldRep
@@ -1813,7 +1819,7 @@ def penalizeWrong(branch, event):
         self.branch[branch].penalized[lastPeriod][tx.origin].num += 1
         return(1)
     else:
-        return(0)
+        return(lastPeriod)
 
 # Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account and distributed like trading fees.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
 # Errors:
@@ -1823,6 +1829,11 @@ def penalizeNotEnoughReports(branch):
     lastPeriod = self.getVotePeriod(branch)-1
     if(self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
         return(-1)
+    # accounts for if no events in a period
+    if(self.getNumberEvents(branch, lastPeriod)==0):
+        self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized = 1
+        return(1)
+
     if(!hasReported(branch, lastPeriod)):
         return(-2)
     numEvents = self.getNumEventsToReport(branch, lastPeriod)
@@ -1844,7 +1855,7 @@ def penalizeNotEnoughReports(branch):
         originalRep = self.getRepBalance(branch, tx.origin)
         # penalize people
         newRep = 3689348814741910528*numReportsActual*originalRep / self.getNumEventsToReport(branch, lastPeriod)
-        oldRep = self.getRepBalance(branch, tx.origin)*14757395258967642112 / 2**64
+        oldRep = originalRep*14757395258967642112 / 2**64
         repChange = (oldRep+newRep) - originalRep
         # removes rep from reporter who lost it
         self.addRep(branch, self.repIDToIndex(branch, tx.origin), repChange)
@@ -1896,10 +1907,10 @@ def penalizationCatchup(branch):
     oldRep = self.getRepBalance(branch, tx.origin)
     if(lastPeriodPenalized!=lastPeriod && !hasReported(branch, lastPeriod)):
         # dock 10% for each period they didn't penalize on
-        smoothedRep = oldRep*(14757395258967642112/2)/2**64
-        i = 0
+        smoothedRep = oldRep*16602069666338596864/2**64
+        i = 1
         while i < delta:
-            smoothedRep = smoothedRep*(14757395258967642112/2)/2**64
+            smoothedRep = smoothedRep*16602069666338596864/2**64
             i += 1
         # and send it to branch for penalty rep collection
         repChange = oldRep - smoothedRep
@@ -2046,12 +2057,6 @@ macro categorical($event):
         # self.penalized[lastPeriod][tx.origin].num += 1
         #   return(1)
 # test .99 resolve push forward
-event comment(market: indexed, ipfsHash)
-
-def addComment(market, ipfsHash):
-    log(type=comment, market, ipfsHash)
-    return(1)
-
 # @return value of reputation sent, 0 if not enough reputation
 # error messages otherwise
     # -1: "Your reputation account was just created, earn some rep. before you can send to others"
@@ -2191,6 +2196,17 @@ def convertToActiveRep(branch, value):
             return(0)
     else:
         return(0)
+
+event comment(market: indexed, ipfsHash)
+event metadata(market: indexed, ipfsHash)
+
+def addComment(market, ipfsHash):
+    log(type=comment, market, ipfsHash)
+    return(1)
+
+def addMetadata(market, ipfsHash):
+    log(type=metadata, market, ipfsHash)
+    return(1)
 
 # [branchID][votingPeriod]
 # reporthash is [reporterID] = hash
@@ -2976,7 +2992,6 @@ def getTotalSharesPurchased(market):
 def getMarketEvent(market, index):
     return(self.Markets[market].events[index])
 
-macro TRADER_FIELDS: 3
 macro EVENTS_FIELDS: 6
 macro OUTCOMES_FIELDS: 2
 macro WINNING_OUTCOMES_FIELDS: 8
@@ -2986,7 +3001,8 @@ def getMarketInfo(marketID):
     index = FIELDS
     participantNumber = self.Markets[marketID].addr2participant[tx.origin]
     descriptionLength = self.getDescriptionLength(marketID)
-    with info = array(FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1):
+    traderFields = 1 + self.Markets[marketID].numOutcomes
+    with info = array(FIELDS + self.Markets[marketID].currentParticipant*traderFields + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1):
         numEvents = self.Markets[marketID].lenEvents
         info[0] = marketID
         info[1] = self.Markets[marketID].currentParticipant
@@ -3001,14 +3017,16 @@ def getMarketInfo(marketID):
         info[10] = self.getCreationFee(marketID)
         info[11] = self.getCreator(marketID)
 
-        # gather trader(s) info: [trader ID, yes shares, no shares]
+        # gather trader(s) info: [trader ID, 1 shares, 2 shares, 3 shares, ...]
         t = 0
         while t < self.Markets[marketID].currentParticipant:
-            info[index + t*TRADER_FIELDS] = self.Markets[marketID].participants[t].participantID
-            info[index + t*TRADER_FIELDS + 1] = self.Markets[marketID].participants[t].shares[1]
-            info[index + t*TRADER_FIELDS + 2] = self.Markets[marketID].participants[t].shares[2]
+            info[index + t*traderFields] = self.Markets[marketID].participants[t].participantID
+            o = 1
+            while o < self.Markets[marketID].numOutcomes + 1:
+                info[index + t*traderFields + o] = self.Markets[marketID].participants[t].shares[o]
+                o += 1
             t += 1
-        index += self.Markets[marketID].currentParticipant*TRADER_FIELDS
+        index += self.Markets[marketID].currentParticipant*traderFields
 
         # gather event(s) info:
         # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
@@ -3069,9 +3087,10 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
                 m = 0
                 while m < numMarkets:
                     marketID = marketIDs[m + offset]
+                    traderFields = 1 + self.Markets[marketID].numOutcomes
                     participantNumber = self.Markets[marketID].addr2participant[tx.origin]
                     descriptionLength = self.getDescriptionLength(marketID)
-                    marketArrayLength[m] = FIELDS + self.Markets[marketID].currentParticipant*TRADER_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1
+                    marketArrayLength[m] = FIELDS + self.Markets[marketID].currentParticipant*traderFields + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1
                     marketsMatrix[m] = self.getMarketInfo(marketID, outitems=marketArrayLength[m])
                     m += 1
 
