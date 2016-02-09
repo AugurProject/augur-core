@@ -27,7 +27,6 @@ def make_groups():
 def gospelify(output):
     if output == "json":
         print "{"
-        print '    "namereg": "0xc6d9d2cd449a754c494264e1809c50e34d64562b",'
     for name, value in reversed(sorted(make_groups().items())):
         if output == "json":
             for i, contract in enumerate(value):
