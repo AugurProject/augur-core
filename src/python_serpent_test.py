@@ -819,19 +819,17 @@ def test_slashrep():
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     assert(c.penalizeWrong(1010101, event1)==1)
     assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
-    print c.getAfterRep(branch, period)
+    assert(c.getRepBalance(branch, s.block.coinbase)==int(23.5*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     assert(c.penalizeWrong(1010101, event2)==1)
     assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
-    print c.getAfterRep(branch, period)
-    print c.repBalance(branch, s.block.coinbase)
-    print c.repBalance(branch, branch)
+    assert(c.getRepBalance(branch, s.block.coinbase)==int(23.5*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     s.mine(55)
     assert(c.collectFees(1010101)==1)
     assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
-    print "OK"
+    print "Test slashrep OK"
 
 def test_catchup():
     global initial_gas
@@ -889,28 +887,21 @@ def test_catchup():
     assert(c.getBeforeRep(branch, period)==c.getAfterRep(branch, period)==c.getRepBalance(branch, s.block.coinbase))
     assert(c.getRepBalance(branch, branch)==164729424578226261279)
     assert(c.getTotalRep(branch)==866996971464348925952)
-    print c.penalizeWrong(1010101, event1)
-    print c.getReport(branch, period, event1)
+    assert(c.penalizeWrong(1010101, event1)==1)
 
-    print c.getBeforeRep(branch, period)
-    print c.getAfterRep(branch, period)
-    print c.getRepBalance(branch, s.block.coinbase)
-    print c.getRepBalance(branch, branch)
-    print c.getTotalRep(branch)
+    assert(c.getBeforeRep(branch, period)==702267546886122664673==c.getRepBalance(branch, s.block.coinbase))
+    assert(c.getRepBalance(branch, branch)==164729424578226261279)
+    assert(c.getTotalRep(branch)==47*2**64)
     assert(c.penalizeWrong(1010101, event2)==1)
-    print c.getBeforeRep(branch, period)
-    print c.getAfterRep(branch, period)
-    print c.getRepBalance(branch, s.block.coinbase)
-    print c.getRepBalance(branch, branch)
-    print c.getTotalRep(branch)
+    assert(c.getBeforeRep(branch, period)==702267546886122664673==c.getRepBalance(branch, s.block.coinbase))
+    assert(c.getRepBalance(branch, branch)==164729424578226261279)
+    assert(c.getTotalRep(branch)==47*2**64)
     s.mine(55)
     assert(c.collectFees(1010101)==1)
-    print c.getBeforeRep(branch, period)
-    print c.getAfterRep(branch, period)
-    print c.getRepBalance(branch, s.block.coinbase)
-    print c.getRepBalance(branch, branch)
-    print c.getTotalRep(branch)
-    
+    assert(c.getRepBalance(branch, s.block.coinbase)==866996971464348925952)
+    assert(c.getRepBalance(branch, branch)==0)
+    assert(c.getTotalRep(branch)==866996971464348925952)
+    print "Test catchup OK"
 
 def gas_use(s):
     global initial_gas

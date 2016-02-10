@@ -1754,6 +1754,9 @@ data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, final)
     # rep collected states whether for a given period a user collected rep
 data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenalized), penalizedUpTo[], feesCollected[][])
 
+def getNumNum(branch):
+    return(self.branch[branch].penalizedUpTo[tx.origin])
+
 #1. Record rep at start of report period [before rep in make reports]
 #2. Penalize for each event
 #3. Each reporter needs to do this for all events they reported on, if not get docked
@@ -1802,6 +1805,8 @@ def penalizeWrong(branch, event):
         repChange = smoothedRep - oldRep
         newAfterRep = self.getAfterRep(branch, lastPeriod) + repChange
         self.setAfterRep(branch, lastPeriod, newAfterRep)
+        self.branch[branch].penalized[lastPeriod][tx.origin].event[event] = 1
+        self.branch[branch].penalized[lastPeriod][tx.origin].num += 1
         if(self.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):
             if(newAfterRep <= 0):
                 newAfterRep = 0
@@ -1815,8 +1820,6 @@ def penalizeWrong(branch, event):
                 self.addRep(branch, self.repIDToIndex(branch, tx.origin), totalRepDifference)
                 # sends that rep to the branch
                 self.addRep(branch, self.repIDToIndex(branch, branch), -totalRepDifference)
-        self.branch[branch].penalized[lastPeriod][tx.origin].event[event] = 1
-        self.branch[branch].penalized[lastPeriod][tx.origin].num += 1
         return(1)
     else:
         return(lastPeriod)
@@ -1946,7 +1949,6 @@ def slashRep(branch, salt, report, reporter, eventID):
     else:
         reporterIndex = self.repIDToIndex(branch, reporter)
         trutherIndex = self.repIDToIndex(branch, tx.origin)
-        trutherBalance = self.getRepBalance(branch, tx.origin)
         # if the truther's rep. account doesn't exist, make one
         if(self.getReporterID(branch, trutherIndex)!=tx.origin):
             trutherIndex = self.getNumberReporters(branch)
@@ -1955,6 +1957,7 @@ def slashRep(branch, salt, report, reporter, eventID):
             return(-2)
         reporterBalance = self.getRepBalance(branch, reporter)
         self.setRep(branch, reporterIndex, 0)
+        trutherBalance = self.getRepBalance(branch, tx.origin)
         self.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*2**63 / 2**64))
     return(reporterBalance)
 

@@ -67,6 +67,8 @@ def penalizeWrong(branch, event):
         repChange = smoothedRep - oldRep
         newAfterRep = MAKEREPORTS.getAfterRep(branch, lastPeriod) + repChange
         MAKEREPORTS.setAfterRep(branch, lastPeriod, newAfterRep)
+        self.branch[branch].penalized[lastPeriod][tx.origin].event[event] = 1
+        self.branch[branch].penalized[lastPeriod][tx.origin].num += 1
         if(MAKEREPORTS.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):
             if(newAfterRep <= 0):
                 newAfterRep = 0
@@ -80,8 +82,6 @@ def penalizeWrong(branch, event):
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), totalRepDifference)
                 # sends that rep to the branch
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
-        self.branch[branch].penalized[lastPeriod][tx.origin].event[event] = 1
-        self.branch[branch].penalized[lastPeriod][tx.origin].num += 1
         return(1)
     else:
         return(lastPeriod)
