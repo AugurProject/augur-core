@@ -23,7 +23,7 @@ def twoOutcomes(market, winningOutcome: arr, events: arr):
     # share two goes with the high side
     pricePerShare2 = 2^64*(outcome - 2^64*minValue) / (2^64*maxValue - 2^64*minValue)
     #share one goes with the low side of the calc
-    pricePerShare1 = 2^64 - pricePerShare1
+    pricePerShare1 = 2^64 - pricePerShare2
     # distribute cashcoin to the people who won money by holding winning shares
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
     if(participantNumber == -1):
