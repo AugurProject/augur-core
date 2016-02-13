@@ -1754,9 +1754,6 @@ data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, final)
     # rep collected states whether for a given period a user collected rep
 data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenalized), penalizedUpTo[], feesCollected[][])
 
-def getNumNum(branch):
-    return(self.branch[branch].penalizedUpTo[tx.origin])
-
 #1. Record rep at start of report period [before rep in make reports]
 #2. Penalize for each event
 #3. Each reporter needs to do this for all events they reported on, if not get docked

@@ -75,6 +75,16 @@ def getMarketsInBranch(branch):
         markets[i] = self.Branches[branch].markets[i]
         i += 1
     return(markets: arr)
+   
+# @return all markets in a branch
+def getSomeMarketsInBranch(branch, initial, last):
+    numMarkets = last - initial
+    markets = array(numMarkets)
+    i = 0
+    while i < numMarkets:
+        markets[i] = self.Branches[branch].markets[initial+i]
+        i += 1
+    return(markets: arr)
 
 def getNumMarketsBranch(branch):
 	return(self.Branches[branch].numMarkets)
