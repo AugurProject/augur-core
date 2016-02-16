@@ -253,7 +253,7 @@ def sell(branch, amount, price, market_id, outcome):
 #Exchange(Market, outcome, sender, amount, receiver, payment) – transfers amount shares from sender to receiver for payment amount
 #max amount is max shares to sell
 #max value is max amount to spend to buy
-def trade(max_amount, trade_ids:arr):
+def trade(max_value, max_amount, trade_ids:arr):
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
     i = 0
@@ -292,8 +292,8 @@ def trade(max_amount, trade_ids:arr):
             participantNumber = MARKETS.getParticipantNumber(market_id, tx.origin)
             balance = MARKETS.getParticipantSharesPurchased(market_id, participantNumber, outcome)
             if balance > 0:
-                participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
-                if (MARKETS.getParticipantID(market, participantNumber) != tx.origin):
+                participantNumber = MARKETS.getParticipantNumber(market_id, tx.origin)
+                if (MARKETS.getParticipantID(market_id, participantNumber) != tx.origin):
                     return(INSUFFICIENT_BALANCE)
                 # Determine fill amount
                 fill = min(amount, min(balance, max_amount))
@@ -305,8 +305,8 @@ def trade(max_amount, trade_ids:arr):
                 else:
                     remove_trade(trade_id, market_id)
                 # Update balances
-                MARKETS.modifyParticipantShares(branch, market, msg.sender, outcome, -fill)
-                MARKETS.modifyParticipantShares(branch, market, owner, outcome, fill)
+                MARKETS.modifyParticipantShares(branch, market_id, msg.sender, outcome, -fill)
+                MARKETS.modifyParticipantShares(branch, market_id, owner, outcome, fill)
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
                 CASH.addCash(msg.sender, value)
                 CASH.subtractCash(market_id, value)
@@ -316,38 +316,28 @@ def trade(max_amount, trade_ids:arr):
                 return(INSUFFICIENT_BALANCE)
 
         elif type == ASK:
-
+            max_value = min(CASH.balance(msg.sender), max_value)
             if max_value > 0:
-
                 # Calculate value of trade
-                trade_value = ((amount * price) * 10 ^ 18) / (precision * 10 ^ decimals)
-
+                trade_value = amount * price / 2**64
                 # Determine fill value
                 value = min(max_value, trade_value)
-
                 # Calculate fill amount, update trade amount or remove filled trade
                 if value < trade_value:
-                    fill = ((value * (precision * 10 ^ decimals)) / price) / 10 ^ 18
+                    fill = value*2**64 / price
                     self.trades[trade_id].amount -= fill
                 else:
                     fill = amount
                     remove_trade(trade_id, market_id)
-                participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+                participantNumber = MARKETS.getParticipantNumber(market_id, tx.origin)
                 # if participant doesn't exist in market, add them
-                if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
-                    participantNumber = MARKETS.addParticipant(market, tx.origin)
-
-                # Update balances
-                MARKETS.modifyParticipantShares(branch, market, msg.sender, outcome, amount)
-                self.balances[owner][market_id].trading -= fill
-                self.balances[msg.sender][market_id].available += fill
-
+                if(tx.origin != MARKETS.getParticipantID(market_id, participantNumber)):
+                    participantNumber = MARKETS.addParticipant(market_id, tx.origin)
+                # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
+                MARKETS.modifyParticipantShares(branch, market_id, msg.sender, outcome, fill)
                 # Transfer cash from user to person who has ask order
-                send(owner, value)
-                if(CASH.balance(tx.origin) < price*(MARKETS.getTradingFee(market) + 2^64)/2^64 or (limit!=0 and (price*2^64/amount)>limit)):
-                    return(-3)
-
-
+                CASH.addCash(owner, value)
+                CASH.subtractCash(msg.sender, value)
                 # Log transaction
                 log(type=log_fill_tx, market_id, msg.sender, owner, BID, price, fill, trade_id, outcome)
             else:
@@ -363,11 +353,7 @@ def trade(max_amount, trade_ids:arr):
         # Next trade
         t += 1
 
-    # Refund excess value
-    if max_value:
-        send(msg.sender, max_value)
-
-    return([SUCCESS, amountUnfilled]: arr)
+    return([SUCCESS, max_value, max_amount]: arr)
 
 
 
