@@ -933,8 +933,8 @@ if __name__ == '__main__':
     #test_create_branch()
     #test_send_rep()
     #test_make_reports()
-    #test_close_market()
-    #test_consensus()
-    test_catchup()
+    test_close_market()
+    test_consensus()
+    #test_catchup()
     #test_slashrep()
     print "DONE TESTING"
