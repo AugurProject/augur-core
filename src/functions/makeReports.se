@@ -368,7 +368,7 @@ def validateReport(eventID, branch, votePeriod, report):
 		# submit report
 		self.mode_items[votePeriod][eventID].report_value[report] += 1
 		if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
-			self.mode_items[votePeriod][eventID].current_mode = reportValue
+			self.mode_items[votePeriod][eventID].current_mode = report
 			self.mode_items[votePeriod][eventID].current_mode_items = self.mode_items[votePeriod][eventID].report_value[report]
 		outcome = self.mode_items[votePeriod][eventID].current_mode
 		# outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
@@ -385,7 +385,7 @@ def validateReport(eventID, branch, votePeriod, report):
 		# submit report
 		self.mode_items[votePeriod][eventID].report_value[report] += 1
 		if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
-			self.mode_items[votePeriod][eventID].current_mode = reportValue
+			self.mode_items[votePeriod][eventID].current_mode = report
 			self.mode_items[votePeriod][eventID].current_mode_items = self.mode_items[votePeriod][eventID].report_value[report]
 		outcome = self.mode_items[votePeriod][eventID].current_mode
 		# outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
