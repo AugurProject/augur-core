@@ -902,6 +902,9 @@ def test_catchup():
     assert(c.getRepBalance(branch, branch)==0)
     assert(c.getTotalRep(branch)==866996971464348925952)
     print "Test catchup OK"
+    
+    # 30 events min
+    # min reports 30
 
 def gas_use(s):
     global initial_gas

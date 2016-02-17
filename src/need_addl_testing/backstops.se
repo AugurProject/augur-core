@@ -31,7 +31,7 @@ def roundTwoBond(branch, event, eventIndex, resolving, votePeriod):
     self.roundTwo[event].roundTwo = 1
     self.roundTwo[event].originalVotePeriod = votePeriod
     if(scalar or categorical):
-      self.roundTwo[event].originalOutcome = MEDIAN.calculateMedian(event)
+      self.roundTwo[event].originalOutcome = #getuncaughtoutcome#MEDIAN.calculatemode(event)
     else:
       self.roundTwo[event].originalOutcome = catch(EVENTS.getUncaughtOutcome(event))
 
@@ -42,7 +42,7 @@ def roundTwoBond(branch, event, eventIndex, resolving, votePeriod):
   overruled = 1
 
   if(scalar or categorical):
-    if(self.roundTwo[event].originalOutcome == MEDIAN.calculateMedian(event)):
+    if(self.roundTwo[event].originalOutcome == EVENTS.getUncaughtOutcome(event)):
       overruled = 0
   else:
     if(self.roundTwo[event].originalOutcome == catch(EVENTS.getUncaughtOutcome(event)):
@@ -202,7 +202,7 @@ def resolve(branch, event):
     pushedBack = EVENTS.getPushedBack(event)
     ethical = catch(EVENTS.getEthical(event))
 
-    # set final outcome / median / event bond, etc
+    # set final outcome / mode / event bond, etc
 
     # binary
     if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65 and 2**64*EVENTS.getMaxValue(event)==2**64):
@@ -225,11 +225,11 @@ def resolve(branch, event):
 
     # scalar
     elif((2^64*EVENTS.getMaxValue(event) != YES || 2**64*EVENTS.getMinValue(event)!=NO) and EVENTS.getNumOutcomes(event) == 2):
-      median = MEDIAN.calculateMedian(event)
-      EVENTS.setMedian(event, median)
+      mode = EVENTS.getUncaughtOutcome(event)
+      EVENTS.setmode(event, mode)
       scaled_min = 2^64*EVENTS.getMinValue(event)
       scaled_max = 2^64*EVENTS.getMaxValue(event)
-      fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
+      fxpOutcome = mode * (scaled_max - scaled_min) + scaled_min
       EVENTS.setOutcome(event, fxpOutcome)
 
       if(fxpOutcome==2**63 || !ethical):
@@ -239,7 +239,7 @@ def resolve(branch, event):
         # not ethical is same as .5 outcome
         fxpOutcome = 2**63
         EVENTS.setOutcome(event, fxpOutcome)
-        EVENTS.setMedian(event, fxpOutcome)
+        EVENTS.setmode(event, fxpOutcome)
       else:
         # return bond
         CASH.subtractCash(event, 42*2**64)
@@ -247,11 +247,11 @@ def resolve(branch, event):
 
     # categorical
     elif(EVENTS.getNumOutcomes(event)>2):
-      median = MEDIAN.calculateMedian(event)
-      EVENTS.setMedian(event, median)
+      mode = 
+      EVENTS.setmode(event, mode)
       scaled_min[j] = 2^64
       scaled_max[j] = 2^64*EVENTS.getNumOutcomes(event)
-      fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
+      fxpOutcome = mode * (scaled_max - scaled_min) + scaled_min
       EVENTS.setOutcome(event, fxpOutcome)
 
       if(fxpOutcome==2**63 || !ethical):
@@ -261,7 +261,7 @@ def resolve(branch, event):
         # not ethical is same as .5 outcome
         fxpOutcome = 2**63
         EVENTS.setOutcome(event, fxpOutcome)
-        EVENTS.setMedian(event, fxpOutcome)
+        EVENTS.setmode(event, fxpOutcome)
       else:
         # return bond
         CASH.subtractCash(event, 42*2**64)
@@ -280,7 +280,7 @@ penalizeWrong for backstop 1:
 	#	○ Denominator is as normal, but totalRepReported is lower
   # if round 2 outcome is different
   # does this work properly for scalars and binary and categorical re p and scalar 0-1 reports in fxp and binary 1 or 2 or 1.5 in fxp
-  if(self.roundTwo[event].originalOutcome != EVENTS.getOutcome(event) && self.roundTwo[event].originalOutcome != EVENTS.getMedian(event) && notDoneForEvent && periodOver && reported && eventInPeriod):
+  if(self.roundTwo[event].originalOutcome != EVENTS.getOutcome(event) && self.roundTwo[event].originalOutcome != EVENTS.getmode(event) && notDoneForEvent && periodOver && reported && eventInPeriod):
     # submit later period, do rbcr on both
     if(period == (EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch))):
       p = self.getProportionCorrect(event)
@@ -291,13 +291,13 @@ penalizeWrong for backstop 1:
       # wrong
       if(reportValue > outcome+.01 or reportValue < outcome-.01):
         if(scalar or categorical):
-          # should be outcome since median is the same
-          p = -(abs(reportValue - EVENTS.getMedian(event))/2) + 1
+          # should be outcome since mode is the same
+          p = -(abs(reportValue - EVENTS.getmode(event))/2) + 1
         newRep = oldRep*(2*p -1)
       # right
       else:
         if(scalar or categorical):
-          p = -(abs(reportValue - EVENTS.getMedian(event))/2) + 1
+          p = -(abs(reportValue - EVENTS.getmode(event))/2) + 1
         newRep = oldRep*(2*(1-p)**2 / p + 1)
       smoothedRep = oldRep*.8 + newRep*.2
       REPORTS.setAfterRep(branch, period, oldRep + (smoothedRep - oldRep))

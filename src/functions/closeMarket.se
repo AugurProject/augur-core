@@ -80,7 +80,7 @@ def closeMarket(branch, market):
     reportingDone = 0
     resolved = 1
     while i < numberEvents:
-        if(EVENTS.getOutcome(events[i])==0 && EVENTS.getMedian(events[i])==0):
+        if(EVENTS.getOutcome(events[i])==0 && EVENTS.getmode(events[i])==0):
             resolved = 0
             i = numberEvents
         i += 1
@@ -108,9 +108,9 @@ def closeMarket(branch, market):
             # TODO: if round 2 event && notFinal return 0
             if(binary(events[n]) && fxpOutcome==0):
                     resolution = RESOLVE.resolveBinary(events[n], market, branch, votingPeriodEvent, period)
-            elif(scalar(events[n]) && EVENTS.getMedian(events[n])==0):
+            elif(scalar(events[n]) && EVENTS.getmode(events[n])==0):
                     resolution = RESOLVE.resolveCategoricalOrScalar(2^64*EVENTS.getMinValue(events[n]), 2^64*EVENTS.getMaxValue(events[n]), event, market, branch, votingPeriodEvent, period)
-            elif(categorical(events[n]) && EVENTS.getMedian(events[n])==0):
+            elif(categorical(events[n]) && EVENTS.getmode(events[n])==0):
                     resolution = RESOLVE.resolveCategoricalOrScalar(2^64, 2^64*EVENTS.getNumOutcomes(events[n]), event, market, branch, votingPeriodEvent, period)
             if(resolution==-4):
                 outcomeFour = 1
@@ -146,7 +146,7 @@ def claimProceeds(branch, market):
     while i < numberEvents:
         numReports = MAKEREPORTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
         numExpected = MAKEREPORTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
-        if(EVENTS.getOutcome(events[i])==0 && EVENTS.getMedian(events[i])==0):
+        if(EVENTS.getOutcome(events[i])==0 && EVENTS.getmode(events[i])==0):
             resolved = 0
         if(numReports != numExpected && numReports!=0 and numExpected!=0):
             reportingDone = 0
