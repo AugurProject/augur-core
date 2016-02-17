@@ -347,7 +347,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
         self.setNumReportsEvent(branch, votingPeriodEvent, event, 0)
         #set outcome to 0
         self.setOutcome(event, 0)
-        self.setMedian(event, 0)
+        self.setmode(event, 0)
         self.setEthics(event, 0)
         #set uncaughtoutcome to 0
         self.setUncaughtOutcome(event, 0)
@@ -391,9 +391,9 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
     return(1)
 
 def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, votingPeriodEvent, period):
-    #median = self.calculateMedian(event)
-    self.setMedian(event, median)
-    fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
+    #mode = self.calculatemode(event)
+    self.setmode(event, mode)
+    fxpOutcome = mode * (scaled_max - scaled_min) + scaled_min
     self.setOutcome(event, fxpOutcome)
     pushedBack = self.getPushedBack(event)
     periodLength = self.getPeriodLength(branch)
@@ -413,7 +413,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         self.setNumReportsEvent(branch, votingPeriodEvent, event, 0)
         #set outcome to 0
         self.setOutcome(event, 0)
-        self.setMedian(event, 0)
+        self.setmode(event, 0)
         self.setEthics(event, 0)
         #set uncaughtoutcome to 0
         self.setUncaughtOutcome(event, 0)
@@ -431,8 +431,8 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         self.setOutcome(event, 0)
         #set pushedback to true
         self.setPushedBack(event)
-        # set median to 0
-        self.setMedian(event, 0)
+        # set mode to 0
+        self.setmode(event, 0)
         self.setEthics(event, 0)
         self.setExpiration(event, block.number)
         self.setTradingPeriod(market, period+1)
@@ -444,7 +444,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         # not ethical is same as .5 outcome
         fxpOutcome = 3*2**63
         self.setOutcome(event, fxpOutcome)
-        self.setMedian(event, fxpOutcome)
+        self.setmode(event, fxpOutcome)
     else:
         # return bond
         self.subtractCash(event, 42*2**64)
@@ -1078,7 +1078,7 @@ def closeMarket(branch, market):
     reportingDone = 0
     resolved = 1
     while i < numberEvents:
-        if(self.getOutcome(events[i])==0 && self.getMedian(events[i])==0):
+        if(self.getOutcome(events[i])==0 && self.getmode(events[i])==0):
             resolved = 0
             i = numberEvents
         i += 1
@@ -1106,9 +1106,9 @@ def closeMarket(branch, market):
             # TODO: if round 2 event && notFinal return 0
             if(binary(events[n]) && fxpOutcome==0):
                     resolution = self.resolveBinary(events[n], market, branch, votingPeriodEvent, period)
-            elif(scalar(events[n]) && self.getMedian(events[n])==0):
+            elif(scalar(events[n]) && self.getmode(events[n])==0):
                     resolution = self.resolveCategoricalOrScalar(2^64*self.getMinValue(events[n]), 2^64*self.getMaxValue(events[n]), event, market, branch, votingPeriodEvent, period)
-            elif(categorical(events[n]) && self.getMedian(events[n])==0):
+            elif(categorical(events[n]) && self.getmode(events[n])==0):
                     resolution = self.resolveCategoricalOrScalar(2^64, 2^64*self.getNumOutcomes(events[n]), event, market, branch, votingPeriodEvent, period)
             if(resolution==-4):
                 outcomeFour = 1
@@ -1144,7 +1144,7 @@ def claimProceeds(branch, market):
     while i < numberEvents:
         numReports = self.getNumReportsEvent(branch, self.getExpiration(events[i])/self.getPeriodLength(branch), events[i])
         numExpected = self.getNumReportsExpectedEvent(branch, self.getExpiration(events[i])/self.getPeriodLength(branch), events[i])
-        if(self.getOutcome(events[i])==0 && self.getMedian(events[i])==0):
+        if(self.getOutcome(events[i])==0 && self.getmode(events[i])==0):
             resolved = 0
         if(numReports != numExpected && numReports!=0 and numExpected!=0):
             reportingDone = 0
@@ -1664,9 +1664,9 @@ def validateReport(eventID, branch, votePeriod, report):
         if((report*range/2^64 + minValue)>numOutcomes*2^64):
             report = 2^64
         # submit report
-        # outcome (uncaught and median) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
+        # outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
         # for scalars and categoricals... if < 200 reports est. for an event use quicksort at the end, if more use order statistic tree contract way
-        # returns -5 until we add support for median calcs
+        # returns -5 until we add support for mode calcs
         return(-5)
     # scalar
     else:
@@ -1680,7 +1680,7 @@ def validateReport(eventID, branch, votePeriod, report):
         # submit report
         # outcome should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
         # for scalars and categoricals... if < 200 reports est. for an event use quicksort at the end, if more use order statistic tree contract way
-        # returns -5 until we add support for median calcs
+        # returns -5 until we add support for mode calcs
         return(-5)
     return(report)
 # numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0
@@ -1790,12 +1790,12 @@ def penalizeWrong(branch, event):
         #184467440737095520 == 0.01 in fxp
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
             #if(scalar(event) or categorical(event) or outcome==3*2**64):
-                #p = -(abs(reportValue - self.getMedian(event))/2) + 2**64
+                #p = -(abs(reportValue - self.getmode(event))/2) + 2**64
             newRep = oldRep*(2*p - 2**64)/2**64
         # right
         else:
             #if(scalar(event) or categorical(event) or outcome==3*2**64):
-                #p = -(abs(reportValue - self.getMedian(event))/2) + 2**64
+                #p = -(abs(reportValue - self.getmode(event))/2) + 2**64
             newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
         #smoothedRep = oldRep*.8 + newRep*.2
         smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
@@ -2029,20 +2029,20 @@ macro categorical($event):
     # code in penalize for that:
         #elif(rejected && rejectedPeriodOver && && actuallyrejected && self.getReport(branch, lastPeriodperiod, event) && !self.penalized[lastPeriod][tx.origin].event[event] && outcome):
         #  outcome = 2**63
-        #  median = 2**63
+        #  mode = 2**63
         #   p = self.proportionCorrect(event, rejected)
         #   oldRep = self.getBeforeRep(branch, period)
         #   # wrong
         #   if(reportValue > outcome+.01 or reportValue < outcome-.01):
         #       if(scalar or categorical or .5):
         #         # scalar/cat are 0 - 1, binary .5 are 1-2 and 1.5
-        #     # should be outcome since median is the same
-        #           p = -(abs(reportValue - median)/2) + 1
+        #     # should be outcome since mode is the same
+        #           p = -(abs(reportValue - mode)/2) + 1
         #       newRep = oldRep*(2*p -1)
         #   # right
         #   else:
         #       if(scalar or categorical or .5):
-        #           p = -(abs(reportValue - median)/2) + 1
+        #           p = -(abs(reportValue - mode)/2) + 1
         #       newRep = oldRep*(2*(1-p)**2 / p + 1)
         #   smoothedRep = oldRep*.8 + newRep*.2
         #   self.setAfterRep(branch, period, oldRep + (smoothedRep - oldRep))
@@ -2528,7 +2528,7 @@ def sqrt(n):
 # S&P 500 scalar would be say 0 && 4700, respectively
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, median, uncaughtOutcome, final, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught, pushedBack)
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, mode, uncaughtOutcome, final, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught, pushedBack)
 
 def getEventInfo(event):
     info = array(6)
@@ -2653,12 +2653,12 @@ def addNumReports(event):
 def getReportingThreshold(event):
 	return(self.Events[event].threshold)
 
-def getMedian(event):
+def getmode(event):
 	# do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
-	return(self.Events[event].median)
+	return(self.Events[event].mode)
 
-def setMedian(event, median):
-	self.Events[event].median = median
+def setmode(event, mode):
+	self.Events[event].mode = mode
 	return(1)
 
 def setFinal(event, final):

@@ -55,12 +55,12 @@ def penalizeWrong(branch, event):
         #184467440737095520 == 0.01 in fxp
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
             #if(scalar(event) or categorical(event) or outcome==3*2**64):
-                #p = -(abs(reportValue - EVENTS.getMedian(event))/2) + 2**64
+                #p = -(abs(reportValue - EVENTS.getmode(event))/2) + 2**64
             newRep = oldRep*(2*p - 2**64)/2**64
         # right
         else:
             #if(scalar(event) or categorical(event) or outcome==3*2**64):
-                #p = -(abs(reportValue - EVENTS.getMedian(event))/2) + 2**64
+                #p = -(abs(reportValue - EVENTS.getmode(event))/2) + 2**64
             newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
         #smoothedRep = oldRep*.8 + newRep*.2
         smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
@@ -294,20 +294,20 @@ macro categorical($event):
     # code in penalize for that:
         #elif(rejected && rejectedPeriodOver && && actuallyrejected && MAKEREPORTS.getReport(branch, lastPeriodperiod, event) && !self.penalized[lastPeriod][tx.origin].event[event] && outcome):
         #  outcome = 2**63
-        #  median = 2**63
+        #  mode = 2**63
         #   p = self.proportionCorrect(event, rejected)
         #   oldRep = MAKEREPORTS.getBeforeRep(branch, period)
         #   # wrong
         #   if(reportValue > outcome+.01 or reportValue < outcome-.01):
         #       if(scalar or categorical or .5):
         #         # scalar/cat are 0 - 1, binary .5 are 1-2 and 1.5
-        #     # should be outcome since median is the same
-        #           p = -(abs(reportValue - median)/2) + 1
+        #     # should be outcome since mode is the same
+        #           p = -(abs(reportValue - mode)/2) + 1
         #       newRep = oldRep*(2*p -1)
         #   # right
         #   else:
         #       if(scalar or categorical or .5):
-        #           p = -(abs(reportValue - median)/2) + 1
+        #           p = -(abs(reportValue - mode)/2) + 1
         #       newRep = oldRep*(2*(1-p)**2 / p + 1)
         #   smoothedRep = oldRep*.8 + newRep*.2
         #   MAKEREPORTS.setAfterRep(branch, period, oldRep + (smoothedRep - oldRep))

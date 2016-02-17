@@ -27,7 +27,7 @@ import branches as BRANCHES
 # S&P 500 scalar would be say 0 && 4700, respectively
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, median, uncaughtOutcome, final, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught, pushedBack)
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, mode, uncaughtOutcome, final, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught, pushedBack)
 
 def getEventInfo(event):
     info = array(6)
@@ -152,12 +152,12 @@ def addNumReports(event):
 def getReportingThreshold(event):
 	return(self.Events[event].threshold)
 
-def getMedian(event):
+def getmode(event):
 	# do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
-	return(self.Events[event].median)
+	return(self.Events[event].mode)
 
-def setMedian(event, median):
-	self.Events[event].median = median
+def setmode(event, mode):
+	self.Events[event].mode = mode
 	return(1)
 
 def setFinal(event, final):

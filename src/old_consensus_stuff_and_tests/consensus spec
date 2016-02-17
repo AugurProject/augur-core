@@ -10,10 +10,10 @@ A consensus guide:
 #    2a) prior to this, multiply by prev. rep vector over mean - done
 #    2b) take old rep multiply by .80 add to new rep *.2 (smoothing part) - done
 #3) using this, calc. outcomes 1, 1.5, 2 for binary using weighed avg / catch param (.1 or .15) - done
-#    3a) scalar outcomes & categoricals use weighted median - /done
+#    3a) scalar outcomes & categoricals use weighted mode - /done
     3b) if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, # that's the outcome (or we could audit here or do certainty based audits) - not done yet
     3c) detect b via a "times voted on" var - not done yet
-    3d) when doing outcomes, only do weighted avg / median on people who actually reported on that event, i.e. # don't include people who reported 0 / no report - not done yet
+    3d) when doing outcomes, only do weighted avg / mode on people who actually reported on that event, i.e. # don't include people who reported 0 / no report - not done yet
     #note: do outcomes w/ smooth rep (not just "new rep"), and calculate using tolerance, use weighted med. for scalars - done
     #3e) then scale scaled back up to w/e value - ditto for categorical (need to mult by range and add min i think) for categorical range is numOutcomes - 1, min is 1 - done
     #3f) save outcomes - done

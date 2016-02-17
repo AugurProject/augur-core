@@ -55,7 +55,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
         MAKEREPORTS.setNumReportsEvent(branch, votingPeriodEvent, event, 0)
         #set outcome to 0
         EVENTS.setOutcome(event, 0)
-        EVENTS.setMedian(event, 0)
+        EVENTS.setmode(event, 0)
         EVENTS.setEthics(event, 0)
         #set uncaughtoutcome to 0
         EVENTS.setUncaughtOutcome(event, 0)
@@ -99,9 +99,9 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
     return(1)
 
 def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, votingPeriodEvent, period):
-    #median = MEDIAN.calculateMedian(event)
-    EVENTS.setMedian(event, median)
-    fxpOutcome = median * (scaled_max - scaled_min) + scaled_min
+    mode = EVENTS.getUncaughtOutcome(event)
+    EVENTS.setmode(event, mode)
+    fxpOutcome = mode * (scaled_max - scaled_min) + scaled_min
     EVENTS.setOutcome(event, fxpOutcome)
     pushedBack = EVENTS.getPushedBack(event)
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -121,7 +121,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         MAKEREPORTS.setNumReportsEvent(branch, votingPeriodEvent, event, 0)
         #set outcome to 0
         EVENTS.setOutcome(event, 0)
-        EVENTS.setMedian(event, 0)
+        EVENTS.setmode(event, 0)
         EVENTS.setEthics(event, 0)
         #set uncaughtoutcome to 0
         EVENTS.setUncaughtOutcome(event, 0)
@@ -139,8 +139,8 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         EVENTS.setOutcome(event, 0)
         #set pushedback to true
         EVENTS.setPushedBack(event)
-        # set median to 0
-        EVENTS.setMedian(event, 0)
+        # set mode to 0
+        EVENTS.setmode(event, 0)
         EVENTS.setEthics(event, 0)
         EVENTS.setExpiration(event, block.number)
         MARKETS.setTradingPeriod(market, period+1)
@@ -152,7 +152,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         # not ethical is same as .5 outcome
         fxpOutcome = 3*2**63
         EVENTS.setOutcome(event, fxpOutcome)
-        EVENTS.setMedian(event, fxpOutcome)
+        EVENTS.setmode(event, fxpOutcome)
     else:
         # return bond
         CASH.subtractCash(event, 42*2**64)

@@ -364,10 +364,7 @@ def validateReport(eventID, branch, votePeriod, report):
         if((report*range/2^64 + minValue)>numOutcomes*2^64):
             report = 2^64
         # submit report
-        # outcome (uncaught and median) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-        # for scalars and categoricals... if < 200 reports est. for an event use quicksort at the end, if more use order statistic tree contract way
-        # returns -5 until we add support for median calcs
-        return(-5)
+        # outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
     # scalar
     else:
         if(report<0):
@@ -378,8 +375,5 @@ def validateReport(eventID, branch, votePeriod, report):
         if((report*range/2^64 + minValue*2^64) < minValue*2^64):
             report = 0
         # submit report
-        # outcome should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-        # for scalars and categoricals... if < 200 reports est. for an event use quicksort at the end, if more use order statistic tree contract way
-        # returns -5 until we add support for median calcs
-        return(-5)
+        # outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
     return(report)
