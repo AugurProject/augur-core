@@ -8,3 +8,17 @@ event log_add_tx(market:indexed, sender, type, price, amount, outcome, tradeid)
 event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
 event log_cancel(market:indexed, sender, price, amount, tradeid, outcome, type)
 
+def commitTrade(market, hash):
+    self.tradeCommits[market][tx.origin].hash = hash
+    self.tradeCommits[market][tx.origin].block = block.number
+    return(1)
+    
+def zeroHash(market):
+    self.tradeCommits[market][tx.origin].hash = 0
+    return(1)
+
+def checkHash(market, tradeHash):
+    if(self.tradeCommits[market][tx.origin].hash != tradeHash || block.number == self.tradeCommits[market][tx.origin].block):
+        return(-1)
+    else:
+        return(1)

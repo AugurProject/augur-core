@@ -27,11 +27,7 @@ import reporting as REPORTING
 import fxpFunctions as FXP
 import markets as MARKETS
 import events as EVENTS
-
-# market, reporter
-data tradeCommits[][](hash, block)
-# tradeID
-data trades[](id, type, market, amount, price, owner, block, refhash, outcome)
+import trades as TRADES
 
 event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
 event log_add_tx(market:indexed, sender, type, price, amount, outcome, tradeid)
@@ -51,10 +47,7 @@ macro INSUFFICIENT_BALANCE: 10
 macro TRADE_ALREADY_EXISTS: 21
 macro TRADE_SAME_BLOCK_PROHIBITED: 22
 
-def commitTrade(market, hash):
-    self.tradeCommits[market][tx.origin].hash = hash
-    self.tradeCommits[market][tx.origin].block = block.number
-    return(1)
+
     
 def makeMarketHash(max_amount, trade_ids: arr):
     i = 0
@@ -267,9 +260,9 @@ def trade(max_value, max_amount, trade_ids:arr):
     tradeInfo[0] = trades
     tradeInfo[1] = max_amount
     tradeHash = sha256(tradeInfo, items=2)
-    if(self.tradeCommits[market][tx.origin].hash != tradeHash || block.number == self.tradeCommits[market][tx.origin].block):
+    if(TRADES.checkHash(market, tradeHash)==-1):
         return(-2)
-    self.tradeCommits[market][tx.origin].hash = 0
+    TRADES.zeroHash(market)
     max_value = max_value
     max_amount = max_amount
     # Try to fulfill each trade passed
