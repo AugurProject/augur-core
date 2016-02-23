@@ -283,10 +283,11 @@ def test_buy_sell_shares():
     initialSharesPurchased2 = c.getSharesPurchased(bin_market, 2)
     sharesToTrade = 5*2**64
     print c.buyCompleteSets(1010101, bin_market, 10*2**64)
-    print c.sellCompleteSets(1010101, bin_market, 10*2**64)
+    print c.sellCompleteSets(1010101, bin_market, 8*2**64)
     print "complete sets yay"
-    print c.sellCompleteSets(1010101, bin_market, 20)
-    print "complete sets yay"
+    #print c.sellCompleteSets(1010101, bin_market, 20)
+    #print "complete sets yay"
+    print c.sell(1010101, 2**64, int(.01*2**64), bin_market, 1)
     c.commitTrade(bin_market, c.makeMarketHash(bin_market, 2, sharesToTrade, 0))
     s.mine(1)
     assert(c.buyShares(1010101, bin_market, 2, sharesToTrade, 0)==1), "Buy shares issue"

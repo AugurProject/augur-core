@@ -67,7 +67,7 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
     else:
         return(TRADE_ALREADY_EXISTS)
 
-    log(type=log_add_tx, $market_id, msg.sender, $type, $price, $amount, $outcome, trade_id)
+    log(type=log_add_tx, $market, msg.sender, $type, $price, $amount, $outcome, trade_id)
 
     return(trade_id)
 
@@ -167,10 +167,10 @@ def sell(branch, amount, price, market_id, outcome):
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
 
-    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
-    numEvents = MARKETS.getNumEvents(market)
-    events = MARKETS.getMarketEvents(market, outitems=numEvents)
-    if(outcome > MARKETS.getMarketNumOutcomes(market) or outcome < 1):
+    participantNumber = MARKETS.getParticipantNumber(market_id, tx.origin)
+    numEvents = MARKETS.getNumEvents(market_id)
+    events = MARKETS.getMarketEvents(market_id, outitems=numEvents)
+    if(outcome > MARKETS.getMarketNumOutcomes(market_id) or outcome < 1):
         return(-4)
     n = 0
     #if event gets pushed back people can still buy / sell
@@ -186,9 +186,9 @@ def sell(branch, amount, price, market_id, outcome):
         else:
           n += 1
     ### TODO: check for .99 market here
-    if (MARKETS.getParticipantID(market, participantNumber) != tx.origin || outcome==0 || (BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market) && !pushedBack) || MARKETS.getBranchID(market) != branch):
+    if (MARKETS.getParticipantID(market_id, participantNumber) != tx.origin || outcome==0 || (BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market_id) && !pushedBack) || MARKETS.getBranchID(market_id) != branch):
         return(-3)
-    if (MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome) < amount):
+    if (MARKETS.getParticipantSharesPurchased(market_id, participantNumber, outcome) < amount):
         return(-5)
     
     save_trade(ASK, amount, price, market_id, outcome, branch, participantNumber)
@@ -216,9 +216,9 @@ def trade(max_value, max_amount, trade_ids:arr):
     tradeInfo[0] = trades
     tradeInfo[1] = max_amount
     tradeHash = sha256(tradeInfo, items=2)
-    if(TRADES.checkHash(market, tradeHash)==-1):
+    if(TRADES.checkHash(tradeHash)==-1):
         return(-2)
-    TRADES.zeroHash(market)
+    TRADES.zeroHash()
     max_value = max_value
     max_amount = max_amount
     # Try to fulfill each trade passed

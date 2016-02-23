@@ -1,9 +1,9 @@
-# market, reporter
-data tradeCommits[][](hash, block)
+# reporter
+data tradeCommits[](hash, block)
 # tradeID
 data trades[](id, type, market, amount, price, owner, block, refhash, outcome)
 
-def makeMarketHash(max_amount, trade_ids: arr):
+def makeTradeHash(max_amount, trade_ids: arr):
     i = 0
     trades = 0
     while i < len(trade_ids):
@@ -16,16 +16,16 @@ def makeMarketHash(max_amount, trade_ids: arr):
     return(tradeHash)
 
 def commitTrade(market, hash):
-    self.tradeCommits[market][tx.origin].hash = hash
-    self.tradeCommits[market][tx.origin].block = block.number
+    self.tradeCommits[tx.origin].hash = hash
+    self.tradeCommits[tx.origin].block = block.number
     return(1)
     
-def zeroHash(market):
-    self.tradeCommits[market][tx.origin].hash = 0
+def zeroHash():
+    self.tradeCommits[tx.origin].hash = 0
     return(1)
 
-def checkHash(market, tradeHash):
-    if(self.tradeCommits[market][tx.origin].hash != tradeHash || block.number <= self.tradeCommits[market][tx.origin].block):
+def checkHash(tradeHash):
+    if(self.tradeCommits[tx.origin].hash != tradeHash || block.number <= self.tradeCommits[tx.origin].block):
         return(-1)
     else:
         return(1)
