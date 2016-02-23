@@ -1,0 +1,10 @@
+# market, reporter
+data tradeCommits[][](hash, block)
+# tradeID
+data trades[](id, type, market, amount, price, owner, block, refhash, outcome)
+
+event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
+event log_add_tx(market:indexed, sender, type, price, amount, outcome, tradeid)
+event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
+event log_cancel(market:indexed, sender, price, amount, tradeid, outcome, type)
+

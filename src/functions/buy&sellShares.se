@@ -29,8 +29,9 @@ import markets as MARKETS
 import events as EVENTS
 
 # market, reporter
-data trades[][](hash, block)
-data trades[2^160](id, type, market, amount, price, owner, block, refhash, outcome)
+data tradeCommits[][](hash, block)
+# tradeID
+data trades[](id, type, market, amount, price, owner, block, refhash, outcome)
 
 event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
 event log_add_tx(market:indexed, sender, type, price, amount, outcome, tradeid)
@@ -51,8 +52,8 @@ macro TRADE_ALREADY_EXISTS: 21
 macro TRADE_SAME_BLOCK_PROHIBITED: 22
 
 def commitTrade(market, hash):
-    self.trades[market][tx.origin].hash = hash
-    self.trades[market][tx.origin].block = block.number
+    self.tradeCommits[market][tx.origin].hash = hash
+    self.tradeCommits[market][tx.origin].block = block.number
     return(1)
     
 def makeMarketHash(max_amount, trade_ids: arr):
@@ -69,7 +70,7 @@ def makeMarketHash(max_amount, trade_ids: arr):
 
 macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participantNumber):
     trade = [$type, $market, $amount, $price, msg.sender, block.number, $outcome]
-    trade_id = sha3(trade:arr)
+    trade_id = sha256(trade, items=7)
 
     # Save trade
     if !self.trades[trade_id].id:
@@ -250,6 +251,7 @@ def sell(branch, amount, price, market_id, outcome):
 # Errors:
     # -1: oracle only branch
     # -2: bad trade hash
+    # -3: trader doesn't exist / own shares in this market
 #Exchange(Market, outcome, sender, amount, receiver, payment) – transfers amount shares from sender to receiver for payment amount
 #max amount is max shares to sell
 #max value is max amount to spend to buy
@@ -265,9 +267,9 @@ def trade(max_value, max_amount, trade_ids:arr):
     tradeInfo[0] = trades
     tradeInfo[1] = max_amount
     tradeHash = sha256(tradeInfo, items=2)
-    if(self.trades[market][tx.origin].hash != tradeHash || block.number == self.trades[market][tx.origin].block):
+    if(self.tradeCommits[market][tx.origin].hash != tradeHash || block.number == self.tradeCommits[market][tx.origin].block):
         return(-2)
-    self.trades[market][tx.origin].hash = 0
+    self.tradeCommits[market][tx.origin].hash = 0
     max_value = max_value
     max_amount = max_amount
     # Try to fulfill each trade passed
@@ -295,7 +297,7 @@ def trade(max_value, max_amount, trade_ids:arr):
             if balance > 0:
                 participantNumber = MARKETS.getParticipantNumber(market_id, tx.origin)
                 if (MARKETS.getParticipantID(market_id, participantNumber) != tx.origin):
-                    return(INSUFFICIENT_BALANCE)
+                    return(-3)
                 # Determine fill amount
                 fill = min(amount, min(balance, max_amount))
                 # Calculate value
