@@ -3,11 +3,6 @@ data tradeCommits[][](hash, block)
 # tradeID
 data trades[](id, type, market, amount, price, owner, block, refhash, outcome)
 
-event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
-event log_add_tx(market:indexed, sender, type, price, amount, outcome, tradeid)
-event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
-event log_cancel(market:indexed, sender, price, amount, tradeid, outcome, type)
-
 def commitTrade(market, hash):
     self.tradeCommits[market][tx.origin].hash = hash
     self.tradeCommits[market][tx.origin].block = block.number
@@ -18,7 +13,52 @@ def zeroHash(market):
     return(1)
 
 def checkHash(market, tradeHash):
-    if(self.tradeCommits[market][tx.origin].hash != tradeHash || block.number == self.tradeCommits[market][tx.origin].block):
+    if(self.tradeCommits[market][tx.origin].hash != tradeHash || block.number <= self.tradeCommits[market][tx.origin].block):
         return(-1)
     else:
         return(1)
+        
+def getID(tradeID):
+    return(self.trades[tradeID].id)
+    
+def saveTrade(trade_id, type, market, amount, price, sender, outcome):
+    self.trades[trade_id].id = trade_id
+    self.trades[trade_id].type = type
+    self.trades[trade_id].market = market
+    self.trades[trade_id].amount = amount
+    self.trades[trade_id].price = price
+    self.trades[trade_id].owner = sender
+    self.trades[trade_id].block = block.number
+    self.trades[trade_id].outcome = outcome
+    self.trades[trade_id].refhash = ref(self.trades[trade_id].id)
+    return(1)
+
+def get_trade(id):
+    trade = array(9)
+    trade[0] = self.trades[id].id
+    trade[1] = self.trades[id].type
+    trade[2] = self.trades[id].market
+    trade[3] = self.trades[id].amount
+    trade[4] = self.trades[id].price
+    trade[5] = self.trades[id].owner
+    trade[6] = self.trades[id].block
+    trade[7] = self.trades[id].refhash
+    trade[8] = self.trades[id].outcome
+    if trade:
+        return(trade:arr)
+    return([0]:arr)
+
+def remove_trade(id):
+    self.trades[id].id = 0
+    self.trades[id].type = 0
+    self.trades[id].market = 0
+    self.trades[id].amount = 0
+    self.trades[id].price = 0
+    self.trades[id].owner = 0
+    self.trades[id].block = 0
+    self.trades[id].refhash = 0
+    return(1)
+    
+def fill_trade(id, fill):
+    self.trades[trade_id].amount -= fill
+    return(1)
