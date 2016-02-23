@@ -334,7 +334,7 @@ def needsReportingOn(event):
 		n = 1
 		ninetynine = 0
 		while n <= numOutcomes:
-			if(MARKETS.price(markets[i], n) > 18262276632972456099):
+			if(MARKETS.lmsr_price(markets[i], n) > 18262276632972456099):
 				ninetynine = 1
 				n = numOutcomes+1
 			n += 1

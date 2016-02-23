@@ -36,10 +36,6 @@ def reputationFaucet(branch):
     self.setRep(branch, index, 47*2**64)
     return(1)
 
-# market, reporter
-data trades[][](hash, block)
-data trades[2^160](id, type, market, amount, price, owner, block, refhash, outcome)
-
 event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
 event log_add_tx(market:indexed, sender, type, price, amount, outcome, tradeid)
 event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
@@ -56,50 +52,18 @@ macro FAILURE: 0
 # Error codes
 macro INSUFFICIENT_BALANCE: 10
 macro TRADE_ALREADY_EXISTS: 21
-macro TRADE_SAME_BLOCK_PROHIBITED: 22
-
-def commitTrade(market, hash):
-    self.trades[market][tx.origin].hash = hash
-    self.trades[market][tx.origin].block = block.number
-    return(1)
-    
-def makeMarketHash(max_amount, trade_ids: arr):
-    i = 0
-    trades = 0
-    while i < len(trade_ids):
-        trades += trade_ids[i]
-        i+=1
-    tradeInfo = array(2)
-    tradeInfo[0] = trades
-    tradeInfo[1] = max_amount
-    tradeHash = sha256(tradeInfo, items=2)
-    return(tradeHash)
 
 macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participantNumber):
     trade = [$type, $market, $amount, $price, msg.sender, block.number, $outcome]
-    trade_id = sha3(trade:arr)
+    trade_id = sha256(trade, items=7)
 
     # Save trade
-    if !self.trades[trade_id].id:
-        self.trades[trade_id].id = trade_id
-        self.trades[trade_id].type = $type
-        self.trades[trade_id].market = $market
-        self.trades[trade_id].amount = $amount
-        self.trades[trade_id].price = $price
-        self.trades[trade_id].owner = msg.sender
-        self.trades[trade_id].block = block.number
-        self.trades[trade_id].outcome = $outcome
-        self.trades[trade_id].refhash = ref(self.trades[trade_id].id)
-
+    if !self.getID(trade_id):
+        self.saveTrade(trade_id, $type, $market, $amount, $price, msg.sender, $outcome)
         # Update market
-        # todo
-        last_id = self.markets[$market_id].last_trade
-        self.markets[$market_id].trade_ids[last_id].next_id = trade_id
-        self.markets[$market_id].trade_ids[trade_id].prev_id = last_id
-        self.markets[$market_id].trade_ids[trade_id].id = trade_id
-        self.markets[$market_id].last_trade = trade_id
-        self.markets[$market_id].total_trades += 1
-
+        last_id = self.getLastTrade($market)
+        self.addTrade($market, trade_id, last_id)
+        
         # Update available and trading amounts for asks
         if $type == ASK:
             self.modifyParticipantShares($branch, $market, $participantNumber, $outcome, -$amount)
@@ -120,13 +84,18 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
 def cancel(trade_id):
     # user can cancel anytime
     # Get trade
-    type = self.trades[trade_id].type
-    amount = self.trades[trade_id].amount
-    price = self.trades[trade_id].price
-    owner = self.trades[trade_id].owner
-    # Get market
-    market = self.trades[trade_id].market
+    trade = array(9)
+    trade = self.get_trade(trade_id, outitems=9)
+    if !trade:
+        return(0)
 
+    type = trade[1]
+    amount = trade[3]
+    price = trade[4]
+    owner = trade[5]
+    # Get market
+    market = trade[2]
+    outcome = trade[8]
     # Check the owner
     if msg.sender == owner:
         # Clear the trade first
@@ -139,38 +108,19 @@ def cancel(trade_id):
             self.addCash(msg.sender, amount * price / 2**64)
         elif type == ASK:
             # shares refund
+            participantNumber = self.getParticipantNumber(market, msg.sender)
+            branch = self.getBranchID(market)
             self.modifyParticipantShares(branch, market, participantNumber, outcome, amount)
         
         # Log cancellation
-        log(type=log_cancel, market_id, msg.sender, price, amount, trade_id, outcome, type)
+        log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type)
         return(SUCCESS)
     return(FAILURE)
 
 macro remove_trade($trade_id, $market_id):
-    self.trades[$trade_id].id = 0
-    self.trades[$trade_id].type = 0
-    self.trades[$trade_id].market = 0
-    self.trades[$trade_id].amount = 0
-    self.trades[$trade_id].price = 0
-    self.trades[$trade_id].owner = 0
-    self.trades[$trade_id].block = 0
-    self.trades[$trade_id].refhash = 0
-
-    prev_id = self.markets[$market_id].trade_ids[$trade_id].prev_id
-    next_id = self.markets[$market_id].trade_ids[$trade_id].next_id
-    if prev_id and next_id:
-        self.markets[$market_id].trade_ids[prev_id].next_id = next_id
-        self.markets[$market_id].trade_ids[next_id].prev_id = prev_id
-    elif prev_id:
-        self.markets[$market_id].last_trade = prev_id
-        self.markets[$market_id].trade_ids[prev_id].next_id = 0
-
-    if next_id:
-        self.markets[$market_id].trade_ids[$trade_id].next_id = 0
-    if prev_id:
-        self.markets[$market_id].trade_ids[$trade_id].prev_id = 0
-    self.markets[$market_id].trade_ids[$trade_id].id = 0
-    self.markets[$market_id].total_trades -= 1
+    self.remove_trade(trade_id)
+    
+    self.remove_trade_from_market(market_id, trade_id)
 
 
 #
@@ -251,13 +201,13 @@ def sell(branch, amount, price, market_id, outcome):
     save_trade(ASK, amount, price, market_id, outcome, branch, participantNumber)
     return(FAILURE)
 
-
 #
 # Trade
 #
 # Errors:
     # -1: oracle only branch
     # -2: bad trade hash
+    # -3: trader doesn't exist / own shares in this market
 #Exchange(Market, outcome, sender, amount, receiver, payment) – transfers amount shares from sender to receiver for payment amount
 #max amount is max shares to sell
 #max value is max amount to spend to buy
@@ -273,25 +223,27 @@ def trade(max_value, max_amount, trade_ids:arr):
     tradeInfo[0] = trades
     tradeInfo[1] = max_amount
     tradeHash = sha256(tradeInfo, items=2)
-    if(self.trades[market][tx.origin].hash != tradeHash || block.number == self.trades[market][tx.origin].block):
+    if(self.checkHash(market, tradeHash)==-1):
         return(-2)
-    self.trades[market][tx.origin].hash = 0
-    
+    self.zeroHash(market)
+    max_value = max_value
+    max_amount = max_amount
     # Try to fulfill each trade passed
     t = 0
     while t < len(trade_ids):
         trade_id = trade_ids[t]
-        # Make sure the trade has been mined, obvious HFT prevention
-        if block.number <= self.trades[trade_id].block:
-            return(TRADE_SAME_BLOCK_PROHIBITED)
-        # Get market
-        market_id = self.trades[trade_id].market
         # Get trade
-        type = self.trades[trade_id].type
-        amount = self.trades[trade_id].amount
-        price = self.trades[trade_id].price
-        owner = self.trades[trade_id].owner
-        outcome = self.trades[trade_id].outcome
+        trade = array(9)
+        trade = self.get_trade(trade_id, outitems=9)
+        if !trade:
+            return(0)
+        # Get market
+        market_id = trade[2]
+        type = trade[1]
+        amount = trade[3]
+        price = trade[4]
+        owner = trade[5]
+        outcome = trade[8]
         branch = self.getBranchID(market_id)
 
         # Fill buy order
@@ -302,14 +254,14 @@ def trade(max_value, max_amount, trade_ids:arr):
             if balance > 0:
                 participantNumber = self.getParticipantNumber(market_id, tx.origin)
                 if (self.getParticipantID(market_id, participantNumber) != tx.origin):
-                    return(INSUFFICIENT_BALANCE)
+                    return(-3)
                 # Determine fill amount
                 fill = min(amount, min(balance, max_amount))
                 # Calculate value
                 value = (fill * price)/2**64
                 # Update trade amount or remove
                 if fill < amount:
-                    self.trades[trade_id].amount -= fill
+                    self.fill_trade(trade_id, fill)
                 else:
                     remove_trade(trade_id, market_id)
                 # Update balances
@@ -318,6 +270,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
                 self.addCash(msg.sender, value)
                 self.subtractCash(market_id, value)
+                # Update max_amount
+                max_amount -= fill
                 # Log transaction
                 log(type=log_fill_tx, market_id, msg.sender, owner, ASK, price, fill, trade_id, outcome)
             else:
@@ -333,7 +287,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Calculate fill amount, update trade amount or remove filled trade
                 if value < trade_value:
                     fill = value*2**64 / price
-                    self.trades[trade_id].amount -= fill
+                    self.fill_trade(trade_id, fill)
                 else:
                     fill = amount
                     remove_trade(trade_id, market_id)
@@ -346,62 +300,20 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Transfer cash from user to person who has ask order
                 self.addCash(owner, value)
                 self.subtractCash(msg.sender, value)
+                # Update max_value
+                max_value -= value
                 # Log transaction
                 log(type=log_fill_tx, market_id, msg.sender, owner, BID, price, fill, trade_id, outcome)
             else:
                 return(INSUFFICIENT_BALANCE)
 
         # Update market last price
-        self.markets[market_id].last_price = price
+        self.set_last_price(market_id, price)
         # Log price, fill amount, type and timestamp
         log(type=log_price, market_id, type, price, fill, block.timestamp, outcome, msg.sender)
-        # Update max_amount and max_value... hmmm
-        max_amount -= fill
-        max_value -= value
         # Next trade
         t += 1
-
     return([SUCCESS, max_value, max_amount]: arr)
-
-
-
-def get_trade_ids(market_id):
-    trades_count = self.markets[market_id].total_trades
-    trade_id = self.markets[market_id].last_trade
-    trade_ids = array(trades_count)
-
-    i = 0
-    while i < trades_count:
-        trade_ids[i] = self.markets[market_id].trade_ids[trade_id].id
-        trade_id = self.markets[market_id].trade_ids[trade_id].prev_id
-        i = i + 1
-
-    if trade_ids:
-        return(trade_ids:arr)
-    return([FAILURE]:arr)
-
-def get_trade(id):
-    trade = array(TRADE_FIELDS)
-
-    trade[0] = self.trades[id].id
-    trade[1] = self.trades[id].type
-    trade[2] = self.trades[id].market
-    trade[3] = self.trades[id].amount
-    trade[4] = self.trades[id].price
-    trade[5] = self.trades[id].owner
-    trade[6] = self.trades[id].block
-    trade[7] = self.trades[id].refhash
-    trade[8] = self.trades[id].outcome
-
-    if trade:
-        return(trade:arr)
-    return([FAILURE]:arr)
-
-
-
-
-
-
 
 # buys amount of every outcome
 def buyCompleteSets(branch, market, amount):
@@ -425,14 +337,13 @@ def buyCompleteSets(branch, market, amount):
         else:
           n += 1
     ### TODO: check for .99 market here
-    if (outcome==0 || (self.getVotePeriod(branch)>self.getTradingPeriod(market) && !pushedBack) || self.getBranchID(market) != branch):
+    if ((self.getVotePeriod(branch)>self.getTradingPeriod(market) && !pushedBack) || self.getBranchID(market) != branch):
         return(-1)
     price = amount
     if(self.balance(tx.origin) < price*(self.getTradingFee(market) + 2^64)/2^64):
         return(-3)
-
+        
     participantNumber = self.getParticipantNumber(market, tx.origin)
-
     # if participant doesn't exist in market, add them
     if(tx.origin != self.getParticipantID(market, participantNumber)):
         participantNumber = self.addParticipant(market, tx.origin)
@@ -477,7 +388,7 @@ def sellCompleteSets(branch, market, amount):
             n = numEvents
         else:
           n += 1
-    if (self.getParticipantID(market, participantNumber) != tx.origin || outcome==0 || (self.getVotePeriod(branch)>self.getTradingPeriod(market) && !pushedBack) || self.getBranchID(market) != branch):
+    if (self.getParticipantID(market, participantNumber) != tx.origin || (self.getVotePeriod(branch)>self.getTradingPeriod(market) && !pushedBack) || self.getBranchID(market) != branch):
         return(-1)
 
     # these prices are in fixed point
@@ -1152,7 +1063,7 @@ def needsReportingOn(event):
 		n = 1
 		ninetynine = 0
 		while n <= numOutcomes:
-			if(self.price(markets[i], n) > 18262276632972456099):
+			if(self.lmsr_price(markets[i], n) > 18262276632972456099):
 				ninetynine = 1
 				n = numOutcomes+1
 			n += 1
@@ -1186,7 +1097,7 @@ def validateReport(eventID, branch, votePeriod, report):
 		# submit report
 		self.mode_items[votePeriod][eventID].report_value[report] += 1
 		if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
-			self.mode_items[votePeriod][eventID].current_mode = reportValue
+			self.mode_items[votePeriod][eventID].current_mode = report
 			self.mode_items[votePeriod][eventID].current_mode_items = self.mode_items[votePeriod][eventID].report_value[report]
 		outcome = self.mode_items[votePeriod][eventID].current_mode
 		# outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
@@ -1203,7 +1114,7 @@ def validateReport(eventID, branch, votePeriod, report):
 		# submit report
 		self.mode_items[votePeriod][eventID].report_value[report] += 1
 		if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
-			self.mode_items[votePeriod][eventID].current_mode = reportValue
+			self.mode_items[votePeriod][eventID].current_mode = report
 			self.mode_items[votePeriod][eventID].current_mode_items = self.mode_items[votePeriod][eventID].report_value[report]
 		outcome = self.mode_items[votePeriod][eventID].current_mode
 		# outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
@@ -1461,7 +1372,7 @@ def pushMarketForward(branch, market):
 #    n = 0
 #    ninetynine = 0
 #    while n < numOutcomes:
-#      if(self.price(markets, n) > 18262276632972456099):
+#      if(self.lmsr_price(markets, n) > 18262276632972456099):
 #        ninetynine = 1
 #        n = numOutcomes
 #        n += 1
@@ -3022,7 +2933,7 @@ def addMarketToBranch(branch, market):
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, forkSelection, pushingForward, bondsMan, originalPeriod, initialLiquidity[])
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, forkSelection, pushingForward, bondsMan, originalPeriod, initialLiquidity[], trade_ids[](id, next_id, prev_id), last_trade, total_trades, last_price)
 
 def getTotalSharesPurchased(market):
     total = 0
@@ -3091,7 +3002,7 @@ def getMarketInfo(marketID):
         k = 0
         while k < self.Markets[marketID].numOutcomes:
             info[index + k*OUTCOMES_FIELDS] = self.Markets[marketID].sharesPurchased[k + 1]
-            info[index + k*OUTCOMES_FIELDS + 1] = self.price(marketID, k + 1)
+            info[index + k*OUTCOMES_FIELDS + 1] = self.lmsr_price(marketID, k + 1)
             k += 1
         index += self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS
         k = 0
@@ -3274,7 +3185,7 @@ macro Bq($marketID):
 def lsLmsr(marketID):
     return(lsLmsr(marketID))
 
-def price(market, outcome):
+def lmsr_price(market, outcome):
     a = lsLmsr(market)
     sharesPurchased(market)[outcome] += 2**50
     b = lsLmsr(market)
@@ -3366,6 +3277,63 @@ def getPushedForward(market):
 
 def getBondsMan(market):
     return(self.Markets[market].bondsMan)
+
+def getLastTrade(market):
+    return(self.Markets[market].last_trade)
+    
+def addTrade(market, trade_id, last_id):
+    self.Markets[market].trade_ids[last_id].next_id = trade_id
+    self.Markets[market].trade_ids[trade_id].prev_id = last_id
+    self.Markets[market].trade_ids[trade_id].id = trade_id
+    self.Markets[market].last_trade = trade_id
+    self.Markets[market].total_trades += 1
+    return(1)
+    
+def remove_trade_from_market(market_id, trade_id):
+    prev_id = self.Markets[market_id].trade_ids[trade_id].prev_id
+    next_id = self.Markets[market_id].trade_ids[trade_id].next_id
+    if prev_id and next_id:
+        self.Markets[market_id].trade_ids[prev_id].next_id = next_id
+        self.Markets[market_id].trade_ids[next_id].prev_id = prev_id
+    elif prev_id:
+        self.Markets[market_id].last_trade = prev_id
+        self.Markets[market_id].trade_ids[prev_id].next_id = 0
+
+    if next_id:
+        self.Markets[market_id].trade_ids[trade_id].next_id = 0
+    if prev_id:
+        self.Markets[market_id].trade_ids[trade_id].prev_id = 0
+    self.Markets[market_id].trade_ids[trade_id].id = 0
+    self.Markets[market_id].total_trades -= 1
+    return(1)
+
+def get_trade_ids(market_id):
+    trades_count = self.Markets[market_id].total_trades
+    trade_id = self.Markets[market_id].last_trade
+    trade_ids = array(trades_count)
+
+    i = 0
+    while i < trades_count:
+        trade_ids[i] = self.Markets[market_id].trade_ids[trade_id].id
+        trade_id = self.Markets[market_id].trade_ids[trade_id].prev_id
+        i = i + 1
+
+    if trade_ids:
+        return(trade_ids:arr)
+    return([FAILURE]:arr)
+    
+def get_total_trades(market_id):
+    return(self.Markets[market_id].total_trades)
+
+#
+# Get price by market ID
+#
+def price(market_id):
+    return(self.Markets[market_id].last_price)
+    
+def set_last_price(market_id, price):
+    self.Markets[market_id].last_price = price
+    return(1)
 # Events' index is the eventID
 # a binary outcome has 0 for min && 1 for max value, but consensus will return 2^64 and 2^65 respectively
 # so for voting 1 and 2 in fxp. need to be given for binaries, not 0 & 1
@@ -3527,6 +3495,81 @@ def getRejectedPeriod(event):
 
 def getRejectedUncaught(event):
 	return(self.Events[event].rejectedUncaught)
+data tradeCommits[][](hash, block)
+# tradeID
+data trades[](id, type, market, amount, price, owner, block, refhash, outcome)
+
+def makeMarketHash(max_amount, trade_ids: arr):
+    i = 0
+    trades = 0
+    while i < len(trade_ids):
+        trades += trade_ids[i]
+        i+=1
+    tradeInfo = array(2)
+    tradeInfo[0] = trades
+    tradeInfo[1] = max_amount
+    tradeHash = sha256(tradeInfo, items=2)
+    return(tradeHash)
+
+def commitTrade(market, hash):
+    self.tradeCommits[market][tx.origin].hash = hash
+    self.tradeCommits[market][tx.origin].block = block.number
+    return(1)
+    
+def zeroHash(market):
+    self.tradeCommits[market][tx.origin].hash = 0
+    return(1)
+
+def checkHash(market, tradeHash):
+    if(self.tradeCommits[market][tx.origin].hash != tradeHash || block.number <= self.tradeCommits[market][tx.origin].block):
+        return(-1)
+    else:
+        return(1)
+        
+def getID(tradeID):
+    return(self.trades[tradeID].id)
+    
+def saveTrade(trade_id, type, market, amount, price, sender, outcome):
+    self.trades[trade_id].id = trade_id
+    self.trades[trade_id].type = type
+    self.trades[trade_id].market = market
+    self.trades[trade_id].amount = amount
+    self.trades[trade_id].price = price
+    self.trades[trade_id].owner = sender
+    self.trades[trade_id].block = block.number
+    self.trades[trade_id].outcome = outcome
+    self.trades[trade_id].refhash = ref(self.trades[trade_id].id)
+    return(1)
+
+def get_trade(id):
+    trade = array(9)
+    trade[0] = self.trades[id].id
+    trade[1] = self.trades[id].type
+    trade[2] = self.trades[id].market
+    trade[3] = self.trades[id].amount
+    trade[4] = self.trades[id].price
+    trade[5] = self.trades[id].owner
+    trade[6] = self.trades[id].block
+    trade[7] = self.trades[id].refhash
+    trade[8] = self.trades[id].outcome
+    if trade:
+        return(trade:arr)
+    return([0]:arr)
+
+def remove_trade(id):
+    self.trades[id].id = 0
+    self.trades[id].type = 0
+    self.trades[id].market = 0
+    self.trades[id].amount = 0
+    self.trades[id].price = 0
+    self.trades[id].owner = 0
+    self.trades[id].block = 0
+    self.trades[id].refhash = 0
+    return(1)
+    
+def fill_trade(id, fill):
+    self.trades[trade_id].amount -= fill
+    return(1)
 data cashcoinBalances[]
 
 data owners[]

@@ -281,7 +281,7 @@ def pushMarketForward(branch, market):
 #    n = 0
 #    ninetynine = 0
 #    while n < numOutcomes:
-#      if(MARKETS.price(markets, n) > 18262276632972456099):
+#      if(MARKETS.lmsr_price(markets, n) > 18262276632972456099):
 #        ninetynine = 1
 #        n = numOutcomes
 #        n += 1

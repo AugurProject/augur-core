@@ -46,20 +46,6 @@ macro FAILURE: 0
 macro INSUFFICIENT_BALANCE: 10
 macro TRADE_ALREADY_EXISTS: 21
 
-
-    
-def makeMarketHash(max_amount, trade_ids: arr):
-    i = 0
-    trades = 0
-    while i < len(trade_ids):
-        trades += trade_ids[i]
-        i+=1
-    tradeInfo = array(2)
-    tradeInfo[0] = trades
-    tradeInfo[1] = max_amount
-    tradeHash = sha256(tradeInfo, items=2)
-    return(tradeHash)
-
 macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participantNumber):
     trade = [$type, $market, $amount, $price, msg.sender, block.number, $outcome]
     trade_id = sha256(trade, items=7)
@@ -127,7 +113,7 @@ def cancel(trade_id):
 macro remove_trade($trade_id, $market_id):
     TRADES.remove_trade(trade_id)
     
-    MARKETS.remove_trade(market_id, trade_id)
+    MARKETS.remove_trade_from_market(market_id, trade_id)
 
 
 #
@@ -207,7 +193,6 @@ def sell(branch, amount, price, market_id, outcome):
     
     save_trade(ASK, amount, price, market_id, outcome, branch, participantNumber)
     return(FAILURE)
-
 
 #
 # Trade
@@ -316,24 +301,12 @@ def trade(max_value, max_amount, trade_ids:arr):
                 return(INSUFFICIENT_BALANCE)
 
         # Update market last price
-        self.markets[market_id].last_price = price
+        MARKETS.set_last_price(market_id, price)
         # Log price, fill amount, type and timestamp
         log(type=log_price, market_id, type, price, fill, block.timestamp, outcome, msg.sender)
         # Next trade
         t += 1
-
     return([SUCCESS, max_value, max_amount]: arr)
-
-
-
-
-
-
-
-
-
-
-
 
 # buys amount of every outcome
 def buyCompleteSets(branch, market, amount):
@@ -357,14 +330,13 @@ def buyCompleteSets(branch, market, amount):
         else:
           n += 1
     ### TODO: check for .99 market here
-    if (outcome==0 || (BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market) && !pushedBack) || MARKETS.getBranchID(market) != branch):
+    if ((BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market) && !pushedBack) || MARKETS.getBranchID(market) != branch):
         return(-1)
     price = amount
     if(CASH.balance(tx.origin) < price*(MARKETS.getTradingFee(market) + 2^64)/2^64):
         return(-3)
-
+        
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
-
     # if participant doesn't exist in market, add them
     if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
         participantNumber = MARKETS.addParticipant(market, tx.origin)
@@ -409,7 +381,7 @@ def sellCompleteSets(branch, market, amount):
             n = numEvents
         else:
           n += 1
-    if (MARKETS.getParticipantID(market, participantNumber) != tx.origin || outcome==0 || (BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market) && !pushedBack) || MARKETS.getBranchID(market) != branch):
+    if (MARKETS.getParticipantID(market, participantNumber) != tx.origin || (BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market) && !pushedBack) || MARKETS.getBranchID(market) != branch):
         return(-1)
 
     # these prices are in fixed point

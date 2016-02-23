@@ -282,6 +282,11 @@ def test_buy_sell_shares():
     initialSharesPurchased1 = c.getSharesPurchased(bin_market, 1)
     initialSharesPurchased2 = c.getSharesPurchased(bin_market, 2)
     sharesToTrade = 5*2**64
+    print c.buyCompleteSets(1010101, bin_market, 10*2**64)
+    print c.sellCompleteSets(1010101, bin_market, 10*2**64)
+    print "complete sets yay"
+    print c.sellCompleteSets(1010101, bin_market, 20)
+    print "complete sets yay"
     c.commitTrade(bin_market, c.makeMarketHash(bin_market, 2, sharesToTrade, 0))
     s.mine(1)
     assert(c.buyShares(1010101, bin_market, 2, sharesToTrade, 0)==1), "Buy shares issue"
@@ -319,8 +324,8 @@ def test_buy_sell_shares():
     gas_use(s)
     bal_after = c.balance(s.block.coinbase)
     assert(bal-bal_after <= -590*2**64), "Scalar sell off"
-    assert(c.price(a, 1) < 2**64), "Scalar sell off"
-    assert(c.price(a, 2) > 198*2**64), "Scalar sell off"
+    assert(c.lmsr_price(a, 1) < 2**64), "Scalar sell off"
+    assert(c.lmsr_price(a, 2) > 198*2**64), "Scalar sell off"
 
     # odd range scalar
     b = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4], 1)
@@ -347,8 +352,8 @@ def test_buy_sell_shares():
     gas_use(s)
     bal_after = c.balance(s.block.coinbase)
     assert(bal-bal_after <= -890*2**64), "Scalar sell off"
-    assert(c.price(b, 2) > 298*2**64), "Scalar sell off"
-    assert(c.price(b, 1) < 2**64), "Scalar sell off"
+    assert(c.lmsr_price(b, 2) > 298*2**64), "Scalar sell off"
+    assert(c.lmsr_price(b, 1) < 2**64), "Scalar sell off"
     c.commitTrade(b, c.makeMarketHash(b, 1, 10*2**64, 0))
     s.mine(1)
     assert(c.buyShares(1010101, b, 1, 10*2**64, 0)==1), "Buy back not working"
@@ -358,25 +363,25 @@ def test_buy_sell_shares():
     bal = c.balance(s.block.coinbase)
     c.commitTrade(d, c.makeMarketHash(d, 1, 15*2**64, 0))
     s.mine(1)
-    assert(c.price(d, 5)==c.price(d, 4)==c.price(d, 3)==c.price(d, 2)==c.price(d, 1)), "Pricing off for categorical"
+    assert(c.lmsr_price(d, 5)==c.lmsr_price(d, 4)==c.lmsr_price(d, 3)==c.lmsr_price(d, 2)==c.lmsr_price(d, 1)), "Pricing off for categorical"
     c.buyShares(1010101, d, 1, 15*2**64,0)
     bal_after = c.balance(s.block.coinbase)
-    print c.price(d, 1)
-    print c.price(d, 2)
-    print c.price(d, 3)
-    print c.price(d, 4)
-    print c.price(d, 5)
+    print c.lmsr_price(d, 1)
+    print c.lmsr_price(d, 2)
+    print c.lmsr_price(d, 3)
+    print c.lmsr_price(d, 4)
+    print c.lmsr_price(d, 5)
     # .44 cost on avg
     # resume here
     print bal-bal_after
     assert((bal-bal_after) <= .47*15*2**64 and (bal-bal_after) >= .44*15*2**64), "Categorical buy off"
-    assert(c.price(d, 1) > .68*2**64 and c.price(d, 1) < .69*2**64), "Categorical buy off"
+    assert(c.lmsr_price(d, 1) > .68*2**64 and c.lmsr_price(d, 1) < .69*2**64), "Categorical buy off"
     c.commitTrade(d, c.makeMarketHash(d, 3, 12*2**64, 0))
     s.mine(1)
     bal = c.balance(s.block.coinbase)
     gas_use(s)
     c.buyShares(1010101, d, 3, 12*2**64, 0)
-    assert(c.price(d, 2) == c.price(d, 4) == c.price(d, 5)), "Categorical prices off"
+    assert(c.lmsr_price(d, 2) == c.lmsr_price(d, 4) == c.lmsr_price(d, 5)), "Categorical prices off"
     gas_use(s)
     bal_after = c.balance(s.block.coinbase)
     assert(bal-bal_after < .22*12*2**64 and bal-bal_after >.20*12*2**64), "Categorical buy off"
@@ -391,7 +396,7 @@ def test_buy_sell_shares():
     print bal-bal_after
     # 28 cents on avg / share
     assert(bal-bal_after < -4*2**64 and bal-bal_after > -5*2**64), "Categorical sell off"
-    assert(c.price(d, 1) > .12*2**64 and c.price(d, 1) < .14*2**64), "Categorical sell off"
+    assert(c.lmsr_price(d, 1) > .12*2**64 and c.lmsr_price(d, 1) < .14*2**64), "Categorical sell off"
     print "1D Done"
     
     ### 2D Markets
@@ -405,7 +410,7 @@ def test_buy_sell_shares():
     c.commitTrade(e, c.makeMarketHash(e, 1, 15*2**64, 0))
     s.mine(1)
     assert(c.getCumScale(e)==300), "Cumulative scale wrong"
-    assert(c.price(e, 1) == c.price(e, 2) == c.price(e, 4) == c.price(e, 3)), "Scalar prices off"
+    assert(c.lmsr_price(e, 1) == c.lmsr_price(e, 2) == c.lmsr_price(e, 4) == c.lmsr_price(e, 3)), "Scalar prices off"
     c.buyShares(1010101, e, 1, 15*2**64,0)
     bal_after = c.balance(s.block.coinbase)
     assert((bal-bal_after) <= 4550*2**64 and (bal-bal_after) >= 4500*2**64), "Scalar buy off"
@@ -415,10 +420,10 @@ def test_buy_sell_shares():
     gas_use(s)
     c.buyShares(1010101, e, 3, 14*2**64, 0)
     gas_use(s)
-    print c.price(e, 1)
-    print c.price(e, 2)
-    print c.price(e, 3)
-    print c.price(e, 4)
+    print c.lmsr_price(e, 1)
+    print c.lmsr_price(e, 2)
+    print c.lmsr_price(e, 3)
+    print c.lmsr_price(e, 4)
     bal_after = c.balance(s.block.coinbase)
     assert(bal-bal_after < 20*2**64), "Scalar buy off"
     c.commitTrade(e, c.makeMarketHash(e, 1, 15*2**64, 0))
@@ -443,8 +448,8 @@ def test_buy_sell_shares():
     c.buyShares(1010101, f, 8, 2*2**64,0)
     bal_after = c.balance(s.block.coinbase)
     print bal - bal_after
-    assert(c.price(f,1)==c.price(f,2)==c.price(f,3)==c.price(f,4)==c.price(f,5)==c.price(f,6)==c.price(f,7)), "3d pricing broken"
-    assert(c.price(f,8)>=522*2**64 and c.price(f,8) <= 524*2**64), "3d pricing broken"
+    assert(c.lmsr_price(f,1)==c.lmsr_price(f,2)==c.lmsr_price(f,3)==c.lmsr_price(f,4)==c.lmsr_price(f,5)==c.lmsr_price(f,6)==c.lmsr_price(f,7)), "3d pricing broken"
+    assert(c.lmsr_price(f,8)>=522*2**64 and c.lmsr_price(f,8) <= 524*2**64), "3d pricing broken"
     assert((bal-bal_after) <= 1055*2**64 and (bal-bal_after) >= 1005*2**64), "3d buy off"
     c.commitTrade(f, c.makeMarketHash(f, 2, 1*2**64, 0))
     s.mine(1)
@@ -928,13 +933,13 @@ if __name__ == '__main__':
     # function tests
     #test_create_event()
     #test_create_market()
-    #test_buy_sell_shares()
+    test_buy_sell_shares()
     #test_transfer_shares()
     #test_create_branch()
     #test_send_rep()
     #test_make_reports()
     #test_close_market()
     #test_consensus()
-    test_catchup()
+    #test_catchup()
     #test_slashrep()
     print "DONE TESTING"
