@@ -33,6 +33,7 @@ import events as EVENTS
     # -1: we're either already past that date, branch doesn't exist, or description is bad
     # 0: not enough money to pay fees or event already exists
     # -2: max value < min value
+# .025 eth to create
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes):
     periodLength = BRANCHES.getPeriodLength(branch)
     if(maxValue < minValue):

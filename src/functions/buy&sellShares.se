@@ -74,6 +74,7 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
 #
 # Cancellation
 #
+# 200k gas
 def cancel(trade_id):
     # user can cancel anytime
     # Get trade
@@ -121,75 +122,41 @@ macro remove_trade($trade_id, $market_id):
 # Errors:
     # -1: amount/price bad or no market
     # -2: oracle only branch
-    # -3: trading not allowed
-    # -4: bad outcome to trade
-    # -5: not enough money or shares
+    # -3: bad outcome to trade
+    # -4: not enough money or shares
 #
-def buy(branch, amount, price, market, outcome):
+# costs 532k
+def buy(amount, price, market, outcome):
     if(amount <= 0 or price <= 0 or market==0):
         return(-1)
+    branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
-
+    if(outcome > MARKETS.getMarketNumOutcomes(market) or outcome < 1):
+        return(-3)
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
     # if participant doesn't exist in market, add them
     if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
         participantNumber = MARKETS.addParticipant(market, tx.origin)
-    numEvents = MARKETS.getNumEvents(market)
-    events = MARKETS.getMarketEvents(market, outitems=numEvents)
-    if(outcome > MARKETS.getMarketNumOutcomes(market) or outcome < 1):
-        return(-4)
-    n = 0    #if event gets pushed back people can still buy / sell
-    pushedBack = 0
-    while n < numEvents:
-        #if(EVENTS.getPushedBack(events[n])==0):
-        if(1):
-            n += 1
-        # pushed back and not resolved
-        elif(EVENTS.getOutcome(events[n])==0):
-            pushedBack = 1
-            n = numEvents
-        else:
-          n += 1
-    ### TODO: check for .99 market here
-    if (outcome==0 || (BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market) && !pushedBack) || MARKETS.getBranchID(market) != branch):
-        return(-3)
     if(CASH.balance(tx.origin) < (amount * price / 2**64 *(MARKETS.getTradingFee(market) + 2^64)/2^64)):
-        return(-5)
-
+        return(-4)
     save_trade(BID, amount, price, market, outcome, branch, participantNumber)
     return(FAILURE)
 
-def sell(branch, amount, price, market_id, outcome):
+# cost 532k
+def sell(amount, price, market_id, outcome):
     if(amount <= 0 or price <= 0 or market_id==0):
         return(-1)
+    branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
-
-    participantNumber = MARKETS.getParticipantNumber(market_id, tx.origin)
-    numEvents = MARKETS.getNumEvents(market_id)
-    events = MARKETS.getMarketEvents(market_id, outitems=numEvents)
     if(outcome > MARKETS.getMarketNumOutcomes(market_id) or outcome < 1):
-        return(-4)
-    n = 0
-    #if event gets pushed back people can still buy / sell
-    pushedBack = 0
-    while n < numEvents:
-        #if(EVENTS.getPushedBack(events[n])==0):
-        if(1):
-            n += 1
-        # pushed back and not resolved
-        elif(EVENTS.getOutcome(events[n])==0):
-            pushedBack = 1
-            n = numEvents
-        else:
-          n += 1
-    ### TODO: check for .99 market here
-    if (MARKETS.getParticipantID(market_id, participantNumber) != tx.origin || outcome==0 || (BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market_id) && !pushedBack) || MARKETS.getBranchID(market_id) != branch):
+        return(-3)
+    participantNumber = MARKETS.getParticipantNumber(market_id, tx.origin)
+    if (MARKETS.getParticipantID(market_id, participantNumber) != tx.origin):
         return(-3)
     if (MARKETS.getParticipantSharesPurchased(market_id, participantNumber, outcome) < amount):
-        return(-5)
-    
+        return(-4)
     save_trade(ASK, amount, price, market_id, outcome, branch, participantNumber)
     return(FAILURE)
 
@@ -203,6 +170,7 @@ def sell(branch, amount, price, market_id, outcome):
 #Exchange(Market, outcome, sender, amount, receiver, payment) – transfers amount shares from sender to receiver for payment amount
 #max value is max amount to spend to buy
 #max amount is max shares to sell
+# 500k gas
 def trade(max_value, max_amount, trade_ids:arr):
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
@@ -231,8 +199,8 @@ def trade(max_value, max_amount, trade_ids:arr):
         if !trade:
             return(0)
         # Get market
-        market_id = trade[2]
         type = trade[1]
+        market_id = trade[2]
         amount = trade[3]
         price = trade[4]
         owner = trade[5]
@@ -245,7 +213,6 @@ def trade(max_value, max_amount, trade_ids:arr):
             participantNumber = MARKETS.getParticipantNumber(market_id, tx.origin)
             balance = MARKETS.getParticipantSharesPurchased(market_id, participantNumber, outcome)
             if balance > 0:
-                participantNumber = MARKETS.getParticipantNumber(market_id, tx.origin)
                 if (MARKETS.getParticipantID(market_id, participantNumber) != tx.origin):
                     return(-3)
                 # Determine fill amount
@@ -309,6 +276,7 @@ def trade(max_value, max_amount, trade_ids:arr):
     return([SUCCESS, max_value, max_amount]: arr)
 
 # buys amount of every outcome
+# cost 850k gas
 def buyCompleteSets(branch, market, amount):
     if(BRANCHES.getOracleOnly(branch)):
         return(-6)

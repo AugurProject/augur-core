@@ -48,7 +48,7 @@ event creationBlock(market:indexed)
     # -5: fee too low
     # -6: duplicate events
     # -7: event already expired
-
+# .05 eth to create
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, forkSelection):
     periodLength = BRANCHES.getPeriodLength(branch)

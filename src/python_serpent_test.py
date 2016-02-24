@@ -194,6 +194,7 @@ def test_create_market():
     # binary
     event5 = c.createEvent(1010101, "new event", 557, 1, 2, 2)
     # scalar
+    gas_use(s)
     event6 = c.createEvent(1010101, "new event", 557, 1, 25, 2)
 
     gas_use(s)
@@ -203,6 +204,7 @@ def test_create_market():
     gas_use(s)
     bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 1)
     print bin_market
+    print "BIN MARKET GAS USE"
     gas_use(s)
     print c.getSharesPurchased(bin_market, 1)
     print c.getSharesPurchased(bin_market, 2)
@@ -282,18 +284,29 @@ def test_buy_sell_shares():
     initialSharesPurchased1 = c.getSharesPurchased(bin_market, 1)
     initialSharesPurchased2 = c.getSharesPurchased(bin_market, 2)
     sharesToTrade = 5*2**64
+    gas_use(s)
     print c.buyCompleteSets(1010101, bin_market, 10*2**64)
     print c.sellCompleteSets(1010101, bin_market, 8*2**64)
+    gas_use(s)
     print "complete sets yay"
     #print c.sellCompleteSets(1010101, bin_market, 20)
     #print "complete sets yay"
-    print c.sell(1010101, 2**64, int(.01*2**64), bin_market, 1)
-    buy = c.buy(1010101, 2**64, int(.02*2**64), bin_market, 2)
+    sell = c.sell(2**64, int(.01*2**64), bin_market, 1)
+    gas_use(s)
+    print c.cancel(sell
+    print "Cancel gas use"
+    gas_use(s)
+    buy = c.buy(2**64, int(.02*2**64), bin_market, 2)
+    gas_use(s)
     hash = c.makeTradeHash(0, 2**64, [buy])
     print hash
     c.commitTrade(hash)
+    gas_use(s)
     s.mine(1)
+    gas_use(s)
     print c.trade(0, 2**64, [buy])
+    print "trade gas used"
+    gas_use(s)
     c.commitTrade(bin_market, c.makeTradeHash(bin_market, 2, sharesToTrade, 0))
     s.mine(1)
     assert(c.buyShares(1010101, bin_market, 2, sharesToTrade, 0)==1), "Buy shares issue"
@@ -650,11 +663,14 @@ def test_make_reports():
     report_hash = c.makeHash(0, 2**64, event1)
     gas_use(s)
     print c.submitReportHash(1010101, report_hash, 0, event1, 0)
+    print "Report hash gas use"
+    gas_use(s)
     assert(c.submitReportHash(1010101, report_hash, 0, event1, 0)==1), "Report hash submission failed"
     gas_use(s)
     s.mine(55)
     gas_use(s)
     assert(c.submitReport(1010101, 0, 0, 0, 2**64, event1, 2**64)==1), "Report submission failed"
+    print "Report gas use"
     gas_use(s)
     print c.getUncaughtOutcome(event1)
     gas_use(s)
@@ -758,8 +774,10 @@ def test_consensus():
     assert(c.getTotalRep(branch)==47*2**64)
     assert(c.getTotalRepReported(branch)==47*2**64)
     
+    gas_use(s)
     assert(c.penalizeNotEnoughReports(1010101)==1)
-    
+    print "Not enough reports penalization gas cost"
+    gas_use(s)
     # assumes user lost no rep after penalizing
     assert(c.getBeforeRep(branch, period)==c.getAfterRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==47*2**64)
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
@@ -772,7 +790,10 @@ def test_consensus():
     assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
     assert(c.getAfterRep(branch, period) < int(47.1*2**64) and c.getAfterRep(branch, period) > int(46.9*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    gas_use(s)
     assert(c.penalizeWrong(1010101, event1)==1)
+    print "Penalize wrong gas cost"
+    gas_use(s)
     assert(c.getBeforeRep(branch, period)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch)==c.getTotalRepReported(branch))
     assert(c.getAfterRep(branch, period) < int(47.1*2**64) and c.getAfterRep(branch, period) > int(46.9*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
