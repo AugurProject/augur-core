@@ -33,6 +33,7 @@ def cashFaucet():
     return(1)
 
 def reputationFaucet(branch):
+    index = 0
     if REPORTING.repIDToIndex(branch, tx.origin) != 0 or REPORTING.getReporterID(branch, 0) == tx.origin:
         index = REPORTING.repIDToIndex(branch, tx.origin)
     else:
