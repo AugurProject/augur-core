@@ -74,7 +74,7 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
     else:
         return(TRADE_ALREADY_EXISTS)
 
-    log(type=log_add_tx, $market_id, msg.sender, $type, $price, $amount, $outcome, trade_id)
+    log(type=log_add_tx, $market, msg.sender, $type, $price, $amount, $outcome, trade_id)
 
     return(trade_id)
 
@@ -146,8 +146,7 @@ def buy(branch, amount, price, market, outcome):
     events = self.getMarketEvents(market, outitems=numEvents)
     if(outcome > self.getMarketNumOutcomes(market) or outcome < 1):
         return(-4)
-    n = 0
-    #if event gets pushed back people can still buy / sell
+    n = 0    #if event gets pushed back people can still buy / sell
     pushedBack = 0
     while n < numEvents:
         #if(self.getPushedBack(events[n])==0):
@@ -174,10 +173,10 @@ def sell(branch, amount, price, market_id, outcome):
     if(self.getOracleOnly(branch)):
         return(-2)
 
-    participantNumber = self.getParticipantNumber(market, tx.origin)
-    numEvents = self.getNumEvents(market)
-    events = self.getMarketEvents(market, outitems=numEvents)
-    if(outcome > self.getMarketNumOutcomes(market) or outcome < 1):
+    participantNumber = self.getParticipantNumber(market_id, tx.origin)
+    numEvents = self.getNumEvents(market_id)
+    events = self.getMarketEvents(market_id, outitems=numEvents)
+    if(outcome > self.getMarketNumOutcomes(market_id) or outcome < 1):
         return(-4)
     n = 0
     #if event gets pushed back people can still buy / sell
@@ -193,9 +192,9 @@ def sell(branch, amount, price, market_id, outcome):
         else:
           n += 1
     ### TODO: check for .99 market here
-    if (self.getParticipantID(market, participantNumber) != tx.origin || outcome==0 || (self.getVotePeriod(branch)>self.getTradingPeriod(market) && !pushedBack) || self.getBranchID(market) != branch):
+    if (self.getParticipantID(market_id, participantNumber) != tx.origin || outcome==0 || (self.getVotePeriod(branch)>self.getTradingPeriod(market_id) && !pushedBack) || self.getBranchID(market_id) != branch):
         return(-3)
-    if (self.getParticipantSharesPurchased(market, participantNumber, outcome) < amount):
+    if (self.getParticipantSharesPurchased(market_id, participantNumber, outcome) < amount):
         return(-5)
     
     save_trade(ASK, amount, price, market_id, outcome, branch, participantNumber)
@@ -209,8 +208,8 @@ def sell(branch, amount, price, market_id, outcome):
     # -2: bad trade hash
     # -3: trader doesn't exist / own shares in this market
 #Exchange(Market, outcome, sender, amount, receiver, payment) – transfers amount shares from sender to receiver for payment amount
-#max amount is max shares to sell
 #max value is max amount to spend to buy
+#max amount is max shares to sell
 def trade(max_value, max_amount, trade_ids:arr):
     if(self.getOracleOnly(branch)):
         return(-1)
@@ -219,13 +218,14 @@ def trade(max_value, max_amount, trade_ids:arr):
     while i < len(trade_ids):
         trades += trade_ids[i]
         i+=1
-    tradeInfo = array(2)
+    tradeInfo = array(3)
     tradeInfo[0] = trades
     tradeInfo[1] = max_amount
-    tradeHash = sha256(tradeInfo, items=2)
-    if(self.checkHash(market, tradeHash)==-1):
+    tradeInfo[2] = max_value
+    tradeHash = sha256(tradeInfo, items=3)
+    if(self.checkHash(tradeHash)==-1):
         return(-2)
-    self.zeroHash(market)
+    self.zeroHash()
     max_value = max_value
     max_amount = max_amount
     # Try to fulfill each trade passed
@@ -3495,33 +3495,34 @@ def getRejectedPeriod(event):
 
 def getRejectedUncaught(event):
 	return(self.Events[event].rejectedUncaught)
-data tradeCommits[][](hash, block)
+data tradeCommits[](hash, block)
 # tradeID
 data trades[](id, type, market, amount, price, owner, block, refhash, outcome)
 
-def makeMarketHash(max_amount, trade_ids: arr):
+def makeTradeHash(max_value, max_amount, trade_ids: arr):
     i = 0
     trades = 0
     while i < len(trade_ids):
         trades += trade_ids[i]
         i+=1
-    tradeInfo = array(2)
+    tradeInfo = array(3)
     tradeInfo[0] = trades
     tradeInfo[1] = max_amount
-    tradeHash = sha256(tradeInfo, items=2)
+    tradeInfo[2] = max_value
+    tradeHash = sha256(tradeInfo, items=3)
     return(tradeHash)
 
-def commitTrade(market, hash):
-    self.tradeCommits[market][tx.origin].hash = hash
-    self.tradeCommits[market][tx.origin].block = block.number
+def commitTrade(hash):
+    self.tradeCommits[tx.origin].hash = hash
+    self.tradeCommits[tx.origin].block = block.number
     return(1)
     
-def zeroHash(market):
-    self.tradeCommits[market][tx.origin].hash = 0
+def zeroHash():
+    self.tradeCommits[tx.origin].hash = 0
     return(1)
 
-def checkHash(market, tradeHash):
-    if(self.tradeCommits[market][tx.origin].hash != tradeHash || block.number <= self.tradeCommits[market][tx.origin].block):
+def checkHash(tradeHash):
+    if(self.tradeCommits[tx.origin].hash != tradeHash || block.number <= self.tradeCommits[tx.origin].block):
         return(-1)
     else:
         return(1)

@@ -3,19 +3,20 @@ data tradeCommits[](hash, block)
 # tradeID
 data trades[](id, type, market, amount, price, owner, block, refhash, outcome)
 
-def makeTradeHash(max_amount, trade_ids: arr):
+def makeTradeHash(max_value, max_amount, trade_ids: arr):
     i = 0
     trades = 0
     while i < len(trade_ids):
         trades += trade_ids[i]
         i+=1
-    tradeInfo = array(2)
+    tradeInfo = array(3)
     tradeInfo[0] = trades
     tradeInfo[1] = max_amount
-    tradeHash = sha256(tradeInfo, items=2)
+    tradeInfo[2] = max_value
+    tradeHash = sha256(tradeInfo, items=3)
     return(tradeHash)
 
-def commitTrade(market, hash):
+def commitTrade(hash):
     self.tradeCommits[tx.origin].hash = hash
     self.tradeCommits[tx.origin].block = block.number
     return(1)
