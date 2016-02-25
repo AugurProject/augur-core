@@ -190,8 +190,8 @@ macro paired_qsort($a, $b, $l, $h):
                                             i += 1
                                         c
 
-# Weighted median of an array
-macro weighted_median($data, $weights):
+# Weighted mode of an array
+macro weighted_mode($data, $weights):
     with n = len($data):
         with done = 0:
             with midpoint = sum($weights) / 2:
@@ -199,7 +199,7 @@ macro weighted_median($data, $weights):
                     while j < num_present[i]:
                         if $weights[j] > midpoint:
                             with maxidx = findmax($weights, n):
-                                wmedian = $data[maxidx]
+                                wmode = $data[maxidx]
                             done = 1
                         j += 1
                 if done == 0:
@@ -219,10 +219,10 @@ macro weighted_median($data, $weights):
                                         cumulative_weight -= sorted_weights[idx-1]
                                         # conservative machine epsilon: 0x1197998 = 18446744 = 2^64 / 10^12
                                         if abs(cumulative_weight - midpoint) < 0x1197998:
-                                            wmedian = (sorted_data[idx-2] + sorted_data[idx-1]) / 2
+                                            wmode = (sorted_data[idx-2] + sorted_data[idx-1]) / 2
                                         else:
-                                            wmedian = sorted_data[idx-1]
-                wmedian
+                                            wmode = sorted_data[idx-1]
+                wmode
 
 # macro 2da10(x)[a][b]:
 #     x[a * 10 + b]
@@ -258,7 +258,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                 i += 1
 
                         # use existing data and reputations to fill missing observations
-                        # (weighted average or median over all non-missing data)
+                        # (weighted average or mode over all non-missing data)
                         with reports_interp = array(two_flatsize):
                             with missing_values = 0:
                                 with i = 0:
@@ -313,7 +313,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                                                                 while j < num_present[i]:
                                                                                     active_reputation[j] = fixed_divide(active_reputation[j], total_active_reputation)
                                                                                     j += 1
-                                                                            guess = weighted_median(active_reports, active_reputation)
+                                                                            guess = weighted_mode(active_reports, active_reputation)
                                                                         with j = 0:
                                                                             while j < num_players - num_present[i]:
                                                                                 reports_interp[nan_indices[j]] = guess
@@ -511,7 +511,7 @@ def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_mi
                                     while j < num_players:
                                         active_reports[j] = reports[i + j*num_events]
                                         j += 1
-                                outcomes_raw[i] = weighted_median(active_reports, smooth_rep)
+                                outcomes_raw[i] = weighted_mode(active_reports, smooth_rep)
                         else:
                             with j = 0:
                                 while j < num_players:

@@ -168,7 +168,7 @@ def test_interps_random(trials, *range_args):
 
     datastr = ',\n\t\t'.join([
         'avg_abs_mid_50:%E%%', 'min_rel:%E%%', 
-        'max_rel:%E%%', 'median_rel:%E%%',
+        'max_rel:%E%%', 'mode_rel:%E%%',
         'max_diff:%E%%', 'min_diff:%E%%'
     ])
     errstr = '\terror in fx_log:\n\t\t'

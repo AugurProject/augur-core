@@ -166,8 +166,8 @@
     }, 
     "statistics": {
         "address": "0x2cc888c7838814bd50d3af330f0b81696f6586ea", 
-        "fullsig": "[{\n    \"name\": \"weighted_median(int256[],int256[])\",\n    \"type\": \"function\",\n    \"inputs\": [{ \"name\": \"data\", \"type\": \"int256[]\" }, { \"name\": \"weights\", \"type\": \"int256[]\" }],\n    \"outputs\": [{ \"name\": \"out\", \"type\": \"int256\" }]\n}]", 
-        "sig": "extern statistics: [weighted_median:[int256[],int256[]]:int256]"
+        "fullsig": "[{\n    \"name\": \"weighted_mode(int256[],int256[])\",\n    \"type\": \"function\",\n    \"inputs\": [{ \"name\": \"data\", \"type\": \"int256[]\" }, { \"name\": \"weights\", \"type\": \"int256[]\" }],\n    \"outputs\": [{ \"name\": \"out\", \"type\": \"int256\" }]\n}]", 
+        "sig": "extern statistics: [weighted_mode:[int256[],int256[]]:int256]"
     }, 
     "transferShares": {
         "address": "0xd78593e53042524b1dc914e8083df8af1678bbfe", 
