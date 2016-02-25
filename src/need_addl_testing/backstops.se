@@ -34,7 +34,7 @@ def roundTwoBond(branch, event, eventIndex, resolving, votePeriod):
       self.roundTwo[event].originalOutcome = #getuncaughtoutcome#MEDIAN.calculatemode(event)
     else:
       self.roundTwo[event].originalOutcome = catch(EVENTS.getUncaughtOutcome(event))
-
+  EXPEVENTS.addRoundTwo(branch, period)
   # else too early or too late
   else:
     return(0)

@@ -10,6 +10,7 @@ import markets as MARKETS
 # round two consensus data
 data bondPaid[]
 data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, final)
+data baseReportersLastPeriod
 
 # branch takes a branchID
     # denominator takes a vote period
@@ -109,10 +110,10 @@ def penalizeNotEnoughReports(branch):
     logOutput = FXP.fx_log(repConstant)
     exp = FXP.fx_exp(22136092888451461120*logOutput/2**64)
     exp += 18446744073709552
-    total = exp*40
+    total = exp*self.baseReportersLastPeriod
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
     if(total > 2**64):
-        numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)/40)*2**64
+        numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)/self.baseReportersLastPeriod)*2**64
     # what _if_ there are actually <30 events in augur?
         # perhaps we should have all reporters in that period report on all of them
     numReportsActual = MAKEREPORTS.getNumReportsActual(branch, lastPeriod)
@@ -229,7 +230,13 @@ def slashRep(branch, salt, report, reporter, eventID):
 def incrementPeriodAfterReporting(branch):
     # do this after reporting is finished
     if(periodOver(branch)):
+        period = block.number / BRANCHES.getPeriodLength($branch) - 1
+        lastPeriod = period - 1
+        percentAppealed = (EXPIRING.getRoundTwo(branch, period)*2**64/getNumberEvents(branch, period) + EXPIRING.getRoundTwo(branch, lastPeriod)*2**64/getNumberEvents(branch, lastPeriod)) / 2
         BRANCHES.incrementPeriod(branch)
+        base_reporter_quantity = (3*2**64 + ((333*2**64 * Percent_Appealed/2**64)**3 / 2**128))/2**64
+        self.baseReportersLastPeriod = BRANCHES.getBaseReporters(branch)
+        BRANCHES.setBaseReporters(branch, base_reporter_quantity)
         return(1)
     else:
         return(0)

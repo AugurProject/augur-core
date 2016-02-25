@@ -52,35 +52,8 @@ event creationBlock(market:indexed)
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, forkSelection):
     periodLength = BRANCHES.getPeriodLength(branch)
-    # liquidity is just buying complete sets then selling at diff. prices
-    # minimum fee 2% with initial liquidity >= $50 and < $100
-    if(initialLiquidity<100*2**64):
-        if(tradingFee<368934881474191032):
-            return(-5)
-    # minimum fee 1% with initial liquidity >= $100 and < $1000
-    if(initialLiquidity<1000*2**64):
-        if(tradingFee<184467440737095516):
-            return(-5)
-    # minimum fee 0.5% with initial liquidity < $2000
-    if(initialLiquidity<2000*2**64):
-        if(tradingFee<92233720368547758):
-            return(-5)
-    # minimum fee 0.4% with initial liquidity < $3000
-    if(initialLiquidity<3000*2**64):
-        if(tradingFee<73786976294838206):
-            return(-5)
-    # minimum fee 0.3% with initial liquidity < $4000
-    if(initialLiquidity<4000*2**64):
-        if(tradingFee<55340232221128654):
-            return(-5)
-    # minimum fee 0.2% with initial liquidity < $5000
-    if(initialLiquidity<5000*2**64):
-        if(tradingFee<36893488147419103):
-            return(-5)
-    # minimum fee 0.1% with initial liquidity >= $5000
-    if(initialLiquidity>=5000*2**64):
-        if(tradingFee<18446744073709551):
-            return(-5)
+    # send this to branch
+    creationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * 2**64 / tradingFee
 
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
     if(periodLength==0 or len(description)==0 or (initialLiquidity<50*2**64 and !BRANCHES.getOracleOnly(branch)) || alpha <= 2^57 || tradingFee < BRANCHES.getMinTradingFee(branch)):

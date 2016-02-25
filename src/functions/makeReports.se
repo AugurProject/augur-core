@@ -302,7 +302,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
 	if(numEvents < 30*2**64):
 		repConstant = 30*2**128/numEvents
 	# in fxp (2**128) == 2**192 / 2**64
-	reportingThreshold = 40*((-(267*volFraction**2)/(2*2**64) + (533*volFraction)/2 + 1*2**64)*repConstant/2**64) * (2**128)
+	reportingThreshold = BRANCHES.getBaseReporters(branch)*((-(267*volFraction**2)/(2*2**64) + (533*volFraction)/2 + 1*2**64)*repConstant/2**64) * (2**128)
 	return(reportingThreshold)
 
 #a^b=exp(b*ln(a))=e^(b*ln(a)).

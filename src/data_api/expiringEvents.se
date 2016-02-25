@@ -24,9 +24,16 @@ import events as EVENTS
 
 # [branchID][votingPeriod]
 # reporthash is [reporterID] = hash
-data EventsExpDates[][](numberEvents, numberRemoved, events[], totalRepReported, numEventsToReportOn, reportHash[][], periodVolume)
+data EventsExpDates[][](numberEvents, numberRemoved, events[], totalRepReported, numEventsToReportOn, reportHash[][], periodVolume, roundTwoNumEvents)
 
 data EventIDToIndex[][]
+	
+def getRoundTwo(branch, period):
+	return(self.EventsExpDates[branch][period].roundTwoNumEvents)
+	
+def addRoundTwo(branch, period):
+	self.EventsExpDates[branch][period].roundTwoNumEvents += 1
+	return(1)
 
 # With this function you can get the eventIDs and report on outcomes
 # @return all events in a branch and expiration period
@@ -48,7 +55,7 @@ def setNumEventsToReportOn(branch, expDateIndex):
 	# after voting has started
 	if(expDateIndex==BRANCHES.getVotePeriod(branch)):
 		numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
-		numberToReportOnEstimate = (numEvents-self.EventsExpDates[branch][expDateIndex].numberRemoved)*40
+		numberToReportOnEstimate = (numEvents-self.EventsExpDates[branch][expDateIndex].numberRemoved)*BRANCHES.getBaseReporters(branch)
 		self.EventsExpDates[branch][expDateIndex].numEventsToReportOn = numberToReportOnEstimate
 		return(1)
 	else:

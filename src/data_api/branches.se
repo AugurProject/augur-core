@@ -29,7 +29,7 @@ import cash as CASH
 # currentExpPeriod - 1 is what's up for reporting at any given time
 # should add a min initial liquidity property, for non pm branches it'd be low and .5*minInitialLiquidity is == fee for event
 # could also add an event fee parameter
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod)
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters)
 
 # first param is the branch, second param is the subcurrency contract
 data cash[][]
@@ -48,6 +48,13 @@ def init():
 # call once after uploading (externed method not allowed in init)
 def initDefaultBranch():
     return(CASH.initiateOwner(1010101))
+    
+def getBaseReporters(branch):
+	return(self.Branches[branch].baseReporters)
+	
+def setBaseReporters(branch, num):
+	self.Branches[branch].baseReporters = num
+	return(1)
 
 def getOracleOnly(branch):
 	return(self.Branches[branch].oracleOnly)
