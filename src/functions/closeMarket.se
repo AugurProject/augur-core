@@ -171,9 +171,7 @@ def claimProceeds(branch, market):
 ### Helper functions
 def returnLiquidity(branch, market):
     # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
-    # refund left over initial liquidity in market - half to market creator, other half to voters
-    # *unless* it's a scaled decision, refund all initial liquidity left over to market creator
-    # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
+    # refund left over initial liquidity in market, excess profits split
     initialLiquidity = INFO.getCreationFee(market)
     winningOutcomes = array(8)
     winningOutcomes = MARKETS.getWinningOutcomes(market, outitems=8)
@@ -191,25 +189,17 @@ def returnLiquidity(branch, market):
     liquidityRemaining = CASH.balance(market) - valueOfShares
     if(liquidityRemaining<0):
         return(-1)
-    # some scalar involved
-    if(winningOutcomes[1]):
-        if(liquidityRemaining > initialLiquidity):
-            # pay back liquidity, split up excess profits
-            CASH.addCash(creator, initialLiquidity)
-            CASH.subtractCash(market, initialLiquidity)
-            liquidityRemaining -= initialLiquidity
-            CASH.addCash(branch, liquidityRemaining/2)
-            CASH.addCash(creator, liquidityRemaining/2)
-            CASH.subtractCash(market, liquidityRemaining)
-        # send whatever's left of the initial liquidity to the creator
-        else:
-            CASH.addCash(creator, liquidityRemaining)
-            CASH.subtractCash(market, liquidityRemaining)
-    # no scalars
-    else:
-        # split up excess profits & liquidity
+    if(liquidityRemaining > initialLiquidity):
+        # pay back liquidity, split up excess profits
+        CASH.addCash(creator, initialLiquidity)
+        CASH.subtractCash(market, initialLiquidity)
+        liquidityRemaining -= initialLiquidity
         CASH.addCash(branch, liquidityRemaining/2)
         CASH.addCash(creator, liquidityRemaining/2)
+        CASH.subtractCash(market, liquidityRemaining)
+    # send whatever's left of the initial liquidity to the creator
+    else:
+        CASH.addCash(creator, liquidityRemaining)
         CASH.subtractCash(market, liquidityRemaining)
     return(1)
     
