@@ -213,15 +213,15 @@ def resolve(branch, event):
 
         if(fxpOutcome==2**63 || !ethical):
           # give event bond money to reporters
-          CASH.subtractCash(event, 42*2**64)
-          CASH.addCash(branch, 42*2**64)
+          CASH.subtractCash(event, EVENTS.getBond(event))
+          CASH.addCash(branch, EVENTS.getBond(event))
           # not ethical is same as .5 outcome
           fxpOutcome = 2**63
           EVENTS.setOutcome(event, fxpOutcome)
         else:
           # return bond
-          CASH.subtractCash(event, 42*2**64)
-          CASH.addCash(INFO.getCreator(event), 42*2**64)
+          CASH.subtractCash(event, EVENTS.getBond(event))
+          CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
 
     # scalar
     elif((2^64*EVENTS.getMaxValue(event) != YES || 2**64*EVENTS.getMinValue(event)!=NO) and EVENTS.getNumOutcomes(event) == 2):
@@ -234,16 +234,16 @@ def resolve(branch, event):
 
       if(fxpOutcome==2**63 || !ethical):
         # give event bond money to reporters
-        CASH.subtractCash(event, 42*2**64)
-        CASH.addCash(branch, 42*2**64)
+        CASH.subtractCash(event, EVENTS.getBond(event))
+        CASH.addCash(branch, EVENTS.getBond(event))
         # not ethical is same as .5 outcome
         fxpOutcome = 2**63
         EVENTS.setOutcome(event, fxpOutcome)
         EVENTS.setmode(event, fxpOutcome)
       else:
         # return bond
-        CASH.subtractCash(event, 42*2**64)
-        CASH.addCash(INFO.getCreator(event), 42*2**64)
+        CASH.subtractCash(event, EVENTS.getBond(event))
+        CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
 
     # categorical
     elif(EVENTS.getNumOutcomes(event)>2):
@@ -256,16 +256,16 @@ def resolve(branch, event):
 
       if(fxpOutcome==2**63 || !ethical):
         # give event bond money to reporters
-        CASH.subtractCash(event, 42*2**64)
-        CASH.addCash(branch, 42*2**64)
+        CASH.subtractCash(event, EVENTS.getBond(event))
+        CASH.addCash(branch, EVENTS.getBond(event))
         # not ethical is same as .5 outcome
         fxpOutcome = 2**63
         EVENTS.setOutcome(event, fxpOutcome)
         EVENTS.setmode(event, fxpOutcome)
       else:
         # return bond
-        CASH.subtractCash(event, 42*2**64)
-        CASH.addCash(INFO.getCreator(event), 42*2**64)
+        CASH.subtractCash(event, EVENTS.getBond(event))
+        CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
     return(1)
     
 penalizeWrong for backstop 1:

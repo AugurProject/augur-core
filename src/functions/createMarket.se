@@ -53,6 +53,7 @@ event creationBlock(market:indexed)
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, forkSelection):
     periodLength = BRANCHES.getPeriodLength(branch)
     # send this to branch
+    # min initial liquidity is what?
     creationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * 2**64 / tradingFee
 
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
@@ -86,12 +87,16 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         futurePeriod = expirationDate / periodLength
         if(expirationDate < block.number):
             return(-7)    
+        if (EVENTS.getEventBranch(event) != branch || !INFO.getCreator(event)):
+            return(-1)
         EXPEVENTS.addEvent(branch, futurePeriod, event)
         if(expirationDate > tradingPeriod):
             tradingPeriod = expirationDate
         eventsConcat += event
-        if (EVENTS.getEventBranch(event) != branch || !INFO.getCreator(event)):
-            return(-1)
+        if(validitybondnotpaid):
+            pay validity bond
+            validity_bond =  6 * creationFee * (1 + Number_of_markets_created_last_24h) / (1 + Number_of_markets_created_last_reporting_period)
+
         #scalars
         maxValue = EVENTS.getMaxValue(event)
         minValue = EVENTS.getMinValue(event)
@@ -146,6 +151,8 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         while i < len(events):
             EVENTS.addMarket(events[i], marketID)
             i += 1
+        # need to add the sets of orders otherwise market can't be created
+        self.addsetsoforders()
         return(marketID)
 
     # revert shares bought and other variables
@@ -156,6 +163,26 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
             v += 1
         MARKETS.initialLiquiditySetup(marketID, 0, 0, 0)
         return(-4)
+
+# bids have amount, price for each outcome
+# asks have amount, price for each outcome
+def addSetOfOrders(bids: arr, asks: arr):
+    # Force initial liquidity to add up to 1+spread for each order on each outcome of a MM’s order schedule to prevent hiding from risk
+    
+    
+    # force num shares on each outcome offered to be equal
+    
+    # do above 2 for both bids and asks
+    
+    # ensure that bids and asks for each side's outcome add up to 1 + spread and no more
+    
+    #Force schedule to be no worse than ls-lmsr [needs adj. priors for ls-lmsr calc to do this]
+
+# call for each set in a schedule to adjust a whole schedule of orders
+def adjustSetOfOrders():
+    #Don't allow initial liquidity to be removed [but can be increased]
+    if(amountOfLiquidity < current):
+        return(0)
 
 # todo: needs to comply w/ new trading fee rules
 # perhaps don't allow raising of trading fee

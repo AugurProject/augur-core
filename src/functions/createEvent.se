@@ -44,7 +44,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         eventinfo[1] = branch                                       #branchID
         eventinfo[2] = expDate                                      #expiration date
         eventinfo[3] = tx.origin                                    #creator address
-        eventinfo[4] = 42*2^64                                      #creation fee
+        eventinfo[4] = periodLength
         eventinfo[5] = minValue                                     #minimum outcome value
         eventinfo[6] = maxValue                                     #maximum outcome value
         eventinfo[7] = numOutcomes                                  #number of outcomes
@@ -61,8 +61,8 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         participationFactor = 1
     CASH.initiateOwner(eventID)
     # send fee and bond
-    if CASH.balance(tx.origin) >= (42*2^64 + participationFactor*45):
-        if !INFO.getCreator(eventID) && !EVENTS.getEventBranch(eventID) && CASH.send(eventID, 42*2^64) && CASH.send(branch, participationFactor*45):
+    if CASH.balance(tx.origin) >= (validity_bond + participationFactor*45):
+        if !INFO.getCreator(eventID) && !EVENTS.getEventBranch(eventID) && CASH.send(eventID, validity_bond) && CASH.send(branch, participationFactor*45):
             # see which future period it expires in && put the event in that bin
             # event voting periods - expDate / periodLength gives you the voting period #
             futurePeriod = expDate / periodLength

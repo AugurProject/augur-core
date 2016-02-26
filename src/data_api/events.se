@@ -27,16 +27,17 @@ import branches as BRANCHES
 # S&P 500 scalar would be say 0 && 4700, respectively
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, mode, uncaughtOutcome, final, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught, pushedBack)
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, mode, uncaughtOutcome, final, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught, pushedBack, bond)
 
 def getEventInfo(event):
-    info = array(6)
+    info = array(7)
     info[0] = self.Events[event].branch
     info[1] = self.Events[event].expirationDate
     info[2] = self.Events[event].outcome
     info[3] = self.Events[event].minValue
     info[4] = self.Events[event].maxValue
     info[5] = self.Events[event].numOutcomes
+    info[6] = self.Events[event].bond
     return(info: arr)
 
 def getEventBranch(event):
@@ -104,10 +105,17 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes)
 	else:
 		return(0)
 
+def setBond(event, bond):
+	self.Events[ID].bond = bond
+	return(1)
+
 def addMarket(event, marketID):
 	self.Events[event].markets[self.Events[event].numMarkets] = marketID
 	self.Events[event].numMarkets += 1
 	return(1)
+
+def getBond(event):
+	return(self.Events[event].bond)
 
 def getMarkets(event):
 	i = 0
