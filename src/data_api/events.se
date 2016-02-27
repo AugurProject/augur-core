@@ -29,6 +29,8 @@ import branches as BRANCHES
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
 data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, mode, uncaughtOutcome, final, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught, pushedBack, bond)
 
+data past24Hours[]
+
 def getEventInfo(event):
     info = array(7)
     info[0] = self.Events[event].branch
@@ -39,6 +41,13 @@ def getEventInfo(event):
     info[5] = self.Events[event].numOutcomes
     info[6] = self.Events[event].bond
     return(info: arr)
+
+def getPast24(period):
+	return(self.past24Hours[period])
+
+def addPast24(period):
+	self.past24Hours[period] += 1
+	return(1)
 
 def getEventBranch(event):
 	return(self.Events[event].branch)
