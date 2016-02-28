@@ -157,7 +157,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
             EVENTS.addMarket(events[i], marketID)
             i += 1
         # need to add the sets of orders otherwise market can't be created
-        self.addsetsoforders()
+        #self.addsetsoforders()
         return(marketID)
 
     # revert shares bought and other variables
@@ -173,7 +173,7 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
 # asks have amount, price for each outcome
 def addSetOfOrders(bids: arr, asks: arr):
     # Force initial liquidity to add up to 1+spread for each order on each outcome of a MM’s order schedule to prevent hiding from risk
-    
+    return(1)
     
     # force num shares on each outcome offered to be equal
     
@@ -188,6 +188,8 @@ def adjustSetOfOrders():
     #Don't allow initial liquidity to be removed [but can be increased]
     if(amountOfLiquidity < current):
         return(0)
+    else:
+        return(1)
 
 # todo: needs to comply w/ new trading fee rules
 # perhaps don't allow raising of trading fee

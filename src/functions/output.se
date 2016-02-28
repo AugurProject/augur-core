@@ -14,7 +14,7 @@ def init():
     self.Reporting[1010101].totalRep += 47*2^64
     self.Branches[1010101].currentVotePeriod = (block.number / 100) - 1
     self.Branches[1010101].periodLength = 100
-    self.Branches[1010101].minTradingFee = 2^57
+    self.Branches[1010101].minTradingFee = 2^54
     self.branchListCount = 1
     self.branchList[0] = 1010101
     # test initial funds
@@ -56,7 +56,9 @@ macro TRADE_ALREADY_EXISTS: 21
 macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participantNumber):
     trade = [$type, $market, $amount, $price, msg.sender, block.number, $outcome]
     trade_id = sha256(trade, items=7)
-
+    trading_fee = self.getTradingFee($market)
+    cumScale = self.getCumScale($market)
+    fee = fee_percent(trading_fee, $price, $amount, cumScale)
     # Save trade
     if !self.getID(trade_id):
         self.saveTrade(trade_id, $type, $market, $amount, $price, msg.sender, $outcome)
@@ -67,10 +69,14 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
         # Update available and trading amounts for asks
         if $type == ASK:
             self.modifyParticipantShares($branch, $market, $participantNumber, $outcome, -$amount)
+            self.send($branch, ($amount * $price / 2**64 * fee /2**64)/2)
+            self.send(self.getCreator($market), ($amount * $price / 2**64 * fee /2**64)/2)
+
         # Send / escrow cash for bids
         if $type == BID:
             self.send($market, $amount * $price / 2**64)
-
+            self.send($branch, ($amount * $price / 2**64 * fee /2**64)/2)
+            self.send(self.getCreator($market), ($amount * $price / 2**64 * fee /2**64)/2)
     else:
         return(TRADE_ALREADY_EXISTS)
 
@@ -81,6 +87,7 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
 #
 # Cancellation
 #
+# 200k gas
 def cancel(trade_id):
     # user can cancel anytime
     # Get trade
@@ -96,6 +103,10 @@ def cancel(trade_id):
     # Get market
     market = trade[2]
     outcome = trade[8]
+    branch = self.getBranchID(market)
+    trading_fee = self.getTradingFee(market)
+    cumScale = self.getCumScale(market)
+    fee = fee_percent(trading_fee, price, amount, cumScale)
     # Check the owner
     if msg.sender == owner:
         # Clear the trade first
@@ -105,12 +116,19 @@ def cancel(trade_id):
         if type == BID:
             # cash refund
             self.subtractCash(market, amount * price / 2**64)
-            self.addCash(msg.sender, amount * price / 2**64)
+            self.subtractCash(branch, (amount * price / 2**64 * fee / 2**64)/2)
+            self.subtractCash(self.getCreator(market), (amount * price / 2**64 * fee / 2**64)/2)
+            self.addCash(msg.sender, (amount * price / 2**64 + (amount * price / 2**64 * fee / 2**64)))
+
         elif type == ASK:
             # shares refund
             participantNumber = self.getParticipantNumber(market, msg.sender)
             branch = self.getBranchID(market)
             self.modifyParticipantShares(branch, market, participantNumber, outcome, amount)
+            self.subtractCash(branch, (amount * price / 2**64 * fee / 2**64)/2)
+            self.subtractCash(self.getCreator(market), (amount * price / 2**64 * fee / 2**64)/2)
+            self.addCash(msg.sender, (amount * price / 2**64 * fee / 2**64))
+
         
         # Log cancellation
         log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type)
@@ -133,7 +151,7 @@ macro remove_trade($trade_id, $market_id):
 #
 # costs 532k
 def buy(amount, price, market, outcome):
-    if(amount <= 0 or price <= 0 or market==0):
+    if(amount <= 0 or price <= 0 or market==0 or price*amount < 2**64):
         return(-1)
     branch = self.getBranchID(market)
     if(self.getOracleOnly(branch)):
@@ -144,14 +162,17 @@ def buy(amount, price, market, outcome):
     # if participant doesn't exist in market, add them
     if(tx.origin != self.getParticipantID(market, participantNumber)):
         participantNumber = self.addParticipant(market, tx.origin)
-    if(self.balance(tx.origin) < (amount * price / 2**64 *(self.getTradingFee(market) + 2^64)/2^64)):
+    trading_fee = self.getTradingFee(market)
+    cumScale = self.getCumScale(market)
+    fee = fee_percent(trading_fee, price, amount, cumScale)
+    if(self.balance(tx.origin) < (amount * price / 2**64 *(fee + 2^64)/2^64)):
         return(-4)
     save_trade(BID, amount, price, market, outcome, branch, participantNumber)
     return(FAILURE)
 
 # cost 532k
 def sell(amount, price, market_id, outcome):
-    if(amount <= 0 or price <= 0 or market_id==0):
+    if(amount <= 0 or price <= 0 or market_id==0 or price*amount < 2**64):
         return(-1)
     branch = self.getBranchID(market)
     if(self.getOracleOnly(branch)):
@@ -162,6 +183,11 @@ def sell(amount, price, market_id, outcome):
     if (self.getParticipantID(market_id, participantNumber) != tx.origin):
         return(-3)
     if (self.getParticipantSharesPurchased(market_id, participantNumber, outcome) < amount):
+        return(-4)
+    trading_fee = self.getTradingFee(market_id)
+    cumScale = self.getCumScale(market_id)
+    fee = fee_percent(trading_fee, price, amount, cumScale)
+    if(self.balance(tx.origin) < (amount * price / 2**64 *fee/2^64)):
         return(-4)
     save_trade(ASK, amount, price, market_id, outcome, branch, participantNumber)
     return(FAILURE)
@@ -212,6 +238,11 @@ def trade(max_value, max_amount, trade_ids:arr):
         owner = trade[5]
         outcome = trade[8]
         branch = self.getBranchID(market_id)
+        creator = self.getCreator(market_id)
+        
+        trading_fee = self.getTradingFee(market_id)
+        cumScale = self.getCumScale(market_id)
+        fee = fee_percent(trading_fee, price, amount, cumScale)
 
         # Fill buy order
         if type == BID:
@@ -219,7 +250,6 @@ def trade(max_value, max_amount, trade_ids:arr):
             participantNumber = self.getParticipantNumber(market_id, tx.origin)
             balance = self.getParticipantSharesPurchased(market_id, participantNumber, outcome)
             if balance > 0:
-
                 if (self.getParticipantID(market_id, participantNumber) != tx.origin):
                     return(-3)
                 # Determine fill amount
@@ -235,11 +265,15 @@ def trade(max_value, max_amount, trade_ids:arr):
                 self.modifyParticipantShares(branch, market_id, msg.sender, outcome, -fill)
                 self.modifyParticipantShares(branch, market_id, owner, outcome, fill)
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
-                self.addCash(msg.sender, value)
+                fee = value * fee / 2**64
+                self.addCash(msg.sender, value-fee)
+                self.addCash(branch, fee/2)
+                self.addCash(creator, fee/2)
                 self.subtractCash(market_id, value)
+                # seller then pays a fee here
                 # Update max_amount
                 max_amount -= fill
-                # Log transaction todo ask/bid
+                # Log transaction
                 log(type=log_fill_tx, market_id, msg.sender, owner, ASK, price, fill, trade_id, outcome)
             else:
                 return(INSUFFICIENT_BALANCE)
@@ -251,6 +285,9 @@ def trade(max_value, max_amount, trade_ids:arr):
                 trade_value = amount * price / 2**64
                 # Determine fill value
                 value = min(max_value, trade_value)
+                fee = trade_value * fee / 2**64
+                if(self.balance(tx.origin) < (trade_value + fee)):
+                    return(INSUFFICIENT_BALANCE)
                 # Calculate fill amount, update trade amount or remove filled trade
                 if value < trade_value:
                     fill = value*2**64 / price
@@ -264,9 +301,12 @@ def trade(max_value, max_amount, trade_ids:arr):
                     participantNumber = self.addParticipant(market_id, tx.origin)
                 # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
                 self.modifyParticipantShares(branch, market_id, msg.sender, outcome, fill)
-                # Transfer cash from user to person who has ask order
+                # Transfer cash from user to person who has ask order and pay fee to branch and market creator
+                cost = value + fee
                 self.addCash(owner, value)
-                self.subtractCash(msg.sender, value)
+                self.subtractCash(msg.sender, cost)
+                self.addCash(branch, fee/2)
+                self.addCash(creator, fee/2)
                 # Update max_value
                 max_value -= value
                 # Log transaction
@@ -308,7 +348,7 @@ def buyCompleteSets(branch, market, amount):
     if ((self.getVotePeriod(branch)>self.getTradingPeriod(market) && !pushedBack) || self.getBranchID(market) != branch):
         return(-1)
     price = amount
-    if(self.balance(tx.origin) < price*(self.getTradingFee(market) + 2^64)/2^64):
+    if(self.balance(tx.origin) < price):
         return(-3)
         
     participantNumber = self.getParticipantNumber(market, tx.origin)
@@ -325,11 +365,6 @@ def buyCompleteSets(branch, market, amount):
     # send money from user acc. to market address/account
     # cost for shares
     self.send(market, price)
-    # half of fees to market creator
-    fee = self.getTradingFee(market)*price/2^64
-    self.send(self.getCreator(market), fee/2)
-    # other half go to branch
-    self.send(branch, fee/2)
     return(1)
 
     
@@ -377,14 +412,11 @@ def sellCompleteSets(branch, market, amount):
     
     # send bitcoin from the market to the user acc.
     self.subtractCash(market, price)
-    fee = self.getTradingFee(market)*price/2^64
-    # half of fees go to market creator
-    self.addCash(self.getCreator(market), fee/2)
-    # half go to branch
-    self.addCash(branch, fee/2)
-    price -= fee
     self.addCash(tx.origin, price)
     return(1)
+    
+macro fee_percent($market_fee, $price, $amount, $cumScale):
+    4 * $market_fee * $price / (2**64*$cumScale) * (2**64-$price/$cumScale) / 2**64
 # first param is the market, second param is the subcurrency contract
 data cash[][]
 
@@ -524,9 +556,7 @@ def claimProceeds(branch, market):
 ### Helper functions
 def returnLiquidity(branch, market):
     # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
-    # refund left over initial liquidity in market - half to market creator, other half to voters
-    # *unless* it's a scaled decision, refund all initial liquidity left over to market creator
-    # rest of money available in market + the additional trading fees divy up amongst reporters and market creator
+    # refund left over initial liquidity in market, excess profits split
     initialLiquidity = self.getCreationFee(market)
     winningOutcomes = array(8)
     winningOutcomes = self.getWinningOutcomes(market, outitems=8)
@@ -544,25 +574,17 @@ def returnLiquidity(branch, market):
     liquidityRemaining = self.balance(market) - valueOfShares
     if(liquidityRemaining<0):
         return(-1)
-    # some scalar involved
-    if(winningOutcomes[1]):
-        if(liquidityRemaining > initialLiquidity):
-            # pay back liquidity, split up excess profits
-            self.addCash(creator, initialLiquidity)
-            self.subtractCash(market, initialLiquidity)
-            liquidityRemaining -= initialLiquidity
-            self.addCash(branch, liquidityRemaining/2)
-            self.addCash(creator, liquidityRemaining/2)
-            self.subtractCash(market, liquidityRemaining)
-        # send whatever's left of the initial liquidity to the creator
-        else:
-            self.addCash(creator, liquidityRemaining)
-            self.subtractCash(market, liquidityRemaining)
-    # no scalars
-    else:
-        # split up excess profits & liquidity
+    if(liquidityRemaining > initialLiquidity):
+        # pay back liquidity, split up excess profits
+        self.addCash(creator, initialLiquidity)
+        self.subtractCash(market, initialLiquidity)
+        liquidityRemaining -= initialLiquidity
         self.addCash(branch, liquidityRemaining/2)
         self.addCash(creator, liquidityRemaining/2)
+        self.subtractCash(market, liquidityRemaining)
+    # send whatever's left of the initial liquidity to the creator
+    else:
+        self.addCash(creator, liquidityRemaining)
         self.subtractCash(market, liquidityRemaining)
     return(1)
     
@@ -626,7 +648,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         eventinfo[1] = branch                                       #branchID
         eventinfo[2] = expDate                                      #expiration date
         eventinfo[3] = tx.origin                                    #creator address
-        eventinfo[4] = 42*2^64                                      #creation fee
+        eventinfo[4] = periodLength
         eventinfo[5] = minValue                                     #minimum outcome value
         eventinfo[6] = maxValue                                     #maximum outcome value
         eventinfo[7] = numOutcomes                                  #number of outcomes
@@ -643,8 +665,8 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         participationFactor = 1
     self.initiateOwner(eventID)
     # send fee and bond
-    if self.balance(tx.origin) >= (42*2^64 + participationFactor*45):
-        if !self.getCreator(eventID) && !self.getEventBranch(eventID) && self.send(eventID, 42*2^64) && self.send(branch, participationFactor*45):
+    if self.balance(tx.origin) >= (participationFactor*45):
+        if !self.getCreator(eventID) && !self.getEventBranch(eventID) && self.send(branch, participationFactor*45):
             # see which future period it expires in && put the event in that bin
             # event voting periods - expDate / periodLength gives you the voting period #
             futurePeriod = expDate / periodLength
@@ -656,7 +678,6 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
             return(0)
     else:
         return(0)
-
 # # of winningOutcomes is 2
 def twoOutcomes(market, winningOutcome: arr, events: arr):
     # look for the scalar
@@ -727,7 +748,7 @@ def valueCalcTwo(market, winningOutcome: arr, events: arr):
     value = sharesTotal1*cumScale*pricePerShare1/2**64 + sharesTotal2*cumScale*pricePerShare2/2**64
     return(value)
 # branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID
-data branches[](submittedHash[][], numReportsActual[][], hasReported[][](reported[]), beforeRep[][], afterRep[][], report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], reportedPeriod[][], firstReport[])
+data branches[](submittedHash[][], numReportsActual[][], hasReported[][](reported[]), beforeRep[][], afterRep[][], report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], reportedPeriod[][], firstReport[], periodDormantRep[][])
 data reportable[][]
 data mode_items[][](report_value[], current_mode, current_mode_items)
 
@@ -799,6 +820,13 @@ def setAfterRep(branch, period, rep):
 	self.branches[branch].afterRep[period][tx.origin] = rep
 	return(rep)
 	
+def getPeriodDormantRep(branch, period):
+	return(self.branches[branch].periodDormantRep[period][tx.origin])
+
+def setPeriodDormantRep(branch, period, rep):
+	self.branches[branch].periodDormantRep[period][tx.origin] = rep
+	return(rep)
+
 def getNumReportsActual(branch, votePeriod):
 	return(self.branches[branch].numReportsActual[tx.origin][votePeriod])
 
@@ -962,11 +990,13 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
 			if(!self.branches[branch].reportedPeriod[votePeriod][tx.origin]):
 				repReported = self.getTotalRepReported(branch)
 				balance = self.getRepBalance(branch, tx.origin)
+				dormantRep = self.getDormantRepBalance(branch, tx.origin)
 				repReported += balance
 				self.setTotalRepReported(branch, votePeriod, repReported)
 				#Record rep at start of report period
 				self.branches[branch].beforeRep[votePeriod][tx.origin] = balance
 				self.branches[branch].afterRep[votePeriod][tx.origin] = balance
+				self.branches[branch].periodDormantRep[period][tx.origin] = dormantRep
 				self.branches[branch].reportedPeriod[votePeriod][tx.origin] = 1
 			return(1)
 		return(-2)
@@ -1000,7 +1030,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
 	if(numEvents < 30*2**64):
 		repConstant = 30*2**128/numEvents
 	# in fxp (2**128) == 2**192 / 2**64
-	reportingThreshold = 40*((-(267*volFraction**2)/(2*2**64) + (533*volFraction)/2 + 1*2**64)*repConstant/2**64) * (2**128)
+	reportingThreshold = self.getBaseReporters(branch)*((-(267*volFraction**2)/(2*2**64) + (533*volFraction)/2 + 1*2**64)*repConstant/2**64) * (2**128)
 	return(reportingThreshold)
 
 #a^b=exp(b*ln(a))=e^(b*ln(a)).
@@ -1112,35 +1142,9 @@ event creationBlock(market:indexed)
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
 def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, forkSelection):
     periodLength = self.getPeriodLength(branch)
-    # liquidity is just buying complete sets then selling at diff. prices
-    # minimum fee 2% with initial liquidity >= $50 and < $100
-    if(initialLiquidity<100*2**64):
-        if(tradingFee<368934881474191032):
-            return(-5)
-    # minimum fee 1% with initial liquidity >= $100 and < $1000
-    if(initialLiquidity<1000*2**64):
-        if(tradingFee<184467440737095516):
-            return(-5)
-    # minimum fee 0.5% with initial liquidity < $2000
-    if(initialLiquidity<2000*2**64):
-        if(tradingFee<92233720368547758):
-            return(-5)
-    # minimum fee 0.4% with initial liquidity < $3000
-    if(initialLiquidity<3000*2**64):
-        if(tradingFee<73786976294838206):
-            return(-5)
-    # minimum fee 0.3% with initial liquidity < $4000
-    if(initialLiquidity<4000*2**64):
-        if(tradingFee<55340232221128654):
-            return(-5)
-    # minimum fee 0.2% with initial liquidity < $5000
-    if(initialLiquidity<5000*2**64):
-        if(tradingFee<36893488147419103):
-            return(-5)
-    # minimum fee 0.1% with initial liquidity >= $5000
-    if(initialLiquidity>=5000*2**64):
-        if(tradingFee<18446744073709551):
-            return(-5)
+    # send this to branch
+    # min initial liquidity is what?
+    creationFee = 1106804644422573056 * self.getBaseReporters(branch) * 2**64 / tradingFee
 
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
     if(periodLength==0 or len(description)==0 or (initialLiquidity<50*2**64 and !self.getOracleOnly(branch)) || alpha <= 2^57 || tradingFee < self.getMinTradingFee(branch)):
@@ -1173,12 +1177,21 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         futurePeriod = expirationDate / periodLength
         if(expirationDate < block.number):
             return(-7)    
+        if (self.getEventBranch(event) != branch || !self.getCreator(event)):
+            return(-1)
         self.addEvent(branch, futurePeriod, event)
         if(expirationDate > tradingPeriod):
             tradingPeriod = expirationDate
         eventsConcat += event
-        if (self.getEventBranch(event) != branch || !self.getCreator(event)):
-            return(-1)
+        if(!self.getBond(event)):
+            # pay validity bond
+            24period = block.number / 7200
+            validity_bond =  6 * creationFee * 2 * (1 + self.getPast24(24period-1)) / (1 + self.getNumberEvents(branch, self.getVotePeriod(branch)))
+            if(!self.send(eventID, validity_bond)):
+                return(-4)
+            self.setBond(event, validity_bond)
+            self.addPast24(24period)
+
         #scalars
         maxValue = self.getMaxValue(event)
         minValue = self.getMinValue(event)
@@ -1233,6 +1246,8 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
         while i < len(events):
             self.addMarket(events[i], marketID)
             i += 1
+        # need to add the sets of orders otherwise market can't be created
+        #self.addsetsoforders()
         return(marketID)
 
     # revert shares bought and other variables
@@ -1243,6 +1258,28 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
             v += 1
         self.initialLiquiditySetup(marketID, 0, 0, 0)
         return(-4)
+
+# bids have amount, price for each outcome
+# asks have amount, price for each outcome
+def addSetOfOrders(bids: arr, asks: arr):
+    # Force initial liquidity to add up to 1+spread for each order on each outcome of a MM’s order schedule to prevent hiding from risk
+    return(1)
+    
+    # force num shares on each outcome offered to be equal
+    
+    # do above 2 for both bids and asks
+    
+    # ensure that bids and asks for each side's outcome add up to 1 + spread and no more
+    
+    #Force schedule to be no worse than ls-lmsr [needs adj. priors for ls-lmsr calc to do this]
+
+# call for each set in a schedule to adjust a whole schedule of orders
+def adjustSetOfOrders():
+    #Don't allow initial liquidity to be removed [but can be increased]
+    if(amountOfLiquidity < current):
+        return(0)
+    else:
+        return(1)
 
 # todo: needs to comply w/ new trading fee rules
 # perhaps don't allow raising of trading fee
@@ -1521,9 +1558,9 @@ macro catch($x):
         BAD
 
 macro ethic_catch($x):
-    if($x < 2^63):
+    if($x < (2^63 - CATCH_TOLERANCE)):
         0
-    elif($x > 2^63):
+    elif($x > (2^63 + CATCH_TOLERANCE)):
         2^64
     else:
         0
@@ -1582,15 +1619,15 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
         return(-4)
     if((fxpOutcome==3*2**63 && pushedBack) || !ethical):
         # give event bond money to reporters
-        self.subtractCash(event, 42*2**64)
-        self.addCash(branch, 42*2**64)
+        self.subtractCash(event, self.getBond(event))
+        self.addCash(branch, self.getBond(event))
         # not ethical is same as .5 outcome
         fxpOutcome = 3*2**63
         self.setOutcome(event, fxpOutcome)
     else:
         # return bond
-        self.subtractCash(event, 42*2**64)
-        self.addCash(self.getCreator(event), 42*2**64)
+        self.subtractCash(event, self.getBond(event))
+        self.addCash(self.getCreator(event), self.getBond(event))
         if(self.getPushedForward(market)):
             self.addCash(self.getBondsMan(market), self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
             self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
@@ -1647,16 +1684,16 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         return(-4)
     if((fxpOutcome==3*2**63 && pushedBack) || !ethical):
         # give event bond money to reporters
-        self.subtractCash(event, 42*2**64)
-        self.addCash(branch, 42*2**64)
+        self.subtractCash(event, self.getBond(event))
+        self.addCash(branch, self.getBond(event))
         # not ethical is same as .5 outcome
         fxpOutcome = 3*2**63
         self.setOutcome(event, fxpOutcome)
         self.setmode(event, fxpOutcome)
     else:
         # return bond
-        self.subtractCash(event, 42*2**64)
-        self.addCash(self.getCreator(event), 42*2**64)
+        self.subtractCash(event, self.getBond(event))
+        self.addCash(self.getCreator(event), self.getBond(event))
         if(self.getPushedForward(market)):
             self.addCash(self.getBondsMan(market), self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
             self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
@@ -1778,6 +1815,7 @@ def addMetadata(market, ipfsHash):
 # round two consensus data
 data bondPaid[]
 data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, final)
+data baseReportersLastPeriod
 
 # branch takes a branchID
     # denominator takes a vote period
@@ -1823,12 +1861,12 @@ def penalizeWrong(branch, event):
         #184467440737095520 == 0.01 in fxp
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
             #if(scalar(event) or categorical(event) or outcome==3*2**64):
-                #p = -(abs(reportValue - self.getmode(event))/2) + 2**64
+                #p = -(abs(reportValue - outcome)/2) + 2**64
             newRep = oldRep*(2*p - 2**64)/2**64
         # right
         else:
             #if(scalar(event) or categorical(event) or outcome==3*2**64):
-                #p = -(abs(reportValue - self.getmode(event))/2) + 2**64
+                #p = -(abs(reportValue - outcome)/2) + 2**64
             newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
         #smoothedRep = oldRep*.8 + newRep*.2
         smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
@@ -1877,10 +1915,10 @@ def penalizeNotEnoughReports(branch):
     logOutput = self.fx_log(repConstant)
     exp = self.fx_exp(22136092888451461120*logOutput/2**64)
     exp += 18446744073709552
-    total = exp*40
+    total = exp*self.baseReportersLastPeriod
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
     if(total > 2**64):
-        numEvents = (self.getNumEventsToReportOn(branch, votePeriod)/40)*2**64
+        numEvents = (self.getNumEventsToReportOn(branch, votePeriod)/self.baseReportersLastPeriod)*2**64
     # what _if_ there are actually <30 events in augur?
         # perhaps we should have all reporters in that period report on all of them
     numReportsActual = self.getNumReportsActual(branch, lastPeriod)
@@ -1997,7 +2035,13 @@ def slashRep(branch, salt, report, reporter, eventID):
 def incrementPeriodAfterReporting(branch):
     # do this after reporting is finished
     if(periodOver(branch)):
+        period = block.number / self.getPeriodLength($branch) - 1
+        lastPeriod = period - 1
+        percentAppealed = (self.getRoundTwo(branch, period)*2**64/self.getNumberEvents(branch, period) + self.getRoundTwo(branch, lastPeriod)*2**64/self.getNumberEvents(branch, lastPeriod)) / 2
         self.incrementPeriod(branch)
+        base_reporter_quantity = (3*2**64 + ((333*2**64 * Percent_Appealed/2**64)**3 / 2**128))/2**64
+        self.baseReportersLastPeriod = self.getBaseReporters(branch)
+        self.setBaseReporters(branch, base_reporter_quantity)
         return(1)
     else:
         return(0)
@@ -2496,23 +2540,24 @@ def setInitialReporters(parent, branchID):
     self.Reporting[branchID].reputation[0].reporterID = branchID
     return(1)
 
-#def claimInitialRep(parent, branchID):
-    # have 1 month to claim
-#    if(self.repIDToIndex(branchID, msg.sender)==0 && block.number < (self.getCreationDate(branchID) + 216000)):
-#        i = self.Reporting[branchID].numberReporters
- #       rep = self.getBeforeRep(parent, self.getParentPeriod(branchID))
-  #      reporterID = msg.sender
-   #     self.Reporting[branchID].reputation[i].reporterID = reporterID
-    #    self.Reporting[branchID].reputation[i].repValue = rep
-     #   self.Reporting[branchID].repIDtoIndex[reporterID] = i
-      #  self.Reporting[branchID].dormantRep[i].reporterID = reporterID
-       # self.Reporting[branchID].dormantRep[i].repValue = self.getDormantRep(parent, self.getParentPeriod(branchID))
-        #self.Reporting[branchID].numberReporters += 1
-        #self.Reporting[branchID].totalRep += rep
-        #return(1)
-    #else:
+def claimInitialRep(parent, branchID):
+     # have 1 month to claim
+    if(self.repIDToIndex(branchID, msg.sender)==0 && block.number < (self.getCreationDate(branchID) + 216000)):
+        i = self.Reporting[branchID].numberReporters
+        rep = self.getBeforeRep(parent, self.getParentPeriod(branchID))
+        reporterID = msg.sender
+        self.Reporting[branchID].reputation[i].reporterID = reporterID
+        self.Reporting[branchID].reputation[i].repValue = rep
+        self.Reporting[branchID].repIDtoIndex[reporterID] = i
+        self.Reporting[branchID].dormantRep[i].reporterID = reporterID
+        dormantRep = self.getPeriodDormantRep(parent, self.getParentPeriod(branchID))
+        self.Reporting[branchID].dormantRep[i].repValue = dormantRep
+        self.Reporting[branchID].numberReporters += 1
+        self.Reporting[branchID].totalRep += rep + dormantRep
+        return(1)
+    else:
         # already claimed or too late
-     #   return(0)
+        return(0)
 
 def addReporter(branch, sender):
     #if(!self.whitelist.check(msg.sender)):
@@ -2685,9 +2730,16 @@ def sqrt(n):
     return val
 # [branchID][votingPeriod]
 # reporthash is [reporterID] = hash
-data EventsExpDates[][](numberEvents, numberRemoved, events[], totalRepReported, numEventsToReportOn, reportHash[][], periodVolume)
+data EventsExpDates[][](numberEvents, numberRemoved, events[], totalRepReported, numEventsToReportOn, reportHash[][], periodVolume, roundTwoNumEvents)
 
 data EventIDToIndex[][]
+	
+def getRoundTwo(branch, period):
+	return(self.EventsExpDates[branch][period].roundTwoNumEvents)
+	
+def addRoundTwo(branch, period):
+	self.EventsExpDates[branch][period].roundTwoNumEvents += 1
+	return(1)
 
 # With this function you can get the eventIDs and report on outcomes
 # @return all events in a branch and expiration period
@@ -2709,7 +2761,7 @@ def setNumEventsToReportOn(branch, expDateIndex):
 	# after voting has started
 	if(expDateIndex==self.getVotePeriod(branch)):
 		numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
-		numberToReportOnEstimate = (numEvents-self.EventsExpDates[branch][expDateIndex].numberRemoved)*40
+		numberToReportOnEstimate = (numEvents-self.EventsExpDates[branch][expDateIndex].numberRemoved)*self.getBaseReporters(branch)
 		self.EventsExpDates[branch][expDateIndex].numEventsToReportOn = numberToReportOnEstimate
 		return(1)
 	else:
@@ -2783,7 +2835,7 @@ def moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod):
 # currentExpPeriod - 1 is what's up for reporting at any given time
 # should add a min initial liquidity property, for non pm branches it'd be low and .5*minInitialLiquidity is == fee for event
 # could also add an event fee parameter
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod)
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters)
 
 # first param is the branch, second param is the subcurrency contract
 data cash[][]
@@ -2796,6 +2848,13 @@ data branchListCount
 # call once after uploading (externed method not allowed in init)
 def initDefaultBranch():
     return(self.initiateOwner(1010101))
+    
+def getBaseReporters(branch):
+	return(self.Branches[branch].baseReporters)
+	
+def setBaseReporters(branch, num):
+	self.Branches[branch].baseReporters = num
+	return(1)
 
 def getOracleOnly(branch):
 	return(self.Branches[branch].oracleOnly)
@@ -3312,17 +3371,27 @@ def set_last_price(market_id, price):
 # S&P 500 scalar would be say 0 && 4700, respectively
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, mode, uncaughtOutcome, final, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught, pushedBack)
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, mode, uncaughtOutcome, final, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught, pushedBack, bond)
+
+data past24Hours[]
 
 def getEventInfo(event):
-    info = array(6)
+    info = array(7)
     info[0] = self.Events[event].branch
     info[1] = self.Events[event].expirationDate
     info[2] = self.Events[event].outcome
     info[3] = self.Events[event].minValue
     info[4] = self.Events[event].maxValue
     info[5] = self.Events[event].numOutcomes
+    info[6] = self.Events[event].bond
     return(info: arr)
+
+def getPast24(period):
+	return(self.past24Hours[period])
+
+def addPast24(period):
+	self.past24Hours[period] += 1
+	return(1)
 
 def getEventBranch(event):
 	return(self.Events[event].branch)
@@ -3389,10 +3458,17 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes)
 	else:
 		return(0)
 
+def setBond(event, bond):
+	self.Events[ID].bond = bond
+	return(1)
+
 def addMarket(event, marketID):
 	self.Events[event].markets[self.Events[event].numMarkets] = marketID
 	self.Events[event].numMarkets += 1
 	return(1)
+
+def getBond(event):
+	return(self.Events[event].bond)
 
 def getMarkets(event):
 	i = 0

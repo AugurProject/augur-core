@@ -232,7 +232,7 @@ def incrementPeriodAfterReporting(branch):
     if(periodOver(branch)):
         period = block.number / BRANCHES.getPeriodLength($branch) - 1
         lastPeriod = period - 1
-        percentAppealed = (EXPIRING.getRoundTwo(branch, period)*2**64/getNumberEvents(branch, period) + EXPIRING.getRoundTwo(branch, lastPeriod)*2**64/getNumberEvents(branch, lastPeriod)) / 2
+        percentAppealed = (EXPIRING.getRoundTwo(branch, period)*2**64/EXPIRING.getNumberEvents(branch, period) + EXPIRING.getRoundTwo(branch, lastPeriod)*2**64/EXPIRING.getNumberEvents(branch, lastPeriod)) / 2
         BRANCHES.incrementPeriod(branch)
         base_reporter_quantity = (3*2**64 + ((333*2**64 * Percent_Appealed/2**64)**3 / 2**128))/2**64
         self.baseReportersLastPeriod = BRANCHES.getBaseReporters(branch)

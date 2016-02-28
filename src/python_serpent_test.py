@@ -293,7 +293,7 @@ def test_buy_sell_shares():
     #print "complete sets yay"
     sell = c.sell(2**64, int(.01*2**64), bin_market, 1)
     gas_use(s)
-    print c.cancel(sell
+    print c.cancel(sell)
     print "Cancel gas use"
     gas_use(s)
     buy = c.buy(2**64, int(.02*2**64), bin_market, 2)
@@ -864,6 +864,20 @@ def test_slashrep():
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     print "Test slashrep OK"
 
+def test_claimrep():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
+    c.setBeforeRep(1010101, -1, 47*2**64)
+    newBranch = c.createSubbranch("new branch", 500, 1010101, 2**54, 0)
+    assert(c.claimInitialRep(1010101, newBranch)==1)
+    assert(c.sendReputation(newBranch, s.block.coinbase, 444)==4)
+    print "Test claimrep OK"
+
 def test_catchup():
     global initial_gas
     initial_gas = 0
@@ -961,7 +975,7 @@ if __name__ == '__main__':
     # function tests
     #test_create_event()
     #test_create_market()
-    test_buy_sell_shares()
+    #test_buy_sell_shares()
     #test_transfer_shares()
     #test_create_branch()
     #test_send_rep()
@@ -970,4 +984,5 @@ if __name__ == '__main__':
     #test_consensus()
     #test_catchup()
     #test_slashrep()
+    test_claimrep()
     print "DONE TESTING"

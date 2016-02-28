@@ -29,7 +29,7 @@ import reporting as REPORTING
 import fxpFunctions as FXP
 
 # branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID
-data branches[](submittedHash[][], numReportsActual[][], hasReported[][](reported[]), beforeRep[][], afterRep[][], report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], reportedPeriod[][], firstReport[])
+data branches[](submittedHash[][], numReportsActual[][], hasReported[][](reported[]), beforeRep[][], afterRep[][], report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], reportedPeriod[][], firstReport[], periodDormantRep[][])
 data reportable[][]
 data mode_items[][](report_value[], current_mode, current_mode_items)
 
@@ -101,6 +101,13 @@ def setAfterRep(branch, period, rep):
 	self.branches[branch].afterRep[period][tx.origin] = rep
 	return(rep)
 	
+def getPeriodDormantRep(branch, period):
+	return(self.branches[branch].periodDormantRep[period][tx.origin])
+
+def setPeriodDormantRep(branch, period, rep):
+	self.branches[branch].periodDormantRep[period][tx.origin] = rep
+	return(rep)
+
 def getNumReportsActual(branch, votePeriod):
 	return(self.branches[branch].numReportsActual[tx.origin][votePeriod])
 
@@ -264,11 +271,13 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
 			if(!self.branches[branch].reportedPeriod[votePeriod][tx.origin]):
 				repReported = EXPEVENTS.getTotalRepReported(branch)
 				balance = REPORTING.getRepBalance(branch, tx.origin)
+				dormantRep = REPORTING.getDormantRepBalance(branch, tx.origin)
 				repReported += balance
 				EXPEVENTS.setTotalRepReported(branch, votePeriod, repReported)
 				#Record rep at start of report period
 				self.branches[branch].beforeRep[votePeriod][tx.origin] = balance
 				self.branches[branch].afterRep[votePeriod][tx.origin] = balance
+				self.branches[branch].periodDormantRep[period][tx.origin] = dormantRep
 				self.branches[branch].reportedPeriod[votePeriod][tx.origin] = 1
 			return(1)
 		return(-2)
