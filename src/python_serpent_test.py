@@ -984,5 +984,5 @@ if __name__ == '__main__':
     #test_consensus()
     #test_catchup()
     #test_slashrep()
-    test_claimrep()
+    #test_claimrep()
     print "DONE TESTING"

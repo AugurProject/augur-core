@@ -35,7 +35,14 @@ import branches as BRANCHES
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, forkSelection, pushingForward, bondsMan, originalPeriod, initialLiquidity[], trade_ids[](id, next_id, prev_id), last_trade, total_trades, last_price)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, forkSelection, pushingForward, bondsMan, originalPeriod, initialLiquidity, trade_ids[](id, next_id, prev_id), last_trade, total_trades, last_price, scheduleSet)
+
+def scheduleSet(market):
+    return(self.Markets[market].scheduleSet)
+    
+def setScheduleSet(market):
+    self.Markets[market].scheduleSet = 1
+    return(1)
 
 def getTotalSharesPurchased(market):
     total = 0
@@ -336,11 +343,11 @@ def modifyParticipantShares(branch, marketID, participantNumber, outcome, amount
         EXPEVENTS.addPeriodVolume(branch, self.getTradingPeriod(marketID), amount)
         return(1)
         
-def initialLiquidityAmount(market, outcome):
-    return(self.Markets[market].initialLiquidity[outcome])
+def initialLiquidityAmount(market):
+    return(self.Markets[market].initialLiquidity)
 
-def setInitialLiquidityAmount(market, outcome, amount):
-    self.Markets[market].initialLiquidity[outcome] = amount
+def setInitialLiquidityAmount(market, amount):
+    self.Markets[market].initialLiquidity = amount
     return(1)
     
 def setWinningOutcomes(market, outcomes: arr):
@@ -357,10 +364,9 @@ def getWinningOutcomes(market):
     # largest # of winning outcomes is 8
     return(load(self.Markets[market].winningOutcomes[0], items=8): arr)
 
-def initialLiquiditySetup(marketID, alpha, cumScale, numOutcomes):
+def initialLiquiditySetup(marketID, cumScale, numOutcomes):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    self.Markets[marketID].alpha = alpha
     self.Markets[marketID].cumulativeScale = cumScale
     self.Markets[marketID].numOutcomes = numOutcomes
     return(1)

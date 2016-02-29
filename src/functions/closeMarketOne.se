@@ -16,5 +16,5 @@ def oneOutcome(market, winningOutcome):
     return(1)
 
 def valueCalcOne(market, winningOutcome):
-    sharesTotal = MARKETS.getSharesPurchased(market, winningOutcome) - MARKETS.initialLiquidityAmount(market, winningOutcome)
+    sharesTotal = MARKETS.getSharesPurchased(market, winningOutcome) - MARKETS.initialLiquidityAmount(market)
     return(sharesTotal*MARKETS.getCumScale(market))

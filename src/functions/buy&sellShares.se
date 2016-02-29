@@ -95,6 +95,9 @@ def cancel(trade_id):
     owner = trade[5]
     # Get market
     market = trade[2]
+    creator = INFO.getCreator(market)
+    if(msg.sender == creator || tx.origin == creator):
+        return(-30)
     outcome = trade[8]
     branch = MARKETS.getBranchID(market)
     trading_fee = MARKETS.getTradingFee(market)
@@ -144,6 +147,9 @@ macro remove_trade($trade_id, $market_id):
 #
 # costs 532k
 def buy(amount, price, market, outcome):
+    creator = INFO.getCreator(market)
+    if(msg.sender == creator || tx.origin == creator):
+        return(-30)
     if(amount <= 0 or price <= 0 or market==0 or price*amount < 2**64):
         return(-1)
     branch = MARKETS.getBranchID(market)
@@ -165,6 +171,9 @@ def buy(amount, price, market, outcome):
 
 # cost 532k
 def sell(amount, price, market_id, outcome):
+    creator = INFO.getCreator(market_id)
+    if(msg.sender == creator || tx.origin == creator):
+        return(-30)
     if(amount <= 0 or price <= 0 or market_id==0 or price*amount < 2**64):
         return(-1)
     branch = MARKETS.getBranchID(market)
@@ -226,6 +235,9 @@ def trade(max_value, max_amount, trade_ids:arr):
         # Get market
         type = trade[1]
         market_id = trade[2]
+        creator = INFO.getCreator(market_id)
+        if(msg.sender == creator || tx.origin == creator):
+            return(-30)
         amount = trade[3]
         price = trade[4]
         owner = trade[5]
@@ -318,9 +330,11 @@ def trade(max_value, max_amount, trade_ids:arr):
 # buys amount of every outcome
 # cost 850k gas
 def buyCompleteSets(branch, market, amount):
+    creator = INFO.getCreator(market)
+    if(msg.sender == creator || tx.origin == creator):
+        return(-30)
     if(BRANCHES.getOracleOnly(branch)):
         return(-6)
-    # make it so trader has locked in fee from buy, so if they sell and they bought when fee was low, they can sell with that low fee as opposed to a high one
     numEvents = MARKETS.getNumEvents(market)
     events = MARKETS.getMarketEvents(market, outitems=numEvents)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
@@ -338,7 +352,7 @@ def buyCompleteSets(branch, market, amount):
         else:
           n += 1
     ### TODO: check for .99 market here
-    if ((BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market) && !pushedBack) || MARKETS.getBranchID(market) != branch):
+    if ((BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market) && !pushedBack) || MARKETS.getBranchID(market) != branch || !MARKETS.scheduleSet(market)):
         return(-1)
     price = amount
     if(CASH.balance(tx.origin) < price):
@@ -363,9 +377,11 @@ def buyCompleteSets(branch, market, amount):
     
 # sells amount of every outcome [if user owns it]
 def sellCompleteSets(branch, market, amount):
+    creator = INFO.getCreator(market)
+    if(msg.sender == creator || tx.origin == creator):
+        return(-30)
     if(BRANCHES.getOracleOnly(branch)):
         return(-6)
-    # lockin fee
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
     numEvents = MARKETS.getNumEvents(market)

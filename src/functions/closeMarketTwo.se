@@ -67,7 +67,7 @@ def valueCalcTwo(market, winningOutcome: arr, events: arr):
     #share one goes with the low side of the calc
     pricePerShare1 = 2^64 - pricePerShare1
     cumScale = MARKETS.getCumScale(market)
-    sharesTotal1 = MARKETS.getSharesPurchased(market, winningOutcome[0]) - MARKETS.initialLiquidityAmount(market, winningOutcome[0])
-    sharesTotal2 = MARKETS.getSharesPurchased(market, winningOutcome[1]) - MARKETS.initialLiquidityAmount(market, winningOutcome[1])
+    sharesTotal1 = MARKETS.getSharesPurchased(market, winningOutcome[0]) - MARKETS.initialLiquidityAmount(market)
+    sharesTotal2 = MARKETS.getSharesPurchased(market, winningOutcome[1]) - MARKETS.initialLiquidityAmount(market)
     value = sharesTotal1*cumScale*pricePerShare1/2**64 + sharesTotal2*cumScale*pricePerShare2/2**64
     return(value)

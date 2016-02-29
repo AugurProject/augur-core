@@ -44,36 +44,33 @@ event creationBlock(market:indexed)
     # -1: bad input or parent doesn't exist
     # -2: too many events
     # -3: too many outcomes
-    # -4: not enough money or market already exists
+    # -4: not enough money
     # -5: fee too low
     # -6: duplicate events
     # -7: event already expired
+    # -8: market already exists
 # .05 eth to create
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
-def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, events:arr, forkSelection):
+def createMarket(branch, description:str, tradingFee, initialLiquidity, events:arr, forkSelection):
     periodLength = BRANCHES.getPeriodLength(branch)
     # send this to branch
-    # min initial liquidity is what?
     creationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * 2**64 / tradingFee
-
+    # min initial liquidity
+    if(initialLiquidity < 2213609288845146112 * BRANCHES.getBaseReporters(branch) * 2**64 / tradingFee):
+        return(-4)
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
-    if(periodLength==0 or len(description)==0 or (initialLiquidity<50*2**64 and !BRANCHES.getOracleOnly(branch)) || alpha <= 2^57 || tradingFee < BRANCHES.getMinTradingFee(branch)):
+    if(periodLength==0 or len(description)==0 || tradingFee < BRANCHES.getMinTradingFee(branch)):
         return(-1)
     if(tradingFee > 2^61):
         return(-1)
-    # minimum initial liquidity for "oracle only" branches is less (half is a fee, half returned)
-    if(initialLiquidity<2*2**64):
-        return(-1)
+        
     event = events[0]
-
     # check that events have same exp. dates && branch
     i = 0
     eventNum = len(events)
-
-    # only supports 3 dimensional markets atm
+    # only supports upto 3 dimensional markets
     if(eventNum > 3):
         return(-2)
-
     numOutcomes = 0
     eventsConcat = 0
     cumulativeScale = 0
@@ -101,7 +98,6 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
                 return(-4)
             EVENTS.setBond(event, validity_bond)
             EVENTS.addPast24(24period)
-
         #scalars
         maxValue = EVENTS.getMaxValue(event)
         minValue = EVENTS.getMinValue(event)
@@ -139,38 +135,35 @@ def createMarket(branch, description:str, alpha, initialLiquidity, tradingFee, e
     CASH.initiateOwner(marketID)
     # pay numOutcomes fee
     # if it's already been created return 0
-    if(!CASH.send(branch, numOutcomes*2^63) || INFO.getCreator(marketID) || MARKETS.getMarketNumOutcomes(marketID)):
-        return(-4)
+    if(INFO.getCreator(marketID) || MARKETS.getMarketNumOutcomes(marketID)):
+        return(-8)
 
-    # buy some of all outcomes
-    # ls-lmsr needs at least a very small initial liquidity
-    y = 1
-    z = initialLiquidity * 2**64 / (cumulativeScale*2**64 + alpha*numOutcomes*cumulativeScale*FXP.fx_log(numOutcomes*2**64)/2**64)
-    MARKETS.initialLiquiditySetup(marketID, alpha, cumulativeScale, numOutcomes)
-    while y <= numOutcomes:
-        MARKETS.modifyShares(marketID, y, z)
-        MARKETS.setInitialLiquidityAmount(marketID, y, z)
-        y += 1
-    if(INFO.setInfo(marketID, description, tx.origin, initialLiquidity) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, forkSelection) && CASH.send(marketID, initialLiquidity)):
+    if(INFO.setInfo(marketID, description, tx.origin, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, forkSelection) && CASH.send(marketID, initialLiquidity) && CASH.send(branch, creationFee)):
         i = 0
         while i < len(events):
             EVENTS.addMarket(events[i], marketID)
             i += 1
-        # need to add the sets of orders otherwise market can't be created
-        #self.addsetsoforders()
+            
+        # buy some of all outcomes
+        MARKETS.initialLiquiditySetup(marketID, cumulativeScale, numOutcomes)
+        # buy complete sets
+        MARKETS.setInitialLiquidityAmount(marketID, initialLiquidity)
+        participantNumber = MARKETS.addParticipant(marketID, tx.origin)
+
+        i = 0
+        # send shares of the event to user address
+        while i <= numOutcomes:
+            MARKETS.modifyShares(marketID, i, initialLiquidity)
+            MARKETS.modifyParticipantShares(branch, market, participantNumber, i, initialLiquidity)
+            i += 1
         return(marketID)
 
-    # revert shares bought and other variables
-    else:
-        v = 1
-        while v <= numOutcomes:
-            MARKETS.modifyShares(marketID, v, -z)
-            v += 1
-        MARKETS.initialLiquiditySetup(marketID, 0, 0, 0)
-        return(-4)
 
 # bids have amount, price for each outcome
 # asks have amount, price for each outcome
+# do this for each set as we go down the book to form a whole schedule of orders
+# need to add the sets of orders
+# if schedule of orders not set, no one can trade in the market
 def addSetOfOrders(bids: arr, asks: arr):
     # Force initial liquidity to add up to 1+spread for each order on each outcome of a MM’s order schedule to prevent hiding from risk
     return(1)
@@ -183,6 +176,9 @@ def addSetOfOrders(bids: arr, asks: arr):
     
     #Force schedule to be no worse than ls-lmsr [needs adj. priors for ls-lmsr calc to do this]
 
+    if all liquidity used up
+    setScheduleSet(market)
+
 # call for each set in a schedule to adjust a whole schedule of orders
 def adjustSetOfOrders():
     #Don't allow initial liquidity to be removed [but can be increased]
@@ -191,13 +187,13 @@ def adjustSetOfOrders():
     else:
         return(1)
 
-# todo: needs to comply w/ new trading fee rules
-# perhaps don't allow raising of trading fee
 def updateTradingFee(branch, market, tradingFee):
-    if(tradingFee < BRANCHES.getMinTradingFee(branch)):
+    oldFee = MARKETS.getTradingFee(market)
+    oldCreationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * 2**64 / oldFee
+    newCreationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * 2**64 / tradingFee
+    if(tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > oldFee):
         return(-1)
-    if(tradingFee > 2^61):
-        return(-1)
+    CASH.send(branch, newCreationFee-oldCreationFee)
     return(MARKETS.setTradingFee(market, tradingFee))
 
 #Add def moveMarket(market, newBranch, marketAuthor) in case of a fork or some other issue
