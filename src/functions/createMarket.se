@@ -28,9 +28,19 @@ import fxpFunctions as FXP
 import markets as MARKETS
 import events as EVENTS
 import expiringEvents as EXPEVENTS
+import trades as TRADES
 
 event creationBlock(market:indexed)
 
+data shareLiquidityLeft[]
+data cashLiquidityLeft[]
+
+event log_add_tx(market:indexed, sender, type, price, amount, outcome, tradeid)
+event log_cancel(market:indexed, sender, price, amount, tradeid, outcome, type)
+
+# Trade types
+macro BID: 1
+macro ASK: 2
 
 # alpha is a fixedpoint number / calc. it in UI
 # z is the optimal initial vector for each outcome
@@ -39,7 +49,7 @@ event creationBlock(market:indexed)
 # initialLiquidity is initial number of cash in each outcome you want to buy/initialize/set
 # tradingFee is a percent in fixedPoint
 # same for these values
-# @return marketID if success
+# @return marketID if success or 1 if on an oracle only branch creation we have success
 # error messages otherwise
     # -1: bad input or parent doesn't exist
     # -2: too many events
@@ -138,25 +148,30 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
     if(INFO.getCreator(marketID) || MARKETS.getMarketNumOutcomes(marketID)):
         return(-8)
 
-    if(INFO.setInfo(marketID, description, tx.origin, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, forkSelection) && CASH.send(marketID, initialLiquidity) && CASH.send(branch, creationFee)):
+    if(INFO.setInfo(marketID, description, tx.origin, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, forkSelection) && CASH.send(branch, creationFee)):
         i = 0
         while i < len(events):
             EVENTS.addMarket(events[i], marketID)
             i += 1
             
+    if(!BRANCHES.getOracleOnly(branch) && CASH.send(marketID, initialLiquidity/2) 
         # buy some of all outcomes
         MARKETS.initialLiquiditySetup(marketID, cumulativeScale, numOutcomes)
         # buy complete sets
-        MARKETS.setInitialLiquidityAmount(marketID, initialLiquidity)
+        MARKETS.setInitialLiquidityAmount(marketID, initialLiquidity/2)
         participantNumber = MARKETS.addParticipant(marketID, tx.origin)
 
         i = 0
         # send shares of the event to user address
         while i <= numOutcomes:
-            MARKETS.modifyShares(marketID, i, initialLiquidity)
-            MARKETS.modifyParticipantShares(branch, market, participantNumber, i, initialLiquidity)
+            MARKETS.modifyShares(marketID, i, initialLiquidity/2)
+            MARKETS.modifyParticipantShares(branch, market, participantNumber, i, initialLiquidity/2)
             i += 1
+        self.cashLiquidityLeft = initialLiquidity/2
+        self.shareLiquidityLeft = initialLiquidity/2
         return(marketID)
+    else:
+        return(1)
 
 
 # bids have amount, price for each outcome
@@ -164,30 +179,88 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
 # do this for each set as we go down the book to form a whole schedule of orders
 # need to add the sets of orders
 # if schedule of orders not set, no one can trade in the market
-def addSetOfOrders(bids: arr, asks: arr):
+# returns 1 if done, 2 if not done yet but order was added successfully
+def addSetOfOrders(bids: arr, asks: arr, market):
+    cumScale = MARKETS.getCumScale(market)
+    branch = MARKETS.getBranch(market)
     if(len(bids)!=len(asks):
+        return(0)
+    numOutcomes = MARKETS.getMarketNumOutcomes(market)
+    if(len(bids) != numOutcomes*2 || len(asks) != numOutcomes*2):
         return(0)
     i = 0
     amount = bids[0]
+    if(amount <= 0):
+        return(0)
     sum = 0
+    cash = 0
     totalLiquidity = 0
     while i < len(bids):
         # force num shares on each outcome offered to be equal
         if(bids[i]!=amount || asks[i]!=amount):
             return(-1)
+        if(bids[i+1] <= 0 or asks[i+1] <= 0 or asks[i+1]*amount < 2**64 or bids[i+1]*amount < 2**64):
+            return(0)
         sum += bids[i+1] + asks[i+1]
+        cash += amount*bids[i+1]/2**64
         totalLiquidity += amount*bids[i+1]/2**64 + amount*asks[i+1]/2**64
         if(abs(bids[i+1] - asks[i+1]) > 1844674407370955264):
             return(-3)
         i += 2
-    # ensure that bids and asks for each side's outcome add up to 2*(1 + spread[.1]) and no more
-    if(sum > 40582836962161013760):
+    # ensure that bids and asks for each side's outcome add up to 2*(range[1 if binary] + spread[.1]) and no more
+    if(sum > 2*(1844674407370955264 + cumScale)):
         return(-2)
+
+    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    # remove liquidity from amount needed still remaining for the bid aspect
+    self.cashLiquidityLeft -= cash
+    # remove liquidity added here in shares amount from amount needed still remaining for the ask aspect
+    self.shareLiquidityLeft -= amount*len(asks)
+    if(self.shareLiquidityLeft < 0 || self.cashLiquidityLeft < 0):
+        return(-1)
     
-    remove liquidity added here in shares amount from amount needed still remaining for the ask aspect and put up ask orders, don't allow mm to cancel them but only adj. them
-    remove cash liquidity from amount needed still remaining for the bid aspect and put up bid orders, don't allow mm to cancel them but only adj. them
-    if all liquidity used up
-        setScheduleSet(market)
+    if(!CASH.send(market, cash)):
+        return(-5)
+
+    i = 0
+    # put up ask orders, don't allow mm to cancel them but only adj. them
+    # put up and pay for bid orders, don't allow mm to cancel them but only adj. them
+    while i < len(bids):
+        save_trade(ASK, amount, asks[i+1], market, (i/2 + 1), branch, participantNumber)
+        save_trade(BID, amount, bids[i+1], market, (i/2 + 1), branch, participantNumber)
+        i += 2
+
+    # liquidity is put on the book, market is ready to roll
+    if(self.shareLiquidityLeft == 0 && self.cashLiquidityLeft == 0):
+        MARKETS.setScheduleSet(market)
+        return(1)
+    else:
+        return(2)
+
+macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participantNumber):
+    trade = [$type, $market, $amount, $price, msg.sender, block.number, $outcome]
+    trade_id = sha256(trade, items=7)
+    # Save trade
+    if !TRADES.getID(trade_id):
+        TRADES.saveTrade(trade_id, $type, $market, $amount, $price, msg.sender, $outcome)
+        # Update market
+        last_id = MARKETS.getLastTrade($market)
+        MARKETS.addTrade($market, trade_id, last_id)
+        # Update available amount for asks
+        if $type == ASK:
+            MARKETS.modifyParticipantShares($branch, $market, $participantNumber, $outcome, -$amount)
+        # Send / escrow cash for bids
+        if $type == BID:
+            CASH.send($market, $amount * $price / 2**64)
+    else:
+        return(-1)
+    log(type=log_add_tx, $market, msg.sender, $type, $price, $amount, $outcome, trade_id)
+
+
+
+
+
+
 
 
 # call for each set in a schedule to adjust a whole schedule of orders
@@ -197,6 +270,67 @@ def adjustSetOfOrders():
         return(0)
     else:
         return(1)
+
+def cancel(trade_id):
+    # Get trade
+    trade = array(9)
+    trade = TRADES.get_trade(trade_id, outitems=9)
+    if !trade:
+        return(0)
+
+    type = trade[1]
+    amount = trade[3]
+    price = trade[4]
+    owner = trade[5]
+    # Get market
+    market = trade[2]
+    creator = INFO.getCreator(market)
+    if(msg.sender == creator || tx.origin == creator):
+        return(-30)
+    outcome = trade[8]
+    branch = MARKETS.getBranchID(market)
+    trading_fee = MARKETS.getTradingFee(market)
+    cumScale = MARKETS.getCumScale(market)
+    fee = fee_percent(trading_fee, price, amount, cumScale)
+    # Check the owner
+    if msg.sender == owner:
+        # Clear the trade first
+        remove_trade(trade_id, market)
+
+        # Issue refunds
+        if type == BID:
+            # cash refund
+            CASH.subtractCash(market, amount * price / 2**64)
+            CASH.subtractCash(branch, (amount * price / 2**64 * fee / 2**64)/2)
+            CASH.subtractCash(INFO.getCreator(market), (amount * price / 2**64 * fee / 2**64)/2)
+            CASH.addCash(msg.sender, (amount * price / 2**64 + (amount * price / 2**64 * fee / 2**64)))
+
+        elif type == ASK:
+            # shares refund
+            participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
+            branch = MARKETS.getBranchID(market)
+            MARKETS.modifyParticipantShares(branch, market, participantNumber, outcome, amount)
+            CASH.subtractCash(branch, (amount * price / 2**64 * fee / 2**64)/2)
+            CASH.subtractCash(INFO.getCreator(market), (amount * price / 2**64 * fee / 2**64)/2)
+            CASH.addCash(msg.sender, (amount * price / 2**64 * fee / 2**64))
+
+        
+        # Log cancellation
+        log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type)
+        return(SUCCESS)
+    return(FAILURE)
+
+macro remove_trade($trade_id, $market_id):
+    TRADES.remove_trade(trade_id)
+    
+    MARKETS.remove_trade_from_market(market_id, trade_id)
+
+
+
+
+
+
+
 
 def updateTradingFee(branch, market, tradingFee):
     oldFee = MARKETS.getTradingFee(market)

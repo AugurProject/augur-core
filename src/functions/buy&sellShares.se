@@ -152,6 +152,8 @@ def buy(amount, price, market, outcome):
         return(-30)
     if(amount <= 0 or price <= 0 or market==0 or price*amount < 2**64):
         return(-1)
+    if(!MARKETS.scheduleSet(market)):
+        return(0)
     branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
@@ -235,6 +237,8 @@ def trade(max_value, max_amount, trade_ids:arr):
         # Get market
         type = trade[1]
         market_id = trade[2]
+        if(!MARKETS.scheduleSet(market_id)):
+            return(0)
         creator = INFO.getCreator(market_id)
         if(msg.sender == creator || tx.origin == creator):
             return(-30)
