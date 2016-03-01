@@ -1,3 +1,0 @@
-iocapture
-pytest
-pytest-cov
