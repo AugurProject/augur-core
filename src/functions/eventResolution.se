@@ -66,8 +66,8 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
     # why residual < periodLength/2?
     if(fxpOutcome==3*2**63 && !pushedBack && residual < periodLength/2):
         # give event bond money to reporters
-        CASH.subtractCash(event, EVENTS.getBond(event))
-        CASH.addCash(branch, EVENTS.getBond(event))
+        CASH.subtractCash(event, 42*2**64)
+        CASH.addCash(branch, 42*2**64)
         # not ethical is same as .5 outcome
         fxpOutcome = 3*2**63
         EVENTS.setOutcome(event, fxpOutcome)
@@ -88,15 +88,15 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
         #return(-4)
     if((fxpOutcome==3*2**63 && pushedBack) || !ethical):
         # give event bond money to reporters
-        CASH.subtractCash(event, EVENTS.getBond(event))
-        CASH.addCash(branch, EVENTS.getBond(event))
+        CASH.subtractCash(event, 42*2**64)
+        CASH.addCash(branch, 42*2**64)
         # not ethical is same as .5 outcome
         fxpOutcome = 3*2**63
         EVENTS.setOutcome(event, fxpOutcome)
     else:
         # return bond
-        CASH.subtractCash(event, EVENTS.getBond(event))
-        CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
+        CASH.subtractCash(event, 42*2**64)
+        CASH.addCash(INFO.getCreator(event), 42*2**64)
         if(MARKETS.getPushedForward(market)):
             CASH.addCash(MARKETS.getBondsMan(market), MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*2^64))
             CASH.subtractCash(market, MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*2^64))
@@ -138,8 +138,8 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
     if(fxpOutcome==3*2**63 && !pushedBack && residual < periodLength/2):
         # give event bond money to reporters
-        CASH.subtractCash(event, EVENTS.getBond(event))
-        CASH.addCash(branch, EVENTS.getBond(event))
+        CASH.subtractCash(event, 42*2**64)
+        CASH.addCash(branch, 42*2**64)
         # not ethical is same as .5 outcome
         fxpOutcome = 3*2**63
         EVENTS.setOutcome(event, fxpOutcome)
@@ -160,16 +160,16 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         #return(-4)
     if((fxpOutcome==3*2**63 && pushedBack) || !ethical):
         # give event bond money to reporters
-        CASH.subtractCash(event, EVENTS.getBond(event))
-        CASH.addCash(branch, EVENTS.getBond(event))
+        CASH.subtractCash(event, 42*2**64)
+        CASH.addCash(branch, 42*2**64)
         # not ethical is same as .5 outcome
         fxpOutcome = 3*2**63
         EVENTS.setOutcome(event, fxpOutcome)
         EVENTS.setmode(event, fxpOutcome)
     else:
         # return bond
-        CASH.subtractCash(event, EVENTS.getBond(event))
-        CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
+        CASH.subtractCash(event, 42*2**64)
+        CASH.addCash(INFO.getCreator(event), 42*2**64)
         if(MARKETS.getPushedForward(market)):
             CASH.addCash(MARKETS.getBondsMan(market), MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*2^64))
             CASH.subtractCash(market, MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*2^64))
