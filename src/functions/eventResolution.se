@@ -65,21 +65,27 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
     # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
     # why residual < periodLength/2?
     if(fxpOutcome==3*2**63 && !pushedBack && residual < periodLength/2):
+        # give event bond money to reporters
+        CASH.subtractCash(event, EVENTS.getBond(event))
+        CASH.addCash(branch, EVENTS.getBond(event))
+        # not ethical is same as .5 outcome
+        fxpOutcome = 3*2**63
+        EVENTS.setOutcome(event, fxpOutcome)
         #push back event
-        MAKEREPORTS.setNumReportsExpectedEvent(branch, votingPeriodEvent, event, 0)
-        MAKEREPORTS.setNumReportsEvent(branch, votingPeriodEvent, event, 0)
-        EVENTS.setEthics(event, 0)
-        EXPEVENTS.addEvent(branch, period+1, event)
+        #MAKEREPORTS.setNumReportsExpectedEvent(branch, votingPeriodEvent, event, 0)
+        #MAKEREPORTS.setNumReportsEvent(branch, votingPeriodEvent, event, 0)
+        #EVENTS.setEthics(event, 0)
+        #EXPEVENTS.addEvent(branch, period+1, event)
         #set outcome to 0
-        EVENTS.setOutcome(event, 0)
+        #EVENTS.setOutcome(event, 0)
         #set uncaughtoutcome to 0
-        EVENTS.setUncaughtOutcome(event, 0)
+        #EVENTS.setUncaughtOutcome(event, 0)
         #set pushedback to true
-        EVENTS.setPushedBack(event)
+        #EVENTS.setPushedBack(event)
         #set event expiration date to be after the current reporting period ends
-        EVENTS.setExpiration(event, block.number)
-        MARKETS.setTradingPeriod(market, period+1)
-        return(-4)
+        #EVENTS.setExpiration(event, block.number)
+        #MARKETS.setTradingPeriod(market, period+1)
+        #return(-4)
     if((fxpOutcome==3*2**63 && pushedBack) || !ethical):
         # give event bond money to reporters
         CASH.subtractCash(event, EVENTS.getBond(event))
@@ -131,20 +137,27 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
 
     # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
     if(fxpOutcome==3*2**63 && !pushedBack && residual < periodLength/2):
+        # give event bond money to reporters
+        CASH.subtractCash(event, EVENTS.getBond(event))
+        CASH.addCash(branch, EVENTS.getBond(event))
+        # not ethical is same as .5 outcome
+        fxpOutcome = 3*2**63
+        EVENTS.setOutcome(event, fxpOutcome)
+        EVENTS.setmode(event, fxpOutcome)
         #push back event
-        MAKEREPORTS.setNumReportsExpectedEvent(branch, votingPeriodEvent, event, 0)
-        MAKEREPORTS.setNumReportsEvent(branch, votingPeriodEvent, event, 0)
-        EXPEVENTS.addEvent(branch, period+1, event)
+        #MAKEREPORTS.setNumReportsExpectedEvent(branch, votingPeriodEvent, event, 0)
+        #MAKEREPORTS.setNumReportsEvent(branch, votingPeriodEvent, event, 0)
+        #EXPEVENTS.addEvent(branch, period+1, event)
         #set outcome to 0
-        EVENTS.setOutcome(event, 0)
+        #EVENTS.setOutcome(event, 0)
         #set pushedback to true
-        EVENTS.setPushedBack(event)
+        #EVENTS.setPushedBack(event)
         # set mode to 0
-        EVENTS.setmode(event, 0)
-        EVENTS.setEthics(event, 0)
-        EVENTS.setExpiration(event, block.number)
-        MARKETS.setTradingPeriod(market, period+1)
-        return(-4)
+        #EVENTS.setmode(event, 0)
+        #EVENTS.setEthics(event, 0)
+        #EVENTS.setExpiration(event, block.number)
+        #MARKETS.setTradingPeriod(market, period+1)
+        #return(-4)
     if((fxpOutcome==3*2**63 && pushedBack) || !ethical):
         # give event bond money to reporters
         CASH.subtractCash(event, EVENTS.getBond(event))

@@ -165,19 +165,30 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
 # need to add the sets of orders
 # if schedule of orders not set, no one can trade in the market
 def addSetOfOrders(bids: arr, asks: arr):
-    # Force initial liquidity to add up to 1+spread for each order on each outcome of a MM’s order schedule to prevent hiding from risk
-    return(1)
+    if(len(bids)!=len(asks):
+        return(0)
+    i = 0
+    amount = bids[0]
+    sum = 0
+    totalLiquidity = 0
+    while i < len(bids):
+        # force num shares on each outcome offered to be equal
+        if(bids[i]!=amount || asks[i]!=amount):
+            return(-1)
+        sum += bids[i+1] + asks[i+1]
+        totalLiquidity += amount*bids[i+1]/2**64 + amount*asks[i+1]/2**64
+        if(abs(bids[i+1] - asks[i+1]) > 1844674407370955264):
+            return(-3)
+        i += 2
+    # ensure that bids and asks for each side's outcome add up to 2*(1 + spread[.1]) and no more
+    if(sum > 40582836962161013760):
+        return(-2)
     
-    # force num shares on each outcome offered to be equal
-    
-    # do above 2 for both bids and asks
-    
-    # ensure that bids and asks for each side's outcome add up to 1 + spread and no more
-    
-    #Force schedule to be no worse than ls-lmsr [needs adj. priors for ls-lmsr calc to do this]
-
+    remove liquidity added here in shares amount from amount needed still remaining for the ask aspect and put up ask orders, don't allow mm to cancel them but only adj. them
+    remove cash liquidity from amount needed still remaining for the bid aspect and put up bid orders, don't allow mm to cancel them but only adj. them
     if all liquidity used up
-    setScheduleSet(market)
+        setScheduleSet(market)
+
 
 # call for each set in a schedule to adjust a whole schedule of orders
 def adjustSetOfOrders():
@@ -309,3 +320,7 @@ def pushMarketForward(branch, market):
 #        MAKEREPORTS.setReportable(period+1, event)
 #      i += 1
 #    return(1)
+
+# Absolute value
+macro abs($n):
+    if($n<0, -$n, $n)
