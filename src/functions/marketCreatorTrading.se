@@ -49,9 +49,7 @@ macro TRADE_ALREADY_EXISTS: 21
 macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participantNumber):
     trade = [$type, $market, $amount, $price, msg.sender, block.number, $outcome]
     trade_id = sha256(trade, items=7)
-    trading_fee = MARKETS.getTradingFee($market)
     cumScale = MARKETS.getCumScale($market)
-    fee = fee_percent(trading_fee, $price, $amount, cumScale)
     # Save trade
     if !TRADES.getID(trade_id):
         TRADES.saveTrade(trade_id, $type, $market, $amount, $price, msg.sender, $outcome)
@@ -62,14 +60,10 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
         # Update available and trading amounts for asks
         if $type == ASK:
             MARKETS.modifyParticipantShares($branch, $market, $participantNumber, $outcome, -$amount)
-            CASH.send($branch, ($amount * $price / 2**64 * fee /2**64)/2)
-            CASH.send(INFO.getCreator($market), ($amount * $price / 2**64 * fee /2**64)/2)
 
         # Send / escrow cash for bids
         if $type == BID:
             CASH.send($market, $amount * $price / 2**64)
-            CASH.send($branch, ($amount * $price / 2**64 * fee /2**64)/2)
-            CASH.send(INFO.getCreator($market), ($amount * $price / 2**64 * fee /2**64)/2)
     else:
         return(TRADE_ALREADY_EXISTS)
 
@@ -81,6 +75,7 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
 # Cancellation
 #
 # 200k gas
+# -2: can't cancel an initial orders
 def cancel(trade_id):
     # user can cancel anytime
     # Get trade
@@ -100,9 +95,9 @@ def cancel(trade_id):
         return(-30)
     outcome = trade[8]
     branch = MARKETS.getBranchID(market)
-    trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
-    fee = fee_percent(trading_fee, price, amount, cumScale)
+    if(TRADES.getInitialTrade(trade_id)):
+        return(-2)
     # Check the owner
     if msg.sender == owner:
         # Clear the trade first
@@ -112,20 +107,14 @@ def cancel(trade_id):
         if type == BID:
             # cash refund
             CASH.subtractCash(market, amount * price / 2**64)
-            CASH.subtractCash(branch, (amount * price / 2**64 * fee / 2**64)/2)
-            CASH.subtractCash(INFO.getCreator(market), (amount * price / 2**64 * fee / 2**64)/2)
-            CASH.addCash(msg.sender, (amount * price / 2**64 + (amount * price / 2**64 * fee / 2**64)))
+            CASH.addCash(msg.sender, (amount * price / 2**64))
 
         elif type == ASK:
             # shares refund
             participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
             branch = MARKETS.getBranchID(market)
             MARKETS.modifyParticipantShares(branch, market, participantNumber, outcome, amount)
-            CASH.subtractCash(branch, (amount * price / 2**64 * fee / 2**64)/2)
-            CASH.subtractCash(INFO.getCreator(market), (amount * price / 2**64 * fee / 2**64)/2)
-            CASH.addCash(msg.sender, (amount * price / 2**64 * fee / 2**64))
 
-        
         # Log cancellation
         log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type)
         return(SUCCESS)
@@ -163,10 +152,8 @@ def buy(amount, price, market, outcome):
     # if participant doesn't exist in market, add them
     if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
         participantNumber = MARKETS.addParticipant(market, tx.origin)
-    trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
-    fee = fee_percent(trading_fee, price, amount, cumScale)
-    if(CASH.balance(tx.origin) < (amount * price / 2**64 *(fee + 2^64)/2^64)):
+    if(CASH.balance(tx.origin) < (amount * price / 2**64)):
         return(-4)
     save_trade(BID, amount, price, market, outcome, branch, participantNumber)
     return(FAILURE)
@@ -188,11 +175,7 @@ def sell(amount, price, market_id, outcome):
         return(-3)
     if (MARKETS.getParticipantSharesPurchased(market_id, participantNumber, outcome) < amount):
         return(-4)
-    trading_fee = MARKETS.getTradingFee(market_id)
     cumScale = MARKETS.getCumScale(market_id)
-    fee = fee_percent(trading_fee, price, amount, cumScale)
-    if(CASH.balance(tx.origin) < (amount * price / 2**64 *fee/2^64)):
-        return(-4)
     save_trade(ASK, amount, price, market_id, outcome, branch, participantNumber)
     return(FAILURE)
 
@@ -251,9 +234,7 @@ def trade(max_value, max_amount, trade_ids:arr):
         branch = MARKETS.getBranchID(market_id)
         creator = INFO.getCreator(market_id)
         
-        trading_fee = MARKETS.getTradingFee(market_id)
         cumScale = MARKETS.getCumScale(market_id)
-        fee = fee_percent(trading_fee, price, amount, cumScale)
 
         # Fill buy order
         if type == BID:
@@ -276,10 +257,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 MARKETS.modifyParticipantShares(branch, market_id, msg.sender, outcome, -fill)
                 MARKETS.modifyParticipantShares(branch, market_id, owner, outcome, fill)
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
-                fee = value * fee / 2**64
-                CASH.addCash(msg.sender, value-fee)
-                CASH.addCash(branch, fee/2)
-                CASH.addCash(creator, fee/2)
+                CASH.addCash(msg.sender, value)
                 CASH.subtractCash(market_id, value)
                 # seller then pays a fee here
                 # Update max_amount
@@ -296,7 +274,6 @@ def trade(max_value, max_amount, trade_ids:arr):
                 trade_value = amount * price / 2**64
                 # Determine fill value
                 value = min(max_value, trade_value)
-                fee = trade_value * fee / 2**64
                 if(CASH.balance(tx.origin) < (trade_value + fee)):
                     return(INSUFFICIENT_BALANCE)
                 # Calculate fill amount, update trade amount or remove filled trade
@@ -313,11 +290,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
                 MARKETS.modifyParticipantShares(branch, market_id, msg.sender, outcome, fill)
                 # Transfer cash from user to person who has ask order and pay fee to branch and market creator
-                cost = value + fee
                 CASH.addCash(owner, value)
-                CASH.subtractCash(msg.sender, cost)
-                CASH.addCash(branch, fee/2)
-                CASH.addCash(creator, fee/2)
+                CASH.subtractCash(msg.sender, value)
                 # Update max_value
                 max_value -= value
                 # Log transaction

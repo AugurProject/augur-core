@@ -167,8 +167,8 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
             MARKETS.modifyShares(marketID, i, initialLiquidity/2)
             MARKETS.modifyParticipantShares(branch, market, participantNumber, i, initialLiquidity/2)
             i += 1
-        self.cashLiquidityLeft = initialLiquidity/2
-        self.shareLiquidityLeft = initialLiquidity/2
+        self.cashLiquidityLeft[market] = initialLiquidity/2
+        self.shareLiquidityLeft[market] = initialLiquidity/2
         return(marketID)
     else:
         return(1)
@@ -183,10 +183,8 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
 def addSetOfOrders(bids: arr, asks: arr, market):
     cumScale = MARKETS.getCumScale(market)
     branch = MARKETS.getBranch(market)
-    if(len(bids)!=len(asks):
-        return(0)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
-    if(len(bids) != numOutcomes*2 || len(asks) != numOutcomes*2):
+    if(len(bids)!=len(asks) or len(bids)!=numOutcomes*2):
         return(0)
     i = 0
     amount = bids[0]
@@ -194,7 +192,6 @@ def addSetOfOrders(bids: arr, asks: arr, market):
         return(0)
     sum = 0
     cash = 0
-    totalLiquidity = 0
     while i < len(bids):
         # force num shares on each outcome offered to be equal
         if(bids[i]!=amount || asks[i]!=amount):
@@ -203,7 +200,6 @@ def addSetOfOrders(bids: arr, asks: arr, market):
             return(0)
         sum += bids[i+1] + asks[i+1]
         cash += amount*bids[i+1]/2**64
-        totalLiquidity += amount*bids[i+1]/2**64 + amount*asks[i+1]/2**64
         if(abs(bids[i+1] - asks[i+1]) > 1844674407370955264):
             return(-3)
         i += 2
@@ -212,15 +208,14 @@ def addSetOfOrders(bids: arr, asks: arr, market):
         return(-2)
 
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
-    # remove liquidity from amount needed still remaining for the bid aspect
-    self.cashLiquidityLeft -= cash
-    # remove liquidity added here in shares amount from amount needed still remaining for the ask aspect
-    self.shareLiquidityLeft -= amount*len(asks)
-    if(self.shareLiquidityLeft < 0 || self.cashLiquidityLeft < 0):
-        return(-1)
-    
-    if(!CASH.send(market, cash)):
+    if(CASH.balance(msg.sender) < cash):
         return(-5)
+    if((self.shareLiquidityLeft[market]-cash) < 0 || (self.cashLiquidityLeft[market]-amount*len(asks)) < 0):
+        return(-1)
+    # remove liquidity from amount needed still remaining for the bid aspect
+    self.cashLiquidityLeft[market] -= cash
+    # remove liquidity added here in shares amount from amount needed still remaining for the ask aspect
+    self.shareLiquidityLeft[market] -= amount*len(asks)
 
     i = 0
     # put up ask orders, don't allow mm to cancel them but only adj. them
@@ -231,7 +226,7 @@ def addSetOfOrders(bids: arr, asks: arr, market):
         i += 2
 
     # liquidity is put on the book, market is ready to roll
-    if(self.shareLiquidityLeft == 0 && self.cashLiquidityLeft == 0):
+    if(self.shareLiquidityLeft[market] == 0 && self.cashLiquidityLeft[market] == 0):
         MARKETS.setScheduleSet(market)
         return(1)
     else:
@@ -251,9 +246,11 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
             MARKETS.modifyParticipantShares($branch, $market, $participantNumber, $outcome, -$amount)
         # Send / escrow cash for bids
         if $type == BID:
-            CASH.send($market, $amount * $price / 2**64)
+            if(!CASH.send($market, $amount * $price / 2**64)):
+                return(-2)
     else:
         return(-1)
+    TRADES.setInitialTrade(trade_id)
     log(type=log_add_tx, $market, msg.sender, $type, $price, $amount, $outcome, trade_id)
 
 

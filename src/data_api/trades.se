@@ -1,7 +1,7 @@
 # reporter
 data tradeCommits[](hash, block)
 # tradeID
-data trades[](id, type, market, amount, price, owner, block, refhash, outcome)
+data trades[](id, type, market, amount, price, owner, block, refhash, outcome, initialTrade)
 
 def makeTradeHash(max_value, max_amount, trade_ids: arr):
     i = 0
@@ -20,6 +20,13 @@ def commitTrade(hash):
     self.tradeCommits[tx.origin].hash = hash
     self.tradeCommits[tx.origin].block = block.number
     return(1)
+    
+def setInitialTrade(id):
+    self.trades[id].initialTrade = 1
+    return(1)
+    
+def getInitialTrade(id):
+    return(self.trades[id].initialTrade)
     
 def zeroHash():
     self.tradeCommits[tx.origin].hash = 0
