@@ -203,6 +203,7 @@ def sell(amount, price, market_id, outcome):
     # -1: oracle only branch
     # -2: bad trade hash
     # -3: trader doesn't exist / own shares in this market
+    # -4: market closed
 #Exchange(Market, outcome, sender, amount, receiver, payment) – transfers amount shares from sender to receiver for payment amount
 #max value is max amount to spend to buy
 #max amount is max shares to sell
@@ -210,6 +211,8 @@ def sell(amount, price, market_id, outcome):
 def trade(max_value, max_amount, trade_ids:arr):
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
+    if(MARKETS.getOneWinningOutcome(market, 0)):
+        return(-4)
     i = 0
     trades = 0
     while i < len(trade_ids):
@@ -344,6 +347,7 @@ def buyCompleteSets(branch, market, amount):
     numEvents = MARKETS.getNumEvents(market)
     events = MARKETS.getMarketEvents(market, outitems=numEvents)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
+    cumScale = MARKETS.getCumScale(market)
     n = 0
     #if event gets pushed back people can still buy / sell
     pushedBack = 0
@@ -360,7 +364,7 @@ def buyCompleteSets(branch, market, amount):
     ### TODO: check for .99 market here
     if ((BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market) && !pushedBack) || MARKETS.getBranchID(market) != branch || !MARKETS.scheduleSet(market)):
         return(-1)
-    price = amount
+    price = amount*cumScale
     if(CASH.balance(tx.origin) < price):
         return(-3)
         
@@ -393,6 +397,7 @@ def sellCompleteSets(branch, market, amount):
     numEvents = MARKETS.getNumEvents(market)
     events = MARKETS.getMarketEvents(market, outitems=numEvents)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
+    cumScale = MARKETS.getCumScale(market)
     n = 0
     #if event gets pushed back people can still buy / sell
     pushedBack = 0
@@ -410,7 +415,7 @@ def sellCompleteSets(branch, market, amount):
         return(-1)
 
     # these prices are in fixed point
-    price = amount
+    price = amount*cumScale
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
     # remove shares from the user's account
     i = 0

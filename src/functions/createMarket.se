@@ -147,6 +147,8 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
     # if it's already been created return 0
     if(INFO.getCreator(marketID) || MARKETS.getMarketNumOutcomes(marketID)):
         return(-8)
+    if(!BRANCHES.getOracleOnly(branch) && CASH.balance(msg.sender) < (initialLiquidity + creationFee)):
+        return(-4)
 
     if(INFO.setInfo(marketID, description, tx.origin, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, forkSelection) && CASH.send(branch, creationFee)):
         i = 0
@@ -154,7 +156,7 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
             EVENTS.addMarket(events[i], marketID)
             i += 1
             
-    if(!BRANCHES.getOracleOnly(branch) && CASH.send(marketID, initialLiquidity/2) 
+    if(!BRANCHES.getOracleOnly(branch) && CASH.send(marketID, initialLiquidity/2)) 
         # buy some of all outcomes
         MARKETS.initialLiquiditySetup(marketID, cumulativeScale, numOutcomes)
         # buy complete sets
@@ -164,11 +166,12 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
         i = 0
         # send shares of the event to user address
         while i <= numOutcomes:
-            MARKETS.modifyShares(marketID, i, initialLiquidity/2)
-            MARKETS.modifyParticipantShares(branch, market, participantNumber, i, initialLiquidity/2)
+            MARKETS.modifyShares(marketID, i, initialLiquidity/(2*cumulativeScale))
+            MARKETS.modifyParticipantShares(branch, market, participantNumber, i, initialLiquidity/(2*cumulativeScale))
             i += 1
         self.cashLiquidityLeft[market] = initialLiquidity/2
-        self.shareLiquidityLeft[market] = initialLiquidity/2
+        # amount of shares held of each outcome
+        self.shareLiquidityLeft[market] = initialLiquidity/(2*cumulativeScale)
         return(marketID)
     else:
         return(1)
@@ -210,12 +213,12 @@ def addSetOfOrders(bids: arr, asks: arr, market):
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
     if(CASH.balance(msg.sender) < cash):
         return(-5)
-    if((self.shareLiquidityLeft[market]-cash) < 0 || (self.cashLiquidityLeft[market]-amount*len(asks)) < 0):
+    if((self.cashLiquidityLeft[market]-cash) < 0 || (self.shareLiquidityLeft[market]-amount) < 0):
         return(-1)
     # remove liquidity from amount needed still remaining for the bid aspect
     self.cashLiquidityLeft[market] -= cash
     # remove liquidity added here in shares amount from amount needed still remaining for the ask aspect
-    self.shareLiquidityLeft[market] -= amount*len(asks)
+    self.shareLiquidityLeft[market] -= amount
 
     i = 0
     # put up ask orders, don't allow mm to cancel them but only adj. them
@@ -259,10 +262,8 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
 
 
 
-
 # call for each set in a schedule to adjust a whole schedule of orders
 def adjustSetOfOrders():
-    #Don't allow initial liquidity to be removed [but can be increased]
     if(amountOfLiquidity < current):
         return(0)
     else:

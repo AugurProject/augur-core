@@ -90,13 +90,10 @@ def cancel(trade_id):
     owner = trade[5]
     # Get market
     market = trade[2]
-    creator = INFO.getCreator(market)
-    if(msg.sender == creator || tx.origin == creator):
-        return(-30)
     outcome = trade[8]
     branch = MARKETS.getBranchID(market)
     cumScale = MARKETS.getCumScale(market)
-    if(TRADES.getInitialTrade(trade_id)):
+    if(TRADES.getInitialTrade(trade_id) && !MARKETS.getOneWinningOutcome(market, 0)):
         return(-2)
     # Check the owner
     if msg.sender == owner:
@@ -136,9 +133,6 @@ macro remove_trade($trade_id, $market_id):
 #
 # costs 532k
 def buy(amount, price, market, outcome):
-    creator = INFO.getCreator(market)
-    if(msg.sender == creator || tx.origin == creator):
-        return(-30)
     if(amount <= 0 or price <= 0 or market==0 or price*amount < 2**64):
         return(-1)
     if(!MARKETS.scheduleSet(market)):
@@ -160,9 +154,6 @@ def buy(amount, price, market, outcome):
 
 # cost 532k
 def sell(amount, price, market_id, outcome):
-    creator = INFO.getCreator(market_id)
-    if(msg.sender == creator || tx.origin == creator):
-        return(-30)
     if(amount <= 0 or price <= 0 or market_id==0 or price*amount < 2**64):
         return(-1)
     branch = MARKETS.getBranchID(market)
@@ -186,6 +177,7 @@ def sell(amount, price, market_id, outcome):
     # -1: oracle only branch
     # -2: bad trade hash
     # -3: trader doesn't exist / own shares in this market
+    # -4: market closed
 #Exchange(Market, outcome, sender, amount, receiver, payment) – transfers amount shares from sender to receiver for payment amount
 #max value is max amount to spend to buy
 #max amount is max shares to sell
@@ -193,6 +185,8 @@ def sell(amount, price, market_id, outcome):
 def trade(max_value, max_amount, trade_ids:arr):
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
+    if(MARKETS.getOneWinningOutcome(market, 0)):
+        return(-4)
     i = 0
     trades = 0
     while i < len(trade_ids):
@@ -222,9 +216,6 @@ def trade(max_value, max_amount, trade_ids:arr):
         market_id = trade[2]
         if(!MARKETS.scheduleSet(market_id)):
             return(0)
-        creator = INFO.getCreator(market_id)
-        if(msg.sender == creator || tx.origin == creator):
-            return(-30)
         amount = trade[3]
         price = trade[4]
         owner = trade[5]
@@ -310,14 +301,12 @@ def trade(max_value, max_amount, trade_ids:arr):
 # buys amount of every outcome
 # cost 850k gas
 def buyCompleteSets(branch, market, amount):
-    creator = INFO.getCreator(market)
-    if(msg.sender == creator || tx.origin == creator):
-        return(-30)
     if(BRANCHES.getOracleOnly(branch)):
         return(-6)
     numEvents = MARKETS.getNumEvents(market)
     events = MARKETS.getMarketEvents(market, outitems=numEvents)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
+    cumScale = MARKETS.getCumScale(market)
     n = 0
     #if event gets pushed back people can still buy / sell
     pushedBack = 0
@@ -334,7 +323,7 @@ def buyCompleteSets(branch, market, amount):
     ### TODO: check for .99 market here
     if ((BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market) && !pushedBack) || MARKETS.getBranchID(market) != branch || !MARKETS.scheduleSet(market)):
         return(-1)
-    price = amount
+    price = amount*cumScale
     if(CASH.balance(tx.origin) < price):
         return(-3)
         
@@ -357,9 +346,6 @@ def buyCompleteSets(branch, market, amount):
     
 # sells amount of every outcome [if user owns it]
 def sellCompleteSets(branch, market, amount):
-    creator = INFO.getCreator(market)
-    if(msg.sender == creator || tx.origin == creator):
-        return(-30)
     if(BRANCHES.getOracleOnly(branch)):
         return(-6)
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
@@ -367,6 +353,7 @@ def sellCompleteSets(branch, market, amount):
     numEvents = MARKETS.getNumEvents(market)
     events = MARKETS.getMarketEvents(market, outitems=numEvents)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
+    cumScale = MARKETS.getCumScale(market)
     n = 0
     #if event gets pushed back people can still buy / sell
     pushedBack = 0
@@ -384,7 +371,7 @@ def sellCompleteSets(branch, market, amount):
         return(-1)
 
     # these prices are in fixed point
-    price = amount
+    price = amount*cumScale
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
     # remove shares from the user's account
     i = 0
@@ -399,7 +386,7 @@ def sellCompleteSets(branch, market, amount):
         MARKETS.modifyParticipantShares(branch, market, participantNumber, i, -amount)
         i += 1
     
-    # send bitcoin from the market to the user acc.
+    # send coin from the market to the user acc.
     CASH.subtractCash(market, price)
     CASH.addCash(tx.origin, price)
     return(1)

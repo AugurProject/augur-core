@@ -363,6 +363,9 @@ def getWinningOutcomes(market):
     #    return(-1)
     # largest # of winning outcomes is 8
     return(load(self.Markets[market].winningOutcomes[0], items=8): arr)
+    
+def getOneWinningOutcome(market, num):
+    return(self.Markets[market].winningOutcomes[num])
 
 def initialLiquiditySetup(marketID, cumScale, numOutcomes):
     #if(!self.whitelist.check(msg.sender)):
