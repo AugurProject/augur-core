@@ -34,6 +34,8 @@ event creationBlock(market:indexed)
 
 data shareLiquidityLeft[]
 data cashLiquidityLeft[]
+data orderSet[][](bids[], asks[], numOrders)
+data orderDepth[]
 
 event log_add_tx(market:indexed, sender, type, price, amount, outcome, tradeid)
 event log_cancel(market:indexed, sender, price, amount, tradeid, outcome, type)
@@ -224,10 +226,13 @@ def addSetOfOrders(bids: arr, asks: arr, market):
     # put up ask orders, don't allow mm to cancel them but only adj. them
     # put up and pay for bid orders, don't allow mm to cancel them but only adj. them
     while i < len(bids):
-        save_trade(ASK, amount, asks[i+1], market, (i/2 + 1), branch, participantNumber)
-        save_trade(BID, amount, bids[i+1], market, (i/2 + 1), branch, participantNumber)
+        ask = save_trade(ASK, amount, asks[i+1], market, (i/2 + 1), branch, participantNumber)
+        bid = save_trade(BID, amount, bids[i+1], market, (i/2 + 1), branch, participantNumber)
+        self.orderSet[market][self.orderDepth[market]].bids[i/2] = bid
+        self.orderSet[market][self.orderDepth[market]].asks[i/2] = ask
         i += 2
-
+    self.orderSet[market][self.orderDepth[market]].numOrders = len(bids)
+    self.orderDepth[market] += 1
     # liquidity is put on the book, market is ready to roll
     if(self.shareLiquidityLeft[market] == 0 && self.cashLiquidityLeft[market] == 0):
         MARKETS.setScheduleSet(market)
@@ -255,6 +260,7 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
         return(-1)
     TRADES.setInitialTrade(trade_id)
     log(type=log_add_tx, $market, msg.sender, $type, $price, $amount, $outcome, trade_id)
+    trade_id
 
 
 
@@ -263,11 +269,57 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
 
 
 # call for each set in a schedule to adjust a whole schedule of orders
-def adjustSetOfOrders():
-    if(amountOfLiquidity < current):
+# bids have amount, price - asks only have prices here
+def adjustSetOfOrders(bids: arr, asks: arr, market, setToReplace):
+    # an ask order can have its price changed to sell at a new price but not amount
+    # a bid order can have its amount _and_ price changed as long as they equal the same total escrowed value as the original bids
+    update trade blocknumbers too
+    
+    oldBids
+    oldAsks
+    oldCash [amount of cash unfilled]
+    
+    cumScale = MARKETS.getCumScale(market)
+    branch = MARKETS.getBranch(market)
+    numOutcomes = MARKETS.getMarketNumOutcomes(market)
+    if(len(bids)!=len(asks) or len(bids)!=numOutcomes*2):
         return(0)
-    else:
-        return(1)
+    i = 0
+    amount = bids[0]
+    if(amount <= 0):
+        return(0)
+    sum = 0
+    cash = 0
+    while i < len(bids):
+        # force num shares on each outcome offered to be equal
+        if(bids[i]!=amount || asks[i]!=amount):
+            return(-1)
+        if(bids[i+1] <= 0 or asks[i+1] <= 0 or asks[i+1]*amount < 2**64 or bids[i+1]*amount < 2**64):
+            return(0)
+        sum += bids[i+1] + asks[i+1]
+        cash += amount*bids[i+1]/2**64
+        if(abs(bids[i+1] - asks[i+1]) > 1844674407370955264):
+            return(-3)
+        i += 2
+    # ensure that bids and asks for each side's outcome add up to 2*(range[1 if binary] + spread[.1]) and no more
+    if(sum > 2*(1844674407370955264 + cumScale)):
+        return(-2)
+
+    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    if(cash!=oldCash):
+        return(-5)
+    i = 0
+    # put up ask orders, don't allow mm to cancel them but only adj. them
+    # put up and pay for bid orders, don't allow mm to cancel them but only adj. them
+    while i < len(bids):
+        ask = save_trade(ASK, amount, asks[i+1], market, (i/2 + 1), branch, participantNumber)
+        bid = save_trade(BID, amount, bids[i+1], market, (i/2 + 1), branch, participantNumber)
+        self.orderSet[market][self.orderDepth[market]].bids[i/2] = bid
+        self.orderSet[market][self.orderDepth[market]].asks[i/2] = ask
+        i += 2
+
+
+
 
 def cancel(trade_id):
     # Get trade

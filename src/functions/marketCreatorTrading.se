@@ -222,6 +222,9 @@ def trade(max_value, max_amount, trade_ids:arr):
         outcome = trade[8]
         if(owner == msg.sender or owner == tx.origin):
             return(0)
+        # Make sure the trade has been mined, obvious HFT prevention
+        if block.number <= self.trades[trade_id].block:
+            return(TRADE_SAME_BLOCK_PROHIBITED)
         branch = MARKETS.getBranchID(market_id)
         creator = INFO.getCreator(market_id)
         
