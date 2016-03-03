@@ -68,6 +68,16 @@ def get_trade(id):
         return(trade:arr)
     return([0]:arr)
 
+def get_amount(id):
+    return(self.trades[id].amount)
+    
+def get_price(id):
+    return(self.trades[id].price)
+
+def update_trade(id, price):
+    self.trades[id].price = price
+    self.trades[id].block = block.number
+
 def remove_trade(id):
     self.trades[id].id = 0
     self.trades[id].type = 0

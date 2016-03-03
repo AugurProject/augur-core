@@ -30,6 +30,7 @@ data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenaliz
     # -2: already past first half of new period and needed to penalize before then
     # -3: need to do not enough reports penalization [or lackthereof]
 def penalizeWrong(branch, event):
+    #roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
@@ -50,6 +51,11 @@ def penalizeWrong(branch, event):
     outcome = EVENTS.getOutcome(event)
     reportValue = MAKEREPORTS.getReport(branch, lastPeriod, event)
     p = self.proportionCorrect(event)
+    if(scalar(event) or categorical(event)):
+        outcome = EVENTS.getUncaughtOutcome(event)
+        # or can do
+        outcome = EVENTS.getMode(event)
+        # which should be exactly the same
     oldRep = MAKEREPORTS.getBeforeRep(branch, lastPeriod)
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && reportValue && outcome!=0):
         # wrong

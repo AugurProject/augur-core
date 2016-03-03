@@ -63,8 +63,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
         EVENTS.setRejected(event, EVENTS.getExpiration(event)/periodLength, fxpOutcome)
         return(-6)
     # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
-    # why residual < periodLength/2?
-    if(fxpOutcome==3*2**63 && !pushedBack && residual < periodLength/2):
+    if(fxpOutcome==3*2**63 && !pushedBack):
         # give event bond money to reporters
         CASH.subtractCash(event, EVENTS.getBond(event))
         CASH.addCash(branch, EVENTS.getBond(event))
@@ -136,7 +135,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         return(-6)
 
     # if .5 due to catch param push back once (as .5 outcome), if same on next consensus no more push backs, that's the outcome
-    if(fxpOutcome==3*2**63 && !pushedBack && residual < periodLength/2):
+    if(fxpOutcome==3*2**63 && !pushedBack):
         # give event bond money to reporters
         CASH.subtractCash(event, EVENTS.getBond(event))
         CASH.addCash(branch, EVENTS.getBond(event))

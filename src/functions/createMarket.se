@@ -38,7 +38,7 @@ data orderSet[][](bids[], asks[], numOrders)
 data orderDepth[]
 
 event log_add_tx(market:indexed, sender, type, price, amount, outcome, tradeid)
-event log_cancel(market:indexed, sender, price, amount, tradeid, outcome, type)
+event log_update_tx(market:indexed, sender, type, price, tradeid)
 
 # Trade types
 macro BID: 1
@@ -122,7 +122,7 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
         else:
             numOutcomes *= eventNumOutcomes
         i += 1
-    if(numOutcomes > 80):
+    if(numOutcomes > 8):
         return(-3)
     if(cumulativeScale==0):
         cumulativeScale = 1
@@ -158,7 +158,7 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
             EVENTS.addMarket(events[i], marketID)
             i += 1
             
-    if(!BRANCHES.getOracleOnly(branch) && CASH.send(marketID, initialLiquidity/2)) 
+    if(!BRANCHES.getOracleOnly(branch) && CASH.send(marketID, initialLiquidity/2))
         # buy some of all outcomes
         MARKETS.initialLiquiditySetup(marketID, cumulativeScale, numOutcomes)
         # buy complete sets
@@ -186,6 +186,8 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
 # if schedule of orders not set, no one can trade in the market
 # returns 1 if done, 2 if not done yet but order was added successfully
 def addSetOfOrders(bids: arr, asks: arr, market):
+    if(msg.sender != INFO.getCreator(market) || tx.origin != INFO.getCreator(market)):
+        return(-4)
     cumScale = MARKETS.getCumScale(market)
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
@@ -262,45 +264,39 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
     log(type=log_add_tx, $market, msg.sender, $type, $price, $amount, $outcome, trade_id)
     trade_id
 
-
-
-
-
-
-
 # call for each set in a schedule to adjust a whole schedule of orders
-# bids have amount, price - asks only have prices here
+# bids and asks only have prices here
 def adjustSetOfOrders(bids: arr, asks: arr, market, setToReplace):
-    # an ask order can have its price changed to sell at a new price but not amount
-    # a bid order can have its amount _and_ price changed as long as they equal the same total escrowed value as the original bids
-    update trade blocknumbers too
-    
-    oldBids
-    oldAsks
-    oldCash [amount of cash unfilled]
-    
+    if(msg.sender != INFO.getCreator(market) || tx.origin != INFO.getCreator(market)):
+        return(-4)
+    # an ask order can have its price changed to sell at a new price
+    # bid orders can have their prices changed as long as the sums equal the same total escrowed value as the original bids
+    oldCash = 0
+    oldBids = array(self.orderSet[market][setToReplace].numOrders)
+    oldAsks = array(self.orderSet[market][setToReplace].numOrders)
+    i = 0
+    while i < self.orderSet[market][setToReplace].numOrders:
+        oldBids[i] = self.orderSet[market][setToReplace].bids[i]
+        oldAsks[i] = self.orderSet[market][setToReplace].asks[i]
+        oldCash += TRADES.get_amount(oldBids[i])*TRADES.get_price(oldBids[i])/2**64
+        i += 1
+
     cumScale = MARKETS.getCumScale(market)
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
-    if(len(bids)!=len(asks) or len(bids)!=numOutcomes*2):
+    if(len(bids)!=len(asks) or len(bids)!=numOutcomes or len(bids)!=len(oldBids)):
         return(0)
     i = 0
-    amount = bids[0]
-    if(amount <= 0):
-        return(0)
     sum = 0
     cash = 0
     while i < len(bids):
-        # force num shares on each outcome offered to be equal
-        if(bids[i]!=amount || asks[i]!=amount):
-            return(-1)
-        if(bids[i+1] <= 0 or asks[i+1] <= 0 or asks[i+1]*amount < 2**64 or bids[i+1]*amount < 2**64):
+        if(bids[i] <= 0 or asks[i] <= 0):
             return(0)
-        sum += bids[i+1] + asks[i+1]
-        cash += amount*bids[i+1]/2**64
-        if(abs(bids[i+1] - asks[i+1]) > 1844674407370955264):
+        sum += bids[i] + asks[i]
+        cash += TRADES.get_amount(oldBids[i])*bids[i]/2**64
+        if(abs(bids[i] - asks[i]) > 1844674407370955264):
             return(-3)
-        i += 2
+        i += 1
     # ensure that bids and asks for each side's outcome add up to 2*(range[1 if binary] + spread[.1]) and no more
     if(sum > 2*(1844674407370955264 + cumScale)):
         return(-2)
@@ -309,80 +305,17 @@ def adjustSetOfOrders(bids: arr, asks: arr, market, setToReplace):
     if(cash!=oldCash):
         return(-5)
     i = 0
-    # put up ask orders, don't allow mm to cancel them but only adj. them
-    # put up and pay for bid orders, don't allow mm to cancel them but only adj. them
     while i < len(bids):
-        ask = save_trade(ASK, amount, asks[i+1], market, (i/2 + 1), branch, participantNumber)
-        bid = save_trade(BID, amount, bids[i+1], market, (i/2 + 1), branch, participantNumber)
-        self.orderSet[market][self.orderDepth[market]].bids[i/2] = bid
-        self.orderSet[market][self.orderDepth[market]].asks[i/2] = ask
-        i += 2
-
-
-
-
-def cancel(trade_id):
-    # Get trade
-    trade = array(9)
-    trade = TRADES.get_trade(trade_id, outitems=9)
-    if !trade:
-        return(0)
-
-    type = trade[1]
-    amount = trade[3]
-    price = trade[4]
-    owner = trade[5]
-    # Get market
-    market = trade[2]
-    creator = INFO.getCreator(market)
-    if(msg.sender == creator || tx.origin == creator):
-        return(-30)
-    outcome = trade[8]
-    branch = MARKETS.getBranchID(market)
-    trading_fee = MARKETS.getTradingFee(market)
-    cumScale = MARKETS.getCumScale(market)
-    fee = fee_percent(trading_fee, price, amount, cumScale)
-    # Check the owner
-    if msg.sender == owner:
-        # Clear the trade first
-        remove_trade(trade_id, market)
-
-        # Issue refunds
-        if type == BID:
-            # cash refund
-            CASH.subtractCash(market, amount * price / 2**64)
-            CASH.subtractCash(branch, (amount * price / 2**64 * fee / 2**64)/2)
-            CASH.subtractCash(INFO.getCreator(market), (amount * price / 2**64 * fee / 2**64)/2)
-            CASH.addCash(msg.sender, (amount * price / 2**64 + (amount * price / 2**64 * fee / 2**64)))
-
-        elif type == ASK:
-            # shares refund
-            participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
-            branch = MARKETS.getBranchID(market)
-            MARKETS.modifyParticipantShares(branch, market, participantNumber, outcome, amount)
-            CASH.subtractCash(branch, (amount * price / 2**64 * fee / 2**64)/2)
-            CASH.subtractCash(INFO.getCreator(market), (amount * price / 2**64 * fee / 2**64)/2)
-            CASH.addCash(msg.sender, (amount * price / 2**64 * fee / 2**64))
-
-        
-        # Log cancellation
-        log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type)
-        return(SUCCESS)
-    return(FAILURE)
-
-macro remove_trade($trade_id, $market_id):
-    TRADES.remove_trade(trade_id)
-    
-    MARKETS.remove_trade_from_market(market_id, trade_id)
-
-
-
-
-
-
-
+        TRADES.update_trade(oldBids[i], bids[i])
+        TRADES.update_trade(oldAsks[i], asks[i])
+        log(type=log_update_tx, market, msg.sender, BID, bids[i], trade_id)
+        log(type=log_update_tx, market, msg.sender, ASK, asks[i], trade_id)
+        i += 1
+    return(1)
 
 def updateTradingFee(branch, market, tradingFee):
+    if(msg.sender != INFO.getCreator(market) || tx.origin != INFO.getCreator(market)):
+        return(-4)
     oldFee = MARKETS.getTradingFee(market)
     oldCreationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * 2**64 / oldFee
     newCreationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * 2**64 / tradingFee
@@ -444,6 +377,7 @@ def moveMarketAndAssocEvents(market, fork):
     # and market remains with old expiration dateevent
 # In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
 def pushMarketForward(branch, market):
+    # prevent for backstop 1 markets and vice versa
     # todo: if has been pushed forward in the past (see close market) don't allow it again
     numEvents = MARKETS.getNumEvents(market)
     if(marketClosed):

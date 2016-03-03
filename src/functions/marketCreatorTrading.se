@@ -133,6 +133,8 @@ macro remove_trade($trade_id, $market_id):
 #
 # costs 532k
 def buy(amount, price, market, outcome):
+    if(msg.sender != INFO.getCreator(market) || tx.origin != INFO.getCreator(market)):
+        return(-4)
     if(amount <= 0 or price <= 0 or market==0 or price*amount < 2**64):
         return(-1)
     if(!MARKETS.scheduleSet(market)):
@@ -156,6 +158,8 @@ def buy(amount, price, market, outcome):
 def sell(amount, price, market_id, outcome):
     if(amount <= 0 or price <= 0 or market_id==0 or price*amount < 2**64):
         return(-1)
+    if(msg.sender != INFO.getCreator(market_id) || tx.origin != INFO.getCreator(market_id)):
+        return(-4)
     branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
@@ -228,6 +232,8 @@ def trade(max_value, max_amount, trade_ids:arr):
         branch = MARKETS.getBranchID(market_id)
         creator = INFO.getCreator(market_id)
         
+        if(msg.sender != INFO.getCreator(market_id) || tx.origin != INFO.getCreator(market_id)):
+            return(-4)
         cumScale = MARKETS.getCumScale(market_id)
 
         # Fill buy order
@@ -311,6 +317,8 @@ def buyCompleteSets(branch, market, amount):
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumScale = MARKETS.getCumScale(market)
     n = 0
+    if(msg.sender != INFO.getCreator(market_id) || tx.origin != INFO.getCreator(market_id)):
+        return(-4)
     #if event gets pushed back people can still buy / sell
     pushedBack = 0
     while n < numEvents:
@@ -351,6 +359,8 @@ def buyCompleteSets(branch, market, amount):
 def sellCompleteSets(branch, market, amount):
     if(BRANCHES.getOracleOnly(branch)):
         return(-6)
+    if(msg.sender != INFO.getCreator(market_id) || tx.origin != INFO.getCreator(market_id)):
+        return(-4)
     # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
     numEvents = MARKETS.getNumEvents(market)
