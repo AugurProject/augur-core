@@ -33,10 +33,17 @@ def cashFaucet():
     return(1)
 
 def reputationFaucet(branch):
+    index = 0
     if REPORTING.repIDToIndex(branch, tx.origin) != 0 or REPORTING.getReporterID(branch, 0) == tx.origin:
         index = REPORTING.repIDToIndex(branch, tx.origin)
     else:
         index = REPORTING.getNumberReporters(branch)
         REPORTING.addReporter(branch, tx.origin)
     REPORTING.setRep(branch, index, 47*2**64)
+    return(1)
+
+def fundNewAccount(branch):
+    CASH.send(self, 0)
+    self.reputationFaucet(branch)
+    CASH.setCash(tx.origin, 10000*2^64)
     return(1)

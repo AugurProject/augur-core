@@ -93,7 +93,7 @@ def addCash(ID, amount):
 def setCash(address, balance):
     #if !self.whitelist.check(msg.sender):
     #    return(-1)
-    if(msg.sender!=self.owners[address] && tx.origin!=self.owners[ID]):
+    if(msg.sender!=self.owners[address] && tx.origin!=self.owners[address]):
         return(0)
     self.cashcoinBalances[address] = balance
     return(1)
