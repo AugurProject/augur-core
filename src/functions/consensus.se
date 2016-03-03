@@ -1,5 +1,5 @@
 import cash as CASH
-import expiringEvents as EXPIRING
+import expiringEvents as EXPEVENTS
 import reporting as REPORTING
 import events as EVENTS
 import fxpFunctions as FXP

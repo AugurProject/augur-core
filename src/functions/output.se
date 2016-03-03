@@ -737,12 +737,8 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
 		return(-9)
 	#if(block.number/self.getPeriodLength(branch)!=((block.number + 4800)/self.getPeriodLength(branch))):
 	#    return(-10)
-	if(!self.upToDateOnRR[msg.sender]):
-		# TODO: calls to consensus functions and in send rep
-		#doIt()
-		self.upToDateOnRR[msg.sender] = 1
-	#if(feesNotCollected && hasReportedLastPeriod):
-	#    doItOrReturn0
+	if(feesNotCollected && hasReportedLastPeriod):
+	    doItOrReturn0
 	x = array(1)
 	x[0] = tx.origin + eventID
 	reportingThreshold = self.calculateReportingThreshold(branch, eventID, votePeriod)
