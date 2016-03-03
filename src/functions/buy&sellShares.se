@@ -28,7 +28,7 @@ import fxpFunctions as FXP
 import markets as MARKETS
 import events as EVENTS
 
-event updatePrice(user:indexed, market:indexed, outcome:indexed, price, cost)
+event updatePrice(user:indexed, market:indexed, outcome:indexed, price, cost, shares)
 
 # market, reporter
 data trades[][](hash, block)
@@ -122,8 +122,8 @@ def buyShares(branch, market, outcome, amount, limit):
     CASH.send(INFO.getCreator(market), fee/2)
     # other half go to branch
     CASH.send(branch, fee/2)
-    # log new price & avg price paid/share
-    log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), -(price+fee)*2^64/amount)
+    # log new price, avg price paid/share, and number of shares
+    log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), -(price+fee)*2^64/amount, amount)
     return(1)
 
 # amount is amount of shares to sell
@@ -196,6 +196,6 @@ def sellShares(branch, market, outcome, amount, limit):
         price -= fee
         CASH.addCash(tx.origin, price)
         MARKETS.modifyParticipantShares(branch, market, participantNumber, outcome, -amount)
-        # log new price and avg. price sold / share
-        log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), (price)*2^64/amount)
+        # log new price and avg. price sold / share and number of shares
+        log(type=updatePrice, tx.origin, market, outcome, MARKETS.price(market, outcome), (price)*2^64/amount, amount)
         return(1)

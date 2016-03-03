@@ -463,6 +463,8 @@ def compile(fullname):
         with open(fullname, 'w') as f:
             f.write(code)
 
+    # new version of serpent:
+    # fullsig = serpent.mk_full_signature(code)
     fullsig = json.loads(serpent.mk_full_signature(code))
     shortname = get_shortname(fullname)
 
