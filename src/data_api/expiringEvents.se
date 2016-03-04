@@ -27,7 +27,10 @@ import events as EVENTS
 data EventsExpDates[][](numberEvents, numberRemoved, events[], totalRepReported, numEventsToReportOn, reportHash[][], periodVolume, roundTwoNumEvents)
 
 data EventIDToIndex[][]
-	
+
+# branch, period as params
+data numReqEvents[][]
+
 def getRoundTwo(branch, period):
 	return(self.EventsExpDates[branch][period].roundTwoNumEvents)
 	
@@ -54,13 +57,19 @@ def getEventIndex(period, eventID):
 def setNumEventsToReportOn(branch, expDateIndex):
 	# after voting has started
 	if(expDateIndex==BRANCHES.getVotePeriod(branch)):
-		numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
+		numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents - self.numReqEvents[branch][expDateIndex]
 		numberToReportOnEstimate = (numEvents-self.EventsExpDates[branch][expDateIndex].numberRemoved)*BRANCHES.getBaseReporters(branch)
-		self.EventsExpDates[branch][expDateIndex].numEventsToReportOn = numberToReportOnEstimate
+		self.EventsExpDates[branch][expDateIndex].numEventsToReportOn = numberToReportOnEstimate + self.numReqEvents[branch][expDateIndex]
 		return(1)
 	else:
 		return(-1)
 
+def getNumRequired(branch, period):
+	return(self.numReqEvents[branch][period])
+
+def addReqEvent(branch, period):
+	self.numReqEvents[branch][period] += 1
+	return(1)
 
 def getNumEventsToReportOn(branch, expDateIndex):
 	return(self.EventsExpDates[branch][expDateIndex].numEventsToReportOn)

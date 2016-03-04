@@ -34,14 +34,10 @@ data reportable[][]
 data mode_items[][](report_value[], current_mode, current_mode_items)
 
 
-# need to finish this req. events stuff for round 2 pushback _and_:
-	# what _if_ there are actually <30 events in augur?
-		# perhaps we should have all reporters in that period report on all of them
+# what _if_ there are actually <30 events in augur?
+	# perhaps we should have all reporters in that period report on all of them
 
 data requiredEvents[]
-#self.Events[event].threshold = 2**256
-# branch, period as params
-data numReqEvents[][]
 data upToDateOnRR[]
 
 def getReportedPeriod(branch, period, reporter):
@@ -58,11 +54,11 @@ def setReportable(votePeriod, eventID):
 def setEventRequired(branch, period, event):
 	if(self.requiredEvents[event]==0):
 		self.requiredEvents[event] = 1
-		self.numReqEvents[branch][period] += 1
+		EXPEVENTS.addReqEvent(branch, period)
 		return(1)
 	else:
 		return(0)
-	
+
 def getRRUpToDate():
 	return(self.upToDateOnRR[msg.sender])
 	
@@ -175,7 +171,7 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
 	x = array(1)
 	x[0] = tx.origin + eventID
 	shaHash = sha3(x, items=1)/2**64
-	if(residual < periodLength/2 && (shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(eventID))):
+	if(residual < periodLength/2 && (shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(eventID) || self.requiredEvents[eventID])):
 		# don't increment num reports expected or numreportshash per reporter for updated commitment, just the first time
 		if(EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, eventID)==0):
 			self.branches[branch].numReportsExpectedEvent[votePeriod][eventID] += 1
@@ -241,7 +237,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
 		#Calculated as opposed to a global variable that slowly changes over time that is.
 		#I think perhaps the target number of reports per reporter could be something like   150+Base_Reporter_Amount
 	shaHash = sha3(x, items=1)/2**64
-	if(shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(eventID)):
+	if(shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(eventID) || self.requiredEvents[eventID]):
 		residual = block.number % periodLength
 		if(residual > periodLength/2):
 			realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, eventID)

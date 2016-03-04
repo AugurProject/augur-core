@@ -10,12 +10,16 @@ import sendReputation as SENDREP
 
 data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final)
 
+def getRoundTwo(event):
+    return(self.roundTwo[event].roundTwo)
+    
+def getFinal(event):
+    return(self.roundTwo[event].final)
+
 # Appeal_Bond = Market_Value * (0.01 + Market_Fee / 2) + Average_Adjudication_Cost
     # Average_Adjudication_Cost = Total fees paid to reporters for all markets in this reporting round / number of markets in this reporting round.
         # needs an abs min of like 100 rep.
 # Reporting period is 2 months minus 24 hours.  This 24 hours allows for the appeals to take place before the next reporting round begins.
-# TODO: if round 2 event && notFinal return 0 for market closing
-# make reports todo wrt event required handling
 def roundTwoPostBond(branch, event, eventIndex, votePeriod):
     bond = 100*2**64
     if(BRANCHES.getVotePeriod(branch)!=votePeriod):
@@ -63,7 +67,7 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
 	    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), bond)
     	# and set final outcome / event bond, etc
     	self.resolve(branch, event)
-    	#b) reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting [don't count ethicality here]
+    	# reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting [don't count ethicality here]
     	self.roundTwo[event].final = 1
 	    return(2*bond)
 	elif(votedOnAgain && self.roundTwo[event].roundTwo && votePeriod!=self.roundTwo[event].originalVotePeriod && eventID!=0 && event==eventID):
@@ -78,76 +82,6 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
     else:
     	return(0)
 
-
-
-
-
-
-
-penalizeWrong for backstop 1 [don't penalize based on ethicality]:
-  # if appealed don't allow rbcr until after the appeal process is over
-  if(self.roundTwo[event].roundTwo && !self.roundTwo[event].final):
-	return(0)
-  # reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting
-  # Don't want to allow people to do rbcr for a round 2 event until the round 2 period is over
-	# So we want to do the rbcr for both period 1 and period 2 at this time
-	# ○ Do the first rbcr, payback bond and subtract diff in rep from total rep reported b/c it goes to bonded challenger and not reporters who reported that round
-	#	○ Do the second (for each user), payback bond and subtract diff in rep from total rep reported b/c it goes to bonded challenger and not reporters who reported that round
-	#	○ Denominator is as normal, but totalRepReported is lower
-  # if round 2 outcome is different
-  # does this work properly for scalars and binary and categorical re p and scalar 0-1 reports in fxp and binary 1 or 2 or 1.5 in fxp
-  if(self.roundTwo[event].originalOutcome != EVENTS.getOutcome(event) && self.roundTwo[event].originalOutcome != EVENTS.getmode(event) && notDoneForEvent && periodOver && reported && eventInPeriod):
-	# submit later period, do rbcr on both
-	if(period == (EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch))):
-	  p = self.getProportionCorrect(event)
-	  outcome = EVENTS.getOutcome(event)
-	  reportValue = REPORTS.getReport(branch,period,event)
-	  secondReportValue
-	  oldRep = REPORTS.getBeforeRep(branch, period)
-	  # wrong
-	  if(reportValue > outcome+.01 or reportValue < outcome-.01):
-		if(scalar or categorical):
-		  # should be [uncaught] outcome since mode is the same
-		  p = -(abs(reportValue - EVENTS.getmode(event))/2) + 1
-		newRep = oldRep*(2*p -1)
-	  # right
-	  else:
-		if(scalar or categorical):
-		  p = -(abs(reportValue - EVENTS.getmode(event))/2) + 1
-		newRep = oldRep*(2*(1-p)**2 / p + 1)
-	  smoothedRep = oldRep*.8 + newRep*.2
-	  REPORTS.setAfterRep(branch, period, oldRep + (smoothedRep - oldRep))
-
-	  repChange = smoothedRep - oldRep
-
-	  if(repChange < 0):
-		self.repDelta[period][tx.origin] += -1*repChange
-		# give rep to bonded challenger
-		# only give rep to bonded challenger _if_ it hasn't been paid back 2x yet
-		if(self.bondPaid[event] < 200):
-		  # done instead of sending to redistrib. pool
-		  addRepToBondedChallenger(-1*repChange)
-		  removeRepFromReporter(-1*repChange)
-		else:
-		  sendToRedistribPoolForThisPeriod
-
-	  if(doneForAllEventsUserReportedOnExceptAnyRoundTwoEventsInThisRoundButNotExemptingOldPeriodRoundTwoEvents):
-		self.totalRepPenalized[period] += oldRep
-		self.denominator[branch][period] = self.totalRepPenalized[period] + (smoothedRep - oldRep)
-
-
-
-
-
-
-
-
-
-
-
-
-
-		
 macro scalar($event):
     ((EVENTS.getMaxValue($event)!=2 || EVENTS.getMinValue($event)!=1) && EVENTS.getNumOutcomes($event)==2)
         

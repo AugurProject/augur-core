@@ -29,6 +29,7 @@ import closeMarketTwo as CLOSETWO
 import closeMarketFour as CLOSEFOUR
 import closeMarketEight as CLOSEEIGHT
 import expiringEvents as EXPEVENTS
+import backstops as BACKSTOPS
 import makeReports as MAKEREPORTS
 import eventResolution as RESOLVE
 
@@ -64,6 +65,7 @@ macro ethic_catch($x):
 # Error messages otherwise
     # -1: Market has no cash anyway / already closed
     # -2: 0 outcome
+    # -3: not final round 2 event
     # -4: Outcome .5 once, pushback and retry
     # -6: bonded pushed forward market not ready to be resolved
     # -7: event not reportable >.99
@@ -105,7 +107,8 @@ def closeMarket(branch, market):
                 return(-7)
             if(EVENTS.getUncaughtOutcome(events[n])==0):
                 return(-2)
-            # TODO: if round 2 event && notFinal return 0
+            if(BACKSTOPS.getRoundTwo(event) && !BACKSTOPS.getFinal(event)):
+                return(-3)
             if(binary(events[n]) && fxpOutcome==0):
                     resolution = RESOLVE.resolveBinary(events[n], market, branch, votingPeriodEvent, period)
             elif(scalar(events[n]) && EVENTS.getmode(events[n])==0):
