@@ -159,6 +159,9 @@ def collectFees(branch):
         return(0)
 
 # call when a user who hasn't reported for a while wants to start again and needs to catch up on penalizations
+# Returns 1 if successful.  Otherwise:
+#   0: already caught up on this branch
+#  -2: can only be called during the first half of the reporting period
 def penalizationCatchup(branch):
     # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
     periodLength = BRANCHES.getPeriodLength(branch)
