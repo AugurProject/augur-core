@@ -103,8 +103,8 @@ def penalizeNotEnoughReports(branch):
         return(-2)
     numEvents = MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
     # min. of 30 events no matter how little rep you have
-    if(numEvents < 30*2**64):
-        numEvents = 30*2**64
+    #if(numEvents < 30*2**64):
+    #    numEvents = 30*2**64
     repConstant = REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch)
     logOutput = FXP.fx_log(repConstant)
     exp = FXP.fx_exp(22136092888451461120*logOutput/2**64)
@@ -122,6 +122,8 @@ def penalizeNotEnoughReports(branch):
         newRep = 3689348814741910528*numReportsActual*originalRep / numEvents
         oldRep = originalRep*14757395258967642112 / 2**64
         repChange = (oldRep+newRep) - originalRep
+        if(repChange > 0):
+            return(1)
         # removes rep from reporter who lost it
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), repChange)
         # sends that rep to the branch rep pool
