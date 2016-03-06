@@ -119,7 +119,7 @@ def penalizeNotEnoughReports(branch):
     if(numEvents/(2*2**64) > MAKEREPORTS.getNumReportsActual(branch, lastPeriod)):
         originalRep = REPORTING.getRepBalance(branch, tx.origin)
         # penalize people
-        newRep = 3689348814741910528*numReportsActual*originalRep / MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
+        newRep = 3689348814741910528*numReportsActual*originalRep / numEvents
         oldRep = originalRep*14757395258967642112 / 2**64
         repChange = (oldRep+newRep) - originalRep
         # removes rep from reporter who lost it
