@@ -24,6 +24,20 @@ data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenaliz
 def initialPenalizedSetting(branch, reporter, upto):
     self.branch[branch].penalizedUpTo[reporter] = upto
     return(1)
+    
+macro YES: 2^65
+macro NO: 2^64
+macro BAD: 3 * 2^63
+macro CATCH_TOLERANCE: 2^64 / 10
+
+# Bins values to 1, 1.5, 2
+macro catch($x):
+    if($x < (BAD - CATCH_TOLERANCE)):
+        NO
+    elif($x > (BAD + CATCH_TOLERANCE)):
+        YES
+    else:
+        BAD
 
 #1. Record rep at start of report period [before rep in make reports]
 #2. Penalize for each event
@@ -52,7 +66,7 @@ def penalizeWrong(branch, event):
     if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event) && MARKETS.getPushedForward(market)):
         if(lastPeriod==EVENTS.getOriginalExpiration(event)/BRANCHES.getPeriodLength(branch)):
             return(-1)
-    outcome = EVENTS.getOutcome(event)
+    outcome = catch(EVENTS.getUncaughtOutcome(event))
     reportValue = MAKEREPORTS.getReport(branch, lastPeriod, event)
     p = self.proportionCorrect(event)
     if(scalar(event) or categorical(event)):
@@ -192,7 +206,7 @@ def penalizationCatchup(branch):
     if(lastPeriodPenalized!=lastPeriod && !hasReported(branch, lastPeriod)):
         # dock 10% for each period they didn't penalize on
         #smoothedRep = oldRep*16602069666338596864/2**64
-        if(delta<0):
+        if(delta <= 0):
             return(0)
         smoothedRep = oldRep*18262276632972455936/2**64
         i = 1
@@ -263,7 +277,7 @@ macro abs($a):
     
 def proportionCorrect(event, branch, period):
     p = 0
-    outcome = EVENTS.getOutcome(event)
+    outcome = catch(EVENTS.getUncaughtOutcome(event))
     if(outcome!=0):
         # binary
         if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65 and 2**64*EVENTS.getMinValue(event)==2**64):

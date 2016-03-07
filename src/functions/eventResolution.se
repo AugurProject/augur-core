@@ -40,6 +40,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
     residual = block.number % periodLength
     ethical = ethic_catch(EVENTS.getEthical(event))
     EVENTS.setOutcome(event, fxpOutcome)
+    EVENTS.setEthics(event, ethical)
     # In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration date
     if(fxpOutcome == 3*2**63 && MARKETS.getPushedForward(market)):
@@ -90,7 +91,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
         CASH.addCash(branch, 42*2**64)
         # not ethical is same as .5 outcome
         fxpOutcome = 3*2**63
-        #EVENTS.setOutcome(event, fxpOutcome)
+        EVENTS.setOutcome(event, fxpOutcome)
     else:
         # return bond
         CASH.subtractCash(event, 42*2**64)
@@ -111,6 +112,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.number % periodLength
     ethical = ethic_catch(EVENTS.getEthical(event))
+    EVENTS.setEthics(event, ethical)
 
     # In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration date
@@ -162,8 +164,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         CASH.addCash(branch, 42*2**64)
         # not ethical is same as .5 outcome
         fxpOutcome = 3*2**63
-        #EVENTS.setOutcome(event, fxpOutcome)
-        #EVENTS.setmode(event, fxpOutcome)
+        EVENTS.setOutcome(event, fxpOutcome)
     else:
         # return bond
         CASH.subtractCash(event, 42*2**64)
