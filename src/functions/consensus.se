@@ -192,7 +192,7 @@ def penalizationCatchup(branch):
     if(lastPeriodPenalized!=lastPeriod && !hasReported(branch, lastPeriod)):
         # dock 10% for each period they didn't penalize on
         #smoothedRep = oldRep*16602069666338596864/2**64
-        if(delta<0):
+        if(delta <= 0):
             return(0)
         smoothedRep = oldRep*18262276632972455936/2**64
         i = 1
