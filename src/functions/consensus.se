@@ -285,6 +285,8 @@ macro repRedistributionDone($branch, $reporter):
     else:
         0
 
+def getRRDone(branch, reporter):
+    return(repRedistributionDone(branch, reporter))
 
 macro scalar($event):
     ((EVENTS.getMaxValue($event)!=2 || EVENTS.getMinValue($event)!=1) && EVENTS.getNumOutcomes($event)==2)
