@@ -174,6 +174,7 @@ def penalizeNotEnoughReports(branch):
     if(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
         self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized = 1
         return(1)
+    # TODOTODO
     # req. events for round 2 is wrong
     # required to report on half of all events selected + all required round 2 events (need to account for that)
     # get threshold doesn't matter for a req. round 2 event, have to report on no matter what
@@ -267,7 +268,6 @@ def penalizationCatchup(branch):
     if(residual > periodLength/2):
         return(-2)
     # find delta between this last period and last penalized up to
-    # doesn't work properly for new branch creation or branch creation on another chain
     lastPeriodPenalized = self.branch[branch].penalizedUpTo[tx.origin]
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     delta = lastPeriod - lastPeriodPenalized
