@@ -10,6 +10,8 @@ import markets as MARKETS
 # round two consensus data
 data bondPaid[]
 data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, final)
+data periodBalance[][]
+data feeFirst
 
 # branch takes a branchID
     # denominator takes a vote period
@@ -147,7 +149,10 @@ def collectFees(branch):
     if(!self.branch[branch].feesCollected[lastPeriod][tx.origin] && hasReported(branch, lastPeriod)):
         newRep = MAKEREPORTS.getAfterRep(branch, lastPeriod)
         denominator = self.branch[branch].denominator[lastPeriod]
-        gainedRep = newRep * 2**64 / denominator * REPORTING.getRepBalance(branch, branch) / 2**64
+        if(!self.feeFirst):
+            self.feeFirst = 1
+            self.periodBalance[branch][lastPeriod] = REPORTING.getRepBalance(branch, branch)
+        gainedRep = newRep * 2**64 / denominator * self.periodBalance[branch][lastPeriod] / 2**64
         #if(lostRep) newRep should be == MAKEREPORTS.getAfterRep(branch, period) + gainedRep
         #if(gainedRep) newRep should be == MAKEREPORTS.getBeforeRep(branch, period) + gainedRep
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), gainedRep)
