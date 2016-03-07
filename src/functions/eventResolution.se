@@ -90,7 +90,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
         CASH.addCash(branch, 42*2**64)
         # not ethical is same as .5 outcome
         fxpOutcome = 3*2**63
-        EVENTS.setOutcome(event, fxpOutcome)
+        #EVENTS.setOutcome(event, fxpOutcome)
     else:
         # return bond
         CASH.subtractCash(event, 42*2**64)
@@ -162,8 +162,8 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         CASH.addCash(branch, 42*2**64)
         # not ethical is same as .5 outcome
         fxpOutcome = 3*2**63
-        EVENTS.setOutcome(event, fxpOutcome)
-        EVENTS.setmode(event, fxpOutcome)
+        #EVENTS.setOutcome(event, fxpOutcome)
+        #EVENTS.setmode(event, fxpOutcome)
     else:
         # return bond
         CASH.subtractCash(event, 42*2**64)
