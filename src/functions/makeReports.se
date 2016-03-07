@@ -40,6 +40,9 @@ data mode_items[][](report_value[], current_mode, current_mode_items)
 data requiredEvents[]
 data upToDateOnRR[]
 
+# branch, period as params
+data numReqEvents[][]
+
 def getReportedPeriod(branch, period, reporter):
 	return(self.branches[branch].reportedPeriod[period][reporter])
 
@@ -54,10 +57,13 @@ def setReportable(votePeriod, eventID):
 def setEventRequired(branch, period, event):
 	if(self.requiredEvents[event]==0):
 		self.requiredEvents[event] = 1
-		EXPEVENTS.addReqEvent(branch, period)
+		self.numReqEvents[branch][period] += 1
 		return(1)
 	else:
 		return(0)
+		
+def getNumRequired(branch, period):
+	return(self.numReqEvents[branch][period])
 
 def getRRUpToDate():
 	return(self.upToDateOnRR[msg.sender])
@@ -306,7 +312,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
 		volFraction = volume*2**64/totalVol
 	numEvents = self.getNumEventsToReport(branch, votePeriod)
 	if(numEvents < 30*2**64):
-		# this isn't right, needs to be newrepconstant=?^1.2 + 0.001 = repconstant*30/numEvents
+		# todo this isn't right, needs to be newrepconstant=?^1.2 + 0.001 = repconstant*30/numEvents
 		repConstant = 30*2**128/numEvents 
 	# in fxp (2**128) == 2**192 / 2**64
 	reportingThreshold = BRANCHES.getBaseReporters(branch)*((-(267*volFraction**2)/(2*2**64) + (533*volFraction)/2 + 1*2**64)*repConstant/2**64) * (2**128)
@@ -321,7 +327,7 @@ def getNumEventsToReport(branch, votePeriod):
 	logOutput = FXP.fx_log(repConstant)
 	exp = FXP.fx_exp(22136092888451461120*logOutput/2**64)
 	exp += 18446744073709552
-	total = exp*prelim
+	total = exp*prelim + self.numReqEvents[branch][expDateIndex]
 	return(total)
 
 def needsReportingOn(event):

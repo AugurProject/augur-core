@@ -191,16 +191,14 @@ def penalizeNotEnoughReports(branch):
         self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized = 1
         return(1)
     # TODOTODO
-    # req. events for round 2 is wrong
     # required to report on half of all events selected + all required round 2 events (need to account for that)
-    # get threshold doesn't matter for a req. round 2 event, have to report on no matter what
     # report on 30 or total events in period whichever is less as min
     if(!hasReported(branch, lastPeriod)):
         return(-2)
     numEvents = MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
     # min. of 30 events no matter how little rep you have, should prob. just place this within the numeventstoreport function automatically
     if(numEvents < 30*2**64):
-        numEvents = 30*2**64
+        numEvents = 30*2**64 + MAKEREPORTS.getNumRequired(branch, votePeriod)
     repConstant = REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch)
     logOutput = FXP.fx_log(repConstant)
     exp = FXP.fx_exp(22136092888451461120*logOutput/2**64)
@@ -208,7 +206,7 @@ def penalizeNotEnoughReports(branch):
     total = exp*self.baseReportersLastPeriod
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
     if(total > 2**64):
-        numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)/self.baseReportersLastPeriod)*2**64
+        numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)/self.baseReportersLastPeriod)*2**64 + MAKEREPORTS.getNumRequired(branch, votePeriod)
     # what _if_ there are actually <30 events in augur?
         # perhaps we should have all reporters in that period report on all of them
     numReportsActual = MAKEREPORTS.getNumReportsActual(branch, lastPeriod)
