@@ -15,6 +15,15 @@ def getRoundTwo(event):
     
 def getFinal(event):
     return(self.roundTwo[event].final)
+    
+def getOriginalOutcome(event):
+    return(self.roundTwo[event].originalOutcome)
+    
+def getOriginalEthicality(event):
+    return(self.roundTwo[event].originalEthicality)
+    
+def getOriginalVotePeriod(event):
+    return(self.roundTwo[event].originalVotePeriod)
 
 # Appeal_Bond = Market_Value * (0.01 + Market_Fee / 2) + Average_Adjudication_Cost
     # Average_Adjudication_Cost = Total fees paid to reporters for all markets in this reporting round / number of markets in this reporting round.
@@ -106,12 +115,10 @@ macro catch($x):
         BAD
         
 macro ethic_catch($x):
-    if($x < (2^63 - CATCH_TOLERANCE)):
+    if($x < 2^63):
         0
-    elif($x > (2^63 + CATCH_TOLERANCE)):
-        2^64
     else:
-        0
+        2^64
 
 def resolve(branch, event):
 	# binary

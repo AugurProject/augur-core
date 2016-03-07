@@ -21,12 +21,10 @@ macro catch($x):
         BAD
 
 macro ethic_catch($x):
-    if($x < (2^63 - CATCH_TOLERANCE)):
+    if($x < 2^63):
         0
-    elif($x > (2^63 + CATCH_TOLERANCE)):
-        2^64
     else:
-        0
+        2^64
 
 macro scalar($event):
     ((EVENTS.getMaxValue($event)!=2 || EVENTS.getMinValue($event)!=1) && EVENTS.getNumOutcomes($event)==2)

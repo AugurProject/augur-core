@@ -6,11 +6,18 @@ import fxpFunctions as FXP
 import makeReports as MAKEREPORTS
 import branches as BRANCHES
 import markets as MARKETS
+import backstops as BACKSTOPS
+
 
 # round two consensus data
 data bondPaid[]
 data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, final)
 data baseReportersLastPeriod
+data periodBalance[][]
+data feeFirst
+
+def init():
+    self.baseReportersLastPeriod = 3
 
 # branch takes a branchID
     # denominator takes a vote period
@@ -61,13 +68,13 @@ def penalizeWrong(branch, event):
         # wrong
         #184467440737095520 == 0.01 in fxp
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
-            #if(scalar(event) or categorical(event) or outcome==3*2**64):
-                #p = -(abs(reportValue - outcome)/2) + 2**64
+            if(scalar(event) or categorical(event) or outcome==3*2**64):
+                p = -(abs(reportValue - outcome)/2) + 2**64
             newRep = oldRep*(2*p - 2**64)/2**64
         # right
         else:
-            #if(scalar(event) or categorical(event) or outcome==3*2**64):
-                #p = -(abs(reportValue - outcome)/2) + 2**64
+            if(scalar(event) or categorical(event) or outcome==3*2**64):
+                p = -(abs(reportValue - outcome)/2) + 2**64
             newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
         #smoothedRep = oldRep*.8 + newRep*.2
         smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
@@ -94,9 +101,10 @@ def penalizeWrong(branch, event):
 
     # penalizeWrong for backstop 1 [don't penalize based on ethicality]:
     # if appealed don't allow rbcr until after the appeal process is over
-    if(self.roundTwo[event].roundTwo && !self.roundTwo[event].final):
+    if(BACKSTOPS.getRoundTwo(event) && !BACKSTOPS.getFinal(event)):
 	    return(0)
 
+    # remove events from required for period in which it gets pushed back, and make 2 for back period, don't allow reporting in first period
     # reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting [don't count ethicality here]
     # Don't want to allow people to do rbcr for a round 2 event until the round 2 period is over
 	# So we want to do the rbcr for both period 1 and period 2 at this time
@@ -105,48 +113,50 @@ def penalizeWrong(branch, event):
 	#	○ Denominator is as normal, but totalRepReported is lower
   # if round 2 outcome is different
   # does this work properly for scalars and binary and categorical re p and scalar 0-1 reports in fxp and binary 1 or 2 or 1.5 in fxp
-  if(self.roundTwo[event].originalOutcome != EVENTS.getOutcome(event) && self.roundTwo[event].originalOutcome != EVENTS.getmode(event) && notDoneForEvent && periodOver && reported && eventInPeriod):
+  
+  # if overruled:     	# reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting [don't count ethicality here]
+
+    # if not overruled:     	# rbcr from original period/orig. outcome stands, rbcr from round 2 happens as usual as well
+
+  
+  if(BACKSTOPS.getOriginalOutcome(event) != EVENTS.getOutcome(event) && BACKSTOPS.getOriginalOutcome(event) != EVENTS.getmode(event) && !self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && reportValue):
 	# submit later period, do rbcr on both
-	if(period == (EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch))):
-	  p = self.getProportionCorrect(event)
-	  outcome = EVENTS.getOutcome(event)
-	  reportValue = REPORTS.getReport(branch,period,event)
-	  secondReportValue
-	  oldRep = REPORTS.getBeforeRep(branch, period)
-	  # wrong
-	  if(reportValue > outcome+.01 or reportValue < outcome-.01):
-		if(scalar or categorical):
-		  # should be [uncaught] outcome since mode is the same
-		  p = -(abs(reportValue - EVENTS.getmode(event))/2) + 1
-		newRep = oldRep*(2*p -1)
-	  # right
-	  else:
-		if(scalar or categorical):
-		  p = -(abs(reportValue - EVENTS.getmode(event))/2) + 1
-		newRep = oldRep*(2*(1-p)**2 / p + 1)
-	  smoothedRep = oldRep*.8 + newRep*.2
-	  REPORTS.setAfterRep(branch, period, oldRep + (smoothedRep - oldRep))
+    p = self.getProportionCorrect(event)
+	outcome = EVENTS.getOutcome(event)
+	reportValue = REPORTS.getReport(branch,period,event)
+	secondReportValue
+	oldRep = REPORTS.getBeforeRep(branch, period)
+	# wrong
+	if(reportValue > outcome+.01 or reportValue < outcome-.01):
+	    if(scalar or categorical):
+		    # should be [uncaught] outcome since mode is the same
+		    p = -(abs(reportValue - EVENTS.getmode(event))/2) + 1
+	    newRep = oldRep*(2*p -1)
+    # right
+	else:
+	    if(scalar or categorical):
+		    p = -(abs(reportValue - EVENTS.getmode(event))/2) + 1
+	    newRep = oldRep*(2*(1-p)**2 / p + 1)
+    smoothedRep = oldRep*.8 + newRep*.2
+    REPORTS.setAfterRep(branch, period, oldRep + (smoothedRep - oldRep))
 
-	  repChange = smoothedRep - oldRep
+    repChange = smoothedRep - oldRep
 
-	  if(repChange < 0):
-		self.repDelta[period][tx.origin] += -1*repChange
+	if(repChange < 0):
+	    self.repDelta[period][tx.origin] += -1*repChange
 		# give rep to bonded challenger
 		# only give rep to bonded challenger _if_ it hasn't been paid back 2x yet
 		if(self.bondPaid[event] < 200):
-		  # done instead of sending to redistrib. pool
-		  addRepToBondedChallenger(-1*repChange)
-		  removeRepFromReporter(-1*repChange)
+		    # done instead of sending to redistrib. pool
+		    addRepToBondedChallenger(-1*repChange)
+		    removeRepFromReporter(-1*repChange)
 		else:
-		  sendToRedistribPoolForThisPeriod
+		    sendToRedistribPoolForThisPeriod
 
-	  if(doneForAllEventsUserReportedOnExceptAnyRoundTwoEventsInThisRoundButNotExemptingOldPeriodRoundTwoEvents):
-		self.totalRepPenalized[period] += oldRep
+	if(doneForAllEventsUserReportedOnExceptAnyRoundTwoEventsInThisRoundButNotExemptingOldPeriodRoundTwoEvents):
+	    self.totalRepPenalized[period] += oldRep
 		self.denominator[branch][period] = self.totalRepPenalized[period] + (smoothedRep - oldRep)
-
         return(1)
-    else:
-        return(lastPeriod)
 
 # Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account and distributed like trading fees.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
 # Errors:
@@ -160,11 +170,16 @@ def penalizeNotEnoughReports(branch):
     if(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
         self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized = 1
         return(1)
-
+    # req. events for round 2 is wrong
+    # required to report on half of all events selected + all required round 2 events (need to account for that)
+    # get threshold doesn't matter for a req. round 2 event, have to report on no matter what
+    # finish new penalize wrong
+    # report on 30 or total events in period whichever is less as min
+    # unethical .5 shouldn't penalize based on .5 outcome but it does right now, commented out setting outcome for .5 for now but needs fixing
     if(!hasReported(branch, lastPeriod)):
         return(-2)
     numEvents = MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
-    # min. of 30 events no matter how little rep you have
+    # min. of 30 events no matter how little rep you have, should prob. just place this within the numeventstoreport function automatically
     if(numEvents < 30*2**64):
         numEvents = 30*2**64
     repConstant = REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch)
@@ -181,9 +196,12 @@ def penalizeNotEnoughReports(branch):
     if(numEvents/(2*2**64) > MAKEREPORTS.getNumReportsActual(branch, lastPeriod)):
         originalRep = REPORTING.getRepBalance(branch, tx.origin)
         # penalize people
-        newRep = 3689348814741910528*numReportsActual*originalRep / MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
+        # can number reported on be greater than num expected to report on
+        newRep = 3689348814741910528*numReportsActual*originalRep / numEvents
         oldRep = originalRep*14757395258967642112 / 2**64
         repChange = (oldRep+newRep) - originalRep
+        if(repChange > 0):
+            return(1)
         # removes rep from reporter who lost it
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), repChange)
         # sends that rep to the branch rep pool
@@ -207,7 +225,10 @@ def collectFees(branch):
     if(!self.branch[branch].feesCollected[lastPeriod][tx.origin] && hasReported(branch, lastPeriod)):
         newRep = MAKEREPORTS.getAfterRep(branch, lastPeriod)
         denominator = self.branch[branch].denominator[lastPeriod]
-        gainedRep = newRep * 2**64 / denominator * REPORTING.getRepBalance(branch, branch) / 2**64
+        if(!self.feeFirst):
+            self.feeFirst = 1
+            self.periodBalance[branch][lastPeriod] = REPORTING.getRepBalance(branch, branch)
+        gainedRep = newRep * 2**64 / denominator * self.periodBalance[branch][lastPeriod] / 2**64
         #if(lostRep) newRep should be == MAKEREPORTS.getAfterRep(branch, period) + gainedRep
         #if(gainedRep) newRep should be == MAKEREPORTS.getBeforeRep(branch, period) + gainedRep
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), gainedRep)
@@ -228,6 +249,8 @@ def penalizationCatchup(branch):
     if(residual > periodLength/2):
         return(-2)
     # find delta between this last period and last penalized up to
+    # this doesn't work right when starting out / initial branch / periods, etc. [or does it?]
+    # also doesn't work properly for new branch creation or branch creation on another chain
     lastPeriodPenalized = self.branch[branch].penalizedUpTo[tx.origin]
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     delta = lastPeriod - lastPeriodPenalized
@@ -350,6 +373,9 @@ macro repRedistributionDone($branch, $reporter):
         1
     else:
         0
+
+def getRRDone(branch, reporter):
+    return(repRedistributionDone(branch, reporter))
 
 
 macro scalar($event):

@@ -126,6 +126,7 @@ def makeHash(salt, report, eventID):
 # Error -5: .99 market
 # Error -6: no markets
 def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
+	# if rep balance less than some min amount don't allow reporting
 	if(BRANCHES.getVotePeriod(branch)!=votePeriod):
 		return(-1)
 	# make sure event is in the given branch...
@@ -305,7 +306,8 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
 		volFraction = volume*2**64/totalVol
 	numEvents = self.getNumEventsToReport(branch, votePeriod)
 	if(numEvents < 30*2**64):
-		repConstant = 30*2**128/numEvents
+		# this isn't right, needs to be newrepconstant=?^1.2 + 0.001 = repconstant*30/numEvents
+		repConstant = 30*2**128/numEvents 
 	# in fxp (2**128) == 2**192 / 2**64
 	reportingThreshold = BRANCHES.getBaseReporters(branch)*((-(267*volFraction**2)/(2*2**64) + (533*volFraction)/2 + 1*2**64)*repConstant/2**64) * (2**128)
 	return(reportingThreshold)
@@ -319,7 +321,7 @@ def getNumEventsToReport(branch, votePeriod):
 	logOutput = FXP.fx_log(repConstant)
 	exp = FXP.fx_exp(22136092888451461120*logOutput/2**64)
 	exp += 18446744073709552
-	total = exp*prelim + self.numReqEvents[branch][votePeriod]*2**64
+	total = exp*prelim
 	return(total)
 
 def needsReportingOn(event):
