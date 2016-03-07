@@ -30,6 +30,20 @@ data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenaliz
 def initialPenalizedSetting(branch, reporter, upto):
     self.branch[branch].penalizedUpTo[reporter] = upto
     return(1)
+    
+macro YES: 2^65
+macro NO: 2^64
+macro BAD: 3 * 2^63
+macro CATCH_TOLERANCE: 2^64 / 10
+
+# Bins values to 1, 1.5, 2
+macro catch($x):
+    if($x < (BAD - CATCH_TOLERANCE)):
+        NO
+    elif($x > (BAD + CATCH_TOLERANCE)):
+        YES
+    else:
+        BAD
 
 #1. Record rep at start of report period [before rep in make reports]
 #2. Penalize for each event
@@ -41,6 +55,8 @@ def initialPenalizedSetting(branch, reporter, upto):
     # -2: already past first half of new period and needed to penalize before then
     # -3: need to do not enough reports penalization [or lackthereof]
 #roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events
+# todo finish new penalize wrong
+# always use uncaught + caught version as opposed to actual outcome for this to be safe wrt ethicality / diff. for payouts
 def penalizeWrong(branch, event):
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
@@ -59,7 +75,7 @@ def penalizeWrong(branch, event):
     if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event) && MARKETS.getPushedForward(market)):
         if(lastPeriod==EVENTS.getOriginalExpiration(event)/BRANCHES.getPeriodLength(branch)):
             return(-1)
-    outcome = EVENTS.getOutcome(event)
+    outcome = catch(EVENTS.getUncaughtOutcome(event))
     reportValue = MAKEREPORTS.getReport(branch, lastPeriod, event)
     p = self.proportionCorrect(event)
     if(scalar(event) or categorical(event)):
@@ -178,9 +194,7 @@ def penalizeNotEnoughReports(branch):
     # req. events for round 2 is wrong
     # required to report on half of all events selected + all required round 2 events (need to account for that)
     # get threshold doesn't matter for a req. round 2 event, have to report on no matter what
-    # finish new penalize wrong
     # report on 30 or total events in period whichever is less as min
-    # unethical .5 shouldn't penalize based on .5 outcome but it does right now, commented out setting outcome for .5 for now but needs fixing
     if(!hasReported(branch, lastPeriod)):
         return(-2)
     numEvents = MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
@@ -255,7 +269,7 @@ def collectFees(branch):
     #increment
     #period 2 voteperiod 1 - penalize voteperiod 0
 # ex 2:
-    #currently in period 100, voteperiod 99- last period penalized up to should be 99 or starting vote period
+    #currently in period 100, voteperiod 99 - last period penalized up to should be 99 or starting vote period
     #add some events to period 100
     #increment to period 101
     #period 101, voteperiod 100 - shouldn't be penalizing anything yet
@@ -273,7 +287,7 @@ def penalizationCatchup(branch):
     delta = lastPeriod - lastPeriodPenalized
     oldRep = REPORTING.getRepBalance(branch, tx.origin)
     if(lastPeriodPenalized!=lastPeriod && !hasReported(branch, lastPeriod)):
-        if(delta < 0):
+        if(delta <= 0):
             return(0)
         # dock 10% for each period they didn't penalize on
         smoothedRep = oldRep*16602069666338596864/2**64
@@ -352,7 +366,7 @@ macro abs($a):
     
 def proportionCorrect(event, branch, period):
     p = 0
-    outcome = EVENTS.getOutcome(event)
+    outcome = catch(EVENTS.getUncaughtOutcome(event))
     if(outcome!=0):
         # binary
         if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65 and 2**64*EVENTS.getMinValue(event)==2**64):
