@@ -31,8 +31,8 @@ data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenaliz
 def penalizeWrong(branch, event):
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
-    if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
-        return(-3)
+    #if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
+    #    return(-3)
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.number % periodLength
     if(residual > periodLength/2):
