@@ -23,7 +23,7 @@ macro catch($x):
 macro ethic_catch($x):
     if($x < 2^63):
         0
-    elif($x >= 2^63):
+    else:
         2^64
 
 macro scalar($event):
