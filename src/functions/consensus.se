@@ -27,6 +27,10 @@ def init():
     # rep collected states whether for a given period a user collected rep
 data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenalized), penalizedUpTo[], feesCollected[][])
 
+def initialPenalizedSetting(branch, reporter, upto):
+    self.branch[branch].penalizedUpTo[reporter] = upto
+    return(1)
+
 #1. Record rep at start of report period [before rep in make reports]
 #2. Penalize for each event
 #3. Each reporter needs to do this for all events they reported on, if not get docked
@@ -242,6 +246,20 @@ def collectFees(branch):
         return(0)
 
 # call when a user who hasn't reported for a while wants to start again and needs to catch up on penalizations
+# ex:
+    #period 0 voteperiod -1 - last period penalized should be -1 or starting vote period
+    #add some events to period 0
+    #increment
+    #period 1 voteperiod 0 - shouldn't be penalizing anything yet
+    #increment
+    #period 2 voteperiod 1 - penalize voteperiod 0
+# ex 2:
+    #currently in period 100, voteperiod 99- last period penalized up to should be 99 or starting vote period
+    #add some events to period 100
+    #increment to period 101
+    #period 101, voteperiod 100 - shouldn't be penalizing anything yet
+    #increment
+    #period 102, voteperiod 101 - penalize voteperiod 100
 def penalizationCatchup(branch):
     # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -249,13 +267,14 @@ def penalizationCatchup(branch):
     if(residual > periodLength/2):
         return(-2)
     # find delta between this last period and last penalized up to
-    # this doesn't work right when starting out / initial branch / periods, etc. [or does it?]
-    # also doesn't work properly for new branch creation or branch creation on another chain
+    # doesn't work properly for new branch creation or branch creation on another chain
     lastPeriodPenalized = self.branch[branch].penalizedUpTo[tx.origin]
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     delta = lastPeriod - lastPeriodPenalized
     oldRep = REPORTING.getRepBalance(branch, tx.origin)
     if(lastPeriodPenalized!=lastPeriod && !hasReported(branch, lastPeriod)):
+        if(delta < 0):
+            return(0)
         # dock 10% for each period they didn't penalize on
         smoothedRep = oldRep*16602069666338596864/2**64
         i = 1
@@ -275,7 +294,6 @@ def penalizationCatchup(branch):
         return(1)
     else:
         return(0)
-
 
 # anti cheat provide ballot and randomNum mechanism steal deposit
 # Returns:
