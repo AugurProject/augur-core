@@ -54,7 +54,7 @@ def penalizeWrong(branch, event):
     if(scalar(event) or categorical(event)):
         #outcome = EVENTS.getUncaughtOutcome(event)
         # or can do
-        outcome = EVENTS.getMode(event)
+        outcome = EVENTS.getmode(event)
         # which should be exactly the same
     oldRep = MAKEREPORTS.getBeforeRep(branch, lastPeriod)
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && reportValue && outcome!=0):
