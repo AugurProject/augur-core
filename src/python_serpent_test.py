@@ -762,6 +762,8 @@ def test_consensus():
     c.incrementPeriod(1010101)
     report_hash = c.makeHash(0, 2**64, event1)
     report_hash2 = c.makeHash(0, 2*2**64, event2)
+    print report_hash
+    print c.submitReportHash(1010101, report_hash, 0, event1, 0)
     assert(c.submitReportHash(1010101, report_hash, 0, event1, 0)==1), "Report hash submission failed"
     assert(c.submitReportHash(1010101, report_hash2, 0, event2, 1)==1), "Report hash submission failed"
     s.mine(55)

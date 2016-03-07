@@ -187,10 +187,12 @@ def penalizationCatchup(branch):
     oldRep = REPORTING.getRepBalance(branch, tx.origin)
     if(lastPeriodPenalized!=lastPeriod && !hasReported(branch, lastPeriod)):
         # dock 10% for each period they didn't penalize on
-        smoothedRep = oldRep*16602069666338596864/2**64
+        #smoothedRep = oldRep*16602069666338596864/2**64
+        smoothedRep = oldRep*18262276632972455936/2**64
         i = 1
         while i < delta:
-            smoothedRep = smoothedRep*16602069666338596864/2**64
+            #smoothedRep = smoothedRep*16602069666338596864/2**64
+            smoothedRep = smoothedRep*18262276632972455936/2**64
             i += 1
         # and send it to branch for penalty rep collection
         repChange = oldRep - smoothedRep
