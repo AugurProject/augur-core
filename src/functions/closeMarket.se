@@ -53,10 +53,8 @@ macro catch($x):
 macro ethic_catch($x):
     if($x < 2^63):
         0
-    elif($x > 2^63):
+    elif($x >= 2^63):
         2^64
-    else:
-        0
 
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
