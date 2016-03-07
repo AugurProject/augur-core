@@ -24,6 +24,8 @@
 
 import reporting as REPORTING
 import cash as CASH
+import consensus as CONSENSUS
+import branches as BRANCHES
 
 # Error -1: Hey, you're not broke!
 def cashFaucet():
@@ -40,6 +42,7 @@ def reputationFaucet(branch):
         index = REPORTING.getNumberReporters(branch)
         REPORTING.addReporter(branch, tx.origin)
     REPORTING.setRep(branch, index, 47*2**64)
+    CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
     return(1)
 
 def fundNewAccount(branch):

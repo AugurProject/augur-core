@@ -34,7 +34,7 @@ data whitelists[](addresses[], taken)
 
 def init():
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
-    self.Reporting[1010101].reputation[0].repValue = 47*2^64
+    self.Reporting[1010101].reputation[0].repValue = 0
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
     self.Reporting[1010101].numberReporters = 2
     self.Reporting[1010101].repIDtoIndex[1010101] = 1
