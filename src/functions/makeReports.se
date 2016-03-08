@@ -315,7 +315,7 @@ def getNumEventsToReport(branch, votePeriod):
 
 def needsReportingOn(event):
 	# This only works for categorical and binary markets, not scalar
-	if((2^64*EVENTS.getMaxValue(events[n]) != 2*2**64 || 2^64*EVENTS.getMinValue(events[n]) != 2**64) and EVENTS.getNumOutcomes(events[n]) == 2):
+	if((2^64*EVENTS.getMaxValue(event) != 2*2**64 || 2^64*EVENTS.getMinValue(event) != 2**64) and EVENTS.getNumOutcomes(event) == 2):
 		return(1)
 	# To determine whether a market needs to be resolved or not, the events can only have one market associated with them or all markets associated with the event fulfill the .99 qualification.
 	numMarkets = EVENTS.getNumMarkets(event)
