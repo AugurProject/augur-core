@@ -313,6 +313,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
 	numEvents = self.getNumEventsToReport(branch, votePeriod)
 	if(numEvents < 30*2**64):
 		# todo this isn't right, needs to be newrepconstant=?^1.2 + 0.001 = repconstant*30/numEvents
+		# todo: report on 30 or total/all so threshold would be 0 for all events in period whichever is less as min to report on [30 or all events]
 		repConstant = 30*2**128/numEvents 
 	# in fxp (2**128) == 2**192 / 2**64
 	reportingThreshold = BRANCHES.getBaseReporters(branch)*((-(267*volFraction**2)/(2*2**64) + (533*volFraction)/2 + 1*2**64)*repConstant/2**64) * (2**128)

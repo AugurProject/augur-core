@@ -56,6 +56,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
         self.roundTwo[event].originalEthicality = ethic_catch(EVENTS.getEthical(event))
         EXPEVENTS.addRoundTwo(branch, period)
         EVENTS.setUncaughtOutcome(event, 0)
+        EVENTS.setmode(event, 0)
         EVENTS.setEthics(event, 0)
         return(1)
 
