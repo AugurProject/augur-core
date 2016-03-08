@@ -54,7 +54,8 @@ def getEventIndex(period, eventID):
 def setNumEventsToReportOn(branch, expDateIndex):
 	# after voting has started
 	if(expDateIndex==BRANCHES.getVotePeriod(branch)):
-		numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
+		# todo fix circular dependency
+		numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents - MAKEREPORTS.getNumRequired(branch, expDateIndex)
 		numberToReportOnEstimate = (numEvents-self.EventsExpDates[branch][expDateIndex].numberRemoved)*BRANCHES.getBaseReporters(branch)
 		self.EventsExpDates[branch][expDateIndex].numEventsToReportOn = numberToReportOnEstimate
 		return(1)
@@ -91,6 +92,9 @@ def addEvent(branch, futurePeriod, eventID):
 def removeEvent(branch, period):
 	self.EventsExpDates[branch][period].numberRemoved += 1
 	return(1)
+
+def getNumRemoved(branch, period):
+	return(self.EventsExpDates[branch][period].numberRemoved)
 
 def setTotalRepReported(branch, expDateIndex, repReported):
 	#if(!self.whitelist.check(msg.sender)):

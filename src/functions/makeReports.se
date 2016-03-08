@@ -310,11 +310,11 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
 	volFraction = 0
 	if(totalVol!=0):
 		volFraction = volume*2**64/totalVol
-	numEvents = self.getNumEventsToReport(branch, votePeriod)
-	if(numEvents < 30*2**64):
-		# todo this isn't right, needs to be newrepconstant=?^1.2 + 0.001 = repconstant*30/numEvents
-		# todo: report on 30 or total/all so threshold would be 0 for all events in period whichever is less as min to report on [30 or all events]
-		repConstant = 30*2**128/numEvents 
+	expectedEvents = repConstant * EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
+	numEventsAfterMinAccounting = self.getNumEventsToReport(branch, votePeriod) - self.numReqEvents[branch][votePeriod]*2**64
+	ratio = numEventsAfterMinAccounting * 2**64 / expectedEvents
+	if(ratio > 2**64):
+		repConstant = repConstant*ratio / 2**64
 	# in fxp (2**128) == 2**192 / 2**64
 	reportingThreshold = BRANCHES.getBaseReporters(branch)*((-(267*volFraction**2)/(2*2**64) + (533*volFraction)/2 + 1*2**64)*repConstant/2**64) * (2**128)
 	return(reportingThreshold)
@@ -328,12 +328,16 @@ def getNumEventsToReport(branch, votePeriod):
 	logOutput = FXP.fx_log(repConstant)
 	exp = FXP.fx_exp(22136092888451461120*logOutput/2**64)
 	exp += 18446744073709552
-	total = exp*prelim + self.numReqEvents[branch][expDateIndex]
+	total = exp*prelim + self.numReqEvents[branch][votePeriod]*2**64
+	eventsInPeriod = EXPEVENTS.getNumberEvents(branch, expDateIndex)-EXPEVENTS.getNumRemoved(branch, votePeriod)
+	minimum = min(30+self.numReqEvents[branch][votePeriod], eventsInPeriod)
+	if(total/2**64 < minimum):
+		total = minimum*2**64
 	return(total)
 
 def needsReportingOn(event):
 	# This only works for categorical and binary markets, not scalar
-	if((2^64*EVENTS.getMaxValue(events[n]) != 2*2**64 || 2^64*EVENTS.getMinValue(events[n]) != 2**64) and EVENTS.getNumOutcomes(events[n]) == 2):
+	if((2^64*EVENTS.getMaxValue(event) != 2*2**64 || 2^64*EVENTS.getMinValue(event) != 2**64) and EVENTS.getNumOutcomes(event) == 2):
 		return(1)
 	# To determine whether a market needs to be resolved or not, the events can only have one market associated with them or all markets associated with the event fulfill the .99 qualification.
 	numMarkets = EVENTS.getNumMarkets(event)
