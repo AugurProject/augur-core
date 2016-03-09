@@ -693,9 +693,9 @@ def test_close_market():
     event4 = c.createEvent(1010101, "new eevent", 5, 1, 2, 2)
     bin_market4 = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event4], 1)
     # categorical
-    event5 = c.createEvent(1010101, "new event", 555, 1, 5, 5)
+    event5 = c.createEvent(1010101, "new event", 5, 1, 5, 5)
     # scalar
-    event6 = c.createEvent(1010101, "new event", 555, -100, 200, 2)
+    event6 = c.createEvent(1010101, "new event", 5, -100, 200, 2)
     market5 = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1, event5, event6], 1)
     c.commitTrade(bin_market3, c.makeMarketHash(bin_market3, 2, 5000*2**64, 0))
     c.commitTrade(bin_market2, c.makeMarketHash(bin_market2, 2, 10*2**64, 0))
@@ -708,17 +708,26 @@ def test_close_market():
     report_hash2 = c.makeHash(0, 2*2**64, event2)
     report_hash3 = c.makeHash(0, 2*2**64, event3)
     report_hash4 = c.makeHash(0, 3*2**63, event4)
+    report_hash5 = c.makeHash(0, 2**64, event5)
+    report_hash6 = c.makeHash(0, 2**64, event6)
     assert(c.submitReportHash(1010101, report_hash, 0, event1, 0)==1), "Report hash submission failed"
     assert(c.submitReportHash(1010101, report_hash2, 0, event2, 1)==1), "Report hash submission failed"
     assert(c.submitReportHash(1010101, report_hash3, 0, event3, 2)==-5), "Report hash .99 check failed"
     assert(c.submitReportHash(1010101, report_hash4, 0, event4, 3)==1), "Report hash submission failed"
+    c.submitReportHash(1010101, report_hash, 0, event1, 0)
+    x = c.submitReportHash(1010101, report_hash5, 0, event5, 1)
+    y = c.submitReportHash(1010101, report_hash6, 0, event6, 2)
     s.mine(55)
     assert(c.submitReport(1010101, 0, 1, 0, 2*2**64, event2, 2**64)==1), "Report submission failed"
     assert(c.submitReport(1010101, 0, 3, 0, 3*2**63, event4, 2**64)==1), "Report submission failed"
     assert(c.closeMarket(1010101, bin_market)==0), "Not expired check [and not early resolve due to not enough reports submitted check] broken"
     assert(c.submitReport(1010101, 0, 0, 0, 2**64, event1, 2**64)==1), "Report submission failed"
+    c.submitReport(1010101, 0, 0, 0, 2**64, event1, 2**64)
+    c.submitReport(1010101, 0, 1, 0, 2**64, event5, 2**64)
+    c.submitReport(1010101, 0, 2, 0, 2**64, event6, 2**64)
     s.mine(60)
     c.incrementPeriod(1010101)
+    c.closeMarket(1010101, market5)
     c.setUncaughtOutcome(event1, 0)
     c.setOutcome(event1, 0)
     assert(c.closeMarket(1010101, bin_market)==-2), "No outcome on market yet"
@@ -955,8 +964,34 @@ def test_catchup():
     assert(c.getTotalRep(branch)==866996971464348925952)
     print "Test catchup OK"
     
-    # 30 events min
-    # min reports 30
+def scalar_categorical_test():
+    from ethereum import tester as t
+    src = os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace', 'src')
+    os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
+    event1 = c.createEvent(1010101, "new event", 5, 1, 2, 2)
+    event5 = c.createEvent(1010101, "new event", 5, 1, 5, 5)
+    event6 = c.createEvent(1010101, "new event", 5, -100, 200, 2)
+    market5 = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1, event5, event6], 1)
+    s.mine(106)
+    c.incrementPeriod(1010101)
+    report_hash = c.makeHash(0, 2**64, event1)
+    report_hash5 = c.makeHash(0, 2**64, event5)
+    report_hash6 = c.makeHash(0, 2**64, event6)
+    a = c.submitReportHash(1010101, report_hash, 0, event1, 0)
+    x = c.submitReportHash(1010101, report_hash5, 0, event5, 1)
+    y = c.submitReportHash(1010101, report_hash6, 0, event6, 2)
+    s.mine(55)
+    c.submitReport(1010101, 0, 0, 0, 2**64, event1, 2**64)
+    c.submitReport(1010101, 0, 1, 0, 2**64, event5, 2**64)
+    c.submitReport(1010101, 0, 2, 0, 2**64, event6, 2**64)
+    s.mine(60)
+    c.incrementPeriod(1010101)
+    assert(c.closeMarket(1010101, market5)==1)
 
 def gas_use(s):
     global initial_gas

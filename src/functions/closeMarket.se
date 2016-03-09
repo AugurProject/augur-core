@@ -66,6 +66,8 @@ macro ethic_catch($x):
     # -6: bonded pushed forward market not ready to be resolved
     # -7: event not reportable >.99
 #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
+event thru(user:indexed, time)
+
 def closeMarket(branch, market):
     if(CASH.balance(market)<=0):
         return(-1)
@@ -83,6 +85,7 @@ def closeMarket(branch, market):
             i = numberEvents
         i += 1
     i = 0
+
     while i < numberEvents:
         numReports = MAKEREPORTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
         numExpected = MAKEREPORTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
@@ -107,23 +110,19 @@ def closeMarket(branch, market):
             if(binary(events[n]) && fxpOutcome==0):
                     resolution = RESOLVE.resolveBinary(events[n], market, branch, votingPeriodEvent, period)
             elif(scalar(events[n]) && EVENTS.getmode(events[n])==0):
-                    resolution = RESOLVE.resolveCategoricalOrScalar(2^64*EVENTS.getMinValue(events[n]), 2^64*EVENTS.getMaxValue(events[n]), event, market, branch, votingPeriodEvent, period)
+                    resolution = RESOLVE.resolveCategoricalOrScalar(2^64*EVENTS.getMinValue(events[n]), 2^64*EVENTS.getMaxValue(events[n]), events[n], market, branch, votingPeriodEvent, period)
             elif(categorical(events[n]) && EVENTS.getmode(events[n])==0):
-                    resolution = RESOLVE.resolveCategoricalOrScalar(2^64, 2^64*EVENTS.getNumOutcomes(events[n]), event, market, branch, votingPeriodEvent, period)
-            if(resolution==-4):
-                outcomeFour = 1
+                    resolution = RESOLVE.resolveCategoricalOrScalar(2^64, 2^64*EVENTS.getNumOutcomes(events[n]), events[n], market, branch, votingPeriodEvent, period)
             elif(resolution==-6):
                 outcomeSix = 1
             n += 1
-        if(outcomeFour):
-            return(-4)
         elif(outcomeSix):
             return(-6)
         winningOutcomes = array(8)
         winningOutcomes = RESOLVE.determineWinningOutcomes(events, numberEvents, branch, market, outitems=8)
         MARKETS.setWinningOutcomes(market, winningOutcomes)
-        
-        self.returnLiquidity(branch, market)
+        if(!BRANCHES.getOracleOnly(branch)):
+            self.returnLiquidity(branch, market, events)
         return(1)
     else:
         return(0)
@@ -167,7 +166,7 @@ def claimProceeds(branch, market):
         return(0)
         
 ### Helper functions
-def returnLiquidity(branch, market):
+def returnLiquidity(branch, market, events: arr):
     # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
     # refund left over initial liquidity in market - half to market creator, other half to voters
     # *unless* it's a scaled decision, refund all initial liquidity left over to market creator
@@ -185,7 +184,6 @@ def returnLiquidity(branch, market):
         valueOfShares = CLOSEFOUR.valueCalcFour(market, winningOutcomes, events)
     elif(winningOutcomes[1]):
         valueOfShares = CLOSETWO.valueCalcTwo(market, winningOutcomes, events)
-
     liquidityRemaining = CASH.balance(market) - valueOfShares
     if(liquidityRemaining<0):
         return(-1)

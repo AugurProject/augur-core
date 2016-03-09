@@ -5,7 +5,7 @@ def init():
     self.Info[1010101].creationFee = 10
     self.Info[1010101].descriptionLength = len(description)
     self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
-    self.Reporting[1010101].reputation[0].repValue = 47*2^64
+    self.Reporting[1010101].reputation[0].repValue = 0
     self.Reporting[1010101].reputation[0].reporterID = tx.origin
     self.Reporting[1010101].numberReporters = 2
     self.Reporting[1010101].repIDtoIndex[1010101] = 1
@@ -13,7 +13,7 @@ def init():
     self.Reporting[1010101].reputation[1].reporterID = 1010101
     self.Reporting[1010101].totalRep += 47*2^64
     self.Branches[1010101].currentVotePeriod = (block.number / 40000) - 1
-    self.Branches[1010101].periodLength = 40000
+    self.Branches[1010101].periodLength = 100
     self.Branches[1010101].minTradingFee = 2^54
     self.branchListCount = 1
     self.branchList[0] = 1010101
@@ -35,6 +35,7 @@ def reputationFaucet(branch):
         index = self.getNumberReporters(branch)
         self.addReporter(branch, tx.origin)
     self.setRep(branch, index, 47*2**64)
+    self.initialPenalizedSetting(branch, tx.origin, (self.getVotePeriod(branch)-1))
     return(1)
 
 def fundNewAccount(branch):
@@ -249,6 +250,8 @@ macro ethic_catch($x):
     # -6: bonded pushed forward market not ready to be resolved
     # -7: event not reportable >.99
 #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
+event thru(user:indexed, time)
+
 def closeMarket(branch, market):
     if(self.balance(market)<=0):
         return(-1)
@@ -266,6 +269,7 @@ def closeMarket(branch, market):
             i = numberEvents
         i += 1
     i = 0
+
     while i < numberEvents:
         numReports = self.getNumReportsEvent(branch, self.getExpiration(events[i])/self.getPeriodLength(branch), events[i])
         numExpected = self.getNumReportsExpectedEvent(branch, self.getExpiration(events[i])/self.getPeriodLength(branch), events[i])
@@ -290,23 +294,19 @@ def closeMarket(branch, market):
             if(binary(events[n]) && fxpOutcome==0):
                     resolution = self.resolveBinary(events[n], market, branch, votingPeriodEvent, period)
             elif(scalar(events[n]) && self.getmode(events[n])==0):
-                    resolution = self.resolveCategoricalOrScalar(2^64*self.getMinValue(events[n]), 2^64*self.getMaxValue(events[n]), event, market, branch, votingPeriodEvent, period)
+                    resolution = self.resolveCategoricalOrScalar(2^64*self.getMinValue(events[n]), 2^64*self.getMaxValue(events[n]), events[n], market, branch, votingPeriodEvent, period)
             elif(categorical(events[n]) && self.getmode(events[n])==0):
-                    resolution = self.resolveCategoricalOrScalar(2^64, 2^64*self.getNumOutcomes(events[n]), event, market, branch, votingPeriodEvent, period)
-            if(resolution==-4):
-                outcomeFour = 1
+                    resolution = self.resolveCategoricalOrScalar(2^64, 2^64*self.getNumOutcomes(events[n]), events[n], market, branch, votingPeriodEvent, period)
             elif(resolution==-6):
                 outcomeSix = 1
             n += 1
-        if(outcomeFour):
-            return(-4)
         elif(outcomeSix):
             return(-6)
         winningOutcomes = array(8)
         winningOutcomes = self.determineWinningOutcomes(events, numberEvents, branch, market, outitems=8)
         self.setWinningOutcomes(market, winningOutcomes)
-        
-        self.returnLiquidity(branch, market)
+        if(!self.getOracleOnly(branch)):
+            self.returnLiquidity(branch, market, events)
         return(1)
     else:
         return(0)
@@ -350,7 +350,7 @@ def claimProceeds(branch, market):
         return(0)
         
 ### Helper functions
-def returnLiquidity(branch, market):
+def returnLiquidity(branch, market, events: arr):
     # give back initial liquidity and ls-lmsr alpha fees (or as much of it/profits are left)
     # refund left over initial liquidity in market - half to market creator, other half to voters
     # *unless* it's a scaled decision, refund all initial liquidity left over to market creator
@@ -368,7 +368,6 @@ def returnLiquidity(branch, market):
         valueOfShares = self.valueCalcFour(market, winningOutcomes, events)
     elif(winningOutcomes[1]):
         valueOfShares = self.valueCalcTwo(market, winningOutcomes, events)
-
     liquidityRemaining = self.balance(market) - valueOfShares
     if(liquidityRemaining<0):
         return(-1)
@@ -679,7 +678,8 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
 
 	# Whoever the first person to try to submit a report for period x on market y with events events checks if it needs to be reported on or not.
 	if(self.reportable[votePeriod][eventID]==0):
-		needsReportingOn = self.needsReportingOn(eventID)
+		needsReportingOn = 1
+		#needsReportingOn = self.needsReportingOn(eventID)
 		# if yes, the value is 1 and everything proceeds normally
 		if(self.getOracleOnly(branch)):
 			needsReportingOn = 1
@@ -886,7 +886,9 @@ def validateReport(eventID, branch, votePeriod, report):
 		range = numOutcomes*2^64 - minValue
 		if(report<0):
 			return(-5)
-		if((report*range/2^64 + minValue)>numOutcomes*2^64):
+		if(report > 2**64):
+			report = 2**64
+		#if((report*range/2^64 + minValue)>numOutcomes*2^64):
 			report = 2^64
 		# submit report
 		self.mode_items[votePeriod][eventID].report_value[report] += 1
@@ -1215,6 +1217,7 @@ def sendReputation(branch, recver, value):
 
     # if the sender's rep. account doesn't exist, make one
     if(self.getReporterID(branch, senderIndex)!=tx.origin):
+        self.initialPenalizedSetting(branch, tx.origin, (self.getVotePeriod(branch)-1))
         self.addReporter(branch, sender)
         return(-1)
 
@@ -1245,6 +1248,7 @@ def sendDormantRep(branch, recver, value):
 
     # if the sender's rep. account doesn't exist, make one
     if(self.getReporterID(branch, senderIndex)!=tx.origin):
+        self.initialPenalizedSetting(branch, tx.origin, (self.getVotePeriod(branch)-1))
         self.addReporter(branch, sender)
         return(-1)
 
@@ -1285,6 +1289,7 @@ def convertToDormantRep(branch, value):
 
     # if the sender's rep. account doesn't exist, make one
     if(self.getReporterID(branch, senderIndex)!=tx.origin):
+        self.initialPenalizedSetting(branch, tx.origin, (self.getVotePeriod(branch)-1))
         self.addReporter(branch, sender)
         return(-1)
 
@@ -1319,6 +1324,7 @@ def convertToActiveRep(branch, value):
 
     # if the sender's rep. account doesn't exist, make one
     if(self.getReporterID(branch, senderIndex)!=tx.origin):
+        self.initialPenalizedSetting(branch, tx.origin, (self.getVotePeriod(branch)-1))
         self.addReporter(branch, sender)
         return(-1)
 
@@ -1357,6 +1363,7 @@ macro scalar($event):
 def catch(x):
     return(catch(x))
 
+# todo: remove pushed forward stuff
 ## helper functions:
 def resolveBinary(event, market, branch, votingPeriodEvent, period):
     fxpOutcome = catch(self.getUncaughtOutcome(event))
@@ -1365,6 +1372,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
     residual = block.number % periodLength
     ethical = ethic_catch(self.getEthical(event))
     self.setOutcome(event, fxpOutcome)
+    self.setEthics(event, ethical)
     # In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration date
     if(fxpOutcome == 3*2**63 && self.getPushedForward(market)):
@@ -1415,7 +1423,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
         self.addCash(branch, 42*2**64)
         # not ethical is same as .5 outcome
         fxpOutcome = 3*2**63
-        #self.setOutcome(event, fxpOutcome)
+        self.setOutcome(event, fxpOutcome)
     else:
         # return bond
         self.subtractCash(event, 42*2**64)
@@ -1430,12 +1438,13 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
 def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, votingPeriodEvent, period):
     mode = self.getUncaughtOutcome(event)
     self.setmode(event, mode)
-    fxpOutcome = mode * (scaled_max - scaled_min) + scaled_min
+    fxpOutcome = mode * (scaled_max - scaled_min)/2**64 + scaled_min
     self.setOutcome(event, fxpOutcome)
     pushedBack = self.getPushedBack(event)
     periodLength = self.getPeriodLength(branch)
     residual = block.number % periodLength
     ethical = ethic_catch(self.getEthical(event))
+    self.setEthics(event, ethical)
 
     # In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration date
@@ -1487,8 +1496,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         self.addCash(branch, 42*2**64)
         # not ethical is same as .5 outcome
         fxpOutcome = 3*2**63
-        #self.setOutcome(event, fxpOutcome)
-        #self.setmode(event, fxpOutcome)
+        self.setOutcome(event, fxpOutcome)
     else:
         # return bond
         self.subtractCash(event, 42*2**64)
@@ -1625,6 +1633,24 @@ data feeFirst
     # rep collected states whether for a given period a user collected rep
 data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenalized), penalizedUpTo[], feesCollected[][])
 
+def initialPenalizedSetting(branch, reporter, upto):
+    self.branch[branch].penalizedUpTo[reporter] = upto
+    return(1)
+    
+macro YES: 2^65
+macro NO: 2^64
+macro BAD: 3 * 2^63
+macro CATCH_TOLERANCE: 2^64 / 10
+
+# Bins values to 1, 1.5, 2
+macro catch($x):
+    if($x < (BAD - CATCH_TOLERANCE)):
+        NO
+    elif($x > (BAD + CATCH_TOLERANCE)):
+        YES
+    else:
+        BAD
+
 #1. Record rep at start of report period [before rep in make reports]
 #2. Penalize for each event
 #3. Each reporter needs to do this for all events they reported on, if not get docked
@@ -1637,8 +1663,8 @@ data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenaliz
 def penalizeWrong(branch, event):
     repBalance = self.getRepBalance(branch, msg.sender)
     lastPeriod = self.getVotePeriod(branch)-1
-    #if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
-    #    return(-3)
+    if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
+        return(-3)
     periodLength = self.getPeriodLength(branch)
     residual = block.number % periodLength
     if(residual > periodLength/2):
@@ -1652,7 +1678,7 @@ def penalizeWrong(branch, event):
     if(self.getOriginalExpiration(event)!=self.getExpiration(event) && self.getPushedForward(market)):
         if(lastPeriod==self.getOriginalExpiration(event)/self.getPeriodLength(branch)):
             return(-1)
-    outcome = self.getOutcome(event)
+    outcome = catch(self.getUncaughtOutcome(event))
     reportValue = self.getReport(branch, lastPeriod, event)
     p = self.proportionCorrect(event)
     if(scalar(event) or categorical(event)):
@@ -1666,11 +1692,17 @@ def penalizeWrong(branch, event):
         #184467440737095520 == 0.01 in fxp
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
             if(scalar(event) or categorical(event) or outcome==3*2**64):
+                # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
+                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                    reportValue += 2**64
                 p = -(abs(reportValue - outcome)/2) + 2**64
             newRep = oldRep*(2*p - 2**64)/2**64
         # right
         else:
             if(scalar(event) or categorical(event) or outcome==3*2**64):
+                # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
+                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                    reportValue += 2**64
                 p = -(abs(reportValue - outcome)/2) + 2**64
             newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
         #smoothedRep = oldRep*.8 + newRep*.2
@@ -1791,10 +1823,14 @@ def penalizationCatchup(branch):
     oldRep = self.getRepBalance(branch, tx.origin)
     if(lastPeriodPenalized!=lastPeriod && !hasReported(branch, lastPeriod)):
         # dock 10% for each period they didn't penalize on
-        smoothedRep = oldRep*16602069666338596864/2**64
+        #smoothedRep = oldRep*16602069666338596864/2**64
+        if(delta <= 0):
+            return(0)
+        smoothedRep = oldRep*18262276632972455936/2**64
         i = 1
         while i < delta:
-            smoothedRep = smoothedRep*16602069666338596864/2**64
+            #smoothedRep = smoothedRep*16602069666338596864/2**64
+            smoothedRep = smoothedRep*18262276632972455936/2**64
             i += 1
         # and send it to branch for penalty rep collection
         repChange = oldRep - smoothedRep
@@ -1859,7 +1895,7 @@ macro abs($a):
     
 def proportionCorrect(event, branch, period):
     p = 0
-    outcome = self.getOutcome(event)
+    outcome = catch(self.getUncaughtOutcome(event))
     if(outcome!=0):
         # binary
         if(self.getNumOutcomes(event)==2 and 2**64*self.getMaxValue(event)==2**65 and 2**64*self.getMinValue(event)==2**64):
@@ -3322,16 +3358,16 @@ def sendFrom(recver, value, from):
 def subtractCash(ID, amount):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    if(msg.sender!=self.owners[ID] && tx.origin!=self.owners[ID]):
-        return(0)
+    #if(msg.sender!=self.owners[ID] && tx.origin!=self.owners[ID]):
+    #    return(0)
     self.cashcoinBalances[ID] -= amount
     return(1)
 
 def addCash(ID, amount):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    if(msg.sender!=self.owners[ID] && tx.origin!=self.owners[ID]):
-        return(0)
+    #if(msg.sender!=self.owners[ID] && tx.origin!=self.owners[ID]):
+    #    return(0)
     self.cashcoinBalances[ID] += amount
     return(1)
 
