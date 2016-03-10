@@ -210,6 +210,8 @@ def trade(max_value, max_amount, trade_ids:arr):
     t = 0
     while t < len(trade_ids):
         trade_id = trade_ids[t]
+        if(TRADES.getInitialTrade(trade_id)):
+            return(0)
         # Get trade
         trade = array(9)
         trade = TRADES.get_trade(trade_id, outitems=9)
