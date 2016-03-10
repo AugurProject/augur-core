@@ -842,7 +842,7 @@ def getNumEventsToReport(branch, votePeriod):
 
 def needsReportingOn(event):
 	# This only works for categorical and binary markets, not scalar
-	if((2^64*self.getMaxValue(events[n]) != 2*2**64 || 2^64*self.getMinValue(events[n]) != 2**64) and self.getNumOutcomes(events[n]) == 2):
+	if((2^64*self.getMaxValue(event) != 2*2**64 || 2^64*self.getMinValue(event) != 2**64) and self.getNumOutcomes(event) == 2):
 		return(1)
 	# To determine whether a market needs to be resolved or not, the events can only have one market associated with them or all markets associated with the event fulfill the .99 qualification.
 	numMarkets = self.getNumMarkets(event)
@@ -889,7 +889,7 @@ def validateReport(eventID, branch, votePeriod, report):
 		if(report > 2**64):
 			report = 2**64
 		#if((report*range/2^64 + minValue)>numOutcomes*2^64):
-			report = 2^64
+			# report = 2^64
 		# submit report
 		self.mode_items[votePeriod][eventID].report_value[report] += 1
 		if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
@@ -916,6 +916,7 @@ def validateReport(eventID, branch, votePeriod, report):
 		# outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
 		self.setUncaughtOutcome(eventID, outcome)
 	return(report)
+
 event creationBlock(market:indexed)
 
 
@@ -1199,6 +1200,7 @@ def pushMarketForward(branch, market):
     # -2: "Receiving address doesn't exist"
 def sendReputation(branch, recver, value):
     # Rep cannot be simultaneously spent (transferred) and used to vote
+    # auto increment vote period if needed
     currentVotePeriod = self.getVotePeriod(branch)
     #if(value<=0 || !self.send(branch, 5*2^64) || self.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || self.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || self.getReport(branch, currentVotePeriod, recver, 0) != 0):
     # self.getReportedPeriod(branch, current)
@@ -1625,6 +1627,9 @@ data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, final)
 data periodBalance[][]
 data feeFirst
 
+
+event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
+
 # branch takes a branchID
     # denominator takes a vote period
     # penalized takes for a given period a user / address reported for a certain event and num of events they reported on in that period in total
@@ -1710,6 +1715,7 @@ def penalizeWrong(branch, event):
         repChange = smoothedRep - oldRep
         newAfterRep = self.getAfterRep(branch, lastPeriod) + repChange
         self.setAfterRep(branch, lastPeriod, newAfterRep)
+        log(type=penalize, tx.origin, outcome, oldRep, repChange, newAfterRep, p, reportValue)
         self.branch[branch].penalized[lastPeriod][tx.origin].event[event] = 1
         self.branch[branch].penalized[lastPeriod][tx.origin].num += 1
         if(self.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):

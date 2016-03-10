@@ -1,0 +1,7 @@
+def abs(value, value2):
+    return(abs((value-value2)))
+    
+macro abs($a):
+    if($a<0):
+        $a = -$a
+    $a
