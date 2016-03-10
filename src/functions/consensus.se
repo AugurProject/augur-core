@@ -13,6 +13,8 @@ data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, final)
 data periodBalance[][]
 data feeFirst
 
+event penalize(user:indexed, outcome, oldrep, repchange, newafterrep)
+
 # branch takes a branchID
     # denominator takes a vote period
     # penalized takes for a given period a user / address reported for a certain event and num of events they reported on in that period in total
@@ -97,6 +99,7 @@ def penalizeWrong(branch, event):
         smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
         repChange = smoothedRep - oldRep
         newAfterRep = MAKEREPORTS.getAfterRep(branch, lastPeriod) + repChange
+        log(type=penalize, tx.origin, outcome, oldRep, repChange, newAfterRep)
         MAKEREPORTS.setAfterRep(branch, lastPeriod, newAfterRep)
         self.branch[branch].penalized[lastPeriod][tx.origin].event[event] = 1
         self.branch[branch].penalized[lastPeriod][tx.origin].num += 1
