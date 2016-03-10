@@ -129,7 +129,8 @@ def penalizeNotEnoughReports(branch):
     if(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
         self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized = 1
         return(1)
-
+    if(residual > periodLength/2):
+        return(-2)
     if(!hasReported(branch, lastPeriod)):
         return(-2)
     numEvents = MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
