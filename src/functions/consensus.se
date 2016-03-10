@@ -122,6 +122,9 @@ def penalizeWrong(branch, event):
     else:
         return(lastPeriod)
 
+def getDenominator(branch, period):
+    return(self.branch[branch].denominator[period])
+
 # Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account and distributed like trading fees.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
 # Errors:
     # -1: already done
