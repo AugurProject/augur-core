@@ -85,7 +85,8 @@ def penalizeWrong(branch, event):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                 if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
                     reportValue += 2**64
-                p = -(abs(reportValue - outcome)/2) + 2**64
+                diff = reportValue - outcome
+                p = -(abs(diff)/2) + 2**64
             newRep = oldRep*(2*p - 2**64)/2**64
         # right
         else:
@@ -93,7 +94,8 @@ def penalizeWrong(branch, event):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                 if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
                     reportValue += 2**64
-                p = -(abs(reportValue - outcome)/2) + 2**64
+                diff = reportValue - outcome
+                p = -(abs(diff)/2) + 2**64
             newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
         #smoothedRep = oldRep*.8 + newRep*.2
         smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
