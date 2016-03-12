@@ -886,10 +886,8 @@ def validateReport(eventID, branch, votePeriod, report):
 		range = numOutcomes*2^64 - minValue
 		if(report<0):
 			return(-5)
-		if(report > 2**64):
+		if(report > 2**64 && report!=3*2**63):
 			report = 2**64
-		#if((report*range/2^64 + minValue)>numOutcomes*2^64):
-			# report = 2^64
 		# submit report
 		self.mode_items[votePeriod][eventID].report_value[report] += 1
 		if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
@@ -903,9 +901,9 @@ def validateReport(eventID, branch, votePeriod, report):
 		if(report<0):
 			return(-5)
 		range = maxValue*2^64 - minValue*2^64
-		if((report*range/2^64 + minValue*2^64) > maxValue*2^64):
+		if((report*range/2^64 + minValue*2^64) > maxValue*2^64 && report!=3*2**63):
 			report = 2^64
-		if((report*range/2^64 + minValue*2^64) < minValue*2^64):
+		if((report*range/2^64 + minValue*2^64) < minValue*2^64 && report!=3*2**63):
 			report = 0
 		# submit report
 		self.mode_items[votePeriod][eventID].report_value[report] += 1
@@ -1627,7 +1625,6 @@ data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, final)
 data periodBalance[][]
 data feeFirst
 
-
 event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
 
 # branch takes a branchID
@@ -1700,7 +1697,8 @@ def penalizeWrong(branch, event):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                 if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
                     reportValue += 2**64
-                p = -(abs(reportValue - outcome)/2) + 2**64
+                diff = reportValue - outcome
+                p = -(abs(diff)/2) + 2**64
             newRep = oldRep*(2*p - 2**64)/2**64
         # right
         else:
@@ -1708,7 +1706,8 @@ def penalizeWrong(branch, event):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                 if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
                     reportValue += 2**64
-                p = -(abs(reportValue - outcome)/2) + 2**64
+                diff = reportValue - outcome
+                p = -(abs(diff)/2) + 2**64
             newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
         #smoothedRep = oldRep*.8 + newRep*.2
         smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
@@ -1735,6 +1734,9 @@ def penalizeWrong(branch, event):
     else:
         return(lastPeriod)
 
+def getDenominator(branch, period):
+    return(self.branch[branch].denominator[period])
+
 # Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account and distributed like trading fees.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
 # Errors:
     # -1: already done
@@ -1747,7 +1749,8 @@ def penalizeNotEnoughReports(branch):
     if(self.getNumberEvents(branch, lastPeriod)==0):
         self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized = 1
         return(1)
-
+    if(residual > periodLength/2):
+        return(-2)
     if(!hasReported(branch, lastPeriod)):
         return(-2)
     numEvents = self.getNumEventsToReport(branch, lastPeriod)
@@ -3096,7 +3099,7 @@ def modifyParticipantShares(branch, marketID, participantNumber, outcome, amount
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Markets[marketID].participants[participantNumber].shares[outcome] += amount
-    if(block.number/40000>=self.getTradingPeriod(marketID)):
+    if(block.number/self.getPeriodLength(branch)>=self.getTradingPeriod(marketID)):
         return(1)
     else:
         if(amount<0):
