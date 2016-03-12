@@ -296,7 +296,7 @@ def test_buy_sell_shares():
     assert(c.sellShares(1010101, bin_market, 2, sharesToTrade, 0)==1), "Sell shares issue"
     assert(c.getSharesPurchased(bin_market, 1) - initialSharesPurchased1 == 0), "Share storage issue"
     assert(c.getSharesPurchased(bin_market, 2) - initialSharesPurchased2 == 0), "Share storage issue"
-    print c.getVolume(bin_market
+    print c.getVolume(bin_market)
     # scalar market
     a = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2], 1)
     bal = c.balance(s.block.coinbase)

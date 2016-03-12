@@ -13,7 +13,7 @@ def init():
     self.Reporting[1010101].reputation[1].reporterID = 1010101
     self.Reporting[1010101].totalRep += 47*2^64
     self.Branches[1010101].currentVotePeriod = (block.number / 40000) - 1
-    self.Branches[1010101].periodLength = 100
+    self.Branches[1010101].periodLength = 40000
     self.Branches[1010101].minTradingFee = 2^54
     self.branchListCount = 1
     self.branchList[0] = 1010101
@@ -3096,7 +3096,7 @@ def modifyParticipantShares(branch, marketID, participantNumber, outcome, amount
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Markets[marketID].participants[participantNumber].shares[outcome] += amount
-    if(block.number/100>=self.getTradingPeriod(marketID)):
+    if(block.number/40000>=self.getTradingPeriod(marketID)):
         return(1)
     else:
         if(amount<0):
