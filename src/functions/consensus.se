@@ -57,7 +57,10 @@ macro catch($x):
 #roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events
 # todo finish new penalize wrong
 # always use uncaught + caught version as opposed to actual outcome for this to be safe wrt ethicality / diff. for payouts
+# make max rep loss 20%, do V way to limit excess cuts
 def penalizeWrong(branch, event):
+    # remove from num reports actual for a reporter for last period if they reported on it [a round 2 event], prevent them from reporting on it, but still do the rep redistrib. at the end before returning in case this event is the last one a user submits for reporting
+    # if it's penalizing in the period it was pushed back to we can
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
@@ -75,6 +78,7 @@ def penalizeWrong(branch, event):
     if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event) && MARKETS.getPushedForward(market)):
         if(lastPeriod==EVENTS.getOriginalExpiration(event)/BRANCHES.getPeriodLength(branch)):
             return(-1)
+
     outcome = catch(EVENTS.getUncaughtOutcome(event))
     reportValue = MAKEREPORTS.getReport(branch, lastPeriod, event)
     p = self.proportionCorrect(event)
@@ -119,10 +123,9 @@ def penalizeWrong(branch, event):
 
 
 
-    # penalizeWrong for backstop 1 [don't penalize based on ethicality]:
+    # penalizeWrong for backstop 1:
     # if appealed don't allow rbcr until after the appeal process is over
     if(BACKSTOPS.getRoundTwo(event) && BACKSTOPS.getFinal(event)):
-	    
 
     # remove events from required for period in which it gets pushed back, and make 2 [original and round 2] for back period, don't allow reporting in first period
     # reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting [don't count ethicality here]
@@ -134,7 +137,8 @@ def penalizeWrong(branch, event):
     # if round 2 outcome is different
     # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting [don't count ethicality here]
     # if not overruled: rbcr from original period/orig. outcome stands, rbcr from round 2 happens as usual as well
-
+    # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
+    # should we take rep from round 2 people towards bond too or no?
     # if outcome differen
     if(BACKSTOPS.getOriginalOutcome(event) != EVENTS.getOutcome(event) && BACKSTOPS.getOriginalOutcome(event) != EVENTS.getUncaughtOutcome(event) && !self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && reportValue):
 	# submit later period, do rbcr on both

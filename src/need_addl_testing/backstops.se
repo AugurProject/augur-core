@@ -38,10 +38,12 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
     if(!resolving && block.number/BRANCHES.getPeriodLength(branch)!=((block.number + 4800)/BRANCHES.getPeriodLength(branch)) && eventID!=0 && event==eventID && self.roundTwo[event].roundTwo==0):
         if(SENDREP.sendReputation(branch, event, bond)==0):
             return(0)
-    	# makes event required reporting in round 2 (the next period) as well
-    	MAKEREPORTS.setEventRequired(branch, period, event)
-    	# push event into next period
     	period = BRANCHES.getVotePeriod(branch)
+    	# remove from events in # to report on calc for last period
+        EXPIRING.removeEvent(branch, period)
+    	# makes event required reporting in round 2 (the next period) as well
+    	MAKEREPORTS.setEventRequired(branch, period+1, event)
+    	# push event into next period
     	EXPIRING.addEvent(branch, period+1, event)
     	# set event expiration date to be after the current reporting period ends
     	EVENTS.setExpiration(event, block.number)
