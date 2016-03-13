@@ -52,7 +52,7 @@ def getMarketEvent(market, index):
 macro EVENTS_FIELDS: 6
 macro OUTCOMES_FIELDS: 2
 macro WINNING_OUTCOMES_FIELDS: 8
-macro FIELDS: 12
+macro FIELDS: 13
 
 def getMarketInfo(marketID):
     index = FIELDS
@@ -71,8 +71,9 @@ def getMarketInfo(marketID):
         info[7] = self.Markets[marketID].branch
         info[8] = numEvents
         info[9] = self.Markets[marketID].cumulativeScale
-        info[10] = INFO.getCreationFee(marketID)
-        info[11] = INFO.getCreator(marketID)
+        info[10] = self.Markets[marketID].volume
+        info[11] = INFO.getCreationFee(marketID)
+        info[12] = INFO.getCreator(marketID)
 
         # gather trader(s) info: [trader ID, 1 shares, 2 shares, 3 shares, ...]
         t = 0
