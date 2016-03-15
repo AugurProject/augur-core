@@ -8,10 +8,13 @@ import branches as BRANCHES
 import markets as MARKETS
 import sendReputation as SENDREP
 
-data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final)
+data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final, bondPoster)
 
 def getRoundTwo(event):
     return(self.roundTwo[event].roundTwo)
+    
+def getBondPoster(event):
+    return(self.roundTwo[event].bondPoster)
     
 def getFinal(event):
     return(self.roundTwo[event].final)
@@ -57,6 +60,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
     	    self.roundTwo[event].originalOutcome = catch(EVENTS.getUncaughtOutcome(event))
         self.roundTwo[event].originalEthicality = ethic_catch(EVENTS.getEthical(event))
         EXPEVENTS.addRoundTwo(branch, period)
+        self.roundTwo[event].bondPoster = msg.sender
         EVENTS.setUncaughtOutcome(event, 0)
         EVENTS.setmode(event, 0)
         EVENTS.setEthics(event, 0)

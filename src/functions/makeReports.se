@@ -29,13 +29,9 @@ import reporting as REPORTING
 import fxpFunctions as FXP
 
 # branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID
-data branches[](submittedHash[][], numReportsActual[][], hasReported[][](reported[]), beforeRep[][], afterRep[][], report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], reportedPeriod[][], firstReport[], periodDormantRep[][])
+data branches[](submittedHash[][], numReportsActual[][], hasReported[][](reported[]), beforeRep[][], afterRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], reportedPeriod[][], firstReport[], periodDormantRep[][])
 data reportable[][]
 data mode_items[][](report_value[], current_mode, current_mode_items)
-
-
-# what _if_ there are actually <30 events in augur?
-	# perhaps we should have all reporters in that period report on all of them
 
 data requiredEvents[]
 data upToDateOnRR[]
@@ -71,6 +67,9 @@ def getRRUpToDate():
 def setRRUpToDate():
 	self.upToDateOnRR[msg.sender] = 1
 	return(1)
+
+def getEthicReport(branch, period, event):
+	return(self.branches[branch].ethics[period][tx.origin].event[event])
 
 def getNumReportsExpectedEvent(branch, votePeriod, eventID):
 	return(self.branches[branch].numReportsExpectedEvent[votePeriod][eventID])
@@ -268,6 +267,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
 				ethics = 2**64
 			ethics = (EVENTS.getEthics(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
 			EVENTS.setEthics(eventID, ethics)
+			self.branches[branch].ethics[votePeriod][tx.origin].event[eventID] = ethics
 			# add 1 report to the event
 			self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
 			# if 1st report of the period for a reporter
