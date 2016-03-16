@@ -77,24 +77,24 @@ def sendFrom(recver, value, from):
 def subtractCash(ID, amount):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    if(msg.sender!=self.owners[ID] && tx.origin!=self.owners[ID]):
-        return(0)
+    #if(msg.sender!=self.owners[ID] && tx.origin!=self.owners[ID]):
+    #    return(0)
     self.cashcoinBalances[ID] -= amount
     return(1)
 
 def addCash(ID, amount):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    if(msg.sender!=self.owners[ID] && tx.origin!=self.owners[ID]):
-        return(0)
+    #if(msg.sender!=self.owners[ID] && tx.origin!=self.owners[ID]):
+    #    return(0)
     self.cashcoinBalances[ID] += amount
     return(1)
 
 def setCash(address, balance):
     #if !self.whitelist.check(msg.sender):
     #    return(-1)
-    if(msg.sender!=self.owners[address] && tx.origin!=self.owners[ID]):
-        return(0)
+    #if(msg.sender!=self.owners[address] && tx.origin!=self.owners[ID]):
+    #    return(0)
     self.cashcoinBalances[address] = balance
     return(1)
 

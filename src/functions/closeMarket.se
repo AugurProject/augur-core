@@ -42,6 +42,8 @@ macro BAD: 3 * 2^63
 
 macro CATCH_TOLERANCE: 2^64 / 10
 
+event thru(user:indexed, time)
+
 # Bins values to 1, 1.5, 2
 macro catch($x):
     if($x < (BAD - CATCH_TOLERANCE)):
@@ -110,11 +112,9 @@ def closeMarket(branch, market):
             if(binary(events[n]) && fxpOutcome==0):
                     resolution = RESOLVE.resolveBinary(events[n], market, branch, votingPeriodEvent, period)
             elif(scalar(events[n]) && EVENTS.getmode(events[n])==0):
-                    resolution = RESOLVE.resolveCategoricalOrScalar(2^64*EVENTS.getMinValue(events[n]), 2^64*EVENTS.getMaxValue(events[n]), event, market, branch, votingPeriodEvent, period)
+                    resolution = RESOLVE.resolveCategoricalOrScalar(2^64*EVENTS.getMinValue(events[n]), 2^64*EVENTS.getMaxValue(events[n]), events[n], market, branch, votingPeriodEvent, period)
             elif(categorical(events[n]) && EVENTS.getmode(events[n])==0):
-                    resolution = RESOLVE.resolveCategoricalOrScalar(2^64, 2^64*EVENTS.getNumOutcomes(events[n]), event, market, branch, votingPeriodEvent, period)
-            if(resolution==-4):
-                outcomeFour = 1
+                    resolution = RESOLVE.resolveCategoricalOrScalar(2^64, 2^64*EVENTS.getNumOutcomes(events[n]), events[n], market, branch, votingPeriodEvent, period)
             elif(resolution==-6):
                 outcomeSix = 1
             n += 1
