@@ -105,7 +105,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
 def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, votingPeriodEvent, period):
     mode = EVENTS.getUncaughtOutcome(event)
     EVENTS.setmode(event, mode)
-    fxpOutcome = mode * (scaled_max - scaled_min) + scaled_min
+    fxpOutcome = mode * (scaled_max - scaled_min)/2**64 + scaled_min
     EVENTS.setOutcome(event, fxpOutcome)
     pushedBack = EVENTS.getPushedBack(event)
     periodLength = BRANCHES.getPeriodLength(branch)

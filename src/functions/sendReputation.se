@@ -45,6 +45,7 @@ def sendReputation(branch, recver, value):
     #    CONSENSUS.collectFees(lastPeriod)
     # before rep, after rep, balance
     # person you're sending to needs rr up to date / done as well
+    # auto increment vote period if needed
     sender = tx.origin
     senderIndex = REPORTING.repIDToIndex(branch, sender)
     receiverIndex = REPORTING.repIDToIndex(branch, recver)

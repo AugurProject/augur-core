@@ -161,7 +161,8 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
 
 	# Whoever the first person to try to submit a report for period x on market y with events events checks if it needs to be reported on or not.
 	if(self.reportable[votePeriod][eventID]==0):
-		needsReportingOn = self.needsReportingOn(eventID)
+		needsReportingOn = 1
+		#needsReportingOn = self.needsReportingOn(eventID)
 		# if yes, the value is 1 and everything proceeds normally
 		if(BRANCHES.getOracleOnly(branch)):
 			needsReportingOn = 1

@@ -41,5 +41,6 @@ def reputationFaucet(branch):
         index = REPORTING.getNumberReporters(branch)
         REPORTING.addReporter(branch, tx.origin)
     REPORTING.setRep(branch, index, 47*2**64)
+    CONSENSUS.initialPenalizedSetting(branch
     CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
     return(1)

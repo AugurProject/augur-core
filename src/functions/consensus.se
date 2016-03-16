@@ -91,7 +91,7 @@ def penalizeWrong(branch, event):
     if(scalar(event) or categorical(event)):
         outcome = EVENTS.getUncaughtOutcome(event)
         # or can do
-        outcome = EVENTS.getMode(event)
+        outcome = EVENTS.getmode(event)
         # which should be exactly the same
     oldRep = MAKEREPORTS.getBeforeRep(branch, lastPeriod)
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && reportValue && outcome!=0):
@@ -99,12 +99,18 @@ def penalizeWrong(branch, event):
         #184467440737095520 == 0.01 in fxp
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
             if(scalar(event) or categorical(event) or outcome==3*2**64):
+                # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
+                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                    reportValue += 2**64
                 diff = reportValue - outcome
                 p = -(abs(diff)/2) + 2**64
             newRep = oldRep*(2*p - 2**64)/2**64
         # right
         else:
             if(scalar(event) or categorical(event) or outcome==3*2**64):
+                # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
+                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                    reportValue += 2**64
                 diff = reportValue - outcome
                 p = -(abs(diff)/2) + 2**64
             newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
@@ -159,7 +165,7 @@ def penalizeRoundTwoWrong(branch, event):
     if(scalar(event) or categorical(event)):
         outcome = EVENTS.getUncaughtOutcome(event)
         # or can do
-        outcome = EVENTS.getMode(event)
+        outcome = EVENTS.getmode(event)
         # which should be exactly the same
     oldRep = MAKEREPORTS.getBeforeRep(branch, lastPeriod)
     p = self.proportionCorrect(event)
@@ -366,13 +372,16 @@ def penalizationCatchup(branch):
         if(delta <= 0):
             return(0)
         # dock 10% for each period they didn't penalize on
-        smoothedRep = oldRep*16602069666338596864/2**64
+        #smoothedRep = oldRep*16602069666338596864/2**64
+        smoothedRep = oldRep*18262276632972455936/2**64 
         i = 1
         if(delta>22):
-            smoothedRep = smoothedRep*1844674407370955264/2**64
+            #smoothedRep = smoothedRep*1844674407370955264/2**64
+            smoothedRep = smoothedRep*18262276632972455936/2**64
             delta = 0
         while i < delta:
-            smoothedRep = smoothedRep*16602069666338596864/2**64
+            #smoothedRep = smoothedRep*16602069666338596864/2**64
+            smoothedRep = smoothedRep*18262276632972455936/2**64
             i += 1
         # and send it to branch for penalty rep collection
         repChange = oldRep - smoothedRep
