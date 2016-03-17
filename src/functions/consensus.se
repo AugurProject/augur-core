@@ -60,7 +60,6 @@ macro catch($x):
 # always use uncaught + caught version as opposed to actual outcome for this to be safe wrt ethicality / diff. for payouts
 # make max rep loss 20%, do V way to limit excess cuts
 def penalizeWrong(branch, event):
-    # remove from num reports actual for a reporter for last period if they reported on it the first time [a round 2 event], prevent them from reporting on it, but still do the rep redistrib. at the end before returning in case this event is the last one a user submits for reporting, only need to call this once that doesn't actually do anything for the original period an event was in simply to remove it from num reports actual, or to instead increment the num b/c it shouldn't be penalized until the next period resolution is over, also make sure this can't be called at all unless it's not a round 2 event, and what happens if only report in period is one like this w/ subtracting from reported on or adding to num?
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
@@ -93,6 +92,26 @@ def penalizeWrong(branch, event):
         outcome = EVENTS.getmode(event)
         # which should be exactly the same
     oldRep = MAKEREPORTS.getBeforeRep(branch, lastPeriod)
+    
+    # for a reporter for last period if they reported on it the first time [a round 2 event], prevent them from reporting on it, but still do the rep redistrib. at the end before returning in case this event is the last one a user submits for reporting and increment the num b/c it shouldn't be penalized until the next period resolution is over
+    if(BACKSTOPS.getRoundTwo(event) && !self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && reportValue && outcome!=0):
+        self.branch[branch].penalized[lastPeriod][tx.origin].event[event] = 1
+        self.branch[branch].penalized[lastPeriod][tx.origin].num += 1
+        if(MAKEREPORTS.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):
+            newAfterRep = MAKEREPORTS.getAfterRep(branch, lastPeriod)
+            if(newAfterRep <= 0):
+                newAfterRep = 0
+                MAKEREPORTS.setAfterRep(branch, lastPeriod, newAfterRep)
+            self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod
+            self.branch[branch].denominator[lastPeriod] += newAfterRep
+            totalRepDifference = newAfterRep - oldRep
+            if(repBalance + totalRepDifference <= 0):
+                totalRepDifference = -1*repBalance
+            if(totalRepDifference<0):
+                # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
+                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), totalRepDifference)
+                # sends that rep to the branch
+                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && reportValue && outcome!=0):
         # wrong
         #184467440737095520 == 0.01 in fxp
@@ -148,7 +167,7 @@ def penalizeRoundTwoWrong(branch, event):
     oldReport = REPORTS.getReport(branch,lastPenalizationPeriod,event)
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
         return(-3)
-    periodLength = BRANCHES.getPeriodLength(branch)
+    periodLength = BRANCHES.getPeriodLength(branch)s
     residual = block.number % periodLength
     if(residual > periodLength/2):
         return(-2)

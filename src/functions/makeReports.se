@@ -402,7 +402,8 @@ def validateReport(eventID, branch, votePeriod, report):
 		if((report*range/2^64 + minValue*2^64) > maxValue*2^64 && report!=3*2**63):
 			report = 2^64
 		if((report*range/2^64 + minValue*2^64) < minValue*2^64 && report!=3*2**63):
-			report = 0
+			# 1 is the new 0
+			report = 1
 		# submit report
 		self.mode_items[votePeriod][eventID].report_value[report] += 1
 		if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
