@@ -1,15 +1,17 @@
-#Essentially, we could allow anyone to pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.  In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep would be redistributed accordingly.  In the other class/branch, the other outcome would be considered right and rep would be redistributed accordingly.  Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets.  Market makers should then be able to move their market to whichever fork they want, if they fail to act, it'd go to the most voluminous fork by default after a couple weeks.
-# Errors:
-	# -1: round two hasn't happened yet
-# what about ethics forking?
-# fork scenario with scalars (1 fork has outcome, the other reports on it again is a soln)
-# if readjudication says a, on fork b when rereporting, a is not a reporting option
-# what if multiple things need to be forked?
-# ok so the problem with a fork bond queue at all even in theory is that they're going to be forking in a worthless network.  i.e. we have parent a with child b, then b forks into b and c,  if someone in a finally gets out of the queue, they're forking a, which is a worthless network, so the markets ​_have_​ to be transferred to winning forks after some period of time.  Then, in the "winning" fork, a market could either fork the network right away again, ​_or_​ simply be readjudicated again (the latter is a cheaper option, although not guaranteed to be secure, b/c someone could be doing a long play attack per all discussion above with 10s of millions of dollars).  So if we say, ok, the market is readjudicated since it's cheaper, if ​_that_​ fails, then the network can be forked again, and so on.  This allows the long play security stuff to play out if need be, allows markets to be resolved at probably the fastest rate of these options, and still allows a sort of implicit fork queue if the network keeps forking due to a really pocket heavy attacker.
-# take 20% of rep away from liars in fork, don't distribute to truthtellers until a new truthful outcome is resolved / reported
-# 1% of rep or highest bidder
+#Essentially, we could allow anyone to pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.  In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep would be redistributed accordingly.  In the other class/branch, the event would be readjudicated and remove the outcome on the pre fork branch and rep would be redistributed as normal, except people who said the original outcome in the original fork lose rep.  
+# Note: Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets.  Market makers should then be able to move their market to whichever fork they want, if they fail to act, it'd go to the most voluminous fork by default after a couple weeks.
 
-​To talk about the smaller fork bond posted:​
+# what if multiple things need to be forked?
+# any markets up for readjudication which need to be forked due to a "wrong" outcome are readjudicated on whichever network wins the fork, bond is transferred to wherever it moves to and no rbcr is done for that event until it's decided which fork it belongs on
+	# save outcome that's being contested [so w/e the og network decided
+# 1% of rep or highest bidder
+# In short: If a market is unethical, that fact is all that matters when it comes to bonds, appeals, and payouts.The outcome only matters for reputation adjustment (since this ignores ethicallity) and nothing else
+# fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
+
+# and moving all the markets w/ a fork?
+# so in last 24 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back? or stick w/ round 2 on the pre fork network?
+
+To talk about the smaller fork bond posted:
 The fork bond is paid. Saved along with it is the current consensus that is being contested.
 The bonds exist in both forks.
 The market either waits for a fork or goes to back to re-adjudication, possibly more than once.
@@ -18,61 +20,6 @@ This final consensus is compared with the consensus the fork was initially done 
 a) If the final truth/consensus  is different than the one that was contested, then we know for sure the bond poster was justified in posting the fork bond, and it is handled at this point in time, paying the poster back, and collecting from the reporters that committed to the consensus the bond poster correctly identified as liars.
 b) If the final truth/consensus is the same as the one that was contested, then we know for sure the bond poster contested a consensus that we know for sure was truth, and the fork bond posted was malicious. The fork bond is paid to the reporters for their additional labor.
 
-​
-12:44
-has to be done on each fork too
-​
-12:44
-i guess not if we actually assign a "final truth" --- but that's not how the fork is supposed to work
-​
-12:46
-so each time a fork happens in one fork the cycle ends and there's an "outcome" (but the market might not be there haha) and the bond is paid or taken in that fork, and it's done differently in the other side of the fork
-​
-12:50
-it honestly seems 100x easier to just take 80% of the rep from the liars and keep the system simple as opposed to having a tree of fork bonds...
-​
-12:50
-on the off chance the fork gets it wrong, can just fork again
-​
-12:52
-it's essentially what ends up happening if you keep having recursive fork bonds anyway and the work required to implement it is way less
-​
-12:55
-
-paying back all the bond raisers is nice and all, but there's another lot simpler way to achieve the same effect: give the original bond raiser the right of first refusal to make another fork on the new fork after a market has been readjudicated
-
-So.... a way to do your idea but not make it open to abuse, is to charge a non refundable cost that is the same as an appeal up to re-adjudication, along with 1% of reputation
-​
-5:22
-this pays the reporters who have to redo the market
-​
-5:23
-and if  the 1%  rep does not win the fork bond biding, it is returned, but the market is still contested and lives on to see another adjudication instead of resolving as is.(edited)
-joeykrug
-5:23 PM when do you charge that cost?
-imkharn
-5:24 PM Make it a pre-requisiste to sending the 1% of reputation to the fork bond contract
-​
-5:25
-unlike all the other funds we throw at reporters however, it would have to be held in a special place while we wait for a new reporting round to begin
-​
-5:25
-then moved into the reporters fees for that round
-​
-5:28
-the bond paid to move from adjudication to readjudication is approximately the cost of doing a re-adjudcation full attendance report gathering.
-​
-5:29
-oh, i see why you ask when it is charged, because one of the bids for forking will win
-​
-5:29
-perhaps even the one paid along with the winning bid go to reporters
-​
-5:29
-or in that case it could be refunded
-​
-5:29
-if it is the winning fork bid
 
 # what to do if market forked - readj. - forked again what do w/ orig readj. rep?  never happened b/c it wasn't the main fork market
 def fork(event):
@@ -82,7 +29,17 @@ def fork(event):
 		# lose bond of 5k rep
 		# results same as roundtwobond
 	# branch 2
+		# take 20% of rep away from liars in fork, don't distribute to truthtellers until a new truthful outcome is resolved / reported
 		# results opposite as roundtwobond
 		#a) return the bond
 		#b) reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest.
 		#Additionally, the rewards for all other answerers are made more extreme: rep redistribution constant used for smoothing is .40 instead of .2
+		
+# push forward for early resolution can't happen during fork
+
+
+• All markets with an expiration date of less than 60 days into the future have their expiration date moved to a date 60 days from the current date. 
+
+• All markets with a expiration date of less than 60 days into the future have the option of Early Expiration disabled. 
+
+• A new reporting period not begin during these 60 days.

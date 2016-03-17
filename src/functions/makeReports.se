@@ -204,6 +204,7 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
 	# -8: invalid event
 	# -9: already resolved
 	# -10: <24 hr left in period, too late to report, able to put up readj. bonds though
+# todo don't allow reporting in last 24hr of a period
 def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
 	if(self.branches[branch].hasReported[eventID][tx.origin].reported[votePeriod]==1):
 		return(-1)
