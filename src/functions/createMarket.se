@@ -95,8 +95,8 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
         expirationDate = EVENTS.getExpiration(event)
         futurePeriod = expirationDate / periodLength
         if(expirationDate < block.number):
-            return(-7)    
-        if (EVENTS.getEventBranch(event) != branch || !INFO.getCreator(event)):
+            return(-7)
+        if(EVENTS.getEventBranch(event) != branch || !INFO.getCreator(event)):
             return(-1)
         EXPEVENTS.addEvent(branch, futurePeriod, event)
         if(expirationDate > tradingPeriod):
