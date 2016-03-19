@@ -5,6 +5,7 @@ inset(refund.se)
 # mutex result non scalar not .5
 # one winning outcome
 def oneOutcome(market, winningOutcome):
+    refund()
     # distribute cashcoin to the people who won money by holding winning shares
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
     if(participantNumber == -1):
@@ -17,5 +18,6 @@ def oneOutcome(market, winningOutcome):
     return(1)
 
 def valueCalcOne(market, winningOutcome):
+    refund()
     sharesTotal = MARKETS.getSharesPurchased(market, winningOutcome) - MARKETS.initialLiquidityAmount(market)
     return(sharesTotal*MARKETS.getCumScale(market))

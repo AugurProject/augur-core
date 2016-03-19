@@ -31,10 +31,12 @@ macro scalar($event):
     ((EVENTS.getMaxValue($event)!=2 || EVENTS.getMinValue($event)!=1) && EVENTS.getNumOutcomes($event)==2)
 
 def catch(x):
+    refund()
     return(catch(x))
 
 ## helper functions:
 def resolveBinary(event, market, branch, votingPeriodEvent, period):
+    refund()
     fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
     pushedBack = EVENTS.getPushedBack(event)
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -104,6 +106,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
     return(1)
 
 def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, votingPeriodEvent, period):
+    refund()
     mode = EVENTS.getUncaughtOutcome(event)
     EVENTS.setmode(event, mode)
     fxpOutcome = mode * (scaled_max - scaled_min)/2**64 + scaled_min
@@ -177,6 +180,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     return(1)
 
 def determineWinningOutcomes(events: arr, numberEvents, branch, market):
+    refund()
     n = 0
     winningOutcomes = array(8)
     while n < numberEvents:

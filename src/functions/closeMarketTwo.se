@@ -5,6 +5,7 @@ inset(refund.se)
 
 # # of winningOutcomes is 2
 def twoOutcomes(market, winningOutcome: arr, events: arr):
+    refund()
     # look for the scalar
     scalar = 0
     if(((EVENTS.getMaxValue(events[0])!=2 || EVENTS.getMinValue(events[0])!=1) && EVENTS.getNumOutcomes(events[0])==2) || EVENTS.getOutcome(events[0])==3*2^63):
@@ -47,6 +48,7 @@ def twoOutcomes(market, winningOutcome: arr, events: arr):
     return(1)
     
 def valueCalcTwo(market, winningOutcome: arr, events: arr):
+    refund()
     # look for the scalar
     scalar = 0
     if(((EVENTS.getMaxValue(events[0])!=2 || EVENTS.getMinValue(events[0])!=1) && EVENTS.getNumOutcomes(events[0])==2) || EVENTS.getOutcome(events[0])==3*2^63):

@@ -72,6 +72,7 @@ macro ethic_catch($x):
     # -7: event not reportable >.99
 #Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
 def closeMarket(branch, market):
+    refund()
     if(CASH.balance(market)<=0):
         return(-1)
     numberEvents = MARKETS.getNumEvents(market)
@@ -135,6 +136,7 @@ def closeMarket(branch, market):
     # 0: reporting not done
     # -1: trader doesn't exist
 def claimProceeds(branch, market):
+    refund()
     numberEvents = MARKETS.getNumEvents(market)
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)

@@ -5,6 +5,7 @@ inset(refund.se)
 
 # four winning outcomes
 def fourOutcomes(market, winningOutcome: arr, events: arr):
+    refund()
     # first is low-low && whatever, second is high-low, third is low-high, fourth is high-high
     scalarOne = -1
     scalarTwo = -1
@@ -76,6 +77,7 @@ def fourOutcomes(market, winningOutcome: arr, events: arr):
     return(1)
 
 def valueCalcFour(market, winningOutcome: arr, events: arr):
+    refund()
     # first is low-low && whatever, second is high-low, third is low-high, fourth is high-high
     scalarOne = -1
     scalarTwo = -1

@@ -39,13 +39,16 @@ inset(refund.se)
 data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, forkSelection, pushingForward, bondsMan, originalPeriod, initialLiquidity, trade_ids[](id, next_id, prev_id), last_trade, total_trades, last_price, scheduleSet)
 
 def scheduleSet(market):
+    refund()
     return(self.Markets[market].scheduleSet)
     
 def setScheduleSet(market):
+    refund()
     self.Markets[market].scheduleSet = 1
     return(1)
 
 def getTotalSharesPurchased(market):
+    refund()
     total = 0
     n = self.Markets[market].numOutcomes
     i = 0
@@ -55,6 +58,7 @@ def getTotalSharesPurchased(market):
     return(total)
 
 def getMarketEvent(market, index):
+    refund()
     return(self.Markets[market].events[index])
 
 macro EVENTS_FIELDS: 6
@@ -63,6 +67,7 @@ macro WINNING_OUTCOMES_FIELDS: 8
 macro FIELDS: 12
 
 def getMarketInfo(marketID):
+    refund()
     index = FIELDS
     participantNumber = self.Markets[marketID].addr2participant[tx.origin]
     descriptionLength = INFO.getDescriptionLength(marketID)
@@ -143,6 +148,7 @@ def getMarketInfo(marketID):
 #           info_j is the information array for market j, and N is the total
 #           number of markets in this branch.
 def getMarketsInfo(branch, offset, numMarketsToLoad):
+    refund()
     numMarkets = BRANCHES.getNumMarketsBranch(branch)
     with marketIDs = BRANCHES.getMarketsInBranch(branch, outitems=numMarkets):
         if numMarketsToLoad > 0 and numMarketsToLoad < numMarkets:
@@ -184,18 +190,23 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
                     return(flattened: arr)
 
 def getForkSelection(market):
+    refund()
     return(self.Markets[market].forkSelection)
 
 def getMarketEvents(market):
+    refund()
     return(load(self.Markets[market].events[0], items=self.Markets[market].lenEvents): arr)
 
 def getSharesPurchased(market, outcome):
+    refund()
     return(self.Markets[market].sharesPurchased[outcome])
 
 def getVolume(market):
+    refund()
     return(self.Markets[market].volume)
 
 def getParticipantNumber(market, address):
+    refund()
     participantNumber = self.Markets[market].addr2participant[address]
     if(self.Markets[market].participants[participantNumber].participantID != tx.origin):
         return(-1)
@@ -203,40 +214,52 @@ def getParticipantNumber(market, address):
         return(participantNumber)
 
 def getParticipantID(market, participantNumber):
+    refund()
     return(self.Markets[market].participants[participantNumber].participantID)
 
 def getParticipantSharesPurchased(market, participantNumber, outcome):
+    refund()
     return(self.Markets[market].participants[participantNumber].shares[outcome])
 
 def getNumEvents(market):
+    refund()
     return(self.Markets[market].lenEvents)
 
 def getCurrentParticipantNumber(market):
+    refund()
     return(self.Markets[market].currentParticipant)
 
 def getAlpha(market):
+    refund()
     return(self.Markets[market].alpha)
 
 def getCumScale(market):
+    refund()
     return(self.Markets[market].cumulativeScale)
 
 def getMarketNumOutcomes(market):
+    refund()
     return(self.Markets[market].numOutcomes)
 
 def getTradingPeriod(market):
+    refund()
     return(self.Markets[market].tradingPeriod)
 
 def getOriginalTradingPeriod(market):
+    refund()
     return(self.Markets[market].originalPeriod)
 
 def setTradingPeriod(market, period):
+    refund()
     self.Markets[market].tradingPeriod = period
     return(1)
 
 def getTradingFee(market):
+    refund()
     return(self.Markets[market].tradingFee)
 
 def getBranchID(market):
+    refund()
     return(self.Markets[market].branch)
 
 # alpha is equal to v/(n*log(n)) where v is the max percent commission
@@ -292,9 +315,11 @@ macro Bq($marketID):
    alpha($marketID) * sumList(sharesPurchased($marketID), 1, numOutcomes($marketID)) / 2**64
 
 def lsLmsr(marketID):
+    refund()
     return(lsLmsr(marketID))
 
 def lmsr_price(market, outcome):
+    refund()
     a = lsLmsr(market)
     sharesPurchased(market)[outcome] += 2**50
     b = lsLmsr(market)
@@ -303,6 +328,7 @@ def lmsr_price(market, outcome):
 
 # check that msg.sender is one of our function contracts
 def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, forkSelection):
+    refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add event list to the market
@@ -316,6 +342,7 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, f
     return(1)
 
 def addParticipant(market, address):
+    refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     participantNumber = self.Markets[market].currentParticipant
@@ -325,12 +352,14 @@ def addParticipant(market, address):
     return(participantNumber)
 
 def modifyShares(marketID, outcome, amount):
+    refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     sharesPurchased(marketID)[outcome] += amount
     return(1)
 
 def modifyParticipantShares(branch, marketID, participantNumber, outcome, amount):
+    refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Markets[marketID].participants[participantNumber].shares[outcome] += amount
@@ -344,13 +373,16 @@ def modifyParticipantShares(branch, marketID, participantNumber, outcome, amount
         return(1)
         
 def initialLiquidityAmount(market):
+    refund()
     return(self.Markets[market].initialLiquidity)
 
 def setInitialLiquidityAmount(market, amount):
+    refund()
     self.Markets[market].initialLiquidity = amount
     return(1)
     
 def setWinningOutcomes(market, outcomes: arr):
+    refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # largest # of winning outcomes is 8
@@ -358,6 +390,7 @@ def setWinningOutcomes(market, outcomes: arr):
     return(1)
 
 def getWinningOutcomes(market):
+    refund()
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
@@ -365,9 +398,11 @@ def getWinningOutcomes(market):
     return(load(self.Markets[market].winningOutcomes[0], items=8): arr)
     
 def getOneWinningOutcome(market, num):
+    refund()
     return(self.Markets[market].winningOutcomes[num])
 
 def initialLiquiditySetup(marketID, cumScale, numOutcomes):
+    refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Markets[marketID].cumulativeScale = cumScale
@@ -375,24 +410,30 @@ def initialLiquiditySetup(marketID, cumScale, numOutcomes):
     return(1)
 
 def setTradingFee(market, fee):
+    refund()
     self.Markets[market].tradingFee = fee
     return(fee)
 
 def setPushedForward(market, bool):
+    refund()
     self.Markets[market].pushingForward = bool
     self.Markets[market].bondsMan = msg.sender
     return(1)
 
 def getPushedForward(market):
+    refund()
     return(self.Markets[market].pushingForward)
 
 def getBondsMan(market):
+    refund()
     return(self.Markets[market].bondsMan)
 
 def getLastTrade(market):
+    refund()
     return(self.Markets[market].last_trade)
     
 def addTrade(market, trade_id, last_id):
+    refund()
     self.Markets[market].trade_ids[last_id].next_id = trade_id
     self.Markets[market].trade_ids[trade_id].prev_id = last_id
     self.Markets[market].trade_ids[trade_id].id = trade_id
@@ -401,6 +442,7 @@ def addTrade(market, trade_id, last_id):
     return(1)
     
 def remove_trade_from_market(market_id, trade_id):
+    refund()
     prev_id = self.Markets[market_id].trade_ids[trade_id].prev_id
     next_id = self.Markets[market_id].trade_ids[trade_id].next_id
     if prev_id and next_id:
@@ -419,6 +461,7 @@ def remove_trade_from_market(market_id, trade_id):
     return(1)
 
 def get_trade_ids(market_id):
+    refund()
     trades_count = self.Markets[market_id].total_trades
     trade_id = self.Markets[market_id].last_trade
     trade_ids = array(trades_count)
@@ -434,14 +477,17 @@ def get_trade_ids(market_id):
     return([FAILURE]:arr)
     
 def get_total_trades(market_id):
+    refund()
     return(self.Markets[market_id].total_trades)
 
 #
 # Get price by market ID
 #
 def price(market_id):
+    refund()
     return(self.Markets[market_id].last_price)
     
 def set_last_price(market_id, price):
+    refund()
     self.Markets[market_id].last_price = price
     return(1)

@@ -45,12 +45,15 @@ def init():
     self.Reporting[1010101].totalRep += 47*2^64
 
 def checkWhitelist(address):
+    refund()
     return(self.whitelists[msg.sender].addresses[address])
 
 def checkContractWhitelist(contract, address):
+    refund()
     return(self.whitelists[contract].addresses[address])
 
 def setWhitelist(contract, addresses:arr):
+    refund()
     if self.whitelists[contract].taken:
         return(text("ERROR: you have to vote to change a whitelist"):str)
     else:
@@ -65,34 +68,41 @@ def setWhitelist(contract, addresses:arr):
 
 # @return reputation value
 def getRepByIndex(branch, repIndex):
+    refund()
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
 # @return reputation value
 def getRepBalance(branch, address):
+    refund()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
     if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
         return(0)
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
 def getDormantRepByIndex(branch, repIndex):
+    refund()
     return(self.Reporting[branch].dormantRep[repIndex].repValue)
 
 # @return reputation value
 def getDormantRepBalance(branch, address):
+    refund()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
     if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
         return(0)
     return(self.Reporting[branch].dormantRep[repIndex].repValue)
 
 def getReporterID(branch, index):
+    refund()
     return(self.Reporting[branch].reputation[index].reporterID)
 
 def getTotalRep(branch):
+    refund()
     return(self.Reporting[branch].totalRep)
 
 # will return 0s for array values after it's looped through all the ones you
 # have an actual balance in
 def getReputation(address):
+    refund()
     branchListCount = BRANCHES.getNumBranches()
     if(address):
         branches = array(2*branchListCount)
@@ -126,12 +136,15 @@ def getReputation(address):
     return(branches: arr)
 
 def getNumberReporters(branch):
+    refund()
     return(self.Reporting[branch].numberReporters)
 
 def repIDToIndex(branch, repID):
+    refund()
     return(self.Reporting[branch].repIDtoIndex[repID])
 
 def hashReport(report: arr, salt):
+    refund()
     hashInfo = array(len(report) + 2)
     hashInfo[0] = tx.origin
     hashInfo[1] = salt
@@ -144,6 +157,7 @@ def hashReport(report: arr, salt):
 
 # check that msg.sender is one of our function contracts
 def setInitialReporters(parent, branchID):
+    refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add branch as a "reporter"
@@ -154,6 +168,7 @@ def setInitialReporters(parent, branchID):
     return(1)
 
 #def claimInitialRep(parent, branchID):
+     refund()
      # have 1 month to claim
 #    if(self.repIDToIndex(branchID, msg.sender)==0 && block.number < (BRANCHES.getCreationDate(branchID) + 216000)):
 #        i = self.Reporting[branchID].numberReporters
@@ -178,6 +193,7 @@ def setInitialReporters(parent, branchID):
 def addReporter(branch, sender):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
+    refund()
     reporterIndex = self.Reporting[branch].numberReporters
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
     self.Reporting[branch].reputation[reporterIndex].repValue = 0
@@ -187,18 +203,21 @@ def addReporter(branch, sender):
     return(1)
 
 def addRep(branch, index, value):
+    refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Reporting[branch].reputation[index].repValue += value
     return(1)
 
 def subtractRep(branch, index, value):
+    refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Reporting[branch].reputation[index].repValue -= value
     return(1)
 
 def setRep(branch, index, newRep):
+    refund()
     #if !self.whitelist.check(msg.sender):
     #    return(-1)
     oldRep = self.Reporting[branch].reputation[index].repValue
@@ -207,12 +226,14 @@ def setRep(branch, index, newRep):
     return(1)
 
 def addDormantRep(branch, index, value):
+    refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Reporting[branch].dormantRep[index].repValue += value
     return(1)
 
 def subtractDormantRep(branch, index, value):
+    refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Reporting[branch].dormantRep[index].repValue -= value
@@ -220,6 +241,7 @@ def subtractDormantRep(branch, index, value):
 
 # check that msg.sender is one of our function contracts
 def setSaleDistribution(addresses: arr, balances: arr, branchID):
+    refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     i = 0

@@ -100,12 +100,15 @@ macro fx_exp($x):
     fx_exp2($x * 0x10000000000000000 / 0xB17217F7D1CF79AC)
 
 def fx_exp(x):
+    refund()
 	return(fx_exp(x))
 
 def fx_log(x):
+    refund()
 	return(fx_log(x))
 
 def sqrt(n):
+    refund()
     val = n
     i = 0
     while i < 11:

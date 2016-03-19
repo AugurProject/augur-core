@@ -5,6 +5,7 @@ inset(refund.se)
 
 # eight winning outcomes
 def eightOutcomes(market, winningOutcome: arr, events: arr):
+    refund()
     outcomeOne = EVENTS.getOutcome(events[0])
     minValueOne = EVENTS.getMinValue(events[0])
     maxValueOne = EVENTS.getMaxValue(events[0])
@@ -63,6 +64,7 @@ def eightOutcomes(market, winningOutcome: arr, events: arr):
     return(1)
     
 def valueCalcEight(market, winningOutcome: arr, events: arr):
+    refund()
     outcomeOne = EVENTS.getOutcome(events[0])
     minValueOne = EVENTS.getMinValue(events[0])
     maxValueOne = EVENTS.getMaxValue(events[0])

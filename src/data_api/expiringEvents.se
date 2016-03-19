@@ -30,15 +30,18 @@ data EventsExpDates[][](numberEvents, numberRemoved, events[], totalRepReported,
 data EventIDToIndex[][]
 
 def getRoundTwo(branch, period):
+	refund()
 	return(self.EventsExpDates[branch][period].roundTwoNumEvents)
 	
 def addRoundTwo(branch, period):
+	refund()
 	self.EventsExpDates[branch][period].roundTwoNumEvents += 1
 	return(1)
 
 # With this function you can get the eventIDs and report on outcomes
 # @return all events in a branch and expiration period
 def getEvents(branch, expDateIndex):
+    refund()
     numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
     events = array(numEvents)
     i = 0
@@ -48,11 +51,13 @@ def getEvents(branch, expDateIndex):
     return(events: arr)
     
 def getEventIndex(period, eventID):
+	refund()
 	return(self.EventIDToIndex[period][eventID])
 
 # we should probably make this bonded too
 # -1: voting not started
 def setNumEventsToReportOn(branch, expDateIndex):
+	refund()
 	# after voting has started
 	if(expDateIndex==BRANCHES.getVotePeriod(branch)):
 		# todo fix circular dependency
@@ -64,25 +69,32 @@ def setNumEventsToReportOn(branch, expDateIndex):
 		return(-1)
 
 def getNumEventsToReportOn(branch, expDateIndex):
+	refund()
 	return(self.EventsExpDates[branch][expDateIndex].numEventsToReportOn)
 
 def getPeriodVolume(branch, expIndex):
+	refund()
 	return(self.EventsExpDates[branch][expIndex].periodVolume)
 
 def getNumberEvents(branch, expDateIndex):
+	refund()
 	return(self.EventsExpDates[branch][expDateIndex].numberEvents)
 
 def getEvent(branch, expDateIndex, eventIndex):
+	refund()
 	return(self.EventsExpDates[branch][expDateIndex].events[eventIndex])
 
 def getTotalRepReported(branch, expDateIndex):
+	refund()
 	return(self.EventsExpDates[branch][expDateIndex].totalRepReported)
 
 def getReportHash(branch, expDateIndex, reporter, event):
+	refund()
 	return(self.EventsExpDates[branch][expDateIndex].reportHash[reporter][event])
 
 # check that msg.sender is one of our function contracts
 def addEvent(branch, futurePeriod, eventID):
+	refund()
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
 	self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
@@ -91,29 +103,35 @@ def addEvent(branch, futurePeriod, eventID):
 	return(1)
 
 def removeEvent(branch, period):
+	refund()
 	self.EventsExpDates[branch][period].numberRemoved += 1
 	return(1)
 
 def getNumRemoved(branch, period):
+	refund()
 	return(self.EventsExpDates[branch][period].numberRemoved)
 
 def setTotalRepReported(branch, expDateIndex, repReported):
+	refund()
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
 	self.EventsExpDates[branch][expDateIndex].totalRepReported = repReported
 	return(1)
 
 def addPeriodVolume(branch, expIndex, volume):
+	refund()
 	self.EventsExpDates[branch][expIndex].periodVolume += volume
 	return(1)
 
 def setReportHash(branch, expDateIndex, reporter, reportHash, event):
+	refund()
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
 	self.EventsExpDates[branch][expDateIndex].reportHash[reporter][event] = reportHash
 	return(1)
 
 def moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod):
+    refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     x = 0

@@ -78,6 +78,7 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
 # 200k gas
 # -2: can't cancel an initial orders
 def cancel(trade_id):
+    refund()
     # user can cancel anytime
     # Get trade
     trade = array(9)
@@ -134,6 +135,7 @@ macro remove_trade($trade_id, $market_id):
 #
 # costs 532k
 def buy(amount, price, market, outcome):
+    refund()
     if(msg.sender != INFO.getCreator(market) || tx.origin != INFO.getCreator(market)):
         return(-4)
     if(amount <= 0 or price <= 0 or market==0 or price*amount < 2**64):
@@ -157,6 +159,7 @@ def buy(amount, price, market, outcome):
 
 # cost 532k
 def sell(amount, price, market_id, outcome):
+    refund()
     if(amount <= 0 or price <= 0 or market_id==0 or price*amount < 2**64):
         return(-1)
     if(msg.sender != INFO.getCreator(market_id) || tx.origin != INFO.getCreator(market_id)):
@@ -188,6 +191,7 @@ def sell(amount, price, market_id, outcome):
 #max amount is max shares to sell
 # 500k gas
 def trade(max_value, max_amount, trade_ids:arr):
+    refund()
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
     if(MARKETS.getOneWinningOutcome(market, 0)):
@@ -313,6 +317,7 @@ def trade(max_value, max_amount, trade_ids:arr):
 # buys amount of every outcome
 # cost 850k gas
 def buyCompleteSets(branch, market, amount):
+    refund()
     if(BRANCHES.getOracleOnly(branch)):
         return(-6)
     numEvents = MARKETS.getNumEvents(market)
@@ -360,6 +365,7 @@ def buyCompleteSets(branch, market, amount):
     
 # sells amount of every outcome [if user owns it]
 def sellCompleteSets(branch, market, amount):
+    refund()
     if(BRANCHES.getOracleOnly(branch)):
         return(-6)
     if(msg.sender != INFO.getCreator(market_id) || tx.origin != INFO.getCreator(market_id)):

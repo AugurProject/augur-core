@@ -33,6 +33,7 @@ data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, 
 data past24Hours[]
 
 def getEventInfo(event):
+	refund()
     info = array(7)
     info[0] = self.Events[event].branch
     info[1] = self.Events[event].expirationDate
@@ -44,60 +45,77 @@ def getEventInfo(event):
     return(info: arr)
 
 def getPast24(period):
+	refund()
 	return(self.past24Hours[period])
 
 def addPast24(period):
+	refund()
 	self.past24Hours[period] += 1
 	return(1)
 
 def getEventBranch(event):
+	refund()
 	return(self.Events[event].branch)
 
 def getPushedBack(event):
+	refund()
 	return(self.Events[event].pushedBack)
 
 def getExpiration(event):
+	refund()
 	return(self.Events[event].expirationDate)
 
 def getOriginalExpiration(event):
+	refund()
 	return(self.Events[event].originalExp)
 
 def setExpiration(event, date):
+	refund()
 	self.Events[event].expirationDate = date
 	return(1)
 
 def getOutcome(event):
+	refund()
 	# do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
 	return(self.Events[event].outcome)
 
 def getEthics(event):
+	refund()
 	return(self.Events[event].ethical)
 
 def setEthics(event, ethicality):
+	refund()
 	self.Events[event].ethical = ethicality
 	return(ethicality)
 
 def getEthical(event):
+	refund()
 	return(self.Events[event].ethical)
 
 def getMinValue(event):
+	refund()
 	return(self.Events[event].minValue)
 
 def getMaxValue(event):
+	refund()
 	return(self.Events[event].maxValue)
 
 def getNumOutcomes(event):
+	refund()
 	return(self.Events[event].numOutcomes)
 
 def setUncaughtOutcome(event, outcome):
+	refund()
 	self.Events[event].uncaughtOutcome = outcome
 	return(1)
 
 def getUncaughtOutcome(event):
+	refund()
 	# do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
 	return(self.Events[event].uncaughtOutcome)
 
 def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes):
+	refund()
 	# check that msg.sender is one of our function contracts
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
@@ -113,18 +131,22 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes)
 		return(0)
 
 def setBond(event, bond):
+	refund()
 	self.Events[ID].bond = bond
 	return(1)
 
 def addMarket(event, marketID):
+	refund()
 	self.Events[event].markets[self.Events[event].numMarkets] = marketID
 	self.Events[event].numMarkets += 1
 	return(1)
 
 def getBond(event):
+	refund()
 	return(self.Events[event].bond)
 
 def getMarkets(event):
+	refund()
 	i = 0
 	markets = array(self.Events[event].numMarkets)
 	while i < self.Events[event].numMarkets:
@@ -133,12 +155,15 @@ def getMarkets(event):
 	return(markets: arr)
 	
 def getMarket(event, marketIndex):
+	refund()
 	return(self.Events[event].markets[marketIndex])
 
 def getNumMarkets(event):
+	refund()
 	return(self.Events[event].numMarkets)
 
 def setOutcome(ID, outcome):
+	refund()
 	#if(!self.whitelist.check(msg.sender)):
 	#	return(-1)
 	self.Events[ID].outcome = outcome
@@ -146,6 +171,7 @@ def setOutcome(ID, outcome):
 
 #In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold.
 def setReportingThreshold(event):
+	refund()
 	# first check is if event expDate is in the current vote period and second is if blockNum is near expiration of voting period (within 7200 blocks or 24 hr.)
 	# final check is if < 25 reports so far
 	# (block.number+7200) / BRANCHES.getPeriodLength(branch) -1 is what we're reporting on in 24 hr
@@ -158,38 +184,48 @@ def setReportingThreshold(event):
 		return(0)
 
 def getNumReports(event):
+	refund()
 	return(self.Events[event].numReports)
 
 def addNumReports(event):
+	refund()
 	self.Events[event].numReports += 1
 	return(1)
 
 def getReportingThreshold(event):
+	refund()
 	return(self.Events[event].threshold)
 
 def getmode(event):
+	refund()
 	# do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
 	return(self.Events[event].mode)
 
 def setmode(event, mode):
+	refund()
 	self.Events[event].mode = mode
 	return(1)
 
 def setRejected(event, period, uncaughtOutcome):
+	refund()
 	self.Events[event].rejected = 1
 	self.Events[event].rejectedPeriod = period
 	self.Events[event].rejectedUncaught = uncaughtOutcome
 	return(1)
 	
 def setPushedBack(event):
+	refund()
 	self.Events[event].pushedBack = 1
 	return(1)
 
 def getRejected(event):
+	refund()
 	return(self.Events[event].rejected)
 
 def getRejectedPeriod(event):
+	refund()
 	return(self.Events[event].rejectedPeriod)
 
 def getRejectedUncaught(event):
+	refund()
 	return(self.Events[event].rejectedUncaught)

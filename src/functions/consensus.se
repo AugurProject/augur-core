@@ -31,6 +31,7 @@ def init():
 data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenalized), penalizedUpTo[], feesCollected[][])
 
 def initialPenalizedSetting(branch, reporter, upto):
+    refund()
     self.branch[branch].penalizedUpTo[reporter] = upto
     return(1)
     
@@ -61,6 +62,7 @@ macro catch($x):
 # always use uncaught + caught version as opposed to actual outcome for this to be safe wrt ethicality / diff. for payouts
 # make max rep loss 20%, do V way to limit excess cuts
 def penalizeWrong(branch, event):
+    refund()
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
@@ -161,6 +163,7 @@ def penalizeWrong(branch, event):
 # So we want to do the rbcr for both period 1 and period 2 at this time
 # penalizeWrong for backstop 1
 def penalizeRoundTwoWrong(branch, event):
+    refund()
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
     reportValue = REPORTS.getReport(branch,lastPeriod,event)
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
@@ -292,6 +295,7 @@ def penalizeRoundTwoWrong(branch, event):
     return(1)
 
 def getDenominator(branch, period):
+    refund()
     return(self.branch[branch].denominator[period])
 
 
@@ -300,6 +304,7 @@ def getDenominator(branch, period):
     # -1: already done
     # -2: hasn't reported this period
 def penalizeNotEnoughReports(branch):
+    refund()
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     if(self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
         return(-1)
@@ -342,6 +347,7 @@ def penalizeNotEnoughReports(branch):
 # -2: needs to be second half of reporting period to claim rep [1st half is when redistribution is done]
     # after this window, any unclaimed rep is pushed to the next period's redistrib. pool via the first make report submission
 def collectFees(branch):
+    refund()
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.number % periodLength
     if(residual < periodLength/2):
@@ -385,6 +391,7 @@ def collectFees(branch):
     #increment
     #period 102, voteperiod 101 - penalize voteperiod 100
 def penalizationCatchup(branch):
+    refund()
     # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.number % periodLength
@@ -426,6 +433,7 @@ def penalizationCatchup(branch):
     # 0: not a valid claim
     # -2: reporter doesn't exist
 def slashRep(branch, salt, report, reporter, eventID):
+    refund()
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.number % periodLength
     if(residual > periodLength/2):
@@ -456,6 +464,7 @@ def slashRep(branch, salt, report, reporter, eventID):
     return(reporterBalance)
 
 def incrementPeriodAfterReporting(branch):
+    refund()
     # do this after reporting is finished
     if(periodOver(branch)):
         period = block.number / BRANCHES.getPeriodLength($branch) - 1
@@ -477,6 +486,7 @@ macro abs($a):
     $a
     
 def proportionCorrect(event, branch, period):
+    refund()
     p = 0
     outcome = catch(EVENTS.getUncaughtOutcome(event))
     if(outcome!=0):
@@ -519,6 +529,7 @@ macro repRedistributionDone($branch, $reporter):
         0
 
 def getRRDone(branch, reporter):
+    refund()
     return(repRedistributionDone(branch, reporter))
 
 

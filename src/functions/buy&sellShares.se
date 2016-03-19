@@ -83,6 +83,7 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
 #
 # 200k gas
 def cancel(trade_id):
+    refund()
     # user can cancel anytime
     # Get trade
     trade = array(9)
@@ -148,6 +149,7 @@ macro remove_trade($trade_id, $market_id):
 #
 # costs 532k
 def buy(amount, price, market, outcome):
+    refund()
     creator = INFO.getCreator(market)
     if(msg.sender == creator || tx.origin == creator):
         return(-30)
@@ -174,6 +176,7 @@ def buy(amount, price, market, outcome):
 
 # cost 532k
 def sell(amount, price, market_id, outcome):
+    refund()
     creator = INFO.getCreator(market_id)
     if(msg.sender == creator || tx.origin == creator):
         return(-30)
@@ -210,6 +213,7 @@ def sell(amount, price, market_id, outcome):
 #max amount is max shares to sell
 # 500k gas
 def trade(max_value, max_amount, trade_ids:arr):
+    refund()
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
     if(MARKETS.getOneWinningOutcome(market, 0)):
@@ -343,6 +347,7 @@ def trade(max_value, max_amount, trade_ids:arr):
 # buys amount of every outcome
 # cost 850k gas
 def buyCompleteSets(branch, market, amount):
+    refund()
     creator = INFO.getCreator(market)
     if(msg.sender == creator || tx.origin == creator):
         return(-30)
@@ -391,6 +396,7 @@ def buyCompleteSets(branch, market, amount):
     
 # sells amount of every outcome [if user owns it]
 def sellCompleteSets(branch, market, amount):
+    refund()
     creator = INFO.getCreator(market)
     if(msg.sender == creator || tx.origin == creator):
         return(-30)

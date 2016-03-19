@@ -36,6 +36,7 @@ inset(refund.se)
     # -2: max value < min value
 # .025 eth to create
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes):
+    refund()
     periodLength = BRANCHES.getPeriodLength(branch)
     if(maxValue < minValue):
         return(-2)

@@ -26,16 +26,18 @@ import reporting as REPORTING
 import cash as CASH
 import consensus as CONSENSUS
 import branches as BRANCHES
-inset(refund.se)
+inset(refund.s)
 
 # Error -1: Hey, you're not broke!
 def cashFaucet():
+    refund()
     if CASH.balance(tx.origin) > 5*2**64:
         return(-1)
     CASH.setCash(tx.origin, 10000*2**64)
     return(1)
 
 def reputationFaucet(branch):
+    refund()
     if REPORTING.repIDToIndex(branch, tx.origin) != 0 or REPORTING.getReporterID(branch, 0) == tx.origin:
         index = REPORTING.repIDToIndex(branch, tx.origin)
     else:
