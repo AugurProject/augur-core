@@ -4,6 +4,7 @@
 
 extern currency: [addCash:[int256,int256]:int256, balance:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256]
 
+
 def sendSubCurrency(recver, value, subcurrency):
     return(subcurrency.send(recver, value))
 

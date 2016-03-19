@@ -22,6 +22,7 @@
 # import makeReports as REPORTS
 # import consensus as CONSENSUS
 import branches as BRANCHES
+inset(refund.se)
 
 # Reporting index is the branchID
 # Reporters index is the rep. address

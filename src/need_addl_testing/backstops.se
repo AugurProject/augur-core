@@ -7,25 +7,32 @@ import makeReports as MAKEREPORTS
 import branches as BRANCHES
 import markets as MARKETS
 import sendReputation as SENDREP
+inset(refund.se)
 
 data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final, bondPoster)
 
 def getRoundTwo(event):
+    refund()
     return(self.roundTwo[event].roundTwo)
     
 def getBondPoster(event):
+    refund()
     return(self.roundTwo[event].bondPoster)
     
 def getFinal(event):
+    refund()
     return(self.roundTwo[event].final)
     
 def getOriginalOutcome(event):
+    refund()
     return(self.roundTwo[event].originalOutcome)
     
 def getOriginalEthicality(event):
+    refund()
     return(self.roundTwo[event].originalEthicality)
     
 def getOriginalVotePeriod(event):
+    refund()
     return(self.roundTwo[event].originalVotePeriod)
 
 # Appeal_Bond = Market_Value * (0.01 + Market_Fee / 2) + Average_Adjudication_Cost
@@ -33,6 +40,7 @@ def getOriginalVotePeriod(event):
         # needs an abs min of like 100 rep.
 # Reporting period is 2 months minus 24 hours.  This 24 hours allows for the appeals to take place before the next reporting round begins.
 def roundTwoPostBond(branch, event, eventIndex, votePeriod):
+    refund()
     bond = 100*2**64
     if(BRANCHES.getVotePeriod(branch)!=votePeriod):
 	    return(0)
@@ -67,6 +75,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
         return(1)
 
 def roundTwoResolve(branch, event, eventIndex, votePeriod):
+    refund()
     overruled = 1
     block.number
     votedOnAgain = 0
@@ -128,6 +137,7 @@ macro ethic_catch($x):
         2^64
 
 def resolve(branch, event):
+	refund()
 	# binary
 	if(binary(event)):
 	    fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))

@@ -28,6 +28,7 @@ import fxpFunctions as FXP
 import markets as MARKETS
 import events as EVENTS
 import trades as TRADES
+inset(refund.se)
 
 event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
 event log_add_tx(market:indexed, sender, type, price, amount, outcome, tradeid)

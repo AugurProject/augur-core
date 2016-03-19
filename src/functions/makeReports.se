@@ -27,6 +27,7 @@ import events as EVENTS
 import markets as MARKETS
 import reporting as REPORTING
 import fxpFunctions as FXP
+inset(refund.se)
 
 # branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID
 data branches[](submittedHash[][], numReportsActual[][], hasReported[][](reported[]), beforeRep[][], afterRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], reportedPeriod[][], firstReport[], periodDormantRep[][])

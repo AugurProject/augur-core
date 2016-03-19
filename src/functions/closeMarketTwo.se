@@ -1,6 +1,7 @@
 import markets as MARKETS
 import cash as CASH
 import events as EVENTS
+inset(refund.se)
 
 # # of winningOutcomes is 2
 def twoOutcomes(market, winningOutcome: arr, events: arr):

@@ -1,0 +1,3 @@
+macro refund():
+    if(msg.value > 0):
+        send(msg.sender, msg.value)

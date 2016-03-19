@@ -21,6 +21,7 @@
 
 import branches as BRANCHES
 import events as EVENTS
+inset(refund.se)
 
 # [branchID][votingPeriod]
 # reporthash is [reporterID] = hash

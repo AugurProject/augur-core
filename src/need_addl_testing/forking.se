@@ -43,3 +43,5 @@ def fork(event):
 • All markets with a expiration date of less than 60 days into the future have the option of Early Expiration disabled. 
 
 • A new reporting period not begin during these 60 days.
+
+# round 2 bond cost discussion, reporting penalties change, bond is transferred to wherever it moves to and no rbcr is done for that event until it's decided which fork it belongs on and on old network bond is returned, readj market outcome shouldn't be final and no rbcr if it gets forked

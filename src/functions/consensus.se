@@ -7,6 +7,7 @@ import makeReports as MAKEREPORTS
 import branches as BRANCHES
 import markets as MARKETS
 import backstops as BACKSTOPS
+inset(refund.se)
 
 
 # round two consensus data [note/todo: UI should show round 2 events first / up top]

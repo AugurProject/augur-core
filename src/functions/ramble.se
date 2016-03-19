@@ -1,10 +1,14 @@
+inset(refund.se)
+
 event comment(market: indexed, ipfsHash)
 event metadata(market: indexed, ipfsHash)
 
 def addComment(market, ipfsHash):
+    refund()
     log(type=comment, market, ipfsHash)
     return(1)
 
 def addMetadata(market, ipfsHash):
+    refund()
     log(type=metadata, market, ipfsHash)
     return(1)
