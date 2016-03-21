@@ -28,11 +28,11 @@ def eightOutcomes(market, winningOutcome: arr, events: arr):
     elif(outcomeThree<minValueThree):
         outcomeThree = minValueThree
 
-    outcomeOneHighSidePercent = 2^64*(outcomeOne - 2^64*minValueOne) / (2^64*maxValueOne - 2^64*minValueOne)
+    outcomeOneHighSidePercent = 2^64*(outcomeOne - minValueOne) / (maxValueOne - minValueOne)
     outcomeOneLowSidePercent = 2^64 - outcomeOneHighSidePercent
-    outcomeTwoHighSidePercent = 2^64*(outcomeTwo - 2^64*minValueTwo) / (2^64*maxValueTwo - 2^64*minValueTwo)
+    outcomeTwoHighSidePercent = 2^64*(outcomeTwo - minValueTwo) / (maxValueTwo - minValueTwo)
     outcomeTwoLowSidePercent = 2^64 - outcomeTwoHighSidePercent
-    outcomeThreeHighSidePercent = 2^64*(outcomeThree - 2^64*minValueThree) / (2^64*maxValueThree - 2^64*minValueThree)
+    outcomeThreeHighSidePercent = 2^64*(outcomeThree - minValueThree) / (maxValueThree - minValueThree)
     outcomeThreeLowSidePercent = 2^64 - outcomeThreeHighSidePercent
             
     # price is in fixed point
@@ -59,7 +59,7 @@ def eightOutcomes(market, winningOutcome: arr, events: arr):
         sharesOwned = MARKETS.getParticipantSharesPurchased(market, participantNumber, winningOutcome[n])
         MARKETS.modifyParticipantShares(MARKETS.getBranchID(market), market, participantNumber, winningOutcome[n], -sharesOwned)
         CASH.subtractCash(market, sharesOwned*pricePerShare[n]*MARKETS.getCumScale(market)/2^64)
-        CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)*pricePerShare[n]/2^64)
+        CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)/2**64*pricePerShare[n]/2^64)
         n+=1
     return(1)
     
@@ -87,11 +87,11 @@ def valueCalcEight(market, winningOutcome: arr, events: arr):
     elif(outcomeThree<minValueThree):
         outcomeThree = minValueThree
 
-    outcomeOneHighSidePercent = 2^64*(outcomeOne - 2^64*minValueOne) / (2^64*maxValueOne - 2^64*minValueOne)
+    outcomeOneHighSidePercent = 2^64*(outcomeOne - minValueOne) / (maxValueOne - minValueOne)
     outcomeOneLowSidePercent = 2^64 - outcomeOneHighSidePercent
-    outcomeTwoHighSidePercent = 2^64*(outcomeTwo - 2^64*minValueTwo) / (2^64*maxValueTwo - 2^64*minValueTwo)
+    outcomeTwoHighSidePercent = 2^64*(outcomeTwo - minValueTwo) / (maxValueTwo - minValueTwo)
     outcomeTwoLowSidePercent = 2^64 - outcomeTwoHighSidePercent
-    outcomeThreeHighSidePercent = 2^64*(outcomeThree - 2^64*minValueThree) / (2^64*maxValueThree - 2^64*minValueThree)
+    outcomeThreeHighSidePercent = 2^64*(outcomeThree - minValueThree) / (maxValueThree - minValueThree)
     outcomeThreeLowSidePercent = 2^64 - outcomeThreeHighSidePercent
             
     # price is in fixed point
@@ -116,5 +116,5 @@ def valueCalcEight(market, winningOutcome: arr, events: arr):
     sharesTotal7 = MARKETS.getSharesPurchased(market, winningOutcome[6]) - MARKETS.initialLiquidityAmount(market)
     sharesTotal8 = MARKETS.getSharesPurchased(market, winningOutcome[7]) - MARKETS.initialLiquidityAmount(market)
 
-    value = sharesTotal1*cumScale*pricePerShare[0]/2**64 + sharesTotal2*cumScale*pricePerShare[1]/2**64 + sharesTotal3*cumScale*pricePerShare[2]/2**64 + sharesTotal4*cumScale*pricePerShare[3]/2**64 + sharesTotal5*cumScale*pricePerShare[4]/2**64 + sharesTotal6*cumScale*pricePerShare[5]/2**64 + sharesTotal7*cumScale*pricePerShare[6]/2**64 + sharesTotal8*cumScale*pricePerShare[7]/2**64
+    value = sharesTotal1*cumScale/2**64*pricePerShare[0]/2**64 + sharesTotal2*cumScale/2**64*pricePerShare[1]/2**64 + sharesTotal3*cumScale/2**64*pricePerShare[2]/2**64 + sharesTotal4*cumScale/2**64*pricePerShare[3]/2**64 + sharesTotal5*cumScale/2**64*pricePerShare[4]/2**64 + sharesTotal6*cumScale/2**64*pricePerShare[5]/2**64 + sharesTotal7*cumScale/2**64*pricePerShare[6]/2**64 + sharesTotal8*cumScale/2**64*pricePerShare[7]/2**64
     return(value)

@@ -13,11 +13,11 @@ def oneOutcome(market, winningOutcome):
     sharesOwned = MARKETS.getParticipantSharesPurchased(market, participantNumber, winningOutcome)
     participant = MARKETS.getParticipantID(market, participantNumber)
     MARKETS.modifyParticipantShares(MARKETS.getBranchID(market), market, participantNumber, winningOutcome, -sharesOwned)
-    CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market))
-    CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market))
+    CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)/2**64)
+    CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)/2**64)
     return(1)
 
 def valueCalcOne(market, winningOutcome):
     refund()
     sharesTotal = MARKETS.getSharesPurchased(market, winningOutcome) - MARKETS.initialLiquidityAmount(market)
-    return(sharesTotal*MARKETS.getCumScale(market))
+    return(sharesTotal*MARKETS.getCumScale(market)/2**64)

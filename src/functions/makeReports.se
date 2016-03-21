@@ -340,7 +340,7 @@ def getNumEventsToReport(branch, votePeriod):
 
 def needsReportingOn(event):
 	# This only works for categorical and binary markets, not scalar
-	if((2^64*EVENTS.getMaxValue(event) != 2*2**64 || 2^64*EVENTS.getMinValue(event) != 2**64) and EVENTS.getNumOutcomes(event) == 2):
+	if((EVENTS.getMaxValue(event) != 2**65 || EVENTS.getMinValue(event) != 2**64) and EVENTS.getNumOutcomes(event) == 2):
 		return(1)
 	# To determine whether a market needs to be resolved or not, the events can only have one market associated with them or all markets associated with the event fulfill the .99 qualification.
 	numMarkets = EVENTS.getNumMarkets(event)
@@ -371,10 +371,11 @@ def validateReport(eventID, branch, votePeriod, report):
 	maxValue = EVENTS.getMaxValue(eventID)
 	minValue = EVENTS.getMinValue(eventID)
 	# binary
-	if(numOutcomes==2 and maxValue==2 && minValue==1):
+	if(numOutcomes==2 and maxValue==2**65 && minValue==2**64):
 		if(report>2*2^64 or report<2^64 or report==0):
 			return(-5)
 		# submit report
+		# todo weight by rep if round 2
 		# outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
 		outcome = (EVENTS.getUncaughtOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
 		EVENTS.setUncaughtOutcome(eventID, outcome)
@@ -389,6 +390,7 @@ def validateReport(eventID, branch, votePeriod, report):
 		#if((report*range/2^64 + minValue)>numOutcomes*2^64 && report!=3*2**63):
 		#	report = 2^64
 		# submit report
+		# todo weight by rep in round 2
 		self.mode_items[votePeriod][eventID].report_value[report] += 1
 		if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
 			self.mode_items[votePeriod][eventID].current_mode = report
@@ -400,13 +402,14 @@ def validateReport(eventID, branch, votePeriod, report):
 	else:
 		if(report<0):
 			return(-5)
-		range = maxValue*2^64 - minValue*2^64
-		if((report*range/2^64 + minValue*2^64) > maxValue*2^64 && report!=3*2**63):
+		range = maxValue - minValue
+		if((report*range/2^64 + minValue) > maxValue && report!=3*2**63):
 			report = 2^64
-		if((report*range/2^64 + minValue*2^64) < minValue*2^64 && report!=3*2**63):
+		if((report*range/2^64 + minValue) < minValue && report!=3*2**63):
 			# 1 is the new 0
 			report = 1
 		# submit report
+		# todo weight by rep in round 2
 		self.mode_items[votePeriod][eventID].report_value[report] += 1
 		if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
 			self.mode_items[votePeriod][eventID].current_mode = report

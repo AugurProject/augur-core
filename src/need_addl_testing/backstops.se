@@ -108,10 +108,10 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
     	return(0)
 
 macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=2 || EVENTS.getMinValue($event)!=1) && EVENTS.getNumOutcomes($event)==2)
+    ((EVENTS.getMaxValue($event)!=2**65 || EVENTS.getMinValue($event)!=2**64) && EVENTS.getNumOutcomes($event)==2)
         
 macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and 2**64*EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==1)
+    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==2**6Z)
         
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)

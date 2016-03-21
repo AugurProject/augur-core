@@ -44,4 +44,16 @@ def fork(event):
 
 • A new reporting period not begin during these 60 days.
 
-# round 2 bond cost discussion, reporting penalties change, bond is transferred to wherever it moves to and no rbcr is done for that event until it's decided which fork it belongs on and on old network bond is returned, readj market outcome shouldn't be final and no rbcr if it gets forked
+# round 2 bond cost discussion, reporting penalties change/make less severe, bond is transferred to wherever it moves to and no rbcr is done for that event until it's decided which fork it belongs on and on old network bond is returned, readj market outcome shouldn't be final and no rbcr if it gets forked
+
+# 8 max outcomes, base reporters should really be mult by 2, i.e. if want 3 then do 6, gas cost to market creators 
+
+
+- Separate creator / liquidity provisioners
+- Charge creator the minimum fee, pay it back up to 2x using half the trading fees
+- Half the trading fees go to reporters
+- Upon buying a full set, the first order placed on the book for each of the shares has no fee, this is abusable, and whoever picks it up's fees go to the person who provided the liquidity
+- maker taker fees
+
+- do old createmarket sum version to add up or new one?
+ph notes

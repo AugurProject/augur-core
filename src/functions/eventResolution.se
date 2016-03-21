@@ -28,7 +28,7 @@ macro ethic_catch($x):
         2^64
 
 macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=2 || EVENTS.getMinValue($event)!=1) && EVENTS.getNumOutcomes($event)==2)
+    ((EVENTS.getMaxValue($event)!=2**65 || EVENTS.getMinValue($event)!=2**64) && EVENTS.getNumOutcomes($event)==2)
 
 def catch(x):
     refund()

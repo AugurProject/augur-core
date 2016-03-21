@@ -373,7 +373,7 @@ def buyCompleteSets(branch, market, amount):
     ### TODO: check for .99 market here
     if ((BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market) && !pushedBack) || MARKETS.getBranchID(market) != branch || !MARKETS.scheduleSet(market)):
         return(-1)
-    price = amount*cumScale
+    price = amount*cumScale/2**64
     if(CASH.balance(tx.origin) < price):
         return(-3)
         
@@ -425,7 +425,7 @@ def sellCompleteSets(branch, market, amount):
         return(-1)
 
     # these prices are in fixed point
-    price = amount*cumScale
+    price = amount*cumScale/2**64
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
     # remove shares from the user's account
     i = 0
@@ -446,4 +446,4 @@ def sellCompleteSets(branch, market, amount):
     return(1)
     
 macro fee_percent($market_fee, $price, $amount, $cumScale):
-    4 * $market_fee * $price / (2**64*$cumScale) * (2**64-$price/$cumScale) / 2**64
+    4 * $market_fee * $price / ($cumScale) * (2**64-$price/$cumScale)

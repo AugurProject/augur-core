@@ -491,7 +491,7 @@ def proportionCorrect(event, branch, period):
     outcome = catch(EVENTS.getUncaughtOutcome(event))
     if(outcome!=0):
         # binary
-        if(EVENTS.getNumOutcomes(event)==2 and 2**64*EVENTS.getMaxValue(event)==2**65 and 2**64*EVENTS.getMinValue(event)==2**64):
+        if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==2**65 and EVENTS.getMinValue(event)==2**64):
             # subtract 1 to get it from 0 to 1
             avgOutcome = EVENTS.getUncaughtOutcome(event) - 2**64
             # say we have outcome of 0, avg is .4, what is p?
@@ -534,10 +534,10 @@ def getRRDone(branch, reporter):
 
 
 macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=2 || EVENTS.getMinValue($event)!=1) && EVENTS.getNumOutcomes($event)==2)
+    ((EVENTS.getMaxValue($event)!=2**65 || EVENTS.getMinValue($event)!=2**64) && EVENTS.getNumOutcomes($event)==2)
         
 macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and 2**64*EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==1)
+    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==2**64)
         
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)

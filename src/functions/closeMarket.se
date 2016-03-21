@@ -114,7 +114,7 @@ def closeMarket(branch, market):
             if(binary(events[n]) && fxpOutcome==0):
                     resolution = RESOLVE.resolveBinary(events[n], market, branch, votingPeriodEvent, period)
             elif(scalar(events[n]) && EVENTS.getmode(events[n])==0):
-                    resolution = RESOLVE.resolveCategoricalOrScalar(2^64*EVENTS.getMinValue(events[n]), 2^64*EVENTS.getMaxValue(events[n]), events[n], market, branch, votingPeriodEvent, period)
+                    resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(events[n]), EVENTS.getMaxValue(events[n]), events[n], market, branch, votingPeriodEvent, period)
             elif(categorical(events[n]) && EVENTS.getmode(events[n])==0):
                     resolution = RESOLVE.resolveCategoricalOrScalar(2^64, 2^64*EVENTS.getNumOutcomes(events[n]), events[n], market, branch, votingPeriodEvent, period)
             elif(resolution==-6):
@@ -174,10 +174,10 @@ def claimProceeds(branch, market):
         return(0)
 
 macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=2 || EVENTS.getMinValue($event)!=1) && EVENTS.getNumOutcomes($event)==2)
+    ((EVENTS.getMaxValue($event)!=2**65 || EVENTS.getMinValue($event)!=2**64) && EVENTS.getNumOutcomes($event)==2)
     
 macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and 2**64*EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==1)
+    (EVENTS.getNumOutcomes($event)==2 and 2**64*EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==2**64)
     
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)

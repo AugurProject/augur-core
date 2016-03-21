@@ -272,7 +272,7 @@ macro lsLmsr($marketID):
                 while $i <= numOutcomes($marketID):
                     $sumExp += FXP.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
                     $i += 1
-                $bq*cumScale($marketID)*FXP.fx_log($sumExp)/2**64
+                $bq*cumScale($marketID)/2**64*FXP.fx_log($sumExp)/2**64
                 
 # Maximum value of array
 macro maximum($a):
