@@ -16,8 +16,3 @@ def oneOutcome(market, winningOutcome):
     CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)/2**64)
     CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)/2**64)
     return(1)
-
-def valueCalcOne(market, winningOutcome):
-    refund()
-    sharesTotal = MARKETS.getSharesPurchased(market, winningOutcome) - MARKETS.initialLiquidityAmount(market)
-    return(sharesTotal*MARKETS.getCumScale(market)/2**64)

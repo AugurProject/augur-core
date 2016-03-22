@@ -26,16 +26,6 @@ def move_event(event):
 			and place it into the next reporting period
 
 
-
-# if someone pays a smaller fork bond aka another readj. bond, any such market already up for readjudication which need to be forked but wasn't first to post a fork bond is readjudicated on whichever network wins the fork
-	# if parent wins then no readj. is necessary and this new bond is returned
-	# original round 2 bond is always returned, "small" fork bond is transferred to wherever it moves to and no rbcr is done for that event until it's decided which fork it belongs on
-	# poss. choices aren't removed
-	# The new consensus is compared with the consensus the fork was initially done over.
-	#a) If the final truth/consensus is different than the one that was contested, then we know for sure the bond poster was justified in posting the fork bond, and it is handled at this point in time, paying the poster back, and collecting from the reporters that committed to the consensus the bond poster correctly identified as liars
-	#b) If the final truth/consensus is the same as the one that was contested, then we know for sure the bond poster contested a consensus that we know for sure was truth, and the fork bond posted was malicious. The fork bond is paid to the reporters for their additional labor.
-	# if this is forked again, round 2 bond here / small fork bond is given back and forked as normal
-
 # In the last 24 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back
 # bond is 1% of rep
 def fork(event, branch):
