@@ -366,6 +366,9 @@ def needsReportingOn(event):
 	return(-1)
 
 def validateReport(eventID, branch, votePeriod, report):
+	# todo in case of fork remove the original outcome as a possible response
+	# add a separate fork outcome and fork ethicality for where to submit report in case of fork
+	# fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
 	# check report validity
 	numOutcomes = EVENTS.getNumOutcomes(eventID)
 	maxValue = EVENTS.getMaxValue(eventID)
@@ -375,7 +378,7 @@ def validateReport(eventID, branch, votePeriod, report):
 		if(report>2*2^64 or report<2^64 or report==0):
 			return(-5)
 		# submit report
-		# todo weight by rep if round 2
+		# todo weight by rep if round 2 and fork
 		# outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
 		outcome = (EVENTS.getUncaughtOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
 		EVENTS.setUncaughtOutcome(eventID, outcome)
@@ -390,7 +393,7 @@ def validateReport(eventID, branch, votePeriod, report):
 		#if((report*range/2^64 + minValue)>numOutcomes*2^64 && report!=3*2**63):
 		#	report = 2^64
 		# submit report
-		# todo weight by rep in round 2
+		# todo weight by rep in round 2 and fork
 		self.mode_items[votePeriod][eventID].report_value[report] += 1
 		if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
 			self.mode_items[votePeriod][eventID].current_mode = report
@@ -409,7 +412,7 @@ def validateReport(eventID, branch, votePeriod, report):
 			# 1 is the new 0
 			report = 1
 		# submit report
-		# todo weight by rep in round 2
+		# todo weight by rep in round 2 and fork
 		self.mode_items[votePeriod][eventID].report_value[report] += 1
 		if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
 			self.mode_items[votePeriod][eventID].current_mode = report

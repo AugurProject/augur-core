@@ -68,9 +68,9 @@ macro ethic_catch($x):
     # -2: 0 outcome
     # -3: not final round 2 event
     # -4: Outcome .5 once, pushback and retry
+    # -5: Event forked and not final yet
     # -6: bonded pushed forward market not ready to be resolved
     # -7: event not reportable >.99
-#Use consistent 1 and 2 fixed point numbers as min and max for close market, make market, make event, buy/sell shares, and consensus on binary events - really, just use base 64 fixed point everywhere
 def closeMarket(branch, market):
     refund()
     if(CASH.balance(market)<=0):
@@ -111,6 +111,8 @@ def closeMarket(branch, market):
                 return(-2)
             if(BACKSTOPS.getRoundTwo(event) && !BACKSTOPS.getFinal(event)):
                 return(-3)
+            if(EVENTS.getForked(event) && !EVENTS.getForkedDone(event)):
+                return(-5)
             if(binary(events[n]) && fxpOutcome==0):
                     resolution = RESOLVE.resolveBinary(events[n], market, branch, votingPeriodEvent, period)
             elif(scalar(events[n]) && EVENTS.getmode(events[n])==0):

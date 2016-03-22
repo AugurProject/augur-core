@@ -28,9 +28,37 @@ inset(refund.se)
 # S&P 500 scalar would be say 0 && 4700, respectively
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught, pushedBack, bond)
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, numReports, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught, pushedBack, bond, forked, forkOver, forkOutcome, forkEthicality)
 
 data past24Hours[]
+
+def getForkOutcome(event):
+	return(self.Events[event].forkOutcome)
+
+def setForkOutcome(event, value):
+	self.Events[event].forkOutcome = value
+	return(1)
+	
+def getForkEthicality(event):
+	return(self.Events[event].forkEthicality)
+
+def setForkEthicality(event, value):
+	self.Events[event].forkEthicality = value
+	return(1)
+
+def getForked(event):
+	return(self.Events[event].forked)
+
+def setForked(event):
+	self.Events[event].forked = 1
+	return(1)
+	
+def setForkDone(event):
+	self.Events[event].forkOver = 1
+	return(1)
+	
+def getForkedDone(event):
+	return(self.Events[event].forkOver)
 
 def getEventInfo(event):
 	refund()

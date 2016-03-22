@@ -46,7 +46,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
 	    return(0)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     # if so, we're in the final 24 hours and event is in this branch + votePeriod
-    if(!resolving && block.number/BRANCHES.getPeriodLength(branch)!=((block.number + 4800)/BRANCHES.getPeriodLength(branch)) && eventID!=0 && event==eventID && self.roundTwo[event].roundTwo==0):
+    if(!resolving && block.number/BRANCHES.getPeriodLength(branch)!=((block.number + 4800)/BRANCHES.getPeriodLength(branch)) && eventID!=0 && event==eventID && self.roundTwo[event].roundTwo==0 && EVENTS.getForked(event)==0):
         if(SENDREP.sendReputation(branch, event, bond)==0):
             return(0)
     	period = BRANCHES.getVotePeriod(branch)
@@ -77,7 +77,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
 def roundTwoResolve(branch, event, eventIndex, votePeriod):
     refund()
     overruled = 1
-    block.number
+    bond = 100*2**64
     votedOnAgain = 0
     if(scalar(event) or categorical(event)):
 	    if(self.roundTwo[event].originalOutcome == EVENTS.getUncaughtOutcome(event) && self.roundTwo[event].originalEthicality==ethic_catch(EVENTS.getEthical(event))):

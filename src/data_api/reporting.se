@@ -30,7 +30,7 @@ inset(refund.se)
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
-data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID))
+data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), fork)
 
 data whitelists[](addresses[], taken)
 
@@ -47,6 +47,10 @@ def init():
 def checkWhitelist(address):
     refund()
     return(self.whitelists[msg.sender].addresses[address])
+    
+def setFork(branch):
+    self.Reporting[branch].fork = 1
+    return(1)
 
 def checkContractWhitelist(contract, address):
     refund()
@@ -168,13 +172,23 @@ def setInitialReporters(parent, branchID):
     return(1)
 
 #def claimInitialRep(parent, branchID):
-     refund()
+     #refund()
      # have 1 month to claim
 #    if(self.repIDToIndex(branchID, msg.sender)==0 && block.number < (BRANCHES.getCreationDate(branchID) + 216000)):
 #        i = self.Reporting[branchID].numberReporters
 #        rep = REPORTS.getBeforeRep(parent, BRANCHES.getParentPeriod(branchID))
 #        reporterID = msg.sender
 #        self.Reporting[branchID].reputation[i].reporterID = reporterID
+#        if(self.Reporting[branchID].fork && (userReportedOutcomeEqualToOutcomePreFork || userDidntReportOnForkedEvent || (forkedOverEthicality && userReportedOnEthicalityEqualToPreFork))):
+            # take away 30% of rep from liars and those who didn't report
+#            repDecrease = rep*12912720851596685312/2**64
+#            rep = rep - repDecrease
+#            amountLeftToPayBonder = doubleOfTheBond - bondDoubledThusFar
+#            if(repDecrease < amountLeftToPayBonder):
+                # send all the rep to the fork bond poster
+#            else:
+                # send amountLeftToPayBonder [if positive] to the fork bond poster
+                # send the rest to the new branch's redistribution pool
 #        self.Reporting[branchID].reputation[i].repValue = rep
 #        self.Reporting[branchID].repIDtoIndex[reporterID] = i
 #        self.Reporting[branchID].dormantRep[i].reporterID = reporterID

@@ -1,59 +1,354 @@
-#Essentially, we could allow anyone to pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.  In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep would be redistributed accordingly.  In the other class/branch, the event would be readjudicated and remove the outcome on the pre fork branch and rep would be redistributed as normal, except people who said the original outcome in the original fork lose rep.  
-# Note: Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets.  Market makers should then be able to move their market to whichever fork they want, if they fail to act, it'd go to the most voluminous fork by default after a couple weeks.
+#Notes:
+	#Essentially, we could allow anyone to pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.  In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep would be redistributed accordingly.  In the other class/branch, the event would be readjudicated and remove the outcome on the pre fork branch and rep would be redistributed as normal, except people who said the original outcome in the original fork lose rep.  
+	# Note: Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets.  Market makers should then be able to move their market to whichever fork they want, if they fail to act, it'd go to the most voluminous fork by default after a couple weeks.
 
-# what if multiple things need to be forked?
-# any markets up for readjudication which need to be forked due to a "wrong" outcome are readjudicated on whichever network wins the fork, bond is transferred to wherever it moves to and no rbcr is done for that event until it's decided which fork it belongs on
-	# save outcome that's being contested [so w/e the og network decided
-# 1% of rep or highest bidder
-# In short: If a market is unethical, that fact is all that matters when it comes to bonds, appeals, and payouts.The outcome only matters for reputation adjustment (since this ignores ethicallity) and nothing else
-# fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
-
-# and moving all the markets w/ a fork?
-# so in last 24 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back? or stick w/ round 2 on the pre fork network?
-
-To talk about the smaller fork bond posted:
-The fork bond is paid. Saved along with it is the current consensus that is being contested.
-The bonds exist in both forks.
-The market either waits for a fork or goes to back to re-adjudication, possibly more than once.
-The market gets a consensus that no one appeals on the 24 hour period eventually, and the consensus is made final.
-This final consensus is compared with the consensus the fork was initially done over.
-a) If the final truth/consensus  is different than the one that was contested, then we know for sure the bond poster was justified in posting the fork bond, and it is handled at this point in time, paying the poster back, and collecting from the reporters that committed to the consensus the bond poster correctly identified as liars.
-b) If the final truth/consensus is the same as the one that was contested, then we know for sure the bond poster contested a consensus that we know for sure was truth, and the fork bond posted was malicious. The fork bond is paid to the reporters for their additional labor.
+# todo: make reports, reporting
 
 
-# what to do if market forked - readj. - forked again what do w/ orig readj. rep?  never happened b/c it wasn't the main fork market
-def fork(event):
-	if(!EVENTS.getRoundTwo(event)):
+# All markets with an expiration date of less than 60 days into the future have their expiration date moved to a date 60 days from the current date. 
+# All markets with a expiration date of less than 60 days into the future have the option of Early Expiration disabled. 
+# A new reporting period not begin during these 60 days.
+# All markets go to new fork at the end of these 60 days
+# markets can move after 60 days
+# free passes on reporting during this period [b/c can't] on og branch and last period [w/ exception of the round 2 event we forked over]
+# new branch continues and doesn't skip a beat
+# consensus pauses on og branch
+def move_event(event):
+	if(branchEventIsInForked && 60daysisover && didntForkOverThisEvent && hasntresolved):
+		x = checkWhichForkWon()
+		if(x==branchEventIsIn):
+			leave event here
+			if(eventHasntResolved):
+				set outcomes to 0
+				push it into next period
+		else:
+			move event to fork
+			and place it into the next reporting period
+
+
+
+# if someone pays a smaller fork bond aka another readj. bond, any such market already up for readjudication which need to be forked but wasn't first to post a fork bond is readjudicated on whichever network wins the fork
+	# if parent wins then no readj. is necessary and this new bond is returned
+	# original round 2 bond is always returned, "small" fork bond is transferred to wherever it moves to and no rbcr is done for that event until it's decided which fork it belongs on
+	# poss. choices aren't removed
+	# The new consensus is compared with the consensus the fork was initially done over.
+	#a) If the final truth/consensus is different than the one that was contested, then we know for sure the bond poster was justified in posting the fork bond, and it is handled at this point in time, paying the poster back, and collecting from the reporters that committed to the consensus the bond poster correctly identified as liars
+	#b) If the final truth/consensus is the same as the one that was contested, then we know for sure the bond poster contested a consensus that we know for sure was truth, and the fork bond posted was malicious. The fork bond is paid to the reporters for their additional labor.
+	# if this is forked again, round 2 bond here / small fork bond is given back and forked as normal
+
+# In the last 24 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back
+# bond is 1% of rep
+def fork(event, branch):
+	if(!EVENTS.getRoundTwo(event) || EVENTS.getFinal(event)):
 		return(-1)
-	# branch 1
-		# lose bond of 5k rep
-		# results same as roundtwobond
-	# branch 2
-		# take 20% of rep away from liars in fork, don't distribute to truthtellers until a new truthful outcome is resolved / reported
-		# results opposite as roundtwobond
-		#a) return the bond
-		#b) reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest.
-		#Additionally, the rewards for all other answerers are made more extreme: rep redistribution constant used for smoothing is .40 instead of .2
+	# if in last 24 hr of period
+	if(block.number/BRANCHES.getPeriodLength(branch)!=((block.number + 4800)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENT.getForked(event)):
+		bond = 184467440737095520*REPORTING.getTotalRep(branch)/2**64
+		# branch 1
+		# lose bond
+		# results same as roundtwobond, let it resolve as that on original network
+		if(SENDREP.sendReputation(branch, event, bond)==0):
+			return(-2)
+
+		# branch 2
+		# on fork bond isn't lost, gets paid up to 2x from "liars"
+		# make the fork
+		newBranch = CREATEBRANCH.createSubbranch(text("fork"), BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), 0)
+		REPORTING.setFork(newBranch)
+		period = BRANCHES.getVotePeriod(newBranch)
+		MAKEREPORTS.setEventRequired(newBranch, period+1, event)
+		EXPIRING.addEvent(newBranch, period+1, event)
+		EVENTS.setExpiration(event, block.number)
+	    MAKEREPORTS.setReportable(period+1, event)
+	    # set round two to true so can't be done again
+		self.forkData[event].originalBranch = branch
+		self.forking[event].bondPoster = msg.sender
+		EVENTS.setForked(event)
 		
-# push forward for early resolution can't happen during fork
+		# return round 2 bond
+		REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), 100*2**64)
+	    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), 100*2**64)
+	else:
+		return(0)
+
+# once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
+def resolveForkedEvent(branch, event, eventIndex, votePeriod):
+    refund()
+    overruled = 1
+    bond = 100*2**64
+    votedOnAgain = 0
+    if(scalar(event) or categorical(event)):
+	    if(self.roundTwo[event].originalOutcome == EVENTS.getUncaughtOutcome(event) && self.roundTwo[event].originalEthicality==ethic_catch(EVENTS.getEthical(event))):
+	        overruled = 0
+	if(self.roundTwo[event].originalOutcome == catch(EVENTS.getUncaughtOutcome(event)) && self.roundTwo[event].originalEthicality==ethic_catch(EVENTS.getEthical(event))):
+	    overruled = 0
+    if(BRANCHES.getVotePeriod(branch) > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
+	    votedOnAgain = 1
+	if(overruled && votedOnAgain && self.roundTwo[event].roundTwo && votePeriod!=self.roundTwo[event].originalVotePeriod && eventID!=0 && event==eventID):
+		# return the bond
+	    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
+	    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), bond)
+    	# and set final outcome / event bond, etc
+    	self.resolve(branch, event)
+    	# reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting [don't count ethicality here]
+    	self.roundTwo[event].final = 1
+    	EVENTS.setForkDone(event)
+	    return(2*bond)
+	elif(votedOnAgain && self.roundTwo[event].roundTwo && votePeriod!=self.roundTwo[event].originalVotePeriod && eventID!=0 && event==eventID):
+		# lose bond
+	    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
+	    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), bond)
+    	# and set final outcome / event bond, etc
+    	self.resolve(branch, event)
+    	# rbcr from original period/orig. outcome stands, rbcr from round 2 happens as usual as well
+    	self.roundTwo[event].final = 1
+    	EVENTS.setForkDone(event)
+    # not voted on again yet
+    else:
+    	return(0)
+    	
+# need to deal with:
+# once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
+def resolve(branch, event):
+	refund()
+	# binary
+	if(binary(event)):
+	    fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
+        ethical = ethic_catch(EVENTS.getEthical(event))
+        EVENTS.setOutcome(event, fxpOutcome)
+	    
+	    if(fxpOutcome==3*2**63 || !ethical):
+            # give event bond money to reporters
+            CASH.subtractCash(event, EVENTS.getBond(event))
+            CASH.addCash(branch, EVENTS.getBond(event))
+            # not ethical is same as .5 outcome
+            fxpOutcome = 3*2**63
+            EVENTS.setOutcome(event, fxpOutcome)
+        else:
+            # return bond
+            CASH.subtractCash(event, EVENTS.getBond(event))
+            CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
+        return(1)
+	# scalar
+	elif(scalar(event) or categorical(event)):
+	    mode = EVENTS.getUncaughtOutcome(event)
+        EVENTS.setmode(event, mode)
+        fxpOutcome = mode * (scaled_max - scaled_min) + scaled_min
+        EVENTS.setOutcome(event, fxpOutcome)
+        ethical = ethic_catch(EVENTS.getEthical(event))
+
+        if(fxpOutcome==2**63 || !ethical):
+    		# give event bond money to reporters
+    		CASH.subtractCash(event, EVENTS.getBond(event))
+    		CASH.addCash(branch, EVENTS.getBond(event))
+    		# not ethical is same as .5 outcome
+    		fxpOutcome = 2**63
+    		EVENTS.setOutcome(event, fxpOutcome)
+    		EVENTS.setmode(event, fxpOutcome)
+	    else:
+    		# return bond
+    		CASH.subtractCash(event, EVENTS.getBond(event))
+    		CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
+    	return(1)
+    # (should never be reached)
+    else:
+        return(0)
+
+# rbcr is done as a normal event where everyone reports on it
+# resolve forked event needs to be called first [or does it for this?]
+# only called on the fork not the parent, normal penalization except the values are forkOutcome and forkEthicality as opposed to anything else
+def penalizeOnForkedEvent(branch, event):
+	if(EVENTS.getForked(event)==0):
+		return(-1)
+	if(EVENTS.getForkedDone(event)==0):
+		return(-2)
+    repBalance = REPORTING.getRepBalance(branch, msg.sender)
+    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
+        return(-3)
+    # if overruled
+    overruled = 0
+    if((BACKSTOPS.getOriginalOutcome(event) != EVENTS.getOutcome(event) && BACKSTOPS.getOriginalOutcome(event) != EVENTS.getUncaughtOutcome(event) or BACKSTOPS.getOriginalEthicality(event)!=ethic_catch(EVENTS.getEthical(event)))):
+        overruled = 1
+    periodLength = BRANCHES.getPeriodLength(branch)
+    residual = block.number % periodLength
+    if(residual > periodLength/2):
+        return(-2)
+    # accounts for if no events in a period
+    if(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
+        self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod
+        self.branch[branch].denominator[lastPeriod] += repBalance
+        return(1)
+
+    if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event) && MARKETS.getPushedForward(market)):
+        if(lastPeriod==EVENTS.getOriginalExpiration(event)/BRANCHES.getPeriodLength(branch)):
+            return(-1)
+
+    newRep = 0
+    outcome = catch(EVENTS.getUncaughtOutcome(event))
+    reportValue = MAKEREPORTS.getReport(branch, lastPeriod, event)
+    p = self.proportionCorrect(event)
+    if(scalar(event) or categorical(event)):
+        outcome = EVENTS.getUncaughtOutcome(event)
+        # or can do
+        outcome = EVENTS.getmode(event)
+        # which should be exactly the same
+    oldRep = MAKEREPORTS.getBeforeRep(branch, lastPeriod)
+    
+    # for a reporter for last period if they reported on it the first time [a round 2 event], prevent them from reporting on it, but still do the rep redistrib. at the end before returning in case this event is the last one a user submits for reporting and increment the num b/c it shouldn't be penalized until the next period resolution is over
+    if(BACKSTOPS.getRoundTwo(event) && !self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && reportValue && outcome!=0):
+        self.branch[branch].penalized[lastPeriod][tx.origin].event[event] = 1
+        self.branch[branch].penalized[lastPeriod][tx.origin].num += 1
+        if(MAKEREPORTS.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):
+            newAfterRep = MAKEREPORTS.getAfterRep(branch, lastPeriod)
+            if(newAfterRep <= 0):
+                newAfterRep = 0
+                MAKEREPORTS.setAfterRep(branch, lastPeriod, newAfterRep)
+            self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod
+            self.branch[branch].denominator[lastPeriod] += newAfterRep
+            totalRepDifference = newAfterRep - oldRep
+            if(repBalance + totalRepDifference <= 0):
+                totalRepDifference = -1*repBalance
+            if(totalRepDifference<0):
+                # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
+                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), totalRepDifference)
+                # sends that rep to the branch
+                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
+    if(!self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && reportValue && outcome!=0):
+        # wrong
+        #184467440737095520 == 0.01 in fxp
+        if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
+            if(scalar(event) or categorical(event) or outcome==3*2**64):
+                # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
+                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                    reportValue += 2**64
+                diff = reportValue - outcome
+                p = -(abs(diff)/2) + 2**64
+            newRep = oldRep*(2*p - 2**64)/2**64
+        # right
+        else:
+            if(scalar(event) or categorical(event) or outcome==3*2**64):
+                # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
+                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                    reportValue += 2**64
+                diff = reportValue - outcome
+                p = -(abs(diff)/2) + 2**64
+            newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
+        #smoothedRep = oldRep*.8 + newRep*.2
+        smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
+        repChange = smoothedRep - oldRep
+        newAfterRep = MAKEREPORTS.getAfterRep(branch, lastPeriod) + repChange
+        log(type=penalize, tx.origin, outcome, oldRep, repChange, newAfterRep, p, reportValue)
+        MAKEREPORTS.setAfterRep(branch, lastPeriod, newAfterRep)
+        self.branch[branch].penalized[lastPeriod][tx.origin].event[event] = 1
+        self.branch[branch].penalized[lastPeriod][tx.origin].num += 1
+        if(MAKEREPORTS.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):
+            if(newAfterRep <= 0):
+                newAfterRep = 0
+                MAKEREPORTS.setAfterRep(branch, lastPeriod, newAfterRep)
+            self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod
+            self.branch[branch].denominator[lastPeriod] += newAfterRep
+            totalRepDifference = newAfterRep - oldRep
+            if(repBalance + totalRepDifference <= 0):
+                totalRepDifference = -1*repBalance
+            if(totalRepDifference<0):
+                # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
+                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), totalRepDifference)
+                # sends that rep to the branch
+                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
+    return(1)
 
 
-• All markets with an expiration date of less than 60 days into the future have their expiration date moved to a date 60 days from the current date. 
-
-• All markets with a expiration date of less than 60 days into the future have the option of Early Expiration disabled. 
-
-• A new reporting period not begin during these 60 days.
-
-# round 2 bond cost discussion, reporting penalties change/make less severe, bond is transferred to wherever it moves to and no rbcr is done for that event until it's decided which fork it belongs on and on old network bond is returned, readj market outcome shouldn't be final and no rbcr if it gets forked
-
-# 8 max outcomes, base reporters should really be mult by 2, i.e. if want 3 then do 6, gas cost to market creators 
 
 
-- Separate creator / liquidity provisioners
-- Charge creator the minimum fee, pay it back up to 2x using half the trading fees
-- Half the trading fees go to reporters
-- Upon buying a full set, the first order placed on the book for each of the shares has no fee, this is abusable, and whoever picks it up's fees go to the person who provided the liquidity
-- maker taker fees
 
-- do old createmarket sum version to add up or new one?
-ph notes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# other stuff:
+	- Separate creator / liquidity provisioners
+	- Charge creator the minimum fee, pay it back up to 2x using half the trading fees
+	- Half the trading fees go to reporters
+	- Upon buying a full set, the first order placed on the book for each of the shares has no fee, this is abusable, and whoever picks it up's fees go to the person who provided the liquidity
+	- maker taker fees
+	#market creator only gets fee reate for his own part of the fee, not for reoprters fee
+	#report catch should be <=0
+	#want reporters to report on 2x min reports number
+	#fix get events for number of events
+	
+	- do old createmarket sum version to add up or new one?
+
+	- ryan augur problem w/ gas costs and creation fee due to more reporters on more voluminous markets, how to calculate in adv. how many reporters a market w/ x volume will have
+	# round 2 bond cost discussion, reporting penalties change/make less severe
+	# 8 max outcomes, base reporters should really be mult by 2, i.e. if want 3 then do 6, gas cost to market creators
+	
+	I think it should be exactly what is needed for reporters to report on the market should no traders show up:
+		(decent labor compensation rate for reporters) + (gas cost for these reporters) 
+		(Initial_Liquidity_Requirement * 0.5 * Fee) + Base_Reporter_Quantity * (Gas cost of commit + Gas cost of reveal)
+	
+	reason to keep fees high w/ market creators
