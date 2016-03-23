@@ -65,14 +65,19 @@ def penalizeWrong(branch, event):
     refund()
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    afterRep = MAKEREPORTS.getAfterRep(branch, lastPeriod)
+    if(BRANCHES.getForkPeriod(branch) == lastPeriod && penalizedForkedEventIfReportedOn && !penalizeduptolastperiod):
+        self.branch[branch].penalized[lastPeriod][tx.origin].num += MAKEREPORTS.getNumReportsActual(branch, lastPeriod)
+        self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod
+        self.branch[branch].denominator[lastPeriod] += afterRep
+        return(1)
+    elif(BRANCHES.getForkPeriod(branch) == lastPeriod):
+        return(-10)
+
     if(EVENTS.getForked(event)):
         return(0)
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
         return(-3)
-    # if overruled
-    overruled = 0
-    if((BACKSTOPS.getOriginalOutcome(event) != EVENTS.getOutcome(event) && BACKSTOPS.getOriginalOutcome(event) != EVENTS.getUncaughtOutcome(event) or BACKSTOPS.getOriginalEthicality(event)!=ethic_catch(EVENTS.getEthical(event)))):
-        overruled = 1
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.number % periodLength
     if(residual > periodLength/2):
@@ -80,7 +85,7 @@ def penalizeWrong(branch, event):
     # accounts for if no events in a period
     if(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
         self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod
-        self.branch[branch].denominator[lastPeriod] += repBalance
+        self.branch[branch].denominator[lastPeriod] += afterRep
         return(1)
 
     if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event) && MARKETS.getPushedForward(market)):
@@ -180,11 +185,15 @@ def penalizeRoundTwoWrong(branch, event):
     newRep = 0
     # if overruled
     overruled = 0
-    if((BACKSTOPS.getOriginalOutcome(event) != EVENTS.getOutcome(event) && BACKSTOPS.getOriginalOutcome(event) != EVENTS.getUncaughtOutcome(event) or BACKSTOPS.getOriginalEthicality(event)!=ethic_catch(EVENTS.getEthical(event)))):
+    if(scalar(event) or categorical(event)):
+	    if((BACKSTOPS.getOriginalOutcome(event) != EVENTS.getUncaughtOutcome(event) or BACKSTOPS.getOriginalEthicality(event)!=ethic_catch(EVENTS.getEthical(event)))):
+            overruled = 1
+    elif((BACKSTOPS.getOriginalOutcome(event) != catch(EVENTS.getUncaughtOutcome(event)) or BACKSTOPS.getOriginalEthicality(event)!=ethic_catch(EVENTS.getEthical(event)))):
         overruled = 1
+
     # if appealed don't allow rbcr until after the appeal process is over
     # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period
-    if(BACKSTOPS.getRoundTwo(event) && BACKSTOPS.getFinal(event) && !self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && reportValue):
+    if(BACKSTOPS.getRoundTwo(event) && (BACKSTOPS.getFinal(event) or eventWasForked) && !self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && reportValue):
         outcome = catch(EVENTS.getUncaughtOutcome(event))
         if(scalar(event) or categorical(event)):
             outcome = EVENTS.getUncaughtOutcome(event)
@@ -278,8 +287,9 @@ def penalizeRoundTwoWrong(branch, event):
                 self.bondPaid[event] += -1*totalRepDifference
 
     self.branch[branch].penalized[lastPeriod][tx.origin].event[event] = 1
-    self.branch[branch].penalized[lastPeriod][tx.origin].num += 1
-
+    self.branch[branch].penalized[lastPeriod][tx.origin].num += MAKEREPORTS.getNumReportsActual(branch, lastPeriod)
+    if(eventwasaforkedevent):
+        penalizedForkedEventIfReportedOn = 1
     if(MAKEREPORTS.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):
         if(newAfterRep <= 0):
             newAfterRep = 0

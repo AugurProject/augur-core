@@ -82,7 +82,7 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
     if(scalar(event) or categorical(event)):
 	    if(self.roundTwo[event].originalOutcome == EVENTS.getUncaughtOutcome(event) && self.roundTwo[event].originalEthicality==ethic_catch(EVENTS.getEthical(event))):
 	        overruled = 0
-	if(self.roundTwo[event].originalOutcome == catch(EVENTS.getUncaughtOutcome(event)) && self.roundTwo[event].originalEthicality==ethic_catch(EVENTS.getEthical(event))):
+	elif(self.roundTwo[event].originalOutcome == catch(EVENTS.getUncaughtOutcome(event)) && self.roundTwo[event].originalEthicality==ethic_catch(EVENTS.getEthical(event))):
 	    overruled = 0
     if(BRANCHES.getVotePeriod(branch) > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
 	    votedOnAgain = 1

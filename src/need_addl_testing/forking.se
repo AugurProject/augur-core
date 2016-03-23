@@ -4,14 +4,12 @@
 
 
 # Period where we forked, at the end of it
-    # don't penalize for this period / anything that happened here should be considered to not have happened
-    # free pass for not reporting during this period
-    # let period be incremented as normal
-    # no rbcr on this period
-    # need to allow people to do rbcr for event forked over on og. parent but not actually resolve the event until later per below
+    # don't penalize for this period / anything that happened here should be considered to not have happened - done
+    # let period be incremented as normal - done
+    # no rbcr on this period besides for event forked over on original. parent but don't actually resolve the event until later per below - done
+    # fork users get a free pass for not reporting on this period - done
 # Period after fork where we need to do nothing while waiting for fork to resolve
-    # free pass for not reporting during this period + no reporting in this period
-    # no rbcr 
+    # free pass for not reporting during this period in og branch + no reporting or rbcr in this period except for on fork branch we re-report on the forked market and that's it, so no free pass on fork for that one event
 # Period after fork is resolved
     # all markets have early exp disabled until this point
     # each event which should've resolved in the past 2 periods is pushed up into this period
@@ -29,7 +27,7 @@ def move_event(event):
 			and place it into the next reporting period w/ outcomes to 0
 
 
-# In the last 24 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back
+# In the last 24 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back [so what do / how to resolve round 2 with this or could just say on the fork round 2 person gets bond back, is normal on pre fork]
 # bond is 1% of rep
 # no reporting in new branch for first period, need to make this happen
 def fork(event, branch):
@@ -355,3 +353,4 @@ def penalizeOnForkedEvent(branch, event):
 	
 	# event reuse suggestions in the UI
 	# reporting as way to stay up to date on events
+	# allow market creator to choose % of her fees that go to makers

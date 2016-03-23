@@ -191,9 +191,13 @@ def setInitialReporters(parent, branchID):
                 # send the rest to the new branch's redistribution pool
 #        self.Reporting[branchID].reputation[i].repValue = rep
 #        self.Reporting[branchID].repIDtoIndex[reporterID] = i
+#        if(fork):
+            forkPeriod = fetchPeriodWhenForked
+#           CONSENSUS.initialPenalizedSetting(branch, tx.origin, forkPeriod)
+#        else:
+#           CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
 #        self.Reporting[branchID].dormantRep[i].reporterID = reporterID
         # circular dependency issue
-#        CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
         # circular dependency issue
 #        dormantRep = REPORTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branchID))
 #        self.Reporting[branchID].dormantRep[i].repValue = dormantRep
