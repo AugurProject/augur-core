@@ -400,7 +400,7 @@ def pushMarketForward(branch, market):
     i = 0
     # for each event in market
     while i < numEvents:
-        if(eventNotResolved && eventNotInRound2Adj):
+        if(eventNotResolved && eventNotInRound2Adj && notRejectedBefore):
             event = MARKETS.getMarketEvent(market, i)
             # push into next vote period
             period = BRANCHES.getVotePeriod(branch)

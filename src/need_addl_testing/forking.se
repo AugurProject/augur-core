@@ -2,32 +2,36 @@
 	#Essentially, we could allow anyone to pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.  In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep would be redistributed accordingly.  In the other class/branch, the event would be readjudicated and remove the outcome on the pre fork branch and rep would be redistributed as normal, except people who said the original outcome in the original fork lose rep.  
 	# Note: Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets.  Market makers should then be able to move their market to whichever fork they want, if they fail to act, it'd go to the most voluminous fork by default after a couple weeks.
 
-# todo: make reports, reporting
 
-
-# All markets with an expiration date of less than 60 days into the future have their expiration date moved to a date 60 days from the current date. 
-# All markets with a expiration date of less than 60 days into the future have the option of Early Expiration disabled. 
-# A new reporting period not begin during these 60 days.
-# All markets go to new fork at the end of these 60 days
-# markets can move after 60 days
-# free passes on reporting during this period [b/c can't] on og branch and last period [w/ exception of the round 2 event we forked over]
-# new branch continues and doesn't skip a beat
-# consensus pauses on og branch
+# Period where we forked, at the end of it
+    # don't penalize for this period / anything that happened here should be considered to not have happened
+    # free pass for not reporting during this period
+    # let period be incremented as normal
+    # no rbcr on this period
+    # need to allow people to do rbcr for event forked over on og. parent but not actually resolve the event until later per below
+# Period after fork where we need to do nothing while waiting for fork to resolve
+    # free pass for not reporting during this period + no reporting in this period
+    # no rbcr 
+# Period after fork is resolved
+    # all markets have early exp disabled until this point
+    # each event which should've resolved in the past 2 periods is pushed up into this period
+        # stays in parent if it wins, otherwise goes to new fork
+    # each event resolving further in the future is pushed into the respective period on whichever fork wins
 def move_event(event):
 	if(branchEventIsInForked && 60daysisover && didntForkOverThisEvent && hasntresolved):
 		x = checkWhichForkWon()
 		if(x==branchEventIsIn):
 			leave event here
-			if(eventHasntResolved):
-				set outcomes to 0
-				push it into next period
+			set outcomes to 0
+			push it into next period
 		else:
 			move event to fork
-			and place it into the next reporting period
+			and place it into the next reporting period w/ outcomes to 0
 
 
 # In the last 24 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back
 # bond is 1% of rep
+# no reporting in new branch for first period, need to make this happen
 def fork(event, branch):
 	if(!EVENTS.getRoundTwo(event) || EVENTS.getFinal(event)):
 		return(-1)
@@ -54,6 +58,7 @@ def fork(event, branch):
 		self.forkData[event].originalBranch = branch
 		self.forking[event].bondPoster = msg.sender
 		EVENTS.setForked(event)
+		BRANCHES.setForkPeriod(branch)
 		
 		# return round 2 bond
 		REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), 100*2**64)
@@ -62,6 +67,7 @@ def fork(event, branch):
 		return(0)
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
+# round 2 event we forked over is rbcr'd + resolved both on fork and on original parent
 def resolveForkedEvent(branch, event, eventIndex, votePeriod):
     refund()
     overruled = 1
@@ -342,3 +348,10 @@ def penalizeOnForkedEvent(branch, event):
 		(Initial_Liquidity_Requirement * 0.5 * Fee) + Base_Reporter_Quantity * (Gas cost of commit + Gas cost of reveal)
 	
 	reason to keep fees high w/ market creators
+	
+	# Can I buy fractional shares in the backend
+	
+	# add cost to close market into creation fee
+	
+	# event reuse suggestions in the UI
+	# reporting as way to stay up to date on events

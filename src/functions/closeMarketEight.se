@@ -22,7 +22,7 @@ def eightOutcomes(market, winningOutcome: arr, events: arr):
         outcomeTwo = minValueTwo
     outcomeThree = EVENTS.getOutcome(events[2])
     minValueThree = EVENTS.getMinValue(events[2])
-    maxValueThree = EVENTS.getMaxValue(events[0])
+    maxValueThree = EVENTS.getMaxValue(events[2])
     if(outcomeThree>maxValueThree):
         outcomeThree = maxValueThree
     elif(outcomeThree<minValueThree):

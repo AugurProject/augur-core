@@ -36,7 +36,7 @@ inset(refund.se)
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], alpha, cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, forkSelection, pushingForward, bondsMan, originalPeriod, initialLiquidity, trade_ids[](id, next_id, prev_id), last_trade, total_trades, last_price, scheduleSet)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, forkSelection, pushingForward, bondsMan, originalPeriod, initialLiquidity, trade_ids[](id, next_id, prev_id), last_trade, total_trades, last_price, scheduleSet)
 
 def scheduleSet(market):
     refund()
@@ -229,10 +229,6 @@ def getCurrentParticipantNumber(market):
     refund()
     return(self.Markets[market].currentParticipant)
 
-def getAlpha(market):
-    refund()
-    return(self.Markets[market].alpha)
-
 def getCumScale(market):
     refund()
     return(self.Markets[market].cumulativeScale)
@@ -262,42 +258,8 @@ def getBranchID(market):
     refund()
     return(self.Markets[market].branch)
 
-# alpha is equal to v/(n*log(n)) where v is the max percent commission
-# && n is the number of outcomes people can trade. Alpha is set when
-# a market is created.
-macro lsLmsr($marketID):
-    with $bq = Bq($marketID):
-        with $i = 1:
-            with $sumExp = 0:
-                while $i <= numOutcomes($marketID):
-                    $sumExp += FXP.fx_exp(sharesPurchased($marketID)[$i] * 2**64 / $bq)
-                    $i += 1
-                $bq*cumScale($marketID)/2**64*FXP.fx_log($sumExp)/2**64
-                
-# Maximum value of array
-macro maximum($a):
-    with $max = $a[0]:
-        with $i = 1:
-            with $len = len($a):
-                while $i < $len:
-                    if $a[$i] > $max:
-                        $max = $a[$i]
-                    $i += 1
-                $max
-
-macro sumList($q, $a, $b):
-    $i = $a + 1
-    $result = $q[$a]
-    while $i <= $b:
-        $result += $q[$i]
-        $i += 1
-    $result
-
 macro market($marketID):
     self.Markets[$marketID]
-
-macro alpha($marketID):
-    market($marketID).alpha
 
 macro cumScale($marketID):
     market($marketID).cumulativeScale
@@ -307,24 +269,6 @@ macro numOutcomes($marketID):
 
 macro sharesPurchased($marketID):
     market($marketID).sharesPurchased
-
-macro particpant($marketID, $addr):
-    market($marketID).participants[$addr]
-
-macro Bq($marketID):
-   alpha($marketID) * sumList(sharesPurchased($marketID), 1, numOutcomes($marketID)) / 2**64
-
-def lsLmsr(marketID):
-    refund()
-    return(lsLmsr(marketID))
-
-def lmsr_price(market, outcome):
-    refund()
-    a = lsLmsr(market)
-    sharesPurchased(market)[outcome] += 2**50
-    b = lsLmsr(market)
-    sharesPurchased(market)[outcome] -= 2**50
-    return(((b - a) * 2**64)/2**50)
 
 # check that msg.sender is one of our function contracts
 def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, forkSelection):

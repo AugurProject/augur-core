@@ -31,7 +31,7 @@ import cash as CASH
 # currentExpPeriod - 1 is what's up for reporting at any given time
 # should add a min initial liquidity property, for non pm branches it'd be low and .5*minInitialLiquidity is == fee for event
 # could also add an event fee parameter
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters)
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod)
 
 # first param is the branch, second param is the subcurrency contract
 data cash[][]
@@ -176,3 +176,10 @@ def addMarketToBranch(branch, market):
 	self.Branches[branch].markets[numMarkets] = market
 	self.Branches[branch].numMarkets += 1
 	return(1)
+	
+def setForkPeriod(branch):
+	self.Branches[branch].forkPeriod = self.Branches[branch].currentVotePeriod
+	return(1)
+	
+def getForkPeriod(branch):
+	return(self.Branches[branch].forkPeriod)

@@ -87,6 +87,7 @@ def setNumReportsEvent(branch, votePeriod, eventID, num):
 	return(1)
 
 def getReport(branch, period, event):
+	#if(whitelist):
 	return(self.branches[branch].report[period][tx.origin].event[event])
 
 def getBeforeRep(branch,period):
