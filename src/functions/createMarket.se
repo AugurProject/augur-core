@@ -66,6 +66,8 @@ macro ASK: 2
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
 def createMarket(branch, description:str, tradingFee, initialLiquidity, events:arr, forkSelection):
     refund()
+    if(forked && wouldExpireInPeriodJustAfterFork):
+        return(-9)
     periodLength = BRANCHES.getPeriodLength(branch)
     # send this to branch
     creationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * 2**64 / tradingFee
@@ -390,6 +392,8 @@ def moveMarketAndAssocEvents(market, fork):
 # In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
 def pushMarketForward(branch, market):
     refund()
+    if(branchEventIsInForked && !winningForkDecided):
+        return(0)
     # prevent for backstop 1 markets and vice versa
     # todo: if has been pushed forward in the past (see close market) don't allow it again
     numEvents = MARKETS.getNumEvents(market)
@@ -400,7 +404,7 @@ def pushMarketForward(branch, market):
     i = 0
     # for each event in market
     while i < numEvents:
-        if(eventNotResolved && eventNotInRound2Adj && notRejectedBefore):
+        if(eventNotResolved && eventNotInRound2Adj && notRejectedBefore && event isn't already in next vote period):
             event = MARKETS.getMarketEvent(market, i)
             # push into next vote period
             period = BRANCHES.getVotePeriod(branch)

@@ -9,24 +9,46 @@
     # no rbcr on this period besides for event forked over on original. parent but don't actually resolve the event until later per below - done
     # fork users get a free pass for not reporting on this period - done
 # Period after fork where we need to do nothing while waiting for fork to resolve
-    # free pass for not reporting during this period in og branch + no reporting or rbcr in this period except for on fork branch we re-report on the forked market and that's it, so no free pass on fork for that one event
+    # free pass for not reporting during this period in og branch - done
+    # no reporting or rbcr in this period except for on fork branch we re-report on the forked market and that's it, so no free pass on fork for that one event - done
 # Period after fork is resolved
-    # all markets have early exp disabled until this point
+    # markets can't be moved until now - done
+    # all markets have early exp disabled until this point - done
     # each event which should've resolved in the past 2 periods is pushed up into this period
-        # stays in parent if it wins, otherwise goes to new fork
+        # stays in parent if it wins, otherwise goes to new fork - done
     # each event resolving further in the future is pushed into the respective period on whichever fork wins
 def move_event(event):
-	if(branchEventIsInForked && 60daysisover && didntForkOverThisEvent && hasntresolved):
+	if(branchEventIsInForked && 60daysisover && didntForkOverThisEvent && hasntresolved && forkResolved):
 		x = checkWhichForkWon()
 		if(x==branchEventIsIn):
 			leave event here
 			set outcomes to 0
-			push it into next period
+			if(shouldveresolved in past 2 periods):
+			    push it into next [this] period
+		    else:
+                pushIntoPeriodItWouldveExpiredIn
 		else:
 			move event to fork
 			and place it into the next reporting period w/ outcomes to 0
+			if(shouldveresolved in past 2 periods):
+			    push it into next [this] period
+		    else:
+		        pushIntoPeriodItWouldveExpiredIn
+    else:
+        return(0)
 
-
+def resolve_fork(branch):
+    makeSureBranchForked
+    ogcap = getMarketCapOfBranch
+    fork = getFork(branch)
+    forkcap = getMarketCapOfFork
+    winner = 0
+    if(ogcap >= forkcap):
+        winner = branch
+    else:
+        winner = fork
+    setWinner(branch, winner)
+    
 # In the last 24 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back [so what do / how to resolve round 2 with this or could just say on the fork round 2 person gets bond back, is normal on pre fork]
 # bond is 1% of rep
 # no reporting in new branch for first period, need to make this happen
@@ -71,6 +93,8 @@ def resolveForkedEvent(branch, event, eventIndex, votePeriod):
     overruled = 1
     bond = 100*2**64
     votedOnAgain = 0
+    if(!winningForkDecided):
+        return(-5)
     if(scalar(event) or categorical(event)):
 	    if(self.roundTwo[event].originalOutcome == EVENTS.getUncaughtOutcome(event) && self.roundTwo[event].originalEthicality==ethic_catch(EVENTS.getEthical(event))):
 	        overruled = 0
@@ -354,3 +378,22 @@ def penalizeOnForkedEvent(branch, event):
 	# event reuse suggestions in the UI
 	# reporting as way to stay up to date on events
 	# allow market creator to choose % of her fees that go to makers
+	
+	# make fork / round 1 pushback wait 48 or 72 hr instead of 24
+	
+	# iluvhermione
+    4:02 PM i guess some sort of alerting system where a 1/99 market gets graded as 100/0 will be helpful
+    joeykrug
+    4:02 PM yeah that's a good idea
+    4:03
+    any market where the highest odds outcome isn't reported
+    4:03
+    as the winning one
+    # add a send shares feature
+    # make so can't report in last 24 hr of period
+    
+    # need a way to move markets forward that don't get enough reports
+    # no trade markets == no reporting
+    
+    # ls-lmsr as initial liquidity
+    

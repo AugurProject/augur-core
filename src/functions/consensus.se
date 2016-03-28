@@ -63,6 +63,8 @@ macro catch($x):
 # make max rep loss 20%, do V way to limit excess cuts
 def penalizeWrong(branch, event):
     refund()
+    if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
+        return(-3)
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     afterRep = MAKEREPORTS.getAfterRep(branch, lastPeriod)
@@ -73,7 +75,12 @@ def penalizeWrong(branch, event):
         return(1)
     elif(BRANCHES.getForkPeriod(branch) == lastPeriod):
         return(-10)
-
+    if(BRANCHES.getForkPeriod(branch)+1 == lastPeriod && !penalizeduptolastperiod):
+        self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod
+        self.branch[branch].denominator[lastPeriod] += afterRep
+        return(1)
+    elif(BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
+        return(-11)
     if(EVENTS.getForked(event)):
         return(0)
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
@@ -324,6 +331,10 @@ def penalizeNotEnoughReports(branch):
     if(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
         self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized = 1
         return(1)
+    if(BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
+        self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized = 1
+        return(1)
+
     if(!hasReported(branch, lastPeriod)):
         return(-2)
     if(residual > periodLength/2):

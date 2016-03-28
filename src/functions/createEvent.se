@@ -37,6 +37,8 @@ inset(refund.se)
 # .025 eth to create
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes):
     refund()
+    if(forked && wouldExpireInPeriodJustAfterFork):
+        return(-9)
     periodLength = BRANCHES.getPeriodLength(branch)
     if(maxValue < minValue):
         return(-2)
