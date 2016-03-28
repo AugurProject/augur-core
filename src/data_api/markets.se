@@ -36,7 +36,14 @@ inset(refund.se)
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, forkSelection, pushingForward, bondsMan, originalPeriod, initialLiquidity, trade_ids[](id, next_id, prev_id), last_trade, total_trades, last_price, scheduleSet)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, forkSelection, pushingForward, bondsMan, originalPeriod, initialLiquidity, trade_ids[](id, next_id, prev_id), last_trade, total_trades, last_price, scheduleSet, tag1, tag2, tag3)
+
+def returnTags(market):
+    tags = array(3)
+    tags[0] = self.Markets[market].tag1
+    tags[1] = self.Markets[market].tag2
+    tags[2] = self.Markets[market].tag3
+    return(tags: arr)
 
 def scheduleSet(market):
     refund()
@@ -271,7 +278,7 @@ macro sharesPurchased($marketID):
     market($marketID).sharesPurchased
 
 # check that msg.sender is one of our function contracts
-def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, forkSelection):
+def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, forkSelection, tag1, tag2, tag3):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
@@ -283,6 +290,9 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, f
     self.Markets[marketID].tradingFee = tradingFee
     self.Markets[marketID].branch = branch
     self.Markets[marketID].forkSelection = forkSelection
+    self.Markets[marketID].tag1 = tag1
+    self.Markets[marketID].tag1 = tag2
+    self.Markets[marketID].tag1 = tag3
     return(1)
 
 def addParticipant(market, address):

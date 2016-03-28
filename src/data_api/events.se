@@ -28,7 +28,7 @@ inset(refund.se)
 # S&P 500 scalar would be say 0 && 4700, respectively
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught, pushedBack, bond, forked, forkOver, forkOutcome, forkEthicality)
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught, pushedBack, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength)
 
 data past24Hours[]
 
@@ -62,15 +62,22 @@ def getForkedDone(event):
 
 def getEventInfo(event):
 	refund()
-    info = array(7)
-    info[0] = self.Events[event].branch
-    info[1] = self.Events[event].expirationDate
-    info[2] = self.Events[event].outcome
-    info[3] = self.Events[event].minValue
-    info[4] = self.Events[event].maxValue
-    info[5] = self.Events[event].numOutcomes
-    info[6] = self.Events[event].bond
-    return(info: arr)
+    length=self.Events[event].resolutionSourceLength
+	eventinfo = string(7*32 + length)
+	eventinfo[0] = self.Events[event].branch
+	eventinfo[1] = self.Events[event].expirationDate 
+	eventinfo[2] = self.Events[event].outcome
+	eventinfo[3] = self.Events[event].minValue
+	eventinfo[4] = self.Events[event].maxValue
+	eventinfo[5] = self.Events[event].numOutcomes
+	eventinfo[6] = self.Events[event].bond
+	mcopy(eventinfo + 7*32, load(self.Events[event].resolutionSource[0], chars=length), length)
+    return(eventinfo: arr)
+    
+def getResolution(event):
+	refund()
+	length=self.Events[event].resolutionSourceLength
+	return(load(self.Events[event].resolutionSource[0], chars=length): str)
 
 def getPast24(period):
 	refund()
@@ -142,7 +149,7 @@ def getUncaughtOutcome(event):
 	# do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
 	return(self.Events[event].uncaughtOutcome)
 
-def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes):
+def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes, resolution: str):
 	refund()
 	# check that msg.sender is one of our function contracts
 	#if(!self.whitelist.check(msg.sender)):
@@ -154,6 +161,7 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes)
 		self.Events[ID].minValue = minValue
 		self.Events[ID].maxValue = maxValue
 		self.Events[ID].numOutcomes = numOutcomes
+		save(self.Events[ID].resolutionSource[0], resolution, chars=len(resolution))
 		return(1)
 	else:
 		return(0)

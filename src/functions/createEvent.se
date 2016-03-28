@@ -35,7 +35,7 @@ inset(refund.se)
     # 0: not enough money to pay fees or event already exists
     # -2: max value < min value
 # .025 eth to create
-def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes):
+def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution: str):
     refund()
     if(forked && wouldExpireInPeriodJustAfterFork):
         return(-9)
@@ -70,7 +70,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
             # see which future period it expires in && put the event in that bin
             # event voting periods - expDate / periodLength gives you the voting period #
             futurePeriod = expDate / periodLength
-            if INFO.setInfo(eventID, description, tx.origin, participationFactor*45) && EVENTS.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes):
+            if INFO.setInfo(eventID, description, tx.origin, participationFactor*45) && EVENTS.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes, resolution):
                 return(eventID)
             else:
                 return(0)
