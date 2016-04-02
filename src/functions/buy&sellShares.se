@@ -200,6 +200,8 @@ def sell(amount, price, market_id, outcome):
     save_trade(ASK, amount, price, market_id, outcome, branch, participantNumber)
     return(FAILURE)
 
+def short
+
 #
 # Trade
 #

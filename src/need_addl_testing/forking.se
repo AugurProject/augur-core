@@ -397,3 +397,19 @@ def penalizeOnForkedEvent(branch, event):
     
     # ls-lmsr as initial liquidity
     
+    When calling to move events because of fork any round 2 events besides forked one should have bond returned
+On penalizewronground2 for forked event make sure it's the event we actually forked over
+Need to have a resolve fork method that gets exchange rate
+Handle: Report threshold is raised so anyone can report on it if it has no reports in last 24 hr
+0 reports on an event either push back or indeterminate
+
+Make sure market exists before allowing trading
+Are people in second unethical round penalized or just people who got it wrong in first round
+Can't report in last 24 hr of period
+
+Assign reporters based on shares outstanding when expiration date arrives, not volume
+If no trades no reporting
+Indeterminate for market with no reports
+Can trading occur after event has occurred. Can trading occur by picking up complete sets after event has occurred in current implementation
+# no reporting on 0 volume markets
+# function to get all events you need to report on
