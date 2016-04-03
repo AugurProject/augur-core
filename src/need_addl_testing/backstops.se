@@ -46,7 +46,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
 	    return(0)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     # if so, we're in the final 24 hours and event is in this branch + votePeriod
-    if(!resolving && block.number/BRANCHES.getPeriodLength(branch)!=((block.number + 4800)/BRANCHES.getPeriodLength(branch)) && eventID!=0 && event==eventID && self.roundTwo[event].roundTwo==0 && EVENTS.getForked(event)==0):
+    if(!resolving && block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 86400)/BRANCHES.getPeriodLength(branch)) && eventID!=0 && event==eventID && self.roundTwo[event].roundTwo==0 && EVENTS.getForked(event)==0):
         if(SENDREP.sendReputation(branch, event, bond)==0):
             return(0)
     	period = BRANCHES.getVotePeriod(branch)
@@ -57,7 +57,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
     	# push event into next period
     	EXPIRING.addEvent(branch, period+1, event)
     	# set event expiration date to be after the current reporting period ends
-    	EVENTS.setExpiration(event, block.number)
+    	EVENTS.setExpiration(event, block.timestamp)
     	MAKEREPORTS.setReportable(period+1, event)
     	# set round two to true so can't be done again
     	self.roundTwo[event].roundTwo = 1

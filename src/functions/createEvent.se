@@ -42,7 +42,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     periodLength = BRANCHES.getPeriodLength(branch)
     if(maxValue < minValue):
         return(-2)
-    if periodLength && description != 0 && expDate > block.number:
+    if periodLength && description != 0 && expDate > block.timestamp:
         eventinfo = string(8*32 + len(description))
         eventinfo[0] = EVENT                                        #typecode
         eventinfo[1] = branch                                       #branchID

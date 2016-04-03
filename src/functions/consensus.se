@@ -86,7 +86,7 @@ def penalizeWrong(branch, event):
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
         return(-3)
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.number % periodLength
+    residual = block.timestamp % periodLength
     if(residual > periodLength/2):
         return(-2)
     # accounts for if no events in a period
@@ -186,7 +186,7 @@ def penalizeRoundTwoWrong(branch, event):
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
         return(-3)
     periodLength = BRANCHES.getPeriodLength(branch)s
-    residual = block.number % periodLength
+    residual = block.timestamp % periodLength
     if(residual > periodLength/2):
         return(-2)
     newRep = 0
@@ -372,7 +372,7 @@ def penalizeNotEnoughReports(branch):
 def collectFees(branch):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.number % periodLength
+    residual = block.timestamp % periodLength
     if(residual < periodLength/2):
         return(-2)
     if(!repRedistributionDone(branch, tx.origin)):
@@ -417,7 +417,7 @@ def penalizationCatchup(branch):
     refund()
     # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.number % periodLength
+    residual = block.timestamp % periodLength
     if(residual > periodLength/2):
         return(-2)
     # find delta between this last period and last penalized up to
@@ -458,7 +458,7 @@ def penalizationCatchup(branch):
 def slashRep(branch, salt, report, reporter, eventID):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.number % periodLength
+    residual = block.timestamp % periodLength
     if(residual > periodLength/2):
         return(-2)
     votePeriod = BRANCHES.getVotePeriod(branch)
@@ -490,7 +490,7 @@ def incrementPeriodAfterReporting(branch):
     refund()
     # do this after reporting is finished
     if(periodOver(branch)):
-        period = block.number / BRANCHES.getPeriodLength($branch) - 1
+        period = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
         lastPeriod = period - 1
         percentAppealed = (EXPIRING.getRoundTwo(branch, period)*2**64/EXPIRING.getNumberEvents(branch, period) + EXPIRING.getRoundTwo(branch, lastPeriod)*2**64/EXPIRING.getNumberEvents(branch, lastPeriod)) / 2
         BRANCHES.incrementPeriod(branch)
@@ -533,7 +533,7 @@ def proportionCorrect(event, branch, period):
 
 macro periodOver($branch):
     # what the current vote period should be
-    currentVotePeriod = block.number / BRANCHES.getPeriodLength($branch) - 1
+    currentVotePeriod = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
     # if actual vote period is less than what the current one should be, return 1, it can be incremented
     if(BRANCHES.getVotePeriod($branch) < currentVotePeriod):
         1

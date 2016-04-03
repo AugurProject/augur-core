@@ -174,7 +174,7 @@ def setInitialReporters(parent, branchID):
 #def claimInitialRep(parent, branchID):
      #refund()
      # have 1 month to claim
-#    if(self.repIDToIndex(branchID, msg.sender)==0 && block.number < (BRANCHES.getCreationDate(branchID) + 216000)):
+#    if(self.repIDToIndex(branchID, msg.sender)==0 && block.timestamp < (BRANCHES.getCreationDate(branchID) + 86400*30)):
 #        i = self.Reporting[branchID].numberReporters
 #        rep = REPORTS.getBeforeRep(parent, BRANCHES.getParentPeriod(branchID))
 #        reporterID = msg.sender

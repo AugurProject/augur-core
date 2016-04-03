@@ -110,7 +110,7 @@ def convertToDormantRep(branch, value):
     refund()
     # if not in first half of reporting period
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.number % periodLength
+    residual = block.timestamp % periodLength
     if(residual > periodLength/2):
       return(-1)
 		# benny comment:
@@ -149,7 +149,7 @@ def convertToActiveRep(branch, value):
     refund()
     # if not in first half of reporting period
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.number % periodLength
+    residual = block.timestamp % periodLength
     if(residual > periodLength/2):
       return(-1)
 

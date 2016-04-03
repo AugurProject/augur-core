@@ -40,7 +40,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
     fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
     pushedBack = EVENTS.getPushedBack(event)
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.number % periodLength
+    residual = block.timestamp % periodLength
     ethical = ethic_catch(EVENTS.getEthical(event))
     EVENTS.setOutcome(event, fxpOutcome)
     EVENTS.setEthics(event, ethical)
@@ -90,7 +90,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     EVENTS.setOutcome(event, fxpOutcome)
     pushedBack = EVENTS.getPushedBack(event)
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.number % periodLength
+    residual = block.timestamp % periodLength
     ethical = ethic_catch(EVENTS.getEthical(event))
     EVENTS.setEthics(event, ethical)
     

@@ -56,7 +56,7 @@ def fork(event, branch):
 	if(!EVENTS.getRoundTwo(event) || EVENTS.getFinal(event)):
 		return(-1)
 	# if in last 24 hr of period
-	if(block.number/BRANCHES.getPeriodLength(branch)!=((block.number + 4800)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENT.getForked(event)):
+	if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 86400)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENT.getForked(event)):
 		bond = 184467440737095520*REPORTING.getTotalRep(branch)/2**64
 		# branch 1
 		# lose bond
@@ -72,7 +72,7 @@ def fork(event, branch):
 		period = BRANCHES.getVotePeriod(newBranch)
 		MAKEREPORTS.setEventRequired(newBranch, period+1, event)
 		EXPIRING.addEvent(newBranch, period+1, event)
-		EVENTS.setExpiration(event, block.number)
+		EVENTS.setExpiration(event, block.timestamp)
 	    MAKEREPORTS.setReportable(period+1, event)
 	    # set round two to true so can't be done again
 		self.forkData[event].originalBranch = branch
@@ -189,7 +189,7 @@ def penalizeOnForkedEvent(branch, event):
     if((BACKSTOPS.getOriginalOutcome(event) != EVENTS.getOutcome(event) && BACKSTOPS.getOriginalOutcome(event) != EVENTS.getUncaughtOutcome(event) or BACKSTOPS.getOriginalEthicality(event)!=ethic_catch(EVENTS.getEthical(event)))):
         overruled = 1
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.number % periodLength
+    residual = block.timestamp % periodLength
     if(residual > periodLength/2):
         return(-2)
     # accounts for if no events in a period

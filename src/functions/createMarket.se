@@ -98,7 +98,7 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
                 return(-6)
         expirationDate = EVENTS.getExpiration(event)
         futurePeriod = expirationDate / periodLength
-        if(expirationDate < block.number):
+        if(expirationDate < block.timestamp):
             return(-7)
         if(EVENTS.getEventBranch(event) != branch || !INFO.getCreator(event)):
             return(-1)
@@ -108,7 +108,7 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
         eventsConcat += event
         if(!EVENTS.getBond(event)):
             # pay validity bond
-            24period = block.number / 7200
+            24period = block.timestamp / 86400
             validity_bond =  6 * creationFee * 2 * (1 + EVENTS.getPast24(24period-1)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))
             if(!CASH.send(eventID, validity_bond)):
                 return(-4)
@@ -410,7 +410,7 @@ def pushMarketForward(branch, market):
             period = BRANCHES.getVotePeriod(branch)
             EXPEVENTS.addEvent(branch, period+1, event)
             # set event expiration date to be after the current reporting period ends
-            EVENTS.setExpiration(event, block.number)
+            EVENTS.setExpiration(event, block.timestamp)
             MARKETS.setTradingPeriod(market, period+1)
             MARKETS.setPushedForward(market, 1)
             #MAKEREPORTS.setReportable(period+1, event)
