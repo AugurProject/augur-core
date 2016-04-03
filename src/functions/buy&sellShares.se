@@ -200,7 +200,127 @@ def sell(amount, price, market_id, outcome):
     save_trade(ASK, amount, price, market_id, outcome, branch, participantNumber)
     return(FAILURE)
 
-def short
+def short_sell(buyer_trade_id, max_amount):
+    refund()
+    if(MARKETS.getOneWinningOutcome(market_id, 0)):
+        return(-4)
+    # check trade hash
+    tradeInfo = array(3)
+    tradeInfo[0] = buyer_trade_id
+    tradeInfo[1] = max_amount
+    tradeInfo[2] = 0
+    tradeHash = sha256(tradeInfo, items=3)
+    if(TRADES.checkHash(tradeHash)==-1):
+        return(-2)
+
+    # Get trade
+    trade = array(9)
+    trade = TRADES.get_trade(buyer_trade_id, outitems=9)
+    if !trade:
+        return(0)
+    # Get market
+    type = trade[1]
+    if(type!=BID):
+        return(0)
+    market_id = trade[2]
+    if(!MARKETS.scheduleSet(market_id)):
+        return(0)
+    creator = INFO.getCreator(market_id)
+    if(msg.sender == creator || tx.origin == creator):
+        return(-30)
+    orig_amount = trade[3]
+    price = trade[4]
+    owner = trade[5]
+    outcome = trade[8]
+    if(owner == msg.sender or owner == tx.origin):
+        return(0)
+    # Make sure the trade has been mined, obvious HFT prevention
+    if block.number <= self.trades[trade_id].block:
+        return(TRADE_SAME_BLOCK_PROHIBITED)
+    branch = MARKETS.getBranchID(market_id)
+    creator = INFO.getCreator(market_id)
+    trading_fee = MARKETS.getTradingFee(market_id)
+    cumScale = MARKETS.getCumScale(market_id)
+    amount = min(orig_amount, max_amount)
+    fee = fee_percent(trading_fee, price, amount, cumScale)
+    fee = amount * price /2**64 * fee / 2**64
+    #buyer gives up say 20
+    #complete set cost is say 100
+    #fee is say 2
+    #market should lose 20 from buyer's escrowed money
+    #market should gain 100 from complete set
+    #person short selling should give the market 80 [complete set cost less shares sold]
+    #plus fees
+        #1 should go to branch
+        #1 should go to creator
+    cost = amount*cumScale/2**64 - (amount*price/2**64 - fee)
+    if(CASH.balance(tx.origin) < cost):
+        return(INSUFFICIENT_BALANCE)
+    numEvents = MARKETS.getNumEvents(market)
+    events = MARKETS.getMarketEvents(market, outitems=numEvents)
+    numOutcomes = MARKETS.getMarketNumOutcomes(market)
+    n = 0
+    #if event gets pushed back people can still buy / sell
+    pushedBack = 0
+    while n < numEvents:
+        #if(EVENTS.getPushedBack(events[n])==0):
+        if(1):
+            n += 1
+        # pushed back and not resolved
+        elif(EVENTS.getOutcome(events[n])==0):
+            pushedBack = 1
+            n = numEvents
+        else:
+          n += 1
+    ### TODO: check for .99 market here
+    if ((BRANCHES.getVotePeriod(MARKETS.getBranchID(market))>MARKETS.getTradingPeriod(market) && !pushedBack) || !MARKETS.scheduleSet(market)):
+        return(-1)   
+    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    # if participant doesn't exist in market, add them
+    if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
+        participantNumber = MARKETS.addParticipant(market, tx.origin)
+
+    i = 0
+    # send shares of the event to user address
+    while i <= numOutcomes:
+        MARKETS.modifyShares(market, i, amount)
+        MARKETS.modifyParticipantShares(branch, market, participantNumber, i, amount)
+        i += 1
+    
+    # send money from user acc. to market address/account
+    # cost for shares
+    CASH.send(market, cost-fee)
+
+    # Fill buy order
+    balance = MARKETS.getParticipantSharesPurchased(market_id, participantNumber, outcome)
+    if balance > 0:
+        if(MARKETS.getParticipantID(market_id, participantNumber) != tx.origin):
+            return(-3)
+        # Determine fill amount
+        fill = amount
+        # Calculate value
+        value = (fill * price)/2**64
+        # Update trade amount or remove
+        if fill < orig_amount:
+            TRADES.fill_trade(trade_id, fill)
+        else:
+            remove_trade(trade_id, market_id)
+        # Update balances
+        MARKETS.modifyParticipantShares(branch, market_id, msg.sender, outcome, -fill)
+        MARKETS.modifyParticipantShares(branch, market_id, owner, outcome, fill)
+        # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
+        CASH.send(branch, fee/2)
+        CASH.send(creator, fee/2)    
+        # Log transaction
+        log(type=log_fill_tx, market_id, msg.sender, owner, ASK, price, fill, trade_id, outcome)
+    else:
+        return(INSUFFICIENT_BALANCE)
+    # Update market last price
+    MARKETS.set_last_price(market_id, price)
+    # Log price, fill amount, type and timestamp
+    log(type=log_price, market_id, type, price, fill, block.timestamp, outcome, msg.sender)
+    return([SUCCESS, max_value, max_amount]: arr)
+
 
 #
 # Trade
