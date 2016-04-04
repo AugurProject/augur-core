@@ -171,42 +171,42 @@ def setInitialReporters(parent, branchID):
     self.Reporting[branchID].reputation[0].reporterID = branchID
     return(1)
 
-#def claimInitialRep(parent, branchID):
-     #refund()
-     # have 1 month to claim
-#    if(self.repIDToIndex(branchID, msg.sender)==0 && block.timestamp < (BRANCHES.getCreationDate(branchID) + 86400*30)):
-#        i = self.Reporting[branchID].numberReporters
-#        rep = REPORTS.getBeforeRep(parent, BRANCHES.getParentPeriod(branchID))
-#        reporterID = msg.sender
-#        self.Reporting[branchID].reputation[i].reporterID = reporterID
-#        if(self.Reporting[branchID].fork && (userReportedOutcomeEqualToOutcomePreFork || userDidntReportOnForkedEvent || (forkedOverEthicality && userReportedOnEthicalityEqualToPreFork))):
+def claimInitialRep(parent, branchID):
+    refund()
+    #have 1 month to claim
+    if(self.repIDToIndex(branchID, msg.sender)==0 && block.timestamp < (BRANCHES.getCreationDate(branchID) + 86400*30)):
+        i = self.Reporting[branchID].numberReporters
+        rep = REPORTS.getBeforeRep(parent, BRANCHES.getParentPeriod(branchID))
+        reporterID = msg.sender
+        self.Reporting[branchID].reputation[i].reporterID = reporterID
+        if(self.Reporting[branchID].fork && (userReportedOutcomeEqualToOutcomePreFork || userDidntReportOnForkedEvent || (forkedOverEthicality && userReportedOnEthicalityEqualToPreFork))):
             # take away 30% of rep from liars and those who didn't report
-#            repDecrease = rep*12912720851596685312/2**64
-#            rep = rep - repDecrease
-#            amountLeftToPayBonder = doubleOfTheBond - bondDoubledThusFar
-#            if(repDecrease < amountLeftToPayBonder):
+            repDecrease = rep*12912720851596685312/2**64
+            rep = rep - repDecrease
+            amountLeftToPayBonder = doubleOfTheBond - bondDoubledThusFar
+            if(repDecrease < amountLeftToPayBonder):
                 # send all the rep to the fork bond poster
-#            else:
+            else:
                 # send amountLeftToPayBonder [if positive] to the fork bond poster
                 # send the rest to the new branch's redistribution pool
-#        self.Reporting[branchID].reputation[i].repValue = rep
-#        self.Reporting[branchID].repIDtoIndex[reporterID] = i
-#        if(fork):
+        self.Reporting[branchID].reputation[i].repValue = rep
+        self.Reporting[branchID].repIDtoIndex[reporterID] = i
+        if(fork):
             forkPeriod = fetchPeriodWhenForked
-#           CONSENSUS.initialPenalizedSetting(branch, tx.origin, forkPeriod)
-#        else:
-#           CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
-#        self.Reporting[branchID].dormantRep[i].reporterID = reporterID
+           CONSENSUS.initialPenalizedSetting(branch, tx.origin, forkPeriod)
+        else:
+           CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
+        self.Reporting[branchID].dormantRep[i].reporterID = reporterID
         # circular dependency issue
         # circular dependency issue
-#        dormantRep = REPORTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branchID))
-#        self.Reporting[branchID].dormantRep[i].repValue = dormantRep
-#        self.Reporting[branchID].numberReporters += 1
-#        self.Reporting[branchID].totalRep += rep + dormantRep
-#        return(1)
-#    else:
+        dormantRep = REPORTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branchID))
+        self.Reporting[branchID].dormantRep[i].repValue = dormantRep
+        self.Reporting[branchID].numberReporters += 1
+        self.Reporting[branchID].totalRep += rep + dormantRep
+        return(1)
+    else:
         # already claimed or too late
-#        return(0)
+        return(0)
 
 def addReporter(branch, sender):
     #if(!self.whitelist.check(msg.sender)):

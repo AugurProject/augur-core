@@ -337,51 +337,6 @@ def updateTradingFee(branch, market, tradingFee):
     CASH.send(branch, newCreationFee-oldCreationFee)
     return(MARKETS.setTradingFee(market, tradingFee))
 
-#Add def moveMarket(market, newBranch, marketAuthor) in case of a fork or some other issue
-#In event of fork:
-#1) Market Maker chooses the fork
-#2) Market is closed at current prices
-#3) The market is unable to go to adjudication upon close date and closes at final prices.
-#4) All traders currently involved in this market are asked which fork to participate in. At market close, this vote is used to determine the fork this market moves to before adjudication.
-#5) market is moved to the fork with a higher rep market cap at the end of time period x as defined by etherex
-#6) market is moved to the fork with a higher market cap as defined by centralized exchange y
-def moveMarketAndAssocEvents(market, fork):
-    refund()
-    #if(self.stuffForked()):
-    if(1):
-        forkChoice = MARKETS.getForkSelection(market)
-
-        # set market branch
-        # move event
-        # move market as well to whichever fork
-
-        #1) Market Maker chooses the fork
-        if(forkChoice==1):
-            if(INFO.getCreator(market)==msg.sender):
-                return(0)
-        #2) Market is closed at current prices
-        elif(forkChoice==2):
-            return(0)
-        #3) The market is unable to go to adjudication upon close date and closes at final prices.
-        elif(forkChoice==3):
-            return(0)
-        #4) All traders currently involved in this market are asked which fork to participate in. At market close, this vote is used to determine the fork this market moves to before adjudication.
-        # should this be weighted by capital in the market? hmm
-        elif(forkChoice==4):
-            return(0)
-        #5) market is moved to the fork with a higher rep market cap at the end of time period x as defined by etherex
-        elif(forkChoice==5):
-            return(0)
-        #6) market is moved to the fork with a higher market cap as defined by centralized exchange y
-        elif(forkChoice==6):
-            return(0)
-        #7) autonocoin style bet which fork it should go on and that's the one (like futarchy, except you don't get a refund)
-        elif(forkChoice==7):
-            return(0)
-    else:
-        return(0)
-
-
 # Anyone can post an "Early Resolution Bond"
 # This bond is equal to 0.5 * Market_Fee * Market_Value
 # This amount is the amount needed to pay the reporters in case this was frivolous.
