@@ -372,7 +372,7 @@ def penalizeOnForkedEvent(branch, event):
 		(decent labor compensation rate for reporters) + (gas cost for these reporters) 
 		(Initial_Liquidity_Requirement * 0.5 * Fee) + Base_Reporter_Quantity * (Gas cost of commit + Gas cost of reveal)
 	
-	# Can I buy fractional shares in the backend / is fee % calc right or missing range - price instead of 1 - price
+	# Can I buy fractional shares in the backend / is fee % calc right or missing range - price instead of 1 - price and does small fee still work or no
 
 	# add cost to close market into creation fee
 
