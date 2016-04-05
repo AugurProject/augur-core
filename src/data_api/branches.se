@@ -31,6 +31,13 @@ import cash as CASH
 # currentExpPeriod - 1 is what's up for reporting at any given time
 # should add a min initial liquidity property, for non pm branches it'd be low and .5*minInitialLiquidity is == fee for event
 # could also add an event fee parameter
+# How to set minimum reporting fee guidelines for reporters, abs. minimum should be calc. as follows:
+    #Volume per period * .5 * fee * ev/ebit * 6 >= rep market cap
+    #Say ev/ebit or valuation is 15, so:
+	#45 * fee * volume per period = rep market cap
+
+	#Want:
+		#Rep market cap >> outstanding shares value at all times
 data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod)
 
 # first param is the branch, second param is the subcurrency contract
@@ -43,7 +50,8 @@ data branchListCount
 def init():
     self.Branches[1010101].currentVotePeriod = (block.timestamp / 1200) - 1
     self.Branches[1010101].periodLength = 1200
-    self.Branches[1010101].minTradingFee = 2^54
+    # .5%
+    self.Branches[1010101].minTradingFee = 92233720368547760 
     self.branchListCount = 1
     self.branchList[0] = 1010101
     self.Branches[1010101].baseReporters = 3

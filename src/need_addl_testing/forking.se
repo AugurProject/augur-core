@@ -180,6 +180,13 @@ def resolve(branch, event):
     else:
         return(0)
 
+#Resolve fork method that gets exchange rate
+def exchangeRate(branch):
+    # get rep exchange rate from etherex for (branch)
+    #return(exchangeRate)
+    # for testing we'll just rng the exchange rate :)
+    return(sha256(branch))
+
 # rbcr is done as a normal event where everyone reports on it
 # resolve forked event needs to be called first [or does it for this?]
 # only called on the fork not the parent, normal penalization except the values are forkOutcome and forkEthicality as opposed to anything else
@@ -357,68 +364,44 @@ def penalizeOnForkedEvent(branch, event):
 
 
 # other stuff:
-	- Separate creator / liquidity provisioners
-	- Charge creator the minimum fee, pay it back up to 2x using half the trading fees
-	- Half the trading fees go to reporters
-	- Upon buying a full set, the first order placed on the book for each of the shares has no fee, this is abusable, and whoever picks it up's fees go to the person who provided the liquidity
-	- maker taker fees
-	#market creator only gets fee reate for his own part of the fee, not for reoprters fee
-	#report catch should be <=0
 	#want reporters to report on 2x min reports number
-	#fix get events for number of events
-	
-	- do old createmarket sum version to add up or new one?
 
 	- ryan augur problem w/ gas costs and creation fee due to more reporters on more voluminous markets, how to calculate in adv. how many reporters a market w/ x volume will have
 	# round 2 bond cost discussion, reporting penalties change/make less severe
-	# 8 max outcomes, base reporters should really be mult by 2, i.e. if want 3 then do 6, gas cost to market creators
-	
 	I think it should be exactly what is needed for reporters to report on the market should no traders show up:
 		(decent labor compensation rate for reporters) + (gas cost for these reporters) 
 		(Initial_Liquidity_Requirement * 0.5 * Fee) + Base_Reporter_Quantity * (Gas cost of commit + Gas cost of reveal)
 	
-	reason to keep fees high w/ market creators
-	
-	# Can I buy fractional shares in the backend
-	
+	# Can I buy fractional shares in the backend / is fee % calc right or missing range - price instead of 1 - price
+
 	# add cost to close market into creation fee
-	
-	# event reuse suggestions in the UI
-	# reporting as way to stay up to date on events
-	# allow market creator to choose % of her fees that go to makers
-	
+
 	# make fork / round 1 pushback wait 48 or 72 hr instead of 24
-	
-	# iluvhermione
-    4:02 PM i guess some sort of alerting system where a 1/99 market gets graded as 100/0 will be helpful
-    joeykrug
-    4:02 PM yeah that's a good idea
-    4:03
-    any market where the highest odds outcome isn't reported
-    4:03
-    as the winning one
-    # add a send shares feature
-    # make so can't report in last 24 hr of period
-    
-    # need a way to move markets forward that don't get enough reports
-    # no trade markets == no reporting
-    
-    # ls-lmsr as initial liquidity
-    
+
+	# make so can't report in last 24 hr of period
+
     When calling to move events because of fork any round 2 events besides forked one should have bond returned
-On penalizewronground2 for forked event make sure it's the event we actually forked over
-Need to have a resolve fork method that gets exchange rate
-Handle: Report threshold is raised so anyone can report on it if it has no reports in last 24 hr
-0 reports on an event either push back or indeterminate
+    On penalizewronground2 for forked event make sure it's the event we actually forked over
+    Handle: Report threshold is raised so anyone can report on it if it has no reports in last 24 hr
+    0 reports on an event either push back or indeterminate
+    
+    # no reporting on 0 outstanding shares markets
+    
+    Are people in second unethical round penalized or just people who got it wrong in first round
+    Assign reporters based on shares outstanding when expiration date arrives, not volume
 
-Make sure market exists before allowing trading
-Are people in second unethical round penalized or just people who got it wrong in first round
-Can't report in last 24 hr of period
 
-Assign reporters based on shares outstanding when expiration date arrives, not volume
-If no trades no reporting
-Indeterminate for market with no reports
-Can trading occur after event has occurred. Can trading occur by picking up complete sets after event has occurred in current implementation
-# no reporting on 0 volume markets
-# function to get all events you need to report on
-# claim initial rep in branches
+    # function to get all events you need to report on
+    
+    How to predict increased cost by more reporter numbers in comparison to initial cost of creating a market and charge trading fees extra or charge higher creation fee or just keep reporters low below some $ in volume amount according to fee on market so min of reporters per outstanding shares or min to pay for reporting fees for a number of reporting fees calculated from fees from market whichever is less 
+    
+    How to choose:
+    
+    - minimum creation fee to pay reporters for gas and minimal reporting
+    
+    - trading fee minimum for markets based on rep market cap and shares outstanding value
+    
+    
+    Adj number of reporters per fees paid so far
+
+    When selecting to report make sure based off of total active rep, not including dormant

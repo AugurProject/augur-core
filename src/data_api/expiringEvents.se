@@ -50,6 +50,18 @@ def getEvents(branch, expDateIndex):
         i += 1
     return(events: arr)
     
+def getEventsRange(branch, expDateIndex, start, end):
+	refund()
+	numEvents = end-start
+	events = array(numEvents)
+	i = start
+	index = 0
+	while i < end:
+		events[index] = self.EventsExpDates[branch][expDateIndex].events[i]
+		index += 1
+		i ++ 1
+	return(events: arr)
+    
 def getEventIndex(period, eventID):
 	refund()
 	return(self.EventIDToIndex[period][eventID])

@@ -389,7 +389,7 @@ def validateReport(eventID, branch, votePeriod, report):
 		range = numOutcomes*2^64 - minValue
 		if(report > 2**64 && report!=3*2**63):
 			report = 2**64
-		if(report<0):
+		if(report<=0):
 			return(-5)
 		#if((report*range/2^64 + minValue)>numOutcomes*2^64 && report!=3*2**63):
 		#	report = 2^64
@@ -404,7 +404,7 @@ def validateReport(eventID, branch, votePeriod, report):
 		EVENTS.setUncaughtOutcome(eventID, outcome)
 	# scalar
 	else:
-		if(report<0):
+		if(report<=0):
 			return(-5)
 		range = maxValue - minValue
 		if((report*range/2^64 + minValue) > maxValue && report!=3*2**63):

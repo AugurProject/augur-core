@@ -565,6 +565,7 @@ macro binary($event):
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)
 
+
 # test bonded pushed forward event/market though not ready to be resolved
     # code in penalize for that:
         #elif(rejected && rejectedPeriodOver && && actuallyrejected && MAKEREPORTS.getReport(branch, lastPeriodperiod, event) && !self.penalized[lastPeriod][tx.origin].event[event] && outcome):
@@ -596,4 +597,3 @@ macro categorical($event):
         # self.penalized[lastPeriod][tx.origin].event[event] = 1
         # self.penalized[lastPeriod][tx.origin].num += 1
         #   return(1)
-# test .99 resolve push forward
