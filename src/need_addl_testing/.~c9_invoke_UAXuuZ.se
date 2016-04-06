@@ -300,3 +300,9 @@ def penalizeOnForkedEvent(branch, event):
 
 # other stuff:
 	# Can I buy fractional shares in the backend / is fee % calc right or missing range - price instead of 1 - price and does small fee still work or no
+
+
+
+
+
+

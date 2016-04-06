@@ -185,6 +185,8 @@ def penalizeRoundTwoWrong(branch, event):
     oldReport = REPORTS.getReport(branch,lastPenalizationPeriod,event)
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
         return(-3)
+    if(BRANCHES.getForkPeriod(branch) == lastPeriod && event!=forkedEvent):
+        return(0)
     periodLength = BRANCHES.getPeriodLength(branch)s
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
@@ -294,9 +296,10 @@ def penalizeRoundTwoWrong(branch, event):
                 self.bondPaid[event] += -1*totalRepDifference
 
     self.branch[branch].penalized[lastPeriod][tx.origin].event[event] = 1
-    self.branch[branch].penalized[lastPeriod][tx.origin].num += MAKEREPORTS.getNumReportsActual(branch, lastPeriod)
+    self.branch[branch].penalized[lastPeriod][tx.origin].num += 1
     if(eventwasaforkedevent):
         penalizedForkedEventIfReportedOn = 1
+        self.branch[branch].penalized[lastPeriod][tx.origin].num += MAKEREPORTS.getNumReportsActual(branch, lastPeriod)
     if(MAKEREPORTS.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):
         if(newAfterRep <= 0):
             newAfterRep = 0
