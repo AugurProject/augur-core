@@ -1,2 +1,4 @@
 colorama
+requests==2.9.1
 ethereum
+https://github.com/ethereum/serpent/tarball/develop
