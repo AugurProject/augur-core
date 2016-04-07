@@ -51,6 +51,9 @@ def checkWhitelist(address):
 def setFork(branch):
     self.Reporting[branch].fork = 1
     return(1)
+    
+def getFork(branch):
+    return(self.Reporting[branch].fork)
 
 def checkContractWhitelist(contract, address):
     refund()

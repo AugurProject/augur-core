@@ -4,6 +4,8 @@
 	#In the other class/branch, the event is readjudicated and remove the outcome on the pre fork branch and rep is redistributed as normal, except people who said the original outcome in the original fork lose rep.  
 	# Note: Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets.  Market makers should then be able to move their market to whichever fork they want, if they fail to act, it'd go to the most voluminous fork by default after a couple weeks.
 
+# branch and forkperiod and who won
+data forkResolved[][]
 
 # Period where we forked, at the end of it
     # don't penalize for this period / anything that happened here should be considered to not have happened - done
@@ -20,18 +22,23 @@
         # stays in parent if it wins, otherwise goes to new fork - done
     # each event resolving further in the future is pushed into the respective period on whichever fork wins - done
 def move_event(event):
-	if(branchEventIsInForked && 60daysisover && didntForkOverThisEvent && hasntresolved && forkResolved):
-		x = checkWhichForkWon()
-		if(x==branchEventIsIn):
-			leave event here
-			set outcomes to 0
+    forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
+    eventForkedOver = BRANCHES.getEventForkedOver(branch)
+    currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
+	if(forkPeriod && currentPeriod == (forkPeriod+2) && eventForkedOver!=event && !EVENTS.getOutcome(event)):
+		winner = self.forkResolved[branch][forkPeriod]
+		if(winner==0):
+            winner = self.resolve_fork(branch)
+		if(winner == EVENTS.getEventBranch(event)):
+			# leave event here
+			# set outcomes to 0
 			# set market branch
-            # move event
             # move market as well to whichever fork
 			if(shouldveresolved in past 2 periods):
 			    push it into next [this] period
 		    else:
                 pushIntoPeriodItWouldveExpiredIn
+            setForkMoved
 		else:
             # set market branch
             # move event
@@ -45,18 +52,37 @@ def move_event(event):
     else:
         return(0)
 
+# parent branch is branch here
 def resolve_fork(branch):
-    makeSureBranchForked
-    ogcap = getMarketCapOfBranch
-    fork = getFork(branch)
-    forkcap = getMarketCapOfFork
-    winner = 0
-    if(ogcap >= forkcap):
+    forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
+    currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
+    # make sure branch forked 
+    if(currentPeriod != (forkPeriod+2)):
+        return(0)
+    origCap = self.exchangeRate(branch)
+    fork = REPORTING.getFork(branch)
+    forkCap = self.exchangeRate(fork)
+    if(origcap >= forkCap):
         winner = branch
+        self.setWinner(branch, winner)
+        return(winner)
     else:
         winner = fork
-    setWinner(branch, winner)
+        self.setWinner(branch, winner)
+        return(winner)
     
+def setWinner(branch, winner):
+    self.forkResolved[branch][winner] = winner
+    return(1)
+
+#Resolve fork method that gets exchange rate
+def exchangeRate(branch):
+    # get rep exchange rate from etherex for (branch)
+    #return(exchangeRate)
+    # for testing we'll just rng the exchange rate :)
+    return(sha256(branch))
+    
+
 # In the last 24 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back [so what do / how to resolve round 2 with this or could just say on the fork round 2 person gets bond back, is normal on pre fork]
 # bond is 1% of rep
 # no reporting in new branch for first period, need to make this happen
@@ -87,7 +113,7 @@ def fork(event, branch):
 		self.forking[event].bondPoster = msg.sender
 		EVENTS.setForked(event)
 		BRANCHES.setForkPeriod(branch)
-		
+		set event forked over
 		# return round 2 bond
 		REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), 100*2**64)
 	    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), 100*2**64)
@@ -180,19 +206,13 @@ def resolve(branch, event):
     else:
         return(0)
 
-#Resolve fork method that gets exchange rate
-def exchangeRate(branch):
-    # get rep exchange rate from etherex for (branch)
-    #return(exchangeRate)
-    # for testing we'll just rng the exchange rate :)
-    return(sha256(branch))
-
 # rbcr is done as a normal event where everyone reports on it
 # resolve forked event needs to be called first [or does it for this?]
 # only called on the fork not the parent, normal penalization except the values are forkOutcome and forkEthicality as opposed to anything else
 def penalizeOnForkedEvent(branch, event):
 	if(EVENTS.getForked(event)==0):
 		return(-1)
+	# means event / fork is resolved iirc
 	if(EVENTS.getForkedDone(event)==0):
 		return(-2)
     repBalance = REPORTING.getRepBalance(branch, msg.sender)

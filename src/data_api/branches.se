@@ -38,7 +38,7 @@ import cash as CASH
 
 	#Want:
 		#Rep market cap >> outstanding shares value at all times
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod)
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver)
 
 # first param is the branch, second param is the subcurrency contract
 data cash[][]
@@ -60,7 +60,14 @@ def init():
 def initDefaultBranch():
 	refund()
     return(CASH.initiateOwner(1010101))
-    
+
+def getEventForkedOver(branch):
+	return(self.Branches[branch].eventForkedOver)
+
+def setEventForkedOver(branch, event):
+	self.Branches[branch].eventForkedOver = event
+	return(1)
+
 def getBaseReporters(branch):
 	refund()
 	return(self.Branches[branch].baseReporters)
