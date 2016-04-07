@@ -19,6 +19,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+# Note: must spend at least 1 in 2**64
+
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import info as INFO
@@ -153,7 +155,7 @@ def buy(amount, price, market, outcome):
     creator = INFO.getCreator(market)
     if(msg.sender == creator || tx.origin == creator):
         return(-30)
-    if(amount <= 0 or price <= 0 or market==0 or price*amount < 2**64):
+    if(amount <= 0 or price <= 0 or market==0):
         return(-1)
     if(!MARKETS.scheduleSet(market)):
         return(0)
@@ -170,7 +172,7 @@ def buy(amount, price, market, outcome):
     cumScale = MARKETS.getCumScale(market)
     fee = fee_percent(trading_fee, price, amount, cumScale)
     fee = fee * MARKETS.getMakerFees($market) / 2**64
-    if(amount*price < 2**64):
+    if(amount*price < 2**64 or price>cumScale):
         return(0)
     if(CASH.balance(tx.origin) < (amount * price / 2**64 *(fee + 2^64)/2^64)):
         return(-4)
@@ -199,7 +201,7 @@ def sell(amount, price, market_id, outcome):
     cumScale = MARKETS.getCumScale(market_id)
     fee = fee_percent(trading_fee, price, amount, cumScale)
     fee = fee * MARKETS.getMakerFees($market) / 2**64
-    if(amount*price < 2**64):
+    if(amount*price < 2**64 or price>cumScale):
         return(0)
     if(CASH.balance(tx.origin) < (amount * price / 2**64 *fee/2^64)):
         return(-4)

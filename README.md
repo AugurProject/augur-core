@@ -3,5 +3,4 @@ augur-core
 
 [![Build Status](https://travis-ci.org/AugurProject/augur-core.svg)](https://travis-ci.org/AugurProject/augur-core)
 
-### Version 0.7:
-  - freeloader prevention - others can't get # shares held (log it, don't return it when buying or selling shares) or outcomes - buying outcome / balances, getmarketoutcome
+Ethereum contracts for a decentralized prediction market platform

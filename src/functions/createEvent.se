@@ -40,7 +40,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     if(forked && wouldExpireInPeriodJustAfterFork):
         return(-9)
     periodLength = BRANCHES.getPeriodLength(branch)
-    if(maxValue < minValue):
+    if(maxValue < minValue or (maxValue-minValue) < 2**64):
         return(-2)
     if periodLength && description != 0 && expDate > block.timestamp:
         eventinfo = string(8*32 + len(description))

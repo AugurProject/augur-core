@@ -86,7 +86,14 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
 	    overruled = 0
     if(BRANCHES.getVotePeriod(branch) > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
 	    votedOnAgain = 1
-	if(overruled && votedOnAgain && self.roundTwo[event].roundTwo && votePeriod!=self.roundTwo[event].originalVotePeriod && eventID!=0 && event==eventID):
+	#any round 2 events besides forked one should have bond returned
+	if(forked && didntForkOverThisEventSpecifically && bondNotReturned && msg.sender == bondPoster):
+	    # return the bond
+	    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
+	    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), bond)
+	    bondReturned = 1
+	    return(1)
+	if(overruled && votedOnAgain && self.roundTwo[event].roundTwo && votePeriod!=self.roundTwo[event].originalVotePeriod && eventID!=0 && event==eventID && !forked && msg.sender == bondPoster):
 		# return the bond
 	    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
 	    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), bond)
@@ -95,7 +102,7 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
     	# reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting [don't count ethicality here]
     	self.roundTwo[event].final = 1
 	    return(2*bond)
-	elif(votedOnAgain && self.roundTwo[event].roundTwo && votePeriod!=self.roundTwo[event].originalVotePeriod && eventID!=0 && event==eventID):
+	elif(votedOnAgain && self.roundTwo[event].roundTwo && votePeriod!=self.roundTwo[event].originalVotePeriod && eventID!=0 && event==eventID && !forked):
 		# lose bond
 	    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
 	    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), bond)

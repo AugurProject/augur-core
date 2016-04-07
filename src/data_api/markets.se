@@ -357,6 +357,7 @@ def getWinningOutcomes(market):
     
 def getOneWinningOutcome(market, num):
     refund()
+    # whitelist
     return(self.Markets[market].winningOutcomes[num])
 
 def initialLiquiditySetup(marketID, cumScale, numOutcomes):
