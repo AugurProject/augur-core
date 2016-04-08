@@ -25,30 +25,51 @@ def move_event(event):
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     eventForkedOver = BRANCHES.getEventForkedOver(branch)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-	if(forkPeriod && currentPeriod == (forkPeriod+2) && eventForkedOver!=event && !EVENTS.getOutcome(event)):
+	if(forkPeriod && currentPeriod == (forkPeriod+2) && eventForkedOver!=event && !EVENTS.getOutcome(event) && notMovedDueToFork):
 		winner = self.forkResolved[branch][forkPeriod]
 		if(winner==0):
             winner = self.resolve_fork(branch)
 		if(winner == EVENTS.getEventBranch(event)):
-			# leave event here
 			# set outcomes to 0
-			# set market branch
-            # move market as well to whichever fork
+            EVENTS.setOutcome(event, 0)
+            EVENTS.setmode(event, 0)
+            EVENTS.setEthics(event, 0)
+            EVENTS.setUncaughtOutcome(event, 0)
+            # return bond if it's a round 2 event and make it not one anymore
+            BACKSTOPS.roundTwoResolve(branch, event, eventIndex, votePeriod)
+            
+            # leave event here
 			if(shouldveresolved in past 2 periods):
 			    push it into next [this] period
+   		        EXPEVENTS.addEvent(branch, futurePeriod, eventID)
+        		EVENTS.setExpiration(event, time)
 		    else:
                 pushIntoPeriodItWouldveExpiredIn
+                EXPEVENTS.addEvent(branch, futurePeriod, eventID)
+        		EVENTS.setExpiration(event, time)
             setForkMoved
 		else:
-            # set market branch
-            # move event
-            # move market as well to whichever fork
-			move event to fork
-			and place it into the next reporting period w/ outcomes to 0
+			# set outcomes to 0
+            EVENTS.setOutcome(event, 0)
+            EVENTS.setmode(event, 0)
+            EVENTS.setEthics(event, 0)
+            EVENTS.setUncaughtOutcome(event, 0)
+            # return bond if it's a round 2 event and make it not one anymore
+            BACKSTOPS.roundTwoResolve(branch, event, eventIndex, votePeriod)
+
+			# move event to fork
+			# and place it into the next reporting period w/ outcomes to 0
 			if(shouldveresolved in past 2 periods):
 			    push it into next [this] period
+		        EXPEVENTS.addEvent(branch, futurePeriod, eventID)
+        		EVENTS.setBranch(event, winner)
+        		EVENTS.setExpiration(event, time)
 		    else:
 		        pushIntoPeriodItWouldveExpiredIn
+		        EXPEVENTS.addEvent(branch, futurePeriod, eventID)
+        		EVENTS.setBranch(event, winner)
+        		EVENTS.setExpiration(event, time)
+        	setForkMoved
     else:
         return(0)
 
@@ -83,7 +104,7 @@ def exchangeRate(branch):
     return(sha256(branch))
     
 
-# In the last 24 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back [so what do / how to resolve round 2 with this or could just say on the fork round 2 person gets bond back, is normal on pre fork]
+# In the last 24 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back [so what do / how to resolve round 2 with this rbcr wise or could just say on the fork round 2 person gets bond back, is normal on pre fork]
 # bond is 1% of rep
 # no reporting in new branch for first period, need to make this happen
 def fork(event, branch):
@@ -119,6 +140,16 @@ def fork(event, branch):
 	    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), 100*2**64)
 	else:
 		return(0)
+
+
+
+
+
+
+
+
+
+
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
 # round 2 event we forked over is rbcr'd + resolved both on fork and on original parent
@@ -205,6 +236,11 @@ def resolve(branch, event):
     # (should never be reached)
     else:
         return(0)
+
+
+
+
+
 
 # rbcr is done as a normal event where everyone reports on it
 # resolve forked event needs to be called first [or does it for this?]

@@ -109,6 +109,10 @@ def setExpiration(event, date):
 	self.Events[event].expirationDate = date
 	return(1)
 
+def setBranch(event, branch):
+	self.Events[event].branch = branch
+	return(1)
+
 def getOutcome(event):
 	refund()
 	# do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
@@ -165,6 +169,7 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes,
 		return(1)
 	else:
 		return(0)
+
 
 def setBond(event, bond):
 	refund()

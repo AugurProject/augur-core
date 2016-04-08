@@ -71,6 +71,7 @@ macro ethic_catch($x):
     # -5: Event forked and not final yet
     # -6: bonded pushed forward market not ready to be resolved
     # -7: event not reportable >.99
+# if market's events have moved due to a fork branch is the new fork
 def closeMarket(branch, market):
     refund()
     if(CASH.balance(market)<=0):
