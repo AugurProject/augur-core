@@ -140,6 +140,8 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
 	eventsID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
 	if(eventsID!=eventID || eventID == 0 || eventsID == 0):
 		return(-2)
+	if(EVENTS.getBranch(eventID)!=branch):
+		return(0)
 	if(EVENTS.getOutcome(eventID)!=0):
 		return(-4)
 	if(self.reportable[votePeriod][eventID]==-1):
@@ -220,6 +222,8 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
 	repIndex = REPORTING.repIDToIndex(branch, tx.origin)
 	if (REPORTING.getReporterID(branch, repIndex) != tx.origin || currentExpPeriod >= (votePeriod+2) || currentExpPeriod < (votePeriod+1) || BRANCHES.getVotePeriod(branch)!=votePeriod):
 		return(-2)
+	if(EVENTS.getBranch(eventID)!=branch):
+		return(0)
 	if(REPORTING.getRepBalance(branch, tx.origin)<10*2**64):
 		return(-4)
 	# make sure event is in the given branch and vote period...

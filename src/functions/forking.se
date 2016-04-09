@@ -6,6 +6,10 @@
 
 # branch and forkperiod and who won
 data forkResolved[][]
+data eventMoved[]
+data forkData[](originalBranch)
+data forking[](bondPoster)
+
 
 # Period where we forked, at the end of it
     # don't penalize for this period / anything that happened here should be considered to not have happened - done
@@ -18,18 +22,23 @@ data forkResolved[][]
 # Period after fork is resolved
     # markets can't be moved until now - done
     # all markets have early exp disabled until this point - done
-    # each event which should've resolved in the past 2 periods is pushed up into this period - done
+    # each event which should've resolved in the past 2 periods is pushed up into period after this - done
         # stays in parent if it wins, otherwise goes to new fork - done
     # each event resolving further in the future is pushed into the respective period on whichever fork wins - done
 def move_event(event):
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
+    branch = EVENTS.getEventBranch(event)
     eventForkedOver = BRANCHES.getEventForkedOver(branch)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-	if(forkPeriod && currentPeriod == (forkPeriod+2) && eventForkedOver!=event && !EVENTS.getOutcome(event) && notMovedDueToFork):
+	if(forkPeriod && currentPeriod == (forkPeriod+2) && !EVENTS.getOutcome(event) && !self.eventMoved[event]):
 		winner = self.forkResolved[branch][forkPeriod]
 		if(winner==0):
             winner = self.resolve_fork(branch)
-		if(winner == EVENTS.getEventBranch(event)):
+        EVENTS.setBranch(event, winner)
+        self.eventMoved[event] = 1
+        if(event == eventForkedOver):
+            return(1)
+		elif(winner == EVENTS.getEventBranch(event)):
 			# set outcomes to 0
             EVENTS.setOutcome(event, 0)
             EVENTS.setmode(event, 0)
@@ -39,15 +48,13 @@ def move_event(event):
             BACKSTOPS.roundTwoResolve(branch, event, eventIndex, votePeriod)
             
             # leave event here
-			if(shouldveresolved in past 2 periods):
-			    push it into next [this] period
-   		        EXPEVENTS.addEvent(branch, futurePeriod, eventID)
-        		EVENTS.setExpiration(event, time)
-		    else:
-                pushIntoPeriodItWouldveExpiredIn
-                EXPEVENTS.addEvent(branch, futurePeriod, eventID)
-        		EVENTS.setExpiration(event, time)
-            setForkMoved
+            expPeriod = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
+            # if should've resolved in past periods
+			if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1) or expPeriod == (forkPeriod+2)):
+			    # push it into next [this] period
+   		        EXPEVENTS.addEvent(branch, currentPeriod+1, eventID)
+        		EVENTS.setExpiration(event, block.timestamp)
+		    # otherwise it's set to expire in the period it would've expired in as normal, no changes needed
 		else:
 			# set outcomes to 0
             EVENTS.setOutcome(event, 0)
@@ -58,18 +65,16 @@ def move_event(event):
             BACKSTOPS.roundTwoResolve(branch, event, eventIndex, votePeriod)
 
 			# move event to fork
+			expPeriod = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
 			# and place it into the next reporting period w/ outcomes to 0
-			if(shouldveresolved in past 2 periods):
-			    push it into next [this] period
-		        EXPEVENTS.addEvent(branch, futurePeriod, eventID)
-        		EVENTS.setBranch(event, winner)
-        		EVENTS.setExpiration(event, time)
+			if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1) or expPeriod == (forkPeriod+2)):
+			    # push it into next [this] period
+		        EXPEVENTS.addEvent(branch, currentPeriod+1, eventID)
+        		EVENTS.setExpiration(event, block.timestamp)
 		    else:
-		        pushIntoPeriodItWouldveExpiredIn
-		        EXPEVENTS.addEvent(branch, futurePeriod, eventID)
-        		EVENTS.setBranch(event, winner)
-        		EVENTS.setExpiration(event, time)
-        	setForkMoved
+		        # push into period it wouldve expired in
+		        EXPEVENTS.addEvent(branch, expPeriod, eventID)
+        		# expiration time doesnt need to change
     else:
         return(0)
 
@@ -102,24 +107,21 @@ def exchangeRate(branch):
     #return(exchangeRate)
     # for testing we'll just rng the exchange rate :)
     return(sha256(branch))
-    
 
-# In the last 24 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back [so what do / how to resolve round 2 with this rbcr wise or could just say on the fork round 2 person gets bond back, is normal on pre fork]
+# In the last 24 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back
 # bond is 1% of rep
-# no reporting in new branch for first period, need to make this happen
 def fork(event, branch):
-	if(!EVENTS.getRoundTwo(event) || EVENTS.getFinal(event)):
+	if(!EVENTS.getRoundTwo(event) || EVENTS.getFinal(event) || EVENTS.getForked(event)):
 		return(-1)
 	# if in last 24 hr of period
 	if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 86400)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENT.getForked(event)):
 		bond = 184467440737095520*REPORTING.getTotalRep(branch)/2**64
-		# branch 1
-		# lose bond
+		# lose fork bond in branch 1
 		# results same as roundtwobond, let it resolve as that on original network
 		if(SENDREP.sendReputation(branch, event, bond)==0):
 			return(-2)
 
-		# branch 2
+		# on branch 2 fork bond isn't lost
 		# on fork bond isn't lost, gets paid up to 2x from "liars"
 		# make the fork
 		newBranch = CREATEBRANCH.createSubbranch(text("fork"), BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), 0)
@@ -134,21 +136,12 @@ def fork(event, branch):
 		self.forking[event].bondPoster = msg.sender
 		EVENTS.setForked(event)
 		BRANCHES.setForkPeriod(branch)
-		set event forked over
+		BRANCHES.setEventForkedOver(branch, event)
 		# return round 2 bond
 		REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), 100*2**64)
 	    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), 100*2**64)
 	else:
 		return(0)
-
-
-
-
-
-
-
-
-
 
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
@@ -238,13 +231,10 @@ def resolve(branch, event):
         return(0)
 
 
-
-
-
-
 # rbcr is done as a normal event where everyone reports on it
 # resolve forked event needs to be called first [or does it for this?]
 # only called on the fork not the parent, normal penalization except the values are forkOutcome and forkEthicality as opposed to anything else
+# some rep from this goes to bond poster, original / last period report is actually what a user reported on the parent for the round 2 bond vote, they lose rep as well as people this time who report wrong
 def penalizeOnForkedEvent(branch, event):
 	if(EVENTS.getForked(event)==0):
 		return(-1)

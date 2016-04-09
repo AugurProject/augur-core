@@ -182,6 +182,9 @@ def addMarket(event, marketID):
 	self.Events[event].numMarkets += 1
 	return(1)
 
+def getBranch(event):
+	return(self.Events[event].branch)
+
 def getBond(event):
 	refund()
 	return(self.Events[event].bond)
