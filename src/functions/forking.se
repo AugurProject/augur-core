@@ -141,6 +141,8 @@ def fork(event, branch, forkedOverEthicality):
 		BACKSTOPS.setFinal(event)
 		self.roundTwo[event].final
 		BRANCHES.setForkPeriod(branch)
+		BRANCHES.setForkPeriod(newBranch)
+		BRANCHES.setEventForkedOver(newBranch, event)
 		BRANCHES.setEventForkedOver(branch, event)
 		# return round 2 bond
 		REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), 100*2**64)
