@@ -15,6 +15,10 @@ def getRoundTwo(event):
     refund()
     return(self.roundTwo[event].roundTwo)
     
+def setRoundTwo(event, roundTwo):
+    self.roundTwo[event].roundTwo = roundTwo
+    return(1)
+    
 def getBondPoster(event):
     refund()
     return(self.roundTwo[event].bondPoster)
@@ -22,6 +26,10 @@ def getBondPoster(event):
 def getFinal(event):
     refund()
     return(self.roundTwo[event].final)
+
+def setFinal(event):
+    self.roundTwo[event].final = 1
+    return(1)
     
 def getOriginalOutcome(event):
     refund()
@@ -172,7 +180,9 @@ def resolve(branch, event):
 	elif(scalar(event) or categorical(event)):
 	    mode = EVENTS.getUncaughtOutcome(event)
         EVENTS.setmode(event, mode)
-        fxpOutcome = mode * (scaled_max - scaled_min) + scaled_min
+        scaled_max = EVENTS.getMaxValue(event)
+        scaled_min = EVENTS.getMinValue(event)
+        fxpOutcome = mode * (scaled_max - scaled_min)/2**64 + scaled_min
         EVENTS.setOutcome(event, fxpOutcome)
         ethical = ethic_catch(EVENTS.getEthical(event))
 
