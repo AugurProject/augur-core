@@ -131,7 +131,7 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
     if(numOutcomes > 8):
         return(-3)
     if(cumulativeScale==0):
-        cumulativeScale = 1
+        cumulativeScale = 2**64
     tradingPeriod = (tradingPeriod / periodLength)
 
     # formation of marketID (hash)
@@ -158,7 +158,7 @@ def createMarket(branch, description:str, tradingFee, initialLiquidity, events:a
     if(!BRANCHES.getOracleOnly(branch) && CASH.balance(msg.sender) < (initialLiquidity + creationFee)):
         return(-4)
 
-    if(INFO.setInfo(marketID, description, tx.origin, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, forkSelection, tag1, tag2, tag3, makerFees) && CASH.send(branch, creationFee)):
+    if(INFO.setInfo(marketID, description, tx.origin, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, forkSelection, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes) && CASH.send(branch, creationFee)):
         i = 0
         while i < len(events):
             EVENTS.addMarket(events[i], marketID)
