@@ -104,11 +104,8 @@ def penalizeWrong(branch, event):
     reportValue = MAKEREPORTS.getReport(branch, lastPeriod, event)
     p = self.proportionCorrect(event)
     if(scalar(event) or categorical(event)):
-        outcome = EVENTS.getUncaughtOutcome(event)
-        # or can do
-        outcome = EVENTS.getmode(event)
-        # which should be exactly the same
     oldRep = MAKEREPORTS.getBeforeRep(branch, lastPeriod)
+        outcome = EVENTS.getUncaughtOutcome(event)
     
     # for a reporter for last period if they reported on it the first time [a round 2 event], prevent them from reporting on it, but still do the rep redistrib. at the end before returning in case this event is the last one a user submits for reporting and increment the num b/c it shouldn't be penalized until the next period resolution is over
     if(BACKSTOPS.getRoundTwo(event) && !self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && reportValue && outcome!=0):
@@ -206,9 +203,6 @@ def penalizeRoundTwoWrong(branch, event):
         outcome = catch(EVENTS.getUncaughtOutcome(event))
         if(scalar(event) or categorical(event)):
             outcome = EVENTS.getUncaughtOutcome(event)
-            # or can do
-            outcome = EVENTS.getmode(event)
-            # which should be exactly the same
         oldRep = MAKEREPORTS.getBeforeRep(branch, lastPeriod)
         p = self.proportionCorrect(event)
         newAfterRep = 0
