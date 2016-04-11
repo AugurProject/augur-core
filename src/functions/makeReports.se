@@ -273,9 +273,14 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
 			# set ethics value for event
 			if(ethics!=2**64 || ethics!=0):
 				ethics = 2**64
-			ethics = (EVENTS.getEthics(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
-			EVENTS.setEthics(eventID, ethics)
-			self.branches[branch].ethics[votePeriod][tx.origin].event[eventID] = ethics
+			if(forkedOverThisEvent):
+				ethics = (EVENTS.getForkEthicality(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
+				EVENTS.setForkEthicality(eventID, ethics)
+				self.branches[branch].ethics[votePeriod][tx.origin].event[eventID] = ethics
+			else:
+				ethics = (EVENTS.getEthics(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
+				EVENTS.setEthics(eventID, ethics)
+				self.branches[branch].ethics[votePeriod][tx.origin].event[eventID] = ethics
 			# add 1 report to the event
 			self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
 			# if 1st report of the period for a reporter
@@ -385,8 +390,12 @@ def validateReport(eventID, branch, votePeriod, report):
 		# submit report
 		# todo weight by rep if round 2 and fork
 		# outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-		outcome = (EVENTS.getUncaughtOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
-		EVENTS.setUncaughtOutcome(eventID, outcome)
+		if(forkedOverThisEvent):
+			outcome = (EVENTS.getForkedOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
+			EVENTS.setForkedOutcome(eventID, outcome)
+		else:
+			outcome = (EVENTS.getUncaughtOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
+			EVENTS.setUncaughtOutcome(eventID, outcome)
 	# categorical
 	elif(numOutcomes>2):
 		minValue = 2^64
@@ -396,7 +405,7 @@ def validateReport(eventID, branch, votePeriod, report):
 		if(report<=0):
 			return(-5)
 		#if((report*range/2^64 + minValue)>numOutcomes*2^64 && report!=3*2**63):
-		#	report = 2^64
+		# report = 2^64
 		# submit report
 		# todo weight by rep in round 2 and fork
 		self.mode_items[votePeriod][eventID].report_value[report] += 1
@@ -405,7 +414,10 @@ def validateReport(eventID, branch, votePeriod, report):
 			self.mode_items[votePeriod][eventID].current_mode_items = self.mode_items[votePeriod][eventID].report_value[report]
 		outcome = self.mode_items[votePeriod][eventID].current_mode
 		# outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-		EVENTS.setUncaughtOutcome(eventID, outcome)
+		if(forkedOverThisEvent):
+			EVENTS.setForkedOutcome(eventID, outcome)
+		else:
+			EVENTS.setUncaughtOutcome(eventID, outcome)
 	# scalar
 	else:
 		if(report<=0):
@@ -424,5 +436,8 @@ def validateReport(eventID, branch, votePeriod, report):
 			self.mode_items[votePeriod][eventID].current_mode_items = self.mode_items[votePeriod][eventID].report_value[report]
 		outcome = self.mode_items[votePeriod][eventID].current_mode
 		# outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-		EVENTS.setUncaughtOutcome(eventID, outcome)
+		if(forkedOverThisEvent):
+			EVENTS.setForkedOutcome(eventID, outcome)
+		else:
+			EVENTS.setUncaughtOutcome(eventID, outcome)
 	return(report)

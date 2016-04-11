@@ -110,6 +110,7 @@ def exchangeRate(branch):
 
 # In the last 24 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back
 # bond is 1% of rep
+# todo make it so can only push back in last 24 hr of _second_ period
 def fork(event, branch):
 	if(!EVENTS.getRoundTwo(event) || EVENTS.getFinal(event) || EVENTS.getForked(event)):
 		return(-1)
@@ -145,14 +146,24 @@ def fork(event, branch):
 
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
-# round 2 event we forked over is rbcr'd + resolved both on fork and on original parent
+# set the forked outcome to be the new outcome from fork
+# round 2 event we forked over is rbcr'd + resolved both on fork and on original parent - so how do we do rbcr and resolution _both_ on fork and parent?
+# branch is orig. branch
 def resolveForkedEvent(branch, event, eventIndex, votePeriod):
     refund()
     overruled = 1
     bond = 100*2**64
     votedOnAgain = 0
-    if(!winningForkDecided):
+    winner = self.forkResolved[branch][forkPeriod]
+    if(!winner):
         return(-5)
+    # original parent won
+    # sets the event outcome to the resolved round 2 outcome + ethicality
+    if(winner == branch):
+        
+    # fork won
+    # sets the event outcome to the forkoutcome + ethicality
+    else:
     if(scalar(event) or categorical(event)):
 	    if(self.roundTwo[event].originalOutcome == EVENTS.getUncaughtOutcome(event) && self.roundTwo[event].originalEthicality==ethic_catch(EVENTS.getEthical(event))):
 	        overruled = 0
