@@ -331,8 +331,6 @@ def short_sell(buyer_trade_id, max_amount):
     CASH.addCash(branch, fee/2)
     # Log transaction
     log(type=log_fill_tx, market_id, msg.sender, owner, ASK, price, fill, trade_id, outcome)
-    # Update market last price
-    MARKETS.set_last_price(market_id, price)
     # Log price, fill amount, type and timestamp
     log(type=log_price, market_id, type, price, fill, block.timestamp, outcome, msg.sender)
     return([SUCCESS, max_value, max_amount]: arr)
@@ -496,8 +494,6 @@ def trade(max_value, max_amount, trade_ids:arr):
             else:
                 return(INSUFFICIENT_BALANCE)
 
-        # Update market last price
-        MARKETS.set_last_price(market_id, price)
         # Log price, fill amount, type and timestamp
         log(type=log_price, market_id, type, price, fill, block.timestamp, outcome, msg.sender)
         # Next trade

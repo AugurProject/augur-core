@@ -82,7 +82,7 @@ def move_event(event):
 def resolve_fork(branch):
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-    # make sure branch forked 
+    # make sure branch forked
     if(currentPeriod != (forkPeriod+2)):
         return(0)
     origCap = self.exchangeRate(branch)
@@ -112,6 +112,8 @@ def exchangeRate(branch):
 # bond is 1% of rep
 # todo make it so can only push back in last 24 hr of _second_ period
 # todo pay back bond poster
+# todo fork over ethicality or outcome
+# round 2 penalize consensus don't pay back reporter b/c bond already returned.. on orig. branch
 def fork(event, branch, forkedOverEthicality):
 	if(!EVENTS.getRoundTwo(event) || EVENTS.getFinal(event) || EVENTS.getForked(event)):
 		return(-1)
