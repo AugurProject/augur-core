@@ -48,6 +48,15 @@ class TestComments(ContractTest):
             self.params["setMetadata"]["links"]
         )
         assert(retval == 1)
+        retval2 = self.contract.setMetadata(
+            self.params["setMetadata"]["market"],
+            self.params["setMetadata"]["tag1"],
+            self.params["setMetadata"]["tag2"],
+            self.params["setMetadata"]["tag3"],
+            self.params["setMetadata"]["source"],
+            self.params["setMetadata"]["links"]
+        )
+        assert(retval2 == 0)
 
     def test_getMetadata(self):
         retval = self.contract.setMetadata(

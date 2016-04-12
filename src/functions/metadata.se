@@ -7,8 +7,10 @@ data Metadata[](tag1, tag2, tag3, sourceLength, source[2048], linksLength, links
 # @param {int} tag{1,2,3} Category tags (short string=int)
 # @param {bytes} source Expiry source
 # @param {bytes} links Helpful external links
-# @return int 1 complete
+# @return int 1 if complete, 0 if metadata already exists for this market ID
 def setMetadata(market, tag1, tag2, tag3, source:str, links:str):
+    if self.Metadata[market].sourceLength != 0:
+        return 0
     self.Metadata[market].tag1 = tag1
     self.Metadata[market].tag2 = tag2
     self.Metadata[market].tag3 = tag3
@@ -18,7 +20,7 @@ def setMetadata(market, tag1, tag2, tag3, source:str, links:str):
     linksLength = len(links)
     self.Metadata[market].linksLength = linksLength
     save(self.Metadata[market].links[0], links, chars=linksLength)
-    return(1)
+    return 1
 
 # @param {int} market Market ID
 # @return int[] Concatenated market metadata
