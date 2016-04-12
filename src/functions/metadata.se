@@ -1,79 +1,45 @@
-macro OFFSET: 8
+macro OFFSET: 6
 
 # Metadata is indexed by market ID.
-data Metadata[](tag1, tag2, tag3, sourceLength, source[2048], detailsLength, details[], link1Length, link1[2048], link2Length, link2[2048], link3Length, link3[2048])
+data Metadata[](tag1, tag2, tag3, sourceLength, source[2048], linksLength, links[2048])
 
 # @param {int} market Market ID
 # @param {int} tag{1,2,3} Category tags (short string=int)
 # @param {bytes} source Expiry source
-# @param {bytes} details Long description
-# @param {bytes} link{1,2,3} Helpful external links
+# @param {bytes} links Helpful external links
 # @return int 1 complete
-def setMetadata(market, tag1, tag2, tag3, source:str, details:str, link1:str, link2:str, link3:str):
+def setMetadata(market, tag1, tag2, tag3, source:str, links:str):
     self.Metadata[market].tag1 = tag1
     self.Metadata[market].tag2 = tag2
     self.Metadata[market].tag3 = tag3
     sourceLength = len(source)
     self.Metadata[market].sourceLength = sourceLength
     save(self.Metadata[market].source[0], source, chars=sourceLength)
-    detailsLength = len(details)
-    self.Metadata[market].detailsLength = detailsLength
-    save(self.Metadata[market].details[0], details, chars=detailsLength)
-    link1Length = len(link1)
-    link2Length = len(link2)
-    link3Length = len(link3)
-    self.Metadata[market].link1Length = link1Length
-    self.Metadata[market].link2Length = link2Length
-    self.Metadata[market].link3Length = link3Length
-    save(self.Metadata[market].link1[0], link1, chars=link1Length)
-    save(self.Metadata[market].link2[0], link2, chars=link2Length)
-    save(self.Metadata[market].link3[0], link3, chars=link3Length)
+    linksLength = len(links)
+    self.Metadata[market].linksLength = linksLength
+    save(self.Metadata[market].links[0], links, chars=linksLength)
     return(1)
 
 # @param {int} market Market ID
 # @return int[] Concatenated market metadata
 def getMetadata(market):
     sourceLength = self.Metadata[market].sourceLength
-    detailsLength = self.Metadata[market].detailsLength
-    link1Length = self.Metadata[market].link1Length
-    link2Length = self.Metadata[market].link2Length
-    link3Length = self.Metadata[market].link3Length
-    metadata = array(OFFSET + sourceLength + detailsLength + link1Length + link2Length + link3Length)
+    linksLength = self.Metadata[market].linksLength
+    metadata = array(OFFSET + sourceLength + linksLength)
     metadata[0] = self.Metadata[market].tag1
     metadata[1] = self.Metadata[market].tag2
     metadata[2] = self.Metadata[market].tag3
     metadata[3] = sourceLength
-    metadata[4] = detailsLength
-    metadata[5] = link1Length
-    metadata[6] = link2Length
-    metadata[7] = link3Length
+    metadata[4] = linksLength
     source = load(self.Metadata[market].source[0], chars=sourceLength)
     c = 0
     while c < sourceLength:
         metadata[OFFSET + c] = getch(source, c)
         c += 1
     index = OFFSET + sourceLength
-    details = load(self.Metadata[market].details[0], chars=detailsLength)
+    links = load(self.Metadata[market].links[0], chars=linksLength)
     c = 0
-    while c < detailsLength:
-        metadata[index + c] = getch(details, c)
-        c += 1
-    index += detailsLength
-    link1 = load(self.Metadata[market].link1[0], chars=link1Length)
-    c = 0
-    while c < link1Length:
-        metadata[index + c] = getch(link1, c)
-        c += 1
-    index += link1Length
-    link2 = load(self.Metadata[market].link2[0], chars=link2Length)
-    c = 0
-    while c < link2Length:
-        metadata[index + c] = getch(link2, c)
-        c += 1
-    index += link2Length
-    link3 = load(self.Metadata[market].link3[0], chars=link3Length)
-    c = 0
-    while c < link3Length:
-        metadata[index + c] = getch(link3, c)
+    while c < linksLength:
+        metadata[index + c] = getch(links, c)
         c += 1
     return(metadata:arr)

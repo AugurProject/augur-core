@@ -28,13 +28,10 @@ class TestComments(ContractTest):
             "setMetadata": {
                 "market": 0xdeadbeef,
                 "tag1": "testing",
-                "tag2": "meta",
-                "tag3": "data etc",
-                "source": "http://www.this-is-only-a-test.com",
-                "details": "Insert very long description here!",
-                "link1": "http://www.testing.com",
-                "link2": "http://www.google.com",
-                "link3": "http://fail.com"
+                "tag2": "Presidential Election",
+                "tag3": "metadata etc",
+                "source": "http://www.answers.com",
+                "links": "https://api.github.com/gists/3a934aaf7aa54ec9d759debe6a0765b4"
             },
             "getMetadata": {
                 "market": 0xdeadbeef
@@ -48,10 +45,7 @@ class TestComments(ContractTest):
             self.params["setMetadata"]["tag2"],
             self.params["setMetadata"]["tag3"],
             self.params["setMetadata"]["source"],
-            self.params["setMetadata"]["details"],
-            self.params["setMetadata"]["link1"],
-            self.params["setMetadata"]["link2"],
-            self.params["setMetadata"]["link3"]
+            self.params["setMetadata"]["links"]
         )
         assert(retval == 1)
 
@@ -62,10 +56,7 @@ class TestComments(ContractTest):
             self.params["setMetadata"]["tag2"],
             self.params["setMetadata"]["tag3"],
             self.params["setMetadata"]["source"],
-            self.params["setMetadata"]["details"],
-            self.params["setMetadata"]["link1"],
-            self.params["setMetadata"]["link2"],
-            self.params["setMetadata"]["link3"]
+            self.params["setMetadata"]["links"]
         )
         assert(retval == 1)
         metadata = self.contract.getMetadata(self.params["getMetadata"]["market"])
@@ -76,16 +67,10 @@ class TestComments(ContractTest):
         assert(self.params["setMetadata"]["tag2"] == tag2[2:-1].decode("hex"))
         assert(self.params["setMetadata"]["tag3"] == tag3[2:-1].decode("hex"))
         sourceLength = metadata[3]
-        detailsLength = metadata[4]
-        link1Length = metadata[5]
-        link2Length = metadata[6]
-        link3Length = metadata[7]
-        assert(self.params["setMetadata"]["source"] == bin2ascii(metadata[8:8+sourceLength]))
-        assert(self.params["setMetadata"]["details"] == bin2ascii(metadata[8+sourceLength:8+sourceLength+detailsLength]))
-        linkStart = 8 + sourceLength + detailsLength
-        assert(self.params["setMetadata"]["link1"] == bin2ascii(metadata[linkStart:linkStart+link1Length]))
-        assert(self.params["setMetadata"]["link2"] == bin2ascii(metadata[linkStart+link1Length:linkStart+link1Length+link2Length]))
-        assert(self.params["setMetadata"]["link3"] == bin2ascii(metadata[linkStart+link1Length+link2Length:]))
+        linksLength = metadata[4]
+        assert(self.params["setMetadata"]["source"] == bin2ascii(metadata[6:6+sourceLength]))
+        linkStart = 6 + sourceLength
+        assert(self.params["setMetadata"]["links"] == bin2ascii(metadata[linkStart:]))
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestComments)
