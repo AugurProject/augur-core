@@ -54,7 +54,8 @@ def init():
     self.Branches[1010101].minTradingFee = 92233720368547760 
     self.branchListCount = 1
     self.branchList[0] = 1010101
-    self.Branches[1010101].baseReporters = 3
+    # since only have to report on half this targets 3
+    self.Branches[1010101].baseReporters = 2*3
 
 # call once after uploading (externed method not allowed in init)
 def initDefaultBranch():
