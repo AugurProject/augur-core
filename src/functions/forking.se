@@ -108,17 +108,17 @@ def exchangeRate(branch):
     # for testing we'll just rng the exchange rate :)
     return(sha256(branch))
 
-# In the last 24 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back
+# In the last 48 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back
 # bond is 1% of rep
-# todo make it so can only push back in last 24 hr of _second_ period
+# todo make it so can only push back in last 48 hr of _second_ period
 # todo pay back bond poster
 # todo fork over ethicality or outcome
 # round 2 penalize consensus don't pay back reporter b/c bond already returned.. on orig. branch
 def fork(event, branch, forkedOverEthicality):
 	if(!EVENTS.getRoundTwo(event) || EVENTS.getFinal(event) || EVENTS.getForked(event)):
 		return(-1)
-	# if in last 24 hr of period
-	if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 86400)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENT.getForked(event)):
+	# if in last 48 hr of period
+	if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 172800)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENT.getForked(event)):
 		bond = 184467440737095520*REPORTING.getTotalRep(branch)/2**64
 		# lose fork bond in branch 1
 		# results same as roundtwobond, let it resolve as that on original network

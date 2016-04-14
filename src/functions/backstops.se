@@ -46,7 +46,7 @@ def getOriginalVotePeriod(event):
 # Appeal_Bond = Market_Value * (0.01 + Market_Fee / 2) + Average_Adjudication_Cost
     # Average_Adjudication_Cost = Total fees paid to reporters for all markets in this reporting round / number of markets in this reporting round.
         # needs an abs min of like 100 rep.
-# Reporting period is 2 months minus 24 hours.  This 24 hours allows for the appeals to take place before the next reporting round begins.
+# Reporting period is 2 months minus 48 hours.  This 48 hours allows for the appeals to take place before the next reporting round begins.
 def roundTwoPostBond(branch, event, eventIndex, votePeriod):
     refund()
     bond = 100*2**64
@@ -54,7 +54,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
 	    return(0)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     # if so, we're in the final 24 hours and event is in this branch + votePeriod
-    if(!resolving && block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 86400)/BRANCHES.getPeriodLength(branch)) && eventID!=0 && event==eventID && self.roundTwo[event].roundTwo==0 && EVENTS.getForked(event)==0):
+    if(!resolving && block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 172800)/BRANCHES.getPeriodLength(branch)) && eventID!=0 && event==eventID && self.roundTwo[event].roundTwo==0 && EVENTS.getForked(event)==0):
         if(SENDREP.sendReputation(branch, event, bond)==0):
             return(0)
     	period = BRANCHES.getVotePeriod(branch)
