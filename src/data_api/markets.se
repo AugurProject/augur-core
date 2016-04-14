@@ -36,7 +36,7 @@ inset(refund.se)
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen)
 
 def getMakerFees(market):
     return(self.Markets[market].makerFees)
@@ -198,6 +198,11 @@ def getSharesPurchased(market, outcome):
     refund()
     return(self.Markets[market].sharesPurchased[outcome])
 
+def getExtraInfo(market):
+	refund()
+	length=self.Markets[market].extraInfoLen
+	return(load(self.Markets[market].extraInfo[0], chars=length): str)
+
 def getVolume(market):
     refund()
     return(self.Markets[market].volume)
@@ -268,13 +273,15 @@ macro sharesPurchased($marketID):
     market($marketID).sharesPurchased
 
 # check that msg.sender is one of our function contracts
-def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, forkSelection, tag1, tag2, tag3, makerFees, cumScale, numOutcomes):
+def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, forkSelection, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add event list to the market
     save(self.Markets[marketID].events[0], events, items=len(events))
     self.Markets[marketID].lenEvents = len(events)
+    save(self.Markets[marketID].extraInfo[0], extraInfo, chars=len(extraInfo))
+	self.Markets[marketID].extraInfoLen = len(extraInfo)
     self.Markets[marketID].tradingPeriod = tradingPeriod
     self.Markets[marketID].originalPeriod = tradingPeriod
     self.Markets[marketID].tradingFee = tradingFee

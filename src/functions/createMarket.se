@@ -47,7 +47,7 @@ event creationBlock(market:indexed)
     # -9: would expire during non-reporting fork period
 # .05 eth to create
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
-def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, tag3, makerFees):
+def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, tag3, makerFees, extraInfo:str):
     refund()
     if(makerFees<0 or makerFees > 2**63):
         return(0)
@@ -141,8 +141,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         return(-8)
     if(!BRANCHES.getOracleOnly(branch) && CASH.balance(msg.sender) < creationFee):
         return(-4)
-
-    if(INFO.setInfo(marketID, description, tx.origin, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, forkSelection, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes) && CASH.send(branch, creationFee)):
+    if(INFO.setInfo(marketID, description, tx.origin, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, forkSelection, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo) && CASH.send(branch, creationFee)):
         i = 0
         while i < len(events):
             EVENTS.addMarket(events[i], marketID)
@@ -171,6 +170,8 @@ def updateTradingFee(branch, market, tradingFee):
 # In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
 def pushMarketForward(branch, market):
     refund()
+    branchEventIsInForked = 0
+    winningForkDecided = 0
     if(branchEventIsInForked && !winningForkDecided):
         return(0)
     # prevent for backstop 1 markets and vice versa

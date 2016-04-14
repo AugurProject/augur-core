@@ -55,7 +55,7 @@ macro catch($x):
 #4. For first half of the new period, people can do penalization for the last period, for the second half users have to claim rep then trading fees
 #5. If you don't do it for all events or don't penalize for not reporting enough, autolose 20% rep each period one does this (b/c they're trying to cheat)
 # Errors:
-    # -1: pushed back event already resolved, so can't redistribute rep based off of its original expected expiration period
+    # -1: pushed forward event already resolved, so can't redistribute rep based off of its original expected expiration period
     # -2: already past first half of new period and needed to penalize before then
     # -3: need to do not enough reports penalization [or lackthereof]
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized

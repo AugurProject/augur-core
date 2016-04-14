@@ -91,7 +91,8 @@ def getDormantRepByIndex(branch, repIndex):
     return(self.Reporting[branch].dormantRep[repIndex].repValue)
 
 # @return reputation value
-def getDormantRepBalance(branch, address):
+# getDormantRepBalance
+def balanceOf(branch, address):
     refund()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
     if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
