@@ -208,7 +208,6 @@ def submitReportHash(branch, reportHash, votePeriod, eventID, eventIndex):
 	# -8: invalid event
 	# -9: already resolved
 	# -10: <24 hr left in period, too late to report, able to put up readj. bonds though
-# todo don't allow reporting in last 24hr of a period
 def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
 	if(self.branches[branch].hasReported[eventID][tx.origin].reported[votePeriod]==1):
 		return(-1)
@@ -232,8 +231,8 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
 		return(-8)
 	if(EVENTS.getOutcome(eventID)!=0):
 		return(-9)
-	#if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 86400)/BRANCHES.getPeriodLength(branch))):
-	#    return(-10)
+	if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 172800)/BRANCHES.getPeriodLength(branch))):
+	    return(-10)
 	if(!self.upToDateOnRR[msg.sender]):
 		# TODO: calls to consensus functions and in send rep
 		#doIt()
@@ -275,7 +274,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
 				ethics = 2**64
 			if(forkedOverThisEvent):
 				ethics = (EVENTS.getForkEthicality(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
-				EVENTS.setForkEth(eventID, ethics)
+				EVENTS.setForkEthicality(eventID, ethics)
 				self.branches[branch].ethics[votePeriod][tx.origin].event[eventID] = ethics
 			else:
 				ethics = (EVENTS.getEthics(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
