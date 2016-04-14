@@ -275,7 +275,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
 				ethics = 2**64
 			if(forkedOverThisEvent):
 				ethics = (EVENTS.getForkEthicality(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
-				EVENTS.setForkEthicality(eventID, ethics)
+				EVENTS.setForkEth(eventID, ethics)
 				self.branches[branch].ethics[votePeriod][tx.origin].event[eventID] = ethics
 			else:
 				ethics = (EVENTS.getEthics(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)

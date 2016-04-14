@@ -216,12 +216,15 @@ def setOutcome(ID, outcome):
 #In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold.
 def setReportingThreshold(event):
 	refund()
-	# first check is if event expDate is in the current vote period and second is if blockNum is near expiration of voting period (within 7200 blocks or 24 hr.)
-	# final check is if < 25 reports so far
+	# first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 7200 blocks or 24 hr.)
+	# final check is if < 3 reports so far
+	# residual < periodLength/2
 	# (block.timestamp+86400) / BRANCHES.getPeriodLength(branch) -1 is what we're reporting on in 24 hr
 	# vote period + 1 is the next vote period
 	# so if in 24 hr we'd be in the next vote period, we're within 24 hr of the end of this one
-	if(BRANCHES.getVotePeriod(self.Events[event].branch)==self.Events[event].expirationDate/BRANCHES.getPeriodLength(self.Events[event].branch) and (((block.timestamp + 86400) / BRANCHES.getPeriodLength(branch)) - 1)==(BRANCHES.getVotePeriod(self.Events[event].branch)+1) and self.Events[event].numReports<25):
+	periodLength = BRANCHES.getPeriodLength(branch)
+	residual = block.timestamp % periodLength
+	if(BRANCHES.getVotePeriod(self.Events[event].branch)==self.Events[event].expirationDate/BRANCHES.getPeriodLength(self.Events[event].branch) and (((block.timestamp + 86400) / BRANCHES.getPeriodLength(branch)) - 1)==(BRANCHES.getVotePeriod(self.Events[event].branch)+1) and self.Events[event].numReports<3):
 		self.Events[event].threshold = 2**192
 		return(1)
 	else:

@@ -142,15 +142,12 @@ def setReportHash(branch, expDateIndex, reporter, reportHash, event):
 	self.EventsExpDates[branch][expDateIndex].reportHash[reporter][event] = reportHash
 	return(1)
 
-def moveEventsToCurrentPeriod(branch, currentVotePeriod, currentPeriod):
-    refund()
-    #if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
-    x = 0
-    while(x < self.EventsExpDates[branch][currentVotePeriod-1].numberEvents):
-        self.EventsExpDates[branch][currentPeriod].events[self.EventsExpDates[branch][currentPeriod].numberEvents] = self.EventsExpDates[branch][currentVotePeriod-1].events[x]
-        self.EventIDToIndex[currentPeriod][self.EventsExpDates[branch][currentVotePeriod-1].events[x]] = self.EventsExpDates[branch][futurePeriod].numberEvents
-        self.EventsExpDates[branch][currentPeriod].numberEvents += 1
-        # sub and set old period event to 0 poss.?
-        x += 1
-    return(1)
+# called in case an event doesn't get reported on at all in a period
+def moveEvent(branch, event):
+	if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch) && !EVENTS.getUncaughtOutcome(event)):
+		# add to next expiration period	
+		self.addEvent(branch, block.timestamp/BRANCHES.getPeriodLength(branch), event)
+        EVENTS.setExpiration(event, block.timestamp)
+		return(1)
+	else:
+		return(0)

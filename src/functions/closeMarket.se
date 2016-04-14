@@ -65,7 +65,7 @@ macro ethic_catch($x):
 # @return 0 if fail/trading not over yet/event not expired or closed already, if success 1
 # Error messages otherwise
     # -1: Market has no cash anyway / already closed
-    # -2: 0 outcome
+    # -2: 0 outcome / not reported on yet
     # -3: not final round 2 event
     # -4: Outcome .5 once, pushback and retry
     # -5: Event forked and not final yet
