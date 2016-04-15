@@ -36,10 +36,13 @@ inset(refund.se)
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue)
 
 def getMakerFees(market):
     return(self.Markets[market].makerFees)
+
+def getSharesValue(market):
+    return(self.Markets[market].sharesValue)
 
 def returnTags(market):
     tags = array(3)
@@ -310,6 +313,10 @@ def modifyShares(marketID, outcome, amount):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     sharesPurchased(marketID)[outcome] += amount
+    return(1)
+    
+def modifySharesValue(marketID, amount):
+    self.Markets[marketID].sharesValue += amount
     return(1)
 
 def modifyParticipantShares(branch, marketID, participantNumber, outcome, amount):

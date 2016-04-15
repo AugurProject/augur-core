@@ -157,8 +157,6 @@ def buy(amount, price, market, outcome):
         return(-30)
     if(amount <= 0 or price <= 0 or market==0):
         return(-1)
-    if(!MARKETS.scheduleSet(market)):
-        return(0)
     branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
@@ -231,8 +229,6 @@ def short_sell(buyer_trade_id, max_amount):
     if(type!=BID):
         return(0)
     market_id = trade[2]
-    if(!MARKETS.scheduleSet(market_id)):
-        return(0)
     creator = INFO.getCreator(market_id)
     if(msg.sender == creator || tx.origin == creator):
         return(-30)
@@ -284,8 +280,7 @@ def short_sell(buyer_trade_id, max_amount):
             n = numEvents
         else:
           n += 1
-    ### TODO: check for .99 market here
-    if ((BRANCHES.getVotePeriod(MARKETS.getBranchID(market))>MARKETS.getTradingPeriod(market) && !pushedBack) || !MARKETS.scheduleSet(market)):
+    if((BRANCHES.getVotePeriod(MARKETS.getBranchID(market))>MARKETS.getTradingPeriod(market) && !pushedBack)):
         return(-1)   
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
     # if participant doesn't exist in market, add them
@@ -381,8 +376,6 @@ def trade(max_value, max_amount, trade_ids:arr):
         # Get market
         type = trade[1]
         market_id = trade[2]
-        if(!MARKETS.scheduleSet(market_id)):
-            return(0)
         creator = INFO.getCreator(market_id)
         if(msg.sender == creator || tx.origin == creator):
             return(-30)
@@ -514,20 +507,7 @@ def buyCompleteSets(branch, market, amount):
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumScale = MARKETS.getCumScale(market)
     n = 0
-    #if event gets pushed back people can still buy / sell
-    pushedBack = 0
-    while n < numEvents:
-        #if(EVENTS.getPushedBack(events[n])==0):
-        if(1):
-            n += 1
-        # pushed back and not resolved
-        elif(EVENTS.getOutcome(events[n])==0):
-            pushedBack = 1
-            n = numEvents
-        else:
-          n += 1
-    ### TODO: check for .99 market here
-    if ((BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market) && !pushedBack) || MARKETS.getBranchID(market) != branch || !MARKETS.scheduleSet(market)):
+    if(MARKETS.getBranchID(market) != branch):
         return(-1)
     price = amount*cumScale/2**64
     if(CASH.balance(tx.origin) < price):
@@ -544,6 +524,9 @@ def buyCompleteSets(branch, market, amount):
         MARKETS.modifyShares(market, i, amount)
         MARKETS.modifyParticipantShares(branch, market, participantNumber, i, amount)
         i += 1
+    if(BRANCHES.getVotePeriod(branch)<MARKETS.getTradingPeriod(market)):
+        MARKETS.modifySharesValue(market, amount*cumScale/2**64)
+        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount*cumScale/2**64)
     # send money from user acc. to market address/account
     # cost for shares
     CASH.send(market, price)
@@ -558,26 +541,12 @@ def sellCompleteSets(branch, market, amount):
         return(-30)
     if(BRANCHES.getOracleOnly(branch)):
         return(-6)
-    # can trade up until the event has started to be voted on (e.g. currentVotePeriod is >= to the latest expDate/periodLength)
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
     numEvents = MARKETS.getNumEvents(market)
     events = MARKETS.getMarketEvents(market, outitems=numEvents)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumScale = MARKETS.getCumScale(market)
-    n = 0
-    #if event gets pushed back people can still buy / sell
-    pushedBack = 0
-    while n < numEvents:
-        #if(EVENTS.getPushedBack(events[n])==0):
-        if(1):
-            n += 1
-        # pushed back and not resolved
-        elif(EVENTS.getOutcome(events[n])==0):
-            pushedBack = 1
-            n = numEvents
-        else:
-          n += 1
-    if (MARKETS.getParticipantID(market, participantNumber) != tx.origin || (BRANCHES.getVotePeriod(branch)>MARKETS.getTradingPeriod(market) && !pushedBack) || MARKETS.getBranchID(market) != branch):
+    if(MARKETS.getParticipantID(market, participantNumber) != tx.origin || MARKETS.getBranchID(market) != branch):
         return(-1)
 
     # these prices are in fixed point
@@ -595,7 +564,9 @@ def sellCompleteSets(branch, market, amount):
         MARKETS.modifyShares(market, i, -amount)
         MARKETS.modifyParticipantShares(branch, market, participantNumber, i, -amount)
         i += 1
-    
+    if(BRANCHES.getVotePeriod(branch)<MARKETS.getTradingPeriod(market)):
+        MARKETS.modifySharesValue(market, -amount*cumScale/2**64)
+        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), -amount*cumScale/2**64)
     # send bitcoin from the market to the user acc.
     CASH.subtractCash(market, price)
     CASH.addCash(tx.origin, price)

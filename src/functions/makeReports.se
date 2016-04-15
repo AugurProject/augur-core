@@ -308,20 +308,22 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
 		numMarkets = 100
 	markets = array(numMarkets)
 	markets = EVENTS.getMarkets(eventID, outitems=numMarkets)
-	volume = 0
+	shareValue = 0
 	i = 0
 	while i < numMarkets:
-		# may be best to store vol here
-		volume += MARKETS.getVolume(markets[i])
+		# todo convert to value in w/e currency once we add subcurrencies
+		shareValue += MARKETS.getSharesValue(market)
 		i += 1
-	totalVol = EXPEVENTS.getPeriodVolume(branch, votePeriod)
+	totalVal = EXPEVENTS.getShareValue(branch, votePeriod)
 	# if odds of reporting are >1, then 2**256 (we don't want to wrap around), so div by 2**64
 	logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getActiveRep(branch))
 	repConstant = FXP.fx_exp(22136092888451461120*logOutput/2**64)
 	repConstant += 18446744073709552
-	volFraction = 0
-	if(totalVol!=0):
-		volFraction = volume*2**64/totalVol
+	shareFraction = 0
+	if(totalVal!=0):
+		volFraction = shareValue*2**64/totalVal
+	if(volFraction>2**64):
+		volFraction = 2**64
 	expectedEvents = repConstant * EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
 	numEventsAfterMinAccounting = self.getNumEventsToReport(branch, votePeriod) - self.numReqEvents[branch][votePeriod]*2**64
 	ratio = numEventsAfterMinAccounting * 2**64 / expectedEvents

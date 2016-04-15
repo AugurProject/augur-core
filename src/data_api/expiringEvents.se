@@ -26,7 +26,7 @@ inset(refund.se)
 
 # [branchID][votingPeriod]
 # reporthash is [reporterID] = hash
-data EventsExpDates[][](numberEvents, numberRemoved, events[], totalRepReported, numEventsToReportOn, reportHash[][], periodVolume, roundTwoNumEvents)
+data EventsExpDates[][](numberEvents, numberRemoved, events[], totalRepReported, numEventsToReportOn, reportHash[][], shareValue, roundTwoNumEvents)
 
 data EventIDToIndex[][]
 
@@ -85,9 +85,9 @@ def getNumEventsToReportOn(branch, expDateIndex):
 	refund()
 	return(self.EventsExpDates[branch][expDateIndex].numEventsToReportOn)
 
-def getPeriodVolume(branch, expIndex):
+def getShareValue(branch, expIndex):
 	refund()
-	return(self.EventsExpDates[branch][expIndex].periodVolume)
+	return(self.EventsExpDates[branch][expIndex].shareV)
 
 def getNumberEvents(branch, expDateIndex):
 	refund()
@@ -131,9 +131,9 @@ def setTotalRepReported(branch, expDateIndex, repReported):
 	self.EventsExpDates[branch][expDateIndex].totalRepReported = repReported
 	return(1)
 
-def addPeriodVolume(branch, expIndex, volume):
+def adjustPeriodShareValueOutstanding(branch, expIndex, amount):
 	refund()
-	self.EventsExpDates[branch][expIndex].periodVolume += volume
+	self.EventsExpDates[branch][expIndex].shareValue += amount
 	return(1)
 
 def setReportHash(branch, expDateIndex, reporter, reportHash, event):
