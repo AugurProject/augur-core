@@ -30,7 +30,7 @@ inset(refund.se)
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
-data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), fork)
+data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), activeRep, fork)
 
 data whitelists[](addresses[], taken)
 
@@ -43,11 +43,19 @@ def init():
     self.Reporting[1010101].reputation[1].repValue = 0
     self.Reporting[1010101].reputation[1].reporterID = 1010101
     self.Reporting[1010101].totalRep += 47*2^64
+    self.Reporting[branch].activeRep = 47*2^64
 
 def checkWhitelist(address):
     refund()
     return(self.whitelists[msg.sender].addresses[address])
+
+def getActiveRep(branch):
+    return(self.Reporting[branch].activeRep)
     
+def adjustActiveRep(branch, amount):
+    self.Reporting[branch].activeRep += amount
+    return(1)
+
 def setFork(branch):
     self.Reporting[branch].fork = 1
     return(1)

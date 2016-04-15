@@ -316,7 +316,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
 		i += 1
 	totalVol = EXPEVENTS.getPeriodVolume(branch, votePeriod)
 	# if odds of reporting are >1, then 2**256 (we don't want to wrap around), so div by 2**64
-	logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch))
+	logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getActiveRep(branch))
 	repConstant = FXP.fx_exp(22136092888451461120*logOutput/2**64)
 	repConstant += 18446744073709552
 	volFraction = 0
@@ -336,7 +336,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
 # returns num events to report on in fxp
 def getNumEventsToReport(branch, votePeriod):
 	prelim = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
-	repConstant = REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch)
+	repConstant = REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getActiveRep(branch)
 	logOutput = FXP.fx_log(repConstant)
 	exp = FXP.fx_exp(22136092888451461120*logOutput/2**64)
 	exp += 18446744073709552
@@ -346,33 +346,6 @@ def getNumEventsToReport(branch, votePeriod):
 	if(total/2**64 < minimum):
 		total = minimum*2**64
 	return(total)
-
-def needsReportingOn(event):
-	# This only works for categorical and binary markets, not scalar
-	if((EVENTS.getMaxValue(event) != 2**65 || EVENTS.getMinValue(event) != 2**64) and EVENTS.getNumOutcomes(event) == 2):
-		return(1)
-	# To determine whether a market needs to be resolved or not, the events can only have one market associated with them or all markets associated with the event fulfill the .99 qualification.
-	numMarkets = EVENTS.getNumMarkets(event)
-	markets = array(numMarkets)
-	markets = EVENTS.getMarkets(event, outitems=numMarkets)
-	if(numMarkets>100):
-		return(1)
-	i = 0
-	# todo optimize perf. here
-	while i < numMarkets:
-		numOutcomes = MARKETS.getMarketNumOutcomes(markets[i])
-		n = 1
-		ninetynine = 0
-		while n <= numOutcomes:
-			if(MARKETS.lmsr_price(markets[i], n) > 18262276632972456099):
-				ninetynine = 1
-				n = numOutcomes+1
-			n += 1
-		if(ninetynine == 0):
-			return(1)
-		i += 1
-	# doesn't need reporting on, meets the .99 qualification
-	return(-1)
 
 def validateReport(eventID, branch, votePeriod, report):
 	# todo in case of fork remove the original outcome as a possible response

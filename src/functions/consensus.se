@@ -337,7 +337,7 @@ def penalizeNotEnoughReports(branch):
     if(residual > periodLength/2):
         return(-2)
     numEvents = MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
-    repConstant = REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getTotalRep(branch)
+    repConstant = REPORTING.getRepBalance(branch, tx.origin)*2**64/REPORTING.getActiveRep(branch)
     logOutput = FXP.fx_log(repConstant)
     exp = FXP.fx_exp(22136092888451461120*logOutput/2**64)
     exp += 18446744073709552
