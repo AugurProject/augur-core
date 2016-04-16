@@ -1,4 +1,4 @@
-inset(refund.se)
+inset('refund.se')
 
 # reporter
 data tradeCommits[](hash, block)

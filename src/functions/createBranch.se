@@ -24,7 +24,7 @@ import expiringEvents as EXPEVENTS
 import info as INFO
 import cash as CASH
 import reporting as REPORTING
-inset(refund.se)
+inset('refund.se')
 
 # period length is given in blocks
 # @return branchID if success
@@ -53,7 +53,7 @@ def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnl
     branchID = sha256(branchInfo, chars=len(branchInfo))
     currentVotePeriod = (block.timestamp / periodLength) - 1
     if(INFO.getCreator(branchID)==0):
-        BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee, oracleOnly, parentPeriod)
+        BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee, oracleOnly, parentPeriod, parent)
     else:
         return(-2)
     if(INFO.getCreator(parent) && CASH.send(parent, 47*2^64) && INFO.setInfo(branchID, description, tx.origin, 47*2^64) && REPORTING.setInitialReporters(parent, branchID)):

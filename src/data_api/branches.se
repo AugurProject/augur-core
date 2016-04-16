@@ -34,11 +34,11 @@ import cash as CASH
 # How to set minimum reporting fee guidelines for reporters, abs. minimum should be calc. as follows:
     #Volume per period * .5 * fee * ev/ebit * 6 >= rep market cap
     #Say ev/ebit or valuation is 15, so:
-	#45 * fee * volume per period = rep market cap
+    #45 * fee * volume per period = rep market cap
 
-	#Want:
-		#Rep market cap >> outstanding shares value at all times
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver)
+    #Want:
+        #Rep market cap >> outstanding shares value at all times
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent)
 
 # first param is the branch, second param is the subcurrency contract
 data cash[][]
@@ -59,46 +59,46 @@ def init():
 
 # call once after uploading (externed method not allowed in init)
 def initDefaultBranch():
-	refund()
+    refund()
     return(CASH.initiateOwner(1010101))
 
 def getEventForkedOver(branch):
-	return(self.Branches[branch].eventForkedOver)
+    return(self.Branches[branch].eventForkedOver)
 
 def setEventForkedOver(branch, event):
-	self.Branches[branch].eventForkedOver = event
-	return(1)
+    self.Branches[branch].eventForkedOver = event
+    return(1)
 
 def getBaseReporters(branch):
-	refund()
-	return(self.Branches[branch].baseReporters)
-	
+    refund()
+    return(self.Branches[branch].baseReporters)
+    
 def setBaseReporters(branch, num):
-	refund()
-	self.Branches[branch].baseReporters = num
-	return(1)
+    refund()
+    self.Branches[branch].baseReporters = num
+    return(1)
 
 def getOracleOnly(branch):
-	refund()
-	return(self.Branches[branch].oracleOnly)
+    refund()
+    return(self.Branches[branch].oracleOnly)
 
 def getVotePeriod(branch):
-	refund()
-	return(self.Branches[branch].currentVotePeriod)
+    refund()
+    return(self.Branches[branch].currentVotePeriod)
 
 def getPeriodLength(branch):
-	refund()
-	return(self.Branches[branch].periodLength)
+    refund()
+    return(self.Branches[branch].periodLength)
 
 # branch cash balance at start of period
 def setInitialBalance(branch, period, balance):
-	refund()
-	self.Branches[branch].balance[period] = balance
-	return(balance)
+    refund()
+    self.Branches[branch].balance[period] = balance
+    return(balance)
 
 def getInitialBalance(branch, period):
-	refund()
-	return(self.Branches[branch].balance[period])
+    refund()
+    return(self.Branches[branch].balance[period])
 
 # @return all markets in a branch
 def getMarketsInBranch(branch):
@@ -111,6 +111,10 @@ def getMarketsInBranch(branch):
         i += 1
     return(markets: arr)
    
+   
+def getParent(branch):
+    return(self.Branches[branch].parent)
+
 # @return all markets in a branch
 def getSomeMarketsInBranch(branch, initial, last):
     refund()
@@ -123,16 +127,16 @@ def getSomeMarketsInBranch(branch, initial, last):
     return(markets: arr)
 
 def getNumMarketsBranch(branch):
-	refund()
-	return(self.Branches[branch].numMarkets)
+    refund()
+    return(self.Branches[branch].numMarkets)
 
 def getMinTradingFee(branch):
-	refund()
-	return(self.Branches[branch].minTradingFee)
+    refund()
+    return(self.Branches[branch].minTradingFee)
 
 # @return all branches
 def getBranches():
-	refund()
+    refund()
     b = 0
     numBranches = self.branchListCount
     branches = array(numBranches)
@@ -142,60 +146,61 @@ def getBranches():
     return(branches: arr)
 
 def getNumBranches():
-	refund()
-	return(self.branchListCount)
+    refund()
+    return(self.branchListCount)
 
-def getBranch(branchNumber):
-	refund()
-	return(self.branchList[branchNumber])
+def getBranchByNum(branchNumber):
+    refund()
+    return(self.branchList[branchNumber])
 
 def getCreationDate(ID):
-	refund()
-	return(self.Branches[ID].creationDate)
+    refund()
+    return(self.Branches[ID].creationDate)
 
 # check that msg.sender is one of our function contracts
-def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleOnly, parentPeriod):
-	#if(!self.whitelist.check(msg.sender)):
-	#	return(-1)
-	refund()
-	if(self.Branches[ID].periodLength==0):
-		self.Branches[ID].currentVotePeriod = currentVotePeriod
-		self.Branches[ID].periodLength = periodLength
-		self.Branches[ID].minTradingFee = minTradingFee
-		self.branchList[self.branchListCount] = ID
-		self.branchListCount += 1
-		self.Branches[ID].creationDate = block.timestamp
-		self.Branches[ID].parentPeriod = parentPeriod
-		self.Branches[ID].oracleOnly = oracleOnly
-		CASH.initiateOwner(ID)
-		return(1)
-	else:
-		return(0)
+def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleOnly, parentPeriod, parent):
+    #if(!self.whitelist.check(msg.sender)):
+    #	return(-1)
+    refund()
+    if(self.Branches[ID].periodLength==0):
+        self.Branches[ID].currentVotePeriod = currentVotePeriod
+        self.Branches[ID].periodLength = periodLength
+        self.Branches[ID].minTradingFee = minTradingFee
+        self.branchList[self.branchListCount] = ID
+        self.branchListCount += 1
+        self.Branches[ID].creationDate = block.timestamp
+        self.Branches[ID].parentPeriod = parentPeriod
+        self.Branches[ID].oracleOnly = oracleOnly
+        self.Branches[ID].parent = parent
+        CASH.initiateOwner(ID)
+        return(1)
+    else:
+        return(0)
 
 def getParentPeriod(branch):
     refund()
     return(self.Branches[branch].parentPeriod)
 
 def incrementPeriod(branch):
-	#if(!self.whitelist.check(msg.sender)):
-	#	return(-1)
-	refund()
-	self.Branches[branch].currentVotePeriod += 1
-	return(1)
+    #if(!self.whitelist.check(msg.sender)):
+    #	return(-1)
+    refund()
+    self.Branches[branch].currentVotePeriod += 1
+    return(1)
 
 # check that msg.sender is one of our function contracts
 def addMarketToBranch(branch, market):
-	#if(!self.whitelist.check(msg.sender)):
-	#	return(-1)
-	refund()
-	numMarkets = self.Branches[branch].numMarkets
-	self.Branches[branch].markets[numMarkets] = market
-	self.Branches[branch].numMarkets += 1
-	return(1)
-	
+    #if(!self.whitelist.check(msg.sender)):
+    #	return(-1)
+    refund()
+    numMarkets = self.Branches[branch].numMarkets
+    self.Branches[branch].markets[numMarkets] = market
+    self.Branches[branch].numMarkets += 1
+    return(1)
+    
 def setForkPeriod(branch):
-	self.Branches[branch].forkPeriod = self.Branches[branch].currentVotePeriod
-	return(1)
-	
+    self.Branches[branch].forkPeriod = self.Branches[branch].currentVotePeriod
+    return(1)
+    
 def getForkPeriod(branch):
-	return(self.Branches[branch].forkPeriod)
+    return(self.Branches[branch].forkPeriod)

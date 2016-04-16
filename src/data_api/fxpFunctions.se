@@ -1,4 +1,4 @@
-inset(refund.se)
+inset('refund.se')
 
 macro fx_floor_log2($x):
     with $y = $x / 0x10000000000000000:
@@ -101,11 +101,11 @@ macro fx_exp($x):
 
 def fx_exp(x):
     refund()
-	return(fx_exp(x))
+    return(fx_exp(x))
 
 def fx_log(x):
     refund()
-	return(fx_log(x))
+    return(fx_log(x))
 
 def sqrt(n):
     refund()

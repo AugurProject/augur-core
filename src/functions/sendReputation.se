@@ -25,10 +25,10 @@ import cash as CASH
 import reporting as REPORTING
 import makeReports as REPORTS
 import consensus as CONSENSUS
-inset(refund.se)
+inset('refund.se')
 
 # sender/owner, then spender
-self.amountCanSpend[][]
+data amountCanSpend[][]
 
 event Transfer(_from:indexed, _to:indexed, _value)
 event Approval(_owner:indexed, _spender:indexed, value)
@@ -101,7 +101,7 @@ def transfer(branch, recver, value):
     if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
         return(-2)
 
-    senderBalance = REPORTING.getDormantRepBalance(branch, sender)
+    senderBalance = REPORTING.balanceOf(branch, sender)
     if(senderBalance >= value && value > 0):
         if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, receiverIndex, value)):
             log(type=Transfer, msg.sender, recver, value)
@@ -132,7 +132,7 @@ def transferFrom(branch, from, recver, value):
     if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
         return(-2)
 
-    senderBalance = REPORTING.getDormantRepBalance(branch, sender)
+    senderBalance = REPORTING.balanceOf(branch, sender)
     if(senderBalance >= value && value > 0 && self.amountCanSpend[from][msg.sender]>=value):
         if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, receiverIndex, value)):
             self.amountCanSpend[from][msg.sender] -= value
@@ -221,7 +221,7 @@ def convertToActiveRep(branch, value):
         CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
         return(-1)
 
-    senderBalance = REPORTING.getDormantRepBalance(branch, sender)
+    senderBalance = REPORTING.balanceOf(branch, sender)
     if(senderBalance >= value):
         if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addRep(branch, senderIndex, value)):
             REPORTING.adjustActiveRep(branch, value)

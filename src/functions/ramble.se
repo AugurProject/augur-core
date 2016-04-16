@@ -1,4 +1,4 @@
-inset(refund.se)
+inset('refund.se')
 
 event comment(market: indexed, ipfsHash)
 event metadata(market: indexed, ipfsHash)

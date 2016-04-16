@@ -26,7 +26,7 @@ import reporting as REPORTING
 import cash as CASH
 import consensus as CONSENSUS
 import branches as BRANCHES
-inset(refund.s)
+inset('refund.se')
 
 # Error -1: Hey, you're not broke!
 def cashFaucet():

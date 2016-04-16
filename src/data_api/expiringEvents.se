@@ -22,7 +22,7 @@
 import branches as BRANCHES
 import events as EVENTS
 import cash as CASH
-inset(refund.se)
+inset('refund.se')
 
 # [branchID][votingPeriod]
 # reporthash is [reporterID] = hash
@@ -30,14 +30,14 @@ data EventsExpDates[][](numberEvents, numberRemoved, events[], totalRepReported,
 
 data EventIDToIndex[][]
 
-def getRoundTwo(branch, period):
-	refund()
-	return(self.EventsExpDates[branch][period].roundTwoNumEvents)
-	
+def getNumRoundTwo(branch, period):
+    refund()
+    return(self.EventsExpDates[branch][period].roundTwoNumEvents)
+    
 def addRoundTwo(branch, period):
-	refund()
-	self.EventsExpDates[branch][period].roundTwoNumEvents += 1
-	return(1)
+    refund()
+    self.EventsExpDates[branch][period].roundTwoNumEvents += 1
+    return(1)
 
 # With this function you can get the eventIDs and report on outcomes
 # @return all events in a branch and expiration period
@@ -52,103 +52,103 @@ def getEvents(branch, expDateIndex):
     return(events: arr)
     
 def getEventsRange(branch, expDateIndex, start, end):
-	refund()
-	numEvents = end-start
-	events = array(numEvents)
-	i = start
-	index = 0
-	while i < end:
-		events[index] = self.EventsExpDates[branch][expDateIndex].events[i]
-		index += 1
-		i ++ 1
-	return(events: arr)
+    refund()
+    numEvents = end-start
+    events = array(numEvents)
+    i = start
+    index = 0
+    while i < end:
+        events[index] = self.EventsExpDates[branch][expDateIndex].events[i]
+        index += 1
+        i += 1
+    return(events: arr)
     
 def getEventIndex(period, eventID):
-	refund()
-	return(self.EventIDToIndex[period][eventID])
+    refund()
+    return(self.EventIDToIndex[period][eventID])
 
 # we should probably make this bonded too
 # -1: voting not started
 def setNumEventsToReportOn(branch, expDateIndex):
-	refund()
-	# after voting has started
-	if(expDateIndex==BRANCHES.getVotePeriod(branch)):
-		# todo fix circular dependency
-		numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents - MAKEREPORTS.getNumRequired(branch, expDateIndex)
-		numberToReportOnEstimate = (numEvents-self.EventsExpDates[branch][expDateIndex].numberRemoved)*BRANCHES.getBaseReporters(branch)
-		self.EventsExpDates[branch][expDateIndex].numEventsToReportOn = numberToReportOnEstimate
-		return(1)
-	else:
-		return(-1)
+    refund()
+    # after voting has started
+    if(expDateIndex==BRANCHES.getVotePeriod(branch)):
+        # todo fix circular dependency
+        numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents - MAKEREPORTS.getNumRequired(branch, expDateIndex)
+        numberToReportOnEstimate = (numEvents-self.EventsExpDates[branch][expDateIndex].numberRemoved)*BRANCHES.getBaseReporters(branch)
+        self.EventsExpDates[branch][expDateIndex].numEventsToReportOn = numberToReportOnEstimate
+        return(1)
+    else:
+        return(-1)
 
 def getNumEventsToReportOn(branch, expDateIndex):
-	refund()
-	return(self.EventsExpDates[branch][expDateIndex].numEventsToReportOn)
+    refund()
+    return(self.EventsExpDates[branch][expDateIndex].numEventsToReportOn)
 
 def getShareValue(branch, expIndex):
-	refund()
-	return(self.EventsExpDates[branch][expIndex].shareV)
+    refund()
+    return(self.EventsExpDates[branch][expIndex].shareValue)
 
 def getNumberEvents(branch, expDateIndex):
-	refund()
-	return(self.EventsExpDates[branch][expDateIndex].numberEvents)
+    refund()
+    return(self.EventsExpDates[branch][expDateIndex].numberEvents)
 
 def getEvent(branch, expDateIndex, eventIndex):
-	refund()
-	return(self.EventsExpDates[branch][expDateIndex].events[eventIndex])
+    refund()
+    return(self.EventsExpDates[branch][expDateIndex].events[eventIndex])
 
 def getTotalRepReported(branch, expDateIndex):
-	refund()
-	return(self.EventsExpDates[branch][expDateIndex].totalRepReported)
+    refund()
+    return(self.EventsExpDates[branch][expDateIndex].totalRepReported)
 
 def getReportHash(branch, expDateIndex, reporter, event):
-	refund()
-	return(self.EventsExpDates[branch][expDateIndex].reportHash[reporter][event])
+    refund()
+    return(self.EventsExpDates[branch][expDateIndex].reportHash[reporter][event])
 
 # check that msg.sender is one of our function contracts
 def addEvent(branch, futurePeriod, eventID):
-	refund()
-	#if(!self.whitelist.check(msg.sender)):
-	#	return(-1)
-	self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
-	self.EventIDToIndex[futurePeriod][eventID] = self.EventsExpDates[branch][futurePeriod].numberEvents
-	self.EventsExpDates[branch][futurePeriod].numberEvents += 1
-	return(1)
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #	return(-1)
+    self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
+    self.EventIDToIndex[futurePeriod][eventID] = self.EventsExpDates[branch][futurePeriod].numberEvents
+    self.EventsExpDates[branch][futurePeriod].numberEvents += 1
+    return(1)
 
 def removeEvent(branch, period):
-	refund()
-	self.EventsExpDates[branch][period].numberRemoved += 1
-	return(1)
+    refund()
+    self.EventsExpDates[branch][period].numberRemoved += 1
+    return(1)
 
 def getNumRemoved(branch, period):
-	refund()
-	return(self.EventsExpDates[branch][period].numberRemoved)
+    refund()
+    return(self.EventsExpDates[branch][period].numberRemoved)
 
 def setTotalRepReported(branch, expDateIndex, repReported):
-	refund()
-	#if(!self.whitelist.check(msg.sender)):
-	#	return(-1)
-	self.EventsExpDates[branch][expDateIndex].totalRepReported = repReported
-	return(1)
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #	return(-1)
+    self.EventsExpDates[branch][expDateIndex].totalRepReported = repReported
+    return(1)
 
 def adjustPeriodShareValueOutstanding(branch, expIndex, amount):
-	refund()
-	self.EventsExpDates[branch][expIndex].shareValue += amount
-	return(1)
+    refund()
+    self.EventsExpDates[branch][expIndex].shareValue += amount
+    return(1)
 
 def setReportHash(branch, expDateIndex, reporter, reportHash, event):
-	refund()
-	#if(!self.whitelist.check(msg.sender)):
-	#	return(-1)
-	self.EventsExpDates[branch][expDateIndex].reportHash[reporter][event] = reportHash
-	return(1)
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #	return(-1)
+    self.EventsExpDates[branch][expDateIndex].reportHash[reporter][event] = reportHash
+    return(1)
 
 # called in case an event doesn't get reported on at all in a period
 def moveEvent(branch, event):
-	if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch) && !EVENTS.getUncaughtOutcome(event)):
-		# add to next expiration period
-		self.addEvent(branch, block.timestamp/BRANCHES.getPeriodLength(branch), event)
+    if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch) && !EVENTS.getUncaughtOutcome(event)):
+        # add to next expiration period
+        self.addEvent(branch, block.timestamp/BRANCHES.getPeriodLength(branch), event)
         EVENTS.setExpiration(event, block.timestamp)
-		return(1)
-	else:
-		return(0)
+        return(1)
+    else:
+        return(0)

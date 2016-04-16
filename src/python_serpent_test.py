@@ -150,7 +150,7 @@ def test_reporting():
     assert(c.getRepBalance(1010101, 777) == 5*2**64), "Get rep broken upon set rep"
     c.addDormantRep(1010101, 2, 5)
     c.subtractDormantRep(1010101, 2, 2)
-    assert(c.getDormantRepBalance(1010101, 777)==3), "Dormant rep balance broken"
+    assert(c.balanceOf(1010101, 777)==3), "Dormant rep balance broken"
     assert(c.getDormantRepByIndex(1010101, 2)==3), "Dormant rep by index broken"
     gas_use(s)
     c.setSaleDistribution([4,44,444,4444,44444], [0, 1, 2, 3, 4], 1010101)
@@ -641,7 +641,7 @@ def test_send_rep():
     assert(c.sendDormantRep(1010101, s.block.coinbase, 444)==0), "Send dormant rep user didn't have check failure"
     assert(c.sendDormantRep(1010101, s.block.coinbase, 10)==10), "Send dormant rep user failure"
     assert(c.sendDormantRep(1010101, 999, 10)==-2), "Send dormant rep to nonexistant receiver check failure"
-    assert(c.getDormantRepBalance(1010101, s.block.coinbase)==44), "Dormant rep balance off"
+    assert(c.balanceOf(1010101, s.block.coinbase)==44), "Dormant rep balance off"
     assert(c.getRepBalance(1010101, s.block.coinbase)==866996971464348925464), "Rep balance off"
     print "Test send rep OK"
 
@@ -958,6 +958,7 @@ def gas_use(s):
 
 if __name__ == '__main__':
     src = os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace', 'src')
+    os.system('rm functions/output.se')
     os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
     # data/api tests
     #test_cash()

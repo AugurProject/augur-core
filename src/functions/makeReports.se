@@ -27,7 +27,7 @@ import events as EVENTS
 import markets as MARKETS
 import reporting as REPORTING
 import fxpFunctions as FXP
-inset(refund.se)
+inset('refund.se')
 
 # branches: votePeriod, reporterID (for both num hash submitted and num actual reports submitted) --- votePeriod, EventID --- eventID
 data branches[](submittedHash[][], numReportsActual[][], hasReported[][](reported[]), beforeRep[][], afterRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], reportedPeriod[][], firstReport[], periodDormantRep[][])
@@ -286,7 +286,7 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
 			if(!self.branches[branch].reportedPeriod[votePeriod][tx.origin]):
 				repReported = EXPEVENTS.getTotalRepReported(branch)
 				balance = REPORTING.getRepBalance(branch, tx.origin)
-				dormantRep = REPORTING.getDormantRepBalance(branch, tx.origin)
+				dormantRep = REPORTING.balanceOf(branch, tx.origin)
 				repReported += balance
 				EXPEVENTS.setTotalRepReported(branch, votePeriod, repReported)
 				#Record rep at start of report period
@@ -365,8 +365,8 @@ def validateReport(eventID, branch, votePeriod, report):
 		# todo weight by rep if round 2 and fork
 		# outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
 		if(forkedOverThisEvent):
-			outcome = (EVENTS.getForkedOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
-			EVENTS.setForkedOutcome(eventID, outcome)
+			outcome = (EVENTS.getForkOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
+			EVENTS.setForkOutcome(eventID, outcome)
 		else:
 			outcome = (EVENTS.getUncaughtOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
 			EVENTS.setUncaughtOutcome(eventID, outcome)
@@ -389,7 +389,7 @@ def validateReport(eventID, branch, votePeriod, report):
 		outcome = self.mode_items[votePeriod][eventID].current_mode
 		# outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
 		if(forkedOverThisEvent):
-			EVENTS.setForkedOutcome(eventID, outcome)
+			EVENTS.setForkOutcome(eventID, outcome)
 		else:
 			EVENTS.setUncaughtOutcome(eventID, outcome)
 	# scalar
@@ -411,7 +411,7 @@ def validateReport(eventID, branch, votePeriod, report):
 		outcome = self.mode_items[votePeriod][eventID].current_mode
 		# outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
 		if(forkedOverThisEvent):
-			EVENTS.setForkedOutcome(eventID, outcome)
+			EVENTS.setForkOutcome(eventID, outcome)
 		else:
 			EVENTS.setUncaughtOutcome(eventID, outcome)
 	return(report)

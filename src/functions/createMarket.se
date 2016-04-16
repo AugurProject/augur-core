@@ -29,7 +29,7 @@ import markets as MARKETS
 import events as EVENTS
 import expiringEvents as EXPEVENTS
 import trades as TRADES
-inset(refund.se)
+inset('refund.se')
 
 event creationBlock(market:indexed)
 
@@ -141,7 +141,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         return(-8)
     if(!BRANCHES.getOracleOnly(branch) && CASH.balance(msg.sender) < creationFee):
         return(-4)
-    if(INFO.setInfo(marketID, description, tx.origin, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, forkSelection, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo) && CASH.send(branch, creationFee)):
+    if(INFO.setInfo(marketID, description, tx.origin, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo) && CASH.send(branch, creationFee)):
         i = 0
         while i < len(events):
             EVENTS.addMarket(events[i], marketID)
@@ -184,7 +184,8 @@ def pushMarketForward(branch, market):
     i = 0
     # for each event in market
     while i < numEvents:
-        if(eventNotResolved && eventNotInRound2Adj && notRejectedBefore && event isn't already in next vote period):
+        if(1):
+            #if(eventNotResolved && eventNotInRound2Adj && notRejectedBefore && event isn't already in next vote period):
             event = MARKETS.getMarketEvent(market, i)
             # push into next vote period
             period = BRANCHES.getVotePeriod(branch)

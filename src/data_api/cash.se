@@ -19,7 +19,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-inset(refund.se)
+inset('refund.se')
 
 data cashcoinBalances[]
 

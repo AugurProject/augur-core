@@ -7,7 +7,7 @@ import makeReports as MAKEREPORTS
 import branches as BRANCHES
 import markets as MARKETS
 import backstops as BACKSTOPS
-inset(refund.se)
+inset('refund.se')
 
 
 # round two consensus data [note/todo: UI should show round 2 events first / up top]
@@ -102,9 +102,9 @@ def penalizeWrong(branch, event):
     newRep = 0
     outcome = catch(EVENTS.getUncaughtOutcome(event))
     reportValue = MAKEREPORTS.getReport(branch, lastPeriod, event)
+    oldRep = MAKEREPORTS.getBeforeRep(branch, lastPeriod)
     p = self.proportionCorrect(event)
     if(scalar(event) or categorical(event)):
-    oldRep = MAKEREPORTS.getBeforeRep(branch, lastPeriod)
         outcome = EVENTS.getUncaughtOutcome(event)
     
     # for a reporter for last period if they reported on it the first time [a round 2 event], prevent them from reporting on it, but still do the rep redistrib. at the end before returning in case this event is the last one a user submits for reporting and increment the num b/c it shouldn't be penalized until the next period resolution is over
@@ -184,7 +184,7 @@ def penalizeRoundTwoWrong(branch, event):
         return(-3)
     if(BRANCHES.getForkPeriod(branch) == lastPeriod && event!=forkedEvent):
         return(0)
-    periodLength = BRANCHES.getPeriodLength(branch)s
+    periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
         return(-2)
@@ -192,7 +192,7 @@ def penalizeRoundTwoWrong(branch, event):
     # if overruled
     overruled = 0
     if(scalar(event) or categorical(event)):
-	    if((BACKSTOPS.getOriginalOutcome(event) != EVENTS.getUncaughtOutcome(event) or BACKSTOPS.getOriginalEthicality(event)!=ethic_catch(EVENTS.getEthical(event)))):
+        if((BACKSTOPS.getOriginalOutcome(event) != EVENTS.getUncaughtOutcome(event) or BACKSTOPS.getOriginalEthicality(event)!=ethic_catch(EVENTS.getEthical(event)))):
             overruled = 1
     elif((BACKSTOPS.getOriginalOutcome(event) != catch(EVENTS.getUncaughtOutcome(event)) or BACKSTOPS.getOriginalEthicality(event)!=ethic_catch(EVENTS.getEthical(event)))):
         overruled = 1
@@ -209,9 +209,9 @@ def penalizeRoundTwoWrong(branch, event):
         smoothedRep = 0
         totalRepDifference = 0
         # Do the first rbcr based on first report and final outcome if reported first time
-    	if(oldReport && !self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && outcome!=0):
-    	    oldEthics = MAKEREPORTS.getEthicReport(branch, lastPenalizationPeriod, event)
-    	    # wrong
+        if(oldReport && !self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && outcome!=0):
+            oldEthics = MAKEREPORTS.getEthicReport(branch, lastPenalizationPeriod, event)
+            # wrong
             #184467440737095520 == 0.01 in fxp
             if(oldReport > outcome+184467440737095520 or oldReport < outcome-184467440737095520):
                 if(scalar(event) or categorical(event) or outcome==3*2**64):
@@ -242,17 +242,17 @@ def penalizeRoundTwoWrong(branch, event):
             if(repBalance + totalRepDifference <= 0):
                 totalRepDifference = -1*repBalance
             # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process
-    	    if(overruled && self.bondPaid[event] < 200 && totalRepDifference < 0 && !eventWasForked):
-    	        # done instead of sending to redistrib. pool
+            if(overruled && self.bondPaid[event] < 200 && totalRepDifference < 0 && !eventWasForked):
+                # done instead of sending to redistrib. pool
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), totalRepDifference)
                 # sends that rep to the bonded challenger
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), -totalRepDifference)
                 self.bondPaid[event] += -1*totalRepDifference
     
-    	# Do the second (for each user) based on second report and final outcome
-    	if(reportValue && !self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && outcome!=0):
+        # Do the second (for each user) based on second report and final outcome
+        if(reportValue && !self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && outcome!=0):
             ethics = MAKEREPORTS.getEthicReport(branch, lastPeriod, event)
-    	    # wrong
+            # wrong
             #184467440737095520 == 0.01 in fxp
             if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
                 if(scalar(event) or categorical(event) or outcome==3*2**64):
@@ -282,8 +282,8 @@ def penalizeRoundTwoWrong(branch, event):
                 totalRepDifference = -184467440737095520*repBalance / 2**64
             if(repBalance + repChange <= 0):
                 totalRepDifference = -1*repBalance
-    	    if(overruled && self.bondPaid[event] < 200 && totalRepDifference < 0 && !eventWasForked):
-    	        # done instead of sending to redistrib. pool
+            if(overruled && self.bondPaid[event] < 200 && totalRepDifference < 0 && !eventWasForked):
+                # done instead of sending to redistrib. pool
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), totalRepDifference)
                 # sends that rep to the bonded challenger
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), -totalRepDifference)
@@ -489,7 +489,7 @@ def incrementPeriodAfterReporting(branch):
     if(periodOver(branch)):
         period = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
         lastPeriod = period - 1
-        percentAppealed = (EXPIRING.getRoundTwo(branch, period)*2**64/EXPIRING.getNumberEvents(branch, period) + EXPIRING.getRoundTwo(branch, lastPeriod)*2**64/EXPIRING.getNumberEvents(branch, lastPeriod)) / 2
+        percentAppealed = (EXPIRING.getNumRoundTwo(branch, period)*2**64/EXPIRING.getNumberEvents(branch, period) + EXPIRING.getNumRoundTwo(branch, lastPeriod)*2**64/EXPIRING.getNumberEvents(branch, lastPeriod)) / 2
         BRANCHES.incrementPeriod(branch)
         # mult. by 2 b/c reporters only have to report on half the things they're selected to report on
         base_reporter_quantity = 2*(3*2**64 + ((333*2**64 * Percent_Appealed/2**64)**3 / 2**128))/2**64

@@ -7,7 +7,7 @@ import makeReports as MAKEREPORTS
 import branches as BRANCHES
 import markets as MARKETS
 import sendReputation as SENDREP
-inset(refund.se)
+inset('refund.se')
 
 data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final, bondPoster)
 
@@ -51,29 +51,29 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
     refund()
     bond = 100*2**64
     if(BRANCHES.getVotePeriod(branch)!=votePeriod):
-	    return(0)
+        return(0)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     # if so, we're in the final 24 hours and event is in this branch + votePeriod
     if(!resolving && block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 172800)/BRANCHES.getPeriodLength(branch)) && eventID!=0 && event==eventID && self.roundTwo[event].roundTwo==0 && EVENTS.getForked(event)==0):
         if(SENDREP.sendReputation(branch, event, bond)==0):
             return(0)
-    	period = BRANCHES.getVotePeriod(branch)
-    	# remove from events in # to report on calc for last period
+        period = BRANCHES.getVotePeriod(branch)
+        # remove from events in # to report on calc for last period
         EXPIRING.removeEvent(branch, period)
-    	# makes event required reporting in round 2 (the next period) as well
-    	MAKEREPORTS.setEventRequired(branch, period+1, event)
-    	# push event into next period
-    	EXPIRING.addEvent(branch, period+1, event)
-    	# set event expiration date to be after the current reporting period ends
-    	EVENTS.setExpiration(event, block.timestamp)
-    	MAKEREPORTS.setReportable(period+1, event)
-    	# set round two to true so can't be done again
-    	self.roundTwo[event].roundTwo = 1
-    	self.roundTwo[event].originalVotePeriod = votePeriod
-    	if(scalar(event) or categorical(event)):
-    	    self.roundTwo[event].originalOutcome = EVENTS.getUncaughtOutcome(event)
-    	else:
-    	    self.roundTwo[event].originalOutcome = catch(EVENTS.getUncaughtOutcome(event))
+        # makes event required reporting in round 2 (the next period) as well
+        MAKEREPORTS.setEventRequired(branch, period+1, event)
+        # push event into next period
+        EXPIRING.addEvent(branch, period+1, event)
+        # set event expiration date to be after the current reporting period ends
+        EVENTS.setExpiration(event, block.timestamp)
+        MAKEREPORTS.setReportable(period+1, event)
+        # set round two to true so can't be done again
+        self.roundTwo[event].roundTwo = 1
+        self.roundTwo[event].originalVotePeriod = votePeriod
+        if(scalar(event) or categorical(event)):
+            self.roundTwo[event].originalOutcome = EVENTS.getUncaughtOutcome(event)
+        else:
+            self.roundTwo[event].originalOutcome = catch(EVENTS.getUncaughtOutcome(event))
         self.roundTwo[event].originalEthicality = ethic_catch(EVENTS.getEthical(event))
         EXPEVENTS.addRoundTwo(branch, period)
         self.roundTwo[event].bondPoster = msg.sender
@@ -92,40 +92,40 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
     bond = 100*2**64
     votedOnAgain = 0
     if(scalar(event) or categorical(event)):
-	    if(self.roundTwo[event].originalOutcome == EVENTS.getUncaughtOutcome(event) && self.roundTwo[event].originalEthicality==ethic_catch(EVENTS.getEthical(event))):
-	        overruled = 0
-	elif(self.roundTwo[event].originalOutcome == catch(EVENTS.getUncaughtOutcome(event)) && self.roundTwo[event].originalEthicality==ethic_catch(EVENTS.getEthical(event))):
-	    overruled = 0
+        if(self.roundTwo[event].originalOutcome == EVENTS.getUncaughtOutcome(event) && self.roundTwo[event].originalEthicality==ethic_catch(EVENTS.getEthical(event))):
+            overruled = 0
+    elif(self.roundTwo[event].originalOutcome == catch(EVENTS.getUncaughtOutcome(event)) && self.roundTwo[event].originalEthicality==ethic_catch(EVENTS.getEthical(event))):
+        overruled = 0
     if(BRANCHES.getVotePeriod(branch) > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
-	    votedOnAgain = 1
-	#any round 2 events besides forked one should have bond returned
-	if(forked && didntForkOverThisEventSpecifically && bondNotReturned && self.roundTwo[event].roundTwo):
-	    # return the bond
-	    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
-	    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), bond)
-	    bondReturned = 1
-	    self.roundTwo[event].roundTwo = 0
-	    return(1)
-	if(overruled && votedOnAgain && self.roundTwo[event].roundTwo && votePeriod!=self.roundTwo[event].originalVotePeriod && eventID!=0 && event==eventID && !forked && msg.sender == bondPoster):
-		# return the bond
-	    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
-	    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), bond)
-    	# and set final outcome / event bond, etc
-    	self.resolve(branch, event)
-    	# reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting [don't count ethicality here]
-    	self.roundTwo[event].final = 1
-	    return(2*bond)
-	elif(votedOnAgain && self.roundTwo[event].roundTwo && votePeriod!=self.roundTwo[event].originalVotePeriod && eventID!=0 && event==eventID && !forked):
-		# lose bond
-	    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
-	    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), bond)
-    	# and set final outcome / event bond, etc
-    	self.resolve(branch, event)
-    	# rbcr from original period/orig. outcome stands, rbcr from round 2 happens as usual as well
-    	self.roundTwo[event].final = 1
+        votedOnAgain = 1
+    #any round 2 events besides forked one should have bond returned
+    if(forked && didntForkOverThisEventSpecifically && bondNotReturned && self.roundTwo[event].roundTwo):
+        # return the bond
+        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), bond)
+        bondReturned = 1
+        self.roundTwo[event].roundTwo = 0
+        return(1)
+    if(overruled && votedOnAgain && self.roundTwo[event].roundTwo && votePeriod!=self.roundTwo[event].originalVotePeriod && eventID!=0 && event==eventID && !forked && msg.sender == bondPoster):
+        # return the bond
+        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), bond)
+        # and set final outcome / event bond, etc
+        self.resolve(branch, event)
+        # reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting [don't count ethicality here]
+        self.roundTwo[event].final = 1
+        return(2*bond)
+    elif(votedOnAgain && self.roundTwo[event].roundTwo && votePeriod!=self.roundTwo[event].originalVotePeriod && eventID!=0 && event==eventID && !forked):
+        # lose bond
+        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), bond)
+        # and set final outcome / event bond, etc
+        self.resolve(branch, event)
+        # rbcr from original period/orig. outcome stands, rbcr from round 2 happens as usual as well
+        self.roundTwo[event].final = 1
     # not voted on again yet
     else:
-    	return(0)
+        return(0)
 
 macro scalar($event):
     ((EVENTS.getMaxValue($event)!=2**65 || EVENTS.getMinValue($event)!=2**64) && EVENTS.getNumOutcomes($event)==2)
@@ -157,14 +157,14 @@ macro ethic_catch($x):
         2^64
 
 def resolve(branch, event):
-	refund()
-	# binary
-	if(binary(event)):
-	    fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
+    refund()
+    # binary
+    if(binary(event)):
+        fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
         ethical = ethic_catch(EVENTS.getEthical(event))
         EVENTS.setOutcome(event, fxpOutcome)
-	    
-	    if(fxpOutcome==3*2**63 || !ethical):
+        
+        if(fxpOutcome==3*2**63 || !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, EVENTS.getBond(event))
             CASH.addCash(branch, EVENTS.getBond(event))
@@ -176,9 +176,9 @@ def resolve(branch, event):
             CASH.subtractCash(event, EVENTS.getBond(event))
             CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
         return(1)
-	# scalar
-	elif(scalar(event) or categorical(event)):
-	    mode = EVENTS.getUncaughtOutcome(event)
+    # scalar
+    elif(scalar(event) or categorical(event)):
+        mode = EVENTS.getUncaughtOutcome(event)
         EVENTS.setmode(event, mode)
         scaled_max = EVENTS.getMaxValue(event)
         scaled_min = EVENTS.getMinValue(event)
@@ -187,18 +187,18 @@ def resolve(branch, event):
         ethical = ethic_catch(EVENTS.getEthical(event))
 
         if(fxpOutcome==2**63 || !ethical):
-    		# give event bond money to reporters
-    		CASH.subtractCash(event, EVENTS.getBond(event))
-    		CASH.addCash(branch, EVENTS.getBond(event))
-    		# not ethical is same as .5 outcome
-    		fxpOutcome = 2**63
-    		EVENTS.setOutcome(event, fxpOutcome)
-    		EVENTS.setmode(event, fxpOutcome)
-	    else:
-    		# return bond
-    		CASH.subtractCash(event, EVENTS.getBond(event))
-    		CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
-    	return(1)
+            # give event bond money to reporters
+            CASH.subtractCash(event, EVENTS.getBond(event))
+            CASH.addCash(branch, EVENTS.getBond(event))
+            # not ethical is same as .5 outcome
+            fxpOutcome = 2**63
+            EVENTS.setOutcome(event, fxpOutcome)
+            EVENTS.setmode(event, fxpOutcome)
+        else:
+            # return bond
+            CASH.subtractCash(event, EVENTS.getBond(event))
+            CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
+        return(1)
     # (should never be reached)
     else:
         return(0)

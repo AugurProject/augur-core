@@ -22,7 +22,7 @@
 # import makeReports as REPORTS
 # import consensus as CONSENSUS
 import branches as BRANCHES
-inset(refund.se)
+inset('refund.se')
 
 # Reporting index is the branchID
 # Reporters index is the rep. address
@@ -200,16 +200,16 @@ def claimInitialRep(parent, branchID):
             repDecrease = rep*12912720851596685312/2**64
             rep = rep - repDecrease
             amountLeftToPayBonder = doubleOfTheBond - bondDoubledThusFar
-            if(repDecrease < amountLeftToPayBonder):
+            #if(repDecrease < amountLeftToPayBonder):
                 # send all the rep to the fork bond poster
-            else:
+            #else:
                 # send amountLeftToPayBonder [if positive] to the fork bond poster
                 # send the rest to the new branch's redistribution pool
         self.Reporting[branchID].reputation[i].repValue = rep
         self.Reporting[branchID].repIDtoIndex[reporterID] = i
         if(fork):
             forkPeriod = fetchPeriodWhenForked
-           CONSENSUS.initialPenalizedSetting(branch, tx.origin, forkPeriod)
+            CONSENSUS.initialPenalizedSetting(branch, tx.origin, forkPeriod)
         else:
            CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
         self.Reporting[branchID].dormantRep[i].reporterID = reporterID

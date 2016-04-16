@@ -25,7 +25,7 @@ import info as INFO
 import cash as CASH
 import reporting as REPORTING
 import events as EVENTS
-inset(refund.se)
+inset('refund.se')
 
 # numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0
 # to 11.0 would be 11 outcomes (if incremented by 0.1)

@@ -32,7 +32,7 @@ import expiringEvents as EXPEVENTS
 import backstops as BACKSTOPS
 import makeReports as MAKEREPORTS
 import eventResolution as RESOLVE
-inset(refund.se)
+inset('refund.se')
 
 # first param is the market, second param is the subcurrency contract
 data cash[][]

@@ -1,8 +1,8 @@
 #Notes:
-	#Anyone can pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.  
-	#In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep is redistributed accordingly.  
-	#In the other class/branch, the event is readjudicated and remove the outcome on the pre fork branch and rep is redistributed as normal, except people who said the original outcome in the original fork lose rep.  
-	# Note: Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets, which would be determined by the fork that represented reality, which would have a higher market cap.  Markets go to the most popular fork by default after 2 months.
+    #Anyone can pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.  
+    #In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep is redistributed accordingly.  
+    #In the other class/branch, the event is readjudicated and remove the outcome on the pre fork branch and rep is redistributed as normal, except people who said the original outcome in the original fork lose rep.  
+    # Note: Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets, which would be determined by the fork that represented reality, which would have a higher market cap.  Markets go to the most popular fork by default after 2 months.
 
 # branch and forkperiod and who won
 data forkResolved[][]
@@ -30,16 +30,16 @@ def move_event(event):
     branch = EVENTS.getEventBranch(event)
     eventForkedOver = BRANCHES.getEventForkedOver(branch)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-	if(forkPeriod && currentPeriod == (forkPeriod+2) && !EVENTS.getOutcome(event) && !self.eventMoved[event]):
-		winner = self.forkResolved[branch][forkPeriod]
-		if(winner==0):
+    if(forkPeriod && currentPeriod == (forkPeriod+2) && !EVENTS.getOutcome(event) && !self.eventMoved[event]):
+        winner = self.forkResolved[branch][forkPeriod]
+        if(winner==0):
             winner = self.resolve_fork(branch)
         EVENTS.setBranch(event, winner)
         self.eventMoved[event] = 1
         if(event == eventForkedOver):
             return(1)
-		elif(winner == EVENTS.getEventBranch(event)):
-			# set outcomes to 0
+        elif(winner == EVENTS.getEventBranch(event)):
+            # set outcomes to 0
             EVENTS.setOutcome(event, 0)
             EVENTS.setmode(event, 0)
             EVENTS.setEthics(event, 0)
@@ -50,13 +50,13 @@ def move_event(event):
             # leave event here
             expPeriod = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
             # if should've resolved in past periods
-			if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1) or expPeriod == (forkPeriod+2)):
-			    # push it into next [this] period
-   		        EXPEVENTS.addEvent(branch, currentPeriod+1, eventID)
-        		EVENTS.setExpiration(event, block.timestamp)
-		    # otherwise it's set to expire in the period it would've expired in as normal, no changes needed
-		else:
-			# set outcomes to 0
+            if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1) or expPeriod == (forkPeriod+2)):
+                # push it into next [this] period
+                EXPEVENTS.addEvent(branch, currentPeriod+1, eventID)
+                EVENTS.setExpiration(event, block.timestamp)
+            # otherwise it's set to expire in the period it would've expired in as normal, no changes needed
+        else:
+            # set outcomes to 0
             EVENTS.setOutcome(event, 0)
             EVENTS.setmode(event, 0)
             EVENTS.setEthics(event, 0)
@@ -64,17 +64,17 @@ def move_event(event):
             # return bond if it's a round 2 event and make it not one anymore
             BACKSTOPS.roundTwoResolve(branch, event, eventIndex, votePeriod)
 
-			# move event to fork
-			expPeriod = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
-			# and place it into the next reporting period w/ outcomes to 0
-			if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1) or expPeriod == (forkPeriod+2)):
-			    # push it into next [this] period
-		        EXPEVENTS.addEvent(branch, currentPeriod+1, eventID)
-        		EVENTS.setExpiration(event, block.timestamp)
-		    else:
-		        # push into period it wouldve expired in
-		        EXPEVENTS.addEvent(branch, expPeriod, eventID)
-        		# expiration time doesnt need to change
+            # move event to fork
+            expPeriod = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
+            # and place it into the next reporting period w/ outcomes to 0
+            if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1) or expPeriod == (forkPeriod+2)):
+                # push it into next [this] period
+                EXPEVENTS.addEvent(branch, currentPeriod+1, eventID)
+                EVENTS.setExpiration(event, block.timestamp)
+            else:
+                # push into period it wouldve expired in
+                EXPEVENTS.addEvent(branch, expPeriod, eventID)
+                # expiration time doesnt need to change
     else:
         return(0)
 
@@ -115,40 +115,40 @@ def exchangeRate(branch):
 # todo fork over ethicality or outcome
 # round 2 penalize consensus don't pay back reporter b/c bond already returned.. on orig. branch
 def fork(event, branch, forkedOverEthicality):
-	if(!EVENTS.getRoundTwo(event) || EVENTS.getFinal(event) || EVENTS.getForked(event)):
-		return(-1)
-	# if in last 48 hr of period
-	if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 172800)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENT.getForked(event)):
-		bond = 184467440737095520*REPORTING.getTotalRep(branch)/2**64
-		# lose fork bond in branch 1
-		# results same as roundtwobond, let it resolve as that on original network
-		if(SENDREP.sendReputation(branch, event, bond)==0):
-			return(-2)
+    if(!EVENTS.getRoundTwo(event) || EVENTS.getFinal(event) || EVENTS.getForked(event)):
+        return(-1)
+    # if in last 48 hr of period
+    if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 172800)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENT.getForked(event)):
+        bond = 184467440737095520*REPORTING.getTotalRep(branch)/2**64
+        # lose fork bond in branch 1
+        # results same as roundtwobond, let it resolve as that on original network
+        if(SENDREP.sendReputation(branch, event, bond)==0):
+            return(-2)
 
-		# on branch 2 fork bond isn't lost
-		# on fork bond isn't lost, gets paid up to 2x from "liars"
-		# make the fork
-		newBranch = CREATEBRANCH.createSubbranch(text("fork"), BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), 0)
-		REPORTING.setFork(newBranch)
-		period = BRANCHES.getVotePeriod(newBranch)
-		MAKEREPORTS.setEventRequired(newBranch, period+1, event)
-		EXPIRING.addEvent(newBranch, period+1, event)
-		EVENTS.setExpiration(event, block.timestamp)
-	    MAKEREPORTS.setReportable(period+1, event)
-		self.forkData[event].originalBranch = branch
-		self.forking[event].bondPoster = msg.sender
-		EVENTS.setForked(event)
-		BACKSTOPS.setFinal(event)
-		self.roundTwo[event].final
-		BRANCHES.setForkPeriod(branch)
-		BRANCHES.setForkPeriod(newBranch)
-		BRANCHES.setEventForkedOver(newBranch, event)
-		BRANCHES.setEventForkedOver(branch, event)
-		# return round 2 bond
-		REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), 100*2**64)
-	    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), 100*2**64)
-	else:
-		return(0)
+        # on branch 2 fork bond isn't lost
+        # on fork bond isn't lost, gets paid up to 2x from "liars"
+        # make the fork
+        newBranch = CREATEBRANCH.createSubbranch(text("fork"), BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), 0)
+        REPORTING.setFork(newBranch)
+        period = BRANCHES.getVotePeriod(newBranch)
+        MAKEREPORTS.setEventRequired(newBranch, period+1, event)
+        EXPIRING.addEvent(newBranch, period+1, event)
+        EVENTS.setExpiration(event, block.timestamp)
+        MAKEREPORTS.setReportable(period+1, event)
+        self.forkData[event].originalBranch = branch
+        self.forking[event].bondPoster = msg.sender
+        EVENTS.setForked(event)
+        BACKSTOPS.setFinal(event)
+        self.roundTwo[event].final
+        BRANCHES.setForkPeriod(branch)
+        BRANCHES.setForkPeriod(newBranch)
+        BRANCHES.setEventForkedOver(newBranch, event)
+        BRANCHES.setEventForkedOver(branch, event)
+        # return round 2 bond
+        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), 100*2**64)
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), 100*2**64)
+    else:
+        return(0)
 
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
@@ -158,29 +158,29 @@ def resolveForkedEvent(branch, event, eventIndex, votePeriod):
     bond = 100*2**64
     votedOnAgain = 0
     if(BRANCHES.getVotePeriod(branch) > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
-	    votedOnAgain = 1
+        votedOnAgain = 1
     if(!EVENTS.getForked(event)):
         return(-1)
-	if(self.resolve(branch, event)):
+    if(self.resolveForkEvent(branch, event)):
         EVENTS.setForkDone(event)
     # fork not done yet
     else:
         return(0)
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
-def resolve(branch, event):
-	refund()
+def resolveForkEvent(branch, event):
+    refund()
     winner = self.forkResolved[branch][forkPeriod]
     if(!winner):
         return(-5)
     
-	# binary
-	if(binary(event)):
-	    fxpOutcome = 0
-	    ethical = 0
-	    # original parent won
-	    if(winner==branch):
-    	    fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
+    # binary
+    if(binary(event)):
+        fxpOutcome = 0
+        ethical = 0
+        # original parent won
+        if(winner==branch):
+            fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
             ethical = ethic_catch(EVENTS.getEthical(event))
         # fork won
         else:
@@ -188,7 +188,7 @@ def resolve(branch, event):
             ethical = ethic_catch(EVENTS.getForkEthicality(event))
         
         EVENTS.setOutcome(event, fxpOutcome)
-	    if(fxpOutcome==3*2**63 || !ethical):
+        if(fxpOutcome==3*2**63 || !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, EVENTS.getBond(event))
             CASH.addCash(branch, EVENTS.getBond(event))
@@ -200,38 +200,38 @@ def resolve(branch, event):
             CASH.subtractCash(event, EVENTS.getBond(event))
             CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
         return(1)
-	# scalar
-	elif(scalar(event) or categorical(event)):
-	    mode = 0
-	    ethical = 0
-	    # original parent won
-	    if(winner==branch):
-	        mode = EVENTS.getUncaughtOutcome(event)
+    # scalar
+    elif(scalar(event) or categorical(event)):
+        mode = 0
+        ethical = 0
+        # original parent won
+        if(winner==branch):
+            mode = EVENTS.getUncaughtOutcome(event)
             ethical = ethic_catch(EVENTS.getEthical(event))
         # fork won
         else:
             mode = EVENTS.getForkOutcome(event)
             ethical = ethic_catch(EVENTS.getForkEthicality(event))
 
-	    EVENTS.setmode(event, mode)
+        EVENTS.setmode(event, mode)
         scaled_max = EVENTS.getMaxValue(event)
         scaled_min = EVENTS.getMinValue(event)
         fxpOutcome = mode * (scaled_max - scaled_min)/2**64 + scaled_min
         EVENTS.setOutcome(event, fxpOutcome)
 
         if(fxpOutcome==2**63 || !ethical):
-    		# give event bond money to reporters
-    		CASH.subtractCash(event, EVENTS.getBond(event))
-    		CASH.addCash(branch, EVENTS.getBond(event))
-    		# not ethical is same as .5 outcome
-    		fxpOutcome = 2**63
-    		EVENTS.setOutcome(event, fxpOutcome)
-    		EVENTS.setmode(event, fxpOutcome)
-	    else:
-    		# return bond
-    		CASH.subtractCash(event, EVENTS.getBond(event))
-    		CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
-    	return(1)
+            # give event bond money to reporters
+            CASH.subtractCash(event, EVENTS.getBond(event))
+            CASH.addCash(branch, EVENTS.getBond(event))
+            # not ethical is same as .5 outcome
+            fxpOutcome = 2**63
+            EVENTS.setOutcome(event, fxpOutcome)
+            EVENTS.setmode(event, fxpOutcome)
+        else:
+            # return bond
+            CASH.subtractCash(event, EVENTS.getBond(event))
+            CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
+        return(1)
     # (should never be reached)
     else:
         return(0)
@@ -242,11 +242,11 @@ def resolve(branch, event):
 # some rep from this goes to bond poster, original / last period report is actually what a user reported on the parent for the round 2 bond vote, they lose rep as well as people this time who report wrong
 # branch is fork
 def penalizeOnForkedEvent(branch, event):
-	if(EVENTS.getForked(event)==0):
-		return(-1)
-	# means event / fork isn't resolved
-	if(EVENTS.getForkedDone(event)==0):
-		return(-2)
+    if(EVENTS.getForked(event)==0):
+        return(-1)
+    # means event / fork isn't resolved
+    if(EVENTS.getForkedDone(event)==0):
+        return(-2)
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
@@ -267,7 +267,7 @@ def penalizeOnForkedEvent(branch, event):
     reportValue = MAKEREPORTS.getReport(branch, lastPeriod, event)
     lastPenalizationPeriod = lastPeriod - 1
     oldReport = MAKEREPORTS.getReport(BRANCHES.getParent(branch), lastPenalizationPeriod)
-    p = self.proportionCorrect(event)
+    p = self.proportionCorrectForkEvent(event)
     if(scalar(event) or categorical(event)):
         outcome = EVENTS.getForkOutcome(event)
     oldRep = MAKEREPORTS.getBeforeRep(branch, lastPeriod)
@@ -307,14 +307,14 @@ def penalizeOnForkedEvent(branch, event):
             totalRepDifference = -1*repBalance
         # reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process
         if(self.bondPaid[event] < 200 && totalRepDifference < 0):
-	        # done instead of sending to redistrib. pool
+            # done instead of sending to redistrib. pool
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), totalRepDifference)
             # sends that rep to the bonded challenger
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.forking[event].bondPoster), -totalRepDifference)
             self.bondPaid[event] += -1*totalRepDifference
     
     # Do the second (for each user) based on second report and final outcome
-	if(reportValue && !self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && outcome!=0):
+    if(reportValue && !self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && outcome!=0):
         ethics = MAKEREPORTS.getEthicReport(branch, lastPeriod, event)
         # wrong
         #184467440737095520 == 0.01 in fxp
@@ -347,7 +347,7 @@ def penalizeOnForkedEvent(branch, event):
         if(repBalance + repChange <= 0):
             totalRepDifference = -1*repBalance
         if(self.bondPaid[event] < 200 && totalRepDifference < 0):
-    	    # done instead of sending to redistrib. pool
+            # done instead of sending to redistrib. pool
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, tx.origin), totalRepDifference)
             # sends that rep to the bonded challenger
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.forking[event].bondPoster), -totalRepDifference)
@@ -372,15 +372,15 @@ def penalizeOnForkedEvent(branch, event):
     return(1)
 
 
-def proportionCorrect(event, branch, period):
+def proportionCorrectForkEvent(event, branch, period):
     refund()
     p = 0
-    outcome = catch(EVENTS.getForkedOutcome(event))
+    outcome = catch(EVENTS.getForkOutcome(event))
     if(outcome!=0):
         # binary
         if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==2**65 and EVENTS.getMinValue(event)==2**64):
             # subtract 1 to get it from 0 to 1
-            avgOutcome = EVENTS.getForkedOutcome(event) - 2**64
+            avgOutcome = EVENTS.getForkOutcome(event) - 2**64
             # say we have outcome of 0, avg is .4, what is p?
             # p is .6 or 60%
             if(outcome == 2**64):
