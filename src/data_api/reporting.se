@@ -43,7 +43,7 @@ def init():
     self.Reporting[1010101].reputation[1].repValue = 0
     self.Reporting[1010101].reputation[1].reporterID = 1010101
     self.Reporting[1010101].totalRep += 47*2^64
-    self.Reporting[branch].activeRep = 47*2^64
+    self.Reporting[1010101].activeRep = 47*2^64
 
 def checkWhitelist(address):
     refund()

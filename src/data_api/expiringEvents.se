@@ -110,7 +110,7 @@ def addEvent(branch, futurePeriod, eventID):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
-    self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
+    self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod]cs] = eventID
     self.EventIDToIndex[futurePeriod][eventID] = self.EventsExpDates[branch][futurePeriod].numberEvents
     self.EventsExpDates[branch][futurePeriod].numberEvents += 1
     return(1)

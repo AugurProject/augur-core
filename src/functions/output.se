@@ -13,9 +13,9 @@ def init():
     self.Reporting[1010101].reputation[1].repValue = 0
     self.Reporting[1010101].reputation[1].reporterID = 1010101
     self.Reporting[1010101].totalRep += 47*2^64
-    self.Reporting[branch].activeRep = 47*2^64
-    self.Branches[1010101].currentVotePeriod = (block.timestamp / 1200) - 1
-    self.Branches[1010101].periodLength = 1200
+    self.Reporting[1010101].activeRep = 47*2^64
+    self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
+    self.Branches[1010101].periodLength = 15
     # .5%
     self.Branches[1010101].minTradingFee = 92233720368547760 
     self.branchListCount = 1
@@ -1082,8 +1082,9 @@ def submitReport(branch, votePeriod, eventIndex, salt, report, eventID, ethics):
 		return(-8)
 	if(self.getOutcome(eventID)!=0):
 		return(-9)
-	if(block.timestamp/self.getPeriodLength(branch)!=((block.timestamp + 172800)/self.getPeriodLength(branch))):
-	    return(-10)
+	# comment out for testing
+	#if(block.timestamp/self.getPeriodLength(branch)!=((block.timestamp + 172800)/self.getPeriodLength(branch))):
+	#    return(-10)
 	if(!self.upToDateOnRR[msg.sender]):
 		# TODO: calls to consensus functions and in send rep
 		#doIt()
@@ -1291,9 +1292,6 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     periodLength = self.getPeriodLength(branch)
     # send this to branch
     creationFee = 1106804644422573056 * self.getBaseReporters(branch) * 2**64 / tradingFee
-    # min initial liquidity
-    if(initialLiquidity < 2213609288845146112 * self.getBaseReporters(branch) * 2**64 / tradingFee):
-        return(-4)
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
     if(periodLength==0 or len(description)==0 || tradingFee < self.getMinTradingFee(branch)):
         return(-1)
@@ -1331,9 +1329,9 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         eventsConcat += event
         if(!self.getBond(event)):
             # pay validity bond
-            24period = block.timestamp / 86400
-            validity_bond =  6 * creationFee * 2 * (1 + self.getPast24(24period-1)) / (1 + self.getNumberEvents(branch, self.getVotePeriod(branch)))
-            if(!self.send(eventID, validity_bond)):
+            period = block.timestamp / 86400
+            validity_bond =  6 * creationFee * 2 * (1 + self.getPast24(period-1)) / (1 + self.getNumberEvents(branch, self.getVotePeriod(branch)))
+            if(!self.send(event, validity_bond)):
                 return(-4)
             self.setBond(event, validity_bond)
             self.addPast24(24period)
@@ -3699,7 +3697,7 @@ def addEvent(branch, futurePeriod, eventID):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
-    self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
+    self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod]cs] = eventID
     self.EventIDToIndex[futurePeriod][eventID] = self.EventsExpDates[branch][futurePeriod].numberEvents
     self.EventsExpDates[branch][futurePeriod].numberEvents += 1
     return(1)
@@ -4697,8 +4695,8 @@ def send(recver, value):
     refund()
     if(self.owners[tx.origin]==0):
         self.owners[tx.origin] = tx.origin
-    if(self.owners[recver]==0):
-        return(0)
+    #if(self.owners[recver]==0):
+    #    return(0)
     sender = tx.origin
     senderBalance = self.cashcoinBalances[sender]
     if(senderBalance >= value && value > 0):
@@ -4715,8 +4713,8 @@ def sendFrom(recver, value, from):
     # it's not owned by a regular account nor a contract owned account (i.e. a market's hash from markets.)
     if(from!=tx.origin and msg.sender!=self.owners[from]):
         return(0)
-    if(self.owners[recver]==0):
-        return(0)
+    #if(self.owners[recver]==0):
+    #    return(0)
     senderBalance = self.cashcoinBalances[from]
     if(senderBalance >= value && value > 0):
         self.cashcoinBalances[from] -= value
