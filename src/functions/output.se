@@ -1,4 +1,5 @@
 def init():
+    self.CLOSEMARKET = 0x02341242419425
     self.baseReportersLastPeriod[1010101] = 2*3
     description = text("Root branch")
     save(self.Info[1010101].description[0], description, chars=len(description))
@@ -12,8 +13,6 @@ def init():
     self.Reporting[1010101].repIDtoIndex[1010101] = 1
     self.Reporting[1010101].reputation[1].repValue = 0
     self.Reporting[1010101].reputation[1].reporterID = 1010101
-    self.Reporting[1010101].totalRep += 47*2^64
-    self.Reporting[1010101].activeRep = 47*2^64
     self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
     self.Branches[1010101].periodLength = 15
     # .5%
@@ -689,6 +688,7 @@ def closeMarket(branch, market):
         winningOutcomes = array(8)
         winningOutcomes = self.determineWinningOutcomes(events, numberEvents, branch, market, outitems=8)
         self.setWinningOutcomes(market, winningOutcomes)
+        #send(msg.sender, self.getGasPrice(market)*2000000)
         return(1)
     else:
         return(0)
@@ -1271,6 +1271,9 @@ inset('refund.se')
 
 event creationBlock(market:indexed)
 
+data CLOSEMARKET
+
+
 # tradingFee is a percent in fixedPoint
 # @return marketID if success or 1 if on an oracle only branch creation we have success
 # error messages otherwise
@@ -1376,12 +1379,18 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         return(-8)
     if(!self.getOracleOnly(branch) && self.balance(msg.sender) < creationFee):
         return(-4)
-    if(self.setInfo(marketID, description, tx.origin, creationFee) && self.addMarketToBranch(branch, marketID) && self.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo) && self.send(branch, creationFee)):
+    # need at least 2M gas @ gas price to cover resolution
+    #if(msg.value < 2000000*tx.gasprice):
+    #    return(0)
+    #send(self.CLOSEMARKET, msg.value)
+    if(self.send(branch, creationFee) && self.setInfo(marketID, description, tx.origin, creationFee) && self.addMarketToBranch(branch, marketID) && self.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, tx.gasprice)):
         i = 0
         while i < len(events):
             self.addMarket(events[i], marketID)
             i += 1
-    return(marketID)
+        return(marketID)
+    else:
+        return(0)
 
 def updateTradingFee(branch, market, tradingFee):
     refund()
@@ -2098,8 +2107,6 @@ macro catch($x):
 # make max rep loss 20%, do V way to limit excess cuts
 def penalizeWrong(branch, event):
     refund()
-    if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
-        return(-3)
     repBalance = self.getRepBalance(branch, msg.sender)
     lastPeriod = self.getVotePeriod(branch)-1
     afterRep = self.getAfterRep(branch, lastPeriod)
@@ -3409,6 +3416,7 @@ def claimInitialRep(parent, branchID):
                 # send amountLeftToPayBonder [if positive] to the fork bond poster
                 # send the rest to the new branch's redistribution pool
         self.Reporting[branchID].reputation[i].repValue = rep
+        self.Reporting[branchID].activeRep += rep
         self.Reporting[branchID].repIDtoIndex[reporterID] = i
         if(fork):
             forkPeriod = fetchPeriodWhenForked
@@ -3459,6 +3467,7 @@ def setRep(branch, index, newRep):
     #    return(-1)
     oldRep = self.Reporting[branch].reputation[index].repValue
     self.Reporting[branch].reputation[index].repValue = newRep
+    self.Reporting[branch].activeRep += newRep - oldRep
     self.Reporting[branch].totalRep += newRep - oldRep
     return(1)
 
@@ -3697,7 +3706,7 @@ def addEvent(branch, futurePeriod, eventID):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
-    self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod]cs] = eventID
+    self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
     self.EventIDToIndex[futurePeriod][eventID] = self.EventsExpDates[branch][futurePeriod].numberEvents
     self.EventsExpDates[branch][futurePeriod].numberEvents += 1
     return(1)
@@ -3927,10 +3936,13 @@ inset('refund.se')
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasprice)
 
 def getMakerFees(market):
     return(self.Markets[market].makerFees)
+
+def getgasprice(market):
+    return(self.Markets[market].gasprice)
 
 def getSharesValue(market):
     return(self.Markets[market].sharesValue)
@@ -4169,7 +4181,7 @@ macro sharesPurchased($marketID):
     market($marketID).sharesPurchased
 
 # check that msg.sender is one of our function contracts
-def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str):
+def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasprice):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
@@ -4186,6 +4198,7 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, t
     self.Markets[marketID].numOutcomes = numOutcomes
     self.Markets[marketID].tag1 = tag1
     self.Markets[marketID].tag2 = tag2
+    self.Markets[marketID].gasprice = gasprice
     self.Markets[marketID].tag3 = tag3
     self.Markets[marketID].makerFees = makerFees
     return(1)

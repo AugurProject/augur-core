@@ -63,8 +63,6 @@ macro catch($x):
 # make max rep loss 20%, do V way to limit excess cuts
 def penalizeWrong(branch, event):
     refund()
-    if(!self.branch[branch].penalized[lastPeriod][tx.origin].notEnoughReportsPenalized):
-        return(-3)
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     afterRep = MAKEREPORTS.getAfterRep(branch, lastPeriod)

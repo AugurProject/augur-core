@@ -42,8 +42,6 @@ def init():
     self.Reporting[1010101].repIDtoIndex[1010101] = 1
     self.Reporting[1010101].reputation[1].repValue = 0
     self.Reporting[1010101].reputation[1].reporterID = 1010101
-    self.Reporting[1010101].totalRep += 47*2^64
-    self.Reporting[1010101].activeRep = 47*2^64
 
 def checkWhitelist(address):
     refund()
@@ -206,6 +204,7 @@ def claimInitialRep(parent, branchID):
                 # send amountLeftToPayBonder [if positive] to the fork bond poster
                 # send the rest to the new branch's redistribution pool
         self.Reporting[branchID].reputation[i].repValue = rep
+        self.Reporting[branchID].activeRep += rep
         self.Reporting[branchID].repIDtoIndex[reporterID] = i
         if(fork):
             forkPeriod = fetchPeriodWhenForked
@@ -256,6 +255,7 @@ def setRep(branch, index, newRep):
     #    return(-1)
     oldRep = self.Reporting[branch].reputation[index].repValue
     self.Reporting[branch].reputation[index].repValue = newRep
+    self.Reporting[branch].activeRep += newRep - oldRep
     self.Reporting[branch].totalRep += newRep - oldRep
     return(1)
 

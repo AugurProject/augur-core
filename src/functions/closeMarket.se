@@ -132,6 +132,7 @@ def closeMarket(branch, market):
         winningOutcomes = array(8)
         winningOutcomes = RESOLVE.determineWinningOutcomes(events, numberEvents, branch, market, outitems=8)
         MARKETS.setWinningOutcomes(market, winningOutcomes)
+        send(msg.sender, MARKETS.getgasSubsidy(market))
         return(1)
     else:
         return(0)
