@@ -59,6 +59,9 @@ def setEventRequired(branch, period, event):
 	else:
 		return(0)
 		
+def getRequired(event):
+	return(self.requiredEvents[event])
+		
 def getNumRequired(branch, period):
 	return(self.numReqEvents[branch][period])
 
