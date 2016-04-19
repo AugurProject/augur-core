@@ -47,6 +47,7 @@ def getOriginalVotePeriod(event):
     # Average_Adjudication_Cost = Total fees paid to reporters for all markets in this reporting round / number of markets in this reporting round.
         # needs an abs min of like 100 rep.
 # Reporting period is 2 months minus 48 hours.  This 48 hours allows for the appeals to take place before the next reporting round begins.
+# todo make sure network isn't forked / forking atm
 def roundTwoPostBond(branch, event, eventIndex, votePeriod):
     refund()
     bond = 100*2**64

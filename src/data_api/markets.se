@@ -36,7 +36,14 @@ inset('refund.se')
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees)
+
+def addFees(market, amount):
+    self.Markets[market].fees += amount
+    return(1)
+
+def getFees(market):
+    return(self.Markets[market].fees)
 
 def getMakerFees(market):
     return(self.Markets[market].makerFees)

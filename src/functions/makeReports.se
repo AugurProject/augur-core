@@ -312,11 +312,13 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
 		numMarkets = 100
 	markets = array(numMarkets)
 	markets = EVENTS.getMarkets(eventID, outitems=numMarkets)
+	totalFees = 0
 	shareValue = 0
 	i = 0
 	while i < numMarkets:
 		# todo convert to value in w/e currency once we add subcurrencies
-		shareValue += MARKETS.getSharesValue(market)
+		shareValue += MARKETS.getSharesValue(markets[i])
+		totalFees += MARKETS.getFees(markets[i])
 		i += 1
 	totalVal = EXPEVENTS.getShareValue(branch, votePeriod)
 	# if odds of reporting are >1, then 2**256 (we don't want to wrap around), so div by 2**64
@@ -325,16 +327,21 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
 	repConstant += 18446744073709552
 	shareFraction = 0
 	if(totalVal!=0):
-		volFraction = shareValue*2**64/totalVal
-	if(volFraction>2**64):
-		volFraction = 2**64
+		shareFraction = shareValue*2**64/totalVal
+	if(shareFraction>2**64):
+		shareFraction = 2**64
+	# what is going on here
 	expectedEvents = repConstant * EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
 	numEventsAfterMinAccounting = self.getNumEventsToReport(branch, votePeriod) - self.numReqEvents[branch][votePeriod]*2**64
 	ratio = numEventsAfterMinAccounting * 2**64 / expectedEvents
 	if(ratio > 2**64):
 		repConstant = repConstant*ratio / 2**64
 	# in fxp (2**128) == 2**192 / 2**64
-	reportingThreshold = BRANCHES.getBaseReporters(branch)*((-(267*volFraction**2)/(2*2**64) + (533*volFraction)/2 + 1*2**64)*repConstant/2**64) * (2**128)
+	numReportersOnMarket = BRANCHES.getBaseReporters(branch)*((-(267*shareFraction**2)/(2*2**64) + (533*shareFraction)/2 + 1*2**64))
+	totalFeesInWei = totalFees * 10**18 / 2**64
+	canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
+	lesser = min(canPayForThisManyReporters*2**64, numReportersOnMarket)
+	reportingThreshold = lesser*repConstant*2**64
 	return(reportingThreshold)
 
 #a^b=exp(b*ln(a))=e^(b*ln(a)).

@@ -324,6 +324,9 @@ def short_sell(buyer_trade_id, max_amount):
     CASH.subtractCash(market_id, fee)
     CASH.addCash(creator, fee/2)
     CASH.addCash(branch, fee/2)
+    
+    MARKETS.addFees(market, fee+takerFeesTotal)
+
     # Log transaction
     log(type=log_fill_tx, market_id, msg.sender, owner, ASK, price, fill, trade_id, outcome)
     # Log price, fill amount, type and timestamp
@@ -432,6 +435,9 @@ def trade(max_value, max_amount, trade_ids:arr):
                 CASH.subtractCash(market_id, fee)
                 CASH.addCash(creator, fee/2)
                 CASH.addCash(branch, fee/2)
+                
+                MARKETS.addFees(market, fee+takerFeesTotal)
+                
                 # Update max_amount
                 max_amount -= fill
                 # Log transaction
@@ -480,6 +486,9 @@ def trade(max_value, max_amount, trade_ids:arr):
                 CASH.subtractCash(market_id, fee)
                 CASH.addCash(creator, fee/2)
                 CASH.addCash(branch, fee/2)
+                
+                MARKETS.addFees(market, fee+takerFeesTotal)
+                
                 # Update max_value
                 max_value -= value
                 # Log transaction
