@@ -296,7 +296,7 @@ def broadcast_code(evm, code, fullname):
         time.sleep(BLOCKTIME)
         receipt = RPC.eth_getTransactionReceipt(txhash)["result"]
         if receipt is not None:
-            check = RPC.eth_getCode(receipt["contractAddress"])['result']
+            check = RPC.eth_getCode(receipt["contractAddress"], "pending")['result']
             if check != '0x' and check[2:] in evm:
                 return receipt["contractAddress"]
         tries += 1
