@@ -64,7 +64,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     # send this to branch
     creationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * 2**64 / tradingFee
     # gives ether/cash amount in fixed point
-    minFee = 3500000*BRANCHES.getBaseReporters(branch)*tx.gasprice*2^64/10^18
+    minFee = 3500000*BRANCHES.getBaseReporters(branch)*tx.gasprice*len(events)*2^64/10^18
     if(creationFee < minFee):
         creationFee = minFee
     if(CASH.balance(msg.sender) < creationFee):
@@ -211,6 +211,5 @@ def pushMarketForward(branch, market):
             EVENTS.setExpiration(event, block.timestamp)
             MARKETS.setTradingPeriod(market, period+1)
             MARKETS.setPushedForward(market, 1)
-            #MAKEREPORTS.setReportable(period+1, event)
         i += 1
     return(1)

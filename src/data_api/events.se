@@ -221,7 +221,7 @@ def setReportingThreshold(event):
     # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this one
     #periodLength = BRANCHES.getPeriodLength(self.Events[event].branch)
     #residual = block.timestamp % periodLength
-    #if(BRANCHES.getVotePeriod(self.Events[event].branch)==self.Events[event].expirationDate/periodLength and (((block.timestamp + 86400) % periodLength) > periodLength/2) and self.Events[event].numReports<3):
+    #if(BRANCHES.getVotePeriod(self.Events[event].branch)==self.Events[event].expirationDate/periodLength and (((block.timestamp + 86400) % periodLength) > periodLength/2) and numexpectedreportsinmakereportscommitmentvalueis<3):
     #    self.Events[event].threshold = 2**192
     #    return(1)
     #else:

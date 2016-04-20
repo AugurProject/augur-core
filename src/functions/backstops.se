@@ -43,9 +43,10 @@ def getOriginalVotePeriod(event):
     refund()
     return(self.roundTwo[event].originalVotePeriod)
 
+# todo do bon
 # Appeal_Bond = Market_Value * (0.01 + Market_Fee / 2) + Average_Adjudication_Cost
     # Average_Adjudication_Cost = Total fees paid to reporters for all markets in this reporting round / number of markets in this reporting round.
-        # needs an abs min of like 100 rep.
+        # needs an abs min of ~200 rep.
 # Reporting period is 2 months minus 48 hours.  This 48 hours allows for the appeals to take place before the next reporting round begins.
 # todo make sure network isn't forked / forking atm
 def roundTwoPostBond(branch, event, eventIndex, votePeriod):
@@ -67,7 +68,6 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
         EXPIRING.addEvent(branch, period+1, event)
         # set event expiration date to be after the current reporting period ends
         EVENTS.setExpiration(event, block.timestamp)
-        MAKEREPORTS.setReportable(period+1, event)
         # set round two to true so can't be done again
         self.roundTwo[event].roundTwo = 1
         self.roundTwo[event].originalVotePeriod = votePeriod

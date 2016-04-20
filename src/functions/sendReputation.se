@@ -166,7 +166,7 @@ def convertToDormantRep(branch, value):
 		# benny comment:
             #```Maybe still have this sort-of variable "power" to it, but REP initially doesn't have "full-power", or REP that hasn't been used to report over the past week has now let it's "power-meter" drop to only 20% earning power (it's kind-of dormant), that then ramps back up to 100% power once it gets used a bit. Could there be an element of this type of time-decay programmed into the REP that's helps incentive? Something like this would make the system more automatic, rather than relying on the user to manually switch "on" or switch "off" the REP. If a user knows, "I better report this week or my REP's power meter goes down to 20% again, and it's gonna take extra effort to get it back to full-power", well that's pretty good incentive to keep the user active, without actually taking it from them.```
 
-    if(value<=0 || !CASH.send(branch, 5*2^64) || REPORTS.getSubmittedHash(branch, period, msg.sender)):
+    if(value<=0 || !CASH.send(branch, 5*2^64)):
         return(0)
 
     #if(REPORTS.getRRUpToDate()!=1):
@@ -204,7 +204,7 @@ def convertToActiveRep(branch, value):
     if(residual > periodLength/2):
       return(-1)
 
-    if(value<=0 || !CASH.send(branch, 5*2^64) || REPORTS.getSubmittedHash(branch, period, msg.sender)):
+    if(value<=0 || !CASH.send(branch, 5*2^64)):
         return(0)
 
     #if(REPORTS.getRRUpToDate()):

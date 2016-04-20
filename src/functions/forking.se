@@ -10,6 +10,7 @@ data eventMoved[]
 data forkData[](originalBranch)
 data forking[](bondPoster)
 data bondPaid[]
+data bondAmount[]
 
 # Period where we forked, at the end of it
     # don't penalize for this period / anything that happened here should be considered to not have happened - done
@@ -136,7 +137,6 @@ def fork(event, branch, forkedOverEthicality):
         MAKEREPORTS.setEventRequired(newBranch, period+1, event)
         EXPIRING.addEvent(newBranch, period+1, event)
         EVENTS.setExpiration(event, block.timestamp)
-        MAKEREPORTS.setReportable(period+1, event)
         self.forkData[event].originalBranch = branch
         self.forking[event].bondPoster = msg.sender
         EVENTS.setForked(event)

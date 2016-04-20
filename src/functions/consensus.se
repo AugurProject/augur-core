@@ -481,6 +481,7 @@ def slashRep(branch, salt, report, reporter, eventID):
         REPORTING.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*2**63 / 2**64))
     return(reporterBalance)
 
+# ui has to call this to stay cheap / not check it elsewhere
 def incrementPeriodAfterReporting(branch):
     refund()
     # do this after reporting is finished
