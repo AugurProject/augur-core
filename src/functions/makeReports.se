@@ -138,7 +138,7 @@ def submitReportHash(event, reportHash):
         return(-2)
     # make sure event is in the given branch and voteperiod
     elif(eventIndex==0):
-        if(EXPEVENTS.getEvent(branch, votePeriod, eventIndex)==0):
+        if(eventID==0 || event!=eventID):
             return(-2)
     elif(EVENTS.getOutcome(event)!=0):
         return(-4)
@@ -146,10 +146,9 @@ def submitReportHash(event, reportHash):
         # TODO: calls to consensus functions and in send rep
         #doIt()
         #self.upToDateOnRR[msg.sender] = 1
-    #reportingThreshold = self.calculateReportingThreshold(branch, eventID, votePeriod)
-    reportingThreshold = 2**192
+    reportingThreshold = self.calculateReportingThreshold(branch, event, votePeriod)
     x = array(1)
-    x[0] = tx.origin + eventID
+    x[0] = tx.origin + event
     # div by 2**64 b/c is out of 2**192
     shaHash = sha3(x, items=1)/2**64
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -183,13 +182,12 @@ def submitReport(event, salt, report, ethics):
     votePeriod = BRANCHES.getVotePeriod(branch)
     eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
     periodLength = BRANCHES.getPeriodLength(branch)
-    currentExpPeriod = (block.timestamp / periodLength)
     repIndex = REPORTING.repIDToIndex(branch, tx.origin)
     if(REPORTING.getReporterID(branch, repIndex) != tx.origin):
         return(-2)
     # make sure event is in the given branch and vote period...
     event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
-    if(event==0 || eventID!=event):
+    if(event==0 || eventIndex == 0 || eventID!=event):
         return(-8)
     if(EVENTS.getOutcome(eventID)!=0):
         return(-9)
@@ -199,10 +197,6 @@ def submitReport(event, salt, report, ethics):
     # comment out for testing
     #if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 172800)/BRANCHES.getPeriodLength(branch))):
     #    return(-10)
-    #if(!self.upToDateOnRR[msg.sender]):
-        # TODO: calls to consensus functions and in send rep
-        #doIt()
-    #    self.upToDateOnRR[msg.sender] = 1
     x = array(1)
     x[0] = tx.origin + eventID
     reportingThreshold = self.calculateReportingThreshold(branch, eventID, votePeriod)
@@ -221,7 +215,6 @@ def submitReport(event, salt, report, ethics):
             return(-5)
         # reporter has reported for 1 more event
         self.branches[branch].numReportsActual[tx.origin][votePeriod] += 1
-        # record that reporter has reported for this event
         # set report value for event
         self.branches[branch].report[votePeriod][tx.origin].event[eventID] = report
         # set ethics value for event
@@ -255,7 +248,7 @@ def submitReport(event, salt, report, ethics):
 
 ### Helper functions:
 # could charge market creator for the part of this calc that only needs to be done once, first person to use gets a refund/rebate
-# broken atm
+# broken atm, returns 0
 def calculateReportingThreshold(branch, eventID, votePeriod):
     numMarkets = EVENTS.getNumMarkets(eventID)
     if(numMarkets>100):
@@ -283,9 +276,9 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
     numReportersOnMarket = BRANCHES.getBaseReporters(branch)*((-(267*shareFraction**2)/(2*2**64) + (533*shareFraction)/2 + 1*2**64))
     totalFeesInWei = totalFees * 10**18 / 2**64
     canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
-    lesser = min(canPayForThisManyReporters*2**64, numReportersOnMarket)
+    lesser = max(canPayForThisManyReporters*2**64, numReportersOnMarket)
     reportingThreshold = lesser*repConstant*2**64
-    return(2**192)
+    return(reportingThreshold)
 
 #a^b=exp(b*ln(a))=e^(b*ln(a)).
 #eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
@@ -308,11 +301,9 @@ def validateReport(eventID, branch, votePeriod, report):
     # add a separate fork outcome and fork ethicality for where to submit report in case of fork
     # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
     # check report validity
-    numOutcomes = EVENTS.getNumOutcomes(eventID)
-    maxValue = EVENTS.getMaxValue(eventID)
-    minValue = EVENTS.getMinValue(eventID)
+
     # binary
-    if(numOutcomes==2 and maxValue==2**65 && minValue==2**64):
+    if(EVENTS.getNumOutcomes(eventID)==2 and EVENTS.getMaxValue(eventID)==2**65 && EVENTS.getMinValue(eventID)==2**64):
         if(report>2*2^64 or report<2^64 or report==0):
             return(-5)
         # submit report
@@ -324,36 +315,11 @@ def validateReport(eventID, branch, votePeriod, report):
         else:
             outcome = (EVENTS.getUncaughtOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
             EVENTS.setUncaughtOutcome(eventID, outcome)
-    # categorical
-    elif(numOutcomes>2):
-        minValue = 2^64
-        range = numOutcomes*2^64 - minValue
+    # scalar or categorical
+    else(numOutcomes>2):
         if(report > 2**64 && report!=3*2**63):
             report = 2**64
-        if(report<=0):
-            return(-5)
-        #if((report*range/2^64 + minValue)>numOutcomes*2^64 && report!=3*2**63):
-        # report = 2^64
-        # submit report
-        # todo weight by rep in round 2 and fork
-        self.mode_items[votePeriod][eventID].report_value[report] += 1
-        if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
-            self.mode_items[votePeriod][eventID].current_mode = report
-            self.mode_items[votePeriod][eventID].current_mode_items = self.mode_items[votePeriod][eventID].report_value[report]
-        outcome = self.mode_items[votePeriod][eventID].current_mode
-        # outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-        if(forkedOverThisEvent):
-            EVENTS.setForkOutcome(eventID, outcome)
-        else:
-            EVENTS.setUncaughtOutcome(eventID, outcome)
-    # scalar
-    else:
-        if(report<=0):
-            return(-5)
-        range = maxValue - minValue
-        if((report*range/2^64 + minValue) > maxValue && report!=3*2**63):
-            report = 2^64
-        if((report*range/2^64 + minValue) < minValue && report!=3*2**63):
+        elif(report<=0):
             # 1 is the new 0
             report = 1
         # submit report

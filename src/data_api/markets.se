@@ -288,7 +288,7 @@ macro sharesPurchased($marketID):
     market($marketID).sharesPurchased
 
 # check that msg.sender is one of our function contracts
-def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy):
+def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy, creationFee):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
@@ -308,6 +308,7 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, t
     self.Markets[marketID].gasSubsidy = gasSubsidy
     self.Markets[marketID].tag3 = tag3
     self.Markets[marketID].makerFees = makerFees
+    self.Markets[marketID].fees = creationFee
     return(1)
 
 def addParticipant(market, address):

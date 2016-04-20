@@ -156,7 +156,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     # need at least 1.2M gas @ gas price to cover resolution
     if(msg.value < (1200000*tx.gasprice + 1000000*tx.gasprice*(eventNum-1))):
         return(0)
-    if(CASH.send(branch, creationFee) && send(self.CLOSEMARKET, msg.value) && INFO.setInfo(marketID, description, tx.origin, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value)):
+    if(CASH.send(branch, creationFee) && send(self.CLOSEMARKET, msg.value) && INFO.setInfo(marketID, description, tx.origin, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value, creationFee)):
         i = 0
         while i < len(events):
             EVENTS.addMarket(events[i], marketID)

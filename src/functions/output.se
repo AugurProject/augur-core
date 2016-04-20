@@ -996,7 +996,7 @@ def submitReportHash(event, reportHash):
         return(-2)
     # make sure event is in the given branch and voteperiod
     elif(eventIndex==0):
-        if(self.getEvent(branch, votePeriod, eventIndex)==0):
+        if(eventID==0 || event!=eventID):
             return(-2)
     elif(self.getOutcome(event)!=0):
         return(-4)
@@ -1004,10 +1004,9 @@ def submitReportHash(event, reportHash):
         # TODO: calls to consensus functions and in send rep
         #doIt()
         #self.upToDateOnRR[msg.sender] = 1
-    #reportingThreshold = self.calculateReportingThreshold(branch, eventID, votePeriod)
-    reportingThreshold = 2**192
+    reportingThreshold = self.calculateReportingThreshold(branch, event, votePeriod)
     x = array(1)
-    x[0] = tx.origin + eventID
+    x[0] = tx.origin + event
     # div by 2**64 b/c is out of 2**192
     shaHash = sha3(x, items=1)/2**64
     periodLength = self.getPeriodLength(branch)
@@ -1113,7 +1112,8 @@ def submitReport(event, salt, report, ethics):
 
 ### Helper functions:
 # could charge market creator for the part of this calc that only needs to be done once, first person to use gets a refund/rebate
-# broken atm
+# broken atm, returns 0
+# 500k ga
 def calculateReportingThreshold(branch, eventID, votePeriod):
     numMarkets = self.getNumMarkets(eventID)
     if(numMarkets>100):
@@ -1141,9 +1141,11 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
     numReportersOnMarket = self.getBaseReporters(branch)*((-(267*shareFraction**2)/(2*2**64) + (533*shareFraction)/2 + 1*2**64))
     totalFeesInWei = totalFees * 10**18 / 2**64
     canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
-    lesser = min(canPayForThisManyReporters*2**64, numReportersOnMarket)
+    lesser = max(canPayForThisManyReporters*2**64, numReportersOnMarket)
     reportingThreshold = lesser*repConstant*2**64
-    return(2**192)
+    # old
+    #reportingThreshold = self.getBaseReporters(branch)*((-(267*volFraction**2)/(2*2**64) + (533*volFraction)/2 + 1*2**64)*repConstant/2**64) * (2**128)
+    return(reportingThreshold)
 
 #a^b=exp(b*ln(a))=e^(b*ln(a)).
 #eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
@@ -1445,7 +1447,7 @@ def getOriginalVotePeriod(event):
     refund()
     return(self.roundTwo[event].originalVotePeriod)
 
-# todo do bon
+# todo do bond
 # Appeal_Bond = Market_Value * (0.01 + Market_Fee / 2) + Average_Adjudication_Cost
     # Average_Adjudication_Cost = Total fees paid to reporters for all markets in this reporting round / number of markets in this reporting round.
         # needs an abs min of ~200 rep.

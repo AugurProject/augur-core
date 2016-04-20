@@ -43,7 +43,7 @@ def getOriginalVotePeriod(event):
     refund()
     return(self.roundTwo[event].originalVotePeriod)
 
-# todo do bon
+# todo do bond
 # Appeal_Bond = Market_Value * (0.01 + Market_Fee / 2) + Average_Adjudication_Cost
     # Average_Adjudication_Cost = Total fees paid to reporters for all markets in this reporting round / number of markets in this reporting round.
         # needs an abs min of ~200 rep.
