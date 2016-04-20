@@ -332,7 +332,7 @@ def modifySharesValue(marketID, amount):
     self.Markets[marketID].sharesValue += amount
     return(1)
 
-def modifyParticipantShares(branch, marketID, participantNumber, outcome, amount):
+def modifyParticipantShares(marketID, participantNumber, outcome, amount):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
