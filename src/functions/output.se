@@ -1040,13 +1040,12 @@ def submitReport(event, salt, report, ethics):
     votePeriod = self.getVotePeriod(branch)
     eventIndex = self.getEventIndex(votePeriod, event)
     periodLength = self.getPeriodLength(branch)
-    currentExpPeriod = (block.timestamp / periodLength)
     repIndex = self.repIDToIndex(branch, tx.origin)
     if(self.getReporterID(branch, repIndex) != tx.origin):
         return(-2)
     # make sure event is in the given branch and vote period...
     event = self.getEvent(branch, votePeriod, eventIndex)
-    if(event==0 || eventID!=event):
+    if(event==0 || eventIndex == 0 || eventID!=event):
         return(-8)
     if(self.getOutcome(eventID)!=0):
         return(-9)
@@ -1056,10 +1055,6 @@ def submitReport(event, salt, report, ethics):
     # comment out for testing
     #if(block.timestamp/self.getPeriodLength(branch)!=((block.timestamp + 172800)/self.getPeriodLength(branch))):
     #    return(-10)
-    #if(!self.upToDateOnRR[msg.sender]):
-        # TODO: calls to consensus functions and in send rep
-        #doIt()
-    #    self.upToDateOnRR[msg.sender] = 1
     x = array(1)
     x[0] = tx.origin + eventID
     reportingThreshold = self.calculateReportingThreshold(branch, eventID, votePeriod)
@@ -1078,13 +1073,14 @@ def submitReport(event, salt, report, ethics):
             return(-5)
         # reporter has reported for 1 more event
         self.branches[branch].numReportsActual[tx.origin][votePeriod] += 1
-        # record that reporter has reported for this event
         # set report value for event
         self.branches[branch].report[votePeriod][tx.origin].event[eventID] = report
         # set ethics value for event
         if(ethics!=2**64 || ethics!=0):
             ethics = 2**64
         if(forkedOverThisEvent):
+            # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
+                #if so # ethics = fork ethic value
             ethics = (self.getForkEthicality(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
             self.setForkEthicality(eventID, ethics)
             self.branches[branch].ethics[votePeriod][tx.origin].event[eventID] = ethics
@@ -1113,7 +1109,6 @@ def submitReport(event, salt, report, ethics):
 ### Helper functions:
 # could charge market creator for the part of this calc that only needs to be done once, first person to use gets a refund/rebate
 # broken atm, returns 0
-# 500k ga
 def calculateReportingThreshold(branch, eventID, votePeriod):
     numMarkets = self.getNumMarkets(eventID)
     if(numMarkets>100):
@@ -1143,8 +1138,6 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
     canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
     lesser = max(canPayForThisManyReporters*2**64, numReportersOnMarket)
     reportingThreshold = lesser*repConstant*2**64
-    # old
-    #reportingThreshold = self.getBaseReporters(branch)*((-(267*volFraction**2)/(2*2**64) + (533*volFraction)/2 + 1*2**64)*repConstant/2**64) * (2**128)
     return(reportingThreshold)
 
 #a^b=exp(b*ln(a))=e^(b*ln(a)).
@@ -1163,19 +1156,14 @@ def getNumEventsToReport(branch, votePeriod):
         total = minimum*2**64
     return(total)
 
+# validates and submits report
 def validateReport(eventID, branch, votePeriod, report):
     # todo in case of fork remove the original outcome as a possible response
     # add a separate fork outcome and fork ethicality for where to submit report in case of fork
-    # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
-    # check report validity
-    numOutcomes = self.getNumOutcomes(eventID)
-    maxValue = self.getMaxValue(eventID)
-    minValue = self.getMinValue(eventID)
     # binary
-    if(numOutcomes==2 and maxValue==2**65 && minValue==2**64):
+    if(self.getNumOutcomes(eventID)==2 and self.getMaxValue(eventID)==2**65 && self.getMinValue(eventID)==2**64):
         if(report>2*2^64 or report<2^64 or report==0):
             return(-5)
-        # submit report
         # todo weight by rep if round 2 and fork
         # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
         if(forkedOverThisEvent):
@@ -1184,46 +1172,20 @@ def validateReport(eventID, branch, votePeriod, report):
         else:
             outcome = (self.getUncaughtOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
             self.setUncaughtOutcome(eventID, outcome)
-    # categorical
-    elif(numOutcomes>2):
-        minValue = 2^64
-        range = numOutcomes*2^64 - minValue
+    # scalar or categorical
+    else:
         if(report > 2**64 && report!=3*2**63):
             report = 2**64
-        if(report<=0):
-            return(-5)
-        #if((report*range/2^64 + minValue)>numOutcomes*2^64 && report!=3*2**63):
-        # report = 2^64
-        # submit report
-        # todo weight by rep in round 2 and fork
-        self.mode_items[votePeriod][eventID].report_value[report] += 1
-        if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
-            self.mode_items[votePeriod][eventID].current_mode = report
-            self.mode_items[votePeriod][eventID].current_mode_items = self.mode_items[votePeriod][eventID].report_value[report]
-        outcome = self.mode_items[votePeriod][eventID].current_mode
-        # outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-        if(forkedOverThisEvent):
-            self.setForkOutcome(eventID, outcome)
-        else:
-            self.setUncaughtOutcome(eventID, outcome)
-    # scalar
-    else:
-        if(report<=0):
-            return(-5)
-        range = maxValue - minValue
-        if((report*range/2^64 + minValue) > maxValue && report!=3*2**63):
-            report = 2^64
-        if((report*range/2^64 + minValue) < minValue && report!=3*2**63):
+        elif(report<=0):
             # 1 is the new 0
             report = 1
-        # submit report
         # todo weight by rep in round 2 and fork
+        # outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
         self.mode_items[votePeriod][eventID].report_value[report] += 1
         if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
             self.mode_items[votePeriod][eventID].current_mode = report
             self.mode_items[votePeriod][eventID].current_mode_items = self.mode_items[votePeriod][eventID].report_value[report]
         outcome = self.mode_items[votePeriod][eventID].current_mode
-        # outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
         if(forkedOverThisEvent):
             self.setForkOutcome(eventID, outcome)
         else:
@@ -1354,7 +1316,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     # need at least 1.2M gas @ gas price to cover resolution
     if(msg.value < (1200000*tx.gasprice + 1000000*tx.gasprice*(eventNum-1))):
         return(0)
-    if(self.send(branch, creationFee) && send(self.CLOSEMARKET, msg.value) && self.setInfo(marketID, description, tx.origin, creationFee) && self.addMarketToBranch(branch, marketID) && self.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value)):
+    if(self.send(branch, creationFee) && send(self.CLOSEMARKET, msg.value) && self.setInfo(marketID, description, tx.origin, creationFee) && self.addMarketToBranch(branch, marketID) && self.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value, creationFee)):
         i = 0
         while i < len(events):
             self.addMarket(events[i], marketID)
@@ -3703,11 +3665,6 @@ def addEvent(branch, futurePeriod, eventID):
     self.EventsExpDates[branch][futurePeriod].numberEvents += 1
     return(1)
 
-def removeEvent(branch, period):
-    refund()
-    self.EventsExpDates[branch][period].numberRemoved += 1
-    return(1)
-
 def getNumRemoved(branch, period):
     refund()
     return(self.EventsExpDates[branch][period].numberRemoved)
@@ -4180,7 +4137,7 @@ macro sharesPurchased($marketID):
     market($marketID).sharesPurchased
 
 # check that msg.sender is one of our function contracts
-def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy):
+def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy, creationFee):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
@@ -4200,6 +4157,7 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, t
     self.Markets[marketID].gasSubsidy = gasSubsidy
     self.Markets[marketID].tag3 = tag3
     self.Markets[marketID].makerFees = makerFees
+    self.Markets[marketID].fees = creationFee
     return(1)
 
 def addParticipant(market, address):

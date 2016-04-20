@@ -119,14 +119,8 @@ def makeHash(salt, report, eventID):
     reportHash = sha256(hashInfo, chars=32*len(hashInfo))
     return(reportHash)
 
-# Error 0: couldn't set report hash
-# Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't started yet
-# Error -2: not in hash submitting timeframe or event doesn't exist / not a valid event expiring then
-# Error -4: already resolved
-# Error -5: .99 market
-# Error -6: no markets
-# submit hash of (tx.origin, salt, Votes[])
-# todo make required event reporting way cheaper
+# Error -1: invalid event
+# Error -2: not in first half of period [commit part] 
 def submitReportHash(event, reportHash):
     branch = EVENTS.getBranch(event)
     votePeriod = BRANCHES.getVotePeriod(branch)
@@ -134,35 +128,25 @@ def submitReportHash(event, reportHash):
         EXPEVENTS.setNumEventsToReportOn(branch, votePeriod)
     eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
-    if(event==0):
-        return(-2)
-    # make sure event is in the given branch and voteperiod
-    elif(eventIndex==0):
-        if(eventID==0 || event!=eventID):
-            return(-2)
-    elif(EVENTS.getOutcome(event)!=0):
-        return(-4)
-    #if(!self.upToDateOnRR[msg.sender]):
-        # TODO: calls to consensus functions and in send rep
-        #doIt()
-        #self.upToDateOnRR[msg.sender] = 1
-    reportingThreshold = self.calculateReportingThreshold(branch, event, votePeriod)
+    if(eventIndex==0 && (eventID==0 || event!=eventID)):
+        return(-1)
+    reportingThreshold = 0
+    if(self.requiredEvents[event] || EVENTS.getReportingThreshold(event)):
+        reportingThreshold = 2**192
+    else:
+        reportingThreshold = self.calculateReportingThreshold(branch, event, votePeriod)
     x = array(1)
     x[0] = tx.origin + event
-    # div by 2**64 b/c is out of 2**192
+    # div by 2**64 b/c is out of 2**192 rather than 2**256 [to avoid looping around]
     shaHash = sha3(x, items=1)/2**64
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
-    if(residual < periodLength/2 && (self.requiredEvents[event] || shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(event))):
-        # don't increment num reports expected per reporter for updated commitment, just the first time
+    if(residual < periodLength/2 && shaHash <= reportingThreshold):
         if(EXPEVENTS.getReportHash(branch, votePeriod, tx.origin, event)==0):
             self.branches[branch].numReportsExpectedEvent[votePeriod][event] += 1
-        if(EXPEVENTS.setReportHash(branch, votePeriod, tx.origin, reportHash, event)):
-            return(1)
-        else:
-            return(0)
-    else:
-        return(-2)
+        EXPEVENTS.setReportHash(branch, votePeriod, tx.origin, reportHash, event)
+        return(1)
+    return(-2)
 
 # @return 1 if success
 # Error messages
@@ -221,6 +205,8 @@ def submitReport(event, salt, report, ethics):
         if(ethics!=2**64 || ethics!=0):
             ethics = 2**64
         if(forkedOverThisEvent):
+            # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
+                #if so # ethics = fork ethic value
             ethics = (EVENTS.getForkEthicality(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
             EVENTS.setForkEthicality(eventID, ethics)
             self.branches[branch].ethics[votePeriod][tx.origin].event[eventID] = ethics
@@ -296,17 +282,14 @@ def getNumEventsToReport(branch, votePeriod):
         total = minimum*2**64
     return(total)
 
+# validates and submits report
 def validateReport(eventID, branch, votePeriod, report):
     # todo in case of fork remove the original outcome as a possible response
     # add a separate fork outcome and fork ethicality for where to submit report in case of fork
-    # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
-    # check report validity
-
     # binary
     if(EVENTS.getNumOutcomes(eventID)==2 and EVENTS.getMaxValue(eventID)==2**65 && EVENTS.getMinValue(eventID)==2**64):
         if(report>2*2^64 or report<2^64 or report==0):
             return(-5)
-        # submit report
         # todo weight by rep if round 2 and fork
         # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
         if(forkedOverThisEvent):
@@ -316,20 +299,19 @@ def validateReport(eventID, branch, votePeriod, report):
             outcome = (EVENTS.getUncaughtOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
             EVENTS.setUncaughtOutcome(eventID, outcome)
     # scalar or categorical
-    else(numOutcomes>2):
+    else:
         if(report > 2**64 && report!=3*2**63):
             report = 2**64
         elif(report<=0):
             # 1 is the new 0
             report = 1
-        # submit report
         # todo weight by rep in round 2 and fork
+        # outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
         self.mode_items[votePeriod][eventID].report_value[report] += 1
         if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
             self.mode_items[votePeriod][eventID].current_mode = report
             self.mode_items[votePeriod][eventID].current_mode_items = self.mode_items[votePeriod][eventID].report_value[report]
         outcome = self.mode_items[votePeriod][eventID].current_mode
-        # outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
         if(forkedOverThisEvent):
             EVENTS.setForkOutcome(eventID, outcome)
         else:
