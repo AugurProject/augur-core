@@ -27,7 +27,7 @@ data owners[]
 
 def init():
     # test initial funds
-    self.cashcoinBalances[tx.origin] = 100000*2^64
+    self.cashcoinBalances[tx.origin] = 100000*ONE
 
 # @return: cash balance of address
 def balance(address):
@@ -44,7 +44,7 @@ def initiateOwner(account):
     else:
         return(0)
 
-# should send values as fixed point in UI (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
+# should send values as fixed point in UI (1 is ONE, 4 is 4*ONE, .5 is 2^63, etc.)
 # @return: value sent, 0 if fails
 # If you've never used cash in augur, to initiate your account call this with value as 0
 def send(recver, value):
@@ -108,14 +108,14 @@ def setCash(address, balance):
     return(1)
 
 def depositEther():
-    self.cashcoinBalances[msg.sender] += msg.value * 2^64 / 10^18
+    self.cashcoinBalances[msg.sender] += msg.value * ONE / 10^18
     return msg.value
 
 def withdrawEther(to, value):
     if(value < 0):
         return(-1)
-    if self.cashcoinBalances[msg.sender] >= value * 2^64 / 10^18:
-        self.cashcoinBalances[msg.sender] -= value * 2^64 / 10^18
+    if self.cashcoinBalances[msg.sender] >= value * ONE / 10^18:
+        self.cashcoinBalances[msg.sender] -= value * ONE / 10^18
         send(to, value)
         return 1
     else:

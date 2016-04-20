@@ -41,7 +41,7 @@ def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnl
     branchInfo = string(8*32+len(description))
     branchInfo[0] = BRANCH                                      #typecode
     branchInfo[1] = tx.origin                                   #creator address
-    branchInfo[2] = 47*2^64                                     #creation fee
+    branchInfo[2] = 47*ONE                                     #creation fee
     branchInfo[3] = periodLength                                #length of voting cycle
     branchInfo[4] = block.timestamp                             #current blocktime
     branchInfo[5] = parent                                      #branchID of parent branch
@@ -56,7 +56,7 @@ def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnl
         BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee, oracleOnly, parentPeriod, parent)
     else:
         return(-2)
-    if(INFO.getCreator(parent) && CASH.send(parent, 47*2^64) && INFO.setInfo(branchID, description, tx.origin, 47*2^64) && REPORTING.setInitialReporters(parent, branchID)):
+    if(INFO.getCreator(parent) && CASH.send(parent, 47*ONE) && INFO.setInfo(branchID, description, tx.origin, 47*ONE) && REPORTING.setInitialReporters(parent, branchID)):
         return(branchID)
     else:
         return(-2)

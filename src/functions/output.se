@@ -22,16 +22,16 @@ def init():
     # since only have to report on half this targets 3
     self.Branches[1010101].baseReporters = 2*3
     # test initial funds
-    self.cashcoinBalances[tx.origin] = 100000*2^64
+    self.cashcoinBalances[tx.origin] = 100000*ONE
 
 inset('refund.se')
 
 # Error -1: Hey, you're not broke!
 def cashFaucet():
     refund()
-    if self.balance(tx.origin) > 5*2**64:
+    if self.balance(tx.origin) > 5*ONE:
         return(-1)
-    self.setCash(tx.origin, 10000*2**64)
+    self.setCash(tx.origin, 10000*ONE)
     return(1)
 
 def reputationFaucet(branch):
@@ -41,7 +41,7 @@ def reputationFaucet(branch):
     else:
         index = self.getNumberReporters(branch)
         self.addReporter(branch, tx.origin)
-    self.setRep(branch, index, 47*2**64)
+    self.setRep(branch, index, 47*ONE)
     self.initialPenalizedSetting(branch, tx.origin, (self.getVotePeriod(branch)-1))
     return(1)
 inset('refund.se')
@@ -69,7 +69,7 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
     trading_fee = self.getTradingFee($market)
     cumScale = self.getCumScale($market)
     fee = fee_percent(trading_fee, $price, $amount, cumScale)
-    fee = fee * self.getMakerFees($market) / 2**64
+    fee = fee * self.getMakerFees($market) / ONE
 
     # Save trade
     if !self.getID(trade_id):
@@ -82,13 +82,13 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
         if $type == ASK:
             self.modifyParticipantShares($branch, $market, $participantNumber, $outcome, -$amount)
             if(fee):
-                self.send($market, ($amount * $price / 2**64 * fee / 2**64))
+                self.send($market, ($amount * $price / ONE * fee / ONE))
 
         # Send / escrow cash for bids
         if $type == BID:
-            self.send($market, $amount * $price / 2**64)
+            self.send($market, $amount * $price / ONE)
             if(fee):
-                self.send($market, ($amount * $price / 2**64 * fee / 2**64))
+                self.send($market, ($amount * $price / ONE * fee / ONE))
     else:
         return(TRADE_ALREADY_EXISTS)
 
@@ -123,7 +123,7 @@ def cancel(trade_id):
     trading_fee = self.getTradingFee(market)
     cumScale = self.getCumScale(market)
     fee = fee_percent(trading_fee, price, amount, cumScale)
-    fee = fee * self.getMakerFees($market) / 2**64
+    fee = fee * self.getMakerFees($market) / ONE
     # Check the owner
     if msg.sender == owner:
         # Clear the trade first
@@ -132,17 +132,17 @@ def cancel(trade_id):
         # Issue refunds
         if type == BID:
             # cash refund
-            self.subtractCash(market, amount * price / 2**64)
-            self.subtractCash(market, (amount * price / 2**64 * fee / 2**64))
-            self.addCash(msg.sender, (amount * price / 2**64 + (amount * price / 2**64 * fee / 2**64)))
+            self.subtractCash(market, amount * price / ONE)
+            self.subtractCash(market, (amount * price / ONE * fee / ONE))
+            self.addCash(msg.sender, (amount * price / ONE + (amount * price / ONE * fee / ONE)))
 
         elif type == ASK:
             # shares refund
             participantNumber = self.getParticipantNumber(market, msg.sender)
             branch = self.getBranchID(market)
             self.modifyParticipantShares(branch, market, participantNumber, outcome, amount)
-            self.subtractCash(market, (amount * price / 2**64 * fee / 2**64))
-            self.addCash(msg.sender, (amount * price / 2**64 * fee / 2**64))
+            self.subtractCash(market, (amount * price / ONE * fee / ONE))
+            self.addCash(msg.sender, (amount * price / ONE * fee / ONE))
 
         
         # Log cancellation
@@ -183,10 +183,10 @@ def buy(amount, price, market, outcome):
     trading_fee = self.getTradingFee(market)
     cumScale = self.getCumScale(market)
     fee = fee_percent(trading_fee, price, amount, cumScale)
-    fee = fee * self.getMakerFees($market) / 2**64
-    if(amount*price < 2**64 or price>cumScale):
+    fee = fee * self.getMakerFees($market) / ONE
+    if(amount*price < ONE or price>cumScale):
         return(0)
-    if(self.balance(tx.origin) < (amount * price / 2**64 *(fee + 2^64)/2^64)):
+    if(self.balance(tx.origin) < (amount * price / ONE *(fee + ONE)/ONE)):
         return(-4)
     save_trade(BID, amount, price, market, outcome, branch, participantNumber)
     return(FAILURE)
@@ -197,7 +197,7 @@ def sell(amount, price, market_id, outcome):
     creator = self.getCreator(market_id)
     if(msg.sender == creator || tx.origin == creator):
         return(-30)
-    if(amount <= 0 or price <= 0 or market_id==0 or price*amount < 2**64):
+    if(amount <= 0 or price <= 0 or market_id==0 or price*amount < ONE):
         return(-1)
     branch = self.getBranchID(market)
     if(self.getOracleOnly(branch)):
@@ -212,10 +212,10 @@ def sell(amount, price, market_id, outcome):
     trading_fee = self.getTradingFee(market_id)
     cumScale = self.getCumScale(market_id)
     fee = fee_percent(trading_fee, price, amount, cumScale)
-    fee = fee * self.getMakerFees($market) / 2**64
-    if(amount*price < 2**64 or price>cumScale):
+    fee = fee * self.getMakerFees($market) / ONE
+    if(amount*price < ONE or price>cumScale):
         return(0)
-    if(self.balance(tx.origin) < (amount * price / 2**64 *fee/2^64)):
+    if(self.balance(tx.origin) < (amount * price / ONE *fee/ONE)):
         return(-4)
     save_trade(ASK, amount, price, market_id, outcome, branch, participantNumber)
     return(FAILURE)
@@ -261,7 +261,7 @@ def short_sell(buyer_trade_id, max_amount):
     cumScale = self.getCumScale(market_id)
     amount = min(orig_amount, max_amount)
     fee = fee_percent(trading_fee, price, amount, cumScale)
-    fee = amount * price /2**64 * fee / 2**64
+    fee = amount * price /ONE * fee / ONE
     branchFees = (13835058055282163712+(2**63 - self.getMakerFees(market))/2)*fee
     creatorFees = (2**62+(2**63 - self.getMakerFees(market))/2)*fee
     takerFeesTotal = branchFees + creatorFees
@@ -275,7 +275,7 @@ def short_sell(buyer_trade_id, max_amount):
     #plus fees
         #1 should go to branch
         #1 should go to creator
-    cost = amount*cumScale/2**64 - (amount*price/2**64 - takerFeesTotal)
+    cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)
     if(self.balance(tx.origin) < cost):
         return(INSUFFICIENT_BALANCE)
     numEvents = self.getNumEvents(market)
@@ -318,7 +318,7 @@ def short_sell(buyer_trade_id, max_amount):
     # Determine fill amount
     fill = amount
     # Calculate value
-    value = (fill * price)/2**64
+    value = (fill * price)/ONE
     # Update trade amount or remove
     if fill < orig_amount:
         self.fill_trade(trade_id, fill)
@@ -334,7 +334,7 @@ def short_sell(buyer_trade_id, max_amount):
     self.send(creator, creatorFees)
 
     # other party [maker] pay their part of the fee here too
-    fee = fee * self.getMakerFees(market) / 2**64
+    fee = fee * self.getMakerFees(market) / ONE
     self.subtractCash(market_id, fee)
     self.addCash(creator, fee/2)
     self.addCash(branch, fee/2)
@@ -423,7 +423,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Determine fill amount
                 fill = min(amount, min(balance, max_amount))
                 # Calculate value
-                value = (fill * price)/2**64
+                value = (fill * price)/ONE
                 # Update trade amount or remove
                 if fill < amount:
                     self.fill_trade(trade_id, fill)
@@ -433,7 +433,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 self.modifyParticipantShares(branch, market_id, msg.sender, outcome, -fill)
                 self.modifyParticipantShares(branch, market_id, owner, outcome, fill)
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
-                fee = value * fee / 2**64
+                fee = value * fee / ONE
                 branchFees = (13835058055282163712+(2**63 - self.getMakerFees(market))/2)*fee
                 creatorFees = (2**62+(2**63 - self.getMakerFees(market))/2)*fee
                 takerFeesTotal = branchFees + creatorFees
@@ -445,7 +445,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 self.subtractCash(market_id, value)
 
                 # other party [maker] pay their part of the fee here too
-                fee = fee * self.getMakerFees(market) / 2**64
+                fee = fee * self.getMakerFees(market) / ONE
                 self.subtractCash(market_id, fee)
                 self.addCash(creator, fee/2)
                 self.addCash(branch, fee/2)
@@ -463,10 +463,10 @@ def trade(max_value, max_amount, trade_ids:arr):
             max_value = min(self.balance(msg.sender), max_value)
             if max_value > 0:
                 # Calculate value of trade
-                trade_value = amount * price / 2**64
+                trade_value = amount * price / ONE
                 # Determine fill value
                 value = min(max_value, trade_value)
-                fee = trade_value * fee / 2**64
+                fee = trade_value * fee / ONE
                 branchFees = (13835058055282163712+(2**63 - self.getMakerFees(market))/2)*fee
                 creatorFees = (2**62+(2**63 - self.getMakerFees(market))/2)*fee
                 takerFeesTotal = branchFees + creatorFees
@@ -475,7 +475,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                     return(INSUFFICIENT_BALANCE)
                 # Calculate fill amount, update trade amount or remove filled trade
                 if value < trade_value:
-                    fill = value*2**64 / price
+                    fill = value*ONE / price
                     self.fill_trade(trade_id, fill)
                 else:
                     fill = amount
@@ -496,7 +496,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 self.subtractCash(msg.sender, cost)
 
                 # other party [maker] pay their part of the fee here too
-                fee = fee * self.getMakerFees(market) / 2**64
+                fee = fee * self.getMakerFees(market) / ONE
                 self.subtractCash(market_id, fee)
                 self.addCash(creator, fee/2)
                 self.addCash(branch, fee/2)
@@ -532,7 +532,7 @@ def buyCompleteSets(branch, market, amount):
     n = 0
     if(self.getBranchID(market) != branch):
         return(-1)
-    price = amount*cumScale/2**64
+    price = amount*cumScale/ONE
     if(self.balance(tx.origin) < price):
         return(-3)
         
@@ -548,8 +548,8 @@ def buyCompleteSets(branch, market, amount):
         self.modifyParticipantShares(branch, market, participantNumber, i, amount)
         i += 1
     if(self.getVotePeriod(branch)<self.getTradingPeriod(market)):
-        self.modifySharesValue(market, amount*cumScale/2**64)
-        self.adjustPeriodShareValueOutstanding(branch, self.getTradingPeriod(market), amount*cumScale/2**64)
+        self.modifySharesValue(market, amount*cumScale/ONE)
+        self.adjustPeriodShareValueOutstanding(branch, self.getTradingPeriod(market), amount*cumScale/ONE)
     # send money from user acc. to market address/account
     # cost for shares
     self.send(market, price)
@@ -573,7 +573,7 @@ def sellCompleteSets(branch, market, amount):
         return(-1)
 
     # these prices are in fixed point
-    price = amount*cumScale/2**64
+    price = amount*cumScale/ONE
     participantNumber = self.getParticipantNumber(market, tx.origin)
     # remove shares from the user's account
     i = 0
@@ -588,25 +588,25 @@ def sellCompleteSets(branch, market, amount):
         self.modifyParticipantShares(branch, market, participantNumber, i, -amount)
         i += 1
     if(self.getVotePeriod(branch)<self.getTradingPeriod(market)):
-        self.modifySharesValue(market, -amount*cumScale/2**64)
-        self.adjustPeriodShareValueOutstanding(branch, self.getTradingPeriod(market), -amount*cumScale/2**64)
+        self.modifySharesValue(market, -amount*cumScale/ONE)
+        self.adjustPeriodShareValueOutstanding(branch, self.getTradingPeriod(market), -amount*cumScale/ONE)
     # send bitcoin from the market to the user acc.
     self.subtractCash(market, price)
     self.addCash(tx.origin, price)
     return(1)
     
 macro fee_percent($market_fee, $price, $amount, $cumScale):
-    4 * $market_fee * $price / ($cumScale) * (2**64-$price/$cumScale)
+    4 * $market_fee * $price / ($cumScale) * (ONE-$price/$cumScale)
 inset('refund.se')
 
 # first param is the market, second param is the subcurrency contract
 data cash[][]
 
 macro YES: 2^65
-macro NO: 2^64
+macro NO: ONE
 macro BAD: 3 * 2^63
 
-macro CATCH_TOLERANCE: 2^64 / 10
+macro CATCH_TOLERANCE: ONE / 10
 
 event thru(user:indexed, time)
 
@@ -623,7 +623,7 @@ macro ethic_catch($x):
     if($x < 2^63):
         0
     else:
-        2^64
+        ONE
 
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
@@ -684,7 +684,7 @@ def closeMarket(branch, market):
             elif(scalar(events[n]) && self.getmode(events[n])==0):
                     resolution = self.resolveCategoricalOrScalar(self.getMinValue(events[n]), self.getMaxValue(events[n]), events[n], market, branch, votingPeriodEvent, period)
             elif(categorical(events[n]) && self.getmode(events[n])==0):
-                    resolution = self.resolveCategoricalOrScalar(2^64, 2^64*self.getNumOutcomes(events[n]), events[n], market, branch, votingPeriodEvent, period)
+                    resolution = self.resolveCategoricalOrScalar(ONE, ONE*self.getNumOutcomes(events[n]), events[n], market, branch, votingPeriodEvent, period)
             elif(resolution==-6):
                 outcomeSix = 1
             n += 1
@@ -743,10 +743,10 @@ def claimProceeds(branch, market):
         return(0)
 
 macro scalar($event):
-    ((self.getMaxValue($event)!=2**65 || self.getMinValue($event)!=2**64) && self.getNumOutcomes($event)==2)
+    ((self.getMaxValue($event)!=2**65 || self.getMinValue($event)!=ONE) && self.getNumOutcomes($event)==2)
     
 macro binary($event):
-    (self.getNumOutcomes($event)==2 and 2**64*self.getMaxValue($event)==2**65 and self.getMinValue($event)==2**64)
+    (self.getNumOutcomes($event)==2 and ONE*self.getMaxValue($event)==2**65 and self.getMinValue($event)==ONE)
     
 macro categorical($event):
     (self.getNumOutcomes($event)>2)
@@ -767,7 +767,7 @@ def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnl
     branchInfo = string(8*32+len(description))
     branchInfo[0] = BRANCH                                      #typecode
     branchInfo[1] = tx.origin                                   #creator address
-    branchInfo[2] = 47*2^64                                     #creation fee
+    branchInfo[2] = 47*ONE                                     #creation fee
     branchInfo[3] = periodLength                                #length of voting cycle
     branchInfo[4] = block.timestamp                             #current blocktime
     branchInfo[5] = parent                                      #branchID of parent branch
@@ -782,7 +782,7 @@ def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnl
         self.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee, oracleOnly, parentPeriod, parent)
     else:
         return(-2)
-    if(self.getCreator(parent) && self.send(parent, 47*2^64) && self.setInfo(branchID, description, tx.origin, 47*2^64) && self.setInitialReporters(parent, branchID)):
+    if(self.getCreator(parent) && self.send(parent, 47*ONE) && self.setInfo(branchID, description, tx.origin, 47*ONE) && self.setInitialReporters(parent, branchID)):
         return(branchID)
     else:
         return(-2)
@@ -802,7 +802,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     if(forked && wouldExpireInPeriodJustAfterFork):
         return(-9)
     periodLength = self.getPeriodLength(branch)
-    if(maxValue < minValue or (maxValue-minValue) < 2**64):
+    if(maxValue < minValue or (maxValue-minValue) < ONE):
         return(-2)
     if periodLength && description != 0 && expDate > block.timestamp:
         eventinfo = string(8*32 + len(description))
@@ -822,7 +822,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         return(0)
     # fee to ask a question rises if voter participation (rep reported) falls, if it's really high, the fee is lowered (participationFactor is a fixedpoint number)
     currentVotePeriod = self.getVotePeriod(branch)
-    participationFactor = (self.getTotalRepReported(branch, currentVotePeriod-2) * 2^64) / self.getTotalRepReported(branch, currentVotePeriod-1)
+    participationFactor = (self.getTotalRepReported(branch, currentVotePeriod-2) * ONE) / self.getTotalRepReported(branch, currentVotePeriod-1)
     if participationFactor == 0:
         participationFactor = 1
     self.initiateOwner(eventID)
@@ -847,11 +847,11 @@ def twoOutcomes(market, winningOutcome: arr, events: arr):
     refund()
     # look for the scalar
     scalar = 0
-    if(((self.getMaxValue(events[0])!=2**65 || self.getMinValue(events[0])!=2**64) && self.getNumOutcomes(events[0])==2) || self.getOutcome(events[0])==3*2^63):
+    if(((self.getMaxValue(events[0])!=2**65 || self.getMinValue(events[0])!=ONE) && self.getNumOutcomes(events[0])==2) || self.getOutcome(events[0])==3*2^63):
         scalar = 0
-    elif(((self.getMaxValue(events[1])!=2**65 || self.getMinValue(events[1])!=2**64) && self.getNumOutcomes(events[1])==2) || self.getOutcome(events[1])==3*2^63):
+    elif(((self.getMaxValue(events[1])!=2**65 || self.getMinValue(events[1])!=ONE) && self.getNumOutcomes(events[1])==2) || self.getOutcome(events[1])==3*2^63):
         scalar = 1
-    elif(((self.getMaxValue(events[2])!=2**65 || self.getMinValue(events[2])!=2**64) && self.getNumOutcomes(events[2])==2) || self.getOutcome(events[2])==3*2^63):
+    elif(((self.getMaxValue(events[2])!=2**65 || self.getMinValue(events[2])!=ONE) && self.getNumOutcomes(events[2])==2) || self.getOutcome(events[2])==3*2^63):
         scalar = 2
     outcome = self.getOutcome(events[scalar])
     minValue = self.getMinValue(events[scalar])
@@ -862,9 +862,9 @@ def twoOutcomes(market, winningOutcome: arr, events: arr):
         outcome = minValue
     # price is in fixed point
     # share two goes with the high side
-    pricePerShare2 = 2^64*(outcome - minValue) / (maxValue - minValue)
+    pricePerShare2 = ONE*(outcome - minValue) / (maxValue - minValue)
     #share one goes with the low side of the calc
-    pricePerShare1 = 2^64 - pricePerShare1
+    pricePerShare1 = ONE - pricePerShare1
     # distribute cashcoin to the people who won money by holding winning shares
     participantNumber = self.getParticipantNumber(market, tx.origin)
     if(participantNumber == -1):
@@ -877,12 +877,12 @@ def twoOutcomes(market, winningOutcome: arr, events: arr):
         self.modifyParticipantShares(self.getBranchID(market), market, participantNumber, winningOutcome[n], -sharesOwned)
         # low side
         if(n==0):
-            self.subtractCash(market, sharesOwned*self.getCumScale(market)/2**64*pricePerShare1/2^64)
-            self.addCash(participant, sharesOwned*self.getCumScale(market)/2**64*pricePerShare1/2^64)
+            self.subtractCash(market, sharesOwned*self.getCumScale(market)/ONE*pricePerShare1/ONE)
+            self.addCash(participant, sharesOwned*self.getCumScale(market)/ONE*pricePerShare1/ONE)
         # high side (of the scalar part)
         elif(n==1):
-            self.subtractCash(market, sharesOwned*self.getCumScale(market)/2**64*pricePerShare2/2^64)
-            self.addCash(participant, sharesOwned*self.getCumScale(market)/2**64*pricePerShare2/2^64)
+            self.subtractCash(market, sharesOwned*self.getCumScale(market)/ONE*pricePerShare2/ONE)
+            self.addCash(participant, sharesOwned*self.getCumScale(market)/ONE*pricePerShare2/ONE)
         n+=1
     return(1)
 inset('refund.se')
@@ -977,14 +977,8 @@ def makeHash(salt, report, eventID):
     reportHash = sha256(hashInfo, chars=32*len(hashInfo))
     return(reportHash)
 
-# Error 0: couldn't set report hash
-# Error -1: reporter (you) doesn't (don't) exist, or voting period over or hasn't started yet
-# Error -2: not in hash submitting timeframe or event doesn't exist / not a valid event expiring then
-# Error -4: already resolved
-# Error -5: .99 market
-# Error -6: no markets
-# submit hash of (tx.origin, salt, Votes[])
-# todo make required event reporting way cheaper
+# Error -1: invalid event
+# Error -2: not in first half of period [commit part] 
 def submitReportHash(event, reportHash):
     branch = self.getBranch(event)
     votePeriod = self.getVotePeriod(branch)
@@ -992,35 +986,25 @@ def submitReportHash(event, reportHash):
         self.setNumEventsToReportOn(branch, votePeriod)
     eventIndex = self.getEventIndex(votePeriod, event)
     eventID = self.getEvent(branch, votePeriod, eventIndex)
-    if(event==0):
-        return(-2)
-    # make sure event is in the given branch and voteperiod
-    elif(eventIndex==0):
-        if(eventID==0 || event!=eventID):
-            return(-2)
-    elif(self.getOutcome(event)!=0):
-        return(-4)
-    #if(!self.upToDateOnRR[msg.sender]):
-        # TODO: calls to consensus functions and in send rep
-        #doIt()
-        #self.upToDateOnRR[msg.sender] = 1
-    reportingThreshold = self.calculateReportingThreshold(branch, event, votePeriod)
+    if(eventIndex==0 && (eventID==0 || event!=eventID)):
+        return(-1)
+    reportingThreshold = 0
+    if(self.requiredEvents[event] || self.getReportingThreshold(event)):
+        reportingThreshold = 2**192
+    else:
+        reportingThreshold = self.calculateReportingThreshold(branch, event, votePeriod)
     x = array(1)
     x[0] = tx.origin + event
-    # div by 2**64 b/c is out of 2**192
-    shaHash = sha3(x, items=1)/2**64
+    # div by ONE b/c is out of 2**192 rather than 2**256 [to avoid looping around]
+    shaHash = sha3(x, items=1)/ONE
     periodLength = self.getPeriodLength(branch)
     residual = block.timestamp % periodLength
-    if(residual < periodLength/2 && (self.requiredEvents[event] || shaHash < reportingThreshold || shaHash<self.getReportingThreshold(event))):
-        # don't increment num reports expected per reporter for updated commitment, just the first time
+    if(residual < periodLength/2 && shaHash <= reportingThreshold):
         if(self.getReportHash(branch, votePeriod, tx.origin, event)==0):
             self.branches[branch].numReportsExpectedEvent[votePeriod][event] += 1
-        if(self.setReportHash(branch, votePeriod, tx.origin, reportHash, event)):
-            return(1)
-        else:
-            return(0)
-    else:
-        return(-2)
+        self.setReportHash(branch, votePeriod, tx.origin, reportHash, event)
+        return(1)
+    return(-2)
 
 # @return 1 if success
 # Error messages
@@ -1058,7 +1042,7 @@ def submitReport(event, salt, report, ethics):
     x = array(1)
     x[0] = tx.origin + eventID
     reportingThreshold = self.calculateReportingThreshold(branch, eventID, votePeriod)
-    shaHash = sha3(x, items=1)/2**64
+    shaHash = sha3(x, items=1)/ONE
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
         realHash = self.getReportHash(branch, votePeriod, msg.sender, eventID)
@@ -1076,8 +1060,8 @@ def submitReport(event, salt, report, ethics):
         # set report value for event
         self.branches[branch].report[votePeriod][tx.origin].event[eventID] = report
         # set ethics value for event
-        if(ethics!=2**64 || ethics!=0):
-            ethics = 2**64
+        if(ethics!=ONE || ethics!=0):
+            ethics = ONE
         if(forkedOverThisEvent):
             # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
                 #if so # ethics = fork ethic value
@@ -1108,7 +1092,6 @@ def submitReport(event, salt, report, ethics):
 
 ### Helper functions:
 # could charge market creator for the part of this calc that only needs to be done once, first person to use gets a refund/rebate
-# broken atm, returns 0
 def calculateReportingThreshold(branch, eventID, votePeriod):
     numMarkets = self.getNumMarkets(eventID)
     if(numMarkets>100):
@@ -1124,20 +1107,20 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
         totalFees += self.getFees(markets[i])
         i += 1
     totalVal = self.getShareValue(branch, votePeriod)
-    logOutput = self.fx_log(self.getRepBalance(branch, tx.origin)*2**64/self.getActiveRep(branch))
-    repConstant = self.fx_exp(22136092888451461120*logOutput/2**64)
+    logOutput = self.fx_log(self.getRepBalance(branch, tx.origin)*ONE/self.getActiveRep(branch))
+    repConstant = self.fx_exp(22136092888451461120*logOutput/ONE)
     repConstant += 18446744073709552
-    shareFraction = shareValue*2**64/totalVal
+    shareFraction = shareValue*ONE/totalVal
     expectedEvents = repConstant * self.getNumEventsToReportOn(branch, votePeriod)
-    numEventsAfterMinAccounting = self.getNumEventsToReport(branch, votePeriod) - self.numReqEvents[branch][votePeriod]*2**64
-    ratio = numEventsAfterMinAccounting * 2**64 / expectedEvents
-    if(ratio > 2**64):
-        repConstant = repConstant*ratio / 2**64
-    numReportersOnMarket = self.getBaseReporters(branch)*((-(267*shareFraction**2)/(2*2**64) + (533*shareFraction)/2 + 1*2**64))
-    totalFeesInWei = totalFees * 10**18 / 2**64
+    numEventsAfterMinAccounting = self.getNumEventsToReport(branch, votePeriod) - self.numReqEvents[branch][votePeriod]*ONE
+    ratio = numEventsAfterMinAccounting * ONE / expectedEvents
+    if(ratio > ONE):
+        repConstant = repConstant*ratio / ONE
+    numReportersOnMarket = self.getBaseReporters(branch)*((-(267*shareFraction**2)/(2*ONE) + (533*shareFraction)/2 + 1*ONE))
+    totalFeesInWei = totalFees * 10**18 / ONE
     canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
-    lesser = max(canPayForThisManyReporters*2**64, numReportersOnMarket)
-    reportingThreshold = lesser*repConstant*2**64
+    lesser = max(canPayForThisManyReporters*ONE, numReportersOnMarket)
+    reportingThreshold = lesser*repConstant*ONE
     return(reportingThreshold)
 
 #a^b=exp(b*ln(a))=e^(b*ln(a)).
@@ -1145,15 +1128,15 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
 # returns num events to report on in fxp
 def getNumEventsToReport(branch, votePeriod):
     prelim = self.getNumEventsToReportOn(branch, votePeriod)
-    repConstant = self.getRepBalance(branch, tx.origin)*2**64/self.getActiveRep(branch)
+    repConstant = self.getRepBalance(branch, tx.origin)*ONE/self.getActiveRep(branch)
     logOutput = self.fx_log(repConstant)
-    exp = self.fx_exp(22136092888451461120*logOutput/2**64)
+    exp = self.fx_exp(22136092888451461120*logOutput/ONE)
     exp += 18446744073709552
-    total = exp*prelim + self.numReqEvents[branch][votePeriod]*2**64
+    total = exp*prelim + self.numReqEvents[branch][votePeriod]*ONE
     eventsInPeriod = self.getNumberEvents(branch, expDateIndex)-self.getNumRemoved(branch, votePeriod)
     minimum = min(30+self.numReqEvents[branch][votePeriod], eventsInPeriod)
-    if(total/2**64 < minimum):
-        total = minimum*2**64
+    if(total/ONE < minimum):
+        total = minimum*ONE
     return(total)
 
 # validates and submits report
@@ -1161,8 +1144,8 @@ def validateReport(eventID, branch, votePeriod, report):
     # todo in case of fork remove the original outcome as a possible response
     # add a separate fork outcome and fork ethicality for where to submit report in case of fork
     # binary
-    if(self.getNumOutcomes(eventID)==2 and self.getMaxValue(eventID)==2**65 && self.getMinValue(eventID)==2**64):
-        if(report>2*2^64 or report<2^64 or report==0):
+    if(self.getNumOutcomes(eventID)==2 and self.getMaxValue(eventID)==2**65 && self.getMinValue(eventID)==ONE):
+        if(report>2*ONE or report<ONE or report==0):
             return(-5)
         # todo weight by rep if round 2 and fork
         # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
@@ -1174,8 +1157,8 @@ def validateReport(eventID, branch, votePeriod, report):
             self.setUncaughtOutcome(eventID, outcome)
     # scalar or categorical
     else:
-        if(report > 2**64 && report!=3*2**63):
-            report = 2**64
+        if(report > ONE && report!=3*2**63):
+            report = ONE
         elif(report<=0):
             # 1 is the new 0
             report = 1
@@ -1222,9 +1205,9 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         return(0)
     periodLength = self.getPeriodLength(branch)
     # send this to branch
-    creationFee = 1106804644422573056 * self.getBaseReporters(branch) * 2**64 / tradingFee
+    creationFee = 1106804644422573056 * self.getBaseReporters(branch) * ONE / tradingFee
     # gives ether/cash amount in fixed point
-    minFee = 3500000*self.getBaseReporters(branch)*tx.gasprice*len(events)*2^64/10^18
+    minFee = 3500000*self.getBaseReporters(branch)*tx.gasprice*len(events)*ONE/10^18
     if(creationFee < minFee):
         creationFee = minFee
     if(self.balance(msg.sender) < creationFee):
@@ -1275,7 +1258,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         #scalars
         maxValue = self.getMaxValue(event)
         minValue = self.getMinValue(event)
-        if((maxValue!=2**65 || minValue !=2**64) && self.getNumOutcomes(event)==2):
+        if((maxValue!=2**65 || minValue !=ONE) && self.getNumOutcomes(event)==2):
             # is a valid scalar
             cumulativeScale += maxValue - minValue
         eventNumOutcomes = self.getNumOutcomes(event)
@@ -1287,7 +1270,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     if(numOutcomes > 8):
         return(-3)
     if(cumulativeScale==0):
-        cumulativeScale = 2**64
+        cumulativeScale = ONE
     tradingPeriod = (tradingPeriod / periodLength)
 
     # formation of marketID (hash)
@@ -1330,8 +1313,8 @@ def updateTradingFee(branch, market, tradingFee):
     if(msg.sender != self.getCreator(market) || tx.origin != self.getCreator(market)):
         return(-4)
     oldFee = self.getTradingFee(market)
-    oldCreationFee = 1106804644422573056 * self.getBaseReporters(branch) * 2**64 / oldFee
-    newCreationFee = 1106804644422573056 * self.getBaseReporters(branch) * 2**64 / tradingFee
+    oldCreationFee = 1106804644422573056 * self.getBaseReporters(branch) * ONE / oldFee
+    newCreationFee = 1106804644422573056 * self.getBaseReporters(branch) * ONE / tradingFee
     if(tradingFee < self.getMinTradingFee(branch) or tradingFee > oldFee):
         return(-1)
     self.send(branch, newCreationFee-oldCreationFee)
@@ -1356,7 +1339,7 @@ def pushMarketForward(branch, market):
     numEvents = self.getNumEvents(market)
     if(marketClosed):
         return(0)
-    if(self.send(market, numEvents*self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))==0):
+    if(self.send(market, numEvents*self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*ONE))==0):
         return(0)
     i = 0
     # for each event in market
@@ -1417,7 +1400,7 @@ def getOriginalVotePeriod(event):
 # todo make sure network isn't forked / forking atm
 def roundTwoPostBond(branch, event, eventIndex, votePeriod):
     refund()
-    bond = 100*2**64
+    bond = 100*ONE
     if(self.getVotePeriod(branch)!=votePeriod):
         return(0)
     eventID = self.getEvent(branch, votePeriod, eventIndex)
@@ -1456,7 +1439,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
 def roundTwoResolve(branch, event, eventIndex, votePeriod):
     refund()
     overruled = 1
-    bond = 100*2**64
+    bond = 100*ONE
     votedOnAgain = 0
     if(scalar(event) or categorical(event)):
         if(self.roundTwo[event].originalOutcome == self.getUncaughtOutcome(event) && self.roundTwo[event].originalEthicality==ethic_catch(self.getEthical(event))):
@@ -1495,7 +1478,7 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
         return(0)
 
 macro scalar($event):
-    ((self.getMaxValue($event)!=2**65 || self.getMinValue($event)!=2**64) && self.getNumOutcomes($event)==2)
+    ((self.getMaxValue($event)!=2**65 || self.getMinValue($event)!=ONE) && self.getNumOutcomes($event)==2)
         
 macro binary($event):
     (self.getNumOutcomes($event)==2 and self.getMaxValue($event)==2**65 and self.getMinValue($event)==2**6Z)
@@ -1504,9 +1487,9 @@ macro categorical($event):
     (self.getNumOutcomes($event)>2)
     
 macro YES: 2^65
-macro NO: 2^64
+macro NO: ONE
 macro BAD: 3 * 2^63
-macro CATCH_TOLERANCE: 2^64 / 10
+macro CATCH_TOLERANCE: ONE / 10
 
 # Bins values to 1, 1.5, 2
 macro catch($x):
@@ -1521,7 +1504,7 @@ macro ethic_catch($x):
     if($x < 2^63):
         0
     else:
-        2^64
+        ONE
 
 def resolve(branch, event):
     refund()
@@ -1549,7 +1532,7 @@ def resolve(branch, event):
         self.setmode(event, mode)
         scaled_max = self.getMaxValue(event)
         scaled_min = self.getMinValue(event)
-        fxpOutcome = mode * (scaled_max - scaled_min)/2**64 + scaled_min
+        fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
         self.setOutcome(event, fxpOutcome)
         ethical = ethic_catch(self.getEthical(event))
 
@@ -1586,7 +1569,7 @@ def sendReputation(branch, recver, value):
     # Rep cannot be simultaneously spent (transferred) and used to vote
     currentVotePeriod = self.getVotePeriod(branch)
     # you can't trade if you or the person you're sending to have submitted a report, or at all in the second half of the period [b/c you can messup / cheat w/ reporting] and you can't trade in the first half of a period until you've been penalized for reporting wrongly/not reporting
-    #if(value<=0 || !self.send(branch, 5*2^64) || self.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || self.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || self.getReport(branch, currentVotePeriod, recver, 0) != 0):
+    #if(value<=0 || !self.send(branch, 5*ONE) || self.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || self.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || self.getReport(branch, currentVotePeriod, recver, 0) != 0):
     # self.getReportedPeriod(branch, current)
     #    return(0)
     # need to check all this for the person it's being sent to as well
@@ -1628,7 +1611,7 @@ def sendReputation(branch, recver, value):
 def transfer(branch, recver, value):
     refund()
     currentVotePeriod = self.getVotePeriod(branch)
-    if(value<=0 || !self.send(branch, 5*2^64)):
+    if(value<=0 || !self.send(branch, 5*ONE)):
         return(0)
 
     sender = msg.sender
@@ -1659,7 +1642,7 @@ def transfer(branch, recver, value):
 def transferFrom(branch, from, recver, value):
     refund()
     currentVotePeriod = self.getVotePeriod(branch)
-    if(value<=0 || !self.send(branch, 5*2^64)):
+    if(value<=0 || !self.send(branch, 5*ONE)):
         return(0)
 
     sender = from
@@ -1710,7 +1693,7 @@ def convertToDormantRep(branch, value):
 		# benny comment:
             #```Maybe still have this sort-of variable "power" to it, but REP initially doesn't have "full-power", or REP that hasn't been used to report over the past week has now let it's "power-meter" drop to only 20% earning power (it's kind-of dormant), that then ramps back up to 100% power once it gets used a bit. Could there be an element of this type of time-decay programmed into the REP that's helps incentive? Something like this would make the system more automatic, rather than relying on the user to manually switch "on" or switch "off" the self. If a user knows, "I better report this week or my REP's power meter goes down to 20% again, and it's gonna take extra effort to get it back to full-power", well that's pretty good incentive to keep the user active, without actually taking it from them.```
 
-    if(value<=0 || !self.send(branch, 5*2^64)):
+    if(value<=0 || !self.send(branch, 5*ONE)):
         return(0)
 
     #if(self.getRRUpToDate()!=1):
@@ -1748,7 +1731,7 @@ def convertToActiveRep(branch, value):
     if(residual > periodLength/2):
       return(-1)
 
-    if(value<=0 || !self.send(branch, 5*2^64)):
+    if(value<=0 || !self.send(branch, 5*ONE)):
         return(0)
 
     #if(self.getRRUpToDate()):
@@ -1778,9 +1761,9 @@ def convertToActiveRep(branch, value):
 inset('refund.se')
 
 macro YES: 2^65
-macro NO: 2^64
+macro NO: ONE
 macro BAD: 3 * 2^63
-macro CATCH_TOLERANCE: 2^64 / 10
+macro CATCH_TOLERANCE: ONE / 10
 
 # Bins values to 1, 1.5, 2
 macro catch($x):
@@ -1795,10 +1778,10 @@ macro ethic_catch($x):
     if($x < 2^63):
         0
     else:
-        2^64
+        ONE
 
 macro scalar($event):
-    ((self.getMaxValue($event)!=2**65 || self.getMinValue($event)!=2**64) && self.getNumOutcomes($event)==2)
+    ((self.getMaxValue($event)!=2**65 || self.getMinValue($event)!=ONE) && self.getNumOutcomes($event)==2)
 
 def catch(x):
     refund()
@@ -1820,8 +1803,8 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
         #set event expiration to be the old date prior to this bond process
         self.setExpiration(event, self.getOriginalExpiration(event))
         self.setTradingPeriod(market, self.getOriginalTradingPeriod(market))
-        self.addCash(branch, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
-        self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+        self.addCash(branch, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*ONE))
+        self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*ONE))
         self.setPushedForward(market, 0)
         self.setNumReportsExpectedEvent(branch, votingPeriodEvent, event, 0)
         self.setNumReportsEvent(branch, votingPeriodEvent, event, 0)
@@ -1846,8 +1829,8 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
         self.subtractCash(event, self.getBond(event))
         self.addCash(self.getCreator(event), self.getBond(event))
         if(self.getPushedForward(market)):
-            self.addCash(self.getBondsMan(market), self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
-            self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+            self.addCash(self.getBondsMan(market), self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*ONE))
+            self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*ONE))
             # delete old event from future events exp
             self.removeEvent(branch, self.getOriginalExpiration(event)/periodLength)
     return(1)
@@ -1856,7 +1839,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     refund()
     mode = self.getUncaughtOutcome(event)
     self.setmode(event, mode)
-    fxpOutcome = mode * (scaled_max - scaled_min)/2**64 + scaled_min
+    fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
     self.setOutcome(event, fxpOutcome)
     pushedBack = self.getPushedBack(event)
     periodLength = self.getPeriodLength(branch)
@@ -1870,8 +1853,8 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         #set event expiration to be the old date prior to this bond process
         self.setExpiration(event, self.getOriginalExpiration(event))
         self.setTradingPeriod(market, self.getOriginalTradingPeriod(market))
-        self.addCash(branch, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
-        self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+        self.addCash(branch, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*ONE))
+        self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*ONE))
         self.setPushedForward(market, 0)
         self.setNumReportsExpectedEvent(branch, votingPeriodEvent, event, 0)
         self.setNumReportsEvent(branch, votingPeriodEvent, event, 0)
@@ -1896,8 +1879,8 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         self.subtractCash(event, self.getBond(event))
         self.addCash(self.getCreator(event), self.getBond(event))
         if(self.getPushedForward(market)):
-            self.addCash(self.getBondsMan(market), self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
-            self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*2^64))
+            self.addCash(self.getBondsMan(market), self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*ONE))
+            self.subtractCash(market, self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*ONE))
             # delete old event from future events exp
             self.removeEvent(branch, self.getOriginalExpiration(event)/periodLength)
     return(1)
@@ -1908,7 +1891,7 @@ def determineWinningOutcomes(events: arr, numberEvents, branch, market):
     winningOutcomes = array(8)
     while n < numberEvents:
         fxpOutcome = self.getOutcome(events[n])
-        outcome = fxpOutcome/2^64
+        outcome = fxpOutcome/ONE
         if(n==0):
             #scalar or .5
             if(scalar(events[n]) || fxpOutcome==3*2^63):
@@ -2013,9 +1996,9 @@ def initialPenalizedSetting(branch, reporter, upto):
     return(1)
     
 macro YES: 2^65
-macro NO: 2^64
+macro NO: ONE
 macro BAD: 3 * 2^63
-macro CATCH_TOLERANCE: 2^64 / 10
+macro CATCH_TOLERANCE: ONE / 10
 
 # Bins values to 1, 1.5, 2
 macro catch($x):
@@ -2105,24 +2088,24 @@ def penalizeWrong(branch, event):
         # wrong
         #184467440737095520 == 0.01 in fxp
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
-            if(scalar(event) or categorical(event) or outcome==3*2**64):
+            if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                 if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
-                    reportValue += 2**64
+                    reportValue += ONE
                 diff = reportValue - outcome
-                p = -(abs(diff)/2) + 2**64
-            newRep = oldRep*(2*p - 2**64)/2**64
+                p = -(abs(diff)/2) + ONE
+            newRep = oldRep*(2*p - ONE)/ONE
         # right
         else:
-            if(scalar(event) or categorical(event) or outcome==3*2**64):
+            if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                 if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
-                    reportValue += 2**64
+                    reportValue += ONE
                 diff = reportValue - outcome
-                p = -(abs(diff)/2) + 2**64
-            newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
+                p = -(abs(diff)/2) + ONE
+            newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
         #smoothedRep = oldRep*.8 + newRep*.2
-        smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
+        smoothedRep = oldRep * 14757395258967642112/ONE + newRep * 3689348814741910528/ONE
         repChange = smoothedRep - oldRep
         newAfterRep = self.getAfterRep(branch, lastPeriod) + repChange
         log(type=penalize, tx.origin, outcome, oldRep, repChange, newAfterRep, p, reportValue)
@@ -2189,31 +2172,31 @@ def penalizeRoundTwoWrong(branch, event):
             # wrong
             #184467440737095520 == 0.01 in fxp
             if(oldReport > outcome+184467440737095520 or oldReport < outcome-184467440737095520):
-                if(scalar(event) or categorical(event) or outcome==3*2**64):
+                if(scalar(event) or categorical(event) or outcome==3*ONE):
                     # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                     if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
-                        oldReport += 2**64
+                        oldReport += ONE
                     diff = oldReport - outcome
-                    p = -(abs(diff)/2) + 2**64
-                newRep = oldRep*(2*p - 2**64)/2**64
+                    p = -(abs(diff)/2) + ONE
+                newRep = oldRep*(2*p - ONE)/ONE
             # right
             else:
-                if(scalar(event) or categorical(event) or outcome==3*2**64):
+                if(scalar(event) or categorical(event) or outcome==3*ONE):
                     # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                     if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
-                        oldReport += 2**64
+                        oldReport += ONE
                     diff = oldReport - outcome
-                    p = -(abs(diff)/2) + 2**64
-                newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
+                    p = -(abs(diff)/2) + ONE
+                newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
             #smoothedRep = oldRep*.8 + newRep*.2
-            smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
+            smoothedRep = oldRep * 14757395258967642112/ONE + newRep * 3689348814741910528/ONE
             repChange = smoothedRep - oldRep
             newAfterRep = self.getAfterRep(branch, lastPeriod) + repChange
             self.setAfterRep(branch, lastPeriod, newAfterRep)
             totalRepDifference = repChange
             # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
             if(oldEthics != ethic_catch(self.getEthical(event)) && totalRepDifference >=0):
-                totalRepDifference = -184467440737095520*repBalance / 2**64
+                totalRepDifference = -184467440737095520*repBalance / ONE
             if(repBalance + totalRepDifference <= 0):
                 totalRepDifference = -1*repBalance
             # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process
@@ -2230,31 +2213,31 @@ def penalizeRoundTwoWrong(branch, event):
             # wrong
             #184467440737095520 == 0.01 in fxp
             if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
-                if(scalar(event) or categorical(event) or outcome==3*2**64):
+                if(scalar(event) or categorical(event) or outcome==3*ONE):
                     # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                     if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
-                        reportValue += 2**64
+                        reportValue += ONE
                     diff = reportValue - outcome
-                    p = -(abs(diff)/2) + 2**64
-                newRep = oldRep*(2*p - 2**64)/2**64
+                    p = -(abs(diff)/2) + ONE
+                newRep = oldRep*(2*p - ONE)/ONE
             # right
             else:
-                if(scalar(event) or categorical(event) or outcome==3*2**64):
+                if(scalar(event) or categorical(event) or outcome==3*ONE):
                     # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                     if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
-                        reportValue += 2**64
+                        reportValue += ONE
                     diff = reportValue - outcome    
-                    p = -(abs(diff)/2) + 2**64
-                newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
+                    p = -(abs(diff)/2) + ONE
+                newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
             #smoothedRep = oldRep*.8 + newRep*.2
-            smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
+            smoothedRep = oldRep * 14757395258967642112/ONE + newRep * 3689348814741910528/ONE
             repChange = smoothedRep - oldRep
             newAfterRep = self.getAfterRep(branch, lastPeriod) + repChange
             self.setAfterRep(branch, lastPeriod, newAfterRep)
             totalRepDifference = repChange
             # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
             if(ethics != ethic_catch(self.getEthical(event)) && totalRepDifference >=0):
-                totalRepDifference = -184467440737095520*repBalance / 2**64
+                totalRepDifference = -184467440737095520*repBalance / ONE
             if(repBalance + repChange <= 0):
                 totalRepDifference = -1*repBalance
             if(overruled && self.bondPaid[event] < 200 && totalRepDifference < 0 && !eventWasForked):
@@ -2312,21 +2295,21 @@ def penalizeNotEnoughReports(branch):
     if(residual > periodLength/2):
         return(-2)
     numEvents = self.getNumEventsToReport(branch, lastPeriod)
-    repConstant = self.getRepBalance(branch, tx.origin)*2**64/self.getActiveRep(branch)
+    repConstant = self.getRepBalance(branch, tx.origin)*ONE/self.getActiveRep(branch)
     logOutput = self.fx_log(repConstant)
-    exp = self.fx_exp(22136092888451461120*logOutput/2**64)
+    exp = self.fx_exp(22136092888451461120*logOutput/ONE)
     exp += 18446744073709552
     total = exp*self.baseReportersLastPeriod[branch]
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
-    if(total > 2**64):
-        numEvents = (self.getNumEventsToReportOn(branch, votePeriod)/self.baseReportersLastPeriod[branch])*2**64 + self.getNumRequired(branch, votePeriod)
+    if(total > ONE):
+        numEvents = (self.getNumEventsToReportOn(branch, votePeriod)/self.baseReportersLastPeriod[branch])*ONE + self.getNumRequired(branch, votePeriod)
     numReportsActual = self.getNumReportsActual(branch, lastPeriod)
-    if(numEvents/(2*2**64) > self.getNumReportsActual(branch, lastPeriod)):
+    if(numEvents/(2*ONE) > self.getNumReportsActual(branch, lastPeriod)):
         originalRep = self.getRepBalance(branch, tx.origin)
         # penalize people
         # can number reported on be greater than num expected to report on
         newRep = 3689348814741910528*numReportsActual*originalRep / numEvents
-        oldRep = originalRep*14757395258967642112 / 2**64
+        oldRep = originalRep*14757395258967642112 / ONE
         repChange = (oldRep+newRep) - originalRep
         if(repChange > 0):
             return(1)
@@ -2357,7 +2340,7 @@ def collectFees(branch):
         if(!self.feeFirst):
             self.feeFirst = 1
             self.periodBalance[branch][lastPeriod] = self.getRepBalance(branch, branch)
-        gainedRep = newRep * 2**64 / denominator * self.periodBalance[branch][lastPeriod] / 2**64
+        gainedRep = newRep * ONE / denominator * self.periodBalance[branch][lastPeriod] / ONE
         #if(lostRep) newRep should be == self.getAfterRep(branch, period) + gainedRep
         #if(gainedRep) newRep should be == self.getBeforeRep(branch, period) + gainedRep
         self.addRep(branch, self.repIDToIndex(branch, tx.origin), gainedRep)
@@ -2401,16 +2384,16 @@ def penalizationCatchup(branch):
         if(delta <= 0):
             return(0)
         # dock 10% for each period they didn't penalize on
-        #smoothedRep = oldRep*16602069666338596864/2**64
-        smoothedRep = oldRep*18262276632972455936/2**64 
+        #smoothedRep = oldRep*16602069666338596864/ONE
+        smoothedRep = oldRep*18262276632972455936/ONE 
         i = 1
         if(delta>22):
-            #smoothedRep = smoothedRep*1844674407370955264/2**64
-            smoothedRep = smoothedRep*18262276632972455936/2**64
+            #smoothedRep = smoothedRep*1844674407370955264/ONE
+            smoothedRep = smoothedRep*18262276632972455936/ONE
             delta = 0
         while i < delta:
-            #smoothedRep = smoothedRep*16602069666338596864/2**64
-            smoothedRep = smoothedRep*18262276632972455936/2**64
+            #smoothedRep = smoothedRep*16602069666338596864/ONE
+            smoothedRep = smoothedRep*18262276632972455936/ONE
             i += 1
         # and send it to branch for penalty rep collection
         repChange = oldRep - smoothedRep
@@ -2455,7 +2438,7 @@ def slashRep(branch, salt, report, reporter, eventID):
         reporterBalance = self.getRepBalance(branch, reporter)
         self.setRep(branch, reporterIndex, 0)
         trutherBalance = self.getRepBalance(branch, tx.origin)
-        self.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*2**63 / 2**64))
+        self.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*2**63 / ONE))
     return(reporterBalance)
 
 # ui has to call this to stay cheap / not check it elsewhere
@@ -2465,10 +2448,10 @@ def incrementPeriodAfterReporting(branch):
     if(periodOver(branch)):
         period = block.timestamp / self.getPeriodLength($branch) - 1
         lastPeriod = period - 1
-        percentAppealed = (self.getNumRoundTwo(branch, period)*2**64/self.getNumberEvents(branch, period) + self.getNumRoundTwo(branch, lastPeriod)*2**64/self.getNumberEvents(branch, lastPeriod)) / 2
+        percentAppealed = (self.getNumRoundTwo(branch, period)*ONE/self.getNumberEvents(branch, period) + self.getNumRoundTwo(branch, lastPeriod)*ONE/self.getNumberEvents(branch, lastPeriod)) / 2
         self.incrementPeriod(branch)
         # mult. by 2 b/c reporters only have to report on half the things they're selected to report on
-        base_reporter_quantity = 2*(3*2**64 + ((333*2**64 * Percent_Appealed/2**64)**3 / 2**128))/2**64
+        base_reporter_quantity = 2*(3*ONE + ((333*ONE * Percent_Appealed/ONE)**3 / 2**128))/ONE
         self.baseReportersLastPeriod[branch] = self.getBaseReporters(branch)
         self.setBaseReporters(branch, base_reporter_quantity)
         return(1)
@@ -2488,16 +2471,16 @@ def proportionCorrect(event, branch, period):
     outcome = catch(self.getUncaughtOutcome(event))
     if(outcome!=0):
         # binary
-        if(self.getNumOutcomes(event)==2 and self.getMaxValue(event)==2**65 and self.getMinValue(event)==2**64):
+        if(self.getNumOutcomes(event)==2 and self.getMaxValue(event)==2**65 and self.getMinValue(event)==ONE):
             # subtract 1 to get it from 0 to 1
-            avgOutcome = self.getUncaughtOutcome(event) - 2**64
+            avgOutcome = self.getUncaughtOutcome(event) - ONE
             # say we have outcome of 0, avg is .4, what is p?
             # p is .6 or 60%
-            if(outcome == 2**64):
-                p = 2**64 - avgOutcome
+            if(outcome == ONE):
+                p = ONE - avgOutcome
             # say we have outcome of 1, avg is .8, what is p (proportion correct)?
             # p is .8 or 80%
-            if(outcome == 2 * 2**64):
+            if(outcome == 2 * ONE):
                 p = avgOutcome
             if(outcome == 3 * 2**63):
                 return(0)
@@ -2531,10 +2514,10 @@ def getRRDone(branch, reporter):
 
 
 macro scalar($event):
-    ((self.getMaxValue($event)!=2**65 || self.getMinValue($event)!=2**64) && self.getNumOutcomes($event)==2)
+    ((self.getMaxValue($event)!=2**65 || self.getMinValue($event)!=ONE) && self.getNumOutcomes($event)==2)
         
 macro binary($event):
-    (self.getNumOutcomes($event)==2 and self.getMaxValue($event)==2**65 and self.getMinValue($event)==2**64)
+    (self.getNumOutcomes($event)==2 and self.getMaxValue($event)==2**65 and self.getMinValue($event)==ONE)
         
 macro categorical($event):
     (self.getNumOutcomes($event)>2)
@@ -2693,7 +2676,7 @@ def fork(event, branch, forkedOverEthicality):
         return(-1)
     # if in last 48 hr of period
     if(block.timestamp/self.getPeriodLength(branch)!=((block.timestamp + 172800)/self.getPeriodLength(branch)) && self.getUncaughtOutcome(event)!=0 && !self.getForked(event)):
-        bond = 184467440737095520*self.getTotalRep(branch)/2**64
+        bond = 184467440737095520*self.getTotalRep(branch)/ONE
         self.bondAmount[branch] = bond
         # lose fork bond in branch 1
         # results same as roundtwobond, let it resolve as that on original network
@@ -2719,8 +2702,8 @@ def fork(event, branch, forkedOverEthicality):
         self.setEventForkedOver(newBranch, event)
         self.setEventForkedOver(branch, event)
         # return round 2 bond
-        self.subtractRep(branch, self.repIDToIndex(branch, event), 100*2**64)
-        self.addRep(branch, self.repIDToIndex(branch, self.roundTwo[event].bondPoster), 100*2**64)
+        self.subtractRep(branch, self.repIDToIndex(branch, event), 100*ONE)
+        self.addRep(branch, self.repIDToIndex(branch, self.roundTwo[event].bondPoster), 100*ONE)
     else:
         return(0)
 
@@ -2729,7 +2712,7 @@ def fork(event, branch, forkedOverEthicality):
 # branch is orig. branch
 def resolveForkedEvent(branch, event, eventIndex, votePeriod):
     refund()
-    bond = 100*2**64
+    bond = 100*ONE
     votedOnAgain = 0
     if(self.getVotePeriod(branch) > (self.getExpiration(event) / self.getPeriodLength(branch))):
         votedOnAgain = 1
@@ -2790,7 +2773,7 @@ def resolveForkEvent(branch, event):
         self.setmode(event, mode)
         scaled_max = self.getMaxValue(event)
         scaled_min = self.getMinValue(event)
-        fxpOutcome = mode * (scaled_max - scaled_min)/2**64 + scaled_min
+        fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
         self.setOutcome(event, fxpOutcome)
 
         if(fxpOutcome==2**63 || !ethical):
@@ -2852,31 +2835,31 @@ def penalizeOnForkedEvent(branch, event):
         # wrong
         #184467440737095520 == 0.01 in fxp
         if(oldReport > outcome+184467440737095520 or oldReport < outcome-184467440737095520):
-            if(scalar(event) or categorical(event) or outcome==3*2**64):
+            if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                 if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
-                    oldReport += 2**64
+                    oldReport += ONE
                 diff = oldReport - outcome
-                p = -(abs(diff)/2) + 2**64
-            newRep = oldRep*(2*p - 2**64)/2**64
+                p = -(abs(diff)/2) + ONE
+            newRep = oldRep*(2*p - ONE)/ONE
         # right
         else:
-            if(scalar(event) or categorical(event) or outcome==3*2**64):
+            if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                 if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
-                    oldReport += 2**64
+                    oldReport += ONE
                 diff = oldReport - outcome
-                p = -(abs(diff)/2) + 2**64
-            newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
+                p = -(abs(diff)/2) + ONE
+            newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
         #smoothedRep = oldRep*.8 + newRep*.2
-        smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
+        smoothedRep = oldRep * 14757395258967642112/ONE + newRep * 3689348814741910528/ONE
         repChange = smoothedRep - oldRep
         newAfterRep = self.getAfterRep(branch, lastPeriod) + repChange
         self.setAfterRep(branch, lastPeriod, newAfterRep)
         totalRepDifference = repChange
         # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
         if(oldEthics != ethic_catch(self.getEthical(event)) && totalRepDifference >=0):
-            totalRepDifference = -184467440737095520*repBalance / 2**64
+            totalRepDifference = -184467440737095520*repBalance / ONE
         if(repBalance + totalRepDifference <= 0):
             totalRepDifference = -1*repBalance
         # reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process
@@ -2893,31 +2876,31 @@ def penalizeOnForkedEvent(branch, event):
         # wrong
         #184467440737095520 == 0.01 in fxp
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
-            if(scalar(event) or categorical(event) or outcome==3*2**64):
+            if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                 if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
-                    reportValue += 2**64
+                    reportValue += ONE
                 diff = reportValue - outcome
-                p = -(abs(diff)/2) + 2**64
-            newRep = oldRep*(2*p - 2**64)/2**64
+                p = -(abs(diff)/2) + ONE
+            newRep = oldRep*(2*p - ONE)/ONE
         # right
         else:
-            if(scalar(event) or categorical(event) or outcome==3*2**64):
+            if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                 if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
-                    reportValue += 2**64
+                    reportValue += ONE
                 diff = reportValue - outcome    
-                p = -(abs(diff)/2) + 2**64
-            newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
+                p = -(abs(diff)/2) + ONE
+            newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
         #smoothedRep = oldRep*.8 + newRep*.2
-        smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
+        smoothedRep = oldRep * 14757395258967642112/ONE + newRep * 3689348814741910528/ONE
         repChange = smoothedRep - oldRep
         newAfterRep = self.getAfterRep(branch, lastPeriod) + repChange
         self.setAfterRep(branch, lastPeriod, newAfterRep)
         totalRepDifference = repChange
         # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
         if(ethics != ethic_catch(self.getEthical(event)) && totalRepDifference >=0):
-            totalRepDifference = -184467440737095520*repBalance / 2**64
+            totalRepDifference = -184467440737095520*repBalance / ONE
         if(repBalance + repChange <= 0):
             totalRepDifference = -1*repBalance
         if(self.bondPaid[event] < self.bondAmount[branch]*2 && totalRepDifference < 0):
@@ -2952,16 +2935,16 @@ def proportionCorrectForkEvent(event, branch, period):
     outcome = catch(self.getForkOutcome(event))
     if(outcome!=0):
         # binary
-        if(self.getNumOutcomes(event)==2 and self.getMaxValue(event)==2**65 and self.getMinValue(event)==2**64):
+        if(self.getNumOutcomes(event)==2 and self.getMaxValue(event)==2**65 and self.getMinValue(event)==ONE):
             # subtract 1 to get it from 0 to 1
-            avgOutcome = self.getForkOutcome(event) - 2**64
+            avgOutcome = self.getForkOutcome(event) - ONE
             # say we have outcome of 0, avg is .4, what is p?
             # p is .6 or 60%
-            if(outcome == 2**64):
-                p = 2**64 - avgOutcome
+            if(outcome == ONE):
+                p = ONE - avgOutcome
             # say we have outcome of 1, avg is .8, what is p (proportion correct)?
             # p is .8 or 80%
-            if(outcome == 2 * 2**64):
+            if(outcome == 2 * ONE):
                 p = avgOutcome
             if(outcome == 3 * 2**63):
                 return(0)
@@ -2971,10 +2954,10 @@ def proportionCorrectForkEvent(event, branch, period):
 
 
 macro scalar($event):
-    ((self.getMaxValue($event)!=2**65 || self.getMinValue($event)!=2**64) && self.getNumOutcomes($event)==2)
+    ((self.getMaxValue($event)!=2**65 || self.getMinValue($event)!=ONE) && self.getNumOutcomes($event)==2)
         
 macro binary($event):
-    (self.getNumOutcomes($event)==2 and self.getMaxValue($event)==2**65 and self.getMinValue($event)==2**64)
+    (self.getNumOutcomes($event)==2 and self.getMaxValue($event)==2**65 and self.getMinValue($event)==ONE)
         
 macro categorical($event):
     (self.getNumOutcomes($event)>2)
@@ -2994,14 +2977,14 @@ def fourOutcomes(market, winningOutcome: arr, events: arr):
     # first is low-low && whatever, second is high-low, third is low-high, fourth is high-high
     scalarOne = -1
     scalarTwo = -1
-    if(((self.getMaxValue(events[0])!=2**65 || self.getMinValue(events[0])!=2**64) && self.getNumOutcomes(events[0])==2) || self.getOutcome(events[0])==3*2^63):
+    if(((self.getMaxValue(events[0])!=2**65 || self.getMinValue(events[0])!=ONE) && self.getNumOutcomes(events[0])==2) || self.getOutcome(events[0])==3*2^63):
         scalarOne = 0
-    if(((self.getMaxValue(events[1])!=2**65 || self.getMinValue(events[1])!=2**64) && self.getNumOutcomes(events[1])==2) || self.getOutcome(events[1])==3*2^63):
+    if(((self.getMaxValue(events[1])!=2**65 || self.getMinValue(events[1])!=ONE) && self.getNumOutcomes(events[1])==2) || self.getOutcome(events[1])==3*2^63):
         if(scalarOne == -1):
             scalarOne = 1
         else:
             scalarTwo = 1
-    elif(((self.getMaxValue(events[2])!=2**65 || self.getMinValue(events[2])!=2**64) && self.getNumOutcomes(events[2])==2) || self.getOutcome(events[2])==3*2^63):
+    elif(((self.getMaxValue(events[2])!=2**65 || self.getMinValue(events[2])!=ONE) && self.getNumOutcomes(events[2])==2) || self.getOutcome(events[2])==3*2^63):
         scalarTwo = 2
     outcomeOne = self.getOutcome(events[scalarOne])
     minValueOne = self.getMinValue(events[scalarOne])
@@ -3018,21 +3001,21 @@ def fourOutcomes(market, winningOutcome: arr, events: arr):
     elif(outcomeTwo<minValueTwo):
         outcomeTwo = minValueTwo
 
-    outcomeOneHighSidePercent = 2^64*(outcomeOne - minValueOne) / (maxValueOne - minValueOne)
-    outcomeOneLowSidePercent = 2^64 - outcomeOneHighSidePercent
-    outcomeTwoHighSidePercent = 2^64*(outcomeTwo - minValueTwo) / (maxValueTwo - minValueTwo)
-    outcomeTwoLowSidePercent = 2^64 - outcomeTwoHighSidePercent
+    outcomeOneHighSidePercent = ONE*(outcomeOne - minValueOne) / (maxValueOne - minValueOne)
+    outcomeOneLowSidePercent = ONE - outcomeOneHighSidePercent
+    outcomeTwoHighSidePercent = ONE*(outcomeTwo - minValueTwo) / (maxValueTwo - minValueTwo)
+    outcomeTwoLowSidePercent = ONE - outcomeTwoHighSidePercent
 
     # price is in fixed point
     # share four goes with the high-high side
-    pricePerShare4 = outcomeOneHighSidePercent * outcomeTwoHighSidePercent / 2^64
+    pricePerShare4 = outcomeOneHighSidePercent * outcomeTwoHighSidePercent / ONE
     # share three goes with the low-high side
-    pricePerShare3 = outcomeOneLowSidePercent * outcomeTwoHighSidePercent / 2^64
+    pricePerShare3 = outcomeOneLowSidePercent * outcomeTwoHighSidePercent / ONE
     # share two goes with the high-low side
-    pricePerShare2 = outcomeOneHighSidePercent * outcomeTwoLowSidePercent / 2^64
+    pricePerShare2 = outcomeOneHighSidePercent * outcomeTwoLowSidePercent / ONE
     # share one goes with the low-low
-    # both fixed point so div by 2^64 to keep in fixed point
-    pricePerShare1 = outcomeOneLowSidePercent * outcomeTwoLowSidePercent / 2^64
+    # both fixed point so div by ONE to keep in fixed point
+    pricePerShare1 = outcomeOneLowSidePercent * outcomeTwoLowSidePercent / ONE
     # distribute cashcoin to the people who won money by holding winning shares
     participantNumber = self.getParticipantNumber(market, tx.origin)
     if(participantNumber == -1):
@@ -3044,20 +3027,20 @@ def fourOutcomes(market, winningOutcome: arr, events: arr):
         self.modifyParticipantShares(self.getBranchID(market), market, participantNumber, winningOutcome[n], -sharesOwned)
         # low-low
         if(n==0):
-            self.subtractCash(market, sharesOwned*self.getCumScale(market)/2**64*pricePerShare1/2^64)
-            self.addCash(participant, sharesOwned*self.getCumScale(market)/2**64*pricePerShare1/2^64)
+            self.subtractCash(market, sharesOwned*self.getCumScale(market)/ONE*pricePerShare1/ONE)
+            self.addCash(participant, sharesOwned*self.getCumScale(market)/ONE*pricePerShare1/ONE)
         # high-low
         elif(n==1):
-            self.subtractCash(market, sharesOwned*self.getCumScale(market)/2**64*pricePerShare2/2^64)
-            self.addCash(participant, sharesOwned*self.getCumScale(market)/2**64*pricePerShare2/2^64)
+            self.subtractCash(market, sharesOwned*self.getCumScale(market)/ONE*pricePerShare2/ONE)
+            self.addCash(participant, sharesOwned*self.getCumScale(market)/ONE*pricePerShare2/ONE)
         # low-high
         elif(n==2):
-            self.subtractCash(market, sharesOwned*self.getCumScale(market)/2**64*pricePerShare3/2^64)
-            self.addCash(participant, sharesOwned*self.getCumScale(market)/2**64*pricePerShare3/2^64)
+            self.subtractCash(market, sharesOwned*self.getCumScale(market)/ONE*pricePerShare3/ONE)
+            self.addCash(participant, sharesOwned*self.getCumScale(market)/ONE*pricePerShare3/ONE)
         # high-high
         elif(n==3):
-            self.subtractCash(market, sharesOwned*self.getCumScale(market)/2**64*pricePerShare4/2^64)
-            self.addCash(participant, sharesOwned*self.getCumScale(market)/2**64*pricePerShare4/2^64)
+            self.subtractCash(market, sharesOwned*self.getCumScale(market)/ONE*pricePerShare4/ONE)
+            self.addCash(participant, sharesOwned*self.getCumScale(market)/ONE*pricePerShare4/ONE)
         n+=1
     return(1)
 inset('refund.se')
@@ -3087,24 +3070,24 @@ def eightOutcomes(market, winningOutcome: arr, events: arr):
     elif(outcomeThree<minValueThree):
         outcomeThree = minValueThree
 
-    outcomeOneHighSidePercent = 2^64*(outcomeOne - minValueOne) / (maxValueOne - minValueOne)
-    outcomeOneLowSidePercent = 2^64 - outcomeOneHighSidePercent
-    outcomeTwoHighSidePercent = 2^64*(outcomeTwo - minValueTwo) / (maxValueTwo - minValueTwo)
-    outcomeTwoLowSidePercent = 2^64 - outcomeTwoHighSidePercent
-    outcomeThreeHighSidePercent = 2^64*(outcomeThree - minValueThree) / (maxValueThree - minValueThree)
-    outcomeThreeLowSidePercent = 2^64 - outcomeThreeHighSidePercent
+    outcomeOneHighSidePercent = ONE*(outcomeOne - minValueOne) / (maxValueOne - minValueOne)
+    outcomeOneLowSidePercent = ONE - outcomeOneHighSidePercent
+    outcomeTwoHighSidePercent = ONE*(outcomeTwo - minValueTwo) / (maxValueTwo - minValueTwo)
+    outcomeTwoLowSidePercent = ONE - outcomeTwoHighSidePercent
+    outcomeThreeHighSidePercent = ONE*(outcomeThree - minValueThree) / (maxValueThree - minValueThree)
+    outcomeThreeLowSidePercent = ONE - outcomeThreeHighSidePercent
             
     # price is in fixed point
     # first is low low low, 2 is high low low, 3 is low high low, 4 is high high low, 5 is low low high, 6 is high low high, 7 is low high high, 8 is high high high
     pricePerShare = array(7)
-    pricePerShare[0] = outcomeOneLowSidePercent * outcomeTwoLowSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
-    pricePerShare[1] = outcomeOneHighSidePercent * outcomeTwoLowSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
-    pricePerShare[2] = outcomeOneLowSidePercent * outcomeTwoHighSidePercent * outcomeOneLowSidePercent / (2^64 * 2^64)
-    pricePerShare[3] = outcomeOneHighSidePercent * outcomeTwoHighSidePercent * outcomeThreeLowSidePercent / (2^64 * 2^64)
-    pricePerShare[4] = outcomeOneLowSidePercent * outcomeTwoLowSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
-    pricePerShare[5] = outcomeOneHighSidePercent * outcomeTwoLowSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
-    pricePerShare[6] = outcomeOneLowSidePercent * outcomeTwoHighSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
-    pricePerShare[7] = outcomeOneHighSidePercent * outcomeTwoHighSidePercent * outcomeThreeHighSidePercent / (2^64 * 2^64)
+    pricePerShare[0] = outcomeOneLowSidePercent * outcomeTwoLowSidePercent * outcomeThreeLowSidePercent / (ONE * ONE)
+    pricePerShare[1] = outcomeOneHighSidePercent * outcomeTwoLowSidePercent * outcomeThreeLowSidePercent / (ONE * ONE)
+    pricePerShare[2] = outcomeOneLowSidePercent * outcomeTwoHighSidePercent * outcomeOneLowSidePercent / (ONE * ONE)
+    pricePerShare[3] = outcomeOneHighSidePercent * outcomeTwoHighSidePercent * outcomeThreeLowSidePercent / (ONE * ONE)
+    pricePerShare[4] = outcomeOneLowSidePercent * outcomeTwoLowSidePercent * outcomeThreeHighSidePercent / (ONE * ONE)
+    pricePerShare[5] = outcomeOneHighSidePercent * outcomeTwoLowSidePercent * outcomeThreeHighSidePercent / (ONE * ONE)
+    pricePerShare[6] = outcomeOneLowSidePercent * outcomeTwoHighSidePercent * outcomeThreeHighSidePercent / (ONE * ONE)
+    pricePerShare[7] = outcomeOneHighSidePercent * outcomeTwoHighSidePercent * outcomeThreeHighSidePercent / (ONE * ONE)
 
     # distribute cashcoin to the people who won money by holding winning shares
     participantNumber = self.getParticipantNumber(market, tx.origin)
@@ -3117,8 +3100,8 @@ def eightOutcomes(market, winningOutcome: arr, events: arr):
     while(winningOutcome[n]!=0):
         sharesOwned = self.getParticipantSharesPurchased(market, participantNumber, winningOutcome[n])
         self.modifyParticipantShares(self.getBranchID(market), market, participantNumber, winningOutcome[n], -sharesOwned)
-        self.subtractCash(market, sharesOwned*pricePerShare[n]*self.getCumScale(market)/2^64)
-        self.addCash(participant, sharesOwned*self.getCumScale(market)/2**64*pricePerShare[n]/2^64)
+        self.subtractCash(market, sharesOwned*pricePerShare[n]*self.getCumScale(market)/ONE)
+        self.addCash(participant, sharesOwned*self.getCumScale(market)/ONE*pricePerShare[n]/ONE)
         n+=1
     return(1)
 inset('refund.se')
@@ -3134,8 +3117,8 @@ def oneOutcome(market, winningOutcome):
     sharesOwned = self.getParticipantSharesPurchased(market, participantNumber, winningOutcome)
     participant = self.getParticipantID(market, participantNumber)
     self.modifyParticipantShares(self.getBranchID(market), market, participantNumber, winningOutcome, -sharesOwned)
-    self.subtractCash(market, sharesOwned*self.getCumScale(market)/2**64)
-    self.addCash(participant, sharesOwned*self.getCumScale(market)/2**64)
+    self.subtractCash(market, sharesOwned*self.getCumScale(market)/ONE)
+    self.addCash(participant, sharesOwned*self.getCumScale(market)/ONE)
     return(1)
 inset('refund.se')
 
@@ -3343,7 +3326,7 @@ def claimInitialRep(parent, branchID):
         self.Reporting[branchID].reputation[i].reporterID = reporterID
         if(self.Reporting[branchID].fork && (userReportedOutcomeEqualToOutcomePreFork || userDidntReportOnForkedEvent || (forkedOverEthicality && userReportedOnEthicalityEqualToPreFork))):
             # take away 30% of rep from liars and those who didn't report
-            repDecrease = rep*12912720851596685312/2**64
+            repDecrease = rep*12912720851596685312/ONE
             rep = rep - repDecrease
             amountLeftToPayBonder = doubleOfTheBond - bondDoubledThusFar
             #if(repDecrease < amountLeftToPayBonder):
@@ -3551,7 +3534,7 @@ def sqrt(n):
     val = n
     i = 0
     while i < 11:
-        val = (val + n*2^64/val)/2
+        val = (val + n*ONE/val)/2
         i += 1
     return val
 inset('refund.se')
@@ -3593,7 +3576,7 @@ def getEventsToReportOn(branch, expDateIndex):
         reportingThreshold = self.calculateReportingThreshold(branch, events[i], expDateIndex)
         x = array(1)
         x[0] = tx.origin + events[i]
-        shaHash = sha3(x, items=1)/2**64
+        shaHash = sha3(x, items=1)/ONE
         if(shaHash < reportingThreshold || shaHash<self.getReportingThreshold(events[i]) || self.getRequired(events[i])):
             events[i+1] = 1
         else:
@@ -3663,6 +3646,11 @@ def addEvent(branch, futurePeriod, eventID):
     self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
     self.EventIDToIndex[futurePeriod][eventID] = self.EventsExpDates[branch][futurePeriod].numberEvents
     self.EventsExpDates[branch][futurePeriod].numberEvents += 1
+    return(1)
+
+def removeEvent(branch, period):
+    refund()
+    self.EventsExpDates[branch][period].numberRemoved += 1
     return(1)
 
 def getNumRemoved(branch, period):
@@ -4285,7 +4273,7 @@ def get_total_trades(market_id):
 inset('refund.se')
 
 # Events' index is the eventID
-# a binary outcome has 0 for min && 1 for max value, but consensus will return 2^64 and 2^65 respectively
+# a binary outcome has 0 for min && 1 for max value, but consensus will return ONE and 2^65 respectively
 # so for voting 1 and 2 in fxp. need to be given for binaries, not 0 & 1
 # S&P 500 scalar would be say 0 && 4700, respectively
 # categorical markets have fixed point min and max
@@ -4658,7 +4646,7 @@ def initiateOwner(account):
     else:
         return(0)
 
-# should send values as fixed point in UI (1 is 2^64, 4 is 4*2^64, .5 is 2^63, etc.)
+# should send values as fixed point in UI (1 is ONE, 4 is 4*ONE, .5 is 2^63, etc.)
 # @return: value sent, 0 if fails
 # If you've never used cash in augur, to initiate your account call this with value as 0
 def send(recver, value):
@@ -4722,14 +4710,14 @@ def setCash(address, balance):
     return(1)
 
 def depositEther():
-    self.cashcoinBalances[msg.sender] += msg.value * 2^64 / 10^18
+    self.cashcoinBalances[msg.sender] += msg.value * ONE / 10^18
     return msg.value
 
 def withdrawEther(to, value):
     if(value < 0):
         return(-1)
-    if self.cashcoinBalances[msg.sender] >= value * 2^64 / 10^18:
-        self.cashcoinBalances[msg.sender] -= value * 2^64 / 10^18
+    if self.cashcoinBalances[msg.sender] >= value * ONE / 10^18:
+        self.cashcoinBalances[msg.sender] -= value * ONE / 10^18
         send(to, value)
         return 1
     else:

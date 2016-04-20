@@ -112,6 +112,6 @@ def sqrt(n):
     val = n
     i = 0
     while i < 11:
-        val = (val + n*2^64/val)/2
+        val = (val + n*ONE/val)/2
         i += 1
     return val

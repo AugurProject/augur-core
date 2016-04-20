@@ -121,7 +121,7 @@ def fork(event, branch, forkedOverEthicality):
         return(-1)
     # if in last 48 hr of period
     if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 172800)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENT.getForked(event)):
-        bond = 184467440737095520*REPORTING.getTotalRep(branch)/2**64
+        bond = 184467440737095520*REPORTING.getTotalRep(branch)/ONE
         self.bondAmount[branch] = bond
         # lose fork bond in branch 1
         # results same as roundtwobond, let it resolve as that on original network
@@ -134,7 +134,7 @@ def fork(event, branch, forkedOverEthicality):
         newBranch = CREATEBRANCH.createSubbranch(text("fork"), BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), 0)
         REPORTING.setFork(newBranch)
         period = BRANCHES.getVotePeriod(newBranch)
-        MAKEREPORTS.setEventRequired(newBranch, period+1, event)
+        EXPIRING.setEventRequired(newBranch, period+1, event)
         EXPIRING.addEvent(newBranch, period+1, event)
         EVENTS.setExpiration(event, block.timestamp)
         self.forkData[event].originalBranch = branch
@@ -147,17 +147,18 @@ def fork(event, branch, forkedOverEthicality):
         BRANCHES.setEventForkedOver(newBranch, event)
         BRANCHES.setEventForkedOver(branch, event)
         # return round 2 bond
-        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), 100*2**64)
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), 100*2**64)
+        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), 100*ONE)
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), 100*ONE)
     else:
         return(0)
 
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
 # branch is orig. branch
+# market creator pay for or bond person pay for?
 def resolveForkedEvent(branch, event, eventIndex, votePeriod):
     refund()
-    bond = 100*2**64
+    bond = 100*ONE
     votedOnAgain = 0
     if(BRANCHES.getVotePeriod(branch) > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
         votedOnAgain = 1
@@ -218,7 +219,7 @@ def resolveForkEvent(branch, event):
         EVENTS.setmode(event, mode)
         scaled_max = EVENTS.getMaxValue(event)
         scaled_min = EVENTS.getMinValue(event)
-        fxpOutcome = mode * (scaled_max - scaled_min)/2**64 + scaled_min
+        fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
         EVENTS.setOutcome(event, fxpOutcome)
 
         if(fxpOutcome==2**63 || !ethical):
@@ -266,45 +267,45 @@ def penalizeOnForkedEvent(branch, event):
     smoothedRep = 0
     totalRepDifference = 0
     outcome = catch(EVENTS.getForkOutcome(event))
-    reportValue = MAKEREPORTS.getReport(branch, lastPeriod, event)
+    reportValue = EXPEVENTS.getReport(branch, lastPeriod, event)
     lastPenalizationPeriod = lastPeriod - 1
-    oldReport = MAKEREPORTS.getReport(BRANCHES.getParent(branch), lastPenalizationPeriod)
+    oldReport = EXPEVENTS.getReport(BRANCHES.getParent(branch), lastPenalizationPeriod)
     p = self.proportionCorrectForkEvent(event)
     if(scalar(event) or categorical(event)):
         outcome = EVENTS.getForkOutcome(event)
-    oldRep = MAKEREPORTS.getBeforeRep(branch, lastPeriod)
+    oldRep = EXPIRING.getBeforeRep(branch, lastPeriod)
 
     # Do the first rbcr based on first report and final outcome if reported first time
     if(oldReport && !self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && outcome!=0):
-        oldEthics = MAKEREPORTS.getEthicReport(BRANCHES.getParent(branch), lastPenalizationPeriod, event)
+        oldEthics = EXPIRING.getEthicReport(BRANCHES.getParent(branch), lastPenalizationPeriod, event)
         # wrong
         #184467440737095520 == 0.01 in fxp
         if(oldReport > outcome+184467440737095520 or oldReport < outcome-184467440737095520):
-            if(scalar(event) or categorical(event) or outcome==3*2**64):
+            if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                 if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
-                    oldReport += 2**64
+                    oldReport += ONE
                 diff = oldReport - outcome
-                p = -(abs(diff)/2) + 2**64
-            newRep = oldRep*(2*p - 2**64)/2**64
+                p = -(abs(diff)/2) + ONE
+            newRep = oldRep*(2*p - ONE)/ONE
         # right
         else:
-            if(scalar(event) or categorical(event) or outcome==3*2**64):
+            if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                 if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
-                    oldReport += 2**64
+                    oldReport += ONE
                 diff = oldReport - outcome
-                p = -(abs(diff)/2) + 2**64
-            newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
+                p = -(abs(diff)/2) + ONE
+            newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
         #smoothedRep = oldRep*.8 + newRep*.2
-        smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
+        smoothedRep = oldRep * 14757395258967642112/ONE + newRep * 3689348814741910528/ONE
         repChange = smoothedRep - oldRep
-        newAfterRep = MAKEREPORTS.getAfterRep(branch, lastPeriod) + repChange
-        MAKEREPORTS.setAfterRep(branch, lastPeriod, newAfterRep)
+        newAfterRep = EXPIRING.getAfterRep(branch, lastPeriod) + repChange
+        EXPIRING.setAfterRep(branch, lastPeriod, newAfterRep)
         totalRepDifference = repChange
         # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
         if(oldEthics != ethic_catch(EVENTS.getEthical(event)) && totalRepDifference >=0):
-            totalRepDifference = -184467440737095520*repBalance / 2**64
+            totalRepDifference = -184467440737095520*repBalance / ONE
         if(repBalance + totalRepDifference <= 0):
             totalRepDifference = -1*repBalance
         # reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process
@@ -317,35 +318,35 @@ def penalizeOnForkedEvent(branch, event):
     
     # Do the second (for each user) based on second report and final outcome
     if(reportValue && !self.branch[branch].penalized[lastPeriod][tx.origin].event[event] && outcome!=0):
-        ethics = MAKEREPORTS.getEthicReport(branch, lastPeriod, event)
+        ethics = EXPIRING.getEthicReport(branch, lastPeriod, event)
         # wrong
         #184467440737095520 == 0.01 in fxp
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
-            if(scalar(event) or categorical(event) or outcome==3*2**64):
+            if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                 if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
-                    reportValue += 2**64
+                    reportValue += ONE
                 diff = reportValue - outcome
-                p = -(abs(diff)/2) + 2**64
-            newRep = oldRep*(2*p - 2**64)/2**64
+                p = -(abs(diff)/2) + ONE
+            newRep = oldRep*(2*p - ONE)/ONE
         # right
         else:
-            if(scalar(event) or categorical(event) or outcome==3*2**64):
+            if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
                 if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
-                    reportValue += 2**64
+                    reportValue += ONE
                 diff = reportValue - outcome    
-                p = -(abs(diff)/2) + 2**64
-            newRep = oldRep*(2*(2**64-p)**2 / p + 2**64)/2**64
+                p = -(abs(diff)/2) + ONE
+            newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
         #smoothedRep = oldRep*.8 + newRep*.2
-        smoothedRep = oldRep * 14757395258967642112/2**64 + newRep * 3689348814741910528/2**64
+        smoothedRep = oldRep * 14757395258967642112/ONE + newRep * 3689348814741910528/ONE
         repChange = smoothedRep - oldRep
-        newAfterRep = MAKEREPORTS.getAfterRep(branch, lastPeriod) + repChange
-        MAKEREPORTS.setAfterRep(branch, lastPeriod, newAfterRep)
+        newAfterRep = EXPIRING.getAfterRep(branch, lastPeriod) + repChange
+        EXPIRING.setAfterRep(branch, lastPeriod, newAfterRep)
         totalRepDifference = repChange
         # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
         if(ethics != ethic_catch(EVENTS.getEthical(event)) && totalRepDifference >=0):
-            totalRepDifference = -184467440737095520*repBalance / 2**64
+            totalRepDifference = -184467440737095520*repBalance / ONE
         if(repBalance + repChange <= 0):
             totalRepDifference = -1*repBalance
         if(self.bondPaid[event] < self.bondAmount[branch]*2 && totalRepDifference < 0):
@@ -357,10 +358,10 @@ def penalizeOnForkedEvent(branch, event):
         
         self.branch[branch].penalized[lastPeriod][tx.origin].event[event] = 1
         self.branch[branch].penalized[lastPeriod][tx.origin].num += 1
-        if(MAKEREPORTS.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):
+        if(EXPIRING.getNumReportsActual(branch, lastPeriod)==self.branch[branch].penalized[lastPeriod][tx.origin].num):
             if(newAfterRep <= 0):
                 newAfterRep = 0
-                MAKEREPORTS.setAfterRep(branch, lastPeriod, newAfterRep)
+                EXPIRING.setAfterRep(branch, lastPeriod, newAfterRep)
             self.branch[branch].penalizedUpTo[tx.origin] = lastPeriod
             self.branch[branch].denominator[lastPeriod] += newAfterRep
             totalRepDifference = newAfterRep - oldRep
@@ -380,16 +381,16 @@ def proportionCorrectForkEvent(event, branch, period):
     outcome = catch(EVENTS.getForkOutcome(event))
     if(outcome!=0):
         # binary
-        if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==2**65 and EVENTS.getMinValue(event)==2**64):
+        if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==2**65 and EVENTS.getMinValue(event)==ONE):
             # subtract 1 to get it from 0 to 1
-            avgOutcome = EVENTS.getForkOutcome(event) - 2**64
+            avgOutcome = EVENTS.getForkOutcome(event) - ONE
             # say we have outcome of 0, avg is .4, what is p?
             # p is .6 or 60%
-            if(outcome == 2**64):
-                p = 2**64 - avgOutcome
+            if(outcome == ONE):
+                p = ONE - avgOutcome
             # say we have outcome of 1, avg is .8, what is p (proportion correct)?
             # p is .8 or 80%
-            if(outcome == 2 * 2**64):
+            if(outcome == 2 * ONE):
                 p = avgOutcome
             if(outcome == 3 * 2**63):
                 return(0)
@@ -399,10 +400,10 @@ def proportionCorrectForkEvent(event, branch, period):
 
 
 macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=2**65 || EVENTS.getMinValue($event)!=2**64) && EVENTS.getNumOutcomes($event)==2)
+    ((EVENTS.getMaxValue($event)!=2**65 || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
         
 macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==2**64)
+    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==ONE)
         
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)

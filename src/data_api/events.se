@@ -23,7 +23,7 @@ import branches as BRANCHES
 inset('refund.se')
 
 # Events' index is the eventID
-# a binary outcome has 0 for min && 1 for max value, but consensus will return 2^64 and 2^65 respectively
+# a binary outcome has 0 for min && 1 for max value, but consensus will return ONE and 2^65 respectively
 # so for voting 1 and 2 in fxp. need to be given for binaries, not 0 & 1
 # S&P 500 scalar would be say 0 && 4700, respectively
 # categorical markets have fixed point min and max

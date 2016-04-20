@@ -22,6 +22,7 @@
 # import makeReports as REPORTS
 # import consensus as CONSENSUS
 import branches as BRANCHES
+import expiringEvents as EXPEVENTS
 inset('refund.se')
 
 # Reporting index is the branchID
@@ -190,12 +191,12 @@ def claimInitialRep(parent, branchID):
     #have 1 month to claim
     if(self.repIDToIndex(branchID, msg.sender)==0 && block.timestamp < (BRANCHES.getCreationDate(branchID) + 86400*30)):
         i = self.Reporting[branchID].numberReporters
-        rep = REPORTS.getBeforeRep(parent, BRANCHES.getParentPeriod(branchID))
+        rep = EXPEVENTS.getBeforeRep(parent, BRANCHES.getParentPeriod(branchID))
         reporterID = msg.sender
         self.Reporting[branchID].reputation[i].reporterID = reporterID
         if(self.Reporting[branchID].fork && (userReportedOutcomeEqualToOutcomePreFork || userDidntReportOnForkedEvent || (forkedOverEthicality && userReportedOnEthicalityEqualToPreFork))):
             # take away 30% of rep from liars and those who didn't report
-            repDecrease = rep*12912720851596685312/2**64
+            repDecrease = rep*12912720851596685312/ONE
             rep = rep - repDecrease
             amountLeftToPayBonder = doubleOfTheBond - bondDoubledThusFar
             #if(repDecrease < amountLeftToPayBonder):
@@ -214,7 +215,7 @@ def claimInitialRep(parent, branchID):
         self.Reporting[branchID].dormantRep[i].reporterID = reporterID
         # circular dependency issue
         # circular dependency issue
-        dormantRep = REPORTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branchID))
+        dormantRep = EXPEVENTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branchID))
         self.Reporting[branchID].dormantRep[i].repValue = dormantRep
         self.Reporting[branchID].numberReporters += 1
         self.Reporting[branchID].totalRep += rep + dormantRep

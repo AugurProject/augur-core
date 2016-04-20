@@ -31,9 +31,9 @@ inset('refund.se')
 # Error -1: Hey, you're not broke!
 def cashFaucet():
     refund()
-    if CASH.balance(tx.origin) > 5*2**64:
+    if CASH.balance(tx.origin) > 5*ONE:
         return(-1)
-    CASH.setCash(tx.origin, 10000*2**64)
+    CASH.setCash(tx.origin, 10000*ONE)
     return(1)
 
 def reputationFaucet(branch):
@@ -43,6 +43,6 @@ def reputationFaucet(branch):
     else:
         index = REPORTING.getNumberReporters(branch)
         REPORTING.addReporter(branch, tx.origin)
-    REPORTING.setRep(branch, index, 47*2**64)
+    REPORTING.setRep(branch, index, 47*ONE)
     CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
     return(1)

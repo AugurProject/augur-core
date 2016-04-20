@@ -38,10 +38,10 @@ inset('refund.se')
 data cash[][]
 
 macro YES: 2^65
-macro NO: 2^64
+macro NO: ONE
 macro BAD: 3 * 2^63
 
-macro CATCH_TOLERANCE: 2^64 / 10
+macro CATCH_TOLERANCE: ONE / 10
 
 event thru(user:indexed, time)
 
@@ -58,7 +58,7 @@ macro ethic_catch($x):
     if($x < 2^63):
         0
     else:
-        2^64
+        ONE
 
 # loop through events in the market, get their outcomes && use those to determine the winning events!
 # distribute coins among winning events
@@ -91,8 +91,8 @@ def closeMarket(branch, market):
         i += 1
     i = 0
     while i < numberEvents:
-        numReports = MAKEREPORTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
-        numExpected = MAKEREPORTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
+        numReports = EXPEVENTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
+        numExpected = EXPEVENTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
         if(numReports == numExpected && numReports!=0 && numExpected!=0):
             reportingDone = 1
             i = numberEvents
@@ -119,7 +119,7 @@ def closeMarket(branch, market):
             elif(scalar(events[n]) && EVENTS.getmode(events[n])==0):
                     resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(events[n]), EVENTS.getMaxValue(events[n]), events[n], market, branch, votingPeriodEvent, period)
             elif(categorical(events[n]) && EVENTS.getmode(events[n])==0):
-                    resolution = RESOLVE.resolveCategoricalOrScalar(2^64, 2^64*EVENTS.getNumOutcomes(events[n]), events[n], market, branch, votingPeriodEvent, period)
+                    resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(events[n]), events[n], market, branch, votingPeriodEvent, period)
             elif(resolution==-6):
                 outcomeSix = 1
             n += 1
@@ -150,8 +150,8 @@ def claimProceeds(branch, market):
     reportingDone = 1
     resolved = 1
     while i < numberEvents:
-        numReports = MAKEREPORTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
-        numExpected = MAKEREPORTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
+        numReports = EXPEVENTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
+        numExpected = EXPEVENTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
         if(EVENTS.getOutcome(events[i])==0 && EVENTS.getmode(events[i])==0):
             resolved = 0
         if(numReports != numExpected && numReports!=0 and numExpected!=0):
@@ -178,10 +178,10 @@ def claimProceeds(branch, market):
         return(0)
 
 macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=2**65 || EVENTS.getMinValue($event)!=2**64) && EVENTS.getNumOutcomes($event)==2)
+    ((EVENTS.getMaxValue($event)!=2**65 || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
     
 macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and 2**64*EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==2**64)
+    (EVENTS.getNumOutcomes($event)==2 and ONE*EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==ONE)
     
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)

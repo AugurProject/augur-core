@@ -40,7 +40,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     if(forked && wouldExpireInPeriodJustAfterFork):
         return(-9)
     periodLength = BRANCHES.getPeriodLength(branch)
-    if(maxValue < minValue or (maxValue-minValue) < 2**64):
+    if(maxValue < minValue or (maxValue-minValue) < ONE):
         return(-2)
     if periodLength && description != 0 && expDate > block.timestamp:
         eventinfo = string(8*32 + len(description))
@@ -60,7 +60,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         return(0)
     # fee to ask a question rises if voter participation (rep reported) falls, if it's really high, the fee is lowered (participationFactor is a fixedpoint number)
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
-    participationFactor = (EXPEVENTS.getTotalRepReported(branch, currentVotePeriod-2) * 2^64) / EXPEVENTS.getTotalRepReported(branch, currentVotePeriod-1)
+    participationFactor = (EXPEVENTS.getTotalRepReported(branch, currentVotePeriod-2) * ONE) / EXPEVENTS.getTotalRepReported(branch, currentVotePeriod-1)
     if participationFactor == 0:
         participationFactor = 1
     CASH.initiateOwner(eventID)

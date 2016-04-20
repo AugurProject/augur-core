@@ -62,9 +62,9 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         return(0)
     periodLength = BRANCHES.getPeriodLength(branch)
     # send this to branch
-    creationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * 2**64 / tradingFee
+    creationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * ONE / tradingFee
     # gives ether/cash amount in fixed point
-    minFee = 3500000*BRANCHES.getBaseReporters(branch)*tx.gasprice*len(events)*2^64/10^18
+    minFee = 3500000*BRANCHES.getBaseReporters(branch)*tx.gasprice*len(events)*ONE/10^18
     if(creationFee < minFee):
         creationFee = minFee
     if(CASH.balance(msg.sender) < creationFee):
@@ -100,7 +100,6 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
             return(-9)
         if(EVENTS.getEventBranch(event) != branch || !INFO.getCreator(event)):
             return(-1)
-        EXPEVENTS.addEvent(branch, futurePeriod, event)
         if(expirationDate > tradingPeriod):
             tradingPeriod = expirationDate
         eventsConcat += event
@@ -115,7 +114,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         #scalars
         maxValue = EVENTS.getMaxValue(event)
         minValue = EVENTS.getMinValue(event)
-        if((maxValue!=2**65 || minValue !=2**64) && EVENTS.getNumOutcomes(event)==2):
+        if((maxValue!=2**65 || minValue !=ONE) && EVENTS.getNumOutcomes(event)==2):
             # is a valid scalar
             cumulativeScale += maxValue - minValue
         eventNumOutcomes = EVENTS.getNumOutcomes(event)
@@ -127,7 +126,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     if(numOutcomes > 8):
         return(-3)
     if(cumulativeScale==0):
-        cumulativeScale = 2**64
+        cumulativeScale = ONE
     tradingPeriod = (tradingPeriod / periodLength)
 
     # formation of marketID (hash)
@@ -160,6 +159,9 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         i = 0
         while i < len(events):
             EVENTS.addMarket(events[i], marketID)
+            expirationDate = EVENTS.getExpiration(event)
+            futurePeriod = expirationDate / periodLength
+            EXPEVENTS.addEvent(branch, futurePeriod, events[i])
             i += 1
         return(marketID)
     else:
@@ -170,8 +172,8 @@ def updateTradingFee(branch, market, tradingFee):
     if(msg.sender != INFO.getCreator(market) || tx.origin != INFO.getCreator(market)):
         return(-4)
     oldFee = MARKETS.getTradingFee(market)
-    oldCreationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * 2**64 / oldFee
-    newCreationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * 2**64 / tradingFee
+    oldCreationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * ONE / oldFee
+    newCreationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * ONE / tradingFee
     if(tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > oldFee):
         return(-1)
     CASH.send(branch, newCreationFee-oldCreationFee)
@@ -196,7 +198,7 @@ def pushMarketForward(branch, market):
     numEvents = MARKETS.getNumEvents(market)
     if(marketClosed):
         return(0)
-    if(CASH.send(market, numEvents*MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*2^64))==0):
+    if(CASH.send(market, numEvents*MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE))==0):
         return(0)
     i = 0
     # for each event in market

@@ -51,7 +51,7 @@ def getOriginalVotePeriod(event):
 # todo make sure network isn't forked / forking atm
 def roundTwoPostBond(branch, event, eventIndex, votePeriod):
     refund()
-    bond = 100*2**64
+    bond = 100*ONE
     if(BRANCHES.getVotePeriod(branch)!=votePeriod):
         return(0)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
@@ -63,7 +63,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
         # remove from events in # to report on calc for last period
         EXPIRING.removeEvent(branch, period)
         # makes event required reporting in round 2 (the next period) as well
-        MAKEREPORTS.setEventRequired(branch, period+1, event)
+        EXPIRING.setEventRequired(branch, period+1, event)
         # push event into next period
         EXPIRING.addEvent(branch, period+1, event)
         # set event expiration date to be after the current reporting period ends
@@ -90,7 +90,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
 def roundTwoResolve(branch, event, eventIndex, votePeriod):
     refund()
     overruled = 1
-    bond = 100*2**64
+    bond = 100*ONE
     votedOnAgain = 0
     if(scalar(event) or categorical(event)):
         if(self.roundTwo[event].originalOutcome == EVENTS.getUncaughtOutcome(event) && self.roundTwo[event].originalEthicality==ethic_catch(EVENTS.getEthical(event))):
@@ -129,7 +129,7 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
         return(0)
 
 macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=2**65 || EVENTS.getMinValue($event)!=2**64) && EVENTS.getNumOutcomes($event)==2)
+    ((EVENTS.getMaxValue($event)!=2**65 || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
         
 macro binary($event):
     (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==2**6Z)
@@ -138,9 +138,9 @@ macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)
     
 macro YES: 2^65
-macro NO: 2^64
+macro NO: ONE
 macro BAD: 3 * 2^63
-macro CATCH_TOLERANCE: 2^64 / 10
+macro CATCH_TOLERANCE: ONE / 10
 
 # Bins values to 1, 1.5, 2
 macro catch($x):
@@ -155,8 +155,9 @@ macro ethic_catch($x):
     if($x < 2^63):
         0
     else:
-        2^64
+        ONE
 
+# market creator pay for it, or take from bond?
 def resolve(branch, event):
     refund()
     # binary
@@ -183,7 +184,7 @@ def resolve(branch, event):
         EVENTS.setmode(event, mode)
         scaled_max = EVENTS.getMaxValue(event)
         scaled_min = EVENTS.getMinValue(event)
-        fxpOutcome = mode * (scaled_max - scaled_min)/2**64 + scaled_min
+        fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
         EVENTS.setOutcome(event, fxpOutcome)
         ethical = ethic_catch(EVENTS.getEthical(event))
 
