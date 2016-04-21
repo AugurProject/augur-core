@@ -84,53 +84,49 @@ def submitReport(event, salt, report, ethics):
     balance = REPORTING.getRepBalance(branch, tx.origin)
     if(balance<2**63):
         return(0)
-    if(self.branches[branch].report[votePeriod][tx.origin].event[eventID]):
+    if(self.branches[branch].report[votePeriod][tx.origin].event[event]):
         return(-1)
     branch = EVENTS.getBranch(event)
     votePeriod = BRANCHES.getVotePeriod(branch)
     eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
     periodLength = BRANCHES.getPeriodLength(branch)
     # make sure event is in the given branch and vote period
-    event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
+    eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
         return(-8)
-    elif(EVENTS.getOutcome(eventID)!=0):
+    elif(EVENTS.getOutcome(event)!=0):
         return(-9)
-    numMarkets = EVENTS.getNumMarkets(eventID)
-    # comment out for testing
+    # commented out for testing
     #if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 172800)/BRANCHES.getPeriodLength(branch))):
     #    return(-10)
-    x = array(1)
-    x[0] = tx.origin + eventID
-    shaHash = sha3(x, items=1)/ONE
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
-        realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, eventID)
+        realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
         reportHash = self.makeHash(salt, report, eventID)
         if(reportHash!=realHash || realHash==0):
             return(-3)
-        report = self.validateReport(eventID, branch, votePeriod, report)
+        report = self.validateReport(event, branch, votePeriod, report)
         if(report == -4):
             return(-4)
         # reporter has reported for 1 more event
         self.branches[branch].numReportsActual[tx.origin][votePeriod] += 1
         # set report value for event
-        self.branches[branch].report[votePeriod][tx.origin].event[eventID] = report
+        self.branches[branch].report[votePeriod][tx.origin].event[event] = report
         # set ethics value for event
         if(ethics!=ONE || ethics!=0):
             ethics = ONE
         if(forkedOverThisEvent):
             # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
                 #if so # ethics = fork ethic value
-            ethics = (EVENTS.getForkEthicality(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
-            EVENTS.setForkEthicality(eventID, ethics)
-            self.branches[branch].ethics[votePeriod][tx.origin].event[eventID] = ethics
+            ethics = (EVENTS.getForkEthicality(event)*self.branches[branch].numReportsEvent[votePeriod][event] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][event] + 1)
+            EVENTS.setForkEthicality(event, ethics)
+            self.branches[branch].ethics[votePeriod][tx.origin].event[event] = ethics
         else:
-            ethics = (EVENTS.getEthics(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
+            ethics = (EVENTS.getEthics(event)*self.branches[branch].numReportsEvent[votePeriod][event] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][event] + 1)
             EVENTS.setEthics(eventID, ethics)
-            self.branches[branch].ethics[votePeriod][tx.origin].event[eventID] = ethics
+            self.branches[branch].ethics[votePeriod][tx.origin].event[event] = ethics
         # add 1 report to the event
-        self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
+        self.branches[branch].numReportsEvent[votePeriod][event] += 1
         # if 1st report of the period for a reporter
         if(!self.branches[branch].reportedPeriod[votePeriod][tx.origin]):
             dormantRep = REPORTING.balanceOf(branch, tx.origin)

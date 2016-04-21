@@ -133,7 +133,7 @@ def getEventsToReportOn(branch, expDateIndex):
         x = array(1)
         x[0] = tx.origin + events[i]
         shaHash = sha3(x, items=1)/ONE
-        if(shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(events[i]) || self.getRequired(events[i])):
+        if((shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(events[i]) || self.getRequired(events[i])) && !EVENTS.getOutcome(events[i])):
             events[i+1] = 1
         else:
             events[i+1] = 0

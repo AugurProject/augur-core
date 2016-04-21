@@ -6,42 +6,10 @@ import fxpFunctions as FXP
 import makeReports as MAKEREPORTS
 import branches as BRANCHES
 import markets as MARKETS
+import backstops as BACKSTOPS
 import sendReputation as SENDREP
 inset('refund.se')
 
-data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final, bondPoster)
-
-def getRoundTwo(event):
-    refund()
-    return(self.roundTwo[event].roundTwo)
-    
-def setRoundTwo(event, roundTwo):
-    self.roundTwo[event].roundTwo = roundTwo
-    return(1)
-    
-def getBondPoster(event):
-    refund()
-    return(self.roundTwo[event].bondPoster)
-    
-def getFinal(event):
-    refund()
-    return(self.roundTwo[event].final)
-
-def setFinal(event):
-    self.roundTwo[event].final = 1
-    return(1)
-    
-def getOriginalOutcome(event):
-    refund()
-    return(self.roundTwo[event].originalOutcome)
-    
-def getOriginalEthicality(event):
-    refund()
-    return(self.roundTwo[event].originalEthicality)
-    
-def getOriginalVotePeriod(event):
-    refund()
-    return(self.roundTwo[event].originalVotePeriod)
 
 # todo do bond
 # Appeal_Bond = Market_Value * (0.01 + Market_Fee / 2) + Average_Adjudication_Cost
@@ -69,15 +37,15 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
         # set event expiration date to be after the current reporting period ends
         EVENTS.setExpiration(event, block.timestamp)
         # set round two to true so can't be done again
-        self.roundTwo[event].roundTwo = 1
-        self.roundTwo[event].originalVotePeriod = votePeriod
+        BACKSTOPS.setRoundTwo(event, 1)
+        BACKSTOPS.setOriginalVotePeriod(event, votePeriod)
         if(scalar(event) or categorical(event)):
-            self.roundTwo[event].originalOutcome = EVENTS.getUncaughtOutcome(event)
+            BACKSTOPS.setOriginalOutcome(event, EVENTS.getUncaughtOutcome(event))
         else:
-            self.roundTwo[event].originalOutcome = catch(EVENTS.getUncaughtOutcome(event))
-        self.roundTwo[event].originalEthicality = ethic_catch(EVENTS.getEthical(event))
+            BACKSTOPS.setOriginalOutcome(event, catch(EVENTS.getUncaughtOutcome(event)))
+        BACKSTOPS.setOriginalEthicality(event, ethic_catch(EVENTS.getEthical(event)))
         EXPEVENTS.addRoundTwo(branch, period)
-        self.roundTwo[event].bondPoster = msg.sender
+        BACKSTOPS.setBondPoster(event, msg.sender)
         EVENTS.setUncaughtOutcome(event, 0)
         EVENTS.setmode(event, 0)
         EVENTS.setEthics(event, 0)
@@ -93,19 +61,19 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
     bond = 100*ONE
     votedOnAgain = 0
     if(scalar(event) or categorical(event)):
-        if(self.roundTwo[event].originalOutcome == EVENTS.getUncaughtOutcome(event) && self.roundTwo[event].originalEthicality==ethic_catch(EVENTS.getEthical(event))):
+        if(BACKSTOPS.getOriginalOutcome(event) == EVENTS.getUncaughtOutcome(event) && BACKSTOPS.getOriginalEthicality(event)==ethic_catch(EVENTS.getEthical(event))):
             overruled = 0
-    elif(self.roundTwo[event].originalOutcome == catch(EVENTS.getUncaughtOutcome(event)) && self.roundTwo[event].originalEthicality==ethic_catch(EVENTS.getEthical(event))):
+    elif(BACKSTOPS.getOriginalOutcome(event) == catch(EVENTS.getUncaughtOutcome(event)) && BACKSTOPS.getOriginalEthicality(event)==ethic_catch(EVENTS.getEthical(event))):
         overruled = 0
     if(BRANCHES.getVotePeriod(branch) > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
         votedOnAgain = 1
     #any round 2 events besides forked one should have bond returned
-    if(forked && didntForkOverThisEventSpecifically && bondNotReturned && self.roundTwo[event].roundTwo):
+    if(forked && didntForkOverThisEventSpecifically && bondNotReturned && BACKSTOPS.getRoundTwo(event)):
         # return the bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), bond)
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
         bondReturned = 1
-        self.roundTwo[event].roundTwo = 0
+        BACKSTOPS.setR
         return(1)
     if(overruled && votedOnAgain && self.roundTwo[event].roundTwo && votePeriod!=self.roundTwo[event].originalVotePeriod && eventID!=0 && event==eventID && !forked && msg.sender == bondPoster):
         # return the bond
@@ -123,6 +91,7 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
         # and set final outcome / event bond, etc
         self.resolve(branch, event)
         # rbcr from original period/orig. outcome stands, rbcr from round 2 happens as usual as well
+        
         self.roundTwo[event].final = 1
     # not voted on again yet
     else:

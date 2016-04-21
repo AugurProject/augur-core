@@ -1,0 +1,49 @@
+data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final, bondPoster)
+
+def getRoundTwo(event):
+    refund()
+    return(self.roundTwo[event].roundTwo)
+    
+def setRoundTwo(event, roundTwo):
+    self.roundTwo[event].roundTwo = roundTwo
+    return(1)
+    
+def getBondPoster(event):
+    refund()
+    return(self.roundTwo[event].bondPoster)
+    
+def setBondPoster(event, bondPoster):
+    self.roundTwo[event].bondPoster = bondPoster
+    return(1)
+
+def getFinal(event):
+    refund()
+    return(self.roundTwo[event].final)
+
+def setFinal(event):
+    self.roundTwo[event].final = 1
+    return(1)
+    
+def getOriginalOutcome(event):
+    refund()
+    return(self.roundTwo[event].originalOutcome)
+
+def setOriginalOutcome(event, originalOutcome):
+    self.roundTwo[event].originalOutcome = originalOutcome
+    return(1)
+
+def getOriginalEthicality(event):
+    refund()
+    return(self.roundTwo[event].originalEthicality)
+    
+def setOriginalEthicality(event, ethicality):
+    self.roundTwo[event].originalEthicality = ethicality
+    return(1)
+
+def getOriginalVotePeriod(event):
+    refund()
+    return(self.roundTwo[event].originalVotePeriod)
+
+def setOriginalVotePeriod(event, period):
+    self.roundTwo[event].originalVotePeriod = period
+    return(1)
