@@ -26,6 +26,7 @@ import cash as CASH
 import events as EVENTS
 import markets as MARKETS
 import reporting as REPORTING
+import backstops as BACKSTOPS
 import fxpFunctions as FXP
 inset('refund.se')
 
@@ -76,10 +77,9 @@ def submitReportHash(event, reportHash):
     # -2: not in second half of period [reveal part]
     # -3: hash doesn't match
     # -4: bad report
-    # -6: hash not low enough
-    # -8: invalid event
-    # -9: already resolved
-    # -10: <48 hr left in period, too late to report, able to put up readj. bonds though
+    # -5: invalid event
+    # -6: already resolved
+    # -7: <48 hr left in period, too late to report, able to put up readj. bonds though
 def submitReport(event, salt, report, ethics):
     balance = REPORTING.getRepBalance(branch, tx.origin)
     if(balance<2**63):
@@ -90,22 +90,27 @@ def submitReport(event, salt, report, ethics):
     votePeriod = BRANCHES.getVotePeriod(branch)
     eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
     periodLength = BRANCHES.getPeriodLength(branch)
-    # make sure event is in the given branch and vote period
+    # makes sure event is in the given branch and vote period
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
-        return(-8)
+        return(-5)
     elif(EVENTS.getOutcome(event)!=0):
-        return(-9)
+        return(-6)
     # commented out for testing
     #if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 172800)/BRANCHES.getPeriodLength(branch))):
-    #    return(-10)
+    #    return(-7)
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
         realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
         reportHash = self.makeHash(salt, report, eventID)
         if(reportHash!=realHash || realHash==0):
             return(-3)
-        report = self.validateReport(event, branch, votePeriod, report)
+        forkedOverEthicality = BACKSTOPS.getForkedOverEthicality(event) 
+        forkedOverThisEvent = 0
+        if(BRANCHES.getEventForkedOver(branch) == event):
+            forkedOverThisEvent = 1
+        roundTwo = BACKSTOPS.getRoundTwo(event)
+        report = self.validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, balance)
         if(report == -4):
             return(-4)
         # reporter has reported for 1 more event
@@ -117,16 +122,25 @@ def submitReport(event, salt, report, ethics):
             ethics = ONE
         if(forkedOverThisEvent):
             # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
-                #if so # ethics = fork ethic value
-            ethics = (EVENTS.getForkEthicality(event)*self.branches[branch].numReportsEvent[votePeriod][event] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][event] + 1)
+            if(forkedOverEthicality):
+                oldEthical = ethic_catch(EVENTS.getEthical(event))
+                if(oldEthical == ONE):
+                    ethics = 0
+                else:
+                    ethics = ONE
+            self.branches[branch].ethics[votePeriod][tx.origin].event[event] = ethics
+            ethics = (EVENTS.getForkEthicality(event)*self.branches[branch].repEvent[votePeriod][event] + ethics*balance) / (self.branches[branch].repEvent[votePeriod][event] + balance)
             EVENTS.setForkEthicality(event, ethics)
-            self.branches[branch].ethics[votePeriod][tx.origin].event[event] = ethics
         else:
-            ethics = (EVENTS.getEthics(event)*self.branches[branch].numReportsEvent[votePeriod][event] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][event] + 1)
-            EVENTS.setEthics(eventID, ethics)
             self.branches[branch].ethics[votePeriod][tx.origin].event[event] = ethics
+            if(roundTwo):
+                ethics = (EVENTS.getEthics(event)*self.branches[branch].repEvent[votePeriod][event] + ethics*balance) / (self.branches[branch].repEvent[votePeriod][event] + balance)
+            else:
+                ethics = (EVENTS.getEthics(event)*self.branches[branch].numReportsEvent[votePeriod][event] + ethics) / (self.branches[branch].numReportsEvent[votePeriod][event] + 1)
+            EVENTS.setEthics(eventID, ethics)
         # add 1 report to the event
         self.branches[branch].numReportsEvent[votePeriod][event] += 1
+        self.branches[branch].repEvent[votePeriod][event] += self.branches[branch].beforeRep[votePeriod][tx.origin]
         # if 1st report of the period for a reporter
         if(!self.branches[branch].reportedPeriod[votePeriod][tx.origin]):
             dormantRep = REPORTING.balanceOf(branch, tx.origin)
@@ -138,6 +152,63 @@ def submitReport(event, salt, report, ethics):
         return(1)
     return(-2)
 
+# validates and submits report
+# weights reports by rep if round 2 and fork
+def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, balance):
+    outcome = 0
+    # binary
+    if(EVENTS.getNumOutcomes(eventID)==2 and EVENTS.getMaxValue(eventID)==2**65 && EVENTS.getMinValue(eventID)==ONE):
+        if(report>2*ONE or report<ONE or report==0):
+            return(-4)
+        # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
+        elif(forkedOverThisEvent):
+            # in case of fork remove the original outcome as a possible response if didn't fork over ethics
+            if(!forkedOverEthicality && report == catch(EVENTS.getUncaughtOutcome(eventID))):
+                return(-4)
+            outcome = (EVENTS.getForkOutcome(eventID)*self.branches[branch].repEvent[votePeriod][eventID] + report*balance) / (self.branches[branch].repEvent[votePeriod][eventID] + balance)
+            EVENTS.setForkOutcome(eventID, outcome)
+        else:
+            if(roundTwo):
+                outcome = (EVENTS.getUncaughtOutcome(eventID)*self.branches[branch].repEvent[votePeriod][eventID] + report*balance) / (self.branches[branch].repEvent[votePeriod][eventID] + balance)
+            else:
+                outcome = (EVENTS.getUncaughtOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
+            EVENTS.setUncaughtOutcome(eventID, outcome)
+    # scalar or categorical
+    else:
+        if(report > ONE && report!=3*2**63):
+            report = ONE
+        elif(report<=0):
+            # 1 is the new 0
+            report = 1
+        # in case of fork remove the original outcome as a possible response if didn't fork over ethics
+        if(forkedOverThisEvent):
+            if(!forkedOverEthicality && report == EVENTS.getUncaughtOutcome(eventID)):
+                return(-4)
+            # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
+            self.mode_items[votePeriod][eventID].report_value[report] += balance
+            if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
+                self.mode_items[votePeriod][eventID].current_mode = report
+                self.mode_items[votePeriod][eventID].current_mode_items = self.mode_items[votePeriod][eventID].report_value[report]
+            outcome = self.mode_items[votePeriod][eventID].current_mode
+            EVENTS.setForkOutcome(eventID, outcome)
+        else:
+            if(roundTwo):
+                # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
+                self.mode_items[votePeriod][eventID].report_value[report] += balance
+                if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
+                    self.mode_items[votePeriod][eventID].current_mode = report
+                    self.mode_items[votePeriod][eventID].current_mode_items = self.mode_items[votePeriod][eventID].report_value[report]
+                outcome = self.mode_items[votePeriod][eventID].current_mode
+            else:
+                # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
+                self.mode_items[votePeriod][eventID].report_value[report] += 1
+                if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
+                    self.mode_items[votePeriod][eventID].current_mode = report
+                    self.mode_items[votePeriod][eventID].current_mode_items = self.mode_items[votePeriod][eventID].report_value[report]
+                outcome = self.mode_items[votePeriod][eventID].current_mode
+            EVENTS.setUncaughtOutcome(eventID, outcome)
+    return(report)
+    
 ### Helper functions:
 # could charge market creator for the part of this calc that only needs to be done once, first person to use gets a refund/rebate
 def calculateReportingThreshold(branch, eventID, votePeriod):
@@ -150,7 +221,6 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
     shareValue = 0
     i = 0
     while i < numMarkets:
-        # todo convert to value in w/e currency once we add subcurrencies
         shareValue += MARKETS.getSharesValue(markets[i])
         totalFees += MARKETS.getFees(markets[i])
         i += 1
@@ -192,39 +262,23 @@ def getNumEventsToReport(branch, votePeriod):
     if(total/ONE < minimum):
         total = minimum*ONE
     return(total)
+    
+macro YES: 2^65
+macro NO: ONE
+macro BAD: 3 * 2^63
+macro CATCH_TOLERANCE: ONE / 10
 
-# validates and submits report
-def validateReport(eventID, branch, votePeriod, report):
-    # todo in case of fork remove the original outcome as a possible response
-    # add a separate fork outcome and fork ethicality for where to submit report in case of fork
-    # binary
-    if(EVENTS.getNumOutcomes(eventID)==2 and EVENTS.getMaxValue(eventID)==2**65 && EVENTS.getMinValue(eventID)==ONE):
-        if(report>2*ONE or report<ONE or report==0):
-            return(-4)
-        # todo weight by rep if round 2 and fork
-        # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-        if(forkedOverThisEvent):
-            outcome = (EVENTS.getForkOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
-            EVENTS.setForkOutcome(eventID, outcome)
-        else:
-            outcome = (EVENTS.getUncaughtOutcome(eventID)*self.branches[branch].numReportsEvent[votePeriod][eventID] + report) / (self.branches[branch].numReportsEvent[votePeriod][eventID] + 1)
-            EVENTS.setUncaughtOutcome(eventID, outcome)
-    # scalar or categorical
+# Bins values to 1, 1.5, 2
+macro catch($x):
+    if($x < (BAD - CATCH_TOLERANCE)):
+        NO
+    elif($x > (BAD + CATCH_TOLERANCE)):
+        YES
     else:
-        if(report > ONE && report!=3*2**63):
-            report = ONE
-        elif(report<=0):
-            # 1 is the new 0
-            report = 1
-        # todo weight by rep in round 2 and fork
-        # outcome (uncaught and mode) should be calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-        self.mode_items[votePeriod][eventID].report_value[report] += 1
-        if(self.mode_items[votePeriod][eventID].report_value[report] > self.mode_items[votePeriod][eventID].current_mode_items):
-            self.mode_items[votePeriod][eventID].current_mode = report
-            self.mode_items[votePeriod][eventID].current_mode_items = self.mode_items[votePeriod][eventID].report_value[report]
-        outcome = self.mode_items[votePeriod][eventID].current_mode
-        if(forkedOverThisEvent):
-            EVENTS.setForkOutcome(eventID, outcome)
-        else:
-            EVENTS.setUncaughtOutcome(eventID, outcome)
-    return(report)
+        BAD
+        
+macro ethic_catch($x):
+    if($x < 2^63):
+        0
+    else:
+        ONE

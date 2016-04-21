@@ -10,7 +10,15 @@ data eventMoved[]
 data forkData[](originalBranch)
 data forking[](bondPoster)
 data bondPaid[]
+data forkedOverEthicality[]
 data bondAmount[]
+
+
+def getForkedOverEthicality(event):
+    return(self.forkedOverEthicality[event])
+    
+
+
 
 # Period where we forked, at the end of it
     # don't penalize for this period / anything that happened here should be considered to not have happened - done
@@ -146,6 +154,7 @@ def fork(event, branch, forkedOverEthicality):
         BRANCHES.setForkPeriod(newBranch)
         BRANCHES.setEventForkedOver(newBranch, event)
         BRANCHES.setEventForkedOver(branch, event)
+        self.forkedOverEthicality[event] = forkedOverEthicality
         # return round 2 bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), 100*ONE)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), 100*ONE)
