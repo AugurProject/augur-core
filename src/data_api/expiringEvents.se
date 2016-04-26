@@ -28,9 +28,10 @@ inset('refund.se')
 # [branchID][votingPeriod]
 # reporthash is [reporterID] = hash
 data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], shareValue, roundTwoNumEvents)
+
 data EventIDToIndex[][]
 
-data branches[](numReportsActual[][], beforeRep[][], afterRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], reportedPeriod[][], periodDormantRep[][])
+data branches[](numReportsActual[][], beforeRep[][], afterRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], reportedPeriod[][], periodDormantRep[][], repEvent[][])
 
 data requiredEvents[]
 # branch, period as params
@@ -38,11 +39,49 @@ data numReqEvents[][]
 
 data mode_items[][](report_value[], current_mode, current_mode_items)
 
+def getCurrentModeItems(period, event):
+    return(self.mode_items[period][event].current_mode_items)
+
+def getCurrentMode(period, event):
+    return(self.mode_items[period][event].current_mode)
+    
+# returns weight of a report value for the mode
+def getWeightOfReport(period, event, report):
+    return(self.mode_items[period][event].report_value[report])
+
+def addToWeightOfReport(period, event, report, amount):
+    self.mode_items[period][event].report_value[report] += amount
+    return(1)
+    
+def setCurrentMode(period, event, mode):
+    self.mode_items[period][event].current_mode = mode
+    return(1)
+    
+# basically setting current mode's weight
+def setCurrentModeItems(period, event, modeReport):
+    self.mode_items[period][event].current_mode = self.mode_items[period][event].report_value[modeReport]
+    return(1)
+
+def getRepEvent(branch, votePeriod, event):
+    return(self.branches[branch].repEvent[votePeriod][event])
+
+def addRepEvent(branch, votePeriod, event, amount):
+    self.branches[branch].repEvent[votePeriod][event] += amount
+    return(1)
+
 def getReportedPeriod(branch, period, reporter):
     return(self.branches[branch].reportedPeriod[period][reporter])
+    
+def setReportedPeriod(branch, period, reporter):
+    self.branches[branch].reportedPeriod[period][reporter] = 1
+    return(1)
 
 def getEthicReport(branch, period, event):
     return(self.branches[branch].ethics[period][tx.origin].event[event])
+
+def setEthicReport(branch, period, event, ethics):
+    self.branches[branch].ethics[period][tx.origin].event[event] = ethics
+    return(1)
 
 def getNumReportsExpectedEvent(branch, votePeriod, eventID):
     return(self.branches[branch].numReportsExpectedEvent[votePeriod][eventID])
@@ -57,12 +96,24 @@ def setNumReportsExpectedEvent(branch, votePeriod, eventID, num):
 def setNumReportsEvent(branch, votePeriod, eventID, num):
     self.branches[branch].numReportsEvent[votePeriod][eventID] = num
     return(1)
+    
+def addReportToEvent(branch, votePeriod, eventID):
+    self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
+    return(1)
+
+def addReportExpected(branch, votePeriod, eventID):
+    self.branches[branch].numReportsExpectedEvent[votePeriod][eventID] += 1
+    return(1)
 
 def getReport(branch, period, event):
     #if(whitelist):
     return(self.branches[branch].report[period][tx.origin].event[event])
 
-def getBeforeRep(branch,period):
+def setReport(branch, period, event, report):
+    self.branches[branch].report[period][tx.origin].event[event] = report
+    return(1)
+
+def getBeforeRep(branch, period):
     return(self.branches[branch].beforeRep[period][tx.origin])
 
 def getAfterRep(branch, period):
