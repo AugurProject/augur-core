@@ -34,7 +34,7 @@ def initiate(numEvents, numReporters):
         maxRep -= int(rep/10)
     lowestVolNum = 0
     reportsOnLowest = 0
-    lowestVolAmt = 11000000*2**65
+    lowestVolAmt = 11000000*TWO
     for z in range(0, numEvents):
         if(listVol[z]<lowestVolAmt):
             lowestVolNum = z

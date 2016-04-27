@@ -4,6 +4,7 @@
     #In the other class/branch, the event is readjudicated and remove the outcome on the pre fork branch and rep is redistributed as normal, except people who said the original outcome in the original fork lose rep.  
     # Note: Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets, which would be determined by the fork that represented reality, which would have a higher market cap.  Markets go to the most popular fork by default after 2 months.
 
+# todo move to backstops data_api
 # branch and forkperiod and who won
 data forkResolved[][]
 data eventMoved[]
@@ -390,7 +391,7 @@ def proportionCorrectForkEvent(event, branch, period):
     outcome = catch(EVENTS.getForkOutcome(event))
     if(outcome!=0):
         # binary
-        if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==2**65 and EVENTS.getMinValue(event)==ONE):
+        if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==TWO and EVENTS.getMinValue(event)==ONE):
             # subtract 1 to get it from 0 to 1
             avgOutcome = EVENTS.getForkOutcome(event) - ONE
             # say we have outcome of 0, avg is .4, what is p?
@@ -409,10 +410,10 @@ def proportionCorrectForkEvent(event, branch, period):
 
 
 macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=2**65 || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
+    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
         
 macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==ONE)
+    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
         
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)

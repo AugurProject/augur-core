@@ -737,7 +737,7 @@ def test_close_market():
     gas_use(s)
     new = c.balance(s.block.coinbase)
     # get 1/2 of liquidity (50) + 42 for event bond
-    assert((new - orig)>=90*2**64 and (new - orig)<=95*2**65), "Liquidity and event bond not returned properly"
+    assert((new - orig)>=90*2**64 and (new - orig)<=95*TWO), "Liquidity and event bond not returned properly"
     assert(c.balance(bin_market2)==10*2**64), "liquidity not returned properly, should only be winning shares remaining"
     assert(c.balance(event2)==0)
     # ensure proceeds returned properly

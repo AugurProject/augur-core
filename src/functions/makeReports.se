@@ -155,7 +155,7 @@ def submitReport(event, salt, report, ethics):
 def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, balance):
     outcome = 0
     # binary
-    if(EVENTS.getNumOutcomes(eventID)==2 and EVENTS.getMaxValue(eventID)==2**65 && EVENTS.getMinValue(eventID)==ONE):
+    if(EVENTS.getNumOutcomes(eventID)==2 and EVENTS.getMaxValue(eventID)==TWO && EVENTS.getMinValue(eventID)==ONE):
         if(report>2*ONE or report<ONE or report==0):
             return(-4)
         # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
@@ -239,7 +239,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
         total = expectedEventsForReporter
         eventsInPeriod = EXPEVENTS.getNumberEvents(branch, expDateIndex)-EXPEVENTS.getNumRemoved(branch, votePeriod)
         numRequiredEvents = EXPEVENTS.getNumRequired(branch, votePeriod)
-        minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
+ ref       minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
         if(total/ONE < minimum):
             total = minimum*ONE
             repConstant = repConstant*ratio / ONE
@@ -262,7 +262,7 @@ def getNumEventsToReport(branch, votePeriod):
         total = minimum*ONE
     return(total)
     
-macro YES: 2^65
+macro YES: TWO
 macro NO: ONE
 macro BAD: 3 * ONEHALF
 macro CATCH_TOLERANCE: ONE / 10

@@ -10,6 +10,7 @@ import backstops as BACKSTOPS
 inset('refund.se')
 
 
+# todo move to consensus data_api and backstops for round 2
 # round two consensus data [note/todo: UI should show round 2 events first / up top]
 data bondPaid[]
 data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, final)
@@ -35,7 +36,7 @@ def initialPenalizedSetting(branch, reporter, upto):
     self.branch[branch].penalizedUpTo[reporter] = upto
     return(1)
     
-macro YES: 2^65
+macro YES: TWO
 macro NO: ONE
 macro BAD: 3 * ONEHALF
 macro CATCH_TOLERANCE: ONE / 10
@@ -511,7 +512,7 @@ def proportionCorrect(event, branch, period):
     outcome = catch(EVENTS.getUncaughtOutcome(event))
     if(outcome!=0):
         # binary
-        if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==2**65 and EVENTS.getMinValue(event)==ONE):
+        if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==TWO and EVENTS.getMinValue(event)==ONE):
             # subtract 1 to get it from 0 to 1
             avgOutcome = EVENTS.getUncaughtOutcome(event) - ONE
             # say we have outcome of 0, avg is .4, what is p?
@@ -554,10 +555,10 @@ def getRRDone(branch, reporter):
 
 
 macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=2**65 || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
+    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
         
 macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==ONE)
+    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
         
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)

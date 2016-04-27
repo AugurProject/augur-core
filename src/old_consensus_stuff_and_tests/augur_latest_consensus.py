@@ -9,7 +9,7 @@ def initiate(numEvents, numReporters):
     numberReportEstimate = 0
     listVol = []
     lowestVolNum = 0
-    lowestVolAmt = 11000000*2**65
+    lowestVolAmt = 11000000*TWO
     maxVol = 1000000
     for x in range(0, numEvents):
         curVol = random.randint(1, maxVol)

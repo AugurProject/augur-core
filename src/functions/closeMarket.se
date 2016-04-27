@@ -37,7 +37,7 @@ inset('refund.se')
 # first param is the market, second param is the subcurrency contract
 data cash[][]
 
-macro YES: 2^65
+macro YES: TWO
 macro NO: ONE
 macro BAD: 3 * ONEHALF
 
@@ -178,10 +178,10 @@ def claimProceeds(branch, market):
         return(0)
 
 macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=2**65 || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
+    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
     
 macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and ONE*EVENTS.getMaxValue($event)==2**65 and EVENTS.getMinValue($event)==ONE)
+    (EVENTS.getNumOutcomes($event)==2 and ONE*EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
     
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)
