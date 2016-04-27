@@ -107,7 +107,7 @@ macro categorical($event):
     
 macro YES: 2^65
 macro NO: ONE
-macro BAD: 3 * 2^63
+macro BAD: 3 * ONEHALF
 macro CATCH_TOLERANCE: ONE / 10
 
 # Bins values to 1, 1.5, 2
@@ -120,7 +120,7 @@ macro catch($x):
         BAD
         
 macro ethic_catch($x):
-    if($x < 2^63):
+    if($x < ONEHALF):
         0
     else:
         ONE
@@ -134,12 +134,12 @@ def resolve(branch, event):
         ethical = ethic_catch(EVENTS.getEthical(event))
         EVENTS.setOutcome(event, fxpOutcome)
         
-        if(fxpOutcome==3*2**63 || !ethical):
+        if(fxpOutcome==3*ONEHALF || !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, EVENTS.getBond(event))
             CASH.addCash(branch, EVENTS.getBond(event))
             # not ethical is same as .5 outcome
-            fxpOutcome = 3*2**63
+            fxpOutcome = 3*ONEHALF
             EVENTS.setOutcome(event, fxpOutcome)
         else:
             # return bond
@@ -156,12 +156,12 @@ def resolve(branch, event):
         EVENTS.setOutcome(event, fxpOutcome)
         ethical = ethic_catch(EVENTS.getEthical(event))
 
-        if(fxpOutcome==2**63 || !ethical):
+        if(fxpOutcome==ONEHALF || !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, EVENTS.getBond(event))
             CASH.addCash(branch, EVENTS.getBond(event))
             # not ethical is same as .5 outcome
-            fxpOutcome = 2**63
+            fxpOutcome = ONEHALF
             EVENTS.setOutcome(event, fxpOutcome)
             EVENTS.setmode(event, fxpOutcome)
         else:

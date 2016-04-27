@@ -3,3 +3,11 @@ macro refund():
         send(msg.sender, msg.value)
 
 macro ONE: 2^64
+
+macro WEITOETH: 10^18
+
+macro THREEFOURTHS: 13835058055282163712
+
+macro ONEFOURTH: 2**62
+
+macro ONEHALF: 2**63

@@ -56,6 +56,8 @@ def submitReportHash(event, reportHash):
     if(EXPEVENTS.getRequired(event) || EVENTS.getReportingThreshold(event)):
         reportingThreshold = 2**192
     else:
+        if(EXPEVENTS.getLesserReportNum(branch, votePeriod, event)==0):
+            EXPEVENTS.setLesserReportNum(branch, votePeriod, event, self.calculateReportTargetForEvent(branch, event, votePeriod))
         reportingThreshold = self.calculateReportingThreshold(branch, event, votePeriod)
     x = array(1)
     x[0] = tx.origin + event
@@ -82,7 +84,7 @@ def submitReportHash(event, reportHash):
     # -7: <48 hr left in period, too late to report, able to put up readj. bonds though
 def submitReport(event, salt, report, ethics):
     balance = REPORTING.getRepBalance(branch, tx.origin)
-    if(balance<2**63):
+    if(balance<ONEHALF):
         return(0)
     branch = EVENTS.getBranch(event)
     votePeriod = BRANCHES.getVotePeriod(branch)
@@ -171,7 +173,7 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
             EVENTS.setUncaughtOutcome(eventID, outcome)
     # scalar or categorical
     else:
-        if(report > ONE && report!=3*2**63):
+        if(report > ONE && report!=3*ONEHALF):
             report = ONE
         elif(report<=0):
             # 1 is the new 0
@@ -204,10 +206,9 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
                 outcome = EXPEVENTS.getCurrentMode(votePeriod, eventID)
             EVENTS.setUncaughtOutcome(eventID, outcome)
     return(report)
-    
+
 ### Helper functions:
-# could charge market creator for the part of this calc that only needs to be done once, first person to use gets a refund/rebate
-def calculateReportingThreshold(branch, eventID, votePeriod):
+def calculateReportTargetForEvent(branch, eventID, votePeriod):
     numMarkets = EVENTS.getNumMarkets(eventID)
     if(numMarkets>25):
         numMarkets = 25
@@ -221,26 +222,29 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
         totalFees += MARKETS.getFees(markets[i])
         i += 1
     totalVal = EXPEVENTS.getShareValue(branch, votePeriod)
-    logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*ONE/REPORTING.getActiveRep(branch))
-    repConstant = FXP.fx_exp(22136092888451461120*logOutput/ONE)
-    repConstant += 18446744073709552
     shareFraction = shareValue*ONE/totalVal
-    numReportOn = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
-    total = repConstant*numReportOn + EXPEVENTS.getNumRequired(branch, votePeriod)*ONE
-    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, expDateIndex)-EXPEVENTS.getNumRemoved(branch, votePeriod)
-    minimum = min(30+EXPEVENTS.getNumRequired(branch, votePeriod), eventsInPeriod)
-    if(total/ONE < minimum):
-        total = minimum*ONE
-    expectedEvents = repConstant * numReportOn
-    numEventsAfterMinAccounting = total - EXPEVENTS.getNumRequired(branch, votePeriod)*ONE
-    ratio = numEventsAfterMinAccounting * ONE / expectedEvents
-    if(ratio > ONE):
-        repConstant = repConstant*ratio / ONE
     numReportersOnMarket = BRANCHES.getBaseReporters(branch)*((-(267*shareFraction**2)/(2*ONE) + (533*shareFraction)/2 + 1*ONE))
-    totalFeesInWei = totalFees * 10**18 / ONE
+    totalFeesInWei = totalFees * WEITOETH / ONE
     canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
     lesser = max(canPayForThisManyReporters*ONE, numReportersOnMarket)
-    reportingThreshold = lesser*repConstant*ONE
+    EXPEVENTS.refundCost(msg.sender, EXPEVENTS.getSubsidy(branch, votePeriod, eventID))
+    return(lesser)
+
+def calculateReportingThreshold(branch, eventID, votePeriod):
+    repConstant = EXPEVENTS.getPeriodRepConstant(branch, votePeriod, msg.sender)
+    if(repConstant==0):
+        logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*ONE/REPORTING.getActiveRep(branch))
+        repConstant = FXP.fx_exp(22136092888451461120*logOutput/ONE) + 18446744073709552
+        expectedEventsForReporter = repConstant * EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
+        total = expectedEventsForReporter
+        eventsInPeriod = EXPEVENTS.getNumberEvents(branch, expDateIndex)-EXPEVENTS.getNumRemoved(branch, votePeriod)
+        numRequiredEvents = EXPEVENTS.getNumRequired(branch, votePeriod)
+        minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
+        if(total/ONE < minimum):
+            total = minimum*ONE
+            repConstant = repConstant*ratio / ONE
+        EXPEVENTS.setPeriodRepConstant(branch, votePeriod, msg.sender, repConstant)
+    reportingThreshold = EXPEVENTS.getLesserReportNum(branch, votePeriod, eventID)*repConstant*ONE
     return(reportingThreshold)
 
 # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
@@ -250,8 +254,7 @@ def getNumEventsToReport(branch, votePeriod):
     prelim = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
     repConstant = REPORTING.getRepBalance(branch, tx.origin)*ONE/REPORTING.getActiveRep(branch)
     logOutput = FXP.fx_log(repConstant)
-    exp = FXP.fx_exp(22136092888451461120*logOutput/ONE)
-    exp += 18446744073709552
+    exp = FXP.fx_exp(22136092888451461120*logOutput/ONE) + 18446744073709552
     total = exp*prelim + EXPEVENTS.getNumRequired(branch, votePeriod)*ONE
     eventsInPeriod = EXPEVENTS.getNumberEvents(branch, expDateIndex)-EXPEVENTS.getNumRemoved(branch, votePeriod)
     minimum = min(30+EXPEVENTS.getNumRequired(branch, votePeriod), eventsInPeriod)
@@ -261,7 +264,7 @@ def getNumEventsToReport(branch, votePeriod):
     
 macro YES: 2^65
 macro NO: ONE
-macro BAD: 3 * 2^63
+macro BAD: 3 * ONEHALF
 macro CATCH_TOLERANCE: ONE / 10
 
 # Bins values to 1, 1.5, 2
@@ -274,7 +277,7 @@ macro catch($x):
         BAD
         
 macro ethic_catch($x):
-    if($x < 2^63):
+    if($x < ONEHALF):
         0
     else:
         ONE

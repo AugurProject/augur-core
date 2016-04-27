@@ -262,8 +262,8 @@ def short_sell(buyer_trade_id, max_amount):
     amount = min(orig_amount, max_amount)
     fee = fee_percent(trading_fee, price, amount, cumScale)
     fee = amount * price /ONE * fee / ONE
-    branchFees = (13835058055282163712+(2**63 - self.getMakerFees(market))/2)*fee
-    creatorFees = (2**62+(2**63 - self.getMakerFees(market))/2)*fee
+    branchFees = (THREEFOURTHS+(ONEHALF - self.getMakerFees(market))/2)*fee
+    creatorFees = (ONEFOURTH+(ONEHALF - self.getMakerFees(market))/2)*fee
     takerFeesTotal = branchFees + creatorFees
     # need todo taker fee
     #buyer gives up say 20
@@ -434,8 +434,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 self.modifyParticipantShares(branch, market_id, owner, outcome, fill)
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
                 fee = value * fee / ONE
-                branchFees = (13835058055282163712+(2**63 - self.getMakerFees(market))/2)*fee
-                creatorFees = (2**62+(2**63 - self.getMakerFees(market))/2)*fee
+                branchFees = (THREEFOURTHS+(ONEHALF - self.getMakerFees(market))/2)*fee
+                creatorFees = (ONEFOURTH+(ONEHALF - self.getMakerFees(market))/2)*fee
                 takerFeesTotal = branchFees + creatorFees
                 self.addCash(msg.sender, value-takerFeesTotal)
                 # 75% to branch + .5% more to branch per maker fee 1% decrease 
@@ -467,8 +467,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Determine fill value
                 value = min(max_value, trade_value)
                 fee = trade_value * fee / ONE
-                branchFees = (13835058055282163712+(2**63 - self.getMakerFees(market))/2)*fee
-                creatorFees = (2**62+(2**63 - self.getMakerFees(market))/2)*fee
+                branchFees = (THREEFOURTHS+(ONEHALF - self.getMakerFees(market))/2)*fee
+                creatorFees = (ONEFOURTH+(ONEHALF - self.getMakerFees(market))/2)*fee
                 takerFeesTotal = branchFees + creatorFees
                 # fix todo for what if maxvalue is say 10 but adding fees to it makes it 11, max value should _include_, not exclude fees
                 if(self.balance(tx.origin) < (value + takerFeesTotal)):
@@ -604,7 +604,7 @@ data cash[][]
 
 macro YES: 2^65
 macro NO: ONE
-macro BAD: 3 * 2^63
+macro BAD: 3 * ONEHALF
 
 macro CATCH_TOLERANCE: ONE / 10
 
@@ -620,7 +620,7 @@ macro catch($x):
         BAD
 
 macro ethic_catch($x):
-    if($x < 2^63):
+    if($x < ONEHALF):
         0
     else:
         ONE
@@ -847,11 +847,11 @@ def twoOutcomes(market, winningOutcome: arr, events: arr):
     refund()
     # look for the scalar
     scalar = 0
-    if(((self.getMaxValue(events[0])!=2**65 || self.getMinValue(events[0])!=ONE) && self.getNumOutcomes(events[0])==2) || self.getOutcome(events[0])==3*2^63):
+    if(((self.getMaxValue(events[0])!=2**65 || self.getMinValue(events[0])!=ONE) && self.getNumOutcomes(events[0])==2) || self.getOutcome(events[0])==3*ONEHALF):
         scalar = 0
-    elif(((self.getMaxValue(events[1])!=2**65 || self.getMinValue(events[1])!=ONE) && self.getNumOutcomes(events[1])==2) || self.getOutcome(events[1])==3*2^63):
+    elif(((self.getMaxValue(events[1])!=2**65 || self.getMinValue(events[1])!=ONE) && self.getNumOutcomes(events[1])==2) || self.getOutcome(events[1])==3*ONEHALF):
         scalar = 1
-    elif(((self.getMaxValue(events[2])!=2**65 || self.getMinValue(events[2])!=ONE) && self.getNumOutcomes(events[2])==2) || self.getOutcome(events[2])==3*2^63):
+    elif(((self.getMaxValue(events[2])!=2**65 || self.getMinValue(events[2])!=ONE) && self.getNumOutcomes(events[2])==2) || self.getOutcome(events[2])==3*ONEHALF):
         scalar = 2
     outcome = self.getOutcome(events[scalar])
     minValue = self.getMinValue(events[scalar])
@@ -1117,7 +1117,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
     if(ratio > ONE):
         repConstant = repConstant*ratio / ONE
     numReportersOnMarket = self.getBaseReporters(branch)*((-(267*shareFraction**2)/(2*ONE) + (533*shareFraction)/2 + 1*ONE))
-    totalFeesInWei = totalFees * 10**18 / ONE
+    totalFeesInWei = totalFees * WEITOETH / ONE
     canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
     lesser = max(canPayForThisManyReporters*ONE, numReportersOnMarket)
     reportingThreshold = lesser*repConstant*ONE
@@ -1157,7 +1157,7 @@ def validateReport(eventID, branch, votePeriod, report):
             self.setUncaughtOutcome(eventID, outcome)
     # scalar or categorical
     else:
-        if(report > ONE && report!=3*2**63):
+        if(report > ONE && report!=3*ONEHALF):
             report = ONE
         elif(report<=0):
             # 1 is the new 0
@@ -1201,13 +1201,13 @@ def setCloseMarket(value):
 # .05 eth to create
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
 def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, tag3, makerFees, extraInfo:str):
-    if(makerFees<0 or makerFees > 2**63):
+    if(makerFees<0 or makerFees > ONEHALF):
         return(0)
     periodLength = self.getPeriodLength(branch)
     # send this to branch
     creationFee = 1106804644422573056 * self.getBaseReporters(branch) * ONE / tradingFee
     # gives ether/cash amount in fixed point
-    minFee = 3500000*self.getBaseReporters(branch)*tx.gasprice*len(events)*ONE/10^18
+    minFee = 3500000*self.getBaseReporters(branch)*tx.gasprice*len(events)*ONE/WEITOETH
     if(creationFee < minFee):
         creationFee = minFee
     if(self.balance(msg.sender) < creationFee):
@@ -1488,7 +1488,7 @@ macro categorical($event):
     
 macro YES: 2^65
 macro NO: ONE
-macro BAD: 3 * 2^63
+macro BAD: 3 * ONEHALF
 macro CATCH_TOLERANCE: ONE / 10
 
 # Bins values to 1, 1.5, 2
@@ -1501,7 +1501,7 @@ macro catch($x):
         BAD
         
 macro ethic_catch($x):
-    if($x < 2^63):
+    if($x < ONEHALF):
         0
     else:
         ONE
@@ -1514,12 +1514,12 @@ def resolve(branch, event):
         ethical = ethic_catch(self.getEthical(event))
         self.setOutcome(event, fxpOutcome)
         
-        if(fxpOutcome==3*2**63 || !ethical):
+        if(fxpOutcome==3*ONEHALF || !ethical):
             # give event bond money to reporters
             self.subtractCash(event, self.getBond(event))
             self.addCash(branch, self.getBond(event))
             # not ethical is same as .5 outcome
-            fxpOutcome = 3*2**63
+            fxpOutcome = 3*ONEHALF
             self.setOutcome(event, fxpOutcome)
         else:
             # return bond
@@ -1536,12 +1536,12 @@ def resolve(branch, event):
         self.setOutcome(event, fxpOutcome)
         ethical = ethic_catch(self.getEthical(event))
 
-        if(fxpOutcome==2**63 || !ethical):
+        if(fxpOutcome==ONEHALF || !ethical):
             # give event bond money to reporters
             self.subtractCash(event, self.getBond(event))
             self.addCash(branch, self.getBond(event))
             # not ethical is same as .5 outcome
-            fxpOutcome = 2**63
+            fxpOutcome = ONEHALF
             self.setOutcome(event, fxpOutcome)
             self.setmode(event, fxpOutcome)
         else:
@@ -1762,7 +1762,7 @@ inset('refund.se')
 
 macro YES: 2^65
 macro NO: ONE
-macro BAD: 3 * 2^63
+macro BAD: 3 * ONEHALF
 macro CATCH_TOLERANCE: ONE / 10
 
 # Bins values to 1, 1.5, 2
@@ -1775,7 +1775,7 @@ macro catch($x):
         BAD
 
 macro ethic_catch($x):
-    if($x < 2^63):
+    if($x < ONEHALF):
         0
     else:
         ONE
@@ -1799,7 +1799,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
     self.setEthics(event, ethical)
     # In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration date
-    if(fxpOutcome == 3*2**63 && self.getPushedForward(market)):
+    if(fxpOutcome == 3*ONEHALF && self.getPushedForward(market)):
         #set event expiration to be the old date prior to this bond process
         self.setExpiration(event, self.getOriginalExpiration(event))
         self.setTradingPeriod(market, self.getOriginalTradingPeriod(market))
@@ -1817,12 +1817,12 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
         # need to store uncaught outcome for rejectedperiod separately as well as which period it was "rejected" in
         self.setRejected(event, self.getExpiration(event)/periodLength, fxpOutcome)
         return(-6)
-    elif(fxpOutcome==3*2**63 || !ethical):
+    elif(fxpOutcome==3*ONEHALF || !ethical):
         # give event bond money to reporters
         self.subtractCash(event, self.getBond(event))
         self.addCash(branch, self.getBond(event))
         # not ethical is same as .5 outcome
-        fxpOutcome = 3*2**63
+        fxpOutcome = 3*ONEHALF
         self.setOutcome(event, fxpOutcome)
     else:
         # return bond
@@ -1849,7 +1849,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     
     # In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration date
-    if(fxpOutcome == 3*2**63 && self.getPushedForward(market)):
+    if(fxpOutcome == 3*ONEHALF && self.getPushedForward(market)):
         #set event expiration to be the old date prior to this bond process
         self.setExpiration(event, self.getOriginalExpiration(event))
         self.setTradingPeriod(market, self.getOriginalTradingPeriod(market))
@@ -1867,12 +1867,12 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         # need to store uncaught outcome for rejectedperiod separately as well as which period it was "rejected" in
         self.setRejected(event, self.getExpiration(event)/periodLength, fxpOutcome)
         return(-6)
-    elif(fxpOutcome==3*2**63 || !ethical):
+    elif(fxpOutcome==3*ONEHALF || !ethical):
         # give event bond money to reporters
         self.subtractCash(event, self.getBond(event))
         self.addCash(branch, self.getBond(event))
         # not ethical is same as .5 outcome
-        fxpOutcome = 3*2**63
+        fxpOutcome = 3*ONEHALF
         self.setOutcome(event, fxpOutcome)
     else:
         # return bond
@@ -1894,14 +1894,14 @@ def determineWinningOutcomes(events: arr, numberEvents, branch, market):
         outcome = fxpOutcome/ONE
         if(n==0):
             #scalar or .5
-            if(scalar(events[n]) || fxpOutcome==3*2^63):
+            if(scalar(events[n]) || fxpOutcome==3*ONEHALF):
                 winningOutcomes[0] = 1
                 winningOutcomes[1] = 2
             # anything besides scalar or .5
             else:
                 winningOutcomes[0] += outcome
         elif(n==1):
-            if(scalar(events[n]) || fxpOutcome==3*2^63):
+            if(scalar(events[n]) || fxpOutcome==3*ONEHALF):
                 # scalar, scalar
                 if(winningOutcomes[1]):
                     winningOutcomes[2] = 3
@@ -1918,7 +1918,7 @@ def determineWinningOutcomes(events: arr, numberEvents, branch, market):
             else:
                 winningOutcomes[0] += self.getNumOutcomes(events[n-1])*(outcome-1)
         elif(n==2):
-            if(scalar(events[n]) || fxpOutcome==3*2^63):
+            if(scalar(events[n]) || fxpOutcome==3*ONEHALF):
                 #scalar, scalar, scalar
                 if(winningOutcomes[3]):
                     winningOutcomes[4] = 5
@@ -1997,7 +1997,7 @@ def initialPenalizedSetting(branch, reporter, upto):
     
 macro YES: 2^65
 macro NO: ONE
-macro BAD: 3 * 2^63
+macro BAD: 3 * ONEHALF
 macro CATCH_TOLERANCE: ONE / 10
 
 # Bins values to 1, 1.5, 2
@@ -2090,7 +2090,7 @@ def penalizeWrong(branch, event):
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
             if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                     reportValue += ONE
                 diff = reportValue - outcome
                 p = -(abs(diff)/2) + ONE
@@ -2099,7 +2099,7 @@ def penalizeWrong(branch, event):
         else:
             if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                     reportValue += ONE
                 diff = reportValue - outcome
                 p = -(abs(diff)/2) + ONE
@@ -2174,7 +2174,7 @@ def penalizeRoundTwoWrong(branch, event):
             if(oldReport > outcome+184467440737095520 or oldReport < outcome-184467440737095520):
                 if(scalar(event) or categorical(event) or outcome==3*ONE):
                     # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                    if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                    if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                         oldReport += ONE
                     diff = oldReport - outcome
                     p = -(abs(diff)/2) + ONE
@@ -2183,7 +2183,7 @@ def penalizeRoundTwoWrong(branch, event):
             else:
                 if(scalar(event) or categorical(event) or outcome==3*ONE):
                     # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                    if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                    if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                         oldReport += ONE
                     diff = oldReport - outcome
                     p = -(abs(diff)/2) + ONE
@@ -2215,7 +2215,7 @@ def penalizeRoundTwoWrong(branch, event):
             if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
                 if(scalar(event) or categorical(event) or outcome==3*ONE):
                     # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                    if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                    if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                         reportValue += ONE
                     diff = reportValue - outcome
                     p = -(abs(diff)/2) + ONE
@@ -2224,7 +2224,7 @@ def penalizeRoundTwoWrong(branch, event):
             else:
                 if(scalar(event) or categorical(event) or outcome==3*ONE):
                     # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                    if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                    if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                         reportValue += ONE
                     diff = reportValue - outcome    
                     p = -(abs(diff)/2) + ONE
@@ -2438,7 +2438,7 @@ def slashRep(branch, salt, report, reporter, eventID):
         reporterBalance = self.getRepBalance(branch, reporter)
         self.setRep(branch, reporterIndex, 0)
         trutherBalance = self.getRepBalance(branch, tx.origin)
-        self.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*2**63 / ONE))
+        self.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*ONEHALF / ONE))
     return(reporterBalance)
 
 # ui has to call this to stay cheap / not check it elsewhere
@@ -2482,7 +2482,7 @@ def proportionCorrect(event, branch, period):
             # p is .8 or 80%
             if(outcome == 2 * ONE):
                 p = avgOutcome
-            if(outcome == 3 * 2**63):
+            if(outcome == 3 * ONEHALF):
                 return(0)
         return(p)
     else:
@@ -2526,8 +2526,8 @@ macro categorical($event):
 # test bonded pushed forward event/market though not ready to be resolved
     # code in penalize for that:
         #elif(rejected && rejectedPeriodOver && && actuallyrejected && self.getReport(branch, lastPeriodperiod, event) && !self.penalized[lastPeriod][tx.origin].event[event] && outcome):
-        #  outcome = 2**63
-        #  mode = 2**63
+        #  outcome = ONEHALF
+        #  mode = ONEHALF
         #   p = self.proportionCorrect(event, rejected)
         #   oldRep = self.getBeforeRep(branch, period)
         #   # wrong
@@ -2745,12 +2745,12 @@ def resolveForkEvent(branch, event):
             ethical = ethic_catch(self.getForkEthicality(event))
         
         self.setOutcome(event, fxpOutcome)
-        if(fxpOutcome==3*2**63 || !ethical):
+        if(fxpOutcome==3*ONEHALF || !ethical):
             # give event bond money to reporters
             self.subtractCash(event, self.getBond(event))
             self.addCash(branch, self.getBond(event))
             # not ethical is same as .5 outcome
-            fxpOutcome = 3*2**63
+            fxpOutcome = 3*ONEHALF
             self.setOutcome(event, fxpOutcome)
         else:
             # return bond
@@ -2776,12 +2776,12 @@ def resolveForkEvent(branch, event):
         fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
         self.setOutcome(event, fxpOutcome)
 
-        if(fxpOutcome==2**63 || !ethical):
+        if(fxpOutcome==ONEHALF || !ethical):
             # give event bond money to reporters
             self.subtractCash(event, self.getBond(event))
             self.addCash(branch, self.getBond(event))
             # not ethical is same as .5 outcome
-            fxpOutcome = 2**63
+            fxpOutcome = ONEHALF
             self.setOutcome(event, fxpOutcome)
             self.setmode(event, fxpOutcome)
         else:
@@ -2837,7 +2837,7 @@ def penalizeOnForkedEvent(branch, event):
         if(oldReport > outcome+184467440737095520 or oldReport < outcome-184467440737095520):
             if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                     oldReport += ONE
                 diff = oldReport - outcome
                 p = -(abs(diff)/2) + ONE
@@ -2846,7 +2846,7 @@ def penalizeOnForkedEvent(branch, event):
         else:
             if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                     oldReport += ONE
                 diff = oldReport - outcome
                 p = -(abs(diff)/2) + ONE
@@ -2878,7 +2878,7 @@ def penalizeOnForkedEvent(branch, event):
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
             if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                     reportValue += ONE
                 diff = reportValue - outcome
                 p = -(abs(diff)/2) + ONE
@@ -2887,7 +2887,7 @@ def penalizeOnForkedEvent(branch, event):
         else:
             if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                     reportValue += ONE
                 diff = reportValue - outcome    
                 p = -(abs(diff)/2) + ONE
@@ -2946,7 +2946,7 @@ def proportionCorrectForkEvent(event, branch, period):
             # p is .8 or 80%
             if(outcome == 2 * ONE):
                 p = avgOutcome
-            if(outcome == 3 * 2**63):
+            if(outcome == 3 * ONEHALF):
                 return(0)
         return(p)
     else:
@@ -2977,14 +2977,14 @@ def fourOutcomes(market, winningOutcome: arr, events: arr):
     # first is low-low && whatever, second is high-low, third is low-high, fourth is high-high
     scalarOne = -1
     scalarTwo = -1
-    if(((self.getMaxValue(events[0])!=2**65 || self.getMinValue(events[0])!=ONE) && self.getNumOutcomes(events[0])==2) || self.getOutcome(events[0])==3*2^63):
+    if(((self.getMaxValue(events[0])!=2**65 || self.getMinValue(events[0])!=ONE) && self.getNumOutcomes(events[0])==2) || self.getOutcome(events[0])==3*ONEHALF):
         scalarOne = 0
-    if(((self.getMaxValue(events[1])!=2**65 || self.getMinValue(events[1])!=ONE) && self.getNumOutcomes(events[1])==2) || self.getOutcome(events[1])==3*2^63):
+    if(((self.getMaxValue(events[1])!=2**65 || self.getMinValue(events[1])!=ONE) && self.getNumOutcomes(events[1])==2) || self.getOutcome(events[1])==3*ONEHALF):
         if(scalarOne == -1):
             scalarOne = 1
         else:
             scalarTwo = 1
-    elif(((self.getMaxValue(events[2])!=2**65 || self.getMinValue(events[2])!=ONE) && self.getNumOutcomes(events[2])==2) || self.getOutcome(events[2])==3*2^63):
+    elif(((self.getMaxValue(events[2])!=2**65 || self.getMinValue(events[2])!=ONE) && self.getNumOutcomes(events[2])==2) || self.getOutcome(events[2])==3*ONEHALF):
         scalarTwo = 2
     outcomeOne = self.getOutcome(events[scalarOne])
     minValueOne = self.getMinValue(events[scalarOne])
@@ -4646,7 +4646,7 @@ def initiateOwner(account):
     else:
         return(0)
 
-# should send values as fixed point in UI (1 is ONE, 4 is 4*ONE, .5 is 2^63, etc.)
+# should send values as fixed point in UI (1 is ONE, 4 is 4*ONE, .5 is ONEHALF, etc.)
 # @return: value sent, 0 if fails
 # If you've never used cash in augur, to initiate your account call this with value as 0
 def send(recver, value):
@@ -4710,14 +4710,14 @@ def setCash(address, balance):
     return(1)
 
 def depositEther():
-    self.cashcoinBalances[msg.sender] += msg.value * ONE / 10^18
+    self.cashcoinBalances[msg.sender] += msg.value * ONE / WEITOETH
     return msg.value
 
 def withdrawEther(to, value):
     if(value < 0):
         return(-1)
-    if self.cashcoinBalances[msg.sender] >= value * ONE / 10^18:
-        self.cashcoinBalances[msg.sender] -= value * ONE / 10^18
+    if self.cashcoinBalances[msg.sender] >= value * ONE / WEITOETH:
+        self.cashcoinBalances[msg.sender] -= value * ONE / WEITOETH
         send(to, value)
         return 1
     else:

@@ -9,7 +9,7 @@ inset('refund.se')
 
 macro YES: 2^65
 macro NO: ONE
-macro BAD: 3 * 2^63
+macro BAD: 3 * ONEHALF
 macro CATCH_TOLERANCE: ONE / 10
 
 # Bins values to 1, 1.5, 2
@@ -22,7 +22,7 @@ macro catch($x):
         BAD
 
 macro ethic_catch($x):
-    if($x < 2^63):
+    if($x < ONEHALF):
         0
     else:
         ONE
@@ -46,7 +46,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
     EVENTS.setEthics(event, ethical)
     # In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration date
-    if(fxpOutcome == 3*2**63 && MARKETS.getPushedForward(market)):
+    if(fxpOutcome == 3*ONEHALF && MARKETS.getPushedForward(market)):
         #set event expiration to be the old date prior to this bond process
         EVENTS.setExpiration(event, EVENTS.getOriginalExpiration(event))
         MARKETS.setTradingPeriod(market, MARKETS.getOriginalTradingPeriod(market))
@@ -64,12 +64,12 @@ def resolveBinary(event, market, branch, votingPeriodEvent, period):
         # need to store uncaught outcome for rejectedperiod separately as well as which period it was "rejected" in
         EVENTS.setRejected(event, EVENTS.getExpiration(event)/periodLength, fxpOutcome)
         return(-6)
-    elif(fxpOutcome==3*2**63 || !ethical):
+    elif(fxpOutcome==3*ONEHALF || !ethical):
         # give event bond money to reporters
         CASH.subtractCash(event, EVENTS.getBond(event))
         CASH.addCash(branch, EVENTS.getBond(event))
         # not ethical is same as .5 outcome
-        fxpOutcome = 3*2**63
+        fxpOutcome = 3*ONEHALF
         EVENTS.setOutcome(event, fxpOutcome)
     else:
         # return bond
@@ -96,7 +96,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     
     # In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration date
-    if(fxpOutcome == 3*2**63 && MARKETS.getPushedForward(market)):
+    if(fxpOutcome == 3*ONEHALF && MARKETS.getPushedForward(market)):
         #set event expiration to be the old date prior to this bond process
         EVENTS.setExpiration(event, EVENTS.getOriginalExpiration(event))
         MARKETS.setTradingPeriod(market, MARKETS.getOriginalTradingPeriod(market))
@@ -114,12 +114,12 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
         # need to store uncaught outcome for rejectedperiod separately as well as which period it was "rejected" in
         EVENTS.setRejected(event, EVENTS.getExpiration(event)/periodLength, fxpOutcome)
         return(-6)
-    elif(fxpOutcome==3*2**63 || !ethical):
+    elif(fxpOutcome==3*ONEHALF || !ethical):
         # give event bond money to reporters
         CASH.subtractCash(event, EVENTS.getBond(event))
         CASH.addCash(branch, EVENTS.getBond(event))
         # not ethical is same as .5 outcome
-        fxpOutcome = 3*2**63
+        fxpOutcome = 3*ONEHALF
         EVENTS.setOutcome(event, fxpOutcome)
     else:
         # return bond
@@ -141,14 +141,14 @@ def determineWinningOutcomes(events: arr, numberEvents, branch, market):
         outcome = fxpOutcome/ONE
         if(n==0):
             #scalar or .5
-            if(scalar(events[n]) || fxpOutcome==3*2^63):
+            if(scalar(events[n]) || fxpOutcome==3*ONEHALF):
                 winningOutcomes[0] = 1
                 winningOutcomes[1] = 2
             # anything besides scalar or .5
             else:
                 winningOutcomes[0] += outcome
         elif(n==1):
-            if(scalar(events[n]) || fxpOutcome==3*2^63):
+            if(scalar(events[n]) || fxpOutcome==3*ONEHALF):
                 # scalar, scalar
                 if(winningOutcomes[1]):
                     winningOutcomes[2] = 3
@@ -165,7 +165,7 @@ def determineWinningOutcomes(events: arr, numberEvents, branch, market):
             else:
                 winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
         elif(n==2):
-            if(scalar(events[n]) || fxpOutcome==3*2^63):
+            if(scalar(events[n]) || fxpOutcome==3*ONEHALF):
                 #scalar, scalar, scalar
                 if(winningOutcomes[3]):
                     winningOutcomes[4] = 5

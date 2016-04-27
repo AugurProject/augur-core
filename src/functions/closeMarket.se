@@ -39,7 +39,7 @@ data cash[][]
 
 macro YES: 2^65
 macro NO: ONE
-macro BAD: 3 * 2^63
+macro BAD: 3 * ONEHALF
 
 macro CATCH_TOLERANCE: ONE / 10
 
@@ -55,7 +55,7 @@ macro catch($x):
         BAD
 
 macro ethic_catch($x):
-    if($x < 2^63):
+    if($x < ONEHALF):
         0
     else:
         ONE
@@ -130,7 +130,7 @@ def closeMarket(branch, market):
         winningOutcomes = array(8)
         winningOutcomes = RESOLVE.determineWinningOutcomes(events, numberEvents, branch, market, outitems=8)
         MARKETS.setWinningOutcomes(market, winningOutcomes)
-        send(msg.sender, MARKETS.getgasSubsidy(market))
+        MARKETS.refundClosing(MARKETS.getgasSubsidy(market), msg.sender)
         return(1)
     else:
         return(0)

@@ -37,7 +37,7 @@ def initialPenalizedSetting(branch, reporter, upto):
     
 macro YES: 2^65
 macro NO: ONE
-macro BAD: 3 * 2^63
+macro BAD: 3 * ONEHALF
 macro CATCH_TOLERANCE: ONE / 10
 
 # Bins values to 1, 1.5, 2
@@ -130,7 +130,7 @@ def penalizeWrong(branch, event):
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
             if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                     reportValue += ONE
                 diff = reportValue - outcome
                 p = -(abs(diff)/2) + ONE
@@ -139,7 +139,7 @@ def penalizeWrong(branch, event):
         else:
             if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                     reportValue += ONE
                 diff = reportValue - outcome
                 p = -(abs(diff)/2) + ONE
@@ -214,7 +214,7 @@ def penalizeRoundTwoWrong(branch, event):
             if(oldReport > outcome+184467440737095520 or oldReport < outcome-184467440737095520):
                 if(scalar(event) or categorical(event) or outcome==3*ONE):
                     # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                    if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                    if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                         oldReport += ONE
                     diff = oldReport - outcome
                     p = -(abs(diff)/2) + ONE
@@ -223,7 +223,7 @@ def penalizeRoundTwoWrong(branch, event):
             else:
                 if(scalar(event) or categorical(event) or outcome==3*ONE):
                     # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                    if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                    if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                         oldReport += ONE
                     diff = oldReport - outcome
                     p = -(abs(diff)/2) + ONE
@@ -255,7 +255,7 @@ def penalizeRoundTwoWrong(branch, event):
             if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
                 if(scalar(event) or categorical(event) or outcome==3*ONE):
                     # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                    if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                    if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                         reportValue += ONE
                     diff = reportValue - outcome
                     p = -(abs(diff)/2) + ONE
@@ -264,7 +264,7 @@ def penalizeRoundTwoWrong(branch, event):
             else:
                 if(scalar(event) or categorical(event) or outcome==3*ONE):
                     # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                    if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                    if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                         reportValue += ONE
                     diff = reportValue - outcome    
                     p = -(abs(diff)/2) + ONE
@@ -478,7 +478,7 @@ def slashRep(branch, salt, report, reporter, eventID):
         reporterBalance = REPORTING.getRepBalance(branch, reporter)
         REPORTING.setRep(branch, reporterIndex, 0)
         trutherBalance = REPORTING.getRepBalance(branch, tx.origin)
-        REPORTING.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*2**63 / ONE))
+        REPORTING.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*ONEHALF / ONE))
     return(reporterBalance)
 
 # ui has to call this to stay cheap / not check it elsewhere
@@ -522,7 +522,7 @@ def proportionCorrect(event, branch, period):
             # p is .8 or 80%
             if(outcome == 2 * ONE):
                 p = avgOutcome
-            if(outcome == 3 * 2**63):
+            if(outcome == 3 * ONEHALF):
                 return(0)
         return(p)
     else:
@@ -566,8 +566,8 @@ macro categorical($event):
 # test bonded pushed forward event/market though not ready to be resolved
     # code in penalize for that:
         #elif(rejected && rejectedPeriodOver && && actuallyrejected && EXPEVENTS.getReport(branch, lastPeriodperiod, event) && !self.penalized[lastPeriod][tx.origin].event[event] && outcome):
-        #  outcome = 2**63
-        #  mode = 2**63
+        #  outcome = ONEHALF
+        #  mode = ONEHALF
         #   p = self.proportionCorrect(event, rejected)
         #   oldRep = EXPIRING.getBeforeRep(branch, period)
         #   # wrong

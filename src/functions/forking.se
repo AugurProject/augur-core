@@ -200,12 +200,12 @@ def resolveForkEvent(branch, event):
             ethical = ethic_catch(EVENTS.getForkEthicality(event))
         
         EVENTS.setOutcome(event, fxpOutcome)
-        if(fxpOutcome==3*2**63 || !ethical):
+        if(fxpOutcome==3*ONEHALF || !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, EVENTS.getBond(event))
             CASH.addCash(branch, EVENTS.getBond(event))
             # not ethical is same as .5 outcome
-            fxpOutcome = 3*2**63
+            fxpOutcome = 3*ONEHALF
             EVENTS.setOutcome(event, fxpOutcome)
         else:
             # return bond
@@ -231,12 +231,12 @@ def resolveForkEvent(branch, event):
         fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
         EVENTS.setOutcome(event, fxpOutcome)
 
-        if(fxpOutcome==2**63 || !ethical):
+        if(fxpOutcome==ONEHALF || !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, EVENTS.getBond(event))
             CASH.addCash(branch, EVENTS.getBond(event))
             # not ethical is same as .5 outcome
-            fxpOutcome = 2**63
+            fxpOutcome = ONEHALF
             EVENTS.setOutcome(event, fxpOutcome)
             EVENTS.setmode(event, fxpOutcome)
         else:
@@ -292,7 +292,7 @@ def penalizeOnForkedEvent(branch, event):
         if(oldReport > outcome+184467440737095520 or oldReport < outcome-184467440737095520):
             if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                     oldReport += ONE
                 diff = oldReport - outcome
                 p = -(abs(diff)/2) + ONE
@@ -301,7 +301,7 @@ def penalizeOnForkedEvent(branch, event):
         else:
             if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                     oldReport += ONE
                 diff = oldReport - outcome
                 p = -(abs(diff)/2) + ONE
@@ -333,7 +333,7 @@ def penalizeOnForkedEvent(branch, event):
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
             if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                     reportValue += ONE
                 diff = reportValue - outcome
                 p = -(abs(diff)/2) + ONE
@@ -342,7 +342,7 @@ def penalizeOnForkedEvent(branch, event):
         else:
             if(scalar(event) or categorical(event) or outcome==3*ONE):
                 # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*2^63 && (scalar(event) or categorical(event))):
+                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
                     reportValue += ONE
                 diff = reportValue - outcome    
                 p = -(abs(diff)/2) + ONE
@@ -401,7 +401,7 @@ def proportionCorrectForkEvent(event, branch, period):
             # p is .8 or 80%
             if(outcome == 2 * ONE):
                 p = avgOutcome
-            if(outcome == 3 * 2**63):
+            if(outcome == 3 * ONEHALF):
                 return(0)
         return(p)
     else:

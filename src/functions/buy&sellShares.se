@@ -226,8 +226,8 @@ def short_sell(buyer_trade_id, max_amount):
     cumScale = MARKETS.getCumScale(market_id)
     amount = min(orig_amount, max_amount)
     fee = amount * price / ONE * fee_percent(trading_fee, price, amount, cumScale) / ONE
-    branchFees = (13835058055282163712+(2**63 - MARKETS.getMakerFees(market))/2)*fee / ONE
-    creatorFees = (2**62+(2**63 - MARKETS.getMakerFees(market))/2)*fee / ONE
+    branchFees = (THREEFOURTHS+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
+    creatorFees = (ONEFOURTH+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
     takerFeesTotal = branchFees + creatorFees
     cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)
     if(CASH.balance(tx.origin) < cost):
@@ -364,9 +364,9 @@ def trade(max_value, max_amount, trade_ids:arr):
                 MARKETS.modifyParticipantShares(market_id, owner, outcome, fill)
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
                 fee = value * fee / ONE
-                # 13835058055282163712 is 3/4
-                branchFees = (13835058055282163712+(2**63 - MARKETS.getMakerFees(market))/2)*fee / ONE
-                creatorFees = (2**62+(2**63 - MARKETS.getMakerFees(market))/2)*fee / ONE
+                # THREEFOURTHS is 3/4
+                branchFees = (THREEFOURTHS+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
+                creatorFees = (ONEFOURTH+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
                 takerFeesTotal = branchFees + creatorFees
                 CASH.addCash(msg.sender, value-takerFeesTotal)
                 # 75% to branch + .5% more to branch per maker fee 1% decrease 
@@ -397,8 +397,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Determine fill value
                 value = min(max_value, trade_value)
                 fee = trade_value * fee / ONE
-                branchFees = (13835058055282163712+(2**63 - MARKETS.getMakerFees(market))/2)*fee / ONE
-                creatorFees = (2**62+(2**63 - MARKETS.getMakerFees(market))/2)*fee / ONE
+                branchFees = (THREEFOURTHS+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
+                creatorFees = (ONEFOURTH+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
                 takerFeesTotal = branchFees + creatorFees
                 # fix todo for what if maxvalue is say 10 but adding fees to it makes it 11, max value should _include_, not exclude fees and account for it w/ cash balance including fees
                 if(CASH.balance(tx.origin) < (value + takerFeesTotal)):

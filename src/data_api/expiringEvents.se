@@ -27,11 +27,11 @@ inset('refund.se')
 
 # [branchID][votingPeriod]
 # reporthash is [reporterID] = hash
-data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], shareValue, roundTwoNumEvents)
+data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], shareValue, roundTwoNumEvents, subsidy[])
 
 data EventIDToIndex[][]
 
-data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], numReportsActual[][], reportedPeriod[][], repEvent[][])
+data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], numReportsActual[][], reportedPeriod[][], repEvent[][], lesserReportNum[][], periodRepConstant[][])
 
 data requiredEvents[]
 
@@ -39,6 +39,23 @@ data requiredEvents[]
 data numReqEvents[][]
 
 data mode_items[][](report_value[], current_mode, current_mode_items)
+
+def refundCost(to, value):
+    send(to, value)
+    return(1)
+
+def getSubsidy(branch, period, event):
+    return(self.EventsExpDates[branch][period].subsidy[event])
+
+def getPeriodRepConstant(branch, votePeriod, sender):
+    return(self.branches[branch].periodRepConstant[votePeriod][sender])
+
+def setPeriodRepConstant(branch, votePeriod, sender, value):
+    self.branches[branch].periodRepConstant[votePeriod][sender] = value
+    return(1)
+
+def getLesserReportNum(branch, period, event):
+    return(self.branches[branch].lesserReportNum[period][event])
 
 def getCurrentModeItems(period, event):
     return(self.mode_items[period][event].current_mode_items)
@@ -181,13 +198,14 @@ def getReportHash(branch, expDateIndex, reporter, event):
     return(self.EventsExpDates[branch][expDateIndex].reportHash[reporter][event])
 
 # check that msg.sender is one of our function contracts
-def addEvent(branch, futurePeriod, eventID):
+def addEvent(branch, futurePeriod, eventID, subsidy):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
     self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
     self.EventIDToIndex[futurePeriod][eventID] = self.EventsExpDates[branch][futurePeriod].numberEvents
     self.EventsExpDates[branch][futurePeriod].numberEvents += 1
+    self.EventsExpDates[branch][futurePeriod].subsidy[eventID] += subsidy
     return(1)
 
 def removeEvent(branch, period):
@@ -277,3 +295,7 @@ def setAfterRep(branch, period, rep):
 def setPeriodDormantRep(branch, period, rep):
     self.branches[branch].periodDormantRep[period][tx.origin] = rep
     return(rep)
+    
+def setLesserReportNum(branch, period, event, num):
+    self.branches[branch].lesserReportNum[period][event] = num
+    return(1)

@@ -708,14 +708,14 @@ def test_close_market():
     report_hash = c.makeHash(0, 2**64, event1)
     report_hash2 = c.makeHash(0, 2*2**64, event2)
     report_hash3 = c.makeHash(0, 2*2**64, event3)
-    report_hash4 = c.makeHash(0, 3*2**63, event4)
+    report_hash4 = c.makeHash(0, 3*ONEHALF, event4)
     assert(c.submitReportHash(1010101, report_hash, 0, event1, 0)==1), "Report hash submission failed"
     assert(c.submitReportHash(1010101, report_hash2, 0, event2, 1)==1), "Report hash submission failed"
     assert(c.submitReportHash(1010101, report_hash3, 0, event3, 2)==-5), "Report hash .99 check failed"
     assert(c.submitReportHash(1010101, report_hash4, 0, event4, 3)==1), "Report hash submission failed"
     s.mine(55)
     assert(c.submitReport(1010101, 0, 1, 0, 2*2**64, event2, 2**64)==1), "Report submission failed"
-    assert(c.submitReport(1010101, 0, 3, 0, 3*2**63, event4, 2**64)==1), "Report submission failed"
+    assert(c.submitReport(1010101, 0, 3, 0, 3*ONEHALF, event4, 2**64)==1), "Report submission failed"
     assert(c.closeMarket(1010101, bin_market)==0), "Not expired check [and not early resolve due to not enough reports submitted check] broken"
     assert(c.submitReport(1010101, 0, 0, 0, 2**64, event1, 2**64)==1), "Report submission failed"
     s.mine(60)
@@ -724,8 +724,8 @@ def test_close_market():
     c.setOutcome(event1, 0)
     assert(c.closeMarket(1010101, bin_market)==-2), "No outcome on market yet"
     assert(c.closeMarket(1010101, bin_market3)==-7), ".99 market issue"
-    c.setUncaughtOutcome(event1, 3*2**63)
-    c.setOutcome(event1, 3*2**63)
+    c.setUncaughtOutcome(event1, 3*ONEHALF)
+    c.setOutcome(event1, 3*ONEHALF)
     assert(c.closeMarket(1010101, bin_market)==0), "Already resolved indeterminate market check fail"
     assert(c.closeMarket(1010101, bin_market4)==-4), ".5 once, pushback and retry failure"
     orig = c.balance(s.block.coinbase)

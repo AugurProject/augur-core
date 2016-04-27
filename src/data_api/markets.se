@@ -42,6 +42,10 @@ def addFees(market, amount):
     self.Markets[market].fees += amount
     return(1)
 
+def refundClosing(amount, to):
+    send(amount, to)
+    return(1)
+
 def getFees(market):
     return(self.Markets[market].fees)
 
