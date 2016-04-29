@@ -33,6 +33,8 @@ inset('refund.se')
 
 event creationBlock(market:indexed)
 
+macro POINTZEROSIX: 1106804644422573056
+
 #data CLOSEMARKET
 
 #def init():
@@ -62,7 +64,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         return(0)
     periodLength = BRANCHES.getPeriodLength(branch)
     # send this to branch
-    creationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * ONE / tradingFee
+    creationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / tradingFee
     # gives ether/cash amount in fixed point
     minFee = 3500000*BRANCHES.getBaseReporters(branch)*tx.gasprice*len(events)*ONE/WEITOETH
     if(creationFee < minFee):
@@ -173,8 +175,8 @@ def updateTradingFee(branch, market, tradingFee):
     if(msg.sender != INFO.getCreator(market) || tx.origin != INFO.getCreator(market)):
         return(-4)
     oldFee = MARKETS.getTradingFee(market)
-    oldCreationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * ONE / oldFee
-    newCreationFee = 1106804644422573056 * BRANCHES.getBaseReporters(branch) * ONE / tradingFee
+    oldCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / oldFee
+    newCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / tradingFee
     if(tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > oldFee):
         return(-1)
     CASH.send(branch, newCreationFee-oldCreationFee)

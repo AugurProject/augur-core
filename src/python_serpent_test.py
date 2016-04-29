@@ -263,25 +263,29 @@ def test_buy_sell_shares():
     s = t.state()
     c = s.abi_contract('functions/output.se')
     gas_use(s)
+    
     c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
+    blocktime = s.block.timestamp
     # binary
-    event1 = c.createEvent(1010101, "new event", 555, 1, 2, 2)
+    event1 = c.createEvent(1010101, "new event", blocktime+1, 2**64, 2*2**64, 2, "www.roflcopter.com") 
     # scalar
-    event2 = c.createEvent(1010101, "new event", 555, 1, 200, 2)
+    event2 = c.createEvent(1010101, "new eventt", blocktime+1, 2**64, 200*2**64, 2, "buddyholly.com")
     # categorical
-    event3 = c.createEvent(1010101, "new event", 555, 1, 5, 5)
+    #event3 = c.createEvent(1010101, "new event", 555, 1, 5, 5)
     # scalar
-    event4 = c.createEvent(1010101, "new event", 555, -100, 200, 2)
+    #event4 = c.createEvent(1010101, "new event", 555, -100, 200, 2)
     # binary
-    event5 = c.createEvent(1010101, "new event", 557, 1, 2, 2)
+    #event5 = c.createEvent(1010101, "new event", 557, 1, 2, 2)
     # scalar
-    event6 = c.createEvent(1010101, "new event", 557, 1, 25, 2)
+    #event6 = c.createEvent(1010101, "new event", 557, 1, 25, 2)
 
-    gas_use(s)
+    #gas_use(s)
 
     ### Single Markets
     # binary market
-    bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 1)
+    bin_market = c.createMarket(1010101, "new market", 184467440737095516, [event1], 1, 2, 3, 0, "yayaya")
+    bin_market2 = c.createMarket(1010101, "new market", 184467440737095516, [event2], 1, 2, 3, 0, "yayaya", sender=t.k2)
     initialSharesPurchased1 = c.getSharesPurchased(bin_market, 1)
     initialSharesPurchased2 = c.getSharesPurchased(bin_market, 2)
     sharesToTrade = 5*2**64
@@ -293,11 +297,13 @@ def test_buy_sell_shares():
     #print c.sellCompleteSets(1010101, bin_market, 20)
     #print "complete sets yay"
     sell = c.sell(2**64, int(.01*2**64), bin_market, 1)
+    print sell
     gas_use(s)
     print c.cancel(sell)
     print "Cancel gas use"
     gas_use(s)
     buy = c.buy(2**64, int(.02*2**64), bin_market, 2)
+    print buy
     gas_use(s)
     hash = c.makeTradeHash(0, 2**64, [buy])
     print hash
@@ -1031,13 +1037,13 @@ if __name__ == '__main__':
     # function tests
     #test_create_event()
     #test_create_market()
-    #test_buy_sell_shares()
+    test_buy_sell_shares()
     #test_transfer_shares()
     #test_create_branch()
     #test_send_rep()
     #test_make_reports()
     #test_close_market()
-    test_consensus()
+    #test_consensus()
     #test_catchup()
     #test_slashrep()
     #test_claimrep()

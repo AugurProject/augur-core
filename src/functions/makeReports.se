@@ -99,7 +99,7 @@ def submitReport(event, salt, report, ethics):
         return(-6)
     periodLength = BRANCHES.getPeriodLength(branch)
     # commented out for testing
-    #if(block.timestamp/periodLength!=((block.timestamp + 172800)/periodLength)):
+    #if(block.timestamp/periodLength!=((block.timestamp + 2*TWENTYFOURHR)/periodLength)):
     #    return(-7)
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
@@ -173,7 +173,7 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
             EVENTS.setUncaughtOutcome(eventID, outcome)
     # scalar or categorical
     else:
-        if(report > ONE && report!=3*ONEHALF):
+        if(report > ONE):
             report = ONE
         elif(report<=0):
             # 1 is the new 0
@@ -239,7 +239,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
         total = expectedEventsForReporter
         eventsInPeriod = EXPEVENTS.getNumberEvents(branch, expDateIndex)-EXPEVENTS.getNumRemoved(branch, votePeriod)
         numRequiredEvents = EXPEVENTS.getNumRequired(branch, votePeriod)
- ref       minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
+        minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
         if(total/ONE < minimum):
             total = minimum*ONE
             repConstant = repConstant*ratio / ONE

@@ -35,7 +35,7 @@ def twoOutcomes(market, winningOutcome: arr, events: arr):
     n = 0
     while(winningOutcome[n]!=0):
         sharesOwned = MARKETS.getParticipantSharesPurchased(market, participantNumber, winningOutcome[n])
-        MARKETS.modifyParticipantShares(MARKETS.getBranchID(market), market, participantNumber, winningOutcome[n], -sharesOwned)
+        MARKETS.modifyParticipantShares(market, participantNumber, winningOutcome[n], -sharesOwned)
         # low side
         if(n==0):
             CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)/ONE*pricePerShare1/ONE)

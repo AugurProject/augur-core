@@ -129,7 +129,7 @@ def fork(event, branch, forkedOverEthicality):
     if(!EVENTS.getRoundTwo(event) || EVENTS.getFinal(event) || EVENTS.getForked(event)):
         return(-1)
     # if in last 48 hr of period
-    if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 172800)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENT.getForked(event)):
+    if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENT.getForked(event)):
         bond = 184467440737095520*REPORTING.getTotalRep(branch)/ONE
         self.bondAmount[branch] = bond
         # lose fork bond in branch 1

@@ -35,17 +35,58 @@ def catch(x):
     return(catch(x))
 
 ## helper functions:
-def resolveBinary(event, market, branch, votingPeriodEvent, period):
+macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $periodLength, $ethical, $scalar):
+    # In the $event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
+    # and $market remains with old expiration date
+    indeterminate = ONEHALF*3
+    if($scalar):
+        indeterminate = ONEHALF
+    if($fxpOutcome == indeterminate && MARKETS.getPushedForward($market)):
+        #set $event expiration to be the old date prior to this bond process
+        EVENTS.setExpiration($event, EVENTS.getOriginalExpiration($event))
+        MARKETS.setTradingPeriod($market, MARKETS.getOriginalTradingPeriod($market))
+        CASH.addCash($branch, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
+        CASH.subtractCash($market, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
+        MARKETS.setPushedForward($market, 0)
+        EXPEVENTS.setNumReportsExpectedEvent($branch, $votingPeriodEvent, $event, 0)
+        EXPEVENTS.setNumReportsEvent($branch, $votingPeriodEvent, $event, 0)
+        #set outcome to 0
+        EVENTS.setOutcome($event, 0)
+        EVENTS.setmode($event, 0)
+        EVENTS.setEthics($event, 0)
+        #set uncaughtoutcome to 0
+        EVENTS.setUncaughtOutcome($event, 0)
+        # need to store uncaught outcome for rejectedperiod separately as well as which period it was "rejected" in
+        EVENTS.setRejected($event, EVENTS.getExpiration($event)/$periodLength, $fxpOutcome)
+        return(-6)
+    elif($fxpOutcome==indeterminate || !$ethical):
+        # give $event bond money to reporters
+        CASH.subtractCash($event, EVENTS.getBond($event))
+        CASH.addCash($branch, EVENTS.getBond($event))
+        # not $ethical is same as .5 outcome
+        $fxpOutcome = indeterminate
+        EVENTS.setOutcome($event, $fxpOutcome)
+    else:
+        # return bond
+        CASH.subtractCash($event, EVENTS.getBond($event))
+        CASH.addCash(INFO.getCreator($event), EVENTS.getBond($event))
+        if(MARKETS.getPushedForward($market)):
+            CASH.addCash(MARKETS.getBondsMan($market), MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
+            CASH.subtractCash($market, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
+            # delete old $event from future events exp
+            EXPEVENTS.removeEvent($branch, EVENTS.getOriginalExpiration($event)/$periodLength)
+
+def resolveBinary(event, market, branch, votingPeriodEvent):
     refund()
     fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
     periodLength = BRANCHES.getPeriodLength(branch)
     ethical = ethic_catch(EVENTS.getEthical(event))
     EVENTS.setOutcome(event, fxpOutcome)
     EVENTS.setEthics(event, ethical)
-    closeOut(fxpOutcome, periodLength, ethical)
+    closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 0)
     return(1)
     
-def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, votingPeriodEvent, period):
+def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, votingPeriodEvent):
     refund()
     mode = EVENTS.getUncaughtOutcome(event)
     EVENTS.setmode(event, mode)
@@ -54,46 +95,8 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     periodLength = BRANCHES.getPeriodLength(branch)
     ethical = ethic_catch(EVENTS.getEthical(event))
     EVENTS.setEthics(event, ethical)
-    closeOut(fxpOutcome, periodLength, ethical)
+    closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1)
     return(1)
-
-macro closeOut(fxpOutcome, periodLength, ethical):
-    # In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
-    # and market remains with old expiration date
-    if(fxpOutcome == 3*ONEHALF && MARKETS.getPushedForward(market)):
-        #set event expiration to be the old date prior to this bond process
-        EVENTS.setExpiration(event, EVENTS.getOriginalExpiration(event))
-        MARKETS.setTradingPeriod(market, MARKETS.getOriginalTradingPeriod(market))
-        CASH.addCash(branch, MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE))
-        CASH.subtractCash(market, MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE))
-        MARKETS.setPushedForward(market, 0)
-        EXPEVENTS.setNumReportsExpectedEvent(branch, votingPeriodEvent, event, 0)
-        EXPEVENTS.setNumReportsEvent(branch, votingPeriodEvent, event, 0)
-        #set outcome to 0
-        EVENTS.setOutcome(event, 0)
-        EVENTS.setmode(event, 0)
-        EVENTS.setEthics(event, 0)
-        #set uncaughtoutcome to 0
-        EVENTS.setUncaughtOutcome(event, 0)
-        # need to store uncaught outcome for rejectedperiod separately as well as which period it was "rejected" in
-        EVENTS.setRejected(event, EVENTS.getExpiration(event)/periodLength, fxpOutcome)
-        return(-6)
-    elif(fxpOutcome==3*ONEHALF || !ethical):
-        # give event bond money to reporters
-        CASH.subtractCash(event, EVENTS.getBond(event))
-        CASH.addCash(branch, EVENTS.getBond(event))
-        # not ethical is same as .5 outcome
-        fxpOutcome = 3*ONEHALF
-        EVENTS.setOutcome(event, fxpOutcome)
-    else:
-        # return bond
-        CASH.subtractCash(event, EVENTS.getBond(event))
-        CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
-        if(MARKETS.getPushedForward(market)):
-            CASH.addCash(MARKETS.getBondsMan(market), MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE))
-            CASH.subtractCash(market, MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE))
-            # delete old event from future events exp
-            EXPEVENTS.removeEvent(branch, EVENTS.getOriginalExpiration(event)/periodLength)
 
 def determineWinningOutcomes(events: arr, numberEvents, branch, market):
     refund()
@@ -102,6 +105,9 @@ def determineWinningOutcomes(events: arr, numberEvents, branch, market):
     while n < numberEvents:
         fxpOutcome = EVENTS.getOutcome(events[n])
         outcome = fxpOutcome/ONE
+        indeterminate = ONEHALF*3
+        if(scalar(events[n])):
+            indeterminate = ONEHALF
         if(n==0):
             #scalar or .5
             if(scalar(events[n]) || fxpOutcome==3*ONEHALF):
