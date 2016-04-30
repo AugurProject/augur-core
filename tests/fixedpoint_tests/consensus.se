@@ -25,7 +25,7 @@
 # ONE = 2^64
 # TRUE = ONE
 # FALSE = -ONE
-# INDETERMINATE = 2^63  # 0.5
+# INDETERMINATE = ONEHALF  # 0.5
 # NO_RESPONSE = 0       # 0
 
 # Arithmetic mean of an array, takes fixed-point inputs

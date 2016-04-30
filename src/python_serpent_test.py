@@ -196,6 +196,7 @@ def test_trading():
         # covers binary + scalar events
         e = c.createEvent(1010101, "event"+str(i), blocktime+1, i*2**64, i*i*2**64, 2, "soisoisoi.com")
         m = c.createEvent(1010101, "sdevent"+str(i), blocktime+1, i*2**64, i*i*2**64, 2, "soisoisoi.com")
+        n = c.createEvent(1010101, "sdeventn"+str(i), blocktime+1, i*2**64, i*i*2**64, 2, "soisoisoi.com")
         print "Event creation gas use"
         print gas_use(s)
         assert(e>1 or e<-9), "Event creation broken"
@@ -205,14 +206,12 @@ def test_trading():
         feeSplit = int(random.random()*2**63)
         gas_use(s)
         bin_market = c.createMarket(1010101, "new market", 184467440737095516, [e], 1, 2, 3, feeSplit, "yayaya", value=10**19)
-        print bin_market
-        return(5)
         print "Market creation gas use"
         print gas_use(s)
         assert(bin_market>0 or bin_market<-9), "market creation broken"
         twodmarket = c.createMarket(1010101, "new market", 184467440737095516, [e, f], 1, 2, 3, feeSplit, "yayaya", value=10**19)
         assert(twodmarket>0 or twodmarket<-9), "market creation broken"
-        threedmarket = c.createMarket(1010101, "new market", 184467440737095516, [e, m, f], 1, 2, 3, feeSplit, "yayaya", value=10**19)
+        threedmarket = c.createMarket(1010101, "new market", 184467440737095516, [e, m, n], 1, 2, 3, feeSplit, "yayaya", value=10**19)
         assert(threedmarket>0 or threedmarket<-9), "market creation broken"
         market = [bin_market, twodmarket, threedmarket]
         a = 0
@@ -224,16 +223,19 @@ def test_trading():
             assert(c.buyCompleteSets(bin_market, 10*2**64)==1)
             print "Buy complete sets gas use"
             print gas_use(s)
-            assert(c.sellCompleteSets(bin_market, 8*2**64)==1)
+            print c.sellCompleteSets(bin_market, 8*2**64)
             print "Sell complete sets gas use"
             print gas_use(s)
-            print c.getVolume(market)
+            print "l"
+            print c.getVolume(bin_market)
+            print "m"
             print c.getSharesValue(bin_market)
-            print c.getTotalSharesPurchased(bin_market)
+            assert(c.getTotalSharesPurchased(bin_market)==4*2**64)
+            print "o"
             # get cash balance after
             bal = c.balance(s.block.coinbase)
             print bal
-            participantIDK1 = c.getParticipantNumber(bin_market, s.block.coinbase)
+            participantNumberIDK1 = c.getParticipantNumber(bin_market, s.block.coinbase)
             print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)
             print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)
             print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 3)
@@ -317,7 +319,7 @@ def test_trading():
             print c.get_trade_ids(bin_market)
             print c.getTotalSharesPurchased(bin_market)
             print c.getSharesValue(bin_market)
-            print c.getVolume(market)
+            print c.getVolume(bin_market)
             # Example:
                 #buyer gives up say 20
                 #complete set cost is say 100
@@ -328,7 +330,8 @@ def test_trading():
                 #plus fees
                     #1 should go to branch
                     #1 should go to creator
-            c.short_sell(buyer_trade_id, max_amount)
+            #c.short_sell(buyer_trade_id, max_amount)
+            assert(1==0)
             a += 1
         print "BUY AND SELL OK"
         i += 1

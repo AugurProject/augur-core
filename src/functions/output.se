@@ -475,7 +475,7 @@ def buyCompleteSets(market, amount):
     # if participant doesn't exist in market, add them
     if(tx.origin != self.getParticipantID(market, participantNumber)):
         participantNumber = self.addParticipant(market, tx.origin)
-    i = 0
+    i = 1
     # send shares of the event to user address
     while i <= numOutcomes:
         self.modifyShares(market, i, amount)
@@ -1185,13 +1185,8 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         return(-4)
     # need at least 1.2M gas @ gas price to cover resolution + 1M for each additional event
     if(msg.value < (1200000*tx.gasprice + 1000000*tx.gasprice*(eventNum-1) + 500000*tx.gasprice)):
-        return(-1)
-    fundsSent = 0
-    if(send(MARKETS, msg.value-500000*tx.gasprice)):
-        fundsSent = 1
-    # made to be 1 for testing so this will be able to be tested in tester module
-    fundsSent = 1
-    if(self.send(branch, creationFee) && fundsSent && self.setInfo(marketID, description, tx.origin, creationFee) && self.addMarketToBranch(branch, marketID) && self.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee)):
+        return(0)
+    if(self.send(branch, creationFee) && send(MARKETS, msg.value-500000*tx.gasprice) && self.setInfo(marketID, description, tx.origin, creationFee) && self.addMarketToBranch(branch, marketID) && self.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee)):
         i = 0
         while i < len(events):
             self.addMarket(events[i], marketID)
@@ -1202,7 +1197,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
             i += 1
         return(marketID)
     else:
-        return(-2)
+        return(0)
 
 def updateTradingFee(branch, market, tradingFee):
     refund()
