@@ -2,6 +2,7 @@
 
 from ethereum import tester as t
 import math
+import random
 import os
 import time
 
@@ -11,7 +12,6 @@ def test_cash():
     t.gas_limit = 100000000
     s = t.state()
     c = s.abi_contract('data_api/cash.se')
-
     assert(c.initiateOwner(111)==1), "Assign owner to id=111"
     assert(c.initiateOwner(111)==0), "Do not re-assign owner of id=111"
     c.setCash(111, 10)
@@ -63,28 +63,6 @@ def test_exp():
     print "EXPIRING EVENTS OK"
     gas_use(s)
 
-def test_quicksort():
-    global initial_gas
-    initial_gas = 0
-    t.gas_limit = 100000000
-    s = t.state()
-    c = s.abi_contract('functions/quicksort.se')
-    array = [1, 40, 2, 30, 44, 33, 22, 12, 22, 43]
-    assert(c.quicksort(array) == [1, 2, 12, 22, 22, 30, 33, 40, 43, 44]), "Quicksort broken"
-    print "QUICKSORT OK"
-    gas_use(s)
-
-def test_insertionsort():
-    global initial_gas
-    initial_gas = 0
-    t.gas_limit = 100000000
-    s = t.state()
-    c = s.abi_contract('functions/insertionsort.se')
-    array = [1, 40, 2, 30, 44, 33, 22, 12, 22, 43]
-    assert(c.insertionSort(array) == [1, 2, 12, 22, 22, 30, 33, 40, 43, 44]), "Insertion sort broken"
-    print "INSERTIONSORT OK"
-    gas_use(s)
-    
 def test_log_exp():
     global initial_gas
     initial_gas = 0
@@ -119,10 +97,6 @@ def test_markets():
     c.setWinningOutcomes(444, [2])
     assert(c.getWinningOutcomes(444)[0] == 2), "Winning outcomes wrong"
     assert(c.addParticipant(444, s.block.coinbase)==0), "Participant adding issue"
-    #modifyShares(market, outcome, amount)
-    #modifyParticipantShares(branch, marketID, participantNumber, outcome, amount)
-    #lsLmsr(marketID)
-    #c.getParticipantSharesPurchased(market, participantNumber, outcome)
     # getMarketEvent singular
     assert(c.getParticipantNumber(444, s.block.coinbase)==0), "Participant number issue"
     assert(c.getParticipantID(444, 0)==745948140856946866108753121277737810491401257713), "Participant ID issue"
@@ -158,456 +132,6 @@ def test_reporting():
     assert(c.getRepBalance(1010101, 4444)==3), "Rep Balance fetch broken w/ initial distrib."
     assert(c.getReporterID(1010101, 6)==4444), "Sale distrib. reporter ID wrong"
     print "REPORTING OK"
-
-def test_create_event():
-    global initial_gas
-    initial_gas = 0
-    t.gas_limit = 100000000
-    s = t.state()
-    c = s.abi_contract('functions/output.se')
-    gas_use(s)
-    c.initiateOwner(1010101)
-    event_binary = c.createEvent(1010101, "new event", 555, 1, 2, 2)
-    event_categorical = c.createEvent(1010101, "new event", 555, 1, 5, 5)
-    event_scalar = c.createEvent(1010101, "new event", 555, 1, 200, 2)
-    assert(event_binary>2**64 or event_binary <-2**64), "binary Event creation broken"
-    assert(event_categorical>2**64 or event_categorical <-2**64), "categorical Event creation broken"
-    assert(event_scalar>2**64 or event_s <-2**64), "scalar Event creation broken"
-    gas_use(s)
-    print "EVENT CREATION OK"
-
-def test_create_market():
-    global initial_gas
-    initial_gas = 0
-    t.gas_limit = 100000000
-    s = t.state()
-    c = s.abi_contract('functions/output.se')
-    gas_use(s)
-    c.initiateOwner(1010101)
-    # binary
-    event1 = c.createEvent(1010101, "new event", 555, 1, 2, 2)
-    # scalar
-    event2 = c.createEvent(1010101, "new event", 555, 1, 200, 2)
-    # categorical
-    event3 = c.createEvent(1010101, "new event", 555, 1, 5, 5)
-    # scalar
-    event4 = c.createEvent(1010101, "new event", 555, -100, 200, 2)
-    # binary
-    event5 = c.createEvent(1010101, "new event", 557, 1, 2, 2)
-    # scalar
-    gas_use(s)
-    event6 = c.createEvent(1010101, "new event", 557, 1, 25, 2)
-
-    gas_use(s)
-    
-    ### Single Markets
-    # binary market
-    gas_use(s)
-    bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 1)
-    print bin_market
-    print "BIN MARKET GAS USE"
-    gas_use(s)
-    print c.getSharesPurchased(bin_market, 1)
-    print c.getSharesPurchased(bin_market, 2)
-    # scalar market
-    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2], 1) 
-    # odd range scalar
-    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4], 1)
-    # categorical market
-    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event3], 1)
-    print "1D Done"
-    
-    ### 2D Markets
-    # scalar + scalar market
-    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event4], 1)
-    # nonscalar, scalar
-    x = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event2], 1)
-    assert(c.getMarketNumOutcomes(x)==4), "Market num outcomes wrong"
-
-    # scalar, nonscalar
-    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4, event1], 1)
-    # nonscalar, nonscalar
-    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event5, event1], 1)
-    print "2D Done"
-    
-    ### 3D Markets
-    # scalar, scalar, scalar
-    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event5, event2, event6], 1)
-    # scalar, nonscalar, scalar
-    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event3, event4], 1)
-    # nonscalar, scalar, scalar
-    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event2, event4], 1)
-    # nonscalar, nonscalar, scalar
-    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event5, event3, event6], 1)
-    # scalar, scalar, nonscalar
-    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event4, event5], 1)
-    # scalar, nonscalar, nonscalar
-    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event1, event3], 1)
-    # nonscalar, scalar, nonscalar
-    market = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event3, event2, event5], 1)
-    assert(c.getMarketNumOutcomes(market)==20), "Market num outcomes wrong"
-    gas_use(s)
-    # nonscalar, nonscalar, nonscalar
-    print c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event5, event3], 1)
-    print "3D Done"
-    gas_use(s)
-    assert(c.getNumMarkets(event2)==9), "Num markets for event wrong"
-    assert(c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event5, event3], 1)==-4), "Duplicate market check broken"
-    assert(c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event3, event3, event3], 1)==-6), "Duplicate event check broken"
-    print "Market Creation OK"
-
-def test_buy_sell_shares():
-    global initial_gas
-    initial_gas = 0
-    t.gas_limit = 100000000
-    s = t.state()
-    c = s.abi_contract('functions/output.se')
-    gas_use(s)
-    
-    c.initiateOwner(1010101)
-    c.reputationFaucet(1010101)
-    blocktime = s.block.timestamp
-    # binary
-    event1 = c.createEvent(1010101, "new event", blocktime+1, 2**64, 2*2**64, 2, "www.roflcopter.com") 
-    # scalar
-    event2 = c.createEvent(1010101, "new eventt", blocktime+1, 2**64, 200*2**64, 2, "buddyholly.com")
-    # categorical
-    #event3 = c.createEvent(1010101, "new event", 555, 1, 5, 5)
-    # scalar
-    #event4 = c.createEvent(1010101, "new event", 555, -100, 200, 2)
-    # binary
-    #event5 = c.createEvent(1010101, "new event", 557, 1, 2, 2)
-    # scalar
-    #event6 = c.createEvent(1010101, "new event", 557, 1, 25, 2)
-
-    #gas_use(s)
-
-    ### Single Markets
-    # binary market
-    bin_market = c.createMarket(1010101, "new market", 184467440737095516, [event1], 1, 2, 3, 0, "yayaya")
-    bin_market2 = c.createMarket(1010101, "new market", 184467440737095516, [event2], 1, 2, 3, 0, "yayaya", sender=t.k2)
-    initialSharesPurchased1 = c.getSharesPurchased(bin_market, 1)
-    initialSharesPurchased2 = c.getSharesPurchased(bin_market, 2)
-    sharesToTrade = 5*2**64
-    gas_use(s)
-    print c.buyCompleteSets(1010101, bin_market, 10*2**64)
-    print c.sellCompleteSets(1010101, bin_market, 8*2**64)
-    gas_use(s)
-    print "complete sets yay"
-    #print c.sellCompleteSets(1010101, bin_market, 20)
-    #print "complete sets yay"
-    sell = c.sell(2**64, int(.01*2**64), bin_market, 1)
-    print sell
-    gas_use(s)
-    print c.cancel(sell)
-    print "Cancel gas use"
-    gas_use(s)
-    buy = c.buy(2**64, int(.02*2**64), bin_market, 2)
-    print buy
-    gas_use(s)
-    hash = c.makeTradeHash(0, 2**64, [buy])
-    print hash
-    c.commitTrade(hash)
-    gas_use(s)
-    s.mine(1)
-    gas_use(s)
-    print c.trade(0, 2**64, [buy])
-    print "trade gas used"
-    gas_use(s)
-    c.commitTrade(bin_market, c.makeTradeHash(bin_market, 2, sharesToTrade, 0))
-    s.mine(1)
-    assert(c.buyShares(1010101, bin_market, 2, sharesToTrade, 0)==1), "Buy shares issue"
-    assert(c.getSharesPurchased(bin_market, 1) - initialSharesPurchased1 == 0), "Share storage issue"
-    print "shares traded:", (c.getSharesPurchased(bin_market, 2) - initialSharesPurchased2) / 2**64
-    assert(c.getSharesPurchased(bin_market, 2) - initialSharesPurchased2 == sharesToTrade), "Share storage issue"
-    c.commitTrade(bin_market, c.makeTradeHash(bin_market, 2, sharesToTrade, 0))
-    s.mine(1)
-    assert(c.sellShares(1010101, bin_market, 2, sharesToTrade, 0)==1), "Sell shares issue"
-    assert(c.getSharesPurchased(bin_market, 1) - initialSharesPurchased1 == 0), "Share storage issue"
-    assert(c.getSharesPurchased(bin_market, 2) - initialSharesPurchased2 == 0), "Share storage issue"
-
-    # scalar market
-    a = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2], 1)
-    bal = c.balance(s.block.coinbase)
-    c.commitTrade(a, c.makeTradeHash(a, 1, 15*2**64, 0))
-    s.mine(1)
-    # should cost ~200/share
-    c.buyShares(1010101, a, 1, 15*2**64,0)
-    bal_after = c.balance(s.block.coinbase)
-    assert((bal-bal_after) <= 3015*2**64 and (bal-bal_after) >= 2980*2**64), "Scalar buy off"
-    c.commitTrade(a, c.makeTradeHash(a, 2, 12*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    c.buyShares(1010101, a, 2, 12*2**64, 0)
-    gas_use(s)
-    bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < 20*2**64), "Scalar buy off"
-    c.commitTrade(a, c.makeTradeHash(a, 1, 15*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    print c.sellShares(1010101, a, 1, 15*2**64, 0)
-    gas_use(s)
-    bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after <= -590*2**64), "Scalar sell off"
-    assert(c.lmsr_price(a, 1) < 2**64), "Scalar sell off"
-    assert(c.lmsr_price(a, 2) > 198*2**64), "Scalar sell off"
-
-    # odd range scalar
-    b = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4], 1)
-    bal = c.balance(s.block.coinbase)
-    c.commitTrade(b, c.makeTradeHash(b, 1, 15*2**64, 0))
-    s.mine(1)
-    c.buyShares(1010101, b, 1, 15*2**64, 0)
-    bal_after = c.balance(s.block.coinbase)
-    print bal - bal_after
-    assert((bal-bal_after) <= 4550*2**64 and (bal-bal_after) >= 4500*2**64), "Scalar buy off"
-    c.commitTrade(b, c.makeTradeHash(b, 2, 12*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    c.buyShares(1010101, b, 2, 12*2**64, 0)
-    gas_use(s)
-    bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < 20*2**64), "Scalar buy off"
-    c.commitTrade(b, c.makeTradeHash(b, 1, 15*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    c.sellShares(1010101, b, 1, 15*2**64, 0)
-    gas_use(s)
-    bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after <= -890*2**64), "Scalar sell off"
-    assert(c.lmsr_price(b, 2) > 298*2**64), "Scalar sell off"
-    assert(c.lmsr_price(b, 1) < 2**64), "Scalar sell off"
-    c.commitTrade(b, c.makeTradeHash(b, 1, 10*2**64, 0))
-    s.mine(1)
-    assert(c.buyShares(1010101, b, 1, 10*2**64, 0)==1), "Buy back not working"
-
-    # categorical market
-    d = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event3], 1)
-    bal = c.balance(s.block.coinbase)
-    c.commitTrade(d, c.makeTradeHash(d, 1, 15*2**64, 0))
-    s.mine(1)
-    assert(c.lmsr_price(d, 5)==c.lmsr_price(d, 4)==c.lmsr_price(d, 3)==c.lmsr_price(d, 2)==c.lmsr_price(d, 1)), "Pricing off for categorical"
-    c.buyShares(1010101, d, 1, 15*2**64,0)
-    bal_after = c.balance(s.block.coinbase)
-    print c.lmsr_price(d, 1)
-    print c.lmsr_price(d, 2)
-    print c.lmsr_price(d, 3)
-    print c.lmsr_price(d, 4)
-    print c.lmsr_price(d, 5)
-    # .44 cost on avg
-    # resume here
-    print bal-bal_after
-    assert((bal-bal_after) <= .47*15*2**64 and (bal-bal_after) >= .44*15*2**64), "Categorical buy off"
-    assert(c.lmsr_price(d, 1) > .68*2**64 and c.lmsr_price(d, 1) < .69*2**64), "Categorical buy off"
-    c.commitTrade(d, c.makeTradeHash(d, 3, 12*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    c.buyShares(1010101, d, 3, 12*2**64, 0)
-    assert(c.lmsr_price(d, 2) == c.lmsr_price(d, 4) == c.lmsr_price(d, 5)), "Categorical prices off"
-    gas_use(s)
-    bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < .22*12*2**64 and bal-bal_after >.20*12*2**64), "Categorical buy off"
-    # Sell
-    c.commitTrade(d, c.makeTradeHash(d, 1, 15*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    c.sellShares(1010101, d, 1, 15*2**64, 0)
-    gas_use(s)
-    bal_after = c.balance(s.block.coinbase)
-    print bal-bal_after
-    # 28 cents on avg / share
-    assert(bal-bal_after < -4*2**64 and bal-bal_after > -5*2**64), "Categorical sell off"
-    assert(c.lmsr_price(d, 1) > .12*2**64 and c.lmsr_price(d, 1) < .14*2**64), "Categorical sell off"
-    print "1D Done"
-    
-    ### 2D Markets
-    # scalar + scalar market
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event4], 1)
-    # nonscalar, scalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event2], 1)
-    # scalar, nonscalar
-    e = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4, event1], 1)
-    bal = c.balance(s.block.coinbase)
-    c.commitTrade(e, c.makeTradeHash(e, 1, 15*2**64, 0))
-    s.mine(1)
-    assert(c.getCumScale(e)==300), "Cumulative scale wrong"
-    assert(c.lmsr_price(e, 1) == c.lmsr_price(e, 2) == c.lmsr_price(e, 4) == c.lmsr_price(e, 3)), "Scalar prices off"
-    c.buyShares(1010101, e, 1, 15*2**64,0)
-    bal_after = c.balance(s.block.coinbase)
-    assert((bal-bal_after) <= 4550*2**64 and (bal-bal_after) >= 4500*2**64), "Scalar buy off"
-    c.commitTrade(e, c.makeTradeHash(e, 3, 14*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    c.buyShares(1010101, e, 3, 14*2**64, 0)
-    gas_use(s)
-    print c.lmsr_price(e, 1)
-    print c.lmsr_price(e, 2)
-    print c.lmsr_price(e, 3)
-    print c.lmsr_price(e, 4)
-    bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < 20*2**64), "Scalar buy off"
-    c.commitTrade(e, c.makeTradeHash(e, 1, 15*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    c.sellShares(1010101, e, 1, 15*2**64, 0)
-    gas_use(s)
-    bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < -300*2**64 and bal-bal_after > -320*2**64), "Scalar sell off"
-    # nonscalar, nonscalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event5, event1], 1)
-    print "2D Done"
-    
-    ### 3D Markets
-    # scalar, scalar, scalar
-    f = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event4, event2, event6], 1)
-    bal = c.balance(s.block.coinbase)
-    assert(c.getCumScale(f) == 523), "3d cumscale wrong"
-    c.commitTrade(f, c.makeTradeHash(f, 8, 2*2**64, 0))
-    s.mine(1)
-    c.buyShares(1010101, f, 8, 2*2**64,0)
-    bal_after = c.balance(s.block.coinbase)
-    print bal - bal_after
-    assert(c.lmsr_price(f,1)==c.lmsr_price(f,2)==c.lmsr_price(f,3)==c.lmsr_price(f,4)==c.lmsr_price(f,5)==c.lmsr_price(f,6)==c.lmsr_price(f,7)), "3d pricing broken"
-    assert(c.lmsr_price(f,8)>=522*2**64 and c.lmsr_price(f,8) <= 524*2**64), "3d pricing broken"
-    assert((bal-bal_after) <= 1055*2**64 and (bal-bal_after) >= 1005*2**64), "3d buy off"
-    c.commitTrade(f, c.makeTradeHash(f, 2, 1*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    c.buyShares(1010101, f, 2, 1*2**64, 0)
-    gas_use(s)
-    bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < 20*2**64), "3d buy off"
-    c.commitTrade(f, c.makeTradeHash(f, 8, 1*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    c.sellShares(1010101, f, 8, 1*2**64, 0)
-    gas_use(s)
-    bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < 20*2**64), "3d sell off"
-    # scalar, nonscalar, scalar
-    h = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event3, event4], 1)
-    bal = c.balance(s.block.coinbase)
-    assert(c.getMarketNumOutcomes(h) == 20), "3d number outcomes wrong"
-    c.commitTrade(h, c.makeTradeHash(h, 15, 15*2**64, 0))
-    s.mine(1)
-    assert(c.getCumScale(h) == 499), "3d cumscale wrong"
-    c.buyShares(1010101, h, 15, 15*2**64,0)
-    bal_after = c.balance(s.block.coinbase)
-    print bal - bal_after
-    assert((bal-bal_after) <= 7600*2**64 and (bal-bal_after) >= 7500*2**64), "3d buy off"
-    c.commitTrade(h, c.makeTradeHash(h, 2, 12*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    c.buyShares(1010101, h, 2, 12*2**64, 0)
-    gas_use(s)
-    bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < 20*2**64), "3d buy off"
-    c.commitTrade(h, c.makeTradeHash(h, 15, 12*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    c.sellShares(1010101, h, 15, 12*2**64, 0)
-    gas_use(s)
-    bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < 20*2**64), "3d sell off"
-    # nonscalar, scalar, scalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event2, event4], 1)
-    # nonscalar, nonscalar, scalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event5, event3, event6], 1)
-    # scalar, scalar, nonscalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event4, event5], 1)
-    # scalar, nonscalar, nonscalar
-    c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event2, event1, event3], 1)
-    # nonscalar, scalar, nonscalar
-    g = market = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event3, event2, event5], 1)
-    bal = c.balance(s.block.coinbase)
-    assert(c.getMarketNumOutcomes(g) == 20), "3d number outcomes wrong"
-    c.commitTrade(g, c.makeTradeHash(g, 8, 15*2**64, 0))
-    s.mine(1)
-    assert(c.getCumScale(g) == 199), "3d cumscale wrong"
-    c.buyShares(1010101, g, 8, 15*2**64,0)
-    bal_after = c.balance(s.block.coinbase)
-    print bal - bal_after
-    assert((bal-bal_after) <= 3010*2**64 and (bal-bal_after) >= 2960*2**64), "3d buy off"
-    c.commitTrade(g, c.makeTradeHash(g, 2, 12*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    c.buyShares(1010101, g, 2, 12*2**64, 0)
-    gas_use(s)
-    bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < 20*2**64), "3d buy off"
-    c.commitTrade(g, c.makeTradeHash(g, 2, 12*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    c.sellShares(1010101, g, 2, 12*2**64, 0)
-    gas_use(s)
-    bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < 20*2**64), "3d sell off"
-    # nonscalar, nonscalar, nonscalar
-    i = c.createMarket(1010101, "new market 2", 2**58, 100*2**64, 368934881474191032, [event1, event5, event3], 1)
-    bal = c.balance(s.block.coinbase)
-    assert(c.getMarketNumOutcomes(i) == 20), "3d number outcomes wrong"
-    c.commitTrade(i, c.makeTradeHash(i, 20, 15*2**64, 0))
-    s.mine(1)
-    assert(c.getCumScale(i) == 1), "3d cumscale wrong"
-    c.buyShares(1010101, i, 20, 15*2**64,0)
-    bal_after = c.balance(s.block.coinbase)
-    print bal - bal_after
-    assert((bal-bal_after) <= .13*15*2**64 and (bal-bal_after) >= .12*15*2**64), "3d buy off"
-    c.commitTrade(i, c.makeTradeHash(i, 2, 12*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    c.buyShares(1010101, i, 2, 12*2**64, 0)
-    gas_use(s)
-    bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < .12*12*2**64), "3d buy off"
-    c.commitTrade(i, c.makeTradeHash(i, 20, 11*2**64, 0))
-    s.mine(1)
-    bal = c.balance(s.block.coinbase)
-    gas_use(s)
-    c.sellShares(1010101, i, 20, 11*2**64, 0)
-    gas_use(s)
-    bal_after = c.balance(s.block.coinbase)
-    assert(bal-bal_after < -1.2*2**64 and bal-bal_after > -1.5*2**64), "3d sell off"
-    print "3D Done"
-    print "BUY AND SELL OK"
-
-def test_transfer_shares():
-    global initial_gas
-    initial_gas = 0
-    t.gas_limit = 100000000
-    s = t.state()
-    c = s.abi_contract('functions/output.se')
-    gas_use(s)
-    c.initiateOwner(1010101)
-    # binary
-    event1 = c.createEvent(1010101, "new event", 555, 1, 2, 2)
-
-    ### Single Markets
-    # binary market
-    bin_market = c.createMarket(1010101, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 1)
-    c.commitTrade(bin_market, c.makeTradeHash(bin_market, 1, 15*2**64, 0))
-    s.mine(1)
-    c.buyShares(1010101, bin_market, 1, 15*2**64,0)
-    # -1: invalid outcome or you haven't traded in this market (or market doesn't exist)
-    assert(c.transferShares(1010101, bin_market, 1, 15*2**64, 444)==15*2**64), "Transfer shares fail"
-    assert(c.transferShares(1010101, bin_market, 1, 15*2**64, 444)==-2), "Check for not having shares fail"
-    assert(c.transferShares(1010101, 222, 1, 15*2**64, 444)==-1), "Check for invalid market fail"
-    print "Transfer shares OK"
 
 def test_create_branch():
     global initial_gas
@@ -651,6 +175,164 @@ def test_send_rep():
     assert(c.balanceOf(1010101, s.block.coinbase)==44), "Dormant rep balance off"
     assert(c.getRepBalance(1010101, s.block.coinbase)==866996971464348925464), "Rep balance off"
     print "Test send rep OK"
+
+def test_trading():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    gas_use(s)
+    
+    c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
+    i = -1
+    while i < 50:
+        if(i==0):
+            i+=1
+            continue
+        gas_use(s)
+        blocktime = s.block.timestamp+500
+        # covers binary + scalar events
+        e = c.createEvent(1010101, "event"+str(i), blocktime+1, i*2**64, i*i*2**64, 2, "soisoisoi.com")
+        m = c.createEvent(1010101, "sdevent"+str(i), blocktime+1, i*2**64, i*i*2**64, 2, "soisoisoi.com")
+        print "Event creation gas use"
+        print gas_use(s)
+        assert(e>1 or e<-9), "Event creation broken"
+        # covers categorical
+        f = c.createEvent(1010101, "event"+str(i), blocktime+1, i*2**64, i*i*2**64, 3, "soisoisoi.com")
+        assert(f>0 or f<-9), "binary Event creation broken"
+        feeSplit = int(random.random()*2**63)
+        gas_use(s)
+        bin_market = c.createMarket(1010101, "new market", 184467440737095516, [e], 1, 2, 3, feeSplit, "yayaya", value=10**19)
+        print bin_market
+        return(5)
+        print "Market creation gas use"
+        print gas_use(s)
+        assert(bin_market>0 or bin_market<-9), "market creation broken"
+        twodmarket = c.createMarket(1010101, "new market", 184467440737095516, [e, f], 1, 2, 3, feeSplit, "yayaya", value=10**19)
+        assert(twodmarket>0 or twodmarket<-9), "market creation broken"
+        threedmarket = c.createMarket(1010101, "new market", 184467440737095516, [e, m, f], 1, 2, 3, feeSplit, "yayaya", value=10**19)
+        assert(threedmarket>0 or threedmarket<-9), "market creation broken"
+        market = [bin_market, twodmarket, threedmarket]
+        a = 0
+        while a < 3:
+            # get cash balance before
+            bal = c.balance(s.block.coinbase)
+            print bal
+            gas_use(s)
+            assert(c.buyCompleteSets(bin_market, 10*2**64)==1)
+            print "Buy complete sets gas use"
+            print gas_use(s)
+            assert(c.sellCompleteSets(bin_market, 8*2**64)==1)
+            print "Sell complete sets gas use"
+            print gas_use(s)
+            print c.getVolume(market)
+            print c.getSharesValue(bin_market)
+            print c.getTotalSharesPurchased(bin_market)
+            # get cash balance after
+            bal = c.balance(s.block.coinbase)
+            print bal
+            participantIDK1 = c.getParticipantNumber(bin_market, s.block.coinbase)
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 3)
+            print c.getSharesPurchased(bin_market, 1)
+            print c.getSharesPurchased(bin_market, 2)
+            print c.getSharesPurchased(bin_market, 3)
+            # get cash balance before and after, ask is just fee
+            bal = c.balance(s.block.coinbase)
+            print bal
+            sell = c.sell(2**64, int(.01*2**64), bin_market, 1)
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)
+            bal = c.balance(s.block.coinbase)
+            print bal
+            print c.get_trade_ids(bin_market)
+            c.cancel(sell)
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)
+            bal = c.balance(s.block.coinbase)
+            print bal
+            # make sure got fee + shares back
+            sell = c.sell(2**64, int(.01*2**64), bin_market, 1)
+            print c.get_trade(sell)
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)
+            bal = c.balance(s.block.coinbase)
+            print bal
+            # get cash balance before and after, bid includes cost + fee
+            buy = c.buy(2**64, int(.02*2**64), bin_market, 2)
+            bal = c.balance(s.block.coinbase)
+            print bal
+            print c.get_trade_ids(bin_market)
+            c.cancel(buy)
+            # make sure got cost + fee back
+            bal = c.balance(s.block.coinbase)
+            print bal
+            buy = c.buy(2**64, int(.02*2**64), bin_market, 2)
+            print c.get_trade_ids(bin_market)
+            print c.get_trade(buy)
+            bal = c.balance(s.block.coinbase)
+            print bal
+            c.cashFaucet(sender=t.k2)
+            hash = c.makeTradeHash(0, 2**64, [buy], sender=t.k2)
+            c.commitTrade(hash, sender=t.k2)
+            s.mine(1)
+            # make sure buyer got their shares, make sure seller or k2 got cash & got rid of their shares
+            c.buyCompleteSets(bin_market, 10*2**64, sender=t.k2)
+            bal = c.balance(t.k2)
+            print bal
+            print c.trade(0, 2**64, [buy], sender=t.k2)
+            bal = c.balance(t.k2)
+            print bal
+            print c.getParticipantSharesPurchased(bin_market, 1, 1)
+            print c.getParticipantSharesPurchased(bin_market, 1, 2)
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)
+            hash = c.makeTradeHash(0, 2**64, [sell], sender=t.k2)
+            c.commitTrade(hash, sender=t.k2)
+            s.mine(1)
+            # make sure buyer or k2 got their shares and gets rid of cash, make sure seller got cash & got rid of their shares
+            bal = c.balance(t.k2)
+            print bal
+            print c.getParticipantSharesPurchased(bin_market, 1, 1)
+            print c.getParticipantSharesPurchased(bin_market, 1, 2)
+            bal = c.balance(s.block.coinbase)
+            print bal
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)
+            print c.trade(2**64, 0, [sell], sender=t.k2)
+            bal = c.balance(t.k2)
+            print bal
+            print c.getParticipantSharesPurchased(bin_market, 1, 1)
+            print c.getParticipantSharesPurchased(bin_market, 1, 2)
+            bal = c.balance(s.block.coinbase)
+            print bal
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)
+            # after putting order on book
+            print c.get_trade(buy)
+            print c.get_trade(sell)
+            print c.get_trade_ids(bin_market)
+            print c.getTotalSharesPurchased(bin_market)
+            print c.getSharesValue(bin_market)
+            print c.getVolume(market)
+            # Example:
+                #buyer gives up say 20
+                #complete set cost is say 100
+                #fee is say 2
+                #market should lose 20 from buyer's escrowed money
+                #market should gain 100 from complete set
+                #person short selling should give the market 80 [complete set cost less shares sold]
+                #plus fees
+                    #1 should go to branch
+                    #1 should go to creator
+            c.short_sell(buyer_trade_id, max_amount)
+            a += 1
+        print "BUY AND SELL OK"
+        i += 1
+    return(1)
 
 def test_make_reports():
     global initial_gas
@@ -1037,11 +719,13 @@ if __name__ == '__main__':
     # function tests
     #test_create_event()
     #test_create_market()
-    test_buy_sell_shares()
+    test_trading()
     #test_transfer_shares()
     #test_create_branch()
     #test_send_rep()
     #test_make_reports()
+    #test_set_sale_distribution
+    #test_claim_initial_rep
     #test_close_market()
     #test_consensus()
     #test_catchup()

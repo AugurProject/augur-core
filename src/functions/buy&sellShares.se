@@ -448,13 +448,13 @@ def trade(max_value, max_amount, trade_ids:arr):
 
 # buys amount of every outcome
 # cost 850k gas
-def buyCompleteSets(branch, market, amount):
+def buyCompleteSets(market, amount):
     refund()
+    branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumScale = MARKETS.getCumScale(market)
-    branch = MARKETS.getBranchID(market)
     cost = amount*cumScale/ONE
     if(CASH.balance(tx.origin) < price):
         return(-3)
@@ -479,6 +479,7 @@ def buyCompleteSets(branch, market, amount):
 # sells amount of every outcome [if user owns it]
 def sellCompleteSets(market, amount):
     refund()
+    branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
     participantNumber = MARKETS.getParticipantNumber(market, tx.origin)

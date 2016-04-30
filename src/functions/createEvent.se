@@ -37,12 +37,14 @@ inset('refund.se')
 # .025 eth to create
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution: str):
     refund()
+    # todo these
     if(forked && wouldExpireInPeriodJustAfterFork):
         return(-9)
     periodLength = BRANCHES.getPeriodLength(branch)
     if(maxValue < minValue or (maxValue-minValue) < ONE):
         return(-2)
-    if periodLength && description != 0 && expDate > block.timestamp:
+    eventID = 0
+    if(periodLength && description != 0 && expDate > block.timestamp):
         eventinfo = string(8*32 + len(description))
         eventinfo[0] = EVENT                                        #typecode
         eventinfo[1] = branch                                       #branchID
@@ -58,22 +60,14 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         return(-1)
     if(numOutcomes < 2 || numOutcomes > 8):
         return(0)
-    # fee to ask a question rises if voter participation (rep reported) falls, if it's really high, the fee is lowered (participationFactor is a fixedpoint number)
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
-    #participationFactor = (EXPEVENTS.getTotalRepReported(branch, currentVotePeriod-2) * ONE) / EXPEVENTS.getTotalRepReported(branch, currentVotePeriod-1)
-    if participationFactor == 0:
-        participationFactor = 1
     CASH.initiateOwner(eventID)
-    # send fee and bond
-    if CASH.balance(tx.origin) >= (participationFactor*45):
-        if !INFO.getCreator(eventID) && !EVENTS.getEventBranch(eventID) && CASH.send(branch, participationFactor*45):
-            # see which future period it expires in && put the event in that bin
-            # event voting periods - expDate / periodLength gives you the voting period #
-            futurePeriod = expDate / periodLength
-            if INFO.setInfo(eventID, description, tx.origin, participationFactor*45) && EVENTS.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes, resolution):
-                return(eventID)
-            else:
-                return(0)
+    if(!INFO.getCreator(eventID)):
+        # see which future period it expires in && put the event in that bin
+        # event voting periods - expDate / periodLength gives you the voting period #
+        futurePeriod = expDate / periodLength
+        if(INFO.setInfo(eventID, description, tx.origin, 0) && EVENTS.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes, resolution)):
+            return(eventID)
         else:
             return(0)
     else:

@@ -102,6 +102,7 @@ def remove_trade(id):
     self.trades[id].owner = 0
     self.trades[id].block = 0
     self.trades[id].refhash = 0
+    self.trades[id].outcome = 0
     return(1)
     
 def fill_trade(id, fill):
