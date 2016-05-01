@@ -69,8 +69,8 @@ def getTotalSharesPurchased(market):
     refund()
     total = 0
     n = self.Markets[market].numOutcomes
-    i = 0
-    while i < n:
+    i = 1
+    while i <= n:
       total += self.Markets[market].sharesPurchased[i]
       i += 1
     return(total)
@@ -439,3 +439,6 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
                         currentFlatLength += col
                         row += 1
                     return(flattened: arr)
+                    
+def getSender():
+    return(msg.sender)

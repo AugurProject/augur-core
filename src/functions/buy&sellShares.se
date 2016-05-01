@@ -146,7 +146,7 @@ def buy(amount, price, market, outcome):
         participantNumber = MARKETS.addParticipant(market, tx.origin)
     trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
-    fee = fee_percent(trading_fee, price, amount, cumScale) * MARKETS.getMakerFees($market) / ONE
+    fee = fee_percent(trading_fee, price, amount, cumScale) * MARKETS.getMakerFees(market_id) / ONE
     if(amount*price < ONE or price>cumScale):
         return(0)
     if(CASH.balance(tx.origin) < (amount * price / ONE * (fee + ONE) /ONE)):
@@ -169,7 +169,7 @@ def sell(amount, price, market_id, outcome):
         return(-4)
     trading_fee = MARKETS.getTradingFee(market_id)
     cumScale = MARKETS.getCumScale(market_id)
-    fee = fee_percent(trading_fee, price, amount, cumScale) * MARKETS.getMakerFees($market) / ONE
+    fee = fee_percent(trading_fee, price, amount, cumScale) * MARKETS.getMakerFees(market_id) / ONE
     if(amount*price < ONE or price>cumScale):
         return(0)
     if(CASH.balance(tx.origin) < (amount * price / ONE * fee / ONE)):

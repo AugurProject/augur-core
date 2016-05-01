@@ -64,7 +64,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         return(0)
     periodLength = BRANCHES.getPeriodLength(branch)
     # send this to branch
-    creationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / tradingFee
+    creationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / (2*tradingFee)
     # gives ether/cash amount in fixed point
     minFee = 3500000*BRANCHES.getBaseReporters(branch)*tx.gasprice*len(events)*ONE/WEITOETH
     if(creationFee < minFee):
