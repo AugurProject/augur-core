@@ -244,10 +244,9 @@ def test_trading():
             # get cash balance before and after, ask is just fee
             bal = c.balance(s.block.coinbase)
             print bal
-            print "hi"
             sell = c.sell(2**64, int(.01*2**64), bin_market, 1)
-            print "ok"
-            assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)==2**64)
+            print sell
+            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)
             print "m"
             assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)==2**65)
             bal = c.balance(s.block.coinbase)
