@@ -246,12 +246,11 @@ def test_trading():
             print bal
             sell = c.sell(2**64, int(.01*2**64), bin_market, 1)
             print sell
-            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)
-            print "m"
+            assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)==2**64)
             assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)==2**65)
             bal = c.balance(s.block.coinbase)
             print bal
-            print c.get_trade_ids(bin_market)
+            assert(len(c.get_trade_ids(bin_market))==1)
             c.cancel(sell)
             assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)==2**65)
             assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)==2**65)
@@ -259,25 +258,22 @@ def test_trading():
             print bal
             # make sure got fee + shares back
             sell = c.sell(2**64, int(.01*2**64), bin_market, 1)
-            print c.get_trade(sell)
             assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)==2**64)
             assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)==2**65)
             ogbal = c.balance(s.block.coinbase)
             # get cash balance before and after, bid includes cost + fee
             buy = c.buy(2**64, int(.02*2**64), bin_market, 2)
             newbal = c.balance(s.block.coinbase)
-            print "balance diffs"
             print ogbal
             print newbal
             #assert(newbal-ogbal)
-            print c.get_trade_ids(bin_market)
-            c.cancel(buy)
+            assert(len(c.get_trade_ids(bin_market))==2)
             # make sure got cost + fee back
+            c.cancel(buy)
             bal = c.balance(s.block.coinbase)
             print bal
             buy = c.buy(2**64, int(.02*2**64), bin_market, 2)
             print c.get_trade_ids(bin_market)
-            print c.get_trade(buy)
             bal = c.balance(s.block.coinbase)
             print bal
             c.cashFaucet(sender=t.k2)
@@ -293,7 +289,7 @@ def test_trading():
             print c.getParticipantSharesPurchased(bin_market, 1, 1)
             print c.getParticipantSharesPurchased(bin_market, 1, 2)
             print c.trade(0, 2**64, [buy], sender=t.k2)
-            bal = c.balance(t.k2)
+            bal = c.balance(sender2)
             print bal
             print c.getParticipantSharesPurchased(bin_market, 1, 1)
             print c.getParticipantSharesPurchased(bin_market, 1, 2)

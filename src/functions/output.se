@@ -522,7 +522,7 @@ def sellCompleteSets(market, amount):
     return(1)
     
 macro fee_percent($market_fee, $price, $amount, $cumScale):
-    4 * $market_fee * $price / ($cumScale) * (ONE-$price/$cumScale)
+    4 * $market_fee * $price / ($cumScale) * (ONE-$price/$cumScale) / ONE
 inset('refund.se')
 
 # first param is the market, second param is the subcurrency contract

@@ -121,8 +121,8 @@ def cancel(trade_id):
     return(FAILURE)
 
 macro remove_trade($trade_id, $market_id):
-    TRADES.remove_trade(trade_id)
-    MARKETS.remove_trade_from_market(market_id, trade_id)
+    TRADES.remove_trade($trade_id)
+    MARKETS.remove_trade_from_market($market_id, $trade_id)
 
 #
 # Buy / Sell actions
@@ -263,8 +263,9 @@ def short_sell(buyer_trade_id, max_amount):
     else:
         remove_trade(trade_id, market_id)
     # Update balances
-    MARKETS.modifyParticipantShares(market_id, msg.sender, outcome, -fill)
-    MARKETS.modifyParticipantShares(market_id, owner, outcome, fill)
+    ownerNum = MARKETS.getParticipantNumber(market_id, owner)
+    MARKETS.modifyParticipantShares(market_id, participantNumber, outcome, -fill)
+    MARKETS.modifyParticipantShares(market_id, ownerNum, outcome, fill)
     # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
     # 75% to branch + .5% more to branch per maker fee 1% decrease 
     CASH.send(branch, branchFees)
@@ -350,6 +351,8 @@ def trade(max_value, max_amount, trade_ids:arr):
             if balance > 0:
                 if(MARKETS.getParticipantID(market_id, participantNumber) != tx.origin):
                     return(-3)
+                sender = MARKETS.getParticipantNumber(market_id, msg.sender)
+                ownerNum = MARKETS.getParticipantNumber(market_id, owner)
                 # Determine fill amount
                 fill = min(amount, min(balance, max_amount))
                 # Calculate value
@@ -360,8 +363,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 else:
                     remove_trade(trade_id, market_id)
                 # Update balances
-                MARKETS.modifyParticipantShares(market_id, msg.sender, outcome, -fill)
-                MARKETS.modifyParticipantShares(market_id, owner, outcome, fill)
+                MARKETS.modifyParticipantShares(market_id, sender, outcome, -fill)
+                MARKETS.modifyParticipantShares(market_id, ownerNum, outcome, fill)
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
                 fee = value * fee / ONE
                 # THREEFOURTHS is 3/4
@@ -415,8 +418,9 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # if participant doesn't exist in market, add them
                 if(tx.origin != MARKETS.getParticipantID(market_id, participantNumber)):
                     participantNumber = MARKETS.addParticipant(market_id, tx.origin)
+                
                 # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
-                MARKETS.modifyParticipantShares(market_id, msg.sender, outcome, fill)
+                MARKETS.modifyParticipantShares(market_id, participantNumber, outcome, fill)
                 # Transfer cash from user to person who has ask order and pay fee to branch and market creator
                 # 75% to branch + .5% more to branch per maker fee 1% decrease 
                 CASH.addCash(branch, branchFees)
