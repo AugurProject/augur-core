@@ -218,6 +218,7 @@ def test_trading():
         while a < 3:
             # set cash to 100k initially
             # get cash balance before
+            # to calc costs need data to do fee calc and whether maker or not etc.
             bal = c.balance(s.block.coinbase)
             print bal
             gas_use(s)
@@ -243,8 +244,11 @@ def test_trading():
             # get cash balance before and after, ask is just fee
             bal = c.balance(s.block.coinbase)
             print bal
+            print "hi"
             sell = c.sell(2**64, int(.01*2**64), bin_market, 1)
+            print "ok"
             assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)==2**64)
+            print "m"
             assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)==2**65)
             bal = c.balance(s.block.coinbase)
             print bal

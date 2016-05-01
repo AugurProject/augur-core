@@ -159,7 +159,7 @@ def buy(amount, price, market, outcome):
         participantNumber = self.addParticipant(market, tx.origin)
     trading_fee = self.getTradingFee(market)
     cumScale = self.getCumScale(market)
-    fee = fee_percent(trading_fee, price, amount, cumScale) * self.getMakerFees($market) / ONE
+    fee = fee_percent(trading_fee, price, amount, cumScale) * self.getMakerFees(market_id) / ONE
     if(amount*price < ONE or price>cumScale):
         return(0)
     if(self.balance(tx.origin) < (amount * price / ONE * (fee + ONE) /ONE)):
@@ -182,7 +182,7 @@ def sell(amount, price, market_id, outcome):
         return(-4)
     trading_fee = self.getTradingFee(market_id)
     cumScale = self.getCumScale(market_id)
-    fee = fee_percent(trading_fee, price, amount, cumScale) * self.getMakerFees($market) / ONE
+    fee = fee_percent(trading_fee, price, amount, cumScale) * self.getMakerFees(market_id) / ONE
     if(amount*price < ONE or price>cumScale):
         return(0)
     if(self.balance(tx.origin) < (amount * price / ONE * fee / ONE)):
@@ -251,7 +251,7 @@ def short_sell(buyer_trade_id, max_amount):
     if(tx.origin != self.getParticipantID(market, participantNumber)):
         participantNumber = self.addParticipant(market, tx.origin)
 
-    i = 0
+    i = 1
     # send shares of the event to user address
     while i <= numOutcomes:
         self.modifyShares(market, i, amount)
@@ -4315,6 +4315,9 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
                         currentFlatLength += col
                         row += 1
                     return(flattened: arr)
+                    
+def getSender():
+    return(msg.sender)
 inset('refund.se')
 
 # Events' index is the eventID
