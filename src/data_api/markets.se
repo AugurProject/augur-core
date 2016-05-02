@@ -99,10 +99,7 @@ def getVolume(market):
 def getParticipantNumber(market, address):
     refund()
     participantNumber = self.Markets[market].addr2participant[address]
-    if(self.Markets[market].participants[participantNumber].participantID != tx.origin):
-        return(-1)
-    else:
-        return(participantNumber)
+    return(participantNumber)
 
 def getParticipantID(market, participantNumber):
     refund()
