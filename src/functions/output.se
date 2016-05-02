@@ -378,9 +378,6 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Update balances
                 self.modifyParticipantShares(market_id, sender, outcome, -fill)
                 self.modifyParticipantShares(market_id, ownerNum, outcome, fill)
-                shares = self.getParticipantSharesPurchased(market_id, ownerNum, outcome)
-                sharesok = self.getParticipantSharesPurchased(market_id, 0, outcome)
-                return([shares, sharesok, ownerNum, owner, fill]: arr)
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
                 fee = value * fee / ONE
                 # THREEFOURTHS is 3/4
@@ -3982,10 +3979,7 @@ def getVolume(market):
 def getParticipantNumber(market, address):
     refund()
     participantNumber = self.Markets[market].addr2participant[address]
-    if(self.Markets[market].participants[participantNumber].participantID != tx.origin):
-        return(-1)
-    else:
-        return(participantNumber)
+    return(participantNumber)
 
 def getParticipantID(market, participantNumber):
     refund()

@@ -297,17 +297,13 @@ def test_trading():
             assert(c.getParticipantSharesPurchased(bin_market, 1, 1)==10*2**64)
             assert(c.getParticipantSharesPurchased(bin_market, 1, 2)==10*2**64)
             x = c.trade(0, 2**64, [buy], sender=t.k2)
-            print x
-            #assert(x[2]==1)
+            assert(x[2]==1)
             bal = c.balance(sender2)
             print bal
             assert(c.getParticipantSharesPurchased(bin_market, 1, 1)==10*2**64)
             assert(c.getParticipantSharesPurchased(bin_market, 1, 2)==9*2**64)
             assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)==2**64)
-            print "this should be 3"
-            print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)
-            print c.getParticipantSharesPurchased(bin_market, 0, 2)
-            assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)==2*2**64)
+            assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)==3*2**64)
             hash = c.makeTradeHash(2**64, 0, [sell], sender=t.k2)
             c.commitTrade(hash, sender=t.k2)
             s.mine(1)
@@ -319,7 +315,7 @@ def test_trading():
             bal = c.balance(s.block.coinbase)
             print bal
             assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1==2**64))
-            #print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)
+            assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)==3*2**64)
             print c.trade(2**64, 0, [sell], sender=t.k2)
             bal = c.balance(t.k2)
             print bal
@@ -327,8 +323,8 @@ def test_trading():
             assert(c.getParticipantSharesPurchased(bin_market, 1, 2)==9*2**64)
             bal = c.balance(s.block.coinbase)
             print bal
-            assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)==2**64)
-            #print c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)
+            assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 1)==0)
+            assert(c.getParticipantSharesPurchased(bin_market, participantNumberIDK1, 2)==3*2**64)
             # after putting order on book
             assert(len(c.get_trade_ids(bin_market))==0)
             assert(c.getTotalSharesPurchased(bin_market)==24*2**64)
