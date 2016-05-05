@@ -77,7 +77,7 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
         self.addTrade($market, trade_id, last_id)
         # Update available and trading amounts for asks
         if $type == ASK:
-            self.modifyParticipantShares($market, $participantNumber, $outcome, -$amount)
+            self.modifyParticipantShares($market, $participantNumber, $outcome, -$amount, 0)
             if(fee):
                 self.send($market, ($amount * $price / ONE * fee / ONE))
         # Send / escrow cash for bids
@@ -111,7 +111,7 @@ def cancel(trade_id):
     branch = self.getBranchID(market)
     trading_fee = self.getTradingFee(market)
     cumScale = self.getCumScale(market)
-    fee = fee_percent(trading_fee, price, amount, cumScale) * self.getMakerFees($market) / ONE
+    fee = fee_percent(trading_fee, price, amount, cumScale) * self.getMakerFees(market) / ONE
     # Check the owner
     if msg.sender == owner:
         # Clear the trade first
@@ -125,7 +125,7 @@ def cancel(trade_id):
         elif type == ASK:
             # shares refund
             participantNumber = self.getParticipantNumber(market, msg.sender)
-            self.modifyParticipantShares(market, participantNumber, outcome, amount)
+            self.modifyParticipantShares(market, participantNumber, outcome, amount, 1)
             self.subtractCash(market, (amount * price / ONE * fee / ONE))
             self.addCash(msg.sender, (amount * price / ONE * fee / ONE))
         # Log cancellation
@@ -133,9 +133,9 @@ def cancel(trade_id):
         return(SUCCESS)
     return(FAILURE)
 
-macro remove_trade($trade_id, $market_id):
+macro remove_trade($trade_id, $market):
     self.remove_trade($trade_id)
-    self.remove_trade_from_market($market_id, $trade_id)
+    self.remove_trade_from_market($market, $trade_id)
 
 #
 # Buy / Sell actions
@@ -159,6 +159,8 @@ def buy(amount, price, market, outcome):
         participantNumber = self.addParticipant(market, tx.origin)
     trading_fee = self.getTradingFee(market)
     cumScale = self.getCumScale(market)
+    if(price > cumScale):
+        return(0)
     fee = fee_percent(trading_fee, price, amount, cumScale) * self.getMakerFees(market) / ONE
     if(amount*price < ONE or price>cumScale):
         return(0)
@@ -168,26 +170,28 @@ def buy(amount, price, market, outcome):
     return(FAILURE)
 
 # cost 532k
-def sell(amount, price, market_id, outcome):
+def sell(amount, price, market, outcome):
     refund()
     if(amount <= 0 or price <= 0):
         return(-1)
     branch = self.getBranchID(market)
     if(self.getOracleOnly(branch)):
         return(-2)
-    participantNumber = self.getParticipantNumber(market_id, tx.origin)
-    if(self.getParticipantID(market_id, participantNumber) != tx.origin):
+    participantNumber = self.getParticipantNumber(market, tx.origin)
+    if(self.getParticipantID(market, participantNumber) != tx.origin):
         return(-3)
-    if(self.getParticipantSharesPurchased(market_id, participantNumber, outcome) < amount):
+    if(self.getParticipantSharesPurchased(market, participantNumber, outcome) < amount):
         return(-4)
-    trading_fee = self.getTradingFee(market_id)
-    cumScale = self.getCumScale(market_id)
-    fee = fee_percent(trading_fee, price, amount, cumScale) * self.getMakerFees(market_id) / ONE
+    trading_fee = self.getTradingFee(market)
+    cumScale = self.getCumScale(market)
+    if(price > cumScale):
+        return(0)
+    fee = fee_percent(trading_fee, price, amount, cumScale) * self.getMakerFees(market) / ONE
     if(amount*price < ONE or price>cumScale):
         return(0)
     if(self.balance(tx.origin) < (amount * price / ONE * fee / ONE)):
         return(-4)
-    save_trade(ASK, amount, price, market_id, outcome, branch, participantNumber)
+    save_trade(ASK, amount, price, market, outcome, branch, participantNumber)
     return(FAILURE)
 
 # Example:
@@ -214,33 +218,33 @@ def short_sell(buyer_trade_id, max_amount):
     trade = array(TRADE_FIELDS)
     trade = self.get_trade(buyer_trade_id, outitems=TRADE_FIELDS)
     if !trade:
-        return(0)
+        return(3)
     # Get market
     type = trade[1]
     if(type!=BID):
-        return(0)
-    market_id = trade[2]
-    if(self.getOneWinningOutcome(market_id, 0)):
+        return(4)
+    market = trade[2]
+    if(self.getOneWinningOutcome(market, 0)):
         return(-4)
     orig_amount = trade[3]
     price = trade[4]
     owner = trade[5]
     outcome = trade[8]
     if(owner == msg.sender or owner == tx.origin):
-        return(0)
+        return(5)
     # Make sure the trade has been mined, obvious HFT prevention
     if block.number <= self.trades[trade_id].block:
         return(TRADE_SAME_BLOCK_PROHIBITED)
-    branch = self.getBranchID(market_id)
+    branch = self.getBranchID(market)
     if(self.getOracleOnly(branch)):
         return(-1)
-    creator = self.getCreator(market_id)
-    trading_fee = self.getTradingFee(market_id)
-    cumScale = self.getCumScale(market_id)
+    creator = self.getCreator(market)
+    trading_fee = self.getTradingFee(market)
+    cumScale = self.getCumScale(market)
     amount = min(orig_amount, max_amount)
     fee = amount * price / ONE * fee_percent(trading_fee, price, amount, cumScale) / ONE
-    branchFees = (THREEFOURTHS+(ONEHALF - self.getMakerFees(market_id))/2)*fee / ONE
-    creatorFees = (ONEFOURTH+(ONEHALF - self.getMakerFees(market_id))/2)*fee / ONE
+    branchFees = (THREEFOURTHS+(ONEHALF - self.getMakerFees(market))/2)*fee / ONE
+    creatorFees = (ONEFOURTH+(ONEHALF - self.getMakerFees(market))/2)*fee / ONE
     takerFeesTotal = branchFees + creatorFees
     cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)
     if(self.balance(tx.origin) < cost):
@@ -255,7 +259,7 @@ def short_sell(buyer_trade_id, max_amount):
     # send shares of the event to user address
     while i <= numOutcomes:
         self.modifyShares(market, i, amount)
-        self.modifyParticipantShares(market, participantNumber, i, amount)
+        self.modifyParticipantShares(market, participantNumber, i, amount, 0)
         i += 1
     if(self.getVotePeriod(branch)<self.getTradingPeriod(market)):
         self.modifySharesValue(market, amount*cumScale/ONE)
@@ -268,17 +272,15 @@ def short_sell(buyer_trade_id, max_amount):
     # Fill buy order
     # Determine fill amount
     fill = amount
-    # Calculate value
-    value = (fill * price)/ONE
     # Update trade amount or remove
     if fill < orig_amount:
         self.fill_trade(trade_id, fill)
     else:
-        remove_trade(trade_id, market_id)
+        remove_trade(trade_id, market)
     # Update balances
-    ownerNum = self.getParticipantNumber(market_id, owner)
-    self.modifyParticipantShares(market_id, participantNumber, outcome, -fill)
-    self.modifyParticipantShares(market_id, ownerNum, outcome, fill)
+    ownerNum = self.getParticipantNumber(market, owner)
+    self.modifyParticipantShares(market, participantNumber, outcome, -fill, 0)
+    self.modifyParticipantShares(market, ownerNum, outcome, fill, 0)
     # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
     # 75% to branch + .5% more to branch per maker fee 1% decrease 
     self.send(branch, branchFees)
@@ -286,18 +288,18 @@ def short_sell(buyer_trade_id, max_amount):
     self.send(creator, creatorFees)
 
     # other party [maker] pay their part of the fee here too
-    fee = fee * self.getMakerFees(market_id) / ONE
-    self.subtractCash(market_id, fee)
+    fee = fee * self.getMakerFees(market) / ONE
+    self.subtractCash(market, fee)
     self.addCash(creator, fee/2)
     self.addCash(branch, fee/2)
     
     self.addFees(market, fee+takerFeesTotal)
 
     # Log transaction
-    log(type=log_fill_tx, market_id, msg.sender, owner, ASK, price, fill, trade_id, outcome)
+    log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)
     # Log price, fill amount, type and timestamp
-    log(type=log_price, market_id, type, price, fill, block.timestamp, outcome, msg.sender)
-    return([SUCCESS, max_value, max_amount]: arr)
+    log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
+    return([SUCCESS, max_amount, fill, price]: arr)
 
 #
 # Trade
@@ -340,8 +342,8 @@ def trade(max_value, max_amount, trade_ids:arr):
             return(0)
         # Get market
         type = trade[1]
-        market_id = trade[2]
-        creator = self.getCreator(market_id)
+        market = trade[2]
+        creator = self.getCreator(market)
         amount = trade[3]
         price = trade[4]
         owner = trade[5]
@@ -351,21 +353,21 @@ def trade(max_value, max_amount, trade_ids:arr):
         # Make sure the trade has been mined, obvious HFT prevention
         if block.number <= self.trades[trade_id].block:
             return(TRADE_SAME_BLOCK_PROHIBITED)
-        branch = self.getBranchID(market_id)
-        trading_fee = self.getTradingFee(market_id)
-        cumScale = self.getCumScale(market_id)
+        branch = self.getBranchID(market)
+        trading_fee = self.getTradingFee(market)
+        cumScale = self.getCumScale(market)
         fee = fee_percent(trading_fee, price, amount, cumScale)
 
         # Fill buy order
         if type == BID:
             # Get available balance of shares
-            participantNumber = self.getParticipantNumber(market_id, tx.origin)
-            balance = self.getParticipantSharesPurchased(market_id, participantNumber, outcome)
+            participantNumber = self.getParticipantNumber(market, tx.origin)
+            balance = self.getParticipantSharesPurchased(market, participantNumber, outcome)
             if balance > 0:
-                if(self.getParticipantID(market_id, participantNumber) != tx.origin):
+                if(self.getParticipantID(market, participantNumber) != tx.origin):
                     return(-3)
-                sender = self.getParticipantNumber(market_id, msg.sender)
-                ownerNum = self.getParticipantNumber(market_id, owner)
+                sender = self.getParticipantNumber(market, msg.sender)
+                ownerNum = self.getParticipantNumber(market, owner)
                 # Determine fill amount
                 fill = min(amount, min(balance, max_amount))
                 # Calculate value
@@ -374,26 +376,26 @@ def trade(max_value, max_amount, trade_ids:arr):
                 if fill < amount:
                     self.fill_trade(trade_id, fill)
                 else:
-                    remove_trade(trade_id, market_id)
+                    remove_trade(trade_id, market)
                 # Update balances
-                self.modifyParticipantShares(market_id, sender, outcome, -fill)
-                self.modifyParticipantShares(market_id, ownerNum, outcome, fill)
+                self.modifyParticipantShares(market, sender, outcome, -fill, 0)
+                self.modifyParticipantShares(market, ownerNum, outcome, fill, 0)
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
                 fee = value * fee / ONE
                 # THREEFOURTHS is 3/4
-                branchFees = (THREEFOURTHS+(ONEHALF - self.getMakerFees(market_id))/2)*fee / ONE
-                creatorFees = (ONEFOURTH+(ONEHALF - self.getMakerFees(market_id))/2)*fee / ONE
+                branchFees = (THREEFOURTHS+(ONEHALF - self.getMakerFees(market))/2)*fee / ONE
+                creatorFees = (ONEFOURTH+(ONEHALF - self.getMakerFees(market))/2)*fee / ONE
                 takerFeesTotal = branchFees + creatorFees
                 self.addCash(msg.sender, value-takerFeesTotal)
                 # 75% to branch + .5% more to branch per maker fee 1% decrease 
                 self.addCash(branch, branchFees)
                 # 25% to creator + .5% more to creator per 1% decrease in maker fees
                 self.addCash(creator, creatorFees)
-                self.subtractCash(market_id, value)
+                self.subtractCash(market, value)
 
                 # other party [maker] pay their part of the fee here too
-                fee = fee * self.getMakerFees(market_id) / ONE
-                self.subtractCash(market_id, fee)
+                fee = fee * self.getMakerFees(market) / ONE
+                self.subtractCash(market, fee)
                 self.addCash(creator, fee/2)
                 self.addCash(branch, fee/2)
                 
@@ -402,7 +404,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Update max_amount
                 max_amount -= fill
                 # Log transaction
-                log(type=log_fill_tx, market_id, msg.sender, owner, ASK, price, fill, trade_id, outcome)
+                log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)
             else:
                 return(INSUFFICIENT_BALANCE)
         elif type == ASK:
@@ -413,8 +415,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Determine fill value
                 value = min(max_value, trade_value)
                 fee = trade_value * fee / ONE
-                branchFees = (THREEFOURTHS+(ONEHALF - self.getMakerFees(market_id))/2)*fee / ONE
-                creatorFees = (ONEFOURTH+(ONEHALF - self.getMakerFees(market_id))/2)*fee / ONE
+                branchFees = (THREEFOURTHS+(ONEHALF - self.getMakerFees(market))/2)*fee / ONE
+                creatorFees = (ONEFOURTH+(ONEHALF - self.getMakerFees(market))/2)*fee / ONE
                 takerFeesTotal = branchFees + creatorFees
                 # fix todo for what if maxvalue is say 10 but adding fees to it makes it 11, max value should _include_, not exclude fees and account for it w/ cash balance including fees
                 if(self.balance(tx.origin) < (value + takerFeesTotal)):
@@ -426,14 +428,14 @@ def trade(max_value, max_amount, trade_ids:arr):
                     self.fill_trade(trade_id, fill)
                 else:
                     fill = amount
-                    remove_trade(trade_id, market_id)
-                participantNumber = self.getParticipantNumber(market_id, tx.origin)
+                    remove_trade(trade_id, market)
+                participantNumber = self.getParticipantNumber(market, tx.origin)
                 # if participant doesn't exist in market, add them
-                if(tx.origin != self.getParticipantID(market_id, participantNumber)):
-                    participantNumber = self.addParticipant(market_id, tx.origin)
+                if(tx.origin != self.getParticipantID(market, participantNumber)):
+                    participantNumber = self.addParticipant(market, tx.origin)
                 
                 # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
-                self.modifyParticipantShares(market_id, participantNumber, outcome, fill)
+                self.modifyParticipantShares(market, participantNumber, outcome, fill, 0)
                 # Transfer cash from user to person who has ask order and pay fee to branch and market creator
                 # 75% to branch + .5% more to branch per maker fee 1% decrease 
                 self.addCash(branch, branchFees)
@@ -444,8 +446,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 self.subtractCash(msg.sender, cost)
 
                 # other party [maker] pay their part of the fee here too
-                fee = fee * self.getMakerFees(market_id) / ONE
-                self.subtractCash(market_id, fee)
+                fee = fee * self.getMakerFees(market) / ONE
+                self.subtractCash(market, fee)
                 self.addCash(creator, fee/2)
                 self.addCash(branch, fee/2)
                 
@@ -453,12 +455,12 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Update max_value
                 max_value -= value
                 # Log transaction
-                log(type=log_fill_tx, market_id, msg.sender, owner, BID, price, fill, trade_id, outcome)
+                log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_id, outcome)
             else:
                 return(INSUFFICIENT_BALANCE)
 
         # Log price, fill amount, type and timestamp
-        log(type=log_price, market_id, type, price, fill, block.timestamp, outcome, msg.sender)
+        log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
         # Next trade
         t += 1
     return([SUCCESS, max_value, max_amount]: arr)
@@ -483,7 +485,7 @@ def buyCompleteSets(market, amount):
     # send shares of the event to user address
     while i <= numOutcomes:
         self.modifyShares(market, i, amount)
-        self.modifyParticipantShares(market, participantNumber, i, amount)
+        self.modifyParticipantShares(market, participantNumber, i, amount, 0)
         i += 1
     if(self.getVotePeriod(branch)<self.getTradingPeriod(market)):
         self.modifySharesValue(market, amount*cumScale/ONE)
@@ -515,7 +517,7 @@ def sellCompleteSets(market, amount):
     i = 1
     while i <= numOutcomes:
         self.modifyShares(market, i, -amount)
-        self.modifyParticipantShares(market, participantNumber, i, -amount)
+        self.modifyParticipantShares(market, participantNumber, i, -amount, 0)
         i += 1
     if(self.getVotePeriod(branch)<self.getTradingPeriod(market)):
         self.modifySharesValue(market, -amount*cumScale/ONE)
@@ -526,7 +528,7 @@ def sellCompleteSets(market, amount):
     return(1)
     
 macro fee_percent($market_fee, $price, $amount, $cumScale):
-    4 * $market_fee * $price / ($cumScale) * (ONE-$price/$cumScale) / ONE
+    4 * $market_fee * $price / ($cumScale) * (ONE-$price*2**64/$cumScale) / ONE
 inset('refund.se')
 
 # first param is the market, second param is the subcurrency contract
@@ -2801,6 +2803,9 @@ macro abs($a):
     if($a<0):
         $a = -$a
     $a
+def test():
+    trade_value = 18446744073709551616 * 184467440737095520 / 2**64
+    return(trade_value)
 macro refund():
     if(msg.value > 0):
         send(msg.sender, msg.value)
@@ -4083,13 +4088,15 @@ def modifySharesValue(marketID, amount):
     self.Markets[marketID].sharesValue += amount
     return(1)
 
-def modifyParticipantShares(marketID, participantNumber, outcome, amount):
+def modifyParticipantShares(marketID, participantNumber, outcome, amount, cancel):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Markets[marketID].participants[participantNumber].shares[outcome] += amount
     if(amount<0):
         amount = amount*-1
+    if(cancel):
+        amount = -1*amount
     self.Markets[marketID].volume += amount
     return(1)
 
