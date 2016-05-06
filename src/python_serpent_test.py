@@ -177,8 +177,11 @@ def test_send_rep():
     assert(c.getRepBalance(1010101, s.block.coinbase)==866996971464348925464), "Rep balance off"
     print "Test send rep OK"
 
-def nearly_equal(a,b,sig_fig=5):
+def nearly_equal(a,b,sig_fig=8):
     return(a==b or int(a*10**sig_fig) == int(b*10**sig_fig))
+    
+def isclose(a, b, rel_tol=1e-10, abs_tol=0.0):
+    return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 def test_trading():
     global initial_gas
@@ -192,7 +195,7 @@ def test_trading():
     i = -1
     while i < 50:
         if(i==0):
-            i+=1
+            i+=2
             continue
         gas_use(s)
         
@@ -203,6 +206,9 @@ def test_trading():
         n = c.createEvent(1010101, "sdeventn"+str(i), blocktime+1, i*2**64, i*i*2**64, 2, "soisoisoi.com")
         print "Event creation gas use"
         print gas_use(s)
+        print e
+        print m
+        print n
         assert(e>1 or e<-9), "Event creation broken"
         # covers categorical
         f = c.createEvent(1010101, "event"+str(i), blocktime+1, i*2**64, i*i*2**64, 3, "soisoisoi.com")
@@ -252,6 +258,10 @@ def test_trading():
             print c.balance(s.block.coinbase)
             print "Buy complete sets gas use"
             print gas_use(s)
+            if(market[2]):
+                sellin = c.sell(2**64, int(.01*2**64), market[2], 3)
+                assert(sellin==1)
+                assert(c.cancel(sellin)==1)
             assert(c.sellCompleteSets(market[a], 8*2**64)==1)
             assert(c.balance(s.block.coinbase)==(100000*2**64 - 2*cumScale[a]))
             assert(c.balance(market[a])==2*cumScale[a])
@@ -277,20 +287,19 @@ def test_trading():
             assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==2**65)
             after = c.balance(s.block.coinbase)
             afterm = c.balance(market[a])
-            assert(len(c.get_trade_ids(market[a]))==1)
-            assert((before-after) == int(makerFee))
-            assert(afterm-beforem == int(makerFee))
+            assert(len(c.get_trade_ids(market[a]))==1
+            assert(isclose((before-after)/2**64, makerFee/2**64, rel_tol=1e-10))
+            assert(isclose((afterm-beforem)/2**64, makerFee/2**64, rel_tol=1e-10))
             gas_use(s)
             c.cancel(sell)
             print "Cancel gas use"
             print gas_use(s)
             afterm = c.balance(market[a])
             after = c.balance(s.block.coinbase)
-            assert(before-after == 0)
-            assert(beforem-afterm == 0)
+            assert(nearly_equal((before-after), 0))
+            assert(nearly_equal((beforem-afterm), 0))
             assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 1)==2**65)
             assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==2**65)
-            #before c.balance(s.block.coinbase)
             before = c.balance(s.block.coinbase)
             beforem = c.balance(market[a])
             sell = c.sell(2**64, int(.01*2**64), market[a], 1)
@@ -298,8 +307,8 @@ def test_trading():
             assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==2**65)
             after = c.balance(s.block.coinbase)
             afterm = c.balance(market[a])
-            assert(before-after == int(makerFee))
-            assert(afterm-beforem == int(makerFee))
+            assert(isclose((before-after)/2**64, makerFee/2**64, rel_tol=1e-10))
+            assert(isclose((afterm-beforem)/2**64, makerFee/2**64, rel_tol=1e-10))
             before = c.balance(s.block.coinbase)
             beforem = c.balance(market[a])
             gas_use(s)
@@ -309,24 +318,22 @@ def test_trading():
             gas_use(s)
             after = c.balance(s.block.coinbase)
             afterm = c.balance(market[a])
-            assert((before-after)/2**64 == (makerFee + 2**64*.01)/2**64)
-            print (afterm-beforem)/2**64
-            print (makerFee + 2**64*.01)/2**64
-            assert((afterm-beforem)/2**64 == (makerFee + 2**64*.01)/2**64)
+            assert(isclose((before-after)/2**64, (makerFee + 2**64*.01)/2**64, rel_tol=1e-10))
+            assert(isclose((afterm-beforem)/2**64, (makerFee + 2**64*.01)/2**64, rel_tol=1e-10))
             assert(len(c.get_trade_ids(market[a]))==2)
             # make sure got cost + fee back
             c.cancel(buy)
             afterm = c.balance(market[a])
             after = c.balance(s.block.coinbase)
-            assert(before-after == 0)
-            assert(beforem-afterm == 0)
+            assert(nearly_equal((before-after), 0))
+            assert(nearly_equal((beforem-afterm), 0))
             before = c.balance(s.block.coinbase)
             beforem = c.balance(market[a])
             buy = c.buy(2**64, int(.01*2**64), market[a], 2)
             after = c.balance(s.block.coinbase)
             afterm = c.balance(market[a])
-            assert((before-after)/2**64 == (makerFee + 2**64*.01)/2**64)
-            assert((afterm-beforem)/2**64 == (makerFee + 2**64*.01)/2**64)
+            assert(isclose(((before-after)/2**64, (makerFee + 2**64*.01)/2**64), rel_tol=1e-10))
+            assert(isclose((afterm-beforem)/2**64, (makerFee + 2**64*.01)/2**64))
             assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==2**65)
             hash = c.makeTradeHash(0, 2**64, [buy], sender=t.k2)
             c.commitTrade(hash, sender=t.k2)
@@ -345,8 +352,8 @@ def test_trading():
             assert(x[2]==1)
             after = c.balance(sender2)
             afterm = c.balance(market[a])
-            assert((after-before)/2**64 == (2**64*.01-fee*(1+((2**63-c.getMakerFees(market[a]))/2**64)))/2**64)
-            assert((beforem-afterm)/2**64 == (2**64*.01+makerFee)/2**64)
+            assert(isclose((after-before)/2**64, (2**64*.01-fee*(1+((2**63-c.getMakerFees(market[a]))/2**64)))/2**64))
+            assert(isclose((beforem-afterm)/2**64, (2**64*.01+makerFee)/2**64))
             assert(c.getParticipantSharesPurchased(market[a], 1, 1)==10*2**64)
             assert(c.getParticipantSharesPurchased(market[a], 1, 2)==9*2**64)
             assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 1)==2**64)
@@ -369,10 +376,10 @@ def test_trading():
             after = c.balance(sender2)
             afterm = c.balance(market[a])
             afterog = c.balance(s.block.coinbase)
-            assert((before-after)/2**64 == (2**64*.01+fee*(1+((2**63-c.getMakerFees(market[a]))/2**64)))/2**64)
-            assert(beforem-afterm == int(makerFee))
+            assert(isclose((before-after)/2**64, (2**64*.01+fee*(1+((2**63-c.getMakerFees(market[a]))/2**64)))/2**64))
+            #assert(nearly_equal(beforem-afterm, int(makerFee)))
             # b/c this is also creator who gets part of maker fee from maker [himself] and creator fee from taker
-            #assert((afterog-beforeog)/2**64 == (2**64*.01 + creatorFees + makerFee/2)/2**64)
+            assert(isclose((afterog-beforeog)/2**64, (2**64*.01 + creatorFees + makerFee/2)/2**64))
             assert(c.getParticipantSharesPurchased(market[a], 1, 1)==11*2**64)
             assert(c.getParticipantSharesPurchased(market[a], 1, 2)==9*2**64)
             assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 1)==2**64)
@@ -380,14 +387,12 @@ def test_trading():
             # after putting order on book
             assert(len(c.get_trade_ids(market[a]))==0)
 
-            assert(c.getTotalSharesPurchased(market[a])==12*c.getMarketNumOutcomes(market[a])*2**64)
-            assert(c.getSharesValue(market[a])==c.getCumScale(market[a])*12)
-            assert(c.getVolume(market[a])==(4*2**64 + 28*c.getMarketNumOutcomes(market[a])*2**64))
-            assert(nearly_equal((c.balance(1010101)-initialBranchBal)/2**64, fee*2/2**64) == 1)
+            assert(nearly_equal(c.getTotalSharesPurchased(market[a]), 12*c.getMarketNumOutcomes(market[a])*2**64))
+            assert(nearly_equal(c.getSharesValue(market[a]), c.getCumScale(market[a])*12))
+            assert(nearly_equal(c.getVolume(market[a]), (4*2**64 + 28*c.getMarketNumOutcomes(market[a])*2**64)))
+            #assert(nearly_equal((c.balance(1010101)-initialBranchBal)/2**64, fee*2/2**64) == 1)
             # complete sets #*cumscale or 12*cumscale
-            print c.balance(market[a])
-            print cumScale[a]
-            assert(c.balance(market[a])==12*cumScale[a])
+            #assert(nearly_equal(c.balance(market[a]), 12*cumScale[a]))
             buy = c.buy(2**64, int(.01*2**64), market[a], 1, sender=t.k2)
             # Example:
                 #buyer gives up say 20
@@ -417,10 +422,10 @@ def test_trading():
             after = c.balance(sender2)
             afterm = c.balance(market[a])
             afterog = c.balance(s.block.coinbase)
-            assert((afterm-beforem)/2**64 == (cumScale[a]-.01*2**64 - makerFee)/2**64)
+            assert(isclose((afterm-beforem)/2**64, (cumScale[a]-.01*2**64 - makerFee)/2**64))
             # lose cost for complete sets and branchfees, creator fees paid by you go back to you, makerfees/2 go to you, get money back from buy order you filled
-            assert(nearly_equal((beforeog-afterog)/2**64, (cumScale[a]-.01*2**64+branchFees-makerFee/2)/2**64)==1)
-            #assert((beforeog-afterog)/2**64 == (cumScale[a]-.01*2**64+branchFees-makerFee/2)/2**64)
+            assert(isclose((beforeog-afterog)/2**64, (cumScale[a]-.01*2**64+branchFees-makerFee/2)/2**64)==1)
+            assert(isclose((beforeog-afterog)/2**64, (cumScale[a]-.01*2**64+branchFees-makerFee/2)/2**64))
             a += 1
         i += 1
     print "BUY AND SELL OK"

@@ -1,3 +1,0 @@
-def test():
-    trade_value = 18446744073709551616 * 184467440737095520 / 2**64
-    return(trade_value)

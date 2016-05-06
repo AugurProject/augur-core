@@ -568,9 +568,12 @@ macro ethic_catch($x):
     # -5: Event forked and not final yet
     # -6: bonded pushed forward market not ready to be resolved
     # -7: event not reportable >.99
+    # -8: market isn't in branch
 # if market's events have moved due to a fork branch is the new fork
 def closeMarket(branch, market):
     refund()
+    if(self.getBranchID(market)!=branch):
+        return(-8)
     if(self.balance(market)<=0):
         return(-1)
     numberEvents = self.getNumEvents(market)
@@ -632,7 +635,7 @@ def closeMarket(branch, market):
     else:
         return(0)
 
-# @return 1 if success        
+# @return 1 if success
 # Errors:
     # 0: reporting not done
     # -1: trader doesn't exist
@@ -676,10 +679,10 @@ def claimProceeds(branch, market):
 
 macro scalar($event):
     ((self.getMaxValue($event)!=TWO || self.getMinValue($event)!=ONE) && self.getNumOutcomes($event)==2)
-    
+
 macro binary($event):
     (self.getNumOutcomes($event)==2 and ONE*self.getMaxValue($event)==TWO and self.getMinValue($event)==ONE)
-    
+
 macro categorical($event):
     (self.getNumOutcomes($event)>2)
 inset('refund.se')
@@ -694,6 +697,8 @@ def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnl
     if(periodLength<=0 || !self.getPeriodLength(parent) || description==0):
         return(-1)
 
+    if(tradingFee < 0 or tradingFee > 2**62):
+        return(-1)
     parentPeriod = self.getVotePeriod(parent)
 
     branchInfo = string(8*32+len(description))
@@ -2509,6 +2514,8 @@ def exchangeRate(branch):
 def fork(event, branch, forkedOverEthicality):
     if(!self.getRoundTwo(event) || self.getFinal(event) || self.getForked(event)):
         return(-1)
+    if(self.getBranch(event)!=branch):
+        return(0)
     # if in last 48 hr of period
     if(block.timestamp/self.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/self.getPeriodLength(branch)) && self.getUncaughtOutcome(event)!=0 && !self.getForked(event)):
         bond = 184467440737095520*self.getTotalRep(branch)/ONE
@@ -2547,10 +2554,12 @@ def fork(event, branch, forkedOverEthicality):
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
 # branch is orig. branch
 # market creator pay for or bond person pay for?
-def resolveForkedEvent(branch, event, eventIndex, votePeriod):
+def resolveForkedEvent(branch, event, votePeriod):
     refund()
     bond = 100*ONE
     votedOnAgain = 0
+    if(self.getBranch(event)!=branch):
+        return(0)
     if(self.getVotePeriod(branch) > (self.getExpiration(event) / self.getPeriodLength(branch))):
         votedOnAgain = 1
     if(!self.getForked(event)):
@@ -2766,7 +2775,7 @@ def penalizeOnForkedEvent(branch, event):
     return(1)
 
 
-def proportionCorrectForkEvent(event, branch, period):
+def proportionCorrectForkEvent(event):
     refund()
     p = 0
     outcome = catch(self.getForkOutcome(event))
@@ -2803,9 +2812,6 @@ macro abs($a):
     if($a<0):
         $a = -$a
     $a
-def test():
-    trade_value = 18446744073709551616 * 184467440737095520 / 2**64
-    return(trade_value)
 macro refund():
     if(msg.value > 0):
         send(msg.sender, msg.value)
@@ -3172,7 +3178,9 @@ def setInitialReporters(parent, branchID):
 
 def claimInitialRep(parent, branchID):
     refund()
-    #have 1 month to claim
+    if(self.getParent(branchID)!=parent):
+        return(0)
+    # have 1 month to claim
     # make sure user can only claim once, use before rep of period where fork was initiated in todo
     if(self.repIDToIndex(branchID, msg.sender)==0 && block.timestamp < (self.getCreationDate(branchID) + TWENTYFOURHR*30)):
         i = self.Reporting[branchID].numberReporters

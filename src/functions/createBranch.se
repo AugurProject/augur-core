@@ -36,6 +36,8 @@ def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnl
     if(periodLength<=0 || !BRANCHES.getPeriodLength(parent) || description==0):
         return(-1)
 
+    if(tradingFee < 0 or tradingFee > 2**62):
+        return(-1)
     parentPeriod = BRANCHES.getVotePeriod(parent)
 
     branchInfo = string(8*32+len(description))

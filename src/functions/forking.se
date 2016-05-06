@@ -128,6 +128,8 @@ def exchangeRate(branch):
 def fork(event, branch, forkedOverEthicality):
     if(!EVENTS.getRoundTwo(event) || EVENTS.getFinal(event) || EVENTS.getForked(event)):
         return(-1)
+    if(EVENTS.getBranch(event)!=branch):
+        return(0)
     # if in last 48 hr of period
     if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENT.getForked(event)):
         bond = 184467440737095520*REPORTING.getTotalRep(branch)/ONE
@@ -166,10 +168,12 @@ def fork(event, branch, forkedOverEthicality):
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
 # branch is orig. branch
 # market creator pay for or bond person pay for?
-def resolveForkedEvent(branch, event, eventIndex, votePeriod):
+def resolveForkedEvent(branch, event, votePeriod):
     refund()
     bond = 100*ONE
     votedOnAgain = 0
+    if(EVENTS.getBranch(event)!=branch):
+        return(0)
     if(BRANCHES.getVotePeriod(branch) > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
         votedOnAgain = 1
     if(!EVENTS.getForked(event)):
@@ -385,7 +389,7 @@ def penalizeOnForkedEvent(branch, event):
     return(1)
 
 
-def proportionCorrectForkEvent(event, branch, period):
+def proportionCorrectForkEvent(event):
     refund()
     p = 0
     outcome = catch(EVENTS.getForkOutcome(event))

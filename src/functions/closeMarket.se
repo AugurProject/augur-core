@@ -71,9 +71,12 @@ macro ethic_catch($x):
     # -5: Event forked and not final yet
     # -6: bonded pushed forward market not ready to be resolved
     # -7: event not reportable >.99
+    # -8: market isn't in branch
 # if market's events have moved due to a fork branch is the new fork
 def closeMarket(branch, market):
     refund()
+    if(MARKETS.getBranchID(market)!=branch):
+        return(-8)
     if(CASH.balance(market)<=0):
         return(-1)
     numberEvents = MARKETS.getNumEvents(market)
@@ -135,7 +138,7 @@ def closeMarket(branch, market):
     else:
         return(0)
 
-# @return 1 if success        
+# @return 1 if success
 # Errors:
     # 0: reporting not done
     # -1: trader doesn't exist
@@ -179,9 +182,9 @@ def claimProceeds(branch, market):
 
 macro scalar($event):
     ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
-    
+
 macro binary($event):
     (EVENTS.getNumOutcomes($event)==2 and ONE*EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
-    
+
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)
