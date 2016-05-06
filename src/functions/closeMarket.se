@@ -144,6 +144,8 @@ def closeMarket(branch, market):
     # -1: trader doesn't exist
 def claimProceeds(branch, market):
     refund()
+    if(MARKETS.getBranchID(market)!=branch):
+        return(-8)
     numberEvents = MARKETS.getNumEvents(market)
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)

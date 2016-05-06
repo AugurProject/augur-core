@@ -641,6 +641,8 @@ def closeMarket(branch, market):
     # -1: trader doesn't exist
 def claimProceeds(branch, market):
     refund()
+    if(self.getBranchID(market)!=branch):
+        return(-8)
     numberEvents = self.getNumEvents(market)
     tradingPeriod = self.getTradingPeriod(market)
     period = self.getVotePeriod(branch)
@@ -1197,7 +1199,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     # need at least 1.2M gas @ gas price to cover resolution + 1M for each additional event
     if(msg.value < (1200000*tx.gasprice + 1000000*tx.gasprice*(eventNum-1) + 500000*tx.gasprice)):
         return(0)
-    if(self.send(branch, creationFee) && send(MARKETS, msg.value-500000*tx.gasprice) && self.setInfo(marketID, description, tx.origin, creationFee) && self.addMarketToBranch(branch, marketID) && self.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee)):
+    if(self.send(branch, creationFee) && send(MARKETS, msg.value-500000*tx.gasprice) && self.setInfo(marketID, description, tx.origin, creationFee) && self.addMarketToBranch(branch, marketID) && self.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, block.number)):
         i = 0
         while i < len(events):
             self.addMarket(events[i], marketID)
@@ -3929,7 +3931,7 @@ inset('refund.se')
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, blockNum)
 
 def addFees(market, amount):
     self.Markets[market].fees += amount
@@ -3971,6 +3973,9 @@ def getTotalSharesPurchased(market):
 def getMarketEvent(market, index):
     refund()
     return(self.Markets[market].events[index])
+
+def getCreationBlock(market):
+    return(self.Markets[market].blockNum)
 
 def getMarketEvents(market):
     refund()
@@ -4052,7 +4057,7 @@ macro sharesPurchased($marketID):
     market($marketID).sharesPurchased
 
 # check that msg.sender is one of our function contracts
-def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy, creationFee):
+def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy, creationFee, block):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
@@ -4073,6 +4078,7 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, t
     self.Markets[marketID].tag3 = tag3
     self.Markets[marketID].makerFees = makerFees
     self.Markets[marketID].fees = creationFee
+    self.Markets[marketID].blockNum = block
     return(1)
 
 def addParticipant(market, address):

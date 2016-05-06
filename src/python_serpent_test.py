@@ -258,7 +258,7 @@ def test_trading():
             print c.balance(s.block.coinbase)
             print "Buy complete sets gas use"
             print gas_use(s)
-            if(market[2]):
+            if(a==2):
                 sellin = c.sell(2**64, int(.01*2**64), market[2], 3)
                 assert(sellin==1)
                 assert(c.cancel(sellin)==1)
@@ -287,7 +287,7 @@ def test_trading():
             assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==2**65)
             after = c.balance(s.block.coinbase)
             afterm = c.balance(market[a])
-            assert(len(c.get_trade_ids(market[a]))==1
+            assert(len(c.get_trade_ids(market[a]))==1)
             assert(isclose((before-after)/2**64, makerFee/2**64, rel_tol=1e-10))
             assert(isclose((afterm-beforem)/2**64, makerFee/2**64, rel_tol=1e-10))
             gas_use(s)
