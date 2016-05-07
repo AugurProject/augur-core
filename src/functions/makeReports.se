@@ -26,6 +26,7 @@ import events as EVENTS
 import markets as MARKETS
 import reporting as REPORTING
 import backstops as BACKSTOPS
+import forking as FORKING
 import fxpFunctions as FXP
 inset('refund.se')
 
@@ -105,7 +106,7 @@ def submitReport(event, salt, report, ethics):
         realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
         if(self.makeHash(salt, report, eventID, sender)!=realHash || realHash==0):
             return(-3)
-        forkedOverEthicality = BACKSTOPS.getForkedOverEthicality(event)
+        forkedOverEthicality = FORKING.getForkedOverEthicality(event)
         forkedOverThisEvent = 0
         if(BRANCHES.getEventForkedOver(branch) == event):
             forkedOverThisEvent = 1

@@ -7,6 +7,7 @@
 import branches as BRANCHES
 import events as EVENTS
 import backstops as BACKSTOPS
+import roundTwo as ROUNDTWO
 import expiringEvents as EXPEVENTS
 inset('refund.se')
 
@@ -61,7 +62,7 @@ def move_event(event):
             EVENTS.setEthics(event, 0)
             EVENTS.setUncaughtOutcome(event, 0)
             # return bond if it's a round 2 event and make it not one anymore
-            BACKSTOPS.roundTwoResolve(branch, event, eventIndex, votePeriod)
+            ROUNDTWO.roundTwoResolve(branch, event, eventIndex, votePeriod)
             
             # leave event here
             expPeriod = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
@@ -78,7 +79,7 @@ def move_event(event):
             EVENTS.setEthics(event, 0)
             EVENTS.setUncaughtOutcome(event, 0)
             # return bond if it's a round 2 event and make it not one anymore
-            BACKSTOPS.roundTwoResolve(branch, event, eventIndex, votePeriod)
+            ROUNDTWO.roundTwoResolve(branch, event, eventIndex, votePeriod)
 
             # move event to fork
             expPeriod = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
