@@ -422,7 +422,22 @@ macro binary($event):
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)
     
+macro ethic_catch($x):
+    if($x < ONEHALF):
+        0
+    else:
+        ONE
+
 macro abs($a):
     if($a<0):
         $a = -$a
     $a
+    
+# Bins values to 1, 1.5, 2
+macro catch($x):
+    if($x < (BAD - CATCH_TOLERANCE)):
+        NO
+    elif($x > (BAD + CATCH_TOLERANCE)):
+        YES
+    else:
+        BAD
