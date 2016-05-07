@@ -296,9 +296,13 @@ def broadcast_code(evm, code, fullname):
         time.sleep(BLOCKTIME)
         receipt = RPC.eth_getTransactionReceipt(txhash)["result"]
         if receipt is not None:
-            check = RPC.eth_getCode(receipt["contractAddress"])['result']
-            if check != '0x' and check[2:] in evm:
-                return receipt["contractAddress"]
+            got_code = RPC.eth_getCode(receipt["contractAddress"], "latest")
+            if 'error' not in got_code:
+                check = got_code['result']
+                if check != '0x' and check[2:] in evm:
+                    return receipt["contractAddress"]
+            else:
+                print(got_code['error'])
         tries += 1
     user_input = raw_input("broadcast failed after %d tries! Try again? [Y/n]" % tries)
     if user_input in 'Yy':
@@ -327,7 +331,7 @@ def get_compile_order():
     for directory, subdirs, files in os.walk(SOURCE):
         for f in files:
             if directory.endswith('data_api') or directory.endswith('functions'):
-                if f.endswith('.se') and f != 'output.se':
+                if f.endswith('.se') and f not in ['output.se', 'refund.se', 'forking.se']:
                     contract_fullnames.append(os.path.join(directory, f))
 
     line_check, dependency_extractor = get_dep_extractors()
