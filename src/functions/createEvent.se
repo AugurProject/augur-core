@@ -49,7 +49,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         eventinfo[0] = EVENT                                        #typecode
         eventinfo[1] = branch                                       #branchID
         eventinfo[2] = expDate                                      #expiration date
-        eventinfo[3] = tx.origin                                    #creator address
+        eventinfo[3] = msg.sender                                 #creator address
         eventinfo[4] = periodLength
         eventinfo[5] = minValue                                     #minimum outcome value
         eventinfo[6] = maxValue                                     #maximum outcome value
@@ -66,7 +66,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         # see which future period it expires in && put the event in that bin
         # event voting periods - expDate / periodLength gives you the voting period #
         futurePeriod = expDate / periodLength
-        if(INFO.setInfo(eventID, description, tx.origin, 0) && EVENTS.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes, resolution)):
+        if(INFO.setInfo(eventID, description, msg.sender, 0) && EVENTS.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes, resolution)):
             return(eventID)
         else:
             return(0)

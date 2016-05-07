@@ -31,7 +31,6 @@ import expiringEvents as EXPEVENTS
 import trades as TRADES
 inset('refund.se')
 
-event creationBlock(market:indexed)
 
 macro POINTZEROSIX: 1106804644422573056
 
@@ -146,7 +145,6 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     marketinfo[10] = tradingFee
     mcopy(marketinfo + 11*32, description, chars=len(description))
     marketID = sha256(marketinfo, chars=len(marketinfo))
-    log(type=creationBlock, marketID)
     CASH.initiateOwner(marketID)
     # pay numOutcomes fee
     # if it's already been created return 0

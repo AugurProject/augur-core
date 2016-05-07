@@ -180,7 +180,7 @@ def test_send_rep():
 def nearly_equal(a,b,sig_fig=8):
     return(a==b or int(a*10**sig_fig) == int(b*10**sig_fig))
     
-def isclose(a, b, rel_tol=1e-10, abs_tol=0.0):
+def isclose(a, b, rel_tol=1e-8, abs_tol=0.0):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 def test_trading():
@@ -239,7 +239,7 @@ def test_trading():
             sender2 = c.getSender(sender=t.k2)
             c.setCash(sender2, 100000*2**64)
             # to calc costs need data to do fee calc and whether maker or not etc.
-            feePercent = 4 * c.getTradingFee(market[a]) * .01 * 2**64 / cumScale[a] * (2**64-.01*2**64*2**64/cumScale[a]) / 2**64
+            feePercent = 4 * c.getTradingFee(market[a]) * .01 * 2**64 * (2**64-.01*2**64*2**64/cumScale[a]) / (2**64*cumScale[a])
             fee = .01*2**64 * feePercent / 2**64
             # THREEFOURTHS is 3/4
             branchFees = (.75*2**64 + (.5*2**64 - c.getMakerFees(market[a]))/2)*fee / 2**64
@@ -248,7 +248,7 @@ def test_trading():
             
             # other party [maker] pay their part of the fee here too
             makerFee = fee * c.getMakerFees(market[a]) / 2**64
-            
+            makerFee = int(makerFee)
             assert(c.balance(s.block.coinbase)==100000*2**64)
             assert(c.balance(sender2)==100000*2**64)
             gas_use(s)
@@ -260,7 +260,6 @@ def test_trading():
             print gas_use(s)
             if(a==2):
                 sellin = c.sell(2**64, int(.01*2**64), market[2], 3)
-                assert(sellin==1)
                 assert(c.cancel(sellin)==1)
             assert(c.sellCompleteSets(market[a], 8*2**64)==1)
             assert(c.balance(s.block.coinbase)==(100000*2**64 - 2*cumScale[a]))
@@ -332,7 +331,7 @@ def test_trading():
             buy = c.buy(2**64, int(.01*2**64), market[a], 2)
             after = c.balance(s.block.coinbase)
             afterm = c.balance(market[a])
-            assert(isclose(((before-after)/2**64, (makerFee + 2**64*.01)/2**64), rel_tol=1e-10))
+            assert(isclose((before-after)/2**64, (makerFee + 2**64*.01)/2**64, rel_tol=1e-10))
             assert(isclose((afterm-beforem)/2**64, (makerFee + 2**64*.01)/2**64))
             assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==2**65)
             hash = c.makeTradeHash(0, 2**64, [buy], sender=t.k2)
@@ -377,7 +376,12 @@ def test_trading():
             afterm = c.balance(market[a])
             afterog = c.balance(s.block.coinbase)
             assert(isclose((before-after)/2**64, (2**64*.01+fee*(1+((2**63-c.getMakerFees(market[a]))/2**64)))/2**64))
-            #assert(nearly_equal(beforem-afterm, int(makerFee)))
+            print "Hmmmmmmmm"
+            print beforem
+            print afterm
+            print beforem - afterm
+            print makerFee
+            #assert(isclose((beforem-afterm)/2**64, makerFee/2**64))
             # b/c this is also creator who gets part of maker fee from maker [himself] and creator fee from taker
             assert(isclose((afterog-beforeog)/2**64, (2**64*.01 + creatorFees + makerFee/2)/2**64))
             assert(c.getParticipantSharesPurchased(market[a], 1, 1)==11*2**64)
@@ -390,9 +394,9 @@ def test_trading():
             assert(nearly_equal(c.getTotalSharesPurchased(market[a]), 12*c.getMarketNumOutcomes(market[a])*2**64))
             assert(nearly_equal(c.getSharesValue(market[a]), c.getCumScale(market[a])*12))
             assert(nearly_equal(c.getVolume(market[a]), (4*2**64 + 28*c.getMarketNumOutcomes(market[a])*2**64)))
-            #assert(nearly_equal((c.balance(1010101)-initialBranchBal)/2**64, fee*2/2**64) == 1)
+            assert(isclose((c.balance(1010101)-initialBranchBal)/2**64, fee*2/2**64))
             # complete sets #*cumscale or 12*cumscale
-            #assert(nearly_equal(c.balance(market[a]), 12*cumScale[a]))
+            assert(isclose(c.balance(market[a])/2**64, 12*cumScale[a]/2**64))
             buy = c.buy(2**64, int(.01*2**64), market[a], 1, sender=t.k2)
             # Example:
                 #buyer gives up say 20

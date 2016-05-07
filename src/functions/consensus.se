@@ -510,7 +510,7 @@ macro abs($a):
         $a = -$a
     $a
     
-def proportionCorrect(event, branch, period):
+def proportionCorrect(event):
     refund()
     p = 0
     outcome = catch(EVENTS.getUncaughtOutcome(event))

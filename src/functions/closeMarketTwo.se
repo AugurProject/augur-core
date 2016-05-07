@@ -4,7 +4,7 @@ import events as EVENTS
 inset('refund.se')
 
 # # of winningOutcomes is 2
-def twoOutcomes(market, winningOutcome: arr, events: arr):
+def twoOutcomes(market, winningOutcome: arr, events: arr, sender):
     refund()
     # look for the scalar
     scalar = 0
@@ -27,7 +27,7 @@ def twoOutcomes(market, winningOutcome: arr, events: arr):
     #share one goes with the low side of the calc
     pricePerShare1 = ONE - pricePerShare1
     # distribute cashcoin to the people who won money by holding winning shares
-    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    participantNumber = MARKETS.getParticipantNumber(market, sender)
     if(participantNumber == -1):
         return(-1)
     participant = MARKETS.getParticipantID(market, participantNumber)

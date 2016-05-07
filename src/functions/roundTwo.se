@@ -60,6 +60,7 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
     overruled = 1
     bond = 100*ONE
     votedOnAgain = 0
+    eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     if(scalar(event) or categorical(event)):
         if(BACKSTOPS.getOriginalOutcome(event) == EVENTS.getUncaughtOutcome(event) && BACKSTOPS.getOriginalEthicality(event)==ethic_catch(EVENTS.getEthical(event))):
             overruled = 0

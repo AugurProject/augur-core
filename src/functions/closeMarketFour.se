@@ -4,7 +4,7 @@ import events as EVENTS
 inset('refund.se')
 
 # four winning outcomes
-def fourOutcomes(market, winningOutcome: arr, events: arr):
+def fourOutcomes(market, winningOutcome: arr, events: arr, sender):
     refund()
     # first is low-low && whatever, second is high-low, third is low-high, fourth is high-high
     scalarOne = -1
@@ -49,7 +49,7 @@ def fourOutcomes(market, winningOutcome: arr, events: arr):
     # both fixed point so div by ONE to keep in fixed point
     pricePerShare1 = outcomeOneLowSidePercent * outcomeTwoLowSidePercent / ONE
     # distribute cashcoin to the people who won money by holding winning shares
-    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    participantNumber = MARKETS.getParticipantNumber(market, sender)
     if(participantNumber == -1):
         return(-1)
     participant = MARKETS.getParticipantID(market, participantNumber)

@@ -4,10 +4,10 @@ inset('refund.se')
 
 # mutex result non scalar not .5
 # one winning outcome
-def oneOutcome(market, winningOutcome):
+def oneOutcome(market, winningOutcome, sender):
     refund()
     # distribute cashcoin to the people who won money by holding winning shares
-    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    participantNumber = MARKETS.getParticipantNumber(market, sender)
     if(participantNumber == -1):
         return(-1)
     sharesOwned = MARKETS.getParticipantSharesPurchased(market, participantNumber, winningOutcome)

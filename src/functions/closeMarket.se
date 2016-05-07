@@ -171,13 +171,13 @@ def claimProceeds(branch, market):
         if(winningOutcomes[0]==0):
             return(0)
         if(winningOutcomes[1]==0):
-            outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0])
+            outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender)
         elif(winningOutcomes[7]):
-            outcome = CLOSEEIGHT.eightOutcomes(market, winningOutcomes, events)
+            outcome = CLOSEEIGHT.eightOutcomes(market, winningOutcomes, events, msg.sender)
         elif(winningOutcomes[3]):
-            outcome = CLOSEFOUR.fourOutcomes(market, winningOutcomes, events)
+            outcome = CLOSEFOUR.fourOutcomes(market, winningOutcomes, events, msg.sender)
         elif(winningOutcomes[1]):
-            outcome = CLOSETWO.twoOutcomes(market, winningOutcomes, events)
+            outcome = CLOSETWO.twoOutcomes(market, winningOutcomes, events, msg.sender)
         return(outcome)
     else:
         return(0)

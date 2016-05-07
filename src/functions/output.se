@@ -62,12 +62,10 @@ macro FAILURE: 0
 macro INSUFFICIENT_BALANCE: 10
 macro TRADE_ALREADY_EXISTS: 21
 
-macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participantNumber):
+macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participantNumber, $fee):
     trade = [$type, $market, $amount, $price, msg.sender, block.number, $outcome]
     trade_id = sha256(trade, items=7)
-    trading_fee = self.getTradingFee($market)
     cumScale = self.getCumScale($market)
-    fee = fee_percent(trading_fee, $price, $amount, cumScale) * self.getMakerFees($market) / ONE
 
     # Save trade
     if !self.getID(trade_id):
@@ -78,13 +76,13 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
         # Update available and trading amounts for asks
         if $type == ASK:
             self.modifyParticipantShares($market, $participantNumber, $outcome, -$amount, 0)
-            if(fee):
-                self.send($market, ($amount * $price / ONE * fee / ONE))
+            if($fee):
+                self.send($market, ($amount * $price * $fee / ONE^2))
         # Send / escrow cash for bids
         if $type == BID:
             self.send($market, $amount * $price / ONE)
-            if(fee):
-                self.send($market, ($amount * $price / ONE * fee / ONE))
+            if($fee):
+                self.send($market, ($amount * $price * $fee / ONE^2))
     else:
         return(TRADE_ALREADY_EXISTS)
     log(type=log_add_tx, $market, msg.sender, $type, $price, $amount, $outcome, trade_id)
@@ -111,7 +109,7 @@ def cancel(trade_id):
     branch = self.getBranchID(market)
     trading_fee = self.getTradingFee(market)
     cumScale = self.getCumScale(market)
-    fee = fee_percent(trading_fee, price, amount, cumScale) * self.getMakerFees(market) / ONE
+    fee = fee_percent(trading_fee, price, cumScale) * self.getMakerFees(market) / ONE
     # Check the owner
     if msg.sender == owner:
         # Clear the trade first
@@ -119,15 +117,15 @@ def cancel(trade_id):
         # Issue refunds
         if type == BID:
             # cash refund
-            amt = amount * price / ONE * (fee + ONE) / ONE
+            amt = amount * price * (fee + ONE) / ONE^2
             self.subtractCash(market, amt)
             self.addCash(msg.sender, amt)
         elif type == ASK:
             # shares refund
             participantNumber = self.getParticipantNumber(market, msg.sender)
             self.modifyParticipantShares(market, participantNumber, outcome, amount, 1)
-            self.subtractCash(market, (amount * price / ONE * fee / ONE))
-            self.addCash(msg.sender, (amount * price / ONE * fee / ONE))
+            self.subtractCash(market, (amount * price * fee / ONE^2))
+            self.addCash(msg.sender, (amount * price * fee / ONE^2))
         # Log cancellation
         log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type)
         return(SUCCESS)
@@ -146,10 +144,9 @@ macro remove_trade($trade_id, $market):
     # -4: not enough money or shares
 #
 # costs 532k
+# smallest trade value is 0.00000001
 def buy(amount, price, market, outcome):
     refund()
-    if(amount <= 0 or price <= 0):
-        return(-1)
     branch = self.getBranchID(market)
     if(self.getOracleOnly(branch)):
         return(-2)
@@ -159,21 +156,18 @@ def buy(amount, price, market, outcome):
         participantNumber = self.addParticipant(market, tx.origin)
     trading_fee = self.getTradingFee(market)
     cumScale = self.getCumScale(market)
-    if(price > cumScale):
+    fee = fee_percent(trading_fee, price, cumScale) * self.getMakerFees(market) / ONE
+    if(price>cumScale or amount*price < 3402823669209384705829531287552 or amount*price >= 2**190):
         return(0)
-    fee = fee_percent(trading_fee, price, amount, cumScale) * self.getMakerFees(market) / ONE
-    if(amount*price < ONE or price>cumScale):
-        return(0)
-    if(self.balance(tx.origin) < (amount * price / ONE * (fee + ONE) /ONE)):
+    if(self.balance(tx.origin) < (amount * price * (fee + ONE) / ONE^2)):
         return(-4)
-    save_trade(BID, amount, price, market, outcome, branch, participantNumber)
+    save_trade(BID, amount, price, market, outcome, branch, participantNumber, fee)
     return(FAILURE)
 
 # cost 532k
+# smallest trade value is 0.00000001
 def sell(amount, price, market, outcome):
     refund()
-    if(amount <= 0 or price <= 0):
-        return(-1)
     branch = self.getBranchID(market)
     if(self.getOracleOnly(branch)):
         return(-2)
@@ -184,14 +178,12 @@ def sell(amount, price, market, outcome):
         return(-4)
     trading_fee = self.getTradingFee(market)
     cumScale = self.getCumScale(market)
-    if(price > cumScale):
+    fee = fee_percent(trading_fee, price, cumScale) * self.getMakerFees(market) / ONE
+    if(price>cumScale or amount*price < 3402823669209384705829531287552L or amount*price >= 2**190):
         return(0)
-    fee = fee_percent(trading_fee, price, amount, cumScale) * self.getMakerFees(market) / ONE
-    if(amount*price < ONE or price>cumScale):
-        return(0)
-    if(self.balance(tx.origin) < (amount * price / ONE * fee / ONE)):
+    if(self.balance(tx.origin) < (amount * price * fee / ONE^2)):
         return(-4)
-    save_trade(ASK, amount, price, market, outcome, branch, participantNumber)
+    save_trade(ASK, amount, price, market, outcome, branch, participantNumber, fee)
     return(FAILURE)
 
 # Example:
@@ -242,13 +234,19 @@ def short_sell(buyer_trade_id, max_amount):
     trading_fee = self.getTradingFee(market)
     cumScale = self.getCumScale(market)
     amount = min(orig_amount, max_amount)
-    fee = amount * price / ONE * fee_percent(trading_fee, price, amount, cumScale) / ONE
+    if(amount < 0):
+        return(INSUFFICIENT_BALANCE)
+    fee = amount * price * fee_percent(trading_fee, price, cumScale) / ONE^2
     branchFees = (THREEFOURTHS+(ONEHALF - self.getMakerFees(market))/2)*fee / ONE
     creatorFees = (ONEFOURTH+(ONEHALF - self.getMakerFees(market))/2)*fee / ONE
     takerFeesTotal = branchFees + creatorFees
     cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)
     if(self.balance(tx.origin) < cost):
         return(INSUFFICIENT_BALANCE)
+
+    if(amount*price/ONE < 184467440738):
+        return(-4)
+
     numOutcomes = self.getMarketNumOutcomes(market)
     participantNumber = self.getParticipantNumber(market, tx.origin)
     # if participant doesn't exist in market, add them
@@ -308,6 +306,7 @@ def short_sell(buyer_trade_id, max_amount):
     # -1: oracle only branch
     # -2: bad trade hash
     # -3: trader doesn't exist / own shares in this market
+    # -4: must buy at least .00000001 in value
     # 10: insufficient balance
 #Exchange(Market, outcome, sender, amount, receiver, payment) – transfers amount shares from sender to receiver for payment amount
 #max value is max amount to spend to buy [including fees]
@@ -356,14 +355,14 @@ def trade(max_value, max_amount, trade_ids:arr):
         branch = self.getBranchID(market)
         trading_fee = self.getTradingFee(market)
         cumScale = self.getCumScale(market)
-        fee = fee_percent(trading_fee, price, amount, cumScale)
+        fee = fee_percent(trading_fee, price, cumScale)
 
         # Fill buy order
         if type == BID:
             # Get available balance of shares
             participantNumber = self.getParticipantNumber(market, tx.origin)
             balance = self.getParticipantSharesPurchased(market, participantNumber, outcome)
-            if balance > 0:
+            if(balance > 0 and max_amount > 0):
                 if(self.getParticipantID(market, participantNumber) != tx.origin):
                     return(-3)
                 sender = self.getParticipantNumber(market, msg.sender)
@@ -372,6 +371,9 @@ def trade(max_value, max_amount, trade_ids:arr):
                 fill = min(amount, min(balance, max_amount))
                 # Calculate value
                 value = (fill * price)/ONE
+                # must trade at least 0.00000001 in value
+                if(value < 184467440738):
+                    return(-4)
                 # Update trade amount or remove
                 if fill < amount:
                     self.fill_trade(trade_id, fill)
@@ -414,7 +416,9 @@ def trade(max_value, max_amount, trade_ids:arr):
                 trade_value = amount * price / ONE
                 # Determine fill value
                 value = min(max_value, trade_value)
-                fee = trade_value * fee / ONE
+                if(value < 184467440738):
+                    return(-4)
+                fee = value * fee / ONE
                 branchFees = (THREEFOURTHS+(ONEHALF - self.getMakerFees(market))/2)*fee / ONE
                 creatorFees = (ONEFOURTH+(ONEHALF - self.getMakerFees(market))/2)*fee / ONE
                 takerFeesTotal = branchFees + creatorFees
@@ -527,8 +531,8 @@ def sellCompleteSets(market, amount):
     self.addCash(tx.origin, cost)
     return(1)
     
-macro fee_percent($market_fee, $price, $amount, $cumScale):
-    4 * $market_fee * $price / ($cumScale) * (ONE-$price*2**64/$cumScale) / ONE
+macro fee_percent($market_fee, $price, $cumScale):
+    4 * $market_fee * $price * (ONE-$price*2**64/$cumScale) / ($cumScale*ONE)
 inset('refund.se')
 
 # first param is the market, second param is the subcurrency contract
@@ -1073,7 +1077,6 @@ macro ethic_catch($x):
         ONE
 inset('refund.se')
 
-event creationBlock(market:indexed)
 
 macro POINTZEROSIX: 1106804644422573056
 
@@ -1188,7 +1191,6 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     marketinfo[10] = tradingFee
     mcopy(marketinfo + 11*32, description, chars=len(description))
     marketID = sha256(marketinfo, chars=len(marketinfo))
-    log(type=creationBlock, marketID)
     self.initiateOwner(marketID)
     # pay numOutcomes fee
     # if it's already been created return 0
@@ -1465,7 +1467,6 @@ def convertToActiveRep(branch, value):
             return(0)
     else:
         return(0)
-
 inset('refund.se')
 
 macro YES: TWO
@@ -1682,6 +1683,7 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
     overruled = 1
     bond = 100*ONE
     votedOnAgain = 0
+    eventID = self.getEvent(branch, votePeriod, eventIndex)
     if(scalar(event) or categorical(event)):
         if(self.getOriginalOutcome(event) == self.getUncaughtOutcome(event) && self.getOriginalEthicality(event)==ethic_catch(self.getEthical(event))):
             overruled = 0
@@ -2298,7 +2300,7 @@ macro abs($a):
         $a = -$a
     $a
     
-def proportionCorrect(event, branch, period):
+def proportionCorrect(event):
     refund()
     p = 0
     outcome = catch(self.getUncaughtOutcome(event))
