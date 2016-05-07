@@ -359,15 +359,15 @@ def get_compile_order():
     while avail:
         curr = avail.pop()
         sorted_nodes.append(curr)
-        print "\n" + curr
+        # print "\n" + curr
         for item, edges in nodes.items():
             if curr in edges:
                 edges.remove(curr)
-            print item, edges
+            # print item, edges
             if not edges:
                 avail.append(item)
                 nodes.pop(item)
-    print sorted_nodes
+    # print sorted_nodes
     return sorted_nodes, nodes_copy
 
 def process_imports(fullname):

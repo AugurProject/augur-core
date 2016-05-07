@@ -308,7 +308,7 @@ def short_sell(buyer_trade_id, max_amount):
     # -3: trader doesn't exist / own shares in this market
     # -4: must buy at least .00000001 in value
     # 10: insufficient balance
-#Exchange(Market, outcome, sender, amount, receiver, payment) – transfers amount shares from sender to receiver for payment amount
+#Exchange(Market, outcome, sender, amount, receiver, payment) - transfers amount shares from sender to receiver for payment amount
 #max value is max amount to spend to buy [including fees]
 #max amount is max shares to sell
 # 500k gas

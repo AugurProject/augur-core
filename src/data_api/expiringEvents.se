@@ -21,7 +21,8 @@
 
 import branches as BRANCHES
 import events as EVENTS
-import makeReports as MAKEREPORTS
+import fxpFunctions as FXP
+import reporting as REPORTING
 inset('refund.se')
 
 # [branchID][votingPeriod]
@@ -140,7 +141,7 @@ def getEventsToReportOn(branch, expDateIndex):
     i = 0
     while i < numEvents:
         events[i] = self.EventsExpDates[branch][expDateIndex].events[i]
-        reportingThreshold = MAKEREPORTS.calculateReportingThreshold(branch, events[i], expDateIndex)
+        reportingThreshold = self.calculateReportingThreshold(branch, events[i], expDateIndex)
         x = array(1)
         x[0] = tx.origin + events[i]
         shaHash = sha3(x, items=1)/ONE
@@ -150,6 +151,23 @@ def getEventsToReportOn(branch, expDateIndex):
             events[i+1] = 0
         i += 2
     return(events: arr)
+
+def calculateReportingThreshold(branch, eventID, votePeriod):
+    repConstant = self.getPeriodRepConstant(branch, votePeriod, msg.sender)
+    if(repConstant==0):
+        logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*ONE/REPORTING.getActiveRep(branch))
+        repConstant = FXP.fx_exp(22136092888451461120*logOutput/ONE) + 18446744073709552
+        expectedEventsForReporter = repConstant * self.getNumEventsToReportOn(branch, votePeriod)
+        total = expectedEventsForReporter
+        eventsInPeriod = self.getNumberEvents(branch, expDateIndex)-self.getNumRemoved(branch, votePeriod)
+        numRequiredEvents = self.getNumRequired(branch, votePeriod)
+        minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
+        if(total/ONE < minimum):
+            total = minimum*ONE
+            repConstant = repConstant*ratio / ONE
+        self.setPeriodRepConstant(branch, votePeriod, msg.sender, repConstant)
+    reportingThreshold = self.getLesserReportNum(branch, votePeriod, eventID)*repConstant*ONE
+    return(reportingThreshold)
     
 def getEventsRange(branch, expDateIndex, start, end):
     refund()

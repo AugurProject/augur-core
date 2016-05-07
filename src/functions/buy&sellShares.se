@@ -49,6 +49,9 @@ macro FAILURE: 0
 macro INSUFFICIENT_BALANCE: 10
 macro TRADE_ALREADY_EXISTS: 21
 
+macro fee_percent($market_fee, $price, $cumScale):
+    4 * $market_fee * $price * (ONE-$price*2**64/$cumScale) / ($cumScale*ONE)
+
 macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participantNumber, $fee):
     trade = [$type, $market, $amount, $price, msg.sender, block.number, $outcome]
     trade_id = sha256(trade, items=7)
@@ -212,7 +215,7 @@ def short_sell(buyer_trade_id, max_amount):
     if(owner == msg.sender or owner == tx.origin):
         return(5)
     # Make sure the trade has been mined, obvious HFT prevention
-    if block.number <= self.trades[trade_id].block:
+    if block.number <= trade[6]:
         return(TRADE_SAME_BLOCK_PROHIBITED)
     branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
@@ -295,7 +298,7 @@ def short_sell(buyer_trade_id, max_amount):
     # -3: trader doesn't exist / own shares in this market
     # -4: must buy at least .00000001 in value
     # 10: insufficient balance
-#Exchange(Market, outcome, sender, amount, receiver, payment) – transfers amount shares from sender to receiver for payment amount
+#Exchange(Market, outcome, sender, amount, receiver, payment) - transfers amount shares from sender to receiver for payment amount
 #max value is max amount to spend to buy [including fees]
 #max amount is max shares to sell
 # 500k gas
@@ -517,6 +520,3 @@ def sellCompleteSets(market, amount):
     CASH.subtractCash(market, cost)
     CASH.addCash(tx.origin, cost)
     return(1)
-    
-macro fee_percent($market_fee, $price, $cumScale):
-    4 * $market_fee * $price * (ONE-$price*2**64/$cumScale) / ($cumScale*ONE)

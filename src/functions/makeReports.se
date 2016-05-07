@@ -57,7 +57,7 @@ def submitReportHash(event, reportHash):
     else:
         if(EXPEVENTS.getLesserReportNum(branch, votePeriod, event)==0):
             EXPEVENTS.setLesserReportNum(branch, votePeriod, event, self.calculateReportTargetForEvent(branch, event, votePeriod))
-        reportingThreshold = self.calculateReportingThreshold(branch, event, votePeriod)
+        reportingThreshold = EXPEVENTS.calculateReportingThreshold(branch, event, votePeriod)
     x = array(1)
     x[0] = tx.origin + event
     # div by ONE b/c is out of 2**192 rather than 2**256 [to avoid looping around]
@@ -228,23 +228,6 @@ def calculateReportTargetForEvent(branch, eventID, votePeriod):
     lesser = max(canPayForThisManyReporters*ONE, numReportersOnMarket)
     EXPEVENTS.refundCost(msg.sender, EXPEVENTS.getSubsidy(branch, votePeriod, eventID))
     return(lesser)
-
-def calculateReportingThreshold(branch, eventID, votePeriod):
-    repConstant = EXPEVENTS.getPeriodRepConstant(branch, votePeriod, msg.sender)
-    if(repConstant==0):
-        logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*ONE/REPORTING.getActiveRep(branch))
-        repConstant = FXP.fx_exp(22136092888451461120*logOutput/ONE) + 18446744073709552
-        expectedEventsForReporter = repConstant * EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
-        total = expectedEventsForReporter
-        eventsInPeriod = EXPEVENTS.getNumberEvents(branch, expDateIndex)-EXPEVENTS.getNumRemoved(branch, votePeriod)
-        numRequiredEvents = EXPEVENTS.getNumRequired(branch, votePeriod)
-        minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
-        if(total/ONE < minimum):
-            total = minimum*ONE
-            repConstant = repConstant*ratio / ONE
-        EXPEVENTS.setPeriodRepConstant(branch, votePeriod, msg.sender, repConstant)
-    reportingThreshold = EXPEVENTS.getLesserReportNum(branch, votePeriod, eventID)*repConstant*ONE
-    return(reportingThreshold)
 
 # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
     # a^b=exp(b*ln(a))=e^(b*ln(a)).
