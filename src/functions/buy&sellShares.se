@@ -340,7 +340,7 @@ def trade(max_value, max_amount, trade_ids:arr):
         if(owner == msg.sender or owner == tx.origin):
             return(0)
         # Make sure the trade has been mined, obvious HFT prevention
-        if block.number <= self.trades[trade_id].block:
+        if block.number <= trade[6]:
             return(TRADE_SAME_BLOCK_PROHIBITED)
         branch = MARKETS.getBranchID(market)
         trading_fee = MARKETS.getTradingFee(market)
