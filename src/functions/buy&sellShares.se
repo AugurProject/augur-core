@@ -43,6 +43,7 @@ macro FAILURE: 0
 # Error codes
 macro INSUFFICIENT_BALANCE: 10
 macro TRADE_ALREADY_EXISTS: 21
+macro TRADE_SAME_BLOCK_PROHIBITED: 22
 
 macro fee_percent($market_fee, $price, $cumScale):
     4 * $market_fee * $price * (ONE-$price*2**64/$cumScale) / ($cumScale*ONE)

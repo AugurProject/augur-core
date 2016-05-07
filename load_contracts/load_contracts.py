@@ -331,7 +331,7 @@ def get_compile_order():
     for directory, subdirs, files in os.walk(SOURCE):
         for f in files:
             if directory.endswith('data_api') or directory.endswith('functions'):
-                if f.endswith('.se') and f not in ['output.se', 'refund.se', 'forking.se'] and not f.startswith('.~c9_invoke_'):
+                if f.endswith('.se') and f not in ['output.se', 'refund.se'] and not f.startswith('.~c9_invoke_'):
                     contract_fullnames.append(os.path.join(directory, f))
 
     line_check, dependency_extractor = get_dep_extractors()
@@ -359,15 +359,15 @@ def get_compile_order():
     while avail:
         curr = avail.pop()
         sorted_nodes.append(curr)
-        # print "\n" + curr
+        print "\n" + curr
         for item, edges in nodes.items():
             if curr in edges:
                 edges.remove(curr)
-            # print item, edges
+            print item, edges
             if not edges:
                 avail.append(item)
                 nodes.pop(item)
-    # print sorted_nodes
+    print sorted_nodes
     return sorted_nodes, nodes_copy
 
 def process_imports(fullname):
