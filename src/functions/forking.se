@@ -4,6 +4,12 @@
     #In the other class/branch, the event is readjudicated and remove the outcome on the pre fork branch and rep is redistributed as normal, except people who said the original outcome in the original fork lose rep.  
     # Note: Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets, which would be determined by the fork that represented reality, which would have a higher market cap.  Markets go to the most popular fork by default after 2 months.
 
+import branches as BRANCHES
+import events as EVENTS
+import backstops as BACKSTOPS
+import expiringEvents as EXPEVENTS
+inset('refund.se')
+
 # todo move to backstops data_api
 # branch and forkperiod and who won
 data forkResolved[][]
@@ -145,8 +151,8 @@ def fork(event, branch, forkedOverEthicality):
         newBranch = CREATEBRANCH.createSubbranch(text("fork"), BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), 0)
         REPORTING.setFork(newBranch)
         period = BRANCHES.getVotePeriod(newBranch)
-        EXPIRING.setEventRequired(newBranch, period+1, event)
-        EXPIRING.addEvent(newBranch, period+1, event)
+        EXPEVENTS.setEventRequired(newBranch, period+1, event)
+        EXPEVENTS.addEvent(newBranch, period+1, event)
         EVENTS.setExpiration(event, block.timestamp)
         self.forkData[event].originalBranch = branch
         self.forking[event].bondPoster = msg.sender
@@ -287,11 +293,11 @@ def penalizeOnForkedEvent(branch, event):
     p = self.proportionCorrectForkEvent(event)
     if(scalar(event) or categorical(event)):
         outcome = EVENTS.getForkOutcome(event)
-    oldRep = EXPIRING.getBeforeRep(branch, lastPeriod, msg.sender)
+    oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
 
     # Do the first rbcr based on first report and final outcome if reported first time
     if(oldReport && !self.branch[branch].penalized[lastPeriod][msg.sender].event[event] && outcome!=0):
-        oldEthics = EXPIRING.getEthicReport(BRANCHES.getParent(branch), lastPenalizationPeriod, event, msg.sender)
+        oldEthics = EXPEVENTS.getEthicReport(BRANCHES.getParent(branch), lastPenalizationPeriod, event, msg.sender)
         # wrong
         #184467440737095520 == 0.01 in fxp
         if(oldReport > outcome+184467440737095520 or oldReport < outcome-184467440737095520):
@@ -314,8 +320,8 @@ def penalizeOnForkedEvent(branch, event):
         #smoothedRep = oldRep*.8 + newRep*.2
         smoothedRep = oldRep * 14757395258967642112/ONE + newRep * 3689348814741910528/ONE
         repChange = smoothedRep - oldRep
-        newAfterRep = EXPIRING.getAfterRep(branch, lastPeriod, msg.sender) + repChange
-        EXPIRING.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
+        EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
         totalRepDifference = repChange
         # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
         if(oldEthics != ethic_catch(EVENTS.getEthical(event)) && totalRepDifference >=0):
@@ -332,7 +338,7 @@ def penalizeOnForkedEvent(branch, event):
     
     # Do the second (for each user) based on second report and final outcome
     if(reportValue && !self.branch[branch].penalized[lastPeriod][msg.sender].event[event] && outcome!=0):
-        ethics = EXPIRING.getEthicReport(branch, lastPeriod, event, msg.sender)
+        ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
         # wrong
         #184467440737095520 == 0.01 in fxp
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
@@ -355,8 +361,8 @@ def penalizeOnForkedEvent(branch, event):
         #smoothedRep = oldRep*.8 + newRep*.2
         smoothedRep = oldRep * 14757395258967642112/ONE + newRep * 3689348814741910528/ONE
         repChange = smoothedRep - oldRep
-        newAfterRep = EXPIRING.getAfterRep(branch, lastPeriod, msg.sender) + repChange
-        EXPIRING.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
+        EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
         totalRepDifference = repChange
         # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
         if(ethics != ethic_catch(EVENTS.getEthical(event)) && totalRepDifference >=0):
@@ -372,10 +378,10 @@ def penalizeOnForkedEvent(branch, event):
         
         self.branch[branch].penalized[lastPeriod][msg.sender].event[event] = 1
         self.branch[branch].penalized[lastPeriod][msg.sender].num += 1
-        if(EXPIRING.getNumReportsActual(branch, lastPeriod, msg.sender)==self.branch[branch].penalized[lastPeriod][msg.sender].num):
+        if(EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)==self.branch[branch].penalized[lastPeriod][msg.sender].num):
             if(newAfterRep <= 0):
                 newAfterRep = 0
-                EXPIRING.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+                EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
             self.branch[branch].penalizedUpTo[msg.sender] = lastPeriod
             self.branch[branch].denominator[lastPeriod] += newAfterRep
             totalRepDifference = newAfterRep - oldRep
