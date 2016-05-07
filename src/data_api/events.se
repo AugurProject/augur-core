@@ -19,7 +19,6 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-import branches as BRANCHES
 inset('refund.se')
 
 # Events' index is the eventID
@@ -170,7 +169,6 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes,
     else:
         return(0)
 
-
 def setBond(event, bond):
     refund()
     self.Events[ID].bond = bond
@@ -213,23 +211,14 @@ def setOutcome(ID, outcome):
     self.Events[ID].outcome = outcome
     return(1)
 
-#In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold.
-def setReportingThreshold(event):
-    refund()
-    # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
-    # final check is if < 3 reports so far
-    # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this one
-    #periodLength = BRANCHES.getPeriodLength(self.Events[event].branch)
-    #residual = block.timestamp % periodLength
-    #if(BRANCHES.getVotePeriod(self.Events[event].branch)==self.Events[event].expirationDate/periodLength and (((block.timestamp + TWENTYFOURHR) % periodLength) > periodLength/2) and numexpectedreportsinmakereportscommitmentvalueis<3):
-    #    self.Events[event].threshold = 2**192
-    #    return(1)
-    #else:
-    return(0)
-
 def getReportingThreshold(event):
     refund()
     return(self.Events[event].threshold)
+    
+def setThreshold(event, threshold):
+    # do whitelist
+    self.Events[event].threshold = threshold
+    return(1)
 
 def getmode(event):
     refund()

@@ -108,7 +108,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
             # pay validity bond
             period = block.timestamp / TWENTYFOURHR
             validity_bond =  6 * creationFee * 2 * (1 + EVENTS.getPast24(period-1)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))
-            if(!CASH.send(event, validity_bond)):
+            if(!CASH.sendFrom(event, validity_bond, msg.sender)):
                 return(-4)
             EVENTS.setBond(event, validity_bond)
             EVENTS.addPast24(24period)
@@ -133,7 +133,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     # formation of marketID (hash)
     marketinfo = string(11*32 + len(description))
     marketinfo[0] = MARKET
-    marketinfo[1] = tx.origin
+    marketinfo[1] = msg.sender
     marketinfo[2] = initialLiquidity
     marketinfo[3] = branch
     marketinfo[4] = eventsConcat
@@ -155,14 +155,14 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     # need at least 1.2M gas @ gas price to cover resolution + 1M for each additional event
     if(msg.value < (1200000*tx.gasprice + 1000000*tx.gasprice*(eventNum-1) + 500000*tx.gasprice)):
         return(0)
-    if(CASH.send(branch, creationFee) && send(MARKETS, msg.value-500000*tx.gasprice) && INFO.setInfo(marketID, description, tx.origin, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, block.number)):
+    if(CASH.sendFrom(branch, creationFee, msg.sender) && send(MARKETS, (msg.value-500000*tx.gasprice)) && INFO.setInfo(marketID, description, msg.sender, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, block.number)):
         i = 0
         while i < len(events):
             EVENTS.addMarket(events[i], marketID)
             expirationDate = EVENTS.getExpiration(event)
             futurePeriod = expirationDate / periodLength
             EXPEVENTS.addEvent(branch, futurePeriod, events[i], 500000*tx.gasprice)
-            send(EVENTS, 500000*tx.gasprice)
+            CASH.send(EVENTS, 500000*tx.gasprice)
             i += 1
         return(marketID)
     else:
@@ -177,7 +177,7 @@ def updateTradingFee(branch, market, tradingFee):
     newCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / tradingFee
     if(tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > oldFee):
         return(-1)
-    CASH.send(branch, newCreationFee-oldCreationFee)
+    CASH.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender)
     return(MARKETS.setTradingFee(market, tradingFee))
 
 # Anyone can post an "Early Resolution Bond"
@@ -199,7 +199,7 @@ def pushMarketForward(branch, market):
     numEvents = MARKETS.getNumEvents(market)
     if(marketClosed):
         return(0)
-    if(CASH.send(market, numEvents*MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE))==0):
+    if(CASH.sendFrom(market, numEvents*MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE), msg.sender)==0):
         return(0)
     i = 0
     # for each event in market
@@ -213,6 +213,6 @@ def pushMarketForward(branch, market):
             # set event expiration date to be after the current reporting period ends
             EVENTS.setExpiration(event, block.timestamp)
             MARKETS.setTradingPeriod(market, period+1)
-            MARKETS.setPushedForward(market, 1)
+            MARKETS.setPushedForward(market, 1, msg.sender)
         i += 1
     return(1)

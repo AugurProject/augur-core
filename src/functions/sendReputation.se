@@ -42,7 +42,8 @@ def sendReputation(branch, recver, value):
     # Rep cannot be simultaneously spent (transferred) and used to vote
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     # you can't trade if you or the person you're sending to have submitted a report, or at all in the second half of the period [b/c you can messup / cheat w/ reporting] and you can't trade in the first half of a period until you've been penalized for reporting wrongly/not reporting
-    #if(value<=0 || !CASH.send(branch, 5*ONE) || EXPEVENTS.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, recver, 0) != 0):
+    # use a diff. fun. than getReport here
+    #if(value<=0 || EXPEVENTS.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, recver, 0) != 0):
     # EXPIRING.getReportedPeriod(branch, current)
     #    return(0)
     # need to check all this for the person it's being sent to as well
@@ -84,7 +85,7 @@ def sendReputation(branch, recver, value):
 def transfer(branch, recver, value):
     refund()
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
-    if(value<=0 || !CASH.send(branch, 5*ONE)):
+    if(value<=0):
         return(0)
 
     sender = msg.sender
@@ -115,7 +116,7 @@ def transfer(branch, recver, value):
 def transferFrom(branch, from, recver, value):
     refund()
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
-    if(value<=0 || !CASH.send(branch, 5*ONE)):
+    if(value<=0):
         return(0)
 
     sender = from
@@ -166,7 +167,7 @@ def convertToDormantRep(branch, value):
 		# benny comment:
             #```Maybe still have this sort-of variable "power" to it, but REP initially doesn't have "full-power", or REP that hasn't been used to report over the past week has now let it's "power-meter" drop to only 20% earning power (it's kind-of dormant), that then ramps back up to 100% power once it gets used a bit. Could there be an element of this type of time-decay programmed into the REP that's helps incentive? Something like this would make the system more automatic, rather than relying on the user to manually switch "on" or switch "off" the REP. If a user knows, "I better report this week or my REP's power meter goes down to 20% again, and it's gonna take extra effort to get it back to full-power", well that's pretty good incentive to keep the user active, without actually taking it from them.```
 
-    if(value<=0 || !CASH.send(branch, 5*ONE)):
+    if(value<=0):
         return(0)
 
     #if(REPORTS.getRRUpToDate()!=1):
@@ -204,7 +205,7 @@ def convertToActiveRep(branch, value):
     if(residual > periodLength/2):
       return(-1)
 
-    if(value<=0 || !CASH.send(branch, 5*ONE)):
+    if(value<=0):
         return(0)
 
     #if(REPORTS.getRRUpToDate()):

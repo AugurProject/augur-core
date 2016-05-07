@@ -35,9 +35,9 @@ data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoInd
 data whitelists[](addresses[], taken)
 
 def init():
-    self.Reporting[1010101].repIDtoIndex[tx.origin] = 0
+    self.Reporting[1010101].repIDtoIndex[msg.sender] = 0
     self.Reporting[1010101].reputation[0].repValue = 0
-    self.Reporting[1010101].reputation[0].reporterID = tx.origin
+    self.Reporting[1010101].reputation[0].reporterID = msg.sender
     self.Reporting[1010101].numberReporters = 2
     self.Reporting[1010101].repIDtoIndex[1010101] = 1
     self.Reporting[1010101].reputation[1].repValue = 0
@@ -137,7 +137,7 @@ def getReputation(address):
                 b += 2
             i += 1
     else:
-        address = tx.origin
+        address = msg.sender
         branches = array(2*branchListCount)
         branchList = array(branchListCount)
         branchList = BRANCHES.getBranches(outitems=branchListCount)
@@ -164,7 +164,7 @@ def repIDToIndex(branch, repID):
 def hashReport(report: arr, salt):
     refund()
     hashInfo = array(len(report) + 2)
-    hashInfo[0] = tx.origin
+    hashInfo[0] = msg.sender
     hashInfo[1] = salt
     i = 2
     while i < (len(report) + 2):
@@ -194,7 +194,7 @@ def setInitialReporters(parent, branchID):
 #     if(self.repIDToIndex(branchID, msg.sender)==0 && block.timestamp < (BRANCHES.getCreationDate(branchID) + TWENTYFOURHR*30)):
 #         i = self.Reporting[branchID].numberReporters
 #         # is this the right before rep so user hasn't lost round 2 bond if they made one
-#         rep = EXPEVENTS.getBeforeRep(parent, BRANCHES.getParentPeriod(branchID))
+#         rep = EXPEVENTS.getBeforeRep(parent, BRANCHES.getParentPeriod(branchID), msg.sender)
 #         reporterID = msg.sender
 #         self.Reporting[branchID].reputation[i].reporterID = reporterID
 #         if(self.Reporting[branchID].fork && (userReportedOutcomeEqualToOutcomePreFork || userDidntReportOnForkedEvent || (forkedOverEthicality && userReportedOnEthicalityEqualToPreFork))):
@@ -212,13 +212,13 @@ def setInitialReporters(parent, branchID):
 #         self.Reporting[branchID].repIDtoIndex[reporterID] = i
 #         if(fork):
 #             forkPeriod = fetchPeriodWhenForked
-#             CONSENSUS.initialPenalizedSetting(branch, tx.origin, forkPeriod)
+#             CONSENSUS.initialPenalizedSetting(branch, msg.sender, forkPeriod)
 #         else:
-#            CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
+#            CONSENSUS.initialPenalizedSetting(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
 #         self.Reporting[branchID].dormantRep[i].reporterID = reporterID
 #         # circular dependency issue
 #         # circular dependency issue
-#         dormantRep = EXPEVENTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branchID))
+#         dormantRep = EXPEVENTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branchID), msg.sender)
 #         self.Reporting[branchID].dormantRep[i].repValue = dormantRep
 #         self.Reporting[branchID].numberReporters += 1
 #         self.Reporting[branchID].totalRep += rep + dormantRep

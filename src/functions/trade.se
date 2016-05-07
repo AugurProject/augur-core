@@ -28,8 +28,8 @@ import markets as MARKETS
 import trades as TRADES
 inset('refund.se')
 
-event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
-event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
+#event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
+#event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
 
 # Trade types
 macro BID: 1
@@ -75,7 +75,7 @@ def trade(max_value, max_amount, trade_ids:arr):
     tradeInfo[1] = max_amount
     tradeInfo[2] = max_value
     tradeHash = sha256(tradeInfo, items=3)
-    if(TRADES.checkHash(tradeHash)==-1):
+    if(TRADES.checkHash(tradeHash, msg.sender)==-1):
         return(-2)
     max_value = max_value
     max_amount = max_amount
@@ -109,10 +109,10 @@ def trade(max_value, max_amount, trade_ids:arr):
         # Fill buy order
         if type == BID:
             # Get available balance of shares
-            participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+            participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
             balance = MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome)
             if(balance > 0 and max_amount > 0):
-                if(MARKETS.getParticipantID(market, participantNumber) != tx.origin):
+                if(MARKETS.getParticipantID(market, participantNumber) != msg.sender):
                     return(-3)
                 sender = MARKETS.getParticipantNumber(market, msg.sender)
                 ownerNum = MARKETS.getParticipantNumber(market, owner)
@@ -172,7 +172,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 creatorFees = (ONEFOURTH+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
                 takerFeesTotal = branchFees + creatorFees
                 # fix todo for what if maxvalue is say 10 but adding fees to it makes it 11, max value should _include_, not exclude fees and account for it w/ cash balance including fees
-                if(CASH.balance(tx.origin) < (value + takerFeesTotal)):
+                if(CASH.balance(msg.sender) < (value + takerFeesTotal)):
                     return(INSUFFICIENT_BALANCE)
                 fill = 0
                 # Calculate fill amount, update trade amount or remove filled trade
@@ -182,10 +182,10 @@ def trade(max_value, max_amount, trade_ids:arr):
                 else:
                     fill = amount
                     remove_trade(trade_id, market)
-                participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+                participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
                 # if participant doesn't exist in market, add them
-                if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
-                    participantNumber = MARKETS.addParticipant(market, tx.origin)
+                if(msg.sender != MARKETS.getParticipantID(market, participantNumber)):
+                    participantNumber = MARKETS.addParticipant(market, msg.sender)
                 
                 # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
                 MARKETS.modifyParticipantShares(market, participantNumber, outcome, fill, 0)

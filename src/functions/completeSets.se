@@ -35,12 +35,12 @@ def buyCompleteSets(market, amount):
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumScale = MARKETS.getCumScale(market)
     cost = amount*cumScale/ONE
-    if(CASH.balance(tx.origin) < price):
+    if(CASH.balance(msg.sender) < price):
         return(-3)
-    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
     # if participant doesn't exist in market, add them
-    if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
-        participantNumber = MARKETS.addParticipant(market, tx.origin)
+    if(msg.sender != MARKETS.getParticipantID(market, participantNumber)):
+        participantNumber = MARKETS.addParticipant(market, msg.sender)
     i = 1
     # send shares of the event to user address
     while i <= numOutcomes:
@@ -51,7 +51,7 @@ def buyCompleteSets(market, amount):
         MARKETS.modifySharesValue(market, amount*cumScale/ONE)
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount*cumScale/ONE)
     # send money from user acc. to market address/account
-    CASH.send(market, cost)
+    CASH.sendFrom(market, cost, msg.sender)
     return(1)
 
     
@@ -61,11 +61,11 @@ def sellCompleteSets(market, amount):
     branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
-    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumScale = MARKETS.getCumScale(market)
     branch = MARKETS.getBranchID(market)
-    if(MARKETS.getParticipantID(market, participantNumber) != tx.origin):
+    if(MARKETS.getParticipantID(market, participantNumber) != msg.sender):
         return(-2)
     # these prices are in fixed point
     cost = amount*cumScale/ONE
@@ -84,5 +84,5 @@ def sellCompleteSets(market, amount):
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), -amount*cumScale/ONE)
     # send funds from the market to the user acc.
     CASH.subtractCash(market, cost)
-    CASH.addCash(tx.origin, cost)
+    CASH.addCash(msg.sender, cost)
     return(1)

@@ -73,8 +73,8 @@ def getRepEvent(branch, votePeriod, event):
 def getReportedPeriod(branch, period, reporter):
     return(self.branches[branch].reportedPeriod[period][reporter])
 
-def getEthicReport(branch, period, event):
-    return(self.branches[branch].ethics[period][tx.origin].event[event])
+def getEthicReport(branch, period, event, sender):
+    return(self.branches[branch].ethics[period][sender].event[event])
 
 def getNumReportsExpectedEvent(branch, votePeriod, eventID):
     return(self.branches[branch].numReportsExpectedEvent[votePeriod][eventID])
@@ -82,21 +82,21 @@ def getNumReportsExpectedEvent(branch, votePeriod, eventID):
 def getNumReportsEvent(branch, votePeriod, eventID):
     return(self.branches[branch].numReportsEvent[votePeriod][eventID])
 
-def getReport(branch, period, event):
+def getReport(branch, period, event, sender):
     #if(whitelist):
-    return(self.branches[branch].report[period][tx.origin].event[event])
+    return(self.branches[branch].report[period][sender].event[event])
 
-def getBeforeRep(branch, period):
-    return(self.branches[branch].beforeRep[period][tx.origin])
+def getBeforeRep(branch, period, sender):
+    return(self.branches[branch].beforeRep[period][sender])
 
-def getAfterRep(branch, period):
-    return(self.branches[branch].afterRep[period][tx.origin])
+def getAfterRep(branch, period, sender):
+    return(self.branches[branch].afterRep[period][sender])
     
-def getPeriodDormantRep(branch, period):
-    return(self.branches[branch].periodDormantRep[period][tx.origin])
+def getPeriodDormantRep(branch, period, sender):
+    return(self.branches[branch].periodDormantRep[period][sender])
 
-def getNumReportsActual(branch, votePeriod):
-    return(self.branches[branch].numReportsActual[tx.origin][votePeriod])
+def getNumReportsActual(branch, votePeriod, sender):
+    return(self.branches[branch].numReportsActual[sender][votePeriod])
 
 def getNumRoundTwo(branch, period):
     refund()
@@ -141,9 +141,9 @@ def getEventsToReportOn(branch, expDateIndex):
     i = 0
     while i < numEvents:
         events[i] = self.EventsExpDates[branch][expDateIndex].events[i]
-        reportingThreshold = self.calculateReportingThreshold(branch, events[i], expDateIndex)
+        reportingThreshold = self.calculateReportingThreshold(branch, events[i], expDateIndex, msg.sender)
         x = array(1)
-        x[0] = tx.origin + events[i]
+        x[0] = msg.sender + events[i]
         shaHash = sha3(x, items=1)/ONE
         if((shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(events[i]) || self.getRequired(events[i])) && !EVENTS.getOutcome(events[i])):
             events[i+1] = 1
@@ -151,11 +151,14 @@ def getEventsToReportOn(branch, expDateIndex):
             events[i+1] = 0
         i += 2
     return(events: arr)
+    
 
-def calculateReportingThreshold(branch, eventID, votePeriod):
-    repConstant = self.getPeriodRepConstant(branch, votePeriod, msg.sender)
+# eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
+    # a^b=exp(b*ln(a))=e^(b*ln(a)).
+def calculateReportingThreshold(branch, eventID, votePeriod, sender):
+    repConstant = self.getPeriodRepConstant(branch, votePeriod, sender)
     if(repConstant==0):
-        logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, tx.origin)*ONE/REPORTING.getActiveRep(branch))
+        logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, sender)*ONE/REPORTING.getActiveRep(branch))
         repConstant = FXP.fx_exp(22136092888451461120*logOutput/ONE) + 18446744073709552
         expectedEventsForReporter = repConstant * self.getNumEventsToReportOn(branch, votePeriod)
         total = expectedEventsForReporter
@@ -165,7 +168,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod):
         if(total/ONE < minimum):
             total = minimum*ONE
             repConstant = repConstant*ratio / ONE
-        self.setPeriodRepConstant(branch, votePeriod, msg.sender, repConstant)
+        self.setPeriodRepConstant(branch, votePeriod, sender, repConstant)
     reportingThreshold = self.getLesserReportNum(branch, votePeriod, eventID)*repConstant*ONE
     return(reportingThreshold)
     
@@ -277,8 +280,8 @@ def setReportedPeriod(branch, period, reporter):
     self.branches[branch].reportedPeriod[period][reporter] = 1
     return(1)
 
-def setEthicReport(branch, period, event, ethics):
-    self.branches[branch].ethics[period][tx.origin].event[event] = ethics
+def setEthicReport(branch, period, event, ethics, sender):
+    self.branches[branch].ethics[period][sender].event[event] = ethics
     return(1)
 
 def setNumReportsExpectedEvent(branch, votePeriod, eventID, num):
@@ -297,22 +300,38 @@ def addReportExpected(branch, votePeriod, eventID):
     self.branches[branch].numReportsExpectedEvent[votePeriod][eventID] += 1
     return(1)
 
-def setReport(branch, period, event, report):
-    self.branches[branch].report[period][tx.origin].event[event] = report
+def setReport(branch, period, event, report, sender):
+    self.branches[branch].report[period][sender].event[event] = report
     return(1)
 
-def setBeforeRep(branch, period, rep):
-    self.branches[branch].beforeRep[period][tx.origin] = rep
+def setBeforeRep(branch, period, rep, sender):
+    self.branches[branch].beforeRep[period][sender] = rep
     return(rep)
 
-def setAfterRep(branch, period, rep):
-    self.branches[branch].afterRep[period][tx.origin] = rep
+def setAfterRep(branch, period, rep, sender):
+    self.branches[branch].afterRep[period][sender] = rep
     return(rep)
 
-def setPeriodDormantRep(branch, period, rep):
-    self.branches[branch].periodDormantRep[period][tx.origin] = rep
+def setPeriodDormantRep(branch, period, rep, sender):
+    self.branches[branch].periodDormantRep[period][sender] = rep
     return(rep)
     
 def setLesserReportNum(branch, period, event, num):
     self.branches[branch].lesserReportNum[period][event] = num
     return(1)
+    
+#In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold.
+def setReportingThreshold(event):
+    refund()
+    # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
+    # final check is if < 3 reports so far
+    # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this one
+    branch = EVENTS.getBranch(event)
+    periodLength = BRANCHES.getPeriodLength(branch)
+    residual = block.timestamp % periodLength
+    votePeriod = BRANCHES.getVotePeriod(branch)
+    if(votePeriod==EVENTS.getExpiration(event)/periodLength and (((block.timestamp + TWENTYFOURHR) % periodLength) > periodLength/2) and self.branches[branch].numReportsExpectedEvent[votePeriod][event]<3):
+        EVENTS.setThreshold(event, 2**192)
+        return(1)
+    else:
+        return(0)

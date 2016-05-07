@@ -38,7 +38,7 @@ inset('refund.se')
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution: str):
     refund()
     # todo these
-    if(forked && wouldExpireInPeriodJustAfterFork):
+    if(BRANCHES.getForkPeriod(branch) && wouldExpireInPeriodJustAfterFork):
         return(-9)
     periodLength = BRANCHES.getPeriodLength(branch)
     if(maxValue < minValue or (maxValue-minValue) < ONE):

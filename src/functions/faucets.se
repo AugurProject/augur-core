@@ -50,5 +50,5 @@ def reputationFaucet(branch):
 def fundNewAccount(branch):
     CASH.send(self, 0)
     self.reputationFaucet(branch)
-    CASH.setCash(tx.origin, 10000*2^64)
+    CASH.setCash(msg.sender, 10000*2^64)
     return(1)

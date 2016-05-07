@@ -118,11 +118,11 @@ def closeMarket(branch, market):
             if((EVENTS.getForked(event) && !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+2))):
                 return(-5)
             if(binary(events[n]) && fxpOutcome==0):
-                    resolution = RESOLVE.resolveBinary(events[n], market, branch, votingPeriodEvent)
+                    resolution = RESOLVE.resolveBinary(events[n], market, branch, votingPeriodEvent, msg.sender)
             elif(scalar(events[n]) && EVENTS.getmode(events[n])==0):
-                    resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(events[n]), EVENTS.getMaxValue(events[n]), events[n], market, branch, votingPeriodEvent)
+                    resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(events[n]), EVENTS.getMaxValue(events[n]), events[n], market, branch, votingPeriodEvent, msg.sender)
             elif(categorical(events[n]) && EVENTS.getmode(events[n])==0):
-                    resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(events[n]), events[n], market, branch, votingPeriodEvent)
+                    resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(events[n]), events[n], market, branch, votingPeriodEvent, msg.sender)
             elif(resolution==-6):
                 outcomeSix = 1
             n += 1

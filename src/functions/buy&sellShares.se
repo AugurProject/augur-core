@@ -19,8 +19,6 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-# Note: must spend at least 1 in ONE
-
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import info as INFO
@@ -49,14 +47,14 @@ macro TRADE_ALREADY_EXISTS: 21
 macro fee_percent($market_fee, $price, $cumScale):
     4 * $market_fee * $price * (ONE-$price*2**64/$cumScale) / ($cumScale*ONE)
 
-macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participantNumber, $fee):
-    trade = [$type, $market, $amount, $price, msg.sender, block.number, $outcome]
+macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participantNumber, $fee, $sender):
+    trade = [$type, $market, $amount, $price, $sender, block.number, $outcome]
     trade_id = sha256(trade, items=7)
     cumScale = MARKETS.getCumScale($market)
 
     # Save trade
     if !TRADES.getID(trade_id):
-        TRADES.saveTrade(trade_id, $type, $market, $amount, $price, msg.sender, $outcome)
+        TRADES.saveTrade(trade_id, $type, $market, $amount, $price, $sender, $outcome)
         # Update market
         last_id = MARKETS.getLastTrade($market)
         MARKETS.addTrade($market, trade_id, last_id)
@@ -64,15 +62,15 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
         if $type == ASK:
             MARKETS.modifyParticipantShares($market, $participantNumber, $outcome, -$amount, 0)
             if($fee):
-                CASH.send($market, ($amount * $price * $fee / ONE^2))
+                CASH.sendFrom($market, ($amount * $price * $fee / ONE^2), $sender)
         # Send / escrow cash for bids
         if $type == BID:
-            CASH.send($market, $amount * $price / ONE)
+            CASH.sendFrom($market, $amount * $price / ONE, $sender)
             if($fee):
-                CASH.send($market, ($amount * $price * $fee / ONE^2))
+                CASH.sendFrom($market, ($amount * $price * $fee / ONE^2), $sender)
     else:
         return(TRADE_ALREADY_EXISTS)
-    log(type=log_add_tx, $market, msg.sender, $type, $price, $amount, $outcome, trade_id)
+    log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id)
     return(trade_id)
 
 #
@@ -137,18 +135,18 @@ def buy(amount, price, market, outcome):
     branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
-    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
     # if participant doesn't exist in market, add them
-    if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
-        participantNumber = MARKETS.addParticipant(market, tx.origin)
+    if(msg.sender != MARKETS.getParticipantID(market, participantNumber)):
+        participantNumber = MARKETS.addParticipant(market, msg.sender)
     trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
     fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE
     if(price>cumScale or amount*price < 3402823669209384705829531287552 or amount*price >= 2**190):
         return(0)
-    if(CASH.balance(tx.origin) < (amount * price * (fee + ONE) / ONE^2)):
+    if(CASH.balance(msg.sender) < (amount * price * (fee + ONE) / ONE^2)):
         return(-4)
-    save_trade(BID, amount, price, market, outcome, branch, participantNumber, fee)
+    save_trade(BID, amount, price, market, outcome, branch, participantNumber, fee, msg.sender)
     return(FAILURE)
 
 # cost 532k
@@ -158,8 +156,8 @@ def sell(amount, price, market, outcome):
     branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
-    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
-    if(MARKETS.getParticipantID(market, participantNumber) != tx.origin):
+    participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
+    if(MARKETS.getParticipantID(market, participantNumber) != msg.sender):
         return(-3)
     if(MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome) < amount):
         return(-4)
@@ -168,9 +166,9 @@ def sell(amount, price, market, outcome):
     fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE
     if(price>cumScale or amount*price < 3402823669209384705829531287552L or amount*price >= 2**190):
         return(0)
-    if(CASH.balance(tx.origin) < (amount * price * fee / ONE^2)):
+    if(CASH.balance(msg.sender) < (amount * price * fee / ONE^2)):
         return(-4)
-    save_trade(ASK, amount, price, market, outcome, branch, participantNumber, fee)
+    save_trade(ASK, amount, price, market, outcome, branch, participantNumber, fee, msg.sender)
     return(FAILURE)
 
 # Example:
@@ -191,7 +189,7 @@ def short_sell(buyer_trade_id, max_amount):
     tradeInfo[1] = max_amount
     tradeInfo[2] = 0
     tradeHash = sha256(tradeInfo, items=3)
-    if(TRADES.checkHash(tradeHash)==-1):
+    if(TRADES.checkHash(tradeHash, msg.sender)==-1):
         return(-2)
     # Get trade
     trade = array(TRADE_FIELDS)
@@ -228,17 +226,17 @@ def short_sell(buyer_trade_id, max_amount):
     creatorFees = (ONEFOURTH+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
     takerFeesTotal = branchFees + creatorFees
     cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)
-    if(CASH.balance(tx.origin) < cost):
+    if(CASH.balance(msg.sender) < cost):
         return(INSUFFICIENT_BALANCE)
 
     if(amount*price/ONE < 184467440738):
         return(-4)
 
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
-    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
     # if participant doesn't exist in market, add them
-    if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
-        participantNumber = MARKETS.addParticipant(market, tx.origin)
+    if(msg.sender != MARKETS.getParticipantID(market, participantNumber)):
+        participantNumber = MARKETS.addParticipant(market, msg.sender)
 
     i = 1
     # send shares of the event to user address
@@ -252,7 +250,7 @@ def short_sell(buyer_trade_id, max_amount):
 
     # send money from user acc. to market address/account
     # cost for shares
-    CASH.send(market, cost-takerFeesTotal)
+    CASH.sendFrom(market, cost-takerFeesTotal, msg.sender)
 
     # Fill buy order
     # Determine fill amount
@@ -268,9 +266,9 @@ def short_sell(buyer_trade_id, max_amount):
     MARKETS.modifyParticipantShares(market, ownerNum, outcome, fill, 0)
     # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
     # 75% to branch + .5% more to branch per maker fee 1% decrease 
-    CASH.send(branch, branchFees)
+    CASH.sendFrom(branch, branchFees, msg.sender)
     # 25% to creator + .5% more to creator per 1% decrease in maker fees
-    CASH.send(creator, creatorFees)
+    CASH.sendFrom(creator, creatorFees, msg.sender)
 
     # other party [maker] pay their part of the fee here too
     fee = fee * MARKETS.getMakerFees(market) / ONE
