@@ -1,5 +1,5 @@
 import cash as CASH
-import expiringEvents as EXPIRING
+import expiringEvents as EXPEVENTS
 import reporting as REPORTING
 import events as EVENTS
 import fxpFunctions as FXP
@@ -54,6 +54,12 @@ macro catch($x):
     else:
         BAD
 
+macro ethic_catch($x):
+    if($x < ONEHALF):
+        0
+    else:
+        ONE
+
 #1. Record rep at start of report period [before rep in make reports]
 #2. Penalize for each event
 #3. Each reporter needs to do this for all events they reported on, if not get docked
@@ -70,9 +76,9 @@ def penalizeWrong(branch, event):
     refund()
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
-    afterRep = EXPIRING.getAfterRep(branch, lastPeriod, msg.sender)
+    afterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
     if(BRANCHES.getForkPeriod(branch) == lastPeriod && penalizedForkedEventIfReportedOn && !penalizeduptolastperiod):
-        self.branch[branch].penalized[lastPeriod][msg.sender].num += EXPIRING.getNumReportsActual(branch, lastPeriod, msg.sender)
+        self.branch[branch].penalized[lastPeriod][msg.sender].num += EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
         self.branch[branch].penalizedUpTo[msg.sender] = lastPeriod
         self.branch[branch].denominator[lastPeriod] += afterRep
         return(1)
@@ -105,7 +111,7 @@ def penalizeWrong(branch, event):
     newRep = 0
     outcome = catch(EVENTS.getUncaughtOutcome(event))
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
-    oldRep = EXPIRING.getBeforeRep(branch, lastPeriod, msg.sender)
+    oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
     p = self.proportionCorrect(event)
     if(scalar(event) or categorical(event)):
         outcome = EVENTS.getUncaughtOutcome(event)
@@ -114,11 +120,11 @@ def penalizeWrong(branch, event):
     if(BACKSTOPS.getRoundTwo(event) && !self.branch[branch].penalized[lastPeriod][msg.sender].event[event] && reportValue && outcome!=0):
         self.branch[branch].penalized[lastPeriod][msg.sender].event[event] = 1
         self.branch[branch].penalized[lastPeriod][msg.sender].num += 1
-        if(EXPIRING.getNumReportsActual(branch, lastPeriod, msg.sender)==self.branch[branch].penalized[lastPeriod][msg.sender].num):
-            newAfterRep = EXPIRING.getAfterRep(branch, lastPeriod, msg.sender)
+        if(EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)==self.branch[branch].penalized[lastPeriod][msg.sender].num):
+            newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
             if(newAfterRep <= 0):
                 newAfterRep = 0
-                EXPIRING.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+                EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
             self.branch[branch].penalizedUpTo[msg.sender] = lastPeriod
             self.branch[branch].denominator[lastPeriod] += newAfterRep
             totalRepDifference = newAfterRep - oldRep
@@ -152,15 +158,15 @@ def penalizeWrong(branch, event):
         #smoothedRep = oldRep*.8 + newRep*.2
         smoothedRep = oldRep * 14757395258967642112/ONE + newRep * 3689348814741910528/ONE
         repChange = smoothedRep - oldRep
-        newAfterRep = EXPIRING.getAfterRep(branch, lastPeriod, msg.sender) + repChange
+        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
         log(type=penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue)
-        EXPIRING.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+        EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
         self.branch[branch].penalized[lastPeriod][msg.sender].event[event] = 1
         self.branch[branch].penalized[lastPeriod][msg.sender].num += 1
-        if(EXPIRING.getNumReportsActual(branch, lastPeriod, msg.sender)==self.branch[branch].penalized[lastPeriod][msg.sender].num):
+        if(EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)==self.branch[branch].penalized[lastPeriod][msg.sender].num):
             if(newAfterRep <= 0):
                 newAfterRep = 0
-                EXPIRING.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+                EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
             self.branch[branch].penalizedUpTo[msg.sender] = lastPeriod
             self.branch[branch].denominator[lastPeriod] += newAfterRep
             totalRepDifference = newAfterRep - oldRep
@@ -206,14 +212,14 @@ def penalizeRoundTwoWrong(branch, event):
         outcome = catch(EVENTS.getUncaughtOutcome(event))
         if(scalar(event) or categorical(event)):
             outcome = EVENTS.getUncaughtOutcome(event)
-        oldRep = EXPIRING.getBeforeRep(branch, lastPeriod, msg.sender)
+        oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
         p = self.proportionCorrect(event)
         newAfterRep = 0
         smoothedRep = 0
         totalRepDifference = 0
         # Do the first rbcr based on first report and final outcome if reported first time
         if(oldReport && !self.branch[branch].penalized[lastPeriod][msg.sender].event[event] && outcome!=0):
-            oldEthics = EXPIRING.getEthicReport(branch, lastPenalizationPeriod, event, msg.sender)
+            oldEthics = EXPEVENTS.getEthicReport(branch, lastPenalizationPeriod, event, msg.sender)
             # wrong
             #184467440737095520 == 0.01 in fxp
             if(oldReport > outcome+184467440737095520 or oldReport < outcome-184467440737095520):
@@ -236,8 +242,8 @@ def penalizeRoundTwoWrong(branch, event):
             #smoothedRep = oldRep*.8 + newRep*.2
             smoothedRep = oldRep * 14757395258967642112/ONE + newRep * 3689348814741910528/ONE
             repChange = smoothedRep - oldRep
-            newAfterRep = EXPIRING.getAfterRep(branch, lastPeriod, msg.sender) + repChange
-            EXPIRING.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+            newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
+            EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
             totalRepDifference = repChange
             # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
             if(oldEthics != ethic_catch(EVENTS.getEthical(event)) && totalRepDifference >=0):
@@ -254,7 +260,7 @@ def penalizeRoundTwoWrong(branch, event):
     
         # Do the second (for each user) based on second report and final outcome
         if(reportValue && !self.branch[branch].penalized[lastPeriod][msg.sender].event[event] && outcome!=0):
-            ethics = EXPIRING.getEthicReport(branch, lastPeriod, event, msg.sender)
+            ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
             # wrong
             #184467440737095520 == 0.01 in fxp
             if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
@@ -277,8 +283,8 @@ def penalizeRoundTwoWrong(branch, event):
             #smoothedRep = oldRep*.8 + newRep*.2
             smoothedRep = oldRep * 14757395258967642112/ONE + newRep * 3689348814741910528/ONE
             repChange = smoothedRep - oldRep
-            newAfterRep = EXPIRING.getAfterRep(branch, lastPeriod, msg.sender) + repChange
-            EXPIRING.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+            newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
+            EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
             totalRepDifference = repChange
             # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
             if(ethics != ethic_catch(EVENTS.getEthical(event)) && totalRepDifference >=0):
@@ -296,11 +302,11 @@ def penalizeRoundTwoWrong(branch, event):
     self.branch[branch].penalized[lastPeriod][msg.sender].num += 1
     if(eventwasaforkedevent):
         penalizedForkedEventIfReportedOn = 1
-        self.branch[branch].penalized[lastPeriod][msg.sender].num += EXPIRING.getNumReportsActual(branch, lastPeriod, msg.sender)
-    if(EXPIRING.getNumReportsActual(branch, lastPeriod, msg.sender)==self.branch[branch].penalized[lastPeriod][msg.sender].num):
+        self.branch[branch].penalized[lastPeriod][msg.sender].num += EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
+    if(EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)==self.branch[branch].penalized[lastPeriod][msg.sender].num):
         if(newAfterRep <= 0):
             newAfterRep = 0
-            EXPIRING.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+            EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
         self.branch[branch].penalizedUpTo[msg.sender] = lastPeriod
         self.branch[branch].denominator[lastPeriod] += newAfterRep
         totalRepDifference = newAfterRep - oldRep
@@ -348,8 +354,8 @@ def penalizeNotEnoughReports(branch):
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
     if(total > ONE):
         numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)/self.baseReportersLastPeriod[branch])*ONE + EXPEVENTS.getNumRequired(branch, votePeriod)
-    numReportsActual = EXPIRING.getNumReportsActual(branch, lastPeriod, msg.sender)
-    if(numEvents/(2*ONE) > EXPIRING.getNumReportsActual(branch, lastPeriod, msg.sender)):
+    numReportsActual = EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
+    if(numEvents/(2*ONE) > EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)):
         originalRep = REPORTING.getRepBalance(branch, msg.sender)
         # penalize people
         # can number reported on be greater than num expected to report on
@@ -362,8 +368,8 @@ def penalizeNotEnoughReports(branch):
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
         # sends that rep to the branch rep pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -repChange)
-        EXPIRING.setBeforeRep(branch, lastPeriod, oldRep+newRep, msg.sender)
-        EXPIRING.setAfterRep(branch, lastPeriod, oldRep+newRep, msg.sender)
+        EXPEVENTS.setBeforeRep(branch, lastPeriod, oldRep+newRep, msg.sender)
+        EXPEVENTS.setAfterRep(branch, lastPeriod, oldRep+newRep, msg.sender)
     self.branch[branch].penalized[lastPeriod][msg.sender].notEnoughReportsPenalized = 1
     return(1)
 
@@ -380,14 +386,14 @@ def collectFees(branch):
         return(-1)
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
     if(!self.branch[branch].feesCollected[lastPeriod][msg.sender] && hasReported(branch, lastPeriod)):
-        newRep = EXPIRING.getAfterRep(branch, lastPeriod, msg.sender)
+        newRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
         denominator = self.branch[branch].denominator[lastPeriod]
         if(!self.feeFirst):
             self.feeFirst = 1
             self.periodBalance[branch][lastPeriod] = REPORTING.getRepBalance(branch, branch)
         gainedRep = newRep * ONE / denominator * self.periodBalance[branch][lastPeriod] / ONE
-        #if(lostRep) newRep should be == EXPIRING.getAfterRep(branch, period, msg.sender) + gainedRep
-        #if(gainedRep) newRep should be == EXPIRING.getBeforeRep(branch, period, msg.sender) + gainedRep
+        #if(lostRep) newRep should be == EXPEVENTS.getAfterRep(branch, period, msg.sender) + gainedRep
+        #if(gainedRep) newRep should be == EXPEVENTS.getBeforeRep(branch, period, msg.sender) + gainedRep
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), gainedRep)
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), gainedRep)
         cash = BRANCHES.getInitialBalance(branch, lastPeriod) * newRep / denominator
@@ -493,7 +499,7 @@ def incrementPeriodAfterReporting(branch):
     if(periodOver(branch)):
         period = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
         lastPeriod = period - 1
-        percentAppealed = (EXPIRING.getNumRoundTwo(branch, period)*ONE/EXPIRING.getNumberEvents(branch, period) + EXPIRING.getNumRoundTwo(branch, lastPeriod)*ONE/EXPIRING.getNumberEvents(branch, lastPeriod)) / 2
+        percentAppealed = (EXPEVENTS.getNumRoundTwo(branch, period)*ONE/EXPEVENTS.getNumberEvents(branch, period) + EXPEVENTS.getNumRoundTwo(branch, lastPeriod)*ONE/EXPEVENTS.getNumberEvents(branch, lastPeriod)) / 2
         BRANCHES.incrementPeriod(branch)
         # mult. by 2 b/c reporters only have to report on half the things they're selected to report on
         base_reporter_quantity = 2*(3*ONE + ((333*ONE * Percent_Appealed/ONE)**3 / 2**128))/ONE
@@ -543,7 +549,7 @@ macro periodOver($branch):
         0
     
 macro hasReported($branch, $period):
-    EXPIRING.getReportedPeriod($branch, $period, msg.sender)
+    EXPEVENTS.getReportedPeriod($branch, $period, msg.sender)
 
 macro repRedistributionDone($branch, $reporter):
     lastPeriodPenalized = self.branch[$branch].penalizedUpTo[$reporter]
@@ -574,7 +580,7 @@ macro categorical($event):
         #  outcome = ONEHALF
         #  mode = ONEHALF
         #   p = self.proportionCorrect(event, rejected)
-        #   oldRep = EXPIRING.getBeforeRep(branch, period, msg.sender)
+        #   oldRep = EXPEVENTS.getBeforeRep(branch, period, msg.sender)
         #   # wrong
         #   if(reportValue > outcome+.01 or reportValue < outcome-.01):
         #       if(scalar or categorical or .5):
@@ -588,12 +594,12 @@ macro categorical($event):
         #           p = -(abs(reportValue - mode)/2) + 1
         #       newRep = oldRep*(2*(1-p)**2 / p + 1)
         #   smoothedRep = oldRep*.8 + newRep*.2
-        #   EXPIRING.setAfterRep(branch, period, oldRep + (smoothedRep - oldRep), msg.sender)
+        #   EXPEVENTS.setAfterRep(branch, period, oldRep + (smoothedRep - oldRep), msg.sender)
         # repChange = smoothedRep - oldRep
         # if(repChange < 0):
         #   sendToRedistribPool
         # # need to except round two events from this when added
-        # if(EXPIRING.getNumReportsActual(branch, lastPeriod, msg.sender)==self.penalized[lastPeriod][msg.sender].num):
+        # if(EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)==self.penalized[lastPeriod][msg.sender].num):
         #   self.totalRepPenalized[period] += oldRep
         #   self.denominator[branch][period] = self.totalRepPenalized[period] + (smoothedRep - oldRep)
         # self.penalized[lastPeriod][msg.sender].event[event] = 1
