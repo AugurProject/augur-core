@@ -46,3 +46,9 @@ def reputationFaucet(branch):
     REPORTING.setRep(branch, index, 47*ONE)
     CONSENSUS.initialPenalizedSetting(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
     return(1)
+
+def fundNewAccount(branch):
+    CASH.send(self, 0)
+    self.reputationFaucet(branch)
+    CASH.setCash(tx.origin, 10000*2^64)
+    return(1)

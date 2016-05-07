@@ -21,7 +21,6 @@
 
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
-import info as INFO
 import cash as CASH
 import events as EVENTS
 import markets as MARKETS

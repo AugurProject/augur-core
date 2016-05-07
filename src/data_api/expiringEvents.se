@@ -22,7 +22,6 @@
 import branches as BRANCHES
 import events as EVENTS
 import makeReports as MAKEREPORTS
-import cash as CASH
 inset('refund.se')
 
 # [branchID][votingPeriod]

@@ -19,8 +19,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-inset('refund.se')
 import cash as CASH
+inset('refund.se')
 
 # CurrentVotePeriod is the current index in eventsExpDates
 # Branches' index is the hash of the branch (aka branchID)
