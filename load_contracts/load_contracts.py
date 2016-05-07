@@ -77,7 +77,7 @@ import shutil
 import traceback
 
 os.chdir(rpc.ROOT)
-SOURCE = os.path.join(rpc.ROOT, 'src')
+SOURCE = os.path.join(rpc.ROOT, os.pardir, 'src')
 IMPORTS = True
 VERBOSITY = 0
 BLOCKTIME = 12
