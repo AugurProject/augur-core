@@ -1,0 +1,219 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation OU
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+# Note: must spend at least 1 in ONE
+
+import branches as BRANCHES
+import info as INFO
+import cash as CASH
+import markets as MARKETS
+import trades as TRADES
+inset('refund.se')
+
+event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
+event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
+
+# Trade types
+macro BID: 1
+macro ASK: 2
+# Field counts
+macro TRADE_FIELDS: 9
+# Boolean success/failure
+macro SUCCESS: 1
+# Error codes
+macro INSUFFICIENT_BALANCE: 10
+
+macro fee_percent($market_fee, $price, $cumScale):
+    4 * $market_fee * $price * (ONE-$price*2**64/$cumScale) / ($cumScale*ONE)
+
+macro remove_trade($trade_id, $market):
+    TRADES.remove_trade($trade_id)
+    MARKETS.remove_trade_from_market($market, $trade_id)
+
+#
+# Trade
+#
+# Errors:
+    # -1: oracle only branch
+    # -2: bad trade hash
+    # -3: trader doesn't exist / own shares in this market
+    # -4: must buy at least .00000001 in value
+    # 10: insufficient balance
+#Exchange(Market, outcome, sender, amount, receiver, payment) - transfers amount shares from sender to receiver for payment amount
+#max value is max amount to spend to buy [including fees]
+#max amount is max shares to sell
+# 500k gas
+def trade(max_value, max_amount, trade_ids:arr):
+    refund()
+    if(BRANCHES.getOracleOnly(branch)):
+        return(-1)
+    i = 0
+    trades = 0
+    while i < len(trade_ids):
+        trades += trade_ids[i]
+        i+=1
+    tradeInfo = array(3)
+    tradeInfo[0] = trades
+    tradeInfo[1] = max_amount
+    tradeInfo[2] = max_value
+    tradeHash = sha256(tradeInfo, items=3)
+    if(TRADES.checkHash(tradeHash)==-1):
+        return(-2)
+    max_value = max_value
+    max_amount = max_amount
+    # Try to fulfill each trade passed
+    t = 0
+    while t < len(trade_ids):
+        trade_id = trade_ids[t]
+        # Get trade
+        trade = array(TRADE_FIELDS)
+        trade = TRADES.get_trade(trade_id, outitems=TRADE_FIELDS)
+        if !trade:
+            return(0)
+        # Get market
+        type = trade[1]
+        market = trade[2]
+        creator = INFO.getCreator(market)
+        amount = trade[3]
+        price = trade[4]
+        owner = trade[5]
+        outcome = trade[8]
+        if(owner == msg.sender or owner == tx.origin):
+            return(0)
+        # Make sure the trade has been mined, obvious HFT prevention
+        if block.number <= trade[6]:
+            return(TRADE_SAME_BLOCK_PROHIBITED)
+        branch = MARKETS.getBranchID(market)
+        trading_fee = MARKETS.getTradingFee(market)
+        cumScale = MARKETS.getCumScale(market)
+        fee = fee_percent(trading_fee, price, cumScale)
+
+        # Fill buy order
+        if type == BID:
+            # Get available balance of shares
+            participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+            balance = MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome)
+            if(balance > 0 and max_amount > 0):
+                if(MARKETS.getParticipantID(market, participantNumber) != tx.origin):
+                    return(-3)
+                sender = MARKETS.getParticipantNumber(market, msg.sender)
+                ownerNum = MARKETS.getParticipantNumber(market, owner)
+                # Determine fill amount
+                fill = min(amount, min(balance, max_amount))
+                # Calculate value
+                value = (fill * price)/ONE
+                # must trade at least 0.00000001 in value
+                if(value < 184467440738):
+                    return(-4)
+                # Update trade amount or remove
+                if fill < amount:
+                    TRADES.fill_trade(trade_id, fill)
+                else:
+                    remove_trade(trade_id, market)
+                # Update balances
+                MARKETS.modifyParticipantShares(market, sender, outcome, -fill, 0)
+                MARKETS.modifyParticipantShares(market, ownerNum, outcome, fill, 0)
+                # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
+                fee = value * fee / ONE
+                # THREEFOURTHS is 3/4
+                branchFees = (THREEFOURTHS+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
+                creatorFees = (ONEFOURTH+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
+                takerFeesTotal = branchFees + creatorFees
+                CASH.addCash(msg.sender, value-takerFeesTotal)
+                # 75% to branch + .5% more to branch per maker fee 1% decrease 
+                CASH.addCash(branch, branchFees)
+                # 25% to creator + .5% more to creator per 1% decrease in maker fees
+                CASH.addCash(creator, creatorFees)
+                CASH.subtractCash(market, value)
+
+                # other party [maker] pay their part of the fee here too
+                fee = fee * MARKETS.getMakerFees(market) / ONE
+                CASH.subtractCash(market, fee)
+                CASH.addCash(creator, fee/2)
+                CASH.addCash(branch, fee/2)
+                
+                # needed to keep track of how many fees a market has raised
+                MARKETS.addFees(market, fee+takerFeesTotal)
+                # Update max_amount
+                max_amount -= fill
+                # Log transaction
+                log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)
+            else:
+                return(INSUFFICIENT_BALANCE)
+        elif type == ASK:
+            max_value = min(CASH.balance(msg.sender), max_value)
+            if max_value > 0:
+                # Calculate value of trade
+                trade_value = amount * price / ONE
+                # Determine fill value
+                value = min(max_value, trade_value)
+                if(value < 184467440738):
+                    return(-4)
+                fee = value * fee / ONE
+                branchFees = (THREEFOURTHS+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
+                creatorFees = (ONEFOURTH+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
+                takerFeesTotal = branchFees + creatorFees
+                # fix todo for what if maxvalue is say 10 but adding fees to it makes it 11, max value should _include_, not exclude fees and account for it w/ cash balance including fees
+                if(CASH.balance(tx.origin) < (value + takerFeesTotal)):
+                    return(INSUFFICIENT_BALANCE)
+                fill = 0
+                # Calculate fill amount, update trade amount or remove filled trade
+                if value < trade_value:
+                    fill = value*ONE / price
+                    TRADES.fill_trade(trade_id, fill)
+                else:
+                    fill = amount
+                    remove_trade(trade_id, market)
+                participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+                # if participant doesn't exist in market, add them
+                if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
+                    participantNumber = MARKETS.addParticipant(market, tx.origin)
+                
+                # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
+                MARKETS.modifyParticipantShares(market, participantNumber, outcome, fill, 0)
+                # Transfer cash from user to person who has ask order and pay fee to branch and market creator
+                # 75% to branch + .5% more to branch per maker fee 1% decrease 
+                CASH.addCash(branch, branchFees)
+                # 25% to creator + .5% more to creator per 1% decrease in maker fees
+                CASH.addCash(creator, creatorFees)
+                cost = value + takerFeesTotal
+                CASH.addCash(owner, value)
+                CASH.subtractCash(msg.sender, cost)
+
+                # other party [maker] pay their part of the fee here too
+                fee = fee * MARKETS.getMakerFees(market) / ONE
+                CASH.subtractCash(market, fee)
+                CASH.addCash(creator, fee/2)
+                CASH.addCash(branch, fee/2)
+                
+                MARKETS.addFees(market, fee+takerFeesTotal)
+                # Update max_value
+                max_value -= value
+                # Log transaction
+                log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_id, outcome)
+            else:
+                return(INSUFFICIENT_BALANCE)
+
+        # Log price, fill amount, type and timestamp
+        log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
+        # Next trade
+        t += 1
+    return([SUCCESS, max_value, max_amount]: arr)

@@ -1,0 +1,88 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation OU
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+import branches as BRANCHES
+import expiringEvents as EXPEVENTS
+import cash as CASH
+import markets as MARKETS
+inset('refund.se')
+
+# buys amount of every outcome
+# cost 850k gas
+def buyCompleteSets(market, amount):
+    refund()
+    branch = MARKETS.getBranchID(market)
+    if(BRANCHES.getOracleOnly(branch)):
+        return(-1)
+    numOutcomes = MARKETS.getMarketNumOutcomes(market)
+    cumScale = MARKETS.getCumScale(market)
+    cost = amount*cumScale/ONE
+    if(CASH.balance(tx.origin) < price):
+        return(-3)
+    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    # if participant doesn't exist in market, add them
+    if(tx.origin != MARKETS.getParticipantID(market, participantNumber)):
+        participantNumber = MARKETS.addParticipant(market, tx.origin)
+    i = 1
+    # send shares of the event to user address
+    while i <= numOutcomes:
+        MARKETS.modifyShares(market, i, amount)
+        MARKETS.modifyParticipantShares(market, participantNumber, i, amount, 0)
+        i += 1
+    if(BRANCHES.getVotePeriod(branch)<MARKETS.getTradingPeriod(market)):
+        MARKETS.modifySharesValue(market, amount*cumScale/ONE)
+        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount*cumScale/ONE)
+    # send money from user acc. to market address/account
+    CASH.send(market, cost)
+    return(1)
+
+    
+# sells amount of every outcome [if user owns it]
+def sellCompleteSets(market, amount):
+    refund()
+    branch = MARKETS.getBranchID(market)
+    if(BRANCHES.getOracleOnly(branch)):
+        return(-1)
+    participantNumber = MARKETS.getParticipantNumber(market, tx.origin)
+    numOutcomes = MARKETS.getMarketNumOutcomes(market)
+    cumScale = MARKETS.getCumScale(market)
+    branch = MARKETS.getBranchID(market)
+    if(MARKETS.getParticipantID(market, participantNumber) != tx.origin):
+        return(-2)
+    # these prices are in fixed point
+    cost = amount*cumScale/ONE
+    i = 1
+    while i <= numOutcomes:
+        if(MARKETS.getParticipantSharesPurchased(market, participantNumber, i) < amount):
+            return(-3)
+        i += 1
+    i = 1
+    while i <= numOutcomes:
+        MARKETS.modifyShares(market, i, -amount)
+        MARKETS.modifyParticipantShares(market, participantNumber, i, -amount, 0)
+        i += 1
+    if(BRANCHES.getVotePeriod(branch)<MARKETS.getTradingPeriod(market)):
+        MARKETS.modifySharesValue(market, -amount*cumScale/ONE)
+        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), -amount*cumScale/ONE)
+    # send funds from the market to the user acc.
+    CASH.subtractCash(market, cost)
+    CASH.addCash(tx.origin, cost)
+    return(1)
