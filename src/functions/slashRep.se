@@ -1,0 +1,40 @@
+import branches as BRANCHES
+import expiringEvents as EXPEVENTS
+import reporting as REPORTING
+
+inset('refund.se')
+
+# anti cheat provide ballot and randomNum mechanism steal deposit
+# Returns:
+    # 0: not a valid claim
+    # -2: reporter doesn't exist
+def slashRep(branch, salt, report, reporter, eventID):
+    refund()
+    periodLength = BRANCHES.getPeriodLength(branch)
+    residual = block.timestamp % periodLength
+    if(residual > periodLength/2):
+        return(-2)
+    votePeriod = BRANCHES.getVotePeriod(branch)
+    realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, eventID)
+    hashInfo = array(4)
+    hashInfo[0] = reporter
+    hashInfo[1] = salt
+    hashInfo[2] = report
+    hashInfo[3] = eventID
+    reportHash = sha256(hashInfo, chars=32*len(hashInfo))
+    if(reportHash!=realHash):
+        return(0)
+    else:
+        reporterIndex = REPORTING.repIDToIndex(branch, reporter)
+        trutherIndex = REPORTING.repIDToIndex(branch, msg.sender)
+        # if the truther's rep. account doesn't exist, make one
+        if(REPORTING.getReporterID(branch, trutherIndex)!=msg.sender):
+            trutherIndex = REPORTING.getNumberReporters(branch)
+            REPORTING.addReporter(branch, msg.sender)
+        if(REPORTING.getReporterID(branch, reporterIndex)!=reporter):
+            return(-2)
+        reporterBalance = REPORTING.getRepBalance(branch, reporter)
+        REPORTING.setRep(branch, reporterIndex, 0)
+        trutherBalance = REPORTING.getRepBalance(branch, msg.sender)
+        REPORTING.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*ONEHALF / ONE))
+    return(reporterBalance)
