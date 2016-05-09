@@ -160,6 +160,9 @@ def trade(max_value, max_amount, trade_ids:arr):
             else:
                 return(INSUFFICIENT_BALANCE)
         elif type == ASK:
+            balance = CASH.balance(msg.sender)
+            makerFeeRate = MARKETS.getMakerFees(market)
+            #balanceAndFees = balance*3*2**64/2**65 * fee / 2**64 - makerfees*balance
             max_value = min(CASH.balance(msg.sender), max_value)
             if max_value > 0:
                 # Calculate value of trade
@@ -169,7 +172,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 if(value < 184467440738):
                     return(-4)
                 fee = value * fee / ONE
-                branchFees = (THREEFOURTHS+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
+                branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
                 creatorFees = (ONEFOURTH+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
                 takerFeesTotal = branchFees + creatorFees
                 # fix todo for what if maxvalue is say 10 but adding fees to it makes it 11, max value should _include_, not exclude fees and account for it w/ cash balance including fees

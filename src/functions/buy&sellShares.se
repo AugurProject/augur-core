@@ -223,8 +223,9 @@ def short_sell(buyer_trade_id, max_amount):
     if(amount < 0):
         return(INSUFFICIENT_BALANCE)
     fee = amount * price * fee_percent(trading_fee, price, cumScale) / ONE^2
-    branchFees = (THREEFOURTHS+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
-    creatorFees = (ONEFOURTH+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
+    makerFeeRate = MARKETS.getMakerFees(market)
+    branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
+    creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*fee / ONE
     takerFeesTotal = branchFees + creatorFees
     cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)
     if(CASH.balance(msg.sender) < cost):
@@ -272,7 +273,7 @@ def short_sell(buyer_trade_id, max_amount):
     CASH.sendFrom(creator, creatorFees, msg.sender)
 
     # other party [maker] pay their part of the fee here too
-    fee = fee * MARKETS.getMakerFees(market) / ONE
+    fee = fee * makerFeeRate / ONE
     CASH.subtractCash(market, fee)
     CASH.addCash(creator, fee/2)
     CASH.addCash(branch, fee/2)

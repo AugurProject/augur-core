@@ -1,0 +1,37 @@
+import branches as BRANCHES
+import expiringEvents as EXPEVENTS
+import consensus as CONSENSUS
+
+data feeFirst[][]
+data periodBalance[][]
+
+# -2: needs to be second half of reporting period to claim rep [1st half is when redistribution is done]
+    # after this window, any unclaimed rep is pushed to the next period's redistrib. pool via the first make report submission
+def collectFees(branch):
+    refund()
+    periodLength = BRANCHES.getPeriodLength(branch)
+    residual = block.timestamp % periodLength
+    if(residual < periodLength/2):
+        return(-2)
+    if(!CONSENSUS.getRRDone(branch, msg.sender)):
+        # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
+        return(-1)
+    lastPeriod = BRANCHES.getVotePeriod(branch) - 1
+    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod) && EXPEVENTS.getReportedPeriod(branch, lastPeriod, msg.sender)):
+        newRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
+        denominator = CONSENSUS.getDenominator(branch, lastPeriod)
+        if(!self.feeFirst[branch][lastPeriod]):
+            self.feeFirst = 1
+            self.periodBalance[branch][lastPeriod] = REPORTING.getRepBalance(branch, branch)
+        gainedRep = newRep * ONE / denominator * self.periodBalance[branch][lastPeriod] / ONE
+        #if(lostRep) newRep should be == EXPEVENTS.getAfterRep(branch, period, msg.sender) + gainedRep
+        #if(gainedRep) newRep should be == EXPEVENTS.getBeforeRep(branch, period, msg.sender) + gainedRep
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), gainedRep)
+        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), gainedRep)
+        cash = BRANCHES.getInitialBalance(branch, lastPeriod) * newRep / denominator
+        CASH.addCash(msg.sender, cash)
+        CASH.subtractCash(branch, cash)
+        CONSENSUS.setFeesCollected(branch, msg.sender, lastPeriod)
+        return(1)
+    else:
+        return(0)

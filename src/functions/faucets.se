@@ -26,6 +26,7 @@ import reporting as REPORTING
 import cash as CASH
 import consensus as CONSENSUS
 import branches as BRANCHES
+import expiringEvents as EXPEVENTS
 inset('refund.se')
 
 # Error -1: Hey, you're not broke!
@@ -52,3 +53,44 @@ def fundNewAccount(branch):
     self.reputationFaucet(branch)
     CASH.setCash(msg.sender, 10000*2^64)
     return(1)
+
+def claimInitialRep(parent, branchID):
+    refund()
+    if(BRANCHES.getParent(branchID)!=parent):
+        return(0)
+    # have 1 month to claim
+    # make sure user can only claim once, use before rep of period where fork was initiated in todo
+    if(REPORTING.repIDToIndex(branchID, msg.sender)==0 && block.timestamp < (BRANCHES.getCreationDate(branchID) + TWENTYFOURHR*30)):
+        i = REPORTING.getNumberReporters(branchID)
+        parentPeriod = BRANCHES.getParentPeriod(branchID)
+        # is this the right before rep so user hasn't lost round 2 bond if they made one
+        rep = EXPEVENTS.getBeforeRep(parent, parentPeriod, msg.sender)
+        reporterID = msg.sender
+        self.Reporting[branchID].reputation[i].reporterID = reporterID
+        if(self.Reporting[branchID].fork && (userReportedOutcomeEqualToOutcomePreFork || userDidntReportOnForkedEvent || (forkedOverEthicality && userReportedOnEthicalityEqualToPreFork))):
+            # take away 30% of rep from liars and those who didn't report
+            repDecrease = rep*12912720851596685312/ONE
+            rep = rep - repDecrease
+            amountLeftToPayBonder = doubleOfTheBond - bondDoubledThusFar
+            if(repDecrease < amountLeftToPayBonder):
+                # send all the rep to the fork bond poster
+            else:
+                # send amountLeftToPayBonder [if positive] to the fork bond poster
+                # send the rest to the new branch's redistribution pool
+        self.Reporting[branchID].reputation[i].repValue = rep
+        self.Reporting[branchID].activeRep += rep
+        self.Reporting[branchID].repIDtoIndex[reporterID] = i
+        if(fork):
+            forkPeriod = fetchPeriodWhenForked
+            CONSENSUS.initialPenalizedSetting(branch, msg.sender, forkPeriod)
+        else:
+            CONSENSUS.initialPenalizedSetting(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
+        self.Reporting[branchID].dormantRep[i].reporterID = reporterID
+        dormantRep = EXPEVENTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branchID), msg.sender)
+        self.Reporting[branchID].dormantRep[i].repValue = dormantRep
+        self.Reporting[branchID].numberReporters += 1
+        self.Reporting[branchID].totalRep += rep + dormantRep
+        return(1)
+    else:
+        # already claimed or too late
+        return(0)
