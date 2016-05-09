@@ -1,4 +1,4 @@
-import info as INFO
+simport info as INFO
 import cash as CASH
 import expiringEvents as EXPIRING
 import reporting as REPORTING
@@ -58,7 +58,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
         EVENTS.setEthics(event, 0)
         return(1)
 
-def roundTwoResolve(branch, event, eventIndex, votePeriod):
+def roundTwoResolve(branch, event, eventIndex):
     refund()
     overruled = 1
     bond = 100*ONE
@@ -69,17 +69,18 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
             overruled = 0
     elif(BACKSTOPS.getOriginalOutcome(event) == catch(EVENTS.getUncaughtOutcome(event)) && BACKSTOPS.getOriginalEthicality(event)==ethic_catch(EVENTS.getEthical(event))):
         overruled = 0
-    if(BRANCHES.getVotePeriod(branch) > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
+    votePeriod = BRANCHES.getVotePeriod(branch)
+    if(votePeriod > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
         votedOnAgain = 1
-    # todo any round 2 events besides forked one should have bond returned
-    if(forked && didntForkOverThisEventSpecifically && bondNotReturned && BACKSTOPS.getRoundTwo(event)):
+    forkPeriod = BRANCHES.getForkPeriod(branch)
+    if(forkPeriod==votePeriod or votePeriod==(forkPeriod+1) or votePeriod==(forkPeriod+2) && (BRANCHES.getEventForkedOver(branch)!=event && BACKSTOPS.getBondReturned(event)==0 && BACKSTOPS.getRoundTwo(event))):
         # return the bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
-        bondReturned = 1
+        BACKSTOPS.setBondReturned(event)
         BACKSTOPS.setRoundTwo(event, 0)
         return(1)
-    elif(overruled && votedOnAgain && BACKSTOPS.getRoundTwo(event) && votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) && eventID!=0 && event==eventID && !forked && msg.sender == bondPoster):
+    elif(overruled && votedOnAgain && BACKSTOPS.getRoundTwo(event) && votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) && eventID!=0 && event==eventID && !forked && msg.sender == bondPoster && !BACKSTOPS.getBondReturned(event)):
         # return the bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
@@ -87,8 +88,9 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
         self.resolve(branch, event, msg.sender)
         # reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting [don't count ethicality here]
         BACKSTOPS.setFinal(event)
+        BACKSTOPS.setBondReturned(event)
         return(2*bond)
-    elif(votedOnAgain && BACKSTOPS.getRoundTwo(event) && votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) && eventID!=0 && event==eventID && !forked):
+    elif(votedOnAgain && BACKSTOPS.getRoundTwo(event) && votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) && eventID!=0 && event==eventID && !forked && !BACKSTOPS.getBondReturned(event)):
         # lose bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), bond)
@@ -96,6 +98,7 @@ def roundTwoResolve(branch, event, eventIndex, votePeriod):
         self.resolve(branch, event, msg.sender)
         # rbcr from original period/orig. outcome stands, rbcr from round 2 happens as usual as well
         BACKSTOPS.setFinal(event)
+        BACKSTOPS.setBondReturned(event)
     # not voted on again yet
     else:
         return(0)

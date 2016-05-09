@@ -9,6 +9,7 @@ import events as EVENTS
 import backstops as BACKSTOPS
 import roundTwo as ROUNDTWO
 import expiringEvents as EXPEVENTS
+import markets as MARKETS
 inset('refund.se')
 
 # todo move to backstops data_api
@@ -39,7 +40,7 @@ def getForkedOverEthicality(event):
 # Period after fork is resolved
     # markets can't be moved until now - done
     # all markets have early exp disabled until this point - done
-    # each event which should've resolved in the past 2 periods is pushed up into period after this - done
+    # each event which should've resolved in the past 2 periods and this one is pushed up into period after this - done
         # stays in parent if it wins, otherwise goes to new fork - done
     # each event resolving further in the future is pushed into the respective period on whichever fork wins - done
 def move_event(event):
@@ -62,7 +63,7 @@ def move_event(event):
             EVENTS.setEthics(event, 0)
             EVENTS.setUncaughtOutcome(event, 0)
             # return bond if it's a round 2 event and make it not one anymore
-            ROUNDTWO.roundTwoResolve(branch, event, eventIndex, votePeriod)
+            ROUNDTWO.roundTwoResolve(branch, event, eventIndex)
             
             # leave event here
             expPeriod = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
@@ -79,7 +80,7 @@ def move_event(event):
             EVENTS.setEthics(event, 0)
             EVENTS.setUncaughtOutcome(event, 0)
             # return bond if it's a round 2 event and make it not one anymore
-            ROUNDTWO.roundTwoResolve(branch, event, eventIndex, votePeriod)
+            ROUNDTWO.roundTwoResolve(branch, event, eventIndex)
 
             # move event to fork
             expPeriod = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
@@ -166,8 +167,12 @@ def fork(event, branch, forkedOverEthicality):
         BRANCHES.setEventForkedOver(branch, event)
         self.forkedOverEthicality[event] = forkedOverEthicality
         # return round 2 bond
-        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), 100*ONE)
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), 100*ONE)
+        market = EVENTS.getMarket(event, 0)
+        avgAdjCost = BRANCHES.getInitialBalance(branch, period-1)/EXPEVENTS.getNumberEvents(branch, votePeriod-1)
+        bond = avgAdjCost + MARKETS.getSharesValue(market)*(184467440737095520 + MARKETS.getTradingFee(market)/2) / 2**64
+        bond = min(bond, 200*ONE)
+        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, self.roundTwo[event].bondPoster), bond)
     else:
         return(0)
 
