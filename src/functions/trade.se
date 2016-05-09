@@ -115,6 +115,7 @@ def trade(max_value, max_amount, trade_ids:arr):
             if(balance > 0 and max_amount > 0):
                 if(MARKETS.getParticipantID(market, participantNumber) != msg.sender):
                     return(-3)
+                makerFeeRate = MARKETS.getMakerFees(market)
                 sender = MARKETS.getParticipantNumber(market, msg.sender)
                 ownerNum = MARKETS.getParticipantNumber(market, owner)
                 # Determine fill amount
@@ -135,8 +136,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
                 fee = value * fee / ONE
                 # THREEFOURTHS is 3/4
-                branchFees = (THREEFOURTHS+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
-                creatorFees = (ONEFOURTH+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
+                branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
+                creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*fee / ONE
                 takerFeesTotal = branchFees + creatorFees
                 CASH.addCash(msg.sender, value-takerFeesTotal)
                 # 75% to branch + .5% more to branch per maker fee 1% decrease 
@@ -146,7 +147,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 CASH.subtractCash(market, value)
 
                 # other party [maker] pay their part of the fee here too
-                fee = fee * MARKETS.getMakerFees(market) / ONE
+                fee = fee * makerFeeRate / ONE
                 CASH.subtractCash(market, fee)
                 CASH.addCash(creator, fee/2)
                 CASH.addCash(branch, fee/2)
@@ -162,8 +163,9 @@ def trade(max_value, max_amount, trade_ids:arr):
         elif type == ASK:
             balance = CASH.balance(msg.sender)
             makerFeeRate = MARKETS.getMakerFees(market)
-            #balanceAndFees = balance*3*2**64/2**65 * fee / 2**64 - makerfees*balance
-            max_value = min(CASH.balance(msg.sender), max_value)
+            feeRate = 3*2**64/2**65 - makerFeeRate
+            maxAmountGivenBalance = balance*2**64/(feeRate+2**64)
+            max_value = min(maxAmountGivenBalance, max_value)
             if max_value > 0:
                 # Calculate value of trade
                 trade_value = amount * price / ONE
@@ -173,10 +175,9 @@ def trade(max_value, max_amount, trade_ids:arr):
                     return(-4)
                 fee = value * fee / ONE
                 branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
-                creatorFees = (ONEFOURTH+(ONEHALF - MARKETS.getMakerFees(market))/2)*fee / ONE
+                creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*fee / ONE
                 takerFeesTotal = branchFees + creatorFees
-                # fix todo for what if maxvalue is say 10 but adding fees to it makes it 11, max value should _include_, not exclude fees and account for it w/ cash balance including fees
-                if(CASH.balance(msg.sender) < (value + takerFeesTotal)):
+                if(balance < (value + takerFeesTotal)):
                     return(INSUFFICIENT_BALANCE)
                 fill = 0
                 # Calculate fill amount, update trade amount or remove filled trade
@@ -203,7 +204,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 CASH.subtractCash(msg.sender, cost)
 
                 # other party [maker] pay their part of the fee here too
-                fee = fee * MARKETS.getMakerFees(market) / ONE
+                fee = fee * makerFeeRate / ONE
                 CASH.subtractCash(market, fee)
                 CASH.addCash(creator, fee/2)
                 CASH.addCash(branch, fee/2)
