@@ -36,11 +36,11 @@ def init():
 data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenalized), penalizedUpTo[], feesCollected[][])
 
 def setNotEnoughPenalized(branch, address, period):
-    self.branch[branch].notEnoughReportsPenalized[period][address] = 1
+    self.branch[branch].penalized[period][address].notEnoughReportsPenalized = 1
     return(1)
     
 def getNotEnoughPenalized(branch, address, period):
-    return(self.branch[branch].notEnoughReportsPenalized[period][address])
+    return(self.branch[branch].penalized[period][address].notEnoughReportsPenalized)
     
 def getBaseReportersLastPeriod(branch):
     return(self.baseReportersLastPeriod[branch])
