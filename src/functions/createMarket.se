@@ -97,7 +97,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         if(expirationDate < block.timestamp):
             return(-7)
         forkPeriod = BRANCHES.getForkPeriod(branch)
-        if(forkPeriod && (futurePeriod == forkPeriod or futurePeriod == (forkPeriod+1))):
+        if(forkPeriod && (futurePeriod == forkPeriod or futurePeriod == (forkPeriod+1) or futurePeriod == (forkPeriod+2))):
             return(-9)
         if(EVENTS.getEventBranch(event) != branch || !INFO.getCreator(event)):
             return(-1)

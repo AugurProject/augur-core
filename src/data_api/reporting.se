@@ -183,15 +183,18 @@ def setInitialReporters(parent, branchID):
     self.Reporting[branchID].reputation[0].reporterID = branchID
     return(1)
 
-def addReporter(branch, sender):
+def addReporter(branch, sender, amount, dormant, repToBonderOrBranch):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     refund()
     reporterIndex = self.Reporting[branch].numberReporters
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
-    self.Reporting[branch].reputation[reporterIndex].repValue = 0
+    self.Reporting[branch].reputation[reporterIndex].repValue = amount
     self.Reporting[branch].reputation[reporterIndex].reporterID = sender
     self.Reporting[branch].dormantRep[reporterIndex].reporterID = sender
+    self.Reporting[branchID].dormantRep[i].repValue = dormant
+    self.Reporting[branch].activeRep += amount + repToBonderOrBranch
+    self.Reporting[branchID].totalRep += amount + dormant + repToBonderOrBranch
     self.Reporting[branch].numberReporters += 1
     return(1)
 

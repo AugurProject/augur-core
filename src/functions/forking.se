@@ -22,10 +22,17 @@ data bondPaid[]
 data forkedOverEthicality[]
 data bondAmount[]
 
+def getForkBondPoster(event):
+    return(self.forking[event].bondPoster)
 
 def getForkedOverEthicality(event):
     return(self.forkedOverEthicality[event])
     
+def getBondPaid(event):
+    return(self.bondPaid[event])
+
+def getBondAmount(event):
+    return(self.bondAmount[event])
 
 
 
@@ -452,3 +459,4 @@ macro catch($x):
         YES
     else:
         BAD
+

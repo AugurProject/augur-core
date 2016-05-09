@@ -1,4 +1,4 @@
-simport info as INFO
+import info as INFO
 import cash as CASH
 import expiringEvents as EXPIRING
 import reporting as REPORTING
@@ -16,12 +16,14 @@ inset('refund.se')
     # Average_Adjudication_Cost = Total fees paid to reporters for all markets in this reporting round / number of markets in this reporting round.
         # needs an abs min of ~200 rep.
 # Reporting period is 2 months minus 48 hours.  This 48 hours allows for the appeals to take place before the next reporting round begins.
-# todo make sure network isn't forked / forking atm
 def roundTwoPostBond(branch, event, eventIndex, votePeriod):
     refund()
     if(BRANCHES.getVotePeriod(branch)!=votePeriod):
         return(0)
     market = EVENTS.getMarket(event, 0)
+    forkPeriod = BRANCHES.getForkPeriod(branch)
+    if(forkPeriod == votePeriod or (forkPeriod+1) == votePeriod or (forkPeriod+2) == votePeriod):
+        return(0)
     avgAdjCost = BRANCHES.getInitialBalance(branch, votePeriod)/EXPIRING.getNumberEvents(branch, votePeriod)
     bond = avgAdjCost + MARKETS.getSharesValue(market)*(184467440737095520 + MARKETS.getTradingFee(market)/2) / 2**64
     bond = min(bond, 200*ONE)
