@@ -67,7 +67,8 @@ def claimInitialRep(parent, branchID):
         rep = EXPEVENTS.getBeforeRep(parent, parentPeriod, msg.sender)
         reporterID = msg.sender
         self.Reporting[branchID].reputation[i].reporterID = reporterID
-        if(self.Reporting[branchID].fork && (userReportedOutcomeEqualToOutcomePreFork || userDidntReportOnForkedEvent || (forkedOverEthicality && userReportedOnEthicalityEqualToPreFork))):
+        report = EXPEVENTS.getReport(branchID, forkPeriod, forkEvent, msg.sender)
+        if(self.Reporting[branchID].fork && (report==EVENTS.getOutcomePreFork || report== || (forkedOverEthicality && userReportedOnEthicalityEqualToPreFork))):
             # take away 30% of rep from liars and those who didn't report
             repDecrease = rep*12912720851596685312/ONE
             rep = rep - repDecrease

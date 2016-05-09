@@ -12,7 +12,6 @@ import sendReputation as SENDREP
 inset('refund.se')
 
 
-# todo do bond
 # Appeal_Bond = Market_Value * (0.01 + Market_Fee / 2) + Average_Adjudication_Cost
     # Average_Adjudication_Cost = Total fees paid to reporters for all markets in this reporting round / number of markets in this reporting round.
         # needs an abs min of ~200 rep.
@@ -20,9 +19,12 @@ inset('refund.se')
 # todo make sure network isn't forked / forking atm
 def roundTwoPostBond(branch, event, eventIndex, votePeriod):
     refund()
-    bond = 100*ONE
     if(BRANCHES.getVotePeriod(branch)!=votePeriod):
         return(0)
+    market = EVENTS.getMarket(event, 0)
+    avgAdjCost = BRANCHES.getInitialBalance(branch, votePeriod)/EXPIRING.getNumberEvents(branch, votePeriod)
+    bond = avgAdjCost + MARKETS.getSharesValue(market)*(184467440737095520 + MARKETS.getTradingFee(market)/2) / 2**64
+    bond = min(bond, 200*ONE)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     # if so, we're in the final 24 hours and event is in this branch + votePeriod
     if(!resolving && block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) && eventID!=0 && event==eventID && BACKSTOPS.getRoundTwo(event)==0 && EVENTS.getForked(event)==0):
