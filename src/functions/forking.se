@@ -5,10 +5,13 @@
     # Note: Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets, which would be determined by the fork that represented reality, which would have a higher market cap.  Markets go to the most popular fork by default after 2 months.
 
 import branches as BRANCHES
+import reporting as REPORTING
 import events as EVENTS
 import backstops as BACKSTOPS
+import sendReputation as SENDREP
 import roundTwo as ROUNDTWO
 import expiringEvents as EXPEVENTS
+import createBranch as CREATEBRANCH
 inset('refund.se')
 
 # todo move to backstops data_api
