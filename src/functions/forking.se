@@ -395,7 +395,6 @@ def penalizeOnForkedEvent(branch, event):
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
     return(1)
 
-
 def proportionCorrectForkEvent(event):
     refund()
     p = 0

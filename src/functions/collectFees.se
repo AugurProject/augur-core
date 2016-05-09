@@ -21,7 +21,7 @@ def collectFees(branch):
         newRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
         denominator = CONSENSUS.getDenominator(branch, lastPeriod)
         if(!self.feeFirst[branch][lastPeriod]):
-            self.feeFirst = 1
+            self.feeFirst[branch][lastPeriod] = 1
             self.periodBalance[branch][lastPeriod] = REPORTING.getRepBalance(branch, branch)
         gainedRep = newRep * ONE / denominator * self.periodBalance[branch][lastPeriod] / ONE
         #if(lostRep) newRep should be == EXPEVENTS.getAfterRep(branch, period, msg.sender) + gainedRep
