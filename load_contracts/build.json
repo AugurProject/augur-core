@@ -3529,7 +3529,7 @@
         "sig": "extern createEvent: [createEvent:[int256,bytes,int256,int256,int256,int256,bytes]:int256]"
     }, 
     "createMarket": {
-        "address": "0x6ee851dd2fef0d95dd4d192cb5e5bffc4122b411", 
+        "address": "0x902d91cc483c77da3be9b62b5060314887fb99d5", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -3574,7 +3574,6 @@
             "TRADES = 0xb8c254877dd025d04bb760e7b738e1219dbc2708", 
             "inset('refund.se')", 
             "", 
-            "", 
             "macro POINTZEROSIX: 1106804644422573056", 
             "", 
             "#data CLOSEMARKET", 
@@ -3586,6 +3585,55 @@
             "#    if(!self.CLOSEMARKET):", 
             "#        self.CLOSEMARKET = value", 
             "#    return(1)", 
+            "", 
+            "def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution:str, tradingFee, tag1, tag2, tag3, makerFees, extraInfo:str):", 
+            "    return(self.createMarket(branch, description, tradingFee, [self.createEvent(branch, description, expDate, minValue, maxValue, numOutcomes, resolution)], tag1, tag2, tag3, makerFees, extraInfo))", 
+            "", 
+            "# numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0", 
+            "# to 11.0 would be 11 outcomes (if incremented by 0.1)", 
+            "# @return eventID if success", 
+            "# error messages otherwise", 
+            "    # -1: we're either already past that date, branch doesn't exist, or description is bad", 
+            "    # 0: not enough money to pay fees or event already exists", 
+            "    # -2: max value < min value", 
+            "# .025 eth to create", 
+            "def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution: str):", 
+            "    refund()", 
+            "    periodLength = BRANCHES.getPeriodLength(branch)", 
+            "    forkPeriod = BRANCHES.getForkPeriod(branch)", 
+            "    if(forkPeriod && ((expDate / periodLength)==forkPeriod or (expDate / periodLength)==(forkPeriod+1))):", 
+            "        return(-9)", 
+            "    if(maxValue < minValue or (maxValue-minValue) < ONE):", 
+            "        return(-2)", 
+            "    eventID = 0", 
+            "    if(periodLength && description != 0 && expDate > block.timestamp):", 
+            "        eventinfo = string(8*32 + len(description))", 
+            "        eventinfo[0] = EVENT                                        #typecode", 
+            "        eventinfo[1] = branch                                       #branchID", 
+            "        eventinfo[2] = expDate                                      #expiration date", 
+            "        eventinfo[3] = msg.sender                                   #creator address", 
+            "        eventinfo[4] = periodLength", 
+            "        eventinfo[5] = minValue                                     #minimum outcome value", 
+            "        eventinfo[6] = maxValue                                     #maximum outcome value", 
+            "        eventinfo[7] = numOutcomes                                  #number of outcomes", 
+            "        mcopy(eventinfo + 8*32, description, len(description))", 
+            "        eventID = sha256(eventinfo, chars=len(eventinfo))", 
+            "    else:", 
+            "        return(-1)", 
+            "    if(numOutcomes < 2 || numOutcomes > 8):", 
+            "        return(0)", 
+            "    currentVotePeriod = BRANCHES.getVotePeriod(branch)", 
+            "    CASH.initiateOwner(eventID)", 
+            "    if(!INFO.getCreator(eventID)):", 
+            "        # see which future period it expires in && put the event in that bin", 
+            "        # event voting periods - expDate / periodLength gives you the voting period #", 
+            "        futurePeriod = expDate / periodLength", 
+            "        if(INFO.setInfo(eventID, description, msg.sender, 0) && EVENTS.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes, resolution)):", 
+            "            return(eventID)", 
+            "        else:", 
+            "            return(0)", 
+            "    else:", 
+            "        return(0)", 
             "", 
             "# tradingFee is a percent in fixedPoint", 
             "# @return marketID if success or 1 if on an oracle only branch creation we have success", 
@@ -3772,6 +3820,46 @@
                         "type": "bytes"
                     }, 
                     {
+                        "name": "expDate", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "minValue", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "maxValue", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "numOutcomes", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "resolution", 
+                        "type": "bytes"
+                    }
+                ], 
+                "name": "createEvent(int256,bytes,int256,int256,int256,int256,bytes)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "name": "branch", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "description", 
+                        "type": "bytes"
+                    }, 
+                    {
                         "name": "tradingFee", 
                         "type": "int256"
                     }, 
@@ -3801,6 +3889,70 @@
                     }
                 ], 
                 "name": "createMarket(int256,bytes,int256,int256[],int256,int256,int256,int256,bytes)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "name": "branch", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "description", 
+                        "type": "bytes"
+                    }, 
+                    {
+                        "name": "expDate", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "minValue", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "maxValue", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "numOutcomes", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "resolution", 
+                        "type": "bytes"
+                    }, 
+                    {
+                        "name": "tradingFee", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "tag1", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "tag2", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "tag3", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "makerFees", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "extraInfo", 
+                        "type": "bytes"
+                    }
+                ], 
+                "name": "createSingleEventMarket(int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256,int256,int256,bytes)", 
                 "outputs": [
                     {
                         "name": "out", 
@@ -3854,7 +4006,7 @@
                 "type": "function"
             }
         ], 
-        "sig": "extern createMarket: [createMarket:[int256,bytes,int256,int256[],int256,int256,int256,int256,bytes]:int256, pushMarketForward:[int256,int256]:int256, updateTradingFee:[int256,int256,int256]:int256]"
+        "sig": "extern createMarket: [createEvent:[int256,bytes,int256,int256,int256,int256,bytes]:int256, createMarket:[int256,bytes,int256,int256[],int256,int256,int256,int256,bytes]:int256, createSingleEventMarket:[int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256,int256,int256,bytes]:int256, pushMarketForward:[int256,int256]:int256, updateTradingFee:[int256,int256,int256]:int256]"
     }, 
     "createSingleEventMarket": {
         "address": "0x6bde7ba55927738fa3a95187c3dee964b4ba5e50", 
