@@ -314,7 +314,7 @@ def get_total_trades(market_id):
 macro EVENTS_FIELDS: 6
 macro OUTCOMES_FIELDS: 2
 macro WINNING_OUTCOMES_FIELDS: 8
-macro FIELDS: 16
+macro FIELDS: 17
 
 def getMarketInfo(marketID):
     refund()
@@ -335,11 +335,12 @@ def getMarketInfo(marketID):
         info[8] = self.Markets[marketID].lenEvents
         info[9] = self.Markets[marketID].cumulativeScale
         info[10] = self.Markets[marketID].blockNum
-        info[11] = INFO.getCreationFee(marketID)
-        info[12] = INFO.getCreator(marketID)
-        info[13] = self.Markets[marketID].tag1
-        info[14] = self.Markets[marketID].tag2
-        info[15] = self.Markets[marketID].tag3
+        info[11] = self.Markets[marketID].volume
+        info[12] = INFO.getCreationFee(marketID)
+        info[13] = INFO.getCreator(marketID)
+        info[14] = self.Markets[marketID].tag1
+        info[15] = self.Markets[marketID].tag2
+        info[16] = self.Markets[marketID].tag3
 
         # gather trader(s) info: [trader ID, 1 shares, 2 shares, 3 shares, ...]
         t = 0
