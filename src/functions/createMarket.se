@@ -194,6 +194,7 @@ def pushMarketForward(branch, market):
     winningForkDecided = 0
     if(branchEventIsInForked && !winningForkDecided):
         return(0)
+    # if round 2 event don't allow it
     # prevent for backstop 1 markets and vice versa
     # todo: if has been pushed forward in the past (see close market) don't allow it again
     numEvents = MARKETS.getNumEvents(market)
