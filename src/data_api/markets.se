@@ -312,7 +312,7 @@ def get_total_trades(market_id):
 
 
 macro EVENTS_FIELDS: 6
-macro OUTCOMES_FIELDS: 2
+macro OUTCOMES_FIELDS: 1
 macro WINNING_OUTCOMES_FIELDS: 8
 macro FIELDS: 17
 
@@ -368,11 +368,11 @@ def getMarketInfo(marketID):
         index += numEvents*EVENTS_FIELDS
 
         # gather outcomes info:
-        # [sharesPurchased, price, winningOutcomes...]
+        # [sharesPurchased, winningOutcomes...]
         k = 0
         while k < self.Markets[marketID].numOutcomes:
             info[index + k*OUTCOMES_FIELDS] = self.Markets[marketID].sharesPurchased[k + 1]
-            k += 2
+            k += 1
         index += self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS
         k = 0
         while k < WINNING_OUTCOMES_FIELDS:
