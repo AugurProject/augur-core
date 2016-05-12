@@ -14,7 +14,7 @@ def collectFees(branch):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
-    if(residual < periodLength/2):
+    if(residual <= periodLength/2):
         return(-2)
     if(!CONSENSUS.getRRDone(branch, msg.sender)):
         # need to call penalize for all events and penalize for too lazy to report or catchup if necessary

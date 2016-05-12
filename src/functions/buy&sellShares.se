@@ -36,7 +36,7 @@ event log_cancel(market:indexed, sender, price, amount, tradeid, outcome, type)
 macro BID: 1
 macro ASK: 2
 # Field counts
-macro TRADE_FIELDS: 9
+macro TRADE_FIELDS: 8
 # Boolean success/failure
 macro SUCCESS: 1
 macro FAILURE: 0
@@ -91,7 +91,7 @@ def cancel(trade_id):
     amount = trade[3]
     price = trade[4]
     owner = trade[5]
-    outcome = trade[8]
+    outcome = trade[7]
     branch = MARKETS.getBranchID(market)
     trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
@@ -207,7 +207,7 @@ def short_sell(buyer_trade_id, max_amount):
     orig_amount = trade[3]
     price = trade[4]
     owner = trade[5]
-    outcome = trade[8]
+    outcome = trade[7]
     if(owner == msg.sender or owner == tx.origin):
         return(5)
     # Make sure the trade has been mined, obvious HFT prevention

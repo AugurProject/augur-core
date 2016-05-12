@@ -3,7 +3,7 @@ inset('refund.se')
 # reporter
 data tradeCommits[](hash, block)
 # tradeID
-data trades[](id, type, market, amount, price, owner, block, refhash, outcome, initialTrade)
+data trades[](id, type, market, amount, price, owner, block, outcome, initialTrade)
 
 def makeTradeHash(max_value, max_amount, trade_ids: arr):
     refund()
@@ -60,12 +60,11 @@ def saveTrade(trade_id, type, market, amount, price, sender, outcome):
     self.trades[trade_id].owner = sender
     self.trades[trade_id].block = block.number
     self.trades[trade_id].outcome = outcome
-    self.trades[trade_id].refhash = ref(self.trades[trade_id].id)
     return(1)
 
 def get_trade(id):
     refund()
-    trade = array(9)
+    trade = array(8)
     trade[0] = self.trades[id].id
     trade[1] = self.trades[id].type
     trade[2] = self.trades[id].market
@@ -73,8 +72,7 @@ def get_trade(id):
     trade[4] = self.trades[id].price
     trade[5] = self.trades[id].owner
     trade[6] = self.trades[id].block
-    trade[7] = self.trades[id].refhash
-    trade[8] = self.trades[id].outcome
+    trade[7] = self.trades[id].outcome
     if trade:
         return(trade:arr)
     return([0]:arr)
@@ -101,7 +99,6 @@ def remove_trade(id):
     self.trades[id].price = 0
     self.trades[id].owner = 0
     self.trades[id].block = 0
-    self.trades[id].refhash = 0
     self.trades[id].outcome = 0
     return(1)
     

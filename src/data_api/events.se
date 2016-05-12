@@ -59,10 +59,13 @@ def setForkDone(event):
 def getForkedDone(event):
     return(self.Events[event].forkOver)
 
+def getEventResolution(event):
+    resLen = self.Events[event].resolutionSourceLength
+    return(load(self.Events[event].resolutionSource[0], chars=resLen): str)
+
 def getEventInfo(event):
     refund()
-    length=self.Events[event].resolutionSourceLength
-    eventinfo = string(7*32 + length)
+    eventinfo = array(7)
     eventinfo[0] = self.Events[event].branch
     eventinfo[1] = self.Events[event].expirationDate 
     eventinfo[2] = self.Events[event].outcome
@@ -70,7 +73,6 @@ def getEventInfo(event):
     eventinfo[4] = self.Events[event].maxValue
     eventinfo[5] = self.Events[event].numOutcomes
     eventinfo[6] = self.Events[event].bond
-    mcopy(eventinfo + 7*32, load(self.Events[event].resolutionSource[0], chars=length), length)
     return(eventinfo: arr)
     
 def getResolution(event):
@@ -167,7 +169,7 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes,
 
 def setBond(event, bond):
     refund()
-    self.Events[ID].bond = bond
+    self.Events[event].bond = bond
     return(1)
 
 def addMarket(event, marketID):

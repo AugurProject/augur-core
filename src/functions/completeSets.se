@@ -35,7 +35,7 @@ def buyCompleteSets(market, amount):
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumScale = MARKETS.getCumScale(market)
     cost = amount*cumScale/ONE
-    if(CASH.balance(msg.sender) < price):
+    if(CASH.balance(msg.sender) < cost):
         return(-3)
     participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
     # if participant doesn't exist in market, add them

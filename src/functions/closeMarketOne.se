@@ -8,8 +8,6 @@ def oneOutcome(market, winningOutcome, sender):
     refund()
     # distribute cashcoin to the people who won money by holding winning shares
     participantNumber = MARKETS.getParticipantNumber(market, sender)
-    if(participantNumber == -1):
-        return(-1)
     sharesOwned = MARKETS.getParticipantSharesPurchased(market, participantNumber, winningOutcome)
     participant = MARKETS.getParticipantID(market, participantNumber)
     MARKETS.modifyParticipantShares(market, participantNumber, winningOutcome, -sharesOwned)

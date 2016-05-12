@@ -238,7 +238,7 @@ def penalizationCatchup(branch):
         if(delta>22):
             #smoothedRep = smoothedRep*1844674407370955264/ONE
             smoothedRep = smoothedRep*18262276632972455936/ONE
-            delta = 0
+            delta = 22
         while i < delta:
             #smoothedRep = smoothedRep*16602069666338596864/ONE
             smoothedRep = smoothedRep*18262276632972455936/ONE

@@ -50,8 +50,6 @@ def fourOutcomes(market, winningOutcome: arr, events: arr, sender):
     pricePerShare1 = outcomeOneLowSidePercent * outcomeTwoLowSidePercent / ONE
     # distribute cashcoin to the people who won money by holding winning shares
     participantNumber = MARKETS.getParticipantNumber(market, sender)
-    if(participantNumber == -1):
-        return(-1)
     participant = MARKETS.getParticipantID(market, participantNumber)
     n = 0
     while(winningOutcome[n]!=0):
