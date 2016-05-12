@@ -4,11 +4,17 @@
     #In the other class/branch, the event is readjudicated and remove the outcome on the pre fork branch and rep is redistributed as normal, except people who said the original outcome in the original fork lose rep.  
     # Note: Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets, which would be determined by the fork that represented reality, which would have a higher market cap.  Markets go to the most popular fork by default after 2 months.
 
+import info as INFO
+import cash as CASH
 import branches as BRANCHES
+import reporting as REPORTING
 import events as EVENTS
+import markets as MARKETS
 import backstops as BACKSTOPS
+import sendReputation as SENDREP
 import roundTwo as ROUNDTWO
 import expiringEvents as EXPEVENTS
+import createBranch as CREATEBRANCH
 inset('refund.se')
 
 # todo move to backstops data_api
@@ -138,7 +144,7 @@ def fork(event, branch, forkedOverEthicality):
     if(EVENTS.getBranch(event)!=branch):
         return(0)
     # if in last 48 hr of period
-    if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENT.getForked(event)):
+    if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENTS.getForked(event)):
         bond = 184467440737095520*REPORTING.getTotalRep(branch)/ONE
         self.bondAmount[branch] = bond
         # lose fork bond in branch 1

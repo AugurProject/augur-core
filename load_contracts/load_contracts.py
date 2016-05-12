@@ -331,7 +331,7 @@ def get_compile_order():
     for directory, subdirs, files in os.walk(SOURCE):
         for f in files:
             if directory.endswith('data_api') or directory.endswith('functions'):
-                if f.endswith('.se') and f not in ['output.se', 'refund.se'] and not f.startswith('.~c9_invoke_'):
+                if f.endswith('.se') and f not in ['output.se', 'refund.se', 'forking.se'] and not f.startswith('.~c9_invoke_'):
                     contract_fullnames.append(os.path.join(directory, f))
 
     line_check, dependency_extractor = get_dep_extractors()

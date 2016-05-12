@@ -7,7 +7,7 @@ import json
 from pyrpctools import get_db, save_db, ROOT
 
 DB = get_db()
-SOURCE = os.path.join(ROOT, 'src')
+SOURCE = os.path.join(ROOT, os.pardir, 'src')
 
 def make_groups():
     groups = {}
