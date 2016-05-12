@@ -64,7 +64,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         CASH.subtractCash($event, EVENTS.getBond($event))
         CASH.addCash($branch, EVENTS.getBond($event))
         # not $ethical is same as .5 outcome
-        $fxpOutcome = indeterminate
+        $fxpOutcome = ONEHALF
         EVENTS.setOutcome($event, $fxpOutcome)
     else:
         # return bond

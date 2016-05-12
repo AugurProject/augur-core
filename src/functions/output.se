@@ -1032,7 +1032,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         if(!self.getBond(event)):
             # pay validity bond
             period = block.timestamp / TWENTYFOURHR
-            validity_bond =  6 * creationFee * 2 * (1 + self.getPast24(period)) / (1 + self.getNumberEvents(branch, self.getVotePeriod(branch)))
+            validity_bond =  (creationFee * (1 + self.getPast24(period)) / (1 + self.getNumberEvents(branch, self.getVotePeriod(branch))))/2
             if(!self.sendFrom(event, validity_bond, msg.sender)):
                 return(-4)
             self.setBond(event, validity_bond)
