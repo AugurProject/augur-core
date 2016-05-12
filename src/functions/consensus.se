@@ -152,24 +152,20 @@ def penalizeWrong(branch, event):
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
     if(!self.branch[branch].penalized[lastPeriod][msg.sender].event[event] && reportValue && (outcome!=0 or EVENTS.getRejected(event))):
         if(EVENTS.getRejectedPeriod(event)==lastPeriod):
-            outcome = ONEHALF*3
-            mode = ONEHALF*3
+            if(scalar(event))
+                outcome = ONEHALF
+            else:
+                outcome = ONEHALF*3
         # wrong
         #184467440737095520 == 0.01 in fxp
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
             if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
-                # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
-                    reportValue += ONE
                 diff = reportValue - outcome
                 p = -(abs(diff)/2) + ONE
             newRep = oldRep*(2*p - ONE)/ONE
         # right
         else:
             if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
-                # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
-                    reportValue += ONE
                 diff = reportValue - outcome
                 p = -(abs(diff)/2) + ONE
             newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE

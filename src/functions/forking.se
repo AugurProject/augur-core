@@ -256,7 +256,7 @@ def resolveForkEvent(branch, event):
         fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
         EVENTS.setOutcome(event, fxpOutcome)
 
-        if(fxpOutcome==ONEHALF || !ethical):
+        if(mode==ONEHALF || !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, EVENTS.getBond(event))
             CASH.addCash(branch, EVENTS.getBond(event))
@@ -316,18 +316,12 @@ def penalizeOnForkedEvent(branch, event):
         #184467440737095520 == 0.01 in fxp
         if(oldReport > outcome+184467440737095520 or oldReport < outcome-184467440737095520):
             if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
-                # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
-                    oldReport += ONE
                 diff = oldReport - outcome
                 p = -(abs(diff)/2) + ONE
             newRep = oldRep*(2*p - ONE)/ONE
         # right
         else:
             if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
-                # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
-                    oldReport += ONE
                 diff = oldReport - outcome
                 p = -(abs(diff)/2) + ONE
             newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
@@ -357,18 +351,12 @@ def penalizeOnForkedEvent(branch, event):
         #184467440737095520 == 0.01 in fxp
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
             if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
-                # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
-                    reportValue += ONE
                 diff = reportValue - outcome
                 p = -(abs(diff)/2) + ONE
             newRep = oldRep*(2*p - ONE)/ONE
         # right
         else:
             if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
-                # makes it so 1.5 penalty isn't super harsh for a scalar / categorical
-                if(outcome == 3*ONEHALF && (scalar(event) or categorical(event))):
-                    reportValue += ONE
                 diff = reportValue - outcome    
                 p = -(abs(diff)/2) + ONE
             newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE

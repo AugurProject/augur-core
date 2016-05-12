@@ -105,9 +105,6 @@ def determineWinningOutcomes(events: arr, numberEvents, branch, market):
     while n < numberEvents:
         fxpOutcome = EVENTS.getOutcome(events[n])
         outcome = fxpOutcome/ONE
-        indeterminate = ONEHALF*3
-        if(scalar(events[n])):
-            indeterminate = ONEHALF
         if(n==0):
             #scalar or .5
             if(scalar(events[n]) || fxpOutcome==3*ONEHALF):
