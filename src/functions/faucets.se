@@ -41,13 +41,13 @@ def cashFaucet():
 
 def reputationFaucet(branch):
     refund()
-    if REPORTING.repIDToIndex(branch, msg.sender) != 0 or REPORTING.getReporterID(branch, 0) == msg.sender:
-        index = REPORTING.repIDToIndex(branch, msg.sender)
+    if REPORTING.repIDToIndex(branch, tx.origin) != 0 or REPORTING.getReporterID(branch, 0) == tx.origin:
+        index = REPORTING.repIDToIndex(branch, tx.origin)
     else:
         index = REPORTING.getNumberReporters(branch)
-        REPORTING.addReporter(branch, msg.sender, 0, 0, 0)
+        REPORTING.addReporter(branch, tx.origin, 0, 0, 0)
     REPORTING.setRep(branch, index, 47*ONE)
-    CONSENSUS.initialPenalizedSetting(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
+    CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
     return(1)
 
 def fundNewAccount(branch):
