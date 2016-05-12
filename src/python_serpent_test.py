@@ -449,40 +449,36 @@ def test_close_market():
         c.incrementPeriod(1010101)
         i += 1
     blocktime = s.block.timestamp
-    event1 = c.createEvent(1010101, "new event", blocktime, 2**64, 2**65, 2, "ok")
+    event1 = c.createEvent(1010101, "new event", blocktime+1, 2**64, 2**65, 2, "ok")
     bin_market = c.createMarket(1010101, "new market", 184467440737095516, [event1], 1, 2, 3, 0, "yayaya", value=10**19)
-    event2 = c.createEvent(1010101, "new ok event", blocktime, 2**64, 2**65, 2, "ok")
+    event2 = c.createEvent(1010101, "new ok event", blocktime+1, 2**64, 2**65, 2, "ok")
     bin_market2 = c.createMarket(1010101, "new matrket", 184467440737095516, [event2], 1, 2, 3, 0, "yayaya", value=10**19)
-    event3 = c.createEvent(1010101, "new sdok event", blocktime, 2**64, 2**65, 2, "ok")
+    event3 = c.createEvent(1010101, "new sdok event", blocktime+1, 2**64, 2**65, 2, "ok")
     bin_market3 = c.createMarket(1010101, "new matrket", 184467440737095516, [event3], 1, 2, 3, 0, "yayaya", value=10**19)
-    event4 = c.createEvent(1010101, "newsdf sdok event", blocktime, 2**64, 2**65, 2, "ok")
+    event4 = c.createEvent(1010101, "newsdf sdok event", blocktime+1, 2**64, 2**65, 2, "ok")
     bin_market4 = c.createMarket(1010101, "new matrket", 184467440737095516, [event4], 1, 2, 3, 0, "yayaya", value=10**19)
 
     # categorical
-    event5 = c.createEvent(1010101, "new sdokdf event", blocktime+2, 2**64, 5*2**64, 3, "ok")
+    event5 = c.createEvent(1010101, "new sdokdf event", blocktime+1, 2**64, 5*2**64, 3, "ok")
     # scalar
-    event6 = c.createEvent(1010101, "new sdokdf mevent", blocktime+2, -100*2**64, 200*2**64, 2, "ok")
+    event6 = c.createEvent(1010101, "new sdokdf mevent", blocktime+1, -100*2**64, 200*2**64, 2, "ok")
 
     market5 = c.createMarket(1010101, "new market", 184467440737095516, [event5, event6], 1, 2, 3, 0, "yayaya", value=10**19)
     c.cashFaucet(sender=t.k2)
     print c.buyCompleteSets(bin_market2, 10*2**64, sender=t.k2)
     periodLength = c.getPeriodLength(1010101)
     c.incrementPeriod(1010101)
-    s.mine(1)
-    remainder = s.block.timestamp%periodLength
-    diff = periodLength - remainder + 1
-    while(remainder >= periodLength/2):
-        time.sleep(diff)
+    while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
+        time.sleep(c.getPeriodLength(1010101)/2)
         s.mine(1)
     report_hash = c.makeHash(0, 2**64, event1, s.block.coinbase)
     report_hash2 = c.makeHash(0, 2*2**64, event2, s.block.coinbase)
     report_hash3 = c.makeHash(0, 2*2**64, event3, s.block.coinbase)
     report_hash4 = c.makeHash(0, 3*2**63, event4, s.block.coinbase)
-    print c.submitReportHash(event1, report_hash)==1
+    print c.submitReportHash(event1, report_hash)
     assert(c.submitReportHash(event1, report_hash)==1), "Report hash submission failed"
     assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
     assert(c.submitReportHash(event4, report_hash4)==1), "Report hash submission failed"
-    s.mine(1)
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
@@ -490,11 +486,8 @@ def test_close_market():
     assert(c.submitReport(event4, 0, 3*2**63, 2**64)==1), "Report submission failed"
     assert(c.closeMarket(1010101, market5)==0), "Not expired check [and not early resolve due to not enough reports submitted check] broken"
     assert(c.submitReport(event1, 0, 2**64, 2**64)==1), "Report submission failed"
-    s.mine(1)
-    remainder = s.block.timestamp%periodLength
-    diff = periodLength - remainder + 1
-    while(remainder >= periodLength/2):
-        time.sleep(diff)
+    while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
+        time.sleep(c.getPeriodLength(1010101)/2)
         s.mine(1)
     c.incrementPeriod(1010101)
     c.setUncaughtOutcome(event1, 0)
@@ -513,6 +506,11 @@ def test_close_market():
     gas_use(s)
     new = c.balance(s.block.coinbase)
     newK = c.balance(c.getSender(sender=t.k2))
+    print new
+    print orig
+    print newNew
+    print newNewK
+    print newK
     # get 1/2 of liquidity (50) + 42 for event bond
     assert((new - orig)>=200*2**64 and (new - orig)<=240*2**64), "Event bond not returned properly"
     assert(c.balance(bin_market2)==10*2**64), "Should only be winning shares remaining issue"
@@ -543,7 +541,7 @@ def test_consensus():
     s.mine(1)
     periodLength = c.getPeriodLength(1010101)
     i = c.getVotePeriod(1010101)
-    while i < int(s.block.timestamp/c.getPeriodLength(1010101)):
+    while i < int((s.block.timestamp+1)/c.getPeriodLength(1010101)):
         c.incrementPeriod(1010101)
         i += 1
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
@@ -635,7 +633,6 @@ def test_consensus():
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     print "Test consensus OK"
 
-# todo check again
 def test_slashrep():
     global initial_gas
     initial_gas = 0
@@ -650,7 +647,7 @@ def test_slashrep():
     event2 = c.createEvent(1010101, "new eventt", blocktime+1, 2**64, 2**65, 2, "ok")
     bin_market2 = c.createMarket(1010101, "new market2", 184467440737095516, [event2], 1, 2, 3, 0, "ayayaya", value=10**19)
     i = c.getVotePeriod(1010101)
-    while i < (int(blocktime/c.getPeriodLength(1010101))):
+    while i < (int((blocktime+1)/c.getPeriodLength(1010101))):
         c.incrementPeriod(1010101)
         i += 1
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
@@ -661,8 +658,9 @@ def test_slashrep():
     print c.submitReportHash(event1, report_hash)
     print c.getVotePeriod(1010101)
     print blocktime / 15
-    print blocktime % 15
-    assert(c.submitReportHash(event1, report_hash)==1), "Report hash submission failed"
+    print s.block.timestamp / 15
+    print s.block.timestamp % 15
+    #assert(==1), "Report hash submission failed"
     assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
     c.slashRep(1010101, 0, 2**64, s.block.coinbase, event1, 1)
     s.mine(1)
@@ -761,7 +759,7 @@ def test_catchup():
     report_hash = c.makeHash(0, 2**64, event1, s.block.coinbase)
     report_hash2 = c.makeHash(0, 2*2**64, event2, s.block.coinbase)
     i = c.getVotePeriod(1010101)
-    while i < int((blocktime/c.getPeriodLength(1010101))):
+    while i < int(((blocktime+1)/c.getPeriodLength(1010101))):
         c.incrementPeriod(1010101)
         i += 1
     periodLength = c.getPeriodLength(1010101)
@@ -857,8 +855,8 @@ if __name__ == '__main__':
     #test_create_branch()
     #test_send_rep()
     #test_make_reports()
-    #test_close_market()
-    test_consensus()
+    test_close_market()
+    #test_consensus()
     #test_catchup()
     #test_slashrep()
     #test_claimrep()
