@@ -40,6 +40,7 @@ data numReqEvents[][]
 
 data mode_items[][](report_value[], current_mode, current_mode_items)
 
+
 def refundCost(to, value):
     send(to, value)
     return(1)
@@ -292,8 +293,9 @@ def setNumReportsEvent(branch, votePeriod, eventID, num):
     self.branches[branch].numReportsEvent[votePeriod][eventID] = num
     return(1)
     
-def addReportToEvent(branch, votePeriod, eventID):
+def addReportToEvent(branch, votePeriod, eventID, sender):
     self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
+    self.branches[branch].numReportsActual[sender][votePeriod] += 1
     return(1)
 
 def addReportExpected(branch, votePeriod, eventID):

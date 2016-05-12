@@ -28,8 +28,6 @@ def twoOutcomes(market, winningOutcome: arr, events: arr, sender):
     pricePerShare1 = ONE - pricePerShare1
     # distribute cashcoin to the people who won money by holding winning shares
     participantNumber = MARKETS.getParticipantNumber(market, sender)
-    if(participantNumber == -1):
-        return(-1)
     participant = MARKETS.getParticipantID(market, participantNumber)
     # for each winning outcome do...
     n = 0

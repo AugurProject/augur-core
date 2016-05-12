@@ -96,7 +96,7 @@ def trade(max_value, max_amount, trade_ids:arr):
         amount = trade[3]
         price = trade[4]
         owner = trade[5]
-        outcome = trade[8]
+        outcome = trade[7]
         if(owner == msg.sender or owner == tx.origin):
             return(0)
         # Make sure the trade has been mined, obvious HFT prevention

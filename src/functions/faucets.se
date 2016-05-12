@@ -23,10 +23,12 @@
 # If you have questions, please contact jack@augur.net or joey@augur.net.
 
 import reporting as REPORTING
+import events as EVENTS
 import cash as CASH
 import consensus as CONSENSUS
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
+import forking as FORKING
 inset('refund.se')
 
 # Error -1: Hey, you're not broke!
@@ -39,13 +41,13 @@ def cashFaucet():
 
 def reputationFaucet(branch):
     refund()
-    if REPORTING.repIDToIndex(branch, msg.sender) != 0 or REPORTING.getReporterID(branch, 0) == msg.sender:
-        index = REPORTING.repIDToIndex(branch, msg.sender)
+    if REPORTING.repIDToIndex(branch, tx.origin) != 0 or REPORTING.getReporterID(branch, 0) == tx.origin:
+        index = REPORTING.repIDToIndex(branch, tx.origin)
     else:
         index = REPORTING.getNumberReporters(branch)
-        REPORTING.addReporter(branch, msg.sender)
+        REPORTING.addReporter(branch, tx.origin, 0, 0, 0)
     REPORTING.setRep(branch, index, 47*ONE)
-    CONSENSUS.initialPenalizedSetting(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
+    CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
     return(1)
 
 def fundNewAccount(branch):
@@ -60,43 +62,72 @@ def fundNewAccount(branch):
     CASH.setCash(msg.sender, 10000*2^64)
     return(1)
 
-def claimInitialRep(parent, branchID):
+def claimInitialRep(parent, branch):
     refund()
-    if(BRANCHES.getParent(branchID)!=parent):
+    if(BRANCHES.getParent(branch)!=parent):
         return(0)
     # have 1 month to claim
-    # make sure user can only claim once, use before rep of period where fork was initiated in todo
-    if(REPORTING.repIDToIndex(branchID, msg.sender)==0 && block.timestamp < (BRANCHES.getCreationDate(branchID) + TWENTYFOURHR*30)):
-        i = REPORTING.getNumberReporters(branchID)
-        parentPeriod = BRANCHES.getParentPeriod(branchID)
-        # is this the right before rep so user hasn't lost round 2 bond if they made one
+    if(REPORTING.repIDToIndex(branch, msg.sender)==0 && block.timestamp < (BRANCHES.getCreationDate(branch) + TWENTYFOURHR*30)):
+        parentPeriod = BRANCHES.getParentPeriod(branch)
+        forkPeriod = BRANCHES.getForkPeriod(parent)
+        fork = REPORTING.getFork(branch)
+        forkEvent = REPORTING.getEventForkedOver(parent)
+        report = EXPEVENTS.getReport(parent, forkPeriod, forkEvent, msg.sender)
+        outcome = EVENTS.getUncaughtOutcome(forkEvent)
+        if(binary(forkEvent)):
+            outcome = catch(outcome)
+        ethical = ethic_catch(EVENTS.getEthical(forkEvent))
+        ethicReport = EXPEVENTS.getEthicReport(parent, forkPeriod, forkEvent, msg.sender)
         rep = EXPEVENTS.getBeforeRep(parent, parentPeriod, msg.sender)
-        reporterID = msg.sender
-        self.Reporting[branchID].reputation[i].reporterID = reporterID
-        if(self.Reporting[branchID].fork && (userReportedOutcomeEqualToOutcomePreFork || userDidntReportOnForkedEvent || (forkedOverEthicality && userReportedOnEthicalityEqualToPreFork))):
+        repDecrease = 0
+        if(fork && (report==outcome || report==0 || (FORKING.getForkedOverEthicality(forkEvent) && ethical==ethicReport))):
             # take away 30% of rep from liars and those who didn't report
             repDecrease = rep*12912720851596685312/ONE
             rep = rep - repDecrease
-            amountLeftToPayBonder = doubleOfTheBond - bondDoubledThusFar
+            amountLeftToPayBonder = FORKING.getBondAmount(forkEvent) - FORKING.getBondPaid(forkEvent)
             if(repDecrease < amountLeftToPayBonder):
                 # send all the rep to the fork bond poster
+                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, FORKING.getForkBondPoster(forkEvent)), repDecrease)
             else:
                 # send amountLeftToPayBonder [if positive] to the fork bond poster
-                # send the rest to the new branch's redistribution pool
-        self.Reporting[branchID].reputation[i].repValue = rep
-        self.Reporting[branchID].activeRep += rep
-        self.Reporting[branchID].repIDtoIndex[reporterID] = i
+                if(amountLeftToPayBonder > 0):
+                    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, FORKING.getForkBondPoster(forkEvent)), amountLeftToPayBonder)    
+                    # send the rest to the new branch's redistribution pool
+                    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), (repDecrease - amountLeftToPayBonder))
+                else:
+                    # send to new branch's redistribution pool
+                    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), repDecrease)
         if(fork):
-            forkPeriod = fetchPeriodWhenForked
             CONSENSUS.initialPenalizedSetting(branch, msg.sender, forkPeriod)
         else:
             CONSENSUS.initialPenalizedSetting(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
-        self.Reporting[branchID].dormantRep[i].reporterID = reporterID
-        dormantRep = EXPEVENTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branchID), msg.sender)
-        self.Reporting[branchID].dormantRep[i].repValue = dormantRep
-        self.Reporting[branchID].numberReporters += 1
-        self.Reporting[branchID].totalRep += rep + dormantRep
+        dormantRep = EXPEVENTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branch), msg.sender)
+        REPORTING.addReporter(branch, msg.sender, rep, dormantRep, repDecrease)
         return(1)
     else:
         # already claimed or too late
         return(0)
+
+        
+macro YES: TWO
+macro NO: ONE
+macro BAD: 3 * ONEHALF
+macro CATCH_TOLERANCE: ONE / 10
+
+macro binary($event):
+    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
+
+# Bins values to 1, 1.5, 2
+macro catch($x):
+    if($x < (BAD - CATCH_TOLERANCE)):
+        NO
+    elif($x > (BAD + CATCH_TOLERANCE)):
+        YES
+    else:
+        BAD
+        
+macro ethic_catch($x):
+    if($x < ONEHALF):
+        0
+    else:
+        ONE

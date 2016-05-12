@@ -26,7 +26,6 @@ import events as EVENTS
 import markets as MARKETS
 import reporting as REPORTING
 import backstops as BACKSTOPS
-# import forking as FORKING
 import fxpFunctions as FXP
 inset('refund.se')
 
@@ -65,7 +64,7 @@ def submitReportHash(event, reportHash):
     shaHash = sha3(x, items=1)/ONE
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
-    if(residual < periodLength/2 && shaHash <= reportingThreshold):
+    if(residual <= periodLength/2 && shaHash <= reportingThreshold):
         if(EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)==0):
             EXPEVENTS.addReportExpected(branch, votePeriod, event)
         EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
@@ -83,10 +82,10 @@ def submitReportHash(event, reportHash):
     # -6: already resolved
     # -7: <48 hr left in period, too late to report, able to put up readj. bonds though
 def submitReport(event, salt, report, ethics):
+    branch = EVENTS.getBranch(event)
     balance = REPORTING.getRepBalance(branch, msg.sender)
     if(balance<ONEHALF):
         return(0)
-    branch = EVENTS.getBranch(event)
     votePeriod = BRANCHES.getVotePeriod(branch)
     if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
         return(-1)
@@ -104,7 +103,7 @@ def submitReport(event, salt, report, ethics):
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
         realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
-        if(self.makeHash(salt, report, eventID, sender)!=realHash || realHash==0):
+        if(self.makeHash(salt, report, eventID, msg.sender)!=realHash || realHash==0):
             return(-3)
         # forkedOverEthicality = FORKING.getForkedOverEthicality(event)
         forkedOverThisEvent = 0
@@ -137,7 +136,7 @@ def submitReport(event, salt, report, ethics):
             else:
                 ethics = (EVENTS.getEthics(event)*EXPEVENTS.getNumReportsEvent(branch, votePeriod, event) + ethics) / (EXPEVENTS.getNumReportsEvent(branch, votePeriod, event) + 1)
             EVENTS.setEthics(eventID, ethics)
-        EXPEVENTS.addReportToEvent(branch, votePeriod, eventID)
+        EXPEVENTS.addReportToEvent(branch, votePeriod, eventID, msg.sender)
         EXPEVENTS.addRepEvent(branch, votePeriod, event, EXPEVENTS.getBeforeRep(branch, period, msg.sender))
         # if 1st report of the period for a reporter
         if(!EXPEVENTS.getReportedPeriod(branch, votePeriod, msg.sender)):

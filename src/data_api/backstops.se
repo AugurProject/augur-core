@@ -1,6 +1,13 @@
 inset('refund.se')
 
-data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final, bondPoster)
+data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final, bondPoster, bondReturned)
+
+def getBondReturned(event):
+    return(self.roundTwo[event].bondReturned)
+    
+def setBondReturned(event):
+    self.roundTwo[event].bondReturned = 1
+    return(1)
 
 def getRoundTwo(event):
     refund()

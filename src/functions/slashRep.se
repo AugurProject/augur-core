@@ -4,17 +4,24 @@ import reporting as REPORTING
 
 inset('refund.se')
 
+data slashed[][]
+
 # anti cheat provide ballot and randomNum mechanism steal deposit
 # Returns:
     # 0: not a valid claim
     # -2: reporter doesn't exist
-def slashRep(branch, salt, report, reporter, eventID):
+def slashRep(branch, salt, report, reporter, eventID, testing):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
         return(-2)
     votePeriod = BRANCHES.getVotePeriod(branch)
+    # if actually past vote period dont allow it
+    if(!testing):
+        votePeriodShouldBe = block.timestamp / periodLength - 1
+        if(votePeriodShouldBe!=votePeriod):
+            return(0)
     realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, eventID)
     hashInfo = array(4)
     hashInfo[0] = reporter
@@ -25,16 +32,20 @@ def slashRep(branch, salt, report, reporter, eventID):
     if(reportHash!=realHash):
         return(0)
     else:
-        reporterIndex = REPORTING.repIDToIndex(branch, reporter)
-        trutherIndex = REPORTING.repIDToIndex(branch, msg.sender)
-        # if the truther's rep. account doesn't exist, make one
-        if(REPORTING.getReporterID(branch, trutherIndex)!=msg.sender):
-            trutherIndex = REPORTING.getNumberReporters(branch)
-            REPORTING.addReporter(branch, msg.sender)
-        if(REPORTING.getReporterID(branch, reporterIndex)!=reporter):
-            return(-2)
-        reporterBalance = REPORTING.getRepBalance(branch, reporter)
-        REPORTING.setRep(branch, reporterIndex, 0)
-        trutherBalance = REPORTING.getRepBalance(branch, msg.sender)
-        REPORTING.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*ONEHALF / ONE))
+        if(!self.slashed[votePeriod][reporter]):
+            reporterIndex = REPORTING.repIDToIndex(branch, reporter)
+            trutherIndex = REPORTING.repIDToIndex(branch, msg.sender)
+            # if the truther's rep. account doesn't exist, make one
+            if(REPORTING.getReporterID(branch, trutherIndex)!=msg.sender):
+                trutherIndex = REPORTING.getNumberReporters(branch)
+                REPORTING.addReporter(branch, msg.sender)
+            if(REPORTING.getReporterID(branch, reporterIndex)!=reporter):
+                return(-2)
+            reporterBalance = REPORTING.getRepBalance(branch, reporter)
+            REPORTING.setRep(branch, reporterIndex, 0)
+            trutherBalance = REPORTING.getRepBalance(branch, msg.sender)
+            REPORTING.setRep(branch, trutherIndex, (trutherBalance + reporterBalance*ONEHALF / ONE))
+            self.slashed[votePeriod][reporter] = 1
+        else:
+            return(0)
     return(reporterBalance)
