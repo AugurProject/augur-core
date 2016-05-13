@@ -25,6 +25,10 @@ data periodBalance[][]
 data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenalized), penalizedUpTo[], feesCollected[][])
 
 
+def getPenalizedUpTo(branch, sender)
+
+def setPenalizedUpTo(branch, sender, period)
+
 def init():
     self.baseReportersLastPeriod[1010101] = 2*3
     

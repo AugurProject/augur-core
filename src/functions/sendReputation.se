@@ -231,3 +231,7 @@ def convertToActiveRep(branch, value):
             return(0)
     else:
         return(0)
+        
+    
+macro hasReported($branch, $period):
+    EXPEVENTS.getReportedPeriod($branch, $period, msg.sender)

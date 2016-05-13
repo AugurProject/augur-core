@@ -744,7 +744,7 @@ def test_catchup():
     blocktime = s.block.timestamp
     assert(c.penalizationCatchup(1010101)==1)
     diffInPeriods = i - origi
-    diffInPeriods = min(diffInPeriods, 22)
+    diffInPeriods = min(diffInPeriods, 23)
     print blocktime
     print c.getVotePeriod(1010101)
     print blocktime / 15
