@@ -16,7 +16,6 @@ import sendReputation as SENDREP
 import roundTwo as ROUNDTWO
 import expiringEvents as EXPEVENTS
 import createBranch as CREATEBRANCH
-import markets as MARKETS
 inset('refund.se')
 
 
