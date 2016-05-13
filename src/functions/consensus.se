@@ -152,7 +152,7 @@ def penalizeWrong(branch, event):
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
     if(!self.branch[branch].penalized[lastPeriod][msg.sender].event[event] && reportValue && (outcome!=0 or EVENTS.getRejected(event))):
         if(EVENTS.getRejectedPeriod(event)==lastPeriod):
-            if(scalar(event))
+            if(scalar(event)):
                 outcome = ONEHALF
             else:
                 outcome = ONEHALF*3
