@@ -44,7 +44,9 @@ macro POINTZEROSIX: 1106804644422573056
 #    return(1)
 
 def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution:str, tradingFee, tag1, tag2, tag3, makerFees, extraInfo:str):
-    return(self.createMarket(branch, description, tradingFee, [self.createEvent(branch, description, expDate, minValue, maxValue, numOutcomes, resolution)], tag1, tag2, tag3, makerFees, extraInfo))
+    event = self.createEvent(branch, description, expDate, minValue, maxValue, numOutcomes, resolution)
+    market = self.createMarket(branch, description, tradingFee, [event], tag1, tag2, tag3, makerFees, extraInfo)
+    return(market)
 
 # numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0
 # to 11.0 would be 11 outcomes (if incremented by 0.1)
