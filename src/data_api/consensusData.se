@@ -11,7 +11,6 @@ inset('refund.se')
 
 data baseReportersLastPeriod[]
 
-event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
 
 data feeFirst[][]
 data periodBalance[][]
@@ -74,3 +73,11 @@ denominator
 def getRRDone(branch, reporter):
     refund()
     return(repRedistributionDone(branch, reporter))
+
+macro repRedistributionDone($branch, $reporter):
+    lastPeriodPenalized = self.branch[$branch].penalizedUpTo[$reporter]
+    lastPeriod = BRANCHES.getVotePeriod($branch)-1
+    if(lastPeriod==lastPeriodPenalized):
+        1
+    else:
+        0

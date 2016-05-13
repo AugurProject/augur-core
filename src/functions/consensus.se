@@ -1,29 +1,12 @@
-macro YES: TWO
-macro NO: ONE
-macro BAD: 3 * ONEHALF
-macro CATCH_TOLERANCE: ONE / 10
+import reporting as REPORTING
+import branches as BRANCHES
+import expiringEvents as EXPEVENTS
+import events as EVENTS
+import markets as MARKETS
+import backstops as BACKSTOPS
+import consensusData as CONSENSUS
 
-# Bins values to 1, 1.5, 2
-macro catch($x):
-    if($x < (BAD - CATCH_TOLERANCE)):
-        NO
-    elif($x > (BAD + CATCH_TOLERANCE)):
-        YES
-    else:
-        BAD
-
-macro ethic_catch($x):
-    if($x < ONEHALF):
-        0
-    else:
-        ONE
-
-macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
-
-macro categorical($event):
-    (EVENTS.getNumOutcomes($event)>2)
-
+event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
 
 #1. Record rep at start of report period [before rep in make reports]
 #2. Penalize for each event
@@ -31,81 +14,59 @@ macro categorical($event):
 #4. For first half of the new period, people can do penalization for the last period, for the second half users have to claim rep then trading fees
 #5. If you don't do it for all events or don't penalize for not reporting enough, autolose 20% rep each period one does this (b/c they're trying to cheat)
 # Errors:
-    # -1: pushed forward event already resolved, so can't redistribute rep based off of its original expected expiration period
+    #  0: event is a fork event
+    # -1: need to penalize in round 2 penalize function
     # -2: already past first half of new period and needed to penalize before then
     # -3: need to do not enough reports penalization [or lackthereof]
+    # -4: in fork period only thing that rbcr is done on is the round 2 event in the original branch via round 2 penalize
+    # -5: already done for all events in this period
+    # -6: forked events should be penalized using the fork penalization function
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized
-# always use uncaught + caught version as opposed to actual outcome for this to be safe wrt ethicality / diff. for payouts
-# make max rep loss 20%, do V way to limit excess cuts
 def penalizeWrong(branch, event):
     refund()
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     afterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
-    if(BRANCHES.getForkPeriod(branch) == lastPeriod && penalizedForkedEventIfReportedOn && !penalizeduptolastperiod):
-        self.branch[branch].penalized[lastPeriod][msg.sender].num += EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
-        self.branch[branch].penalizedUpTo[msg.sender] = lastPeriod
-        self.branch[branch].denominator[lastPeriod] += afterRep
-        return(1)
-    elif(BRANCHES.getForkPeriod(branch) == lastPeriod):
-        return(-10)
-    if(BRANCHES.getForkPeriod(branch)+1 == lastPeriod && !penalizeduptolastperiod):
-        self.branch[branch].penalizedUpTo[msg.sender] = lastPeriod
-        self.branch[branch].denominator[lastPeriod] += afterRep
-        return(1)
-    elif(BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
-        return(-11)
-    if(EVENTS.getForked(event)):
-        return(0)
-    if(!self.branch[branch].penalized[lastPeriod][msg.sender].notEnoughReportsPenalized):
-        return(-3)
+    forkPeriod = BRANCHES.getForkPeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
-    if(residual > periodLength/2):
+    newRep = 0
+    oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
+    roundTwo = BACKSTOPS.getRoundTwo(event)
+    outcome = catch(EVENTS.getUncaughtOutcome(event))
+    if(scalar(event) or categorical(event)):
+        outcome = EVENTS.getUncaughtOutcome(event)
+    p = self.proportionCorrect(event)
+    reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
+    if(self.branch[branch].penalizedUpTo[msg.sender]==lastPeriod):
+        return(-5)
+    elif(!self.branch[branch].penalized[lastPeriod][msg.sender].notEnoughReportsPenalized):
+        return(-3)
+    elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
         return(-2)
-    # accounts for if no events in a period
-    if(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
+    elif(forkPeriod == lastPeriod):
+        return(-4)
+    elif(forkPeriod+1 == lastPeriod):
         self.branch[branch].penalizedUpTo[msg.sender] = lastPeriod
         self.branch[branch].denominator[lastPeriod] += afterRep
         return(1)
-
-    if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event) && MARKETS.getPushedForward(market)):
-        if(lastPeriod==EVENTS.getOriginalExpiration(event)/BRANCHES.getPeriodLength(branch)):
-            return(-1)
-
-    newRep = 0
-    outcome = catch(EVENTS.getUncaughtOutcome(event))
-    reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
-    oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
-    p = self.proportionCorrect(event)
-    if(scalar(event) or categorical(event)):
-        outcome = EVENTS.getUncaughtOutcome(event)
-    
-    # for a reporter for last period if they reported on it the first time [a round 2 event], prevent them from reporting on it, but still do the rep redistrib. at the end before returning in case this event is the last one a user submits for reporting and increment the num b/c it shouldn't be penalized until the next period resolution is over
-    if(BACKSTOPS.getRoundTwo(event) && !self.branch[branch].penalized[lastPeriod][msg.sender].event[event] && reportValue && outcome!=0):
+    elif(EVENTS.getForked(event)):
+        return(0)
+    # if no events in a period
+    elif(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
+        self.branch[branch].penalizedUpTo[msg.sender] = lastPeriod
+        self.branch[branch].denominator[lastPeriod] += afterRep
+        return(1)
+    elif(roundTwo && outcome!=0):
+        return(-1)
+    # lastperiod is where people who originally voted on a round 2 event voted the first time - want num events penalized to go up but not to actually be penalized for it yet
+        # shouldn't be penalized until the next period resolution is over [since it's a round 2 event]
+    if(roundTwo && !self.branch[branch].penalized[lastPeriod][msg.sender].event[event] && reportValue):
         self.branch[branch].penalized[lastPeriod][msg.sender].event[event] = 1
         self.branch[branch].penalized[lastPeriod][msg.sender].num += 1
-        if(EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)==self.branch[branch].penalized[lastPeriod][msg.sender].num):
-            newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
-            if(newAfterRep <= 0):
-                newAfterRep = 0
-                EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
-            self.branch[branch].penalizedUpTo[msg.sender] = lastPeriod
-            self.branch[branch].denominator[lastPeriod] += newAfterRep
-            totalRepDifference = newAfterRep - oldRep
-            if(repBalance + totalRepDifference <= 0):
-                totalRepDifference = -1*repBalance
-            if(totalRepDifference<0):
-                # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
-                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), totalRepDifference)
-                # sends that rep to the branch
-                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
-    if(!self.branch[branch].penalized[lastPeriod][msg.sender].event[event] && reportValue && (outcome!=0 or EVENTS.getRejected(event))):
-        if(EVENTS.getRejectedPeriod(event)==lastPeriod):
-            if(scalar(event))
-                outcome = ONEHALF
-            else:
-                outcome = ONEHALF*3
+    elif(!self.branch[branch].penalized[lastPeriod][msg.sender].event[event] && reportValue && (outcome!=0 or EVENTS.getRejected(event))):
+        if(EVENTS.getRejectedPeriod(event)==lastPeriod && scalar(event)):
+            outcome = ONEHALF
         # wrong
         #184467440737095520 == 0.01 in fxp
         if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
@@ -120,27 +81,26 @@ def penalizeWrong(branch, event):
                 p = -(abs(diff)/2) + ONE
             newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
         #smoothedRep = oldRep*.8 + newRep*.2
-        smoothedRep = oldRep * 14757395258967642112/ONE + newRep * 3689348814741910528/ONE
-        repChange = smoothedRep - oldRep
+        repChange = oldRep * 14757395258967642112/ONE + newRep * 3689348814741910528/ONE - oldRep
         newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
         log(type=penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue)
         EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
         self.branch[branch].penalized[lastPeriod][msg.sender].event[event] = 1
         self.branch[branch].penalized[lastPeriod][msg.sender].num += 1
-        if(EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)==self.branch[branch].penalized[lastPeriod][msg.sender].num):
-            if(newAfterRep <= 0):
-                newAfterRep = 0
-                EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
-            self.branch[branch].penalizedUpTo[msg.sender] = lastPeriod
-            self.branch[branch].denominator[lastPeriod] += newAfterRep
-            totalRepDifference = newAfterRep - oldRep
-            if(repBalance + totalRepDifference <= 0):
-                totalRepDifference = -1*repBalance
-            if(totalRepDifference<0):
-                # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
-                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), totalRepDifference)
-                # sends that rep to the branch
-                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
+    if(EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)==self.branch[branch].penalized[lastPeriod][msg.sender].num):
+        if(newAfterRep <= 0):
+            newAfterRep = 0
+            EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+        self.branch[branch].penalizedUpTo[msg.sender] = lastPeriod
+        self.branch[branch].denominator[lastPeriod] += newAfterRep
+        totalRepDifference = newAfterRep - oldRep
+        if(repBalance + totalRepDifference <= 0):
+            totalRepDifference = -1*repBalance
+        if(totalRepDifference<0):
+            # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), totalRepDifference)
+            # sends that rep to the branch
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
     return(1)
 
 # ui has to call this to stay cheap / not check it elsewhere
@@ -159,19 +119,12 @@ def incrementPeriodAfterReporting(branch):
         return(1)
     else:
         return(0)
-        
+
 ### Helper functions:
-
-macro abs($a):
-    if($a<0):
-        $a = -$a
-    $a
-
-macro ethic_catch($x):
-    if($x < ONEHALF):
-        0
-    else:
-        ONE
+macro YES: TWO
+macro NO: ONE
+macro BAD: 3 * ONEHALF
+macro CATCH_TOLERANCE: ONE / 10
 
 def proportionCorrect(event):
     refund()
@@ -204,11 +157,35 @@ macro periodOver($branch):
         1
     else:
         0
-
-macro repRedistributionDone($branch, $reporter):
-    lastPeriodPenalized = self.branch[$branch].penalizedUpTo[$reporter]
-    lastPeriod = BRANCHES.getVotePeriod($branch)-1
-    if(lastPeriod==lastPeriodPenalized):
-        1
+        
+# Bins values to 1, 1.5, 2
+macro catch($x):
+    if($x < (BAD - CATCH_TOLERANCE)):
+        NO
+    elif($x > (BAD + CATCH_TOLERANCE)):
+        YES
     else:
+        BAD
+
+macro ethic_catch($x):
+    if($x < ONEHALF):
         0
+    else:
+        ONE
+
+macro scalar($event):
+    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
+
+macro categorical($event):
+    (EVENTS.getNumOutcomes($event)>2)
+
+macro abs($a):
+    if($a<0):
+        $a = -$a
+    $a
+
+macro ethic_catch($x):
+    if($x < ONEHALF):
+        0
+    else:
+        ONE

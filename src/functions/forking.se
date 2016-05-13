@@ -1,4 +1,4 @@
-
+# need to assure people penalize for fork period
 #Notes:
     #Anyone can pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.  
     #In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep is redistributed accordingly.  
@@ -301,7 +301,7 @@ def penalizeOnForkedEvent(branch, event):
         return(-3)
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
-    if(residual > periodLength/2):
+    if(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
         return(-2)
     if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event) && MARKETS.getPushedForward(market)):
         if(lastPeriod==EVENTS.getOriginalExpiration(event)/BRANCHES.getPeriodLength(branch)):

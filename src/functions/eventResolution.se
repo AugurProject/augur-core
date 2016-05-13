@@ -75,6 +75,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             CASH.subtractCash($market, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
             # delete old $event from future events exp
             EXPEVENTS.removeEvent($branch, EVENTS.getOriginalExpiration($event)/$periodLength)
+            EXPEVENTS.deleteEvent($branch, EVENTS.getOriginalExpiration($event)/$periodLength, $event)
 
 def resolveBinary(event, market, branch, votingPeriodEvent, sender):
     refund()

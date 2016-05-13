@@ -229,6 +229,12 @@ def addEvent(branch, futurePeriod, eventID, subsidy):
     self.EventsExpDates[branch][futurePeriod].subsidy[eventID] += subsidy
     return(1)
 
+def deleteEvent(branch, period, event):
+    i = self.EventIDToIndex[period][event]
+    self.EventsExpDates[branch][period].events[i] = 0
+    self.EventIDToIndex[period][event] = 0
+    return(1)
+
 def removeEvent(branch, period):
     refund()
     self.EventsExpDates[branch][period].numberRemoved += 1

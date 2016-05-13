@@ -104,7 +104,8 @@ def penalizeRoundTwoWrong(branch, event):
                 # sends that rep to the bonded challenger
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), -totalRepDifference)
                 self.bondPaid[event] += -1*totalRepDifference
-
+    else:
+        return(0)
     self.branch[branch].penalized[lastPeriod][msg.sender].event[event] = 1
     self.branch[branch].penalized[lastPeriod][msg.sender].num += 1
     if(eventwasaforkedevent):
