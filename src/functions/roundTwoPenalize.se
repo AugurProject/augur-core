@@ -125,3 +125,15 @@ def penalizeRoundTwoWrong(branch, event):
             # sends that rep to the branch
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
     return(1)
+
+
+
+
+macro scalar($event):
+    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
+        
+macro binary($event):
+    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
+        
+macro categorical($event):
+    (EVENTS.getNumOutcomes($event)>2)

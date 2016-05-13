@@ -1,45 +1,3 @@
-import cash as CASH
-import expiringEvents as EXPEVENTS
-import reporting as REPORTING
-import events as EVENTS
-import fxpFunctions as FXP
-import makeReports as MAKEREPORTS
-import branches as BRANCHES
-import markets as MARKETS
-import backstops as BACKSTOPS
-inset('refund.se')
-
-
-# todo move to consensus data_api and backstops for round 2
-# round two consensus data [note/todo: UI should show round 2 events first / up top]
-data bondPaid[]
-data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, final)
-data baseReportersLastPeriod[]
-
-event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
-
-def init():
-    self.baseReportersLastPeriod[1010101] = 2*3
-
-# todo: make it 0.98 * old rep + 0.02 * new rep
-# (1-k) * old rep + k * new rep where k = 0.2 / (number of events you reported on last period)
-
-
-# branch takes a branchID
-    # denominator takes a vote period
-    # penalized takes for a given period a user / address reported for a certain event and num of events they reported on in that period in total
-    # penalizedUpTo is the latest period a user has done the penalization for
-    # fees collected states whether for a given period a user collected fees
-    # rep collected states whether for a given period a user collected rep
-
-def getFeesCollected(branch, address, period):
-    return(self.branch[branch].feesCollected[period][address])
-
-def setFeesCollected(branch, address, period):
-    self.branch[branch].feesCollected[period][address] = 1
-    return(1)
-
-    
 macro YES: TWO
 macro NO: ONE
 macro BAD: 3 * ONEHALF
@@ -59,6 +17,13 @@ macro ethic_catch($x):
         0
     else:
         ONE
+
+macro scalar($event):
+    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
+
+macro categorical($event):
+    (EVENTS.getNumOutcomes($event)>2)
+
 
 #1. Record rep at start of report period [before rep in make reports]
 #2. Penalize for each event
@@ -178,9 +143,6 @@ def penalizeWrong(branch, event):
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
     return(1)
 
-def getDenominator(branch, period):
-    refund()
-    return(self.branch[branch].denominator[period])
 
 # call when a user who hasn't reported for a while wants to start again and needs to catch up on penalizations
 # ex:
@@ -307,17 +269,3 @@ macro repRedistributionDone($branch, $reporter):
         1
     else:
         0
-
-def getRRDone(branch, reporter):
-    refund()
-    return(repRedistributionDone(branch, reporter))
-
-
-macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
-        
-macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
-        
-macro categorical($event):
-    (EVENTS.getNumOutcomes($event)>2)

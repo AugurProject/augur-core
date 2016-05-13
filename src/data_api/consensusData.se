@@ -1,6 +1,43 @@
+import cash as CASH
+import expiringEvents as EXPEVENTS
+import reporting as REPORTING
+import events as EVENTS
+import fxpFunctions as FXP
+import makeReports as MAKEREPORTS
+import branches as BRANCHES
+import markets as MARKETS
+import backstops as BACKSTOPS
+inset('refund.se')
+
+data baseReportersLastPeriod[]
+
+event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
+
 data feeFirst[][]
 data periodBalance[][]
+
+# branch takes a branchID
+    # denominator takes a vote period
+    # penalized takes for a given period a user / address reported for a certain event and num of events they reported on in that period in total
+    # penalizedUpTo is the latest period a user has done the penalization for
+    # fees collected states whether for a given period a user collected fees
+    # rep collected states whether for a given period a user collected rep
 data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenalized), penalizedUpTo[], feesCollected[][])
+
+
+def init():
+    self.baseReportersLastPeriod[1010101] = 2*3
+    
+def getDenominator(branch, period):
+    refund()
+    return(self.branch[branch].denominator[period])
+
+def getFeesCollected(branch, address, period):
+    return(self.branch[branch].feesCollected[period][address])
+
+def setFeesCollected(branch, address, period):
+    self.branch[branch].feesCollected[period][address] = 1
+    return(1)
 
 def getFeeFirst(branch, period)
 
@@ -29,3 +66,7 @@ getrrdone
 
 get+set fees collected
 denominator
+
+def getRRDone(branch, reporter):
+    refund()
+    return(repRedistributionDone(branch, reporter))
