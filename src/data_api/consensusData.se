@@ -1,0 +1,31 @@
+data feeFirst[][]
+data periodBalance[][]
+data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenalized), penalizedUpTo[], feesCollected[][])
+
+def getFeeFirst(branch, period)
+
+setfeefirst
+
+def getPeriodBalance(branch, period)
+
+setPeriodBalance(branch, period, balance)
+
+def initialPenalizedSetting(branch, reporter, upto):
+    refund()
+    self.branch[branch].penalizedUpTo[reporter] = upto
+    return(1)
+
+def setNotEnoughPenalized(branch, address, period):
+    self.branch[branch].penalized[period][address].notEnoughReportsPenalized = 1
+    return(1)
+    
+def getNotEnoughPenalized(branch, address, period):
+    return(self.branch[branch].penalized[period][address].notEnoughReportsPenalized)
+    
+def getBaseReportersLastPeriod(branch):
+    return(self.baseReportersLastPeriod[branch])
+
+getrrdone
+
+get+set fees collected
+denominator

@@ -1,6 +1,6 @@
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
-import consensus as CONSENSUS
+import consensusData as CONSENSUS
 import reporting as REPORTING
 import fxpFunctions as FXP
 import makeReports as MAKEREPORTS
@@ -24,7 +24,6 @@ def penalizeNotEnoughReports(branch):
     if(BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
         CONSENSUS.setNotEnoughPenalized(branch, msg.sender, lastPeriod)
         return(1)
-
     if(!EXPEVENTS.getReportedPeriod(branch, lastPeriod, msg.sender)):
         return(-2)
     if(residual > periodLength/2):

@@ -1,12 +1,10 @@
 import cash as CASH
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
-import consensus as CONSENSUS
+import consensusData as CONSENSUS
 import reporting as REPORTING
 inset('refund.se')
 
-data feeFirst[][]
-data periodBalance[][]
 
 # -2: needs to be second half of reporting period to claim rep [1st half is when redistribution is done]
     # after this window, any unclaimed rep is pushed to the next period's redistrib. pool via the first make report submission
@@ -23,10 +21,10 @@ def collectFees(branch):
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod) && EXPEVENTS.getReportedPeriod(branch, lastPeriod, msg.sender)):
         newRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
         denominator = CONSENSUS.getDenominator(branch, lastPeriod)
-        if(!self.feeFirst[branch][lastPeriod]):
-            self.feeFirst[branch][lastPeriod] = 1
-            self.periodBalance[branch][lastPeriod] = REPORTING.getRepBalance(branch, branch)
-        gainedRep = newRep * ONE / denominator * self.periodBalance[branch][lastPeriod] / ONE
+        if(!CONSENSUS.getFeeFirst(branch, period)):
+            CONSENSUS.setFeeFirst(branch, period)
+            CONSENSUS.setPeriodBalance(branch, period, REPORTING.getRepBalance(branch, branch))
+        gainedRep = newRep * CONSENSUS.getPeriodBalance(branch, period) / denominator
         #if(lostRep) newRep should be == EXPEVENTS.getAfterRep(branch, period, msg.sender) + gainedRep
         #if(gainedRep) newRep should be == EXPEVENTS.getBeforeRep(branch, period, msg.sender) + gainedRep
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), gainedRep)

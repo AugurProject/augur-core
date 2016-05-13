@@ -31,7 +31,6 @@ def init():
     # penalizedUpTo is the latest period a user has done the penalization for
     # fees collected states whether for a given period a user collected fees
     # rep collected states whether for a given period a user collected rep
-data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenalized), penalizedUpTo[], feesCollected[][])
 
 def getFeesCollected(branch, address, period):
     return(self.branch[branch].feesCollected[period][address])
@@ -40,20 +39,6 @@ def setFeesCollected(branch, address, period):
     self.branch[branch].feesCollected[period][address] = 1
     return(1)
 
-def setNotEnoughPenalized(branch, address, period):
-    self.branch[branch].penalized[period][address].notEnoughReportsPenalized = 1
-    return(1)
-    
-def getNotEnoughPenalized(branch, address, period):
-    return(self.branch[branch].penalized[period][address].notEnoughReportsPenalized)
-    
-def getBaseReportersLastPeriod(branch):
-    return(self.baseReportersLastPeriod[branch])
-
-def initialPenalizedSetting(branch, reporter, upto):
-    refund()
-    self.branch[branch].penalizedUpTo[reporter] = upto
-    return(1)
     
 macro YES: TWO
 macro NO: ONE
