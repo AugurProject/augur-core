@@ -65,7 +65,7 @@ def claimInitialRep(parent, branch):
         parentPeriod = BRANCHES.getParentPeriod(branch)
         forkPeriod = BRANCHES.getForkPeriod(parent)
         fork = REPORTING.getFork(branch)
-        forkEvent = REPORTING.getEventForkedOver(parent)
+        forkEvent = BRANCHES.getEventForkedOver(parent)
         report = EXPEVENTS.getReport(parent, forkPeriod, forkEvent, msg.sender)
         outcome = EVENTS.getUncaughtOutcome(forkEvent)
         if(binary(forkEvent)):
