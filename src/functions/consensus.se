@@ -31,6 +31,7 @@ def penalizeWrong(branch, event):
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     newRep = 0
+    newAfterRep = 0
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
     roundTwo = BACKSTOPS.getRoundTwo(event)
     outcome = catch(EVENTS.getUncaughtOutcome(event))
