@@ -18,6 +18,7 @@ import expiringEvents as EXPEVENTS
 import createBranch as CREATEBRANCH
 inset('refund.se')
 
+data branch[](denominator[], penalized[][](event[], num, notEnoughReportsPenalized), penalizedUpTo[], feesCollected[][])
 
 #Notes:
     #Anyone can pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.  
@@ -431,6 +432,7 @@ def proportionCorrectForkEvent(event):
         return(0)
 
 
+
 macro scalar($event):
     ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
         
@@ -459,4 +461,3 @@ macro catch($x):
         YES
     else:
         BAD
-
