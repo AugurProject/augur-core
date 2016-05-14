@@ -6,6 +6,8 @@ import markets as MARKETS
 import backstops as BACKSTOPS
 import consensusData as CONSENSUS
 
+inset('refund.se')
+
 event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
 
 #1. Record rep at start of report period [before rep in make reports]

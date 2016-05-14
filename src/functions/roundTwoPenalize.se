@@ -1,6 +1,6 @@
 # So we want to do the rbcr for both period 1 and period 2 at this time
-# penalizeWrong for backstop 1
-# in a fork - done on original branch
+# essentially penalizeWrong for backstop 1 [where everyone reports on a given event]
+# in a fork this is called on the original branch
 def penalizeRoundTwoWrong(branch, event):
     refund()
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
