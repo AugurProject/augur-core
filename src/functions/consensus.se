@@ -23,6 +23,7 @@ event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportV
     # -4: in fork period only thing that rbcr is done on is the round 2 event in the original branch via round 2 penalize
     # -5: already done for all events in this period
     # -6: forked events should be penalized using the fork penalization function
+# force event to be resolved first if it can be
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized
 def penalizeWrong(branch, event):
     refund()
@@ -129,6 +130,7 @@ macro NO: ONE
 macro BAD: 3 * ONEHALF
 macro CATCH_TOLERANCE: ONE / 10
 
+# put in consensus data
 def proportionCorrect(event):
     refund()
     p = 0
