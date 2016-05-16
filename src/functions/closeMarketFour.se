@@ -52,24 +52,25 @@ def fourOutcomes(market, winningOutcome: arr, events: arr, sender):
     participantNumber = MARKETS.getParticipantNumber(market, sender)
     participant = MARKETS.getParticipantID(market, participantNumber)
     n = 0
+    cumScale = MARKETS.getCumScale(market)
     while(winningOutcome[n]!=0):
         sharesOwned = MARKETS.getParticipantSharesPurchased(market, participantNumber, winningOutcome[n])
         MARKETS.modifyParticipantShares(market, participantNumber, winningOutcome[n], -sharesOwned)
         # low-low
         if(n==0):
-            CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)/ONE*pricePerShare1/ONE)
-            CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)/ONE*pricePerShare1/ONE)
+            CASH.subtractCash(market, sharesOwned*cumScale/ONE*pricePerShare1/ONE)
+            CASH.addCash(participant, sharesOwned*cumScale/ONE*pricePerShare1/ONE)
         # high-low
         elif(n==1):
-            CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)/ONE*pricePerShare2/ONE)
-            CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)/ONE*pricePerShare2/ONE)
+            CASH.subtractCash(market, sharesOwned*cumScale/ONE*pricePerShare2/ONE)
+            CASH.addCash(participant, sharesOwned*cumScale/ONE*pricePerShare2/ONE)
         # low-high
         elif(n==2):
-            CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)/ONE*pricePerShare3/ONE)
-            CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)/ONE*pricePerShare3/ONE)
+            CASH.subtractCash(market, sharesOwned*cumScale/ONE*pricePerShare3/ONE)
+            CASH.addCash(participant, sharesOwned*cumScale/ONE*pricePerShare3/ONE)
         # high-high
         elif(n==3):
-            CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)/ONE*pricePerShare4/ONE)
-            CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)/ONE*pricePerShare4/ONE)
+            CASH.subtractCash(market, sharesOwned*cumScale/ONE*pricePerShare4/ONE)
+            CASH.addCash(participant, sharesOwned*cumScale/ONE*pricePerShare4/ONE)
         n+=1
     return(1)

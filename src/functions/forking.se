@@ -159,6 +159,7 @@ def fork(event, branch, forkedOverEthicality):
         return(-1)
     if(EVENTS.getBranch(event)!=branch):
         return(0)
+    # if pushed forward event don't allow todo
     # if in last 48 hr of period
     if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENTS.getForked(event)):
         bond = 184467440737095520*REPORTING.getTotalRep(branch)/ONE

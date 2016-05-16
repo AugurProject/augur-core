@@ -20,6 +20,9 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
     refund()
     if(BRANCHES.getVotePeriod(branch)!=votePeriod):
         return(0)
+    # if pushed forward don't allow
+    if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event)):
+        return(-1)
     market = EVENTS.getMarket(event, 0)
     forkPeriod = BRANCHES.getForkPeriod(branch)
     if(forkPeriod == votePeriod or (forkPeriod+1) == votePeriod or (forkPeriod+2) == votePeriod):
@@ -51,10 +54,6 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
         BACKSTOPS.setOriginalEthicality(event, ethic_catch(EVENTS.getEthical(event)))
         EXPEVENTS.addRoundTwo(branch, period)
         BACKSTOPS.setBondPoster(event, msg.sender)
-        EVENTS.setUncaughtOutcome(event, 0)
-        EVENTS.setmode(event, 0)
-        EVENTS.setEthics(event, 0)
-        return(1)
         EVENTS.setUncaughtOutcome(event, 0)
         EVENTS.setmode(event, 0)
         EVENTS.setEthics(event, 0)

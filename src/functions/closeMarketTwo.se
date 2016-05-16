@@ -31,16 +31,17 @@ def twoOutcomes(market, winningOutcome: arr, events: arr, sender):
     participant = MARKETS.getParticipantID(market, participantNumber)
     # for each winning outcome do...
     n = 0
+    cumScale = MARKETS.getCumScale(market)
     while(winningOutcome[n]!=0):
         sharesOwned = MARKETS.getParticipantSharesPurchased(market, participantNumber, winningOutcome[n])
         MARKETS.modifyParticipantShares(market, participantNumber, winningOutcome[n], -sharesOwned)
         # low side
         if(n==0):
-            CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)/ONE*pricePerShare1/ONE)
-            CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)/ONE*pricePerShare1/ONE)
+            CASH.subtractCash(market, sharesOwned*cumScale/ONE*pricePerShare1/ONE)
+            CASH.addCash(participant, sharesOwned*cumScale/ONE*pricePerShare1/ONE)
         # high side (of the scalar part)
         elif(n==1):
-            CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)/ONE*pricePerShare2/ONE)
-            CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)/ONE*pricePerShare2/ONE)
+            CASH.subtractCash(market, sharesOwned*cumScale/ONE*pricePerShare2/ONE)
+            CASH.addCash(participant, sharesOwned*cumScale/ONE*pricePerShare2/ONE)
         n+=1
     return(1)

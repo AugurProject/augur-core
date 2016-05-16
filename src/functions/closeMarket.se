@@ -171,7 +171,10 @@ def claimProceeds(branch, market):
         if(winningOutcomes[0]==0):
             return(0)
         if(winningOutcomes[1]==0):
-            outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender)
+            if(len(events)==1 && categorical(events[0]) && EVENTS.getOutcome(events[0])==2**63):
+                outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(events[0]))
+            else:
+                outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, 0)
         elif(winningOutcomes[7]):
             outcome = CLOSEEIGHT.eightOutcomes(market, winningOutcomes, events, msg.sender)
         elif(winningOutcomes[3]):
