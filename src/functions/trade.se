@@ -35,7 +35,7 @@ event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, am
 macro BID: 1
 macro ASK: 2
 # Field counts
-macro TRADE_FIELDS: 9
+macro TRADE_FIELDS: 8
 # Boolean success/failure
 macro SUCCESS: 1
 # Error codes

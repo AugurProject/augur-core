@@ -29,6 +29,8 @@ inset('refund.se')
 # cost 850k gas
 def buyCompleteSets(market, amount):
     refund()
+    if(!MARKETS.getCreationBlock(market)):
+        return(0)
     branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
