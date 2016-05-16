@@ -2,6 +2,59 @@ inset('refund.se')
 
 data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final, bondPoster, bondReturned, bondPaid)
 
+data forking[](bondPoster, bondAmount, forkedOverEthicality, bondPaid, originalBranch, moved)
+
+data resolved[][]
+
+def setForkBondPoster(event, poster):
+    self.forking[event].bondPoster = poster
+    return(1)
+
+def getForkBondPoster(event):
+    return(self.forking[event].bondPoster)
+
+def setForkedOverEthicality(event):
+    self.forking[event].forkedOverEthicality = 1
+    return(1)
+
+def getForkedOverEthicality(event):
+    return(self.forking[event].forkedOverEthicality)
+    
+def adjBondPaid(event, amount):
+    self.forking[event].bondPaid += amount
+    return(1)
+
+def getBondPaid(event):
+    return(self.forking[event].bondPaid)
+
+def setBondAmount(event, amount):
+    self.forking[event].bondAmount = amount
+    return(1)
+
+def getBondAmount(event):
+    return(self.forking[event].bondAmount)
+
+def setOriginalBranch(event, branch):
+    self.forking[event].originalBranch = branch
+    return(1)
+
+def getOriginalBranch(event):
+    return(self.forking[event].originalBranch)
+    
+def setMoved(event):
+    self.forking[event].moved = 1
+    return(1)
+
+def getMoved(event):
+    return(self.forking[event].moved)
+    
+def setResolved(branch, forkPeriod):
+    self.resolved[branch][forkPeriod] = 1
+    return(1)
+
+def getResolved(branch, forkPeriod):
+    return(self.resolved[branch][forkPeriod])
+
 def getBondPaid(event):
     return(self.roundTwo[event].bondPaid)
 
