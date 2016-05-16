@@ -47,7 +47,7 @@ def reputationFaucet(branch):
         index = REPORTING.getNumberReporters(branch)
         REPORTING.addReporter(branch, tx.origin, 0, 0, 0)
     REPORTING.setRep(branch, index, 47*ONE)
-    CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
+    CONSENSUS.setPenalizedUpTo(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
     return(1)
 
 def fundNewAccount(branch):
@@ -92,9 +92,9 @@ def claimInitialRep(parent, branch):
                     # send to new branch's redistribution pool
                     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), repDecrease)
         if(fork):
-            CONSENSUS.initialPenalizedSetting(branch, msg.sender, forkPeriod)
+            CONSENSUS.setPenalizedUpTo(branch, msg.sender, forkPeriod)
         else:
-            CONSENSUS.initialPenalizedSetting(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
+            CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
         dormantRep = EXPEVENTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branch), msg.sender)
         REPORTING.addReporter(branch, msg.sender, rep, dormantRep, repDecrease)
         return(1)

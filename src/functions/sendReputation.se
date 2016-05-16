@@ -62,7 +62,7 @@ def sendReputation(branch, recver, value):
     # if the sender's rep. account doesn't exist, make one, only if in first half of period
     if(REPORTING.getReporterID(branch, senderIndex)!=tx.origin):
         REPORTING.addReporter(branch, sender)
-        CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
+        CONSENSUS.setPenalizedUpTo(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
         return(-1)
 
     if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
@@ -94,9 +94,9 @@ def transfer(branch, recver, value):
 
     # if the sender's rep. account doesn't exist, make one
     if(REPORTING.getReporterID(branch, senderIndex)!=msg.sender):
-        CONSENSUS.initialPenalizedSetting(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
+        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
         REPORTING.addReporter(branch, sender)
-        CONSENSUS.initialPenalizedSetting(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
+        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
         return(-1)
 
     if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
@@ -125,9 +125,9 @@ def transferFrom(branch, from, recver, value):
 
     # if the sender's rep. account doesn't exist, make one
     if(REPORTING.getReporterID(branch, senderIndex)!=from):
-        CONSENSUS.initialPenalizedSetting(branch, from, (BRANCHES.getVotePeriod(branch)-1))
+        CONSENSUS.setPenalizedUpTo(branch, from, (BRANCHES.getVotePeriod(branch)-1))
         REPORTING.addReporter(branch, sender)
-        CONSENSUS.initialPenalizedSetting(branch, from, (BRANCHES.getVotePeriod(branch)-1))
+        CONSENSUS.setPenalizedUpTo(branch, from, (BRANCHES.getVotePeriod(branch)-1))
         return(-1)
 
     if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
@@ -182,7 +182,7 @@ def convertToDormantRep(branch, value):
     # if the sender's rep. account doesn't exist, make one
     if(REPORTING.getReporterID(branch, senderIndex)!=tx.origin):
         REPORTING.addReporter(branch, sender)
-        CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
+        CONSENSUS.setPenalizedUpTo(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
         return(-1)
 
     senderBalance = REPORTING.getRepBalance(branch, sender)
@@ -219,7 +219,7 @@ def convertToActiveRep(branch, value):
     # if the sender's rep. account doesn't exist, make one
     if(REPORTING.getReporterID(branch, senderIndex)!=tx.origin):
         REPORTING.addReporter(branch, sender)
-        CONSENSUS.initialPenalizedSetting(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
+        CONSENSUS.setPenalizedUpTo(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
         return(-1)
 
     senderBalance = REPORTING.balanceOf(branch, sender)

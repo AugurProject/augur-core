@@ -48,20 +48,20 @@ def penalizeRoundTwoWrong(branch, event):
     avgAdjCost = BRANCHES.getInitialBalance(branch, votePeriod)/EXPIRING.getNumberEvents(branch, votePeriod)
     bond = avgAdjCost + MARKETS.getSharesValue(market)*(184467440737095520 + MARKETS.getTradingFee(market)/2) / 2**64
     bond = min(bond, 200*ONE)
-    if(self.branch[branch].penalizedUpTo[msg.sender]==lastPeriod):
+    if(CONSENSUS.getPenalizedUpTo(branch, sender)==lastPeriod):
         return(-5)
-    elif(!self.branch[branch].penalized[lastPeriod][msg.sender].notEnoughReportsPenalized):
+    elif(!CONSENSUS.getNotEnoughPenalized(branch, msg.sender, lastPeriod)):
         return(-3)
     elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
         return(-2)
     elif(forkPeriod+1 == lastPeriod):
-        self.branch[branch].penalizedUpTo[msg.sender] = lastPeriod
-        self.branch[branch].denominator[lastPeriod] += afterRep
+        CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
+        CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
         return(1)
     # if no events in a period
     elif(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
-        self.branch[branch].penalizedUpTo[msg.sender] = lastPeriod
-        self.branch[branch].denominator[lastPeriod] += afterRep
+        CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
+        CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
         return(1)
     if(BRANCHES.getForkPeriod(branch) == lastPeriod && event!=forkedEvent):
         return(-4)
@@ -74,12 +74,12 @@ def penalizeRoundTwoWrong(branch, event):
 
     # if appealed don't allow rbcr until after the appeal process is over
     # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period
-    if(BACKSTOPS.getRoundTwo(event) && (BACKSTOPS.getFinal(event) or event==forkEvent) && !self.branch[branch].penalized[lastPeriod][msg.sender].event[event] && (reportValue or oldReport)):
+    if(BACKSTOPS.getRoundTwo(event) && (BACKSTOPS.getFinal(event) or event==forkEvent) && !CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && (reportValue or oldReport)):
         newAfterRep = 0
         smoothedRep = 0
         totalRepDifference = 0
         # Do the first rbcr based on first report and final outcome if reported first time
-        if(oldReport && !self.branch[branch].penalized[lastPeriod][msg.sender].event[event] && outcome!=0):
+        if(oldReport && outcome!=0):
             # wrong
             #184467440737095520 == 0.01 in fxp
             if(oldReport > outcome+184467440737095520 or oldReport < outcome-184467440737095520):
@@ -103,14 +103,14 @@ def penalizeRoundTwoWrong(branch, event):
             if(repBalance + repChange <= 0):
                 repChange = -1*repBalance
             # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process
-            if(overruled && self.bondPaid[event] < 2*bond && repChange < 0 && event!=forkEvent):
+            if(overruled && BACKSTOPS.getBondPaid(event) < 2*bond && repChange < 0 && event!=forkEvent):
                 # done instead of sending to redistrib. pool
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
                 # sends that rep to the bonded challenger
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), -repChange)
-                self.bondPaid[event] += -1*repChange
+                BACKSTOPS.increaseBondPaid(event, (-1*repChange))
         # Do the second (for each user) based on second report and final outcome
-        if(reportValue && !self.branch[branch].penalized[lastPeriod][msg.sender].event[event] && outcome!=0):
+        if(reportValue && outcome!=0):
             # wrong
             #184467440737095520 == 0.01 in fxp
             if(reportValue > outcome+184467440737095520 or reportValue < outcome-184467440737095520):
@@ -133,24 +133,24 @@ def penalizeRoundTwoWrong(branch, event):
                 repChange = -184467440737095520*repBalance / ONE
             if(repBalance + repChange <= 0):
                 repChange = -1*repBalance
-            if(overruled && self.bondPaid[event] < 2*bond && totalRepDifference < 0 && event!=forkEvent):
+            if(overruled && BACKSTOPS.getBondPaid(event) < 2*bond && totalRepDifference < 0 && event!=forkEvent):
                 # done instead of sending to redistrib. pool
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), totalRepDifference)
                 # sends that rep to the bonded challenger
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), -totalRepDifference)
-                self.bondPaid[event] += -1*repChange
-        self.branch[branch].penalized[lastPeriod][msg.sender].event[event] = 1
-        self.branch[branch].penalized[lastPeriod][msg.sender].num += 1
+                BACKSTOPS.increaseBondPaid(event, (-1*repChange))
+        CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
+        CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
     else:
         return(0)
     if(event==forkEvent):
-        self.branch[branch].penalized[lastPeriod][msg.sender].num += EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender) - 1
-    if(EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)==self.branch[branch].penalized[lastPeriod][msg.sender].num):
+        CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, (EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender) - 1))
+    if(EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)==CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
         if(newAfterRep <= 0):
             newAfterRep = 0
             EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
-        self.branch[branch].penalizedUpTo[msg.sender] = lastPeriod
-        self.branch[branch].denominator[lastPeriod] += newAfterRep
+        CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
+        CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
         totalRepDifference = newAfterRep - oldRep
         if(repBalance + totalRepDifference <= 0):
             totalRepDifference = -1*repBalance
@@ -162,11 +162,73 @@ def penalizeRoundTwoWrong(branch, event):
     return(1)
 
 
+### Helper functions:
+macro YES: TWO
+macro NO: ONE
+macro BAD: 3 * ONEHALF
+macro CATCH_TOLERANCE: ONE / 10
+
+# put in consensus data
+def proportionCorrect(event):
+    refund()
+    p = 0
+    outcome = catch(EVENTS.getUncaughtOutcome(event))
+    if(outcome!=0):
+        # binary
+        if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==TWO and EVENTS.getMinValue(event)==ONE):
+            # subtract 1 to get it from 0 to 1
+            avgOutcome = EVENTS.getUncaughtOutcome(event) - ONE
+            # say we have outcome of 0, avg is .4, what is p?
+            # p is .6 or 60%
+            if(outcome == ONE):
+                p = ONE - avgOutcome
+            # say we have outcome of 1, avg is .8, what is p (proportion correct)?
+            # p is .8 or 80%
+            if(outcome == 2 * ONE):
+                p = avgOutcome
+            if(outcome == 3 * ONEHALF):
+                return(0)
+        return(p)
+    else:
+        return(0)
+
+macro periodOver($branch):
+    # what the current vote period should be
+    currentVotePeriod = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
+    # if actual vote period is less than what the current one should be, return 1, it can be incremented
+    if(BRANCHES.getVotePeriod($branch) < currentVotePeriod):
+        1
+    else:
+        0
+        
+# Bins values to 1, 1.5, 2
+macro catch($x):
+    if($x < (BAD - CATCH_TOLERANCE)):
+        NO
+    elif($x > (BAD + CATCH_TOLERANCE)):
+        YES
+    else:
+        BAD
+
+macro ethic_catch($x):
+    if($x < ONEHALF):
+        0
+    else:
+        ONE
+
 macro scalar($event):
     ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
-        
-macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
-        
+
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)
+
+macro abs($a):
+    if($a<0):
+        $a = -$a
+    $a
+
+macro ethic_catch($x):
+    if($x < ONEHALF):
+        0
+    else:
+        ONE
