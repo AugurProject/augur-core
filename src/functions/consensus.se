@@ -34,7 +34,7 @@ def penalizeWrong(branch, event):
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     newRep = 0
-    newAfterRep = 0
+    newAfterRep = afterRep
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
     roundTwo = BACKSTOPS.getRoundTwo(event)
     outcome = catch(EVENTS.getUncaughtOutcome(event))
@@ -50,15 +50,11 @@ def penalizeWrong(branch, event):
         return(-2)
     elif(forkPeriod == lastPeriod):
         return(-4)
-    elif(forkPeriod+1 == lastPeriod):
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
-        CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
-        return(1)
     elif(EVENTS.getForked(event)):
-        return(0)
+        return(-6)
     # if no events in a period
     elif(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod
+        CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
         CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
         return(1)
     elif(roundTwo && outcome!=0):

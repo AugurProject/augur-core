@@ -32,7 +32,7 @@ def penalizeRoundTwoWrong(branch, event):
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     newRep = 0
-    newAfterRep = 0
+    newAfterRep = afterRep
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
     roundTwo = BACKSTOPS.getRoundTwo(event)
     overruled = 0
@@ -54,10 +54,6 @@ def penalizeRoundTwoWrong(branch, event):
         return(-3)
     elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
         return(-2)
-    elif(forkPeriod+1 == lastPeriod):
-        CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
-        CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
-        return(1)
     # if no events in a period
     elif(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
         CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
