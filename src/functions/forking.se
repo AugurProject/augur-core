@@ -121,7 +121,13 @@ def fork(event, branch, forkedOverEthicality):
         return(-1)
     if(EVENTS.getBranch(event)!=branch):
         return(0)
-    # if pushed forward event don't allow todo
+    if(msg.value < 200000*tx.gasprice):
+        return(0)
+    send(CONSENSUS, msg.value)
+    CONSENSUS.setRefund(event, msg.value)
+    # if pushed forward event don't allow
+    if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event)):
+        return(-4)
     # if in last 48 hr of period
     if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENTS.getForked(event)):
         bond = 184467440737095520*REPORTING.getTotalRep(branch)/ONE
@@ -130,7 +136,6 @@ def fork(event, branch, forkedOverEthicality):
         # results same as roundtwobond, let it resolve as that on original network
         if(SENDREP.sendReputation(branch, event, bond)==0):
             return(-2)
-
         # on branch 2 fork bond isn't lost
         # on fork bond isn't lost, gets paid up to 2x from "liars"
         # make the fork
@@ -163,7 +168,6 @@ def fork(event, branch, forkedOverEthicality):
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
 # branch is orig. branch
-# market creator pay for or bond person pay for?
 def resolveForkedEvent(branch, event, votePeriod):
     refund()
     bond = 100*ONE
@@ -176,6 +180,8 @@ def resolveForkedEvent(branch, event, votePeriod):
         return(-1)
     if(self.resolveForkEvent(branch, event)):
         EVENTS.setForkDone(event)
+        CONSENSUS.doRefund(msg.sender, event)
+        return(1)
     # fork not done yet
     else:
         return(0)

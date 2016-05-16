@@ -16,8 +16,18 @@ inset('refund.se')
     # rep collected states whether for a given period a user collected rep
 data branch[](period[](denominator, penalized[](event[], num, notEnoughReportsPenalized), feesCollected[], feeFirst, periodBalance), penalizedUpTo[], baseReportersLastPeriod)
 
+data refunds[]
+
 def init():
     self.baseReportersLastPeriod[1010101] = 2*3
+
+def setRefund(event, amt):
+    self.refunds[event] = amt
+    return(1)
+    
+def doRefund(sender, event):
+    send(sender, self.refunds[event])
+    return(1)
 
 def getBaseReportersLastPeriod(branch):
     return(self.branch[branch].baseReportersLastPeriod)
