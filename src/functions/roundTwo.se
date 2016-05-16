@@ -62,7 +62,11 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
 def roundTwoResolve(branch, event, eventIndex):
     refund()
     overruled = 1
-    bond = 100*ONE
+    votePeriod = BRANCHES.getVotePeriod(branch)
+    market = EVENTS.getMarket(event, 0)
+    avgAdjCost = BRANCHES.getInitialBalance(branch, votePeriod-1)/EXPEVENTS.getNumberEvents(branch, votePeriod-1)
+    bond = avgAdjCost + MARKETS.getSharesValue(market)*(184467440737095520 + MARKETS.getTradingFee(market)/2) / 2**64
+    bond = min(bond, 200*ONE)
     votedOnAgain = 0
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     if(scalar(event) or categorical(event)):
@@ -70,7 +74,6 @@ def roundTwoResolve(branch, event, eventIndex):
             overruled = 0
     elif(BACKSTOPS.getOriginalOutcome(event) == catch(EVENTS.getUncaughtOutcome(event)) && BACKSTOPS.getOriginalEthicality(event)==ethic_catch(EVENTS.getEthical(event))):
         overruled = 0
-    votePeriod = BRANCHES.getVotePeriod(branch)
     if(votePeriod > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
         votedOnAgain = 1
     forkPeriod = BRANCHES.getForkPeriod(branch)

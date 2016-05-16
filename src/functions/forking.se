@@ -42,7 +42,6 @@ def move_event(event):
         winner = self.forkResolved[branch][forkPeriod]
         if(winner==0):
             winner = self.resolve_fork(branch)
-        EVENTS.setBranch(event, winner)
         self.eventMoved[event] = 1
         if(event == eventForkedOver):
             return(1)
@@ -64,6 +63,7 @@ def move_event(event):
                 EVENTS.setExpiration(event, block.timestamp)
             # otherwise it's set to expire in the period it would've expired in as normal, no changes needed
         else:
+            EVENTS.setBranch(event, winner)
             # set outcomes to 0
             EVENTS.setOutcome(event, 0)
             EVENTS.setmode(event, 0)
@@ -91,25 +91,21 @@ def resolve_fork(branch):
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     # make sure branch forked
-    if(currentPeriod != (forkPeriod+2)):
+    if(currentPeriod != (forkPeriod+2) or self.forkResolved[branch][forkPeriod]):
         return(0)
     origCap = self.exchangeRate(branch)
     fork = REPORTING.getFork(branch)
     forkCap = self.exchangeRate(fork)
     if(origcap >= forkCap):
         winner = branch
-        self.setWinner(branch, winner)
+        self.forkResolved[branch][forkPeriod] = winner
         return(winner)
     else:
         winner = fork
-        self.setWinner(branch, winner)
+        self.forkResolved[branch][forkPeriod] = winner
         return(winner)
-    
-def setWinner(branch, winner):
-    self.forkResolved[branch][winner] = winner
-    return(1)
 
-#Resolve fork method that gets exchange rate
+# Resolve fork method that gets exchange rate
 def exchangeRate(branch):
     # get rep exchange rate from etherex for (branch)
     #return(exchangeRate)
@@ -118,12 +114,11 @@ def exchangeRate(branch):
 
 # In the last 48 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back
 # bond is 1% of rep
-# todo make it so can only push back in last 48 hr of _second_ period
-# todo pay back bond poster
-# todo fork over ethicality or outcome
-# round 2 penalize consensus don't pay back reporter b/c bond already returned.. on orig. branch
-# todo make sure branch isn't forking when we make a fork...
 def fork(event, branch, forkedOverEthicality):
+    forkPeriod = BRANCHES.getForkPeriod(branch)
+    currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
+    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod+1) or currentPeriod == (forkPeriod+2)):
+        return(-3)
     if(!EVENTS.getRoundTwo(event) || EVENTS.getFinal(event) || EVENTS.getForked(event)):
         return(-1)
     if(EVENTS.getBranch(event)!=branch):
@@ -156,13 +151,14 @@ def fork(event, branch, forkedOverEthicality):
         BRANCHES.setEventForkedOver(newBranch, event)
         BRANCHES.setEventForkedOver(branch, event)
         self.forkedOverEthicality[event] = forkedOverEthicality
-        # return round 2 bond
+        # return round 2 bond on orig. branch
         market = EVENTS.getMarket(event, 0)
-        avgAdjCost = BRANCHES.getInitialBalance(branch, period-1)/EXPEVENTS.getNumberEvents(branch, votePeriod-1)
+        avgAdjCost = BRANCHES.getInitialBalance(branch, period-1)/EXPEVENTS.getNumberEvents(branch, period-1)
         bond = avgAdjCost + MARKETS.getSharesValue(market)*(184467440737095520 + MARKETS.getTradingFee(market)/2) / 2**64
         bond = min(bond, 200*ONE)
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
+        BACKSTOPS.setBondReturned(event)
     else:
         return(0)
 
