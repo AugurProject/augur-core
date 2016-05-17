@@ -16,8 +16,6 @@ inset('refund.se')
 # some rep from this goes to bond poster, original / last period report is actually what a user reported on the parent for the round 2 bond vote, they lose rep as well as people this time who report wrong
 # branch is fork
 def penalizeOnForkedEvent(branch, event):
-    if(EVENTS.getForked(event)==0):
-        return(-1)
     # means event / fork isn't resolved
     if(EVENTS.getForkedDone(event)==0):
         return(-2)

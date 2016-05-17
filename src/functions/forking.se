@@ -36,11 +36,11 @@ def move_event(event):
     branch = EVENTS.getEventBranch(event)
     eventForkedOver = BRANCHES.getEventForkedOver(branch)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-    if(forkPeriod && currentPeriod == (forkPeriod+2) && !EVENTS.getOutcome(event) && !self.eventMoved[event]):
-        winner = self.forkResolved[branch][forkPeriod]
+    if(forkPeriod && currentPeriod == (forkPeriod+2) && !EVENTS.getOutcome(event) && !BACKSTOPS.getMoved(event)):
+        winner = BACKSTOPS.getResolved(branch, forkPeriod)
         if(winner==0):
             winner = self.resolve_fork(branch)
-        self.eventMoved[event] = 1
+        BACKSTOPS.setMoved(event)
         if(event == eventForkedOver):
             return(1)
         elif(winner == EVENTS.getEventBranch(event)):
@@ -86,21 +86,19 @@ def move_event(event):
 
 # parent branch is branch here
 def resolve_fork(branch):
+    # do whitelist
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-    # make sure branch forked
-    if(currentPeriod != (forkPeriod+2) or self.forkResolved[branch][forkPeriod]):
-        return(0)
     origCap = self.exchangeRate(branch)
     fork = REPORTING.getFork(branch)
     forkCap = self.exchangeRate(fork)
     if(origcap >= forkCap):
         winner = branch
-        self.forkResolved[branch][forkPeriod] = winner
+        BACKSTOPS.setResolved(branch, forkPeriod, winner)
         return(winner)
     else:
         winner = fork
-        self.forkResolved[branch][forkPeriod] = winner
+        BACKSTOPS.setResolved(branch, forkPeriod, winner)
         return(winner)
 
 # Resolve fork method that gets exchange rate
@@ -132,7 +130,7 @@ def fork(event, branch, forkedOverEthicality):
     # if in last 48 hr of period
     if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENTS.getForked(event)):
         bond = 184467440737095520*REPORTING.getTotalRep(branch)/ONE
-        self.bondAmount[branch] = bond
+        BACKSTOPS.setBondAmount(event, bond)
         # lose fork bond in branch 1
         # results same as roundtwobond, let it resolve as that on original network
         if(SENDREP.sendReputation(branch, event, bond)==0):
@@ -146,15 +144,16 @@ def fork(event, branch, forkedOverEthicality):
         EXPEVENTS.setEventRequired(newBranch, period+1, event)
         EXPEVENTS.addEvent(newBranch, period+1, event)
         EVENTS.setExpiration(event, block.timestamp)
-        self.forkData[event].originalBranch = branch
-        self.forking[event].bondPoster = msg.sender
+        BACKSTOPS.setOriginalBranch(event, branch)
+        BACKSTOPS.setForkBondPoster(event, msg.sender)
         EVENTS.setForked(event)
         BACKSTOPS.setFinal(event)
         BRANCHES.setForkPeriod(branch)
         BRANCHES.setForkPeriod(newBranch)
         BRANCHES.setEventForkedOver(newBranch, event)
         BRANCHES.setEventForkedOver(branch, event)
-        self.forkedOverEthicality[event] = forkedOverEthicality
+        if(forkedOverEthicality):
+            BACKSTOPS.setForkedOverEthicality(event)
         # return round 2 bond on orig. branch
         market = EVENTS.getMarket(event, 0)
         avgAdjCost = BRANCHES.getInitialBalance(branch, period-1)/EXPEVENTS.getNumberEvents(branch, period-1)
@@ -173,6 +172,7 @@ def resolveForkedEvent(branch, event, votePeriod):
     refund()
     bond = 100*ONE
     votedOnAgain = 0
+    # checks for orig. branch
     if(EVENTS.getBranch(event)!=branch):
         return(0)
     if(BRANCHES.getVotePeriod(branch) > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
@@ -190,7 +190,8 @@ def resolveForkedEvent(branch, event, votePeriod):
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
 def resolveForkEvent(branch, event):
     refund()
-    winner = self.forkResolved[branch][forkPeriod]
+    # whitelist
+    winner = BACKSTOPS.getResolved(branch, BRANCHES.getForkPeriod(branch))
     if(!winner):
         return(-5)
     # binary

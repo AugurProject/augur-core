@@ -48,8 +48,8 @@ def setMoved(event):
 def getMoved(event):
     return(self.forking[event].moved)
     
-def setResolved(branch, forkPeriod):
-    self.resolved[branch][forkPeriod] = 1
+def setResolved(branch, forkPeriod, winner):
+    self.resolved[branch][forkPeriod] = winner
     return(1)
 
 def getResolved(branch, forkPeriod):
