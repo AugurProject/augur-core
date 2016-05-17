@@ -29,12 +29,11 @@ def penalizeWrong(branch, event):
     refund()
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
-    afterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
     forkPeriod = BRANCHES.getForkPeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     newRep = 0
-    newAfterRep = afterRep
+    newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
     roundTwo = BACKSTOPS.getRoundTwo(event)
     outcome = catch(EVENTS.getUncaughtOutcome(event))

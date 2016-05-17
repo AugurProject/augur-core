@@ -20,11 +20,11 @@ def setForkedOverEthicality(event):
 def getForkedOverEthicality(event):
     return(self.forking[event].forkedOverEthicality)
     
-def adjBondPaid(event, amount):
+def adjForkBondPaid(event, amount):
     self.forking[event].bondPaid += amount
     return(1)
 
-def getBondPaid(event):
+def getForkBondPaid(event):
     return(self.forking[event].bondPaid)
 
 def setBondAmount(event, amount):

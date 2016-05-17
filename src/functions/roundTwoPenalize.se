@@ -27,12 +27,11 @@ def penalizeRoundTwoWrong(branch, event):
     refund()
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
-    afterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
     forkPeriod = BRANCHES.getForkPeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     newRep = 0
-    newAfterRep = afterRep
+    newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
     roundTwo = BACKSTOPS.getRoundTwo(event)
     overruled = 0
@@ -44,11 +43,12 @@ def penalizeRoundTwoWrong(branch, event):
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     lastPenalizationPeriod = lastPeriod - 1
     oldReport = EXPEVENTS.getReport(branch,lastPenalizationPeriod,event,msg.sender)
+    ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
     oldEthics = EXPEVENTS.getEthicReport(branch, lastPenalizationPeriod, event, msg.sender)
     avgAdjCost = BRANCHES.getInitialBalance(branch, votePeriod)/EXPIRING.getNumberEvents(branch, votePeriod)
     bond = avgAdjCost + MARKETS.getSharesValue(market)*(184467440737095520 + MARKETS.getTradingFee(market)/2) / 2**64
     bond = min(bond, 200*ONE)
-    if(CONSENSUS.getPenalizedUpTo(branch, sender)==lastPeriod):
+    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
     elif(!CONSENSUS.getNotEnoughPenalized(branch, msg.sender, lastPeriod)):
         return(-3)
@@ -56,7 +56,7 @@ def penalizeRoundTwoWrong(branch, event):
         return(-2)
     # if no events in a period
     elif(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
-        CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
+        CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
         CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
         return(1)
     if(BRANCHES.getForkPeriod(branch) == lastPeriod && event!=forkedEvent):
@@ -73,7 +73,6 @@ def penalizeRoundTwoWrong(branch, event):
     if(BACKSTOPS.getRoundTwo(event) && (BACKSTOPS.getFinal(event) or event==forkEvent) && !CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && (reportValue or oldReport)):
         newAfterRep = 0
         smoothedRep = 0
-        totalRepDifference = 0
         # Do the first rbcr based on first report and final outcome if reported first time
         if(oldReport && outcome!=0):
             # wrong
@@ -129,11 +128,11 @@ def penalizeRoundTwoWrong(branch, event):
                 repChange = -184467440737095520*repBalance / ONE
             if(repBalance + repChange <= 0):
                 repChange = -1*repBalance
-            if(overruled && BACKSTOPS.getBondPaid(event) < 2*bond && totalRepDifference < 0 && event!=forkEvent):
+            if(overruled && BACKSTOPS.getBondPaid(event) < 2*bond && repChange < 0 && event!=forkEvent):
                 # done instead of sending to redistrib. pool
-                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), totalRepDifference)
+                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
                 # sends that rep to the bonded challenger
-                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), -totalRepDifference)
+                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), -repChange)
                 BACKSTOPS.increaseBondPaid(event, (-1*repChange))
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
@@ -145,7 +144,7 @@ def penalizeRoundTwoWrong(branch, event):
         if(newAfterRep <= 0):
             newAfterRep = 0
             EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
-        CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
+        CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
         CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
         totalRepDifference = newAfterRep - oldRep
         if(repBalance + totalRepDifference <= 0):
