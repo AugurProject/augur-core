@@ -29,8 +29,6 @@ inset('refund.se')
 # period parameter for reporting
 # currentExpPeriod = (block.timestamp / self.Branches[branch].periodLength)
 # currentExpPeriod - 1 is what's up for reporting at any given time
-# should add a min initial liquidity property, for non pm branches it'd be low and .5*minInitialLiquidity is == fee for event
-# could also add an event fee parameter
 # How to set minimum reporting fee guidelines for reporters, abs. minimum should be calc. as follows:
     #Volume per period * .5 * fee * ev/ebit * 6 >= rep market cap
     #Say ev/ebit or valuation is 15, so:
@@ -62,6 +60,7 @@ def initDefaultBranch():
     refund()
     return(CASH.initiateOwner(1010101))
 
+# event a branch was most recently forked over
 def getEventForkedOver(branch):
     return(self.Branches[branch].eventForkedOver)
 
@@ -202,5 +201,6 @@ def setForkPeriod(branch):
     self.Branches[branch].forkPeriod = self.Branches[branch].currentVotePeriod
     return(1)
     
+# gets the period in which a branch was most recently forked
 def getForkPeriod(branch):
     return(self.Branches[branch].forkPeriod)

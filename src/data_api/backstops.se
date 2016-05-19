@@ -1,10 +1,18 @@
 inset('refund.se')
 
-data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final, bondPoster, bondReturned, bondPaid)
+data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final, bondPoster, bondReturned, bondPaid, refund)
 
 data forking[](bondPoster, bondAmount, forkedOverEthicality, bondPaid, originalBranch, moved)
 
 data resolved[][]
+
+def setRoundTwoRefund(event, amt):
+    self.roundTwo[event].refund = amt
+    return(1)
+    
+def doRoundTwoRefund(sender, event):
+    send(sender, self.roundTwo[event].refund)
+    return(1)
 
 def setForkBondPoster(event, poster):
     self.forking[event].bondPoster = poster
@@ -27,10 +35,12 @@ def adjForkBondPaid(event, amount):
 def getForkBondPaid(event):
     return(self.forking[event].bondPaid)
 
+# sets bond amount for a fork bond
 def setBondAmount(event, amount):
     self.forking[event].bondAmount = amount
     return(1)
 
+# gets bond amount for a fork bond
 def getBondAmount(event):
     return(self.forking[event].bondAmount)
 
@@ -55,13 +65,16 @@ def setResolved(branch, forkPeriod, winner):
 def getResolved(branch, forkPeriod):
     return(self.resolved[branch][forkPeriod])
 
+# gets how much of round 2 bond has been paid back
 def getBondPaid(event):
     return(self.roundTwo[event].bondPaid)
 
+# increases how much of round 2 bond has been paid back
 def increaseBondPaid(event, amount):
     self.roundTwo[event].bondPaid += amount
     return(1)
 
+# whether a round 2 bond's principle has been returned
 def getBondReturned(event):
     return(self.roundTwo[event].bondReturned)
     
@@ -85,6 +98,7 @@ def setBondPoster(event, bondPoster):
     self.roundTwo[event].bondPoster = bondPoster
     return(1)
 
+# whether a round 2 event is final
 def getFinal(event):
     refund()
     return(self.roundTwo[event].final)

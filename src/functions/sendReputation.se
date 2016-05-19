@@ -24,7 +24,8 @@ import expiringEvents as EXPEVENTS
 import cash as CASH
 import reporting as REPORTING
 import makeReports as REPORTS
-import consensus as CONSENSUS
+import penalizationCatchup as CATCHUP
+import consensusData as CONSENSUS
 inset('refund.se')
 
 # sender/owner, then spender
@@ -44,9 +45,19 @@ def sendReputation(branch, recver, value):
     # you can't trade if you or the person you're sending to have submitted a report, or at all in the second half of the period [b/c you can messup / cheat w/ reporting] and you can't trade in the first half of a period until you've been penalized for reporting wrongly/not reporting
     # use a diff. fun. than getReport here
     #if(value<=0 || EXPEVENTS.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, recver, 0) != 0):
-    # EXPIRING.getReportedPeriod(branch, current)
+    # EXPEVENTS.getNumReportsActual(branch, currentVotePeriod, msg.sender)
     #    return(0)
+    
+    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
+    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    delta = lastPeriod - lastPeriodPenalized
+    if(delta > 1):
+        if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
+            return(0)
+
     # need to check all this for the person it's being sent to as well
+    if(!CONSENSUS.getRRDone(branch, msg.sender)):
+        return(0)
     #if(REPORTS.getRRUpToDate()!=1):
     #    doIt()
     #    self.RRDone = true
@@ -87,7 +98,6 @@ def transfer(branch, recver, value):
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     if(value<=0):
         return(0)
-
     sender = msg.sender
     senderIndex = REPORTING.repIDToIndex(branch, sender)
     receiverIndex = REPORTING.repIDToIndex(branch, recver)
@@ -118,7 +128,6 @@ def transferFrom(branch, from, recver, value):
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     if(value<=0):
         return(0)
-
     sender = from
     senderIndex = REPORTING.repIDToIndex(branch, sender)
     receiverIndex = REPORTING.repIDToIndex(branch, recver)
@@ -161,6 +170,8 @@ def convertToDormantRep(branch, value):
     refund()
     # if not in first half of reporting period
     periodLength = BRANCHES.getPeriodLength(branch)
+    if!CONSENSUS.getRRDone(branch, msg.sender)):
+        return(0)
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
       return(-1)
@@ -169,6 +180,13 @@ def convertToDormantRep(branch, value):
 
     if(value<=0):
         return(0)
+    
+    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
+    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    delta = lastPeriod - lastPeriodPenalized
+    if(delta > 1):
+        if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
+            return(0)
 
     #if(REPORTS.getRRUpToDate()!=1):
     #    doIt()
@@ -204,7 +222,15 @@ def convertToActiveRep(branch, value):
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
       return(-1)
-
+      
+    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
+    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    delta = lastPeriod - lastPeriodPenalized
+    if(delta > 1):
+        if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
+            return(0)
+    if(!CONSENSUS.getRRDone(branch, msg.sender)):
+        return(0)
     if(value<=0):
         return(0)
 
@@ -234,4 +260,4 @@ def convertToActiveRep(branch, value):
         
     
 macro hasReported($branch, $period):
-    EXPEVENTS.getReportedPeriod($branch, $period, msg.sender)
+    EXPEVENTS.getNumReportsActual($branch, $period, msg.sender)

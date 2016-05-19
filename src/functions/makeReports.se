@@ -27,6 +27,8 @@ import markets as MARKETS
 import reporting as REPORTING
 import backstops as BACKSTOPS
 import fxpFunctions as FXP
+import consensusData as CONSENSUS
+import collectFees as COLLECTFEES
 inset('refund.se')
 
 def makeHash(salt, report, eventID, sender):
@@ -38,11 +40,23 @@ def makeHash(salt, report, eventID, sender):
     reportHash = sha256(hashInfo, chars=32*len(hashInfo))
     return(reportHash)
 
+# Error: 0: not caught up on rep redistributions
 # Error -1: invalid event
 # Error -2: not in first half of period [commit part]
 def submitReportHash(event, reportHash):
-    branch = EVENTS.getBranch(event)
     votePeriod = BRANCHES.getVotePeriod(branch)
+    branch = EVENTS.getBranch(event)
+
+    # makes sure a user is up to date on penalizations
+    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
+    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    delta = lastPeriod - lastPeriodPenalized
+    if(delta > 1):
+        if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
+            return(0)
+    if(!CONSENSUS.getRRDone(branch, msg.sender)):
+        return(0)
+
     # first report of period, num events not set
     if(EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)==0):
         EXPEVENTS.setNumEventsToReportOn(branch)
@@ -81,6 +95,7 @@ def submitReportHash(event, reportHash):
     # -5: invalid event
     # -6: already resolved
     # -7: <48 hr left in period, too late to report, able to put up readj. bonds though
+    # -8: fees couldn't be collected
 def submitReport(event, salt, report, ethics):
     branch = EVENTS.getBranch(event)
     balance = REPORTING.getRepBalance(branch, msg.sender)
@@ -97,6 +112,10 @@ def submitReport(event, salt, report, ethics):
     elif(EVENTS.getOutcome(event)!=0):
         return(-6)
     periodLength = BRANCHES.getPeriodLength(branch)
+    # ensures user has collected fees for last reporting period
+    if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod-1)):
+        if(COLLECTFEES.collectFees(branch, msg.sender)!=1):
+            return(-8)
     # commented out for testing
     #if(block.timestamp/periodLength!=((block.timestamp + 2*TWENTYFOURHR)/periodLength)):
     #    return(-7)
@@ -105,7 +124,7 @@ def submitReport(event, salt, report, ethics):
         realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
         if(self.makeHash(salt, report, eventID, msg.sender)!=realHash || realHash==0):
             return(-3)
-        # forkedOverEthicality = FORKING.getForkedOverEthicality(event)
+        forkedOverEthicality = BACKSTOPS.getForkedOverEthicality(event)
         forkedOverThisEvent = 0
         if(BRANCHES.getEventForkedOver(branch) == event):
             forkedOverThisEvent = 1
@@ -118,6 +137,7 @@ def submitReport(event, salt, report, ethics):
         ethics = ethics
         if(ethics!=ONE || ethics!=0):
             ethics = ONE
+        # set ethicality for forked event
         if(forkedOverThisEvent):
             # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
             if(forkedOverEthicality):
@@ -129,6 +149,7 @@ def submitReport(event, salt, report, ethics):
             EXPEVENTS.setEthicReport(branch, votePeriod, event, ethics, msg.sender)
             ethics = (EVENTS.getForkEthicality(event)*EXPEVENTS.getRepEvent(branch, votePeriod, event) + ethics*balance) / (EXPEVENTS.getRepEvent(branch, votePeriod, event) + balance)
             EVENTS.setForkEthicality(event, ethics)
+        # set ethicality for a regular event
         else:
             EXPEVENTS.setEthicReport(branch, votePeriod, event, ethics, msg.sender)
             if(roundTwo):
@@ -137,15 +158,16 @@ def submitReport(event, salt, report, ethics):
                 ethics = (EVENTS.getEthics(event)*EXPEVENTS.getNumReportsEvent(branch, votePeriod, event) + ethics) / (EXPEVENTS.getNumReportsEvent(branch, votePeriod, event) + 1)
             EVENTS.setEthics(eventID, ethics)
         EXPEVENTS.addReportToEvent(branch, votePeriod, eventID, msg.sender)
-        EXPEVENTS.addRepEvent(branch, votePeriod, event, EXPEVENTS.getBeforeRep(branch, period, msg.sender))
+        # round 2 and fork events are weighted by rep    
+        if(roundTwo or forkedOverThisEvent):
+            EXPEVENTS.addRepEvent(branch, votePeriod, event, EXPEVENTS.getBeforeRep(branch, votePeriod, msg.sender))
         # if 1st report of the period for a reporter
-        if(!EXPEVENTS.getReportedPeriod(branch, votePeriod, msg.sender)):
+        if(!EXPEVENTS.getNumReportsActual(branch, votePeriod, msg.sender)):
             dormantRep = REPORTING.balanceOf(branch, msg.sender)
             # Record rep at start of report period
             EXPEVENTS.setBeforeRep(branch, votePeriod, balance, msg.sender)
             EXPEVENTS.setAfterRep(branch, votePeriod, balance, msg.sender)
             EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, msg.sender)
-            EXPEVENTS.setReportedPeriod(branch, votePeriod, msg.sender)
         return(1)
     return(-2)
 
@@ -177,8 +199,8 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
         elif(report<=0):
             # 1 is the new 0
             report = 1
-        # in case of fork remove the original outcome as a possible response if didn't fork over ethics
         if(forkedOverThisEvent):
+            # in case of fork remove the original outcome as a possible response if didn't fork over ethics
             if(!forkedOverEthicality && report == EVENTS.getUncaughtOutcome(eventID)):
                 return(-4)
             # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
@@ -207,6 +229,7 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
     return(report)
 
 ### Helper functions:
+# calculates how many reports should be on a given event
 def calculateReportTargetForEvent(branch, eventID, votePeriod, sender):
     numMarkets = EVENTS.getNumMarkets(eventID)
     if(numMarkets>25):
@@ -225,25 +248,10 @@ def calculateReportTargetForEvent(branch, eventID, votePeriod, sender):
     numReportersOnMarket = BRANCHES.getBaseReporters(branch)*((-(267*shareFraction**2)/(2*ONE) + (533*shareFraction)/2 + 1*ONE))
     totalFeesInWei = totalFees * WEITOETH / ONE
     canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
-    lesser = max(canPayForThisManyReporters*ONE, numReportersOnMarket)
+    lesser = min(canPayForThisManyReporters*ONE, numReportersOnMarket)
     EXPEVENTS.refundCost(sender, EXPEVENTS.getSubsidy(branch, votePeriod, eventID))
     return(lesser)
 
-# eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
-    # a^b=exp(b*ln(a))=e^(b*ln(a)).
-# returns num events to report on in fxp
-def getNumEventsToReport(branch, votePeriod):
-    prelim = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
-    repConstant = REPORTING.getRepBalance(branch, msg.sender)*ONE/REPORTING.getActiveRep(branch)
-    logOutput = FXP.fx_log(repConstant)
-    exp = FXP.fx_exp(22136092888451461120*logOutput/ONE) + 18446744073709552
-    total = exp*prelim + EXPEVENTS.getNumRequired(branch, votePeriod)*ONE
-    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, expDateIndex)-EXPEVENTS.getNumRemoved(branch, votePeriod)
-    minimum = min(30+EXPEVENTS.getNumRequired(branch, votePeriod), eventsInPeriod)
-    if(total/ONE < minimum):
-        total = minimum*ONE
-    return(total)
-    
 macro YES: TWO
 macro NO: ONE
 macro BAD: 3 * ONEHALF

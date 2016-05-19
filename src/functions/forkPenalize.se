@@ -24,9 +24,10 @@ def penalizeOnForkedEvent(branch, event):
     newRep = 0
     newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
-    outcome = catch(EVENTS.getForkOutcome(event))
+    forkOutcome = EVENTS.getForkOutcome(event)
+    outcome = catch(forkOutcome)
     if(scalar(event) or categorical(event)):
-        outcome = EVENTS.getForkOutcome(event)
+        outcome = forkOut
     p = self.proportionCorrectForkEvent(event)
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     lastPenalizationPeriod = lastPeriod - 1
@@ -37,7 +38,8 @@ def penalizeOnForkedEvent(branch, event):
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
     elif(!CONSENSUS.getNotEnoughPenalized(branch, msg.sender, lastPeriod)):
-        return(-3)
+        if(NOTENOUGH.penalizeNotEnoughReports(branch, msg.sender)!=1):
+            return(-3)   
     # means event / fork isn't resolved
     if(EVENTS.getForkedDone(event)==0):
         return(-2)

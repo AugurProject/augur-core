@@ -36,6 +36,7 @@ def setBaseReportersLastPeriod(branch, amount):
     self.branch[branch].baseReportersLastPeriod = amount
     return(1)
 
+# get whether the first fee has been claimed by a reporter yet
 def getFeeFirst(branch, period):
     return(self.branch[branch].period[period].feeFirst)
 

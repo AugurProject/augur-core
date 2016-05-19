@@ -31,6 +31,8 @@ import expiringEvents as EXPEVENTS
 import forking as FORKING
 inset('refund.se')
 
+macro POINTSEVEN: 12912720851596685312
+
 # Error -1: Hey, you're not broke!
 def cashFaucet():
     refund()
@@ -56,6 +58,7 @@ def fundNewAccount(branch):
     CASH.setCash(msg.sender, 10000*2^64)
     return(1)
 
+# used to claim rep on a fork or on a new branch
 def claimInitialRep(parent, branch):
     refund()
     if(BRANCHES.getParent(branch)!=parent):
@@ -64,7 +67,7 @@ def claimInitialRep(parent, branch):
     if(REPORTING.repIDToIndex(branch, msg.sender)==0 && block.timestamp < (BRANCHES.getCreationDate(branch) + TWENTYFOURHR*30)):
         parentPeriod = BRANCHES.getParentPeriod(branch)
         forkPeriod = BRANCHES.getForkPeriod(parent)
-        fork = REPORTING.getFork(branch)
+        fork = REPORTING.getFork(parent)
         forkEvent = BRANCHES.getEventForkedOver(parent)
         report = EXPEVENTS.getReport(parent, forkPeriod, forkEvent, msg.sender)
         outcome = EVENTS.getUncaughtOutcome(forkEvent)
@@ -76,7 +79,7 @@ def claimInitialRep(parent, branch):
         repDecrease = 0
         if(fork && (report==outcome || report==0 || (FORKING.getForkedOverEthicality(forkEvent) && ethical==ethicReport))):
             # take away 30% of rep from liars and those who didn't report
-            repDecrease = rep*12912720851596685312/ONE
+            repDecrease = rep*POINTSEVEN/ONE
             rep = rep - repDecrease
             amountLeftToPayBonder = FORKING.getBondAmount(forkEvent) - FORKING.getBondPaid(forkEvent)
             if(repDecrease < amountLeftToPayBonder):

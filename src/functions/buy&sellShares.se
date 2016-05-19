@@ -122,7 +122,7 @@ macro remove_trade($trade_id, $market):
     MARKETS.remove_trade_from_market($market, $trade_id)
 
 #
-# Buy / Sell actions
+# Buy / Sell actions: puts orders on the book
 # Errors:
     # -1: amount/price bad or no market
     # -2: oracle only branch

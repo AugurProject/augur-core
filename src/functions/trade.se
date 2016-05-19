@@ -62,6 +62,7 @@ macro remove_trade($trade_id, $market):
 #max value is max amount to spend to buy [including fees]
 #max amount is max shares to sell
 # 500k gas
+# picks orders off the book
 def trade(max_value, max_amount, trade_ids:arr):
     refund()
     if(BRANCHES.getOracleOnly(branch)):

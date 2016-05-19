@@ -5,6 +5,8 @@ import consensus as CONSENSUS
 
 import('refund.se')
 
+macro POINTONE: 16602069666338596864
+
 # call when a user who hasn't reported for a while wants to start again and needs to catch up on penalizations
 # ex:
     #period 0 voteperiod -1 - last period penalized should be -1 or starting vote period
@@ -20,7 +22,7 @@ import('refund.se')
     #period 101, voteperiod 100 - shouldn't be penalizing anything yet
     #increment
     #period 102, voteperiod 101 - penalize voteperiod 100
-def penalizationCatchup(branch):
+def penalizationCatchup(branch, sender):
     refund()
     # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -28,36 +30,30 @@ def penalizationCatchup(branch):
     if(residual > periodLength/2):
         return(-2)
     # find delta between this last period and last penalized up to
-    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
+    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     delta = lastPeriod - lastPeriodPenalized
-    oldRep = REPORTING.getRepBalance(branch, msg.sender)
-    if(lastPeriodPenalized!=lastPeriod && !hasReported(branch, lastPeriod)):
+    oldRep = REPORTING.getRepBalance(branch, sender)
+    if(lastPeriodPenalized!=lastPeriod && !EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)):
         if(delta <= 0):
             return(0)
         # dock 10% for each period they didn't penalize on
-        #smoothedRep = oldRep*16602069666338596864/ONE
-        smoothedRep = oldRep*18262276632972455936/ONE 
+        smoothedRep = oldRep*POINTONE/ONE
         i = 1
         # delta 22 thing, if >22, max is 23 [1 above, 1 below, and 21 in while loop]
         if(delta>22):
-            #smoothedRep = smoothedRep*1844674407370955264/ONE
-            smoothedRep = smoothedRep*18262276632972455936/ONE
+            smoothedRep = smoothedRep*POINTONE/ONE
             delta = 22
         while i < delta:
-            #smoothedRep = smoothedRep*16602069666338596864/ONE
-            smoothedRep = smoothedRep*18262276632972455936/ONE
+            smoothedRep = smoothedRep*POINTONE/ONE
             i += 1
         # and send it to branch for penalty rep collection
         repChange = oldRep - smoothedRep
         # removes rep from reporter who lost it
-        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
+        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, sender), repChange)
         # sends that rep to the branch rep pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repChange)
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
+        CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
         return(1)
     else:
         return(0)
-
-macro hasReported($branch, $period):
-    EXPEVENTS.getReportedPeriod($branch, $period, msg.sender)

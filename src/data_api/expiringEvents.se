@@ -25,13 +25,22 @@ import fxpFunctions as FXP
 import reporting as REPORTING
 inset('refund.se')
 
+macro ONEPOINTTWO: 22136092888451461120
+
+macro POINTZEROZEROONE: 18446744073709552
+
 # [branchID][votingPeriod]
 # reporthash is [reporterID] = hash
+# subsidy is money for paying back a user for calculating the targeted num of reports for an event
 data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], shareValue, roundTwoNumEvents, subsidy[])
 
 data EventIDToIndex[][]
 
-data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], numReportsActual[][], reportedPeriod[][], repEvent[][], lesserReportNum[][], periodRepConstant[][])
+# numReportsEvent is number of reports on an event, expected is how many have been committed for an event
+# numReportsActual is the amount of reports a user has submitted in a period
+# lesserReportNum is the number of reports an event should have [the lesser of how many it can afford from fees and how many it should have due to outstanding share value]
+# periodRepConstant is 
+data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], numReportsActual[][], repEvent[][], lesserReportNum[][], periodRepConstant[][])
 
 data requiredEvents[]
 
@@ -70,9 +79,6 @@ def getWeightOfReport(period, event, report):
 
 def getRepEvent(branch, votePeriod, event):
     return(self.branches[branch].repEvent[votePeriod][event])
-
-def getReportedPeriod(branch, period, reporter):
-    return(self.branches[branch].reportedPeriod[period][reporter])
 
 def getEthicReport(branch, period, event, sender):
     return(self.branches[branch].ethics[period][sender].event[event])
@@ -160,7 +166,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod, sender):
     repConstant = self.getPeriodRepConstant(branch, votePeriod, sender)
     if(repConstant==0):
         logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, sender)*ONE/REPORTING.getActiveRep(branch))
-        repConstant = FXP.fx_exp(22136092888451461120*logOutput/ONE) + 18446744073709552
+        repConstant = FXP.fx_exp(ONEPOINTTWO*logOutput/ONE) + POINTZEROZEROONE
         expectedEventsForReporter = repConstant * self.getNumEventsToReportOn(branch, votePeriod)
         total = expectedEventsForReporter
         eventsInPeriod = self.getNumberEvents(branch, expDateIndex)-self.getNumRemoved(branch, votePeriod)
@@ -281,10 +287,6 @@ def setCurrentModeItems(period, event, modeReport):
 
 def addRepEvent(branch, votePeriod, event, amount):
     self.branches[branch].repEvent[votePeriod][event] += amount
-    return(1)
-    
-def setReportedPeriod(branch, period, reporter):
-    self.branches[branch].reportedPeriod[period][reporter] = 1
     return(1)
 
 def setEthicReport(branch, period, event, ethics, sender):

@@ -11,6 +11,8 @@ import expiringEvents as EXPEVENTS
 import createBranch as CREATEBRANCH
 inset('refund.se')
 
+# UI has to handle function calls for these
+
 #Notes:
     #Anyone can pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.  
     #In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep is redistributed accordingly.  
@@ -35,6 +37,8 @@ def move_event(event):
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     branch = EVENTS.getEventBranch(event)
     eventForkedOver = BRANCHES.getEventForkedOver(branch)
+    expPeriod = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
+    eventIndex = EXPEVENTS.getEventIndex(expPeriod, event)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     if(forkPeriod && currentPeriod == (forkPeriod+2) && !EVENTS.getOutcome(event) && !BACKSTOPS.getMoved(event)):
         winner = BACKSTOPS.getResolved(branch, forkPeriod)
@@ -53,7 +57,6 @@ def move_event(event):
             ROUNDTWO.roundTwoResolve(branch, event, eventIndex)
             
             # leave event here
-            expPeriod = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
             # if should've resolved in past periods
             if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1) or expPeriod == (forkPeriod+2)):
                 # push it into next [this] period
@@ -71,7 +74,6 @@ def move_event(event):
             ROUNDTWO.roundTwoResolve(branch, event, eventIndex)
 
             # move event to fork
-            expPeriod = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
             # and place it into the next reporting period w/ outcomes to 0
             if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1) or expPeriod == (forkPeriod+2)):
                 # push it into next [this] period
@@ -168,12 +170,12 @@ def fork(event, branch, forkedOverEthicality):
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
 # branch is orig. branch
-def resolveForkedEvent(branch, event, votePeriod):
+def resolveForkedEvent(branch, event):
     refund()
     bond = 100*ONE
     votedOnAgain = 0
     # checks for orig. branch
-    if(EVENTS.getBranch(event)!=branch):
+    if(EVENTS.getBranch(event)!=branch or BRANCHES.getEventForkedOver(branch)!=event):
         return(0)
     if(BRANCHES.getVotePeriod(branch) > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
         votedOnAgain = 1
@@ -191,6 +193,7 @@ def resolveForkedEvent(branch, event, votePeriod):
 def resolveForkEvent(branch, event):
     refund()
     # whitelist
+    bond = EVENTS.getBond(event)
     winner = BACKSTOPS.getResolved(branch, BRANCHES.getForkPeriod(branch))
     if(!winner):
         return(-5)
@@ -207,17 +210,18 @@ def resolveForkEvent(branch, event):
             fxpOutcome = catch(EVENTS.getForkOutcome(event))
             ethical = ethic_catch(EVENTS.getForkEthicality(event))
         EVENTS.setOutcome(event, fxpOutcome)
+        EVENTS.setEthics(event, ethical)
         if(fxpOutcome==3*ONEHALF || !ethical):
             # give event bond money to reporters
-            CASH.subtractCash(event, EVENTS.getBond(event))
-            CASH.addCash(branch, EVENTS.getBond(event))
+            CASH.subtractCash(event, bond)
+            CASH.addCash(branch, bond)
             # not ethical is same as .5 outcome
             fxpOutcome = 3*ONEHALF
             EVENTS.setOutcome(event, fxpOutcome)
         else:
             # return bond
-            CASH.subtractCash(event, EVENTS.getBond(event))
-            CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
+            CASH.subtractCash(event, bond)
+            CASH.addCash(INFO.getCreator(event), bond)
         return(1)
     # scalar
     elif(scalar(event) or categorical(event)):
@@ -232,22 +236,27 @@ def resolveForkEvent(branch, event):
             mode = EVENTS.getForkOutcome(event)
             ethical = ethic_catch(EVENTS.getForkEthicality(event))
         EVENTS.setmode(event, mode)
+        EVENTS.setEthics(event, ethical)
         scaled_max = EVENTS.getMaxValue(event)
         scaled_min = EVENTS.getMinValue(event)
+        if(categorical(event)):
+            scaled_min = ONE
+            scaled_max = ONE*EVENTS.getNumOutcomes(event)
         fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
+        ethicOutcome = 0
+        if(!ethical):
+            ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
         EVENTS.setOutcome(event, fxpOutcome)
         if(mode==ONEHALF || !ethical):
             # give event bond money to reporters
-            CASH.subtractCash(event, EVENTS.getBond(event))
-            CASH.addCash(branch, EVENTS.getBond(event))
+            CASH.subtractCash(event, bond)
+            CASH.addCash(branch, EVENTS.bond)
             # not ethical is same as .5 outcome
-            fxpOutcome = ONEHALF
-            EVENTS.setOutcome(event, fxpOutcome)
-            EVENTS.setmode(event, fxpOutcome)
+            EVENTS.setOutcome(event, ethicOutcome)
         else:
             # return bond
-            CASH.subtractCash(event, EVENTS.getBond(event))
-            CASH.addCash(INFO.getCreator(event), EVENTS.getBond(event))
+            CASH.subtractCash(event, bond)
+            CASH.addCash(INFO.getCreator(event), bond)
         return(1)
     # (should never be reached)
     else:
