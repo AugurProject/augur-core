@@ -65,7 +65,7 @@ macro remove_trade($trade_id, $market):
 def trade(max_value, max_amount, trade_ids:arr):
     refund()
     if(BRANCHES.getOracleOnly(branch)):
-        return(-1)
+        return([-1]: arr)
     i = 0
     trades = 0
     while i < len(trade_ids):
@@ -77,7 +77,7 @@ def trade(max_value, max_amount, trade_ids:arr):
     tradeInfo[2] = max_value
     tradeHash = sha256(tradeInfo, items=3)
     if(TRADES.checkHash(tradeHash, msg.sender)==-1):
-        return(-2)
+        return([-2]: arr)
     max_value = max_value
     max_amount = max_amount
     # Try to fulfill each trade passed
@@ -88,7 +88,7 @@ def trade(max_value, max_amount, trade_ids:arr):
         trade = array(TRADE_FIELDS)
         trade = TRADES.get_trade(trade_id, outitems=TRADE_FIELDS)
         if !trade:
-            return(0)
+            return([0]: arr)
         # Get market
         type = trade[1]
         market = trade[2]
@@ -98,10 +98,10 @@ def trade(max_value, max_amount, trade_ids:arr):
         owner = trade[5]
         outcome = trade[7]
         if(owner == msg.sender or owner == tx.origin):
-            return(0)
+            return([0]: arr)
         # Make sure the trade has been mined, obvious HFT prevention
         if block.number <= trade[6]:
-            return(TRADE_SAME_BLOCK_PROHIBITED)
+            return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
         branch = MARKETS.getBranchID(market)
         trading_fee = MARKETS.getTradingFee(market)
         cumScale = MARKETS.getCumScale(market)
@@ -114,7 +114,7 @@ def trade(max_value, max_amount, trade_ids:arr):
             balance = MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome)
             if(balance > 0 and max_amount > 0):
                 if(MARKETS.getParticipantID(market, participantNumber) != msg.sender):
-                    return(-3)
+                    return([-3]: arr)
                 makerFeeRate = MARKETS.getMakerFees(market)
                 sender = MARKETS.getParticipantNumber(market, msg.sender)
                 ownerNum = MARKETS.getParticipantNumber(market, owner)
@@ -124,7 +124,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 value = (fill * price)/ONE
                 # must trade at least 0.00000001 in value
                 if(value < 184467440738):
-                    return(-4)
+                    return([-4]: arr)
                 # Update trade amount or remove
                 if fill < amount:
                     TRADES.fill_trade(trade_id, fill)
@@ -159,7 +159,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Log transaction
                 log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)
             else:
-                return(INSUFFICIENT_BALANCE)
+                return([INSUFFICIENT_BALANCE]: arr)
         elif type == ASK:
             balance = CASH.balance(msg.sender)
             makerFeeRate = MARKETS.getMakerFees(market)
@@ -172,13 +172,13 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Determine fill value
                 value = min(max_value, trade_value)
                 if(value < 184467440738):
-                    return(-4)
+                    return([-4]: arr)
                 fee = value * fee / ONE
                 branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
                 creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*fee / ONE
                 takerFeesTotal = branchFees + creatorFees
                 if(balance < (value + takerFeesTotal)):
-                    return(INSUFFICIENT_BALANCE)
+                    return([INSUFFICIENT_BALANCE]: arr)
                 fill = 0
                 # Calculate fill amount, update trade amount or remove filled trade
                 if value < trade_value:
@@ -215,7 +215,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Log transaction
                 log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_id, outcome)
             else:
-                return(INSUFFICIENT_BALANCE)
+                return([INSUFFICIENT_BALANCE]: arr)
 
         # Log price, fill amount, type and timestamp
         log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)

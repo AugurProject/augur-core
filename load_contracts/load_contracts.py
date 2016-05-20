@@ -282,10 +282,10 @@ def broadcast_code(evm, code, fullname):
             print 'UNKNOWN ERROR'
             print json.dumps(result, indent=4, sort_keys=True)
         print 'ABORTING'
-        print 'code:'
-        print code
-        print 'DB:'
-        print json.dumps(DB, indent=4, sort_keys=True)
+        # print 'code:'
+        # print code
+        # print 'DB:'
+        # print json.dumps(DB, indent=4, sort_keys=True)
         dump = open('load_contracts_FATAL_dump.json', 'w')
         print>>dump, json.dumps(DB, indent=4, sort_keys=True)
         sys.exit(1)

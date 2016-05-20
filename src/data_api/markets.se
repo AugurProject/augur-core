@@ -22,6 +22,7 @@
 import info as INFO
 import events as EVENTS
 import branches as BRANCHES
+import trades as TRADES
 inset('refund.se')
 
 # Markets' index is the marketID
@@ -34,7 +35,7 @@ inset('refund.se')
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, blockNum)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime)
 
 def addFees(market, amount):
     self.Markets[market].fees += amount
@@ -77,8 +78,8 @@ def getMarketEvent(market, index):
     refund()
     return(self.Markets[market].events[index])
 
-def getCreationBlock(market):
-    return(self.Markets[market].blockNum)
+def getCreationTime(market):
+    return(self.Markets[market].creationTime)
 
 def getMarketEvents(market):
     refund()
@@ -160,7 +161,7 @@ macro sharesPurchased($marketID):
     market($marketID).sharesPurchased
 
 # check that msg.sender is one of our function contracts
-def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy, creationFee, block):
+def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy, creationFee, timestamp):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
@@ -181,7 +182,7 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, t
     self.Markets[marketID].tag3 = tag3
     self.Markets[marketID].makerFees = makerFees
     self.Markets[marketID].fees = creationFee
-    self.Markets[marketID].blockNum = block
+    self.Markets[marketID].creationTime = timestamp
     return(1)
 
 def addParticipant(market, address):
@@ -309,10 +310,23 @@ def get_total_trades(market_id):
     refund()
     return(self.Markets[market_id].total_trades)
 
-
+def getOrderBook(marketID):
+    refund()
+    numTrades = self.Markets[marketID].total_trades
+    trades = self.get_trade_ids(marketID, outitems=numTrades)
+    orderBook = array(8*numTrades)
+    i = 0
+    while i < numTrades:
+        tradeInfo = TRADES.get_trade(trades[i], outitems=8)
+        j = 0
+        while j < 8:
+            orderBook[8*i + j] = tradeInfo[j]
+            j += 1
+        i += 1
+    return(orderBook:arr)
 
 macro EVENTS_FIELDS: 6
-macro OUTCOMES_FIELDS: 1
+macro OUTCOMES_FIELDS: 2
 macro WINNING_OUTCOMES_FIELDS: 8
 macro FIELDS: 17
 
@@ -321,8 +335,7 @@ def getMarketInfo(marketID):
     index = FIELDS
     participantNumber = self.Markets[marketID].addr2participant[msg.sender]
     descriptionLength = INFO.getDescriptionLength(marketID)
-    traderFields = 1 + self.Markets[marketID].numOutcomes
-    with info = array(FIELDS + self.Markets[marketID].currentParticipant*traderFields + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1):
+    with info = array(FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1):
         numEvents = self.Markets[marketID].lenEvents
         info[0] = marketID
         info[1] = self.Markets[marketID].currentParticipant
@@ -334,24 +347,13 @@ def getMarketInfo(marketID):
         info[7] = self.Markets[marketID].branch
         info[8] = self.Markets[marketID].lenEvents
         info[9] = self.Markets[marketID].cumulativeScale
-        info[10] = self.Markets[marketID].blockNum
+        info[10] = self.Markets[marketID].creationTime
         info[11] = self.Markets[marketID].volume
         info[12] = INFO.getCreationFee(marketID)
         info[13] = INFO.getCreator(marketID)
         info[14] = self.Markets[marketID].tag1
         info[15] = self.Markets[marketID].tag2
         info[16] = self.Markets[marketID].tag3
-
-        # gather trader(s) info: [trader ID, 1 shares, 2 shares, 3 shares, ...]
-        t = 0
-        while t < self.Markets[marketID].currentParticipant:
-            info[index + t*traderFields] = self.Markets[marketID].participants[t].participantID
-            o = 1
-            while o < self.Markets[marketID].numOutcomes + 1:
-                info[index + t*traderFields + o] = self.Markets[marketID].participants[t].shares[o]
-                o += 1
-            t += 1
-        index += self.Markets[marketID].currentParticipant*traderFields
 
         # gather event(s) info:
         # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
@@ -367,11 +369,31 @@ def getMarketInfo(marketID):
                 i += 1
         index += numEvents*EVENTS_FIELDS
 
-        # gather outcomes info:
-        # [sharesPurchased, winningOutcomes...]
+        # gather outcomes info: [sharesPurchased, price], winningOutcomes
+        # (price of outcome = bid/ask average)
+        numTrades = self.Markets[marketID].total_trades
+        numOutcomes = self.Markets[marketID].numOutcomes
+        trades = self.get_trade_ids(marketID, outitems=numTrades)
         k = 0
-        while k < self.Markets[marketID].numOutcomes:
+        while k < numOutcomes:
             info[index + k*OUTCOMES_FIELDS] = self.Markets[marketID].sharesPurchased[k + 1]
+            i = 0
+            bid = 0
+            ask = 0
+            while i < numTrades:
+                tradeInfo = TRADES.get_trade(trades[i], outitems=8)
+                if tradeInfo[7] == k + 1:
+                    if tradeInfo[1] == 1:
+                        bid = tradeInfo[4]
+                    else:
+                        ask = tradeInfo[4]
+                    if bid != 0 and ask != 0:
+                        info[index + k*OUTCOMES_FIELDS + 1] = (bid + ask) / 2
+                        i = numTrades
+                    else:
+                        i += 1
+                else:
+                    i += 1
             k += 1
         index += self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS
         k = 0

@@ -75,7 +75,7 @@ def get_trade(id):
     trade[7] = self.trades[id].outcome
     if trade:
         return(trade:arr)
-    return([0]:arr)
+    return([0]:arr)    
 
 def get_amount(id):
     refund()
