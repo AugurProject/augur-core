@@ -176,6 +176,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod, sender):
             total = minimum*ONE
             repConstant = repConstant*ratio / ONE
         self.setPeriodRepConstant(branch, votePeriod, sender, repConstant)
+    # 1 is 2**192 here, lesserreportnum, repconstant, and one are all base 2**64
     reportingThreshold = self.getLesserReportNum(branch, votePeriod, eventID)*repConstant*ONE
     return(reportingThreshold)
     

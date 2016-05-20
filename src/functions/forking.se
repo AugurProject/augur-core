@@ -11,6 +11,8 @@ import expiringEvents as EXPEVENTS
 import createBranch as CREATEBRANCH
 inset('refund.se')
 
+macro POINTZEROONE: 184467440737095520
+
 # UI has to handle function calls for these
 
 #Notes:
@@ -131,7 +133,7 @@ def fork(event, branch, forkedOverEthicality):
         return(-4)
     # if in last 48 hr of period
     if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0 && !EVENTS.getForked(event)):
-        bond = 184467440737095520*REPORTING.getTotalRep(branch)/ONE
+        bond = POINTZEROONE*REPORTING.getTotalRep(branch)/ONE
         BACKSTOPS.setBondAmount(event, bond)
         # lose fork bond in branch 1
         # results same as roundtwobond, let it resolve as that on original network
