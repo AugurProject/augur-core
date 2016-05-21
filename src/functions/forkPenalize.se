@@ -50,6 +50,7 @@ def penalizeOnForkedEvent(branch, event):
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     if(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
         return(-2)
+    numReportedOn = EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
     # penalization on a forked event
     # if didn't report [reportValue of 0] then it's a bad report here
     if(!CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event)):
@@ -68,8 +69,12 @@ def penalizeOnForkedEvent(branch, event):
                     diff = reportValue - outcome    
                     p = -(abs(diff)/2) + ONE
                 newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
-            #smoothedRep = oldRep*.8 + newRep*.2
-            repChange = oldRep * POINTEIGHT/ONE + newRep * POINTTWO/ONE - oldRep
+            # (1-k) * old rep + k * new rep where k = 1 / (number of events you reported on last period) for forking
+            # use .10 as a max penalty per fork event
+            if(numReportedOn<10):
+                repChange = oldRep * (ONE - ONE/10)/ONE + newRep*(ONE/10)/ONE - oldRep
+            else:
+                repChange = oldRep * (ONE - ONE/numReportedOn)/ONE + newRep*(ONE/numReportedOn)/ONE - oldRep
             newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
             EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
             # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
@@ -85,8 +90,9 @@ def penalizeOnForkedEvent(branch, event):
                 BACKSTOPS.adjForkBondPaid(event, -1*repChange)
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
+        numReportedOn+=1
     # once penalized for all events actually get rid of net rep lost
-    if(EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)==CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
+    if(numReportedOn==CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
         if(newAfterRep <= 0):
             newAfterRep = 0
             EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)

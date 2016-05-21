@@ -84,6 +84,7 @@ def penalizeWrong(branch, event):
     elif(!CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue && rejected && EVENTS.getRejectedPeriod(event)==lastPeriod):
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
+    numReportedOn = EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
     # penalization on a regular event if not already penalized, it has outcome, and user reported on it
     elif(!CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue && outcome!=0):
         # wrong
@@ -98,15 +99,20 @@ def penalizeWrong(branch, event):
                 diff = reportValue - outcome
                 p = -(abs(diff)/2) + ONE
             newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
-        #smoothedRep = oldRep*.8 + newRep*.2
-        repChange = oldRep * POINTEIGHT/ONE + newRep *POINTTWO/ONE - oldRep
+        # (1-k) * old rep + k * new rep where k = 0.2 / (number of events you reported on last period) for penalization and pen. rate for forking and backstop 1
+        # use .02 as a max penalty per event
+        if(numReportedOn<10):
+            repChange = oldRep * (ONE - POINTTWO/10)/ONE + newRep*(POINTTWO/10)/ONE - oldRep
+        else:
+            repChange = oldRep * (ONE - POINTTWO/numReportedOn)/ONE + newRep*(POINTTWO/numReportedOn)/ONE - oldRep
         newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
         log(type=penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue)
         EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
+        numReportedOn+=1
     # once penalized for all events actually get rid of net rep lost
-    if(EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)==CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
+    if(numReportedOn==CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
         if(newAfterRep <= 0):
             newAfterRep = 0
             EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
