@@ -28,10 +28,11 @@ import cash as CASH
 import consensusData as CONSENSUS
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
-import forking as FORKING
+import backstops as BACKSTOPS
 inset('refund.se')
 
 macro POINTSEVEN: 12912720851596685312
+macro POINTZEROONE: 184467440737095520
 
 # Error -1: Hey, you're not broke!
 def cashFaucet():
@@ -77,18 +78,18 @@ def claimInitialRep(parent, branch):
         ethicReport = EXPEVENTS.getEthicReport(parent, forkPeriod, forkEvent, msg.sender)
         rep = EXPEVENTS.getBeforeRep(parent, parentPeriod, msg.sender)
         repDecrease = 0
-        if(fork && (report==outcome || report==0 || (FORKING.getForkedOverEthicality(forkEvent) && ethical==ethicReport))):
+        if(fork && (report<(outcome-POINTZEROONE) || (report > (outcome+POINTZEROONE)) || report==0 || (BACKSTOPS.getForkedOverEthicality(forkEvent) && ethical==ethicReport))):
             # take away 30% of rep from liars and those who didn't report
             repDecrease = rep*POINTSEVEN/ONE
             rep = rep - repDecrease
-            amountLeftToPayBonder = FORKING.getBondAmount(forkEvent) - FORKING.getBondPaid(forkEvent)
+            amountLeftToPayBonder = BACKSTOPS.getBondAmount(forkEvent) - BACKSTOPS.getForkBondPaid(forkEvent)
             if(repDecrease < amountLeftToPayBonder):
                 # send all the rep to the fork bond poster
-                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, FORKING.getForkBondPoster(forkEvent)), repDecrease)
+                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(forkEvent)), repDecrease)
             else:
                 # send amountLeftToPayBonder [if positive] to the fork bond poster
                 if(amountLeftToPayBonder > 0):
-                    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, FORKING.getForkBondPoster(forkEvent)), amountLeftToPayBonder)    
+                    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(forkEvent)), amountLeftToPayBonder)    
                     # send the rest to the new branch's redistribution pool
                     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), (repDecrease - amountLeftToPayBonder))
                 else:
