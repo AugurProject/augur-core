@@ -370,7 +370,7 @@ def getMarketInfo(marketID):
         index += numEvents*EVENTS_FIELDS
 
         # gather outcomes info: [sharesPurchased, price], winningOutcomes
-        # (price of outcome = bid/ask average)
+        # (price of outcome = best bid/ask average)
         numTrades = self.Markets[marketID].total_trades
         numOutcomes = self.Markets[marketID].numOutcomes
         trades = self.get_trade_ids(marketID, outitems=numTrades)
@@ -384,16 +384,14 @@ def getMarketInfo(marketID):
                 tradeInfo = TRADES.get_trade(trades[i], outitems=8)
                 if tradeInfo[7] == k + 1:
                     if tradeInfo[1] == 1:
-                        bid = tradeInfo[4]
+                        bid = max(bid, tradeInfo[4])
                     else:
-                        ask = tradeInfo[4]
-                    if bid != 0 and ask != 0:
-                        info[index + k*OUTCOMES_FIELDS + 1] = (bid + ask) / 2
-                        i = numTrades
-                    else:
-                        i += 1
-                else:
-                    i += 1
+                        if ask == 0:
+                            ask = tradeInfo[4]
+                        else:
+                            ask = min(ask, tradeInfo[4])
+                i += 1
+            info[index + k*OUTCOMES_FIELDS + 1] = (bid + ask) / 2
             k += 1
         index += self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS
         k = 0
