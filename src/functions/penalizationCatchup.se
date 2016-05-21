@@ -34,7 +34,7 @@ def penalizationCatchup(branch, sender):
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     delta = lastPeriod - lastPeriodPenalized
     oldRep = REPORTING.getRepBalance(branch, sender)
-    if(lastPeriodPenalized!=lastPeriod && !EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)):
+    if(lastPeriodPenalized!=lastPeriod && !EXPEVENTS.getNumReportsActual(branch, lastPeriod, sender)):
         if(delta <= 0):
             return(0)
         # dock 10% for each period they didn't penalize on

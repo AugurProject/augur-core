@@ -34,6 +34,8 @@ data amountCanSpend[][]
 event Transfer(_from:indexed, _to:indexed, _value)
 event Approval(_owner:indexed, _spender:indexed, value)
 
+# fix sender, tx.origin stuff here
+
 # @return value of reputation sent, 0 if not enough reputation
 # error messages otherwise
     # -1: "Your reputation account was just created, earn some rep. before you can send to others"

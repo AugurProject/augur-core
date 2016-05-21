@@ -33,7 +33,7 @@ def penalizeNotEnoughReports(branch, sender):
     if(BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
         CONSENSUS.setNotEnoughPenalized(branch, sender, lastPeriod)
         return(1)
-    if(!EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender):
+    if(!EXPEVENTS.getNumReportsActual(branch, lastPeriod, sender):
         return(-2)
     if(residual > periodLength/2):
         return(-3)

@@ -93,10 +93,10 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
         BACKSTOPS.setBondReturned(event)
         BACKSTOPS.setRoundTwo(event, 0)
-        BACKSTOPS.doRoundTwoRefund(msg.sender, event)
+        BACKSTOPS.doRoundTwoRefund(sender, event)
         return(1)
     # overruled and bond poster wasn't malicious
-    elif(overruled && votedOnAgain && BACKSTOPS.getRoundTwo(event) && votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) && eventID!=0 && event==eventID && !forked && msg.sender == bondPoster && !BACKSTOPS.getBondReturned(event)):
+    elif(overruled && votedOnAgain && BACKSTOPS.getRoundTwo(event) && votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) && eventID!=0 && event==eventID && !forked && !BACKSTOPS.getBondReturned(event)):
         # return the bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
@@ -105,7 +105,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         # reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting [don't count ethicality here]
         BACKSTOPS.setFinal(event)
         BACKSTOPS.setBondReturned(event)
-        BACKSTOPS.doRoundTwoRefund(msg.sender, event)
+        BACKSTOPS.doRoundTwoRefund(sender, event)
         return(2*bond)
     # same as original consensus and bond poster was wrong
     elif(votedOnAgain && BACKSTOPS.getRoundTwo(event) && votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) && eventID!=0 && event==eventID && !forked && !BACKSTOPS.getBondReturned(event)):
@@ -117,7 +117,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         # rbcr from original period/orig. outcome stands, rbcr from round 2 happens as usual as well
         BACKSTOPS.setFinal(event)
         BACKSTOPS.setBondReturned(event)
-        BACKSTOPS.doRoundTwoRefund(msg.sender, event)
+        BACKSTOPS.doRoundTwoRefund(sender, event)
         return(1)
     # not voted on again yet
     else:
