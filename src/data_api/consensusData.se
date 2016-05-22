@@ -21,12 +21,12 @@ data refunds[]
 def init():
     self.baseReportersLastPeriod[1010101] = 2*3
 
-def setRefund(event, amt):
-    self.refunds[event] = amt
+def setRefund(refunder, amt):
+    self.refunds[refunder] = amt
     return(1)
     
-def doRefund(sender, event):
-    send(sender, self.refunds[event])
+def doRefund(sender, refunder):
+    send(sender, self.refunds[refunder])
     return(1)
 
 def getBaseReportersLastPeriod(branch):

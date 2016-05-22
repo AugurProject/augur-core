@@ -25,7 +25,6 @@ macro MINBOND: 200*ONE
     #  0: event is a fork event
     # -1: need to penalize in round 2 penalize function
     # -2: already past first half of new period and needed to penalize before then
-    # -3: need to do not enough reports penalization [or lackthereof]
     # -4: in fork period only thing that rbcr is done on is the round 2 event in the original branch via round 2 penalize
     # -5: already done for all events in this period
     # -6: forked events should be penalized using the fork penalization function
@@ -63,10 +62,6 @@ def penalizeRoundTwoWrong(branch, event):
     bond = min(bond, MINBOND)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
-    # penalizes a reporter if they didn't report on at least half of the events they were selected to report on
-    elif(!CONSENSUS.getNotEnoughPenalized(branch, msg.sender, lastPeriod)):
-        if(NOTENOUGH.penalizeNotEnoughReports(branch, msg.sender)!=1):
-            return(-3)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
         return(-2)

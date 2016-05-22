@@ -101,6 +101,14 @@ def submitReport(event, salt, report, ethics):
     balance = REPORTING.getRepBalance(branch, msg.sender)
     if(balance<ONE):
         return(0)
+    # if 1st report of the period for a reporter
+    if(!EXPEVENTS.getNumReportsActual(branch, votePeriod, msg.sender) && msg.value >= 500000*tx.gasprice):
+        dormantRep = REPORTING.balanceOf(branch, msg.sender)
+        # Record rep at start of report period
+        EXPEVENTS.setBeforeRep(branch, votePeriod, balance, msg.sender)
+        EXPEVENTS.setAfterRep(branch, votePeriod, balance, msg.sender)
+        EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, msg.sender)
+        CONSENSUS.setRefund(msg.sender, msg.value)
     votePeriod = BRANCHES.getVotePeriod(branch)
     if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
         return(-1)
@@ -161,13 +169,6 @@ def submitReport(event, salt, report, ethics):
         # round 2 and fork events are weighted by rep    
         if(roundTwo or forkedOverThisEvent):
             EXPEVENTS.addRepEvent(branch, votePeriod, event, EXPEVENTS.getBeforeRep(branch, votePeriod, msg.sender))
-        # if 1st report of the period for a reporter
-        if(!EXPEVENTS.getNumReportsActual(branch, votePeriod, msg.sender)):
-            dormantRep = REPORTING.balanceOf(branch, msg.sender)
-            # Record rep at start of report period
-            EXPEVENTS.setBeforeRep(branch, votePeriod, balance, msg.sender)
-            EXPEVENTS.setAfterRep(branch, votePeriod, balance, msg.sender)
-            EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, msg.sender)
         return(1)
     return(-2)
 

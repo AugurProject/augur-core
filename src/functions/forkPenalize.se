@@ -18,7 +18,6 @@ inset('refund.se')
 # fork event needs to be resolved first before this can be called
 # Errors:
     # -2: already past first half of new period and needed to penalize before then
-    # -3: need to do not enough reports penalization [or lackthereof]
     # -4: fork event isn't resolved yet
     # -5: already done for all events in this period
 def penalizeOnForkedEvent(branch, event):
@@ -40,10 +39,6 @@ def penalizeOnForkedEvent(branch, event):
     bond = BACKSTOPS.getBondAmount(event)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
-    # penalizes a reporter if they didn't report on at least half of the events they were selected to report on
-    elif(!CONSENSUS.getNotEnoughPenalized(branch, msg.sender, lastPeriod)):
-        if(NOTENOUGH.penalizeNotEnoughReports(branch, msg.sender)!=1):
-            return(-3)   
     # means event / fork isn't resolved
     if(EVENTS.getForkedDone(event)==0):
         return(-4)

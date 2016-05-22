@@ -143,16 +143,19 @@ def getEvents(branch, expDateIndex):
         i += 1
     return(events: arr)
     
-def getEventsToReportOn(branch, expDateIndex):
+# 0, event means calculateReportTargetForEvent(branch, eventID, votePeriod, sender) in make reports should be called for that event
+def getEventsToReportOn(branch, expDateIndex, sender):
     refund()
     numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
     events = array(numEvents*2)
     i = 0
     while i < numEvents:
+        if(self.getLesserReportNum(branch, votePeriod, event)==0):
+            return([0, event]: arr)
         events[i] = self.EventsExpDates[branch][expDateIndex].events[i]
-        reportingThreshold = self.calculateReportingThreshold(branch, events[i], expDateIndex, msg.sender)
+        reportingThreshold = self.calculateReportingThreshold(branch, events[i], expDateIndex, sender)
         x = array(1)
-        x[0] = msg.sender + events[i]
+        x[0] = sender + events[i]
         shaHash = sha3(x, items=1)/ONE
         if((shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(events[i]) || self.getRequired(events[i])) && !EVENTS.getOutcome(events[i])):
             events[i+1] = 1
@@ -161,6 +164,16 @@ def getEventsToReportOn(branch, expDateIndex):
         i += 2
     return(events: arr)
     
+def getEventCanReportOn(branch, expDateIndex, reporter, event):
+    refund()
+    reportingThreshold = self.calculateReportingThreshold(branch, event, expDateIndex, sender)
+    x = array(1)
+    x[0] = sender + event
+    shaHash = sha3(x, items=1)/ONE
+    if(shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(event) || self.getRequired(events)):
+        return(1)
+    else:
+        return(0)
 
 # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
     # a^b=exp(b*ln(a))=e^(b*ln(a)).
