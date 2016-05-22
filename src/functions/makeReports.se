@@ -87,7 +87,7 @@ def submitReportHash(event, reportHash):
 
 # @return 1 if success
 # Error messages
-    # 0: reporter doesn't exist or has <.5 rep
+    # 0: reporter doesn't exist or has <1 rep
     # -1: has already reported
     # -2: not in second half of period [reveal part]
     # -3: hash doesn't match
@@ -99,7 +99,7 @@ def submitReportHash(event, reportHash):
 def submitReport(event, salt, report, ethics):
     branch = EVENTS.getBranch(event)
     balance = REPORTING.getRepBalance(branch, msg.sender)
-    if(balance<ONEHALF):
+    if(balance<ONE):
         return(0)
     votePeriod = BRANCHES.getVotePeriod(branch)
     if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):

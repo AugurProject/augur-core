@@ -423,7 +423,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
                 # (data offset by 1+numMarkets so length data can be prepended)
                 totalFlatLength = 1 + numMarkets
                 m = 0
-                while m < numMarkets:
+                while m < numMarkets: 
                     totalFlatLength += marketArrayLength[m]
                     m += 1
                 with flattened = array(totalFlatLength):

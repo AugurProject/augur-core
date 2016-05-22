@@ -29,6 +29,8 @@ macro ONEPOINTTWO: 22136092888451461120
 
 macro POINTZEROZEROONE: 18446744073709552
 
+macro POINTZEROONE: 184467440737095520
+
 # [branchID][votingPeriod]
 # reporthash is [reporterID] = hash
 # subsidy is money for paying back a user for calculating the targeted num of reports for an event
@@ -165,16 +167,18 @@ def getEventsToReportOn(branch, expDateIndex):
 def calculateReportingThreshold(branch, eventID, votePeriod, sender):
     repConstant = self.getPeriodRepConstant(branch, votePeriod, sender)
     if(repConstant==0):
+        repFraction = REPORTING.getRepBalance(branch, sender)*ONE/REPORTING.getActiveRep(branch)
         logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, sender)*ONE/REPORTING.getActiveRep(branch))
         repConstant = FXP.fx_exp(ONEPOINTTWO*logOutput/ONE) + POINTZEROZEROONE
         expectedEventsForReporter = repConstant * self.getNumEventsToReportOn(branch, votePeriod)
         total = expectedEventsForReporter
         eventsInPeriod = self.getNumberEvents(branch, expDateIndex)-self.getNumRemoved(branch, votePeriod)
         numRequiredEvents = self.getNumRequired(branch, votePeriod)
-        minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
-        if(total/ONE < minimum):
-            total = minimum*ONE
-            repConstant = repConstant*ratio / ONE
+        if(repFraction >= POINTZEROONE):
+            minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
+            if(total/ONE < minimum):
+                total = minimum*ONE
+                repConstant = total / self.getNumEventsToReportOn(branch, votePeriod)
         self.setPeriodRepConstant(branch, votePeriod, sender, repConstant)
     # 1 is 2**192 here, lesserreportnum, repconstant, and one are all base 2**64
     reportingThreshold = self.getLesserReportNum(branch, votePeriod, eventID)*repConstant*ONE
