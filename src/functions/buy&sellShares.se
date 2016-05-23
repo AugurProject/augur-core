@@ -280,7 +280,8 @@ def short_sell(buyer_trade_id, max_amount):
     CASH.addCash(creator, fee/2)
     CASH.addCash(branch, fee/2)
     
-    MARKETS.addFees(market, fee+takerFeesTotal)
+    # only count branch fees here
+    MARKETS.addFees(market, fee/2+branchFees)
 
     # Log transaction
     log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)

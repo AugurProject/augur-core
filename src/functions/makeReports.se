@@ -169,6 +169,13 @@ def submitReport(event, salt, report, ethics):
         # round 2 and fork events are weighted by rep    
         if(roundTwo or forkedOverThisEvent):
             EXPEVENTS.addRepEvent(branch, votePeriod, event, EXPEVENTS.getBeforeRep(branch, votePeriod, msg.sender))
+        reportsNum = EXPEVENTS.getLesserReportNum(branch, votePeriod, event)
+        paidBack = EXPEVENTS.getReportersPaidSoFar(branch, event)
+        diff = reportsNum - paidBack
+        if(diff >= 1):
+            EXPEVENTS.addReportersPaidSoFar(branch, event)
+            CASH.subtractCash(branch, 3500000*tx.gasprice*ONE / WEITOETH)
+            CASH.addCash(msg.sender, 3500000*tx.gasprice*ONE / WEITOETH)
         return(1)
     return(-2)
 

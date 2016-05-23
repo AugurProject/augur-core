@@ -42,7 +42,7 @@ data EventIDToIndex[][]
 # numReportsActual is the amount of reports a user has submitted in a period
 # lesserReportNum is the number of reports an event should have [the lesser of how many it can afford from fees and how many it should have due to outstanding share value]
 # periodRepConstant is 
-data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], numReportsActual[][], repEvent[][], lesserReportNum[][], periodRepConstant[][])
+data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], numReportsActual[][], repEvent[][], lesserReportNum[][], periodRepConstant[][], reportersPaidSoFarForEvent[])
 
 data requiredEvents[]
 
@@ -51,7 +51,13 @@ data numReqEvents[][]
 
 data mode_items[][](report_value[], current_mode, current_mode_items)
 
+def getReportersPaidSoFar(branch, event):
+    return(self.branches[branch].reportersPaidSoFarForEvent[event])
 
+def addReportersPaidSoFar(branch, event):
+    self.branches[branch].reportersPaidSoFarForEvent[event] += 1
+    return(1)
+    
 def refundCost(to, value):
     send(to, value)
     return(1)

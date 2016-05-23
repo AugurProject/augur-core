@@ -154,7 +154,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 CASH.addCash(branch, fee/2)
                 
                 # needed to keep track of how many fees a market has raised
-                MARKETS.addFees(market, fee+takerFeesTotal)
+                # only count branch fees here
+                MARKETS.addFees(market, fee/2+branchFees)
                 # Update max_amount
                 max_amount -= fill
                 # Log transaction
@@ -210,7 +211,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 CASH.addCash(creator, fee/2)
                 CASH.addCash(branch, fee/2)
                 
-                MARKETS.addFees(market, fee+takerFeesTotal)
+                # only count branch fees here
+                MARKETS.addFees(market, fee/2+branchFees)
                 # Update max_value
                 max_value -= value
                 # Log transaction
