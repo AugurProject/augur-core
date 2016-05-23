@@ -172,7 +172,7 @@ def convertToDormantRep(branch, value):
     refund()
     # if not in first half of reporting period
     periodLength = BRANCHES.getPeriodLength(branch)
-    if!CONSENSUS.getRRDone(branch, msg.sender)):
+    if(!CONSENSUS.getRRDone(branch, msg.sender)):
         return(0)
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):

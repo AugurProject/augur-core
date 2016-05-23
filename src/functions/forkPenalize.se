@@ -48,9 +48,9 @@ def penalizeOnForkedEvent(branch, event):
     numReportedOn = EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
     # penalization on a forked event
     # if didn't report [reportValue of 0] then it's a bad report here
+    # Do (for each user) based on forking report and final outcome
     if(!CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event)):
-        # Do (for each user) based on forking report and final outcome
-        if(outcome!=0)
+        if(outcome!=0):
             # wrong
             #184467440737095520 == 0.01 in fxp
             if(reportValue > outcome+POINTZEROONE or reportValue < outcome-POINTZEROONE):

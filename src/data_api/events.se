@@ -244,7 +244,3 @@ def getRejected(event):
 def getRejectedPeriod(event):
     refund()
     return(self.Events[event].rejectedPeriod)
-
-def getRejectedUncaught(event):
-    refund()
-    return(self.Events[event].rejectedUncaught)

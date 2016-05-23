@@ -252,7 +252,7 @@ def resolveForkEvent(branch, event):
         if(mode==ONEHALF || !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, bond)
-            CASH.addCash(branch, EVENTS.bond)
+            CASH.addCash(branch, bond)
             # not ethical is same as .5 outcome
             EVENTS.setOutcome(event, ethicOutcome)
         else:

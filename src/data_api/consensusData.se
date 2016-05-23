@@ -19,7 +19,7 @@ data branch[](period[](denominator, penalized[](event[], num, notEnoughReportsPe
 data refunds[]
 
 def init():
-    self.baseReportersLastPeriod[1010101] = 2*3
+    self.branch[1010101].baseReportersLastPeriod = 2*3
 
 def setRefund(refunder, amt):
     self.refunds[refunder] = amt
@@ -40,7 +40,7 @@ def setBaseReportersLastPeriod(branch, amount):
 def getFeeFirst(branch, period):
     return(self.branch[branch].period[period].feeFirst)
 
-def setFeefirst(branch, period, val):
+def setFeeFirst(branch, period, val):
     self.branch[branch].period[period].feeFirst = val
     return(1)
 
