@@ -2773,7 +2773,7 @@ def resolveForkEvent(branch, event):
         if(mode==ONEHALF || !ethical):
             # give event bond money to reporters
             self.subtractCash(event, bond)
-            self.addCash(branch, self.bond)
+            self.addCash(branch, bond)
             # not ethical is same as .5 outcome
             self.setOutcome(event, ethicOutcome)
         else:
