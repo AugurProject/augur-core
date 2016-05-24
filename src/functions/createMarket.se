@@ -176,18 +176,18 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     tradingPeriod = (tradingPeriod / periodLength)
 
     # formation of marketID (hash)
-    marketinfo = string(9*32 + len(description))
-    marketinfo[0] = MARKET
-    marketinfo[1] = msg.sender
-    marketinfo[2] = branch
-    marketinfo[3] = eventsConcat
-    marketinfo[4] = len(events)
-    marketinfo[5] = cumulativeScale
-    marketinfo[6] = numOutcomes
-    marketinfo[7] = tradingPeriod
-    marketinfo[8] = tradingFee
-    mcopy(marketinfo + 9*32, description, chars=len(description))
+    marketinfo = string(8*32 + len(description))
+    marketinfo[0] = tradingPeriod
+    marketinfo[1] = tradingFee
+    marketinfo[2] = block.timestamp
+    marketinfo[3] = tag1
+    marketinfo[4] = tag2
+    marketinfo[5] = tag3
+    marketinfo[6] = lastExpDate
+    marketinfo[7] = len(description)
+    mcopy(marketinfo + 8*32, description, chars=len(description))
     marketID = sha3(marketinfo, chars=len(marketinfo))
+    MARKETS.addToMarketsHash(branch, marketID)
     CASH.initiateOwner(marketID)
     # pay numOutcomes fee
     # if it's already been created return 0

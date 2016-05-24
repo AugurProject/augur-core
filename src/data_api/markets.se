@@ -37,6 +37,19 @@ inset('refund.se')
 # tradingPeriod is which eventexpperiod market expires in
 data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime, lastExpDate, prices[])
 
+# takes branch as param, composite hash of all markets in the system
+data marketsHash[]
+
+def getMarketsHash(branch):
+    return(self.marketsHash[branch])
+
+def addToMarketsHash(branch, newHash):
+    x = array(2)
+    x[0] = self.marketsHash[branch]
+    x[1] = newHash
+    self.marketsHash[branch] = sha3(x, items=2)
+    return(1)
+
 def addFees(market, amount):
     self.Markets[market].fees += amount
     return(1)
