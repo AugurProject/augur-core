@@ -26,6 +26,7 @@ import reporting as REPORTING
 import makeReports as MAKEREPORTS
 import fxpFunctions as FXP
 import markets as MARKETS
+import backstops as BACKSTOPS
 import events as EVENTS
 import expiringEvents as EXPEVENTS
 import trades as TRADES
@@ -235,24 +236,28 @@ def updateTradingFee(branch, market, tradingFee):
 # In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
 def pushMarketForward(branch, market):
     refund()
+    # can't do while forking
+    forkPeriod = BRANCHES.getForkPeriod(branch)
+    currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
+    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod+1) or currentPeriod == (forkPeriod+2)):
+        return(-3)
     branchEventIsInForked = 0
     winningForkDecided = 0
     if(branchEventIsInForked && !winningForkDecided):
         return(0)
-    # if round 2 event don't allow it
-    # prevent for backstop 1 markets and vice versa
-    # todo: if has been pushed forward in the past (see close market) don't allow it again
+
     numEvents = MARKETS.getNumEvents(market)
     if(marketClosed):
         return(0)
     if(CASH.sendFrom(market, numEvents*MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE), msg.sender)==0):
         return(0)
     i = 0
+    periodLength = BRANCHES.getPeriodLength(branch)
     # for each event in market
     while i < numEvents:
-        if(1):
-            #if(eventNotResolved && eventNotInRound2Adj && notRejectedBefore && event isn't already in next vote period):
-            event = MARKETS.getMarketEvent(market, i)
+        event = MARKETS.getMarketEvent(market, i)
+        expiration = EVENTS.getExpiration(event) / periodLength
+        if(!EVENTS.getRejectedPeriod(event) && EVENTS.getExpiration(event)==EVENTS.getOriginalExpiration(event) && !MARKETS.getPushedForward(market) && !EVENTS.getOutcome(event) && !BACKSTOPS.getRoundTwo(event) && expiration!=(block.timestamp / periodLength)):
             # push into next vote period
             period = BRANCHES.getVotePeriod(branch)
             EXPEVENTS.addEvent(branch, period+1, event)

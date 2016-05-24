@@ -453,11 +453,6 @@ def test_abunch_of_markets():
     c.getMarketsInfo(1010101, 0, 100)
     return(1)
 
-x = time.time()
-s.mine(1)
-c.getMarketsInBranch(1010101)
-y = time.time()
-y-x
 def test_close_market():
     global initial_gas
     initial_gas = 0
