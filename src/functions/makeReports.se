@@ -37,7 +37,7 @@ def makeHash(salt, report, eventID, sender):
     hashInfo[1] = salt
     hashInfo[2] = report
     hashInfo[3] = eventID
-    reportHash = sha256(hashInfo, chars=32*len(hashInfo))
+    reportHash = sha3(hashInfo, chars=32*len(hashInfo))
     return(reportHash)
 
 # Error: 0: not caught up on rep redistributions

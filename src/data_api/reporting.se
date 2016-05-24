@@ -171,7 +171,7 @@ def hashReport(report: arr, salt):
     while i < (len(report) + 2):
         hashInfo[i] = report[i-2]
         i += 1
-    reportHash = sha256(hashInfo, chars=32*len(hashInfo))
+    reportHash = sha3(hashInfo, chars=32*len(hashInfo))
     return(reportHash)
 
 # check that msg.sender is one of our function contracts

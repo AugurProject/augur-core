@@ -28,7 +28,7 @@ def slashRep(branch, salt, report, reporter, eventID, testing):
     hashInfo[1] = salt
     hashInfo[2] = report
     hashInfo[3] = eventID
-    reportHash = sha256(hashInfo, chars=32*len(hashInfo))
+    reportHash = sha3(hashInfo, chars=32*len(hashInfo))
     if(reportHash!=realHash):
         return(0)
     else:

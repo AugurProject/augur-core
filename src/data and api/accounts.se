@@ -1,8 +1,8 @@
-# accounts indexed with sha256(handle)
+# accounts indexed with sha3(handle)
 data accounts[](privateKey, iv, salt, mac, uuid)
 
 # Register a new account.
-# @param {int} handle sha256 digest of the user's handle/username
+# @param {int} handle sha3 digest of the user's handle/username
 # @param {int} privateKey Encrypted private key (256-bit)
 # @param {int} iv AES initialization vector (128-bit)
 # @param {int} salt Key derivation salt (256-bit)
@@ -20,7 +20,7 @@ def register(handle, privateKey, iv, salt, mac, uuid):
     return(1)
 
 # Retrieve an existing account.
-# @param {int} handle sha256 digest of the user's handle/username
+# @param {int} handle sha3 digest of the user's handle/username
 # @return array(5) [privateKey, iv, salt, mac, uuid] (0s if account not found)
 def getAccount(handle):
     privateKey = self.accounts[handle].privateKey

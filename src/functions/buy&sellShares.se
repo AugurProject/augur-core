@@ -50,7 +50,7 @@ macro fee_percent($market_fee, $price, $cumScale):
 
 macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participantNumber, $fee, $sender):
     trade = [$type, $market, $amount, $price, $sender, block.number, $outcome]
-    trade_id = sha256(trade, items=7)
+    trade_id = sha3(trade, items=7)
     cumScale = MARKETS.getCumScale($market)
 
     # Save trade
@@ -191,7 +191,7 @@ def short_sell(buyer_trade_id, max_amount):
     tradeInfo[0] = buyer_trade_id
     tradeInfo[1] = max_amount
     tradeInfo[2] = 0
-    tradeHash = sha256(tradeInfo, items=3)
+    tradeHash = sha3(tradeInfo, items=3)
     if(TRADES.checkHash(tradeHash, msg.sender)==-1):
         return(-2)
     # Get trade

@@ -68,7 +68,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         eventinfo[6] = maxValue                                     #maximum outcome value
         eventinfo[7] = numOutcomes                                  #number of outcomes
         mcopy(eventinfo + 8*32, description, len(description))
-        eventID = sha256(eventinfo, chars=len(eventinfo))
+        eventID = sha3(eventinfo, chars=len(eventinfo))
     else:
         return(-1)
     if(numOutcomes < 2 || numOutcomes > 8):
@@ -187,7 +187,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     marketinfo[7] = tradingPeriod
     marketinfo[8] = tradingFee
     mcopy(marketinfo + 9*32, description, chars=len(description))
-    marketID = sha256(marketinfo, chars=len(marketinfo))
+    marketID = sha3(marketinfo, chars=len(marketinfo))
     CASH.initiateOwner(marketID)
     # pay numOutcomes fee
     # if it's already been created return 0

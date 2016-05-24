@@ -110,7 +110,7 @@ def exchangeRate(branch):
     # get rep exchange rate from etherex for (branch)
     #return(exchangeRate)
     # for testing we'll just rng the exchange rate :)
-    return(sha256(branch))
+    return(sha3(branch))
 
 # In the last 48 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back
 # bond is 1% of rep

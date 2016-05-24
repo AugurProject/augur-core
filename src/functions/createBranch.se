@@ -52,7 +52,7 @@ def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnl
     mcopy(branchInfo+ 8*32, description, len(description))
     # people can check that these characteristics hash to the ID if they want
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
-    branchID = sha256(branchInfo, chars=len(branchInfo))
+    branchID = sha3(branchInfo, chars=len(branchInfo))
     currentVotePeriod = (block.timestamp / periodLength) - 1
     if(INFO.getCreator(branchID)==0):
         BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee, oracleOnly, parentPeriod, parent)

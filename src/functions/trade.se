@@ -76,7 +76,7 @@ def trade(max_value, max_amount, trade_ids:arr):
     tradeInfo[0] = trades
     tradeInfo[1] = max_amount
     tradeInfo[2] = max_value
-    tradeHash = sha256(tradeInfo, items=3)
+    tradeHash = sha3(tradeInfo, items=3)
     if(TRADES.checkHash(tradeHash, msg.sender)==-1):
         return([-2]: arr)
     max_value = max_value
