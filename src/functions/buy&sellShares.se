@@ -133,7 +133,7 @@ macro remove_trade($trade_id, $market):
 # smallest trade value is 0.00000001
 def buy(amount, price, market, outcome):
     refund()
-    if(!MARKETS.getCreationBlock(market)):
+    if(!MARKETS.getCreationTime(market)):
         return(0)
     branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):

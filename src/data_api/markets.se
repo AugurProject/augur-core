@@ -34,7 +34,7 @@ inset('refund.se')
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, blockNum)
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime, lastExpDate)
 
 def addFees(market, amount):
     self.Markets[market].fees += amount
@@ -77,8 +77,8 @@ def getMarketEvent(market, index):
     refund()
     return(self.Markets[market].events[index])
 
-def getCreationBlock(market):
-    return(self.Markets[market].blockNum)
+def getCreationTime(market):
+    return(self.Markets[market].creationTime)
 
 def getMarketEvents(market):
     refund()
@@ -160,7 +160,7 @@ macro sharesPurchased($marketID):
     market($marketID).sharesPurchased
 
 # check that msg.sender is one of our function contracts
-def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy, creationFee, block):
+def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy, creationFee, lastExpDate):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
@@ -181,7 +181,8 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, t
     self.Markets[marketID].tag3 = tag3
     self.Markets[marketID].makerFees = makerFees
     self.Markets[marketID].fees = creationFee
-    self.Markets[marketID].blockNum = block
+    self.Markets[marketID].creationTime = block.timestamp
+    self.Markets[marketID].lastExpDate = lastExpDate
     return(1)
 
 def addParticipant(market, address):
