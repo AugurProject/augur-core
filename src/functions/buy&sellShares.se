@@ -287,4 +287,5 @@ def short_sell(buyer_trade_id, max_amount):
     log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)
     # Log price, fill amount, type and timestamp
     log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
+    MARKETS.setPrice(market, outcome, price)
     return([SUCCESS, max_amount, fill, price]: arr)

@@ -221,6 +221,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 return([INSUFFICIENT_BALANCE]: arr)
 
         # Log price, fill amount, type and timestamp
+        MARKETS.setPrice(market, outcome, price)
         log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
         # Next trade
         t += 1
