@@ -35,7 +35,11 @@ inset('refund.se')
 # a binary outcome state 1 is no, 2 is true, 0 if not determined
 # tradingFee is a percent in fixedPoint
 # tradingPeriod is which eventexpperiod market expires in
+<<<<<<< HEAD
 data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime)
+=======
+data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime, lastExpDate)
+>>>>>>> 52
 
 def addFees(market, amount):
     self.Markets[market].fees += amount
@@ -161,7 +165,11 @@ macro sharesPurchased($marketID):
     market($marketID).sharesPurchased
 
 # check that msg.sender is one of our function contracts
+<<<<<<< HEAD
 def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy, creationFee, timestamp):
+=======
+def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy, creationFee, lastExpDate):
+>>>>>>> 52
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
@@ -182,7 +190,12 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, t
     self.Markets[marketID].tag3 = tag3
     self.Markets[marketID].makerFees = makerFees
     self.Markets[marketID].fees = creationFee
+<<<<<<< HEAD
     self.Markets[marketID].creationTime = timestamp
+=======
+    self.Markets[marketID].creationTime = block.timestamp
+    self.Markets[marketID].lastExpDate = lastExpDate
+>>>>>>> 52
     return(1)
 
 def addParticipant(market, address):
@@ -443,7 +456,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
                 # (data offset by 1+numMarkets so length data can be prepended)
                 totalFlatLength = 1 + numMarkets
                 m = 0
-                while m < numMarkets:
+                while m < numMarkets: 
                     totalFlatLength += marketArrayLength[m]
                     m += 1
                 with flattened = array(totalFlatLength):

@@ -122,7 +122,7 @@ macro remove_trade($trade_id, $market):
     MARKETS.remove_trade_from_market($market, $trade_id)
 
 #
-# Buy / Sell actions
+# Buy / Sell actions: puts orders on the book
 # Errors:
     # -1: amount/price bad or no market
     # -2: oracle only branch
@@ -133,6 +133,8 @@ macro remove_trade($trade_id, $market):
 # smallest trade value is 0.00000001
 def buy(amount, price, market, outcome):
     refund()
+    if(!MARKETS.getCreationTime(market)):
+        return(0)
     branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
@@ -278,7 +280,8 @@ def short_sell(buyer_trade_id, max_amount):
     CASH.addCash(creator, fee/2)
     CASH.addCash(branch, fee/2)
     
-    MARKETS.addFees(market, fee+takerFeesTotal)
+    # only count branch fees here
+    MARKETS.addFees(market, fee/2+branchFees)
 
     # Log transaction
     log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)

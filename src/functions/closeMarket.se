@@ -67,13 +67,12 @@ macro ethic_catch($x):
     # -1: Market has no cash anyway / already closed
     # -2: 0 outcome / not reported on yet
     # -3: not final round 2 event
-    # -4: Outcome .5 once, pushback and retry
     # -5: Event forked and not final yet
     # -6: bonded pushed forward market not ready to be resolved
     # -7: event not reportable >.99
     # -8: market isn't in branch
 # if market's events have moved due to a fork branch is the new fork
-def closeMarket(branch, market):
+def closeMarket(branch, market, sender):
     refund()
     if(MARKETS.getBranchID(market)!=branch):
         return(-8)
@@ -103,7 +102,6 @@ def closeMarket(branch, market):
     if((period > tradingPeriod || reportingDone) && !resolved):
         # loop through events in the market, get their outcomes && use those to determine the winning events!
         n = 0
-        outcomeFour = 0
         outcomeSix = 0
         while n < numberEvents:
             votingPeriodEvent = EVENTS.getExpiration(events[n])/BRANCHES.getPeriodLength(branch)
@@ -118,26 +116,25 @@ def closeMarket(branch, market):
             if((EVENTS.getForked(event) && !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+2))):
                 return(-5)
             if(binary(events[n]) && fxpOutcome==0):
-                    resolution = RESOLVE.resolveBinary(events[n], market, branch, votingPeriodEvent, msg.sender)
+                    resolution = RESOLVE.resolveBinary(events[n], market, branch, votingPeriodEvent)
             elif(scalar(events[n]) && EVENTS.getmode(events[n])==0):
-                    resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(events[n]), EVENTS.getMaxValue(events[n]), events[n], market, branch, votingPeriodEvent, msg.sender)
+                    resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(events[n]), EVENTS.getMaxValue(events[n]), events[n], market, branch, votingPeriodEvent)
             elif(categorical(events[n]) && EVENTS.getmode(events[n])==0):
-                    resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(events[n]), events[n], market, branch, votingPeriodEvent, msg.sender)
+                    resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(events[n]), events[n], market, branch, votingPeriodEvent)
             elif(resolution==-6):
                 outcomeSix = 1
             n += 1
-        if(outcomeFour):
-            return(-4)
         elif(outcomeSix):
             return(-6)
         winningOutcomes = array(8)
         winningOutcomes = RESOLVE.determineWinningOutcomes(events, numberEvents, branch, market, outitems=8)
         MARKETS.setWinningOutcomes(market, winningOutcomes)
-        MARKETS.refundClosing(MARKETS.getgasSubsidy(market), msg.sender)
+        MARKETS.refundClosing(MARKETS.getgasSubsidy(market), sender)
         return(1)
     else:
         return(0)
 
+# claim winnings after a market is resolved
 # @return 1 if success
 # Errors:
     # 0: reporting not done
@@ -171,7 +168,10 @@ def claimProceeds(branch, market):
         if(winningOutcomes[0]==0):
             return(0)
         if(winningOutcomes[1]==0):
-            outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender)
+            if(len(events)==1 && categorical(events[0]) && EVENTS.getOutcome(events[0])==2**63):
+                outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(events[0]))
+            else:
+                outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, 0)
         elif(winningOutcomes[7]):
             outcome = CLOSEEIGHT.eightOutcomes(market, winningOutcomes, events, msg.sender)
         elif(winningOutcomes[3]):

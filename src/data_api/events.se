@@ -22,12 +22,15 @@
 inset('refund.se')
 
 # Events' index is the eventID
-# a binary outcome has 0 for min && 1 for max value, but consensus will return ONE and TWO respectively
 # so for voting 1 and 2 in fxp. need to be given for binaries, not 0 & 1
-# S&P 500 scalar would be say 0 && 4700, respectively
 # categorical markets have fixed point min and max
  # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, rejectedUncaught, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength)
+# threshold is the min sha threshold for reporting on an event
+# mode is the mode for a given event
+# originalExp is original expiry date in the case an event was pushed back and the expiration date gets changed - both are in epoch time
+# if a pushed back event is rejected then rejectedPeriod is the period it was pushed forward to and rejected in
+# bond is the indeterminate bond
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength)
 
 data past24Hours[]
 
@@ -228,13 +231,11 @@ def setmode(event, mode):
     self.Events[event].mode = mode
     return(1)
 
-def setRejected(event, period, uncaughtOutcome):
+def setRejected(event, period):
     refund()
     self.Events[event].rejected = 1
     self.Events[event].rejectedPeriod = period
-    self.Events[event].rejectedUncaught = uncaughtOutcome
     return(1)
-    
 
 def getRejected(event):
     refund()
@@ -243,7 +244,3 @@ def getRejected(event):
 def getRejectedPeriod(event):
     refund()
     return(self.Events[event].rejectedPeriod)
-
-def getRejectedUncaught(event):
-    refund()
-    return(self.Events[event].rejectedUncaught)

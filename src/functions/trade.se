@@ -28,14 +28,14 @@ import markets as MARKETS
 import trades as TRADES
 inset('refund.se')
 
-event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
-event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
+#event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
+#event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
 
 # Trade types
 macro BID: 1
 macro ASK: 2
 # Field counts
-macro TRADE_FIELDS: 9
+macro TRADE_FIELDS: 8
 # Boolean success/failure
 macro SUCCESS: 1
 # Error codes
@@ -62,6 +62,7 @@ macro remove_trade($trade_id, $market):
 #max value is max amount to spend to buy [including fees]
 #max amount is max shares to sell
 # 500k gas
+# picks orders off the book
 def trade(max_value, max_amount, trade_ids:arr):
     refund()
     if(BRANCHES.getOracleOnly(branch)):
@@ -153,7 +154,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 CASH.addCash(branch, fee/2)
                 
                 # needed to keep track of how many fees a market has raised
-                MARKETS.addFees(market, fee+takerFeesTotal)
+                # only count branch fees here
+                MARKETS.addFees(market, fee/2+branchFees)
                 # Update max_amount
                 max_amount -= fill
                 # Log transaction
@@ -209,7 +211,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 CASH.addCash(creator, fee/2)
                 CASH.addCash(branch, fee/2)
                 
-                MARKETS.addFees(market, fee+takerFeesTotal)
+                # only count branch fees here
+                MARKETS.addFees(market, fee/2+branchFees)
                 # Update max_value
                 max_value -= value
                 # Log transaction

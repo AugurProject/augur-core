@@ -1,0 +1,156 @@
+import info as INFO
+import cash as CASH
+import branches as BRANCHES
+import reporting as REPORTING
+import events as EVENTS
+import markets as MARKETS
+import backstops as BACKSTOPS
+import sendReputation as SENDREP
+import roundTwo as ROUNDTWO
+import expiringEvents as EXPEVENTS
+import createBranch as CREATEBRANCH
+inset('refund.se')
+
+# rbcr is done as a normal event where everyone reports on it
+# only called on the fork not the parent, normal penalization except the values are forkOutcome and forkEthicality as opposed to anything else
+# some rep from this goes to bond poster, original / last period report is actually what a user reported on the parent for the round 2 bond vote, they lose rep as well as people this time who report wrong
+# branch is fork
+# fork event needs to be resolved first before this can be called
+# Errors:
+    # -2: already past first half of new period and needed to penalize before then
+    # -4: fork event isn't resolved yet
+    # -5: already done for all events in this period
+def penalizeOnForkedEvent(branch, event):
+    refund()
+    repBalance = REPORTING.getRepBalance(branch, msg.sender)
+    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    periodLength = BRANCHES.getPeriodLength(branch)
+    residual = block.timestamp % periodLength
+    newRep = 0
+    newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
+    oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
+    forkOutcome = EVENTS.getForkOutcome(event)
+    outcome = catch(forkOutcome)
+    if(scalar(event) or categorical(event)):
+        outcome = forkOut
+    p = self.proportionCorrectForkEvent(event)
+    reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
+    ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
+    bond = BACKSTOPS.getBondAmount(event)
+    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
+        return(-5)
+    # means event / fork isn't resolved
+    if(EVENTS.getForkedDone(event)==0):
+        return(-4)
+    # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
+    if(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
+        return(-2)
+    numReportedOn = EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
+    # penalization on a forked event
+    # if didn't report [reportValue of 0] then it's a bad report here
+    # Do (for each user) based on forking report and final outcome
+    if(!CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event)):
+        if(outcome!=0):
+            # wrong
+            #184467440737095520 == 0.01 in fxp
+            if(reportValue > outcome+POINTZEROONE or reportValue < outcome-POINTZEROONE):
+                if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
+                    diff = reportValue - outcome
+                    p = -(abs(diff)/2) + ONE
+                newRep = oldRep*(2*p - ONE)/ONE
+            # right
+            else:
+                if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
+                    diff = reportValue - outcome    
+                    p = -(abs(diff)/2) + ONE
+                newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
+            # (1-k) * old rep + k * new rep where k = 1 / (number of events you reported on last period) for forking
+            # use .10 as a max penalty per fork event
+            if(numReportedOn<10):
+                repChange = oldRep * (ONE - ONE/10)/ONE + newRep*(ONE/10)/ONE - oldRep
+            else:
+                repChange = oldRep * (ONE - ONE/numReportedOn)/ONE + newRep*(ONE/numReportedOn)/ONE - oldRep
+            newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
+            EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+            # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
+            if(ethics != ethic_catch(EVENTS.getEthical(event)) && repChange >=0):
+                repChange = -POINTTWO*repBalance / ONE
+            if(repBalance + repChange <= 0):
+                repChange = -1*repBalance
+            if(BACKSTOPS.getForkBondPaid(event) < BACKSTOPS.getBondAmount(event)*2 && repChange < 0):
+                # done instead of sending to redistrib. pool
+                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
+                # sends that rep to the bonded challenger
+                REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(event)), -repChange)
+                BACKSTOPS.adjForkBondPaid(event, -1*repChange)
+        CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
+        CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
+        numReportedOn+=1
+    # once penalized for all events actually get rid of net rep lost
+    if(numReportedOn==CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
+        if(newAfterRep <= 0):
+            newAfterRep = 0
+            EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+        CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
+        CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
+        totalRepDifference = newAfterRep - oldRep
+        if(repBalance + totalRepDifference <= 0):
+            totalRepDifference = -1*repBalance
+        if(totalRepDifference<0):
+            # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), totalRepDifference)
+            # sends that rep to the branch
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
+    return(1)
+
+def proportionCorrectForkEvent(event):
+    refund()
+    p = 0
+    outcome = catch(EVENTS.getForkOutcome(event))
+    if(outcome!=0):
+        # binary
+        if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==TWO and EVENTS.getMinValue(event)==ONE):
+            # subtract 1 to get it from 0 to 1
+            avgOutcome = EVENTS.getForkOutcome(event) - ONE
+            # say we have outcome of 0, avg is .4, what is p?
+            # p is .6 or 60%
+            if(outcome == ONE):
+                p = ONE - avgOutcome
+            # say we have outcome of 1, avg is .8, what is p (proportion correct)?
+            # p is .8 or 80%
+            if(outcome == 2 * ONE):
+                p = avgOutcome
+            if(outcome == 3 * ONEHALF):
+                return(0)
+        return(p)
+    else:
+        return(0)
+
+macro scalar($event):
+    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
+        
+macro binary($event):
+    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
+        
+macro categorical($event):
+    (EVENTS.getNumOutcomes($event)>2)
+    
+macro ethic_catch($x):
+    if($x < ONEHALF):
+        0
+    else:
+        ONE
+
+macro abs($a):
+    if($a<0):
+        $a = -$a
+    $a
+    
+# Bins values to 1, 1.5, 2
+macro catch($x):
+    if($x < (BAD - CATCH_TOLERANCE)):
+        NO
+    elif($x > (BAD + CATCH_TOLERANCE)):
+        YES
+    else:
+        BAD

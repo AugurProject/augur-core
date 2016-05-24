@@ -1,59 +1,76 @@
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
-import consensus as CONSENSUS
+import consensusData as CONSENSUS
 import reporting as REPORTING
 import fxpFunctions as FXP
 import makeReports as MAKEREPORTS
 inset('refund.se')
 
+macro ONEPOINTTWO: 22136092888451461120
+
+macro POINTZEROZEROONE: 18446744073709552
+
+macro POINTONE: 1844674407370955264
+
+macro POINTNINE: 16602069666338596864
+
 # Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account and distributed like trading fees.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
 # Errors:
     # -1: already done
-    # -2: hasn't reported this period
-def penalizeNotEnoughReports(branch):
+    # -2: not in right part of period
+# prove both that a reporter voted on less than he/she actually could have and it was <.5 of what they were predicted to have reported on
+# reporters pay an eth bond for this on first report --- if never called by collect fees they get it back else it goes back to pay someone who correctly calls this function --- return bond if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees
+def proveReporterDidntReportEnough(branch, reporter, eventExample):
     refund()
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
-    if(CONSENSUS.getNotEnoughPenalized(branch, msg.sender, lastPeriod)):
+    if(CONSENSUS.getNotEnoughPenalized(branch, reporter, lastPeriod)):
         return(-1)
-    # accounts for if no events in a period
-    if(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
-        CONSENSUS.setNotEnoughPenalized(branch, msg.sender, lastPeriod)
-        return(1)
     if(BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
-        CONSENSUS.setNotEnoughPenalized(branch, msg.sender, lastPeriod)
+        CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
         return(1)
-
-    if(!EXPEVENTS.getReportedPeriod(branch, lastPeriod, msg.sender)):
-        return(-2)
     if(residual > periodLength/2):
         return(-2)
-    numEvents = MAKEREPORTS.getNumEventsToReport(branch, lastPeriod)
-    repConstant = REPORTING.getRepBalance(branch, msg.sender)*ONE/REPORTING.getActiveRep(branch)
+    # events a user should be reporting on
+    # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
+    # a^b=exp(b*ln(a))=e^(b*ln(a)).
+    prelim = EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)
+    repConstant = REPORTING.getRepBalance(branch, reporter)*ONE/REPORTING.getActiveRep(branch)
     logOutput = FXP.fx_log(repConstant)
-    exp = FXP.fx_exp(22136092888451461120*logOutput/ONE)
-    exp += 18446744073709552
+    exp = FXP.fx_exp(ONEPOINTTWO*logOutput/ONE) + POINTZEROZEROONE 
     baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
+    # if total [which is mult by num events to report on via the prelim amount] is too high [>1] then numevents will estimate a higher number than reality, so need to correct for this below
     total = exp*baseReporters
+    numEvents = exp*prelim + EXPEVENTS.getNumRequired(branch, votePeriod)*ONE
+    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, expDateIndex)-EXPEVENTS.getNumRemoved(branch, votePeriod)
+    if(repConstant >= POINTZEROONE):
+        minimum = min(30+EXPEVENTS.getNumRequired(branch, votePeriod), eventsInPeriod)
+        if(numEvents/ONE < minimum):
+            numEvents = minimum*ONE
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
     if(total > ONE):
-        numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)/baseReporters)*ONE + EXPEVENTS.getNumRequired(branch, votePeriod)
-    numReportsActual = EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
-    if(numEvents/(2*ONE) > EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)):
-        originalRep = REPORTING.getRepBalance(branch, msg.sender)
+        numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)/baseReporters)*ONE + EXPEVENTS.getNumRequired(branch, votePeriod)*ONE
+    numReportsActual = EXPEVENTS.getNumReportsActual(branch, lastPeriod, reporter)
+    # reporter couldve reported on event example but didnt
+    couldveReported = EXPEVENTS.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
+    if(numEvents/2 > EXPEVENTS.getNumReportsActual(branch, lastPeriod, reporter)*ONE && couldveReported):
+        originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
         # penalize people
-        # can number reported on be greater than num expected to report on
-        newRep = 3689348814741910528*numReportsActual*originalRep / numEvents
-        oldRep = originalRep*14757395258967642112 / ONE
+        newRep = POINTONE*numReportsActual*originalRep / numEvents
+        oldRep = originalRep*POINTNINE / ONE
         repChange = (oldRep+newRep) - originalRep
         if(repChange > 0):
             return(1)
         # removes rep from reporter who lost it
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, reporter), repChange)
         # sends that rep to the branch rep pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -repChange)
-        EXPEVENTS.setBeforeRep(branch, lastPeriod, oldRep+newRep, msg.sender)
-        EXPEVENTS.setAfterRep(branch, lastPeriod, oldRep+newRep, msg.sender)
-    CONSENSUS.setNotEnoughPenalized(branch, msg.sender, lastPeriod)
-    return(1)
+        EXPEVENTS.setBeforeRep(branch, lastPeriod, oldRep+newRep, reporter)
+        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, reporter) + repChange
+        EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, reporter)
+        CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
+        CONSENSUS.doRefund(msg.sender, reporter)
+        return(1)
+    else:
+        return(0)

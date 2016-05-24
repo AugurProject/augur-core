@@ -53,10 +53,11 @@ def eightOutcomes(market, winningOutcome: arr, events: arr, sender):
     
     # for each winning outcome do...
     n = 0
+    cumScale = MARKETS.getCumScale(market)
     while(winningOutcome[n]!=0):
         sharesOwned = MARKETS.getParticipantSharesPurchased(market, participantNumber, winningOutcome[n])
         MARKETS.modifyParticipantShares(market, participantNumber, winningOutcome[n], -sharesOwned)
-        CASH.subtractCash(market, sharesOwned*pricePerShare[n]*MARKETS.getCumScale(market)/ONE)
-        CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)/ONE*pricePerShare[n]/ONE)
+        CASH.subtractCash(market, sharesOwned*cumScale/ONE*pricePerShare[n]/ONE)
+        CASH.addCash(participant, sharesOwned*cumScale/ONE*pricePerShare[n]/ONE)
         n+=1
     return(1)

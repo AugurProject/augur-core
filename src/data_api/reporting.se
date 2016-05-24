@@ -28,6 +28,9 @@ inset('refund.se')
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
 # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
 # Events is 0 indexed as well
+# total rep is all the rep in augur
+# active rep is the amount which is actually active
+# fork is the child branch of a parent which forked
 data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), activeRep, fork)
 
 data whitelists[](addresses[], taken)
@@ -53,7 +56,7 @@ def adjustActiveRep(branch, amount):
     return(1)
 
 def setFork(branch):
-    self.Reporting[branch].fork = 1
+    self.Reporting[branch].fork = branch
     return(1)
     
 def getFork(branch):

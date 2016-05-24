@@ -435,6 +435,29 @@ def test_trading():
     print "BUY AND SELL OK"
     return(1)
 
+def test_abunch_of_markets():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
+    i = 0
+    while i < 10000:
+        c.setCash(s.block.coinbase, 1000000*2**64)
+        event = c.createEvent(1010101, "sss"+str(i), s.block.timestamp+100, 2**64, 2**65, 2, "lol")
+        market = c.createMarket(1010101, "aaa"+str(i), 2**58, [event], 1, 2, 3, 2**60, "aaa", value = 10**19)
+        s.mine(1)
+        i += 1
+    c.getMarketsInfo(1010101, 0, 100)
+    return(1)
+
+x = time.time()
+s.mine(1)
+c.getMarketsInBranch(1010101)
+y = time.time()
+y-x
 def test_close_market():
     global initial_gas
     initial_gas = 0
@@ -474,6 +497,7 @@ def test_close_market():
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
         time.sleep(c.getPeriodLength(1010101)/2)
         s.mine(1)
+    c.penalizeWrong(1010101, 0)
     report_hash = c.makeHash(0, 2**64, event1, s.block.coinbase)
     report_hash2 = c.makeHash(0, 2*2**64, event2, s.block.coinbase)
     report_hash3 = c.makeHash(0, 2*2**64, event3, s.block.coinbase)
@@ -549,6 +573,7 @@ def test_consensus():
     gas_use(s)
     report_hash2 = c.makeHash(0, 2*2**64, event2, s.block.coinbase)
     gas_use(s)
+    c.penalizeWrong(1010101, 0)
     assert(c.submitReportHash(event1, report_hash)==1), "Report hash submission failed"
     print "hash submit gas use"
     gas_use(s)
@@ -651,6 +676,7 @@ def test_slashrep():
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
         time.sleep(c.getPeriodLength(1010101)/2)
         s.mine(1)
+    c.penalizeWrong(1010101, 0)
     report_hash = c.makeHash(0, 2**64, event1, s.block.coinbase)
     report_hash2 = c.makeHash(0, 2*2**64, event2, s.block.coinbase)
     print c.submitReportHash(event1, report_hash)
@@ -744,7 +770,7 @@ def test_catchup():
     blocktime = s.block.timestamp
     assert(c.penalizationCatchup(1010101)==1)
     diffInPeriods = i - origi
-    diffInPeriods = min(diffInPeriods, 22)
+    diffInPeriods = min(diffInPeriods, 23)
     print blocktime
     print c.getVotePeriod(1010101)
     print blocktime / 15
