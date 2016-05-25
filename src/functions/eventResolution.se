@@ -39,10 +39,11 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
     # In the $event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and $market remains with old expiration date
     indeterminate = ONEHALF*3
-    if(($fxpOutcome == indeterminate or $mode==ONEHALF) && MARKETS.getPushedForward($market)):
+    if(($fxpOutcome == indeterminate or $mode==ONEHALF) && EVENTS.getEventPushedUp($event)):
+        if(MARKETS.getPushedForward($market)):
+            CASH.addCash($branch, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
+            CASH.subtractCash($market, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
         MARKETS.setTradingPeriod($market, MARKETS.getOriginalTradingPeriod($market))
-        CASH.addCash($branch, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
-        CASH.subtractCash($market, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
         MARKETS.setPushedForward($market, 0, msg.sender)
         EXPEVENTS.setNumReportsExpectedEvent($branch, $votingPeriodEvent, $event, 0)
         EXPEVENTS.setNumReportsEvent($branch, $votingPeriodEvent, $event, 0)

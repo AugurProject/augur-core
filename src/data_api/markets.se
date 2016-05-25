@@ -416,6 +416,7 @@ def getMarketInfo(marketID):
 				c += 1
 		return(info: arr)
 
+# still broken
 def getMarketsInfo(branch, offset, numMarketsToLoad):
 	numMarkets = BRANCHES.getNumMarketsBranch(branch)
 	marketIDs = BRANCHES.getMarketsInBranch(branch, outitems=numMarkets)
@@ -425,29 +426,29 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
 		totalLen += INFO.getDescriptionLength(marketIDs[m+offset])
 		m += 1
 	data = array(totalLen)
-	row = 0
+	m = 0
 	c = 0
-	#totalMarkets = min(numMarketsToLoad, numMarkets)
-	while row < numMarketsToLoad:
-		descriptionLength = INFO.getDescriptionLength(marketIDs[row+offset])
-		data[row + c] = marketIDs[row+offset]
-		data[row + c + 1] = self.Markets[marketIDs[row+offset]].tradingPeriod
-		data[row + c + 2] = self.Markets[marketIDs[row+offset]].tradingFee
-		data[row + c + 3] = self.Markets[marketIDs[row+offset]].creationTime
-		data[row + c + 4] = self.Markets[marketIDs[row+offset]].volume
-		data[row + c + 5] = self.Markets[marketIDs[row+offset]].tag1
-		data[row + c + 6] = self.Markets[marketIDs[row+offset]].tag2
-		data[row + c + 7] = self.Markets[marketIDs[row+offset]].tag3
-		data[row + c + 8] = self.Markets[marketIDs[row+offset]].lastExpDate
-		data[row + c + 9] = descriptionLength
+	totalMarkets = min(numMarketsToLoad, numMarkets)
+	while m < totalMarkets:
+		descriptionLength = INFO.getDescriptionLength(marketIDs[m+offset])
+		data[c] = marketIDs[m+offset]
+		data[c + 1] = self.Markets[marketIDs[m+offset]].tradingPeriod
+		data[c + 2] = self.Markets[marketIDs[m+offset]].tradingFee
+		data[c + 3] = self.Markets[marketIDs[m+offset]].creationTime
+		data[c + 4] = self.Markets[marketIDs[m+offset]].volume
+		data[c + 5] = self.Markets[marketIDs[m+offset]].tag1
+		data[c + 6] = self.Markets[marketIDs[m+offset]].tag2
+		data[c + 7] = self.Markets[marketIDs[m+offset]].tag3
+		data[c + 8] = self.Markets[marketIDs[m+offset]].lastExpDate
+		data[c + 9] = descriptionLength
 		c += 10
-		description = INFO.getDescription(marketIDs[row+offset], outchars=descriptionLength)
+		description = INFO.getDescription(marketIDs[m+offset], outchars=descriptionLength)
 		d = 0
 		while d < descriptionLength:
-			data[row + c] = getch(description, d)
+			data[c] = getch(description, d)
 			d += 1
 			c += 1
-		row += 1
+		m += 1
 	return(data: arr)
 
 def getSender():

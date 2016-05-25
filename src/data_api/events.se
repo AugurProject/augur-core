@@ -30,9 +30,16 @@ inset('refund.se')
 # originalExp is original expiry date in the case an event was pushed back and the expiration date gets changed - both are in epoch time
 # if a pushed back event is rejected then rejectedPeriod is the period it was pushed forward to and rejected in
 # bond is the indeterminate bond
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength)
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp)
 
 data past24Hours[]
+
+def getEventPushedUp(event):
+    return(self.Events[event].pushedUp)
+    
+def setEventPushedUp(event):
+    self.Events[event].pushedUp = 1
+    return(1)
 
 def getForkOutcome(event):
     return(self.Events[event].forkOutcome)

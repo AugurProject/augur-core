@@ -44,8 +44,8 @@ def makeHash(salt, report, eventID, sender):
 # Error -1: invalid event
 # Error -2: not in first half of period [commit part]
 def submitReportHash(event, reportHash):
-    votePeriod = BRANCHES.getVotePeriod(branch)
     branch = EVENTS.getBranch(event)
+    votePeriod = BRANCHES.getVotePeriod(branch)
 
     # makes sure a user is up to date on penalizations
     lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
@@ -64,7 +64,7 @@ def submitReportHash(event, reportHash):
     eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
-        return(-1)
+        return([eventIndex, eventID, event]: arr)
     reportingThreshold = 0
     if(EXPEVENTS.getRequired(event) || EVENTS.getReportingThreshold(event)):
         reportingThreshold = 2**192

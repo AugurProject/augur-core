@@ -43,6 +43,13 @@ def penalizeRoundTwoWrong(branch, event):
     roundTwo = BACKSTOPS.getRoundTwo(event)
     overruled = 0
     uncaught = EVENTS.getUncaughtOutcome(event)
+    # if no events in a period
+    if(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
+        CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
+        CONSENSUS.increaseDenominator(branch, lastPeriod, repBalance)
+        return(1)
+    elif(BRANCHES.getForkPeriod(branch) == lastPeriod && event!=forkEvent):
+        return(-4)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     if(!uncaught):
         if(ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(votePeriod, event), msg.sender)==0):
@@ -65,13 +72,6 @@ def penalizeRoundTwoWrong(branch, event):
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
         return(-2)
-    # if no events in a period
-    elif(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
-        CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
-        return(1)
-    if(BRANCHES.getForkPeriod(branch) == lastPeriod && event!=forkEvent):
-        return(-4)
     # if overruled / different outcome after reporting on again
     if(scalar(event) or categorical(event)):
         if((BACKSTOPS.getOriginalOutcome(event) != EVENTS.getUncaughtOutcome(event) or BACKSTOPS.getOriginalEthicality(event)!=ethic_catch(EVENTS.getEthical(event)))):

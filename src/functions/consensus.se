@@ -43,8 +43,20 @@ def penalizeWrong(branch, event):
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
     roundTwo = BACKSTOPS.getRoundTwo(event)
     uncaught = EVENTS.getUncaughtOutcome(event)
+    if(forkPeriod == lastPeriod):
+        return(-4)
+    elif(EVENTS.getForked(event)):
+        return(-6)
+    # if no events in a period
+    elif(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
+        CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
+        CONSENSUS.increaseDenominator(branch, lastPeriod, repBalance)
+        return(1)
+    elif(roundTwo && outcome!=0):
+        return(-1)
+    
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
-    if(!uncaught && !(rejected && EVENTS.getRejectedPeriod(event)==lastPeriod)):
+    elif(!uncaught && !(rejected && EVENTS.getRejectedPeriod(event)==lastPeriod)):
         if(CLOSEMARKET.closeMarket(branch, EVENTS.getMarket(event, 0), msg.sender)!=1):
             return(-7)
     outcome = catch(uncaught)
@@ -57,17 +69,6 @@ def penalizeWrong(branch, event):
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
         return(-2)
-    elif(forkPeriod == lastPeriod):
-        return(-4)
-    elif(EVENTS.getForked(event)):
-        return(-6)
-    # if no events in a period
-    elif(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
-        CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
-        return(1)
-    elif(roundTwo && outcome!=0):
-        return(-1)
     # lastperiod is where people who originally voted on a round 2 event voted the first time - want num events penalized to go up but not to actually be penalized for it yet
         # shouldn't be penalized until the next period resolution is over [since it's a round 2 event]
     if(roundTwo && !CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue):
