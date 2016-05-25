@@ -977,7 +977,7 @@ def submitReportHash(event, reportHash):
     eventIndex = self.getEventIndex(votePeriod, event)
     eventID = self.getEvent(branch, votePeriod, eventIndex)
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
-        return([eventIndex, eventID, event]: arr)
+        return(-1)
     reportingThreshold = 0
     if(self.getRequired(event) || self.getReportingThreshold(event)):
         reportingThreshold = 2**192
@@ -1009,13 +1009,16 @@ def submitReportHash(event, reportHash):
     # -6: already resolved
     # -7: <48 hr left in period, too late to report, able to put up readj. bonds though
     # -8: fees couldn't be collected
+    # -9: need to pay not reporting bond
 def submitReport(event, salt, report, ethics):
     branch = self.getBranch(event)
     balance = self.getRepBalance(branch, msg.sender)
     if(balance<ONE):
         return(0)
     # if 1st report of the period for a reporter
-    if(!self.getNumReportsActual(branch, votePeriod, msg.sender) && msg.value >= 500000*tx.gasprice):
+    if(!self.getNumReportsActual(branch, votePeriod, msg.sender)):
+        if(msg.value <= 500000*tx.gasprice):
+            return(-9)
         dormantRep = self.balanceOf(branch, msg.sender)
         # Record rep at start of report period
         self.setBeforeRep(branch, votePeriod, balance, msg.sender)
@@ -1035,7 +1038,7 @@ def submitReport(event, salt, report, ethics):
     periodLength = self.getPeriodLength(branch)
     # ensures user has collected fees for last reporting period
     if(!self.getFeesCollected(branch, msg.sender, votePeriod-1)):
-        if(self.collectFees(branch, msg.sender)!=1):
+        if(self.collectFees(branch, msg.sender)<1):
             return(-8)
     # commented out for testing
     #if(block.timestamp/periodLength!=((block.timestamp + 2*TWENTYFOURHR)/periodLength)):
@@ -1424,7 +1427,7 @@ def pushMarketForward(branch, market):
         # push into next vote period
         period = self.getVotePeriod(branch)
         # figure out what's going on with subsidy system here
-        self.addEvent(branch, period+1, events[i])
+        self.addEvent(branch, period+1, events[i], 0)
         # set event expiration date to be after the current reporting period ends
         self.setExpiration(events[i], block.timestamp)
         self.setTradingPeriod(market, period+1)
@@ -1857,9 +1860,11 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         if(self.getPushedForward($market)):
             self.addCash(self.getBondsMan($market), self.getTradingFee($market)*self.getTotalSharesPurchased($market)/(2*ONE))
             self.subtractCash($market, self.getTradingFee($market)*self.getTotalSharesPurchased($market)/(2*ONE))
+        if(self.getEventPushedUp($event)):
             # delete old $event from future events exp
-            self.removeEvent($branch, self.getOriginalExpiration($event)/$periodLength)
-            self.deleteEvent($branch, self.getOriginalExpiration($event)/$periodLength, $event)
+            $period = self.getOriginalExpiration($event)/$periodLength
+            self.removeEvent($branch, $period)
+            self.deleteEvent($branch, $period, $event)
 
 def resolveBinary(event, market, branch, votingPeriodEvent):
     refund()
@@ -2352,8 +2357,9 @@ def penalizeWrong(branch, event):
     if(self.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
-    elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
-        return(-2)
+    # commented for testing
+    #elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
+    #    return(-2)
     # lastperiod is where people who originally voted on a round 2 event voted the first time - want num events penalized to go up but not to actually be penalized for it yet
         # shouldn't be penalized until the next period resolution is over [since it's a round 2 event]
     if(roundTwo && !self.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue):
@@ -3237,6 +3243,10 @@ def collectFees(branch, sender):
             self.doRefund(msg.sender, msg.sender)
         return(1)
     else:
+        # return not reported enough bond if not enough penalized is 0 or self.getForkPeriod(branch)+1 == lastPeriod during collect fees
+        if(self.getNotEnoughPenalized(branch, msg.sender, lastPeriod)==0 or self.getForkPeriod(branch)+1 == lastPeriod):
+            self.doRefund(msg.sender, msg.sender)
+        self.setFeesCollected(branch, sender, lastPeriod)
         return(2)
 
 inset('refund.se')

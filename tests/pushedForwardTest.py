@@ -1,4 +1,5 @@
 os.system('rm functions/output.se')
+src = os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace', 'src')
 os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
 global initial_gas
 initial_gas = 0
