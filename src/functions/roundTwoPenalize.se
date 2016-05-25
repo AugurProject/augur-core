@@ -44,7 +44,7 @@ def penalizeRoundTwoWrong(branch, event):
     overruled = 0
     uncaught = EVENTS.getUncaughtOutcome(event)
     # if no events in a period
-    if(EXPEVENTS.getNumberEvents(branch, lastPeriod)==0):
+    if(EXPEVENTS.getNumberEvents(branch, lastPeriod)<=0):
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
         CONSENSUS.increaseDenominator(branch, lastPeriod, repBalance)
         return(1)

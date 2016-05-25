@@ -8,6 +8,7 @@ inset('refund.se')
 
 # -2: needs to be second half of reporting period to claim rep [1st half is when redistribution is done]
     # after this window, any unclaimed rep is pushed to the next period's redistrib. pool via the first make report submission
+# 2 means no errors but didnt report
 def collectFees(branch, sender):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -38,4 +39,8 @@ def collectFees(branch, sender):
             CONSENSUS.doRefund(msg.sender, msg.sender)
         return(1)
     else:
-        return(0)
+        # return not reported enough bond if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees
+        if(CONSENSUS.getNotEnoughPenalized(branch, msg.sender, lastPeriod)==0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
+            CONSENSUS.doRefund(msg.sender, msg.sender)
+        CONSENSUS.setFeesCollected(branch, sender, lastPeriod)
+        return(2)

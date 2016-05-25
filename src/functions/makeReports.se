@@ -64,7 +64,7 @@ def submitReportHash(event, reportHash):
     eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
-        return([eventIndex, eventID, event]: arr)
+        return(-1)
     reportingThreshold = 0
     if(EXPEVENTS.getRequired(event) || EVENTS.getReportingThreshold(event)):
         reportingThreshold = 2**192
@@ -96,13 +96,16 @@ def submitReportHash(event, reportHash):
     # -6: already resolved
     # -7: <48 hr left in period, too late to report, able to put up readj. bonds though
     # -8: fees couldn't be collected
+    # -9: need to pay not reporting bond
 def submitReport(event, salt, report, ethics):
     branch = EVENTS.getBranch(event)
     balance = REPORTING.getRepBalance(branch, msg.sender)
     if(balance<ONE):
         return(0)
     # if 1st report of the period for a reporter
-    if(!EXPEVENTS.getNumReportsActual(branch, votePeriod, msg.sender) && msg.value >= 500000*tx.gasprice):
+    if(!EXPEVENTS.getNumReportsActual(branch, votePeriod, msg.sender)):
+        if(msg.value <= 500000*tx.gasprice):
+            return(-9)
         dormantRep = REPORTING.balanceOf(branch, msg.sender)
         # Record rep at start of report period
         EXPEVENTS.setBeforeRep(branch, votePeriod, balance, msg.sender)
@@ -122,7 +125,7 @@ def submitReport(event, salt, report, ethics):
     periodLength = BRANCHES.getPeriodLength(branch)
     # ensures user has collected fees for last reporting period
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod-1)):
-        if(COLLECTFEES.collectFees(branch, msg.sender)!=1):
+        if(COLLECTFEES.collectFees(branch, msg.sender)<1):
             return(-8)
     # commented out for testing
     #if(block.timestamp/periodLength!=((block.timestamp + 2*TWENTYFOURHR)/periodLength)):

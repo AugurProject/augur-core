@@ -691,7 +691,7 @@ def penalizeRoundTwoWrong(branch, event):
     overruled = 0
     uncaught = self.getUncaughtOutcome(event)
     # if no events in a period
-    if(self.getNumberEvents(branch, lastPeriod)==0):
+    if(self.getNumberEvents(branch, lastPeriod)<=0):
         self.setPenalizedUpTo(branch, msg.sender, lastPeriod)
         self.increaseDenominator(branch, lastPeriod, repBalance)
         return(1)
@@ -957,8 +957,8 @@ def makeHash(salt, report, eventID, sender):
 # Error -1: invalid event
 # Error -2: not in first half of period [commit part]
 def submitReportHash(event, reportHash):
-    votePeriod = self.getVotePeriod(branch)
     branch = self.getBranch(event)
+    votePeriod = self.getVotePeriod(branch)
 
     # makes sure a user is up to date on penalizations
     lastPeriodPenalized = self.getPenalizedUpTo(branch, msg.sender)
@@ -1819,6 +1819,7 @@ def catch(x):
 macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $periodLength, $ethical, $scalarorcat, $mode, $ethicOutcome):
     # In the $event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and $market remains with old expiration date
+    # UI needs to call penalizeWrong for ones that are pushed back in both pushed back period and regular period with actual reporting
     indeterminate = ONEHALF*3
     if(($fxpOutcome == indeterminate or $mode==ONEHALF) && self.getEventPushedUp($event)):
         if(self.getPushedForward($market)):
@@ -2332,7 +2333,7 @@ def penalizeWrong(branch, event):
     elif(self.getForked(event)):
         return(-6)
     # if no events in a period
-    elif(self.getNumberEvents(branch, lastPeriod)==0):
+    elif(self.getNumberEvents(branch, lastPeriod)<=0):
         self.setPenalizedUpTo(branch, msg.sender, lastPeriod)
         self.increaseDenominator(branch, lastPeriod, repBalance)
         return(1)
@@ -3205,6 +3206,7 @@ inset('refund.se')
 
 # -2: needs to be second half of reporting period to claim rep [1st half is when redistribution is done]
     # after this window, any unclaimed rep is pushed to the next period's redistrib. pool via the first make report submission
+# 2 means no errors but didnt report
 def collectFees(branch, sender):
     refund()
     periodLength = self.getPeriodLength(branch)
@@ -3235,7 +3237,7 @@ def collectFees(branch, sender):
             self.doRefund(msg.sender, msg.sender)
         return(1)
     else:
-        return(0)
+        return(2)
 
 inset('refund.se')
 
@@ -4780,6 +4782,7 @@ def getMarketInfo(marketID):
 				c += 1
 		return(info: arr)
 
+# still broken
 def getMarketsInfo(branch, offset, numMarketsToLoad):
 	numMarkets = self.getNumMarketsBranch(branch)
 	marketIDs = self.getMarketsInBranch(branch, outitems=numMarkets)
@@ -4791,8 +4794,8 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
 	data = array(totalLen)
 	m = 0
 	c = 0
-	#totalMarkets = min(numMarketsToLoad, numMarkets)
-	while m < numMarketsToLoad:
+	totalMarkets = min(numMarketsToLoad, numMarkets)
+	while m < totalMarkets:
 		descriptionLength = self.getDescriptionLength(marketIDs[m+offset])
 		data[c] = marketIDs[m+offset]
 		data[c + 1] = self.Markets[marketIDs[m+offset]].tradingPeriod

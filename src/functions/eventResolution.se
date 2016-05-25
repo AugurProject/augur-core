@@ -38,6 +38,7 @@ def catch(x):
 macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $periodLength, $ethical, $scalarorcat, $mode, $ethicOutcome):
     # In the $event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and $market remains with old expiration date
+    # UI needs to call penalizeWrong for ones that are pushed back in both pushed back period and regular period with actual reporting
     indeterminate = ONEHALF*3
     if(($fxpOutcome == indeterminate or $mode==ONEHALF) && EVENTS.getEventPushedUp($event)):
         if(MARKETS.getPushedForward($market)):
@@ -75,9 +76,11 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         if(MARKETS.getPushedForward($market)):
             CASH.addCash(MARKETS.getBondsMan($market), MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
             CASH.subtractCash($market, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
+        if(EVENTS.getEventPushedUp($event)):
             # delete old $event from future events exp
-            EXPEVENTS.removeEvent($branch, EVENTS.getOriginalExpiration($event)/$periodLength)
-            EXPEVENTS.deleteEvent($branch, EVENTS.getOriginalExpiration($event)/$periodLength, $event)
+            $period = EVENTS.getOriginalExpiration($event)/$periodLength
+            EXPEVENTS.removeEvent($branch, $period)
+            EXPEVENTS.deleteEvent($branch, $period, $event)
 
 def resolveBinary(event, market, branch, votingPeriodEvent):
     refund()

@@ -262,8 +262,7 @@ def pushMarketForward(branch, market):
         # push into next vote period
         period = BRANCHES.getVotePeriod(branch)
         # figure out what's going on with subsidy system here
-        # and figure out why make reports wont work
-        EXPEVENTS.addEvent(branch, period+1, events[i])
+        EXPEVENTS.addEvent(branch, period+1, events[i], 0)
         # set event expiration date to be after the current reporting period ends
         EVENTS.setExpiration(events[i], block.timestamp)
         MARKETS.setTradingPeriod(market, period+1)
