@@ -346,7 +346,7 @@ def getOrderBook(marketID):
 macro EVENTS_FIELDS: 6
 macro OUTCOMES_FIELDS: 2
 macro WINNING_OUTCOMES_FIELDS: 8
-macro FIELDS: 17
+macro FIELDS: 18
 
 def getMarketInfo(marketID):
 	refund()
@@ -372,7 +372,7 @@ def getMarketInfo(marketID):
 		info[14] = self.Markets[marketID].tag1
 		info[15] = self.Markets[marketID].tag2
 		info[16] = self.Markets[marketID].tag3
-
+		info[17] = self.Markets[marketID].creationTime
 		# gather event(s) info:
 		# [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
 		with events = slice(load(self.Markets[marketID].events[0], chars=32*numEvents), items=0, items=numEvents):
@@ -419,33 +419,34 @@ def getMarketInfo(marketID):
 def getMarketsInfo(branch, offset, numMarketsToLoad):
 	numMarkets = BRANCHES.getNumMarketsBranch(branch)
 	marketIDs = BRANCHES.getMarketsInBranch(branch, outitems=numMarkets)
-	totalLen = numMarketsToLoad*9
+	totalLen = numMarketsToLoad*10
 	m = 0
 	while m < numMarketsToLoad:
 		totalLen += INFO.getDescriptionLength(marketIDs[m+offset])
 		m += 1
 	data = array(totalLen)
 	row = 0
+	c = 0
+	#totalMarkets = min(numMarketsToLoad, numMarkets)
 	while row < numMarketsToLoad:
-		col = 0
 		descriptionLength = INFO.getDescriptionLength(marketIDs[row+offset])
-		data[row + col] = marketIDs[row]
-		data[row + col + 1] = self.Markets[marketIDs[row+offset]].tradingPeriod
-		data[row + col + 2] = self.Markets[marketIDs[row+offset]].tradingFee
-		data[row + col + 3] = self.Markets[marketIDs[row+offset]].creationTime
-		data[row + col + 4] = self.Markets[marketIDs[row+offset]].volume
-		data[row + col + 5] = self.Markets[marketIDs[row+offset]].tag1
-		data[row + col + 6] = self.Markets[marketIDs[row+offset]].tag2
-		data[row + col + 7] = self.Markets[marketIDs[row+offset]].tag3
-		data[row + col + 9] = self.Markets[marketIDs[row+offset]].lastExpDate
-		data[row + col + 8] = descriptionLength
-		col += 9
+		data[row + c] = marketIDs[row+offset]
+		data[row + c + 1] = self.Markets[marketIDs[row+offset]].tradingPeriod
+		data[row + c + 2] = self.Markets[marketIDs[row+offset]].tradingFee
+		data[row + c + 3] = self.Markets[marketIDs[row+offset]].creationTime
+		data[row + c + 4] = self.Markets[marketIDs[row+offset]].volume
+		data[row + c + 5] = self.Markets[marketIDs[row+offset]].tag1
+		data[row + c + 6] = self.Markets[marketIDs[row+offset]].tag2
+		data[row + c + 7] = self.Markets[marketIDs[row+offset]].tag3
+		data[row + c + 8] = self.Markets[marketIDs[row+offset]].lastExpDate
+		data[row + c + 9] = descriptionLength
+		c += 10
 		description = INFO.getDescription(marketIDs[row+offset], outchars=descriptionLength)
-		c = 0
-		while c < descriptionLength:
-			data[col + row + c] = getch(description, c)
+		d = 0
+		while d < descriptionLength:
+			data[row + c] = getch(description, d)
+			d += 1
 			c += 1
-		col += c
 		row += 1
 	return(data: arr)
 

@@ -140,7 +140,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         if(expirationDate < block.timestamp):
             return(-7)
         forkPeriod = BRANCHES.getForkPeriod(branch)
-        if(forkPeriod && (futurePeriod == forkPeriod or futurePeriod == (forkPeriod+1) or futurePeriod == (forkPeriod+2))):
+        if(forkPeriod && (futurePeriod == forkPeriod or futurePeriod == (forkPeriod+1))):
             return(-9)
         if(EVENTS.getEventBranch(event) != branch || !INFO.getCreator(event)):
             return(-1)
@@ -238,32 +238,33 @@ def pushMarketForward(branch, market):
     refund()
     # can't do while forking
     forkPeriod = BRANCHES.getForkPeriod(branch)
-    currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod+1) or currentPeriod == (forkPeriod+2)):
-        return(-3)
-    branchEventIsInForked = 0
-    winningForkDecided = 0
-    if(branchEventIsInForked && !winningForkDecided):
-        return(0)
-
-    numEvents = MARKETS.getNumEvents(market)
-    if(marketClosed):
-        return(0)
-    if(CASH.sendFrom(market, numEvents*MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE), msg.sender)==0):
-        return(0)
-    i = 0
     periodLength = BRANCHES.getPeriodLength(branch)
+    currentPeriod = block.timestamp / periodLength
+    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod+1)):
+        return(-1)
+    numEvents = MARKETS.getNumEvents(market)
+    # if market closed or already pushed forward, return 0
+    if(MARKETS.getOneWinningOutcome(market, 0) or MARKETS.getPushedForward(market)):
+        return(-2)
+    if(CASH.sendFrom(market, numEvents*MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE), msg.sender)==0):
+        return(-3)
+    i = 0
+    events = array(3)
     # for each event in market
     while i < numEvents:
-        event = MARKETS.getMarketEvent(market, i)
-        expiration = EVENTS.getExpiration(event) / periodLength
-        if(!EVENTS.getRejectedPeriod(event) && EVENTS.getExpiration(event)==EVENTS.getOriginalExpiration(event) && !MARKETS.getPushedForward(market) && !EVENTS.getOutcome(event) && !BACKSTOPS.getRoundTwo(event) && expiration!=(block.timestamp / periodLength)):
-            # push into next vote period
-            period = BRANCHES.getVotePeriod(branch)
-            EXPEVENTS.addEvent(branch, period+1, event)
-            # set event expiration date to be after the current reporting period ends
-            EVENTS.setExpiration(event, block.timestamp)
-            MARKETS.setTradingPeriod(market, period+1)
-            MARKETS.setPushedForward(market, 1, msg.sender)
+        events[i] = MARKETS.getMarketEvent(market, i)
+        expiration = EVENTS.getExpiration(events[i])
+        if(EVENTS.getRejectedPeriod(events[i]) || expiration!=EVENTS.getOriginalExpiration(events[i]) || EVENTS.getOutcome(events[i]) || BACKSTOPS.getRoundTwo(events[i]) || expiration/periodLength==block.timestamp/periodLength):
+            return(-4)
+        i += 1
+    i = 0
+    while i < numEvents:
+        # push into next vote period
+        period = BRANCHES.getVotePeriod(branch)
+        EXPEVENTS.addEvent(branch, period+1, events[i])
+        # set event expiration date to be after the current reporting period ends
+        EVENTS.setExpiration(events[i], block.timestamp)
+        MARKETS.setTradingPeriod(market, period+1)
+        MARKETS.setPushedForward(market, 1, msg.sender)
         i += 1
     return(1)

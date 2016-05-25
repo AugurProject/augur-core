@@ -539,7 +539,7 @@ def closeMarket(branch, market, sender):
                 return(-3)
             forkPeriod = self.getForkPeriod(self.getEventBranch(events[n]))
             currentPeriod = block.timestamp / self.getPeriodLength(branch)
-            if((self.getForked(event) && !self.getForkedDone(event)) or (currentPeriod <= (forkPeriod+2))):
+            if((self.getForked(event) && !self.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):
                 return(-5)
             if(binary(events[n]) && fxpOutcome==0):
                     resolution = self.resolveBinary(events[n], market, branch, votingPeriodEvent)
@@ -1302,7 +1302,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         if(expirationDate < block.timestamp):
             return(-7)
         forkPeriod = self.getForkPeriod(branch)
-        if(forkPeriod && (futurePeriod == forkPeriod or futurePeriod == (forkPeriod+1) or futurePeriod == (forkPeriod+2))):
+        if(forkPeriod && (futurePeriod == forkPeriod or futurePeriod == (forkPeriod+1))):
             return(-9)
         if(self.getEventBranch(event) != branch || !self.getCreator(event)):
             return(-1)
@@ -1400,33 +1400,34 @@ def pushMarketForward(branch, market):
     refund()
     # can't do while forking
     forkPeriod = self.getForkPeriod(branch)
-    currentPeriod = block.timestamp / self.getPeriodLength(branch)
-    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod+1) or currentPeriod == (forkPeriod+2)):
-        return(-3)
-    branchEventIsInForked = 0
-    winningForkDecided = 0
-    if(branchEventIsInForked && !winningForkDecided):
-        return(0)
-
-    numEvents = self.getNumEvents(market)
-    if(marketClosed):
-        return(0)
-    if(self.sendFrom(market, numEvents*self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*ONE), msg.sender)==0):
-        return(0)
-    i = 0
     periodLength = self.getPeriodLength(branch)
+    currentPeriod = block.timestamp / periodLength
+    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod+1)):
+        return(-1)
+    numEvents = self.getNumEvents(market)
+    # if market closed or already pushed forward, return 0
+    if(self.getOneWinningOutcome(market, 0) or self.getPushedForward(market)):
+        return(-2)
+    if(self.sendFrom(market, numEvents*self.getTradingFee(market)*self.getTotalSharesPurchased(market)/(2*ONE), msg.sender)==0):
+        return(-3)
+    i = 0
+    events = array(3)
     # for each event in market
     while i < numEvents:
-        event = self.getMarketEvent(market, i)
-        expiration = self.getExpiration(event) / periodLength
-        if(!self.getRejectedPeriod(event) && self.getExpiration(event)==self.getOriginalExpiration(event) && !self.getPushedForward(market) && !self.getOutcome(event) && !self.getRoundTwo(event) && expiration!=(block.timestamp / periodLength)):
-            # push into next vote period
-            period = self.getVotePeriod(branch)
-            self.addEvent(branch, period+1, event)
-            # set event expiration date to be after the current reporting period ends
-            self.setExpiration(event, block.timestamp)
-            self.setTradingPeriod(market, period+1)
-            self.setPushedForward(market, 1, msg.sender)
+        events[i] = self.getMarketEvent(market, i)
+        expiration = self.getExpiration(events[i])
+        if(self.getRejectedPeriod(events[i]) || expiration!=self.getOriginalExpiration(events[i]) || self.getOutcome(events[i]) || self.getRoundTwo(events[i]) || expiration/periodLength==block.timestamp/periodLength):
+            return(-4)
+        i += 1
+    i = 0
+    while i < numEvents:
+        # push into next vote period
+        period = self.getVotePeriod(branch)
+        self.addEvent(branch, period+1, events[i])
+        # set event expiration date to be after the current reporting period ends
+        self.setExpiration(events[i], block.timestamp)
+        self.setTradingPeriod(market, period+1)
+        self.setPushedForward(market, 1, msg.sender)
         i += 1
     return(1)
 inset('refund.se')
@@ -2113,7 +2114,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
         return(-1)
     market = self.getMarket(event, 0)
     forkPeriod = self.getForkPeriod(branch)
-    if(forkPeriod == votePeriod or (forkPeriod+1) == votePeriod or (forkPeriod+2) == votePeriod):
+    if(forkPeriod == votePeriod or (forkPeriod+1) == votePeriod):
         return(0)
     # todo find actual cost
     if(msg.value < 500000*tx.gasprice):
@@ -2172,7 +2173,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         votedOnAgain = 1
     forkPeriod = self.getForkPeriod(branch)
     # if forking and this isn't the fork event
-    if(forkPeriod==votePeriod or votePeriod==(forkPeriod+1) or votePeriod==(forkPeriod+2) && (self.getEventForkedOver(branch)!=event && self.getBondReturned(event)==0 && self.getRoundTwo(event))):
+    if(forkPeriod==votePeriod or votePeriod==(forkPeriod+1) && (self.getEventForkedOver(branch)!=event && self.getBondReturned(event)==0 && self.getRoundTwo(event))):
         # return the bond
         self.subtractRep(branch, self.repIDToIndex(branch, event), bond)
         self.addRep(branch, self.repIDToIndex(branch, self.getBondPoster(event)), bond)
@@ -2560,7 +2561,7 @@ macro POINTZEROONE: 184467440737095520
 # Period after fork is resolved
     # markets can't be moved until now - done
     # all markets have early exp disabled until this point - done
-    # each event which should've resolved in the past 2 periods and this one is pushed up into period after this - done
+    # each event which should've resolved in the past 2 periods and this one is pushed up into this period and voted on in period after this - done
         # stays in parent if it wins, otherwise goes to new fork - done
     # each event resolving further in the future is pushed into the respective period on whichever fork wins - done
 def move_event(event):
@@ -2588,9 +2589,9 @@ def move_event(event):
             
             # leave event here
             # if should've resolved in past periods
-            if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1) or expPeriod == (forkPeriod+2)):
+            if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1)):
                 # push it into next [this] period
-                self.addEvent(branch, currentPeriod+1, eventID)
+                self.addEvent(branch, currentPeriod, eventID)
                 self.setExpiration(event, block.timestamp)
             # otherwise it's set to expire in the period it would've expired in as normal, no changes needed
         else:
@@ -2605,9 +2606,9 @@ def move_event(event):
 
             # move event to fork
             # and place it into the next reporting period w/ outcomes to 0
-            if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1) or expPeriod == (forkPeriod+2)):
+            if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1)):
                 # push it into next [this] period
-                self.addEvent(branch, currentPeriod+1, eventID)
+                self.addEvent(branch, currentPeriod, eventID)
                 self.setExpiration(event, block.timestamp)
             else:
                 # push into period it wouldve expired in
@@ -2645,6 +2646,7 @@ def exchangeRate(branch):
 def fork(event, branch, forkedOverEthicality):
     forkPeriod = self.getForkPeriod(branch)
     currentPeriod = block.timestamp / self.getPeriodLength(branch)
+    # no fork for 1 period after a fork
     if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod+1) or currentPeriod == (forkPeriod+2)):
         return(-3)
     if(!self.getRoundTwo(event) || self.getFinal(event) || self.getForked(event)):
@@ -4704,7 +4706,7 @@ def getOrderBook(marketID):
 macro EVENTS_FIELDS: 6
 macro OUTCOMES_FIELDS: 2
 macro WINNING_OUTCOMES_FIELDS: 8
-macro FIELDS: 17
+macro FIELDS: 18
 
 def getMarketInfo(marketID):
 	refund()
@@ -4730,7 +4732,7 @@ def getMarketInfo(marketID):
 		info[14] = self.Markets[marketID].tag1
 		info[15] = self.Markets[marketID].tag2
 		info[16] = self.Markets[marketID].tag3
-
+		info[17] = self.Markets[marketID].creationTime
 		# gather event(s) info:
 		# [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
 		with events = slice(load(self.Markets[marketID].events[0], chars=32*numEvents), items=0, items=numEvents):
@@ -4777,17 +4779,19 @@ def getMarketInfo(marketID):
 def getMarketsInfo(branch, offset, numMarketsToLoad):
 	numMarkets = self.getNumMarketsBranch(branch)
 	marketIDs = self.getMarketsInBranch(branch, outitems=numMarkets)
-	totalLen = numMarketsToLoad*9
+	totalLen = numMarketsToLoad*10
 	m = 0
 	while m < numMarketsToLoad:
 		totalLen += self.getDescriptionLength(marketIDs[m+offset])
 		m += 1
 	data = array(totalLen)
 	row = 0
+	
+	#totalMarkets = min(numMarketsToLoad, numMarkets)
 	while row < numMarketsToLoad:
 		col = 0
 		descriptionLength = self.getDescriptionLength(marketIDs[row+offset])
-		data[row + col] = marketIDs[row]
+		data[row + col] = marketIDs[row+offset]
 		data[row + col + 1] = self.Markets[marketIDs[row+offset]].tradingPeriod
 		data[row + col + 2] = self.Markets[marketIDs[row+offset]].tradingFee
 		data[row + col + 3] = self.Markets[marketIDs[row+offset]].creationTime
@@ -4795,9 +4799,9 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
 		data[row + col + 5] = self.Markets[marketIDs[row+offset]].tag1
 		data[row + col + 6] = self.Markets[marketIDs[row+offset]].tag2
 		data[row + col + 7] = self.Markets[marketIDs[row+offset]].tag3
-		data[row + col + 9] = self.Markets[marketIDs[row+offset]].lastExpDate
-		data[row + col + 8] = descriptionLength
-		col += 9
+		data[row + col + 8] = self.Markets[marketIDs[row+offset]].lastExpDate
+		data[row + col + 9] = descriptionLength
+		col += 10
 		description = self.getDescription(marketIDs[row+offset], outchars=descriptionLength)
 		c = 0
 		while c < descriptionLength:

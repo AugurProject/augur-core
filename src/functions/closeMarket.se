@@ -113,7 +113,7 @@ def closeMarket(branch, market, sender):
                 return(-3)
             forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(events[n]))
             currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-            if((EVENTS.getForked(event) && !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+2))):
+            if((EVENTS.getForked(event) && !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):
                 return(-5)
             if(binary(events[n]) && fxpOutcome==0):
                     resolution = RESOLVE.resolveBinary(events[n], market, branch, votingPeriodEvent)

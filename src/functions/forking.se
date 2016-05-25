@@ -32,7 +32,7 @@ macro POINTZEROONE: 184467440737095520
 # Period after fork is resolved
     # markets can't be moved until now - done
     # all markets have early exp disabled until this point - done
-    # each event which should've resolved in the past 2 periods and this one is pushed up into period after this - done
+    # each event which should've resolved in the past 2 periods and this one is pushed up into this period and voted on in period after this - done
         # stays in parent if it wins, otherwise goes to new fork - done
     # each event resolving further in the future is pushed into the respective period on whichever fork wins - done
 def move_event(event):
@@ -60,9 +60,9 @@ def move_event(event):
             
             # leave event here
             # if should've resolved in past periods
-            if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1) or expPeriod == (forkPeriod+2)):
+            if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1)):
                 # push it into next [this] period
-                EXPEVENTS.addEvent(branch, currentPeriod+1, eventID)
+                EXPEVENTS.addEvent(branch, currentPeriod, eventID)
                 EVENTS.setExpiration(event, block.timestamp)
             # otherwise it's set to expire in the period it would've expired in as normal, no changes needed
         else:
@@ -77,9 +77,9 @@ def move_event(event):
 
             # move event to fork
             # and place it into the next reporting period w/ outcomes to 0
-            if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1) or expPeriod == (forkPeriod+2)):
+            if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1)):
                 # push it into next [this] period
-                EXPEVENTS.addEvent(branch, currentPeriod+1, eventID)
+                EXPEVENTS.addEvent(branch, currentPeriod, eventID)
                 EVENTS.setExpiration(event, block.timestamp)
             else:
                 # push into period it wouldve expired in
@@ -117,6 +117,7 @@ def exchangeRate(branch):
 def fork(event, branch, forkedOverEthicality):
     forkPeriod = BRANCHES.getForkPeriod(branch)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
+    # no fork for 1 period after a fork
     if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod+1) or currentPeriod == (forkPeriod+2)):
         return(-3)
     if(!EVENTS.getRoundTwo(event) || EVENTS.getFinal(event) || EVENTS.getForked(event)):

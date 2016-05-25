@@ -28,7 +28,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
         return(-1)
     market = EVENTS.getMarket(event, 0)
     forkPeriod = BRANCHES.getForkPeriod(branch)
-    if(forkPeriod == votePeriod or (forkPeriod+1) == votePeriod or (forkPeriod+2) == votePeriod):
+    if(forkPeriod == votePeriod or (forkPeriod+1) == votePeriod):
         return(0)
     # todo find actual cost
     if(msg.value < 500000*tx.gasprice):
@@ -87,7 +87,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         votedOnAgain = 1
     forkPeriod = BRANCHES.getForkPeriod(branch)
     # if forking and this isn't the fork event
-    if(forkPeriod==votePeriod or votePeriod==(forkPeriod+1) or votePeriod==(forkPeriod+2) && (BRANCHES.getEventForkedOver(branch)!=event && BACKSTOPS.getBondReturned(event)==0 && BACKSTOPS.getRoundTwo(event))):
+    if(forkPeriod==votePeriod or votePeriod==(forkPeriod+1) && (BRANCHES.getEventForkedOver(branch)!=event && BACKSTOPS.getBondReturned(event)==0 && BACKSTOPS.getRoundTwo(event))):
         # return the bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
