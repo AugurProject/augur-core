@@ -437,7 +437,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         numEvents = (self.getNumEventsToReportOn(branch, votePeriod)/baseReporters)*ONE + self.getNumRequired(branch, votePeriod)*ONE
     numReportsActual = self.getNumReportsActual(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
-    couldveReported = self.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
+    couldveReported = self.getEventCanReportOn(branch, lastPeriod, reporter, eventExample, msg.sender)
     if(numEvents/2 > self.getNumReportsActual(branch, lastPeriod, reporter)*ONE && couldveReported):
         originalRep = self.getBeforeRep(branch, lastPeriod, reporter)
         # penalize people
@@ -547,10 +547,10 @@ def closeMarket(branch, market, sender):
                     resolution = self.resolveCategoricalOrScalar(self.getMinValue(events[n]), self.getMaxValue(events[n]), events[n], market, branch, votingPeriodEvent)
             elif(categorical(events[n]) && self.getmode(events[n])==0):
                     resolution = self.resolveCategoricalOrScalar(ONE, ONE*self.getNumOutcomes(events[n]), events[n], market, branch, votingPeriodEvent)
-            elif(resolution==-6):
+            if(resolution==-6):
                 outcomeSix = 1
             n += 1
-        elif(outcomeSix):
+        if(outcomeSix):
             return(-6)
         winningOutcomes = array(8)
         winningOutcomes = self.determineWinningOutcomes(events, numberEvents, branch, market, outitems=8)
@@ -804,7 +804,6 @@ def penalizeRoundTwoWrong(branch, event):
                 self.increaseBondPaid(event, (-1*repChange))
         self.setPenalized(branch, lastPeriod, msg.sender, event)
         self.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
-        numReportedOn+=1
     else:
         return(0)
     # if a fork event in original branch, only event needed to report on in this period is that one [b/c the original branch resolves it as a regular round 2 event, fork reports again]
@@ -983,7 +982,7 @@ def submitReportHash(event, reportHash):
         reportingThreshold = 2**192
     else:
         if(self.getLesserReportNum(branch, votePeriod, event)==0):
-            self.setLesserReportNum(branch, votePeriod, event, self.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender))
+            self.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
         reportingThreshold = self.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
     x = array(1)
     x[0] = msg.sender + event
@@ -1013,6 +1012,7 @@ def submitReportHash(event, reportHash):
 def submitReport(event, salt, report, ethics):
     branch = self.getBranch(event)
     balance = self.getRepBalance(branch, msg.sender)
+    votePeriod = self.getVotePeriod(branch)
     if(balance<ONE):
         return(0)
     # if 1st report of the period for a reporter
@@ -1025,7 +1025,6 @@ def submitReport(event, salt, report, ethics):
         self.setAfterRep(branch, votePeriod, balance, msg.sender)
         self.setPeriodDormantRep(branch, votePeriod, dormantRep, msg.sender)
         self.setRefund(msg.sender, msg.value)
-    votePeriod = self.getVotePeriod(branch)
     if(self.getReport(branch, votePeriod, event, msg.sender)):
         return(-1)
     eventIndex = self.getEventIndex(votePeriod, event)
@@ -1173,7 +1172,9 @@ def calculateReportTargetForEvent(branch, eventID, votePeriod, sender):
     totalFeesInWei = totalFees * WEITOETH / ONE
     canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
     lesser = min(canPayForThisManyReporters*ONE, numReportersOnMarket)
-    self.refundCost(sender, self.getSubsidy(branch, votePeriod, eventID))
+    if(self.getLesserReportNum(branch, period, event)==0):
+        self.refundCost(sender, self.getSubsidy(branch, votePeriod, eventID))
+        self.setLesserReportNum(branch, votePeriod, eventID, lesser)
     return(lesser)
 
 macro YES: TWO
@@ -1370,9 +1371,9 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
             self.addMarket(events[i], marketID)
             expirationDate = self.getExpiration(event)
             futurePeriod = expirationDate / periodLength
-            if(self.getEvent(branch, futurePeriod, self.getEventIndex(futurePeriod, events[i]))==0):
+            if(self.getEvent(branch, futurePeriod, self.getEventIndex(futurePeriod, events[i]))!=events[i]):
                 self.addEvent(branch, futurePeriod, events[i], 500000*tx.gasprice)
-                # cost for calculating num. of reports for an event 
+                # cost for calculating num. of reports for an event
                 self.send(EVENTS, 500000*tx.gasprice)
             i += 1
         return(marketID)
@@ -1432,7 +1433,7 @@ def pushMarketForward(branch, market):
         self.setExpiration(events[i], block.timestamp)
         self.setTradingPeriod(market, period+1)
         self.setPushedForward(market, 1, msg.sender)
-        self.setEventPushedUp(events[i])
+        self.setEventPushedUp(events[i], 1)
         i += 1
     return(1)
 inset('refund.se')
@@ -1823,8 +1824,8 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
     # In the $event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and $market remains with old expiration date
     # UI needs to call penalizeWrong for ones that are pushed back in both pushed back period and regular period with actual reporting
-    indeterminate = ONEHALF*3
-    if(($fxpOutcome == indeterminate or $mode==ONEHALF) && self.getEventPushedUp($event)):
+    $indeterminate = ONEHALF*3
+    if(($fxpOutcome == $indeterminate or $mode==ONEHALF) && self.getEventPushedUp($event)):
         if(self.getPushedForward($market)):
             self.addCash($branch, self.getTradingFee($market)*self.getTotalSharesPurchased($market)/(2*ONE))
             self.subtractCash($market, self.getTradingFee($market)*self.getTotalSharesPurchased($market)/(2*ONE))
@@ -1838,11 +1839,12 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         self.setEthics($event, 0)
         #set uncaughtoutcome to 0
         self.setUncaughtOutcome($event, 0)
-        # need to store uncaught outcome for rejectedperiod separately as well as which period it was "rejected" in
+        self.setEventPushedUp($event, 0)
+        # need to store which period it was "rejected" in
         self.setRejected($event, self.getExpiration($event)/$periodLength)
         #set $event expiration to be the old date
         self.setExpiration($event, self.getOriginalExpiration($event))
-        return(-6)
+        -6
     elif(($fxpOutcome==indeterminate or $mode==ONEHALF) || !$ethical):
         # give $event bond money to reporters
         self.subtractCash($event, self.getBond($event))
@@ -1853,6 +1855,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             self.setOutcome($event, $ethicOutcome)
         else:
             self.setOutcome($event, indeterminate)
+        1
     else:
         # return bond
         self.subtractCash($event, self.getBond($event))
@@ -1865,6 +1868,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             $period = self.getOriginalExpiration($event)/$periodLength
             self.removeEvent($branch, $period)
             self.deleteEvent($branch, $period, $event)
+        1
 
 def resolveBinary(event, market, branch, votingPeriodEvent):
     refund()
@@ -1873,9 +1877,9 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
     ethical = ethic_catch(self.getEthical(event))
     self.setOutcome(event, fxpOutcome)
     self.setEthics(event, ethical)
-    closeOut(event, market, branch, votingPeriodEvent, fxpOutcome,  periodLength, ethical, 0, 0, 0)
-    return(1)
-    
+    val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 0, 0, 0)
+    return(val)
+
 def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, votingPeriodEvent):
     refund()
     mode = self.getUncaughtOutcome(event)
@@ -1888,8 +1892,8 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     if(!ethical):
         ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
     self.setEthics(event, ethical)
-    closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
-    return(1)
+    val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
+    return(val)
 
 def determineWinningOutcomes(events: arr, numberEvents, branch, market):
     refund()
@@ -2035,7 +2039,6 @@ def penalizeOnForkedEvent(branch, event):
                 self.adjForkBondPaid(event, -1*repChange)
         self.setPenalized(branch, lastPeriod, msg.sender, event)
         self.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
-        numReportedOn+=1
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn==self.getPenalizedNum(branch, lastPeriod, msg.sender)):
         if(newAfterRep <= 0):
@@ -2356,6 +2359,7 @@ def penalizeWrong(branch, event):
     reportValue = self.getReport(branch, lastPeriod, event, msg.sender)
     if(self.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
+    numReportedOn = self.getNumReportsActual(branch, lastPeriod, msg.sender)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     # commented for testing
     #elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
@@ -2371,7 +2375,6 @@ def penalizeWrong(branch, event):
     elif(!self.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue && rejected && self.getRejectedPeriod(event)==lastPeriod):
         self.setPenalized(branch, lastPeriod, msg.sender, event)
         self.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
-    numReportedOn = self.getNumReportsActual(branch, lastPeriod, msg.sender)
     # penalization on a regular event if not already penalized, it has outcome, and user reported on it
     elif(!self.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue && outcome!=0):
         # wrong
@@ -2397,7 +2400,6 @@ def penalizeWrong(branch, event):
         self.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
         self.setPenalized(branch, lastPeriod, msg.sender, event)
         self.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
-        numReportedOn+=1
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn==self.getPenalizedNum(branch, lastPeriod, msg.sender)):
         if(newAfterRep <= 0):
@@ -3914,7 +3916,7 @@ def getEventsToReportOn(branch, expDateIndex, sender):
         i += 2
     return(events: arr)
     
-def getEventCanReportOn(branch, expDateIndex, reporter, event):
+def getEventCanReportOn(branch, expDateIndex, reporter, event, sender):
     refund()
     reportingThreshold = self.calculateReportingThreshold(branch, event, expDateIndex, sender)
     x = array(1)
@@ -4792,7 +4794,6 @@ def getMarketInfo(marketID):
 				c += 1
 		return(info: arr)
 
-# still broken
 def getMarketsInfo(branch, offset, numMarketsToLoad):
 	numMarkets = self.getNumMarketsBranch(branch)
 	marketIDs = self.getMarketsInBranch(branch, outitems=numMarkets)
@@ -4847,8 +4848,8 @@ data past24Hours[]
 def getEventPushedUp(event):
     return(self.Events[event].pushedUp)
     
-def setEventPushedUp(event):
-    self.Events[event].pushedUp = 1
+def setEventPushedUp(event, val):
+    self.Events[event].pushedUp = val
     return(1)
 
 def getForkOutcome(event):

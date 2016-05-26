@@ -416,7 +416,6 @@ def getMarketInfo(marketID):
 				c += 1
 		return(info: arr)
 
-# still broken
 def getMarketsInfo(branch, offset, numMarketsToLoad):
 	numMarkets = BRANCHES.getNumMarketsBranch(branch)
 	marketIDs = BRANCHES.getMarketsInBranch(branch, outitems=numMarkets)

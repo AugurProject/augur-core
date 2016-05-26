@@ -121,10 +121,10 @@ def closeMarket(branch, market, sender):
                     resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(events[n]), EVENTS.getMaxValue(events[n]), events[n], market, branch, votingPeriodEvent)
             elif(categorical(events[n]) && EVENTS.getmode(events[n])==0):
                     resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(events[n]), events[n], market, branch, votingPeriodEvent)
-            elif(resolution==-6):
+            if(resolution==-6):
                 outcomeSix = 1
             n += 1
-        elif(outcomeSix):
+        if(outcomeSix):
             return(-6)
         winningOutcomes = array(8)
         winningOutcomes = RESOLVE.determineWinningOutcomes(events, numberEvents, branch, market, outitems=8)

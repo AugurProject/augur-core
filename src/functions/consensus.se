@@ -66,6 +66,7 @@ def penalizeWrong(branch, event):
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
+    numReportedOn = EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     # commented for testing
     #elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
@@ -81,7 +82,6 @@ def penalizeWrong(branch, event):
     elif(!CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue && rejected && EVENTS.getRejectedPeriod(event)==lastPeriod):
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
-    numReportedOn = EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
     # penalization on a regular event if not already penalized, it has outcome, and user reported on it
     elif(!CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue && outcome!=0):
         # wrong
@@ -107,7 +107,6 @@ def penalizeWrong(branch, event):
         EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
-        numReportedOn+=1
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn==CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
         if(newAfterRep <= 0):

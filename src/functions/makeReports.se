@@ -70,12 +70,13 @@ def submitReportHash(event, reportHash):
         reportingThreshold = 2**192
     else:
         if(EXPEVENTS.getLesserReportNum(branch, votePeriod, event)==0):
-            EXPEVENTS.setLesserReportNum(branch, votePeriod, event, self.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender))
+            self.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
         reportingThreshold = EXPEVENTS.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
     x = array(1)
     x[0] = msg.sender + event
     # div by ONE b/c is out of 2**192 rather than 2**256 [to avoid looping around]
-    shaHash = sha3(x, items=1)/ONE
+    # add 2**255 to ensure pos. and between 0 and 1
+    shaHash = (sha3(x, items=1)+2**255)/ONE
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     if(residual <= periodLength/2 && shaHash <= reportingThreshold):
@@ -100,6 +101,7 @@ def submitReportHash(event, reportHash):
 def submitReport(event, salt, report, ethics):
     branch = EVENTS.getBranch(event)
     balance = REPORTING.getRepBalance(branch, msg.sender)
+    votePeriod = BRANCHES.getVotePeriod(branch)
     if(balance<ONE):
         return(0)
     # if 1st report of the period for a reporter
@@ -112,7 +114,6 @@ def submitReport(event, salt, report, ethics):
         EXPEVENTS.setAfterRep(branch, votePeriod, balance, msg.sender)
         EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, msg.sender)
         CONSENSUS.setRefund(msg.sender, msg.value)
-    votePeriod = BRANCHES.getVotePeriod(branch)
     if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
         return(-1)
     eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
@@ -260,7 +261,9 @@ def calculateReportTargetForEvent(branch, eventID, votePeriod, sender):
     totalFeesInWei = totalFees * WEITOETH / ONE
     canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
     lesser = min(canPayForThisManyReporters*ONE, numReportersOnMarket)
-    EXPEVENTS.refundCost(sender, EXPEVENTS.getSubsidy(branch, votePeriod, eventID))
+    if(EXPEVENTS.getLesserReportNum(branch, period, event)==0):
+        EXPEVENTS.refundCost(sender, EXPEVENTS.getSubsidy(branch, votePeriod, eventID))
+        EXPEVENTS.setLesserReportNum(branch, votePeriod, eventID, lesser)
     return(lesser)
 
 macro YES: TWO

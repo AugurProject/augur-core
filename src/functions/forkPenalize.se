@@ -85,7 +85,6 @@ def penalizeOnForkedEvent(branch, event):
                 BACKSTOPS.adjForkBondPaid(event, -1*repChange)
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
-        numReportedOn+=1
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn==CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
         if(newAfterRep <= 0):

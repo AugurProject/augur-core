@@ -1,0 +1,14 @@
+def test(a, b):
+    x = array(1)
+    x[0] = a + b
+    shaHash = sha3(x, items=1)
+    return(shaHash)
+    
+c.initiateOwner(1010101)
+c.reputationFaucet(1010101)
+blocktime = s.block.timestamp
+event1 = c.createEvent(1010101, "new event", blocktime+1, 2**64, 2*2**64, 2, "www.roflcopter.com")
+bin_market = c.createMarket(1010101, "new market", 184467440737095516, [event1], 1, 2, 3, 0, "yayaya", value=10**19)
+event2 = c.createEvent(1010101, "new eventt", blocktime+1, 2**64, 2*2**64, 2, "buddyholly.com")
+bin_market2 = c.createMarket(1010101, "new market", 184467440737095516, [event2], 1, 2, 3, 0, "yayaya", value=10**19)
+    

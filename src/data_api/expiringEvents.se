@@ -162,7 +162,8 @@ def getEventsToReportOn(branch, expDateIndex, sender):
         reportingThreshold = self.calculateReportingThreshold(branch, events[i], expDateIndex, sender)
         x = array(1)
         x[0] = sender + events[i]
-        shaHash = sha3(x, items=1)/ONE
+        # add 2**255 to ensure pos. and between 0 and 1
+        shaHash = (sha3(x, items=1)+2**255)/ONE
         if((shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(events[i]) || self.getRequired(events[i])) && !EVENTS.getOutcome(events[i])):
             events[i+1] = 1
         else:
@@ -170,12 +171,13 @@ def getEventsToReportOn(branch, expDateIndex, sender):
         i += 2
     return(events: arr)
     
-def getEventCanReportOn(branch, expDateIndex, reporter, event):
+def getEventCanReportOn(branch, expDateIndex, reporter, event, sender):
     refund()
     reportingThreshold = self.calculateReportingThreshold(branch, event, expDateIndex, sender)
     x = array(1)
     x[0] = sender + event
-    shaHash = sha3(x, items=1)/ONE
+    # add 2**255 to ensure pos. and between 0 and 1
+    shaHash = (sha3(x, items=1)+2**255)/ONE
     if(shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(event) || self.getRequired(events)):
         return(1)
     else:

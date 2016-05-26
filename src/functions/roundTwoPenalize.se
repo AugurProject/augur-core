@@ -157,7 +157,6 @@ def penalizeRoundTwoWrong(branch, event):
                 BACKSTOPS.increaseBondPaid(event, (-1*repChange))
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
-        numReportedOn+=1
     else:
         return(0)
     # if a fork event in original branch, only event needed to report on in this period is that one [b/c the original branch resolves it as a regular round 2 event, fork reports again]

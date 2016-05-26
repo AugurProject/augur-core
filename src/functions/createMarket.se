@@ -205,9 +205,9 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
             EVENTS.addMarket(events[i], marketID)
             expirationDate = EVENTS.getExpiration(event)
             futurePeriod = expirationDate / periodLength
-            if(EXPEVENTS.getEvent(branch, futurePeriod, EXPEVENTS.getEventIndex(futurePeriod, events[i]))==0):
+            if(EXPEVENTS.getEvent(branch, futurePeriod, EXPEVENTS.getEventIndex(futurePeriod, events[i]))!=events[i]):
                 EXPEVENTS.addEvent(branch, futurePeriod, events[i], 500000*tx.gasprice)
-                # cost for calculating num. of reports for an event 
+                # cost for calculating num. of reports for an event
                 CASH.send(EVENTS, 500000*tx.gasprice)
             i += 1
         return(marketID)
@@ -267,6 +267,6 @@ def pushMarketForward(branch, market):
         EVENTS.setExpiration(events[i], block.timestamp)
         MARKETS.setTradingPeriod(market, period+1)
         MARKETS.setPushedForward(market, 1, msg.sender)
-        EVENTS.setEventPushedUp(events[i])
+        EVENTS.setEventPushedUp(events[i], 1)
         i += 1
     return(1)

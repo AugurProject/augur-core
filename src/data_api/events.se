@@ -37,8 +37,8 @@ data past24Hours[]
 def getEventPushedUp(event):
     return(self.Events[event].pushedUp)
     
-def setEventPushedUp(event):
-    self.Events[event].pushedUp = 1
+def setEventPushedUp(event, val):
+    self.Events[event].pushedUp = val
     return(1)
 
 def getForkOutcome(event):

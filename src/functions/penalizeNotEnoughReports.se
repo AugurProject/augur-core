@@ -53,7 +53,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)/baseReporters)*ONE + EXPEVENTS.getNumRequired(branch, votePeriod)*ONE
     numReportsActual = EXPEVENTS.getNumReportsActual(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
-    couldveReported = EXPEVENTS.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
+    couldveReported = EXPEVENTS.getEventCanReportOn(branch, lastPeriod, reporter, eventExample, msg.sender)
     if(numEvents/2 > EXPEVENTS.getNumReportsActual(branch, lastPeriod, reporter)*ONE && couldveReported):
         originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
         # penalize people

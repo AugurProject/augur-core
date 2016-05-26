@@ -82,6 +82,33 @@ while index < foldercount:												#loops all selected folders
     #end of folder loop
 
 #----------------------------------------------------------------
+#Remove Duplicate Events
+#----------------------------------------------------------------   
+uniqueevent = []        #holds event text before '('
+indexline = 0
+while indexline < len(maindataline):
+    if maindataline[indexline][:6] == "event ":                 #if line starts with "event "
+        examine = maindataline[indexline]
+        indexchar = 0
+        while indexchar < len(examine):         #search through characters in event line
+            if examine[indexchar] == "(":
+                examine = examine[:indexchar]         #sets examine variable to characters before '('
+                break
+            indexchar += 1
+        indexevent = 0
+        unique = 1
+        while indexevent < len(uniqueevent):        #search through known unique events
+            if uniqueevent[indexevent] == examine:
+                maindataline.pop(indexline)     #current line is duplicate removing
+                indexline -= 1          #subtracts a line from the loop as one was removed
+                unique = 0
+                break
+            indexevent +=1
+        if unique:
+            uniqueevent.append(examine)     #adds event declaration to list of known events
+    indexline += 1
+
+#----------------------------------------------------------------
 #Erase init lines and move them to the top of the data
 #----------------------------------------------------------------	
 
