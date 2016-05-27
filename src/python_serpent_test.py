@@ -965,6 +965,32 @@ def test_market_pushback():
     assert(c.getRepBalance(branch, branch)==0)
     assert(c.getTotalRep(branch)==48*2**64)
     print "Test push back OK"
+    
+def test_pen_not_enough_reports():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
+    blocktime = s.block.timestamp
+    c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
+    blocktime = s.block.timestamp
+    event1 = c.createEvent(1010101, "new event", blocktime+1, 2**64, 2*2**64, 2, "www.roflcopter.com")
+    bin_market = c.createMarket(1010101, "new market", 184467440737095516, [event1], 1, 2, 3, 0, "yayaya", value=10**19)
+    event2 = c.createEvent(1010101, "new eventt", blocktime+1, 2**64, 2*2**64, 2, "buddyholly.com")
+    bin_market2 = c.createMarket(1010101, "new madrket", 184467440737095516, [event2], 1, 2, 3, 0, "yayaya", value=10**19)
+    c.buyCompleteSets(bin_market, 2**65)
+    c.buyCompleteSets(bin_market2, 2**65)
+    c.incrementPeriod(1010101)
+    c.setNumEventsToReportOn(branch)
+    c.calculateReportTargetForEvent(1010101, event1, c.getVotePeriod(1010101), s.block.coinbase)
+    c.calculateReportTargetForEvent(1010101, event2, c.getVotePeriod(1010101), s.block.coinbase)
+    c.incrementPeriod(1010101)
+    c.proveReporterDidntReportEnough(1010101, s.block.coinbase, event1, sender=t.k2)
+    print "Test penalize not enough OK"
 
 def gas_use(s):
     global initial_gas

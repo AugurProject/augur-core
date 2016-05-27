@@ -426,18 +426,18 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     baseReporters = self.getBaseReportersLastPeriod(branch)
     # if total [which is mult by num events to report on via the prelim amount] is too high [>1] then numevents will estimate a higher number than reality, so need to correct for this below
     total = exp*baseReporters
-    numEvents = exp*prelim + self.getNumRequired(branch, votePeriod)*ONE
-    eventsInPeriod = self.getNumberEvents(branch, expDateIndex)-self.getNumRemoved(branch, votePeriod)
+    numEvents = exp*prelim + self.getNumRequired(branch, lastPeriod)*ONE
+    eventsInPeriod = self.getNumberEvents(branch, lastPeriod)-self.getNumRemoved(branch, lastPeriod)
     if(repConstant >= POINTZEROONE):
-        minimum = min(30+self.getNumRequired(branch, votePeriod), eventsInPeriod)
+        minimum = min(30+self.getNumRequired(branch, lastPeriod), eventsInPeriod)
         if(numEvents/ONE < minimum):
             numEvents = minimum*ONE
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
     if(total > ONE):
-        numEvents = (self.getNumEventsToReportOn(branch, votePeriod)/baseReporters)*ONE + self.getNumRequired(branch, votePeriod)*ONE
+        numEvents = (self.getNumEventsToReportOn(branch, lastPeriod)/baseReporters)*ONE + self.getNumRequired(branch, lastPeriod)*ONE
     numReportsActual = self.getNumReportsActual(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
-    couldveReported = self.getEventCanReportOn(branch, lastPeriod, reporter, eventExample, msg.sender)
+    couldveReported = self.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
     if(numEvents/2 > self.getNumReportsActual(branch, lastPeriod, reporter)*ONE && couldveReported):
         originalRep = self.getBeforeRep(branch, lastPeriod, reporter)
         # penalize people
@@ -987,7 +987,8 @@ def submitReportHash(event, reportHash):
     x = array(1)
     x[0] = msg.sender + event
     # div by ONE b/c is out of 2**192 rather than 2**256 [to avoid looping around]
-    shaHash = sha3(x, items=1)/ONE
+    # add 2**255 to ensure pos. and between 0 and 1
+    shaHash = (sha3(x, items=1)+2**255)/ONE
     periodLength = self.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     if(residual <= periodLength/2 && shaHash <= reportingThreshold):
@@ -3908,7 +3909,8 @@ def getEventsToReportOn(branch, expDateIndex, sender):
         reportingThreshold = self.calculateReportingThreshold(branch, events[i], expDateIndex, sender)
         x = array(1)
         x[0] = sender + events[i]
-        shaHash = sha3(x, items=1)/ONE
+        # add 2**255 to ensure pos. and between 0 and 1
+        shaHash = (sha3(x, items=1)+2**255)/ONE
         if((shaHash < reportingThreshold || shaHash<self.getReportingThreshold(events[i]) || self.getRequired(events[i])) && !self.getOutcome(events[i])):
             events[i+1] = 1
         else:
@@ -3916,12 +3918,13 @@ def getEventsToReportOn(branch, expDateIndex, sender):
         i += 2
     return(events: arr)
     
-def getEventCanReportOn(branch, expDateIndex, reporter, event, sender):
+def getEventCanReportOn(branch, expDateIndex, reporter, event):
     refund()
-    reportingThreshold = self.calculateReportingThreshold(branch, event, expDateIndex, sender)
+    reportingThreshold = self.calculateReportingThreshold(branch, event, expDateIndex, reporter)
     x = array(1)
-    x[0] = sender + event
-    shaHash = sha3(x, items=1)/ONE
+    x[0] = reporter + event
+    # add 2**255 to ensure pos. and between 0 and 1
+    shaHash = (sha3(x, items=1)+2**255)/ONE
     if(shaHash < reportingThreshold || shaHash<self.getReportingThreshold(event) || self.getRequired(events)):
         return(1)
     else:

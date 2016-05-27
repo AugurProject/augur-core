@@ -42,19 +42,20 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
     # if total [which is mult by num events to report on via the prelim amount] is too high [>1] then numevents will estimate a higher number than reality, so need to correct for this below
     total = exp*baseReporters
-    numEvents = exp*prelim + EXPEVENTS.getNumRequired(branch, votePeriod)*ONE
-    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, expDateIndex)-EXPEVENTS.getNumRemoved(branch, votePeriod)
+    numEvents = exp*prelim + EXPEVENTS.getNumRequired(branch, lastPeriod)*ONE
+    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, lastPeriod)-EXPEVENTS.getNumRemoved(branch, lastPeriod)
     if(repConstant >= POINTZEROONE):
-        minimum = min(30+EXPEVENTS.getNumRequired(branch, votePeriod), eventsInPeriod)
+        minimum = min(30+EXPEVENTS.getNumRequired(branch, lastPeriod), eventsInPeriod)
         if(numEvents/ONE < minimum):
             numEvents = minimum*ONE
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
     if(total > ONE):
-        numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)/baseReporters)*ONE + EXPEVENTS.getNumRequired(branch, votePeriod)*ONE
+        numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)/baseReporters)*ONE + EXPEVENTS.getNumRequired(branch, lastPeriod)*ONE
     numReportsActual = EXPEVENTS.getNumReportsActual(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
-    couldveReported = EXPEVENTS.getEventCanReportOn(branch, lastPeriod, reporter, eventExample, msg.sender)
+    couldveReported = EXPEVENTS.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
     if(numEvents/2 > EXPEVENTS.getNumReportsActual(branch, lastPeriod, reporter)*ONE && couldveReported):
+        # only meant for people who did report but not enough [those who didnt at all use pen. catchup] so using before rep is fine
         originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
         # penalize people
         newRep = POINTONE*numReportsActual*originalRep / numEvents
