@@ -49,7 +49,7 @@ def addToMarketsHash(branch, newHash):
 def addFees(market, amount):
 	self.Markets[market].fees += amount
 	return(1)
-	
+
 def setPrice(market, outcome, price):
 	self.Markets[market].prices[outcome] = price
 	return(1)

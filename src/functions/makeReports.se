@@ -29,6 +29,7 @@ import backstops as BACKSTOPS
 import fxpFunctions as FXP
 import consensusData as CONSENSUS
 import collectFees as COLLECTFEES
+import penalizationCatchup as CATCHUP
 inset('refund.se')
 
 def makeHash(salt, report, eventID, sender):

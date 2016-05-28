@@ -444,7 +444,7 @@ def test_abunch_of_markets():
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
     i = 0
-    while i < 2:
+    while i < 10000:
         c.setCash(s.block.coinbase, 1000000*2**64)
         event = c.createEvent(1010101, "sss"+str(i), s.block.timestamp+100, 2**64, 2**65, 2, "lol")
         market = c.createMarket(1010101, "aaa"+str(i), 2**58, [event], 1, 2, 3, 2**60, "aaa", value = 10**19)
@@ -1061,4 +1061,5 @@ if __name__ == '__main__':
     #test_catchup()
     #test_slashrep()
     #test_claimrep()
+    #test_abunch_of_markets()
     print "DONE TESTING"
