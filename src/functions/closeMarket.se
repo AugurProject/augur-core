@@ -168,7 +168,9 @@ def claimProceeds(branch, market):
         if(winningOutcomes[0]==0):
             return(0)
         if(winningOutcomes[1]==0):
-            if(len(events)==1 && categorical(events[0]) && EVENTS.getOutcome(events[0])==2**63):
+            minval = EVENTS.getMinValue(events[0])
+            ethical = ethic_catch(EVENTS.getEthical(events[0]))
+            if(len(events)==1 && categorical(events[0]) && (EVENTS.getmode(events[0])==ONEHALF or !ethical)):
                 outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(events[0]))
             else:
                 outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, 0)
