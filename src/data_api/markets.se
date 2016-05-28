@@ -62,6 +62,12 @@ def refundClosing(amount, to):
 	send(amount, to)
 	return(1)
 
+def getLastExpDate(market):
+	return(self.Markets[market].lastExpDate)
+
+def getLastOutcomePrice(market, outcome):
+	return(self.Markets[market].prices[outcome])
+
 def getFees(market):
 	return(self.Markets[market].fees)
 
@@ -327,128 +333,6 @@ def get_trade_ids(market_id):
 def get_total_trades(market_id):
 	refund()
 	return(self.Markets[market_id].total_trades)
-
-def getOrderBook(marketID):
-	refund()
-	numTrades = self.Markets[marketID].total_trades
-	trades = self.get_trade_ids(marketID, outitems=numTrades)
-	orderBook = array(8*numTrades)
-	i = 0
-	while i < numTrades:
-		tradeInfo = TRADES.get_trade(trades[i], outitems=8)
-		j = 0
-		while j < 8:
-			orderBook[8*i + j] = tradeInfo[j]
-			j += 1
-		i += 1
-	return(orderBook:arr)
-
-macro EVENTS_FIELDS: 6
-macro OUTCOMES_FIELDS: 2
-macro WINNING_OUTCOMES_FIELDS: 8
-macro FIELDS: 18
-
-def getMarketInfo(marketID):
-	refund()
-	index = FIELDS
-	participantNumber = self.Markets[marketID].addr2participant[msg.sender]
-	descriptionLength = INFO.getDescriptionLength(marketID)
-	with info = array(FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1):
-		numEvents = self.Markets[marketID].lenEvents
-		info[0] = marketID
-		info[1] = self.Markets[marketID].currentParticipant
-		info[2] = self.Markets[marketID].makerFees
-		info[3] = participantNumber
-		info[4] = self.Markets[marketID].numOutcomes
-		info[5] = self.Markets[marketID].tradingPeriod
-		info[6] = self.Markets[marketID].tradingFee
-		info[7] = self.Markets[marketID].branch
-		info[8] = self.Markets[marketID].lenEvents
-		info[9] = self.Markets[marketID].cumulativeScale
-		info[10] = self.Markets[marketID].creationTime
-		info[11] = self.Markets[marketID].volume
-		info[12] = INFO.getCreationFee(marketID)
-		info[13] = INFO.getCreator(marketID)
-		info[14] = self.Markets[marketID].tag1
-		info[15] = self.Markets[marketID].tag2
-		info[16] = self.Markets[marketID].tag3
-		info[17] = self.Markets[marketID].creationTime
-		# gather event(s) info:
-		# [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
-		with events = slice(load(self.Markets[marketID].events[0], chars=32*numEvents), items=0, items=numEvents):
-			i = 0
-			while i < numEvents:
-				with eventInfo = EVENTS.getEventInfo(events[i], outitems=EVENTS_FIELDS):
-					info[index + i*EVENTS_FIELDS] = events[i]
-					j = 1
-					while j < EVENTS_FIELDS:
-						info[index + i*EVENTS_FIELDS + j] = eventInfo[j]
-						j += 1
-				i += 1
-		index += numEvents*EVENTS_FIELDS
-
-		# gather outcomes info: [sharesPurchased, price], winningOutcomes
-		# (price of outcome = last trade)
-		numTrades = self.Markets[marketID].total_trades
-		numOutcomes = self.Markets[marketID].numOutcomes
-		trades = self.get_trade_ids(marketID, outitems=numTrades)
-		k = 0
-		while k < numOutcomes:
-			info[index + k*OUTCOMES_FIELDS] = self.Markets[marketID].sharesPurchased[k + 1]
-			i = 0
-			lastTrade = self.Markets[marketID].prices[k+1]
-			info[index + k*OUTCOMES_FIELDS + 1] = lastTrade
-			k += 1
-		index += self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS
-		k = 0
-		while k < WINNING_OUTCOMES_FIELDS:
-			info[index + k] = self.Markets[marketID].winningOutcomes[k]
-			k += 1
-		index += WINNING_OUTCOMES_FIELDS
-
-		# append description character codes
-		info[index] = descriptionLength
-		index += 1
-		with description = INFO.getDescription(marketID, outchars=descriptionLength):
-			c = 0
-			while c < descriptionLength:
-				info[index + c] = getch(description, c)
-				c += 1
-		return(info: arr)
-
-def getMarketsInfo(branch, offset, numMarketsToLoad):
-	numMarkets = BRANCHES.getNumMarketsBranch(branch)
-	marketIDs = BRANCHES.getMarketsInBranch(branch, outitems=numMarkets)
-	totalLen = numMarketsToLoad*10
-	m = 0
-	while m < numMarketsToLoad:
-		totalLen += INFO.getDescriptionLength(marketIDs[m+offset])
-		m += 1
-	data = array(totalLen)
-	m = 0
-	c = 0
-	totalMarkets = min(numMarketsToLoad, numMarkets)
-	while m < totalMarkets:
-		descriptionLength = INFO.getDescriptionLength(marketIDs[m+offset])
-		data[c] = marketIDs[m+offset]
-		data[c + 1] = self.Markets[marketIDs[m+offset]].tradingPeriod
-		data[c + 2] = self.Markets[marketIDs[m+offset]].tradingFee
-		data[c + 3] = self.Markets[marketIDs[m+offset]].creationTime
-		data[c + 4] = self.Markets[marketIDs[m+offset]].volume
-		data[c + 5] = self.Markets[marketIDs[m+offset]].tag1
-		data[c + 6] = self.Markets[marketIDs[m+offset]].tag2
-		data[c + 7] = self.Markets[marketIDs[m+offset]].tag3
-		data[c + 8] = self.Markets[marketIDs[m+offset]].lastExpDate
-		data[c + 9] = descriptionLength
-		c += 10
-		description = INFO.getDescription(marketIDs[m+offset], outchars=descriptionLength)
-		d = 0
-		while d < descriptionLength:
-			data[c] = getch(description, d)
-			d += 1
-			c += 1
-		m += 1
-	return(data: arr)
 
 def getSender():
 	return(msg.sender)
