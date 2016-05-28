@@ -43,6 +43,8 @@ def penalizeWrong(branch, event):
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
     roundTwo = BACKSTOPS.getRoundTwo(event)
     uncaught = EVENTS.getUncaughtOutcome(event)
+    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
+        return(-5)
     if(forkPeriod == lastPeriod):
         return(-4)
     elif(EVENTS.getForked(event)):
@@ -64,8 +66,6 @@ def penalizeWrong(branch, event):
         outcome = uncaught
     p = self.proportionCorrect(event)
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
-    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
-        return(-5)
     numReportedOn = EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     # commented for testing

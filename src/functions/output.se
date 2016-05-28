@@ -439,6 +439,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     # reporter couldve reported on event example but didnt
     couldveReported = self.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
     if(numEvents/2 > self.getNumReportsActual(branch, lastPeriod, reporter)*ONE && couldveReported):
+        # only meant for people who did report but not enough [those who didnt at all use pen. catchup] so using before rep is fine
         originalRep = self.getBeforeRep(branch, lastPeriod, reporter)
         # penalize people
         newRep = POINTONE*numReportsActual*originalRep / numEvents

@@ -19,6 +19,7 @@ def collectFees(branch, sender):
         # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
         return(-1)
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
+    # todo make so need 1 rep to claim fees
     if(!CONSENSUS.getFeesCollected(branch, sender, lastPeriod) && EXPEVENTS.getNumReportsActual(branch, lastPeriod, sender)):
         newRep = EXPEVENTS.getAfterRep(branch, lastPeriod, sender)
         denominator = CONSENSUS.getDenominator(branch, lastPeriod)

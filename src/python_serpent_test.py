@@ -481,14 +481,21 @@ def test_close_market():
     event6 = c.createEvent(1010101, "new sdokdf mevent", blocktime+1, -100*2**64, 200*2**64, 2, "ok")
 
     market5 = c.createMarket(1010101, "new markeft", 184467440737095516, [event5, event6], 1, 2, 3, 0, "yayaya", value=10**19)
+    market6 = c.createMarket(1010101, "new markefst", 184467440737095516, [event1, event2, event3], 1, 2, 3, 0, "yayaya", value=10**19)
     c.cashFaucet(sender=t.k2)
+    c.cashFaucet(sender=t.k3)
+    sender = c.getSender(sender=t.k2)
+    sender2 = c.getSender(sender=t.k3)
+    print c.buyCompleteSets(market5, 10*2**64, sender=t.k2)
+    print c.buyCompleteSets(market6, 10*2**64, sender=t.k3)
+    assert(c.balance(sender)==7000*2**64)
+    assert(c.balance(sender2)==9990*2**64)
     print c.buyCompleteSets(bin_market2, 10*2**64, sender=t.k2)
     periodLength = c.getPeriodLength(1010101)
     i = c.getVotePeriod(1010101)
     while i < (int((blocktime+1)/c.getPeriodLength(1010101))):
         c.incrementPeriod(1010101)
         i += 1
-
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
         time.sleep(c.getPeriodLength(1010101)/2)
         s.mine(1)
@@ -497,14 +504,21 @@ def test_close_market():
     report_hash2 = c.makeHash(0, 2*2**64, event2, s.block.coinbase)
     report_hash3 = c.makeHash(0, 2*2**64, event3, s.block.coinbase)
     report_hash4 = c.makeHash(0, 3*2**63, event4, s.block.coinbase)
+    report_hash5 = c.makeHash(0, 2**63, event5, s.block.coinbase)
+    report_hash6 = c.makeHash(0, 1, event6, s.block.coinbase)
     assert(c.submitReportHash(event1, report_hash)==1), "Report hash submission failed"
     assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
     assert(c.submitReportHash(event4, report_hash4)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event3, report_hash3)==1)
+    c.submitReportHash(event5, report_hash5)
+    c.submitReportHash(event6, report_hash6)
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
     assert(c.submitReport(event2, 0, 2*2**64, 2**64, value=500000000)==1), "Report submission failed"
     assert(c.submitReport(event4, 0, 3*2**63, 2**64)==1), "Report submission failed"
+    assert(c.submitReport(event5, 0, 2**63, 2**64, value=500000000)==1)
+    assert(c.submitReport(event6, 0, 1, 2**64, value=500000000)
     c.send(market5, 2**64)
     assert(c.closeMarket(1010101, market5)==0), "Not expired check [and not early resolve due to not enough reports submitted check] broken"
     assert(c.submitReport(event1, 0, 2**64, 2**64)==1), "Report submission failed"
@@ -538,6 +552,9 @@ def test_close_market():
     newK = c.balance(c.getSender(sender=t.k2))
     assert((newK - origK)==10*2**64), "Didn't get 10 back from selling winning shares"
     assert(c.balance(bin_market2)==0), "Payouts not done successfully"
+    assert(c.closeMarket(1010101, market5)==1), "Close market failure"
+    assert(c.claimProceeds(1010101, market5, sender=t.k2)==1)
+    assert(c.balance(sender)==10000*2**64)
     gas_use(s)
     gas_use(s)
     print "Test close market OK"
