@@ -444,13 +444,14 @@ def test_abunch_of_markets():
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
     i = 0
-    while i < 10000:
+    while i < 2:
         c.setCash(s.block.coinbase, 1000000*2**64)
         event = c.createEvent(1010101, "sss"+str(i), s.block.timestamp+100, 2**64, 2**65, 2, "lol")
         market = c.createMarket(1010101, "aaa"+str(i), 2**58, [event], 1, 2, 3, 2**60, "aaa", value = 10**19)
         s.mine(1)
         i += 1
-    c.getMarketsInfo(1010101, 0, 100)
+    marketsInfo = c.getMarketsInfo(1010101, 0, 100)
+    print marketsInfo
     return(1)
 
 def test_close_market():
@@ -999,8 +1000,9 @@ def gas_use(s):
     initial_gas = s.block.gas_used
 
 if __name__ == '__main__':
-    src = os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace', 'src')
-    os.system('rm functions/output.se')
+    src = os.path.join(os.getenv('AUGUR_CORE', os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace')), 'src')
+    output = os.path.join(src, 'functions', 'output.se')
+    if os.path.exists(output): os.remove(output)
     os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
     # data/api tests
     #test_cash()
