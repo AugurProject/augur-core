@@ -308,7 +308,7 @@ def setCurrentMode(period, event, mode):
     
 # basically setting current mode's weight
 def setCurrentModeItems(period, event, modeReport):
-    self.mode_items[period][event].current_mode = self.mode_items[period][event].report_value[modeReport]
+    self.mode_items[period][event].current_mode_items = self.mode_items[period][event].report_value[modeReport]
     return(1)
 
 def addRepEvent(branch, votePeriod, event, amount):

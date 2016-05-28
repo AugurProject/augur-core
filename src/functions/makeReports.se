@@ -218,7 +218,7 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
             # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
             EXPEVENTS.addToWeightOfReport(votePeriod, eventID, report, balance)
             if(EXPEVENTS.getWeightOfReport(votePeriod, eventID, report) > EXPEVENTS.getCurrentModeItems(votePeriod, eventID)):
-                EXPEVENTS.setCurrentMode(votePeriod, event, report)
+                EXPEVENTS.setCurrentMode(votePeriod, eventID, report)
                 EXPEVENTS.setCurrentModeItems(votePeriod, eventID, report)
             outcome = EXPEVENTS.getCurrentMode(votePeriod, eventID)
             EVENTS.setForkOutcome(eventID, outcome)
@@ -227,14 +227,14 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
                 # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
                 EXPEVENTS.addToWeightOfReport(votePeriod, eventID, report, balance)
                 if(EXPEVENTS.getWeightOfReport(votePeriod, eventID, report) > EXPEVENTS.getCurrentModeItems(votePeriod, eventID)):
-                    EXPEVENTS.setCurrentMode(votePeriod, event, report)
+                    EXPEVENTS.setCurrentMode(votePeriod, eventID, report)
                     EXPEVENTS.setCurrentModeItems(votePeriod, eventID, report)
                 outcome = EXPEVENTS.getCurrentMode(votePeriod, eventID)
             else:
                 # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
                 EXPEVENTS.addToWeightOfReport(votePeriod, eventID, report, 1)
                 if(EXPEVENTS.getWeightOfReport(votePeriod, eventID, report) > EXPEVENTS.getCurrentModeItems(votePeriod, eventID)):
-                    EXPEVENTS.setCurrentMode(votePeriod, event, report)
+                    EXPEVENTS.setCurrentMode(votePeriod, eventID, report)
                     EXPEVENTS.setCurrentModeItems(votePeriod, eventID, report)
                 outcome = EXPEVENTS.getCurrentMode(votePeriod, eventID)
             EVENTS.setUncaughtOutcome(eventID, outcome)

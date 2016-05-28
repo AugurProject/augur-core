@@ -572,6 +572,10 @@ def test_consensus():
     bin_market = c.createMarket(1010101, "new market", 184467440737095516, [event1], 1, 2, 3, 0, "yayaya", value=10**19)
     event2 = c.createEvent(1010101, "new eventt", blocktime+1, 2**64, 2*2**64, 2, "buddyholly.com")
     bin_market2 = c.createMarket(1010101, "new madrket", 184467440737095516, [event2], 1, 2, 3, 0, "yayaya", value=10**19)
+    event3 = c.createEvent(1010101, "new eventt3", blocktime+1, 2**64, 2*2**64, 5, "buddyholly.com")
+    event4 = c.createEvent(1010101, "new eventt4", blocktime+1, 0, 250*2**64, 2, "buddyholly.com")
+    catmarket = c.createMarket(1010101, "newsd madrket", 184467440737095516, [event3], 1, 2, 3, 0, "yayaya", value=10**19)
+    scalarmarket = c.createMarket(1010101, "nescw madrket", 184467440737095516, [event4], 1, 2, 3, 0, "yayaya", value=10**19)
     s.mine(1)
     periodLength = c.getPeriodLength(1010101)
     i = c.getVotePeriod(1010101)
@@ -584,6 +588,8 @@ def test_consensus():
     report_hash = c.makeHash(0, 2**64, event1, s.block.coinbase)
     gas_use(s)
     report_hash2 = c.makeHash(0, 2*2**64, event2, s.block.coinbase)
+    report_hash3 = c.makeHash(0, 2**63+1, event3, s.block.coinbase)
+    report_hash4 = c.makeHash(0, int(50*2**64/250), event4, s.block.coinbase)
     gas_use(s)
     c.penalizeWrong(1010101, 0)
     assert(c.submitReportHash(event1, report_hash)==1), "Report hash submission failed"
@@ -591,6 +597,8 @@ def test_consensus():
     gas_use(s)
     assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
     print "hash submit gas use"
+    assert(c.submitReportHash(event3, report_hash3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event4, report_hash4)==1), "Report hash submission failed"
     gas_use(s)
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
@@ -601,6 +609,8 @@ def test_consensus():
     assert(c.submitReport(event2, 0, 2*2**64, 2**64)==1), "Report submission failed"
     print "report submit gas use"
     gas_use(s)
+    assert(c.submitReport(event3, 0, 2**63+1, 2**64)==1), "Report submission failed"
+    assert(c.submitReport(event4, 0, int(50*2**64/250), 2**64)==1), "Report submission failed"
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
         time.sleep(c.getPeriodLength(1010101)/2)
         s.mine(1)
@@ -621,6 +631,8 @@ def test_consensus():
     # need to resolve event first
     c.send(bin_market, 5*2**64)
     c.send(bin_market2, 5*2**64)
+    c.send(catmarket, 5*2**64)
+    c.send(scalarmarket, 5*2**64)
     gas_use(s)
     #votingPeriodEvent = int(c.getExpiration(event1)/c.getPeriodLength(branch))
     #fxpOutcome = c.getOutcome(event1)
@@ -642,6 +654,8 @@ def test_consensus():
     print "close market gas use"
     gas_use(s)
     assert(c.closeMarket(1010101, bin_market2)==1)
+    assert(c.closeMarket(1010101, catmarket)==1)
+    assert(c.closeMarket(1010101, scalarmarket)==1)
     print "close market gas use"
     gas_use(s)
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
@@ -655,6 +669,8 @@ def test_consensus():
     assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46.9*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     assert(c.penalizeWrong(1010101, event2)==1)
+    assert(c.penalizeWrong(1010101, event3)==1)
+    assert(c.penalizeWrong(1010101, event4)==1)
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
     assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46.9*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
