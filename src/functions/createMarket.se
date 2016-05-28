@@ -30,6 +30,7 @@ import backstops as BACKSTOPS
 import events as EVENTS
 import expiringEvents as EXPEVENTS
 import trades as TRADES
+import completeSets as COMPLETESETS
 inset('refund.se')
 
 macro POINTZEROSIX: 1106804644422573056

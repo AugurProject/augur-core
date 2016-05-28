@@ -3,7 +3,7 @@ import reporting as REPORTING
 import expiringEvents as EXPEVENTS
 import consensus as CONSENSUS
 
-import('refund.se')
+inset('refund.se')
 
 macro POINTONE: 16602069666338596864
 
