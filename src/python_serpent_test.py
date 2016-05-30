@@ -684,6 +684,99 @@ def test_consensus():
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     print "Test consensus OK"
 
+def test_consensus_multiple_reporters():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
+    blocktime = s.block.timestamp
+    binaryevent = c.createEvent(1010101, "new event", blocktime+1, 2**64, 2*2**64, 2, "www.roflcopter.com")
+    binaryunethicalevent = c.createEvent(1010101, "new eventt", blocktime+1, 2**64, 2*2**64, 2, "buddyholly.com")
+    binindeterminateevent = c.createEvent(1010101, "new sdsdaeventt", blocktime+1, 2**64, 2*2**64, 2, "buddyholly.com")
+    binmarket = c.createMarket(1010101, "new market", 184467440737095516, [binaryevent], 1, 2, 3, 0, "yayaya", value=10**19)
+    binmarketunethical = c.createMarket(1010101, "new madrket", 184467440737095516, [binaryunethicalevent], 1, 2, 3, 0, "yayaya", value=10**19)
+    binmarketindetermiante = c.createMarket(1010101, "new madrket", 184467440737095516, [binindeterminateevent], 1, 2, 3, 0, "yayaya", value=10**19)
+    
+    catevent = c.createEvent(1010101, "new eventt3", blocktime+1, 2**64, 2*2**64, 5, "buddyholly.com")
+    scalarevent = c.createEvent(1010101, "new eventt4", blocktime+1, 0, 250*2**64, 2, "buddyholly.com")
+    catmarket = c.createMarket(1010101, "newsd madrket", 184467440737095516, [catevent], 1, 2, 3, 0, "yayaya", value=10**19)
+    scalarmarket = c.createMarket(1010101, "nescw madrket", 184467440737095516, [scalarevent], 1, 2, 3, 0, "yayaya", value=10**19)
+    
+    cateventunethical = c.createEvent(1010101, "afunew eventt3", blocktime+1, 2**64, 2*2**64, 5, "buddyholly.com")
+    scalareventunethical = c.createEvent(1010101, "afafdsnew eventt4", blocktime+1, 0, 250*2**64, 2, "buddyholly.com")
+    catmarketunethical = c.createMarket(1010101, "newsdsfs madrggket", 184467440737095516, [cateventunethical], 1, 2, 3, 0, "yayaya", value=10**19)
+    scalarmarketunethical = c.createMarket(1010101, "nescwsfss madrket", 184467440737095516, [scalareventunethical], 1, 2, 3, 0, "yayaya", value=10**19)
+    
+    cateventindeterminate = c.createEvent(1010101, "sssnew evgentt3", blocktime+1, 2**64, 2*2**64, 5, "buddyholly.com")
+    scalareventindeterminate = c.createEvent(1010101, "aanewg eventt4", blocktime+1, 0, 250*2**64, 2, "buddyholly.com")
+    catmarketindeterminate = c.createMarket(1010101, "newsd mabasdrket", 184467440737095516, [cateventindeterminate], 1, 2, 3, 0, "yayaya", value=10**19)
+    scalarmarketindeterminate = c.createMarket(1010101, "aaaaaanewrscw madrket", 184467440737095516, [scalareventindeterminate], 1, 2, 3, 0, "yayaya", value=10**19)
+    
+    s.mine(1)
+    periodLength = c.getPeriodLength(1010101)
+    i = c.getVotePeriod(1010101)
+    while i < int((s.block.timestamp+1)/c.getPeriodLength(1010101)):
+        c.incrementPeriod(1010101)
+        i += 1
+    while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
+        time.sleep(c.getPeriodLength(1010101)/2)
+        s.mine(1)
+    report_hash = c.makeHash(0, 2**64, event1, s.block.coinbase)
+    report_hash2 = c.makeHash(0, 2*2**64, event2, s.block.coinbase)
+    report_hash3 = c.makeHash(0, 2**63+1, event3, s.block.coinbase)
+    report_hash4 = c.makeHash(0, int(50*2**64/250), event4, s.block.coinbase)
+    c.penalizeWrong(1010101, 0)
+    assert(c.submitReportHash(event1, report_hash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event3, report_hash3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event4, report_hash4)==1), "Report hash submission failed"
+    while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
+        time.sleep(int(periodLength/2))
+        s.mine(1)
+    assert(c.submitReport(event1, 0, 2**64, 2**64, value=500000000)==1), "Report submission failed"
+    assert(c.submitReport(event2, 0, 2*2**64, 2**64)==1), "Report submission failed"
+    assert(c.submitReport(event3, 0, 2**63+1, 2**64)==1), "Report submission failed"
+    assert(c.submitReport(event4, 0, int(50*2**64/250), 2**64)==1), "Report submission failed"
+    while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
+        time.sleep(c.getPeriodLength(1010101)/2)
+        s.mine(1)
+    c.incrementPeriod(1010101)
+    branch = 1010101
+    period = int((blocktime+1)/c.getPeriodLength(1010101))
+    # need to resolve event first
+    c.send(bin_market, 5*2**64)
+    c.send(bin_market2, 5*2**64)
+    c.send(catmarket, 5*2**64)
+    c.send(scalarmarket, 5*2**64)
+    assert(c.closeMarket(1010101, bin_market)==1)
+    assert(c.closeMarket(1010101, bin_market2)==1)
+    assert(c.closeMarket(1010101, catmarket)==1)
+    assert(c.closeMarket(1010101, scalarmarket)==1)
+    assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
+    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46.9*2**64))
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    assert(c.penalizeWrong(1010101, event1)==1)
+    assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
+    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46.9*2**64))
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    assert(c.penalizeWrong(1010101, event2)==1)
+    assert(c.penalizeWrong(1010101, event3)==1)
+    assert(c.penalizeWrong(1010101, event4)==1)
+    assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
+    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46.9*2**64))
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
+        time.sleep(int(periodLength/2))
+        s.mine(1)
+    assert(c.collectFees(1010101, s.block.coinbase)==1)
+    assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
+    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46.9*2**64))
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    print "Test consensus multiple reporters OK"
+
 def test_slashrep():
     global initial_gas
     initial_gas = 0
@@ -1061,4 +1154,5 @@ if __name__ == '__main__':
     #test_catchup()
     #test_slashrep()
     #test_claimrep()
+    #test_consensus_multiple_reporters()
     print "DONE TESTING"
