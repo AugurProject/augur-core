@@ -692,29 +692,31 @@ def test_consensus_multiple_reporters():
     c = s.abi_contract('functions/output.se')
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
+    c.reputationFaucet(1010101, sender=t.k2)
+    c.reputationFaucet(1010101, sender=t.k3)
+    c.cashFaucet(sender=t.k2)
+    c.cashFaucet(sender=t.k3)
     blocktime = s.block.timestamp
-    binaryevent = c.createEvent(1010101, "new event", blocktime+1, 2**64, 2*2**64, 2, "www.roflcopter.com")
-    binaryunethicalevent = c.createEvent(1010101, "new eventt", blocktime+1, 2**64, 2*2**64, 2, "buddyholly.com")
-    binindeterminateevent = c.createEvent(1010101, "new sdsdaeventt", blocktime+1, 2**64, 2*2**64, 2, "buddyholly.com")
-    binmarket = c.createMarket(1010101, "new market", 184467440737095516, [binaryevent], 1, 2, 3, 0, "yayaya", value=10**19)
-    binmarketunethical = c.createMarket(1010101, "new madrket", 184467440737095516, [binaryunethicalevent], 1, 2, 3, 0, "yayaya", value=10**19)
-    binmarketindetermiante = c.createMarket(1010101, "new madrket", 184467440737095516, [binindeterminateevent], 1, 2, 3, 0, "yayaya", value=10**19)
+    bevent = c.createEvent(1010101, "new event", blocktime+1, 2**64, 2*2**64, 2, "www.roflcopter.com")
+    bunethicalevent = c.createEvent(1010101, "new eventt", blocktime+1, 2**64, 2*2**64, 2, "buddyholly.com")
+    bindeterminateevent = c.createEvent(1010101, "new sdsdaeventt", blocktime+1, 2**64, 2*2**64, 2, "buddyholly.com")
+    cevent = c.createEvent(1010101, "new eventt3", blocktime+1, 2**64, 2*2**64, 5, "buddyholly.com")
+    sevent = c.createEvent(1010101, "new eventt4", blocktime+1, 0, 250*2**64, 2, "buddyholly.com")
+    cunethicalevent = c.createEvent(1010101, "afunew eventt3", blocktime+1, 2**64, 2*2**64, 5, "buddyholly.com")
+    sunethicalevent = c.createEvent(1010101, "afafdsnew eventt4", blocktime+1, 0, 250*2**64, 2, "buddyholly.com")
+    cindeterminateevent = c.createEvent(1010101, "sssnew evgentt3", blocktime+1, 2**64, 2*2**64, 5, "buddyholly.com")
+    sindeterminateevent = c.createEvent(1010101, "aanewg eventt4", blocktime+1, 0, 250*2**64, 2, "buddyholly.com")
     
-    catevent = c.createEvent(1010101, "new eventt3", blocktime+1, 2**64, 2*2**64, 5, "buddyholly.com")
-    scalarevent = c.createEvent(1010101, "new eventt4", blocktime+1, 0, 250*2**64, 2, "buddyholly.com")
-    catmarket = c.createMarket(1010101, "newsd madrket", 184467440737095516, [catevent], 1, 2, 3, 0, "yayaya", value=10**19)
-    scalarmarket = c.createMarket(1010101, "nescw madrket", 184467440737095516, [scalarevent], 1, 2, 3, 0, "yayaya", value=10**19)
-    
-    cateventunethical = c.createEvent(1010101, "afunew eventt3", blocktime+1, 2**64, 2*2**64, 5, "buddyholly.com")
-    scalareventunethical = c.createEvent(1010101, "afafdsnew eventt4", blocktime+1, 0, 250*2**64, 2, "buddyholly.com")
-    catmarketunethical = c.createMarket(1010101, "newsdsfs madrggket", 184467440737095516, [cateventunethical], 1, 2, 3, 0, "yayaya", value=10**19)
-    scalarmarketunethical = c.createMarket(1010101, "nescwsfss madrket", 184467440737095516, [scalareventunethical], 1, 2, 3, 0, "yayaya", value=10**19)
-    
-    cateventindeterminate = c.createEvent(1010101, "sssnew evgentt3", blocktime+1, 2**64, 2*2**64, 5, "buddyholly.com")
-    scalareventindeterminate = c.createEvent(1010101, "aanewg eventt4", blocktime+1, 0, 250*2**64, 2, "buddyholly.com")
-    catmarketindeterminate = c.createMarket(1010101, "newsd mabasdrket", 184467440737095516, [cateventindeterminate], 1, 2, 3, 0, "yayaya", value=10**19)
-    scalarmarketindeterminate = c.createMarket(1010101, "aaaaaanewrscw madrket", 184467440737095516, [scalareventindeterminate], 1, 2, 3, 0, "yayaya", value=10**19)
-    
+    binmarket = c.createMarket(1010101, "new market", 184467440737095516, [bevent], 1, 2, 3, 0, "yayaya", value=10**19)
+    binmarketunethical = c.createMarket(1010101, "new madrket", 184467440737095516, [bunethicalevent], 1, 2, 3, 0, "yayaya", value=10**19)
+    binmarketindeterminate = c.createMarket(1010101, "new madrket", 184467440737095516, [bindeterminateevent], 1, 2, 3, 0, "yayaya", value=10**19)
+    catmarket = c.createMarket(1010101, "newsd madrket", 184467440737095516, [cevent], 1, 2, 3, 0, "yayaya", value=10**19)
+    scalarmarket = c.createMarket(1010101, "nescw madrket", 184467440737095516, [sevent], 1, 2, 3, 0, "yayaya", value=10**19)
+    catmarketunethical = c.createMarket(1010101, "newsdsfs madrggket", 184467440737095516, [cunethicalevent], 1, 2, 3, 0, "yayaya", value=10**19)
+    scalarmarketunethical = c.createMarket(1010101, "nescwsfss madrket", 184467440737095516, [sunethicalevent], 1, 2, 3, 0, "yayaya", value=10**19)
+    catmarketindeterminate = c.createMarket(1010101, "newsd mabasdrket", 184467440737095516, [cindeterminateevent], 1, 2, 3, 0, "yayaya", value=10**19)
+    scalarmarketindeterminate = c.createMarket(1010101, "aaaaaanewrscw madrket", 184467440737095516, [sindeterminateevent], 1, 2, 3, 0, "yayaya", value=10**19)
+
     s.mine(1)
     periodLength = c.getPeriodLength(1010101)
     i = c.getVotePeriod(1010101)
@@ -724,54 +726,196 @@ def test_consensus_multiple_reporters():
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
         time.sleep(c.getPeriodLength(1010101)/2)
         s.mine(1)
-    report_hash = c.makeHash(0, 2**64, event1, s.block.coinbase)
-    report_hash2 = c.makeHash(0, 2*2**64, event2, s.block.coinbase)
-    report_hash3 = c.makeHash(0, 2**63+1, event3, s.block.coinbase)
-    report_hash4 = c.makeHash(0, int(50*2**64/250), event4, s.block.coinbase)
-    c.penalizeWrong(1010101, 0)
-    assert(c.submitReportHash(event1, report_hash)==1), "Report hash submission failed"
-    assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(event3, report_hash3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(event4, report_hash4)==1), "Report hash submission failed"
+    binaryeventhash = c.makeHash(0, 2**64, bevent, c.getSender(sender=t.k1))
+    binaryunethicaleventhash = c.makeHash(0, 2**64, bunethicalevent, c.getSender(sender=t.k1))
+    binindeterminateeventhash = c.makeHash(0, 3*2**63, bindeterminateevent, c.getSender(sender=t.k1))
+    cateventhash = c.makeHash(0, 2**62, cevent, c.getSender(sender=t.k1))
+    cateventunethicalhash = c.makeHash(0, 1, cunethicalevent, c.getSender(sender=t.k1))
+    cateventindeterminatehash = c.makeHash(0, 2**63, cindeterminateevent, c.getSender(sender=t.k1))
+    scalareventhash = c.makeHash(0, 2**64, sevent, c.getSender(sender=t.k1))
+    scalareventunethicalhash = c.makeHash(0, 1, sunethicalevent, c.getSender(sender=t.k1))
+    scalareventindeterminatehash = c.makeHash(0, 2**63, sindeterminateevent, c.getSender(sender=t.k1))
+
+    binaryeventhash2 = c.makeHash(0, 3*2**63, bevent, c.getSender(sender=t.k2))
+    binaryunethicaleventhash2 = c.makeHash(0, 2**65, bunethicalevent, c.getSender(sender=t.k2))
+    binindeterminateeventhash2 = c.makeHash(0, 3*2**63, bindeterminateevent, c.getSender(sender=t.k2))
+    cateventhash2 = c.makeHash(0, 2**64, catevent, c.getSender(sender=t.k2))
+    cateventunethicalhash2 = c.makeHash(0, 1, cunethicalevent, c.getSender(sender=t.k2))
+    cateventindeterminatehash2 = c.makeHash(0, 2**63, cindeterminateevent, c.getSender(sender=t.k2))
+    scalareventhash2 = c.makeHash(0, 1, sevent, c.getSender(sender=t.k2))
+    scalareventunethicalhash2 = c.makeHash(0, 1, sunethicalevent, c.getSender(sender=t.k2))
+    scalareventindeterminatehash2 = c.makeHash(0, 2**63, sindeterminateevent, c.getSender(sender=t.k2))
+
+    binaryeventhash3 = c.makeHash(0, 2**64, bevent, c.getSender(sender=t.k3))
+    binaryunethicaleventhash3 = c.makeHash(0, 2**65, bunethicalevent, c.getSender(sender=t.k3))
+    binindeterminateeventhash3 = c.makeHash(0, 3*2**63, bindeterminateevent, c.getSender(sender=t.k3))
+    cateventhash3 = c.makeHash(0, 2**64, cevent, c.getSender(sender=t.k3))
+    cateventunethicalhash3 = c.makeHash(0, 2**64, cunethicalevent, c.getSender(sender=t.k3))
+    cateventindeterminatehash3 = c.makeHash(0, 1, cindeterminateevent, c.getSender(sender=t.k3))
+    scalareventhash3 = c.makeHash(0, 2**64, sevent, c.getSender(sender=t.k3))
+    scalareventunethicalhash3 = c.makeHash(0, 1, sunethicalevent, c.getSender(sender=t.k3))
+    scalareventindeterminatehash3 = c.makeHash(0, 2**63, sindeterminateevent, c.getSender(sender=t.k3))
+
+    c.penalizeWrong(1010101, 0, sender=t.k1)
+    c.penalizeWrong(1010101, 0, sender=t.k2)
+    c.penalizeWrong(1010101, 0, sender=t.k3)
+
+    assert(c.submitReportHash(bevent, binaryeventhash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cevent, cateventhash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cunethicalevent, cateventunethicalhash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cindeterminateevent, cateventindeterminatehash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sevent, scalareventhash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash)==1), "Report hash submission failed"
+
+    assert(c.submitReportHash(bevent, binaryeventhash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cevent, cateventhash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cunethicalevent, cateventunethicalhash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cindeterminateevent, cateventindeterminatehash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sevent, scalareventhash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash2, sender=t.k2)==1), "Report hash submission failed"
+
+    assert(c.submitReportHash(bevent, binaryeventhash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cevent, cateventhash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cunethicalevent, cateventunethicalhash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cindeterminateevent, cateventindeterminatehash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sevent, scalareventhash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash3, sender=t.k3)==1), "Report hash submission failed"
+
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
-    assert(c.submitReport(event1, 0, 2**64, 2**64, value=500000000)==1), "Report submission failed"
-    assert(c.submitReport(event2, 0, 2*2**64, 2**64)==1), "Report submission failed"
-    assert(c.submitReport(event3, 0, 2**63+1, 2**64)==1), "Report submission failed"
-    assert(c.submitReport(event4, 0, int(50*2**64/250), 2**64)==1), "Report submission failed"
+
+    assert(c.submitReport(bevent, 0, 2**64, 2**64, value=500000000)==1), "Report submission failed"
+    assert(c.submitReport(bunethicalevent, 0, 2**64, 0)==1), "Report submission failed"
+    assert(c.submitReport(bindeterminateevent, 0, 3*2**63, 2**64)==1), "Report submission failed"
+    assert(c.submitReport(cevent, 0, 2**62, 2**64)==1), "Report submission failed"
+    assert(c.submitReport(cunethicalevent, 0, 1, 0)==1), "Report submission failed"
+    assert(c.submitReport(cindeterminateevent, 0, 2**63, 2**64)==1), "Report submission failed"
+    assert(c.submitReport(sevent, 0, 2**64, 2**64)==1), "Report submission failed"
+    assert(c.submitReport(sunethicalevent, 0, 1, 0)==1), "Report submission failed"
+    assert(c.submitReport(sindeterminateevent, 0, 2**63, 2**64)==1), "Report submission failed"
+
+    assert(c.submitReport(bevent, 0, 3***63, 3*2**63, value=500000000, sender=t.k2)==1), "Report submission failed"
+    assert(c.submitReport(bunethicalevent, 0, 2**65, 0, sender=t.k2)==1), "Report submission failed"
+    assert(c.submitReport(bindeterminateevent, 0, 2**63, 2**64, sender=t.k2)==1), "Report submission failed"
+    assert(c.submitReport(cevent, 0, 2**64, 2**64, sender=t.k2)==1), "Report submission failed"
+    assert(c.submitReport(cunethicalevent, 0, 1, 0, sender=t.k2)==1), "Report submission failed"
+    assert(c.submitReport(cindeterminateevent, 0, 2**63, 2**64, sender=t.k2)==1), "Report submission failed"
+    assert(c.submitReport(sevent, 0, 1, 2**64, sender=t.k2)==1), "Report submission failed"
+    assert(c.submitReport(sunethicalevent, 0, 1, 0, sender=t.k2)==1), "Report submission failed"
+    assert(c.submitReport(sindeterminateevent, 0, 2**63, 2**64, sender=t.k2)==1), "Report submission failed"
+
+    assert(c.submitReport(bevent, 0, 2**64, 2**64, value=500000000, sender=t.k3)==1), "Report submission failed"
+    assert(c.submitReport(bunethicalevent, 0, 2**65, 0, sender=t.k3)==1), "Report submission failed"
+    assert(c.submitReport(bindeterminateevent, 0, 3*2**63, 2**64, sender=t.k3)==1), "Report submission failed"
+    assert(c.submitReport(cevent, 0, 2**64, 2**64, sender=t.k3)==1), "Report submission failed"
+    assert(c.submitReport(cunethicalevent, 0, 2**64, 1, sender=t.k3)==1), "Report submission failed"
+    assert(c.submitReport(cindeterminateevent, 0, 1, 2**64, sender=t.k3)==1), "Report submission failed"
+    assert(c.submitReport(sevent, 0, 2**64, 2**64, sender=t.k3)==1), "Report submission failed"
+    assert(c.submitReport(sunethicalevent, 0, 1, 0, sender=t.k3)==1), "Report submission failed"
+    assert(c.submitReport(sindeterminateevent, 0, 2**63, 2**64, sender=t.k3)==1), "Report submission failed"
+
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
         time.sleep(c.getPeriodLength(1010101)/2)
         s.mine(1)
+
     c.incrementPeriod(1010101)
     branch = 1010101
     period = int((blocktime+1)/c.getPeriodLength(1010101))
     # need to resolve event first
-    c.send(bin_market, 5*2**64)
-    c.send(bin_market2, 5*2**64)
-    c.send(catmarket, 5*2**64)
+    c.send(binmarket, 5*2**64)
+    c.send(binmarketunethical, 5*2**64)
+    c.send(binmarketindeterminate, 5*2**64)
     c.send(scalarmarket, 5*2**64)
-    assert(c.closeMarket(1010101, bin_market)==1)
-    assert(c.closeMarket(1010101, bin_market2)==1)
-    assert(c.closeMarket(1010101, catmarket)==1)
+    c.send(scalarmarketunethical, 5*2**64)
+    c.send(scalarmarketindeterminate, 5*2**64)
+    c.send(catmarket, 5*2**64)
+    c.send(catmarketunethical, 5*2**64)
+    c.send(catmarketindeterminate, 5*2**64)
+    
+    assert(c.closeMarket(1010101, binmarket)==1)
+    assert(c.closeMarket(1010101, binmarketunethical)==1)
+    assert(c.closeMarket(1010101, binmarketindeterminate)==1)
     assert(c.closeMarket(1010101, scalarmarket)==1)
+    assert(c.closeMarket(1010101, scalarmarketunethical)==1)
+    assert(c.closeMarket(1010101, scalarmarketindeterminate)==1)
+    assert(c.closeMarket(1010101, catmarket)==1)
+    assert(c.closeMarket(1010101, catmarketunethical)==1)
+    assert(c.closeMarket(1010101, catmarketindeterminate)==1)
+
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
     assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46.9*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
-    assert(c.penalizeWrong(1010101, event1)==1)
+    assert(c.penalizeWrong(1010101, bevent)==1)
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
     assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46.9*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
-    assert(c.penalizeWrong(1010101, event2)==1)
-    assert(c.penalizeWrong(1010101, event3)==1)
-    assert(c.penalizeWrong(1010101, event4)==1)
+    assert(c.penalizeWrong(1010101, bunethicalevent)==1)
+    assert(c.penalizeWrong(1010101, bindeterminateevent)==1)
+    assert(c.penalizeWrong(1010101, cevent)==1)
+    assert(c.penalizeWrong(1010101, cunethicalevent)==1)
+    assert(c.penalizeWrong(1010101, cindeterminateevent)==1)
+    assert(c.penalizeWrong(1010101, sevent)==1)
+    assert(c.penalizeWrong(1010101, sunethicalevent)==1)
+    assert(c.penalizeWrong(1010101, sindeterminateevent)==1)
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
     assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46.9*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+
+    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k2))==c.getRepBalance(branch, c.getSender(sender=t.k2))==c.getTotalRep(branch))
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(47.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(46.9*2**64))
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    assert(c.penalizeWrong(1010101, bevent, sender=t.k2)==1)
+    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k2))==c.getRepBalance(branch, c.getSender(sender=t.k2))==c.getTotalRep(branch))
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(47.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(46.9*2**64))
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    assert(c.penalizeWrong(1010101, bunethicalevent, sender=t.k2)==1)
+    assert(c.penalizeWrong(1010101, bindeterminateevent, sender=t.k2)==1)
+    assert(c.penalizeWrong(1010101, cevent, sender=t.k2)==1)
+    assert(c.penalizeWrong(1010101, cunethicalevent, sender=t.k2)==1)
+    assert(c.penalizeWrong(1010101, cindeterminateevent, sender=t.k2)==1)
+    assert(c.penalizeWrong(1010101, sevent, sender=t.k2)==1)
+    assert(c.penalizeWrong(1010101, sunethicalevent, sender=t.k2)==1)
+    assert(c.penalizeWrong(1010101, sindeterminateevent, sender=t.k2)==1)
+    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k2))==c.getRepBalance(branch, c.getSender(sender=t.k2))==c.getTotalRep(branch))
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(47.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(46.9*2**64))
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+
+    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k3))==c.getRepBalance(branch, c.getSender(sender=t.k3))==c.getTotalRep(branch))
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(47.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(46.9*2**64))
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    assert(c.penalizeWrong(1010101, bevent, sender=t.k3)==1)
+    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k3))==c.getRepBalance(branch, c.getSender(sender=t.k3))==c.getTotalRep(branch))
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(47.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(46.9*2**64))
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    assert(c.penalizeWrong(1010101, bunethicalevent, sender=t.k3)==1)
+    assert(c.penalizeWrong(1010101, bindeterminateevent, sender=t.k3)==1)
+    assert(c.penalizeWrong(1010101, cevent, sender=t.k3)==1)
+    assert(c.penalizeWrong(1010101, cunethicalevent, sender=t.k3)==1)
+    assert(c.penalizeWrong(1010101, cindeterminateevent, sender=t.k3)==1)
+    assert(c.penalizeWrong(1010101, sevent, sender=t.k3)==1)
+    assert(c.penalizeWrong(1010101, sunethicalevent, sender=t.k3)==1)
+    assert(c.penalizeWrong(1010101, sindeterminateevent, sender=t.k3)==1)
+    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k3))==c.getRepBalance(branch, c.getSender(sender=t.k3))==c.getTotalRep(branch))
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(47.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(46.9*2**64))
+    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
+    
     assert(c.collectFees(1010101, s.block.coinbase)==1)
+    assert(c.collectFees(1010101, c.getSender(t.k2))==1)
+    assert(c.collectFees(1010101, c.getSender(t.k3))==1)
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
     assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46.9*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
