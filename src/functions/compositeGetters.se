@@ -50,33 +50,21 @@ def getOrderBook(marketID):
 def getMarketInfo(marketID):
     refund()
     index = BASE_FIELDS
-    # participantNumber = self.Markets[marketID].addr2participant[msg.sender]
     descriptionLength = INFO.getDescriptionLength(marketID)
-    # with marketInfo = array(BASE_FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1):
     numEvents = MARKETS.getNumEvents(marketID)
     numOutcomes = MARKETS.getMarketNumOutcomes(marketID)
     marketInfo = array(BASE_FIELDS + numEvents*EVENTS_FIELDS + numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1)
     marketInfo[0] = marketID
-    # marketInfo[1] = self.Markets[marketID].currentParticipant
     marketInfo[1] = MARKETS.getCurrentParticipantNumber(marketID)
-    # marketInfo[2] = self.Markets[marketID].makerFees
     marketInfo[2] = MARKETS.getMakerFees(marketID)
     marketInfo[3] = MARKETS.getParticipantNumber(marketID, msg.sender)
-    # marketInfo[4] = self.Markets[marketID].numOutcomes
     marketInfo[4] = numOutcomes
-    # marketInfo[5] = self.Markets[marketID].tradingPeriod
     marketInfo[5] = MARKETS.getTradingPeriod(marketID)
-    # marketInfo[6] = self.Markets[marketID].tradingFee
     marketInfo[6] = MARKETS.getTradingFee(marketID)
-    # marketInfo[7] = self.Markets[marketID].branch
     marketInfo[7] = MARKETS.getBranchID(marketID)
-    # marketInfo[8] = self.Markets[marketID].lenEvents
     marketInfo[8] = numEvents
-    # marketInfo[9] = self.Markets[marketID].cumulativeScale
     marketInfo[9] = MARKETS.getCumScale(marketID)
-    # marketInfo[10] = self.Markets[marketID].creationTime
     marketInfo[10] = MARKETS.getCreationTime(marketID)
-    # marketInfo[11] = self.Markets[marketID].volume
     marketInfo[11] = MARKETS.getVolume(marketID)
     marketInfo[12] = INFO.getCreationFee(marketID)
     marketInfo[13] = INFO.getCreator(marketID)
@@ -87,7 +75,6 @@ def getMarketInfo(marketID):
 
     # gather event(s) info:
     # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
-    # with events = slice(load(self.Markets[marketID].events[0], chars=32*numEvents), items=0, items=numEvents):
     events = slice(MARKETS.getMarketEvents(marketID, outitems=numEvents), items=0, items=numEvents)
     i = 0
     while i < numEvents:
@@ -102,22 +89,18 @@ def getMarketInfo(marketID):
 
     # gather outcomes info: [sharesPurchased, price], winningOutcomes
     # (price of outcome = last trade)
-    # numTrades = self.Markets[marketID].total_trades
     numTrades = MARKETS.get_total_trades(marketID)
     trades = MARKETS.get_trade_ids(marketID, outitems=numTrades)
     k = 0
     while k < numOutcomes:
-        # marketInfo[index + k*OUTCOMES_FIELDS] = self.Markets[marketID].sharesPurchased[k + 1]
         marketInfo[index + k*OUTCOMES_FIELDS] = MARKETS.getSharesPurchased(marketID, k + 1)
         i = 0
-        # lastTrade = self.Markets[marketID].prices[k+1]
         marketInfo[index + k*OUTCOMES_FIELDS + 1] = MARKETS.getLastOutcomePrice(market, k + 1)
         k += 1
     index += numOutcomes*OUTCOMES_FIELDS
     winningOutcomes = slice(MARKETS.getWinningOutcomes(marketID, outitems=8), items=0, items=8)
     k = 0
     while k < WINNING_OUTCOMES_FIELDS:
-        # marketInfo[index + k] = self.Markets[marketID].winningOutcomes[k]
         marketInfo[index + k] = winningOutcomes[k]
         k += 1
     index += WINNING_OUTCOMES_FIELDS
@@ -134,35 +117,39 @@ def getMarketInfo(marketID):
 
 def getMarketsInfo(branch, offset, numMarketsToLoad):
     numMarkets = BRANCHES.getNumMarketsBranch(branch)
+    if numMarketsToLoad == 0:
+        numMarketsToLoad = numMarkets
     marketIDs = slice(BRANCHES.getMarketsInBranch(branch, outitems=numMarkets), items=0, items=numMarkets)
     totalLen = numMarketsToLoad*10
     m = 0
     while m < numMarketsToLoad:
-        totalLen += INFO.getDescriptionLength(marketIDs[m+offset])
+        totalLen += INFO.getDescriptionLength(marketIDs[m + offset])
         m += 1
-    marketsInfo = array(totalLen)
+    marketsInfo = array(totalLen + 1)
     m = 0
-    c = 0
+    c = 1
     totalMarkets = min(numMarketsToLoad, numMarkets)
+    marketsInfo[0] = totalMarkets
     while m < totalMarkets:
         marketID = marketIDs[m + offset]
         descriptionLength = INFO.getDescriptionLength(marketID)
-        marketsInfo[c] = marketID
-        marketsInfo[c + 1] = MARKETS.getTradingPeriod(marketID)
-        marketsInfo[c + 2] = MARKETS.getTradingFee(marketID)
-        marketsInfo[c + 3] = MARKETS.getCreationTime(marketID)
-        marketsInfo[c + 4] = MARKETS.getVolume(marketID)
+        marketsInfo[c] = 10 + descriptionLength
+        marketsInfo[c + 1] = marketID
+        marketsInfo[c + 2] = MARKETS.getTradingPeriod(marketID)
+        marketsInfo[c + 3] = MARKETS.getTradingFee(marketID)
+        marketsInfo[c + 4] = MARKETS.getCreationTime(marketID)
+        marketsInfo[c + 5] = MARKETS.getVolume(marketID)
         tags = slice(MARKETS.returnTags(marketID, outitems=3), items=0, items=3)
-        marketsInfo[c + 5] = tags[0]
-        marketsInfo[c + 6] = tags[1]
-        marketsInfo[c + 7] = tags[2]
-        marketsInfo[c + 8] = MARKETS.getLastExpDate(marketID)
-        marketsInfo[c + 9] = descriptionLength
-        description = INFO.getDescription(marketIDs[m+offset], outchars=descriptionLength)
+        marketsInfo[c + 6] = tags[0]
+        marketsInfo[c + 7] = tags[1]
+        marketsInfo[c + 8] = tags[2]
+        marketsInfo[c + 9] = MARKETS.getLastExpDate(marketID)
+        description = INFO.getDescription(marketIDs[m + offset], outchars=descriptionLength)
+        c += 10
         d = 0
         while d < descriptionLength:
             marketsInfo[c] = getch(description, d)
+            c += 1
             d += 1
-        c += 10 + descriptionLength
         m += 1
     return(marketsInfo: arr)
