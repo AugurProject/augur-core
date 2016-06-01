@@ -739,7 +739,7 @@ def test_consensus_multiple_reporters():
     binaryeventhash2 = c.makeHash(0, 3*2**63, bevent, c.getSender(sender=t.k2))
     binaryunethicaleventhash2 = c.makeHash(0, 2**65, bunethicalevent, c.getSender(sender=t.k2))
     binindeterminateeventhash2 = c.makeHash(0, 3*2**63, bindeterminateevent, c.getSender(sender=t.k2))
-    cateventhash2 = c.makeHash(0, 2**64, catevent, c.getSender(sender=t.k2))
+    cateventhash2 = c.makeHash(0, 2**64, cevent, c.getSender(sender=t.k2))
     cateventunethicalhash2 = c.makeHash(0, 1, cunethicalevent, c.getSender(sender=t.k2))
     cateventindeterminatehash2 = c.makeHash(0, 2**63, cindeterminateevent, c.getSender(sender=t.k2))
     scalareventhash2 = c.makeHash(0, 1, sevent, c.getSender(sender=t.k2))

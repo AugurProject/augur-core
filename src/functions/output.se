@@ -1744,7 +1744,7 @@ macro hasReported($branch, $period):
     self.getNumReportsActual($branch, $period, msg.sender)
 inset('refund.se')
 
-macro POINTONE: 16602069666338596864
+macro POINTNINE: 16602069666338596864
 
 # call when a user who hasn't reported for a while wants to start again and needs to catch up on penalizations
 # ex:
@@ -1777,14 +1777,14 @@ def penalizationCatchup(branch, sender):
         if(delta <= 0):
             return(0)
         # dock 10% for each period they didn't penalize on
-        smoothedRep = oldRep*POINTONE/ONE
+        smoothedRep = oldRep*POINTNINE/ONE
         i = 1
         # delta 22 thing, if >22, max is 23 [1 above, 1 below, and 21 in while loop]
         if(delta>22):
-            smoothedRep = smoothedRep*POINTONE/ONE
+            smoothedRep = smoothedRep*POINTNINE/ONE
             delta = 22
         while i < delta:
-            smoothedRep = smoothedRep*POINTONE/ONE
+            smoothedRep = smoothedRep*POINTNINE/ONE
             i += 1
         # and send it to branch for penalty rep collection
         repChange = oldRep - smoothedRep
@@ -1793,7 +1793,7 @@ def penalizationCatchup(branch, sender):
         # sends that rep to the branch rep pool
         self.addRep(branch, self.repIDToIndex(branch, branch), repChange)
         self.setPenalizedUpTo(branch, sender, lastPeriod)
-        return(1)
+        return([delta, oldRep, smoothedRep, repChange, POINTNINE, ONE]: arr)
     else:
         return(0)
 inset('refund.se')

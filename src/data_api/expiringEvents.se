@@ -184,13 +184,14 @@ def getEventCanReportOn(branch, expDateIndex, reporter, event):
         return(0)
 
 # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
+    # exp(1.2*ln(repbal)) / exp(1.2*ln(totalrep)) is == (reporterList[n]/totalRep)**1.2
     # a^b=exp(b*ln(a))=e^(b*ln(a)).
 def calculateReportingThreshold(branch, eventID, votePeriod, sender):
     repConstant = self.getPeriodRepConstant(branch, votePeriod, sender)
     if(repConstant==0):
         repFraction = REPORTING.getRepBalance(branch, sender)*ONE/REPORTING.getActiveRep(branch)
-        logOutput = FXP.fx_log(REPORTING.getRepBalance(branch, sender)*ONE/REPORTING.getActiveRep(branch))
-        repConstant = FXP.fx_exp(ONEPOINTTWO*logOutput/ONE) + POINTZEROZEROONE
+        logOutput = FXP.fx_log(repFraction)
+        repConstant = FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getRepBalance(branch, sender))/ONE)*2**64/FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getActiveRep(branch))/ONE) + POINTZEROZEROONE
         expectedEventsForReporter = repConstant * self.getNumEventsToReportOn(branch, votePeriod)
         total = expectedEventsForReporter
         eventsInPeriod = self.getNumberEvents(branch, expDateIndex)-self.getNumRemoved(branch, votePeriod)
