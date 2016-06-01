@@ -246,9 +246,7 @@ def resolveForkEvent(branch, event):
             scaled_min = ONE
             scaled_max = ONE*EVENTS.getNumOutcomes(event)
         fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
-        ethicOutcome = 0
-        if(!ethical):
-            ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
+        ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
         EVENTS.setOutcome(event, fxpOutcome)
         if(mode==ONEHALF || !ethical):
             # give event bond money to reporters

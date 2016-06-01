@@ -685,6 +685,9 @@ def test_consensus():
     print "Test consensus OK"
 
 def test_consensus_multiple_reporters():
+    src = os.path.join(os.getenv('AUGUR_CORE', os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace')), 'src')
+    output = os.path.join(src, 'functions', 'output.se')
+    os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
     global initial_gas
     initial_gas = 0
     t.gas_limit = 100000000
@@ -709,14 +712,13 @@ def test_consensus_multiple_reporters():
     
     binmarket = c.createMarket(1010101, "new market", 184467440737095516, [bevent], 1, 2, 3, 0, "yayaya", value=10**19)
     binmarketunethical = c.createMarket(1010101, "new madrket", 184467440737095516, [bunethicalevent], 1, 2, 3, 0, "yayaya", value=10**19)
-    binmarketindeterminate = c.createMarket(1010101, "new madrket", 184467440737095516, [bindeterminateevent], 1, 2, 3, 0, "yayaya", value=10**19)
+    binmarketindeterminate = c.createMarket(1010101, "new amadrket", 184467440737095516, [bindeterminateevent], 1, 2, 3, 0, "yayaya", value=10**19)
     catmarket = c.createMarket(1010101, "newsd madrket", 184467440737095516, [cevent], 1, 2, 3, 0, "yayaya", value=10**19)
     scalarmarket = c.createMarket(1010101, "nescw madrket", 184467440737095516, [sevent], 1, 2, 3, 0, "yayaya", value=10**19)
     catmarketunethical = c.createMarket(1010101, "newsdsfs madrggket", 184467440737095516, [cunethicalevent], 1, 2, 3, 0, "yayaya", value=10**19)
     scalarmarketunethical = c.createMarket(1010101, "nescwsfss madrket", 184467440737095516, [sunethicalevent], 1, 2, 3, 0, "yayaya", value=10**19)
     catmarketindeterminate = c.createMarket(1010101, "newsd mabasdrket", 184467440737095516, [cindeterminateevent], 1, 2, 3, 0, "yayaya", value=10**19)
     scalarmarketindeterminate = c.createMarket(1010101, "aaaaaanewrscw madrket", 184467440737095516, [sindeterminateevent], 1, 2, 3, 0, "yayaya", value=10**19)
-
     s.mine(1)
     periodLength = c.getPeriodLength(1010101)
     i = c.getVotePeriod(1010101)
@@ -726,40 +728,45 @@ def test_consensus_multiple_reporters():
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
         time.sleep(c.getPeriodLength(1010101)/2)
         s.mine(1)
-    binaryeventhash = c.makeHash(0, 2**64, bevent, c.getSender(sender=t.k1))
-    binaryunethicaleventhash = c.makeHash(0, 2**64, bunethicalevent, c.getSender(sender=t.k1))
-    binindeterminateeventhash = c.makeHash(0, 3*2**63, bindeterminateevent, c.getSender(sender=t.k1))
-    cateventhash = c.makeHash(0, 2**62, cevent, c.getSender(sender=t.k1))
-    cateventunethicalhash = c.makeHash(0, 1, cunethicalevent, c.getSender(sender=t.k1))
-    cateventindeterminatehash = c.makeHash(0, 2**63, cindeterminateevent, c.getSender(sender=t.k1))
-    scalareventhash = c.makeHash(0, 2**64, sevent, c.getSender(sender=t.k1))
-    scalareventunethicalhash = c.makeHash(0, 1, sunethicalevent, c.getSender(sender=t.k1))
-    scalareventindeterminatehash = c.makeHash(0, 2**63, sindeterminateevent, c.getSender(sender=t.k1))
-
+    binaryeventhash = c.makeHash(0, 2**64, bevent, s.block.coinbase)
     binaryeventhash2 = c.makeHash(0, 3*2**63, bevent, c.getSender(sender=t.k2))
-    binaryunethicaleventhash2 = c.makeHash(0, 2**65, bunethicalevent, c.getSender(sender=t.k2))
-    binindeterminateeventhash2 = c.makeHash(0, 3*2**63, bindeterminateevent, c.getSender(sender=t.k2))
-    cateventhash2 = c.makeHash(0, 2**64, cevent, c.getSender(sender=t.k2))
-    cateventunethicalhash2 = c.makeHash(0, 1, cunethicalevent, c.getSender(sender=t.k2))
-    cateventindeterminatehash2 = c.makeHash(0, 2**63, cindeterminateevent, c.getSender(sender=t.k2))
-    scalareventhash2 = c.makeHash(0, 1, sevent, c.getSender(sender=t.k2))
-    scalareventunethicalhash2 = c.makeHash(0, 1, sunethicalevent, c.getSender(sender=t.k2))
-    scalareventindeterminatehash2 = c.makeHash(0, 2**63, sindeterminateevent, c.getSender(sender=t.k2))
-
     binaryeventhash3 = c.makeHash(0, 2**64, bevent, c.getSender(sender=t.k3))
+    
+    binaryunethicaleventhash = c.makeHash(0, 2**64, bunethicalevent, s.block.coinbase)
+    binaryunethicaleventhash2 = c.makeHash(0, 2**65, bunethicalevent, c.getSender(sender=t.k2))
     binaryunethicaleventhash3 = c.makeHash(0, 2**65, bunethicalevent, c.getSender(sender=t.k3))
+    
+    binindeterminateeventhash = c.makeHash(0, 3*2**63, bindeterminateevent, s.block.coinbase)
+    binindeterminateeventhash2 = c.makeHash(0, 3*2**63, bindeterminateevent, c.getSender(sender=t.k2))
     binindeterminateeventhash3 = c.makeHash(0, 3*2**63, bindeterminateevent, c.getSender(sender=t.k3))
+    
+    cateventhash = c.makeHash(0, 2**62, cevent, s.block.coinbase)
+    cateventhash2 = c.makeHash(0, 2**64, cevent, c.getSender(sender=t.k2))
     cateventhash3 = c.makeHash(0, 2**64, cevent, c.getSender(sender=t.k3))
+    
+    cateventunethicalhash = c.makeHash(0, 1, cunethicalevent, s.block.coinbase)
+    cateventunethicalhash2 = c.makeHash(0, 1, cunethicalevent, c.getSender(sender=t.k2))
     cateventunethicalhash3 = c.makeHash(0, 2**64, cunethicalevent, c.getSender(sender=t.k3))
+    
+    cateventindeterminatehash = c.makeHash(0, 2**63, cindeterminateevent, s.block.coinbase)
+    cateventindeterminatehash2 = c.makeHash(0, 2**63, cindeterminateevent, c.getSender(sender=t.k2))
     cateventindeterminatehash3 = c.makeHash(0, 1, cindeterminateevent, c.getSender(sender=t.k3))
+    
+    scalareventhash = c.makeHash(0, 2**64, sevent, s.block.coinbase)
+    scalareventhash2 = c.makeHash(0, 1, sevent, c.getSender(sender=t.k2))
     scalareventhash3 = c.makeHash(0, 2**64, sevent, c.getSender(sender=t.k3))
+    
+    scalareventunethicalhash = c.makeHash(0, 1, sunethicalevent, s.block.coinbase)
+    scalareventunethicalhash2 = c.makeHash(0, 1, sunethicalevent, c.getSender(sender=t.k2))
     scalareventunethicalhash3 = c.makeHash(0, 1, sunethicalevent, c.getSender(sender=t.k3))
+    
+    scalareventindeterminatehash = c.makeHash(0, 2**63, sindeterminateevent, s.block.coinbase)
+    scalareventindeterminatehash2 = c.makeHash(0, 2**63, sindeterminateevent, c.getSender(sender=t.k2))
     scalareventindeterminatehash3 = c.makeHash(0, 2**63, sindeterminateevent, c.getSender(sender=t.k3))
-
+    
     c.penalizeWrong(1010101, 0)
     c.penalizeWrong(1010101, 0, sender=t.k2)
     c.penalizeWrong(1010101, 0, sender=t.k3)
-
     assert(c.submitReportHash(bevent, binaryeventhash)==1), "Report hash submission failed"
     assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash)==1), "Report hash submission failed"
     assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash)==1), "Report hash submission failed"
@@ -769,7 +776,6 @@ def test_consensus_multiple_reporters():
     assert(c.submitReportHash(sevent, scalareventhash)==1), "Report hash submission failed"
     assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash)==1), "Report hash submission failed"
     assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash)==1), "Report hash submission failed"
-
     assert(c.submitReportHash(bevent, binaryeventhash2, sender=t.k2)==1), "Report hash submission failed"
     assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash2, sender=t.k2)==1), "Report hash submission failed"
     assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash2, sender=t.k2)==1), "Report hash submission failed"
@@ -779,7 +785,6 @@ def test_consensus_multiple_reporters():
     assert(c.submitReportHash(sevent, scalareventhash2, sender=t.k2)==1), "Report hash submission failed"
     assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash2, sender=t.k2)==1), "Report hash submission failed"
     assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash2, sender=t.k2)==1), "Report hash submission failed"
-
     assert(c.submitReportHash(bevent, binaryeventhash3, sender=t.k3)==1), "Report hash submission failed"
     assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash3, sender=t.k3)==1), "Report hash submission failed"
     assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash3, sender=t.k3)==1), "Report hash submission failed"
@@ -789,11 +794,9 @@ def test_consensus_multiple_reporters():
     assert(c.submitReportHash(sevent, scalareventhash3, sender=t.k3)==1), "Report hash submission failed"
     assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash3, sender=t.k3)==1), "Report hash submission failed"
     assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash3, sender=t.k3)==1), "Report hash submission failed"
-
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
-
     assert(c.submitReport(bevent, 0, 2**64, 2**64, value=500000000)==1), "Report submission failed"
     assert(c.submitReport(bunethicalevent, 0, 2**64, 0)==1), "Report submission failed"
     assert(c.submitReport(bindeterminateevent, 0, 3*2**63, 2**64)==1), "Report submission failed"
@@ -803,17 +806,15 @@ def test_consensus_multiple_reporters():
     assert(c.submitReport(sevent, 0, 2**64, 2**64)==1), "Report submission failed"
     assert(c.submitReport(sunethicalevent, 0, 1, 0)==1), "Report submission failed"
     assert(c.submitReport(sindeterminateevent, 0, 2**63, 2**64)==1), "Report submission failed"
-
-    assert(c.submitReport(bevent, 0, 3***63, 3*2**63, value=500000000, sender=t.k2)==1), "Report submission failed"
+    assert(c.submitReport(bevent, 0, 3*2**63, 3*2**63, value=500000000, sender=t.k2)==1), "Report submission failed"
     assert(c.submitReport(bunethicalevent, 0, 2**65, 0, sender=t.k2)==1), "Report submission failed"
-    assert(c.submitReport(bindeterminateevent, 0, 2**63, 2**64, sender=t.k2)==1), "Report submission failed"
+    assert(c.submitReport(bindeterminateevent, 0, 3*2**63, 2**64, sender=t.k2)==1), "Report submission failed"
     assert(c.submitReport(cevent, 0, 2**64, 2**64, sender=t.k2)==1), "Report submission failed"
     assert(c.submitReport(cunethicalevent, 0, 1, 0, sender=t.k2)==1), "Report submission failed"
     assert(c.submitReport(cindeterminateevent, 0, 2**63, 2**64, sender=t.k2)==1), "Report submission failed"
     assert(c.submitReport(sevent, 0, 1, 2**64, sender=t.k2)==1), "Report submission failed"
     assert(c.submitReport(sunethicalevent, 0, 1, 0, sender=t.k2)==1), "Report submission failed"
     assert(c.submitReport(sindeterminateevent, 0, 2**63, 2**64, sender=t.k2)==1), "Report submission failed"
-
     assert(c.submitReport(bevent, 0, 2**64, 2**64, value=500000000, sender=t.k3)==1), "Report submission failed"
     assert(c.submitReport(bunethicalevent, 0, 2**65, 0, sender=t.k3)==1), "Report submission failed"
     assert(c.submitReport(bindeterminateevent, 0, 3*2**63, 2**64, sender=t.k3)==1), "Report submission failed"
@@ -823,11 +824,9 @@ def test_consensus_multiple_reporters():
     assert(c.submitReport(sevent, 0, 2**64, 2**64, sender=t.k3)==1), "Report submission failed"
     assert(c.submitReport(sunethicalevent, 0, 1, 0, sender=t.k3)==1), "Report submission failed"
     assert(c.submitReport(sindeterminateevent, 0, 2**63, 2**64, sender=t.k3)==1), "Report submission failed"
-
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
         time.sleep(c.getPeriodLength(1010101)/2)
         s.mine(1)
-
     c.incrementPeriod(1010101)
     branch = 1010101
     period = int((blocktime+1)/c.getPeriodLength(1010101))
@@ -851,74 +850,115 @@ def test_consensus_multiple_reporters():
     assert(c.closeMarket(1010101, catmarket)==1)
     assert(c.closeMarket(1010101, catmarketunethical)==1)
     assert(c.closeMarket(1010101, catmarketindeterminate)==1)
-
-    assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
+    assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase))
     assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46.9*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     assert(c.penalizeWrong(1010101, bevent)==1)
-    assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
+    # didn't lose rep
+    assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase))
     # should gain a bit of rep
     assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(47*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     assert(c.penalizeWrong(1010101, bunethicalevent)==1)
+    # lost rep
+    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(46.6*2**64) and c.getAfterRep(branch, period, s.block.coinbase)) > int(46.3*2**64))
     assert(c.penalizeWrong(1010101, bindeterminateevent)==1)
+    # same rep
+    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(46.6*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46.3*2**64))
     assert(c.penalizeWrong(1010101, cevent)==1)
+    # lost rep
+    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(45.9*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(45.6*2**64))
     assert(c.penalizeWrong(1010101, cunethicalevent)==1)
+    # same rep
+    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(45.9*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(45.6*2**64))
     assert(c.penalizeWrong(1010101, cindeterminateevent)==1)
+    # same rep
+    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(45.9*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(45.6*2**64))
     assert(c.penalizeWrong(1010101, sevent)==1)
+    # same rep
+    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(45.9*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(45.6*2**64))
     assert(c.penalizeWrong(1010101, sunethicalevent)==1)
+    # same rep
+    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(45.9*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(45.6*2**64))
     assert(c.penalizeWrong(1010101, sindeterminateevent)==1)
-    assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
-    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46.9*2**64))
-    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
-
-    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k2))==c.getRepBalance(branch, c.getSender(sender=t.k2))==c.getTotalRep(branch))
+    # same rep
+    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(45.9*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(45.6*2**64))
+    print c.getRepBalance(branch, s.block.coinbase)
+    
+    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k2))==c.getRepBalance(branch, c.getSender(sender=t.k2)))
     assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(47.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(46.9*2**64))
-    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     assert(c.penalizeWrong(1010101, bevent, sender=t.k2)==1)
-    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k2))==c.getRepBalance(branch, c.getSender(sender=t.k2))==c.getTotalRep(branch))
-    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(47.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(46.9*2**64))
-    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k2))==c.getRepBalance(branch, c.getSender(sender=t.k2)))
+    # lose a bit of rep on 1st event
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(46.8*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(46.5*2**64))
     assert(c.penalizeWrong(1010101, bunethicalevent, sender=t.k2)==1)
+    # gain rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(47.2*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(46.8*2**64))
     assert(c.penalizeWrong(1010101, bindeterminateevent, sender=t.k2)==1)
+    # same rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(47.2*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(46.8*2**64))
     assert(c.penalizeWrong(1010101, cevent, sender=t.k2)==1)
+    # same rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(47.2*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(46.8*2**64))
     assert(c.penalizeWrong(1010101, cunethicalevent, sender=t.k2)==1)
+    # same rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(47.2*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(46.8*2**64))
     assert(c.penalizeWrong(1010101, cindeterminateevent, sender=t.k2)==1)
+    # same rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(47.2*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(46.8*2**64))
     assert(c.penalizeWrong(1010101, sevent, sender=t.k2)==1)
+    # lost rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(46.2*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(45.9*2**64))
     assert(c.penalizeWrong(1010101, sunethicalevent, sender=t.k2)==1)
+    # same rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(46.2*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(45.9*2**64))
     assert(c.penalizeWrong(1010101, sindeterminateevent, sender=t.k2)==1)
-    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k2))==c.getRepBalance(branch, c.getSender(sender=t.k2))==c.getTotalRep(branch))
-    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(47.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(46.9*2**64))
-    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
-
-    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k3))==c.getRepBalance(branch, c.getSender(sender=t.k3))==c.getTotalRep(branch))
+    # same rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(46.2*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(45.9*2**64))
+    print c.getRepBalance(branch, c.getSender(sender=t.k2))
+    
+    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k3))==c.getRepBalance(branch, c.getSender(sender=t.k3)))
     assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(47.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(46.9*2**64))
-    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     assert(c.penalizeWrong(1010101, bevent, sender=t.k3)==1)
-    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k3))==c.getRepBalance(branch, c.getSender(sender=t.k3))==c.getTotalRep(branch))
-    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(47.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(46.9*2**64))
-    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
+    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k3))==c.getRepBalance(branch, c.getSender(sender=t.k3)))
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(47.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(47*2**64))
     assert(c.penalizeWrong(1010101, bunethicalevent, sender=t.k3)==1)
+    # gain rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(47.5*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(47.2*2**64))
     assert(c.penalizeWrong(1010101, bindeterminateevent, sender=t.k3)==1)
+    # same rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(47.5*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(47.2*2**64))
     assert(c.penalizeWrong(1010101, cevent, sender=t.k3)==1)
+    # same rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(47.5*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(47.2*2**64))
     assert(c.penalizeWrong(1010101, cunethicalevent, sender=t.k3)==1)
+    # lost rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(46.6*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(46.2*2**64))
     assert(c.penalizeWrong(1010101, cindeterminateevent, sender=t.k3)==1)
+    # lost rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(46.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(45.8*2**64))
     assert(c.penalizeWrong(1010101, sevent, sender=t.k3)==1)
+    # same rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(46.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(45.8*2**64))
     assert(c.penalizeWrong(1010101, sunethicalevent, sender=t.k3)==1)
+    # same rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(46.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(45.8*2**64))
     assert(c.penalizeWrong(1010101, sindeterminateevent, sender=t.k3)==1)
-    assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k3))==c.getRepBalance(branch, c.getSender(sender=t.k3))==c.getTotalRep(branch))
-    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(47.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(46.9*2**64))
-    assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
-
+    # same rep
+    assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(46.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(45.8*2**64))
+    print c.getRepBalance(branch, c.getSender(sender=t.k3))
+    
+    totalRep = c.getRepBalance(branch, c.getSender(sender=t.k3)) + c.getRepBalance(branch, c.getSender(sender=t.k2)) + c.getRepBalance(branch, s.block.coinbase) + c.getRepBalance(1010101, 1010101)
+    
+    assert(int(totalRep/2**64) > 140 and int(totalRep/2**64) < 142)
+    
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
     
     assert(c.collectFees(1010101, s.block.coinbase)==1)
-    assert(c.collectFees(1010101, c.getSender(t.k2))==1)
-    assert(c.collectFees(1010101, c.getSender(t.k3))==1)
-    assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
-    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46.9*2**64))
+    assert(c.collectFees(1010101, c.getSender(sender=t.k2))==1)
+    assert(c.collectFees(1010101, c.getSender(sender=t.k3))==1)
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     print "Test consensus multiple reporters OK"
 

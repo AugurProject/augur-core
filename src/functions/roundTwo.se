@@ -185,9 +185,7 @@ def resolve(branch, event):
             scaled_max = ONE*EVENTS.getNumOutcomes(event)
         fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
         EVENTS.setOutcome(event, fxpOutcome)
-        ethicOutcome = 0
-        if(!ethical):
-            ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
+        ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
         if(mode==ONEHALF || !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, bond)
