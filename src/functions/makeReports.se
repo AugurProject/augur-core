@@ -147,7 +147,7 @@ def submitReport(event, salt, report, ethics):
         EXPEVENTS.setReport(branch, votePeriod, eventID, report, msg.sender)
         # set ethics value for event
         ethics = ethics
-        if(ethics!=ONE || ethics!=0):
+        if(ethics!=ONE and ethics!=0):
             ethics = ONE
         # set ethicality for forked event
         if(forkedOverThisEvent):
