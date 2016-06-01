@@ -580,7 +580,7 @@ def test_consensus():
     s.mine(1)
     periodLength = c.getPeriodLength(1010101)
     i = c.getVotePeriod(1010101)
-    while i < int((s.block.timestamp+1)/c.getPeriodLength(1010101)):
+    while i < int((blocktime+1)/c.getPeriodLength(1010101)):
         c.incrementPeriod(1010101)
         i += 1
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
@@ -720,7 +720,7 @@ def test_consensus_multiple_reporters():
     s.mine(1)
     periodLength = c.getPeriodLength(1010101)
     i = c.getVotePeriod(1010101)
-    while i < int((s.block.timestamp+1)/c.getPeriodLength(1010101)):
+    while i < int((blocktime+1)/c.getPeriodLength(1010101)):
         c.incrementPeriod(1010101)
         i += 1
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
@@ -756,7 +756,7 @@ def test_consensus_multiple_reporters():
     scalareventunethicalhash3 = c.makeHash(0, 1, sunethicalevent, c.getSender(sender=t.k3))
     scalareventindeterminatehash3 = c.makeHash(0, 2**63, sindeterminateevent, c.getSender(sender=t.k3))
 
-    c.penalizeWrong(1010101, 0, sender=t.k1)
+    c.penalizeWrong(1010101, 0)
     c.penalizeWrong(1010101, 0, sender=t.k2)
     c.penalizeWrong(1010101, 0, sender=t.k3)
 
@@ -857,7 +857,8 @@ def test_consensus_multiple_reporters():
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     assert(c.penalizeWrong(1010101, bevent)==1)
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
-    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46.9*2**64))
+    # should gain a bit of rep
+    assert(c.getAfterRep(branch, period, s.block.coinbase) < int(47.1*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(47*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     assert(c.penalizeWrong(1010101, bunethicalevent)==1)
     assert(c.penalizeWrong(1010101, bindeterminateevent)==1)

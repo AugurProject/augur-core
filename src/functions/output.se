@@ -420,9 +420,8 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
     # a^b=exp(b*ln(a))=e^(b*ln(a)).
     prelim = self.getNumEventsToReportOn(branch, lastPeriod)
-    repConstant = self.getRepBalance(branch, reporter)*ONE/self.getActiveRep(branch)
-    logOutput = self.fx_log(repConstant)
-    exp = self.fx_exp(ONEPOINTTWO*logOutput/ONE) + POINTZEROZEROONE 
+    # need to do active rep on a period by period basis.. todo
+    exp = self.fx_exp(ONEPOINTTWO*self.fx_log(self.getBeforeRep(branch, lastPeriod, sender))/ONE)*2**64/self.fx_exp(ONEPOINTTWO*self.fx_log(self.getActiveRep(branch))/ONE) + POINTZEROZEROONE
     baseReporters = self.getBaseReportersLastPeriod(branch)
     # if total [which is mult by num events to report on via the prelim amount] is too high [>1] then numevents will estimate a higher number than reality, so need to correct for this below
     total = exp*baseReporters
@@ -1793,7 +1792,7 @@ def penalizationCatchup(branch, sender):
         # sends that rep to the branch rep pool
         self.addRep(branch, self.repIDToIndex(branch, branch), repChange)
         self.setPenalizedUpTo(branch, sender, lastPeriod)
-        return([delta, oldRep, smoothedRep, repChange, POINTNINE, ONE]: arr)
+        return([delta, oldRep, smoothedRep, repChange]: arr)
     else:
         return(0)
 inset('refund.se')
@@ -3937,13 +3936,12 @@ def getEventCanReportOn(branch, expDateIndex, reporter, event):
         return(0)
 
 # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
+    # exp(1.2*ln(repbal)) / exp(1.2*ln(totalrep)) is == (reporterList[n]/totalRep)**1.2
     # a^b=exp(b*ln(a))=e^(b*ln(a)).
 def calculateReportingThreshold(branch, eventID, votePeriod, sender):
     repConstant = self.getPeriodRepConstant(branch, votePeriod, sender)
     if(repConstant==0):
-        repFraction = self.getRepBalance(branch, sender)*ONE/self.getActiveRep(branch)
-        logOutput = self.fx_log(self.getRepBalance(branch, sender)*ONE/self.getActiveRep(branch))
-        repConstant = self.fx_exp(ONEPOINTTWO*logOutput/ONE) + POINTZEROZEROONE
+        repConstant = self.fx_exp(ONEPOINTTWO*self.fx_log(self.getRepBalance(branch, sender))/ONE)*2**64/self.fx_exp(ONEPOINTTWO*self.fx_log(self.getActiveRep(branch))/ONE) + POINTZEROZEROONE
         expectedEventsForReporter = repConstant * self.getNumEventsToReportOn(branch, votePeriod)
         total = expectedEventsForReporter
         eventsInPeriod = self.getNumberEvents(branch, expDateIndex)-self.getNumRemoved(branch, votePeriod)

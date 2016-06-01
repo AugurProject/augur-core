@@ -23,10 +23,10 @@ def collectFees(branch, sender):
     if(!CONSENSUS.getFeesCollected(branch, sender, lastPeriod) && EXPEVENTS.getNumReportsActual(branch, lastPeriod, sender)):
         newRep = EXPEVENTS.getAfterRep(branch, lastPeriod, sender)
         denominator = CONSENSUS.getDenominator(branch, lastPeriod)
-        if(!CONSENSUS.getFeeFirst(branch, period)):
-            CONSENSUS.setFeeFirst(branch, period)
-            CONSENSUS.setPeriodBalance(branch, period, REPORTING.getRepBalance(branch, branch))
-        gainedRep = newRep * CONSENSUS.getPeriodBalance(branch, period) / denominator
+        if(!CONSENSUS.getFeeFirst(branch, lastPeriod)):
+            CONSENSUS.setFeeFirst(branch, lastPeriod, 1)
+            CONSENSUS.setPeriodBalance(branch, lastPeriod, REPORTING.getRepBalance(branch, branch))
+        gainedRep = newRep * CONSENSUS.getPeriodBalance(branch, lastPeriod) / denominator
         #if(lostRep) newRep should be == EXPEVENTS.getAfterRep(branch, period, sender) + gainedRep
         #if(gainedRep) newRep should be == EXPEVENTS.getBeforeRep(branch, period, sender) + gainedRep
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, sender), gainedRep)
@@ -39,7 +39,7 @@ def collectFees(branch, sender):
         if(CONSENSUS.getNotEnoughPenalized(branch, msg.sender, lastPeriod)==0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
             CONSENSUS.doRefund(msg.sender, msg.sender)
         return(1)
-    else:
+    elif(!CONSENSUS.getFeesCollected(branch, sender, lastPeriod)):
         # return not reported enough bond if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees
         if(CONSENSUS.getNotEnoughPenalized(branch, msg.sender, lastPeriod)==0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
             CONSENSUS.doRefund(msg.sender, msg.sender)
