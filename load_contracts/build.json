@@ -3094,7 +3094,7 @@
         "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:int256, sellCompleteSets:[int256,int256]:int256]"
     }, 
     "compositeGetters": {
-        "address": "0x0c82d30572c038ba7b4c98fcfcfb76c92a042e4a", 
+        "address": "0xeee6bc21b091b3f45e483b4378700bf5158918c2", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -3218,7 +3218,36 @@
             "        c += 1", 
             "    return(marketInfo: arr)", 
             "", 
+            "def batchGetMarketInfo(marketIDs: arr):", 
+            "    refund()", 
+            "    numMarkets = len(marketIDs)", 
+            "    totalLength = 0", 
+            "    marketInfoLength = array(numMarkets)", 
+            "    i = 0", 
+            "    while i < numMarkets:", 
+            "        marketID = marketIDs[i]", 
+            "        descriptionLength = INFO.getDescriptionLength(marketID)", 
+            "        numEvents = MARKETS.getNumEvents(marketID)", 
+            "        numOutcomes = MARKETS.getMarketNumOutcomes(marketID)", 
+            "        marketInfoLength[i] = BASE_FIELDS + numEvents*EVENTS_FIELDS + numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 2", 
+            "        totalLength += marketInfoLength[i]", 
+            "        i += 1", 
+            "    marketsInfo = array(totalLength)", 
+            "    index = 0", 
+            "    i = 0", 
+            "    while i < numMarkets:", 
+            "        marketInfo = self.getMarketInfo(marketIDs[i], outitems=marketInfoLength[i] - 1)", 
+            "        marketsInfo[index] = marketInfoLength[i]", 
+            "        j = 0", 
+            "        while j < marketInfoLength[i] - 1:", 
+            "            marketsInfo[index + j + 1] = marketInfo[j]", 
+            "            j += 1", 
+            "        index += marketInfoLength[i]", 
+            "        i += 1", 
+            "    return(marketsInfo: arr)", 
+            "", 
             "def getMarketsInfo(branch, offset, numMarketsToLoad):", 
+            "    refund()", 
             "    numMarkets = BRANCHES.getNumMarketsBranch(branch)", 
             "    if numMarketsToLoad == 0:", 
             "        numMarketsToLoad = numMarkets", 
@@ -3258,6 +3287,22 @@
             "    return(marketsInfo: arr)"
         ], 
         "fullsig": [
+            {
+                "inputs": [
+                    {
+                        "name": "marketIDs", 
+                        "type": "int256[]"
+                    }
+                ], 
+                "name": "batchGetMarketInfo(int256[])", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256[]"
+                    }
+                ], 
+                "type": "function"
+            }, 
             {
                 "inputs": [
                     {
@@ -3315,7 +3360,7 @@
                 "type": "function"
             }
         ], 
-        "sig": "extern compositeGetters: [getMarketInfo:[int256]:int256[], getMarketsInfo:[int256,int256,int256]:int256[], getOrderBook:[int256]:int256[]]"
+        "sig": "extern compositeGetters: [batchGetMarketInfo:[int256[]]:int256[], getMarketInfo:[int256]:int256[], getMarketsInfo:[int256,int256,int256]:int256[], getOrderBook:[int256]:int256[]]"
     }, 
     "consensus": {
         "address": "0x13af9740aa6bfb1c16b7be01374e4021b281c01c", 
