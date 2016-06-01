@@ -115,7 +115,36 @@ def getMarketInfo(marketID):
         c += 1
     return(marketInfo: arr)
 
+def batchGetMarketInfo(marketIDs: arr):
+    refund()
+    numMarkets = len(marketIDs)
+    totalLength = 0
+    marketInfoLength = array(numMarkets)
+    i = 0
+    while i < numMarkets:
+        marketID = marketIDs[i]
+        descriptionLength = INFO.getDescriptionLength(marketID)
+        numEvents = MARKETS.getNumEvents(marketID)
+        numOutcomes = MARKETS.getMarketNumOutcomes(marketID)
+        marketInfoLength[i] = BASE_FIELDS + numEvents*EVENTS_FIELDS + numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 2
+        totalLength += marketInfoLength[i]
+        i += 1
+    marketsInfo = array(totalLength)
+    index = 0
+    i = 0
+    while i < numMarkets:
+        marketInfo = self.getMarketInfo(marketIDs[i], outitems=marketInfoLength[i] - 1)
+        marketsInfo[index] = marketInfoLength[i]
+        j = 0
+        while j < marketInfoLength[i] - 1:
+            marketsInfo[index + j + 1] = marketInfo[j]
+            j += 1
+        index += marketInfoLength[i]
+        i += 1
+    return(marketsInfo: arr)
+
 def getMarketsInfo(branch, offset, numMarketsToLoad):
+    refund()
     numMarkets = BRANCHES.getNumMarketsBranch(branch)
     if numMarketsToLoad == 0:
         numMarketsToLoad = numMarkets
