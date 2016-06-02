@@ -685,11 +685,6 @@ def test_consensus():
     print "Test consensus OK"
 
 def test_consensus_multiple_reporters():
-    src = os.path.join(os.getenv('AUGUR_CORE', os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace')), 'src')
-    output = os.path.join(src, 'functions', 'output.se')
-    os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
-    global initial_gas
-    initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
     c = s.abi_contract('functions/output.se')

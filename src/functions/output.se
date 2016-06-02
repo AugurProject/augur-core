@@ -1061,7 +1061,7 @@ def submitReport(event, salt, report, ethics):
         self.setReport(branch, votePeriod, eventID, report, msg.sender)
         # set ethics value for event
         ethics = ethics
-        if(ethics!=ONE || ethics!=0):
+        if(ethics!=ONE and ethics!=0):
             ethics = ONE
         # set ethicality for forked event
         if(forkedOverThisEvent):
@@ -1850,7 +1850,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         #set $event expiration to be the old date
         self.setExpiration($event, self.getOriginalExpiration($event))
         -6
-    elif(($fxpOutcome==indeterminate or $mode==ONEHALF) || !$ethical):
+    elif(($fxpOutcome==$indeterminate or $mode==ONEHALF) || !$ethical):
         # give $event bond money to reporters
         self.subtractCash($event, self.getBond($event))
         self.addCash($branch, self.getBond($event))
@@ -1859,7 +1859,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             # mode is used to compare for reporting acc. so still the same as reported outcome, but resolving the market as .5
             self.setOutcome($event, $ethicOutcome)
         else:
-            self.setOutcome($event, indeterminate)
+            self.setOutcome($event, $indeterminate)
         1
     else:
         # return bond
@@ -1893,9 +1893,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     self.setOutcome(event, fxpOutcome)
     periodLength = self.getPeriodLength(branch)
     ethical = ethic_catch(self.getEthical(event))
-    ethicOutcome = 0
-    if(!ethical):
-        ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
+    ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
     self.setEthics(event, ethical)
     val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
     return(val)
@@ -2288,9 +2286,7 @@ def resolve(branch, event):
             scaled_max = ONE*self.getNumOutcomes(event)
         fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
         self.setOutcome(event, fxpOutcome)
-        ethicOutcome = 0
-        if(!ethical):
-            ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
+        ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
         if(mode==ONEHALF || !ethical):
             # give event bond money to reporters
             self.subtractCash(event, bond)
@@ -2392,6 +2388,7 @@ def penalizeWrong(branch, event):
         else:
             if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
                 diff = reportValue - outcome
+                # perhaps for right we should do
                 p = -(abs(diff)/2) + ONE
             newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
         # (1-k) * old rep + k * new rep where k = 0.2 / (number of events you reported on last period) for penalization and pen. rate for forking and backstop 1
@@ -2793,9 +2790,7 @@ def resolveForkEvent(branch, event):
             scaled_min = ONE
             scaled_max = ONE*self.getNumOutcomes(event)
         fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
-        ethicOutcome = 0
-        if(!ethical):
-            ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
+        ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
         self.setOutcome(event, fxpOutcome)
         if(mode==ONEHALF || !ethical):
             # give event bond money to reporters
@@ -3040,7 +3035,6 @@ def trade(max_value, max_amount, trade_ids:arr):
         # Next trade
         t += 1
     return([SUCCESS, max_value, max_amount]: arr)
-
 macro refund():
     if(msg.value > 0):
         send(msg.sender, msg.value)
@@ -3234,10 +3228,10 @@ def collectFees(branch, sender):
     if(!self.getFeesCollected(branch, sender, lastPeriod) && self.getNumReportsActual(branch, lastPeriod, sender)):
         newRep = self.getAfterRep(branch, lastPeriod, sender)
         denominator = self.getDenominator(branch, lastPeriod)
-        if(!self.getFeeFirst(branch, period)):
-            self.setFeeFirst(branch, period)
-            self.setPeriodBalance(branch, period, self.getRepBalance(branch, branch))
-        gainedRep = newRep * self.getPeriodBalance(branch, period) / denominator
+        if(!self.getFeeFirst(branch, lastPeriod)):
+            self.setFeeFirst(branch, lastPeriod, 1)
+            self.setPeriodBalance(branch, lastPeriod, self.getRepBalance(branch, branch))
+        gainedRep = newRep * self.getPeriodBalance(branch, lastPeriod) / denominator
         #if(lostRep) newRep should be == self.getAfterRep(branch, period, sender) + gainedRep
         #if(gainedRep) newRep should be == self.getBeforeRep(branch, period, sender) + gainedRep
         self.addRep(branch, self.repIDToIndex(branch, sender), gainedRep)
@@ -3250,7 +3244,7 @@ def collectFees(branch, sender):
         if(self.getNotEnoughPenalized(branch, msg.sender, lastPeriod)==0 or self.getForkPeriod(branch)+1 == lastPeriod):
             self.doRefund(msg.sender, msg.sender)
         return(1)
-    else:
+    elif(!self.getFeesCollected(branch, sender, lastPeriod)):
         # return not reported enough bond if not enough penalized is 0 or self.getForkPeriod(branch)+1 == lastPeriod during collect fees
         if(self.getNotEnoughPenalized(branch, msg.sender, lastPeriod)==0 or self.getForkPeriod(branch)+1 == lastPeriod):
             self.doRefund(msg.sender, msg.sender)
