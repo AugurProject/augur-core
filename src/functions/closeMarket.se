@@ -20,7 +20,6 @@
 # Any questions please contact joey@augur.net
 
 import branches as BRANCHES
-import info as INFO
 import cash as CASH
 import markets as MARKETS
 import events as EVENTS
@@ -30,7 +29,6 @@ import closeMarketFour as CLOSEFOUR
 import closeMarketEight as CLOSEEIGHT
 import expiringEvents as EXPEVENTS
 import backstops as BACKSTOPS
-import makeReports as MAKEREPORTS
 import eventResolution as RESOLVE
 inset('refund.se')
 

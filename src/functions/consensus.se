@@ -2,11 +2,9 @@ import reporting as REPORTING
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import events as EVENTS
-import markets as MARKETS
 import backstops as BACKSTOPS
 import closeMarket as CLOSEMARKET
 import consensusData as CONSENSUS
-import penalizeNotEnoughReports as NOTENOUGH
 
 inset('refund.se')
 

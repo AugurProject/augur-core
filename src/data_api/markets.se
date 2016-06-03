@@ -348,6 +348,7 @@ macro OUTCOMES_FIELDS: 2
 macro WINNING_OUTCOMES_FIELDS: 8
 macro FIELDS: 18
 
+# todo move these getters to a new contract
 def getMarketInfo(marketID):
 	refund()
 	index = FIELDS

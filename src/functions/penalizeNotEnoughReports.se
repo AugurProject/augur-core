@@ -3,7 +3,6 @@ import expiringEvents as EXPEVENTS
 import consensusData as CONSENSUS
 import reporting as REPORTING
 import fxpFunctions as FXP
-import makeReports as MAKEREPORTS
 inset('refund.se')
 
 macro ONEPOINTTWO: 22136092888451461120

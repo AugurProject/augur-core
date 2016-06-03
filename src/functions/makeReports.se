@@ -26,7 +26,6 @@ import events as EVENTS
 import markets as MARKETS
 import reporting as REPORTING
 import backstops as BACKSTOPS
-import fxpFunctions as FXP
 import consensusData as CONSENSUS
 import collectFees as COLLECTFEES
 inset('refund.se')

@@ -5,7 +5,6 @@ import events as EVENTS
 import markets as MARKETS
 import backstops as BACKSTOPS
 import consensusData as CONSENSUS
-import penalizeNotEnoughReports as NOTENOUGH
 import roundTwo as ROUNDTWO
 
 inset('refund.se')
