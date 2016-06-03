@@ -418,30 +418,30 @@ def getMarketInfo(marketID):
 
 def getMarketsInfo(branch, offset, numMarketsToLoad):
 	numMarkets = BRANCHES.getNumMarketsBranch(branch)
-	marketIDs = BRANCHES.getMarketsInBranch(branch, outitems=numMarkets)
+	marketIDs = BRANCHES.getSomeMarketsInBranch(branch, offset, offset+numMarketsToLoad, outitems=numMarketsToLoad)
 	totalLen = numMarketsToLoad*10
 	m = 0
 	while m < numMarketsToLoad:
-		totalLen += INFO.getDescriptionLength(marketIDs[m+offset])
+		totalLen += INFO.getDescriptionLength(marketIDs[m])
 		m += 1
 	data = array(totalLen)
 	m = 0
 	c = 0
 	totalMarkets = min(numMarketsToLoad, numMarkets)
 	while m < totalMarkets:
-		descriptionLength = INFO.getDescriptionLength(marketIDs[m+offset])
-		data[c] = marketIDs[m+offset]
-		data[c + 1] = self.Markets[marketIDs[m+offset]].tradingPeriod
-		data[c + 2] = self.Markets[marketIDs[m+offset]].tradingFee
-		data[c + 3] = self.Markets[marketIDs[m+offset]].creationTime
-		data[c + 4] = self.Markets[marketIDs[m+offset]].volume
-		data[c + 5] = self.Markets[marketIDs[m+offset]].tag1
-		data[c + 6] = self.Markets[marketIDs[m+offset]].tag2
-		data[c + 7] = self.Markets[marketIDs[m+offset]].tag3
-		data[c + 8] = self.Markets[marketIDs[m+offset]].lastExpDate
+		descriptionLength = INFO.getDescriptionLength(marketIDs[m])
+		data[c] = marketIDs[m]
+		data[c + 1] = self.Markets[marketIDs[m]].tradingPeriod
+		data[c + 2] = self.Markets[marketIDs[m]].tradingFee
+		data[c + 3] = self.Markets[marketIDs[m]].creationTime
+		data[c + 4] = self.Markets[marketIDs[m]].volume
+		data[c + 5] = self.Markets[marketIDs[m]].tag1
+		data[c + 6] = self.Markets[marketIDs[m]].tag2
+		data[c + 7] = self.Markets[marketIDs[m]].tag3
+		data[c + 8] = self.Markets[marketIDs[m]].lastExpDate
 		data[c + 9] = descriptionLength
 		c += 10
-		description = INFO.getDescription(marketIDs[m+offset], outchars=descriptionLength)
+		description = INFO.getDescription(marketIDs[m], outchars=descriptionLength)
 		d = 0
 		while d < descriptionLength:
 			data[c] = getch(description, d)

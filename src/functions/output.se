@@ -2388,7 +2388,7 @@ def penalizeWrong(branch, event):
         else:
             if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
                 diff = reportValue - outcome
-                # perhaps for right we should do
+                # perhaps for right we should do diff todo so adds to more than 1 --- can actually do proportion correct for this i think now
                 p = -(abs(diff)/2) + ONE
             newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
         # (1-k) * old rep + k * new rep where k = 0.2 / (number of events you reported on last period) for penalization and pen. rate for forking and backstop 1

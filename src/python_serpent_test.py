@@ -953,7 +953,7 @@ def test_consensus_multiple_reporters():
     
     assert(c.collectFees(1010101, s.block.coinbase)==1)
     assert(c.collectFees(1010101, c.getSender(sender=t.k2))==1)
-    assert(c.collectFees(1010101, c.getSender(sender=t.k3))==1)
+    assert(c.ccollectFees(1010101, c.getSender(sender=t.k3))==1)
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     print "Test consensus multiple reporters OK"
 
