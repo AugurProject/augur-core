@@ -262,3 +262,4 @@ def convertToActiveRep(branch, value):
     
 macro hasReported($branch, $period):
     EXPEVENTS.getNumReportsActual($branch, $period, msg.sender)
+    

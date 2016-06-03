@@ -40,8 +40,5 @@ def collectFees(branch, sender):
             CONSENSUS.doRefund(msg.sender, msg.sender)
         return(1)
     elif(!CONSENSUS.getFeesCollected(branch, sender, lastPeriod)):
-        # return not reported enough bond if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees
-        if(CONSENSUS.getNotEnoughPenalized(branch, msg.sender, lastPeriod)==0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
-            CONSENSUS.doRefund(msg.sender, msg.sender)
         CONSENSUS.setFeesCollected(branch, sender, lastPeriod)
         return(2)
