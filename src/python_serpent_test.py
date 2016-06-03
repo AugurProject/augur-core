@@ -689,7 +689,7 @@ def test_consensus_multiple_reporters():
     s = t.state()
     c = s.abi_contract('functions/output.se')
     c.initiateOwner(1010101)
-    c.reputationFaucet(1010101)
+    c.reputationFaucet(1010101
     c.reputationFaucet(1010101, sender=t.k2)
     c.reputationFaucet(1010101, sender=t.k3)
     c.cashFaucet(sender=t.k2)

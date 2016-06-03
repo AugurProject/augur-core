@@ -32,11 +32,11 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     if(residual > periodLength/2):
         return(-2)
     # events a user should be reporting on
-    # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
+    # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
     # a^b=exp(b*ln(a))=e^(b*ln(a)).
     prelim = EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)
     # need to do active rep on a period by period basis.. todo
-    exp = FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(EXPEVENTS.getBeforeRep(branch, lastPeriod, sender))/ONE)*2**64/FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getActiveRep(branch))/ONE) + POINTZEROZEROONE
+    exp = FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(EXPEVENTS.getBeforeRep(branch, lastPeriod, sender))/ONE)*2**64/FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getActiveRep(branch))/ONE)
     baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
     # if total [which is mult by num events to report on via the prelim amount] is too high [>1] then numevents will estimate a higher number than reality, so need to correct for this below
     total = exp*baseReporters
