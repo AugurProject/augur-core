@@ -42,6 +42,8 @@ def penalizeRoundTwoWrong(branch, event):
     roundTwo = BACKSTOPS.getRoundTwo(event)
     overruled = 0
     uncaught = EVENTS.getUncaughtOutcome(event)
+    if(repBalance < ONE):
+        return(0)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
     # if no events in a period
@@ -166,6 +168,11 @@ def penalizeRoundTwoWrong(branch, event):
         if(newAfterRep <= 0):
             newAfterRep = 0
             EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+        if(oldRep==0):
+            EXPEVENTS.setAfterRep(branch, lastPeriod, repBalance, msg.sender)
+            EXPEVENTS.setBeforeRep(branch, lastPeriod, repBalance, msg.sender)
+            newAfterRep = repBalance
+            oldRep = repBalance
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
         CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
         totalRepDifference = newAfterRep - oldRep

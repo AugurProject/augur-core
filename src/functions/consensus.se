@@ -41,6 +41,8 @@ def penalizeWrong(branch, event):
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
     roundTwo = BACKSTOPS.getRoundTwo(event)
     uncaught = EVENTS.getUncaughtOutcome(event)
+    if(repBalance < ONE):
+        return(0)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
     if(forkPeriod == lastPeriod):
@@ -111,6 +113,11 @@ def penalizeWrong(branch, event):
         if(newAfterRep <= 0):
             newAfterRep = 0
             EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+        if(oldRep==0):
+            EXPEVENTS.setAfterRep(branch, lastPeriod, repBalance, msg.sender)
+            EXPEVENTS.setBeforeRep(branch, lastPeriod, repBalance, msg.sender)
+            newAfterRep = repBalance
+            oldRep = repBalance
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
         CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
         totalRepDifference = newAfterRep - oldRep

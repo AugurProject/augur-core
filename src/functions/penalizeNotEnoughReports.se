@@ -52,9 +52,11 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     numReportsActual = EXPEVENTS.getNumReportsActual(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
     couldveReported = EXPEVENTS.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
-    if(numEvents/2 > EXPEVENTS.getNumReportsActual(branch, lastPeriod, reporter)*ONE && couldveReported):
-        # only meant for people who did report but not enough [those who didnt at all use pen. catchup] so using before rep is fine
+    if(numEvents/2 > numReportsActual*ONE && couldveReported):
+        # typically meant for people who did report but not enough [those who didnt at all use pen. catchup] so using before rep is fine, but if not use rep balance
         originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
+        if(originalRep==0)
+            originalRep = REPORTING.getRepBalance(branch, reporter)
         # penalize people
         newRep = POINTONE*numReportsActual*originalRep / numEvents
         oldRep = originalRep*POINTNINE / ONE
@@ -66,7 +68,10 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         # sends that rep to the branch rep pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -repChange)
         EXPEVENTS.setBeforeRep(branch, lastPeriod, oldRep+newRep, reporter)
-        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, reporter) + repChange
+        afterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, reporter)
+        newAfterRep = afterRep + repChange
+        if(afterRep==0):
+            newAfterRep = oldRep+newRep
         EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, reporter)
         CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
         CONSENSUS.doRefund(msg.sender, reporter)
