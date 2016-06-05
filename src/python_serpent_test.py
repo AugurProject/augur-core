@@ -38,7 +38,7 @@ def test_ether():
     s = t.state()
     c = s.abi_contract('need_addl_testing/ether.se')
     print c.depositEther(value=5)
-    assert(c.depositEther(value=5)==5), "Unsuccessful eth deposit"
+    assert(c.depositEther(value=5)==5*2**64/10**18), "Unsuccessful eth deposit"
     assert(c.withdrawEther(111, 500)==0), "Printed money out of thin air..."
     assert(c.withdrawEther(111, 5)==1), "Unsuccessful withdrawal"
     gas_use(s)
@@ -1310,11 +1310,11 @@ if __name__ == '__main__':
     os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
     # data/api tests
     #test_cash()
-    test_ether()
+    #test_ether()
     #test_quicksort()
     #test_insertionsort()
     #test_log_exp()
-    #test_exp()
+    test_exp()
     #test_markets()
     #test_reporting()
 

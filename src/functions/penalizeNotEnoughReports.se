@@ -55,7 +55,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     if(numEvents/2 > numReportsActual*ONE && couldveReported):
         # typically meant for people who did report but not enough [those who didnt at all use pen. catchup] so using before rep is fine, but if not use rep balance
         originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
-        if(originalRep==0)
+        if(originalRep==0):
             originalRep = REPORTING.getRepBalance(branch, reporter)
         # penalize people
         newRep = POINTONE*numReportsActual*originalRep / numEvents
