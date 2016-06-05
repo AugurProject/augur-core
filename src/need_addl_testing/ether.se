@@ -1,6 +1,6 @@
 #inset('refund.se')
 macro ONE: 2**64
-macro WEITOETH: 2^18
+macro WEITOETH: 10^18
 
 data cashcoinBalances[]
 
