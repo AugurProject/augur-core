@@ -55,9 +55,6 @@ def test_exp():
     c.addEvent(1010101, 0, 447)
     assert(c.getEvent(1010101, 0, 0) == 447), "Add/get event broken"
     assert(c.getNumberEvents(1010101, 0)==1), "Num events wrong"
-    assert(c.setNumEventsToReportOn(1010101, 0)==-1), "Vote period check issue"
-    c.moveEventsToCurrentPeriod(1010101, 1, 2)
-    assert(c.getEvent(1010101, 2, 0) == 447), "Move events broken"
     assert(c.sqrt(25*2**64)==5*2**64), "Square root broken"
     print "EXPIRING EVENTS OK"
     gas_use(s)
@@ -1311,10 +1308,8 @@ if __name__ == '__main__':
     # data/api tests
     #test_cash()
     #test_ether()
-    #test_quicksort()
-    #test_insertionsort()
     #test_log_exp()
-    #test_exp()
+    test_exp()
     #test_markets()
     #test_reporting()
 

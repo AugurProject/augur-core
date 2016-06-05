@@ -1,0 +1,26 @@
+import events as EVENTS
+
+inset('refund.se')
+
+def proportionCorrect(event):
+    refund()
+    p = 0
+    outcome = catch(EVENTS.getUncaughtOutcome(event))
+    if(outcome!=0):
+        # binary
+        if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==TWO and EVENTS.getMinValue(event)==ONE):
+            # subtract 1 to get it from 0 to 1
+            avgOutcome = EVENTS.getUncaughtOutcome(event) - ONE
+            # say we have outcome of 0, avg is .4, what is p?
+            # p is .6 or 60%
+            if(outcome == ONE):
+                p = ONE - avgOutcome
+            # say we have outcome of 1, avg is .8, what is p (proportion correct)?
+            # p is .8 or 80%
+            if(outcome == 2 * ONE):
+                p = avgOutcome
+            if(outcome == 3 * ONEHALF):
+                return(0)
+        return(p)
+    else:
+        return(0)
