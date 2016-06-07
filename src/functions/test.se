@@ -1,6 +1,0 @@
-def testReturn():
-    x = self.testBlah(value=msg.value)
-    return(x)
-    
-def testBlah():
-    return(msg.value)
