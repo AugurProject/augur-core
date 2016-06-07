@@ -89,6 +89,7 @@ def test_markets():
     c = s.abi_contract('functions/output.se')
     gas_use(s)
     c.initializeMarket(444, [445, 446, 447], 1, 2**57, 1010101, 1, 2, 3, 2**58, 2**64, 2, "aaa", 500, 20*2**64, 2222)
+    c.initialLiquiditySetup(444, 2**55, 1, 2)
     c.setWinningOutcomes(444, [2])
     assert(c.getWinningOutcomes(444)[0] == 2), "Winning outcomes wrong"
     assert(c.addParticipant(444, s.block.coinbase)==0), "Participant adding issue"

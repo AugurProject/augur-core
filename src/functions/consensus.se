@@ -77,7 +77,7 @@ def penalizeWrong(branch, event):
     if(roundTwo && !CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue):
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
-        # if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event
+        # if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event todo
             # unless this just happened to them last period and they reported correctly then
     # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. if appealed don't allow rbcr until after the appeal process is over in the first period
     elif(!CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue && rejected && EVENTS.getRejectedPeriod(event)==lastPeriod):

@@ -88,13 +88,14 @@ def test_markets():
     s = t.state()
     c = s.abi_contract('functions/output.se')
     gas_use(s)
-    c.initializeMarket(444, [445, 446, 447], 1, 2**57, 1010101, 1, 2, 3, 2**58, 2**64, 2, "aaa", 500, 20*2**64, 2222)
+    c.initializeMarket(444, [445, 446, 447], 1, 2**57, 1010101, 2)
+    c.initialLiquiditySetup(444, 2**55, 1, 2)
     c.setWinningOutcomes(444, [2])
     assert(c.getWinningOutcomes(444)[0] == 2), "Winning outcomes wrong"
     assert(c.addParticipant(444, s.block.coinbase)==0), "Participant adding issue"
     # getMarketEvent singular
     assert(c.getParticipantNumber(444, s.block.coinbase)==0), "Participant number issue"
-    assert(c.getParticipantID(444, 0)==s.block.coinbase), "Participant ID issue"
+    assert(c.getParticipantID(444, 0)==745948140856946866108753121277737810491401257713), "Participant ID issue"
     assert(c.getMarketEvents(444) == [445,446,447]), "Market events load/save broken"
     print "MARKETS OK"
 
@@ -1308,8 +1309,8 @@ if __name__ == '__main__':
     #test_cash()
     #test_ether()
     #test_log_exp()
-    #test_exp()
-    test_markets()
+    test_exp()
+    #test_markets()
     #test_reporting()
 
     # function tests

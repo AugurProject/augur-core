@@ -1497,6 +1497,31 @@ def sellCompleteSets(market, amount):
     return(1)
 inset('refund.se')
 
+def proportionCorrect(event):
+    refund()
+    p = 0
+    outcome = catch(self.getUncaughtOutcome(event))
+    if(outcome!=0):
+        # binary
+        if(self.getNumOutcomes(event)==2 and self.getMaxValue(event)==TWO and self.getMinValue(event)==ONE):
+            # subtract 1 to get it from 0 to 1
+            avgOutcome = self.getUncaughtOutcome(event) - ONE
+            # say we have outcome of 0, avg is .4, what is p?
+            # p is .6 or 60%
+            if(outcome == ONE):
+                p = ONE - avgOutcome
+            # say we have outcome of 1, avg is .8, what is p (proportion correct)?
+            # p is .8 or 80%
+            if(outcome == 2 * ONE):
+                p = avgOutcome
+            if(outcome == 3 * ONEHALF):
+                return(0)
+        return(p)
+    else:
+        return(0)
+
+inset('refund.se')
+
 # sender/owner, then spender
 data amountCanSpend[][]
 
@@ -2372,7 +2397,7 @@ def penalizeWrong(branch, event):
     if(roundTwo && !self.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue):
         self.setPenalized(branch, lastPeriod, msg.sender, event)
         self.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
-        # if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event
+        # if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event todo
             # unless this just happened to them last period and they reported correctly then
     # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. if appealed don't allow rbcr until after the appeal process is over in the first period
     elif(!self.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue && rejected && self.getRejectedPeriod(event)==lastPeriod):
@@ -2448,30 +2473,6 @@ macro YES: TWO
 macro NO: ONE
 macro BAD: 3 * ONEHALF
 macro CATCH_TOLERANCE: ONE / 10
-
-# put in consensus data
-def proportionCorrect(event):
-    refund()
-    p = 0
-    outcome = catch(self.getUncaughtOutcome(event))
-    if(outcome!=0):
-        # binary
-        if(self.getNumOutcomes(event)==2 and self.getMaxValue(event)==TWO and self.getMinValue(event)==ONE):
-            # subtract 1 to get it from 0 to 1
-            avgOutcome = self.getUncaughtOutcome(event) - ONE
-            # say we have outcome of 0, avg is .4, what is p?
-            # p is .6 or 60%
-            if(outcome == ONE):
-                p = ONE - avgOutcome
-            # say we have outcome of 1, avg is .8, what is p (proportion correct)?
-            # p is .8 or 80%
-            if(outcome == 2 * ONE):
-                p = avgOutcome
-            if(outcome == 3 * ONEHALF):
-                return(0)
-        return(p)
-    else:
-        return(0)
 
 macro periodOver($branch):
     # what the current vote period should be
@@ -3042,6 +3043,12 @@ def trade(max_value, max_amount, trade_ids:arr):
         # Next trade
         t += 1
     return([SUCCESS, max_value, max_amount]: arr)
+def testReturn():
+    x = self.testBlah(value=msg.value)
+    return(x)
+    
+def testBlah():
+    return(msg.value)
 macro refund():
     if(msg.value > 0):
         send(msg.sender, msg.value)
