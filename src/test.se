@@ -1,0 +1,16 @@
+data testing[](banana[])
+
+def test():
+    i = 0
+    while i < 20000:
+        self.testing[i].banana[i] = 2**254+i
+        i += 1
+    return(1)
+    
+def ret():
+    i = 0
+    n = array(20000)
+    while i < 20000:
+        n[i] = self.testing[i].banana[i]
+        i += 1
+    return(n: arr)

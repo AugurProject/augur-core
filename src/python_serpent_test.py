@@ -91,11 +91,11 @@ def test_markets():
     c.initializeMarket(444, [445, 446, 447], 1, 2**57, 1010101, 1, 2, 3, 2**58, 2**64, 2, "aaa", 500, 20*2**64, 2222)
     c.setWinningOutcomes(444, [2])
     assert(c.getWinningOutcomes(444)[0] == 2), "Winning outcomes wrong"
-    assert(c.addParticipant(444, s.block.coinbase)==0), "Participant adding issue"
+    assert(c.addParticipant(444, c.getSender(sender=t.k1))==0), "Participant adding issue"
     # getMarketEvent singular
-    assert(c.getParticipantNumber(444, s.block.coinbase)==0), "Participant number issue"
-    assert(c.getParticipantID(444, 0)==s.block.coinbase), "Participant ID issue"
-    assert(c.getMarketEvents(444) == [445,446,447]), "Market events load/save broken"
+    assert(c.getParticipantNumber(444, c.getSender(sender=t.k1))==0), "Participant number issue"
+    assert(c.getParticipantID(444, 0)==c.getSender(sender=t.k1)), "Participant ID issue"
+    assert(c.getMarketEvents(444) == [445, 446, 447]), "Market events load/save broken"
     print "MARKETS OK"
 
 def test_reporting():

@@ -3043,12 +3043,6 @@ def trade(max_value, max_amount, trade_ids:arr):
         # Next trade
         t += 1
     return([SUCCESS, max_value, max_amount]: arr)
-def testReturn():
-    x = self.testBlah(value=msg.value)
-    return(x)
-    
-def testBlah():
-    return(msg.value)
 macro refund():
     if(msg.value > 0):
         send(msg.sender, msg.value)
@@ -4751,7 +4745,7 @@ def getMarketInfo(marketID):
 		info[5] = self.Markets[marketID].tradingPeriod
 		info[6] = self.Markets[marketID].tradingFee
 		info[7] = self.Markets[marketID].branch
-		info[8] = self.Markets[marketID].lenEvents
+		info[8] = numEvents
 		info[9] = self.Markets[marketID].cumulativeScale
 		info[10] = self.Markets[marketID].creationTime
 		info[11] = self.Markets[marketID].volume

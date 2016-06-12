@@ -364,7 +364,7 @@ def getMarketInfo(marketID):
 		info[5] = self.Markets[marketID].tradingPeriod
 		info[6] = self.Markets[marketID].tradingFee
 		info[7] = self.Markets[marketID].branch
-		info[8] = self.Markets[marketID].lenEvents
+		info[8] = numEvents
 		info[9] = self.Markets[marketID].cumulativeScale
 		info[10] = self.Markets[marketID].creationTime
 		info[11] = self.Markets[marketID].volume
