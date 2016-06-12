@@ -1272,13 +1272,12 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     if(creationFee < minFee):
         creationFee = minFee
     if(self.balance(msg.sender) < creationFee):
-        return(-4)
+        return(-11)
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
     if(periodLength==0 or len(description)==0 || tradingFee < self.getMinTradingFee(branch)):
         return(-1)
     if(tradingFee > 2^61):
         return(-1)
-        
     event = events[0]
     # check that events have same exp. dates && branch
     i = 0
@@ -1313,7 +1312,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
             period = block.timestamp / TWENTYFOURHR
             validity_bond =  (creationFee * (1 + self.getPast24(period)) / (1 + self.getNumberEvents(branch, self.getVotePeriod(branch))))/2
             if(!self.sendFrom(event, validity_bond, msg.sender)):
-                return(-4)
+                return([event, validity_bond, msg.sender]: arr)
             self.setBond(event, validity_bond)
             self.addPast24(period)
         #scalars
@@ -1354,8 +1353,6 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     # if it's already been created return 0
     if(self.getCreator(marketID) || self.getMarketNumOutcomes(marketID)):
         return(-8)
-    if(!self.getOracleOnly(branch) && self.balance(msg.sender) < creationFee):
-        return(-4)
     # need at least 1.2M gas @ gas price to cover resolution + 1M for each additional event + 500k per event to calc. num reports for it
     if(msg.value < (1200000*tx.gasprice + 1000000*tx.gasprice*(eventNum-1) + 500000*eventNum*tx.gasprice)):
         return(0)

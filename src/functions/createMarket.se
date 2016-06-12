@@ -114,7 +114,6 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         return(-1)
     if(tradingFee > 2^61):
         return(-1)
-        
     event = events[0]
     # check that events have same exp. dates && branch
     i = 0
@@ -147,7 +146,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         if(!EVENTS.getBond(event)):
             # pay validity / indeterminate protection bond
             period = block.timestamp / TWENTYFOURHR
-            validity_bond =  (creationFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch))))/2
+            validity_bond = (creationFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch))))/2
             if(!CASH.sendFrom(event, validity_bond, msg.sender)):
                 return(-4)
             EVENTS.setBond(event, validity_bond)
@@ -190,8 +189,6 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     # if it's already been created return 0
     if(INFO.getCreator(marketID) || MARKETS.getMarketNumOutcomes(marketID)):
         return(-8)
-    if(!BRANCHES.getOracleOnly(branch) && CASH.balance(msg.sender) < creationFee):
-        return(-4)
     # need at least 1.2M gas @ gas price to cover resolution + 1M for each additional event + 500k per event to calc. num reports for it
     if(msg.value < (1200000*tx.gasprice + 1000000*tx.gasprice*(eventNum-1) + 500000*eventNum*tx.gasprice)):
         return(0)

@@ -141,9 +141,10 @@ def test_create_branch():
     assert(c.createSubbranch("new branch", 100, 1010101, 2**55, 0)==-2), "Branch already exist fail"
     assert(c.createSubbranch("new branch", 100, 10101, 2**55, 0)==-1), "Branch doesn't exist check fail"
     assert(c.getParentPeriod(b)==c.getVotePeriod(1010101)), "Parent period saving broken"
-    event1 = c.createEvent(b, "new event", 555, 1, 2, 2)
+    c.cashFaucet()
+    event1 = c.createEvent(b, "new event", s.block.timestamp+50, 2**64, 2**65, 2, "hehe")
     print hex(event1)
-    bin_market = c.createMarket(b, "new market", 2**58, 100*2**64, 184467440737095516, [event1], 1)
+    bin_market = c.createMarket(b, "new market", 2**58, [event1], 1, 2, 3, 2**60, "hehehe", value=10**18)
     print hex(bin_market)
     print "Test branch OK"
 
@@ -1309,7 +1310,7 @@ if __name__ == '__main__':
     #test_ether()
     #test_log_exp()
     #test_exp()
-    test_markets()
+    #test_markets()
     #test_reporting()
 
     # function tests
