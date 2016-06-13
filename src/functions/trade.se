@@ -19,8 +19,6 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-# Note: must spend at least 1 in ONE
-
 import branches as BRANCHES
 import info as INFO
 import cash as CASH
@@ -28,8 +26,8 @@ import markets as MARKETS
 import trades as TRADES
 inset('refund.se')
 
-#event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
-#event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
+event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
+event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
 
 # Trade types
 macro BID: 1
@@ -42,9 +40,12 @@ macro SUCCESS: 1
 macro INSUFFICIENT_BALANCE: 10
 macro TRADE_SAME_BLOCK_PROHIBITED: 22
 
+# calculates trading fee percentage
+# 4*fee*price*(1-price/range)/range keeps fees lower at the edges
 macro fee_percent($market_fee, $price, $cumScale):
     4 * $market_fee * $price * (ONE-$price*2**64/$cumScale) / ($cumScale*ONE)
 
+# removes a trade from the book
 macro remove_trade($trade_id, $market):
     TRADES.remove_trade($trade_id)
     MARKETS.remove_trade_from_market($market, $trade_id)

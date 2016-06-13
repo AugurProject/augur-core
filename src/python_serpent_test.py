@@ -432,25 +432,6 @@ def test_trading():
     print "BUY AND SELL OK"
     return(1)
 
-def test_abunch_of_markets():
-    global initial_gas
-    initial_gas = 0
-    t.gas_limit = 100000000
-    s = t.state()
-    c = s.abi_contract('functions/output.se')
-    c.initiateOwner(1010101)
-    c.reputationFaucet(1010101)
-    i = 0
-    while i < 2:
-        c.setCash(s.block.coinbase, 1000000*2**64)
-        event = c.createEvent(1010101, "sss"+str(i), s.block.timestamp+100, 2**64, 2**65, 2, "lol")
-        market = c.createMarket(1010101, "aaa"+str(i), 2**58, [event], 1, 2, 3, 2**60, "aaa", value = 10**19)
-        s.mine(1)
-        i += 1
-    marketsInfo = c.getMarketsInfo(1010101, 0, 100)
-    print marketsInfo
-    return(1)
-
 def test_close_market():
     global initial_gas
     initial_gas = 0
@@ -950,7 +931,7 @@ def test_consensus_multiple_reporters():
     
     assert(c.collectFees(1010101, s.block.coinbase)==1)
     assert(c.collectFees(1010101, c.getSender(sender=t.k2))==1)
-    assert(c.ccollectFees(1010101, c.getSender(sender=t.k3))==1)
+    assert(c.collectFees(1010101, c.getSender(sender=t.k3))==1)
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
     print "Test consensus multiple reporters OK"
 
@@ -1097,7 +1078,6 @@ def test_catchup():
     assert(c.submitReport(event1, 0, 2**64, 2**64, value=500000000)==1), "Report submission failed"
     assert(c.submitReport(event2, 0, 2*2**64, 2**64)==1), "Report submission failed"
     c.incrementPeriod(1010101)
-    assert(c.penalizeWrong(1010101, event1)==-3)
     branch = 1010101
     period = c.getVotePeriod(1010101)-1
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getAfterRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase))
@@ -1195,7 +1175,7 @@ def test_market_pushback():
     assert(c.getTotalRep(branch)==47*2**64)
     gas_use(s)
     # get events in periods both old and new here
-    assert(len(c.getEvents(1010101, (blocktime+10000)/15))==2)
+    assert(len(c.getEvents(1010101, int((blocktime+10000)/15)))==2)
     assert(len(c.getEvents(1010101, c.getVotePeriod(1010101)-1))==2)
     assert(c.closeMarket(1010101, bin_market)==1)
     assert(c.closeMarket(1010101, bin_market2)==-6)
@@ -1204,7 +1184,7 @@ def test_market_pushback():
     # - early expiration should exist there
     assert(c.getEvents(1010101, c.getVotePeriod(1010101)-1)[0]==event1)
     # - original further off one it shouldn't exist in
-    assert(c.getEvents(1010101, (blocktime+10000)/15)[0]==0)
+    assert(c.getEvents(1010101, int((blocktime+10000)/15))[0]==0)
     # for event 2 
     # - it should have a rejected period and be rejected
     assert(c.getRejected(event2)==1)
@@ -1212,7 +1192,7 @@ def test_market_pushback():
     # - early expiration should exist there
     assert(c.getEvents(1010101, c.getVotePeriod(1010101)-1)[1]==event2)
     # - original further off it should exist and be reported on in
-    assert(c.getEvents(1010101, (blocktime+10000)/15)[1]==event2)
+    assert(c.getEvents(1010101, int((blocktime+10000)/15))[1]==event2)
     # - for event 1 should penalize on the early expiration and not be able to on the original
     # - when penalizing should "penalize" [not really get a free pass] on the rejected period and then on the real reporting period later for event 2
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
@@ -1231,6 +1211,8 @@ def test_market_pushback():
     while(s.block.timestamp%c.getPeriodLength(1010101) > periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
+    c.penalizeWrong(1010101, event1)
+    c.penalizeWrong(1010101, event2)
     report_hash = c.makeHash(0, 2**64, event1, s.block.coinbase)
     report_hash2 = c.makeHash(0, 3*2**63, event2, s.block.coinbase)
     assert(c.submitReportHash(event1, report_hash)==-1), "Report hash -1 check failed"
@@ -1309,6 +1291,7 @@ if __name__ == '__main__':
     output = os.path.join(src, 'functions', 'output.se')
     if os.path.exists(output): os.remove(output)
     os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
+
     # data/api tests
     #test_cash()
     #test_ether()
@@ -1318,17 +1301,16 @@ if __name__ == '__main__':
     #test_reporting()
 
     # function tests
-    #test_create_event()
-    #test_create_market()
     #test_trading()
     #test_create_branch()
     #test_send_rep()
-    test_market_pushback()
-    test_close_market()
-    test_consensus()
+    #test_market_pushback()
+    #test_close_market()
+    #test_consensus()
     #test_catchup()
     #test_slashrep()
     #test_claimrep()
-    test_consensus_multiple_reporters()
+    #test_consensus_multiple_reporters()
     #test_pen_not_enough_reports()
+    # pushback, catchup, slashrep, claimrep
     print "DONE TESTING"

@@ -2845,8 +2845,6 @@ macro catch($x):
         BAD
 inset('refund.se')
 
-#event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
-#event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
 
 # Trade types
 macro BID: 1
@@ -2859,9 +2857,12 @@ macro SUCCESS: 1
 macro INSUFFICIENT_BALANCE: 10
 macro TRADE_SAME_BLOCK_PROHIBITED: 22
 
+# calculates trading fee percentage
+# 4*fee*price*(1-price/range)/range keeps fees lower at the edges
 macro fee_percent($market_fee, $price, $cumScale):
     4 * $market_fee * $price * (ONE-$price*2**64/$cumScale) / ($cumScale*ONE)
 
+# removes a trade from the book
 macro remove_trade($trade_id, $market):
     self.remove_trade($trade_id)
     self.remove_trade_from_market($market, $trade_id)
@@ -4419,6 +4420,7 @@ inset('refund.se')
 # tradingPeriod is which eventexpperiod market expires in
 data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime, lastExpDate, prices[])
 
+
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
 
@@ -5069,10 +5071,12 @@ def getRejectedPeriod(event):
     return(self.Events[event].rejectedPeriod)
 inset('refund.se')
 
-# reporter
+### Storage of all data associated with trades
+
+# reporterID is index
 data tradeCommits[](hash, block)
-# tradeID
-data trades[](id, type, market, amount, price, owner, block, outcome, initialTrade)
+# tradeID is index
+data trades[](id, type, market, amount, price, owner, block, outcome)
 
 def makeTradeHash(max_value, max_amount, trade_ids: arr):
     refund()
@@ -5093,16 +5097,7 @@ def commitTrade(hash):
     self.tradeCommits[msg.sender].hash = hash
     self.tradeCommits[msg.sender].block = block.number
     return(1)
-    
-def setInitialTrade(id):
-    refund()
-    self.trades[id].initialTrade = 1
-    return(1)
-    
-def getInitialTrade(id):
-    refund()
-    return(self.trades[id].initialTrade)
-    
+
 def zeroHash():
     refund()
     self.tradeCommits[msg.sender].hash = 0
