@@ -978,7 +978,7 @@ def test_slashrep():
         time.sleep(c.getPeriodLength(1010101)/2)
         s.mine(1)
     c.incrementPeriod(1010101)
-    assert(c.penalizeWrong(1010101, event1)==-3)
+    assert(c.penalizeWrong(1010101, event1)==1)
     branch = 1010101
     period = c.getVotePeriod(1010101) - 1
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getAfterRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase))
@@ -990,11 +990,9 @@ def test_slashrep():
     # need to resolve event first
     c.send(bin_market, 2**64)
     c.send(bin_market2, 2**64)
-    assert(c.closeMarket(1010101, bin_market)==1)
     assert(c.closeMarket(1010101, bin_market2)==1)
 
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
-    assert(c.penalizeWrong(1010101, event1)==1)
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase)==c.getTotalRep(branch))
     assert(c.getRepBalance(branch, s.block.coinbase)==int(23.5*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
@@ -1307,10 +1305,10 @@ if __name__ == '__main__':
     #test_market_pushback()
     #test_close_market()
     #test_consensus()
-    #test_catchup()
+    test_catchup()
     #test_slashrep()
     #test_claimrep()
     #test_consensus_multiple_reporters()
     #test_pen_not_enough_reports()
-    # pushback, catchup, slashrep, claimrep
+    # pushback, catchup
     print "DONE TESTING"

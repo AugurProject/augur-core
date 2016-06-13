@@ -3,7 +3,7 @@ import cash as CASH
 import events as EVENTS
 inset('refund.se')
 
-# # of winningOutcomes is 2
+# Payout traders in markets with number of winningOutcomes of 2 [one scalar with any combination of binary + categorical for the other 2 dimensions, or just 1D]
 def twoOutcomes(market, winningOutcome: arr, events: arr, sender):
     refund()
     # look for the scalar
@@ -14,13 +14,10 @@ def twoOutcomes(market, winningOutcome: arr, events: arr, sender):
         scalar = 1
     elif(((EVENTS.getMaxValue(events[2])!=TWO || EVENTS.getMinValue(events[2])!=ONE) && EVENTS.getNumOutcomes(events[2])==2) || EVENTS.getOutcome(events[2])==3*ONEHALF):
         scalar = 2
+    # fetch outcome and min/max values for the scalar
     outcome = EVENTS.getOutcome(events[scalar])
     minValue = EVENTS.getMinValue(events[scalar])
     maxValue = EVENTS.getMaxValue(events[scalar])
-    if(outcome>maxValue):
-        outcome = maxValue
-    elif(outcome<minValue):
-        outcome = minValue
     # price is in fixed point
     # share two goes with the high side
     pricePerShare2 = ONE*(outcome - minValue) / (maxValue - minValue)

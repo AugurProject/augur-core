@@ -3,31 +3,21 @@ import markets as MARKETS
 import events as EVENTS
 inset('refund.se')
 
-# eight winning outcomes
+# Do payouts for a market with eight winning outcomes [aka a 3d all scalar market]
 def eightOutcomes(market, winningOutcome: arr, events: arr, sender):
     refund()
+    # fetch outcomes and ranges for all events
     outcomeOne = EVENTS.getOutcome(events[0])
     minValueOne = EVENTS.getMinValue(events[0])
     maxValueOne = EVENTS.getMaxValue(events[0])
-    if(outcomeOne>maxValueOne):
-        outcomeOne = maxValueOne
-    elif(outcomeOne<minValueOne):
-        outcomeOne = minValueOne
     outcomeTwo = EVENTS.getOutcome(events[1])
     minValueTwo = EVENTS.getMinValue(events[1])
     maxValueTwo = EVENTS.getMaxValue(events[1])
-    if(outcomeTwo>maxValueTwo):
-        outcomeTwo = maxValueTwo
-    elif(outcomeTwo<minValueTwo):
-        outcomeTwo = minValueTwo
     outcomeThree = EVENTS.getOutcome(events[2])
     minValueThree = EVENTS.getMinValue(events[2])
     maxValueThree = EVENTS.getMaxValue(events[2])
-    if(outcomeThree>maxValueThree):
-        outcomeThree = maxValueThree
-    elif(outcomeThree<minValueThree):
-        outcomeThree = minValueThree
-
+    
+    # high side is the long outcome, low side is the short
     outcomeOneHighSidePercent = ONE*(outcomeOne - minValueOne) / (maxValueOne - minValueOne)
     outcomeOneLowSidePercent = ONE - outcomeOneHighSidePercent
     outcomeTwoHighSidePercent = ONE*(outcomeTwo - minValueTwo) / (maxValueTwo - minValueTwo)
@@ -51,7 +41,7 @@ def eightOutcomes(market, winningOutcome: arr, events: arr, sender):
     participantNumber = MARKETS.getParticipantNumber(market, sender)
     participant = MARKETS.getParticipantID(market, participantNumber)
     
-    # for each winning outcome do...
+    # for each outcome user owns pay them appropriate amount * number of shares they own and decrement their shares
     n = 0
     cumScale = MARKETS.getCumScale(market)
     while(winningOutcome[n]!=0):

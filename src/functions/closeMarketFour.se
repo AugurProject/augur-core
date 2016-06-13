@@ -3,7 +3,7 @@ import markets as MARKETS
 import events as EVENTS
 inset('refund.se')
 
-# four winning outcomes
+# Payout a trader in a market with four winning outcomes
 def fourOutcomes(market, winningOutcome: arr, events: arr, sender):
     refund()
     # first is low-low && whatever, second is high-low, third is low-high, fourth is high-high
