@@ -382,6 +382,7 @@ def short_sell(buyer_trade_id, max_amount):
     # only count branch fees here
     self.addFees(market, fee/2+branchFees)
 
+    max_amount -= fill
     # Log transaction
     log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)
     # Log price, fill amount, type and timestamp
@@ -1272,7 +1273,7 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
     if(creationFee < minFee):
         creationFee = minFee
     if(self.balance(msg.sender) < creationFee):
-        return(-11)
+        return(-4)
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
     if(periodLength==0 or len(description)==0 || tradingFee < self.getMinTradingFee(branch)):
         return(-1)
@@ -1310,9 +1311,9 @@ def createMarket(branch, description:str, tradingFee, events:arr, tag1, tag2, ta
         if(!self.getBond(event)):
             # pay validity / indeterminate protection bond
             period = block.timestamp / TWENTYFOURHR
-            validity_bond =  (creationFee * (1 + self.getPast24(period)) / (1 + self.getNumberEvents(branch, self.getVotePeriod(branch))))/2
+            validity_bond = (creationFee * (1 + self.getPast24(period)) / (1 + self.getNumberEvents(branch, self.getVotePeriod(branch))))/2
             if(!self.sendFrom(event, validity_bond, msg.sender)):
-                return([event, validity_bond, msg.sender]: arr)
+                return(-4)
             self.setBond(event, validity_bond)
             self.addPast24(period)
         #scalars
@@ -2584,6 +2585,7 @@ macro POINTZEROONE: 184467440737095520
     # each event which should've resolved in the past 2 periods and this one is pushed up into this period and voted on in period after this - done
         # stays in parent if it wins, otherwise goes to new fork - done
     # each event resolving further in the future is pushed into the respective period on whichever fork wins - done
+# todo if already moved once don't allow again after another fork
 def move_event(event):
     forkPeriod = self.getForkPeriod(self.getEventBranch(event))
     branch = self.getEventBranch(event)
@@ -2638,6 +2640,7 @@ def move_event(event):
         return(0)
 
 # parent branch is branch here
+# todo fork use address picked in market creation to resolve it and have a default fork resolve option
 def resolve_fork(branch):
     # do whitelist
     forkPeriod = self.getForkPeriod(self.getEventBranch(event))
@@ -4351,6 +4354,7 @@ def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleO
         self.Branches[ID].parentPeriod = parentPeriod
         self.Branches[ID].oracleOnly = oracleOnly
         self.Branches[ID].parent = parent
+        self.Branches[ID].baseReporters = self.Branches[parent].baseReporters
         self.initiateOwner(ID)
         return(1)
     else:

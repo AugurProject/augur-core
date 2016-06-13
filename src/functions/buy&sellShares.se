@@ -283,6 +283,7 @@ def short_sell(buyer_trade_id, max_amount):
     # only count branch fees here
     MARKETS.addFees(market, fee/2+branchFees)
 
+    max_amount -= fill
     # Log transaction
     log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)
     # Log price, fill amount, type and timestamp

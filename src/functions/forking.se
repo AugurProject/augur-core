@@ -35,6 +35,7 @@ macro POINTZEROONE: 184467440737095520
     # each event which should've resolved in the past 2 periods and this one is pushed up into this period and voted on in period after this - done
         # stays in parent if it wins, otherwise goes to new fork - done
     # each event resolving further in the future is pushed into the respective period on whichever fork wins - done
+# todo if already moved once don't allow again after another fork
 def move_event(event):
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     branch = EVENTS.getEventBranch(event)
@@ -89,6 +90,7 @@ def move_event(event):
         return(0)
 
 # parent branch is branch here
+# todo fork use address picked in market creation to resolve it and have a default fork resolve option
 def resolve_fork(branch):
     # do whitelist
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
