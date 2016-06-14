@@ -21,17 +21,9 @@ def fourOutcomes(market, winningOutcome: arr, events: arr, sender):
     outcomeOne = EVENTS.getOutcome(events[scalarOne])
     minValueOne = EVENTS.getMinValue(events[scalarOne])
     maxValueOne = EVENTS.getMaxValue(events[scalarOne])
-    if(outcomeOne>maxValueOne):
-        outcomeOne = maxValueOne
-    elif(outcomeOne<minValueOne):
-        outcomeOne = minValueOne
     outcomeTwo = EVENTS.getOutcome(events[scalarTwo])
     minValueTwo = EVENTS.getMinValue(events[scalarTwo])
     maxValueTwo = EVENTS.getMaxValue(events[scalarTwo])
-    if(outcomeTwo>maxValueTwo):
-        outcomeTwo = maxValueTwo
-    elif(outcomeTwo<minValueTwo):
-        outcomeTwo = minValueTwo
 
     outcomeOneHighSidePercent = ONE*(outcomeOne - minValueOne) / (maxValueOne - minValueOne)
     outcomeOneLowSidePercent = ONE - outcomeOneHighSidePercent
@@ -39,6 +31,7 @@ def fourOutcomes(market, winningOutcome: arr, events: arr, sender):
     outcomeTwoLowSidePercent = ONE - outcomeTwoHighSidePercent
 
     # price is in fixed point
+    # both fixed point so div by ONE to keep in fixed point
     # share four goes with the high-high side
     pricePerShare4 = outcomeOneHighSidePercent * outcomeTwoHighSidePercent / ONE
     # share three goes with the low-high side
@@ -46,8 +39,8 @@ def fourOutcomes(market, winningOutcome: arr, events: arr, sender):
     # share two goes with the high-low side
     pricePerShare2 = outcomeOneHighSidePercent * outcomeTwoLowSidePercent / ONE
     # share one goes with the low-low
-    # both fixed point so div by ONE to keep in fixed point
     pricePerShare1 = outcomeOneLowSidePercent * outcomeTwoLowSidePercent / ONE
+
     # distribute cashcoin to the people who won money by holding winning shares
     participantNumber = MARKETS.getParticipantNumber(market, sender)
     participant = MARKETS.getParticipantID(market, participantNumber)

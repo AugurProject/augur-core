@@ -892,7 +892,7 @@ macro ethic_catch($x):
         ONE
 inset('refund.se')
 
-# # of winningOutcomes is 2
+# Payout traders in markets with number of winningOutcomes of 2 [one scalar with any combination of binary + categorical for the other 2 dimensions, or just 1D]
 def twoOutcomes(market, winningOutcome: arr, events: arr, sender):
     refund()
     # look for the scalar
@@ -903,13 +903,10 @@ def twoOutcomes(market, winningOutcome: arr, events: arr, sender):
         scalar = 1
     elif(((self.getMaxValue(events[2])!=TWO || self.getMinValue(events[2])!=ONE) && self.getNumOutcomes(events[2])==2) || self.getOutcome(events[2])==3*ONEHALF):
         scalar = 2
+    # fetch outcome and min/max values for the scalar
     outcome = self.getOutcome(events[scalar])
     minValue = self.getMinValue(events[scalar])
     maxValue = self.getMaxValue(events[scalar])
-    if(outcome>maxValue):
-        outcome = maxValue
-    elif(outcome<minValue):
-        outcome = minValue
     # price is in fixed point
     # share two goes with the high side
     pricePerShare2 = ONE*(outcome - minValue) / (maxValue - minValue)
@@ -1418,12 +1415,12 @@ def pushMarketForward(branch, market):
     i = 0
     while i < numEvents:
         # push into next vote period
-        period = self.getVotePeriod(branch)
+        period = block.timestamp/periodLength
         # figure out what's going on with subsidy system here
-        self.addEvent(branch, period+1, events[i], 0)
+        self.addEvent(branch, period, events[i], 0)
         # set event expiration date to be after the current reporting period ends
         self.setExpiration(events[i], block.timestamp)
-        self.setTradingPeriod(market, period+1)
+        self.setTradingPeriod(market, period)
         self.setPushedForward(market, 1, msg.sender)
         self.setEventPushedUp(events[i], 1)
         i += 1
@@ -1808,7 +1805,7 @@ def penalizationCatchup(branch, sender):
         # sends that rep to the branch rep pool
         self.addRep(branch, self.repIDToIndex(branch, branch), repChange)
         self.setPenalizedUpTo(branch, sender, lastPeriod)
-        return([delta, oldRep, smoothedRep, repChange]: arr)
+        return(1)
     else:
         return(0)
 inset('refund.se')
@@ -3063,7 +3060,7 @@ macro TWO: 2**65
 macro TWENTYFOURHR: 86400
 inset('refund.se')
 
-# four winning outcomes
+# Payout a trader in a market with four winning outcomes
 def fourOutcomes(market, winningOutcome: arr, events: arr, sender):
     refund()
     # first is low-low && whatever, second is high-low, third is low-high, fourth is high-high
@@ -3136,31 +3133,21 @@ def fourOutcomes(market, winningOutcome: arr, events: arr, sender):
     return(1)
 inset('refund.se')
 
-# eight winning outcomes
+# Do payouts for a market with eight winning outcomes [aka a 3d all scalar market]
 def eightOutcomes(market, winningOutcome: arr, events: arr, sender):
     refund()
+    # fetch outcomes and ranges for all events
     outcomeOne = self.getOutcome(events[0])
     minValueOne = self.getMinValue(events[0])
     maxValueOne = self.getMaxValue(events[0])
-    if(outcomeOne>maxValueOne):
-        outcomeOne = maxValueOne
-    elif(outcomeOne<minValueOne):
-        outcomeOne = minValueOne
     outcomeTwo = self.getOutcome(events[1])
     minValueTwo = self.getMinValue(events[1])
     maxValueTwo = self.getMaxValue(events[1])
-    if(outcomeTwo>maxValueTwo):
-        outcomeTwo = maxValueTwo
-    elif(outcomeTwo<minValueTwo):
-        outcomeTwo = minValueTwo
     outcomeThree = self.getOutcome(events[2])
     minValueThree = self.getMinValue(events[2])
     maxValueThree = self.getMaxValue(events[2])
-    if(outcomeThree>maxValueThree):
-        outcomeThree = maxValueThree
-    elif(outcomeThree<minValueThree):
-        outcomeThree = minValueThree
-
+    
+    # high side is the long outcome, low side is the short
     outcomeOneHighSidePercent = ONE*(outcomeOne - minValueOne) / (maxValueOne - minValueOne)
     outcomeOneLowSidePercent = ONE - outcomeOneHighSidePercent
     outcomeTwoHighSidePercent = ONE*(outcomeTwo - minValueTwo) / (maxValueTwo - minValueTwo)
@@ -3184,7 +3171,7 @@ def eightOutcomes(market, winningOutcome: arr, events: arr, sender):
     participantNumber = self.getParticipantNumber(market, sender)
     participant = self.getParticipantID(market, participantNumber)
     
-    # for each winning outcome do...
+    # for each outcome user owns pay them appropriate amount * number of shares they own and decrement their shares
     n = 0
     cumScale = self.getCumScale(market)
     while(winningOutcome[n]!=0):

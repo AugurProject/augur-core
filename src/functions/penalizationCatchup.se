@@ -54,6 +54,6 @@ def penalizationCatchup(branch, sender):
         # sends that rep to the branch rep pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repChange)
         CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
-        return([delta, oldRep, smoothedRep, repChange]: arr)
+        return(1)
     else:
         return(0)

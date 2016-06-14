@@ -58,8 +58,7 @@ macro ethic_catch($x):
     else:
         ONE
 
-# loop through events in the market, get their outcomes && use those to determine the winning events!
-# distribute coins among winning events
+# Loop through events in the market, get their outcomes && use those to determine the winning outcomes and resolve a market!
 # @return 0 if fail/trading not over yet/event not expired or closed already, if success 1
 # Error messages otherwise
     # -1: Market has no cash anyway / already closed
@@ -69,7 +68,7 @@ macro ethic_catch($x):
     # -6: bonded pushed forward market not ready to be resolved
     # -7: event not reportable >.99
     # -8: market isn't in branch
-# if market's events have moved due to a fork branch is the new fork
+# if market's events have moved due to a fork branch param passed should be the new fork
 def closeMarket(branch, market, sender):
     refund()
     if(MARKETS.getBranchID(market)!=branch):
@@ -90,6 +89,7 @@ def closeMarket(branch, market, sender):
             i = numberEvents
         i += 1
     i = 0
+    # checks if all the precommitted reports have been revealed alreadydstryretdsfgtrfdserdsfgtrhyuj[]
     while i < numberEvents:
         numReports = EXPEVENTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
         numExpected = EXPEVENTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])

@@ -253,12 +253,12 @@ def pushMarketForward(branch, market):
     i = 0
     while i < numEvents:
         # push into next vote period
-        period = BRANCHES.getVotePeriod(branch)
+        period = block.timestamp/periodLength
         # figure out what's going on with subsidy system here
-        EXPEVENTS.addEvent(branch, period+1, events[i], 0)
+        EXPEVENTS.addEvent(branch, period, events[i], 0)
         # set event expiration date to be after the current reporting period ends
         EVENTS.setExpiration(events[i], block.timestamp)
-        MARKETS.setTradingPeriod(market, period+1)
+        MARKETS.setTradingPeriod(market, period)
         MARKETS.setPushedForward(market, 1, msg.sender)
         EVENTS.setEventPushedUp(events[i], 1)
         i += 1
