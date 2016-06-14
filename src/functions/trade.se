@@ -51,7 +51,7 @@ macro remove_trade($trade_id, $market):
     MARKETS.remove_trade_from_market($market, $trade_id)
 
 #
-# Trade
+# Trade [allows a user to pick up/fill orders off the book]
 #
 # Errors:
     # -1: oracle only branch
@@ -59,10 +59,10 @@ macro remove_trade($trade_id, $market):
     # -3: trader doesn't exist / own shares in this market
     # -4: must buy at least .00000001 in value
     # 10: insufficient balance
-#Exchange(Market, outcome, sender, amount, receiver, payment) - transfers amount shares from sender to receiver for payment amount
-#max value is max amount to spend to buy [including fees]
-#max amount is max shares to sell
-# 500k gas
+    # 22: trade in same block prohibited
+# max value is max money to spend to buy [including fees] filling ask orders
+# max amount is max shares to sell filling bid orders
+# 500k gas cost
 # picks orders off the book
 def trade(max_value, max_amount, trade_ids:arr):
     refund()
@@ -137,7 +137,6 @@ def trade(max_value, max_amount, trade_ids:arr):
                 MARKETS.modifyParticipantShares(market, ownerNum, outcome, fill, 0)
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
                 fee = value * fee / ONE
-                # THREEFOURTHS is 3/4
                 branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
                 creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*fee / ONE
                 takerFeesTotal = branchFees + creatorFees

@@ -35,6 +35,7 @@ event Approval(_owner:indexed, _spender:indexed, value)
 
 # fix sender, tx.origin stuff here
 
+# send active reputation
 # @return value of reputation sent, 0 if not enough reputation
 # error messages otherwise
     # -1: "Your reputation account was just created, earn some rep. before you can send to others"
@@ -89,6 +90,7 @@ def sendReputation(branch, recver, value):
     else:
         return(0)
 
+# Transfer dormant rep
 # @return value of reputation sent, 0 if not enough reputation
 # error messages otherwise
     # -1: "Your reputation account was just created, earn some rep. before you can send to others"
@@ -123,6 +125,7 @@ def transfer(branch, recver, value):
     else:
         return(0)
 
+# TransferFrom per token api for dormant rep
 # fails unless from has authorized sender
 def transferFrom(branch, from, recver, value):
     refund()
@@ -154,16 +157,17 @@ def transferFrom(branch, from, recver, value):
     else:
         return(0)
     
-# allows spender to withdraw from your account
+# Allows spender to withdraw from your dormant rep account
 def approve(branch, spender, value):
     self.amountCanSpend[msg.sender][spender] = value
     log(type=Approval, msg.sender, spender, value)
     return(1)
 
-# returns amount spender can withdraw from owner
+# Returns amount spender can withdraw from owner
 def allowance(owner, spender):
     return(self.amountCanSpend[owner][spender])
 
+# Convert active rep to dormant rep
 # error messages
     # -1: not in first half of reporting period
 # shouldn't be penalized for dormant rep when converting back to active due to not reporting beyond the dormant penalization
@@ -214,6 +218,7 @@ def convertToDormantRep(branch, value):
     else:
         return(0)
 
+# Convert dormant rep to active rep
 # error messages
     # -1: not in first half of reporting period
 def convertToActiveRep(branch, value):
@@ -262,4 +267,3 @@ def convertToActiveRep(branch, value):
     
 macro hasReported($branch, $period):
     EXPEVENTS.getNumReportsActual($branch, $period, msg.sender)
-    

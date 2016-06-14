@@ -22,15 +22,15 @@
 import branches as BRANCHES
 inset('refund.se')
 
-# Reporting index is the branchID
-# Reporters index is the rep. address
-# We 0 index reputation so can walk thru for consensus
-# EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
-# RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
-# Events is 0 indexed as well
-# total rep is all the rep in augur
-# active rep is the amount which is actually active
-# fork is the child branch of a parent which forked
+# Storage of all data associated with reporters
+    # Reporting index is the branchID
+    # Reporters index is the rep. address
+    # We 0 index reputation so can walk thru for consensus
+    # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
+    # total rep is all the rep in augur
+    # active rep is the amount which is actually active
+    # fork is the child branch of a parent which forked
+    # dormant rep stores dormant rep values
 data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), activeRep, fork)
 
 data whitelists[](addresses[], taken)

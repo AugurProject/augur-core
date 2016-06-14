@@ -21,12 +21,12 @@ def twoOutcomes(market, winningOutcome: arr, events: arr, sender):
     # price is in fixed point
     # share two goes with the high side
     pricePerShare2 = ONE*(outcome - minValue) / (maxValue - minValue)
-    #share one goes with the low side of the calc
+    # share one goes with the low side of the calc
     pricePerShare1 = ONE - pricePerShare1
     # distribute cashcoin to the people who won money by holding winning shares
     participantNumber = MARKETS.getParticipantNumber(market, sender)
     participant = MARKETS.getParticipantID(market, participantNumber)
-    # for each winning outcome do...
+    # for each winning outcome get rid of shares and send money to the trader
     n = 0
     cumScale = MARKETS.getCumScale(market)
     while(winningOutcome[n]!=0):

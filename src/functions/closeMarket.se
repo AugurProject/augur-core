@@ -41,7 +41,6 @@ macro BAD: 3 * ONEHALF
 
 macro CATCH_TOLERANCE: ONE / 10
 
-event thru(user:indexed, time)
 
 # Bins values to 1, 1.5, 2
 macro catch($x):
@@ -52,6 +51,7 @@ macro catch($x):
     else:
         BAD
 
+# If ethicality value <.5 it's 0, otherwise it's ethical
 macro ethic_catch($x):
     if($x < ONEHALF):
         0
@@ -64,15 +64,14 @@ macro ethic_catch($x):
     # -1: Market has no cash anyway / already closed
     # -2: 0 outcome / not reported on yet
     # -3: not final round 2 event
+    # -4: market isn't in branch
     # -5: Event forked and not final yet
     # -6: bonded pushed forward market not ready to be resolved
-    # -7: event not reportable >.99
-    # -8: market isn't in branch
 # if market's events have moved due to a fork branch param passed should be the new fork
 def closeMarket(branch, market, sender):
     refund()
     if(MARKETS.getBranchID(market)!=branch):
-        return(-8)
+        return(-4)
     if(CASH.balance(market)<=0):
         return(-1)
     numberEvents = MARKETS.getNumEvents(market)
@@ -82,6 +81,7 @@ def closeMarket(branch, market, sender):
     events = MARKETS.getMarketEvents(market, outitems=3)
     i = 0
     reportingDone = 0
+    # checks whether any events not already resolved
     resolved = 1
     while i < numberEvents:
         if(EVENTS.getOutcome(events[i])==0 && EVENTS.getmode(events[i])==0):
@@ -89,7 +89,7 @@ def closeMarket(branch, market, sender):
             i = numberEvents
         i += 1
     i = 0
-    # checks if all the precommitted reports have been revealed alreadydstryretdsfgtrfdserdsfgtrhyuj[]
+    # checks if all the precommitted reports have been revealed already
     while i < numberEvents:
         numReports = EXPEVENTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
         numExpected = EXPEVENTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
@@ -98,7 +98,7 @@ def closeMarket(branch, market, sender):
             i = numberEvents
         i += 1
     if((period > tradingPeriod || reportingDone) && !resolved):
-        # loop through events in the market, get their outcomes && use those to determine the winning events!
+        # loop through events in the market, get their outcomes, resolve them && use those to determine the winning outcomes for a given market!
         n = 0
         outcomeSix = 0
         while n < numberEvents:
@@ -127,13 +127,14 @@ def closeMarket(branch, market, sender):
         winningOutcomes = array(8)
         winningOutcomes = RESOLVE.determineWinningOutcomes(events, numberEvents, branch, market, outitems=8)
         MARKETS.setWinningOutcomes(market, winningOutcomes)
+        # refunds closing cost
         MARKETS.refundClosing(MARKETS.getgasSubsidy(market), sender)
         return(1)
     else:
         return(0)
 
-# claim winnings after a market is resolved
-# @return 1 if success
+# Claim trading profits/value per share after a market is resolved
+# @returns 1 if successful
 # Errors:
     # 0: reporting not done
     # -1: trader doesn't exist
@@ -158,6 +159,7 @@ def claimProceeds(branch, market):
             reportingDone = 0
             i = numberEvents
         i += 1
+    # as long as it's resolved money can be collected
     if((period > tradingPeriod || reportingDone) && resolved):
         winningOutcomes = array(8)
         winningOutcomes = MARKET.getWinningOutcomes(market, outitems=8)
@@ -168,9 +170,11 @@ def claimProceeds(branch, market):
         if(winningOutcomes[1]==0):
             minval = EVENTS.getMinValue(events[0])
             ethical = ethic_catch(EVENTS.getEthical(events[0]))
+            # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
             if(len(events)==1 && categorical(events[0]) && (EVENTS.getmode(events[0])==ONEHALF or !ethical)):
                 outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(events[0]))
             else:
+                # resolves a regular binary market
                 outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, 0)
         elif(winningOutcomes[7]):
             outcome = CLOSEEIGHT.eightOutcomes(market, winningOutcomes, events, msg.sender)

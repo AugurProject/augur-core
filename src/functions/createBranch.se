@@ -25,39 +25,44 @@ import cash as CASH
 import reporting as REPORTING
 inset('refund.se')
 
-# period length is given in blocks
+# Create a new branch given a parent branch - a branch is essentially a fork of rep where new markets can be created
+# period length is given in seconds
 # @return branchID if success
 # error messages otherwise
     # -1: bad input or parent doesn't exist
-    # -2: no money for creation fee or branch already exists
-def createSubbranch(description:str, periodLength, parent, tradingFee, oracleOnly):
+    # -2: no money for creation fee
+    # -3: branch already exists
+def createSubbranch(description:str, periodLength, parent, mintradingFee, oracleOnly):
     refund()
     if(periodLength<=0 || !BRANCHES.getPeriodLength(parent) || description==0):
         return(-1)
-
-    if(tradingFee < 0 or tradingFee > 2**62):
+    if(minTradingFee < 0 or minTradingFee > 2**62):
         return(-1)
     parentPeriod = BRANCHES.getVotePeriod(parent)
-
-    branchInfo = string(8*32+len(description))
-    branchInfo[0] = BRANCH                                      #typecode
-    branchInfo[1] = tx.origin                                   #creator address
-    branchInfo[2] = 47*ONE                                     #creation fee
-    branchInfo[3] = periodLength                                #length of voting cycle
-    branchInfo[4] = block.timestamp                             #current blocktime
-    branchInfo[5] = parent                                      #branchID of parent branch
-    branchInfo[6] = tradingFee
-    branchInfo[7] = oracleOnly
-    mcopy(branchInfo+ 8*32, description, len(description))
+    branchInfo = string(7*32+len(description))
+    branchInfo[0] = msg.sender
+    #creation fee
+    branchInfo[1] = 47*ONE
+    #length of voting cycle
+    branchInfo[2] = periodLength
+    branchInfo[3] = block.timestamp
+    branchInfo[4] = parent
+    branchInfo[5] = minTradingFee
+    branchInfo[6] = oracleOnly
+    mcopy(branchInfo + 7*32, description, len(description))
     # people can check that these characteristics hash to the ID if they want
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
     branchID = sha3(branchInfo, chars=len(branchInfo))
     currentVotePeriod = (block.timestamp / periodLength) - 1
-    if(INFO.getCreator(branchID)==0):
-        BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, tradingFee, oracleOnly, parentPeriod, parent)
-    else:
+    if(CASH.balance(msg.sender)<47*ONE):
         return(-2)
-    if(INFO.getCreator(parent) && CASH.sendFrom(parent, 47*ONE, msg.sender) && INFO.setInfo(branchID, description, tx.origin, 47*ONE) && REPORTING.setInitialReporters(parent, branchID)):
+    # provided event doesn't already exist, create it
+    if(INFO.getCreator(branchID)==0):
+        BRANCHES.initializeBranch(branchID, currentVotePeriod, periodLength, minTradingFee, oracleOnly, parentPeriod, parent)
+    else:
+        return(-3)
+    # pay creation fee, initialize branch info
+    if(CASH.sendFrom(parent, 47*ONE, msg.sender) && INFO.setInfo(branchID, description, tx.origin, 47*ONE) && REPORTING.setInitialReporters(parent, branchID)):
         return(branchID)
     else:
         return(-2)

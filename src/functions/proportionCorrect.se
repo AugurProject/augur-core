@@ -2,6 +2,7 @@ import events as EVENTS
 
 inset('refund.se')
 
+# Returns the proportion of reporters who reported correctly on a given binary event 
 def proportionCorrect(event):
     refund()
     p = 0

@@ -15,6 +15,21 @@ macro POINTZEROONE: 184467440737095520
 macro POINTEIGHT: 14757395258967642112
 macro POINTTWO: 3689348814741910528
 
+# ex:
+    #period 0 voteperiod -1 - last period penalized should be -1 or starting vote period
+    #add some events to period 0
+    #increment
+    #period 1 voteperiod 0 - shouldn't be penalizing anything yet b/c still reporting on period 0
+    #increment
+    #period 2 voteperiod 1 - penalize on voteperiod 0
+# ex 2:
+    #currently in period 100, voteperiod 99 - last period penalized up to should be 99 or starting vote period
+    #add some events to period 100
+    #increment to period 101
+    #period 101, voteperiod 100 - shouldn't be penalizing anything yet
+    #increment
+    #period 102, voteperiod 101 - penalize on voteperiod 100
+
 #1. Record rep at start of report period [before rep in make reports]
 #2. Penalize for each event
 #3. Each reporter needs to do this for all events they reported on, if not get docked

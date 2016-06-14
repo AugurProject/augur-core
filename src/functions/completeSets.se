@@ -25,8 +25,11 @@ import cash as CASH
 import markets as MARKETS
 inset('refund.se')
 
-# buys amount of every outcome
+# Buys amount of every outcome
 # cost 850k gas
+# Errors:
+    # 0: invalid market
+    # -3: not enough money
 def buyCompleteSets(market, amount):
     refund()
     if(!MARKETS.getCreationTime(market)):
@@ -56,8 +59,11 @@ def buyCompleteSets(market, amount):
     CASH.sendFrom(market, cost, msg.sender)
     return(1)
 
-    
-# sells amount of every outcome [if user owns it]
+# Sells amount of every outcome [if user owns it]
+# cost 850k gas
+# Errors:
+    # -2: trader doesn't exist
+    # -3: user doesn't own enough shares 
 def sellCompleteSets(market, amount):
     refund()
     branch = MARKETS.getBranchID(market)

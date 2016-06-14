@@ -36,40 +36,46 @@ def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue
     market = self.createMarket(branch, description, tradingFee, [event], tag1, tag2, tag3, makerFees, extraInfo)
     return(market)
 
-# numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0
-# to 11.0 would be 11 outcomes (if incremented by 0.1)
+# Create an event. Events are the basic units / questions that are reported on in Augur by reporters
+# @param numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0 to 11.0 would be 11 outcomes (if incremented by 0.1)
+# @param minValue should be 2**64 for a binary event, maxValue should be 2**65 for a binary event
+# @param minValue for a scalar from 0 to 100 should be 0 and max should be 100*2**64, for -100 to 200, it should be -100*2**64 and 200*2**64 respectively
+# @param description is a description of the event / the question itself
+# @param resolution is the string source/link to resolve the event
+# @param branch is the branch the event is created in
+# @param expDate is the epoch time in which the event expires
 # @return eventID if success
 # error messages otherwise
+    #  0: not enough money to pay fees or event already exists
     # -1: we're either already past that date, branch doesn't exist, or description is bad
-    # 0: not enough money to pay fees or event already exists
-    # -2: max value < min value
-    # -9: would expire during non-reporting fork period
+    # -2: max value < min value or range < 1
+    # -3: invalid number of outcomes
+    # -4: would expire during non-reporting fork period
 # .025 eth to create
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution: str):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
     forkPeriod = BRANCHES.getForkPeriod(branch)
     if(forkPeriod && ((expDate / periodLength)==forkPeriod or (expDate / periodLength)==(forkPeriod+1))):
-        return(-9)
+        return(-4)
     if(maxValue < minValue or (maxValue-minValue) < ONE):
         return(-2)
     eventID = 0
     if(periodLength && description != 0 && expDate > block.timestamp):
-        eventinfo = string(8*32 + len(description))
-        eventinfo[0] = EVENT                                        #typecode
-        eventinfo[1] = branch                                       #branchID
-        eventinfo[2] = expDate                                      #expiration date
-        eventinfo[3] = msg.sender                                   #creator address
-        eventinfo[4] = periodLength
-        eventinfo[5] = minValue                                     #minimum outcome value
-        eventinfo[6] = maxValue                                     #maximum outcome value
-        eventinfo[7] = numOutcomes                                  #number of outcomes
-        mcopy(eventinfo + 8*32, description, len(description))
+        eventinfo = string(7*32 + len(description))
+        eventinfo[0] = branch                                       #branchID
+        eventinfo[1] = expDate                                      #expiration date
+        eventinfo[2] = msg.sender                                   #creator address
+        eventinfo[3] = periodLength
+        eventinfo[4] = minValue                                     #minimum outcome value
+        eventinfo[5] = maxValue                                     #maximum outcome value
+        eventinfo[6] = numOutcomes                                  #number of outcomes
+        mcopy(eventinfo + 7*32, description, len(description))
         eventID = sha3(eventinfo, chars=len(eventinfo))
     else:
         return(-1)
     if(numOutcomes < 2 || numOutcomes > 8):
-        return(0)
+        return(-3)
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     CASH.initiateOwner(eventID)
     if(!INFO.getCreator(eventID)):
@@ -83,7 +89,14 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     else:
         return(0)
 
-# tradingFee is a percent in fixedPoint
+# Create a market. Markets are the basic _tradable_ units / questions that are traded on in Augur
+# @param branch is the branch of the market
+# @param description is the description for a market
+# @param tradingFee is percent in fixedPoint
+# @param events array is the list of events in a market [up to 3]
+# @params tag1, tag2, and tag3 are the tags describing a market
+# @param makerFees are the percent of the trading fee a maker pays [0-50% in fixed point]
+# @param extraInfo is a string of any extra info associated with a market
 # @return marketID if success or 1 if on an oracle only branch creation we have success
 # error messages otherwise
     # -1: bad input or parent doesn't exist
