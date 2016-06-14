@@ -1888,7 +1888,7 @@
         "sig": "extern createBranch: [createSubbranch:[bytes,int256,int256,int256,int256]:int256]"
     }, 
     "createMarket": {
-        "address": "0x2bcf1482f030d37de85528fb405e9864922d3ba6", 
+        "address": "0x660cdfdf3d0e7443e7935343a1131b961575ccc7", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -1940,10 +1940,13 @@
             "macro POINTZEROSIX: 1106804644422573056", 
             "macro COSTPERREPORTER: 3500000", 
             "", 
+            "event marketCreated(marketID)", 
+            "event tradingFeeUpdated(marketID, tradingFee)", 
+            "", 
             "# def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution:str, tradingFee, tag1, tag2, tag3, makerFees, extraInfo:str):", 
-            "#     event = self.createEvent(branch, description, expDate, minValue, maxValue, numOutcomes, resolution)", 
-            "#     market = self.createMarket(branch, description, tradingFee, [event], tag1, tag2, tag3, makerFees, extraInfo)", 
-            "#     return(market)", 
+            "#     eventID = self.createEvent(branch, description, expDate, minValue, maxValue, numOutcomes, resolution, call=delegate)", 
+            "#     marketID = self.createMarket(branch, description, tradingFee, [eventID], tag1, tag2, tag3, makerFees, extraInfo, call=delegate)", 
+            "#     return(marketID)", 
             "", 
             "# numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0", 
             "# to 11.0 would be 11 outcomes (if incremented by 0.1)", 
@@ -2115,13 +2118,14 @@
             "                # cost for calculating num. of reports for an event", 
             "                CASH.send(EVENTS, 500000*tx.gasprice)", 
             "            i += 1", 
+            "        log(type=marketCreated, marketID)", 
             "        return(marketID)", 
             "    else:", 
             "        return(0)", 
             "", 
             "def updateTradingFee(branch, market, tradingFee):", 
             "    refund()", 
-            "    if(msg.sender != INFO.getCreator(market) || tx.origin != INFO.getCreator(market)):", 
+            "    if(msg.sender != INFO.getCreator(market) and tx.origin != INFO.getCreator(market)):", 
             "        return(-4)", 
             "    oldFee = MARKETS.getTradingFee(market)", 
             "    oldCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / oldFee", 
@@ -2129,6 +2133,7 @@
             "    if(tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > oldFee):", 
             "        return(-1)", 
             "    CASH.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender)", 
+            "    log(type=tradingFeeUpdated, market, tradingFee)", 
             "    return(MARKETS.setTradingFee(market, tradingFee))", 
             "", 
             "# Anyone can post an \"Early Resolution Bond\"", 
@@ -2148,7 +2153,7 @@
             "    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod+1)):", 
             "        return(-1)", 
             "    numEvents = MARKETS.getNumEvents(market)", 
-            "    # if market closed or already pushed forward, return 0", 
+            "    # if market closed or already pushed forward, return -2", 
             "    if(MARKETS.getOneWinningOutcome(market, 0) or MARKETS.getPushedForward(market)):", 
             "        return(-2)", 
             "    if(CASH.sendFrom(market, numEvents*MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE), msg.sender)==0):", 
@@ -2176,7 +2181,171 @@
             "        i += 1", 
             "    return(1)"
         ], 
-        "fullsig": "[{\n    \"name\": \"createEvent(int256,bytes,int256,int256,int256,int256,bytes)\",\n    \"type\": \"function\",\n    \"inputs\": [{ \"name\": \"branch\", \"type\": \"int256\" }, { \"name\": \"description\", \"type\": \"bytes\" }, { \"name\": \"expDate\", \"type\": \"int256\" }, { \"name\": \"minValue\", \"type\": \"int256\" }, { \"name\": \"maxValue\", \"type\": \"int256\" }, { \"name\": \"numOutcomes\", \"type\": \"int256\" }, { \"name\": \"resolution\", \"type\": \"bytes\" }],\n    \"outputs\": [{ \"name\": \"out\", \"type\": \"int256\" }]\n},\n{\n    \"name\": \"createMarket(int256,bytes,int256,int256[],int256,int256,int256,int256,bytes)\",\n    \"type\": \"function\",\n    \"inputs\": [{ \"name\": \"branch\", \"type\": \"int256\" }, { \"name\": \"description\", \"type\": \"bytes\" }, { \"name\": \"tradingFee\", \"type\": \"int256\" }, { \"name\": \"events\", \"type\": \"int256[]\" }, { \"name\": \"tag1\", \"type\": \"int256\" }, { \"name\": \"tag2\", \"type\": \"int256\" }, { \"name\": \"tag3\", \"type\": \"int256\" }, { \"name\": \"makerFees\", \"type\": \"int256\" }, { \"name\": \"extraInfo\", \"type\": \"bytes\" }],\n    \"outputs\": [{ \"name\": \"out\", \"type\": \"int256\" }]\n},\n{\n    \"name\": \"pushMarketForward(int256,int256)\",\n    \"type\": \"function\",\n    \"inputs\": [{ \"name\": \"branch\", \"type\": \"int256\" }, { \"name\": \"market\", \"type\": \"int256\" }],\n    \"outputs\": [{ \"name\": \"out\", \"type\": \"int256\" }]\n},\n{\n    \"name\": \"updateTradingFee(int256,int256,int256)\",\n    \"type\": \"function\",\n    \"inputs\": [{ \"name\": \"branch\", \"type\": \"int256\" }, { \"name\": \"market\", \"type\": \"int256\" }, { \"name\": \"tradingFee\", \"type\": \"int256\" }],\n    \"outputs\": [{ \"name\": \"out\", \"type\": \"int256\" }]\n}]", 
+        "fullsig": [
+            {
+                "constant": false, 
+                "inputs": [
+                    {
+                        "name": "branch", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "description", 
+                        "type": "bytes"
+                    }, 
+                    {
+                        "name": "expDate", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "minValue", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "maxValue", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "numOutcomes", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "resolution", 
+                        "type": "bytes"
+                    }
+                ], 
+                "name": "createEvent(int256,bytes,int256,int256,int256,int256,bytes)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [
+                    {
+                        "name": "branch", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "description", 
+                        "type": "bytes"
+                    }, 
+                    {
+                        "name": "tradingFee", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "events", 
+                        "type": "int256[]"
+                    }, 
+                    {
+                        "name": "tag1", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "tag2", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "tag3", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "makerFees", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "extraInfo", 
+                        "type": "bytes"
+                    }
+                ], 
+                "name": "createMarket(int256,bytes,int256,int256[],int256,int256,int256,int256,bytes)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [
+                    {
+                        "name": "branch", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "market", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "pushMarketForward(int256,int256)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [
+                    {
+                        "name": "branch", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "market", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "tradingFee", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "updateTradingFee(int256,int256,int256)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "indexed": false, 
+                        "name": "marketID", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "marketCreated(int256)", 
+                "type": "event"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "indexed": false, 
+                        "name": "marketID", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "tradingFee", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "tradingFeeUpdated(int256,int256)", 
+                "type": "event"
+            }
+        ], 
         "sig": "extern createMarket: [createEvent:[int256,bytes,int256,int256,int256,int256,bytes]:int256, createMarket:[int256,bytes,int256,int256[],int256,int256,int256,int256,bytes]:int256, pushMarketForward:[int256,int256]:int256, updateTradingFee:[int256,int256,int256]:int256]"
     }, 
     "eventResolution": {
