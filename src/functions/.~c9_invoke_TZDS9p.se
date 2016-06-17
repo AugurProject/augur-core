@@ -8,7 +8,7 @@ inset('refund.se')
 # Anti cheat/collusion mechanism: provide ballot and random salt to steal rep from a colluder
 # Returns:
     # 0: not a valid claim
-    # 1: on success
+    # 1
     # -2: past reveal date
     # -3: reporter being slashed doesn't exist
 def slashRep(branch, salt, report, reporter, eventID, testing):

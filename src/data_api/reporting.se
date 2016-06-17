@@ -240,7 +240,7 @@ def subtractDormantRep(branch, index, value):
     return(1)
 
 # check that msg.sender is one of our function contracts
-# make this cheaper
+# Sets the initial distribution of rep
 def setSaleDistribution(addresses: arr, balances: arr, branchID):
     refund()
     #if(!self.whitelist.check(msg.sender)):

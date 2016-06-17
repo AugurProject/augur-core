@@ -13,12 +13,14 @@ macro POINTONE: 1844674407370955264
 
 macro POINTNINE: 16602069666338596864
 
-# Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account and distributed like trading fees.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
+# Prove both that a reporter voted on less than he/she actually could have and it was <.5 of what they should have reported on using an example event
+# The rep lost here is then sent to the branch's rep account and distributed like other redistributed rep.
+# Note:
+    # Reporters pay an eth bond for this on their first report --- if never called then during collect fees they get it back else it goes back to pay someone who correctly calls this function, so the bond is returned to the poster if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees [which means it's the first period after a fork is initiated]
+# Returns 1 if successful
 # Errors:
     # -1: already done
     # -2: not in right part of period
-# prove both that a reporter voted on less than he/she actually could have and it was <.5 of what they were predicted to have reported on
-# reporters pay an eth bond for this on first report --- if never called by collect fees they get it back else it goes back to pay someone who correctly calls this function --- return bond if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees
 def proveReporterDidntReportEnough(branch, reporter, eventExample):
     refund()
     lastPeriod = BRANCHES.getVotePeriod(branch)-1

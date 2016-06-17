@@ -3,17 +3,28 @@ inset('refund.se')
 
 # Storage for branch data
 # branch takes a branchID
-
     # penalized takes for a given period a user / address reported for a certain event and num of events they reported on in that period in total
     # penalizedUpTo is the latest period a user has done the penalization for
     # fees collected states whether for a given period a user collected fees
     # rep collected states whether for a given period a user collected rep
+    # base reporters last period is the minimum number of reporters for the last period
 data branch[](period[](denominator, penalized[](event[], num, notEnoughReportsPenalized), feesCollected[], feeFirst, periodBalance), penalizedUpTo[], baseReportersLastPeriod)
 
+# refunds keeps track of subsidies for various consensus function calls paid for by the market creator or bonders
 data refunds[]
+
+# Keeps track of whether a reporter has been penalized for collusion while reporting
+data slashed[][](reporter[])
 
 def init():
     self.branch[1010101].baseReportersLastPeriod = 2*3
+
+def getSlashed(branch, votePeriod, reporter):
+    return(self.slashed[branch][votePeriod].reporter[reporter])
+    
+def setSlashed(branch, votePeriod, reporter):
+    self.slashed[branch][votePeriod].reporter[reporter] = 1
+    return(1)
 
 def setRefund(refunder, amt):
     self.refunds[refunder] = amt

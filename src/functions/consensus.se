@@ -15,31 +15,32 @@ macro POINTZEROONE: 184467440737095520
 macro POINTEIGHT: 14757395258967642112
 macro POINTTWO: 3689348814741910528
 
-# ex:
-    #period 0 voteperiod -1 - last period penalized should be -1 or starting vote period
-    #add some events to period 0
-    #increment
-    #period 1 voteperiod 0 - shouldn't be penalizing anything yet b/c still reporting on period 0
-    #increment
-    #period 2 voteperiod 1 - penalize on voteperiod 0
-# ex 2:
-    #currently in period 100, voteperiod 99 - last period penalized up to should be 99 or starting vote period
-    #add some events to period 100
-    #increment to period 101
-    #period 101, voteperiod 100 - shouldn't be penalizing anything yet
-    #increment
-    #period 102, voteperiod 101 - penalize on voteperiod 100
-
+# Penalizes a reporter for reporting wrongly on an event
+    # examples from the start of a new branch:
+        # ex:
+            #period 0 voteperiod -1 - last period penalized should be -1 or starting vote period
+            #add some events to period 0
+            #increment
+            #period 1 voteperiod 0 - shouldn't be penalizing anything yet b/c still reporting on period 0
+            #increment
+            #period 2 voteperiod 1 - penalize on events in voteperiod 0
+        # ex 2:
+            #currently in period 100, voteperiod 99 - last period penalized up to should be 99 or starting vote period
+            #add some events to period 100
+            #increment to period 101
+            #period 101, voteperiod 100 - shouldn't be penalizing anything yet
+            #increment
+            #period 102, voteperiod 101 - penalize on events in voteperiod 100
 #1. Record rep at start of report period [before rep in make reports]
 #2. Penalize for each event
 #3. Each reporter needs to do this for all events they reported on, if not get docked
 #4. For first half of the new period, people can do penalization for the last period, for the second half users have to claim rep then trading fees
-#5. If you don't do it for all events or don't penalize for not reporting enough, autolose 10% rep each period one does this (b/c they're trying to cheat)
+#5. If a reporter doesn't do it for all events, they autolose 10% rep each period one doesn't do it (b/c they're trying to cheat)
 # Errors:
     #  0: event is a fork event
     # -1: need to penalize in round 2 penalize function
     # -2: already past first half of new period and needed to penalize before then
-    # -4: in fork period only thing that rbcr is done on is the round 2 event in the original branch via round 2 penalize
+    # -4: in fork period only thing that rep redistribution is done on is the round 2 event in the original branch via round 2 penalize
     # -5: already done for all events in this period
     # -6: forked events should be penalized using the fork penalization function
     # -7: no outcome
@@ -70,17 +71,17 @@ def penalizeWrong(branch, event):
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
         CONSENSUS.increaseDenominator(branch, lastPeriod, repBalance)
         return(1)
-    elif(roundTwo && outcome!=0):
-        return(-1)
-    
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     elif(!uncaught && !(rejected && EVENTS.getRejectedPeriod(event)==lastPeriod)):
         if(CLOSEMARKET.closeMarket(branch, EVENTS.getMarket(event, 0), msg.sender)!=1):
             return(-7)
+
     outcome = catch(uncaught)
     if(scalar(event) or categorical(event)):
         outcome = uncaught
     p = PROPORTION.proportionCorrect(event)
+    if(roundTwo && outcome!=0):
+        return(-1)
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     numReportedOn = EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
@@ -94,7 +95,7 @@ def penalizeWrong(branch, event):
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
         # if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event todo
             # unless this just happened to them last period and they reported correctly then
-    # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. if appealed don't allow rbcr until after the appeal process is over in the first period
+    # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. if appealed don't allow rep redistribution until after the appeal process is over in the first period
     elif(!CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue && rejected && EVENTS.getRejectedPeriod(event)==lastPeriod):
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
@@ -124,7 +125,7 @@ def penalizeWrong(branch, event):
         EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
-    # once penalized for all events actually get rid of net rep lost
+    # once penalized for all events actually get rid of net rep lost and send it to the branch for redistribution
     if(numReportedOn==CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
         if(newAfterRep <= 0):
             newAfterRep = 0
@@ -146,6 +147,7 @@ def penalizeWrong(branch, event):
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
     return(1)
 
+# Increments the period after reporting
 # ui has to call this to stay cheap / not check it elsewhere
 def incrementPeriodAfterReporting(branch):
     refund()

@@ -5,12 +5,16 @@ import backstops as BACKSTOPS
 import expiringEvents as EXPEVENTS
 inset('refund.se')
 
-# rbcr is done as a normal event where everyone reports on it
-# only called on the fork not the parent, normal penalization except the values are forkOutcome and forkEthicality as opposed to anything else
-# some rep from this goes to bond poster, original / last period report is actually what a user reported on the parent for the round 2 bond vote, they lose rep as well as people this time who report wrong
-# branch is fork
-# fork event needs to be resolved first before this can be called
+
+# Penalizes a reporter for reporting wrongly on a forked event / backstop 2
+# Notes:
+    # essentially penalizeWrong for backstop 2 [where everyone reports on a forked event on the new branch]
+    # only called on the fork not the parent, normal penalization except the outcome values are forkOutcome and forkEthicality as opposed to anything else
+    # some rep from this goes to bond poster
+    # branch is the fork, not the parent
+    # fork event needs to be resolved first before this can be called
 # Errors:
+    #  0: not enough rep to report/penalize
     # -2: already past first half of new period and needed to penalize before then
     # -4: fork event isn't resolved yet
     # -5: already done for all events in this period
@@ -28,7 +32,7 @@ def penalizeOnForkedEvent(branch, event):
     forkOutcome = EVENTS.getForkOutcome(event)
     outcome = catch(forkOutcome)
     if(scalar(event) or categorical(event)):
-        outcome = forkOut
+        outcome = forkOutcome
     p = self.proportionCorrectForkEvent(event)
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
@@ -103,6 +107,7 @@ def penalizeOnForkedEvent(branch, event):
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
     return(1)
 
+# Calculates the proportion of correct reports for a binary forked event
 def proportionCorrectForkEvent(event):
     refund()
     p = 0

@@ -1,8 +1,9 @@
 macro refund():
+    if self.test_callstack() != 1: return(-1)
     if(msg.value > 0):
         send(msg.sender, msg.value)
 
-macro ONE: 2^64
+def test_callstack(): return(1)
 
 macro WEITOETH: 10^18
 

@@ -24,11 +24,11 @@ macro POINTZEROONE: 184467440737095520
 # Period where we forked, at the end of it
     # don't penalize for this period / anything that happened here should be considered to not have happened - done
     # let period be incremented as normal - done
-    # no rbcr on this period besides for event forked over on original. parent but don't actually resolve the event until later per below - done
+    # no rep redistribution on this period besides for event forked over on original. parent but don't actually resolve the event until later per below - done
     # fork users get a free pass for not reporting on this period - done
 # Period after fork where we need to do nothing while waiting for fork to resolve
     # free pass for not reporting during this period in og branch - done, UI needs to call penalizeWrong with a 0 as event param or todo do this contract side after doing penalize wrong
-    # no reporting or rbcr in this period except for on fork branch we re-report on the forked market and that's it, so no free pass on fork for that one event - done
+    # no reporting or rep redistribution in this period except for on fork branch we re-report on the forked market and that's it, so no free pass on fork for that one event - done
 # Period after fork is resolved
     # markets can't be moved until now - done
     # all markets have early exp disabled until this point - done

@@ -29,11 +29,7 @@ macro ethic_catch($x):
 macro scalar($event):
     ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
 
-def catch(x):
-    refund()
-    return(catch(x))
-
-## helper functions:
+## helper function to close an event for resolution
 macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $periodLength, $ethical, $scalarorcat, $mode, $ethicOutcome):
     # In the $event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and $market remains with old expiration date
@@ -65,13 +61,13 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         CASH.addCash($branch, EVENTS.getBond($event))
         # not $ethical is same as .5 outcome
         if($scalarorcat):
-            # mode is used to compare for reporting acc. so still the same as reported outcome, but resolving the market as .5
+            # the mode is used to compare for reporting accuracy. so still the same as the reported uncaught outcome/mode, but resolving the market as .5 right in the middle of the range so payouts are done right for an unethical [or indeterminate] market
             EVENTS.setOutcome($event, $ethicOutcome)
         else:
             EVENTS.setOutcome($event, $indeterminate)
         1
     else:
-        # return bond
+        # return bond as a normal event resolution
         CASH.subtractCash($event, EVENTS.getBond($event))
         CASH.addCash(INFO.getCreator($event), EVENTS.getBond($event))
         if(MARKETS.getPushedForward($market)):
@@ -82,31 +78,52 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             $period = EVENTS.getOriginalExpiration($event)/$periodLength
             EXPEVENTS.removeEvent($branch, $period)
             EXPEVENTS.deleteEvent($branch, $period, $event)
+            EVENTS.setOriginalExpiration($event, EVENTS.getExpiration($event))
         1
 
+# Resolves a binary market
 def resolveBinary(event, market, branch, votingPeriodEvent):
     refund()
     fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
     periodLength = BRANCHES.getPeriodLength(branch)
     ethical = ethic_catch(EVENTS.getEthical(event))
+    # outcome is set to the binned version of the raw reported outcome
     EVENTS.setOutcome(event, fxpOutcome)
+    # ethics is set to the binned version of the raw ethicality outcome
     EVENTS.setEthics(event, ethical)
     val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 0, 0, 0)
     return(val)
 
+# Resolves a categorical market
 def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, votingPeriodEvent):
     refund()
     mode = EVENTS.getUncaughtOutcome(event)
     EVENTS.setmode(event, mode)
     fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
+    # outcome is set to the mode of the reported outcomes
     EVENTS.setOutcome(event, fxpOutcome)
     periodLength = BRANCHES.getPeriodLength(branch)
+    # ethics is set to the binned version of the raw ethicality outcome
     ethical = ethic_catch(EVENTS.getEthical(event))
     ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
     EVENTS.setEthics(event, ethical)
     val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
     return(val)
 
+# Determines the "winning outcomes" for a given market
+# Easiest to give examples:
+    # 1D Markets:
+        # Binary or Categorical will have 1 winning outcome [1 or 2 for binary, 1 thru numOutcomes for categorical is the value for the winning outcome]
+    # 2D Markets:
+        # Binary or Categorical will have 1 winning outcome [1 or 2 for binary, 1 thru numOutcomes for categorical is the value for the winning outcome]
+        # Scalar will have 2 outcomes, [one long and short each worth some amount]
+    # 3D Markets:
+        # Binary or Categorical will have 1 winning outcome [1 or 2 for binary, 1 thru numOutcomes for categorical is the value for the winning outcome]
+        # Scalar will have 2 outcomes, [one long and short each worth some amount]
+        # So 3 determinate binary outcomes == 1 outcome
+        # 3 scalars == 8 outcomes
+        # 2 scalars and 1 binary or 1 categorical == 4 outcomes
+        # 1 scalar and 2 binary or categoricals == 2 outcomes
 def determineWinningOutcomes(events: arr, numberEvents, branch, market):
     refund()
     n = 0

@@ -28,9 +28,9 @@ import trades as TRADES
 inset('refund.se')
 
 event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
-event log_add_tx(market:indexed, sender, type, price, amount, outcome, tradeid)
+event log_add_tx(market:indexed, sender:indexed, type, price, amount, outcome, tradeid)
 event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
-event log_cancel(market:indexed, sender, price, amount, tradeid, outcome, type)
+event log_cancel(market:indexed, sender:indexed, price, amount, tradeid, outcome, type)
 
 # Trade types
 macro BID: 1
@@ -75,7 +75,8 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
     return(trade_id)
 
 #
-# Cancellation
+# Cancellation: cancels a trade, if a bid refunds money, if an ask returns shares
+# @returns 1 if success, 0 if failure
 #
 # 200k gas
 def cancel(trade_id):
@@ -124,12 +125,13 @@ macro remove_trade($trade_id, $market):
 #
 # Buy / Sell actions: puts orders on the book
 # Errors:
-    # -1: amount/price bad or no market
+    #  0: market doesn't exist
+    # -1: amount/price bad
     # -2: oracle only branch
-    # -3: bad outcome to trade [not needed anymore, can't buy shares that don't exist]
+    # -3: trader doesn't exist in market
     # -4: not enough money or shares
 #
-# costs 532k
+# costs 532k gas
 # smallest trade value is 0.00000001
 def buy(amount, price, market, outcome):
     refund()
@@ -145,14 +147,15 @@ def buy(amount, price, market, outcome):
     trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
     fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE
+    # price cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
     if(price>cumScale or amount*price < 3402823669209384705829531287552 or amount*price >= 2**190):
-        return(0)
+        return(-1)
     if(CASH.balance(msg.sender) < (amount * price * (fee + ONE) / ONE^2)):
         return(-4)
     save_trade(BID, amount, price, market, outcome, branch, participantNumber, fee, msg.sender)
     return(FAILURE)
 
-# cost 532k
+# costs 532k gas
 # smallest trade value is 0.00000001
 def sell(amount, price, market, outcome):
     refund()
@@ -167,13 +170,15 @@ def sell(amount, price, market, outcome):
     trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
     fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE
+    # price cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
     if(price>cumScale or amount*price < 3402823669209384705829531287552L or amount*price >= 2**190):
-        return(0)
+        return(-1)
     if(CASH.balance(msg.sender) < (amount * price * fee / ONE^2)):
         return(-4)
     save_trade(ASK, amount, price, market, outcome, branch, participantNumber, fee, msg.sender)
     return(FAILURE)
 
+# Allows a user to "short" by buying n complete sets and selling n shares of the unwanted outcome to a bid on the book
 # Example:
     #buyer gives up say 20
     #complete set cost is say 100
