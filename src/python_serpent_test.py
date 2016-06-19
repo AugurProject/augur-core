@@ -534,6 +534,7 @@ def test_close_market():
     assert(c.closeMarket(1010101, market5)==1), "Close market failure"
     assert(c.claimProceeds(1010101, market5, sender=t.k2)==1)
     assert(c.balance(sender)==10000*2**64)
+    # todo check winning outcomes
     gas_use(s)
     gas_use(s)
     print "Test close market OK"
