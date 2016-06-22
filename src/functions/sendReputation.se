@@ -44,7 +44,7 @@ def sendReputation(branch, recver, value):
     refund()
     # Rep cannot be simultaneously spent (transferred) and used to vote
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
-    # you can't trade if you or the person you're sending to have submitted a report, or at all in the second half of the period [b/c you can messup / cheat w/ reporting] and you can't trade in the first half of a period until you've been penalized for reporting wrongly/not reporting
+    # you can't trade if you or the person you're sending to have submitted a report, or at all in the second half of the period [b/c you can messup / cheat w/ reporting by gettin extra claims on fees] and you can't trade in the first half of a period until you've been penalized for reporting wrongly/not reporting
     # use a diff. fun. than getReport here
     #if(value<=0 || EXPEVENTS.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, recver, 0) != 0):
     # EXPEVENTS.getNumReportsActual(branch, currentVotePeriod, msg.sender)

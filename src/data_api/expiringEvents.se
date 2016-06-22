@@ -25,17 +25,16 @@ import events as EVENTS
 import fxpFunctions as FXP
 import reporting as REPORTING
 inset('refund.se')
-
+event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
 macro ONEPOINTTWO: 22136092888451461120
 
 macro POINTZEROONE: 184467440737095520
 
 # [branchID][votingPeriod]
-# reporthash is [reporterID] = hash
+# reporthash is [reporterID][event] = hash
 # subsidy is money for paying back a user for calculating the targeted num of reports for an event
-data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], shareValue, roundTwoNumEvents, subsidy[])
-
 data EventIDToIndex[][]
+data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], shareValue, roundTwoNumEvents, subsidy[])
 
 # numReportsEvent is number of reports on an event, expected is how many have been committed for an event
 # numReportsActual is the amount of reports a user has submitted in a period
@@ -43,11 +42,10 @@ data EventIDToIndex[][]
 # periodRepConstant is 
 data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], numReportsActual[][], repEvent[][], lesserReportNum[][], periodRepConstant[][], reportersPaidSoFarForEvent[])
 
-data requiredEvents[]
 
 # branch, period as params
 data numReqEvents[][]
-
+data requiredEvents[]
 data mode_items[][](report_value[], current_mode, current_mode_items)
 
 def getReportersPaidSoFar(branch, event):

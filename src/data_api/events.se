@@ -120,6 +120,10 @@ def getExpiration(event):
 def getOriginalExpiration(event):
     refund()
     return(self.Events[event].originalExp)
+    
+def setOriginalExpiration(event, date):
+    self.Events[event].originalExp = date
+    return(1)
 
 def setExpiration(event, date):
     refund()

@@ -39,6 +39,7 @@ def makeHash(salt, report, eventID, sender):
     reportHash = sha3(hashInfo, chars=32*len(hashInfo))
     return(reportHash)
 
+# Allows a user to submit the hash of their report / commit
 # Error: 0: not caught up on rep redistributions
 # Error -1: invalid event
 # Error -2: not in first half of period [commit part]
