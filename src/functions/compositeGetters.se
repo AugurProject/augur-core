@@ -149,7 +149,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
     if numMarketsToLoad == 0:
         numMarketsToLoad = numMarkets
     marketIDs = slice(BRANCHES.getMarketsInBranch(branch, outitems=numMarkets), items=0, items=numMarkets)
-    totalLen = numMarketsToLoad*10
+    totalLen = numMarketsToLoad*11
     m = 0
     while m < numMarketsToLoad:
         totalLen += INFO.getDescriptionLength(marketIDs[m + offset])
@@ -162,7 +162,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
     while m < totalMarkets:
         marketID = marketIDs[m + offset]
         descriptionLength = INFO.getDescriptionLength(marketID)
-        marketsInfo[c] = 10 + descriptionLength
+        marketsInfo[c] = 11 + descriptionLength
         marketsInfo[c + 1] = marketID
         marketsInfo[c + 2] = MARKETS.getTradingPeriod(marketID)
         marketsInfo[c + 3] = MARKETS.getTradingFee(marketID)
@@ -173,8 +173,9 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
         marketsInfo[c + 7] = tags[1]
         marketsInfo[c + 8] = tags[2]
         marketsInfo[c + 9] = MARKETS.getLastExpDate(marketID)
+        marketsInfo[c + 10] = MARKETS.getMakerFees(marketID)
         description = INFO.getDescription(marketIDs[m + offset], outchars=descriptionLength)
-        c += 10
+        c += 11
         d = 0
         while d < descriptionLength:
             marketsInfo[c] = getch(description, d)

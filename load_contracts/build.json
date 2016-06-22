@@ -1284,7 +1284,7 @@
         "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:int256, sellCompleteSets:[int256,int256]:int256]"
     }, 
     "compositeGetters": {
-        "address": "0xce65c10f58c0ba0fe6dd98c4872af2b14a97a539", 
+        "address": "0x0d9995e01fd62263a5b52255dc069d70d4edc1a7", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -1442,7 +1442,7 @@
             "    if numMarketsToLoad == 0:", 
             "        numMarketsToLoad = numMarkets", 
             "    marketIDs = slice(BRANCHES.getMarketsInBranch(branch, outitems=numMarkets), items=0, items=numMarkets)", 
-            "    totalLen = numMarketsToLoad*10", 
+            "    totalLen = numMarketsToLoad*11", 
             "    m = 0", 
             "    while m < numMarketsToLoad:", 
             "        totalLen += INFO.getDescriptionLength(marketIDs[m + offset])", 
@@ -1455,7 +1455,7 @@
             "    while m < totalMarkets:", 
             "        marketID = marketIDs[m + offset]", 
             "        descriptionLength = INFO.getDescriptionLength(marketID)", 
-            "        marketsInfo[c] = 10 + descriptionLength", 
+            "        marketsInfo[c] = 11 + descriptionLength", 
             "        marketsInfo[c + 1] = marketID", 
             "        marketsInfo[c + 2] = MARKETS.getTradingPeriod(marketID)", 
             "        marketsInfo[c + 3] = MARKETS.getTradingFee(marketID)", 
@@ -1466,8 +1466,9 @@
             "        marketsInfo[c + 7] = tags[1]", 
             "        marketsInfo[c + 8] = tags[2]", 
             "        marketsInfo[c + 9] = MARKETS.getLastExpDate(marketID)", 
+            "        marketsInfo[c + 10] = MARKETS.getMakerFees(marketID)", 
             "        description = INFO.getDescription(marketIDs[m + offset], outchars=descriptionLength)", 
-            "        c += 10", 
+            "        c += 11", 
             "        d = 0", 
             "        while d < descriptionLength:", 
             "            marketsInfo[c] = getch(description, d)", 
@@ -1476,7 +1477,84 @@
             "        m += 1", 
             "    return(marketsInfo: arr)"
         ], 
-        "fullsig": "[{\n    \"name\": \"batchGetMarketInfo(int256[])\",\n    \"type\": \"function\",\n    \"inputs\": [{ \"name\": \"marketIDs\", \"type\": \"int256[]\" }],\n    \"outputs\": [{ \"name\": \"out\", \"type\": \"int256[]\" }]\n},\n{\n    \"name\": \"getMarketInfo(int256)\",\n    \"type\": \"function\",\n    \"inputs\": [{ \"name\": \"marketID\", \"type\": \"int256\" }],\n    \"outputs\": [{ \"name\": \"out\", \"type\": \"int256[]\" }]\n},\n{\n    \"name\": \"getMarketsInfo(int256,int256,int256)\",\n    \"type\": \"function\",\n    \"inputs\": [{ \"name\": \"branch\", \"type\": \"int256\" }, { \"name\": \"offset\", \"type\": \"int256\" }, { \"name\": \"numMarketsToLoad\", \"type\": \"int256\" }],\n    \"outputs\": [{ \"name\": \"out\", \"type\": \"int256[]\" }]\n},\n{\n    \"name\": \"getOrderBook(int256)\",\n    \"type\": \"function\",\n    \"inputs\": [{ \"name\": \"marketID\", \"type\": \"int256\" }],\n    \"outputs\": [{ \"name\": \"out\", \"type\": \"int256[]\" }]\n}]", 
+        "fullsig": [
+            {
+                "constant": false, 
+                "inputs": [
+                    {
+                        "name": "marketIDs", 
+                        "type": "int256[]"
+                    }
+                ], 
+                "name": "batchGetMarketInfo(int256[])", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256[]"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [
+                    {
+                        "name": "marketID", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "getMarketInfo(int256)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256[]"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [
+                    {
+                        "name": "branch", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "offset", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "numMarketsToLoad", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "getMarketsInfo(int256,int256,int256)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256[]"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [
+                    {
+                        "name": "marketID", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "getOrderBook(int256)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256[]"
+                    }
+                ], 
+                "type": "function"
+            }
+        ], 
         "sig": "extern compositeGetters: [batchGetMarketInfo:[int256[]]:int256[], getMarketInfo:[int256]:int256[], getMarketsInfo:[int256,int256,int256]:int256[], getOrderBook:[int256]:int256[]]"
     }, 
     "consensus": {
