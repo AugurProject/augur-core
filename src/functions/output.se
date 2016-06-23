@@ -933,7 +933,7 @@ def submitReportHash(event, reportHash):
     if(!self.getRRDone(branch, msg.sender)):
         return(0)
 
-    # first report of period, num events not set
+    # if first report of period, num events not set
     if(self.getNumEventsToReportOn(branch, votePeriod)==0):
         self.setNumEventsToReportOn(branch)
         self.setInitialBalance(branch, votePeriod, self.balance(branch))
@@ -950,9 +950,10 @@ def submitReportHash(event, reportHash):
         reportingThreshold = self.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
     x = array(1)
     x[0] = msg.sender + event
-    # div by ONE b/c is out of 2**192 rather than 2**256 [to avoid looping around]
-    # add 2**255 to ensure pos. and between 0 and 1
-    shaHash = (sha3(x, items=1)+2**255)/ONE
+    # do abs then mult by 2 to ensure pos. and between 0 and 1
+    shaHash = sha3(x, items=1)
+    shaHashAbs = abs(shaHash)/ONE
+    shaHash = 2*shaHashAbs
     periodLength = self.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     if(residual <= periodLength/2 && shaHash <= reportingThreshold):
@@ -962,6 +963,7 @@ def submitReportHash(event, reportHash):
         return(1)
     return(-2)
 
+# Submits / reveals a report for a period
 # @return 1 if success
 # Error messages
     # 0: reporter doesn't exist or has <1 rep
@@ -1053,6 +1055,7 @@ def submitReport(event, salt, report, ethics):
         reportsNum = self.getLesserReportNum(branch, votePeriod, event)
         paidBack = self.getReportersPaidSoFar(branch, event)
         diff = reportsNum - paidBack
+        # used to pay reporters after reporting for their gas costs
         if(diff >= 1):
             self.addReportersPaidSoFar(branch, event)
             self.subtractCash(branch, 3500000*tx.gasprice*ONE / WEITOETH)
@@ -1062,6 +1065,9 @@ def submitReport(event, salt, report, ethics):
 
 # validates and submits report
 # weights reports by rep if round 2 and fork
+# Returns -4 if report is invalid
+    # isn't between 1 and 2 if binary
+    # if same report as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
 def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, balance):
     outcome = 0
     # binary
@@ -1162,6 +1168,11 @@ macro ethic_catch($x):
         0
     else:
         ONE
+        
+macro abs($a):
+    if($a<0):
+        $a = -$a
+    $a
 inset('refund.se')
 
 macro POINTZEROSIX: 1106804644422573056
@@ -1491,7 +1502,7 @@ def sendReputation(branch, recver, value):
     refund()
     # Rep cannot be simultaneously spent (transferred) and used to vote
     currentVotePeriod = self.getVotePeriod(branch)
-    # you can't trade if you or the person you're sending to have submitted a report, or at all in the second half of the period [b/c you can messup / cheat w/ reporting] and you can't trade in the first half of a period until you've been penalized for reporting wrongly/not reporting
+    # you can't trade if you or the person you're sending to have submitted a report, or at all in the second half of the period [b/c you can messup / cheat w/ reporting by gettin extra claims on fees] and you can't trade in the first half of a period until you've been penalized for reporting wrongly/not reporting
     # use a diff. fun. than getReport here
     #if(value<=0 || self.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || self.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || self.getReport(branch, currentVotePeriod, recver, 0) != 0):
     # self.getNumReportsActual(branch, currentVotePeriod, msg.sender)
@@ -2457,9 +2468,10 @@ inset('refund.se')
 # Returns:
     # 0: not a valid claim
     # 1: on success
+    # -1: invalid vote period
     # -2: past reveal date
     # -3: reporter being slashed doesn't exist
-def slashRep(branch, salt, report, reporter, eventID, testing):
+def slashRep(branch, salt, report, reporter, eventID):
     refund()
     periodLength = self.getPeriodLength(branch)
     residual = block.timestamp % periodLength
@@ -2467,10 +2479,9 @@ def slashRep(branch, salt, report, reporter, eventID, testing):
         return(-2)
     votePeriod = self.getVotePeriod(branch)
     # if actually past vote period dont allow it
-    if(!testing):
-        votePeriodShouldBe = block.timestamp / periodLength - 1
-        if(votePeriodShouldBe!=votePeriod):
-            return(0)
+    votePeriodShouldBe = block.timestamp / periodLength - 1
+    if(votePeriodShouldBe!=votePeriod):
+        return(-1)
     realHash = self.getReportHash(branch, votePeriod, reporter, eventID)
     hashInfo = array(4)
     hashInfo[0] = reporter
@@ -3045,19 +3056,22 @@ def collectFees(branch, sender):
         # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
         return(-1)
     lastPeriod = self.getVotePeriod(branch) - 1
-    # todo make so need 1 rep to claim fees [should have to report or no?]
-    if(!self.getFeesCollected(branch, sender, lastPeriod) && self.getNumReportsActual(branch, lastPeriod, sender)):
-        newRep = self.getAfterRep(branch, lastPeriod, sender)
+    newRep = self.getAfterRep(branch, lastPeriod, sender)
+    # need 1 rep to claim fees
+    if(!self.getFeesCollected(branch, sender, lastPeriod) && newRep>ONE):
         denominator = self.getDenominator(branch, lastPeriod)
+        # sets the amount of rep available for redistribution in the next period
         if(!self.getFeeFirst(branch, lastPeriod)):
             self.setFeeFirst(branch, lastPeriod, 1)
             self.setPeriodBalance(branch, lastPeriod, self.getRepBalance(branch, branch))
         gainedRep = newRep * self.getPeriodBalance(branch, lastPeriod) / denominator
         #if(lostRep) newRep should be == self.getAfterRep(branch, period, sender) + gainedRep
         #if(gainedRep) newRep should be == self.getBeforeRep(branch, period, sender) + gainedRep
+        # give a reporter their portion of redistributed rep
         self.addRep(branch, self.repIDToIndex(branch, sender), gainedRep)
         self.subtractRep(branch, self.repIDToIndex(branch, branch), gainedRep)
         cash = self.getInitialBalance(branch, lastPeriod) * newRep / denominator
+        # give a reporter their portion of the trading fees
         self.addCash(sender, cash)
         self.subtractCash(branch, cash)
         self.setFeesCollected(branch, sender, lastPeriod)
@@ -3065,6 +3079,7 @@ def collectFees(branch, sender):
         if(self.getNotEnoughPenalized(branch, msg.sender, lastPeriod)==0 or self.getForkPeriod(branch)+1 == lastPeriod):
             self.doRefund(msg.sender, msg.sender)
         return(1)
+    # shouldn't be reached / if so no effect
     elif(!self.getFeesCollected(branch, sender, lastPeriod)):
         self.setFeesCollected(branch, sender, lastPeriod)
         return(2)
@@ -3112,7 +3127,7 @@ inset('refund.se')
 # Storage of all data associated with reporters
     # Reporting index is the branchID
     # Reporters index is the rep. address
-    # We 0 index reputation so can walk thru for consensus
+    # We 0 index reputation so can walk thru for consensus - todo / wrong don't need 0 indexing anymore
     # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
     # total rep is all the rep in augur
     # active rep is the amount which is actually active
@@ -3604,6 +3619,7 @@ def setOriginalVotePeriod(event, period):
     self.roundTwo[event].originalVotePeriod = period
     return(1)
 inset('refund.se')
+
 macro ONEPOINTTWO: 22136092888451461120
 
 macro POINTZEROONE: 184467440737095520
@@ -3737,8 +3753,10 @@ def getEventsToReportOn(branch, expDateIndex, sender):
         reportingThreshold = self.calculateReportingThreshold(branch, events[i], expDateIndex, sender)
         x = array(1)
         x[0] = sender + events[i]
-        # add 2**255 to ensure pos. and between 0 and 1
-        shaHash = (sha3(x, items=1)+2**255)/ONE
+        # do abs then mult by 2 to ensure pos. and between 0 and 1
+        shaHash = sha3(x, items=1)
+        shaHashAbs = abs(shaHash)/ONE
+        shaHash = 2*shaHashAbs
         if((shaHash < reportingThreshold || shaHash<self.getReportingThreshold(events[i]) || self.getRequired(events[i])) && !self.getOutcome(events[i])):
             events[i+1] = 1
         else:
@@ -3751,8 +3769,10 @@ def getEventCanReportOn(branch, expDateIndex, reporter, event):
     reportingThreshold = self.calculateReportingThreshold(branch, event, expDateIndex, reporter)
     x = array(1)
     x[0] = reporter + event
-    # add 2**255 to ensure pos. and between 0 and 1
-    shaHash = (sha3(x, items=1)+2**255)/ONE
+    # do abs then mult by 2 to ensure pos. and between 0 and 1
+    shaHash = sha3(x, items=1)
+    shaHashAbs = abs(shaHash)/ONE
+    shaHash = 2*shaHashAbs
     if(shaHash < reportingThreshold || shaHash<self.getReportingThreshold(event) || self.getRequired(events)):
         return(1)
     else:
@@ -3945,6 +3965,11 @@ def setReportingThreshold(event):
         return(1)
     else:
         return(0)
+        
+macro abs($a):
+    if($a<0):
+        $a = -$a
+    $a
 inset('refund.se')
 
 # Storage for branch data

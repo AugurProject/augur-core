@@ -7,22 +7,18 @@ inset('refund.se')
 
 # Anti cheat/collusion mechanism: provide ballot and random salt to steal rep from a colluder
 # Returns:
-    # 0: not a valid claim
     # 1: on success
+    # -1: invalid vote period
     # -2: past reveal date
     # -3: reporter being slashed doesn't exist
-def slashRep(branch, salt, report, reporter, eventID, testing):
+    # -4: invalid claim / report hash -     # make sure that the colluding reporter's commit is the same as the info provided in the params
+def slashRep(branch, salt, report, reporter, eventID):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
-    if(residual > periodLength/2):
-        return(-2)
     votePeriod = BRANCHES.getVotePeriod(branch)
-    # if actually past vote period dont allow it
-    if(!testing):
-        votePeriodShouldBe = block.timestamp / periodLength - 1
-        if(votePeriodShouldBe!=votePeriod):
-            return(0)
+    alreadySlashed = CONSENSUS.getSlashed(branch, votePeriod, reporter)
+    votePeriodShouldBe = block.timestamp / periodLength - 1
     realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, eventID)
     hashInfo = array(4)
     hashInfo[0] = reporter
@@ -30,27 +26,28 @@ def slashRep(branch, salt, report, reporter, eventID, testing):
     hashInfo[2] = report
     hashInfo[3] = eventID
     reportHash = sha3(hashInfo, chars=32*len(hashInfo))
-    # make sure that the colluding reporter's commit is the same as the info provided in the params
+    if(residual > periodLength/2):
+        return(-2)
+    if(votePeriodShouldBe!=votePeriod):
+        return(-1)
+    if(REPORTING.getReporterID(branch, reporterIndex)!=reporter):
+        return(-3)
+    if(alreadySlashed):
+        return(-5)
     if(reportHash!=realHash):
-        return(0)
-    else:
-        if(!CONSENSUS.getSlashed(branch, votePeriod, reporter)):
-            CONSENSUS.setSlashed(branch, votePeriod, reporter)
-            reporterIndex = REPORTING.repIDToIndex(branch, reporter)
-            trutherIndex = REPORTING.repIDToIndex(branch, msg.sender)
-            # if the truther's rep. account doesn't exist, make one
-            if(REPORTING.getReporterID(branch, trutherIndex)!=msg.sender):
-                trutherIndex = REPORTING.getNumberReporters(branch)
-                REPORTING.addReporter(branch, msg.sender)
-            if(REPORTING.getReporterID(branch, reporterIndex)!=reporter):
-                return(-3)
-            reporterBalance = REPORTING.getRepBalance(branch, reporter)
-            # removes rep from colluder
-            REPORTING.subtractRep(branch, reporterIndex, reporterBalance)
-            # gives truther half 
-            REPORTING.addRep(branch, trutherIndex, (reporterBalance*ONEHALF / ONE))
-            # other half sent to branch
-            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), reporterBalance*ONEHALF/ONE)
-        else:
-            return(0)
+        return(-4)
+    CONSENSUS.setSlashed(branch, votePeriod, reporter)
+    reporterIndex = REPORTING.repIDToIndex(branch, reporter)
+    trutherIndex = REPORTING.repIDToIndex(branch, msg.sender)
+    # if the truther's rep. account doesn't exist, make one
+    if(REPORTING.getReporterID(branch, trutherIndex)!=msg.sender):
+        trutherIndex = REPORTING.getNumberReporters(branch)
+        REPORTING.addReporter(branch, msg.sender)
+    reporterBalance = REPORTING.getRepBalance(branch, reporter)
+    # removes rep from colluder
+    REPORTING.subtractRep(branch, reporterIndex, reporterBalance)
+    # gives truther half 
+    REPORTING.addRep(branch, trutherIndex, (reporterBalance*ONEHALF / ONE))
+    # other half sent to branch
+    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), reporterBalance*ONEHALF/ONE)
     return(1)

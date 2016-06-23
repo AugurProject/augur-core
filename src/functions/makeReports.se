@@ -57,7 +57,7 @@ def submitReportHash(event, reportHash):
     if(!CONSENSUS.getRRDone(branch, msg.sender)):
         return(0)
 
-    # first report of period, num events not set
+    # if first report of period, num events not set
     if(EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)==0):
         EXPEVENTS.setNumEventsToReportOn(branch)
         BRANCHES.setInitialBalance(branch, votePeriod, CASH.balance(branch))
@@ -74,9 +74,10 @@ def submitReportHash(event, reportHash):
         reportingThreshold = EXPEVENTS.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
     x = array(1)
     x[0] = msg.sender + event
-    # div by ONE b/c is out of 2**192 rather than 2**256 [to avoid looping around]
-    # add 2**255 to ensure pos. and between 0 and 1
-    shaHash = (sha3(x, items=1)+2**255)/ONE
+    # do abs then mult by 2 to ensure pos. and between 0 and 1
+    shaHash = sha3(x, items=1)
+    shaHashAbs = abs(shaHash)/ONE
+    shaHash = 2*shaHashAbs
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     if(residual <= periodLength/2 && shaHash <= reportingThreshold):
@@ -86,6 +87,7 @@ def submitReportHash(event, reportHash):
         return(1)
     return(-2)
 
+# Submits / reveals a report for a period
 # @return 1 if success
 # Error messages
     # 0: reporter doesn't exist or has <1 rep
@@ -177,6 +179,7 @@ def submitReport(event, salt, report, ethics):
         reportsNum = EXPEVENTS.getLesserReportNum(branch, votePeriod, event)
         paidBack = EXPEVENTS.getReportersPaidSoFar(branch, event)
         diff = reportsNum - paidBack
+        # used to pay reporters after reporting for their gas costs
         if(diff >= 1):
             EXPEVENTS.addReportersPaidSoFar(branch, event)
             CASH.subtractCash(branch, 3500000*tx.gasprice*ONE / WEITOETH)
@@ -186,6 +189,9 @@ def submitReport(event, salt, report, ethics):
 
 # validates and submits report
 # weights reports by rep if round 2 and fork
+# Returns -4 if report is invalid
+    # isn't between 1 and 2 if binary
+    # if same report as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
 def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, balance):
     outcome = 0
     # binary
@@ -286,3 +292,8 @@ macro ethic_catch($x):
         0
     else:
         ONE
+        
+macro abs($a):
+    if($a<0):
+        $a = -$a
+    $a

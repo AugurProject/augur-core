@@ -939,14 +939,14 @@ def test_slashrep():
         c.incrementPeriod(1010101)
         i += 1
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
-        time.sleep(c.getPeriodLength(1010101)/2)
+        time.sleep(1)   
         s.mine(1)
     c.penalizeWrong(1010101, 0)
     report_hash = c.makeHash(0, 2**64, event1, s.block.coinbase)
     report_hash2 = c.makeHash(0, 2*2**64, event2, s.block.coinbase)
     assert(c.submitReportHash(event1, report_hash)==1)
     assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
-    c.slashRep(1010101, 0, 2**64, s.block.coinbase, event1, 1)
+    c.slashRep(1010101, 0, 2**64, s.block.coinbase, event1)
     s.mine(1)
     periodLength = c.getPeriodLength(1010101)
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
@@ -1277,14 +1277,14 @@ if __name__ == '__main__':
     #test_reporting()
 
     # function tests
-    test_trading()
+    #test_trading()
     #test_create_branch()
     #test_send_rep()
     #test_market_pushback()
     #test_close_market()
     #test_consensus()
     #test_catchup()
-    #test_slashrep()
+    test_slashrep()
     #test_claimrep()
     #test_consensus_multiple_reporters()
     #test_pen_not_enough_reports()

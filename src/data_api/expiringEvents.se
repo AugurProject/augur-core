@@ -25,7 +25,7 @@ import events as EVENTS
 import fxpFunctions as FXP
 import reporting as REPORTING
 inset('refund.se')
-event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
+
 macro ONEPOINTTWO: 22136092888451461120
 
 macro POINTZEROONE: 184467440737095520
@@ -159,8 +159,10 @@ def getEventsToReportOn(branch, expDateIndex, sender):
         reportingThreshold = self.calculateReportingThreshold(branch, events[i], expDateIndex, sender)
         x = array(1)
         x[0] = sender + events[i]
-        # add 2**255 to ensure pos. and between 0 and 1
-        shaHash = (sha3(x, items=1)+2**255)/ONE
+        # do abs then mult by 2 to ensure pos. and between 0 and 1
+        shaHash = sha3(x, items=1)
+        shaHashAbs = abs(shaHash)/ONE
+        shaHash = 2*shaHashAbs
         if((shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(events[i]) || self.getRequired(events[i])) && !EVENTS.getOutcome(events[i])):
             events[i+1] = 1
         else:
@@ -173,8 +175,10 @@ def getEventCanReportOn(branch, expDateIndex, reporter, event):
     reportingThreshold = self.calculateReportingThreshold(branch, event, expDateIndex, reporter)
     x = array(1)
     x[0] = reporter + event
-    # add 2**255 to ensure pos. and between 0 and 1
-    shaHash = (sha3(x, items=1)+2**255)/ONE
+    # do abs then mult by 2 to ensure pos. and between 0 and 1
+    shaHash = sha3(x, items=1)
+    shaHashAbs = abs(shaHash)/ONE
+    shaHash = 2*shaHashAbs
     if(shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(event) || self.getRequired(events)):
         return(1)
     else:
@@ -367,3 +371,8 @@ def setReportingThreshold(event):
         return(1)
     else:
         return(0)
+        
+macro abs($a):
+    if($a<0):
+        $a = -$a
+    $a

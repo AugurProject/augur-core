@@ -62,31 +62,34 @@ def buyCompleteSets(market, amount):
 # Sells amount of every outcome [if user owns it]
 # cost 850k gas
 # Errors:
+    # -1: oracle only / no trading branch
     # -2: trader doesn't exist
     # -3: user doesn't own enough shares 
 def sellCompleteSets(market, amount):
     refund()
-    branch = MARKETS.getBranchID(market)
-    if(BRANCHES.getOracleOnly(branch)):
-        return(-1)
     participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
+    branch = MARKETS.getBranchID(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumScale = MARKETS.getCumScale(market)
-    branch = MARKETS.getBranchID(market)
+    cost = amount*cumScale/ONE
+    
+    if(BRANCHES.getOracleOnly(branch)):
+        return(-1)
     if(MARKETS.getParticipantID(market, participantNumber) != msg.sender):
         return(-2)
-    # these prices are in fixed point
-    cost = amount*cumScale/ONE
-    i = 1
-    while i <= numOutcomes:
+    n = 1
+    while n <= numOutcomes:
         if(MARKETS.getParticipantSharesPurchased(market, participantNumber, i) < amount):
             return(-3)
-        i += 1
-    i = 1
-    while i <= numOutcomes:
+        n += 1
+    n = 1
+
+    # Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets
+    while n <= numOutcomes:
         MARKETS.modifyShares(market, i, -amount)
         MARKETS.modifyParticipantShares(market, participantNumber, i, -amount, 0)
-        i += 1
+        n += 1
+    # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
     if(BRANCHES.getVotePeriod(branch)<MARKETS.getTradingPeriod(market)):
         MARKETS.modifySharesValue(market, -amount*cumScale/ONE)
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), -amount*cumScale/ONE)
