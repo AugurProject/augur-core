@@ -159,3 +159,9 @@ macro catch($x):
         YES
     else:
         BAD
+        
+### Helper functions:
+macro YES: TWO
+macro NO: ONE
+macro BAD: 3 * ONEHALF
+macro CATCH_TOLERANCE: ONE / 10
