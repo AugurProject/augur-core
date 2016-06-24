@@ -17,7 +17,6 @@ data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicalit
     # bondPoster is the account which posted the bond
     # forkedOverEthicality states whether the event was forked due to controversy of ethicality
     # originalBranch is the branch the event was originally on
-    
 data forking[](bondPoster, bondAmount, forkedOverEthicality, bondPaid, originalBranch, moved)
 
 # Given a branch and a forkPeriod it states which fork the winner was
