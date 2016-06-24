@@ -409,7 +409,8 @@ macro POINTNINE: 16602069666338596864
 # The rep lost here is then sent to the branch's rep account and distributed like other redistributed rep.
 # Note:
     # Reporters pay an eth bond for this on their first report --- if never called then during collect fees they get it back else it goes back to pay someone who correctly calls this function, so the bond is returned to the poster if not enough penalized is 0 or self.getForkPeriod(branch)+1 == lastPeriod during collect fees [which means it's the first period after a fork is initiated]
-# Returns 1 if successful
+# Returns 1 if successful penalization
+# Returns 2 if didn't need to be penalized and thus wasn't
 # Errors:
     # -1: already done
     # -2: not in right part of period
@@ -420,11 +421,12 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     residual = block.timestamp % periodLength
     if(self.getNotEnoughPenalized(branch, reporter, lastPeriod)):
         return(-1)
-    if(self.getForkPeriod(branch)+1 == lastPeriod):
-        self.setNotEnoughPenalized(branch, reporter, lastPeriod)
-        return(1)
     if(residual > periodLength/2):
         return(-2)
+    # in period just after fork period no reports required
+    if(self.getForkPeriod(branch)+1 == lastPeriod):
+        self.setNotEnoughPenalized(branch, reporter, lastPeriod)
+        return(2)
     # events a user should be reporting on
     # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
     # a^b=exp(b*ln(a))=e^(b*ln(a)).
@@ -471,7 +473,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         self.doRefund(msg.sender, reporter)
         return(1)
     else:
-        return(0)
+        return(2)
 inset('refund.se')
 
 # first param is the market, second param is the subcurrency contract
@@ -509,36 +511,32 @@ macro ethic_catch($x):
     # -4: market isn't in branch
     # -5: Event forked and not final yet
     # -6: bonded pushed forward market not ready to be resolved
-# if market's events have moved due to a fork branch param passed should be the new fork
+    # -7: already resolved
+# if market's events have moved due to a fork branch param passed should be the new fork [todo check to make sure it handles the wrong branch param properly here]
 def closeMarket(branch, market, sender):
     refund()
-    if(self.getBranchID(market)!=branch):
-        return(-4)
     if(self.balance(market)<=0):
         return(-1)
+    if(self.getUncaughtOutcome(event)==0):
+        return(-2)
+    if(self.getRoundTwo(event) && !self.getFinal(event)):
+        return(-3)
+    if(self.getBranchID(market)!=branch):
+        return(-4)
     numberEvents = self.getNumEvents(market)
     tradingPeriod = self.getTradingPeriod(market)
     period = self.getVotePeriod(branch)
     event = self.getMarketEvent(market, 0)
-    reportingDone = 0
     # checks whether any events not already resolved
     resolved = 1
+    # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
     if(self.getOutcome(event)==0 && self.getmode(event)==0):
         resolved = 0
-    # checks if all the precommitted reports have been revealed already
-    numReports = self.getNumReportsEvent(branch, self.getExpiration(event)/self.getPeriodLength(branch), event)
-    numExpected = self.getNumReportsExpectedEvent(branch, self.getExpiration(event)/self.getPeriodLength(branch), event)
-    if(numReports == numExpected && numReports!=0 && numExpected!=0):
-        reportingDone = 1
-    if((period > tradingPeriod || reportingDone) && !resolved):
+    if((period > tradingPeriod) && !resolved):
         # look at through event in the market, get its outcomes, resolve it && use those to determine the winning outcomes for a given market!
         votingPeriodEvent = self.getExpiration(event)/self.getPeriodLength(branch)
         fxpOutcome = self.getOutcome(event)
         resolution = 1
-        if(self.getUncaughtOutcome(event)==0):
-            return(-2)
-        if(self.getRoundTwo(event) && !self.getFinal(event)):
-            return(-3)
         forkPeriod = self.getForkPeriod(self.getEventBranch(event))
         currentPeriod = block.timestamp / self.getPeriodLength(branch)
         if((self.getForked(event) && !self.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):
@@ -573,15 +571,9 @@ def claimProceeds(branch, market):
     tradingPeriod = self.getTradingPeriod(market)
     period = self.getVotePeriod(branch)
     event = self.getMarketEvent(market, 0)
-    reportingDone = 1
     resolved = 1
-    numReports = self.getNumReportsEvent(branch, self.getExpiration(event)/self.getPeriodLength(branch), event)
-    numExpected = self.getNumReportsExpectedEvent(branch, self.getExpiration(event)/self.getPeriodLength(branch), event)
     if(self.getOutcome(event)==0 && self.getmode(event)==0):
         resolved = 0
-    if(numReports != numExpected && numReports!=0 and numExpected!=0):
-        reportingDone = 0
-        i = numberEvents
     # as long as it's resolved money can be collected
     if((period > tradingPeriod || reportingDone) && resolved):
         winningOutcomes = array(8)
@@ -873,7 +865,9 @@ macro ethic_catch($x):
         ONE
 inset('refund.se')
 
-# Payout traders in markets with number of winningOutcomes of 2 [one scalar with any combination of binary + categorical for the other 2 dimensions, or just 1D]
+# Payout traders in markets with number of winningOutcomes of 2 [one scalar with any combination of binary + categorical for the other 2 dimensions, or just 1D with a scalar]
+# Error:
+    # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant #0 is really #0]
 def twoOutcomes(market, winningOutcome: arr, event, sender):
     refund()
     # fetch outcome and min/max values for the scalar
@@ -881,13 +875,14 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
     minValue = self.getMinValue(event)
     maxValue = self.getMaxValue(event)
     # price is in fixed point
-    # share two goes with the high side
+    # share two goes with the high/long side
     pricePerShare2 = ONE*(outcome - minValue) / (maxValue - minValue)
-    # share one goes with the low side of the calc
+    # share one goes with the low/short side of the calc
     pricePerShare1 = ONE - pricePerShare1
-    # distribute cashcoin to the people who won money by holding winning shares
     participantNumber = self.getParticipantNumber(market, sender)
     participant = self.getParticipantID(market, participantNumber)
+    if(participant!=sender):
+        return(-1)
     # for each winning outcome get rid of shares and send money to the trader
     n = 0
     cumScale = self.getCumScale(market)
@@ -957,8 +952,6 @@ def submitReportHash(event, reportHash):
     periodLength = self.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     if(residual <= periodLength/2 && shaHash <= reportingThreshold):
-        if(self.getReportHash(branch, votePeriod, msg.sender, event)==0):
-            self.addReportExpected(branch, votePeriod, event)
         self.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
         return(1)
     return(-2)
@@ -1203,33 +1196,29 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     refund()
     periodLength = self.getPeriodLength(branch)
     forkPeriod = self.getForkPeriod(branch)
-    if(forkPeriod && ((expDate / periodLength)==forkPeriod or (expDate / periodLength)==(forkPeriod+1))):
-        return(-4)
+    if(!periodLength or description == 0 or expDate < block.timestamp):
+        return(-1)
     if(maxValue < minValue or (maxValue-minValue) < ONE):
         return(-2)
-    eventID = 0
-    if(periodLength && description != 0 && expDate > block.timestamp):
-        eventinfo = string(7*32 + len(description))
-        eventinfo[0] = branch                                       #branchID
-        eventinfo[1] = expDate                                      #expiration date
-        eventinfo[2] = msg.sender                                   #creator address
-        eventinfo[3] = periodLength
-        eventinfo[4] = minValue                                     #minimum outcome value
-        eventinfo[5] = maxValue                                     #maximum outcome value
-        eventinfo[6] = numOutcomes                                  #number of outcomes
-        mcopy(eventinfo + 7*32, description, len(description))
-        eventID = sha3(eventinfo, chars=len(eventinfo))
-    else:
-        return(-1)
     if(numOutcomes < 2 || numOutcomes > 8):
         return(-3)
-    currentVotePeriod = self.getVotePeriod(branch)
+    if(forkPeriod && ((expDate / periodLength)==forkPeriod or (expDate / periodLength)==(forkPeriod+1))):
+        return(-4)
+    eventinfo = string(7*32 + len(description))
+    eventinfo[0] = branch                                       #branchID
+    eventinfo[1] = expDate                                      #expiration date
+    eventinfo[2] = msg.sender                                   #creator address
+    eventinfo[3] = periodLength
+    eventinfo[4] = minValue                                     #minimum outcome value
+    eventinfo[5] = maxValue                                     #maximum outcome value
+    eventinfo[6] = numOutcomes                                  #number of outcomes
+    mcopy(eventinfo + 7*32, description, len(description))
+    eventID = sha3(eventinfo, chars=len(eventinfo))
     self.initiateOwner(eventID)
-    if(!self.getCreator(eventID)):
-        if(self.setInfo(eventID, description, msg.sender, 0) && self.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes, resolution)):
-            return(eventID)
-        else:
-            return(0)
+    if(self.getCreator(eventID)):
+        return(0)
+    if(self.setInfo(eventID, description, msg.sender, 0) && self.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes, resolution)):
+        return(eventID)
     else:
         return(0)
 
@@ -1243,23 +1232,15 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
 # @param extraInfo is a string of any extra info associated with a market
 # @return marketID if success or 1 if on an oracle only branch creation we have success
 # error messages otherwise
-    # -1: bad input or parent doesn't exist
-    # -2: too many events
-    # -3: too many outcomes
-    # -4: not enough money to pay all the event bonds
-    # -5: fee too low
-    # -6: duplicate events
-    # -7: event already expired
-    # -8: market already exists
-    # -9: would expire during non-reporting fork period
+    # -1: bad input or event doesn't exist
+    # -2: event already expired
+    # -3: would expire during non-reporting fork period
+    # -4: market already exists
+    # throws if not enough money to create the market and place event in the appropriate reporting period
 # .05 eth to create
+# need at least 1.2M gas @ gas price to cover resolution 500k per event to calc. num reports for it - this is passed as value to this function
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
 def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, makerFees, extraInfo:str):
-    if(makerFees<0 or makerFees > ONEHALF):
-        return(0)
-    numOutcomes = self.getNumOutcomes(event)
-    if(numOutcomes > 8):
-        return(-3)
     periodLength = self.getPeriodLength(branch)
     creationFee = POINTZEROSIX * self.getBaseReporters(branch) * ONE / (2*tradingFee)
     # gives ether/cash amount in fixed point
@@ -1267,45 +1248,28 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
     if(creationFee < minFee):
         creationFee = minFee
     validity_bond = (creationFee * (1 + self.getPast24(period)) / (1 + self.getNumberEvents(branch, self.getVotePeriod(branch))))/2
-    if(self.balance(msg.sender) < (creationFee+validity_bond)):
-        return(-4)
-    # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
-    if(periodLength==0 or len(description)==0 || tradingFee < self.getMinTradingFee(branch) or tradingFee > 2^61):
-        return(-1)
-    # need at least 1.2M gas @ gas price to cover resolution + 1M for each additional event + 500k per event to calc. num reports for it
-    if(msg.value < (1200000*tx.gasprice + 1000000*tx.gasprice*(eventNum-1) + 500000*tx.gasprice)):
-        send(msg.sender, msg.value)
-        return(0)
-
-    # check that events have same exp. dates && branch
+    numOutcomes = self.getNumOutcomes(event)
     cumulativeScale = 0
     # market's trading period is the same as the last expiring event in the market
     expirationDate = self.getExpiration(event)
     futurePeriod = expirationDate / periodLength
-    if(expirationDate < block.timestamp):
-        return(-7)
     forkPeriod = self.getForkPeriod(branch)
-    if(forkPeriod && (futurePeriod == forkPeriod or futurePeriod == (forkPeriod+1))):
-        return(-9)
-    if(self.getEventBranch(event) != branch || !self.getCreator(event)):
+    # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
+    if(periodLength==0 or len(description)==0 || tradingFee < self.getMinTradingFee(branch) or tradingFee > 2^61 or self.getEventBranch(event) != branch or !self.getCreator(event) or makerFees < 0 or makerFees > ONEHALF):
         return(-1)
-    if(!self.getBond(event)):
-        # pay validity / indeterminate protection bond
-        period = block.timestamp / TWENTYFOURHR
-        if(!self.sendFrom(event, validity_bond, msg.sender)):
-            return(-4)
-        self.setBond(event, validity_bond)
-        self.addPast24(period)
+    if(expirationDate < block.timestamp):
+        return(-2)
+    if(forkPeriod && (futurePeriod == forkPeriod or futurePeriod == (forkPeriod+1))):
+        return(-3)
     #scalars
     maxValue = self.getMaxValue(event)
     minValue = self.getMinValue(event)
-    if((maxValue!=TWO || minValue !=ONE) && self.getNumOutcomes(event)==2):
-        # is a valid scalar
+    # is a valid scalar
+    if((maxValue!=TWO || minValue !=ONE) && numOutcomes==2):
         # cumulativeScale is the range of a scalar
         cumulativeScale += maxValue - minValue
     if(cumulativeScale==0):
         cumulativeScale = ONE
-    lastExpDate = expirationDate
 
     # formation of marketID (hash)
     marketinfo = string(8*32 + len(description))
@@ -1315,41 +1279,53 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
     marketinfo[3] = tag1
     marketinfo[4] = tag2
     marketinfo[5] = tag3
-    marketinfo[6] = lastExpDate
+    marketinfo[6] = expirationDate
     marketinfo[7] = len(description)
     mcopy(marketinfo + 8*32, description, chars=len(description))
     marketID = sha3(marketinfo, chars=len(marketinfo))
-    
     # if it's already been created return 0
     if(self.getCreator(marketID) || self.getMarketNumOutcomes(marketID)):
-        return(-8)
+        return(-4)
     events = array(1)
     events[0] = event
     # initialize market and send money to pay for resolution
-    if(self.sendFrom(branch, creationFee, msg.sender) && send(MARKETS, (msg.value-500000*eventNum*tx.gasprice)) && self.setInfo(marketID, description, msg.sender, creationFee) && self.addMarketToBranch(branch, marketID) && self.initializeMarket(marketID, events, futurePeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*eventNum*tx.gasprice, creationFee, lastExpDate)):
-        # add events to the appropriate reporting period
-        self.addMarket(event, marketID)
-        if(self.getEvent(branch, futurePeriod, self.getEventIndex(futurePeriod, event))!=event):
-            self.addEvent(branch, futurePeriod, event, 500000*tx.gasprice)
-            # cost for calculating num. of reports for an event
-            self.send(EXPEVENTS, 500000*tx.gasprice)
+    if(self.sendFrom(branch, creationFee, msg.sender) && send(MARKETS, (msg.value-500000*tx.gasprice)) && self.setInfo(marketID, description, msg.sender, creationFee) && self.addMarketToBranch(branch, marketID) && self.initializeMarket(marketID, events, futurePeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, expirationDate)):
         self.addToMarketsHash(branch, marketID)
         self.initiateOwner(marketID)
-        return(marketID)
+        self.addMarket(event, marketID)
     else:
-        return(0)
+        throw
+    # add events to the appropriate reporting period
+    if(self.getEvent(branch, futurePeriod, self.getEventIndex(futurePeriod, event))!=event):
+        self.addEvent(branch, futurePeriod, event, 500000*tx.gasprice)
+        # cost for calculating num. of reports for an event
+        if(!send(EXPEVENTS, 500000*tx.gasprice)):
+            throw
+        if(!self.getBond(event)):
+            # pay validity / indeterminate protection bond
+            period = block.timestamp / TWENTYFOURHR
+            if(!self.sendFrom(event, validity_bond, msg.sender)):
+                throw
+            self.setBond(event, validity_bond)
+            self.addPast24(period)
+    return(marketID)
 
+# Updates a trading fee to be lower in a market
+# Errors
+    # -1: not the market creator
+    # -2: invalid new trading fee
 def updateTradingFee(branch, market, tradingFee):
     refund()
     if(msg.sender != self.getCreator(market) || tx.origin != self.getCreator(market)):
-        return(-4)
+        return(-1)
     oldFee = self.getTradingFee(market)
     oldCreationFee = POINTZEROSIX * self.getBaseReporters(branch) * ONE / oldFee
     newCreationFee = POINTZEROSIX * self.getBaseReporters(branch) * ONE / tradingFee
     if(tradingFee < self.getMinTradingFee(branch) or tradingFee > oldFee):
-        return(-1)
-    self.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender)
-    return(self.setTradingFee(market, tradingFee))
+        return(-2)
+    if(!self.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender) && self.setTradingFee(market, tradingFee)):
+        throw
+    return(1)
 
 # Anyone can post an "Early Resolution Bond"
 # This bond is equal to 0.5 * Market_Fee * Market_Value
@@ -1378,7 +1354,7 @@ def pushMarketForward(branch, market):
             return(-4)
     # push into next vote period
     period = block.timestamp/periodLength
-    # figure out what's going on with subsidy system here
+    # figure out what's going on with subsidy system here todo
     self.addEvent(branch, period, event, 0)
     # set event expiration date to be after the current reporting period ends
     self.setExpiration(event, block.timestamp)
@@ -1391,31 +1367,33 @@ inset('refund.se')
 # Buys amount of every outcome
 # cost 850k gas
 # Errors:
-    # 0: invalid market
-    # -3: not enough money
+    # 0: invalid market/doesn't exist
+    # -1: oracle only branch [no trading allowed]
+    # -2: not enough money
 def buyCompleteSets(market, amount):
     refund()
-    if(!self.getCreationTime(market)):
-        return(0)
     branch = self.getBranchID(market)
-    if(self.getOracleOnly(branch)):
-        return(-1)
     numOutcomes = self.getMarketNumOutcomes(market)
     cumScale = self.getCumScale(market)
     cost = amount*cumScale/ONE
+    if(!self.getCreationTime(market)):
+        return(0)
+    if(self.getOracleOnly(branch)):
+        return(-1)
     if(self.balance(msg.sender) < cost):
-        return(-3)
+        return(-2)
     participantNumber = self.getParticipantNumber(market, msg.sender)
     # if participant doesn't exist in market, add them
     if(msg.sender != self.getParticipantID(market, participantNumber)):
         participantNumber = self.addParticipant(market, msg.sender)
-    i = 1
-    # send shares of the event to user address
-    while i <= numOutcomes:
-        self.modifyShares(market, i, amount)
-        self.modifyParticipantShares(market, participantNumber, i, amount, 0)
-        i += 1
-    if(self.getVotePeriod(branch)<self.getTradingPeriod(market)):
+    n = 1
+    # send shares of the event to user address and increment the number issued in the market for each outcome
+    while n <= numOutcomes:
+        self.modifyShares(market, n, amount)
+        self.modifyParticipantShares(market, participantNumber, n, amount, 0)
+        n += 1
+    # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
+    if(self.getVotePeriod(branch) < self.getTradingPeriod(market)):
         self.modifySharesValue(market, amount*cumScale/ONE)
         self.adjustPeriodShareValueOutstanding(branch, self.getTradingPeriod(market), amount*cumScale/ONE)
     # send money from user acc. to market address/account
@@ -1425,31 +1403,32 @@ def buyCompleteSets(market, amount):
 # Sells amount of every outcome [if user owns it]
 # cost 850k gas
 # Errors:
+    # -1: oracle only / no trading branch
     # -2: trader doesn't exist
     # -3: user doesn't own enough shares 
 def sellCompleteSets(market, amount):
     refund()
-    branch = self.getBranchID(market)
-    if(self.getOracleOnly(branch)):
-        return(-1)
     participantNumber = self.getParticipantNumber(market, msg.sender)
+    branch = self.getBranchID(market)
     numOutcomes = self.getMarketNumOutcomes(market)
     cumScale = self.getCumScale(market)
-    branch = self.getBranchID(market)
+    cost = amount*cumScale/ONE
+    if(self.getOracleOnly(branch)):
+        return(-1)
     if(self.getParticipantID(market, participantNumber) != msg.sender):
         return(-2)
-    # these prices are in fixed point
-    cost = amount*cumScale/ONE
-    i = 1
-    while i <= numOutcomes:
-        if(self.getParticipantSharesPurchased(market, participantNumber, i) < amount):
+    n = 1
+    while n <= numOutcomes:
+        if(self.getParticipantSharesPurchased(market, participantNumber, n) < amount):
             return(-3)
-        i += 1
-    i = 1
-    while i <= numOutcomes:
-        self.modifyShares(market, i, -amount)
-        self.modifyParticipantShares(market, participantNumber, i, -amount, 0)
-        i += 1
+        n += 1
+    n = 1
+    # Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets
+    while n <= numOutcomes:
+        self.modifyShares(market, n, -amount)
+        self.modifyParticipantShares(market, participantNumber, n, -amount, 0)
+        n += 1
+    # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
     if(self.getVotePeriod(branch)<self.getTradingPeriod(market)):
         self.modifySharesValue(market, -amount*cumScale/ONE)
         self.adjustPeriodShareValueOutstanding(branch, self.getTradingPeriod(market), -amount*cumScale/ONE)
@@ -1459,30 +1438,45 @@ def sellCompleteSets(market, amount):
     return(1)
 inset('refund.se')
 
-# Returns the proportion of reporters who reported correctly on a given binary event 
+# Returns the proportion of reporters who reported correctly on a given binary event
+# Returns 0 if no outcome
 def proportionCorrect(event):
     refund()
     p = 0
     outcome = catch(self.getUncaughtOutcome(event))
-    if(outcome!=0):
-        # binary
-        if(self.getNumOutcomes(event)==2 and self.getMaxValue(event)==TWO and self.getMinValue(event)==ONE):
-            # subtract 1 to get it from 0 to 1
-            avgOutcome = self.getUncaughtOutcome(event) - ONE
-            # say we have outcome of 0, avg is .4, what is p?
-            # p is .6 or 60%
-            if(outcome == ONE):
-                p = ONE - avgOutcome
-            # say we have outcome of 1, avg is .8, what is p (proportion correct)?
-            # p is .8 or 80%
-            if(outcome == 2 * ONE):
-                p = avgOutcome
-            if(outcome == 3 * ONEHALF):
-                return(0)
-        return(p)
-    else:
+    if(outcome==0):
         return(0)
+    # binary
+    if(self.getNumOutcomes(event)==2 and self.getMaxValue(event)==TWO and self.getMinValue(event)==ONE):
+        # subtract 1 to get it from 0 to 1
+        avgOutcome = self.getUncaughtOutcome(event) - ONE
+        # say we have outcome of 0, avg is .4, what is p?
+            # p is .6 or 60%
+        if(outcome == ONE):
+            p = ONE - avgOutcome
+        # say we have outcome of 1, avg is .8, what is p (proportion correct)?
+            # p is .8 or 80%
+        elif(outcome == 2 * ONE):
+            p = avgOutcome
+        # unneeded but nice to know that in indeterminate case it'll return 0
+        #elif(outcome == 3 * ONEHALF):
+        #    return(0)
+    return(p)
 
+### Helper functions:
+macro YES: TWO
+macro NO: ONE
+macro BAD: 3 * ONEHALF
+macro CATCH_TOLERANCE: ONE / 10
+
+# Bins values to 1, 1.5, 2
+macro catch($x):
+    if($x < (BAD - CATCH_TOLERANCE)):
+        NO
+    elif($x > (BAD + CATCH_TOLERANCE)):
+        YES
+    else:
+        BAD
 inset('refund.se')
 
 # sender/owner, then spender
@@ -1730,42 +1724,45 @@ inset('refund.se')
 macro POINTNINE: 16602069666338596864
 
 # Call when a user who hasn't reported for a while [and had their rep active] and wants to start again and needs to catch up on penalizations
+# Errors:
+    # -1: not in first half of reporting period
+    # -2: doesn't need to be penalized/caught up
+    # -3: user isn't behind or reported in the last period [and should thus use the penalization functions in consensus.se]
 def penalizationCatchup(branch, sender):
     refund()
-    periodLength = self.getPeriodLength(branch)
-    residual = block.timestamp % periodLength
-    # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
-    if(residual > periodLength/2):
-        return(-2)
     # find delta between this last period and the last one a reporter was penalized up to
     lastPeriodPenalized = self.getPenalizedUpTo(branch, sender)
     lastPeriod = self.getVotePeriod(branch)-1
     delta = lastPeriod - lastPeriodPenalized
     oldRep = self.getRepBalance(branch, sender)
+    periodLength = self.getPeriodLength(branch)
+    residual = block.timestamp % periodLength
+    # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
+    if(residual > periodLength/2):
+        return(-1)
+    if(delta <= 0):
+        return(-2)
     # provided user is at least one period behind and they didn't report in the last period
-    if(lastPeriodPenalized!=lastPeriod && !self.getNumReportsActual(branch, lastPeriod, sender)):
-        if(delta <= 0):
-            return(0)
-        # dock 10% for each period they didn't penalize on
-        smoothedRep = oldRep*POINTNINE/ONE
-        i = 1
-        # if delta >22, max is 23 [1 above, 1 below, and 21 in while loop] penalizations simply so we don't run into out of gas issues
-        if(delta>22):
-            smoothedRep = smoothedRep*POINTNINE/ONE
-            delta = 22
-        while i < delta:
-            smoothedRep = smoothedRep*POINTNINE/ONE
-            i += 1
-        # and send it to branch for penalty rep collection
-        repChange = oldRep - smoothedRep
-        # removes rep from reporter who lost it
-        self.subtractRep(branch, self.repIDToIndex(branch, sender), repChange)
-        # sends that rep to the branch rep pool
-        self.addRep(branch, self.repIDToIndex(branch, branch), repChange)
-        self.setPenalizedUpTo(branch, sender, lastPeriod)
-        return(1)
-    else:
-        return(0)
+    if(lastPeriodPenalized==lastPeriod or self.getNumReportsActual(branch, lastPeriod, sender)):
+        return(-3)
+    # dock 10% for each period they didn't penalize on
+    smoothedRep = oldRep*POINTNINE/ONE
+    i = 1
+    # if delta >22, max is 23 [1 above, 1 below, and 21 in while loop] penalizations simply so we don't run into out of gas issues
+    if(delta>22):
+        smoothedRep = smoothedRep*POINTNINE/ONE
+        delta = 22
+    while i < delta:
+        smoothedRep = smoothedRep*POINTNINE/ONE
+        i += 1
+    # and send it to branch for penalty rep collection
+    repChange = oldRep - smoothedRep
+    # removes rep from reporter who lost it
+    self.subtractRep(branch, self.repIDToIndex(branch, sender), repChange)
+    # sends that rep to the branch rep pool
+    self.addRep(branch, self.repIDToIndex(branch, branch), repChange)
+    self.setPenalizedUpTo(branch, sender, lastPeriod)
+    return(1)
 inset('refund.se')
 
 macro YES: TWO
@@ -1803,7 +1800,6 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             self.subtractCash($market, self.getTradingFee($market)*self.getTotalSharesPurchased($market)/(2*ONE))
         self.setTradingPeriod($market, self.getOriginalTradingPeriod($market))
         self.setPushedForward($market, 0, msg.sender)
-        self.setNumReportsExpectedEvent($branch, $votingPeriodEvent, $event, 0)
         self.setNumReportsEvent($branch, $votingPeriodEvent, $event, 0)
         #set outcome to 0
         self.setOutcome($event, 0)
@@ -2046,6 +2042,12 @@ macro catch($x):
         YES
     else:
         BAD
+        
+### Helper functions:
+macro YES: TWO
+macro NO: ONE
+macro BAD: 3 * ONEHALF
+macro CATCH_TOLERANCE: ONE / 10
 inset('refund.se')
 
 macro POINTZEROONE: 184467440737095520
@@ -2466,22 +2468,18 @@ inset('refund.se')
 
 # Anti cheat/collusion mechanism: provide ballot and random salt to steal rep from a colluder
 # Returns:
-    # 0: not a valid claim
     # 1: on success
     # -1: invalid vote period
     # -2: past reveal date
     # -3: reporter being slashed doesn't exist
+    # -4: invalid claim / report hash -     # make sure that the colluding reporter's commit is the same as the info provided in the params
 def slashRep(branch, salt, report, reporter, eventID):
     refund()
     periodLength = self.getPeriodLength(branch)
     residual = block.timestamp % periodLength
-    if(residual > periodLength/2):
-        return(-2)
     votePeriod = self.getVotePeriod(branch)
-    # if actually past vote period dont allow it
+    alreadySlashed = self.getSlashed(branch, votePeriod, reporter)
     votePeriodShouldBe = block.timestamp / periodLength - 1
-    if(votePeriodShouldBe!=votePeriod):
-        return(-1)
     realHash = self.getReportHash(branch, votePeriod, reporter, eventID)
     hashInfo = array(4)
     hashInfo[0] = reporter
@@ -2489,29 +2487,30 @@ def slashRep(branch, salt, report, reporter, eventID):
     hashInfo[2] = report
     hashInfo[3] = eventID
     reportHash = sha3(hashInfo, chars=32*len(hashInfo))
-    # make sure that the colluding reporter's commit is the same as the info provided in the params
+    if(residual > periodLength/2):
+        return(-2)
+    if(votePeriodShouldBe!=votePeriod):
+        return(-1)
+    if(self.getReporterID(branch, reporterIndex)!=reporter):
+        return(-3)
+    if(alreadySlashed):
+        return(-5)
     if(reportHash!=realHash):
-        return(0)
-    else:
-        if(!self.getSlashed(branch, votePeriod, reporter)):
-            self.setSlashed(branch, votePeriod, reporter)
-            reporterIndex = self.repIDToIndex(branch, reporter)
-            trutherIndex = self.repIDToIndex(branch, msg.sender)
-            # if the truther's rep. account doesn't exist, make one
-            if(self.getReporterID(branch, trutherIndex)!=msg.sender):
-                trutherIndex = self.getNumberReporters(branch)
-                self.addReporter(branch, msg.sender)
-            if(self.getReporterID(branch, reporterIndex)!=reporter):
-                return(-3)
-            reporterBalance = self.getRepBalance(branch, reporter)
-            # removes rep from colluder
-            self.subtractRep(branch, reporterIndex, reporterBalance)
-            # gives truther half 
-            self.addRep(branch, trutherIndex, (reporterBalance*ONEHALF / ONE))
-            # other half sent to branch
-            self.addRep(branch, self.repIDToIndex(branch, branch), reporterBalance*ONEHALF/ONE)
-        else:
-            return(0)
+        return(-4)
+    self.setSlashed(branch, votePeriod, reporter)
+    reporterIndex = self.repIDToIndex(branch, reporter)
+    trutherIndex = self.repIDToIndex(branch, msg.sender)
+    # if the truther's rep. account doesn't exist, make one
+    if(self.getReporterID(branch, trutherIndex)!=msg.sender):
+        trutherIndex = self.getNumberReporters(branch)
+        self.addReporter(branch, msg.sender)
+    reporterBalance = self.getRepBalance(branch, reporter)
+    # removes rep from colluder
+    self.subtractRep(branch, reporterIndex, reporterBalance)
+    # gives truther half 
+    self.addRep(branch, trutherIndex, (reporterBalance*ONEHALF / ONE))
+    # other half sent to branch
+    self.addRep(branch, self.repIDToIndex(branch, branch), reporterBalance*ONEHALF/ONE)
     return(1)
 inset('refund.se')
 
@@ -3018,8 +3017,13 @@ macro TWENTYFOURHR: 86400
 inset('refund.se')
 
 # Payout a trader in a market with one winning outcome [so not scalar]
+# Error:
+    # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant #0 is really #0]
 def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes):
     participantNumber = self.getParticipantNumber(market, sender)
+    participant = self.getParticipantID(market, participantNumber)
+    if(participant!=sender):
+        return(-1)
     cumScale = self.getCumScale(market)
     # if it's an indeterminate categorical market resolve with all outcomes having an equal value
     if(categoricalPointFive):
@@ -3033,7 +3037,6 @@ def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes
     else:
         # distribute profit to the people who won money by holding winning shares
         sharesOwned = self.getParticipantSharesPurchased(market, participantNumber, winningOutcome)
-        participant = self.getParticipantID(market, participantNumber)
         self.modifyParticipantShares(market, participantNumber, winningOutcome, -sharesOwned)
         self.subtractCash(market, sharesOwned*cumScale/ONE)
         self.addCash(participant, sharesOwned*cumScale/ONE)
@@ -3634,7 +3637,7 @@ data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReport
 # numReportsActual is the amount of reports a user has submitted in a period
 # lesserReportNum is the number of reports an event should have [the lesser of how many it can afford from fees and how many it should have due to outstanding share value]
 # periodRepConstant is 
-data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], numReportsActual[][], repEvent[][], lesserReportNum[][], periodRepConstant[][], reportersPaidSoFarForEvent[])
+data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsActual[][], repEvent[][], lesserReportNum[][], periodRepConstant[][], reportersPaidSoFarForEvent[])
 
 
 # branch, period as params
@@ -3681,9 +3684,6 @@ def getRepEvent(branch, votePeriod, event):
 
 def getEthicReport(branch, period, event, sender):
     return(self.branches[branch].ethics[period][sender].event[event])
-
-def getNumReportsExpectedEvent(branch, votePeriod, eventID):
-    return(self.branches[branch].numReportsExpectedEvent[votePeriod][eventID])
 
 def getNumReportsEvent(branch, votePeriod, eventID):
     return(self.branches[branch].numReportsEvent[votePeriod][eventID])
@@ -3913,10 +3913,6 @@ def setEthicReport(branch, period, event, ethics, sender):
     self.branches[branch].ethics[period][sender].event[event] = ethics
     return(1)
 
-def setNumReportsExpectedEvent(branch, votePeriod, eventID, num):
-    self.branches[branch].numReportsExpectedEvent[votePeriod][eventID] = num
-    return(1)
-
 def setNumReportsEvent(branch, votePeriod, eventID, num):
     self.branches[branch].numReportsEvent[votePeriod][eventID] = num
     return(1)
@@ -3924,10 +3920,6 @@ def setNumReportsEvent(branch, votePeriod, eventID, num):
 def addReportToEvent(branch, votePeriod, eventID, sender):
     self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
     self.branches[branch].numReportsActual[sender][votePeriod] += 1
-    return(1)
-
-def addReportExpected(branch, votePeriod, eventID):
-    self.branches[branch].numReportsExpectedEvent[votePeriod][eventID] += 1
     return(1)
 
 def setReport(branch, period, event, report, sender):
@@ -3954,13 +3946,13 @@ def setLesserReportNum(branch, period, event, num):
 def setReportingThreshold(event):
     refund()
     # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
-    # final check is if < 3 reports so far
+    # final check is if no reports on event
     # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this one
     branch = self.getBranch(event)
     periodLength = self.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     votePeriod = self.getVotePeriod(branch)
-    if(votePeriod==self.getExpiration(event)/periodLength and (((block.timestamp + TWENTYFOURHR) % periodLength) > periodLength/2) and self.branches[branch].numReportsExpectedEvent[votePeriod][event]<3):
+    if(votePeriod==self.getExpiration(event)/periodLength and (((block.timestamp + TWENTYFOURHR) % periodLength) > periodLength/2) and !self.getUncaughtOutcome(event)):
         self.setThreshold(event, 2**192)
         return(1)
     else:
