@@ -81,8 +81,6 @@ def submitReportHash(event, reportHash):
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     if(residual <= periodLength/2 && shaHash <= reportingThreshold):
-        if(EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)==0):
-            EXPEVENTS.addReportExpected(branch, votePeriod, event)
         EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
         return(1)
     return(-2)

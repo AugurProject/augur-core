@@ -40,7 +40,7 @@ data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReport
 # numReportsActual is the amount of reports a user has submitted in a period
 # lesserReportNum is the number of reports an event should have [the lesser of how many it can afford from fees and how many it should have due to outstanding share value]
 # periodRepConstant is 
-data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsExpectedEvent[][], numReportsActual[][], repEvent[][], lesserReportNum[][], periodRepConstant[][], reportersPaidSoFarForEvent[])
+data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsActual[][], repEvent[][], lesserReportNum[][], periodRepConstant[][], reportersPaidSoFarForEvent[])
 
 
 # branch, period as params
@@ -87,9 +87,6 @@ def getRepEvent(branch, votePeriod, event):
 
 def getEthicReport(branch, period, event, sender):
     return(self.branches[branch].ethics[period][sender].event[event])
-
-def getNumReportsExpectedEvent(branch, votePeriod, eventID):
-    return(self.branches[branch].numReportsExpectedEvent[votePeriod][eventID])
 
 def getNumReportsEvent(branch, votePeriod, eventID):
     return(self.branches[branch].numReportsEvent[votePeriod][eventID])
@@ -319,10 +316,6 @@ def setEthicReport(branch, period, event, ethics, sender):
     self.branches[branch].ethics[period][sender].event[event] = ethics
     return(1)
 
-def setNumReportsExpectedEvent(branch, votePeriod, eventID, num):
-    self.branches[branch].numReportsExpectedEvent[votePeriod][eventID] = num
-    return(1)
-
 def setNumReportsEvent(branch, votePeriod, eventID, num):
     self.branches[branch].numReportsEvent[votePeriod][eventID] = num
     return(1)
@@ -330,10 +323,6 @@ def setNumReportsEvent(branch, votePeriod, eventID, num):
 def addReportToEvent(branch, votePeriod, eventID, sender):
     self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
     self.branches[branch].numReportsActual[sender][votePeriod] += 1
-    return(1)
-
-def addReportExpected(branch, votePeriod, eventID):
-    self.branches[branch].numReportsExpectedEvent[votePeriod][eventID] += 1
     return(1)
 
 def setReport(branch, period, event, report, sender):
@@ -360,13 +349,13 @@ def setLesserReportNum(branch, period, event, num):
 def setReportingThreshold(event):
     refund()
     # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
-    # final check is if < 3 reports so far
+    # final check is if no reports on event
     # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this one
     branch = EVENTS.getBranch(event)
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     votePeriod = BRANCHES.getVotePeriod(branch)
-    if(votePeriod==EVENTS.getExpiration(event)/periodLength and (((block.timestamp + TWENTYFOURHR) % periodLength) > periodLength/2) and self.branches[branch].numReportsExpectedEvent[votePeriod][event]<3):
+    if(votePeriod==EVENTS.getExpiration(event)/periodLength and (((block.timestamp + TWENTYFOURHR) % periodLength) > periodLength/2) and !EVENTS.getUncaughtOutcome(event)):
         EVENTS.setThreshold(event, 2**192)
         return(1)
     else:

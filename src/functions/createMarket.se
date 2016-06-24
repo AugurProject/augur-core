@@ -56,33 +56,29 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
     forkPeriod = BRANCHES.getForkPeriod(branch)
-    if(forkPeriod && ((expDate / periodLength)==forkPeriod or (expDate / periodLength)==(forkPeriod+1))):
-        return(-4)
+    if(!periodLength or description == 0 or expDate < block.timestamp):
+        return(-1)
     if(maxValue < minValue or (maxValue-minValue) < ONE):
         return(-2)
-    eventID = 0
-    if(periodLength && description != 0 && expDate > block.timestamp):
-        eventinfo = string(7*32 + len(description))
-        eventinfo[0] = branch                                       #branchID
-        eventinfo[1] = expDate                                      #expiration date
-        eventinfo[2] = msg.sender                                   #creator address
-        eventinfo[3] = periodLength
-        eventinfo[4] = minValue                                     #minimum outcome value
-        eventinfo[5] = maxValue                                     #maximum outcome value
-        eventinfo[6] = numOutcomes                                  #number of outcomes
-        mcopy(eventinfo + 7*32, description, len(description))
-        eventID = sha3(eventinfo, chars=len(eventinfo))
-    else:
-        return(-1)
     if(numOutcomes < 2 || numOutcomes > 8):
         return(-3)
-    currentVotePeriod = BRANCHES.getVotePeriod(branch)
+    if(forkPeriod && ((expDate / periodLength)==forkPeriod or (expDate / periodLength)==(forkPeriod+1))):
+        return(-4)
+    eventinfo = string(7*32 + len(description))
+    eventinfo[0] = branch                                       #branchID
+    eventinfo[1] = expDate                                      #expiration date
+    eventinfo[2] = msg.sender                                   #creator address
+    eventinfo[3] = periodLength
+    eventinfo[4] = minValue                                     #minimum outcome value
+    eventinfo[5] = maxValue                                     #maximum outcome value
+    eventinfo[6] = numOutcomes                                  #number of outcomes
+    mcopy(eventinfo + 7*32, description, len(description))
+    eventID = sha3(eventinfo, chars=len(eventinfo))
     CASH.initiateOwner(eventID)
-    if(!INFO.getCreator(eventID)):
-        if(INFO.setInfo(eventID, description, msg.sender, 0) && EVENTS.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes, resolution)):
-            return(eventID)
-        else:
-            return(0)
+    if(INFO.getCreator(eventID)):
+        return(0)
+    if(INFO.setInfo(eventID, description, msg.sender, 0) && EVENTS.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes, resolution)):
+        return(eventID)
     else:
         return(0)
 

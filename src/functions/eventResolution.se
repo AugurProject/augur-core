@@ -41,7 +41,6 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             CASH.subtractCash($market, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
         MARKETS.setTradingPeriod($market, MARKETS.getOriginalTradingPeriod($market))
         MARKETS.setPushedForward($market, 0, msg.sender)
-        EXPEVENTS.setNumReportsExpectedEvent($branch, $votingPeriodEvent, $event, 0)
         EXPEVENTS.setNumReportsEvent($branch, $votingPeriodEvent, $event, 0)
         #set outcome to 0
         EVENTS.setOutcome($event, 0)

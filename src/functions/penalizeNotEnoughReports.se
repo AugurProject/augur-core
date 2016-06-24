@@ -17,7 +17,8 @@ macro POINTNINE: 16602069666338596864
 # The rep lost here is then sent to the branch's rep account and distributed like other redistributed rep.
 # Note:
     # Reporters pay an eth bond for this on their first report --- if never called then during collect fees they get it back else it goes back to pay someone who correctly calls this function, so the bond is returned to the poster if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees [which means it's the first period after a fork is initiated]
-# Returns 1 if successful
+# Returns 1 if successful penalization
+# Returns 2 if didn't need to be penalized and thus wasn't
 # Errors:
     # -1: already done
     # -2: not in right part of period
@@ -28,11 +29,12 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     residual = block.timestamp % periodLength
     if(CONSENSUS.getNotEnoughPenalized(branch, reporter, lastPeriod)):
         return(-1)
-    if(BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
-        CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
-        return(1)
     if(residual > periodLength/2):
         return(-2)
+    # in period just after fork period no reports required
+    if(BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
+        CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
+        return(2)
     # events a user should be reporting on
     # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
     # a^b=exp(b*ln(a))=e^(b*ln(a)).
@@ -79,4 +81,4 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         CONSENSUS.doRefund(msg.sender, reporter)
         return(1)
     else:
-        return(0)
+        return(2)

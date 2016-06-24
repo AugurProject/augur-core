@@ -3,8 +3,13 @@ import cash as CASH
 inset('refund.se')
 
 # Payout a trader in a market with one winning outcome [so not scalar]
+# Error:
+    # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant #0 is really #0]
 def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes):
     participantNumber = MARKETS.getParticipantNumber(market, sender)
+    participant = MARKETS.getParticipantID(market, participantNumber)
+    if(participant!=sender):
+        return(-1)
     cumScale = MARKETS.getCumScale(market)
     # if it's an indeterminate categorical market resolve with all outcomes having an equal value
     if(categoricalPointFive):
@@ -18,7 +23,6 @@ def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes
     else:
         # distribute profit to the people who won money by holding winning shares
         sharesOwned = MARKETS.getParticipantSharesPurchased(market, participantNumber, winningOutcome)
-        participant = MARKETS.getParticipantID(market, participantNumber)
         MARKETS.modifyParticipantShares(market, participantNumber, winningOutcome, -sharesOwned)
         CASH.subtractCash(market, sharesOwned*cumScale/ONE)
         CASH.addCash(participant, sharesOwned*cumScale/ONE)

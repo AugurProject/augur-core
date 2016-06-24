@@ -67,36 +67,32 @@ macro ethic_catch($x):
     # -4: market isn't in branch
     # -5: Event forked and not final yet
     # -6: bonded pushed forward market not ready to be resolved
-# if market's events have moved due to a fork branch param passed should be the new fork
+    # -7: already resolved
+# if market's events have moved due to a fork branch param passed should be the new fork [todo check to make sure it handles the wrong branch param properly here]
 def closeMarket(branch, market, sender):
     refund()
-    if(MARKETS.getBranchID(market)!=branch):
-        return(-4)
     if(CASH.balance(market)<=0):
         return(-1)
+    if(EVENTS.getUncaughtOutcome(event)==0):
+        return(-2)
+    if(BACKSTOPS.getRoundTwo(event) && !BACKSTOPS.getFinal(event)):
+        return(-3)
+    if(MARKETS.getBranchID(market)!=branch):
+        return(-4)
     numberEvents = MARKETS.getNumEvents(market)
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)
-    reportingDone = 0
     # checks whether any events not already resolved
     resolved = 1
+    # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
     if(EVENTS.getOutcome(event)==0 && EVENTS.getmode(event)==0):
         resolved = 0
-    # checks if all the precommitted reports have been revealed already
-    numReports = EXPEVENTS.getNumReportsEvent(branch, EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch), event)
-    numExpected = EXPEVENTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch), event)
-    if(numReports == numExpected && numReports!=0 && numExpected!=0):
-        reportingDone = 1
-    if((period > tradingPeriod || reportingDone) && !resolved):
+    if((period > tradingPeriod) && !resolved):
         # look at through event in the market, get its outcomes, resolve it && use those to determine the winning outcomes for a given market!
         votingPeriodEvent = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
         fxpOutcome = EVENTS.getOutcome(event)
         resolution = 1
-        if(EVENTS.getUncaughtOutcome(event)==0):
-            return(-2)
-        if(BACKSTOPS.getRoundTwo(event) && !BACKSTOPS.getFinal(event)):
-            return(-3)
         forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
         currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
         if((EVENTS.getForked(event) && !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):
@@ -131,15 +127,9 @@ def claimProceeds(branch, market):
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)
-    reportingDone = 1
     resolved = 1
-    numReports = EXPEVENTS.getNumReportsEvent(branch, EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch), event)
-    numExpected = EXPEVENTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch), event)
     if(EVENTS.getOutcome(event)==0 && EVENTS.getmode(event)==0):
         resolved = 0
-    if(numReports != numExpected && numReports!=0 and numExpected!=0):
-        reportingDone = 0
-        i = numberEvents
     # as long as it's resolved money can be collected
     if((period > tradingPeriod || reportingDone) && resolved):
         winningOutcomes = array(8)
