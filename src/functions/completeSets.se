@@ -47,7 +47,7 @@ def buyCompleteSets(market, amount):
     # send shares of the event to user address
     while i <= numOutcomes:
         MARKETS.modifyShares(market, i, amount)
-        MARKETS.modifyParticipantShares(market, participantNumber, i, amount, 0)
+        MARKETS.modifyParticipantShares(market, participantNumber, i, amount, 0, 1)
         i += 1
     if(BRANCHES.getVotePeriod(branch)<MARKETS.getTradingPeriod(market)):
         MARKETS.modifySharesValue(market, amount*cumScale/ONE)
@@ -79,7 +79,7 @@ def sellCompleteSets(market, amount):
     i = 1
     while i <= numOutcomes:
         MARKETS.modifyShares(market, i, -amount)
-        MARKETS.modifyParticipantShares(market, participantNumber, i, -amount, 0)
+        MARKETS.modifyParticipantShares(market, participantNumber, i, -amount, 0, 1)
         i += 1
     if(BRANCHES.getVotePeriod(branch)<MARKETS.getTradingPeriod(market)):
         MARKETS.modifySharesValue(market, -amount*cumScale/ONE)

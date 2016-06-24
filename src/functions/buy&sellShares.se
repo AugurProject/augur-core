@@ -61,7 +61,7 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
         MARKETS.addTrade($market, trade_id, last_id)
         # Update available and trading amounts for asks
         if $type == ASK:
-            MARKETS.modifyParticipantShares($market, $participantNumber, $outcome, -$amount, 0)
+            MARKETS.modifyParticipantShares($market, $participantNumber, $outcome, -$amount, 0, 0)
             if($fee):
                 CASH.sendFrom($market, ($amount * $price * $fee / ONE^2), $sender)
         # Send / escrow cash for bids
@@ -109,7 +109,7 @@ def cancel(trade_id):
         elif type == ASK:
             # shares refund
             participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
-            MARKETS.modifyParticipantShares(market, participantNumber, outcome, amount, 1)
+            MARKETS.modifyParticipantShares(market, participantNumber, outcome, amount, 1, 0)
             CASH.subtractCash(market, (amount * price * fee / ONE^2))
             CASH.addCash(msg.sender, (amount * price * fee / ONE^2))
         # Log cancellation
@@ -246,7 +246,7 @@ def short_sell(buyer_trade_id, max_amount):
     # send shares of the event to user address
     while i <= numOutcomes:
         MARKETS.modifyShares(market, i, amount)
-        MARKETS.modifyParticipantShares(market, participantNumber, i, amount, 0)
+        MARKETS.modifyParticipantShares(market, participantNumber, i, amount, 0, 0)
         i += 1
     if(BRANCHES.getVotePeriod(branch)<MARKETS.getTradingPeriod(market)):
         MARKETS.modifySharesValue(market, amount*cumScale/ONE)
@@ -266,8 +266,8 @@ def short_sell(buyer_trade_id, max_amount):
         remove_trade(trade_id, market)
     # Update balances
     ownerNum = MARKETS.getParticipantNumber(market, owner)
-    MARKETS.modifyParticipantShares(market, participantNumber, outcome, -fill, 0)
-    MARKETS.modifyParticipantShares(market, ownerNum, outcome, fill, 0)
+    MARKETS.modifyParticipantShares(market, participantNumber, outcome, -fill, 0, 0)
+    MARKETS.modifyParticipantShares(market, ownerNum, outcome, fill, 0, 0)
     # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
     # 75% to branch + .5% more to branch per maker fee 1% decrease 
     CASH.sendFrom(branch, branchFees, msg.sender)
