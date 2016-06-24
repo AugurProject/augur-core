@@ -9,6 +9,7 @@ import sendReputation as SENDREP
 import roundTwo as ROUNDTWO
 import expiringEvents as EXPEVENTS
 import createBranch as CREATEBRANCH
+import consensusData as CONSENSUSDATA
 inset('refund.se')
 
 macro POINTZEROONE: 184467440737095520
@@ -127,8 +128,8 @@ def fork(event, branch, forkedOverEthicality):
     # todo find actual gas cost for resolution here and charge that
     if(msg.value < 200000*tx.gasprice):
         return(0)
-    send(CONSENSUS, msg.value)
-    CONSENSUS.setRefund(event, msg.value)
+    send(CONSENSUSDATA, msg.value)
+    CONSENSUSDATA.setRefund(event, msg.value)
     # if pushed forward event don't allow
     if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event)):
         return(-4)
@@ -186,7 +187,7 @@ def resolveForkedEvent(branch, event):
         return(-1)
     if(self.resolveForkEvent(branch, event)):
         EVENTS.setForkDone(event)
-        CONSENSUS.doRefund(msg.sender, event)
+        CONSENSUSDATA.doRefund(msg.sender, event)
         return(1)
     # fork not done yet
     else:

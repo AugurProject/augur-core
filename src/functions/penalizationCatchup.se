@@ -1,7 +1,7 @@
 import branches as BRANCHES
 import reporting as REPORTING
 import expiringEvents as EXPEVENTS
-import consensus as CONSENSUS
+import consensusData as CONSENSUSDATA
 
 inset('refund.se')
 
@@ -30,7 +30,7 @@ def penalizationCatchup(branch, sender):
     if(residual > periodLength/2):
         return(-2)
     # find delta between this last period and last penalized up to
-    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, sender)
+    lastPeriodPenalized = CONSENSUSDATA.getPenalizedUpTo(branch, sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     delta = lastPeriod - lastPeriodPenalized
     oldRep = REPORTING.getRepBalance(branch, sender)
@@ -53,7 +53,7 @@ def penalizationCatchup(branch, sender):
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, sender), repChange)
         # sends that rep to the branch rep pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repChange)
-        CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
+        CONSENSUSDATA.setPenalizedUpTo(branch, sender, lastPeriod)
         return(1)
     else:
         return(0)

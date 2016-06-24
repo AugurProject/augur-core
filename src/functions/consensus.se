@@ -6,7 +6,6 @@ import markets as MARKETS
 import backstops as BACKSTOPS
 import closeMarket as CLOSEMARKET
 import consensusData as CONSENSUS
-import penalizeNotEnoughReports as NOTENOUGH
 
 inset('refund.se')
 
