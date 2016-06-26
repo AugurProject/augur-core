@@ -235,21 +235,21 @@ macro remove_trade($trade_id, $market):
 # smallest trade value is 0.00000001
 def buy(amount, price, market, outcome):
     refund()
-    if(!self.getCreationTime(market)):
-        return(0)
-    branch = self.getBranchID(market)
-    if(self.getOracleOnly(branch)):
-        return(-2)
-    participantNumber = self.getParticipantNumber(market, msg.sender)
-    # if participant doesn't exist in market, add them
-    if(msg.sender != self.getParticipantID(market, participantNumber)):
-        participantNumber = self.addParticipant(market, msg.sender)
     trading_fee = self.getTradingFee(market)
     cumScale = self.getCumScale(market)
     fee = fee_percent(trading_fee, price, cumScale) * self.getMakerFees(market) / ONE
+    participantNumber = self.getParticipantNumber(market, msg.sender)
+    branch = self.getBranchID(market)
+    if(!self.getCreationTime(market)):
+        return(0)
     # price cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
     if(price>cumScale or amount*price < 3402823669209384705829531287552 or amount*price >= 2**190):
         return(-1)
+    if(self.getOracleOnly(branch)):
+        return(-2)
+    # if participant doesn't exist in market, add them
+    if(msg.sender != self.getParticipantID(market, participantNumber)):
+        participantNumber = self.addParticipant(market, msg.sender)
     if(self.balance(msg.sender) < (amount * price * (fee + ONE) / ONE^2)):
         return(-4)
     save_trade(BID, amount, price, market, outcome, branch, participantNumber, fee, msg.sender)
@@ -260,19 +260,20 @@ def buy(amount, price, market, outcome):
 def sell(amount, price, market, outcome):
     refund()
     branch = self.getBranchID(market)
+    trading_fee = self.getTradingFee(market)
+    cumScale = self.getCumScale(market)
+    fee = fee_percent(trading_fee, price, cumScale) * self.getMakerFees(market) / ONE
+    participantNumber = self.getParticipantNumber(market, msg.sender)
+    # price cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
+    if(price>cumScale or amount*price < 3402823669209384705829531287552L or amount*price >= 2**190):
+        return(-1)
     if(self.getOracleOnly(branch)):
         return(-2)
-    participantNumber = self.getParticipantNumber(market, msg.sender)
     if(self.getParticipantID(market, participantNumber) != msg.sender):
         return(-3)
     if(self.getParticipantSharesPurchased(market, participantNumber, outcome) < amount):
         return(-4)
-    trading_fee = self.getTradingFee(market)
-    cumScale = self.getCumScale(market)
-    fee = fee_percent(trading_fee, price, cumScale) * self.getMakerFees(market) / ONE
-    # price cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
-    if(price>cumScale or amount*price < 3402823669209384705829531287552L or amount*price >= 2**190):
-        return(-1)
+    # check for enough money for fees
     if(self.balance(msg.sender) < (amount * price * fee / ONE^2)):
         return(-4)
     save_trade(ASK, amount, price, market, outcome, branch, participantNumber, fee, msg.sender)
@@ -289,8 +290,11 @@ def sell(amount, price, market, outcome):
     #plus fees
         #1 should go to branch
         #1 should go to creator
+# Errors:
+    
 def short_sell(buyer_trade_id, max_amount):
     refund()
+    branch = self.getBranchID(market)
     # check trade hash
     tradeInfo = array(3)
     tradeInfo[0] = buyer_trade_id
@@ -320,7 +324,7 @@ def short_sell(buyer_trade_id, max_amount):
     # Make sure the trade has been mined, obvious HFT prevention
     if block.number <= trade[6]:
         return(TRADE_SAME_BLOCK_PROHIBITED)
-    branch = self.getBranchID(market)
+    
     if(self.getOracleOnly(branch)):
         return(-1)
     creator = self.getCreator(market)
@@ -515,6 +519,10 @@ macro ethic_catch($x):
 # if market's events have moved due to a fork branch param passed should be the new fork [todo check to make sure it handles the wrong branch param properly here]
 def closeMarket(branch, market, sender):
     refund()
+    numberEvents = self.getNumEvents(market)
+    tradingPeriod = self.getTradingPeriod(market)
+    period = self.getVotePeriod(branch)
+    event = self.getMarketEvent(market, 0)
     if(self.balance(market)<=0):
         return(-1)
     if(self.getUncaughtOutcome(event)==0):
@@ -523,10 +531,6 @@ def closeMarket(branch, market, sender):
         return(-3)
     if(self.getBranchID(market)!=branch):
         return(-4)
-    numberEvents = self.getNumEvents(market)
-    tradingPeriod = self.getTradingPeriod(market)
-    period = self.getVotePeriod(branch)
-    event = self.getMarketEvent(market, 0)
     # checks whether any events not already resolved
     resolved = 1
     # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
@@ -561,13 +565,13 @@ def closeMarket(branch, market, sender):
 # Claim trading profits/value per share after a market is resolved
 # @returns 1 if successful
 # Errors:
-    # 0: reporting not done
+    # 0: market not resolved
     # -1: trader doesn't exist
+    # -8: invalid branch
 def claimProceeds(branch, market):
     refund()
     if(self.getBranchID(market)!=branch):
         return(-8)
-    numberEvents = self.getNumEvents(market)
     tradingPeriod = self.getTradingPeriod(market)
     period = self.getVotePeriod(branch)
     event = self.getMarketEvent(market, 0)
@@ -583,14 +587,14 @@ def claimProceeds(branch, market):
         if(winningOutcomes[0]==0):
             return(0)
         if(winningOutcomes[1]==0):
-            minval = self.getMinValue(event)
             ethical = ethic_catch(self.getEthical(event))
             # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
             if(categorical(event) && (self.getmode(event)==ONEHALF or !ethical)):
                 outcome = self.oneOutcome(market, winningOutcomes[0], msg.sender, 1, self.getNumOutcomes(event))
+            # resolves a regular binary market
             else:
-                # resolves a regular binary market
                 outcome = self.oneOutcome(market, winningOutcomes[0], msg.sender, 0, 0)
+        # resolves a scalar market
         elif(winningOutcomes[1]):
             outcome = self.twoOutcomes(market, winningOutcomes, event, msg.sender)
         return(outcome)
@@ -3491,7 +3495,6 @@ data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicalit
     # bondPoster is the account which posted the bond
     # forkedOverEthicality states whether the event was forked due to controversy of ethicality
     # originalBranch is the branch the event was originally on
-    
 data forking[](bondPoster, bondAmount, forkedOverEthicality, bondPaid, originalBranch, moved)
 
 # Given a branch and a forkPeriod it states which fork the winner was
