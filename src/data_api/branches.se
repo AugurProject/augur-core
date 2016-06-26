@@ -171,6 +171,7 @@ def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleO
         self.Branches[ID].parentPeriod = parentPeriod
         self.Branches[ID].oracleOnly = oracleOnly
         self.Branches[ID].parent = parent
+        self.Branches[ID].baseReporters = self.Branches[parent].baseReporters
         CASH.initiateOwner(ID)
         return(1)
     else:
