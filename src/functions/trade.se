@@ -162,11 +162,12 @@ def trade(max_value, max_amount, trade_ids:arr):
             makerFeeRate = MARKETS.getMakerFees(market)
             takerFee = (ONEPOINTFIVE - makerFeeRate)*fee / ONE
             total_trade_cost = amount * (price + takerFee) / ONE
-            # trade amount to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilledIncludingFees)
+            # trade value to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilledIncludingFees)
             value_to_spend = min(total_trade_cost, min(max_value, balance))
             # Determine fill amount
             fill = value_to_spend*ONE / (price+takerFee)
-            if(value_to_spend >= 184467440738):
+            trade_value_excluding_fees = fill*price/ONE
+            if(trade_value_excluding_feesa >= 184467440738):
                 # Update trade amount or remove filled trade
                 if fill < amount:
                     TRADES.fill_trade(trade_ids[t], fill)
@@ -179,9 +180,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
                 MARKETS.modifyParticipantShares(market, sender, outcome, fill, 0)
 
-                trade_value_excluding_fees = fill*price/ONE
-                branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees*fee / ONE**2
-                creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees*fee / ONE**2
+                branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees/ONE * fee / ONE
+                creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees/ONE * fee / ONE
                 # Transfer cash from user to person who has ask order and pay fee to branch and market creator
                 # 75% to branch + .5% more to branch per maker fee 1% decrease 
                 CASH.addCash(branch, branchFees)
@@ -191,7 +191,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 CASH.subtractCash(msg.sender, value_to_spend)
 
                 # other party [maker] pay their part of the fee here too
-                makerFee = fee * trade_value_excluding_fees * makerFeeRate / ONE**2
+                makerFee = trade_value_excluding_fees * makerFeeRate / ONE * fee / ONE
                 CASH.subtractCash(market, makerFee)
                 CASH.addCash(creator, makerFee/2)
                 CASH.addCash(branch, makerFee/2)

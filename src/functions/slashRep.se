@@ -42,7 +42,7 @@ def slashRep(branch, salt, report, reporter, eventID):
     # if the truther's rep. account doesn't exist, make one
     if(REPORTING.getReporterID(branch, trutherIndex)!=msg.sender):
         trutherIndex = REPORTING.getNumberReporters(branch)
-        REPORTING.addReporter(branch, msg.sender)
+        REPORTING.addReporter(branch, msg.sender, 0, 0, 0)
     reporterBalance = REPORTING.getRepBalance(branch, reporter)
     # removes rep from colluder
     REPORTING.subtractRep(branch, reporterIndex, reporterBalance)

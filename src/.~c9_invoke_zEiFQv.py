@@ -369,13 +369,9 @@ def test_trading():
             after = c.balance(sender2)
             afterm = c.balance(market[a])
             afterog = c.balance(s.block.coinbase)
-            print before
-            print after
-            print fee
-            print c.getMakerFees(market[a])
             assert(isclose((before-after)/2**64, (2**64*.01+fee*(1+((2**63-c.getMakerFees(market[a]))/2**64)))/2**64))
             print beforem
-            print afterm
+            
             print beforem - afterm
             print makerFee
             assert(isclose((beforem-afterm)/2**64, makerFee/2**64))
