@@ -12,7 +12,7 @@
 #
 #    This program is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See thes
 #    GNU General Public License for more details.
 #
 #    You should have received a copy of the GNU General Public License
@@ -236,7 +236,7 @@ def modifyParticipantShares(marketID, participantNumber, outcome, amount, cancel
 	if(cancel):
 		amount = -1*amount
 	if(!sets):
-    	self.Markets[marketID].volume += amount
+	    	self.Markets[marketID].volume += amount
 	return(1)
 
 def setWinningOutcomes(market, outcomes: arr):
