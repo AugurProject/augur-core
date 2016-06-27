@@ -76,6 +76,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         newAfterRep = afterRep + repChange
         if(afterRep==0):
             newAfterRep = oldRep+newRep
+        # todo decrease denominator by rep person lost here
         EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, reporter)
         CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
         CONSENSUS.doRefund(msg.sender, reporter)

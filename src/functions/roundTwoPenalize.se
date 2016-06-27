@@ -28,6 +28,7 @@ macro MINBOND: 200*ONE
     # -3: round two resolve wasn't successful
     # -4: in fork period only thing that rep redistribution is done on is the round 2 event in the original branch via round 2 penalize
     # -5: already done for all events in this period
+    # -6: needed to collect fees last period which sets the before/after rep
 # force event to be resolved first if it can be
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized
 # todo go over penalty amounts like .2 for ethicality seems too high
@@ -44,11 +45,8 @@ def penalizeRoundTwoWrong(branch, event):
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
-    # if no events in a period
-    if(EXPEVENTS.getNumberEvents(branch, lastPeriod)<=0):
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
-        CONSENSUS.increaseDenominator(branch, lastPeriod, repBalance)
-        return(1)
+    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod)):
+        return(-6)
     elif(BRANCHES.getForkPeriod(branch) == lastPeriod && event!=forkEvent):
         return(-4)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
@@ -168,11 +166,6 @@ def penalizeRoundTwoWrong(branch, event):
         if(newAfterRep <= 0):
             newAfterRep = 0
             EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
-        if(oldRep==0):
-            EXPEVENTS.setAfterRep(branch, lastPeriod, repBalance, msg.sender)
-            EXPEVENTS.setBeforeRep(branch, lastPeriod, repBalance, msg.sender)
-            newAfterRep = repBalance
-            oldRep = repBalance
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
         CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
         totalRepDifference = newAfterRep - oldRep

@@ -18,6 +18,7 @@ inset('refund.se')
     # -2: already past first half of new period and needed to penalize before then
     # -4: fork event isn't resolved yet
     # -5: already done for all events in this period
+    # -6: needed to collect fees last period which sets the before/after rep
 def penalizeOnForkedEvent(branch, event):
     refund()
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
@@ -39,6 +40,8 @@ def penalizeOnForkedEvent(branch, event):
     bond = BACKSTOPS.getBondAmount(event)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
+    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod)):
+        return(-6)
     # means event / fork isn't resolved
     if(EVENTS.getForkedDone(event)==0):
         return(-4)
@@ -90,11 +93,6 @@ def penalizeOnForkedEvent(branch, event):
         if(newAfterRep <= 0):
             newAfterRep = 0
             EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
-        if(oldRep==0):
-            EXPEVENTS.setAfterRep(branch, lastPeriod, repBalance, msg.sender)
-            EXPEVENTS.setBeforeRep(branch, lastPeriod, repBalance, msg.sender)
-            newAfterRep = repBalance
-            oldRep = repBalance
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
         CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
         totalRepDifference = newAfterRep - oldRep
