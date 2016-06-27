@@ -150,6 +150,7 @@ def getEventsToReportOn(branch, expDateIndex, sender):
     events = array(numEvents*2)
     i = 0
     while i < numEvents:
+        # todo or just calculate report target for event here for purposes of computing this
         if(self.getLesserReportNum(branch, votePeriod, event)==0):
             return([0, event]: arr)
         events[i] = self.EventsExpDates[branch][expDateIndex].events[i]

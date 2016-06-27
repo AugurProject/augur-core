@@ -252,7 +252,7 @@ def modifyParticipantShares(marketID, participantNumber, outcome, amount, cancel
 	if(cancel):
 		amount = -1*amount
 	self.Markets[marketID].volume += amount
-	return(1)
+	return(1)   
 
 def setWinningOutcomes(market, outcomes: arr):
 	refund()

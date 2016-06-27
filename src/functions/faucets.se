@@ -60,10 +60,13 @@ def fundNewAccount(branch):
     return(1)
 
 # Used to claim rep on a fork or on a new branch
+# Returns 1 if successful, 0 if already claimed
+# Error:
+    # -1: parent isn't the actual parent
 def claimInitialRep(parent, branch):
     refund()
     if(BRANCHES.getParent(branch)!=parent):
-        return(0)
+        return(-1)
     # have 1 month to claim
     if(REPORTING.repIDToIndex(branch, msg.sender)==0 && block.timestamp < (BRANCHES.getCreationDate(branch) + TWENTYFOURHR*30)):
         parentPeriod = BRANCHES.getParentPeriod(branch)

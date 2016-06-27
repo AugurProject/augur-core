@@ -54,10 +54,13 @@ def fundNewAccount(branch):
     return(1)
 
 # Used to claim rep on a fork or on a new branch
+# Returns 1 if successful, 0 if already claimed
+# Error:
+    # -1: parent isn't the actual parent
 def claimInitialRep(parent, branch):
     refund()
     if(self.getParent(branch)!=parent):
-        return(0)
+        return(-1)
     # have 1 month to claim
     if(self.repIDToIndex(branch, msg.sender)==0 && block.timestamp < (self.getCreationDate(branch) + TWENTYFOURHR*30)):
         parentPeriod = self.getParentPeriod(branch)
@@ -124,7 +127,6 @@ macro ethic_catch($x):
         0
     else:
         ONE
-
 inset('refund.se')
 
 event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
@@ -291,10 +293,18 @@ def sell(amount, price, market, outcome):
         #1 should go to branch
         #1 should go to creator
 # Errors:
-    
+    # -1: trade doesn't exist
+    # -2: invalid trade hash/commitment
+    # -3: must be a bid, not an ask
+    # -4: market is already resolved
+    # -5: can't pickup your own trade
+    # -6: can't trade on oracle only branch
+    # -7: not a large enough trade
 def short_sell(buyer_trade_id, max_amount):
     refund()
     branch = self.getBranchID(market)
+    if(self.getOracleOnly(branch)):
+        return(-6)
     # check trade hash
     tradeInfo = array(3)
     tradeInfo[0] = buyer_trade_id
@@ -307,11 +317,11 @@ def short_sell(buyer_trade_id, max_amount):
     trade = array(TRADE_FIELDS)
     trade = self.get_trade(buyer_trade_id, outitems=TRADE_FIELDS)
     if !trade:
-        return(3)
+        return(-1)
     # Get market
     type = trade[1]
     if(type!=BID):
-        return(4)
+        return(-3)
     market = trade[2]
     if(self.getOneWinningOutcome(market, 0)):
         return(-4)
@@ -320,13 +330,12 @@ def short_sell(buyer_trade_id, max_amount):
     owner = trade[5]
     outcome = trade[7]
     if(owner == msg.sender or owner == tx.origin):
-        return(5)
+        return(-5)
     # Make sure the trade has been mined, obvious HFT prevention
     if block.number <= trade[6]:
         return(TRADE_SAME_BLOCK_PROHIBITED)
     
-    if(self.getOracleOnly(branch)):
-        return(-1)
+    # calculate cost
     creator = self.getCreator(market)
     trading_fee = self.getTradingFee(market)
     cumScale = self.getCumScale(market)
@@ -341,9 +350,8 @@ def short_sell(buyer_trade_id, max_amount):
     cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)
     if(self.balance(msg.sender) < cost):
         return(INSUFFICIENT_BALANCE)
-
     if(amount*price/ONE < 184467440738):
-        return(-4)
+        return(-7)
 
     numOutcomes = self.getMarketNumOutcomes(market)
     participantNumber = self.getParticipantNumber(market, msg.sender)
@@ -352,7 +360,7 @@ def short_sell(buyer_trade_id, max_amount):
         participantNumber = self.addParticipant(market, msg.sender)
 
     i = 1
-    # send shares of the event to user address
+    # send shares of the event to user address, buying complete sets
     while i <= numOutcomes:
         self.modifyShares(market, i, amount)
         self.modifyParticipantShares(market, participantNumber, i, amount, 0)
@@ -360,12 +368,12 @@ def short_sell(buyer_trade_id, max_amount):
     if(self.getVotePeriod(branch)<self.getTradingPeriod(market)):
         self.modifySharesValue(market, amount*cumScale/ONE)
         self.adjustPeriodShareValueOutstanding(branch, self.getTradingPeriod(market), amount*cumScale/ONE)
-
     # send money from user acc. to market address/account
     # cost for shares
-    self.sendFrom(market, cost-takerFeesTotal, msg.sender)
+    if(!self.sendFrom(market, cost-takerFeesTotal, msg.sender)):
+        throw
 
-    # Fill buy order
+    # Fill buy order [short selling the outcome user doesn't want]
     # Determine fill amount
     fill = amount
     # Update trade amount or remove
@@ -379,9 +387,11 @@ def short_sell(buyer_trade_id, max_amount):
     self.modifyParticipantShares(market, ownerNum, outcome, fill, 0)
     # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
     # 75% to branch + .5% more to branch per maker fee 1% decrease 
-    self.sendFrom(branch, branchFees, msg.sender)
+    if(!self.sendFrom(branch, branchFees, msg.sender)):
+        throw
     # 25% to creator + .5% more to creator per 1% decrease in maker fees
-    self.sendFrom(creator, creatorFees, msg.sender)
+    if(!self.sendFrom(creator, creatorFees, msg.sender)):
+        throw
 
     # other party [maker] pay their part of the fee here too
     fee = fee * makerFeeRate / ONE
@@ -929,7 +939,7 @@ def submitReportHash(event, reportHash):
     if(delta > 1):
         if(self.penalizationCatchup(branch, msg.sender)!=1):
             return(0)
-    if(!self.getRRDone(branch, msg.sender)):
+    if(!self.getRepRedistributionDone(branch, msg.sender)):
         return(0)
 
     # if first report of period, num events not set
@@ -1122,6 +1132,7 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
 
 ### Helper functions:
 # calculates how many reports should be on a given event
+# todo make sure max cost is actually 500k gas here
 def calculateReportTargetForEvent(branch, eventID, votePeriod, sender):
     numMarkets = self.getNumMarkets(eventID)
     if(numMarkets>25):
@@ -1514,7 +1525,7 @@ def sendReputation(branch, recver, value):
             return(0)
 
     # need to check all this for the person it's being sent to as well
-    if(!self.getRRDone(branch, msg.sender)):
+    if(!self.getRepRedistributionDone(branch, msg.sender)):
         return(0)
     #if(self.getRRUpToDate()!=1):
     #    doIt()
@@ -1631,7 +1642,7 @@ def convertToDormantRep(branch, value):
     refund()
     # if not in first half of reporting period
     periodLength = self.getPeriodLength(branch)
-    if(!self.getRRDone(branch, msg.sender)):
+    if(!self.getRepRedistributionDone(branch, msg.sender)):
         return(0)
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
@@ -1691,7 +1702,7 @@ def convertToActiveRep(branch, value):
     if(delta > 1):
         if(self.penalizationCatchup(branch, msg.sender)!=1):
             return(0)
-    if(!self.getRRDone(branch, msg.sender)):
+    if(!self.getRepRedistributionDone(branch, msg.sender)):
         return(0)
     if(value<=0):
         return(0)
@@ -2306,7 +2317,6 @@ def penalizeWrong(branch, event):
     refund()
     repBalance = self.getRepBalance(branch, msg.sender)
     lastPeriod = self.getVotePeriod(branch)-1
-    forkPeriod = self.getForkPeriod(branch)
     periodLength = self.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     newRep = 0
@@ -2319,7 +2329,7 @@ def penalizeWrong(branch, event):
         return(0)
     if(self.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
-    if(forkPeriod == lastPeriod):
+    if(self.getForkPeriod(branch) == lastPeriod):
         return(-4)
     elif(self.getForked(event)):
         return(-6)
@@ -2387,6 +2397,7 @@ def penalizeWrong(branch, event):
         if(newAfterRep <= 0):
             newAfterRep = 0
             self.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+        # flawed here, can just get excess redistributions and fees
         if(oldRep==0):
             self.setAfterRep(branch, lastPeriod, repBalance, msg.sender)
             self.setBeforeRep(branch, lastPeriod, repBalance, msg.sender)
@@ -2507,7 +2518,7 @@ def slashRep(branch, salt, report, reporter, eventID):
     # if the truther's rep. account doesn't exist, make one
     if(self.getReporterID(branch, trutherIndex)!=msg.sender):
         trutherIndex = self.getNumberReporters(branch)
-        self.addReporter(branch, msg.sender)
+        self.addReporter(branch, msg.sender, 0, 0, 0)
     reporterBalance = self.getRepBalance(branch, reporter)
     # removes rep from colluder
     self.subtractRep(branch, reporterIndex, reporterBalance)
@@ -2935,13 +2946,13 @@ def trade(max_value, max_amount, trade_ids:arr):
             balance = self.balance(msg.sender)
             makerFeeRate = self.getMakerFees(market)
             takerFee = (ONEPOINTFIVE - makerFeeRate)*fee / ONE
-            total_trade_cost = amount * (price + takerFee) / ONE
+            total_trade_cost = amount * price * (takerFee+ONE) / ONE**2
             # trade value to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilledIncludingFees)
             value_to_spend = min(total_trade_cost, min(max_value, balance))
             # Determine fill amount
-            fill = value_to_spend*ONE / (price+takerFee)
+            fill = value_to_spend*ONE / price * ONE / (takerFee+ONE)
             trade_value_excluding_fees = fill*price/ONE
-            if(trade_value_excluding_feesa >= 184467440738):
+            if(trade_value_excluding_fees >= 184467440738):
                 # Update trade amount or remove filled trade
                 if fill < amount:
                     self.fill_trade(trade_ids[t], fill)
@@ -3044,7 +3055,7 @@ def collectFees(branch, sender):
     residual = block.timestamp % periodLength
     if(residual <= periodLength/2):
         return(-2)
-    if(!self.getRRDone(branch, sender)):
+    if(!self.getRepRedistributionDone(branch, sender)):
         # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
         return(-1)
     lastPeriod = self.getVotePeriod(branch) - 1
@@ -3248,18 +3259,6 @@ def repIDToIndex(branch, repID):
     refund()
     return(self.Reporting[branch].repIDtoIndex[repID])
 
-def hashReport(report: arr, salt):
-    refund()
-    hashInfo = array(len(report) + 2)
-    hashInfo[0] = msg.sender
-    hashInfo[1] = salt
-    i = 2
-    while i < (len(report) + 2):
-        hashInfo[i] = report[i-2]
-        i += 1
-    reportHash = sha3(hashInfo, chars=32*len(hashInfo))
-    return(reportHash)
-
 # check that msg.sender is one of our function contracts
 def setInitialReporters(parent, branchID):
     refund()
@@ -3281,9 +3280,9 @@ def addReporter(branch, sender, amount, dormant, repToBonderOrBranch):
     self.Reporting[branch].reputation[reporterIndex].repValue = amount
     self.Reporting[branch].reputation[reporterIndex].reporterID = sender
     self.Reporting[branch].dormantRep[reporterIndex].reporterID = sender
-    self.Reporting[branchID].dormantRep[i].repValue = dormant
+    self.Reporting[branch].dormantRep[reporterIndex].repValue = dormant
     self.Reporting[branch].activeRep += amount + repToBonderOrBranch
-    self.Reporting[branchID].totalRep += amount + dormant + repToBonderOrBranch
+    self.Reporting[branch].totalRep += amount + dormant + repToBonderOrBranch
     self.Reporting[branch].numberReporters += 1
     return(1)
 
@@ -3735,6 +3734,7 @@ def getEventsToReportOn(branch, expDateIndex, sender):
     events = array(numEvents*2)
     i = 0
     while i < numEvents:
+        # todo or just calculate report target for event here for purposes of computing this
         if(self.getLesserReportNum(branch, votePeriod, event)==0):
             return([0, event]: arr)
         events[i] = self.EventsExpDates[branch][expDateIndex].events[i]
@@ -4046,7 +4046,7 @@ def setNotEnoughPenalized(branch, address, period):
 def getNotEnoughPenalized(branch, address, period):
     return(self.branch[branch].period[period].penalized[address].notEnoughReportsPenalized)
     
-def getRRDone(branch, reporter):
+def getRepRedistributionDone(branch, reporter):
     refund()
     return(repRedistributionDone(branch, reporter))
 
@@ -4487,7 +4487,7 @@ def modifyParticipantShares(marketID, participantNumber, outcome, amount, cancel
 	if(cancel):
 		amount = -1*amount
 	self.Markets[marketID].volume += amount
-	return(1)
+	return(1)   
 
 def setWinningOutcomes(market, outcomes: arr):
 	refund()
@@ -4712,7 +4712,7 @@ inset('refund.se')
 # Events' index is the eventID
 # so max-min/numOutcomes is interval between outcomes (useful for ui for categoricals, e.g. 1 is >50, 2 is >100, etc.)
 # markets keeps track of the markets associated with an event
-# threshold is the min "random" sha threshold for reporting on an event
+# threshold is the min "random" sha threshold for reporting on an event used in the scenario where no one reports on an event
 # mode is the mode reported value for a given event [only on categorical / scalar events]
 # uncaughtOutcome is the average reported value for a binary event
 # ethical is the ethicality for a given event

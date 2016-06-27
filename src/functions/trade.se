@@ -161,13 +161,13 @@ def trade(max_value, max_amount, trade_ids:arr):
             balance = CASH.balance(msg.sender)
             makerFeeRate = MARKETS.getMakerFees(market)
             takerFee = (ONEPOINTFIVE - makerFeeRate)*fee / ONE
-            total_trade_cost = amount * (price + takerFee) / ONE
+            total_trade_cost = amount * price * (takerFee+ONE) / ONE**2
             # trade value to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilledIncludingFees)
             value_to_spend = min(total_trade_cost, min(max_value, balance))
             # Determine fill amount
-            fill = value_to_spend*ONE / (price+takerFee)
+            fill = value_to_spend*ONE / price * ONE / (takerFee+ONE)
             trade_value_excluding_fees = fill*price/ONE
-            if(trade_value_excluding_feesa >= 184467440738):
+            if(trade_value_excluding_fees >= 184467440738):
                 # Update trade amount or remove filled trade
                 if fill < amount:
                     TRADES.fill_trade(trade_ids[t], fill)

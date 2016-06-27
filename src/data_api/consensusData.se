@@ -97,7 +97,7 @@ def setNotEnoughPenalized(branch, address, period):
 def getNotEnoughPenalized(branch, address, period):
     return(self.branch[branch].period[period].penalized[address].notEnoughReportsPenalized)
     
-def getRRDone(branch, reporter):
+def getRepRedistributionDone(branch, reporter):
     refund()
     return(repRedistributionDone(branch, reporter))
 

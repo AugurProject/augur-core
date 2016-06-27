@@ -17,7 +17,7 @@ def collectFees(branch, sender):
     residual = block.timestamp % periodLength
     if(residual <= periodLength/2):
         return(-2)
-    if(!CONSENSUS.getRRDone(branch, sender)):
+    if(!CONSENSUS.getRepRedistributionDone(branch, sender)):
         # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
         return(-1)
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1

@@ -58,7 +58,7 @@ def sendReputation(branch, recver, value):
             return(0)
 
     # need to check all this for the person it's being sent to as well
-    if(!CONSENSUS.getRRDone(branch, msg.sender)):
+    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
         return(0)
     #if(REPORTS.getRRUpToDate()!=1):
     #    doIt()
@@ -175,7 +175,7 @@ def convertToDormantRep(branch, value):
     refund()
     # if not in first half of reporting period
     periodLength = BRANCHES.getPeriodLength(branch)
-    if(!CONSENSUS.getRRDone(branch, msg.sender)):
+    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
         return(0)
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
@@ -235,7 +235,7 @@ def convertToActiveRep(branch, value):
     if(delta > 1):
         if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
             return(0)
-    if(!CONSENSUS.getRRDone(branch, msg.sender)):
+    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
         return(0)
     if(value<=0):
         return(0)

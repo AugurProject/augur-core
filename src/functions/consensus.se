@@ -49,7 +49,6 @@ def penalizeWrong(branch, event):
     refund()
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
-    forkPeriod = BRANCHES.getForkPeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     newRep = 0
@@ -62,7 +61,7 @@ def penalizeWrong(branch, event):
         return(0)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
-    if(forkPeriod == lastPeriod):
+    if(BRANCHES.getForkPeriod(branch) == lastPeriod):
         return(-4)
     elif(EVENTS.getForked(event)):
         return(-6)
@@ -130,6 +129,7 @@ def penalizeWrong(branch, event):
         if(newAfterRep <= 0):
             newAfterRep = 0
             EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+        # flawed here, can just get excess redistributions and fees
         if(oldRep==0):
             EXPEVENTS.setAfterRep(branch, lastPeriod, repBalance, msg.sender)
             EXPEVENTS.setBeforeRep(branch, lastPeriod, repBalance, msg.sender)

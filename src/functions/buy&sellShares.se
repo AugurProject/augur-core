@@ -191,10 +191,18 @@ def sell(amount, price, market, outcome):
         #1 should go to branch
         #1 should go to creator
 # Errors:
-    
+    # -1: trade doesn't exist
+    # -2: invalid trade hash/commitment
+    # -3: must be a bid, not an ask
+    # -4: market is already resolved
+    # -5: can't pickup your own trade
+    # -6: can't trade on oracle only branch
+    # -7: not a large enough trade
 def short_sell(buyer_trade_id, max_amount):
     refund()
     branch = MARKETS.getBranchID(market)
+    if(BRANCHES.getOracleOnly(branch)):
+        return(-6)
     # check trade hash
     tradeInfo = array(3)
     tradeInfo[0] = buyer_trade_id
@@ -207,11 +215,11 @@ def short_sell(buyer_trade_id, max_amount):
     trade = array(TRADE_FIELDS)
     trade = TRADES.get_trade(buyer_trade_id, outitems=TRADE_FIELDS)
     if !trade:
-        return(3)
+        return(-1)
     # Get market
     type = trade[1]
     if(type!=BID):
-        return(4)
+        return(-3)
     market = trade[2]
     if(MARKETS.getOneWinningOutcome(market, 0)):
         return(-4)
@@ -220,13 +228,12 @@ def short_sell(buyer_trade_id, max_amount):
     owner = trade[5]
     outcome = trade[7]
     if(owner == msg.sender or owner == tx.origin):
-        return(5)
+        return(-5)
     # Make sure the trade has been mined, obvious HFT prevention
     if block.number <= trade[6]:
         return(TRADE_SAME_BLOCK_PROHIBITED)
     
-    if(BRANCHES.getOracleOnly(branch)):
-        return(-1)
+    # calculate cost
     creator = INFO.getCreator(market)
     trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
@@ -241,9 +248,8 @@ def short_sell(buyer_trade_id, max_amount):
     cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)
     if(CASH.balance(msg.sender) < cost):
         return(INSUFFICIENT_BALANCE)
-
     if(amount*price/ONE < 184467440738):
-        return(-4)
+        return(-7)
 
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
@@ -252,7 +258,7 @@ def short_sell(buyer_trade_id, max_amount):
         participantNumber = MARKETS.addParticipant(market, msg.sender)
 
     i = 1
-    # send shares of the event to user address
+    # send shares of the event to user address, buying complete sets
     while i <= numOutcomes:
         MARKETS.modifyShares(market, i, amount)
         MARKETS.modifyParticipantShares(market, participantNumber, i, amount, 0)
@@ -260,12 +266,12 @@ def short_sell(buyer_trade_id, max_amount):
     if(BRANCHES.getVotePeriod(branch)<MARKETS.getTradingPeriod(market)):
         MARKETS.modifySharesValue(market, amount*cumScale/ONE)
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount*cumScale/ONE)
-
     # send money from user acc. to market address/account
     # cost for shares
-    CASH.sendFrom(market, cost-takerFeesTotal, msg.sender)
+    if(!CASH.sendFrom(market, cost-takerFeesTotal, msg.sender)):
+        throw
 
-    # Fill buy order
+    # Fill buy order [short selling the outcome user doesn't want]
     # Determine fill amount
     fill = amount
     # Update trade amount or remove
@@ -279,9 +285,11 @@ def short_sell(buyer_trade_id, max_amount):
     MARKETS.modifyParticipantShares(market, ownerNum, outcome, fill, 0)
     # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
     # 75% to branch + .5% more to branch per maker fee 1% decrease 
-    CASH.sendFrom(branch, branchFees, msg.sender)
+    if(!CASH.sendFrom(branch, branchFees, msg.sender)):
+        throw
     # 25% to creator + .5% more to creator per 1% decrease in maker fees
-    CASH.sendFrom(creator, creatorFees, msg.sender)
+    if(!CASH.sendFrom(creator, creatorFees, msg.sender)):
+        throw
 
     # other party [maker] pay their part of the fee here too
     fee = fee * makerFeeRate / ONE

@@ -54,7 +54,7 @@ def submitReportHash(event, reportHash):
     if(delta > 1):
         if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
             return(0)
-    if(!CONSENSUS.getRRDone(branch, msg.sender)):
+    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
         return(0)
 
     # if first report of period, num events not set
@@ -247,6 +247,7 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
 
 ### Helper functions:
 # calculates how many reports should be on a given event
+# todo make sure max cost is actually 500k gas here
 def calculateReportTargetForEvent(branch, eventID, votePeriod, sender):
     numMarkets = EVENTS.getNumMarkets(eventID)
     if(numMarkets>25):

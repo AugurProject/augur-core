@@ -381,16 +381,14 @@ def test_trading():
             assert(isclose((beforem-afterm)/2**64, makerFee/2**64))
             # b/c this is also creator who gets part of maker fee from maker [himself] and creator fee from taker
             assert(isclose((afterog-beforeog)/2**64, (2**64*.01 + creatorFees + makerFee/2)/2**64))
-            assert(c.getParticipantSharesPurchased(market[a], 1, 1)==11*2**64)
-            assert(c.getParticipantSharesPurchased(market[a], 1, 2)==9*2**64)
-            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 1)==2**64)
-            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==3*2**64)
-            # after putting order on book
-            assert(len(c.get_trade_ids(market[a]))==0)
+            assert(isclose(c.getParticipantSharesPurchased(market[a], 1, 1)*1.0, 11.0*2**64))
+            assert(isclose(c.getParticipantSharesPurchased(market[a], 1, 2)*1.0, 9.0*2**64))
+            assert(isclose(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 1)*1.0, 1.0*2**64))
+            assert(isclose(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)*1.0, 1.0*3*2**64))
 
             assert(nearly_equal(c.getTotalSharesPurchased(market[a]), 12*c.getMarketNumOutcomes(market[a])*2**64))
             assert(nearly_equal(c.getSharesValue(market[a]), c.getCumScale(market[a])*12))
-            assert(nearly_equal(c.getVolume(market[a]), (4*2**64 + 28*c.getMarketNumOutcomes(market[a])*2**64)))
+            assert(isclose(c.getVolume(market[a]), (4*2**64 + 28*c.getMarketNumOutcomes(market[a])*2**64)))
             assert(isclose((c.balance(1010101)-initialBranchBal)/2**64, fee*2/2**64))
             # complete sets #*cumscale or 12*cumscale
             assert(isclose(c.balance(market[a])/2**64, 12*cumScale[a]/2**64))
@@ -415,10 +413,10 @@ def test_trading():
             gas_use(s)
             print "Short sell"
             print c.short_sell(buy, 2**64)
-            assert(c.getParticipantSharesPurchased(market[a], 1, 1)==12*2**64)
-            assert(c.getParticipantSharesPurchased(market[a], 1, 2)==9*2**64)
-            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 1)==2**64)
-            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==4*2**64)
+            assert(isclose(c.getParticipantSharesPurchased(market[a], 1, 1)*1.0, 12.0*2**64))
+            assert(isclose(c.getParticipantSharesPurchased(market[a], 1, 2)*1.0, 9.0*2**64))
+            assert(isclose(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 1)*1.0, 1.0*2**64))
+            assert(isclose(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2), 4.0*2**64))
             print "Short sell gas use"
             gas_use(s)
             after = c.balance(sender2)
