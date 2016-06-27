@@ -42,6 +42,7 @@ def collectFees(branch, sender):
         CASH.subtractCash(branch, cash)
         CONSENSUS.setFeesCollected(branch, sender, lastPeriod)
         # return not reported enough bond if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees
+        # todo first period this won't have been paid?
         if(CONSENSUS.getNotEnoughPenalized(branch, msg.sender, lastPeriod)==0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
             CONSENSUS.doRefund(msg.sender, msg.sender)
         # need to pay not reporting bond
@@ -50,6 +51,7 @@ def collectFees(branch, sender):
         balance = REPORTING.getRepBalance(branch, msg.sender)
         dormantRep = REPORTING.balanceOf(branch, msg.sender)
         # Record rep for next report period before any redistributions
+        # todo what if in first period these before/after/etc haven't been set?
         EXPEVENTS.setBeforeRep(branch, votePeriod, balance, msg.sender)
         EXPEVENTS.setAfterRep(branch, votePeriod, balance, msg.sender)
         EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, msg.sender)

@@ -478,12 +478,12 @@ def test_close_market():
     report_hash4 = c.makeHash(0, 3*2**63, event4, s.block.coinbase)
     report_hash5 = c.makeHash(0, 2**63, event5, s.block.coinbase)
     report_hash6 = c.makeHash(0, 1, event6, s.block.coinbase)
-    assert(c.submitReportHash(event1, report_hash)==1), "Report hash submission failed"
-    assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(event4, report_hash4)==1), "Report hash submission failed"
-    assert(c.submitReportHash(event3, report_hash3)==1)
-    c.submitReportHash(event5, report_hash5)
-    c.submitReportHash(event6, report_hash6)
+    assert(c.submitReportHash(event1, report_hash, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event2, report_hash2, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event4, report_hash4, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event3, report_hash3, 0)==1)
+    c.submitReportHash(event5, report_hash5, 0)
+    c.submitReportHash(event6, report_hash6, 0)
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
@@ -561,13 +561,13 @@ def test_consensus():
     report_hash4 = c.makeHash(0, int(50*2**64/250), event4, s.block.coinbase)
     gas_use(s)
     c.penalizeWrong(1010101, 0)
-    assert(c.submitReportHash(event1, report_hash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event1, report_hash, 0)==1), "Report hash submission failed"
     print "hash submit gas use"
     gas_use(s)
-    assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event2, report_hash2, 0)==1), "Report hash submission failed"
     print "hash submit gas use"
-    assert(c.submitReportHash(event3, report_hash3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(event4, report_hash4)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event3, report_hash3, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event4, report_hash4, 0)==1), "Report hash submission failed"
     gas_use(s)
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
@@ -730,33 +730,33 @@ def test_consensus_multiple_reporters():
     c.penalizeWrong(1010101, 0)
     c.penalizeWrong(1010101, 0, sender=t.k2)
     c.penalizeWrong(1010101, 0, sender=t.k3)
-    assert(c.submitReportHash(bevent, binaryeventhash)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cevent, cateventhash)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cunethicalevent, cateventunethicalhash)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cindeterminateevent, cateventindeterminatehash)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sevent, scalareventhash)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bevent, binaryeventhash2, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash2, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash2, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cevent, cateventhash2, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cunethicalevent, cateventunethicalhash2, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cindeterminateevent, cateventindeterminatehash2, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sevent, scalareventhash2, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash2, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash2, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bevent, binaryeventhash3, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash3, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash3, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cevent, cateventhash3, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cunethicalevent, cateventunethicalhash3, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cindeterminateevent, cateventindeterminatehash3, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sevent, scalareventhash3, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash3, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bevent, binaryeventhash, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cevent, cateventhash, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cunethicalevent, cateventunethicalhash, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cindeterminateevent, cateventindeterminatehash, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sevent, scalareventhash, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bevent, binaryeventhash2, 0 sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash2, 0, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash2, 0, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cevent, cateventhash2, 0, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cunethicalevent, cateventunethicalhash2, 0, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cindeterminateevent, cateventindeterminatehash2, 0, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sevent, scalareventhash2, 0, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash2, 0, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash2, 0, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bevent, binaryeventhash3, 0, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash3, 0, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash3, 0, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cevent, cateventhash3, 0, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cunethicalevent, cateventunethicalhash3, 0, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cindeterminateevent, cateventindeterminatehash3, 0, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sevent, scalareventhash3, 0, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash3, 0, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash3, 0, sender=t.k3)==1), "Report hash submission failed"
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
@@ -948,8 +948,8 @@ def test_slashrep():
     c.penalizeWrong(1010101, 0)
     report_hash = c.makeHash(0, 2**64, event1, s.block.coinbase)
     report_hash2 = c.makeHash(0, 2*2**64, event2, s.block.coinbase)
-    assert(c.submitReportHash(event1, report_hash)==1)
-    assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event1, report_hash, 0)==1)
+    assert(c.submitReportHash(event2, report_hash2, 0)==1), "Report hash submission failed"
     c.slashRep(1010101, 0, 2**64, s.block.coinbase, event1)
     s.mine(1)
     periodLength = c.getPeriodLength(1010101)
@@ -1048,11 +1048,11 @@ def test_catchup():
         time.sleep(c.getPeriodLength(1010101)/2)
         s.mine(1)
     c.penalizeWrong(1010101, 0)
-    n = c.submitReportHash(event1, report_hash)
+    n = c.submitReportHash(event1, report_hash, 0)
     print n
     print s.block.timestamp
     assert(n==1), "Report hash submission failed"
-    assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event2, report_hash2, 0)==1), "Report hash submission failed"
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
@@ -1138,8 +1138,8 @@ def test_market_pushback():
     print c.submitReportHash(event1, report_hash)
     print event1
     print report_hash
-    assert(c.submitReportHash(event1, report_hash)==1), "Report hash submission failed"
-    assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event1, report_hash, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event2, report_hash2, 0)==1), "Report hash submission failed"
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
@@ -1196,8 +1196,8 @@ def test_market_pushback():
     c.penalizeWrong(1010101, event2)
     report_hash = c.makeHash(0, 2**64, event1, s.block.coinbase)
     report_hash2 = c.makeHash(0, 3*2**63, event2, s.block.coinbase)
-    assert(c.submitReportHash(event1, report_hash)==-1), "Report hash -1 check failed"
-    assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event1, report_hash, 0)==-1), "Report hash -1 check failed"
+    assert(c.submitReportHash(event2, report_hash2, 0)==1), "Report hash submission failed"
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
