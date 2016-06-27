@@ -50,7 +50,9 @@ def get_contract_paths(path):
         for f in files:
             if directory.endswith("data_api") or directory.endswith("functions"):
                 if f.endswith(".se") and f not in ["output.se", "refund.se"] and not f.startswith(".~"):
-                    contract_paths[f[0].upper() + f[1:-3]] = os.path.join(directory, f)
+                    contract_name = f[0].upper() + f[1:-3]
+                    if contract_name == "Buy&sellShares": contract_name = "BuyAndSellShares"
+                    contract_paths[contract_name] = os.path.join(directory, f)
     return contract_paths
 
 # Get contract API info from a local file
