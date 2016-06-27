@@ -96,11 +96,14 @@ def update_from_old_api(method, contract_name, method_name, old_api):
 def get_input_names(inputs):
     return [i["name"] for i in inputs]
 
+def get_input_types(inputs):
+    return [i["type"] for i in inputs]
+
 def update_from_full_signature(name, inputs):
     split_name = name.split("(")
     method = {"method": split_name[0]}
     if len(inputs):
-        method["signature"] = split_name[1][:-1]
+        method["signature"] = get_input_types(inputs)
         method["inputs"] = get_input_names(inputs)
     return method
 
