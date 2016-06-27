@@ -60,6 +60,7 @@ def submitReportHash(event, reportHash):
     # if first report of period, num events not set
     if(EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)==0):
         EXPEVENTS.setNumEventsToReportOn(branch)
+        # set amount of fees to be distributed in this period from the branch
         BRANCHES.setInitialBalance(branch, votePeriod, CASH.balance(branch))
     eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
@@ -104,17 +105,6 @@ def submitReport(event, salt, report, ethics):
     votePeriod = BRANCHES.getVotePeriod(branch)
     if(balance<ONE):
         return(0)
-    # if 1st report of the period for a reporter
-    if(!EXPEVENTS.getNumReportsActual(branch, votePeriod, msg.sender)):
-        if(msg.value <= 500000*tx.gasprice):
-            return(-9)
-        dormantRep = REPORTING.balanceOf(branch, msg.sender)
-        # Record rep at start of report period
-        EXPEVENTS.setBeforeRep(branch, votePeriod, balance, msg.sender)
-        EXPEVENTS.setAfterRep(branch, votePeriod, balance, msg.sender)
-        EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, msg.sender)
-        CONSENSUS.setRefund(msg.sender, msg.value)
-        send(CONSENSUS, msg.value)
     if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
         return(-1)
     eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
@@ -165,8 +155,10 @@ def submitReport(event, salt, report, ethics):
         # set ethicality for a regular event
         else:
             EXPEVENTS.setEthicReport(branch, votePeriod, event, ethics, msg.sender)
+            # weight by rep
             if(roundTwo):
                 ethics = (EVENTS.getEthics(event)*EXPEVENTS.getRepEvent(branch, votePeriod, event) + ethics*balance) / (EXPEVENTS.getRepEvent(branch, votePeriod, event) + balance)
+            # just a simple avg.
             else:
                 ethics = (EVENTS.getEthics(event)*EXPEVENTS.getNumReportsEvent(branch, votePeriod, event) + ethics) / (EXPEVENTS.getNumReportsEvent(branch, votePeriod, event) + 1)
             EVENTS.setEthics(eventID, ethics)
@@ -214,7 +206,7 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
         if(report > ONE):
             report = ONE
         elif(report<=0):
-            # 1 is the new 0
+            # 1 is the new 0 [1/2**64 is basically 0 but able to be differentiated from no report of 0]
             report = 1
         if(forkedOverThisEvent):
             # in case of fork remove the original outcome as a possible response if didn't fork over ethics

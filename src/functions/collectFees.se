@@ -43,6 +43,16 @@ def collectFees(branch, sender):
         # return not reported enough bond if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees
         if(CONSENSUS.getNotEnoughPenalized(branch, msg.sender, lastPeriod)==0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
             CONSENSUS.doRefund(msg.sender, msg.sender)
+        if(msg.value <= 500000*tx.gasprice):
+            throw
+        dormantRep = REPORTING.balanceOf(branch, msg.sender)
+        # Record rep at start of report period
+        EXPEVENTS.setBeforeRep(branch, votePeriod, balance, msg.sender)
+        EXPEVENTS.setAfterRep(branch, votePeriod, balance, msg.sender)
+        EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, msg.sender)
+        CONSENSUS.setRefund(msg.sender, msg.value)
+        send(CONSENSUS, msg.value)
+
         return(1)
     # shouldn't be reached / if so no effect
     elif(!CONSENSUS.getFeesCollected(branch, sender, lastPeriod)):

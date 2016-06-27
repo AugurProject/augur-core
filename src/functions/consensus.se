@@ -45,6 +45,7 @@ macro POINTTWO: 3689348814741910528
     # -6: forked events should be penalized using the fork penalization function
     # -7: no outcome
 # force event to be resolved first if it can be
+# todo req fees collected?
 def penalizeWrong(branch, event):
     refund()
     repBalance = REPORTING.getRepBalance(branch, msg.sender)

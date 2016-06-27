@@ -103,6 +103,7 @@ def claimInitialRep(parent, branch):
             CONSENSUS.setPenalizedUpTo(branch, msg.sender, forkPeriod)
         else:
             CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
+        # todo this doesn't work if hasn't reported last period
         dormantRep = EXPEVENTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branch), msg.sender)
         REPORTING.addReporter(branch, msg.sender, rep, dormantRep, repDecrease)
         return(1)
