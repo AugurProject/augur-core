@@ -34,19 +34,17 @@ macro POINTZEROONE: 184467440737095520
 # reporthash is [reporterID][event] = hash
 # subsidy is money for paying back a user for calculating the targeted num of reports for an event
 data EventIDToIndex[][]
-data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], saltyHash[][], shareValue, subsidy[], roundTwoNumEvents)
+data requiredEvents[]
+
+data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], saltyHash[][], shareValue, subsidy[], roundTwoNumEvents, numReqEvents)
 
 # numReportsEvent is number of reports on an event, expected is how many have been committed for an event
 # numReportsActual is the amount of reports a user has submitted in a period
 # lesserReportNum is the number of reports an event should have [the lesser of how many it can afford from fees and how many it should have due to outstanding share value]
 # periodRepConstant is 
 data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsActual[][], repEvent[][], lesserReportNum[][], periodRepConstant[][], reportersPaidSoFarForEvent[])
-
-
-# branch, period as params
-data numReqEvents[][]
-data requiredEvents[]
 data mode_items[][](report_value[], current_mode, current_mode_items)
+
 
 def getSaltyHash(branch, expDateIndex, reporter, event):
     refund()
@@ -131,13 +129,13 @@ def getRequired(event):
     return(self.requiredEvents[event])
     
 def getNumRequired(branch, period):
-    return(self.numReqEvents[branch][period])
+    return(self.EventsExpDates[branch][period].numReqEvents)
     
 # Return 0 means already required
 def setEventRequired(branch, period, event):
     if(self.requiredEvents[event]==0):
         self.requiredEvents[event] = 1
-        self.numReqEvents[branch][period] += 1
+        self.EventsExpDates[branch][period].numReqEvents += 1
         return(1)
     else:
         return(0)
@@ -236,7 +234,7 @@ def setNumEventsToReportOn(branch):
     refund()
     # after voting has started
     expDateIndex = BRANCHES.getVotePeriod(branch)
-    self.EventsExpDates[branch][expDateIndex].numEventsToReportOn = (self.EventsExpDates[branch][expDateIndex].numberEvents - self.numReqEvents[branch][expDateIndex] - self.EventsExpDates[branch][expDateIndex].numberRemoved)*BRANCHES.getBaseReporters(branch)
+    self.EventsExpDates[branch][expDateIndex].numEventsToReportOn = (self.EventsExpDates[branch][expDateIndex].numberEvents - self.EventIDToIndex[branch][expDateIndex].numReqEvents - self.EventsExpDates[branch][expDateIndex].numberRemoved)*BRANCHES.getBaseReporters(branch)
     return(1)
 
 def getNumEventsToReportOn(branch, expDateIndex):
