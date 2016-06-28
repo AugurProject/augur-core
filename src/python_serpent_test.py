@@ -427,28 +427,40 @@ def test_trading():
     print "BUY AND SELL OK"
     return(1)
 
-<<<<<<< HEAD
-def test_abunch_of_markets():
+def test_getMarketInfoCache():
     global initial_gas
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
     c = s.abi_contract('functions/output.se')
     c.initiateOwner(1010101)
-    c.reputationFaucet(1010101)
-    i = 0
-    while i < 10000:
-        c.setCash(s.block.coinbase, 1000000*2**64)
-        event = c.createEvent(1010101, "sss"+str(i), s.block.timestamp+100, 2**64, 2**65, 2, "lol")
-        market = c.createMarket(1010101, "aaa"+str(i), 2**58, [event], 1, 2, 3, 2**60, "aaa", value = 10**19)
-        s.mine(1)
-        i += 1
-    marketsInfo = c.getMarketsInfo(1010101, 0, 100)
-    print marketsInfo
-    return(1)
+    blocktime = s.block.timestamp
+    event = c.createEvent(1010101, "new event", blocktime+1, 2**64, 2**65, 2, "ok")
+    description = "new market"
+    tradingFee = 184467440737095516
+    tags = [1,2,3]
+    makerFee = 0
+    market = c.createMarket(1010101, description, tradingFee, [event], tags[0], tags[1], tags[2], makerFee, "yayaya", value=10**19)
+    info = c.getMarketInfoCache(market)
+    #BASE_CACHE_FIELS + num_events + description length
+    expected_size = 10 + 1 + len(description) + 1
+    assert(len(info)==expected_size)
+    assert(info[0]==market)
+    assert(info[1]==makerFee)
+    assert(info[2]==c.getTradingPeriod(market))
+    assert(info[3]==tradingFee)
+    #no volume yet
+    assert(info[5]==0)
+    assert(info[6]==tags[0])
+    assert(info[7]==tags[1])
+    assert(info[8]==tags[2])
+    #only 1 event
+    assert(info[9]==1)
+    #description starts at index 12, length stored at 11
+    desc_result = ''.join(map(chr,info[12:12+info[11]]))
+    assert(description==desc_result)
+    gas_use(s)
 
-=======
->>>>>>> develop
 def test_close_market():
     global initial_gas
     initial_gas = 0
@@ -507,13 +519,6 @@ def test_close_market():
         s.mine(1)
     assert(c.submitReport(event2, 0, 2*2**64, 2**64, value=500000000)==1), "Report submission failed"
     assert(c.submitReport(event4, 0, 3*2**63, 2**64)==1), "Report submission failed"
-<<<<<<< HEAD
-    assert(c.submitReport(event5, 0, 2**63, 2**64, value=500000000)==1)
-    assert(c.submitReport(event6, 0, 1, 2**64, value=500000000))
-    c.send(market5, 2**64)
-    assert(c.closeMarket(1010101, market5)==0), "Not expired check [and not early resolve due to not enough reports submitted check] broken"
-=======
->>>>>>> develop
     assert(c.submitReport(event1, 0, 2**64, 2**64)==1), "Report submission failed"
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
         time.sleep(c.getPeriodLength(1010101)/2)
@@ -1306,7 +1311,7 @@ if __name__ == '__main__':
     #test_reporting()
 
     # function tests
-    test_trading()
+    #test_trading()
     #test_create_branch()
     #test_send_rep()
     #test_market_pushback()
@@ -1315,6 +1320,8 @@ if __name__ == '__main__':
     #test_catchup()
     #test_slashrep()
     #test_claimrep()
+    #test_getMarketInfoCache()
     #test_consensus_multiple_reporters()
     #test_pen_not_enough_reports()
     print "DONE TESTING"
+

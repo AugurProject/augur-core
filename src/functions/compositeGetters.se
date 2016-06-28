@@ -31,6 +31,7 @@ macro EVENTS_FIELDS: 6
 macro OUTCOMES_FIELDS: 2
 macro WINNING_OUTCOMES_FIELDS: 8
 macro BASE_FIELDS: 17
+macro BASE_CACHE_FIELDS: 10
 
 def getOrderBook(marketID):
     refund()
@@ -113,6 +114,43 @@ def getMarketInfo(marketID):
     while c < descriptionLength:
         marketInfo[index + c] = getch(description, c)
         c += 1
+    return(marketInfo: arr)
+
+def getMarketInfoCache(marketID):
+    refund()
+    index = BASE_CACHE_FIELDS
+    numEvents = MARKETS.getNumEvents(marketID)
+    descriptionLength = INFO.getDescriptionLength(marketID)
+    marketInfo = array(BASE_CACHE_FIELDS + numEvents + descriptionLength + 1)
+    marketInfo[0] = marketID
+    marketInfo[1] = MARKETS.getMakerFees(marketID)
+    marketInfo[2] = MARKETS.getTradingPeriod(marketID)
+    marketInfo[3] = MARKETS.getTradingFee(marketID)
+    marketInfo[4] = MARKETS.getCreationTime(marketID)
+    marketInfo[5] = MARKETS.getVolume(marketID)
+    tags = slice(MARKETS.returnTags(marketID, outitems=3), items=0, items=3)
+    marketInfo[6] = tags[0]
+    marketInfo[7] = tags[1]
+    marketInfo[8] = tags[2]
+    marketInfo[9] = numEvents
+
+    # Only expirationDate is cached by an augur_node, so ignoring all other event data:
+    events = slice(MARKETS.getMarketEvents(marketID, outitems=numEvents), items=0, items=numEvents)
+    i = 0
+    while i < numEvents:
+        marketInfo[index] = EVENTS.getExpiration(events[i])
+        i += 1
+        index += 1
+
+    # append description character codes
+    marketInfo[index] = descriptionLength
+    index += 1
+    description = INFO.getDescription(marketID, outchars=descriptionLength)
+    c = 0
+    while c < descriptionLength:
+        marketInfo[index + c] = getch(description, c)
+        c += 1
+
     return(marketInfo: arr)
 
 def batchGetMarketInfo(marketIDs: arr):

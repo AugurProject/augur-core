@@ -39,6 +39,7 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+src/functions/output.se
 
 # Translations
 *.mo
