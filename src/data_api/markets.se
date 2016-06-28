@@ -21,16 +21,33 @@
 
 inset('refund.se')
 
-# Markets' index is the marketID
-# Events is a 0 indexed array of events in the market in the format of
-	# [1, event, event, 2, event, 3, event, event, event]
-	# 1 means dimension 1, 2 is events in dimension 2, 3 is the dimension 3 events
-# Sharespurchased keeps track of the number of shares purchased for each outcome
-	# sharesPurchased states starts at 1 - (same for participants[].shares[] array)
-# Participants is a 0 indexed array of participants, their cashIDs, && the shares in each outcome they've purchased of an event
-# a binary outcome state 1 is no, 2 is true, 0 if not determined
-# tradingFee is a percent in fixedPoint
-# tradingPeriod is which eventexpperiod market expires in
+# Markets' index is the marketID, markets stores data about markets [which are able to be traded on] in augur
+    # Events is a 0 indexed array of events in the market in the format of
+    	# [1, event, event, 2, event, 3, event, event, event]
+    	# 1 means dimension 1, 2 is events in dimension 2, 3 is the dimension 3 events
+    # Sharespurchased keeps track of the number of shares purchased for each outcome
+    	# sharesPurchased states starts at 1 - (same for participants[].shares[] array)
+    # Participants is a 0 indexed array of participants, their cashIDs, && the shares in each outcome they've purchased of an event
+    # currentParticipant is the number of participants [traders] in the market
+    # cumulativeScale == range of the market for scalars
+    # numOutcomes is the number of outcomes in a market [up to 8 for now]
+    # a binary outcome state 1 is no, 2 is true, 0 if not done, 1.5 if indeterminate
+    # tradingFee is a percent in fixedPoint and the base trading fee for a market: takers pay 100%-150% of this, makers pay 0-50% of this
+    # tradingPeriod is which eventexpperiod market expires in
+    # pushing forward is whether a market has been pushed forward to attempt early resolution
+    # bondsman is the person/address who/that posted the early resolution bond
+    # originalPeriod is the original period the market's event would resolve in
+    # trade_ids stores trades for a given market
+    # last_trade is the last trade that happened in a given market
+    # total_trades is the total number of trades in a give market
+    # tags are the subject tags / categories / keywords for a given market
+    # makerFees - from 0-50% - amount of fee that the maker orders pay
+    # extraInfo is any extra info that didn't fit well in the regular description
+    # sharesValue is the value of the shares traded in a given market
+    # gasSubsidy is paid by the creator to pay for closing the market [closing is just setting the winning outcomes and allowing people to withdraw funds if they own winning shares]
+    # fees is total amount of fees a market has paid to a branch [the reporters]
+    # lastExpDate is when the market's last event expires
+    # prices keeps track of the latest traded price for a given outcome in a market
 data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime, lastExpDate, prices[])
 
 # takes branch as param, composite hash of all markets in the system
@@ -54,6 +71,7 @@ def setPrice(market, outcome, price):
 	self.Markets[market].prices[outcome] = price
 	return(1)
 
+# refund closing cost for a market
 def refundClosing(amount, to):
 	send(amount, to)
 	return(1)
@@ -235,9 +253,8 @@ def modifyParticipantShares(marketID, participantNumber, outcome, amount, cancel
 		amount = amount*-1
 	if(cancel):
 		amount = -1*amount
-	if(!sets):
-	    	self.Markets[marketID].volume += amount
-	return(1)
+	self.Markets[marketID].volume += amount
+	return(1)   
 
 def setWinningOutcomes(market, outcomes: arr):
 	refund()

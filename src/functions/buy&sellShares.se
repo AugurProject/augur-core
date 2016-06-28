@@ -25,8 +25,8 @@ import markets as MARKETS
 import trades as TRADES
 inset('refund.se')
 
-event log_add_tx(market:indexed, sender, type, price, amount, outcome, tradeid)
-event log_cancel(market:indexed, sender, price, amount, tradeid, outcome, type)
+event log_add_tx(market:indexed, sender:indexed, type, price, amount, outcome, tradeid)
+event log_cancel(market:indexed, sender:indexed, price, amount, tradeid, outcome, type)
 
 # Trade types
 macro BID: 1
@@ -71,7 +71,8 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
     return(trade_id)
 
 #
-# Cancellation
+# Cancellation: cancels a trade, if a bid refunds money, if an ask returns shares
+# @returns 1 if success, 0 if failure
 #
 # 200k gas
 def cancel(trade_id):
@@ -120,51 +121,55 @@ macro remove_trade($trade_id, $market):
 #
 # Buy / Sell actions: puts orders on the book
 # Errors:
-    # -1: amount/price bad or no market
+    #  0: market doesn't exist
+    # -1: amount/price bad
     # -2: oracle only branch
-    # -3: bad outcome to trade [not needed anymore, can't buy shares that don't exist]
+    # -3: trader doesn't exist in market
     # -4: not enough money or shares
 #
-# costs 532k
+# costs 532k gas
 # smallest trade value is 0.00000001
 def buy(amount, price, market, outcome):
     refund()
-    if(!MARKETS.getCreationTime(market)):
-        return(-1)
-    branch = MARKETS.getBranchID(market)
-    if(BRANCHES.getOracleOnly(branch)):
-        return(-2)
-    participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
-    # if participant doesn't exist in market, add them
-    if(msg.sender != MARKETS.getParticipantID(market, participantNumber)):
-        participantNumber = MARKETS.addParticipant(market, msg.sender)
     trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
     fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE
+    participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
+    branch = MARKETS.getBranchID(market)
+    if(!MARKETS.getCreationTime(market)):
+        return(0)
+    # price cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
     if(price>cumScale or amount*price < 3402823669209384705829531287552 or amount*price >= 2**190):
         return(-1)
+    if(BRANCHES.getOracleOnly(branch)):
+        return(-2)
+    # if participant doesn't exist in market, add them
+    if(msg.sender != MARKETS.getParticipantID(market, participantNumber)):
+        participantNumber = MARKETS.addParticipant(market, msg.sender)
     if(CASH.balance(msg.sender) < (amount * price * (fee + ONE) / ONE^2)):
         return(-4)
     save_trade(BID, amount, price, market, outcome, branch, participantNumber, fee, msg.sender)
     return(FAILURE)
 
-# cost 532k
+# costs 532k gas
 # smallest trade value is 0.00000001
 def sell(amount, price, market, outcome):
     refund()
     branch = MARKETS.getBranchID(market)
+    trading_fee = MARKETS.getTradingFee(market)
+    cumScale = MARKETS.getCumScale(market)
+    fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE
+    participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
+    # price cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
+    if(price>cumScale or amount*price < 3402823669209384705829531287552L or amount*price >= 2**190):
+        return(-1)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
-    participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
     if(MARKETS.getParticipantID(market, participantNumber) != msg.sender):
         return(-3)
     if(MARKETS.getParticipantSharesPurchased(market, participantNumber, outcome) < amount):
         return(-4)
-    trading_fee = MARKETS.getTradingFee(market)
-    cumScale = MARKETS.getCumScale(market)
-    fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE
-    if(price>cumScale or amount*price < 3402823669209384705829531287552L or amount*price >= 2**190):
-        return(-1)
+    # check for enough money for fees
     if(CASH.balance(msg.sender) < (amount * price * fee / ONE^2)):
         return(-4)
     save_trade(ASK, amount, price, market, outcome, branch, participantNumber, fee, msg.sender)

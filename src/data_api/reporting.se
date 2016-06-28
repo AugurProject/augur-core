@@ -22,15 +22,15 @@
 import branches as BRANCHES
 inset('refund.se')
 
-# Reporting index is the branchID
-# Reporters index is the rep. address
-# We 0 index reputation so can walk thru for consensus
-# EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
-# RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
-# Events is 0 indexed as well
-# total rep is all the rep in augur
-# active rep is the amount which is actually active
-# fork is the child branch of a parent which forked
+# Storage of all data associated with reporters
+    # Reporting index is the branchID
+    # Reporters index is the rep. address
+    # We 0 index reputation so can walk thru for consensus - todo / wrong don't need 0 indexing anymore
+    # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
+    # total rep is all the rep in augur
+    # active rep is the amount which is actually active
+    # fork is the child branch of a parent which forked
+    # dormant rep stores dormant rep values
 data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), activeRep, fork)
 
 data whitelists[](addresses[], taken)
@@ -162,18 +162,6 @@ def repIDToIndex(branch, repID):
     refund()
     return(self.Reporting[branch].repIDtoIndex[repID])
 
-def hashReport(report: arr, salt):
-    refund()
-    hashInfo = array(len(report) + 2)
-    hashInfo[0] = msg.sender
-    hashInfo[1] = salt
-    i = 2
-    while i < (len(report) + 2):
-        hashInfo[i] = report[i-2]
-        i += 1
-    reportHash = sha3(hashInfo, chars=32*len(hashInfo))
-    return(reportHash)
-
 # check that msg.sender is one of our function contracts
 def setInitialReporters(parent, branchID):
     refund()
@@ -195,9 +183,9 @@ def addReporter(branch, sender, amount, dormant, repToBonderOrBranch):
     self.Reporting[branch].reputation[reporterIndex].repValue = amount
     self.Reporting[branch].reputation[reporterIndex].reporterID = sender
     self.Reporting[branch].dormantRep[reporterIndex].reporterID = sender
-    self.Reporting[branchID].dormantRep[i].repValue = dormant
+    self.Reporting[branch].dormantRep[reporterIndex].repValue = dormant
     self.Reporting[branch].activeRep += amount + repToBonderOrBranch
-    self.Reporting[branchID].totalRep += amount + dormant + repToBonderOrBranch
+    self.Reporting[branch].totalRep += amount + dormant + repToBonderOrBranch
     self.Reporting[branch].numberReporters += 1
     return(1)
 
@@ -240,7 +228,7 @@ def subtractDormantRep(branch, index, value):
     return(1)
 
 # check that msg.sender is one of our function contracts
-# make this cheaper
+# Sets the initial distribution of rep
 def setSaleDistribution(addresses: arr, balances: arr, branchID):
     refund()
     #if(!self.whitelist.check(msg.sender)):

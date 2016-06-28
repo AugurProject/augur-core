@@ -1,9 +1,11 @@
 inset('refund.se')
 
-# reporter
+### Storage of all data associated with trades
+
+# reporterID is index
 data tradeCommits[](hash, block)
-# tradeID
-data trades[](id, type, market, amount, price, owner, block, outcome, initialTrade)
+# tradeID is index
+data trades[](id, type, market, amount, price, owner, block, outcome)
 
 def makeTradeHash(max_value, max_amount, trade_ids: arr):
     refund()
@@ -24,16 +26,7 @@ def commitTrade(hash):
     self.tradeCommits[msg.sender].hash = hash
     self.tradeCommits[msg.sender].block = block.number
     return(1)
-    
-def setInitialTrade(id):
-    refund()
-    self.trades[id].initialTrade = 1
-    return(1)
-    
-def getInitialTrade(id):
-    refund()
-    return(self.trades[id].initialTrade)
-    
+
 def zeroHash():
     refund()
     self.tradeCommits[msg.sender].hash = 0

@@ -21,17 +21,27 @@
 
 inset('refund.se')
 
+# Keeps track of data about events in augur
 # Events' index is the eventID
-# so for voting 1 and 2 in fxp. need to be given for binaries, not 0 & 1
-# categorical markets have fixed point min and max
- # so max-min/numOutcomes is interval between outcomes (useful for ui, e.g. 1 is >50, 2 is >100, etc.)
-# threshold is the min sha threshold for reporting on an event
-# mode is the mode for a given event
+# so max-min/numOutcomes is interval between outcomes (useful for ui for categoricals, e.g. 1 is >50, 2 is >100, etc.)
+# markets keeps track of the markets associated with an event
+# threshold is the min "random" sha threshold for reporting on an event used in the scenario where no one reports on an event
+# mode is the mode reported value for a given event [only on categorical / scalar events]
+# uncaughtOutcome is the average reported value for a binary event
+# ethical is the ethicality for a given event
 # originalExp is original expiry date in the case an event was pushed back and the expiration date gets changed - both are in epoch time
-# if a pushed back event is rejected then rejectedPeriod is the period it was pushed forward to and rejected in
-# bond is the indeterminate bond
+# pushedUp states that an event was pushed forward to attempt early resolution
+# rejected states that a pushed forward market's event [so one that attempted to resolve before it was expired] got rejected and shouldn't have actually been pushed forward
+    # rejectedPeriod is the period such an event was pushed forward to and failed to be resolved in
+# bond is the indeterminate bond that's taken away if an event is reported on as indeterminate
+# forked is whether an event was the event a branch was forked over
+# forkOver is whether the event that was forked over is resolved
+# forkOutcome is the outcome of an event that was forked over
+# forkEthicality is the ethicality of an event that was forked over
+# resolutionSource is a string with the recommended source for resolving a market
 data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp)
 
+# Keeps track of number of events created in the past 24 hours
 data past24Hours[]
 
 def getEventPushedUp(event):
@@ -110,6 +120,10 @@ def getExpiration(event):
 def getOriginalExpiration(event):
     refund()
     return(self.Events[event].originalExp)
+    
+def setOriginalExpiration(event, date):
+    self.Events[event].originalExp = date
+    return(1)
 
 def setExpiration(event, date):
     refund()

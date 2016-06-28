@@ -59,11 +59,14 @@ def fundNewAccount(branch):
     CASH.setCash(msg.sender, 10000*2^64)
     return(1)
 
-# used to claim rep on a fork or on a new branch
+# Used to claim rep on a fork or on a new branch
+# Returns 1 if successful, 0 if already claimed
+# Error:
+    # -1: parent isn't the actual parent
 def claimInitialRep(parent, branch):
     refund()
     if(BRANCHES.getParent(branch)!=parent):
-        return(0)
+        return(-1)
     # have 1 month to claim
     if(REPORTING.repIDToIndex(branch, msg.sender)==0 && block.timestamp < (BRANCHES.getCreationDate(branch) + TWENTYFOURHR*30)):
         parentPeriod = BRANCHES.getParentPeriod(branch)
@@ -78,9 +81,10 @@ def claimInitialRep(parent, branch):
         ethicReport = EXPEVENTS.getEthicReport(parent, forkPeriod, forkEvent, msg.sender)
         rep = EXPEVENTS.getBeforeRep(parent, parentPeriod, msg.sender)
         repDecrease = 0
-        if(fork && (report<(outcome-POINTZEROONE) || (report > (outcome+POINTZEROONE)) || report==0 || (BACKSTOPS.getForkedOverEthicality(forkEvent) && ethical==ethicReport))):
+        # if forked and (reported with original consensus or didn't report or (reported with original ethicality and forked over ethicality))
+        if(fork && ((report >= (outcome-POINTZEROONE) && report <= (outcome+POINTZEROONE)) || report==0 || (BACKSTOPS.getForkedOverEthicality(forkEvent) && ethical==ethicReport))):
             # take away 30% of rep from liars and those who didn't report
-            repDecrease = rep*POINTSEVEN/ONE
+            repDecrease = rep - rep*POINTSEVEN/ONE
             rep = rep - repDecrease
             amountLeftToPayBonder = BACKSTOPS.getBondAmount(forkEvent) - BACKSTOPS.getForkBondPaid(forkEvent)
             if(repDecrease < amountLeftToPayBonder):
@@ -91,7 +95,7 @@ def claimInitialRep(parent, branch):
                 if(amountLeftToPayBonder > 0):
                     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(forkEvent)), amountLeftToPayBonder)    
                     # send the rest to the new branch's redistribution pool
-                    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), (repDecrease - amountLeftToPayBonder))
+                    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), (repDecrease - amountLeftToPayBonder))
                 else:
                     # send to new branch's redistribution pool
                     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), repDecrease)
@@ -99,6 +103,7 @@ def claimInitialRep(parent, branch):
             CONSENSUS.setPenalizedUpTo(branch, msg.sender, forkPeriod)
         else:
             CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
+        # todo this doesn't work if hasn't reported last period
         dormantRep = EXPEVENTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branch), msg.sender)
         REPORTING.addReporter(branch, msg.sender, rep, dormantRep, repDecrease)
         return(1)

@@ -22,8 +22,7 @@
 inset('refund.se')
 
 # Every entity in our contract has similar metadata.
-# Instead of putting it in each entity, we put all the
-# metadata here.
+# Instead of putting it in each entity, we put all the metadata here.
 # Info's index is the hash of the item we're getting info on
 data Info[](description[2048], descriptionLength, creator, creationFee)
 
