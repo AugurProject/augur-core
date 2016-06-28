@@ -73,8 +73,8 @@ def setPrice(market, outcome, price):
 
 # refund closing cost for a market
 def refundClosing(market, to):
-    subsidy = self.Markets[market].gasSubsidy
-    self.Markets[market].gasSubsidy -= subsidy
+	subsidy = self.Markets[market].gasSubsidy
+	self.Markets[market].gasSubsidy -= subsidy
 	send(subsidy, to)
 	return(1)
 
