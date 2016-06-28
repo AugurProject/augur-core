@@ -55,9 +55,9 @@ def getMarketInfo(marketID):
     numOutcomes = MARKETS.getMarketNumOutcomes(marketID)
     marketInfo = array(BASE_FIELDS + numEvents*EVENTS_FIELDS + numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1)
     marketInfo[0] = marketID
-    marketInfo[1] = MARKETS.getCurrentParticipantNumber(marketID)
+    # marketInfo[1] = MARKETS.getCurrentParticipantNumber(marketID)
     marketInfo[2] = MARKETS.getMakerFees(marketID)
-    marketInfo[3] = MARKETS.getParticipantNumber(marketID, msg.sender)
+    # marketInfo[3] = MARKETS.getParticipantNumber(marketID, msg.sender)
     marketInfo[4] = numOutcomes
     marketInfo[5] = MARKETS.getTradingPeriod(marketID)
     marketInfo[6] = MARKETS.getTradingFee(marketID)
