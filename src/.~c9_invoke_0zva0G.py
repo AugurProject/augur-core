@@ -409,6 +409,8 @@ def test_trading():
             gas_use(s)
             print "Short sell"
             print c.short_sell(buy, 2**64)
+            print c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 1)
+            print c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 2)
             assert(isclose(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 1)*1.0, 12.0*2**64))
             assert(isclose(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 2)*1.0, 9.0*2**64))
             assert(isclose(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 1)*1.0, 1.0*2**64))

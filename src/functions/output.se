@@ -97,6 +97,7 @@ def claimInitialRep(parent, branch):
             self.setPenalizedUpTo(branch, msg.sender, forkPeriod)
         else:
             self.setPenalizedUpTo(branch, msg.sender, (self.getVotePeriod(branch)-1))
+        # todo this doesn't work if hasn't reported last period
         dormantRep = self.getPeriodDormantRep(parent, self.getParentPeriod(branch), msg.sender)
         self.addReporter(branch, msg.sender, rep, dormantRep, repDecrease)
         return(1)
@@ -150,7 +151,7 @@ macro TRADE_SAME_BLOCK_PROHIBITED: 22
 macro fee_percent($market_fee, $price, $cumScale):
     4 * $market_fee * $price * (ONE-$price*2**64/$cumScale) / ($cumScale*ONE)
 
-macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participantNumber, $fee, $sender):
+macro save_trade($type, $amount, $price, $market, $outcome, $branch, $fee, $sender):
     trade = [$type, $market, $amount, $price, $sender, block.number, $outcome]
     trade_id = sha3(trade, items=7)
     cumScale = self.getCumScale($market)
@@ -163,7 +164,7 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $participan
         self.addTrade($market, trade_id, last_id)
         # Update available and trading amounts for asks
         if $type == ASK:
-            self.modifyParticipantShares($market, $participantNumber, $outcome, -$amount, 0)
+            self.modifyParticipantShares($market, msg.sender, $outcome, -$amount, 0)
             if($fee):
                 self.sendFrom($market, ($amount * $price * $fee / ONE^2), $sender)
         # Send / escrow cash for bids
@@ -211,8 +212,7 @@ def cancel(trade_id):
             self.addCash(msg.sender, amt)
         elif type == ASK:
             # shares refund
-            participantNumber = self.getParticipantNumber(market, msg.sender)
-            self.modifyParticipantShares(market, participantNumber, outcome, amount, 1)
+            self.modifyParticipantShares(market, msg.sender, outcome, amount, 1)
             self.subtractCash(market, (amount * price * fee / ONE^2))
             self.addCash(msg.sender, (amount * price * fee / ONE^2))
         # Log cancellation
@@ -240,7 +240,6 @@ def buy(amount, price, market, outcome):
     trading_fee = self.getTradingFee(market)
     cumScale = self.getCumScale(market)
     fee = fee_percent(trading_fee, price, cumScale) * self.getMakerFees(market) / ONE
-    participantNumber = self.getParticipantNumber(market, msg.sender)
     branch = self.getBranchID(market)
     if(!self.getCreationTime(market)):
         return(0)
@@ -249,12 +248,9 @@ def buy(amount, price, market, outcome):
         return(-1)
     if(self.getOracleOnly(branch)):
         return(-2)
-    # if participant doesn't exist in market, add them
-    if(msg.sender != self.getParticipantID(market, participantNumber)):
-        participantNumber = self.addParticipant(market, msg.sender)
     if(self.balance(msg.sender) < (amount * price * (fee + ONE) / ONE^2)):
         return(-4)
-    save_trade(BID, amount, price, market, outcome, branch, participantNumber, fee, msg.sender)
+    save_trade(BID, amount, price, market, outcome, branch, fee, msg.sender)
     return(FAILURE)
 
 # costs 532k gas
@@ -265,20 +261,17 @@ def sell(amount, price, market, outcome):
     trading_fee = self.getTradingFee(market)
     cumScale = self.getCumScale(market)
     fee = fee_percent(trading_fee, price, cumScale) * self.getMakerFees(market) / ONE
-    participantNumber = self.getParticipantNumber(market, msg.sender)
     # price cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
     if(price>cumScale or amount*price < 3402823669209384705829531287552L or amount*price >= 2**190):
         return(-1)
     if(self.getOracleOnly(branch)):
         return(-2)
-    if(self.getParticipantID(market, participantNumber) != msg.sender):
-        return(-3)
-    if(self.getParticipantSharesPurchased(market, participantNumber, outcome) < amount):
+    if(self.getParticipantSharesPurchased(market, msg.sender, outcome) < amount):
         return(-4)
     # check for enough money for fees
     if(self.balance(msg.sender) < (amount * price * fee / ONE^2)):
         return(-4)
-    save_trade(ASK, amount, price, market, outcome, branch, participantNumber, fee, msg.sender)
+    save_trade(ASK, amount, price, market, outcome, branch, fee, msg.sender)
     return(FAILURE)
 
 # Allows a user to "short" by buying n complete sets and selling n shares of the unwanted outcome to a bid on the book
@@ -354,16 +347,12 @@ def short_sell(buyer_trade_id, max_amount):
         return(-7)
 
     numOutcomes = self.getMarketNumOutcomes(market)
-    participantNumber = self.getParticipantNumber(market, msg.sender)
-    # if participant doesn't exist in market, add them
-    if(msg.sender != self.getParticipantID(market, participantNumber)):
-        participantNumber = self.addParticipant(market, msg.sender)
 
     i = 1
     # send shares of the event to user address, buying complete sets
     while i <= numOutcomes:
         self.modifyShares(market, i, amount)
-        self.modifyParticipantShares(market, participantNumber, i, amount, 0)
+        self.modifyParticipantShares(market, msg.sender, i, amount, 0)
         i += 1
     if(self.getVotePeriod(branch)<self.getTradingPeriod(market)):
         self.modifySharesValue(market, amount*cumScale/ONE)
@@ -382,9 +371,8 @@ def short_sell(buyer_trade_id, max_amount):
     else:
         remove_trade(trade_id, market)
     # Update balances
-    ownerNum = self.getParticipantNumber(market, owner)
-    self.modifyParticipantShares(market, participantNumber, outcome, -fill, 0)
-    self.modifyParticipantShares(market, ownerNum, outcome, fill, 0)
+    self.modifyParticipantShares(market, msg.sender, outcome, -fill, 0)
+    self.modifyParticipantShares(market, msg.sender, outcome, fill, 0)
     # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
     # 75% to branch + .5% more to branch per maker fee 1% decrease 
     if(!self.sendFrom(branch, branchFees, msg.sender)):
@@ -482,6 +470,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         newAfterRep = afterRep + repChange
         if(afterRep==0):
             newAfterRep = oldRep+newRep
+        # todo decrease denominator by rep person lost here
         self.setAfterRep(branch, lastPeriod, newAfterRep, reporter)
         self.setNotEnoughPenalized(branch, reporter, lastPeriod)
         self.doRefund(msg.sender, reporter)
@@ -567,7 +556,7 @@ def closeMarket(branch, market, sender):
         winningOutcomes = self.determineWinningOutcomes(event, outitems=8)
         self.setWinningOutcomes(market, winningOutcomes)
         # refunds closing cost
-        self.refundClosing(self.getgasSubsidy(market), sender)
+        self.refundClosing(market, sender)
         return(1)
     else:
         return(0)
@@ -682,6 +671,7 @@ macro MINBOND: 200*ONE
     # -3: round two resolve wasn't successful
     # -4: in fork period only thing that rep redistribution is done on is the round 2 event in the original branch via round 2 penalize
     # -5: already done for all events in this period
+    # -6: needed to collect fees last period which sets the before/after rep
 # force event to be resolved first if it can be
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized
 # todo go over penalty amounts like .2 for ethicality seems too high
@@ -698,11 +688,8 @@ def penalizeRoundTwoWrong(branch, event):
     oldRep = self.getBeforeRep(branch, lastPeriod, msg.sender)
     if(self.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
-    # if no events in a period
-    if(self.getNumberEvents(branch, lastPeriod)<=0):
-        self.setPenalizedUpTo(branch, msg.sender, lastPeriod)
-        self.increaseDenominator(branch, lastPeriod, repBalance)
-        return(1)
+    if(!self.getFeesCollected(branch, msg.sender, lastPeriod)):
+        return(-6)
     elif(self.getForkPeriod(branch) == lastPeriod && event!=forkEvent):
         return(-4)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
@@ -822,11 +809,6 @@ def penalizeRoundTwoWrong(branch, event):
         if(newAfterRep <= 0):
             newAfterRep = 0
             self.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
-        if(oldRep==0):
-            self.setAfterRep(branch, lastPeriod, repBalance, msg.sender)
-            self.setBeforeRep(branch, lastPeriod, repBalance, msg.sender)
-            newAfterRep = repBalance
-            oldRep = repBalance
         self.setPenalizedUpTo(branch, msg.sender, lastPeriod)
         self.increaseDenominator(branch, lastPeriod, newAfterRep)
         totalRepDifference = newAfterRep - oldRep
@@ -893,16 +875,12 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
     pricePerShare2 = ONE*(outcome - minValue) / (maxValue - minValue)
     # share one goes with the low/short side of the calc
     pricePerShare1 = ONE - pricePerShare1
-    participantNumber = self.getParticipantNumber(market, sender)
-    participant = self.getParticipantID(market, participantNumber)
-    if(participant!=sender):
-        return(-1)
     # for each winning outcome get rid of shares and send money to the trader
     n = 0
     cumScale = self.getCumScale(market)
     while(winningOutcome[n]!=0):
-        sharesOwned = self.getParticipantSharesPurchased(market, participantNumber, winningOutcome[n])
-        self.modifyParticipantShares(market, participantNumber, winningOutcome[n], -sharesOwned)
+        sharesOwned = self.getParticipantSharesPurchased(market, msg.sender, winningOutcome[n])
+        self.modifyParticipantShares(market, msg.sender, winningOutcome[n], -sharesOwned)
         # low side
         if(n==0):
             self.subtractCash(market, sharesOwned*cumScale/ONE*pricePerShare1/ONE)
@@ -928,7 +906,7 @@ def makeHash(salt, report, eventID, sender):
 # Error: 0: not caught up on rep redistributions
 # Error -1: invalid event
 # Error -2: not in first half of period [commit part]
-def submitReportHash(event, reportHash):
+def submitReportHash(event, reportHash, encryptedSaltyHash):
     branch = self.getBranch(event)
     votePeriod = self.getVotePeriod(branch)
 
@@ -945,6 +923,7 @@ def submitReportHash(event, reportHash):
     # if first report of period, num events not set
     if(self.getNumEventsToReportOn(branch, votePeriod)==0):
         self.setNumEventsToReportOn(branch)
+        # set amount of fees to be distributed in this period from the branch
         self.setInitialBalance(branch, votePeriod, self.balance(branch))
     eventIndex = self.getEventIndex(votePeriod, event)
     eventID = self.getEvent(branch, votePeriod, eventIndex)
@@ -967,6 +946,7 @@ def submitReportHash(event, reportHash):
     residual = block.timestamp % periodLength
     if(residual <= periodLength/2 && shaHash <= reportingThreshold):
         self.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
+        self.setSaltyHash(branch, votePeriod, msg.sender, encryptedSaltyHash, event)
         return(1)
     return(-2)
 
@@ -982,24 +962,12 @@ def submitReportHash(event, reportHash):
     # -6: already resolved
     # -7: <48 hr left in period, too late to report, able to put up readj. bonds though
     # -8: fees couldn't be collected
-    # -9: need to pay not reporting bond
 def submitReport(event, salt, report, ethics):
     branch = self.getBranch(event)
     balance = self.getRepBalance(branch, msg.sender)
     votePeriod = self.getVotePeriod(branch)
     if(balance<ONE):
         return(0)
-    # if 1st report of the period for a reporter
-    if(!self.getNumReportsActual(branch, votePeriod, msg.sender)):
-        if(msg.value <= 500000*tx.gasprice):
-            return(-9)
-        dormantRep = self.balanceOf(branch, msg.sender)
-        # Record rep at start of report period
-        self.setBeforeRep(branch, votePeriod, balance, msg.sender)
-        self.setAfterRep(branch, votePeriod, balance, msg.sender)
-        self.setPeriodDormantRep(branch, votePeriod, dormantRep, msg.sender)
-        self.setRefund(msg.sender, msg.value)
-        send(CONSENSUS, msg.value)
     if(self.getReport(branch, votePeriod, event, msg.sender)):
         return(-1)
     eventIndex = self.getEventIndex(votePeriod, event)
@@ -1050,8 +1018,10 @@ def submitReport(event, salt, report, ethics):
         # set ethicality for a regular event
         else:
             self.setEthicReport(branch, votePeriod, event, ethics, msg.sender)
+            # weight by rep
             if(roundTwo):
                 ethics = (self.getEthics(event)*self.getRepEvent(branch, votePeriod, event) + ethics*balance) / (self.getRepEvent(branch, votePeriod, event) + balance)
+            # just a simple avg.
             else:
                 ethics = (self.getEthics(event)*self.getNumReportsEvent(branch, votePeriod, event) + ethics) / (self.getNumReportsEvent(branch, votePeriod, event) + 1)
             self.setEthics(eventID, ethics)
@@ -1099,7 +1069,7 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
         if(report > ONE):
             report = ONE
         elif(report<=0):
-            # 1 is the new 0
+            # 1 is the new 0 [1/2**64 is basically 0 but able to be differentiated from no report of 0]
             report = 1
         if(forkedOverThisEvent):
             # in case of fork remove the original outcome as a possible response if didn't fork over ethics
@@ -1397,15 +1367,11 @@ def buyCompleteSets(market, amount):
         return(-1)
     if(self.balance(msg.sender) < cost):
         return(-2)
-    participantNumber = self.getParticipantNumber(market, msg.sender)
-    # if participant doesn't exist in market, add them
-    if(msg.sender != self.getParticipantID(market, participantNumber)):
-        participantNumber = self.addParticipant(market, msg.sender)
     n = 1
     # send shares of the event to user address and increment the number issued in the market for each outcome
     while n <= numOutcomes:
         self.modifyShares(market, n, amount)
-        self.modifyParticipantShares(market, participantNumber, n, amount, 0)
+        self.modifyParticipantShares(market, msg.sender, n, amount, 0)
         n += 1
     # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
     if(self.getVotePeriod(branch) < self.getTradingPeriod(market)):
@@ -1423,25 +1389,22 @@ def buyCompleteSets(market, amount):
     # -3: user doesn't own enough shares 
 def sellCompleteSets(market, amount):
     refund()
-    participantNumber = self.getParticipantNumber(market, msg.sender)
     branch = self.getBranchID(market)
     numOutcomes = self.getMarketNumOutcomes(market)
     cumScale = self.getCumScale(market)
     cost = amount*cumScale/ONE
     if(self.getOracleOnly(branch)):
         return(-1)
-    if(self.getParticipantID(market, participantNumber) != msg.sender):
-        return(-2)
     n = 1
     while n <= numOutcomes:
-        if(self.getParticipantSharesPurchased(market, participantNumber, n) < amount):
+        if(self.getParticipantSharesPurchased(market, msg.sender, n) < amount):
             return(-3)
         n += 1
     n = 1
     # Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets
     while n <= numOutcomes:
         self.modifyShares(market, n, -amount)
-        self.modifyParticipantShares(market, participantNumber, n, -amount, 0)
+        self.modifyParticipantShares(market, msg.sender, n, -amount, 0)
         n += 1
     # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
     if(self.getVotePeriod(branch)<self.getTradingPeriod(market)):
@@ -1501,6 +1464,7 @@ event Transfer(_from:indexed, _to:indexed, _value)
 event Approval(_owner:indexed, _spender:indexed, value)
 
 # fix sender, tx.origin stuff here
+# todo should we check collect fees done or no
 
 # send active reputation
 # @return value of reputation sent, 0 if not enough reputation
@@ -1638,6 +1602,9 @@ def allowance(owner, spender):
 # error messages
     # -1: not in first half of reporting period
 # shouldn't be penalized for dormant rep when converting back to active due to not reporting beyond the dormant penalization
+# todo when handling dormant rep stuff:
+# if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event
+# unless this just happened to them last period and they reported correctly then
 def convertToDormantRep(branch, value):
     refund()
     # if not in first half of reporting period
@@ -1916,6 +1883,7 @@ inset('refund.se')
     # -2: already past first half of new period and needed to penalize before then
     # -4: fork event isn't resolved yet
     # -5: already done for all events in this period
+    # -6: needed to collect fees last period which sets the before/after rep
 def penalizeOnForkedEvent(branch, event):
     refund()
     repBalance = self.getRepBalance(branch, msg.sender)
@@ -1937,6 +1905,8 @@ def penalizeOnForkedEvent(branch, event):
     bond = self.getBondAmount(event)
     if(self.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
+    if(!self.getFeesCollected(branch, msg.sender, lastPeriod)):
+        return(-6)
     # means event / fork isn't resolved
     if(self.getForkedDone(event)==0):
         return(-4)
@@ -1988,11 +1958,6 @@ def penalizeOnForkedEvent(branch, event):
         if(newAfterRep <= 0):
             newAfterRep = 0
             self.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
-        if(oldRep==0):
-            self.setAfterRep(branch, lastPeriod, repBalance, msg.sender)
-            self.setBeforeRep(branch, lastPeriod, repBalance, msg.sender)
-            newAfterRep = repBalance
-            oldRep = repBalance
         self.setPenalizedUpTo(branch, msg.sender, lastPeriod)
         self.increaseDenominator(branch, lastPeriod, newAfterRep)
         totalRepDifference = newAfterRep - oldRep
@@ -2312,6 +2277,7 @@ macro POINTTWO: 3689348814741910528
     # -5: already done for all events in this period
     # -6: forked events should be penalized using the fork penalization function
     # -7: no outcome
+    # -8: needed to collect fees last period which sets the before/after rep
 # force event to be resolved first if it can be
 def penalizeWrong(branch, event):
     refund()
@@ -2325,6 +2291,8 @@ def penalizeWrong(branch, event):
     oldRep = self.getBeforeRep(branch, lastPeriod, msg.sender)
     roundTwo = self.getRoundTwo(event)
     uncaught = self.getUncaughtOutcome(event)
+    if(!self.getFeesCollected(branch, msg.sender, lastPeriod)):
+        return(-8)
     if(repBalance < ONE):
         return(0)
     if(self.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
@@ -2333,11 +2301,6 @@ def penalizeWrong(branch, event):
         return(-4)
     elif(self.getForked(event)):
         return(-6)
-    # if no events in a period
-    elif(self.getNumberEvents(branch, lastPeriod)<=0):
-        self.setPenalizedUpTo(branch, msg.sender, lastPeriod)
-        self.increaseDenominator(branch, lastPeriod, repBalance)
-        return(1)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     elif(!uncaught && !(rejected && self.getRejectedPeriod(event)==lastPeriod)):
         if(self.closeMarket(branch, self.getMarket(event, 0), msg.sender)!=1):
@@ -2397,12 +2360,6 @@ def penalizeWrong(branch, event):
         if(newAfterRep <= 0):
             newAfterRep = 0
             self.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
-        # flawed here, can just get excess redistributions and fees
-        if(oldRep==0):
-            self.setAfterRep(branch, lastPeriod, repBalance, msg.sender)
-            self.setBeforeRep(branch, lastPeriod, repBalance, msg.sender)
-            newAfterRep = repBalance
-            oldRep = repBalance
         self.setPenalizedUpTo(branch, msg.sender, lastPeriod)
         self.increaseDenominator(branch, lastPeriod, newAfterRep)
         totalRepDifference = newAfterRep - oldRep
@@ -2895,11 +2852,8 @@ def trade(max_value, max_amount, trade_ids:arr):
         # Fill buy order
         if type == BID:
             # Get available balance of shares
-            sender = self.getParticipantNumber(market, msg.sender)
-            balance = self.getParticipantSharesPurchased(market, sender, outcome)
+            balance = self.getParticipantSharesPurchased(market, msg.sender, outcome)
             if(balance > 0 and max_amount > 0):
-                if(self.getParticipantID(market, sender) != msg.sender):
-                    return([-3]: arr)
                 makerFeeRate = self.getMakerFees(market)
                 # Determine fill amount
                 fill = min(amount, min(balance, max_amount))
@@ -2914,8 +2868,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 else:
                     remove_trade(trade_ids[t], market)
                 # Update balances
-                self.modifyParticipantShares(market, sender, outcome, -fill, 0)
-                self.modifyParticipantShares(market, self.getParticipantNumber(market, owner), outcome, fill, 0)
+                self.modifyParticipantShares(market, msg.sender, outcome, -fill, 0)
+                self.modifyParticipantShares(market, owner, outcome, fill, 0)
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
                 fee = value * fee / ONE
                 branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
@@ -2958,12 +2912,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                     self.fill_trade(trade_ids[t], fill)
                 else:
                     remove_trade(trade_ids[t], market)
-                sender = self.getParticipantNumber(market, msg.sender)
-                # if participant doesn't exist in market, add them
-                if(msg.sender != self.getParticipantID(market, sender)):
-                    sender = self.addParticipant(market, msg.sender)
                 # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
-                self.modifyParticipantShares(market, sender, outcome, fill, 0)
+                self.modifyParticipantShares(market, msg.sender, outcome, fill, 0)
 
                 branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees/ONE * fee / ONE
                 creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees/ONE * fee / ONE
@@ -3020,24 +2970,20 @@ inset('refund.se')
 # Error:
     # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant #0 is really #0]
 def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes):
-    participantNumber = self.getParticipantNumber(market, sender)
-    participant = self.getParticipantID(market, participantNumber)
-    if(participant!=sender):
-        return(-1)
     cumScale = self.getCumScale(market)
     # if it's an indeterminate categorical market resolve with all outcomes having an equal value
     if(categoricalPointFive):
         i = 0
         while(i < numOutcomes):
-            sharesOwned = self.getParticipantSharesPurchased(market, participantNumber, i+1)
-            self.modifyParticipantShares(market, participantNumber, i+1, -sharesOwned)
+            sharesOwned = self.getParticipantSharesPurchased(market, msg.sender, i+1)
+            self.modifyParticipantShares(market, msg.sender, i+1, -sharesOwned)
             self.subtractCash(market, sharesOwned*self.getCumScale(market)/(numOutcomes*ONE))
             self.addCash(participant, sharesOwned*self.getCumScale(market)/(numOutcomes*ONE))
             i+=1
     else:
         # distribute profit to the people who won money by holding winning shares
-        sharesOwned = self.getParticipantSharesPurchased(market, participantNumber, winningOutcome)
-        self.modifyParticipantShares(market, participantNumber, winningOutcome, -sharesOwned)
+        sharesOwned = self.getParticipantSharesPurchased(market, msg.sender, winningOutcome)
+        self.modifyParticipantShares(market, msg.sender, winningOutcome, -sharesOwned)
         self.subtractCash(market, sharesOwned*cumScale/ONE)
         self.addCash(participant, sharesOwned*cumScale/ONE)
     return(1)
@@ -3058,7 +3004,8 @@ def collectFees(branch, sender):
     if(!self.getRepRedistributionDone(branch, sender)):
         # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
         return(-1)
-    lastPeriod = self.getVotePeriod(branch) - 1
+    votePeriod = self.getVotePeriod(branch)
+    lastPeriod = votePeriod - 1
     newRep = self.getAfterRep(branch, lastPeriod, sender)
     # need 1 rep to claim fees
     if(!self.getFeesCollected(branch, sender, lastPeriod) && newRep>ONE):
@@ -3079,8 +3026,21 @@ def collectFees(branch, sender):
         self.subtractCash(branch, cash)
         self.setFeesCollected(branch, sender, lastPeriod)
         # return not reported enough bond if not enough penalized is 0 or self.getForkPeriod(branch)+1 == lastPeriod during collect fees
+        # todo first period this won't have been paid?
         if(self.getNotEnoughPenalized(branch, msg.sender, lastPeriod)==0 or self.getForkPeriod(branch)+1 == lastPeriod):
             self.doRefund(msg.sender, msg.sender)
+        # need to pay not reporting bond
+        if(msg.value <= 500000*tx.gasprice):
+            throw
+        balance = self.getRepBalance(branch, msg.sender)
+        dormantRep = self.balanceOf(branch, msg.sender)
+        # Record rep for next report period before any redistributions
+        # todo what if in first period these before/after/etc haven't been set?
+        self.setBeforeRep(branch, votePeriod, balance, msg.sender)
+        self.setAfterRep(branch, votePeriod, balance, msg.sender)
+        self.setPeriodDormantRep(branch, votePeriod, dormantRep, msg.sender)
+        self.setRefund(msg.sender, msg.value)
+        send(CONSENSUS, msg.value)
         return(1)
     # shouldn't be reached / if so no effect
     elif(!self.getFeesCollected(branch, sender, lastPeriod)):
@@ -3618,7 +3578,7 @@ macro POINTZEROONE: 184467440737095520
 # reporthash is [reporterID][event] = hash
 # subsidy is money for paying back a user for calculating the targeted num of reports for an event
 data EventIDToIndex[][]
-data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], shareValue, roundTwoNumEvents, subsidy[])
+data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], shareValue, roundTwoNumEvents, subsidy[], saltyHash[][])
 
 # numReportsEvent is number of reports on an event, expected is how many have been committed for an event
 # numReportsActual is the amount of reports a user has submitted in a period
@@ -3631,6 +3591,17 @@ data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](ev
 data numReqEvents[][]
 data requiredEvents[]
 data mode_items[][](report_value[], current_mode, current_mode_items)
+
+def getSaltyHash(branch, expDateIndex, reporter, event):
+    refund()
+    return(self.EventsExpDates[branch][expDateIndex].saltyHash[reporter][event])
+
+def setSaltyHash(branch, expDateIndex, reporter, saltyHash, event):
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #	return(-1)
+    self.EventsExpDates[branch][expDateIndex].saltyHash[reporter][event] = saltyHash
+    return(1)
 
 def getReportersPaidSoFar(branch, event):
     return(self.branches[branch].reportersPaidSoFarForEvent[event])
@@ -4262,10 +4233,10 @@ inset('refund.se')
 
 # Markets' index is the marketID, markets stores data about markets [which are able to be traded on] in augur
     # Events is a 0 indexed array of events in the market in the format of
-    	# [1, event, event, 2, event, 3, event, event, event]
-    	# 1 means dimension 1, 2 is events in dimension 2, 3 is the dimension 3 events
+        # [1, event, event, 2, event, 3, event, event, event]
+        # 1 means dimension 1, 2 is events in dimension 2, 3 is the dimension 3 events
     # Sharespurchased keeps track of the number of shares purchased for each outcome
-    	# sharesPurchased states starts at 1 - (same for participants[].shares[] array)
+        # sharesPurchased states starts at 1 - (same for participants[].shares[] array)
     # Participants is a 0 indexed array of participants, their cashIDs, && the shares in each outcome they've purchased of an event
     # currentParticipant is the number of participants [traders] in the market
     # cumulativeScale == range of the market for scalars
@@ -4287,314 +4258,293 @@ inset('refund.se')
     # fees is total amount of fees a market has paid to a branch [the reporters]
     # lastExpDate is when the market's last event expires
     # prices keeps track of the latest traded price for a given outcome in a market
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime, lastExpDate, prices[])
+data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime, lastExpDate, prices[])
 
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
 
 def getMarketsHash(branch):
-	return(self.marketsHash[branch])
+    return(self.marketsHash[branch])
 
 def addToMarketsHash(branch, newHash):
-	x = array(2)
-	x[0] = self.marketsHash[branch]
-	x[1] = newHash
-	self.marketsHash[branch] = sha3(x, items=2)
-	return(1)
+    x = array(2)
+    x[0] = self.marketsHash[branch]
+    x[1] = newHash
+    self.marketsHash[branch] = sha3(x, items=2)
+    return(1)
 
 def addFees(market, amount):
-	self.Markets[market].fees += amount
-	return(1)
-	
+    self.Markets[market].fees += amount
+    return(1)
+    
 def setPrice(market, outcome, price):
-	self.Markets[market].prices[outcome] = price
-	return(1)
+    self.Markets[market].prices[outcome] = price
+    return(1)
 
 # refund closing cost for a market
-def refundClosing(amount, to):
-	send(amount, to)
-	return(1)
+def refundClosing(market, to):
+    subsidy = self.Markets[market].gasSubsidy
+    self.Markets[market].gasSubsidy -= subsidy
+    send(subsidy, to)
+    return(1)
 
 def getFees(market):
-	return(self.Markets[market].fees)
+    return(self.Markets[market].fees)
 
 def getMakerFees(market):
-	return(self.Markets[market].makerFees)
+    return(self.Markets[market].makerFees)
 
 def getgasSubsidy(market):
-	return(self.Markets[market].gasSubsidy)
+    return(self.Markets[market].gasSubsidy)
 
 def getSharesValue(market):
-	return(self.Markets[market].sharesValue)
+    return(self.Markets[market].sharesValue)
 
 def returnTags(market):
-	tags = array(3)
-	tags[0] = self.Markets[market].tag1
-	tags[1] = self.Markets[market].tag2
-	tags[2] = self.Markets[market].tag3
-	return(tags: arr)
+    tags = array(3)
+    tags[0] = self.Markets[market].tag1
+    tags[1] = self.Markets[market].tag2
+    tags[2] = self.Markets[market].tag3
+    return(tags: arr)
 
 def getTotalSharesPurchased(market):
-	refund()
-	total = 0
-	n = self.Markets[market].numOutcomes
-	i = 1
-	while i <= n:
-	  total += self.Markets[market].sharesPurchased[i]
-	  i += 1
-	return(total)
+    refund()
+    total = 0
+    n = self.Markets[market].numOutcomes
+    i = 1
+    while i <= n:
+      total += self.Markets[market].sharesPurchased[i]
+      i += 1
+    return(total)
 
 def getMarketEvent(market, index):
-	refund()
-	return(self.Markets[market].events[index])
+    refund()
+    return(self.Markets[market].events[index])
 
 def getCreationTime(market):
-	return(self.Markets[market].creationTime)
+    return(self.Markets[market].creationTime)
 
 def getMarketEvents(market):
-	refund()
-	return(load(self.Markets[market].events[0], items=self.Markets[market].lenEvents): arr)
+    refund()
+    return(load(self.Markets[market].events[0], items=self.Markets[market].lenEvents): arr)
 
 def getSharesPurchased(market, outcome):
-	refund()
-	return(self.Markets[market].sharesPurchased[outcome])
+    refund()
+    return(self.Markets[market].sharesPurchased[outcome])
 
 def getExtraInfo(market):
-	refund()
-	length=self.Markets[market].extraInfoLen
-	return(load(self.Markets[market].extraInfo[0], chars=length): str)
+    refund()
+    length=self.Markets[market].extraInfoLen
+    return(load(self.Markets[market].extraInfo[0], chars=length): str)
 
 def getVolume(market):
-	refund()
-	return(self.Markets[market].volume)
+    refund()
+    return(self.Markets[market].volume)
 
-def getParticipantNumber(market, address):
-	refund()
-	participantNumber = self.Markets[market].addr2participant[address]
-	return(participantNumber)
-
-def getParticipantID(market, participantNumber):
-	refund()
-	return(self.Markets[market].participants[participantNumber].participantID)
-
-def getParticipantSharesPurchased(market, participantNumber, outcome):
-	refund()
-	return(self.Markets[market].participants[participantNumber].shares[outcome])
+def getParticipantSharesPurchased(market, trader, outcome):
+    refund()
+    return(self.Markets[market].participants[trader].shares[outcome])
 
 def getNumEvents(market):
-	refund()
-	return(self.Markets[market].lenEvents)
-
-def getCurrentParticipantNumber(market):
-	refund()
-	return(self.Markets[market].currentParticipant)
+    refund()
+    return(self.Markets[market].lenEvents)
 
 def getCumScale(market):
-	refund()
-	return(self.Markets[market].cumulativeScale)
+    refund()
+    return(self.Markets[market].cumulativeScale)
 
 def getMarketNumOutcomes(market):
-	refund()
-	return(self.Markets[market].numOutcomes)
+    refund()
+    return(self.Markets[market].numOutcomes)
 
 def getTradingPeriod(market):
-	refund()
-	return(self.Markets[market].tradingPeriod)
+    refund()
+    return(self.Markets[market].tradingPeriod)
 
 def getOriginalTradingPeriod(market):
-	refund()
-	return(self.Markets[market].originalPeriod)
+    refund()
+    return(self.Markets[market].originalPeriod)
 
 def setTradingPeriod(market, period):
-	refund()
-	self.Markets[market].tradingPeriod = period
-	return(1)
+    refund()
+    self.Markets[market].tradingPeriod = period
+    return(1)
 
 def getTradingFee(market):
-	refund()
-	return(self.Markets[market].tradingFee)
+    refund()
+    return(self.Markets[market].tradingFee)
 
 def getBranchID(market):
-	refund()
-	return(self.Markets[market].branch)
+    refund()
+    return(self.Markets[market].branch)
 
 macro market($marketID):
-	self.Markets[$marketID]
+    self.Markets[$marketID]
 
 macro cumScale($marketID):
-	market($marketID).cumulativeScale
+    market($marketID).cumulativeScale
 
 macro numOutcomes($marketID):
-	market($marketID).numOutcomes
+    market($marketID).numOutcomes
 
 macro sharesPurchased($marketID):
-	market($marketID).sharesPurchased
+    market($marketID).sharesPurchased
 
 # check that msg.sender is one of our function contracts
 def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy, creationFee, lastExpDate):
-	refund()
-	#if(!self.whitelist.check(msg.sender)):
-	#    return(-1)
-	# add event list to the market
-	save(self.Markets[marketID].events[0], events, items=len(events))
-	self.Markets[marketID].lenEvents = len(events)
-	save(self.Markets[marketID].extraInfo[0], extraInfo, chars=len(extraInfo))
-	self.Markets[marketID].extraInfoLen = len(extraInfo)
-	self.Markets[marketID].tradingPeriod = tradingPeriod
-	self.Markets[marketID].originalPeriod = tradingPeriod
-	self.Markets[marketID].tradingFee = tradingFee
-	self.Markets[marketID].branch = branch
-	self.Markets[marketID].cumulativeScale = cumScale
-	self.Markets[marketID].numOutcomes = numOutcomes
-	self.Markets[marketID].tag1 = tag1
-	self.Markets[marketID].tag2 = tag2
-	self.Markets[marketID].gasSubsidy = gasSubsidy
-	self.Markets[marketID].tag3 = tag3
-	self.Markets[marketID].makerFees = makerFees
-	self.Markets[marketID].fees = creationFee
-	self.Markets[marketID].creationTime = block.timestamp
-	self.Markets[marketID].lastExpDate = lastExpDate
-	return(1)
-
-def addParticipant(market, address):
-	refund()
-	#if(!self.whitelist.check(msg.sender)):
-	#    return(-1)
-	participantNumber = self.Markets[market].currentParticipant
-	self.Markets[market].participants[participantNumber].participantID = address
-	self.Markets[market].addr2participant[address] = participantNumber
-	self.Markets[market].currentParticipant += 1
-	return(participantNumber)
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    # add event list to the market
+    save(self.Markets[marketID].events[0], events, items=len(events))
+    self.Markets[marketID].lenEvents = len(events)
+    save(self.Markets[marketID].extraInfo[0], extraInfo, chars=len(extraInfo))
+    self.Markets[marketID].extraInfoLen = len(extraInfo)
+    self.Markets[marketID].tradingPeriod = tradingPeriod
+    self.Markets[marketID].originalPeriod = tradingPeriod
+    self.Markets[marketID].tradingFee = tradingFee
+    self.Markets[marketID].branch = branch
+    self.Markets[marketID].cumulativeScale = cumScale
+    self.Markets[marketID].numOutcomes = numOutcomes
+    self.Markets[marketID].tag1 = tag1
+    self.Markets[marketID].tag2 = tag2
+    self.Markets[marketID].gasSubsidy = gasSubsidy
+    self.Markets[marketID].tag3 = tag3
+    self.Markets[marketID].makerFees = makerFees
+    self.Markets[marketID].fees = creationFee
+    self.Markets[marketID].creationTime = block.timestamp
+    self.Markets[marketID].lastExpDate = lastExpDate
+    return(1)
 
 def modifyShares(marketID, outcome, amount):
-	refund()
-	#if(!self.whitelist.check(msg.sender)):
-	#    return(-1)
-	sharesPurchased(marketID)[outcome] += amount
-	return(1)
-	
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    sharesPurchased(marketID)[outcome] += amount
+    return(1)
+    
 def modifySharesValue(marketID, amount):
-	self.Markets[marketID].sharesValue += amount
-	return(1)
+    self.Markets[marketID].sharesValue += amount
+    return(1)
 
-def modifyParticipantShares(marketID, participantNumber, outcome, amount, cancel):
-	refund()
-	#if(!self.whitelist.check(msg.sender)):
-	#    return(-1)
-	self.Markets[marketID].participants[participantNumber].shares[outcome] += amount
-	if(amount<0):
-		amount = amount*-1
-	if(cancel):
-		amount = -1*amount
-	self.Markets[marketID].volume += amount
-	return(1)   
+def modifyParticipantShares(marketID, trader, outcome, amount, cancel):
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Markets[marketID].participants[trader].shares[outcome] += amount
+    if(amount<0):
+        amount = amount*-1
+    if(cancel):
+        amount = -1*amount
+    self.Markets[marketID].volume += amount
+    return(1)   
 
 def setWinningOutcomes(market, outcomes: arr):
-	refund()
-	#if(!self.whitelist.check(msg.sender)):
-	#    return(-1)
-	# largest # of winning outcomes is 8
-	save(self.Markets[market].winningOutcomes[0], outcomes, items=len(outcomes))
-	return(1)
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    # largest # of winning outcomes is 8
+    save(self.Markets[market].winningOutcomes[0], outcomes, items=len(outcomes))
+    return(1)
 
 def getWinningOutcomes(market):
-	refund()
-	# do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
-	#if(!self.whitelist.check(msg.sender)):
-	#    return(-1)
-	# largest # of winning outcomes is 8
-	return(load(self.Markets[market].winningOutcomes[0], items=8): arr)
-	
+    refund()
+    # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    # largest # of winning outcomes is 8
+    return(load(self.Markets[market].winningOutcomes[0], items=8): arr)
+    
 def getOneWinningOutcome(market, num):
-	refund()
-	# whitelist
-	return(self.Markets[market].winningOutcomes[num])
+    refund()
+    # whitelist
+    return(self.Markets[market].winningOutcomes[num])
 
 def setTradingFee(market, fee):
-	refund()
-	self.Markets[market].tradingFee = fee
-	return(fee)
+    refund()
+    self.Markets[market].tradingFee = fee
+    return(fee)
 
 def setPushedForward(market, bool, sender):
-	refund()
-	self.Markets[market].pushingForward = bool
-	self.Markets[market].bondsMan = sender
-	return(1)
+    refund()
+    self.Markets[market].pushingForward = bool
+    self.Markets[market].bondsMan = sender
+    return(1)
 
 def getPushedForward(market):
-	refund()
-	return(self.Markets[market].pushingForward)
+    refund()
+    return(self.Markets[market].pushingForward)
 
 def getBondsMan(market):
-	refund()
-	return(self.Markets[market].bondsMan)
+    refund()
+    return(self.Markets[market].bondsMan)
 
 def getLastTrade(market):
-	refund()
-	return(self.Markets[market].last_trade)
-	
+    refund()
+    return(self.Markets[market].last_trade)
+    
 def addTrade(market, trade_id, last_id):
-	refund()
-	self.Markets[market].trade_ids[last_id].next_id = trade_id
-	self.Markets[market].trade_ids[trade_id].prev_id = last_id
-	self.Markets[market].trade_ids[trade_id].id = trade_id
-	self.Markets[market].last_trade = trade_id
-	self.Markets[market].total_trades += 1
-	return(1)
-	
+    refund()
+    self.Markets[market].trade_ids[last_id].next_id = trade_id
+    self.Markets[market].trade_ids[trade_id].prev_id = last_id
+    self.Markets[market].trade_ids[trade_id].id = trade_id
+    self.Markets[market].last_trade = trade_id
+    self.Markets[market].total_trades += 1
+    return(1)
+    
 def remove_trade_from_market(market_id, trade_id):
-	refund()
-	prev_id = self.Markets[market_id].trade_ids[trade_id].prev_id
-	next_id = self.Markets[market_id].trade_ids[trade_id].next_id
-	if prev_id and next_id:
-		self.Markets[market_id].trade_ids[prev_id].next_id = next_id
-		self.Markets[market_id].trade_ids[next_id].prev_id = prev_id
-	elif prev_id:
-		self.Markets[market_id].last_trade = prev_id
-		self.Markets[market_id].trade_ids[prev_id].next_id = 0
+    refund()
+    prev_id = self.Markets[market_id].trade_ids[trade_id].prev_id
+    next_id = self.Markets[market_id].trade_ids[trade_id].next_id
+    if prev_id and next_id:
+        self.Markets[market_id].trade_ids[prev_id].next_id = next_id
+        self.Markets[market_id].trade_ids[next_id].prev_id = prev_id
+    elif prev_id:
+        self.Markets[market_id].last_trade = prev_id
+        self.Markets[market_id].trade_ids[prev_id].next_id = 0
 
-	if next_id:
-		self.Markets[market_id].trade_ids[trade_id].next_id = 0
-	if prev_id:
-		self.Markets[market_id].trade_ids[trade_id].prev_id = 0
-	self.Markets[market_id].trade_ids[trade_id].id = 0
-	self.Markets[market_id].total_trades -= 1
-	return(1)
+    if next_id:
+        self.Markets[market_id].trade_ids[trade_id].next_id = 0
+    if prev_id:
+        self.Markets[market_id].trade_ids[trade_id].prev_id = 0
+    self.Markets[market_id].trade_ids[trade_id].id = 0
+    self.Markets[market_id].total_trades -= 1
+    return(1)
 
 def get_trade_ids(market_id):
-	refund()
-	trades_count = self.Markets[market_id].total_trades
-	trade_id = self.Markets[market_id].last_trade
-	trade_ids = array(trades_count)
+    refund()
+    trades_count = self.Markets[market_id].total_trades
+    trade_id = self.Markets[market_id].last_trade
+    trade_ids = array(trades_count)
 
-	i = 0
-	while i < trades_count:
-		trade_ids[i] = self.Markets[market_id].trade_ids[trade_id].id
-		trade_id = self.Markets[market_id].trade_ids[trade_id].prev_id
-		i = i + 1
+    i = 0
+    while i < trades_count:
+        trade_ids[i] = self.Markets[market_id].trade_ids[trade_id].id
+        trade_id = self.Markets[market_id].trade_ids[trade_id].prev_id
+        i = i + 1
 
-	if trade_ids:
-		return(trade_ids:arr)
-	return([FAILURE]:arr)
-	
+    if trade_ids:
+        return(trade_ids:arr)
+    return([FAILURE]:arr)
+    
 def get_total_trades(market_id):
-	refund()
-	return(self.Markets[market_id].total_trades)
+    refund()
+    return(self.Markets[market_id].total_trades)
 
 def getOrderBook(marketID):
-	refund()
-	numTrades = self.Markets[marketID].total_trades
-	trades = self.get_trade_ids(marketID, outitems=numTrades)
-	orderBook = array(8*numTrades)
-	i = 0
-	while i < numTrades:
-		tradeInfo = self.get_trade(trades[i], outitems=8)
-		j = 0
-		while j < 8:
-			orderBook[8*i + j] = tradeInfo[j]
-			j += 1
-		i += 1
-	return(orderBook:arr)
+    refund()
+    numTrades = self.Markets[marketID].total_trades
+    trades = self.get_trade_ids(marketID, outitems=numTrades)
+    orderBook = array(8*numTrades)
+    i = 0
+    while i < numTrades:
+        tradeInfo = self.get_trade(trades[i], outitems=8)
+        j = 0
+        while j < 8:
+            orderBook[8*i + j] = tradeInfo[j]
+            j += 1
+        i += 1
+    return(orderBook:arr)
 
 macro EVENTS_FIELDS: 6
 macro OUTCOMES_FIELDS: 2
@@ -4603,109 +4553,106 @@ macro FIELDS: 18
 
 # todo move these getters to a new contract
 def getMarketInfo(marketID):
-	refund()
-	index = FIELDS
-	participantNumber = self.Markets[marketID].addr2participant[msg.sender]
-	descriptionLength = self.getDescriptionLength(marketID)
-	with info = array(FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1):
-		numEvents = self.Markets[marketID].lenEvents
-		info[0] = marketID
-		info[1] = self.Markets[marketID].currentParticipant
-		info[2] = self.Markets[marketID].makerFees
-		info[3] = participantNumber
-		info[4] = self.Markets[marketID].numOutcomes
-		info[5] = self.Markets[marketID].tradingPeriod
-		info[6] = self.Markets[marketID].tradingFee
-		info[7] = self.Markets[marketID].branch
-		info[8] = numEvents
-		info[9] = self.Markets[marketID].cumulativeScale
-		info[10] = self.Markets[marketID].creationTime
-		info[11] = self.Markets[marketID].volume
-		info[12] = self.getCreationFee(marketID)
-		info[13] = self.getCreator(marketID)
-		info[14] = self.Markets[marketID].tag1
-		info[15] = self.Markets[marketID].tag2
-		info[16] = self.Markets[marketID].tag3
-		info[17] = self.Markets[marketID].creationTime
-		# gather event(s) info:
-		# [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
-		with events = slice(load(self.Markets[marketID].events[0], chars=32*numEvents), items=0, items=numEvents):
-			i = 0
-			while i < numEvents:
-				with eventInfo = self.getEventInfo(events[i], outitems=EVENTS_FIELDS):
-					info[index + i*EVENTS_FIELDS] = events[i]
-					j = 1
-					while j < EVENTS_FIELDS:
-						info[index + i*EVENTS_FIELDS + j] = eventInfo[j]
-						j += 1
-				i += 1
-		index += numEvents*EVENTS_FIELDS
+    refund()
+    index = FIELDS
+    descriptionLength = self.getDescriptionLength(marketID)
+    with info = array(FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1):
+        numEvents = self.Markets[marketID].lenEvents
+        info[0] = marketID
+        info[2] = self.Markets[marketID].makerFees
+        info[4] = self.Markets[marketID].numOutcomes
+        info[5] = self.Markets[marketID].tradingPeriod
+        info[6] = self.Markets[marketID].tradingFee
+        info[7] = self.Markets[marketID].branch
+        info[8] = numEvents
+        info[9] = self.Markets[marketID].cumulativeScale
+        info[10] = self.Markets[marketID].creationTime
+        info[11] = self.Markets[marketID].volume
+        info[12] = self.getCreationFee(marketID)
+        info[13] = self.getCreator(marketID)
+        info[14] = self.Markets[marketID].tag1
+        info[15] = self.Markets[marketID].tag2
+        info[16] = self.Markets[marketID].tag3
+        info[17] = self.Markets[marketID].creationTime
+        # gather event(s) info:
+        # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
+        with events = slice(load(self.Markets[marketID].events[0], chars=32*numEvents), items=0, items=numEvents):
+            i = 0
+            while i < numEvents:
+                with eventInfo = self.getEventInfo(events[i], outitems=EVENTS_FIELDS):
+                    info[index + i*EVENTS_FIELDS] = events[i]
+                    j = 1
+                    while j < EVENTS_FIELDS:
+                        info[index + i*EVENTS_FIELDS + j] = eventInfo[j]
+                        j += 1
+                i += 1
+        index += numEvents*EVENTS_FIELDS
 
-		# gather outcomes info: [sharesPurchased, price], winningOutcomes
-		# (price of outcome = last trade)
-		numTrades = self.Markets[marketID].total_trades
-		numOutcomes = self.Markets[marketID].numOutcomes
-		trades = self.get_trade_ids(marketID, outitems=numTrades)
-		k = 0
-		while k < numOutcomes:
-			info[index + k*OUTCOMES_FIELDS] = self.Markets[marketID].sharesPurchased[k + 1]
-			i = 0
-			lastTrade = self.Markets[marketID].prices[k+1]
-			info[index + k*OUTCOMES_FIELDS + 1] = lastTrade
-			k += 1
-		index += self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS
-		k = 0
-		while k < WINNING_OUTCOMES_FIELDS:
-			info[index + k] = self.Markets[marketID].winningOutcomes[k]
-			k += 1
-		index += WINNING_OUTCOMES_FIELDS
+        # gather outcomes info: [sharesPurchased, price], winningOutcomes
+        # (price of outcome = last trade)
+        numTrades = self.Markets[marketID].total_trades
+        numOutcomes = self.Markets[marketID].numOutcomes
+        trades = self.get_trade_ids(marketID, outitems=numTrades)
+        k = 0
+        while k < numOutcomes:
+            info[index + k*OUTCOMES_FIELDS] = self.Markets[marketID].sharesPurchased[k + 1]
+            i = 0
+            lastTrade = self.Markets[marketID].prices[k+1]
+            info[index + k*OUTCOMES_FIELDS + 1] = lastTrade
+            k += 1
+        index += self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS
+        k = 0
+        while k < WINNING_OUTCOMES_FIELDS:
+            info[index + k] = self.Markets[marketID].winningOutcomes[k]
+            k += 1
+        index += WINNING_OUTCOMES_FIELDS
 
-		# append description character codes
-		info[index] = descriptionLength
-		index += 1
-		with description = self.getDescription(marketID, outchars=descriptionLength):
-			c = 0
-			while c < descriptionLength:
-				info[index + c] = getch(description, c)
-				c += 1
-		return(info: arr)
+        # append description character codes
+        info[index] = descriptionLength
+        index += 1
+        with description = self.getDescription(marketID, outchars=descriptionLength):
+            c = 0
+            while c < descriptionLength:
+                info[index + c] = getch(description, c)
+                c += 1
+        return(info: arr)
 
 def getMarketsInfo(branch, offset, numMarketsToLoad):
-	numMarkets = self.getNumMarketsBranch(branch)
-	marketIDs = self.getSomeMarketsInBranch(branch, offset, offset+numMarketsToLoad, outitems=numMarketsToLoad)
-	totalLen = numMarketsToLoad*10
-	m = 0
-	while m < numMarketsToLoad:
-		totalLen += self.getDescriptionLength(marketIDs[m])
-		m += 1
-	data = array(totalLen)
-	m = 0
-	c = 0
-	totalMarkets = min(numMarketsToLoad, numMarkets)
-	while m < totalMarkets:
-		descriptionLength = self.getDescriptionLength(marketIDs[m])
-		data[c] = marketIDs[m]
-		data[c + 1] = self.Markets[marketIDs[m]].tradingPeriod
-		data[c + 2] = self.Markets[marketIDs[m]].tradingFee
-		data[c + 3] = self.Markets[marketIDs[m]].creationTime
-		data[c + 4] = self.Markets[marketIDs[m]].volume
-		data[c + 5] = self.Markets[marketIDs[m]].tag1
-		data[c + 6] = self.Markets[marketIDs[m]].tag2
-		data[c + 7] = self.Markets[marketIDs[m]].tag3
-		data[c + 8] = self.Markets[marketIDs[m]].lastExpDate
-		data[c + 9] = descriptionLength
-		c += 10
-		description = self.getDescription(marketIDs[m], outchars=descriptionLength)
-		d = 0
-		while d < descriptionLength:
-			data[c] = getch(description, d)
-			d += 1
-			c += 1
-		m += 1
-	return(data: arr)
+    numMarkets = self.getNumMarketsBranch(branch)
+    marketIDs = self.getSomeMarketsInBranch(branch, offset, offset+numMarketsToLoad, outitems=numMarketsToLoad)
+    totalLen = numMarketsToLoad*10
+    m = 0
+    while m < numMarketsToLoad:
+        totalLen += self.getDescriptionLength(marketIDs[m])
+        m += 1
+    data = array(totalLen)
+    m = 0
+    c = 0
+    totalMarkets = min(numMarketsToLoad, numMarkets)
+    while m < totalMarkets:
+        descriptionLength = self.getDescriptionLength(marketIDs[m])
+        data[c] = marketIDs[m]
+        data[c + 1] = self.Markets[marketIDs[m]].tradingPeriod
+        data[c + 2] = self.Markets[marketIDs[m]].tradingFee
+        data[c + 3] = self.Markets[marketIDs[m]].creationTime
+        data[c + 4] = self.Markets[marketIDs[m]].volume
+        data[c + 5] = self.Markets[marketIDs[m]].tag1
+        data[c + 6] = self.Markets[marketIDs[m]].tag2
+        data[c + 7] = self.Markets[marketIDs[m]].tag3
+        data[c + 8] = self.Markets[marketIDs[m]].lastExpDate
+        data[c + 9] = descriptionLength
+        c += 10
+        description = self.getDescription(marketIDs[m], outchars=descriptionLength)
+        d = 0
+        while d < descriptionLength:
+            data[c] = getch(description, d)
+            d += 1
+            c += 1
+        m += 1
+    return(data: arr)
 
 def getSender():
-	return(msg.sender)
+    return(msg.sender)
 inset('refund.se')
 
 # Keeps track of data about events in augur

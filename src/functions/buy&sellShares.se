@@ -269,7 +269,7 @@ def short_sell(buyer_trade_id, max_amount):
         remove_trade(trade_id, market)
     # Update balances
     MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 0)
-    MARKETS.modifyParticipantShares(market, msg.sender, outcome, fill, 0)
+    MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
     # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
     # 75% to branch + .5% more to branch per maker fee 1% decrease 
     if(!CASH.sendFrom(branch, branchFees, msg.sender)):
