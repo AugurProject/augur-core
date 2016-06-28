@@ -130,7 +130,7 @@ macro remove_trade($trade_id, $market):
 def buy(amount, price, market, outcome):
     refund()
     if(!MARKETS.getCreationTime(market)):
-        return(0)
+        return(-1)
     branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
@@ -142,7 +142,7 @@ def buy(amount, price, market, outcome):
     cumScale = MARKETS.getCumScale(market)
     fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE
     if(price>cumScale or amount*price < 3402823669209384705829531287552 or amount*price >= 2**190):
-        return(0)
+        return(-1)
     if(CASH.balance(msg.sender) < (amount * price * (fee + ONE) / ONE^2)):
         return(-4)
     save_trade(BID, amount, price, market, outcome, branch, participantNumber, fee, msg.sender)
@@ -164,7 +164,7 @@ def sell(amount, price, market, outcome):
     cumScale = MARKETS.getCumScale(market)
     fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE
     if(price>cumScale or amount*price < 3402823669209384705829531287552L or amount*price >= 2**190):
-        return(0)
+        return(-1)
     if(CASH.balance(msg.sender) < (amount * price * fee / ONE^2)):
         return(-4)
     save_trade(ASK, amount, price, market, outcome, branch, participantNumber, fee, msg.sender)
