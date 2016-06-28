@@ -123,8 +123,7 @@ macro remove_trade($trade_id, $market):
     #  0: market doesn't exist
     # -1: amount/price bad
     # -2: oracle only branch
-    # -3: trader doesn't exist in market
-    # -4: not enough money or shares
+    # -3: not enough money or shares
 #
 # costs 532k gas
 # smallest trade value is 0.00000001
@@ -142,7 +141,7 @@ def buy(amount, price, market, outcome):
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
     if(CASH.balance(msg.sender) < (amount * price * (fee + ONE) / ONE^2)):
-        return(-4)
+        return(-3)
     save_trade(BID, amount, price, market, outcome, branch, fee, msg.sender)
     return(FAILURE)
 
@@ -160,9 +159,9 @@ def sell(amount, price, market, outcome):
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
     if(MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome) < amount):
-        return(-4)
+        return(-3)
     # check for enough money for fees
     if(CASH.balance(msg.sender) < (amount * price * fee / ONE^2)):
-        return(-4)
+        return(-3)
     save_trade(ASK, amount, price, market, outcome, branch, fee, msg.sender)
     return(FAILURE)
