@@ -48,7 +48,7 @@ inset('refund.se')
     # fees is total amount of fees a market has paid to a branch [the reporters]
     # lastExpDate is when the market's last event expires
     # prices keeps track of the latest traded price for a given outcome in a market
-data Markets[](events[], sharesPurchased[], addr2participant[], participants[](participantID, shares[]), lenEvents, currentParticipant, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime, lastExpDate, prices[])
+data Markets[](events[], sharesPurchased[], participants[](shares[]), lenEvents, winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime, lastExpDate, prices[])
 
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
@@ -72,8 +72,10 @@ def setPrice(market, outcome, price):
 	return(1)
 
 # refund closing cost for a market
-def refundClosing(amount, to):
-	send(amount, to)
+def refundClosing(market, to):
+    subsidy = self.Markets[market].gasSubsidy
+    self.Markets[market].gasSubsidy -= subsidy
+	send(subsidy, to)
 	return(1)
 
 def getLastExpDate(market):
@@ -135,26 +137,13 @@ def getVolume(market):
 	refund()
 	return(self.Markets[market].volume)
 
-def getParticipantNumber(market, address):
+def getParticipantSharesPurchased(market, trader, outcome):
 	refund()
-	participantNumber = self.Markets[market].addr2participant[address]
-	return(participantNumber)
-
-def getParticipantID(market, participantNumber):
-	refund()
-	return(self.Markets[market].participants[participantNumber].participantID)
-
-def getParticipantSharesPurchased(market, participantNumber, outcome):
-	refund()
-	return(self.Markets[market].participants[participantNumber].shares[outcome])
+	return(self.Markets[market].participants[trader].shares[outcome])
 
 def getNumEvents(market):
 	refund()
 	return(self.Markets[market].lenEvents)
-
-def getCurrentParticipantNumber(market):
-	refund()
-	return(self.Markets[market].currentParticipant)
 
 def getCumScale(market):
 	refund()
@@ -223,16 +212,6 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, t
 	self.Markets[marketID].lastExpDate = lastExpDate
 	return(1)
 
-def addParticipant(market, address):
-	refund()
-	#if(!self.whitelist.check(msg.sender)):
-	#    return(-1)
-	participantNumber = self.Markets[market].currentParticipant
-	self.Markets[market].participants[participantNumber].participantID = address
-	self.Markets[market].addr2participant[address] = participantNumber
-	self.Markets[market].currentParticipant += 1
-	return(participantNumber)
-
 def modifyShares(marketID, outcome, amount):
 	refund()
 	#if(!self.whitelist.check(msg.sender)):
@@ -244,11 +223,11 @@ def modifySharesValue(marketID, amount):
 	self.Markets[marketID].sharesValue += amount
 	return(1)
 
-def modifyParticipantShares(marketID, participantNumber, outcome, amount, cancel, sets):
+def modifyParticipantShares(marketID, trader, outcome, amount, cancel):
 	refund()
 	#if(!self.whitelist.check(msg.sender)):
 	#    return(-1)
-	self.Markets[marketID].participants[participantNumber].shares[outcome] += amount
+	self.Markets[marketID].participants[trader].shares[outcome] += amount
 	if(amount<0):
 		amount = amount*-1
 	if(cancel):

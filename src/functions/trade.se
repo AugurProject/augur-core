@@ -111,11 +111,8 @@ def trade(max_value, max_amount, trade_ids:arr):
         # Fill buy order
         if type == BID:
             # Get available balance of shares
-            sender = MARKETS.getParticipantNumber(market, msg.sender)
-            balance = MARKETS.getParticipantSharesPurchased(market, sender, outcome)
+            balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)
             if(balance > 0 and max_amount > 0):
-                if(MARKETS.getParticipantID(market, sender) != msg.sender):
-                    return(-3)
                 makerFeeRate = MARKETS.getMakerFees(market)
                 # Determine fill amount
                 fill = min(amount, min(balance, max_amount))
@@ -130,8 +127,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 else:
                     remove_trade(trade_ids[t], market)
                 # Update balances
-                MARKETS.modifyParticipantShares(market, sender, outcome, -fill, 0)
-                MARKETS.modifyParticipantShares(market, MARKETS.getParticipantNumber(market, owner), outcome, fill, 0)
+                MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 0)
+                MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
                 fee = value * fee / ONE
                 branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
@@ -174,12 +171,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                     TRADES.fill_trade(trade_ids[t], fill)
                 else:
                     remove_trade(trade_ids[t], market)
-                sender = MARKETS.getParticipantNumber(market, msg.sender)
-                # if participant doesn't exist in market, add them
-                if(msg.sender != MARKETS.getParticipantID(market, sender)):
-                    sender = MARKETS.addParticipant(market, msg.sender)
                 # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
-                MARKETS.modifyParticipantShares(market, sender, outcome, fill, 0)
+                MARKETS.modifyParticipantShares(market, msg.sender, outcome, fill, 0)
 
                 branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees/ONE * fee / ONE
                 creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees/ONE * fee / ONE
@@ -286,16 +279,12 @@ def short_sell(buyer_trade_id, max_amount):
         return(-7)
 
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
-    participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
-    # if participant doesn't exist in market, add them
-    if(msg.sender != MARKETS.getParticipantID(market, participantNumber)):
-        participantNumber = MARKETS.addParticipant(market, msg.sender)
 
     i = 1
     # send shares of the event to user address, buying complete sets
     while i <= numOutcomes:
         MARKETS.modifyShares(market, i, amount)
-        MARKETS.modifyParticipantShares(market, participantNumber, i, amount, 0)
+        MARKETS.modifyParticipantShares(market, msg.sender, i, amount, 0)
         i += 1
     if(BRANCHES.getVotePeriod(branch)<MARKETS.getTradingPeriod(market)):
         MARKETS.modifySharesValue(market, amount*cumScale/ONE)
@@ -314,9 +303,8 @@ def short_sell(buyer_trade_id, max_amount):
     else:
         remove_trade(trade_id, market)
     # Update balances
-    ownerNum = MARKETS.getParticipantNumber(market, owner)
-    MARKETS.modifyParticipantShares(market, participantNumber, outcome, -fill, 0)
-    MARKETS.modifyParticipantShares(market, ownerNum, outcome, fill, 0)
+    MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 0)
+    MARKETS.modifyParticipantShares(market, msg.sender, outcome, fill, 0)
     # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
     # 75% to branch + .5% more to branch per maker fee 1% decrease 
     if(!CASH.sendFrom(branch, branchFees, msg.sender)):
