@@ -372,7 +372,7 @@ def short_sell(buyer_trade_id, max_amount):
         remove_trade(trade_id, market)
     # Update balances
     self.modifyParticipantShares(market, msg.sender, outcome, -fill, 0)
-    self.modifyParticipantShares(market, msg.sender, outcome, fill, 0)
+    self.modifyParticipantShares(market, owner, outcome, fill, 0)
     # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
     # 75% to branch + .5% more to branch per maker fee 1% decrease 
     if(!self.sendFrom(branch, branchFees, msg.sender)):
@@ -3578,7 +3578,7 @@ macro POINTZEROONE: 184467440737095520
 # reporthash is [reporterID][event] = hash
 # subsidy is money for paying back a user for calculating the targeted num of reports for an event
 data EventIDToIndex[][]
-data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], shareValue, roundTwoNumEvents, subsidy[], saltyHash[][])
+data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], saltyHash[][], shareValue, subsidy[], roundTwoNumEvents)
 
 # numReportsEvent is number of reports on an event, expected is how many have been committed for an event
 # numReportsActual is the amount of reports a user has submitted in a period
@@ -4237,13 +4237,14 @@ inset('refund.se')
         # 1 means dimension 1, 2 is events in dimension 2, 3 is the dimension 3 events
     # Sharespurchased keeps track of the number of shares purchased for each outcome
         # sharesPurchased states starts at 1 - (same for participants[].shares[] array)
-    # Participants is a 0 indexed array of participants, their cashIDs, && the shares in each outcome they've purchased of an event
+    # Participants is an array of participants, their addresses as keys and the shares in each outcome they've purchased of an event as the values
+    	# e.g. participants[addr].shares[1]
     # currentParticipant is the number of participants [traders] in the market
     # cumulativeScale == range of the market for scalars
     # numOutcomes is the number of outcomes in a market [up to 8 for now]
     # a binary outcome state 1 is no, 2 is true, 0 if not done, 1.5 if indeterminate
     # tradingFee is a percent in fixedPoint and the base trading fee for a market: takers pay 100%-150% of this, makers pay 0-50% of this
-    # tradingPeriod is which eventexpperiod market expires in
+    # tradingPeriod is which eventExpPeriod market expires in
     # pushing forward is whether a market has been pushed forward to attempt early resolution
     # bondsman is the person/address who/that posted the early resolution bond
     # originalPeriod is the original period the market's event would resolve in
@@ -4549,7 +4550,7 @@ def getOrderBook(marketID):
 macro EVENTS_FIELDS: 6
 macro OUTCOMES_FIELDS: 2
 macro WINNING_OUTCOMES_FIELDS: 8
-macro FIELDS: 18
+macro FIELDS: 16
 
 # todo move these getters to a new contract
 def getMarketInfo(marketID):
@@ -4559,21 +4560,21 @@ def getMarketInfo(marketID):
     with info = array(FIELDS + self.Markets[marketID].lenEvents*EVENTS_FIELDS + self.Markets[marketID].numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 1):
         numEvents = self.Markets[marketID].lenEvents
         info[0] = marketID
-        info[2] = self.Markets[marketID].makerFees
-        info[4] = self.Markets[marketID].numOutcomes
-        info[5] = self.Markets[marketID].tradingPeriod
-        info[6] = self.Markets[marketID].tradingFee
-        info[7] = self.Markets[marketID].branch
-        info[8] = numEvents
-        info[9] = self.Markets[marketID].cumulativeScale
-        info[10] = self.Markets[marketID].creationTime
-        info[11] = self.Markets[marketID].volume
-        info[12] = self.getCreationFee(marketID)
-        info[13] = self.getCreator(marketID)
-        info[14] = self.Markets[marketID].tag1
-        info[15] = self.Markets[marketID].tag2
-        info[16] = self.Markets[marketID].tag3
-        info[17] = self.Markets[marketID].creationTime
+        info[1] = self.Markets[marketID].makerFees
+        info[2] = self.Markets[marketID].numOutcomes
+        info[3] = self.Markets[marketID].tradingPeriod
+        info[4] = self.Markets[marketID].tradingFee
+        info[5] = self.Markets[marketID].branch
+        info[6] = numEvents
+        info[7] = self.Markets[marketID].cumulativeScale
+        info[8] = self.Markets[marketID].creationTime
+        info[9] = self.Markets[marketID].volume
+        info[10] = self.getCreationFee(marketID)
+        info[11] = self.getCreator(marketID)
+        info[12] = self.Markets[marketID].tag1
+        info[13] = self.Markets[marketID].tag2
+        info[14] = self.Markets[marketID].tag3
+        info[15] = self.Markets[marketID].creationTime
         # gather event(s) info:
         # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
         with events = slice(load(self.Markets[marketID].events[0], chars=32*numEvents), items=0, items=numEvents):
