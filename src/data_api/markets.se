@@ -65,32 +65,19 @@ def addToMarketsHash(branch, newHash):
     return(1)
 
 def addFees(market, amount):
-<<<<<<< HEAD
-	self.Markets[market].fees += amount
-	return(1)
-
-=======
     self.Markets[market].fees += amount
     return(1)
     
->>>>>>> develop
 def setPrice(market, outcome, price):
     self.Markets[market].prices[outcome] = price
     return(1)
 
 # refund closing cost for a market
 def refundClosing(market, to):
-<<<<<<< HEAD
-	subsidy = self.Markets[market].gasSubsidy
-	self.Markets[market].gasSubsidy -= subsidy
-	send(subsidy, to)
-	return(1)
-=======
     subsidy = self.Markets[market].gasSubsidy
     self.Markets[market].gasSubsidy -= subsidy
     send(subsidy, to)
     return(1)
->>>>>>> develop
 
 def getLastExpDate(market):
 	return(self.Markets[market].lastExpDate)
