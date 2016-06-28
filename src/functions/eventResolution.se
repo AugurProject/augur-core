@@ -4,7 +4,6 @@ import cash as CASH
 import markets as MARKETS
 import events as EVENTS
 import expiringEvents as EXPEVENTS
-import makeReports as MAKEREPORTS
 inset('refund.se')
 
 macro YES: TWO
@@ -30,11 +29,7 @@ macro ethic_catch($x):
 macro scalar($event):
     ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
 
-def catch(x):
-    refund()
-    return(catch(x))
-
-## helper functions:
+## helper function to close an event for resolution
 macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $periodLength, $ethical, $scalarorcat, $mode, $ethicOutcome):
     # In the $event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and $market remains with old expiration date
@@ -46,7 +41,6 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             CASH.subtractCash($market, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
         MARKETS.setTradingPeriod($market, MARKETS.getOriginalTradingPeriod($market))
         MARKETS.setPushedForward($market, 0, msg.sender)
-        EXPEVENTS.setNumReportsExpectedEvent($branch, $votingPeriodEvent, $event, 0)
         EXPEVENTS.setNumReportsEvent($branch, $votingPeriodEvent, $event, 0)
         #set outcome to 0
         EVENTS.setOutcome($event, 0)
@@ -60,19 +54,19 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         #set $event expiration to be the old date
         EVENTS.setExpiration($event, EVENTS.getOriginalExpiration($event))
         -6
-    elif(($fxpOutcome==indeterminate or $mode==ONEHALF) || !$ethical):
+    elif(($fxpOutcome==$indeterminate or $mode==ONEHALF) || !$ethical):
         # give $event bond money to reporters
         CASH.subtractCash($event, EVENTS.getBond($event))
         CASH.addCash($branch, EVENTS.getBond($event))
         # not $ethical is same as .5 outcome
         if($scalarorcat):
-            # mode is used to compare for reporting acc. so still the same as reported outcome, but resolving the market as .5
+            # the mode is used to compare for reporting accuracy. so still the same as the reported uncaught outcome/mode, but resolving the market as .5 right in the middle of the range so payouts are done right for an unethical [or indeterminate] market
             EVENTS.setOutcome($event, $ethicOutcome)
         else:
-            EVENTS.setOutcome($event, indeterminate)
+            EVENTS.setOutcome($event, $indeterminate)
         1
     else:
-        # return bond
+        # return bond as a normal event resolution
         CASH.subtractCash($event, EVENTS.getBond($event))
         CASH.addCash(INFO.getCreator($event), EVENTS.getBond($event))
         if(MARKETS.getPushedForward($market)):
@@ -83,98 +77,53 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             $period = EVENTS.getOriginalExpiration($event)/$periodLength
             EXPEVENTS.removeEvent($branch, $period)
             EXPEVENTS.deleteEvent($branch, $period, $event)
+            EVENTS.setOriginalExpiration($event, EVENTS.getExpiration($event))
         1
 
+# Resolves a binary market
 def resolveBinary(event, market, branch, votingPeriodEvent):
     refund()
     fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
     periodLength = BRANCHES.getPeriodLength(branch)
     ethical = ethic_catch(EVENTS.getEthical(event))
+    # outcome is set to the binned version of the raw reported outcome
     EVENTS.setOutcome(event, fxpOutcome)
+    # ethics is set to the binned version of the raw ethicality outcome
     EVENTS.setEthics(event, ethical)
     val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 0, 0, 0)
     return(val)
 
+# Resolves a categorical market
 def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, votingPeriodEvent):
     refund()
     mode = EVENTS.getUncaughtOutcome(event)
     EVENTS.setmode(event, mode)
     fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
+    # outcome is set to the mode of the reported outcomes
     EVENTS.setOutcome(event, fxpOutcome)
     periodLength = BRANCHES.getPeriodLength(branch)
+    # ethics is set to the binned version of the raw ethicality outcome
     ethical = ethic_catch(EVENTS.getEthical(event))
-    ethicOutcome = 0
-    if(!ethical):
-        ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
+    ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
     EVENTS.setEthics(event, ethical)
     val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
     return(val)
 
-def determineWinningOutcomes(events: arr, numberEvents, branch, market):
+# Determines the "winning outcomes" for a given market
+# Easiest to give examples:
+    # 1D Markets:
+        # Binary or Categorical will have 1 winning outcome [1 or 2 for binary, 1 thru numOutcomes for categorical is the poss. value for the winning outcome]
+def determineWinningOutcomes(event):
     refund()
-    n = 0
     winningOutcomes = array(8)
-    while n < numberEvents:
-        fxpOutcome = EVENTS.getOutcome(events[n])
-        outcome = fxpOutcome/ONE
-        if(n==0):
-            #scalar or .5
-            if(scalar(events[n]) || fxpOutcome==3*ONEHALF):
-                winningOutcomes[0] = 1
-                winningOutcomes[1] = 2
-            # anything besides scalar or .5
-            else:
-                winningOutcomes[0] += outcome
-        elif(n==1):
-            if(scalar(events[n]) || fxpOutcome==3*ONEHALF):
-                # scalar, scalar
-                if(winningOutcomes[1]):
-                    winningOutcomes[2] = 3
-                    winningOutcomes[3] = 4
-                # nonscalar, scalar
-                else:
-                    #winningOutcomes[0] = winningOutcomes[0]
-                    winningOutcomes[1] = winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-1])
-            # scalar, nonscalar
-            elif(winningOutcomes[1]):
-                winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
-                winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
-            # nonscalar, nonscalar
-            else:
-                winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-1])*(outcome-1)
-        elif(n==2):
-            if(scalar(events[n]) || fxpOutcome==3*ONEHALF):
-                #scalar, scalar, scalar
-                if(winningOutcomes[3]):
-                    winningOutcomes[4] = 5
-                    winningOutcomes[5] = 6
-                    winningOutcomes[6] = 7
-                    winningOutcomes[7] = 8
-                #scalar, nonscalar, scalar
-                #nonscalar, scalar, scalar
-                elif(winningOutcomes[1]):
-                    #winningOutcomes[0] = winningOutcomes[0]
-                    #winningOutcomes[1] = winningOutcomes[1]
-                    winningOutcomes[2] += winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
-                    winningOutcomes[3] += winningOutcomes[1] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
-                #nonscalar, nonscalar, scalar
-                elif(winningOutcomes[1]==0):
-                    #winningOutcomes[0] = winningOutcomes[0]
-                    winningOutcomes[1] += winningOutcomes[0] + EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1])
-            else:
-                #scalar, scalar, nonscalar
-                if(winningOutcomes[3]):
-                    winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                    winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                    winningOutcomes[2] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                    winningOutcomes[3] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                #scalar, nonscalar, nonscalar
-                #nonscalar, scalar, nonscalar
-                elif(winningOutcomes[1]):
-                    winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                    winningOutcomes[1] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-                #nonscalar, nonscalar, nonscalar
-                else:
-                    winningOutcomes[0] += EVENTS.getNumOutcomes(events[n-2]) * EVENTS.getNumOutcomes(events[n-1]) * (outcome-1)
-        n+=1
+    fxpOutcome = EVENTS.getOutcome(event)
+    outcome = fxpOutcome/ONE
+    if(n==0):
+        #scalar or .5
+        if(scalar(event) || fxpOutcome==3*ONEHALF):
+            winningOutcomes[0] = 1
+            winningOutcomes[1] = 2
+        # anything besides scalar or .5
+        else:
+            winningOutcomes[0] += outcome
     return(winningOutcomes: arr)

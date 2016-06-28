@@ -20,17 +20,12 @@
 # Any questions please contact joey@augur.net
 
 import branches as BRANCHES
-import info as INFO
 import cash as CASH
 import markets as MARKETS
 import events as EVENTS
 import closeMarketOne as CLOSEONE
 import closeMarketTwo as CLOSETWO
-import closeMarketFour as CLOSEFOUR
-import closeMarketEight as CLOSEEIGHT
-import expiringEvents as EXPEVENTS
 import backstops as BACKSTOPS
-import makeReports as MAKEREPORTS
 import eventResolution as RESOLVE
 inset('refund.se')
 
@@ -43,7 +38,6 @@ macro BAD: 3 * ONEHALF
 
 macro CATCH_TOLERANCE: ONE / 10
 
-event thru(user:indexed, time)
 
 # Bins values to 1, 1.5, 2
 macro catch($x):
@@ -54,112 +48,86 @@ macro catch($x):
     else:
         BAD
 
+# If ethicality value <.5 it's 0, otherwise it's ethical
 macro ethic_catch($x):
     if($x < ONEHALF):
         0
     else:
         ONE
 
-# loop through events in the market, get their outcomes && use those to determine the winning events!
-# distribute coins among winning events
+# Loop through events in the market, get their outcomes && use those to determine the winning outcomes and resolve a market!
 # @return 0 if fail/trading not over yet/event not expired or closed already, if success 1
 # Error messages otherwise
     # -1: Market has no cash anyway / already closed
     # -2: 0 outcome / not reported on yet
     # -3: not final round 2 event
+    # -4: market isn't in branch
     # -5: Event forked and not final yet
     # -6: bonded pushed forward market not ready to be resolved
-    # -7: event not reportable >.99
-    # -8: market isn't in branch
-# if market's events have moved due to a fork branch is the new fork
+    # -7: already resolved
+# if market's events have moved due to a fork branch param passed should be the new fork [todo check to make sure it handles the wrong branch param properly here]
 def closeMarket(branch, market, sender):
     refund()
-    if(MARKETS.getBranchID(market)!=branch):
-        return(-8)
-    if(CASH.balance(market)<=0):
-        return(-1)
     numberEvents = MARKETS.getNumEvents(market)
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
-    events = array(3)
-    events = MARKETS.getMarketEvents(market, outitems=3)
-    i = 0
-    reportingDone = 0
+    event = MARKETS.getMarketEvent(market, 0)
+    if(CASH.balance(market)<=0):
+        return(-1)
+    if(EVENTS.getUncaughtOutcome(event)==0):
+        return(-2)
+    if(BACKSTOPS.getRoundTwo(event) && !BACKSTOPS.getFinal(event)):
+        return(-3)
+    if(MARKETS.getBranchID(market)!=branch):
+        return(-4)
+    # checks whether any events not already resolved
     resolved = 1
-    while i < numberEvents:
-        if(EVENTS.getOutcome(events[i])==0 && EVENTS.getmode(events[i])==0):
-            resolved = 0
-            i = numberEvents
-        i += 1
-    i = 0
-    while i < numberEvents:
-        numReports = EXPEVENTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
-        numExpected = EXPEVENTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
-        if(numReports == numExpected && numReports!=0 && numExpected!=0):
-            reportingDone = 1
-            i = numberEvents
-        i += 1
-    if((period > tradingPeriod || reportingDone) && !resolved):
-        # loop through events in the market, get their outcomes && use those to determine the winning events!
-        n = 0
-        outcomeSix = 0
-        while n < numberEvents:
-            votingPeriodEvent = EVENTS.getExpiration(events[n])/BRANCHES.getPeriodLength(branch)
-            fxpOutcome = EVENTS.getOutcome(events[n])
-            resolution = 1
-            if(EVENTS.getUncaughtOutcome(events[n])==0):
-                return(-2)
-            if(BACKSTOPS.getRoundTwo(event) && !BACKSTOPS.getFinal(event)):
-                return(-3)
-            forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(events[n]))
-            currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-            if((EVENTS.getForked(event) && !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):
-                return(-5)
-            if(binary(events[n]) && fxpOutcome==0):
-                    resolution = RESOLVE.resolveBinary(events[n], market, branch, votingPeriodEvent)
-            elif(scalar(events[n]) && EVENTS.getmode(events[n])==0):
-                    resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(events[n]), EVENTS.getMaxValue(events[n]), events[n], market, branch, votingPeriodEvent)
-            elif(categorical(events[n]) && EVENTS.getmode(events[n])==0):
-                    resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(events[n]), events[n], market, branch, votingPeriodEvent)
-            if(resolution==-6):
-                outcomeSix = 1
-            n += 1
-        if(outcomeSix):
+    # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
+    if(EVENTS.getOutcome(event)==0 && EVENTS.getmode(event)==0):
+        resolved = 0
+    if((period > tradingPeriod) && !resolved):
+        # look at through event in the market, get its outcomes, resolve it && use those to determine the winning outcomes for a given market!
+        votingPeriodEvent = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
+        fxpOutcome = EVENTS.getOutcome(event)
+        resolution = 1
+        forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
+        currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
+        if((EVENTS.getForked(event) && !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):
+            return(-5)
+        if(binary(event) && fxpOutcome==0):
+                resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
+        elif(scalar(event) && EVENTS.getmode(event)==0):
+                resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
+        elif(categorical(event) && EVENTS.getmode(event)==0):
+                resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
+        if(resolution==-6):
             return(-6)
         winningOutcomes = array(8)
-        winningOutcomes = RESOLVE.determineWinningOutcomes(events, numberEvents, branch, market, outitems=8)
+        winningOutcomes = RESOLVE.determineWinningOutcomes(event, outitems=8)
         MARKETS.setWinningOutcomes(market, winningOutcomes)
-        MARKETS.refundClosing(MARKETS.getgasSubsidy(market), sender)
+        # refunds closing cost
+        MARKETS.refundClosing(market, sender)
         return(1)
     else:
         return(0)
 
-# claim winnings after a market is resolved
-# @return 1 if success
+# Claim trading profits/value per share after a market is resolved
+# @returns 1 if successful
 # Errors:
-    # 0: reporting not done
+    # 0: market not resolved
     # -1: trader doesn't exist
+    # -8: invalid branch
 def claimProceeds(branch, market):
     refund()
     if(MARKETS.getBranchID(market)!=branch):
         return(-8)
-    numberEvents = MARKETS.getNumEvents(market)
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
-    events = array(3)
-    events = MARKETS.getMarketEvents(market, outitems=3)
-    i = 0
-    reportingDone = 1
+    event = MARKETS.getMarketEvent(market, 0)
     resolved = 1
-    while i < numberEvents:
-        numReports = EXPEVENTS.getNumReportsEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
-        numExpected = EXPEVENTS.getNumReportsExpectedEvent(branch, EVENTS.getExpiration(events[i])/BRANCHES.getPeriodLength(branch), events[i])
-        if(EVENTS.getOutcome(events[i])==0 && EVENTS.getmode(events[i])==0):
-            resolved = 0
-        if(numReports != numExpected && numReports!=0 and numExpected!=0):
-            reportingDone = 0
-            i = numberEvents
-        i += 1
+    if(EVENTS.getOutcome(event)==0 && EVENTS.getmode(event)==0):
+        resolved = 0
+    # as long as it's resolved money can be collected
     if((period > tradingPeriod || reportingDone) && resolved):
         winningOutcomes = array(8)
         winningOutcomes = MARKET.getWinningOutcomes(market, outitems=8)
@@ -168,18 +136,16 @@ def claimProceeds(branch, market):
         if(winningOutcomes[0]==0):
             return(0)
         if(winningOutcomes[1]==0):
-            minval = EVENTS.getMinValue(events[0])
-            ethical = ethic_catch(EVENTS.getEthical(events[0]))
-            if(len(events)==1 && categorical(events[0]) && (EVENTS.getmode(events[0])==ONEHALF or !ethical)):
-                outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(events[0]))
+            ethical = ethic_catch(EVENTS.getEthical(event))
+            # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
+            if(categorical(event) && (EVENTS.getmode(event)==ONEHALF or !ethical)):
+                outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))
+            # resolves a regular binary market
             else:
                 outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, 0)
-        elif(winningOutcomes[7]):
-            outcome = CLOSEEIGHT.eightOutcomes(market, winningOutcomes, events, msg.sender)
-        elif(winningOutcomes[3]):
-            outcome = CLOSEFOUR.fourOutcomes(market, winningOutcomes, events, msg.sender)
+        # resolves a scalar market
         elif(winningOutcomes[1]):
-            outcome = CLOSETWO.twoOutcomes(market, winningOutcomes, events, msg.sender)
+            outcome = CLOSETWO.twoOutcomes(market, winningOutcomes, event, msg.sender)
         return(outcome)
     else:
         return(0)

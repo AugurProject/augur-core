@@ -2,8 +2,8 @@ import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import consensusData as CONSENSUS
 import reporting as REPORTING
+import reportingThreshold as THRESHOLD
 import fxpFunctions as FXP
-import makeReports as MAKEREPORTS
 inset('refund.se')
 
 macro ONEPOINTTWO: 22136092888451461120
@@ -14,12 +14,15 @@ macro POINTONE: 1844674407370955264
 
 macro POINTNINE: 16602069666338596864
 
-# Basically, if you don't access the account, the rep just sort of sits there, proverbially speaking, it's burned.  If you access the account, it's sent to the branch's rep account and distributed like trading fees.  To prevent double claiming, similarly to trading fees each rep acc. that hadn't claimed rep or trading fees but reported that past period would neither be able to send nor receive rep until they claimed.  You'd get % of people that reported fees / rep
+# Prove both that a reporter voted on less than he/she actually could have and it was <.5 of what they should have reported on using an example event
+# The rep lost here is then sent to the branch's rep account and distributed like other redistributed rep.
+# Note:
+    # Reporters pay an eth bond for this on their first report --- if never called then during collect fees they get it back else it goes back to pay someone who correctly calls this function, so the bond is returned to the poster if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees [which means it's the first period after a fork is initiated]
+# Returns 1 if successful penalization
+# Returns 2 if didn't need to be penalized and thus wasn't
 # Errors:
     # -1: already done
     # -2: not in right part of period
-# prove both that a reporter voted on less than he/she actually could have and it was <.5 of what they were predicted to have reported on
-# reporters pay an eth bond for this on first report --- if never called by collect fees they get it back else it goes back to pay someone who correctly calls this function --- return bond if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees
 def proveReporterDidntReportEnough(branch, reporter, eventExample):
     refund()
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
@@ -27,18 +30,18 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     residual = block.timestamp % periodLength
     if(CONSENSUS.getNotEnoughPenalized(branch, reporter, lastPeriod)):
         return(-1)
-    if(BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
-        CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
-        return(1)
     if(residual > periodLength/2):
         return(-2)
+    # in period just after fork period no reports required
+    if(BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
+        CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
+        return(2)
     # events a user should be reporting on
-    # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2+.001))
+    # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
     # a^b=exp(b*ln(a))=e^(b*ln(a)).
     prelim = EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)
-    repConstant = REPORTING.getRepBalance(branch, reporter)*ONE/REPORTING.getActiveRep(branch)
-    logOutput = FXP.fx_log(repConstant)
-    exp = FXP.fx_exp(ONEPOINTTWO*logOutput/ONE) + POINTZEROZEROONE 
+    # need to do active rep on a period by period basis.. todo
+    exp = FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(EXPEVENTS.getBeforeRep(branch, lastPeriod, sender))/ONE)*2**64/FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getActiveRep(branch))/ONE)
     baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
     # if total [which is mult by num events to report on via the prelim amount] is too high [>1] then numevents will estimate a higher number than reality, so need to correct for this below
     total = exp*baseReporters
@@ -53,10 +56,12 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)/baseReporters)*ONE + EXPEVENTS.getNumRequired(branch, lastPeriod)*ONE
     numReportsActual = EXPEVENTS.getNumReportsActual(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
-    couldveReported = EXPEVENTS.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
-    if(numEvents/2 > EXPEVENTS.getNumReportsActual(branch, lastPeriod, reporter)*ONE && couldveReported):
-        # only meant for people who did report but not enough [those who didnt at all use pen. catchup] so using before rep is fine
+    couldveReported = THRESHOLD.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
+    if(numEvents/2 > numReportsActual*ONE && couldveReported):
+        # typically meant for people who did report but not enough [those who didnt at all use pen. catchup] so using before rep is fine, but if not use rep balance
         originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
+        if(originalRep==0):
+            originalRep = REPORTING.getRepBalance(branch, reporter)
         # penalize people
         newRep = POINTONE*numReportsActual*originalRep / numEvents
         oldRep = originalRep*POINTNINE / ONE
@@ -68,10 +73,14 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         # sends that rep to the branch rep pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -repChange)
         EXPEVENTS.setBeforeRep(branch, lastPeriod, oldRep+newRep, reporter)
-        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, reporter) + repChange
+        afterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, reporter)
+        newAfterRep = afterRep + repChange
+        if(afterRep==0):
+            newAfterRep = oldRep+newRep
+        # todo decrease denominator by rep person lost here
         EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, reporter)
         CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
         CONSENSUS.doRefund(msg.sender, reporter)
         return(1)
     else:
-        return(0)
+        return(2)

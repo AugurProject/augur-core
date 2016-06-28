@@ -409,6 +409,8 @@ def test_trading():
             gas_use(s)
             print "Short sell"
             print c.short_sell(buy, 2**64)
+            print c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 1)
+            print c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 2)
             assert(isclose(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 1)*1.0, 12.0*2**64))
             assert(isclose(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 2)*1.0, 9.0*2**64))
             assert(isclose(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 1)*1.0, 1.0*2**64))
@@ -426,40 +428,6 @@ def test_trading():
         i += 1
     print "BUY AND SELL OK"
     return(1)
-
-def test_getMarketInfoCache():
-    global initial_gas
-    initial_gas = 0
-    t.gas_limit = 100000000
-    s = t.state()
-    c = s.abi_contract('functions/output.se')
-    c.initiateOwner(1010101)
-    blocktime = s.block.timestamp
-    event = c.createEvent(1010101, "new event", blocktime+1, 2**64, 2**65, 2, "ok")
-    description = "new market"
-    tradingFee = 184467440737095516
-    tags = [1,2,3]
-    makerFee = 0
-    market = c.createMarket(1010101, description, tradingFee, [event], tags[0], tags[1], tags[2], makerFee, "yayaya", value=10**19)
-    info = c.getMarketInfoCache(market)
-    #BASE_CACHE_FIELS + num_events + description length
-    expected_size = 10 + 1 + len(description) + 1
-    assert(len(info)==expected_size)
-    assert(info[0]==market)
-    assert(info[1]==makerFee)
-    assert(info[2]==c.getTradingPeriod(market))
-    assert(info[3]==tradingFee)
-    #no volume yet
-    assert(info[5]==0)
-    assert(info[6]==tags[0])
-    assert(info[7]==tags[1])
-    assert(info[8]==tags[2])
-    #only 1 event
-    assert(info[9]==1)
-    #description starts at index 12, length stored at 11
-    desc_result = ''.join(map(chr,info[12:12+info[11]]))
-    assert(description==desc_result)
-    gas_use(s)
 
 def test_close_market():
     global initial_gas
@@ -1311,7 +1279,7 @@ if __name__ == '__main__':
     #test_reporting()
 
     # function tests
-    #test_trading()
+    test_trading()
     #test_create_branch()
     #test_send_rep()
     #test_market_pushback()
@@ -1320,8 +1288,6 @@ if __name__ == '__main__':
     #test_catchup()
     #test_slashrep()
     #test_claimrep()
-    #test_getMarketInfoCache()
     #test_consensus_multiple_reporters()
     #test_pen_not_enough_reports()
     print "DONE TESTING"
-

@@ -3,8 +3,6 @@ import cash as CASH
 import expiringEvents as EXPIRING
 import reporting as REPORTING
 import events as EVENTS
-import fxpFunctions as FXP
-import makeReports as MAKEREPORTS
 import branches as BRANCHES
 import markets as MARKETS
 import backstops as BACKSTOPS
@@ -15,34 +13,43 @@ macro POINTZEROONE: 184467440737095520
 
 macro MINBOND: 200*2**64
 
+# Allows a user to post a bond to enter round two of consensus
 # Appeal_Bond = Market_Value * (0.01 + Market_Fee / 2) + Average_Adjudication_Cost
     # Average_Adjudication_Cost = Total fees paid to reporters for all markets in this reporting round / number of markets in this reporting round.
         # needs an abs min of ~200 rep.
 # Reporting period is 2 months minus 48 hours.  This 48 hours allows for the appeals to take place before the next reporting round begins.
+# Returns 1 upon success
+# Errors:
+    #  0: invalid votePeriod/branch
+    # -1: Pushed forward event, bonding not allowed during this
+    # -2: branch is in the middle of a fork
+    # -3: not enough rep to cover bond
 def roundTwoPostBond(branch, event, eventIndex, votePeriod):
     refund()
     if(BRANCHES.getVotePeriod(branch)!=votePeriod):
         return(0)
-    # if pushed forward don't allow
+    # if pushed forward don't allow until no longer pushed fwd
     if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event)):
         return(-1)
     market = EVENTS.getMarket(event, 0)
     forkPeriod = BRANCHES.getForkPeriod(branch)
     if(forkPeriod == votePeriod or (forkPeriod+1) == votePeriod):
-        return(0)
+        return(-2)
     # todo find actual cost
     if(msg.value < 500000*tx.gasprice):
         return(0)
+    # pays money to cover resolution cost
     send(BACKSTOPS, msg.value)
     BACKSTOPS.setRoundTwoRefund(event, msg.value)
     avgAdjCost = BRANCHES.getInitialBalance(branch, votePeriod)/EXPIRING.getNumberEvents(branch, votePeriod)
     bond = avgAdjCost + MARKETS.getSharesValue(market)*(POINTZEROONE + MARKETS.getTradingFee(market)/2) / ONE
     bond = min(bond, MINBOND)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
-    # if so, we're in the final 24 hours and event is in this branch + votePeriod
+    # if so, we're in the final 48 hours and event is in this branch + votePeriod
     if(!resolving && block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) && eventID!=0 && event==eventID && BACKSTOPS.getRoundTwo(event)==0 && EVENTS.getForked(event)==0):
+        # send the bond to the branch
         if(SENDREP.sendReputation(branch, event, bond)==0):
-            return(0)
+            return(-3)
         period = BRANCHES.getVotePeriod(branch)
         # remove from events in # to report on calc for last period
         EXPIRING.removeEvent(branch, period)
@@ -67,10 +74,11 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
         EVENTS.setEthics(event, 0)
         return(1)
 
-# resolves a round 2 event
+# Resolves a round 2 event scenario
+# Errors:
+    # 0: returned if not reported on again yet
 def roundTwoResolve(branch, event, eventIndex, sender):
     refund()
-    overruled = 1
     votePeriod = BRANCHES.getVotePeriod(branch)
     market = EVENTS.getMarket(event, 0)
     avgAdjCost = BRANCHES.getInitialBalance(branch, votePeriod-1)/EXPEVENTS.getNumberEvents(branch, votePeriod-1)
@@ -78,6 +86,8 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     bond = min(bond, MINBOND)
     votedOnAgain = 0
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
+    overruled = 1
+    # checks if the event's outcome was overruled or the same as the original reporting cycle
     if(scalar(event) or categorical(event)):
         if(BACKSTOPS.getOriginalOutcome(event) == EVENTS.getUncaughtOutcome(event) && BACKSTOPS.getOriginalEthicality(event)==ethic_catch(EVENTS.getEthical(event))):
             overruled = 0
@@ -95,26 +105,26 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         BACKSTOPS.setRoundTwo(event, 0)
         BACKSTOPS.doRoundTwoRefund(sender, event)
         return(1)
-    # overruled and bond poster wasn't malicious
+    # overruled and bond poster was right
     elif(overruled && votedOnAgain && BACKSTOPS.getRoundTwo(event) && votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) && eventID!=0 && event==eventID && !forked && !BACKSTOPS.getBondReturned(event)):
         # return the bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
         # and set final outcome / event bond, etc
         self.resolve(branch, event)
-        # reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rbcr for the round 2 reporting [don't count ethicality here]
+        # reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rep redistribution for the round 2 reporting
         BACKSTOPS.setFinal(event)
         BACKSTOPS.setBondReturned(event)
         BACKSTOPS.doRoundTwoRefund(sender, event)
         return(2*bond)
-    # same as original consensus and bond poster was wrong
+    # same as original consensus and bond poster was wrong [or malicious]
     elif(votedOnAgain && BACKSTOPS.getRoundTwo(event) && votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) && eventID!=0 && event==eventID && !forked && !BACKSTOPS.getBondReturned(event)):
         # lose bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), bond)
         # and set final outcome / event bond, etc
         self.resolve(branch, event)
-        # rbcr from original period/orig. outcome stands, rbcr from round 2 happens as usual as well
+        # rep redistribution from original period/orig. outcome stands, rep redistribution from round 2 happens as usual as well
         BACKSTOPS.setFinal(event)
         BACKSTOPS.setBondReturned(event)
         BACKSTOPS.doRoundTwoRefund(sender, event)
@@ -122,6 +132,8 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     # not voted on again yet
     else:
         return(0)
+        
+### Helper functions
 
 macro scalar($event):
     ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
@@ -152,14 +164,18 @@ macro ethic_catch($x):
     else:
         ONE
 
-# take from bond to pay for resolution of a round 2 event
+# Actually sets the outcome for a round 2 event
+# Errors:
+    # 0: event isn't binary, categorical, or scalar [hell has frozen over or quantum events have been invented]
 def resolve(branch, event):
     refund()
     bond = EVENTS.getBond(event)
+    # set ethicality to the binned version of the ethics
     ethical = ethic_catch(EVENTS.getEthical(event))
     EVENTS.setEthics(event, ethical)
     # binary
     if(binary(event)):
+        # set outcome to the binned version of the outcome
         fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
         EVENTS.setOutcome(event, fxpOutcome)
         if(fxpOutcome==3*ONEHALF || !ethical):
@@ -177,6 +193,7 @@ def resolve(branch, event):
     # scalar
     elif(scalar(event) or categorical(event)):
         mode = EVENTS.getUncaughtOutcome(event)
+        # sets mode which is used to penalize/reward reporters
         EVENTS.setmode(event, mode)
         scaled_max = EVENTS.getMaxValue(event)
         scaled_min = EVENTS.getMinValue(event)
@@ -184,10 +201,9 @@ def resolve(branch, event):
             scaled_min = ONE
             scaled_max = ONE*EVENTS.getNumOutcomes(event)
         fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
+        # sets outcome which is used in calculating payouts 
         EVENTS.setOutcome(event, fxpOutcome)
-        ethicOutcome = 0
-        if(!ethical):
-            ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
+        ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
         if(mode==ONEHALF || !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, bond)

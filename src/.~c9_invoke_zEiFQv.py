@@ -91,7 +91,10 @@ def test_markets():
     c.initializeMarket(444, [445, 446, 447], 1, 2**57, 1010101, 1, 2, 3, 2**58, 2**64, 2, "aaa", 500, 20*2**64, 2222)
     c.setWinningOutcomes(444, [2])
     assert(c.getWinningOutcomes(444)[0] == 2), "Winning outcomes wrong"
+    assert(c.addParticipant(444, c.getSender(sender=t.k1))==0), "Participant adding issue"
     # getMarketEvent singular
+    assert(c.getParticipantNumber(444, c.getSender(sender=t.k1))==0), "Participant number issue"
+    assert(c.getParticipantID(444, 0)==c.getSender(sender=t.k1)), "Participant ID issue"
     assert(c.getMarketEvents(444) == [445, 446, 447]), "Market events load/save broken"
     print "MARKETS OK"
 
@@ -259,8 +262,9 @@ def test_trading():
             assert(c.getVolume(market[a])==18*c.getMarketNumOutcomes(market[a])*2**64)
             assert(c.getSharesValue(market[a])==c.getCumScale(market[a])*2)
             assert(c.getTotalSharesPurchased(market[a])==2*c.getMarketNumOutcomes(market[a])*2**64)
-            assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 1)==2**65)
-            assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 2)==2**65)
+            participantNumberIDK1 = c.getParticipantNumber(market[a], s.block.coinbase)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 1)==2**65)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==2**65)
             assert(c.getSharesPurchased(market[a], 1)==2**65)
             assert(c.getSharesPurchased(market[a], 2)==2**65)
             # get cash balance before and after, ask is just fee
@@ -270,8 +274,8 @@ def test_trading():
             sell = c.sell(2**64, int(.01*2**64), market[a], 1)
             print "selling gas use"
             print gas_use(s)
-            assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 1)==2**64)
-            assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 2)==2**65)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 1)==2**64)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==2**65)
             after = c.balance(s.block.coinbase)
             afterm = c.balance(market[a])
             assert(len(c.get_trade_ids(market[a]))==1)
@@ -287,13 +291,13 @@ def test_trading():
             after = c.balance(s.block.coinbase)
             assert(nearly_equal((before-after), 0))
             assert(nearly_equal((beforem-afterm), 0))
-            assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 1)==2**65)
-            assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 2)==2**65)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 1)==2**65)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==2**65)
             before = c.balance(s.block.coinbase)
             beforem = c.balance(market[a])
             sell = c.sell(2**64, int(.01*2**64), market[a], 1)
-            assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 1)==2**64)
-            assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 2)==2**65)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 1)==2**64)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==2**65)
             after = c.balance(s.block.coinbase)
             afterm = c.balance(market[a])
             assert(isclose((before-after)/2**64, makerFee/2**64, rel_tol=1e-8))
@@ -323,13 +327,13 @@ def test_trading():
             afterm = c.balance(market[a])
             assert(isclose((before-after)/2**64, (makerFee + 2**64*.01)/2**64, rel_tol=1e-8))
             assert(isclose((afterm-beforem)/2**64, (makerFee + 2**64*.01)/2**64))
-            assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 2)==2**65)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==2**65)
             hash = c.makeTradeHash(0, 2**64, [buy], sender=t.k2)
             c.commitTrade(hash, sender=t.k2)
             s.mine(1)
             c.buyCompleteSets(market[a], 10*2**64, sender=t.k2)
-            assert(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 1)==10*2**64)
-            assert(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 2)==10*2**64)
+            assert(c.getParticipantSharesPurchased(market[a], 1, 1)==10*2**64)
+            assert(c.getParticipantSharesPurchased(market[a], 1, 2)==10*2**64)
 
             before = c.balance(sender2)
             beforem = c.balance(market[a])
@@ -343,18 +347,18 @@ def test_trading():
             afterm = c.balance(market[a])
             assert(isclose((after-before)/2**64, (2**64*.01-fee*(1+((2**63-c.getMakerFees(market[a]))/2**64)))/2**64))
             assert(isclose((beforem-afterm)/2**64, (2**64*.01+makerFee)/2**64))
-            assert(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 1)==10*2**64)
-            assert(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 2)==9*2**64)
-            assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 1)==2**64)
-            assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 2)==3*2**64)
+            assert(c.getParticipantSharesPurchased(market[a], 1, 1)==10*2**64)
+            assert(c.getParticipantSharesPurchased(market[a], 1, 2)==9*2**64)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 1)==2**64)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==3*2**64)
             hash = c.makeTradeHash(2**64, 0, [sell], sender=t.k2)
             c.commitTrade(hash, sender=t.k2)
             s.mine(1)
             # make sure buyer or k2 got their shares and gets rid of cash, make sure seller got cash & got rid of their shares
-            assert(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 1)==10*2**64)
-            assert(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 2)==9*2**64)
-            assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 1)==2**64)
-            assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 2)==3*2**64)
+            assert(c.getParticipantSharesPurchased(market[a], 1, 1)==10*2**64)
+            assert(c.getParticipantSharesPurchased(market[a], 1, 2)==9*2**64)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 1)==2**64)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==3*2**64)
             before = c.balance(sender2)
             beforem = c.balance(market[a])
             beforeog = c.balance(s.block.coinbase)
@@ -365,26 +369,24 @@ def test_trading():
             after = c.balance(sender2)
             afterm = c.balance(market[a])
             afterog = c.balance(s.block.coinbase)
-            print before
-            print after
-            print fee
-            print c.getMakerFees(market[a])
             assert(isclose((before-after)/2**64, (2**64*.01+fee*(1+((2**63-c.getMakerFees(market[a]))/2**64)))/2**64))
             print beforem
-            print afterm
+            
             print beforem - afterm
             print makerFee
             assert(isclose((beforem-afterm)/2**64, makerFee/2**64))
             # b/c this is also creator who gets part of maker fee from maker [himself] and creator fee from taker
             assert(isclose((afterog-beforeog)/2**64, (2**64*.01 + creatorFees + makerFee/2)/2**64))
-            assert(isclose(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 1)*1.0, 11.0*2**64))
-            assert(isclose(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 2)*1.0, 9.0*2**64))
-            assert(isclose(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 1)*1.0, 1.0*2**64))
-            assert(isclose(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 2)*1.0, 1.0*3*2**64))
+            assert(c.getParticipantSharesPurchased(market[a], 1, 1)==11*2**64)
+            assert(c.getParticipantSharesPurchased(market[a], 1, 2)==9*2**64)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 1)==2**64)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==3*2**64)
+            # after putting order on book
+            assert(len(c.get_trade_ids(market[a]))==0)
 
             assert(nearly_equal(c.getTotalSharesPurchased(market[a]), 12*c.getMarketNumOutcomes(market[a])*2**64))
             assert(nearly_equal(c.getSharesValue(market[a]), c.getCumScale(market[a])*12))
-            assert(isclose(c.getVolume(market[a]), (4*2**64 + 28*c.getMarketNumOutcomes(market[a])*2**64)))
+            assert(nearly_equal(c.getVolume(market[a]), (4*2**64 + 28*c.getMarketNumOutcomes(market[a])*2**64)))
             assert(isclose((c.balance(1010101)-initialBranchBal)/2**64, fee*2/2**64))
             # complete sets #*cumscale or 12*cumscale
             assert(isclose(c.balance(market[a])/2**64, 12*cumScale[a]/2**64))
@@ -409,10 +411,10 @@ def test_trading():
             gas_use(s)
             print "Short sell"
             print c.short_sell(buy, 2**64)
-            assert(isclose(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 1)*1.0, 12.0*2**64))
-            assert(isclose(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 2)*1.0, 9.0*2**64))
-            assert(isclose(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 1)*1.0, 1.0*2**64))
-            assert(isclose(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 2), 4.0*2**64))
+            assert(c.getParticipantSharesPurchased(market[a], 1, 1)==12*2**64)
+            assert(c.getParticipantSharesPurchased(market[a], 1, 2)==9*2**64)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 1)==2**64)
+            assert(c.getParticipantSharesPurchased(market[a], participantNumberIDK1, 2)==4*2**64)
             print "Short sell gas use"
             gas_use(s)
             after = c.balance(sender2)
@@ -426,40 +428,6 @@ def test_trading():
         i += 1
     print "BUY AND SELL OK"
     return(1)
-
-def test_getMarketInfoCache():
-    global initial_gas
-    initial_gas = 0
-    t.gas_limit = 100000000
-    s = t.state()
-    c = s.abi_contract('functions/output.se')
-    c.initiateOwner(1010101)
-    blocktime = s.block.timestamp
-    event = c.createEvent(1010101, "new event", blocktime+1, 2**64, 2**65, 2, "ok")
-    description = "new market"
-    tradingFee = 184467440737095516
-    tags = [1,2,3]
-    makerFee = 0
-    market = c.createMarket(1010101, description, tradingFee, [event], tags[0], tags[1], tags[2], makerFee, "yayaya", value=10**19)
-    info = c.getMarketInfoCache(market)
-    #BASE_CACHE_FIELS + num_events + description length
-    expected_size = 10 + 1 + len(description) + 1
-    assert(len(info)==expected_size)
-    assert(info[0]==market)
-    assert(info[1]==makerFee)
-    assert(info[2]==c.getTradingPeriod(market))
-    assert(info[3]==tradingFee)
-    #no volume yet
-    assert(info[5]==0)
-    assert(info[6]==tags[0])
-    assert(info[7]==tags[1])
-    assert(info[8]==tags[2])
-    #only 1 event
-    assert(info[9]==1)
-    #description starts at index 12, length stored at 11
-    desc_result = ''.join(map(chr,info[12:12+info[11]]))
-    assert(description==desc_result)
-    gas_use(s)
 
 def test_close_market():
     global initial_gas
@@ -508,12 +476,12 @@ def test_close_market():
     report_hash4 = c.makeHash(0, 3*2**63, event4, s.block.coinbase)
     report_hash5 = c.makeHash(0, 2**63, event5, s.block.coinbase)
     report_hash6 = c.makeHash(0, 1, event6, s.block.coinbase)
-    assert(c.submitReportHash(event1, report_hash, 0)==1), "Report hash submission failed"
-    assert(c.submitReportHash(event2, report_hash2, 0)==1), "Report hash submission failed"
-    assert(c.submitReportHash(event4, report_hash4, 0)==1), "Report hash submission failed"
-    assert(c.submitReportHash(event3, report_hash3, 0)==1)
-    c.submitReportHash(event5, report_hash5, 0)
-    c.submitReportHash(event6, report_hash6, 0)
+    assert(c.submitReportHash(event1, report_hash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event4, report_hash4)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event3, report_hash3)==1)
+    c.submitReportHash(event5, report_hash5)
+    c.submitReportHash(event6, report_hash6)
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
@@ -591,13 +559,13 @@ def test_consensus():
     report_hash4 = c.makeHash(0, int(50*2**64/250), event4, s.block.coinbase)
     gas_use(s)
     c.penalizeWrong(1010101, 0)
-    assert(c.submitReportHash(event1, report_hash, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event1, report_hash)==1), "Report hash submission failed"
     print "hash submit gas use"
     gas_use(s)
-    assert(c.submitReportHash(event2, report_hash2, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
     print "hash submit gas use"
-    assert(c.submitReportHash(event3, report_hash3, 0)==1), "Report hash submission failed"
-    assert(c.submitReportHash(event4, report_hash4, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event3, report_hash3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event4, report_hash4)==1), "Report hash submission failed"
     gas_use(s)
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
@@ -760,33 +728,33 @@ def test_consensus_multiple_reporters():
     c.penalizeWrong(1010101, 0)
     c.penalizeWrong(1010101, 0, sender=t.k2)
     c.penalizeWrong(1010101, 0, sender=t.k3)
-    assert(c.submitReportHash(bevent, binaryeventhash, 0)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash, 0)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash, 0)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cevent, cateventhash, 0)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cunethicalevent, cateventunethicalhash, 0)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cindeterminateevent, cateventindeterminatehash, 0)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sevent, scalareventhash, 0)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash, 0)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash, 0)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bevent, binaryeventhash2, 0, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash2, 0, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash2, 0, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cevent, cateventhash2, 0, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cunethicalevent, cateventunethicalhash2, 0, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cindeterminateevent, cateventindeterminatehash2, 0, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sevent, scalareventhash2, 0, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash2, 0, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash2, 0, sender=t.k2)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bevent, binaryeventhash3, 0, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash3, 0, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash3, 0, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cevent, cateventhash3, 0, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cunethicalevent, cateventunethicalhash3, 0, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(cindeterminateevent, cateventindeterminatehash3, 0, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sevent, scalareventhash3, 0, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash3, 0, sender=t.k3)==1), "Report hash submission failed"
-    assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash3, 0, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bevent, binaryeventhash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cevent, cateventhash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cunethicalevent, cateventunethicalhash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cindeterminateevent, cateventindeterminatehash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sevent, scalareventhash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bevent, binaryeventhash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cevent, cateventhash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cunethicalevent, cateventunethicalhash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cindeterminateevent, cateventindeterminatehash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sevent, scalareventhash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash2, sender=t.k2)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bevent, binaryeventhash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bunethicalevent, binaryunethicaleventhash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(bindeterminateevent, binindeterminateeventhash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cevent, cateventhash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cunethicalevent, cateventunethicalhash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(cindeterminateevent, cateventindeterminatehash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sevent, scalareventhash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sunethicalevent, scalareventunethicalhash3, sender=t.k3)==1), "Report hash submission failed"
+    assert(c.submitReportHash(sindeterminateevent, scalareventindeterminatehash3, sender=t.k3)==1), "Report hash submission failed"
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
@@ -978,8 +946,8 @@ def test_slashrep():
     c.penalizeWrong(1010101, 0)
     report_hash = c.makeHash(0, 2**64, event1, s.block.coinbase)
     report_hash2 = c.makeHash(0, 2*2**64, event2, s.block.coinbase)
-    assert(c.submitReportHash(event1, report_hash, 0)==1)
-    assert(c.submitReportHash(event2, report_hash2, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event1, report_hash)==1)
+    assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
     c.slashRep(1010101, 0, 2**64, s.block.coinbase, event1)
     s.mine(1)
     periodLength = c.getPeriodLength(1010101)
@@ -1078,11 +1046,11 @@ def test_catchup():
         time.sleep(c.getPeriodLength(1010101)/2)
         s.mine(1)
     c.penalizeWrong(1010101, 0)
-    n = c.submitReportHash(event1, report_hash, 0)
+    n = c.submitReportHash(event1, report_hash)
     print n
     print s.block.timestamp
     assert(n==1), "Report hash submission failed"
-    assert(c.submitReportHash(event2, report_hash2, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
@@ -1168,8 +1136,8 @@ def test_market_pushback():
     print c.submitReportHash(event1, report_hash)
     print event1
     print report_hash
-    assert(c.submitReportHash(event1, report_hash, 0)==1), "Report hash submission failed"
-    assert(c.submitReportHash(event2, report_hash2, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event1, report_hash)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
@@ -1226,8 +1194,8 @@ def test_market_pushback():
     c.penalizeWrong(1010101, event2)
     report_hash = c.makeHash(0, 2**64, event1, s.block.coinbase)
     report_hash2 = c.makeHash(0, 3*2**63, event2, s.block.coinbase)
-    assert(c.submitReportHash(event1, report_hash, 0)==-1), "Report hash -1 check failed"
-    assert(c.submitReportHash(event2, report_hash2, 0)==1), "Report hash submission failed"
+    assert(c.submitReportHash(event1, report_hash)==-1), "Report hash -1 check failed"
+    assert(c.submitReportHash(event2, report_hash2)==1), "Report hash submission failed"
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
@@ -1311,7 +1279,7 @@ if __name__ == '__main__':
     #test_reporting()
 
     # function tests
-    #test_trading()
+    test_trading()
     #test_create_branch()
     #test_send_rep()
     #test_market_pushback()
@@ -1320,8 +1288,6 @@ if __name__ == '__main__':
     #test_catchup()
     #test_slashrep()
     #test_claimrep()
-    #test_getMarketInfoCache()
     #test_consensus_multiple_reporters()
     #test_pen_not_enough_reports()
     print "DONE TESTING"
-

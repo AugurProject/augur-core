@@ -21,8 +21,10 @@
 
 inset('refund.se')
 
+# address -> value map of "cash [a made up subcurrency/token for testing"
 data cashcoinBalances[]
 
+# address -> address mapping of a cash address to the address that owns it
 data owners[]
 
 def init():
@@ -44,9 +46,9 @@ def initiateOwner(account):
     else:
         return(0)
 
+# Send cash to a receiver from msg.sender
 # should send values as fixed point in UI (1 is ONE, 4 is 4*ONE, .5 is ONEHALF, etc.)
 # @return: value sent, 0 if fails
-# If you've never used cash in augur, to initiate your account call this with value as 0
 def send(recver, value):
     refund()
     if(self.owners[msg.sender]==0):
@@ -62,6 +64,7 @@ def send(recver, value):
     else:
         return(0)
 
+# Sends cash from a user to a receiver
 # @return value of cash sent; fail is 0
 def sendFrom(recver, value, from):
     refund()

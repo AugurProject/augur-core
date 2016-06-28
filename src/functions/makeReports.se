@@ -26,10 +26,10 @@ import events as EVENTS
 import markets as MARKETS
 import reporting as REPORTING
 import backstops as BACKSTOPS
-import fxpFunctions as FXP
 import consensusData as CONSENSUS
 import collectFees as COLLECTFEES
 import penalizationCatchup as CATCHUP
+import reportingThreshold as THRESHOLD
 inset('refund.se')
 
 def makeHash(salt, report, eventID, sender):
@@ -41,10 +41,11 @@ def makeHash(salt, report, eventID, sender):
     reportHash = sha3(hashInfo, chars=32*len(hashInfo))
     return(reportHash)
 
+# Allows a user to submit the hash of their report / commit
 # Error: 0: not caught up on rep redistributions
 # Error -1: invalid event
 # Error -2: not in first half of period [commit part]
-def submitReportHash(event, reportHash):
+def submitReportHash(event, reportHash, encryptedSaltyHash):
     branch = EVENTS.getBranch(event)
     votePeriod = BRANCHES.getVotePeriod(branch)
 
@@ -55,12 +56,13 @@ def submitReportHash(event, reportHash):
     if(delta > 1):
         if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
             return(0)
-    if(!CONSENSUS.getRRDone(branch, msg.sender)):
+    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
         return(0)
 
-    # first report of period, num events not set
+    # if first report of period, num events not set
     if(EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)==0):
         EXPEVENTS.setNumEventsToReportOn(branch)
+        # set amount of fees to be distributed in this period from the branch
         BRANCHES.setInitialBalance(branch, votePeriod, CASH.balance(branch))
     eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
@@ -72,21 +74,22 @@ def submitReportHash(event, reportHash):
     else:
         if(EXPEVENTS.getLesserReportNum(branch, votePeriod, event)==0):
             self.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
-        reportingThreshold = EXPEVENTS.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
+        reportingThreshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
     x = array(1)
     x[0] = msg.sender + event
-    # div by ONE b/c is out of 2**192 rather than 2**256 [to avoid looping around]
-    # add 2**255 to ensure pos. and between 0 and 1
-    shaHash = (sha3(x, items=1)+2**255)/ONE
+    # do abs then mult by 2 to ensure pos. and between 0 and 1
+    shaHash = sha3(x, items=1)
+    shaHashAbs = abs(shaHash)/ONE
+    shaHash = 2*shaHashAbs
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     if(residual <= periodLength/2 && shaHash <= reportingThreshold):
-        if(EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)==0):
-            EXPEVENTS.addReportExpected(branch, votePeriod, event)
         EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
+        EXPEVENTS.setSaltyHash(branch, votePeriod, msg.sender, encryptedSaltyHash, event)
         return(1)
     return(-2)
 
+# Submits / reveals a report for a period
 # @return 1 if success
 # Error messages
     # 0: reporter doesn't exist or has <1 rep
@@ -98,23 +101,12 @@ def submitReportHash(event, reportHash):
     # -6: already resolved
     # -7: <48 hr left in period, too late to report, able to put up readj. bonds though
     # -8: fees couldn't be collected
-    # -9: need to pay not reporting bond
 def submitReport(event, salt, report, ethics):
     branch = EVENTS.getBranch(event)
     balance = REPORTING.getRepBalance(branch, msg.sender)
     votePeriod = BRANCHES.getVotePeriod(branch)
     if(balance<ONE):
         return(0)
-    # if 1st report of the period for a reporter
-    if(!EXPEVENTS.getNumReportsActual(branch, votePeriod, msg.sender)):
-        if(msg.value <= 500000*tx.gasprice):
-            return(-9)
-        dormantRep = REPORTING.balanceOf(branch, msg.sender)
-        # Record rep at start of report period
-        EXPEVENTS.setBeforeRep(branch, votePeriod, balance, msg.sender)
-        EXPEVENTS.setAfterRep(branch, votePeriod, balance, msg.sender)
-        EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, msg.sender)
-        CONSENSUS.setRefund(msg.sender, msg.value)
     if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
         return(-1)
     eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
@@ -148,7 +140,7 @@ def submitReport(event, salt, report, ethics):
         EXPEVENTS.setReport(branch, votePeriod, eventID, report, msg.sender)
         # set ethics value for event
         ethics = ethics
-        if(ethics!=ONE || ethics!=0):
+        if(ethics!=ONE and ethics!=0):
             ethics = ONE
         # set ethicality for forked event
         if(forkedOverThisEvent):
@@ -165,8 +157,10 @@ def submitReport(event, salt, report, ethics):
         # set ethicality for a regular event
         else:
             EXPEVENTS.setEthicReport(branch, votePeriod, event, ethics, msg.sender)
+            # weight by rep
             if(roundTwo):
                 ethics = (EVENTS.getEthics(event)*EXPEVENTS.getRepEvent(branch, votePeriod, event) + ethics*balance) / (EXPEVENTS.getRepEvent(branch, votePeriod, event) + balance)
+            # just a simple avg.
             else:
                 ethics = (EVENTS.getEthics(event)*EXPEVENTS.getNumReportsEvent(branch, votePeriod, event) + ethics) / (EXPEVENTS.getNumReportsEvent(branch, votePeriod, event) + 1)
             EVENTS.setEthics(eventID, ethics)
@@ -177,6 +171,7 @@ def submitReport(event, salt, report, ethics):
         reportsNum = EXPEVENTS.getLesserReportNum(branch, votePeriod, event)
         paidBack = EXPEVENTS.getReportersPaidSoFar(branch, event)
         diff = reportsNum - paidBack
+        # used to pay reporters after reporting for their gas costs
         if(diff >= 1):
             EXPEVENTS.addReportersPaidSoFar(branch, event)
             CASH.subtractCash(branch, 3500000*tx.gasprice*ONE / WEITOETH)
@@ -186,6 +181,9 @@ def submitReport(event, salt, report, ethics):
 
 # validates and submits report
 # weights reports by rep if round 2 and fork
+# Returns -4 if report is invalid
+    # isn't between 1 and 2 if binary
+    # if same report as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
 def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, balance):
     outcome = 0
     # binary
@@ -210,7 +208,7 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
         if(report > ONE):
             report = ONE
         elif(report<=0):
-            # 1 is the new 0
+            # 1 is the new 0 [1/2**64 is basically 0 but able to be differentiated from no report of 0]
             report = 1
         if(forkedOverThisEvent):
             # in case of fork remove the original outcome as a possible response if didn't fork over ethics
@@ -243,6 +241,7 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
 
 ### Helper functions:
 # calculates how many reports should be on a given event
+# todo make sure max cost is actually 500k gas here
 def calculateReportTargetForEvent(branch, eventID, votePeriod, sender):
     numMarkets = EVENTS.getNumMarkets(eventID)
     if(numMarkets>25):
@@ -286,3 +285,8 @@ macro ethic_catch($x):
         0
     else:
         ONE
+        
+macro abs($a):
+    if($a<0):
+        $a = -$a
+    $a

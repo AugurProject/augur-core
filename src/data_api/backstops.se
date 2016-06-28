@@ -1,9 +1,25 @@
 inset('refund.se')
 
+# Keeps track of data for round two backstop [where everyone reports on something] using event as the index
+    # final is whether an event is final
+    # bondReturned is whether the bond principle has been returned
+    # bondPaid is how much on top of the bond principle has been paid to the bond poster
+    # refund is subsidy to pay for round 2 event resolution function call
+    # bondPoster is the account which posted the bond
+    # original ethicality, outcome, and voteperiod specify the first round of consensus values for ethicality, outcome, and voteperiod, respectively
+    # roundTwo states whether an event is a round two event
 data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final, bondPoster, bondReturned, bondPaid, refund)
 
+# Keeps track of data for the forking backstop [wherein the network is forked into two sets of rep] using event as the index
+    # moved is used for stating whether an event has been moved to the winning fork
+    # bondPaid is how much on top of the bond principle has been paid to the bond poster
+    # bondAmount is the amount of the bond
+    # bondPoster is the account which posted the bond
+    # forkedOverEthicality states whether the event was forked due to controversy of ethicality
+    # originalBranch is the branch the event was originally on
 data forking[](bondPoster, bondAmount, forkedOverEthicality, bondPaid, originalBranch, moved)
 
+# Given a branch and a forkPeriod it states which fork the winner was
 data resolved[][]
 
 def setRoundTwoRefund(event, amt):

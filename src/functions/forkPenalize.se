@@ -1,26 +1,26 @@
-import info as INFO
-import cash as CASH
 import branches as BRANCHES
 import reporting as REPORTING
 import events as EVENTS
-import markets as MARKETS
 import backstops as BACKSTOPS
-import sendReputation as SENDREP
-import roundTwo as ROUNDTWO
 import expiringEvents as EXPEVENTS
-import createBranch as CREATEBRANCH
 import consensusData as CONSENSUS
+
 inset('refund.se')
 
-# rbcr is done as a normal event where everyone reports on it
-# only called on the fork not the parent, normal penalization except the values are forkOutcome and forkEthicality as opposed to anything else
-# some rep from this goes to bond poster, original / last period report is actually what a user reported on the parent for the round 2 bond vote, they lose rep as well as people this time who report wrong
-# branch is fork
-# fork event needs to be resolved first before this can be called
+
+# Penalizes a reporter for reporting wrongly on a forked event / backstop 2
+# Notes:
+    # essentially penalizeWrong for backstop 2 [where everyone reports on a forked event on the new branch]
+    # only called on the fork not the parent, normal penalization except the outcome values are forkOutcome and forkEthicality as opposed to anything else
+    # some rep from this goes to bond poster
+    # branch is the fork, not the parent
+    # fork event needs to be resolved first before this can be called
 # Errors:
+    #  0: not enough rep to report/penalize
     # -2: already past first half of new period and needed to penalize before then
     # -4: fork event isn't resolved yet
     # -5: already done for all events in this period
+    # -6: needed to collect fees last period which sets the before/after rep
 def penalizeOnForkedEvent(branch, event):
     refund()
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
@@ -30,16 +30,20 @@ def penalizeOnForkedEvent(branch, event):
     newRep = 0
     newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
+    if(repBalance < ONE):
+        return(0)
     forkOutcome = EVENTS.getForkOutcome(event)
     outcome = catch(forkOutcome)
     if(scalar(event) or categorical(event)):
-        outcome = forkOut
+        outcome = forkOutcome
     p = self.proportionCorrectForkEvent(event)
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
     bond = BACKSTOPS.getBondAmount(event)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
+    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod)):
+        return(-6)
     # means event / fork isn't resolved
     if(EVENTS.getForkedDone(event)==0):
         return(-4)
@@ -103,6 +107,7 @@ def penalizeOnForkedEvent(branch, event):
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
     return(1)
 
+# Calculates the proportion of correct reports for a binary forked event
 def proportionCorrectForkEvent(event):
     refund()
     p = 0
@@ -154,3 +159,9 @@ macro catch($x):
         YES
     else:
         BAD
+        
+### Helper functions:
+macro YES: TWO
+macro NO: ONE
+macro BAD: 3 * ONEHALF
+macro CATCH_TOLERANCE: ONE / 10
