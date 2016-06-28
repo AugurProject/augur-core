@@ -25,9 +25,6 @@ import markets as MARKETS
 import events as EVENTS
 import closeMarketOne as CLOSEONE
 import closeMarketTwo as CLOSETWO
-import closeMarketFour as CLOSEFOUR
-import closeMarketEight as CLOSEEIGHT
-import expiringEvents as EXPEVENTS
 import backstops as BACKSTOPS
 import eventResolution as RESOLVE
 inset('refund.se')
