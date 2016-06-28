@@ -3,6 +3,8 @@ import reporting as REPORTING
 import events as EVENTS
 import backstops as BACKSTOPS
 import expiringEvents as EXPEVENTS
+import consensusData as CONSENSUS
+
 inset('refund.se')
 
 

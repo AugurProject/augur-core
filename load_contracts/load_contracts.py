@@ -470,7 +470,9 @@ def compile(fullname):
         with open(fullname, 'w') as f:
             f.write(code)
 
-    fullsig = json.loads(serpent.mk_full_signature(code))
+    # old version of serpent
+    # fullsig = json.loads(serpent.mk_full_signature(code))
+    fullsig = serpent.mk_full_signature(code)
     shortname = get_shortname(fullname)
 
     if 'WHITELIST' in code:

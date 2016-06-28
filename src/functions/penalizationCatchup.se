@@ -1,7 +1,7 @@
 import branches as BRANCHES
 import reporting as REPORTING
 import expiringEvents as EXPEVENTS
-import consensus as CONSENSUS
+import consensusData as CONSENSUSDATA
 
 inset('refund.se')
 

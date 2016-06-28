@@ -22,13 +22,7 @@
 
 import branches as BRANCHES
 import events as EVENTS
-import fxpFunctions as FXP
-import reporting as REPORTING
 inset('refund.se')
-
-macro ONEPOINTTWO: 22136092888451461120
-
-macro POINTZEROONE: 184467440737095520
 
 # [branchID][votingPeriod]
 # reporthash is [reporterID][event] = hash
@@ -43,6 +37,7 @@ data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReport
 # lesserReportNum is the number of reports an event should have [the lesser of how many it can afford from fees and how many it should have due to outstanding share value]
 # periodRepConstant is 
 data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsActual[][], repEvent[][], lesserReportNum[][], periodRepConstant[][], reportersPaidSoFarForEvent[])
+
 data mode_items[][](report_value[], current_mode, current_mode_items)
 
 
@@ -152,66 +147,6 @@ def getEvents(branch, expDateIndex):
         i += 1
     return(events: arr)
     
-# 0, event means calculateReportTargetForEvent(branch, eventID, votePeriod, sender) in make reports should be called for that event
-def getEventsToReportOn(branch, expDateIndex, sender):
-    refund()
-    numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
-    events = array(numEvents*2)
-    i = 0
-    while i < numEvents:
-        # todo or just calculate report target for event here for purposes of computing this
-        if(self.getLesserReportNum(branch, votePeriod, event)==0):
-            return([0, event]: arr)
-        events[i] = self.EventsExpDates[branch][expDateIndex].events[i]
-        reportingThreshold = self.calculateReportingThreshold(branch, events[i], expDateIndex, sender)
-        x = array(1)
-        x[0] = sender + events[i]
-        # do abs then mult by 2 to ensure pos. and between 0 and 1
-        shaHash = sha3(x, items=1)
-        shaHashAbs = abs(shaHash)/ONE
-        shaHash = 2*shaHashAbs
-        if((shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(events[i]) || self.getRequired(events[i])) && !EVENTS.getOutcome(events[i])):
-            events[i+1] = 1
-        else:
-            events[i+1] = 0
-        i += 2
-    return(events: arr)
-    
-def getEventCanReportOn(branch, expDateIndex, reporter, event):
-    refund()
-    reportingThreshold = self.calculateReportingThreshold(branch, event, expDateIndex, reporter)
-    x = array(1)
-    x[0] = reporter + event
-    # do abs then mult by 2 to ensure pos. and between 0 and 1
-    shaHash = sha3(x, items=1)
-    shaHashAbs = abs(shaHash)/ONE
-    shaHash = 2*shaHashAbs
-    if(shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(event) || self.getRequired(events)):
-        return(1)
-    else:
-        return(0)
-
-# eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
-    # exp(1.2*ln(repbal)) / exp(1.2*ln(totalrep)) is == (reporterList[n]/totalRep)**1.2
-    # a^b=exp(b*ln(a))=e^(b*ln(a)).
-def calculateReportingThreshold(branch, eventID, votePeriod, sender):
-    repConstant = self.getPeriodRepConstant(branch, votePeriod, sender)
-    if(repConstant==0):
-        repConstant = FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getRepBalance(branch, sender))/ONE)*2**64/FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getActiveRep(branch))/ONE)
-        expectedEventsForReporter = repConstant * self.getNumEventsToReportOn(branch, votePeriod)
-        total = expectedEventsForReporter
-        eventsInPeriod = self.getNumberEvents(branch, expDateIndex)-self.getNumRemoved(branch, votePeriod)
-        numRequiredEvents = self.getNumRequired(branch, votePeriod)
-        if(repFraction >= POINTZEROONE):
-            minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
-            if(total/ONE < minimum):
-                total = minimum*ONE
-                repConstant = total / self.getNumEventsToReportOn(branch, votePeriod)
-        self.setPeriodRepConstant(branch, votePeriod, sender, repConstant)
-    # 1 is 2**192 here, lesserreportnum, repconstant, and one are all base 2**64
-    reportingThreshold = self.getLesserReportNum(branch, votePeriod, eventID)*repConstant*ONE
-    return(reportingThreshold)
-    
 def getEventsRange(branch, expDateIndex, start, end):
     refund()
     numEvents = end-start
@@ -304,15 +239,15 @@ def moveEvent(branch, event):
         return(1)
     else:
         return(0)
-        
+
 def addToWeightOfReport(period, event, report, amount):
     self.mode_items[period][event].report_value[report] += amount
     return(1)
-    
+
 def setCurrentMode(period, event, mode):
     self.mode_items[period][event].current_mode = mode
     return(1)
-    
+
 # basically setting current mode's weight
 def setCurrentModeItems(period, event, modeReport):
     self.mode_items[period][event].current_mode_items = self.mode_items[period][event].report_value[modeReport]
@@ -354,24 +289,3 @@ def setPeriodDormantRep(branch, period, rep, sender):
 def setLesserReportNum(branch, period, event, num):
     self.branches[branch].lesserReportNum[period][event] = num
     return(1)
-    
-#In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold.
-def setReportingThreshold(event):
-    refund()
-    # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
-    # final check is if no reports on event
-    # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this one
-    branch = EVENTS.getBranch(event)
-    periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.timestamp % periodLength
-    votePeriod = BRANCHES.getVotePeriod(branch)
-    if(votePeriod==EVENTS.getExpiration(event)/periodLength and (((block.timestamp + TWENTYFOURHR) % periodLength) > periodLength/2) and !EVENTS.getUncaughtOutcome(event)):
-        EVENTS.setThreshold(event, 2**192)
-        return(1)
-    else:
-        return(0)
-        
-macro abs($a):
-    if($a<0):
-        $a = -$a
-    $a

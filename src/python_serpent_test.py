@@ -427,6 +427,28 @@ def test_trading():
     print "BUY AND SELL OK"
     return(1)
 
+<<<<<<< HEAD
+def test_abunch_of_markets():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
+    i = 0
+    while i < 10000:
+        c.setCash(s.block.coinbase, 1000000*2**64)
+        event = c.createEvent(1010101, "sss"+str(i), s.block.timestamp+100, 2**64, 2**65, 2, "lol")
+        market = c.createMarket(1010101, "aaa"+str(i), 2**58, [event], 1, 2, 3, 2**60, "aaa", value = 10**19)
+        s.mine(1)
+        i += 1
+    marketsInfo = c.getMarketsInfo(1010101, 0, 100)
+    print marketsInfo
+    return(1)
+
+=======
+>>>>>>> develop
 def test_close_market():
     global initial_gas
     initial_gas = 0
@@ -485,6 +507,13 @@ def test_close_market():
         s.mine(1)
     assert(c.submitReport(event2, 0, 2*2**64, 2**64, value=500000000)==1), "Report submission failed"
     assert(c.submitReport(event4, 0, 3*2**63, 2**64)==1), "Report submission failed"
+<<<<<<< HEAD
+    assert(c.submitReport(event5, 0, 2**63, 2**64, value=500000000)==1)
+    assert(c.submitReport(event6, 0, 1, 2**64, value=500000000))
+    c.send(market5, 2**64)
+    assert(c.closeMarket(1010101, market5)==0), "Not expired check [and not early resolve due to not enough reports submitted check] broken"
+=======
+>>>>>>> develop
     assert(c.submitReport(event1, 0, 2**64, 2**64)==1), "Report submission failed"
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
         time.sleep(c.getPeriodLength(1010101)/2)

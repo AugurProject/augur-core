@@ -1,2 +1,4 @@
 colorama
 ethereum
+progress
+requests

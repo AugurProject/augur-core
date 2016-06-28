@@ -2,6 +2,7 @@ import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import consensusData as CONSENSUS
 import reporting as REPORTING
+import reportingThreshold as THRESHOLD
 import fxpFunctions as FXP
 inset('refund.se')
 
@@ -55,7 +56,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)/baseReporters)*ONE + EXPEVENTS.getNumRequired(branch, lastPeriod)*ONE
     numReportsActual = EXPEVENTS.getNumReportsActual(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
-    couldveReported = EXPEVENTS.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
+    couldveReported = THRESHOLD.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
     if(numEvents/2 > numReportsActual*ONE && couldveReported):
         # typically meant for people who did report but not enough [those who didnt at all use pen. catchup] so using before rep is fine, but if not use rep balance
         originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)

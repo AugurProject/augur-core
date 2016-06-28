@@ -31,10 +31,13 @@ inset('refund.se')
 macro POINTZEROSIX: 1106804644422573056
 macro COSTPERREPORTER: 3500000
 
-def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution:str, tradingFee, tag1, tag2, tag3, makerFees, extraInfo:str):
-    event = self.createEvent(branch, description, expDate, minValue, maxValue, numOutcomes, resolution)
-    market = self.createMarket(branch, description, tradingFee, [event], tag1, tag2, tag3, makerFees, extraInfo)
-    return(market)
+event marketCreated(marketID)
+event tradingFeeUpdated(marketID, tradingFee)
+
+# def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution:str, tradingFee, tag1, tag2, tag3, makerFees, extraInfo:str):
+#     eventID = self.createEvent(branch, description, expDate, minValue, maxValue, numOutcomes, resolution, call=delegate)
+#     marketID = self.createMarket(branch, description, tradingFee, [eventID], tag1, tag2, tag3, makerFees, extraInfo, call=delegate)
+#     return(marketID)
 
 # Create an event. Events are the basic units / questions that are reported on in Augur by reporters
 # @param numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0 to 11.0 would be 11 outcomes (if incremented by 0.1)
