@@ -50,7 +50,7 @@ def penalizeOnForkedEvent(branch, event):
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     if(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
         return(-2)
-    numReportedOn = EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
+    numReportedOn = EXPEVENTS.getnumReportsSubmitted(branch, lastPeriod, msg.sender)
     # penalization on a forked event
     # if didn't report [reportValue of 0] then it's a bad report here
     # Do (for each user) based on forking report and final outcome

@@ -69,7 +69,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
         return(-1)
     reportingThreshold = 0
-    if(EXPEVENTS.getRequired(event) || EVENTS.getReportingThreshold(event)):
+    if(EXPEVENTS.getRequired(event, votePeriod, branch) || EVENTS.getReportingThreshold(event)):
         reportingThreshold = 2**192
     else:
         if(EXPEVENTS.getLesserReportNum(branch, votePeriod, event)==0):
@@ -169,11 +169,11 @@ def submitReport(event, salt, report, ethics):
         if(roundTwo or forkedOverThisEvent):
             EXPEVENTS.addRepEvent(branch, votePeriod, event, EXPEVENTS.getBeforeRep(branch, votePeriod, msg.sender))
         reportsNum = EXPEVENTS.getLesserReportNum(branch, votePeriod, event)
-        paidBack = EXPEVENTS.getReportersPaidSoFar(branch, event)
+        paidBack = EVENTS.getReportersPaidSoFar(event)
         diff = reportsNum - paidBack
         # used to pay reporters after reporting for their gas costs
         if(diff >= 1):
-            EXPEVENTS.addReportersPaidSoFar(branch, event)
+            EVENTS.addReportersPaidSoFar(event)
             CASH.subtractCash(branch, 3500000*tx.gasprice*ONE / WEITOETH)
             CASH.addCash(msg.sender, 3500000*tx.gasprice*ONE / WEITOETH)
         return(1)

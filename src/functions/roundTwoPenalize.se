@@ -78,7 +78,7 @@ def penalizeRoundTwoWrong(branch, event):
     elif((BACKSTOPS.getOriginalOutcome(event) != catch(EVENTS.getUncaughtOutcome(event)) or BACKSTOPS.getOriginalEthicality(event)!=ethic_catch(EVENTS.getEthical(event)))):
         overruled = 1
         
-    numReportedOn = EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
+    numReportedOn = EXPEVENTS.getnumReportsSubmitted(branch, lastPeriod, msg.sender)
 
     # penalization on a round 2 event if not already penalized, it has outcome, and user reported on it
     # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period

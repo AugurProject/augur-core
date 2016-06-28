@@ -39,10 +39,17 @@ inset('refund.se')
 # forkOutcome is the outcome of an event that was forked over
 # forkEthicality is the ethicality of an event that was forked over
 # resolutionSource is a string with the recommended source for resolving a market
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp)
+data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent)
 
 # Keeps track of number of events created in the past 24 hours
 data past24Hours[]
+
+def getReportersPaidSoFar(event):
+    return(self.Events[event].reportersPaidSoFarForEvent)
+
+def addReportersPaidSoFar(event):
+    self.Events[event].reportersPaidSoFarForEvent += 1
+    return(1)
 
 def getEventPushedUp(event):
     return(self.Events[event].pushedUp)

@@ -1,4 +1,3 @@
-# todo move extern stuff into a new contract
 # This software (Augur) allows buying && selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
 #    This program is free software; you can redistribute it &&/or modify
@@ -24,39 +23,51 @@ import branches as BRANCHES
 import events as EVENTS
 inset('refund.se')
 
-# [branchID][votingPeriod]
-# reporthash is [reporterID][event] = hash
-# subsidy is money for paying back a user for calculating the targeted num of reports for an event
-data EventIDToIndex[][]
-data requiredEvents[]
+### This contract keeps track of data associated with reporting periods and the events + reports in them
 
-data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], saltyHash[][], shareValue, subsidy[], roundTwoNumEvents, numReqEvents)
+# This keeps track of info in a period for the events in that period, it takes a branch and votePeriod as params, respectively
+    # Events is 0 indexed and stores the events in a period [this allows the client to loop through and detect which events a given user should report on]
+    # eventIDToIndex returns an event id for a given index in events
+    # requiredEvents states whether a given event is required to be reported on or not [a round2 backstop or a fork event are both required]
+    # subsidy is money for paying back a user for calculating the targeted num of reports for an event
+    # numReportsEvent is number of reports on an event
+    # repEvent is the amount of rep that has reported on an event
+    # lesserReportNum is the number of reports an event should have [the lesser of how many it can afford from fees and how many it should have due to outstanding share value]
+    # numberEvents is the total number of events in a given reporting period
+    # roundTwoNumEvents is the number of round 2 events in a given reporting period
+    # numReqEvents is the number of events that are required to be reported on in a given reporting period
+    # numberRemoved is the number of events that no longer have to be reported on in this period [a good example is an event that was resolved early successfully]
+    # numEventsToReportOn is the number of events available for reporting on [not including required events] * base number of reporters per event [this is multiplied by a user's periodRepWeight to figure out how many events they should be reporting on in a given period]
+    # shareValue is the value of all the outstanding shares from markets that have events expiring in this period 
+data periodEventInfo[][](events[], eventIDToIndex[], requiredEvents[], subsidy[], numReportsEvent[], repEvent[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, shareValue)
 
-# numReportsEvent is number of reports on an event, expected is how many have been committed for an event
-# numReportsActual is the amount of reports a user has submitted in a period
-# lesserReportNum is the number of reports an event should have [the lesser of how many it can afford from fees and how many it should have due to outstanding share value]
-# periodRepConstant is 
-data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsActual[][], repEvent[][], lesserReportNum[][], periodRepConstant[][], reportersPaidSoFarForEvent[])
+# This keeps track of info in a period for the reporters, it takes a branch and votePeriod as params, respectively
+    # Before rep is the amount of active rep a user has before any penalizations for reporting incorrectly
+    # After rep is the amount of active rep a user has after all the modifications to their rep at the end of a period [it's initially equal to the before rep]
+    # Period dormant rep is how much rep a user has dormant at the start of a period
+    # Report hash stores the hash of a report&salt a user submitted for a given report [takes report, event as params]
+    # Salty encrypted hash stores an encrypted concatenation of the salt and a report: it allows users to easily migrate across devices [takes report, event as params]
+    # Report is the report a reporter submitted for a given event [takes report, event as params]
+    # Ethics is the ethicality a reporter submitted for a given event [takes report, event as params]
+    # numReportsSubmitted is the number of a reports a reporter has submitted for this period
+    # periodRepWeight is a weighting used to calculate how many events a reporter should report on in a given period
+data reporterPeriodInfo[][](beforeRep[], afterRep[], periodDormantRep[], reportHash[][], saltyEncryptedHash[][], report[][], ethics[][], numReportsSubmitted[], periodRepWeight[])
 
-data mode_items[][](report_value[], current_mode, current_mode_items)
+# This takes a period and event as params (e.g self.modeItems[period][event]) and stores mode data for categorical & scalar event reports
+    # reportValue takes a possible reported value [say .72 in fixed point] as a key and the value is how many reports that event has, or in the case of a backstop, how much rep has reported on that event
+    # currentMode keeps track of the current mode report for an event or which reportValue key has the highest value of reports/rep reported on it
+    # currentModeItems is how many reports or rep reported the current mode has, which is used in determining whether there's a new mode
+data modeItems[][](reportValue[], currentMode, currentModeItems)
 
-
-def getSaltyHash(branch, expDateIndex, reporter, event):
+def getsaltyEncryptedHash(branch, expDateIndex, reporter, event):
     refund()
-    return(self.EventsExpDates[branch][expDateIndex].saltyHash[reporter][event])
+    return(self.EventsExpDates[branch][expDateIndex].saltyEncryptedHash[reporter][event])
 
-def setSaltyHash(branch, expDateIndex, reporter, saltyHash, event):
+def setsaltyEncryptedHash(branch, expDateIndex, reporter, saltyEncryptedHash, event):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
-    self.EventsExpDates[branch][expDateIndex].saltyHash[reporter][event] = saltyHash
-    return(1)
-
-def getReportersPaidSoFar(branch, event):
-    return(self.branches[branch].reportersPaidSoFarForEvent[event])
-
-def addReportersPaidSoFar(branch, event):
-    self.branches[branch].reportersPaidSoFarForEvent[event] += 1
+    self.EventsExpDates[branch][expDateIndex].saltyEncryptedHash[reporter][event] = saltyEncryptedHash
     return(1)
     
 def refundCost(to, value):
@@ -66,25 +77,25 @@ def refundCost(to, value):
 def getSubsidy(branch, period, event):
     return(self.EventsExpDates[branch][period].subsidy[event])
 
-def getPeriodRepConstant(branch, votePeriod, sender):
-    return(self.branches[branch].periodRepConstant[votePeriod][sender])
+def getperiodRepWeight(branch, votePeriod, sender):
+    return(self.branches[branch].periodRepWeight[votePeriod][sender])
 
-def setPeriodRepConstant(branch, votePeriod, sender, value):
-    self.branches[branch].periodRepConstant[votePeriod][sender] = value
+def setperiodRepWeight(branch, votePeriod, sender, value):
+    self.branches[branch].periodRepWeight[votePeriod][sender] = value
     return(1)
 
 def getLesserReportNum(branch, period, event):
     return(self.branches[branch].lesserReportNum[period][event])
 
 def getCurrentModeItems(period, event):
-    return(self.mode_items[period][event].current_mode_items)
+    return(self.modeItems[period][event].currentModeItems)
 
 def getCurrentMode(period, event):
-    return(self.mode_items[period][event].current_mode)
+    return(self.modeItems[period][event].currentMode)
     
 # returns weight of a report value for the mode
 def getWeightOfReport(period, event, report):
-    return(self.mode_items[period][event].report_value[report])
+    return(self.modeItems[period][event].reportValue[report])
 
 def getRepEvent(branch, votePeriod, event):
     return(self.branches[branch].repEvent[votePeriod][event])
@@ -108,8 +119,8 @@ def getAfterRep(branch, period, sender):
 def getPeriodDormantRep(branch, period, sender):
     return(self.branches[branch].periodDormantRep[period][sender])
 
-def getNumReportsActual(branch, votePeriod, sender):
-    return(self.branches[branch].numReportsActual[sender][votePeriod])
+def getnumReportsSubmitted(branch, votePeriod, sender):
+    return(self.branches[branch].numReportsSubmitted[sender][votePeriod])
 
 def getNumRoundTwo(branch, period):
     refund()
@@ -120,16 +131,16 @@ def addRoundTwo(branch, period):
     self.EventsExpDates[branch][period].roundTwoNumEvents += 1
     return(1)
 
-def getRequired(event):
-    return(self.requiredEvents[event])
+def getRequired(event, period, branch):
+    return(self.EventsExpDates[branch][period].requiredEvents[event])
     
 def getNumRequired(branch, period):
     return(self.EventsExpDates[branch][period].numReqEvents)
     
 # Return 0 means already required
 def setEventRequired(branch, period, event):
-    if(self.requiredEvents[event]==0):
-        self.requiredEvents[event] = 1
+    if(self.EventsExpDates[branch][period].requiredEvents[event]==0):
+        self.EventsExpDates[branch][period].requiredEvents[event] = 1
         self.EventsExpDates[branch][period].numReqEvents += 1
         return(1)
     else:
@@ -241,16 +252,16 @@ def moveEvent(branch, event):
         return(0)
 
 def addToWeightOfReport(period, event, report, amount):
-    self.mode_items[period][event].report_value[report] += amount
+    self.modeItems[period][event].reportValue[report] += amount
     return(1)
 
 def setCurrentMode(period, event, mode):
-    self.mode_items[period][event].current_mode = mode
+    self.modeItems[period][event].currentMode = mode
     return(1)
 
 # basically setting current mode's weight
 def setCurrentModeItems(period, event, modeReport):
-    self.mode_items[period][event].current_mode_items = self.mode_items[period][event].report_value[modeReport]
+    self.modeItems[period][event].currentModeItems = self.modeItems[period][event].reportValue[modeReport]
     return(1)
 
 def addRepEvent(branch, votePeriod, event, amount):
@@ -267,7 +278,7 @@ def setNumReportsEvent(branch, votePeriod, eventID, num):
     
 def addReportToEvent(branch, votePeriod, eventID, sender):
     self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
-    self.branches[branch].numReportsActual[sender][votePeriod] += 1
+    self.branches[branch].numReportsSubmitted[sender][votePeriod] += 1
     return(1)
 
 def setReport(branch, period, event, report, sender):

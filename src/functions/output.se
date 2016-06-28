@@ -447,16 +447,16 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
     if(total > ONE):
         numEvents = (self.getNumEventsToReportOn(branch, lastPeriod)/baseReporters)*ONE + self.getNumRequired(branch, lastPeriod)*ONE
-    numReportsActual = self.getNumReportsActual(branch, lastPeriod, reporter)
+    numReportsSubmitted = self.getnumReportsSubmitted(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
     couldveReported = self.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
-    if(numEvents/2 > numReportsActual*ONE && couldveReported):
+    if(numEvents/2 > numReportsSubmitted*ONE && couldveReported):
         # typically meant for people who did report but not enough [those who didnt at all use pen. catchup] so using before rep is fine, but if not use rep balance
         originalRep = self.getBeforeRep(branch, lastPeriod, reporter)
         if(originalRep==0):
             originalRep = self.getRepBalance(branch, reporter)
         # penalize people
-        newRep = POINTONE*numReportsActual*originalRep / numEvents
+        newRep = POINTONE*numReportsSubmitted*originalRep / numEvents
         oldRep = originalRep*POINTNINE / ONE
         repChange = (oldRep+newRep) - originalRep
         if(repChange > 0):
@@ -721,7 +721,7 @@ def penalizeRoundTwoWrong(branch, event):
     elif((self.getOriginalOutcome(event) != catch(self.getUncaughtOutcome(event)) or self.getOriginalEthicality(event)!=ethic_catch(self.getEthical(event)))):
         overruled = 1
         
-    numReportedOn = self.getNumReportsActual(branch, lastPeriod, msg.sender)
+    numReportedOn = self.getnumReportsSubmitted(branch, lastPeriod, msg.sender)
 
     # penalization on a round 2 event if not already penalized, it has outcome, and user reported on it
     # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period
@@ -1478,7 +1478,7 @@ def sendReputation(branch, recver, value):
     # you can't trade if you or the person you're sending to have submitted a report, or at all in the second half of the period [b/c you can messup / cheat w/ reporting by gettin extra claims on fees] and you can't trade in the first half of a period until you've been penalized for reporting wrongly/not reporting
     # use a diff. fun. than getReport here
     #if(value<=0 || self.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || self.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || self.getReport(branch, currentVotePeriod, recver, 0) != 0):
-    # self.getNumReportsActual(branch, currentVotePeriod, msg.sender)
+    # self.getnumReportsSubmitted(branch, currentVotePeriod, msg.sender)
     #    return(0)
     
     lastPeriodPenalized = self.getPenalizedUpTo(branch, msg.sender)
@@ -1700,7 +1700,7 @@ def convertToActiveRep(branch, value):
         
     
 macro hasReported($branch, $period):
-    self.getNumReportsActual($branch, $period, msg.sender)
+    self.getnumReportsSubmitted($branch, $period, msg.sender)
 inset('refund.se')
 
 macro POINTNINE: 16602069666338596864
@@ -1725,7 +1725,7 @@ def penalizationCatchup(branch, sender):
     if(delta <= 0):
         return(-2)
     # provided user is at least one period behind and they didn't report in the last period
-    if(lastPeriodPenalized==lastPeriod or self.getNumReportsActual(branch, lastPeriod, sender)):
+    if(lastPeriodPenalized==lastPeriod or self.getnumReportsSubmitted(branch, lastPeriod, sender)):
         return(-3)
     # dock 10% for each period they didn't penalize on
     smoothedRep = oldRep*POINTNINE/ONE
@@ -1913,7 +1913,7 @@ def penalizeOnForkedEvent(branch, event):
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     if(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
         return(-2)
-    numReportedOn = self.getNumReportsActual(branch, lastPeriod, msg.sender)
+    numReportedOn = self.getnumReportsSubmitted(branch, lastPeriod, msg.sender)
     # penalization on a forked event
     # if didn't report [reportValue of 0] then it's a bad report here
     # Do (for each user) based on forking report and final outcome
@@ -2313,7 +2313,7 @@ def penalizeWrong(branch, event):
     if(roundTwo && outcome!=0):
         return(-1)
     reportValue = self.getReport(branch, lastPeriod, event, msg.sender)
-    numReportedOn = self.getNumReportsActual(branch, lastPeriod, msg.sender)
+    numReportedOn = self.getnumReportsSubmitted(branch, lastPeriod, msg.sender)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     # commented for testing
     #elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
@@ -3581,10 +3581,10 @@ data EventIDToIndex[][]
 data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], saltyHash[][], shareValue, subsidy[], roundTwoNumEvents)
 
 # numReportsEvent is number of reports on an event, expected is how many have been committed for an event
-# numReportsActual is the amount of reports a user has submitted in a period
+# numReportsSubmitted is the amount of reports a user has submitted in a period
 # lesserReportNum is the number of reports an event should have [the lesser of how many it can afford from fees and how many it should have due to outstanding share value]
-# periodRepConstant is 
-data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsActual[][], repEvent[][], lesserReportNum[][], periodRepConstant[][], reportersPaidSoFarForEvent[])
+# periodRepWeight is 
+data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsSubmitted[][], repEvent[][], lesserReportNum[][], periodRepWeight[][], reportersPaidSoFarForEvent[])
 
 
 # branch, period as params
@@ -3617,11 +3617,11 @@ def refundCost(to, value):
 def getSubsidy(branch, period, event):
     return(self.EventsExpDates[branch][period].subsidy[event])
 
-def getPeriodRepConstant(branch, votePeriod, sender):
-    return(self.branches[branch].periodRepConstant[votePeriod][sender])
+def getperiodRepWeight(branch, votePeriod, sender):
+    return(self.branches[branch].periodRepWeight[votePeriod][sender])
 
-def setPeriodRepConstant(branch, votePeriod, sender, value):
-    self.branches[branch].periodRepConstant[votePeriod][sender] = value
+def setperiodRepWeight(branch, votePeriod, sender, value):
+    self.branches[branch].periodRepWeight[votePeriod][sender] = value
     return(1)
 
 def getLesserReportNum(branch, period, event):
@@ -3659,8 +3659,8 @@ def getAfterRep(branch, period, sender):
 def getPeriodDormantRep(branch, period, sender):
     return(self.branches[branch].periodDormantRep[period][sender])
 
-def getNumReportsActual(branch, votePeriod, sender):
-    return(self.branches[branch].numReportsActual[sender][votePeriod])
+def getnumReportsSubmitted(branch, votePeriod, sender):
+    return(self.branches[branch].numReportsSubmitted[sender][votePeriod])
 
 def getNumRoundTwo(branch, period):
     refund()
@@ -3741,7 +3741,7 @@ def getEventCanReportOn(branch, expDateIndex, reporter, event):
     # exp(1.2*ln(repbal)) / exp(1.2*ln(totalrep)) is == (reporterList[n]/totalRep)**1.2
     # a^b=exp(b*ln(a))=e^(b*ln(a)).
 def calculateReportingThreshold(branch, eventID, votePeriod, sender):
-    repConstant = self.getPeriodRepConstant(branch, votePeriod, sender)
+    repConstant = self.getperiodRepWeight(branch, votePeriod, sender)
     if(repConstant==0):
         repConstant = self.fx_exp(ONEPOINTTWO*self.fx_log(self.getRepBalance(branch, sender))/ONE)*2**64/self.fx_exp(ONEPOINTTWO*self.fx_log(self.getActiveRep(branch))/ONE)
         expectedEventsForReporter = repConstant * self.getNumEventsToReportOn(branch, votePeriod)
@@ -3753,7 +3753,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod, sender):
             if(total/ONE < minimum):
                 total = minimum*ONE
                 repConstant = total / self.getNumEventsToReportOn(branch, votePeriod)
-        self.setPeriodRepConstant(branch, votePeriod, sender, repConstant)
+        self.setperiodRepWeight(branch, votePeriod, sender, repConstant)
     # 1 is 2**192 here, lesserreportnum, repconstant, and one are all base 2**64
     reportingThreshold = self.getLesserReportNum(branch, votePeriod, eventID)*repConstant*ONE
     return(reportingThreshold)
@@ -3878,7 +3878,7 @@ def setNumReportsEvent(branch, votePeriod, eventID, num):
     
 def addReportToEvent(branch, votePeriod, eventID, sender):
     self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
-    self.branches[branch].numReportsActual[sender][votePeriod] += 1
+    self.branches[branch].numReportsSubmitted[sender][votePeriod] += 1
     return(1)
 
 def setReport(branch, period, event, report, sender):

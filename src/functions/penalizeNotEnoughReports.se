@@ -41,6 +41,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     # a^b=exp(b*ln(a))=e^(b*ln(a)).
     prelim = EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)
     # need to do active rep on a period by period basis.. todo
+    # switch to period rep weight for exp?
     exp = FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(EXPEVENTS.getBeforeRep(branch, lastPeriod, sender))/ONE)*2**64/FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getActiveRep(branch))/ONE)
     baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
     # if total [which is mult by num events to report on via the prelim amount] is too high [>1] then numevents will estimate a higher number than reality, so need to correct for this below
@@ -54,16 +55,16 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
     if(total > ONE):
         numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)/baseReporters)*ONE + EXPEVENTS.getNumRequired(branch, lastPeriod)*ONE
-    numReportsActual = EXPEVENTS.getNumReportsActual(branch, lastPeriod, reporter)
+    numReportsSubmitted = EXPEVENTS.getnumReportsSubmitted(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
     couldveReported = THRESHOLD.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
-    if(numEvents/2 > numReportsActual*ONE && couldveReported):
+    if(numEvents/2 > numReportsSubmitted*ONE && couldveReported):
         # typically meant for people who did report but not enough [those who didnt at all use pen. catchup] so using before rep is fine, but if not use rep balance
         originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
         if(originalRep==0):
             originalRep = REPORTING.getRepBalance(branch, reporter)
         # penalize people
-        newRep = POINTONE*numReportsActual*originalRep / numEvents
+        newRep = POINTONE*numReportsSubmitted*originalRep / numEvents
         oldRep = originalRep*POINTNINE / ONE
         repChange = (oldRep+newRep) - originalRep
         if(repChange > 0):

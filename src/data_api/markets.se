@@ -28,7 +28,7 @@ inset('refund.se')
     # Sharespurchased keeps track of the number of shares purchased for each outcome
         # sharesPurchased states starts at 1 - (same for participants[].shares[] array)
     # Participants is an array of participants, their addresses as keys and the shares in each outcome they've purchased of an event as the values
-    	# e.g. participants[addr].shares[1]
+        # e.g. participants[addr].shares[1]
     # currentParticipant is the number of participants [traders] in the market
     # cumulativeScale == range of the market for scalars
     # numOutcomes is the number of outcomes in a market [up to 8 for now]
@@ -65,38 +65,25 @@ def addToMarketsHash(branch, newHash):
     return(1)
 
 def addFees(market, amount):
-<<<<<<< HEAD
-	self.Markets[market].fees += amount
-	return(1)
-
-=======
     self.Markets[market].fees += amount
     return(1)
-    
->>>>>>> develop
+
 def setPrice(market, outcome, price):
     self.Markets[market].prices[outcome] = price
     return(1)
 
 # refund closing cost for a market
 def refundClosing(market, to):
-<<<<<<< HEAD
-	subsidy = self.Markets[market].gasSubsidy
-	self.Markets[market].gasSubsidy -= subsidy
-	send(subsidy, to)
-	return(1)
-=======
     subsidy = self.Markets[market].gasSubsidy
     self.Markets[market].gasSubsidy -= subsidy
     send(subsidy, to)
     return(1)
->>>>>>> develop
 
 def getLastExpDate(market):
-	return(self.Markets[market].lastExpDate)
+    return(self.Markets[market].lastExpDate)
 
 def getLastOutcomePrice(market, outcome):
-	return(self.Markets[market].prices[outcome])
+    return(self.Markets[market].prices[outcome])
 
 def getFees(market):
     return(self.Markets[market].fees)
@@ -342,4 +329,4 @@ def get_total_trades(market_id):
     return(self.Markets[market_id].total_trades)
 
 def getSender():
-	return(msg.sender)
+    return(msg.sender)
