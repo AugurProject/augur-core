@@ -29,6 +29,7 @@ import backstops as BACKSTOPS
 import consensusData as CONSENSUS
 import collectFees as COLLECTFEES
 import penalizationCatchup as CATCHUP
+import reportingThreshold as THRESHOLD
 inset('refund.se')
 
 def makeHash(salt, report, eventID, sender):
@@ -73,7 +74,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     else:
         if(EXPEVENTS.getLesserReportNum(branch, votePeriod, event)==0):
             self.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
-        reportingThreshold = EXPEVENTS.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
+        reportingThreshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
     x = array(1)
     x[0] = msg.sender + event
     # do abs then mult by 2 to ensure pos. and between 0 and 1
