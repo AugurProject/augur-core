@@ -6,24 +6,20 @@ inset('refund.se')
 # Error:
     # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant #0 is really #0]
 def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes):
-    participantNumber = MARKETS.getParticipantNumber(market, sender)
-    participant = MARKETS.getParticipantID(market, participantNumber)
-    if(participant!=sender):
-        return(-1)
     cumScale = MARKETS.getCumScale(market)
     # if it's an indeterminate categorical market resolve with all outcomes having an equal value
     if(categoricalPointFive):
         i = 0
         while(i < numOutcomes):
-            sharesOwned = MARKETS.getParticipantSharesPurchased(market, participantNumber, i+1)
-            MARKETS.modifyParticipantShares(market, participantNumber, i+1, -sharesOwned)
+            sharesOwned = MARKETS.getParticipantSharesPurchased(market, msg.sender, i+1)
+            MARKETS.modifyParticipantShares(market, msg.sender, i+1, -sharesOwned)
             CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)/(numOutcomes*ONE))
             CASH.addCash(participant, sharesOwned*MARKETS.getCumScale(market)/(numOutcomes*ONE))
             i+=1
     else:
         # distribute profit to the people who won money by holding winning shares
-        sharesOwned = MARKETS.getParticipantSharesPurchased(market, participantNumber, winningOutcome)
-        MARKETS.modifyParticipantShares(market, participantNumber, winningOutcome, -sharesOwned)
+        sharesOwned = MARKETS.getParticipantSharesPurchased(market, msg.sender, winningOutcome)
+        MARKETS.modifyParticipantShares(market, msg.sender, winningOutcome, -sharesOwned)
         CASH.subtractCash(market, sharesOwned*cumScale/ONE)
         CASH.addCash(participant, sharesOwned*cumScale/ONE)
     return(1)

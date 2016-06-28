@@ -109,7 +109,7 @@ def closeMarket(branch, market, sender):
         winningOutcomes = RESOLVE.determineWinningOutcomes(event, outitems=8)
         MARKETS.setWinningOutcomes(market, winningOutcomes)
         # refunds closing cost
-        MARKETS.refundClosing(MARKETS.getgasSubsidy(market), sender)
+        MARKETS.refundClosing(market, sender)
         return(1)
     else:
         return(0)

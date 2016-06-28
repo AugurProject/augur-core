@@ -43,15 +43,11 @@ def buyCompleteSets(market, amount):
         return(-1)
     if(CASH.balance(msg.sender) < cost):
         return(-2)
-    participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
-    # if participant doesn't exist in market, add them
-    if(msg.sender != MARKETS.getParticipantID(market, participantNumber)):
-        participantNumber = MARKETS.addParticipant(market, msg.sender)
     n = 1
     # send shares of the event to user address and increment the number issued in the market for each outcome
     while n <= numOutcomes:
         MARKETS.modifyShares(market, n, amount)
-        MARKETS.modifyParticipantShares(market, participantNumber, n, amount, 0)
+        MARKETS.modifyParticipantShares(market, msg.sender, n, amount, 0)
         n += 1
     # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
     if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
@@ -69,25 +65,22 @@ def buyCompleteSets(market, amount):
     # -3: user doesn't own enough shares 
 def sellCompleteSets(market, amount):
     refund()
-    participantNumber = MARKETS.getParticipantNumber(market, msg.sender)
     branch = MARKETS.getBranchID(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumScale = MARKETS.getCumScale(market)
     cost = amount*cumScale/ONE
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
-    if(MARKETS.getParticipantID(market, participantNumber) != msg.sender):
-        return(-2)
     n = 1
     while n <= numOutcomes:
-        if(MARKETS.getParticipantSharesPurchased(market, participantNumber, n) < amount):
+        if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < amount):
             return(-3)
         n += 1
     n = 1
     # Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets
     while n <= numOutcomes:
         MARKETS.modifyShares(market, n, -amount)
-        MARKETS.modifyParticipantShares(market, participantNumber, n, -amount, 0)
+        MARKETS.modifyParticipantShares(market, msg.sender, n, -amount, 0)
         n += 1
     # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
     if(BRANCHES.getVotePeriod(branch)<MARKETS.getTradingPeriod(market)):

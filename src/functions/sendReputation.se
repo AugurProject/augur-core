@@ -34,6 +34,7 @@ event Transfer(_from:indexed, _to:indexed, _value)
 event Approval(_owner:indexed, _spender:indexed, value)
 
 # fix sender, tx.origin stuff here
+# todo should we check collect fees done or no
 
 # send active reputation
 # @return value of reputation sent, 0 if not enough reputation
@@ -171,6 +172,9 @@ def allowance(owner, spender):
 # error messages
     # -1: not in first half of reporting period
 # shouldn't be penalized for dormant rep when converting back to active due to not reporting beyond the dormant penalization
+# todo when handling dormant rep stuff:
+# if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event
+# unless this just happened to them last period and they reported correctly then
 def convertToDormantRep(branch, value):
     refund()
     # if not in first half of reporting period

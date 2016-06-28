@@ -17,16 +17,12 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
     pricePerShare2 = ONE*(outcome - minValue) / (maxValue - minValue)
     # share one goes with the low/short side of the calc
     pricePerShare1 = ONE - pricePerShare1
-    participantNumber = MARKETS.getParticipantNumber(market, sender)
-    participant = MARKETS.getParticipantID(market, participantNumber)
-    if(participant!=sender):
-        return(-1)
     # for each winning outcome get rid of shares and send money to the trader
     n = 0
     cumScale = MARKETS.getCumScale(market)
     while(winningOutcome[n]!=0):
-        sharesOwned = MARKETS.getParticipantSharesPurchased(market, participantNumber, winningOutcome[n])
-        MARKETS.modifyParticipantShares(market, participantNumber, winningOutcome[n], -sharesOwned)
+        sharesOwned = MARKETS.getParticipantSharesPurchased(market, msg.sender, winningOutcome[n])
+        MARKETS.modifyParticipantShares(market, msg.sender, winningOutcome[n], -sharesOwned)
         # low side
         if(n==0):
             CASH.subtractCash(market, sharesOwned*cumScale/ONE*pricePerShare1/ONE)
