@@ -59,11 +59,11 @@ data reporterPeriodInfo[][](beforeRep[], afterRep[], periodDormantRep[], reportH
     # currentModeItems is how many reports or rep reported the current mode has, which is used in determining whether there's a new mode
 data modeItems[][](reportValue[], currentMode, currentModeItems)
 
-def getsaltyEncryptedHash(branch, expDateIndex, reporter, event):
+def getSaltyEncryptedHash(branch, expDateIndex, reporter, event):
     refund()
     return(self.reporterPeriodInfo[branch][expDateIndex].saltyEncryptedHash[reporter][event])
 
-def setsaltyEncryptedHash(branch, expDateIndex, reporter, saltyEncryptedHash, event):
+def setSaltyEncryptedHash(branch, expDateIndex, reporter, saltyEncryptedHash, event):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)

@@ -12,8 +12,8 @@ def init():
     self.Reporting[1010101].reputation[1].repValue = 0
     self.Reporting[1010101].reputation[1].reporterID = 1010101
     self.branch[1010101].baseReportersLastPeriod = 2*3
-    self.Branches[1010101].currentVotePeriod = (block.timestamp / 7200) - 1
-    self.Branches[1010101].periodLength = 7200 # 2 hours
+    self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
+    self.Branches[1010101].periodLength = 15 # 2 hours
     # .5%
     self.Branches[1010101].minTradingFee = 92233720368547760 
     self.branchListCount = 1
@@ -820,7 +820,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     residual = block.timestamp % periodLength
     if(residual <= periodLength/2 && shaHash <= reportingThreshold):
         self.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
-        self.setSaltyHash(branch, votePeriod, msg.sender, encryptedSaltyHash, event)
+        self.setSaltyEncryptedHash(branch, votePeriod, msg.sender, encryptedSaltyHash, event)
         return(1)
     return(-2)
 
@@ -3680,11 +3680,11 @@ data reporterPeriodInfo[][](beforeRep[], afterRep[], periodDormantRep[], reportH
     # currentModeItems is how many reports or rep reported the current mode has, which is used in determining whether there's a new mode
 data modeItems[][](reportValue[], currentMode, currentModeItems)
 
-def getsaltyEncryptedHash(branch, expDateIndex, reporter, event):
+def getSaltyEncryptedHash(branch, expDateIndex, reporter, event):
     refund()
     return(self.reporterPeriodInfo[branch][expDateIndex].saltyEncryptedHash[reporter][event])
 
-def setsaltyEncryptedHash(branch, expDateIndex, reporter, saltyEncryptedHash, event):
+def setSaltyEncryptedHash(branch, expDateIndex, reporter, saltyEncryptedHash, event):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
