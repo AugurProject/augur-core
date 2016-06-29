@@ -64,7 +64,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
         EXPEVENTS.setNumEventsToReportOn(branch)
         # set amount of fees to be distributed in this period from the branch
         BRANCHES.setInitialBalance(branch, votePeriod, CASH.balance(branch))
-    eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
+    eventIndex = EXPEVENTS.getEventIndex(branch, votePeriod, event)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
         return(-1)
@@ -105,11 +105,14 @@ def submitReport(event, salt, report, ethics):
     branch = EVENTS.getBranch(event)
     balance = REPORTING.getRepBalance(branch, msg.sender)
     votePeriod = BRANCHES.getVotePeriod(branch)
+    weight = 1
+    if(roundTwo or forkedOverThisEvent):
+        weight = balance
     if(balance<ONE):
         return(0)
     if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
         return(-1)
-    eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
+    eventIndex = EXPEVENTS.getEventIndex(branch, votePeriod, event)
     # makes sure event is in the given branch and vote period
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
@@ -134,7 +137,7 @@ def submitReport(event, salt, report, ethics):
         if(BRANCHES.getEventForkedOver(branch) == event):
             forkedOverThisEvent = 1
         roundTwo = BACKSTOPS.getRoundTwo(event)
-        report = self.validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, balance)
+        report = self.validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, weight)
         if(report == -4):
             return(-4)
         EXPEVENTS.setReport(branch, votePeriod, eventID, report, msg.sender)
@@ -152,22 +155,15 @@ def submitReport(event, salt, report, ethics):
                 else:
                     ethics = ONE
             EXPEVENTS.setEthicReport(branch, votePeriod, event, ethics, msg.sender)
-            ethics = (EVENTS.getForkEthicality(event)*EXPEVENTS.getRepEvent(branch, votePeriod, event) + ethics*balance) / (EXPEVENTS.getRepEvent(branch, votePeriod, event) + balance)
+            ethics = (EVENTS.getForkEthicality(event)*EXPEVENTS.getEventWeight(branch, votePeriod, event) + ethics*weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
             EVENTS.setForkEthicality(event, ethics)
         # set ethicality for a regular event
         else:
             EXPEVENTS.setEthicReport(branch, votePeriod, event, ethics, msg.sender)
-            # weight by rep
-            if(roundTwo):
-                ethics = (EVENTS.getEthics(event)*EXPEVENTS.getRepEvent(branch, votePeriod, event) + ethics*balance) / (EXPEVENTS.getRepEvent(branch, votePeriod, event) + balance)
-            # just a simple avg.
-            else:
-                ethics = (EVENTS.getEthics(event)*EXPEVENTS.getNumReportsEvent(branch, votePeriod, event) + ethics) / (EXPEVENTS.getNumReportsEvent(branch, votePeriod, event) + 1)
+            ethics = (EVENTS.getEthics(event)*EXPEVENTS.getEventWeight(branch, votePeriod, event) + ethics*weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
             EVENTS.setEthics(eventID, ethics)
-        EXPEVENTS.addReportToEvent(branch, votePeriod, eventID, msg.sender)
-        # round 2 and fork events are weighted by rep    
-        if(roundTwo or forkedOverThisEvent):
-            EXPEVENTS.addRepEvent(branch, votePeriod, event, EXPEVENTS.getBeforeRep(branch, votePeriod, msg.sender))
+        # round 2 and fork events are weighted by rep, otherwise 1
+        EXPEVENTS.countReportAsSubmitted(branch, votePeriod, eventID, msg.sender, weight)
         reportsNum = EXPEVENTS.getLesserReportNum(branch, votePeriod, event)
         paidBack = EVENTS.getReportersPaidSoFar(event)
         diff = reportsNum - paidBack
@@ -184,7 +180,7 @@ def submitReport(event, salt, report, ethics):
 # Returns -4 if report is invalid
     # isn't between 1 and 2 if binary
     # if same report as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
-def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, balance):
+def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, weight):
     outcome = 0
     # binary
     if(EVENTS.getNumOutcomes(eventID)==2 and EVENTS.getMaxValue(eventID)==TWO && EVENTS.getMinValue(eventID)==ONE):
@@ -195,13 +191,10 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
             # in case of fork remove the original outcome as a possible response if didn't fork over ethics
             if(!forkedOverEthicality && report == catch(EVENTS.getUncaughtOutcome(eventID))):
                 return(-4)
-            outcome = (EVENTS.getForkOutcome(eventID)*EXPEVENTS.getRepEvent(branch, votePeriod, eventID) + report*balance) / (EXPEVENTS.getRepEvent(branch, votePeriod, eventID) + balance)
+            outcome = (EVENTS.getForkOutcome(eventID)*EXPEVENTS.getEventWeight(branch, votePeriod, eventID) + report*weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, eventID) + weight)
             EVENTS.setForkOutcome(eventID, outcome)
         else:
-            if(roundTwo):
-                outcome = (EVENTS.getUncaughtOutcome(eventID)*EXPEVENTS.getRepEvent(branch, votePeriod, eventID) + report*balance) / (EXPEVENTS.getRepEvent(branch, votePeriod, eventID) + balance)
-            else:
-                outcome = (EVENTS.getUncaughtOutcome(eventID)*EXPEVENTS.getNumReportsEvent(branch, votePeriod, eventID) + report) / (EXPEVENTS.getNumReportsEvent(branch, votePeriod, eventID) + 1)
+            outcome = (EVENTS.getUncaughtOutcome(eventID)*EXPEVENTS.getEventWeight(branch, votePeriod, eventID) + report*weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, eventID) + weight)
             EVENTS.setUncaughtOutcome(eventID, outcome)
     # scalar or categorical
     else:
@@ -210,32 +203,18 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
         elif(report<=0):
             # 1 is the new 0 [1/2**64 is basically 0 but able to be differentiated from no report of 0]
             report = 1
-        if(forkedOverThisEvent):
-            # in case of fork remove the original outcome as a possible response if didn't fork over ethics
-            if(!forkedOverEthicality && report == EVENTS.getUncaughtOutcome(eventID)):
+        # in case of fork remove the original outcome as a possible response if didn't fork over ethics
+        if(forkedOverThisEvent && (!forkedOverEthicality && report == EVENTS.getUncaughtOutcome(eventID))):
                 return(-4)
-            # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-            EXPEVENTS.addToWeightOfReport(votePeriod, eventID, report, balance)
-            if(EXPEVENTS.getWeightOfReport(votePeriod, eventID, report) > EXPEVENTS.getCurrentModeItems(votePeriod, eventID)):
-                EXPEVENTS.setCurrentMode(votePeriod, eventID, report)
-                EXPEVENTS.setCurrentModeItems(votePeriod, eventID, report)
-            outcome = EXPEVENTS.getCurrentMode(votePeriod, eventID)
+        # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
+        EXPEVENTS.addToWeightOfReport(votePeriod, eventID, report, weight)
+        if(EXPEVENTS.getWeightOfReport(votePeriod, eventID, report) > EXPEVENTS.getCurrentModeItems(votePeriod, eventID)):
+            EXPEVENTS.setCurrentMode(votePeriod, eventID, report)
+            EXPEVENTS.setCurrentModeItems(votePeriod, eventID, report)
+        outcome = EXPEVENTS.getCurrentMode(votePeriod, eventID)
+        if(forkedOverThisEvent):
             EVENTS.setForkOutcome(eventID, outcome)
         else:
-            if(roundTwo):
-                # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-                EXPEVENTS.addToWeightOfReport(votePeriod, eventID, report, balance)
-                if(EXPEVENTS.getWeightOfReport(votePeriod, eventID, report) > EXPEVENTS.getCurrentModeItems(votePeriod, eventID)):
-                    EXPEVENTS.setCurrentMode(votePeriod, eventID, report)
-                    EXPEVENTS.setCurrentModeItems(votePeriod, eventID, report)
-                outcome = EXPEVENTS.getCurrentMode(votePeriod, eventID)
-            else:
-                # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-                EXPEVENTS.addToWeightOfReport(votePeriod, eventID, report, 1)
-                if(EXPEVENTS.getWeightOfReport(votePeriod, eventID, report) > EXPEVENTS.getCurrentModeItems(votePeriod, eventID)):
-                    EXPEVENTS.setCurrentMode(votePeriod, eventID, report)
-                    EXPEVENTS.setCurrentModeItems(votePeriod, eventID, report)
-                outcome = EXPEVENTS.getCurrentMode(votePeriod, eventID)
             EVENTS.setUncaughtOutcome(eventID, outcome)
     return(report)
 

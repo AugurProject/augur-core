@@ -159,7 +159,7 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
     else:
         throw
     # add events to the appropriate reporting period
-    if(EXPEVENTS.getEvent(branch, futurePeriod, EXPEVENTS.getEventIndex(futurePeriod, event))!=event):
+    if(EXPEVENTS.getEvent(branch, futurePeriod, EXPEVENTS.getEventIndex(branch, futurePeriod, event))!=event):
         EXPEVENTS.addEvent(branch, futurePeriod, event, 500000*tx.gasprice)
         # cost for calculating num. of reports for an event
         if(!send(EXPEVENTS, 500000*tx.gasprice)):
