@@ -440,10 +440,10 @@ def test_getMarketInfoCache():
     tradingFee = 184467440737095516
     tags = [1,2,3]
     makerFee = 0
-    market = c.createMarket(1010101, description, tradingFee, [event], tags[0], tags[1], tags[2], makerFee, "yayaya", value=10**19)
+    market = c.createMarket(1010101, description, tradingFee, event, tags[0], tags[1], tags[2], makerFee, "yayaya", value=10**19)
     info = c.getMarketInfoCache(market)
-    #BASE_CACHE_FIELS + num_events + description length
-    expected_size = 10 + 1 + len(description) + 1
+    #BASE_CACHE_FIELS + description length
+    expected_size = 10 + len(description) + 1
     assert(len(info)==expected_size)
     assert(info[0]==market)
     assert(info[1]==makerFee)
@@ -454,10 +454,8 @@ def test_getMarketInfoCache():
     assert(info[6]==tags[0])
     assert(info[7]==tags[1])
     assert(info[8]==tags[2])
-    #only 1 event
-    assert(info[9]==1)
     #description starts at index 12, length stored at 11
-    desc_result = ''.join(map(chr,info[12:12+info[11]]))
+    desc_result = ''.join(map(chr,info[11:11+info[10]]))
     assert(description==desc_result)
     gas_use(s)
 
