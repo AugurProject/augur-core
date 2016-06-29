@@ -3,7 +3,7 @@ macro refund():
     if(msg.value > 0):
         send(msg.sender, msg.value)
 
-#def test_callstack(): return(1)
+def test_callstack(): return(1)
 
 macro ONE: 2^64
 

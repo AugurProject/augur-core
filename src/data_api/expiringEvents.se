@@ -75,15 +75,39 @@ def refundCost(to, value):
     send(to, value)
     return(1)
 
-def getSubsidy(branch, period, event):ewr
+def getSubsidy(branch, period, event):
     return(self.periodEventInfo[branch][period].subsidy[event])
 
-def getperiodRepWeight(branch, votePeriod, sender):
+def getPeriodRepWeight(branch, votePeriod, sender):
     return(self.reporterPeriodInfo[branch][votePeriod].periodRepWeight[sender])
 
-def setperiodRepWeight(branch, votePeriod, sender, value):
+def setPeriodRepWeight(branch, votePeriod, sender, value):
     self.reporterPeriodInfo[branch][votePeriod].periodRepWeight[sender] = value
     return(1)
+
+def getReportHash(branch, expDateIndex, reporter, event):
+    refund()
+    return(self.reporterPeriodInfo[branch][expDateIndex].reportHash[reporter][event])
+
+def setEthicReport(branch, period, event, ethics, sender):
+    self.reporterPeriodInfo[branch][period].ethics[sender][event] = ethics
+    return(1)
+
+def setReport(branch, period, event, report, sender):
+    self.reporterPeriodInfo[branch][period].report[sender][event] = report
+    return(1)
+
+def setBeforeRep(branch, period, rep, sender):
+    self.reporterPeriodInfo[branch][period].beforeRep[sender] = rep
+    return(rep)
+
+def setAfterRep(branch, period, rep, sender):
+    self.reporterPeriodInfo[branch][period].afterRep[sender] = rep
+    return(rep)
+
+def setPeriodDormantRep(branch, period, rep, sender):
+    self.reporterPeriodInfo[branch][period].periodDormantRep[sender] = rep
+    return(rep)
 
 def getLesserReportNum(branch, period, event):
     return(self.periodEventInfo[branch][period].lesserReportNum[event])
@@ -101,9 +125,6 @@ def getWeightOfReport(period, event, report):
 def getEthicReport(branch, period, event, sender):
     return(self.reporterPeriodInfo[branch][period].ethics[sender][event])
 
-def getEventWeight(branch, votePeriod, eventID):
-    return(self.periodEventInfo[branch][votePeriod].eventWeight[eventID])
-
 def getReport(branch, period, event, sender):
     #if(whitelist):
     return(self.reporterPeriodInfo[branch][period].report[sender][event])
@@ -119,6 +140,9 @@ def getPeriodDormantRep(branch, period, sender):
 
 def getnumReportsSubmitted(branch, votePeriod, sender):
     return(self.reporterPeriodInfo[branch][votePeriod].numReportsSubmitted[sender])
+
+def getEventWeight(branch, votePeriod, eventID):
+    return(self.periodEventInfo[branch][votePeriod].eventWeight[eventID])
 
 def getNumRoundTwo(branch, period):
     refund()
@@ -197,10 +221,6 @@ def getEvent(branch, expDateIndex, eventIndex):
     refund()
     return(self.periodEventInfo[branch][expDateIndex].events[eventIndex])
 
-def getReportHash(branch, expDateIndex, reporter, event):
-    refund()
-    return(self.reporterPeriodInfo[branch][expDateIndex].reportHash[reporter][event])
-
 # check that msg.sender is one of our function contracts
 def addEvent(branch, futurePeriod, eventID, subsidy):
     refund()
@@ -262,10 +282,6 @@ def setCurrentModeItems(period, event, modeReport):
     self.modeItems[period][event].currentModeItems = self.modeItems[period][event].reportValue[modeReport]
     return(1)
 
-def setEthicReport(branch, period, event, ethics, sender):
-    self.reporterPeriodInfo[branch][period].ethics[sender][event] = ethics
-    return(1)
-
 def setEventWeight(branch, votePeriod, eventID, num):
     self.periodEventInfo[branch][votePeriod].eventWeight[eventID] = num
     return(1)
@@ -275,22 +291,6 @@ def countReportAsSubmitted(branch, votePeriod, eventID, sender, weight):
     self.reporterPeriodInfo[branch][votePeriod].numReportsSubmitted[sender] += 1
     return(1)
 
-def setReport(branch, period, event, report, sender):
-    self.reporterPeriodInfo[branch][period].report[sender][event] = report
-    return(1)
-
-def setBeforeRep(branch, period, rep, sender):
-    self.reporterPeriodInfo[branch][period].beforeRep[sender] = rep
-    return(rep)
-
-def setAfterRep(branch, period, rep, sender):
-    self.reporterPeriodInfo[branch][period].afterRep[sender] = rep
-    return(rep)
-
-def setPeriodDormantRep(branch, period, rep, sender):
-    self.reporterPeriodInfo[branch][period].periodDormantRep[sender] = rep
-    return(rep)
-    
 def setLesserReportNum(branch, period, event, num):
     self.periodEventInfo[branch][period].lesserReportNum[event] = num
     return(1)

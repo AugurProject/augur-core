@@ -1300,7 +1300,7 @@ if __name__ == '__main__':
     #test_reporting()
 
     # function tests
-    test_trading()
+    #test_trading()
     #test_create_branch()
     #test_send_rep()
     #test_market_pushback()
@@ -1309,6 +1309,6 @@ if __name__ == '__main__':
     #test_catchup()
     #test_slashrep()
     #test_claimrep()
-    #test_consensus_multiple_reporters()
+    test_consensus_multiple_reporters()
     #test_pen_not_enough_reports()
     print "DONE TESTING"
