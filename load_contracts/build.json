@@ -2806,11 +2806,7 @@
         "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:int256, sellCompleteSets:[int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "compositeGetters": {
-<<<<<<< Updated upstream
-        "address": "0x16ca9b6b6d91dd35442d149531269cd6010f1773", 
-=======
-        "address": "0xf54f0bec13a1da10e551edefa27ee3c1fe6fb042", 
->>>>>>> Stashed changes
+        "address": "0xe093ff31b37694147becc7c5345172eb3d8e0fc3", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 

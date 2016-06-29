@@ -114,7 +114,7 @@ def update_contract_api(contract_name, contract_path, old_api):
     fullsig = serpent.mk_full_signature(contract_path)
     api = {}
     for fn in fullsig:
-        if fn["type"] == "function":
+        if fn["type"] == "function" and fn["name"] != "test_callstack()":
             method = update_from_full_signature(fn["name"], fn["inputs"])
             api[method["method"]] = update_from_old_api(method, contract_name, method["method"], old_api)
     return api
