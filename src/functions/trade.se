@@ -57,7 +57,6 @@ macro remove_trade($trade_id, $market):
 # Trade [allows a user to pick up/fill orders off the book]
 #
 # Errors:
-    # -1: oracle only branch
     # -2: bad trade hash
     # -3: trader doesn't exist / own shares in this market
     # -4: must buy at least .00000001 in 
@@ -70,8 +69,6 @@ macro remove_trade($trade_id, $market):
 # picks orders off the book
 def trade(max_value, max_amount, trade_ids:arr):
     refund()
-    if(BRANCHES.getOracleOnly(branch)):
-        return([-1]: arr)
     i = 0
     trades = 0
     while i < len(trade_ids):
@@ -223,13 +220,9 @@ def trade(max_value, max_amount, trade_ids:arr):
     # -3: must be a bid, not an ask
     # -4: market is already resolved
     # -5: can't pickup your own trade
-    # -6: can't trade on oracle only branch
     # -7: not a large enough trade
 def short_sell(buyer_trade_id, max_amount):
     refund()
-    branch = MARKETS.getBranchID(market)
-    if(BRANCHES.getOracleOnly(branch)):
-        return(-6)
     # check trade hash
     tradeInfo = array(3)
     tradeInfo[0] = buyer_trade_id
@@ -248,6 +241,7 @@ def short_sell(buyer_trade_id, max_amount):
     if(type!=BID):
         return(-3)
     market = trade[2]
+    branch = MARKETS.getBranchID(market)
     if(MARKETS.getOneWinningOutcome(market, 0)):
         return(-4)
     orig_amount = trade[3]

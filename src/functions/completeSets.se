@@ -60,7 +60,6 @@ def buyCompleteSets(market, amount):
 # Sells amount of every outcome [if user owns it]
 # cost 850k gas
 # Errors:
-    # -1: oracle only / no trading branch
     # -2: trader doesn't exist
     # -3: user doesn't own enough shares 
 def sellCompleteSets(market, amount):
@@ -69,8 +68,6 @@ def sellCompleteSets(market, amount):
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumScale = MARKETS.getCumScale(market)
     cost = amount*cumScale/ONE
-    if(BRANCHES.getOracleOnly(branch)):
-        return(-1)
     n = 1
     while n <= numOutcomes:
         if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < amount):
