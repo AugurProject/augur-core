@@ -30,6 +30,7 @@ def slashRep(branch, salt, report, reporter, eventID):
         return(-2)
     if(votePeriodShouldBe!=votePeriod):
         return(-1)
+    reporterIndex = REPORTING.repIDToIndex(branch, reporter)
     if(REPORTING.getReporterID(branch, reporterIndex)!=reporter):
         return(-3)
     if(alreadySlashed):
@@ -37,7 +38,6 @@ def slashRep(branch, salt, report, reporter, eventID):
     if(reportHash!=realHash):
         return(-4)
     CONSENSUS.setSlashed(branch, votePeriod, reporter)
-    reporterIndex = REPORTING.repIDToIndex(branch, reporter)
     trutherIndex = REPORTING.repIDToIndex(branch, msg.sender)
     # if the truther's rep. account doesn't exist, make one
     if(REPORTING.getReporterID(branch, trutherIndex)!=msg.sender):

@@ -31,6 +31,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod, sender):
     return(reportingThreshold)
 
 # 0, event means calculateReportTargetForEvent(branch, eventID, votePeriod, sender) in make reports should be called for that event [or just call here?]
+# todo fix index / loops issues here
 def getEventsToReportOn(branch, expDateIndex, sender):
     refund()
     numEvents = EXPEVENTS.getNumberEvents(branch, expDateIndex)
