@@ -64,8 +64,8 @@ def penalizeRoundTwoWrong(branch, event):
     oldReport = EXPEVENTS.getReport(branch,lastPenalizationPeriod,event,msg.sender)
     ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
     oldEthics = EXPEVENTS.getEthicReport(branch, lastPenalizationPeriod, event, msg.sender)
-    avgAdjCost = BRANCHES.getInitialBalance(branch, votePeriod)/EXPIRING.getNumberEvents(branch, votePeriod)
-    bond = avgAdjCost + MARKETS.getSharesValue(market)*(POINTZEROONE + MARKETS.getTradingFee(market)/2) / 2**64
+    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod)/EXPIRING.getNumberEvents(branch, votePeriod)
+    bond = averageAdjudicationCost + MARKETS.getSharesValue(market)*(POINTZEROONE + MARKETS.getTradingFee(market)/2) / 2**64
     bond = min(bond, MINBOND)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
@@ -78,7 +78,7 @@ def penalizeRoundTwoWrong(branch, event):
     elif((BACKSTOPS.getOriginalOutcome(event) != catch(EVENTS.getUncaughtOutcome(event)) or BACKSTOPS.getOriginalEthicality(event)!=ethic_catch(EVENTS.getEthical(event)))):
         overruled = 1
         
-    numReportedOn = EXPEVENTS.getnumReportsSubmitted(branch, lastPeriod, msg.sender)
+    numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
 
     # penalization on a round 2 event if not already penalized, it has outcome, and user reported on it
     # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period

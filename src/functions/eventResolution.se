@@ -44,7 +44,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         EXPEVENTS.setEventWeight($branch, $votingPeriodEvent, $event, 0)
         #set outcome to 0
         EVENTS.setOutcome($event, 0)
-        EVENTS.setmode($event, 0)
+        EVENTS.setMode($event, 0)
         EVENTS.setEthics($event, 0)
         #set uncaughtoutcome to 0
         EVENTS.setUncaughtOutcome($event, 0)
@@ -97,7 +97,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
 def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, votingPeriodEvent):
     refund()
     mode = EVENTS.getUncaughtOutcome(event)
-    EVENTS.setmode(event, mode)
+    EVENTS.setMode(event, mode)
     fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
     # outcome is set to the mode of the reported outcomes
     EVENTS.setOutcome(event, fxpOutcome)

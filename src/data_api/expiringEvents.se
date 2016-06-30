@@ -138,7 +138,7 @@ def getAfterRep(branch, period, sender):
 def getPeriodDormantRep(branch, period, sender):
     return(self.reporterPeriodInfo[branch][period].periodDormantRep[sender])
 
-def getnumReportsSubmitted(branch, votePeriod, sender):
+def getNumReportsSubmitted(branch, votePeriod, sender):
     return(self.reporterPeriodInfo[branch][votePeriod].numReportsSubmitted[sender])
 
 def getEventWeight(branch, votePeriod, eventID):

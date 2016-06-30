@@ -80,7 +80,7 @@ def penalizeWrong(branch, event):
     if(roundTwo && outcome!=0):
         return(-1)
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
-    numReportedOn = EXPEVENTS.getnumReportsSubmitted(branch, lastPeriod, msg.sender)
+    numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     # commented for testing
     #elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):

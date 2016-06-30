@@ -55,7 +55,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
     if(total > ONE):
         numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)/baseReporters)*ONE + EXPEVENTS.getNumRequired(branch, lastPeriod)*ONE
-    numReportsSubmitted = EXPEVENTS.getnumReportsSubmitted(branch, lastPeriod, reporter)
+    numReportsSubmitted = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
     couldveReported = THRESHOLD.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
     if(numEvents/2 > numReportsSubmitted*ONE && couldveReported):

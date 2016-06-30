@@ -321,7 +321,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
     if(total > ONE):
         numEvents = (self.getNumEventsToReportOn(branch, lastPeriod)/baseReporters)*ONE + self.getNumRequired(branch, lastPeriod)*ONE
-    numReportsSubmitted = self.getnumReportsSubmitted(branch, lastPeriod, reporter)
+    numReportsSubmitted = self.getNumReportsSubmitted(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
     couldveReported = self.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
     if(numEvents/2 > numReportsSubmitted*ONE && couldveReported):
@@ -407,7 +407,7 @@ def closeMarket(branch, market, sender):
     # checks whether any events not already resolved
     resolved = 1
     # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
-    if(self.getOutcome(event)==0 && self.getmode(event)==0):
+    if(self.getOutcome(event)==0 && self.getMode(event)==0):
         resolved = 0
     if((period > tradingPeriod) && !resolved):
         # look at through event in the market, get its outcomes, resolve it && use those to determine the winning outcomes for a given market!
@@ -420,9 +420,9 @@ def closeMarket(branch, market, sender):
             return(-5)
         if(binary(event) && fxpOutcome==0):
                 resolution = self.resolveBinary(event, market, branch, votingPeriodEvent)
-        elif(scalar(event) && self.getmode(event)==0):
+        elif(scalar(event) && self.getMode(event)==0):
                 resolution = self.resolveCategoricalOrScalar(self.getMinValue(event), self.getMaxValue(event), event, market, branch, votingPeriodEvent)
-        elif(categorical(event) && self.getmode(event)==0):
+        elif(categorical(event) && self.getMode(event)==0):
                 resolution = self.resolveCategoricalOrScalar(ONE, ONE*self.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
         if(resolution==-6):
             return(-6)
@@ -449,7 +449,7 @@ def claimProceeds(branch, market):
     period = self.getVotePeriod(branch)
     event = self.getMarketEvent(market, 0)
     resolved = 1
-    if(self.getOutcome(event)==0 && self.getmode(event)==0):
+    if(self.getOutcome(event)==0 && self.getMode(event)==0):
         resolved = 0
     # as long as it's resolved money can be collected
     if((period > tradingPeriod || reportingDone) && resolved):
@@ -462,7 +462,7 @@ def claimProceeds(branch, market):
         if(winningOutcomes[1]==0):
             ethical = ethic_catch(self.getEthical(event))
             # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
-            if(categorical(event) && (self.getmode(event)==ONEHALF or !ethical)):
+            if(categorical(event) && (self.getMode(event)==ONEHALF or !ethical)):
                 outcome = self.oneOutcome(market, winningOutcomes[0], msg.sender, 1, self.getNumOutcomes(event))
             # resolves a regular binary market
             else:
@@ -581,8 +581,8 @@ def penalizeRoundTwoWrong(branch, event):
     oldReport = self.getReport(branch,lastPenalizationPeriod,event,msg.sender)
     ethics = self.getEthicReport(branch, lastPeriod, event, msg.sender)
     oldEthics = self.getEthicReport(branch, lastPenalizationPeriod, event, msg.sender)
-    avgAdjCost = self.getInitialBalance(branch, votePeriod)/self.getNumberEvents(branch, votePeriod)
-    bond = avgAdjCost + self.getSharesValue(market)*(POINTZEROONE + self.getTradingFee(market)/2) / 2**64
+    averageAdjudicationCost = self.getInitialBalance(branch, votePeriod)/self.getNumberEvents(branch, votePeriod)
+    bond = averageAdjudicationCost + self.getSharesValue(market)*(POINTZEROONE + self.getTradingFee(market)/2) / 2**64
     bond = min(bond, MINBOND)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
@@ -595,7 +595,7 @@ def penalizeRoundTwoWrong(branch, event):
     elif((self.getOriginalOutcome(event) != catch(self.getUncaughtOutcome(event)) or self.getOriginalEthicality(event)!=ethic_catch(self.getEthical(event)))):
         overruled = 1
         
-    numReportedOn = self.getnumReportsSubmitted(branch, lastPeriod, msg.sender)
+    numReportedOn = self.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
 
     # penalization on a round 2 event if not already penalized, it has outcome, and user reported on it
     # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period
@@ -1335,7 +1335,7 @@ def sendReputation(branch, recver, value):
     # you can't trade if you or the person you're sending to have submitted a report, or at all in the second half of the period [b/c you can messup / cheat w/ reporting by gettin extra claims on fees] and you can't trade in the first half of a period until you've been penalized for reporting wrongly/not reporting
     # use a diff. fun. than getReport here
     #if(value<=0 || self.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || self.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || self.getReport(branch, currentVotePeriod, recver, 0) != 0):
-    # self.getnumReportsSubmitted(branch, currentVotePeriod, msg.sender)
+    # self.getNumReportsSubmitted(branch, currentVotePeriod, msg.sender)
     #    return(0)
     
     lastPeriodPenalized = self.getPenalizedUpTo(branch, msg.sender)
@@ -1557,7 +1557,7 @@ def convertToActiveRep(branch, value):
         
     
 macro hasReported($branch, $period):
-    self.getnumReportsSubmitted($branch, $period, msg.sender)
+    self.getNumReportsSubmitted($branch, $period, msg.sender)
 inset('refund.se')
 
 macro POINTNINE: 16602069666338596864
@@ -1582,7 +1582,7 @@ def penalizationCatchup(branch, sender):
     if(delta <= 0):
         return(-2)
     # provided user is at least one period behind and they didn't report in the last period
-    if(lastPeriodPenalized==lastPeriod or self.getnumReportsSubmitted(branch, lastPeriod, sender)):
+    if(lastPeriodPenalized==lastPeriod or self.getNumReportsSubmitted(branch, lastPeriod, sender)):
         return(-3)
     # dock 10% for each period they didn't penalize on
     smoothedRep = oldRep*POINTNINE/ONE
@@ -1643,7 +1643,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         self.setEventWeight($branch, $votingPeriodEvent, $event, 0)
         #set outcome to 0
         self.setOutcome($event, 0)
-        self.setmode($event, 0)
+        self.setMode($event, 0)
         self.setEthics($event, 0)
         #set uncaughtoutcome to 0
         self.setUncaughtOutcome($event, 0)
@@ -1696,7 +1696,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
 def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, votingPeriodEvent):
     refund()
     mode = self.getUncaughtOutcome(event)
-    self.setmode(event, mode)
+    self.setMode(event, mode)
     fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
     # outcome is set to the mode of the reported outcomes
     self.setOutcome(event, fxpOutcome)
@@ -1771,7 +1771,7 @@ def penalizeOnForkedEvent(branch, event):
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     if(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
         return(-2)
-    numReportedOn = self.getnumReportsSubmitted(branch, lastPeriod, msg.sender)
+    numReportedOn = self.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
     # penalization on a forked event
     # if didn't report [reportValue of 0] then it's a bad report here
     # Do (for each user) based on forking report and final outcome
@@ -1921,8 +1921,8 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
     # pays money to cover resolution cost
     send(BACKSTOPS, msg.value)
     self.setRoundTwoRefund(event, msg.value)
-    avgAdjCost = self.getInitialBalance(branch, votePeriod)/self.getNumberEvents(branch, votePeriod)
-    bond = avgAdjCost + self.getSharesValue(market)*(POINTZEROONE + self.getTradingFee(market)/2) / ONE
+    averageAdjudicationCost = self.getInitialBalance(branch, votePeriod)/self.getNumberEvents(branch, votePeriod)
+    bond = averageAdjudicationCost + self.getSharesValue(market)*(POINTZEROONE + self.getTradingFee(market)/2) / ONE
     bond = min(bond, MINBOND)
     eventID = self.getEvent(branch, votePeriod, eventIndex)
     # if so, we're in the final 48 hours and event is in this branch + votePeriod
@@ -1950,7 +1950,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
         self.addRoundTwo(branch, period)
         self.setBondPoster(event, msg.sender)
         self.setUncaughtOutcome(event, 0)
-        self.setmode(event, 0)
+        self.setMode(event, 0)
         self.setEthics(event, 0)
         return(1)
 
@@ -1961,8 +1961,8 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     refund()
     votePeriod = self.getVotePeriod(branch)
     market = self.getMarket(event, 0)
-    avgAdjCost = self.getInitialBalance(branch, votePeriod-1)/self.getNumberEvents(branch, votePeriod-1)
-    bond = avgAdjCost + self.getSharesValue(market)*(POINTZEROONE + self.getTradingFee(market)/2) / ONE
+    averageAdjudicationCost = self.getInitialBalance(branch, votePeriod-1)/self.getNumberEvents(branch, votePeriod-1)
+    bond = averageAdjudicationCost + self.getSharesValue(market)*(POINTZEROONE + self.getTradingFee(market)/2) / ONE
     bond = min(bond, MINBOND)
     votedOnAgain = 0
     eventID = self.getEvent(branch, votePeriod, eventIndex)
@@ -2074,7 +2074,7 @@ def resolve(branch, event):
     elif(scalar(event) or categorical(event)):
         mode = self.getUncaughtOutcome(event)
         # sets mode which is used to penalize/reward reporters
-        self.setmode(event, mode)
+        self.setMode(event, mode)
         scaled_max = self.getMaxValue(event)
         scaled_min = self.getMinValue(event)
         if(categorical(event)):
@@ -2172,7 +2172,7 @@ def penalizeWrong(branch, event):
     if(roundTwo && outcome!=0):
         return(-1)
     reportValue = self.getReport(branch, lastPeriod, event, msg.sender)
-    numReportedOn = self.getnumReportsSubmitted(branch, lastPeriod, msg.sender)
+    numReportedOn = self.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     # commented for testing
     #elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
@@ -2387,7 +2387,7 @@ def move_event(event):
         elif(winner == self.getEventBranch(event)):
             # set outcomes to 0
             self.setOutcome(event, 0)
-            self.setmode(event, 0)
+            self.setMode(event, 0)
             self.setEthics(event, 0)
             self.setUncaughtOutcome(event, 0)
             # return bond if it's a round 2 event and make it not one anymore
@@ -2404,7 +2404,7 @@ def move_event(event):
             self.setBranch(event, winner)
             # set outcomes to 0
             self.setOutcome(event, 0)
-            self.setmode(event, 0)
+            self.setMode(event, 0)
             self.setEthics(event, 0)
             self.setUncaughtOutcome(event, 0)
             # return bond if it's a round 2 event and make it not one anymore
@@ -2497,8 +2497,8 @@ def fork(event, branch, forkedOverEthicality):
             self.setForkedOverEthicality(event)
         # return round 2 bond on orig. branch
         market = self.getMarket(event, 0)
-        avgAdjCost = self.getInitialBalance(branch, period-1)/self.getNumberEvents(branch, period-1)
-        bond = avgAdjCost + self.getSharesValue(market)*(184467440737095520 + self.getTradingFee(market)/2) / 2**64
+        averageAdjudicationCost = self.getInitialBalance(branch, period-1)/self.getNumberEvents(branch, period-1)
+        bond = averageAdjudicationCost + self.getSharesValue(market)*(184467440737095520 + self.getTradingFee(market)/2) / 2**64
         bond = min(bond, 200*ONE)
         self.subtractRep(branch, self.repIDToIndex(branch, event), bond)
         self.addRep(branch, self.repIDToIndex(branch, self.getBondPoster(event)), bond)
@@ -2574,7 +2574,7 @@ def resolveForkEvent(branch, event):
         else:
             mode = self.getForkOutcome(event)
             ethical = ethic_catch(self.getForkEthicality(event))
-        self.setmode(event, mode)
+        self.setMode(event, mode)
         self.setEthics(event, ethical)
         scaled_max = self.getMaxValue(event)
         scaled_min = self.getMinValue(event)
@@ -3759,7 +3759,7 @@ def getAfterRep(branch, period, sender):
 def getPeriodDormantRep(branch, period, sender):
     return(self.reporterPeriodInfo[branch][period].periodDormantRep[sender])
 
-def getnumReportsSubmitted(branch, votePeriod, sender):
+def getNumReportsSubmitted(branch, votePeriod, sender):
     return(self.reporterPeriodInfo[branch][votePeriod].numReportsSubmitted[sender])
 
 def getEventWeight(branch, votePeriod, eventID):
@@ -4925,12 +4925,12 @@ def setThreshold(event, threshold):
     self.Events[event].threshold = threshold
     return(1)
 
-def getmode(event):
+def getMode(event):
     refund()
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
     return(self.Events[event].mode)
 
-def setmode(event, mode):
+def setMode(event, mode):
     refund()
     self.Events[event].mode = mode
     return(1)

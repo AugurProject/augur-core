@@ -249,12 +249,12 @@ def setThreshold(event, threshold):
     self.Events[event].threshold = threshold
     return(1)
 
-def getmode(event):
+def getMode(event):
     refund()
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
     return(self.Events[event].mode)
 
-def setmode(event, mode):
+def setMode(event, mode):
     refund()
     self.Events[event].mode = mode
     return(1)
