@@ -34,10 +34,8 @@ macro MINBOND: 200*ONE
 # todo go over penalty amounts like .2 for ethicality seems too high
 def penalizeRoundTwoWrong(branch, event):
     refund()
-    roundTwo = BACKSTOPS.getRoundTwo(event)
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
-    forkPeriod = BRANCHES.getForkPeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     newRep = 0

@@ -159,6 +159,7 @@ def transferFrom(branch, from, recver, value):
         return(0)
     
 # Allows spender to withdraw from your dormant rep account
+# fix to be branch specific todo
 def approve(branch, spender, value):
     self.amountCanSpend[msg.sender][spender] = value
     log(type=Approval, msg.sender, spender, value)
