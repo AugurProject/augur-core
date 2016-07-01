@@ -189,7 +189,6 @@ def fork(event, branch, forkedOverEthicality):
     # -2 wrong branch
 def resolveForkedEvent(branch, event):
     refund()
-    bond = 100*ONE
     votedOnAgain = 0
     # checks for orig. branch
     if(EVENTS.getBranch(event)!=branch or BRANCHES.getEventForkedOver(branch)!=event):
