@@ -68,7 +68,6 @@ macro ethic_catch($x):
 # if market's events have moved due to a fork branch param passed should be the new fork [todo check to make sure it handles the wrong branch param properly here]
 def closeMarket(branch, market, sender):
     refund()
-    numberEvents = MARKETS.getNumEvents(market)
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)

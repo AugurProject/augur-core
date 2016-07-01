@@ -39,7 +39,6 @@ def penalizeOnForkedEvent(branch, event):
     p = self.proportionCorrectForkEvent(event)
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
-    bond = BACKSTOPS.getBondAmount(event)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod)):
