@@ -32,7 +32,7 @@ inset('refund.se')
     # -1: bad input or parent doesn't exist
     # -2: no money for creation fee
     # -3: branch already exists
-def createSubbranch(description:str, periodLength, parent, mintradingFee, oracleOnly):
+def createSubbranch(description:str, periodLength, parent, minTradingFee, oracleOnly):
     refund()
     if(periodLength<=0 || !BRANCHES.getPeriodLength(parent) || description==0):
         return(-1)
@@ -49,7 +49,7 @@ def createSubbranch(description:str, periodLength, parent, mintradingFee, oracle
     branchInfo[4] = parent
     branchInfo[5] = minTradingFee
     branchInfo[6] = oracleOnly
-    mcopy(branchInfo + 7*32, description, len(description))
+    mcopy(branchInfo + 7*32, description, chars=len(description))
     # people can check that these characteristics hash to the ID if they want
     # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
     branchID = sha3(branchInfo, chars=len(branchInfo))

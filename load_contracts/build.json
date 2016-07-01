@@ -4125,7 +4125,7 @@
         "sig": "extern consensusData: [doRefund:[int256,int256]:int256, getBaseReportersLastPeriod:[int256]:int256, getDenominator:[int256,int256]:int256, getFeeFirst:[int256,int256]:int256, getFeesCollected:[int256,int256,int256]:int256, getNotEnoughPenalized:[int256,int256,int256]:int256, getPenalized:[int256,int256,int256,int256]:int256, getPenalizedNum:[int256,int256,int256]:int256, getPenalizedUpTo:[int256,int256]:int256, getPeriodBalance:[int256,int256]:int256, getRepRedistributionDone:[int256,int256]:int256, getSlashed:[int256,int256,int256]:int256, increaseDenominator:[int256,int256,int256]:int256, increasePenalizedNum:[int256,int256,int256,int256]:int256, setBaseReportersLastPeriod:[int256,int256]:int256, setFeeFirst:[int256,int256,int256]:int256, setFeesCollected:[int256,int256,int256]:int256, setNotEnoughPenalized:[int256,int256,int256]:int256, setPenalized:[int256,int256,int256,int256]:int256, setPenalizedUpTo:[int256,int256,int256]:int256, setPeriodBalance:[int256,int256,int256]:_, setRefund:[int256,int256]:int256, setSlashed:[int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "createBranch": {
-        "address": "0x6577c99511bc1d5eb74bfde123881a21428ae812", 
+        "address": "0xb8613192ef98dfd1fbeedb15c8350c8d3aac9a03", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -4165,7 +4165,7 @@
             "    # -1: bad input or parent doesn't exist", 
             "    # -2: no money for creation fee", 
             "    # -3: branch already exists", 
-            "def createSubbranch(description:str, periodLength, parent, mintradingFee, oracleOnly):", 
+            "def createSubbranch(description:str, periodLength, parent, minTradingFee, oracleOnly):", 
             "    refund()", 
             "    if(periodLength<=0 || !BRANCHES.getPeriodLength(parent) || description==0):", 
             "        return(-1)", 
@@ -4182,7 +4182,7 @@
             "    branchInfo[4] = parent", 
             "    branchInfo[5] = minTradingFee", 
             "    branchInfo[6] = oracleOnly", 
-            "    mcopy(branchInfo + 7*32, description, len(description))", 
+            "    mcopy(branchInfo + 7*32, description, chars=len(description))", 
             "    # people can check that these characteristics hash to the ID if they want", 
             "    # people can hand a friend their new branch hash && characteristics && say, \"don't trust me? check\"", 
             "    branchID = sha3(branchInfo, chars=len(branchInfo))", 
@@ -4217,7 +4217,7 @@
                         "type": "int256"
                     }, 
                     {
-                        "name": "mintradingFee", 
+                        "name": "minTradingFee", 
                         "type": "int256"
                     }, 
                     {
@@ -8171,7 +8171,7 @@
         "sig": "extern forkPenalize: [penalizeOnForkedEvent:[int256,int256]:int256, proportionCorrectForkEvent:[int256]:int256, test_callstack:[]:int256]"
     }, 
     "forking": {
-        "address": "0x08a31edc4d5e6b19745ee07345d0052b945f3a0e", 
+        "address": "0x4da58f4c737985e4ab9b89e8ea706b617ba2eb2d", 
         "code": [
             "extern refund.se: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256, test_callstack:[]:int256]", 
             "INFO = 0x0ec7078eed298506918767f610d0b69fbe80f4fc", 
@@ -8194,7 +8194,7 @@
             "extern expiringEvents: [addEvent:[int256,int256,int256,int256]:int256, addRepEvent:[int256,int256,int256,int256]:int256, addReportToEvent:[int256,int256,int256,int256]:int256, addReportersPaidSoFar:[int256,int256]:int256, addRoundTwo:[int256,int256]:int256, addToWeightOfReport:[int256,int256,int256,int256]:int256, adjustPeriodShareValueOutstanding:[int256,int256,int256]:int256, deleteEvent:[int256,int256,int256]:int256, getAfterRep:[int256,int256,int256]:int256, getBeforeRep:[int256,int256,int256]:int256, getCurrentMode:[int256,int256]:int256, getCurrentModeItems:[int256,int256]:int256, getEthicReport:[int256,int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getEventsRange:[int256,int256,int256,int256]:int256[], getLesserReportNum:[int256,int256,int256]:int256, getNumEventsToReportOn:[int256,int256]:int256, getNumRemoved:[int256,int256]:int256, getNumReportsActual:[int256,int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumRequired:[int256,int256]:int256, getNumRoundTwo:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodDormantRep:[int256,int256,int256]:int256, getPeriodRepConstant:[int256,int256,int256]:int256, getRepEvent:[int256,int256,int256]:int256, getReport:[int256,int256,int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getReportersPaidSoFar:[int256,int256]:int256, getRequired:[int256]:int256, getSaltyHash:[int256,int256,int256,int256]:int256, getShareValue:[int256,int256]:int256, getSubsidy:[int256,int256,int256]:int256, getWeightOfReport:[int256,int256,int256]:int256, moveEvent:[int256,int256]:int256, refundCost:[int256,int256]:int256, removeEvent:[int256,int256]:int256, setAfterRep:[int256,int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256,int256]:int256, setCurrentMode:[int256,int256,int256]:int256, setCurrentModeItems:[int256,int256,int256]:int256, setEthicReport:[int256,int256,int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setLesserReportNum:[int256,int256,int256,int256]:int256, setNumEventsToReportOn:[int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setPeriodDormantRep:[int256,int256,int256,int256]:int256, setPeriodRepConstant:[int256,int256,int256,int256]:int256, setReport:[int256,int256,int256,int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setSaltyHash:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]", 
             "EXPEVENTS = 0xd2cfe56ceb218117da138fe6a7450aa8c6b450d2", 
             "extern createBranch: [createSubbranch:[bytes,int256,int256,int256,int256]:int256, test_callstack:[]:int256]", 
-            "CREATEBRANCH = 0x6577c99511bc1d5eb74bfde123881a21428ae812", 
+            "CREATEBRANCH = 0xb8613192ef98dfd1fbeedb15c8350c8d3aac9a03", 
             "extern consensusData: [doRefund:[int256,int256]:int256, getBaseReportersLastPeriod:[int256]:int256, getDenominator:[int256,int256]:int256, getFeeFirst:[int256,int256]:int256, getFeesCollected:[int256,int256,int256]:int256, getNotEnoughPenalized:[int256,int256,int256]:int256, getPenalized:[int256,int256,int256,int256]:int256, getPenalizedNum:[int256,int256,int256]:int256, getPenalizedUpTo:[int256,int256]:int256, getPeriodBalance:[int256,int256]:int256, getRepRedistributionDone:[int256,int256]:int256, getSlashed:[int256,int256,int256]:int256, increaseDenominator:[int256,int256,int256]:int256, increasePenalizedNum:[int256,int256,int256,int256]:int256, setBaseReportersLastPeriod:[int256,int256]:int256, setFeeFirst:[int256,int256,int256]:int256, setFeesCollected:[int256,int256,int256]:int256, setNotEnoughPenalized:[int256,int256,int256]:int256, setPenalized:[int256,int256,int256,int256]:int256, setPenalizedUpTo:[int256,int256,int256]:int256, setPeriodBalance:[int256,int256,int256]:_, setRefund:[int256,int256]:int256, setSlashed:[int256,int256,int256]:int256, test_callstack:[]:int256]", 
             "CONSENSUSDATA = 0x3ed2cdd6bfbb4368a249368ee681b77fc9965492", 
             "inset('refund.se')", 
