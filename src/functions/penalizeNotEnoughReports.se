@@ -48,6 +48,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     total = exp*baseReporters
     numEvents = exp*prelim + EXPEVENTS.getNumRequired(branch, lastPeriod)*ONE
     eventsInPeriod = EXPEVENTS.getNumberEvents(branch, lastPeriod)-EXPEVENTS.getNumRemoved(branch, lastPeriod)
+    # todo fix no rep constant here
     if(repConstant >= POINTZEROONE):
         minimum = min(30+EXPEVENTS.getNumRequired(branch, lastPeriod), eventsInPeriod)
         if(numEvents/ONE < minimum):

@@ -16,20 +16,20 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
     # share two goes with the high/long side
     pricePerShare2 = ONE*(outcome - minValue) / (maxValue - minValue)
     # share one goes with the low/short side of the calc
-    pricePerShare1 = ONE - pricePerShare1
+    pricePerShare1 = ONE - pricePerShare2
     # for each winning outcome get rid of shares and send money to the trader
     n = 0
     cumScale = MARKETS.getCumScale(market)
     while(winningOutcome[n]!=0):
-        sharesOwned = MARKETS.getParticipantSharesPurchased(market, msg.sender, winningOutcome[n])
-        MARKETS.modifyParticipantShares(market, msg.sender, winningOutcome[n], -sharesOwned)
+        sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, winningOutcome[n])
+        MARKETS.modifyParticipantShares(market, sender, winningOutcome[n], -sharesOwned)
         # low side
         if(n==0):
             CASH.subtractCash(market, sharesOwned*cumScale/ONE*pricePerShare1/ONE)
-            CASH.addCash(participant, sharesOwned*cumScale/ONE*pricePerShare1/ONE)
+            CASH.addCash(sender, sharesOwned*cumScale/ONE*pricePerShare1/ONE)
         # high side (of the scalar part)
         elif(n==1):
             CASH.subtractCash(market, sharesOwned*cumScale/ONE*pricePerShare2/ONE)
-            CASH.addCash(participant, sharesOwned*cumScale/ONE*pricePerShare2/ONE)
+            CASH.addCash(sender, sharesOwned*cumScale/ONE*pricePerShare2/ONE)
         n+=1
     return(1)

@@ -42,7 +42,7 @@ def move_event(event):
     branch = EVENTS.getEventBranch(event)
     eventForkedOver = BRANCHES.getEventForkedOver(branch)
     expPeriod = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
-    eventIndex = EXPEVENTS.getEventIndex(brexpPeriod, event)
+    eventIndex = EXPEVENTS.getEventIndex(expPeriod, event)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     if(forkPeriod && currentPeriod == (forkPeriod+2) && !EVENTS.getOutcome(event) && !BACKSTOPS.getMoved(event)):
         winner = BACKSTOPS.getResolved(branch, forkPeriod)
@@ -63,7 +63,7 @@ def move_event(event):
             # if should've resolved in past periods
             if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1)):
                 # push it into next [this] period
-                EXPEVENTS.addEvent(branch, currentPeriod, eventID)
+                EXPEVENTS.addEvent(branch, currentPeriod, event)
                 EVENTS.setExpiration(event, block.timestamp)
             # otherwise it's set to expire in the period it would've expired in as normal, no changes needed
         # event's branch is changed to winning branch
@@ -80,11 +80,11 @@ def move_event(event):
             # and place it into the next reporting period w/ outcomes to 0
             if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1)):
                 # push it into next [this] period
-                EXPEVENTS.addEvent(winner, currentPeriod, eventID)
+                EXPEVENTS.addEvent(winner, currentPeriod, event)
                 EVENTS.setExpiration(event, block.timestamp)
             else:
                 # push into period it wouldve expired in
-                EXPEVENTS.addEvent(winner, expPeriod, eventID)
+                EXPEVENTS.addEvent(winner, expPeriod, event)
                 # expiration time doesnt need to change
     else:
         return(0)
@@ -98,7 +98,7 @@ def resolve_fork(branch):
     origCap = self.exchangeRate(branch)
     fork = REPORTING.getFork(branch)
     forkCap = self.exchangeRate(fork)
-    if(origcap >= forkCap):
+    if(origCap >= forkCap):
         winner = branch
         BACKSTOPS.setResolved(branch, forkPeriod, winner)
         return(winner)
@@ -189,7 +189,6 @@ def fork(event, branch, forkedOverEthicality):
     # -2 wrong branch
 def resolveForkedEvent(branch, event):
     refund()
-    bond = 100*ONE
     votedOnAgain = 0
     # checks for orig. branch
     if(EVENTS.getBranch(event)!=branch or BRANCHES.getEventForkedOver(branch)!=event):

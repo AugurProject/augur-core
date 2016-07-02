@@ -79,6 +79,7 @@ def penalizeWrong(branch, event):
     p = PROPORTION.proportionCorrect(event)
     if(roundTwo && outcome!=0):
         return(-1)
+    repChange = 0
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
@@ -150,7 +151,7 @@ def incrementPeriodAfterReporting(branch):
         percentAppealed = (EXPEVENTS.getNumRoundTwo(branch, period)*ONE/EXPEVENTS.getNumberEvents(branch, period) + EXPEVENTS.getNumRoundTwo(branch, lastPeriod)*ONE/EXPEVENTS.getNumberEvents(branch, lastPeriod)) / 2
         BRANCHES.incrementPeriod(branch)
         # mult. by 2 b/c reporters only have to report on half the things they're selected to report on
-        base_reporter_quantity = 2*(3*ONE + ((333*ONE * Percent_Appealed/ONE)**3 / 2**128))/ONE
+        base_reporter_quantity = 2*(3*ONE + ((333*ONE * percentAppealed/ONE)**3 / 2**128))/ONE
         CONSENSUS.setBaseReportersLastPeriod(branch, BRANCHES.getBaseReporters(branch))
         BRANCHES.setBaseReporters(branch, base_reporter_quantity)
         return(1)

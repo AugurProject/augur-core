@@ -41,6 +41,7 @@ def penalizeRoundTwoWrong(branch, event):
     newRep = 0
     newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
+    forkEvent = BRANCHES.getEventForkedOver(branch)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod)):
@@ -55,7 +56,6 @@ def penalizeRoundTwoWrong(branch, event):
     outcome = catch(uncaught)
     if(scalar(event) or categorical(event)):
         outcome = uncaught
-    forkEvent = BRANCHES.getEventForkedOver(branch)
     p = PROPORTION.proportionCorrect(event)
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     lastPenalizationPeriod = lastPeriod - 1
@@ -77,7 +77,7 @@ def penalizeRoundTwoWrong(branch, event):
         overruled = 1
         
     numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
-
+    repChange = 0
     # penalization on a round 2 event if not already penalized, it has outcome, and user reported on it
     # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period
     if(BACKSTOPS.getRoundTwo(event) && (BACKSTOPS.getFinal(event) or event==forkEvent) && !CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && (reportValue or oldReport)):

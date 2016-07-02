@@ -12,7 +12,7 @@
 #
 #    This program is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See thes
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 #
 #    You should have received a copy of the GNU General Public License
@@ -318,7 +318,7 @@ def get_trade_ids(market_id):
     while i < trades_count:
         trade_ids[i] = self.Markets[market_id].trade_ids[trade_id].id
         trade_id = self.Markets[market_id].trade_ids[trade_id].prev_id
-        i = i + 1
+        i += 1
 
     if trade_ids:
         return(trade_ids:arr)
