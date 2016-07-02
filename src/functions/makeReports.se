@@ -242,7 +242,7 @@ def calculateReportTargetForEvent(branch, eventID, votePeriod, sender):
     totalFeesInWei = totalFees * WEITOETH / ONE
     canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
     lesser = min(canPayForThisManyReporters*ONE, numReportersOnMarket)
-    if(EXPEVENTS.getLesserReportNum(branch, period, event)==0):
+    if(EXPEVENTS.getLesserReportNum(branch, votePeriod, eventID)==0):
         EXPEVENTS.refundCost(sender, EXPEVENTS.getSubsidy(branch, votePeriod, eventID))
         EXPEVENTS.setLesserReportNum(branch, votePeriod, eventID, lesser)
     return(lesser)

@@ -118,12 +118,11 @@ def determineWinningOutcomes(event):
     winningOutcomes = array(8)
     fxpOutcome = EVENTS.getOutcome(event)
     outcome = fxpOutcome/ONE
-    if(n==0):
-        #scalar or .5
-        if(scalar(event) || fxpOutcome==3*ONEHALF):
-            winningOutcomes[0] = 1
-            winningOutcomes[1] = 2
-        # anything besides scalar or .5
-        else:
-            winningOutcomes[0] += outcome
+    #scalar or .5
+    if(scalar(event) || fxpOutcome==3*ONEHALF):
+        winningOutcomes[0] = 1
+        winningOutcomes[1] = 2
+    # anything besides scalar or .5
+    else:
+        winningOutcomes[0] += outcome
     return(winningOutcomes: arr)

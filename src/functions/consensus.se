@@ -79,6 +79,7 @@ def penalizeWrong(branch, event):
     p = PROPORTION.proportionCorrect(event)
     if(roundTwo && outcome!=0):
         return(-1)
+    repChange = 0
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period

@@ -37,6 +37,7 @@ def penalizeOnForkedEvent(branch, event):
     if(scalar(event) or categorical(event)):
         outcome = forkOutcome
     p = self.proportionCorrectForkEvent(event)
+    repChange = 0
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):

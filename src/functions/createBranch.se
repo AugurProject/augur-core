@@ -32,7 +32,7 @@ inset('refund.se')
     # -1: bad input or parent doesn't exist
     # -2: no money for creation fee
     # -3: branch already exists
-def createSubbranch(description:str, periodLength, parent, mintradingFee, oracleOnly):
+def createSubbranch(description:str, periodLength, parent, minTradingFee, oracleOnly):
     refund()
     if(periodLength<=0 || !BRANCHES.getPeriodLength(parent) || description==0):
         return(-1)

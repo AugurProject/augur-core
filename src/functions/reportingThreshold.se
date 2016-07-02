@@ -18,8 +18,9 @@ def calculateReportingThreshold(branch, eventID, votePeriod, sender):
         numEventsToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
         expectedEventsForReporter = repConstant * numEventsToReportOn
         total = expectedEventsForReporter
-        eventsInPeriod = EXPEVENTS.getNumberEvents(branch, expDateIndex)-EXPEVENTS.getNumRemoved(branch, votePeriod)
+        eventsInPeriod = EXPEVENTS.getNumberEvents(branch, votePeriod)-EXPEVENTS.getNumRemoved(branch, votePeriod)
         numRequiredEvents = EXPEVENTS.getNumRequired(branch, votePeriod)
+        repFraction = REPORTING.getRepBalance(branch, sender) * 2**64 / REPORTING.getActiveRep(branch)
         if(repFraction >= POINTZEROONE):
             minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
             if(total/ONE < minimum):
