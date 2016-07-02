@@ -49,7 +49,7 @@ def penalizeRoundTwoWrong(branch, event):
     elif(BRANCHES.getForkPeriod(branch) == lastPeriod && event!=forkEvent):
         return(-4)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
-    uncaught = EVENTS.getUncaughtOutcome(event)ote
+    uncaught = EVENTS.getUncaughtOutcome(event)
     if(!uncaught):
         if(ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriod, event), msg.sender)==0):
             return(-3)
