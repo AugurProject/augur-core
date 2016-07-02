@@ -48,9 +48,9 @@ def penalizeRoundTwoWrong(branch, event):
     elif(BRANCHES.getForkPeriod(branch) == lastPeriod && event!=forkEvent):
         return(-4)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
-    uncaught = EVENTS.getUncaughtOutcome(event)
+    uncaught = EVENTS.getUncaughtOutcome(event)ote
     if(!uncaught):
-        if(ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, votePeriod, event), msg.sender)==0):
+        if(ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriod, event), msg.sender)==0):
             return(-3)
     outcome = catch(uncaught)
     if(scalar(event) or categorical(event)):
@@ -62,7 +62,7 @@ def penalizeRoundTwoWrong(branch, event):
     oldReport = EXPEVENTS.getReport(branch,lastPenalizationPeriod,event,msg.sender)
     ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
     oldEthics = EXPEVENTS.getEthicReport(branch, lastPenalizationPeriod, event, msg.sender)
-    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod)/EXPIRING.getNumberEvents(branch, votePeriod)
+    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, lastPeriod)/EXPIRING.getNumberEvents(branch, lastPeriod)
     bond = averageAdjudicationCost + MARKETS.getSharesValue(market)*(POINTZEROONE + MARKETS.getTradingFee(market)/2) / 2**64
     bond = min(bond, MINBOND)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period

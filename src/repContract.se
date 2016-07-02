@@ -60,7 +60,7 @@ def transfer(receiver, value):
 # fails unless from has authorized sender
 def transferFrom(from, receiver, value):
     senderBalance = self.reporting[from]
-    if(senderBalance < value or value <= 0 or !self.approvedToSpend[from][msg.sender] or !self.seeded):
+    if(senderBalance < value or value <= 0 or (!self.approvedToSpend[from][msg.sender] and from!=msg.sender) or !self.seeded):
         throw
     self.reporting[from] -= value
     self.reporting[receiver] += value
@@ -95,3 +95,6 @@ def balanceOf(address):
 
 def getTotalRep(branch):
     return(self.totalRep)
+    
+def getSender():
+    return(msg.sender)
