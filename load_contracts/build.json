@@ -1819,6 +1819,140 @@
         ], 
         "sig": "extern buy&sellShares: [buy:[int256,int256,int256,int256]:int256, cancel:[int256]:int256, sell:[int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
+    "c1": {
+        "address": "0x6a0a9ec489f9769264db1752df82caee69d7bab7", 
+        "code": [
+            "data v", 
+            "event Happy(balance)", 
+            "event Rage(balance)", 
+            "", 
+            "def feh():", 
+            "    log(type=Rage, self.balance)", 
+            "    return(1)", 
+            "", 
+            "def foo():", 
+            "    log(type=Happy, self.balance)", 
+            "    self.v += 1", 
+            "    return(self.v)"
+        ], 
+        "fullsig": [
+            {
+                "constant": false, 
+                "inputs": [], 
+                "name": "feh()", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [], 
+                "name": "foo()", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "indexed": false, 
+                        "name": "balance", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "Happy(int256)", 
+                "type": "event"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "indexed": false, 
+                        "name": "balance", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "Rage(int256)", 
+                "type": "event"
+            }
+        ], 
+        "sig": "extern c1: [feh:[]:int256, foo:[]:int256]"
+    }, 
+    "c2": {
+        "address": "0x8ec8dec437cb8be8609f5b4769270df0b934e2e7", 
+        "code": [
+            "extern c1: [foo:[]:int256]", 
+            "# extern c1: [foo:[]:int256]", 
+            "# C1 = 0x65d5c1320b3958337ec43269b6ccb457e6d0db69", 
+            "", 
+            "data v", 
+            "data callee", 
+            "event Happeh(balance)", 
+            "", 
+            "def set_callee(addr:address):", 
+            "    self.callee = addr", 
+            "", 
+            "def bar():", 
+            "    log(type=Happeh, self.balance)", 
+            "    self.callee.foo(call=delegate)", 
+            "    log(type=Happeh, self.balance)", 
+            "", 
+            "def baz():", 
+            "    return(self.v)"
+        ], 
+        "fullsig": [
+            {
+                "constant": false, 
+                "inputs": [], 
+                "name": "bar()", 
+                "outputs": [], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [], 
+                "name": "baz()", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [
+                    {
+                        "name": "addr", 
+                        "type": "address"
+                    }
+                ], 
+                "name": "set_callee(address)", 
+                "outputs": [], 
+                "type": "function"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "indexed": false, 
+                        "name": "balance", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "Happeh(int256)", 
+                "type": "event"
+            }
+        ], 
+        "sig": "extern c2: [bar:[]:_, baz:[]:int256, set_callee:[address]:_]"
+    }, 
     "cash": {
         "address": "0xee01fd89924dfd409bf1356072f98138c57bd7cc", 
         "code": [
@@ -2538,7 +2672,7 @@
         "sig": "extern closeMarketTwo: [test_callstack:[]:int256, twoOutcomes:[int256,int256[],int256,int256]:int256]"
     }, 
     "collectFees": {
-        "address": "0x59c8771527a8b9f7a8d1686a5d0abee424bee648", 
+        "address": "0xb3eeaa1287c59be7dbbf7e5af7b6005882a437d1", 
         "code": [
             "extern refund.se: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, test_callstack:[]:int256, withdrawEther:[int256,int256]:int256]", 
             "CASH = 0xee01fd89924dfd409bf1356072f98138c57bd7cc", 
@@ -2594,7 +2728,7 @@
             "            CONSENSUS.doRefund(msg.sender, msg.sender)", 
             "        # need to pay not reporting bond", 
             "        if(msg.value <= 500000*tx.gasprice):", 
-            "            throw", 
+            "            throw()", 
             "        balance = REPORTING.getRepBalance(branch, msg.sender)", 
             "        dormantRep = REPORTING.balanceOf(branch, msg.sender)", 
             "        # Record rep for next report period before any redistributions", 
@@ -4250,7 +4384,7 @@
         "sig": "extern createBranch: [createSubbranch:[bytes,int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "createMarket": {
-        "address": "0x54894e13b69e760e9d0f6af18b9b2c87c5fc5525", 
+        "address": "0x854cde0fd53ae086342605dbf59a5b2632970fb2", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -4295,10 +4429,10 @@
             "event marketCreated(marketID)", 
             "event tradingFeeUpdated(marketID, tradingFee)", 
             "", 
-            "# def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution:str, tradingFee, tag1, tag2, tag3, makerFees, extraInfo:str):", 
-            "#     eventID = self.createEvent(branch, description, expDate, minValue, maxValue, numOutcomes, resolution, call=delegate)", 
-            "#     marketID = self.createMarket(branch, description, tradingFee, [eventID], tag1, tag2, tag3, makerFees, extraInfo, call=delegate)", 
-            "#     return(marketID)", 
+            "def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution:str, tradingFee, tag1, tag2, tag3, makerFees, extraInfo:str):", 
+            "    eventID = self.createEvent(branch, description, expDate, minValue, maxValue, numOutcomes, resolution, call=delegate)", 
+            "    marketID = self.createMarket(branch, description, tradingFee, eventID, tag1, tag2, tag3, makerFees, extraInfo, call=delegate)", 
+            "    return(marketID)", 
             "", 
             "# Create an event. Events are the basic units / questions that are reported on in Augur by reporters", 
             "# @param numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0 to 11.0 would be 11 outcomes (if incremented by 0.1)", 
@@ -4317,7 +4451,6 @@
             "    # -4: would expire during non-reporting fork period", 
             "# .025 eth to create", 
             "def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution: str):", 
-            "    refund()", 
             "    periodLength = BRANCHES.getPeriodLength(branch)", 
             "    forkPeriod = BRANCHES.getForkPeriod(branch)", 
             "    if(!periodLength or description == 0 or expDate < block.timestamp):", 
@@ -4418,18 +4551,18 @@
             "        CASH.initiateOwner(marketID)", 
             "        EVENTS.addMarket(event, marketID)", 
             "    else:", 
-            "        throw", 
+            "        throw()", 
             "    # add events to the appropriate reporting period", 
             "    if(EXPEVENTS.getEvent(branch, futurePeriod, EXPEVENTS.getEventIndex(futurePeriod, event))!=event):", 
             "        EXPEVENTS.addEvent(branch, futurePeriod, event, 500000*tx.gasprice)", 
             "        # cost for calculating num. of reports for an event", 
             "        if(!send(EXPEVENTS, 500000*tx.gasprice)):", 
-            "            throw", 
+            "            throw()", 
             "        if(!EVENTS.getBond(event)):", 
             "            # pay validity / indeterminate protection bond", 
             "            period = block.timestamp / TWENTYFOURHR", 
             "            if(!CASH.sendFrom(event, validity_bond, msg.sender)):", 
-            "                throw", 
+            "                throw()", 
             "            EVENTS.setBond(event, validity_bond)", 
             "            EVENTS.addPast24(period)", 
             "    log(type=marketCreated, marketID)", 
@@ -4449,7 +4582,7 @@
             "    if(tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > oldFee):", 
             "        return(-2)", 
             "    if(!CASH.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender) && MARKETS.setTradingFee(market, tradingFee)):", 
-            "        throw", 
+            "        throw()", 
             "    log(type=tradingFeeUpdated, market, tradingFee)", 
             "    return(1)", 
             "", 
@@ -4588,6 +4721,71 @@
                         "type": "int256"
                     }, 
                     {
+                        "name": "description", 
+                        "type": "bytes"
+                    }, 
+                    {
+                        "name": "expDate", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "minValue", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "maxValue", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "numOutcomes", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "resolution", 
+                        "type": "bytes"
+                    }, 
+                    {
+                        "name": "tradingFee", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "tag1", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "tag2", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "tag3", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "makerFees", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "extraInfo", 
+                        "type": "bytes"
+                    }
+                ], 
+                "name": "createSingleEventMarket(int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256,int256,int256,bytes)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [
+                    {
+                        "name": "branch", 
+                        "type": "int256"
+                    }, 
+                    {
                         "name": "market", 
                         "type": "int256"
                     }
@@ -4666,7 +4864,116 @@
                 "type": "event"
             }
         ], 
-        "sig": "extern createMarket: [createEvent:[int256,bytes,int256,int256,int256,int256,bytes]:int256, createMarket:[int256,bytes,int256,int256,int256,int256,int256,int256,bytes]:int256, pushMarketForward:[int256,int256]:int256, test_callstack:[]:int256, updateTradingFee:[int256,int256,int256]:int256]"
+        "sig": "extern createMarket: [createEvent:[int256,bytes,int256,int256,int256,int256,bytes]:int256, createMarket:[int256,bytes,int256,int256,int256,int256,int256,int256,bytes]:int256, createSingleEventMarket:[int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256,int256,int256,bytes]:int256, pushMarketForward:[int256,int256]:int256, test_callstack:[]:int256, updateTradingFee:[int256,int256,int256]:int256]"
+    }, 
+    "createSingleEventMarket": {
+        "address": "0x37d78f37e1ad74189c0a61694780607b1dcf0803", 
+        "code": [
+            "extern createMarket: [createEvent:[int256,bytes,int256,int256,int256,int256,bytes]:int256, createMarket:[int256,bytes,int256,int256,int256,int256,int256,int256,bytes]:int256, pushMarketForward:[int256,int256]:int256, test_callstack:[]:int256, updateTradingFee:[int256,int256,int256]:int256]", 
+            "CREATEMARKET = 0xf5d0c0b3f8adbd08abc6da473b2c363b81d59c91", 
+            "", 
+            "event marketCreated(marketID, msgValue, txGasPrice, msgSender)", 
+            "", 
+            "def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution:str, tradingFee, tag1, tag2, tag3, makerFees, extraInfo:str):", 
+            "    log(type=marketCreated, msg.sender, msg.value, self.balance, self)", 
+            "    eventID = CREATEMARKET.createEvent(branch, description, expDate, minValue, maxValue, numOutcomes, resolution, call=delegate)", 
+            "    marketID = CREATEMARKET.createMarket(branch, description, tradingFee, eventID, tag1, tag2, tag3, makerFees, extraInfo, call=delegate)", 
+            "    return(marketID)"
+        ], 
+        "fullsig": [
+            {
+                "constant": false, 
+                "inputs": [
+                    {
+                        "name": "branch", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "description", 
+                        "type": "bytes"
+                    }, 
+                    {
+                        "name": "expDate", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "minValue", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "maxValue", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "numOutcomes", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "resolution", 
+                        "type": "bytes"
+                    }, 
+                    {
+                        "name": "tradingFee", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "tag1", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "tag2", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "tag3", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "makerFees", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "extraInfo", 
+                        "type": "bytes"
+                    }
+                ], 
+                "name": "createSingleEventMarket(int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256,int256,int256,bytes)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "indexed": false, 
+                        "name": "marketID", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "msgValue", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "txGasPrice", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "msgSender", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "marketCreated(int256,int256,int256,int256)", 
+                "type": "event"
+            }
+        ], 
+        "sig": "extern createSingleEventMarket: [createSingleEventMarket:[int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256,int256,int256,bytes]:int256]"
     }, 
     "eventResolution": {
         "address": "0x34eea9d6769355b56348f22d6e1e2b25fbd8f513", 
@@ -8171,7 +8478,7 @@
         "sig": "extern forkPenalize: [penalizeOnForkedEvent:[int256,int256]:int256, proportionCorrectForkEvent:[int256]:int256, test_callstack:[]:int256]"
     }, 
     "forking": {
-        "address": "0x4da58f4c737985e4ab9b89e8ea706b617ba2eb2d", 
+        "address": "0x47de547e9ad873c18b5263543ef7d38a7f2974bf", 
         "code": [
             "extern refund.se: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256, test_callstack:[]:int256]", 
             "INFO = 0x0ec7078eed298506918767f610d0b69fbe80f4fc", 
@@ -8188,9 +8495,9 @@
             "extern refund.se: [adjForkBondPaid:[int256,int256]:int256, doRoundTwoRefund:[int256,int256]:int256, getBondAmount:[int256]:int256, getBondPaid:[int256]:int256, getBondPoster:[int256]:int256, getBondReturned:[int256]:int256, getFinal:[int256]:int256, getForkBondPaid:[int256]:int256, getForkBondPoster:[int256]:int256, getForkedOverEthicality:[int256]:int256, getMoved:[int256]:int256, getOriginalBranch:[int256]:int256, getOriginalEthicality:[int256]:int256, getOriginalOutcome:[int256]:int256, getOriginalVotePeriod:[int256]:int256, getResolved:[int256,int256]:int256, getRoundTwo:[int256]:int256, increaseBondPaid:[int256,int256]:int256, setBondAmount:[int256,int256]:int256, setBondPoster:[int256,int256]:int256, setBondReturned:[int256]:int256, setFinal:[int256]:int256, setForkBondPoster:[int256,int256]:int256, setForkedOverEthicality:[int256]:int256, setMoved:[int256]:int256, setOriginalBranch:[int256,int256]:int256, setOriginalEthicality:[int256,int256]:int256, setOriginalOutcome:[int256,int256]:int256, setOriginalVotePeriod:[int256,int256]:int256, setResolved:[int256,int256,int256]:int256, setRoundTwo:[int256,int256]:int256, setRoundTwoRefund:[int256,int256]:int256, test_callstack:[]:int256]", 
             "BACKSTOPS = 0xf9c9a87f339b76dc007848ab50363116ec1af05b", 
             "extern sendReputation: [allowance:[int256,int256]:int256, approve:[int256,int256,int256]:int256, convertToActiveRep:[int256,int256]:int256, convertToDormantRep:[int256,int256]:int256, sendReputation:[int256,int256,int256]:int256, test_callstack:[]:int256, transfer:[int256,int256,int256]:int256, transferFrom:[int256,int256,int256,int256]:int256]", 
-            "SENDREP = 0x4e7ffa77266d9935432348db6dc2fda3d48c3972", 
+            "SENDREP = 0x5fb2d397bd30e9b82219a0ed1d9018312ca51e6c", 
             "extern roundTwo: [resolve:[int256,int256]:int256, roundTwoPostBond:[int256,int256,int256,int256]:int256, roundTwoResolve:[int256,int256,int256,int256]:int256, test_callstack:[]:int256]", 
-            "ROUNDTWO = 0x915941fcf8fa17b933705f8cff57f852ba524a3e", 
+            "ROUNDTWO = 0x6bea17561677b97745180615109a249bd1533e2f", 
             "extern expiringEvents: [addEvent:[int256,int256,int256,int256]:int256, addRepEvent:[int256,int256,int256,int256]:int256, addReportToEvent:[int256,int256,int256,int256]:int256, addReportersPaidSoFar:[int256,int256]:int256, addRoundTwo:[int256,int256]:int256, addToWeightOfReport:[int256,int256,int256,int256]:int256, adjustPeriodShareValueOutstanding:[int256,int256,int256]:int256, deleteEvent:[int256,int256,int256]:int256, getAfterRep:[int256,int256,int256]:int256, getBeforeRep:[int256,int256,int256]:int256, getCurrentMode:[int256,int256]:int256, getCurrentModeItems:[int256,int256]:int256, getEthicReport:[int256,int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getEventsRange:[int256,int256,int256,int256]:int256[], getLesserReportNum:[int256,int256,int256]:int256, getNumEventsToReportOn:[int256,int256]:int256, getNumRemoved:[int256,int256]:int256, getNumReportsActual:[int256,int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumRequired:[int256,int256]:int256, getNumRoundTwo:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodDormantRep:[int256,int256,int256]:int256, getPeriodRepConstant:[int256,int256,int256]:int256, getRepEvent:[int256,int256,int256]:int256, getReport:[int256,int256,int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getReportersPaidSoFar:[int256,int256]:int256, getRequired:[int256]:int256, getSaltyHash:[int256,int256,int256,int256]:int256, getShareValue:[int256,int256]:int256, getSubsidy:[int256,int256,int256]:int256, getWeightOfReport:[int256,int256,int256]:int256, moveEvent:[int256,int256]:int256, refundCost:[int256,int256]:int256, removeEvent:[int256,int256]:int256, setAfterRep:[int256,int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256,int256]:int256, setCurrentMode:[int256,int256,int256]:int256, setCurrentModeItems:[int256,int256,int256]:int256, setEthicReport:[int256,int256,int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setLesserReportNum:[int256,int256,int256,int256]:int256, setNumEventsToReportOn:[int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setPeriodDormantRep:[int256,int256,int256,int256]:int256, setPeriodRepConstant:[int256,int256,int256,int256]:int256, setReport:[int256,int256,int256,int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setSaltyHash:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]", 
             "EXPEVENTS = 0xd2cfe56ceb218117da138fe6a7450aa8c6b450d2", 
             "extern createBranch: [createSubbranch:[bytes,int256,int256,int256,int256]:int256, test_callstack:[]:int256]", 
@@ -8991,7 +9298,7 @@
         "sig": "extern refund.se: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "makeReports": {
-        "address": "0xf060d000aa0603b4670a0d27afced0047213c023", 
+        "address": "0x3a79c151769141750ea8ca06e4ed9fcef74ec5a9", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -9031,7 +9338,7 @@
             "extern consensusData: [doRefund:[int256,int256]:int256, getBaseReportersLastPeriod:[int256]:int256, getDenominator:[int256,int256]:int256, getFeeFirst:[int256,int256]:int256, getFeesCollected:[int256,int256,int256]:int256, getNotEnoughPenalized:[int256,int256,int256]:int256, getPenalized:[int256,int256,int256,int256]:int256, getPenalizedNum:[int256,int256,int256]:int256, getPenalizedUpTo:[int256,int256]:int256, getPeriodBalance:[int256,int256]:int256, getRepRedistributionDone:[int256,int256]:int256, getSlashed:[int256,int256,int256]:int256, increaseDenominator:[int256,int256,int256]:int256, increasePenalizedNum:[int256,int256,int256,int256]:int256, setBaseReportersLastPeriod:[int256,int256]:int256, setFeeFirst:[int256,int256,int256]:int256, setFeesCollected:[int256,int256,int256]:int256, setNotEnoughPenalized:[int256,int256,int256]:int256, setPenalized:[int256,int256,int256,int256]:int256, setPenalizedUpTo:[int256,int256,int256]:int256, setPeriodBalance:[int256,int256,int256]:_, setRefund:[int256,int256]:int256, setSlashed:[int256,int256,int256]:int256, test_callstack:[]:int256]", 
             "CONSENSUS = 0x3ed2cdd6bfbb4368a249368ee681b77fc9965492", 
             "extern collectFees: [collectFees:[int256,int256]:int256, test_callstack:[]:int256]", 
-            "COLLECTFEES = 0x59c8771527a8b9f7a8d1686a5d0abee424bee648", 
+            "COLLECTFEES = 0xb3eeaa1287c59be7dbbf7e5af7b6005882a437d1", 
             "extern penalizationCatchup: [penalizationCatchup:[int256,int256]:int256, test_callstack:[]:int256]", 
             "CATCHUP = 0x0e92a0e24c4315804b6beeba5bb9eb30b596fd5a", 
             "extern reportingThreshold: [calculateReportingThreshold:[int256,int256,int256,int256]:int256, getEventCanReportOn:[int256,int256,int256,int256]:int256, getEventsToReportOn:[int256,int256,int256]:int256[], setReportingThreshold:[int256]:int256, test_callstack:[]:int256]", 
@@ -12066,7 +12373,7 @@
         "sig": "extern reportingThreshold: [calculateReportingThreshold:[int256,int256,int256,int256]:int256, getEventCanReportOn:[int256,int256,int256,int256]:int256, getEventsToReportOn:[int256,int256,int256]:int256[], setReportingThreshold:[int256]:int256, test_callstack:[]:int256]"
     }, 
     "roundTwo": {
-        "address": "0x915941fcf8fa17b933705f8cff57f852ba524a3e", 
+        "address": "0x6bea17561677b97745180615109a249bd1533e2f", 
         "code": [
             "extern refund.se: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256, test_callstack:[]:int256]", 
             "INFO = 0x0ec7078eed298506918767f610d0b69fbe80f4fc", 
@@ -12085,7 +12392,7 @@
             "extern refund.se: [adjForkBondPaid:[int256,int256]:int256, doRoundTwoRefund:[int256,int256]:int256, getBondAmount:[int256]:int256, getBondPaid:[int256]:int256, getBondPoster:[int256]:int256, getBondReturned:[int256]:int256, getFinal:[int256]:int256, getForkBondPaid:[int256]:int256, getForkBondPoster:[int256]:int256, getForkedOverEthicality:[int256]:int256, getMoved:[int256]:int256, getOriginalBranch:[int256]:int256, getOriginalEthicality:[int256]:int256, getOriginalOutcome:[int256]:int256, getOriginalVotePeriod:[int256]:int256, getResolved:[int256,int256]:int256, getRoundTwo:[int256]:int256, increaseBondPaid:[int256,int256]:int256, setBondAmount:[int256,int256]:int256, setBondPoster:[int256,int256]:int256, setBondReturned:[int256]:int256, setFinal:[int256]:int256, setForkBondPoster:[int256,int256]:int256, setForkedOverEthicality:[int256]:int256, setMoved:[int256]:int256, setOriginalBranch:[int256,int256]:int256, setOriginalEthicality:[int256,int256]:int256, setOriginalOutcome:[int256,int256]:int256, setOriginalVotePeriod:[int256,int256]:int256, setResolved:[int256,int256,int256]:int256, setRoundTwo:[int256,int256]:int256, setRoundTwoRefund:[int256,int256]:int256, test_callstack:[]:int256]", 
             "BACKSTOPS = 0xf9c9a87f339b76dc007848ab50363116ec1af05b", 
             "extern sendReputation: [allowance:[int256,int256]:int256, approve:[int256,int256,int256]:int256, convertToActiveRep:[int256,int256]:int256, convertToDormantRep:[int256,int256]:int256, sendReputation:[int256,int256,int256]:int256, test_callstack:[]:int256, transfer:[int256,int256,int256]:int256, transferFrom:[int256,int256,int256,int256]:int256]", 
-            "SENDREP = 0x4e7ffa77266d9935432348db6dc2fda3d48c3972", 
+            "SENDREP = 0x5fb2d397bd30e9b82219a0ed1d9018312ca51e6c", 
             "inset('refund.se')", 
             "", 
             "macro POINTZEROONE: 184467440737095520", 
@@ -12395,7 +12702,7 @@
         "sig": "extern roundTwo: [resolve:[int256,int256]:int256, roundTwoPostBond:[int256,int256,int256,int256]:int256, roundTwoResolve:[int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "roundTwoPenalize": {
-        "address": "0x39fe055135dbf244e81b7d840d262bba2ef3fc3d", 
+        "address": "0xa7b6681a1202a601c492c92dc6cc3c289e0f2073", 
         "code": [
             "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOf:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getFork:[int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setFork:[int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, test_callstack:[]:int256, totalSupply:[int256]:int256]", 
             "REPORTING = 0x95b46aa63e212de35607bd867592de7b3886df07", 
@@ -12414,7 +12721,7 @@
             "extern consensusData: [doRefund:[int256,int256]:int256, getBaseReportersLastPeriod:[int256]:int256, getDenominator:[int256,int256]:int256, getFeeFirst:[int256,int256]:int256, getFeesCollected:[int256,int256,int256]:int256, getNotEnoughPenalized:[int256,int256,int256]:int256, getPenalized:[int256,int256,int256,int256]:int256, getPenalizedNum:[int256,int256,int256]:int256, getPenalizedUpTo:[int256,int256]:int256, getPeriodBalance:[int256,int256]:int256, getRepRedistributionDone:[int256,int256]:int256, getSlashed:[int256,int256,int256]:int256, increaseDenominator:[int256,int256,int256]:int256, increasePenalizedNum:[int256,int256,int256,int256]:int256, setBaseReportersLastPeriod:[int256,int256]:int256, setFeeFirst:[int256,int256,int256]:int256, setFeesCollected:[int256,int256,int256]:int256, setNotEnoughPenalized:[int256,int256,int256]:int256, setPenalized:[int256,int256,int256,int256]:int256, setPenalizedUpTo:[int256,int256,int256]:int256, setPeriodBalance:[int256,int256,int256]:_, setRefund:[int256,int256]:int256, setSlashed:[int256,int256,int256]:int256, test_callstack:[]:int256]", 
             "CONSENSUS = 0x3ed2cdd6bfbb4368a249368ee681b77fc9965492", 
             "extern roundTwo: [resolve:[int256,int256]:int256, roundTwoPostBond:[int256,int256,int256,int256]:int256, roundTwoResolve:[int256,int256,int256,int256]:int256, test_callstack:[]:int256]", 
-            "ROUNDTWO = 0x915941fcf8fa17b933705f8cff57f852ba524a3e", 
+            "ROUNDTWO = 0x6bea17561677b97745180615109a249bd1533e2f", 
             "", 
             "inset('refund.se')", 
             "", 
@@ -12663,7 +12970,7 @@
         "sig": "extern roundTwoPenalize: [penalizeRoundTwoWrong:[int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "sendReputation": {
-        "address": "0x4e7ffa77266d9935432348db6dc2fda3d48c3972", 
+        "address": "0x5fb2d397bd30e9b82219a0ed1d9018312ca51e6c", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -12693,7 +13000,7 @@
             "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOf:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getFork:[int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setFork:[int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, test_callstack:[]:int256, totalSupply:[int256]:int256]", 
             "REPORTING = 0x95b46aa63e212de35607bd867592de7b3886df07", 
             "extern makeReports: [calculateReportTargetForEvent:[int256,int256,int256,int256]:int256, makeHash:[int256,int256,int256,int256]:int256, submitReport:[int256,int256,int256,int256]:int256, submitReportHash:[int256,int256,int256]:int256, test_callstack:[]:int256, validateReport:[int256,int256,int256,int256,int256,int256,int256,int256]:int256]", 
-            "REPORTS = 0xf060d000aa0603b4670a0d27afced0047213c023", 
+            "REPORTS = 0x3a79c151769141750ea8ca06e4ed9fcef74ec5a9", 
             "extern penalizationCatchup: [penalizationCatchup:[int256,int256]:int256, test_callstack:[]:int256]", 
             "CATCHUP = 0x0e92a0e24c4315804b6beeba5bb9eb30b596fd5a", 
             "extern consensusData: [doRefund:[int256,int256]:int256, getBaseReportersLastPeriod:[int256]:int256, getDenominator:[int256,int256]:int256, getFeeFirst:[int256,int256]:int256, getFeesCollected:[int256,int256,int256]:int256, getNotEnoughPenalized:[int256,int256,int256]:int256, getPenalized:[int256,int256,int256,int256]:int256, getPenalizedNum:[int256,int256,int256]:int256, getPenalizedUpTo:[int256,int256]:int256, getPeriodBalance:[int256,int256]:int256, getRepRedistributionDone:[int256,int256]:int256, getSlashed:[int256,int256,int256]:int256, increaseDenominator:[int256,int256,int256]:int256, increasePenalizedNum:[int256,int256,int256,int256]:int256, setBaseReportersLastPeriod:[int256,int256]:int256, setFeeFirst:[int256,int256,int256]:int256, setFeesCollected:[int256,int256,int256]:int256, setNotEnoughPenalized:[int256,int256,int256]:int256, setPenalized:[int256,int256,int256,int256]:int256, setPenalizedUpTo:[int256,int256,int256]:int256, setPeriodBalance:[int256,int256,int256]:_, setRefund:[int256,int256]:int256, setSlashed:[int256,int256,int256]:int256, test_callstack:[]:int256]", 
@@ -13281,7 +13588,7 @@
         "sig": "extern slashRep: [slashRep:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "trade": {
-        "address": "0xdf0c814f16e9ecf90f28e22996edadaf702239bd", 
+        "address": "0xe0e90fd3c22eebcfb109e9c719b8686f6c61f5df", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -13583,7 +13890,7 @@
             "    # send money from user acc. to market address/account", 
             "    # cost for shares", 
             "    if(!CASH.sendFrom(market, cost-takerFeesTotal, msg.sender)):", 
-            "        throw", 
+            "        throw()", 
             "", 
             "    # Fill buy order [short selling the outcome user doesn't want]", 
             "    # Determine fill amount", 
@@ -13599,10 +13906,10 @@
             "    # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]", 
             "    # 75% to branch + .5% more to branch per maker fee 1% decrease", 
             "    if(!CASH.sendFrom(branch, branchFees, msg.sender)):", 
-            "        throw", 
+            "        throw()", 
             "    # 25% to creator + .5% more to creator per 1% decrease in maker fees", 
             "    if(!CASH.sendFrom(creator, creatorFees, msg.sender)):", 
-            "        throw", 
+            "        throw()", 
             "", 
             "    # other party [maker] pay their part of the fee here too", 
             "    fee = fee * makerFeeRate / ONE", 

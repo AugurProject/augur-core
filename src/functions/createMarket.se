@@ -34,10 +34,10 @@ macro COSTPERREPORTER: 3500000
 event marketCreated(marketID)
 event tradingFeeUpdated(marketID, tradingFee)
 
-# def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution:str, tradingFee, tag1, tag2, tag3, makerFees, extraInfo:str):
-#     eventID = self.createEvent(branch, description, expDate, minValue, maxValue, numOutcomes, resolution, call=delegate)
-#     marketID = self.createMarket(branch, description, tradingFee, [eventID], tag1, tag2, tag3, makerFees, extraInfo, call=delegate)
-#     return(marketID)
+def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution:str, tradingFee, tag1, tag2, tag3, makerFees, extraInfo:str):
+    eventID = self.createEvent(branch, description, expDate, minValue, maxValue, numOutcomes, resolution, call=delegate)
+    marketID = self.createMarket(branch, description, tradingFee, eventID, tag1, tag2, tag3, makerFees, extraInfo, call=delegate)
+    return(marketID)
 
 # Create an event. Events are the basic units / questions that are reported on in Augur by reporters
 # @param numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0 to 11.0 would be 11 outcomes (if incremented by 0.1)
@@ -56,7 +56,6 @@ event tradingFeeUpdated(marketID, tradingFee)
     # -4: would expire during non-reporting fork period
 # .025 eth to create
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution: str):
-    refund()
     periodLength = BRANCHES.getPeriodLength(branch)
     forkPeriod = BRANCHES.getForkPeriod(branch)
     if(!periodLength or description == 0 or expDate < block.timestamp):
@@ -157,18 +156,18 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
         CASH.initiateOwner(marketID)
         EVENTS.addMarket(event, marketID)
     else:
-        throw
+        throw()
     # add events to the appropriate reporting period
     if(EXPEVENTS.getEvent(branch, futurePeriod, EXPEVENTS.getEventIndex(futurePeriod, event))!=event):
         EXPEVENTS.addEvent(branch, futurePeriod, event, 500000*tx.gasprice)
         # cost for calculating num. of reports for an event
         if(!send(EXPEVENTS, 500000*tx.gasprice)):
-            throw
+            throw()
         if(!EVENTS.getBond(event)):
             # pay validity / indeterminate protection bond
             period = block.timestamp / TWENTYFOURHR
             if(!CASH.sendFrom(event, validity_bond, msg.sender)):
-                throw
+                throw()
             EVENTS.setBond(event, validity_bond)
             EVENTS.addPast24(period)
     log(type=marketCreated, marketID)
@@ -188,7 +187,7 @@ def updateTradingFee(branch, market, tradingFee):
     if(tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > oldFee):
         return(-2)
     if(!CASH.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender) && MARKETS.setTradingFee(market, tradingFee)):
-        throw
+        throw()
     log(type=tradingFeeUpdated, market, tradingFee)
     return(1)
 
