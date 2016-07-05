@@ -2,7 +2,6 @@ import reporting as REPORTING
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import events as EVENTS
-import proportionCorrect as PROPORTION
 import markets as MARKETS
 import backstops as BACKSTOPS
 import consensusData as CONSENSUS
@@ -11,6 +10,7 @@ import roundTwo as ROUNDTWO
 inset('refund.se')
 inset('eventHelpers.se')
 inset('redistributeRep.se')
+inset('proportionCorrect.se')
 
 #event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
 
@@ -58,7 +58,7 @@ def penalizeRoundTwoWrong(branch, event):
     outcome = catch(uncaught)
     if(scalar(event) or categorical(event)):
         outcome = uncaught
-    p = PROPORTION.proportionCorrect(event)
+    p = proportionCorrect(event, 0)
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     lastPenalizationPeriod = lastPeriod - 1
     oldReport = EXPEVENTS.getReport(branch,lastPenalizationPeriod,event,msg.sender)
