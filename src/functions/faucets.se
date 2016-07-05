@@ -30,6 +30,7 @@ import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import backstops as BACKSTOPS
 inset('refund.se')
+inset('eventHelpers.se')
 
 macro POINTSEVEN: 12912720851596685312
 macro POINTZEROONE: 184467440737095520
@@ -79,6 +80,7 @@ def claimInitialRep(parent, branch):
             outcome = catch(outcome)
         ethical = ethic_catch(EVENTS.getEthical(forkEvent))
         ethicReport = EXPEVENTS.getEthicReport(parent, forkPeriod, forkEvent, msg.sender)
+        # todo what if this wasn't set
         rep = EXPEVENTS.getBeforeRep(parent, parentPeriod, msg.sender)
         repDecrease = 0
         # if forked and (reported with original consensus or didn't report or (reported with original ethicality and forked over ethicality))
@@ -110,27 +112,3 @@ def claimInitialRep(parent, branch):
     else:
         # already claimed or too late
         return(0)
-
-        
-macro YES: TWO
-macro NO: ONE
-macro BAD: 3 * ONEHALF
-macro CATCH_TOLERANCE: ONE / 10
-
-macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
-
-# Bins values to 1, 1.5, 2
-macro catch($x):
-    if($x < (BAD - CATCH_TOLERANCE)):
-        NO
-    elif($x > (BAD + CATCH_TOLERANCE)):
-        YES
-    else:
-        BAD
-        
-macro ethic_catch($x):
-    if($x < ONEHALF):
-        0
-    else:
-        ONE

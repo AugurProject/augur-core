@@ -1,0 +1,2 @@
+def ok(e, a):
+    return(max(e, a))

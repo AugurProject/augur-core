@@ -1,0 +1,40 @@
+### Helper functions:
+macro YES: TWO
+macro NO: ONE
+macro BAD: 3 * ONEHALF
+macro CATCH_TOLERANCE: ONE / 10
+
+# Bins values to 1, 1.5, 2
+macro catch($x):
+    if($x < (BAD - CATCH_TOLERANCE)):
+        NO
+    elif($x > (BAD + CATCH_TOLERANCE)):
+        YES
+    else:
+        BAD
+
+macro ethic_catch($x):
+    if($x < ONEHALF):
+        0
+    else:
+        ONE
+
+macro scalar($event):
+    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
+
+macro binary($event):
+    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
+
+macro categorical($event):
+    (EVENTS.getNumOutcomes($event)>2)
+
+macro abs($a):
+    if($a<0):
+        $a = -$a
+    $a
+
+macro ethic_catch($x):
+    if($x < ONEHALF):
+        0
+    else:
+        ONE

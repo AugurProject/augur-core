@@ -9,6 +9,8 @@ import consensusData as CONSENSUS
 import roundTwo as ROUNDTWO
 
 inset('refund.se')
+inset('eventHelpers.se')
+inset('redistributeRep.se')
 
 #event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
 
@@ -160,57 +162,7 @@ def penalizeRoundTwoWrong(branch, event):
     if(event==forkEvent):
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, (numReportedOn - 1))
     # penalization on a regular event if not already penalized, it has outcome, and user reported on it
+    # once penalized for all events actually get rid of net rep lost
     if(numReportedOn==CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
-        if(newAfterRep <= 0):
-            newAfterRep = 0
-            EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
-        CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
-        totalRepDifference = newAfterRep - oldRep
-        if(repBalance + totalRepDifference <= 0):
-            totalRepDifference = -1*repBalance
-        if(totalRepDifference<0):
-            # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
-            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), totalRepDifference)
-            # sends that rep to the branch
-            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
+        sendRedistributedRepToBranch()
     return(1)
-
-
-### Helper functions:
-macro YES: TWO
-macro NO: ONE
-macro BAD: 3 * ONEHALF
-macro CATCH_TOLERANCE: ONE / 10
-
-# Bins values to 1, 1.5, 2
-macro catch($x):
-    if($x < (BAD - CATCH_TOLERANCE)):
-        NO
-    elif($x > (BAD + CATCH_TOLERANCE)):
-        YES
-    else:
-        BAD
-
-macro ethic_catch($x):
-    if($x < ONEHALF):
-        0
-    else:
-        ONE
-
-macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
-
-macro categorical($event):
-    (EVENTS.getNumOutcomes($event)>2)
-
-macro abs($a):
-    if($a<0):
-        $a = -$a
-    $a
-
-macro ethic_catch($x):
-    if($x < ONEHALF):
-        0
-    else:
-        ONE

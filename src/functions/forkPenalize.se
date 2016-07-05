@@ -6,7 +6,8 @@ import expiringEvents as EXPEVENTS
 import consensusData as CONSENSUS
 
 inset('refund.se')
-
+inset('eventHelpers.se')
+inset('redistributeRep.se')
 
 # Penalizes a reporter for reporting wrongly on a forked event / backstop 2
 # Notes:
@@ -37,9 +38,9 @@ def penalizeOnForkedEvent(branch, event):
     if(scalar(event) or categorical(event)):
         outcome = forkOutcome
     p = self.proportionCorrectForkEvent(event)
-    repChange = 0
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
+    bond = BACKSTOPS.getBondAmount(event)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod)):
@@ -92,19 +93,7 @@ def penalizeOnForkedEvent(branch, event):
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn==CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
-        if(newAfterRep <= 0):
-            newAfterRep = 0
-            EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, lastPeriod)
-        CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
-        totalRepDifference = newAfterRep - oldRep
-        if(repBalance + totalRepDifference <= 0):
-            totalRepDifference = -1*repBalance
-        if(totalRepDifference<0):
-            # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
-            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), totalRepDifference)
-            # sends that rep to the branch
-            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
+        sendRedistributedRepToBranch()
     return(1)
 
 # Calculates the proportion of correct reports for a binary forked event
@@ -130,38 +119,3 @@ def proportionCorrectForkEvent(event):
         return(p)
     else:
         return(0)
-
-macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
-        
-macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
-        
-macro categorical($event):
-    (EVENTS.getNumOutcomes($event)>2)
-    
-macro ethic_catch($x):
-    if($x < ONEHALF):
-        0
-    else:
-        ONE
-
-macro abs($a):
-    if($a<0):
-        $a = -$a
-    $a
-    
-# Bins values to 1, 1.5, 2
-macro catch($x):
-    if($x < (BAD - CATCH_TOLERANCE)):
-        NO
-    elif($x > (BAD + CATCH_TOLERANCE)):
-        YES
-    else:
-        BAD
-        
-### Helper functions:
-macro YES: TWO
-macro NO: ONE
-macro BAD: 3 * ONEHALF
-macro CATCH_TOLERANCE: ONE / 10
