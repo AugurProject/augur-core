@@ -24,7 +24,7 @@ macro MINBOND: 200*2**64
     #  0: invalid votePeriod/branch
     # -1: Pushed forward event, bonding not allowed during this
     # -2: branch is in the middle of a fork
-    # throws if not enough msg.value to cover resolution cost or not a large enough bond
+    # throw()s if not enough msg.value to cover resolution cost or not a large enough bond
 def roundTwoPostBond(branch, event, eventIndex, votePeriod):
     if(BRANCHES.getVotePeriod(branch)!=votePeriod):
         return(0)
@@ -40,7 +40,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
         return(0)
     # pays money to cover resolution cost
     if(!send(BACKSTOPS, msg.value)):
-        throw
+        throw()
     BACKSTOPS.setRoundTwoRefund(event, msg.value)
     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod)/EXPIRING.getNumberEvents(branch, votePeriod)
     bond = averageAdjudicationCost + MARKETS.getSharesValue(market)*(POINTZEROONE + MARKETS.getTradingFee(market)/2) / ONE
@@ -51,7 +51,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
         # send the bond to the branch
         # todo fix this will fail b/c event doesn't have rep acc
         if(!SENDREP.sendReputation(branch, event, bond)):
-            throw
+            throw()
         period = BRANCHES.getVotePeriod(branch)
         # remove from events in # to report on calc for last period
         EXPIRING.removeEvent(branch, period)
@@ -115,7 +115,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
         # and set final outcome / event bond, etc
         if(!self.resolve(branch, event)):
-            throw
+            throw()
         # reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, then beyond that the people who originally reported whatever the actual truth was would get the rest. then regular rep redistribution for the round 2 reporting
         BACKSTOPS.setFinal(event)
         BACKSTOPS.setBondReturned(event)
@@ -128,7 +128,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), bond)
         # and set final outcome / event bond, etc
         if(!self.resolve(branch, event)): 
-            throw
+            throw()
         # rep redistribution from original period/orig. outcome stands, rep redistribution from round 2 happens as usual as well
         BACKSTOPS.setFinal(event)
         BACKSTOPS.setBondReturned(event)

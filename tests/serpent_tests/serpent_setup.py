@@ -20,7 +20,7 @@ Method/Madness:
   in the serpent module. The there is the EVM nonsense. To fix that
   I just redirect stdout to /dev/null, and define my own PRINT
   function that forces data to show in the terminal. And while I'm
-  at it, I might as well throw the usual imports in since every
+  at it, I might as well throw() the usual imports in since every
   test script I write will import this module. And maybe I should
   define some useful contants and functions...
 '''

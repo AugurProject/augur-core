@@ -18,3 +18,9 @@ macro ONEHALF: 2**63
 macro TWO: 2**65
 
 macro TWENTYFOURHR: 86400
+
+macro throw():
+    i = 0
+    while(1):
+        i += 1
+    i

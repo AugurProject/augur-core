@@ -50,7 +50,7 @@ def any():
 def transfer(receiver, value):
     senderBalance = self.reporting[msg.sender]
     if(senderBalance < value or value <= 0 or !self.seeded):
-        throw
+        throw()
     self.reporting[msg.sender] -= value
     self.reporting[receiver] += value
     log(type=Transfer, msg.sender, receiver, value)
@@ -61,7 +61,7 @@ def transfer(receiver, value):
 def transferFrom(from, receiver, value):
     senderBalance = self.reporting[from]
     if(senderBalance < value or value <= 0 or (!self.approvedToSpend[from][msg.sender] and from!=msg.sender) or !self.seeded):
-        throw
+        throw()
     self.reporting[from] -= value
     self.reporting[receiver] += value
     log(type=Transfer, from, receiver, value)
@@ -98,3 +98,9 @@ def getTotalRep(branch):
     
 def getSender():
     return(msg.sender)
+    
+macro throw():
+    i = 0
+    while(1):
+        i += 1
+    i

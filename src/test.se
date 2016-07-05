@@ -1,2 +1,10 @@
 def ok(e, a):
-    return(max(e, a))
+    if(a==2):
+        throw()
+    return(e)
+
+macro throw():
+    i = 0
+    while(1):
+        i += 1
+    i

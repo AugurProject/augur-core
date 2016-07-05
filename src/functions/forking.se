@@ -140,7 +140,7 @@ def fork(event, branch, forkedOverEthicality):
     if(msg.value < 200000*tx.gasprice):
         return(0)
     if(!send(CONSENSUSDATA, msg.value)):
-        throw
+        throw()
     CONSENSUSDATA.setRefund(event, msg.value)
     # if in last 48 hr of period and is round 2 event with reports attempted
     if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0):
