@@ -45,6 +45,7 @@ def move_event(event):
     expPeriod = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
     eventIndex = EXPEVENTS.getEventIndex(expPeriod, event)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
+    # todo getoutcome may not work
     if(forkPeriod && currentPeriod == (forkPeriod+2) && !EVENTS.getOutcome(event) && !BACKSTOPS.getMoved(event)):
         winner = BACKSTOPS.getResolved(branch, forkPeriod)
         if(winner==0):

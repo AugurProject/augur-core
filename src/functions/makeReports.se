@@ -52,9 +52,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     votePeriod = BRANCHES.getVotePeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
-    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
-    lastPeriod = BRANCHES.getVotePeriod(branch)-1
-    delta = lastPeriod - lastPeriodPenalized    
+z    delta = lastPeriod - lastPeriodPenalized
     eventIndex = EXPEVENTS.getEventIndex(branch, votePeriod, event)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
@@ -132,6 +130,7 @@ def submitReport(event, salt, report, ethics):
         return(-3)
     if(ethics!=ONE and ethics!=0):
         return(-5)
+    # todo get outcome may not work / be valid
     elif(EVENTS.getOutcome(event)!=0):
         return(-6)
     # commented out for easy testing
@@ -226,8 +225,8 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
 # todo make sure max cost is actually 500k gas here
 def calculateReportTargetForEvent(branch, eventID, votePeriod, sender):
     numMarkets = EVENTS.getNumMarkets(eventID)
-    if(numMarkets>25):
-        numMarkets = 25
+    if(numMarkets>20):
+        numMarkets = 20
     markets = array(numMarkets)
     markets = EVENTS.getMarkets(eventID, outitems=numMarkets)
     totalFees = 0

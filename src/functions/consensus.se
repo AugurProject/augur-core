@@ -10,6 +10,7 @@ inset('refund.se')
 inset('eventHelpers.se')
 inset('redistributeRep.se')
 inset('proportionCorrect.se')
+inset('repChange.se')
 
 event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
 
@@ -63,16 +64,20 @@ def penalizeWrong(branch, event):
     uncaught = EVENTS.getUncaughtOutcome(event)
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod)):
         return(-8)
-    if(repBalance < ONE):
+    elif(repBalance < ONE):
         return(0)
-    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
+    # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
+    elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
+        return(-2)
+    elif(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-5)
-    if(BRANCHES.getForkPeriod(branch) == lastPeriod):
+    elif(BRANCHES.getForkPeriod(branch) == lastPeriod):
         return(-4)
     elif(EVENTS.getForked(event)):
         return(-6)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
-    elif(!uncaught && !(rejected && EVENTS.getRejectedPeriod(event)==lastPeriod)):
+    # todo fix getoutcome
+    elif(!EVENTS.getOutcome(event) && !(rejected && EVENTS.getRejectedPeriod(event)==lastPeriod)):
         if(CLOSEMARKET.closeMarket(branch, EVENTS.getMarket(event, 0), msg.sender)!=1):
             return(-7)
 
@@ -86,10 +91,6 @@ def penalizeWrong(branch, event):
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
     penalizedOnEvent = CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event)
-    # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
-    # commented for testing
-    #elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
-    #    return(-2)
     # lastperiod is where people who originally voted on a round 2 event voted the first time - want num events penalized to go up but not to actually be penalized for it yet
         # shouldn't be penalized until the next period resolution is over [since it's a round 2 event]
     if(roundTwo && !penalizedOnEvent && reportValue):
@@ -101,26 +102,7 @@ def penalizeWrong(branch, event):
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
     # penalization on a regular event if not already penalized, it has outcome, and user reported on it
     elif(!penalizedOnEvent && reportValue && outcome!=0):
-        # wrong
-        if(reportValue > outcome+POINTZEROONE or reportValue < outcome-POINTZEROONE):
-            # p has to be adjusted for scalars/categoricals to show how far off a reporter is from consensus
-            if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
-                diff = reportValue - outcome
-                p = -(abs(diff)/2) + ONE
-            newRep = oldRep*(2*p - ONE)/ONE
-        # right
-        else:
-            # p has to be adjusted for scalars/categoricals
-            if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
-                diff = reportValue - outcome
-                p = -(abs(diff)/2) + ONE
-            newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
-        # (1-k) * old rep + k * new rep where k = 0.2 / (number of events you reported on last period) for penalization and pen. rate for forking and backstop 1
-        # use .02 as a max penalty per event
-        if(numReportedOn<10):
-            repChange = oldRep * (ONE - POINTTWO/10)/ONE + newRep*(POINTTWO/10)/ONE - oldRep
-        else:
-            repChange = oldRep * (ONE - POINTTWO/numReportedOn)/ONE + newRep*(POINTTWO/numReportedOn)/ONE - oldRep
+        calculateRepChange(reportValue, POINTTWO)
         newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
         log(type=penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue)
         EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)

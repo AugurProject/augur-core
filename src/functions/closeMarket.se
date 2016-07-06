@@ -19,6 +19,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+# todo fix getoutcome stuff 0 is a valid outcome...
+
 import branches as BRANCHES
 import cash as CASH
 import markets as MARKETS

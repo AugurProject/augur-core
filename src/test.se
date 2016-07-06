@@ -1,10 +1,7 @@
 def ok(e, a):
-    if(a==2):
-        throw()
-    return(e)
-
-macro throw():
     i = 0
-    while(1):
+    x = 222
+    while i < 170:
+        x = x*23/2
         i += 1
-    i
+    return(x)

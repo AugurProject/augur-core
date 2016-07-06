@@ -77,7 +77,7 @@ def setReportingThreshold(event):
     # final check is if no reports on event
     # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this one
     branch = EVENTS.getBranch(event)
-    periodLength = BRANCHES.getPeriodLength(branch)
+    periodLength = BRANCHES.getPeriodLength(branch)a
     votePeriod = BRANCHES.getVotePeriod(branch)
     if(votePeriod==EVENTS.getExpiration(event)/periodLength and (((block.timestamp + TWENTYFOURHR) % periodLength) > periodLength/2) and !EVENTS.getUncaughtOutcome(event)):
         EVENTS.setThreshold(event, 2**192)
