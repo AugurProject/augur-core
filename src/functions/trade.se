@@ -57,8 +57,8 @@ macro remove_trade($trade_id, $market):
 # Trade [allows a user to pick up/fill orders off the book]
 #
 # Errors:
+    # -1: trade doesn't exist
     # -2: bad trade hash
-    # -3: trader doesn't exist / own shares in this market
     # -4: must buy at least .00000001 in 
     # -5: can't pick up your own trade
     # 10: insufficient balance
@@ -68,7 +68,8 @@ macro remove_trade($trade_id, $market):
 # 500k gas cost
 # picks orders off the book
 def trade(max_value, max_amount, trade_ids:arr):
-    refund()
+    if(msg.value > 0):
+        send(msg.sender, msg.value)
     i = 0
     trades = 0
     while i < len(trade_ids):
@@ -80,7 +81,7 @@ def trade(max_value, max_amount, trade_ids:arr):
     tradeInfo[2] = max_value
     tradeHash = sha3(tradeInfo, items=3)
     if(TRADES.checkHash(tradeHash, msg.sender)==-1):
-        return(-2)
+        return([-2]: arr)
     # Try to fulfill each trade passed
     t = 0
     while t < len(trade_ids):
@@ -88,7 +89,7 @@ def trade(max_value, max_amount, trade_ids:arr):
         trade = array(TRADE_FIELDS)
         trade = TRADES.get_trade(trade_ids[t], outitems=TRADE_FIELDS)
         if !trade:
-            return(0)
+            return([0]: arr)
         # Get market
         type = trade[1]
         market = trade[2]
@@ -99,10 +100,10 @@ def trade(max_value, max_amount, trade_ids:arr):
         outcome = trade[7]
         fill = 0
         if(owner == msg.sender or owner == tx.origin):
-            return(-5)
+            return([-5]: arr)
         # Make sure the trade has been mined, obvious HFT prevention
         if block.number <= trade[6]:
-            return(TRADE_SAME_BLOCK_PROHIBITED)
+            return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
         branch = MARKETS.getBranchID(market)
         fee = fee_percent(MARKETS.getTradingFee(market), price, MARKETS.getCumScale(market))
 
@@ -118,7 +119,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 value = (fill * price)/ONE
                 # must trade at least 0.00000001 in value
                 if(value < 184467440738):
-                    return(-4)
+                    return([-4]: arr)
                 # Update trade amount or remove
                 if fill < amount:
                     TRADES.fill_trade(trade_ids[t], fill)
@@ -152,7 +153,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Log transaction
                 log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome)
             else:
-                return(INSUFFICIENT_BALANCE)
+                return([INSUFFICIENT_BALANCE]: arr)
         elif type == ASK:
             balance = CASH.balance(msg.sender)
             makerFeeRate = MARKETS.getMakerFees(market)
@@ -195,7 +196,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Log transaction
                 log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome)
             else:
-                return(INSUFFICIENT_BALANCE)
+                return([INSUFFICIENT_BALANCE]: arr)
 
         # Log price, fill amount, type and timestamp
         MARKETS.setPrice(market, outcome, price)
@@ -223,7 +224,8 @@ def trade(max_value, max_amount, trade_ids:arr):
     # -5: can't pickup your own trade
     # -7: not a large enough trade
 def short_sell(buyer_trade_id, max_amount):
-    refund()
+    if(msg.value > 0):
+        send(msg.sender, msg.value)
     # check trade hash
     tradeInfo = array(3)
     tradeInfo[0] = buyer_trade_id
@@ -231,29 +233,29 @@ def short_sell(buyer_trade_id, max_amount):
     tradeInfo[2] = 0
     tradeHash = sha3(tradeInfo, items=3)
     if(TRADES.checkHash(tradeHash, msg.sender)==-1):
-        return(-2)
+        return([-2]: arr)
     # Get trade
     trade = array(TRADE_FIELDS)
     trade = TRADES.get_trade(buyer_trade_id, outitems=TRADE_FIELDS)
     if !trade:
-        return(-1)
+        return([-1]: arr)
     # Get market
     type = trade[1]
     if(type!=BID):
-        return(-3)
+        return([-3]: arr)
     market = trade[2]
     branch = MARKETS.getBranchID(market)
     if(MARKETS.getOneWinningOutcome(market, 0)):
-        return(-4)
+        return([-4]: arr)
     orig_amount = trade[3]
     price = trade[4]
     owner = trade[5]
     outcome = trade[7]
     if(owner == msg.sender or owner == tx.origin):
-        return(-5)
+        return([-5]: arr)
     # Make sure the trade has been mined, obvious HFT prevention
     if block.number <= trade[6]:
-        return(TRADE_SAME_BLOCK_PROHIBITED)
+        return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
     
     # calculate cost
     creator = INFO.getCreator(market)
@@ -261,7 +263,7 @@ def short_sell(buyer_trade_id, max_amount):
     cumScale = MARKETS.getCumScale(market)
     amount = min(orig_amount, max_amount)
     if(amount < 0):
-        return(INSUFFICIENT_BALANCE)
+        return([INSUFFICIENT_BALANCE]: arr)
     fee = amount * price * fee_percent(trading_fee, price, cumScale) / ONE^2
     makerFeeRate = MARKETS.getMakerFees(market)
     branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
@@ -269,9 +271,9 @@ def short_sell(buyer_trade_id, max_amount):
     takerFeesTotal = branchFees + creatorFees
     cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)
     if(CASH.balance(msg.sender) < cost):
-        return(INSUFFICIENT_BALANCE)
+        return([INSUFFICIENT_BALANCE]: arr)
     if(amount*price/ONE < 184467440738):
-        return(-7)
+        return([-7]: arr)
 
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
 
