@@ -27,11 +27,11 @@ macro MINBOND: 200*ONE
 # in a fork this is called on the original branch and event is reported on again on new branch
 # Errors:
     #  0: event isn't eligible/up for round two penalization
-    # -2: already past first half of new period and needed to penalize before then
-    # -3: round two resolve wasn't successful
-    # -4: in fork period only thing that rep redistribution is done on is the round 2 event in the original branch via round 2 penalize
-    # -5: already done for all events in this period
-    # -6: needed to collect fees last period which sets the before/after rep
+    # -1: already past first half of new period and needed to penalize before then
+    # -2: round two resolve wasn't successful
+    # -3: in fork period only thing that rep redistribution is done on is the round 2 event in the original branch via round 2 penalize
+    # -4: already done for all events in this period
+    # -5: needed to collect fees last period which sets the before/after rep
 # force event to be resolved first if it can be
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized
 # todo go over penalty amounts like .2 for ethicality seems too high
@@ -46,7 +46,10 @@ def penalizeRoundTwoWrong(branch, event):
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
     forkEvent = BRANCHES.getEventForkedOver(branch)
-    p = proportionCorrect(event, 0)
+    uncaught = EVENTS.getUncaughtOutcome(event)
+    outcome = catch(uncaught)
+    if(scalar(event) or categorical(event)):
+        outcome = uncaught
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     oldReport = EXPEVENTS.getReport(branch,lastPenalizationPeriod,event,msg.sender)
     ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
@@ -55,23 +58,20 @@ def penalizeRoundTwoWrong(branch, event):
     bond = averageAdjudicationCost + MARKETS.getSharesValue(market)*(POINTZEROONE + MARKETS.getTradingFee(market)/2) / 2**64
     bond = min(bond, MINBOND)
     ethical = EVENTS.getEthical(event)
+    p = proportionCorrect(event, 0)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     if(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
-        return(-2)
-    elif(BRANCHES.getForkPeriod(branch) == lastPeriod && event!=forkEvent):
-        return(-4)
-    elif(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
-        return(-5)
-    elif(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod)):
-        return(-6)
+        return(-1)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
-    uncaught = EVENTS.getUncaughtOutcome(event)
-    if(!EVENTS.getOutcome(event)):
+    elif(!EVENTS.getOutcome(event)):
         if(ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriod, event), msg.sender)==0):
-            return(-3)
-    outcome = catch(uncaught)
-    if(scalar(event) or categorical(event)):
-        outcome = uncaught
+            return(-2)
+    elif(BRANCHES.getForkPeriod(branch) == lastPeriod && event!=forkEvent):
+        return(-3)
+    elif(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
+        return(-4)
+    elif(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod)):
+        return(-5)
     # if overruled / different outcome after reporting on again
     overruled = 0
     if(scalar(event) or categorical(event)):
@@ -85,16 +85,14 @@ def penalizeRoundTwoWrong(branch, event):
     # penalization on a round 2 event if not already penalized, it has outcome, and user reported on it
     # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period
     if(BACKSTOPS.getRoundTwo(event) && (BACKSTOPS.getFinal(event) or event==forkEvent) && !CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && (reportValue or oldReport)):
-        newAfterRep = 0
-        smoothedRep = 0
         # Do the first rep redistribution based on first report and final outcome if reported first time
         if(oldReport && outcome!=0):
             calculateRepChange(oldReport, POINTFOUR)
-            handleEthicsAndBondRepRedistribution(POINTFOUR, oldEthics)
+            handleEthicsAndBondRepRedistribution(POINTFOUR, oldEthics, numReportedOn)
         # Do the second (for each user) based on second report and final outcome
         if(reportValue && outcome!=0):
             calculateRepChange(reportValue, POINTTWO)
-            handleEthicsAndBondRepRedistribution(POINTTWO, ethics)
+            handleEthicsAndBondRepRedistribution(POINTTWO, ethics, numReportedOn)
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
     else:
@@ -107,11 +105,15 @@ def penalizeRoundTwoWrong(branch, event):
     if(numReportedOn==CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
         sendRedistributedRepToBranch()
     return(1)
-    
-handleEthicsAndBondRepRedistribution($maxPenalty, $ethics):
+
+
+macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn):
     # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max maxPenalty% of their rep respectively
     if($ethics != ethic_catch(ethical) && repChange >=0):
-        repChange = -$maxPenalty/10*repBalance / ONE
+        if($numReportedOn<10):
+            repChange = -$maxPenalty/10*repBalance / ONE
+        else:
+            repChange = -$maxPenalty/$numReportedOn*repBalance / ONE
     if(repBalance + repChange <= 0):
         repChange = -1*repBalance
     # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usulater in the process

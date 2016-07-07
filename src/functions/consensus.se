@@ -43,11 +43,11 @@ macro POINTTWO: 3689348814741910528
     #  0: user has <1 rep
     # -1: need to penalize in round 2 penalize function
     # -2: already past first half of new period and needed to penalize before then
-    # -4: in fork period only thing that rep redistribution is done on is the round 2 event in the original branch via round 2 penalize
-    # -5: already done for all events in this period
-    # -6: forked events should be penalized using the fork penalization function
-    # -7: no outcome
-    # -8: needed to collect fees last period [but didn't] which sets the before/after rep so now have to call penalizationCatchup
+    # -3: in fork period only thing that rep redistribution is done on is the round 2 event in the original branch via round 2 penalize
+    # -4: already done for all events in this period
+    # -5: forked events should be penalized using the fork penalization function
+    # -6: no outcome
+    # -7: needed to collect fees last period [but didn't] which sets the before/after rep so now have to call penalizationCatchup
 # force event to be resolved first if it can be
 # call with branch, 0 if no events
 def penalizeWrong(branch, event):
@@ -62,31 +62,31 @@ def penalizeWrong(branch, event):
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
     roundTwo = BACKSTOPS.getRoundTwo(event)
     uncaught = EVENTS.getUncaughtOutcome(event)
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod)):
-        return(-8)
-    elif(repBalance < ONE):
-        return(0)
-    # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
-    elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
-        return(-2)
-    elif(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
-        return(-5)
-    elif(BRANCHES.getForkPeriod(branch) == lastPeriod):
-        return(-4)
-    elif(EVENTS.getForked(event)):
-        return(-6)
-    # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
-    # todo fix getoutcome
-    elif(!EVENTS.getOutcome(event) && !(rejected && EVENTS.getRejectedPeriod(event)==lastPeriod)):
-        if(CLOSEMARKET.closeMarket(branch, EVENTS.getMarket(event, 0), msg.sender)!=1):
-            return(-7)
-
     outcome = catch(uncaught)
+    if(repBalance < ONE):
+        return(0)
     if(scalar(event) or categorical(event)):
         outcome = uncaught
     p = proportionCorrect(event, 0)
     if(roundTwo && outcome!=0):
         return(-1)
+    # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
+    elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
+        return(-2)
+    elif(BRANCHES.getForkPeriod(branch) == lastPeriod):
+        return(-3)
+    elif(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
+        return(-4)
+    elif(EVENTS.getForked(event)):
+        return(-5)
+    # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
+    # todo fix getoutcome
+    elif(!EVENTS.getOutcome(event) && !(rejected && EVENTS.getRejectedPeriod(event)==lastPeriod)):
+        if(CLOSEMARKET.closeMarket(branch, EVENTS.getMarket(event, 0), msg.sender)!=1):
+            return(-6)
+    elif(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod)):
+        return(-7)
+
     repChange = 0
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
