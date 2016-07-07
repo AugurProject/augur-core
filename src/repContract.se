@@ -18,6 +18,8 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# check for overflows
+
 # Storage of all data associated with reporters
 # takes reporterID as key, value is rep amount
 data reporting[]
@@ -95,12 +97,25 @@ def balanceOf(address):
 
 def getTotalRep(branch):
     return(self.totalRep)
-    
-def getSender():
-    return(msg.sender)
-    
+
 macro throw():
     i = 0
     while(1):
-        i += 1
-    i
+        i +=1
+
+# safe adders pulled from piper merriam's btcrelay audit
+def safeToAdd(a, b):
+    return(a + b >= a)
+
+def addSafely(a, b):
+    if (!safeToAdd(a, b)): throw()
+    return(a + b)
+
+def safeToSubtract(uint a, uint b) returns (bool) {
+    return (b <= a);
+}
+
+function subtractSafely(uint a, uint b) returns (uint) {
+    if (!safeToSubtract(a, b)) throw;
+    return a - b;
+}

@@ -3047,7 +3047,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod, sender):
         numEventsToReportOn = self.getNumEventsToReportOn(branch, votePeriod)
         expectedEventsForReporter = repConstant * numEventsToReportOn
         total = expectedEventsForReporter
-        eventsInPeriod = self.getNumberEvents(branch, expDateIndex)-self.getNumRemoved(branch, votePeriod)
+        eventsInPeriod = self.getNumberEvents(branch, period)-self.getNumRemoved(branch, votePeriod)
         numRequiredEvents = self.getNumRequired(branch, votePeriod)
         if(repFraction >= POINTZEROONE):
             minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
@@ -3060,41 +3060,41 @@ def calculateReportingThreshold(branch, eventID, votePeriod, sender):
     return(reportingThreshold)
 
 # 0, event means calculateReportTargetForEvent(branch, eventID, votePeriod, sender) in make reports should be called for that event
-def getEventsToReportOn(branch, expDateIndex, sender):
+def getEventsToReportOn(branch, period, sender):
     refund()
-    numEvents = self.getNumberEvents(branch, expDateIndex)
+    numEvents = self.getNumberEvents(branch, period)
     events = array(numEvents*2)
     i = 0
     while i < numEvents:
         # todo or just calculate report target for event here for purposes of computing this
         if(self.getLesserReportNum(branch, votePeriod, event)==0):
             return([0, event]: arr)
-        # events[i] = self.EventsExpDates[branch][expDateIndex].events[i]
-        events[i] = self.getEvent(branch, expDateIndex, i)
-        reportingThreshold = self.calculateReportingThreshold(branch, events[i], expDateIndex, sender)
+        # events[i] = self.EventsExpDates[branch][period].events[i]
+        events[i] = self.getEvent(branch, period, i)
+        reportingThreshold = self.calculateReportingThreshold(branch, events[i], period, sender)
         x = array(1)
         x[0] = sender + events[i]
         # do abs then mult by 2 to ensure pos. and between 0 and 1
         shaHash = sha3(x, items=1)
         shaHashAbs = abs(shaHash)/ONE
         shaHash = 2*shaHashAbs
-        if((shaHash < reportingThreshold || shaHash<self.getReportingThreshold(events[i]) || self.getRequired(events[i], expDateIndex, branch)) && !self.getOutcome(events[i])):
+        if((shaHash < reportingThreshold || shaHash<self.getReportingThreshold(events[i]) || self.getRequired(events[i], period, branch)) && !self.getOutcome(events[i])):
             events[i+1] = 1
         else:
             events[i+1] = 0
         i += 2
     return(events: arr)
 
-def getEventCanReportOn(branch, expDateIndex, reporter, event):
+def getEventCanReportOn(branch, period, reporter, event):
     refund()
-    reportingThreshold = self.calculateReportingThreshold(branch, event, expDateIndex, reporter)
+    reportingThreshold = self.calculateReportingThreshold(branch, event, period, reporter)
     x = array(1)
     x[0] = reporter + event
     # do abs then mult by 2 to ensure pos. and between 0 and 1
     shaHash = sha3(x, items=1)
     shaHashAbs = abs(shaHash)/ONE
     shaHash = 2*shaHashAbs
-    if(shaHash < reportingThreshold || shaHash<self.getReportingThreshold(event) || self.getRequired(event, expDateIndex, branch)):
+    if(shaHash < reportingThreshold || shaHash<self.getReportingThreshold(event) || self.getRequired(event, period, branch)):
         return(1)
     else:
         return(0)
@@ -3680,15 +3680,15 @@ data reporterPeriodInfo[][](beforeRep[], afterRep[], periodDormantRep[], reportH
     # currentModeItems is how many reports or rep reported the current mode has, which is used in determining whether there's a new mode
 data modeItems[][](reportValue[], currentMode, currentModeItems)
 
-def getSaltyEncryptedHash(branch, expDateIndex, reporter, event):
+def getSaltyEncryptedHash(branch, period, reporter, event):
     refund()
-    return(self.reporterPeriodInfo[branch][expDateIndex].saltyEncryptedHash[reporter][event])
+    return(self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event])
 
-def setSaltyEncryptedHash(branch, expDateIndex, reporter, saltyEncryptedHash, event):
+def setSaltyEncryptedHash(branch, period, reporter, saltyEncryptedHash, event):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
-    self.reporterPeriodInfo[branch][expDateIndex].saltyEncryptedHash[reporter][event] = saltyEncryptedHash
+    self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event] = saltyEncryptedHash
     return(1)
     
 # todo fix sec.
@@ -3706,9 +3706,9 @@ def setPeriodRepWeight(branch, votePeriod, sender, value):
     self.reporterPeriodInfo[branch][votePeriod].periodRepWeight[sender] = value
     return(1)
 
-def getReportHash(branch, expDateIndex, reporter, event):
+def getReportHash(branch, period, reporter, event):
     refund()
-    return(self.reporterPeriodInfo[branch][expDateIndex].reportHash[reporter][event])
+    return(self.reporterPeriodInfo[branch][period].reportHash[reporter][event])
 
 def setEthicReport(branch, period, event, ethics, sender):
     self.reporterPeriodInfo[branch][period].ethics[sender][event] = ethics
@@ -3791,24 +3791,24 @@ def setEventRequired(branch, period, event):
 
 # With this function you can get the eventIDs and report on outcomes
 # @return all events in a branch and expiration period
-def getEvents(branch, expDateIndex):
+def getEvents(branch, period):
     refund()
-    numEvents = self.periodEventInfo[branch][expDateIndex].numberEvents
+    numEvents = self.periodEventInfo[branch][period].numberEvents
     events = array(numEvents)
     i = 0
     while i < numEvents:
-        events[i] = self.periodEventInfo[branch][expDateIndex].events[i]
+        events[i] = self.periodEventInfo[branch][period].events[i]
         i += 1
     return(events: arr)
     
-def getEventsRange(branch, expDateIndex, start, end):
+def getEventsRange(branch, period, start, end):
     refund()
     numEvents = end-start
     events = array(numEvents)
     i = start
     index = 0
     while i < end:
-        events[index] = self.periodEventInfo[branch][expDateIndex].events[i]
+        events[index] = self.periodEventInfo[branch][period].events[i]
         index += 1
         i += 1
     return(events: arr)
@@ -3822,25 +3822,25 @@ def getEventIndex(branch, period, eventID):
 def setNumEventsToReportOn(branch):
     refund()
     # after voting has started
-    expDateIndex = self.getVotePeriod(branch)
-    self.periodEventInfo[branch][expDateIndex].numEventsToReportOn = (self.periodEventInfo[branch][expDateIndex].numberEvents - self.periodEventInfo[branch][expDateIndex].numReqEvents - self.periodEventInfo[branch][expDateIndex].numberRemoved)*self.getBaseReporters(branch)
+    period = self.getVotePeriod(branch)
+    self.periodEventInfo[branch][period].numEventsToReportOn = (self.periodEventInfo[branch][period].numberEvents - self.periodEventInfo[branch][period].numReqEvents - self.periodEventInfo[branch][period].numberRemoved)*self.getBaseReporters(branch)
     return(1)
 
-def getNumEventsToReportOn(branch, expDateIndex):
+def getNumEventsToReportOn(branch, period):
     refund()
-    return(self.periodEventInfo[branch][expDateIndex].numEventsToReportOn)
+    return(self.periodEventInfo[branch][period].numEventsToReportOn)
 
 def getShareValue(branch, expIndex):
     refund()
     return(self.periodEventInfo[branch][expIndex].shareValue)
 
-def getNumberEvents(branch, expDateIndex):
+def getNumberEvents(branch, period):
     refund()
-    return(self.periodEventInfo[branch][expDateIndex].numberEvents)
+    return(self.periodEventInfo[branch][period].numberEvents)
 
-def getEvent(branch, expDateIndex, eventIndex):
+def getEvent(branch, period, eventIndex):
     refund()
-    return(self.periodEventInfo[branch][expDateIndex].events[eventIndex])
+    return(self.periodEventInfo[branch][period].events[eventIndex])
 
 # check that msg.sender is one of our function contracts
 def addEvent(branch, futurePeriod, eventID, subsidy):
@@ -3873,11 +3873,11 @@ def adjustPeriodShareValueOutstanding(branch, expIndex, amount):
     self.periodEventInfo[branch][expIndex].shareValue += amount
     return(1)
 
-def setReportHash(branch, expDateIndex, reporter, reportHash, event):
+def setReportHash(branch, period, reporter, reportHash, event):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
-    self.reporterPeriodInfo[branch][expDateIndex].reportHash[reporter][event] = reportHash
+    self.reporterPeriodInfo[branch][period].reportHash[reporter][event] = reportHash
     return(1)
 
 # called in case an event doesn't get reported on at all in a period

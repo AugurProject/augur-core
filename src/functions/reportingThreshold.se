@@ -3,6 +3,7 @@ import events as EVENTS
 import expiringEvents as EXPEVENTS
 import fxpFunctions as FXP
 import reporting as REPORTING
+import makeReports as MAKEREPORTS
 inset('refund.se')
 
 macro ONEPOINTTWO: 22136092888451461120
@@ -18,7 +19,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod, sender):
         numEventsToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
         expectedEventsForReporter = repConstant * numEventsToReportOn
         total = expectedEventsForReporter
-        eventsInPeriod = EXPEVENTS.getNumberEvents(branch, expDateIndex)-EXPEVENTS.getNumRemoved(branch, votePeriod)
+        eventsInPeriod = EXPEVENTS.getNumberEvents(branch, period)-EXPEVENTS.getNumRemoved(branch, votePeriod)
         numRequiredEvents = EXPEVENTS.getNumRequired(branch, votePeriod)
         if(repFraction >= POINTZEROONE):
             minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
@@ -30,42 +31,40 @@ def calculateReportingThreshold(branch, eventID, votePeriod, sender):
     reportingThreshold = EXPEVENTS.getLesserReportNum(branch, votePeriod, eventID)*repConstant*ONE
     return(reportingThreshold)
 
-# 0, event means calculateReportTargetForEvent(branch, eventID, votePeriod, sender) in make reports should be called for that event [or just call here?]
 # todo fix index / loops issues here
-def getEventsToReportOn(branch, expDateIndex, sender):
-    refund()
-    numEvents = EXPEVENTS.getNumberEvents(branch, expDateIndex)
+def getEventsToReportOn(branch, period, sender, start):
+    numEvents = EXPEVENTS.getNumberEvents(branch, period)
     events = array(numEvents*2)
     i = 0
+    n = start
     while i < numEvents:
-        # todo or just calculate report target for event here for purposes of computing this
-        if(EXPEVENTS.getLesserReportNum(branch, votePeriod, event)==0):
-            return([0, event]: arr)
-        # events[i] = self.EventsExpDates[branch][expDateIndex].events[i]
-        events[i] = EXPEVENTS.getEvent(branch, expDateIndex, i)
-        reportingThreshold = self.calculateReportingThreshold(branch, events[i], expDateIndex, sender)
+        events[i] = EXPEVENTS.getEvent(branch, period, n)
+        # calculate report target for event here if not done for purposes of computing this
+        if(EXPEVENTS.getLesserReportNum(branch, period, events[i])==0):
+            MAKEREPORTS.calculateReportTargetForEvent(branch, events[i], period, msg.sender)
+        reportingThreshold = self.calculateReportingThreshold(branch, events[i], period, sender)
         x = array(1)
         x[0] = sender + events[i]
         # do abs then mult by 2 to ensure pos. and between 0 and 1
         shaHash = sha3(x, items=1)
         shaHash = (abs(shaHash)/ONE) * 2
-        if((shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(events[i]) || EXPEVENTS.getRequired(events[i], expDateIndex, branch)) && !EVENTS.getOutcome(events[i])):
+        if((shaHash < reportingThreshold || EXPEVENTS.getRequired(events[i], period, branch)) && !EVENTS.getOutcome(events[i])):
             events[i+1] = 1
         else:
             events[i+1] = 0
         i += 2
+        n += 1
     return(events: arr)
 
-def getEventCanReportOn(branch, expDateIndex, reporter, event):
+def getEventCanReportOn(branch, period, reporter, event):
     refund()
-    reportingThreshold = self.calculateReportingThreshold(branch, event, expDateIndex, reporter)
+    reportingThreshold = self.calculateReportingThreshold(branch, event, period, reporter)
     x = array(1)
     x[0] = reporter + event
     # do abs then mult by 2 to ensure pos. and between 0 and 1
     shaHash = sha3(x, items=1)
-    shaHash = (abs(shaHash)/ONE) * 2
-    # prob. shouldn't count getreportingtheshold here
-    if(shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(event) || EXPEVENTS.getRequired(event, expDateIndex, branch)):
+    shaHash = (abs(shaHash)/ONE) * 2    
+    if(shaHash < reportingThreshold || EXPEVENTS.getRequired(event, period, branch)):
         return(1)
     else:
         return(0)
@@ -77,7 +76,7 @@ def setReportingThreshold(event):
     # final check is if no reports on event
     # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this one
     branch = EVENTS.getBranch(event)
-    periodLength = BRANCHES.getPeriodLength(branch)a
+    periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = BRANCHES.getVotePeriod(branch)
     if(votePeriod==EVENTS.getExpiration(event)/periodLength and (((block.timestamp + TWENTYFOURHR) % periodLength) > periodLength/2) and !EVENTS.getUncaughtOutcome(event)):
         EVENTS.setThreshold(event, 2**192)
