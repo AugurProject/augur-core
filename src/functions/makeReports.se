@@ -218,7 +218,7 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
             EVENTS.setForkOutcome(eventID, outcome)
         else:
             EVENTS.setUncaughtOutcome(eventID, outcome)
-    return(report)
+    return(report)whwe
 
 ### Helper functions:
 # calculates how many reports should be on a given event
