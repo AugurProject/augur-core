@@ -32,6 +32,12 @@ import penalizationCatchup as CATCHUP
 import reportingThreshold as THRESHOLD
 inset('refund.se')
 
+event returnValue(x)
+
+macro logReturn($x):
+    log(type=returnValue, $x)
+    return($x)
+
 def makeHash(salt, report, eventID, sender):
     hashInfo = array(4)
     hashInfo[0] = sender
@@ -106,29 +112,29 @@ def submitReport(event, salt, report, ethics):
     balance = REPORTING.getRepBalance(branch, msg.sender)
     votePeriod = BRANCHES.getVotePeriod(branch)
     if(balance<ONE):
-        return(0)
+        logReturn(0)
     if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
-        return(-1)
+        logReturn(-1)
     eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
     # makes sure event is in the given branch and vote period
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
-        return(-5)
+        logReturn(-5)
     elif(EVENTS.getOutcome(event)!=0):
-        return(-6)
+        logReturn(-6)
     periodLength = BRANCHES.getPeriodLength(branch)
     # ensures user has collected fees for last reporting period
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod-1)):
         if(COLLECTFEES.collectFees(branch, msg.sender)<1):
-            return(-8)
+            logReturn(-8)
     # commented out for testing
     #if(block.timestamp/periodLength!=((block.timestamp + 2*TWENTYFOURHR)/periodLength)):
-    #    return(-7)
+    #    logReturn(-7)
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
         realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
         if(self.makeHash(salt, report, eventID, msg.sender)!=realHash || realHash==0):
-            return(-3)
+            logReturn(-3)
         forkedOverEthicality = BACKSTOPS.getForkedOverEthicality(event)
         forkedOverThisEvent = 0
         if(BRANCHES.getEventForkedOver(branch) == event):
@@ -136,7 +142,7 @@ def submitReport(event, salt, report, ethics):
         roundTwo = BACKSTOPS.getRoundTwo(event)
         report = self.validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, balance)
         if(report == -4):
-            return(-4)
+            logReturn(-4)
         EXPEVENTS.setReport(branch, votePeriod, eventID, report, msg.sender)
         # set ethics value for event
         ethics = ethics
@@ -176,8 +182,8 @@ def submitReport(event, salt, report, ethics):
             EXPEVENTS.addReportersPaidSoFar(branch, event)
             CASH.subtractCash(branch, 3500000*tx.gasprice*ONE / WEITOETH)
             CASH.addCash(msg.sender, 3500000*tx.gasprice*ONE / WEITOETH)
-        return(1)
-    return(-2)
+        logReturn(1)
+    logReturn(-2)
 
 # validates and submits report
 # weights reports by rep if round 2 and fork
