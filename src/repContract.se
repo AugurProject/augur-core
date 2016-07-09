@@ -18,8 +18,6 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# check for overflows
-
 # Storage of all data associated with reporters
 # takes reporterID as key, value is rep amount
 data reporting[]
@@ -53,6 +51,8 @@ def transfer(receiver, value):
     senderBalance = self.reporting[msg.sender]
     if(senderBalance < value or value <= 0 or !self.seeded):
         throw()
+    if(!safeToSubtract(self.reporting[msg.sender], value) or !safeToAdd(self.reporting[receiver], value)):
+        throw()
     self.reporting[msg.sender] -= value
     self.reporting[receiver] += value
     log(type=Transfer, msg.sender, receiver, value)
@@ -63,6 +63,8 @@ def transfer(receiver, value):
 def transferFrom(from, receiver, value):
     senderBalance = self.reporting[from]
     if(senderBalance < value or value <= 0 or (!self.approvedToSpend[from][msg.sender] and from!=msg.sender) or !self.seeded):
+        throw()
+    if(!safeToSubtract(self.reporting[from], value) or !safeToAdd(self.reporting[receiver], value)):
         throw()
     self.reporting[from] -= value
     self.reporting[receiver] += value
@@ -103,19 +105,9 @@ macro throw():
     while(1):
         i +=1
 
-# safe adders pulled from piper merriam's btcrelay audit
-def safeToAdd(a, b):
-    return(a + b >= a)
+# safe adders idea pulled from piper merriam's btcrelay audit
+macro safeToAdd($a, $b):
+    (($a + $b) >= $a)
 
-def addSafely(a, b):
-    if (!safeToAdd(a, b)): throw()
-    return(a + b)
-
-def safeToSubtract(uint a, uint b) returns (bool) {
-    return (b <= a);
-}
-
-function subtractSafely(uint a, uint b) returns (uint) {
-    if (!safeToSubtract(a, b)) throw;
-    return a - b;
-}
+macro safeToSubtract($a, $b):
+    ($b <= $a)

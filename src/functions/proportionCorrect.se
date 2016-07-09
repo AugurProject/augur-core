@@ -12,7 +12,7 @@ macro proportionCorrect(event, forkEvent):
         uncaught = EVENTS.getUncaughtOutcome(event)        
         outcome = catch(uncaught)
         # subtract 1 to get it from 0 to 1
-        avgOutcome = uncaug - ONE):
+        avgOutcome = uncaught - ONE
         return(0)
     # binary
     if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==TWO and EVENTS.getMinValue(event)==ONE):

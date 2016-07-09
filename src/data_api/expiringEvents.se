@@ -196,15 +196,15 @@ def getEventIndex(branch, period, eventID):
     refund()
     return(self.periodEventInfo[branch][period].eventIDToIndex[eventID])
 
-# we should probably make this bonded too
+# gets number of available events to report on, not counting required events
 # -1: voting not started
 def setNumEventsToReportOn(branch):
-    refund()
-    # after voting has started
+    # whitelist to only makeReports
     period = BRANCHES.getVotePeriod(branch)
     self.periodEventInfo[branch][period].numEventsToReportOn = (self.periodEventInfo[branch][period].numberEvents - self.periodEventInfo[branch][period].numReqEvents - self.periodEventInfo[branch][period].numberRemoved)*BRANCHES.getBaseReporters(branch)
     return(1)
 
+# gets number of available events to report on, not counting required events
 def getNumEventsToReportOn(branch, period):
     refund()
     return(self.periodEventInfo[branch][period].numEventsToReportOn)

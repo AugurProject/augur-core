@@ -52,7 +52,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     votePeriod = BRANCHES.getVotePeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
-z    delta = lastPeriod - lastPeriodPenalized
+    delta = lastPeriod - lastPeriodPenalized
     eventIndex = EXPEVENTS.getEventIndex(branch, votePeriod, event)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
@@ -151,7 +151,7 @@ def submitReport(event, salt, report, ethics):
         # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
         if(forkedOverEthicality):
             oldEthical = ethic_catch(EVENTS.getEthical(event))
-            if(oldEthical == ONE)
+            if(oldEthical == ONE):
                 ethics = 0
             else:
                 ethics = ONE

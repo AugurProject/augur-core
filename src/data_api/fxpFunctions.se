@@ -1,5 +1,3 @@
-inset('refund.se')
-
 macro fx_floor_log2($x):
     with $y = $x / 0x10000000000000000:
         with $lo = 0:
@@ -101,20 +99,8 @@ macro fx_exp($x):
 
 # Calculates the exponential function given a fixed point [base 2^64] number, so e^x
 def fx_exp(x):
-    refund()
     return(fx_exp(x))
 
 # Calculates the natural log function given a fixed point [base 2^64] number, so ln(x)
 def fx_log(x):
-    refund()
     return(fx_log(x))
-
-# Takes the square root of a fixed point number
-def sqrt(n):
-    refund()
-    val = n
-    i = 0
-    while i < 11:
-        val = (val + n*ONE/val)/2
-        i += 1
-    return val

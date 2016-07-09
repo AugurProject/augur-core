@@ -16,16 +16,17 @@ def calculateReportingThreshold(branch, eventID, votePeriod, sender):
     repConstant = EXPEVENTS.getPeriodRepWeight(branch, votePeriod, sender)
     if(!repConstant):
         repConstant = FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getRepBalance(branch, sender))/ONE)*2**64/FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getActiveRep(branch))/ONE)
-        numEventsToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
-        expectedEventsForReporter = repConstant * numEventsToReportOn
-        total = expectedEventsForReporter
+        numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
+        expectedEventsForReporter = repConstant * numEventsAvailableToReportOn
+        # this includes required events
         eventsInPeriod = EXPEVENTS.getNumberEvents(branch, period)-EXPEVENTS.getNumRemoved(branch, votePeriod)
         numRequiredEvents = EXPEVENTS.getNumRequired(branch, votePeriod)
+        # ensures low number of events with highly concentrated rep edge case still get reported on
         if(repFraction >= POINTZEROONE):
             minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
-            if(total/ONE < minimum):
-                total = minimum*ONE
-                repConstant = total / numEventsToReportOn
+            if(expectedEventsForReporter/ONE < minimum):
+                expectedEventsForReporter = minimum*ONE
+                repConstant = expectedEventsForReporter / numEventsAvailableToReportOn
         EXPEVENTS.setPeriodRepWeight(branch, votePeriod, sender, repConstant)
     # 1 is 2**192 here, lesserreportnum, repconstant, and one are all base 2**64
     reportingThreshold = EXPEVENTS.getLesserReportNum(branch, votePeriod, eventID)*repConstant*ONE
