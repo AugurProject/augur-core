@@ -214,7 +214,7 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
         if(report > ONE):
             report = ONE
         elif(report<=0):
-            # 1 is the new 0 [1/2**64 is basically 0 but able to be differentiated from no report of 0]
+            # 1 is the new 0 [1/10**18 is basically 0 but able to be differentiated from no report of 0]
             report = 1
         if(forkedOverThisEvent):
             # in case of fork remove the original outcome as a possible response if didn't fork over ethics

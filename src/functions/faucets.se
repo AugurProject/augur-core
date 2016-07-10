@@ -31,8 +31,8 @@ import expiringEvents as EXPEVENTS
 import backstops as BACKSTOPS
 inset('refund.se')
 
-macro POINTSEVEN: 12912720851596685312
-macro POINTZEROONE: 184467440737095520
+macro POINTSEVEN: 700000000000000000
+macro POINTZEROONE: 10000000000000000
 
 # Error -1: Hey, you're not broke!
 def cashFaucet():
@@ -56,7 +56,7 @@ def reputationFaucet(branch):
 def fundNewAccount(branch):
     CASH.send(self, 0)
     self.reputationFaucet(branch)
-    CASH.setCash(msg.sender, 10000*2^64)
+    CASH.setCash(msg.sender, 10000*ONE)
     return(1)
 
 # Used to claim rep on a fork or on a new branch

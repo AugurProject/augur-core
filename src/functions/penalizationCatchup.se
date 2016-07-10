@@ -5,7 +5,7 @@ import consensusData as CONSENSUS
 
 inset('refund.se')
 
-macro POINTNINE: 16602069666338596864
+macro POINTNINE: 900000000000000000
 
 # Call when a user who hasn't reported for a while [and had their rep active] and wants to start again and needs to catch up on penalizations
 # Errors:

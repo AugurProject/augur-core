@@ -36,7 +36,7 @@ event Transfer(_from:indexed, _to:indexed, _value)
 event Approval(_owner:indexed, _spender:indexed)
 
 macro ONE:
-    2**64
+    10**18
 
 macro refund():
     if(msg.value > 0):

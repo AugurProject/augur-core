@@ -87,12 +87,15 @@ def get_send_returns(contract_name, method_name, old_api):
             send = old_api[contract_name][method_name]["send"]
         if "returns" in old_api[contract_name][method_name]:
             returns = old_api[contract_name][method_name]["returns"]
-    return send, returns
+        if "mutable" in old_api[contract_name][method_name]:
+            mutable = old_api[contract_name][method_name]["mutable"]
+    return send, returns, mutable
 
 def update_from_old_api(method, contract_name, method_name, old_api):
-    send, returns = get_send_returns(contract_name, method_name, old_api)
+    send, returns, mutable = get_send_returns(contract_name, method_name, old_api)
     if send is not None: method["send"] = send
     if returns is not None: method["returns"] = returns
+    if mutable is not None: method["mutable"] = mutable
     return method
 
 def get_input_names(inputs):

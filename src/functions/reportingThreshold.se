@@ -5,8 +5,8 @@ import fxpFunctions as FXP
 import reporting as REPORTING
 inset('refund.se')
 
-macro ONEPOINTTWO: 22136092888451461120
-macro POINTZEROONE: 184467440737095520
+macro ONEPOINTTWO: 1200000000000000000
+macro POINTZEROONE: 10000000000000000
 
 # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
     # exp(1.2*ln(repbal)) / exp(1.2*ln(totalrep)) is == (reporterList[n]/totalRep)**1.2
@@ -14,7 +14,7 @@ macro POINTZEROONE: 184467440737095520
 def calculateReportingThreshold(branch, eventID, votePeriod, sender):
     repConstant = EXPEVENTS.getPeriodRepConstant(branch, votePeriod, sender)
     if(repConstant==0):
-        repConstant = FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getRepBalance(branch, sender))/ONE)*2**64/FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getActiveRep(branch))/ONE)
+        repConstant = FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getRepBalance(branch, sender))/ONE)*ONE/FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getActiveRep(branch))/ONE)
         numEventsToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
         expectedEventsForReporter = repConstant * numEventsToReportOn
         total = expectedEventsForReporter
@@ -26,7 +26,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod, sender):
                 total = minimum*ONE
                 repConstant = total / numEventsToReportOn
         EXPEVENTS.setPeriodRepConstant(branch, votePeriod, sender, repConstant)
-    # 1 is 2**192 here, lesserreportnum, repconstant, and one are all base 2**64
+    # 1 is 2**192 here, lesserreportnum, repconstant, and one are all base 10**18
     reportingThreshold = EXPEVENTS.getLesserReportNum(branch, votePeriod, eventID)*repConstant*ONE
     return(reportingThreshold)
 

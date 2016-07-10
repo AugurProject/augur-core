@@ -30,7 +30,7 @@ inset('refund.se')
 event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
 event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
 
-macro ONEPOINTFIVE: 27670116110564327424
+macro ONEPOINTFIVE: 1500000000000000000
 
 # Trade types
 macro BID: 1
@@ -46,7 +46,7 @@ macro TRADE_SAME_BLOCK_PROHIBITED: 22
 # calculates trading fee percentage
 # 4*fee*price*(1-price/range)/range keeps fees lower at the edges
 macro fee_percent($market_fee, $price, $cumScale):
-    4 * $market_fee * $price * (ONE-$price*2**64/$cumScale) / ($cumScale*ONE)
+    4 * $market_fee * $price * (ONE-$price*ONE/$cumScale) / ($cumScale*ONE)
 
 # removes a trade from the book
 macro remove_trade($trade_id, $market):
@@ -267,7 +267,7 @@ def short_sell(buyer_trade_id, max_amount):
     amount = min(orig_amount, max_amount)
     if(amount < 0):
         return(INSUFFICIENT_BALANCE)
-    fee = amount * price * fee_percent(trading_fee, price, cumScale) / ONE^2
+    fee = amount * price / ONE * fee_percent(trading_fee, price, cumScale) / ONE
     makerFeeRate = MARKETS.getMakerFees(market)
     branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
     creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*fee / ONE

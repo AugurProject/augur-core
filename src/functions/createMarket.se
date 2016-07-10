@@ -28,7 +28,7 @@ import events as EVENTS
 import expiringEvents as EXPEVENTS
 inset('refund.se')
 
-macro POINTZEROSIX: 1106804644422573056
+macro POINTZEROSIX: 60000000000000000
 macro COSTPERREPORTER: 3500000
 
 event marketCreated(marketID)
@@ -41,8 +41,8 @@ def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue
 
 # Create an event. Events are the basic units / questions that are reported on in Augur by reporters
 # @param numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0 to 11.0 would be 11 outcomes (if incremented by 0.1)
-# @param minValue should be 2**64 for a binary event, maxValue should be 2**65 for a binary event
-# @param minValue for a scalar from 0 to 100 should be 0 and max should be 100*2**64, for -100 to 200, it should be -100*2**64 and 200*2**64 respectively
+# @param minValue should be 10**18 for a binary event, maxValue should be 2*10**18 for a binary event
+# @param minValue for a scalar from 0 to 100 should be 0 and max should be 100*10**18, for -100 to 200, it should be -100*10**18 and 200*10**18 respectively
 # @param description is a description of the event / the question itself
 # @param resolution is the string source/link to resolve the event
 # @param branch is the branch the event is created in
