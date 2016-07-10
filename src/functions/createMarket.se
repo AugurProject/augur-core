@@ -28,6 +28,7 @@ import events as EVENTS
 import expiringEvents as EXPEVENTS
 inset('refund.se')
 
+macro POINTONETWOFIVE: 125000000000000000
 macro POINTZEROSIX: 60000000000000000
 macro COSTPERREPORTER: 3500000
 
@@ -117,7 +118,7 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
     futurePeriod = expirationDate / periodLength
     forkPeriod = BRANCHES.getForkPeriod(branch)
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
-    if(periodLength==0 or len(description)==0 || tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > 2^61 or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or makerFees < 0 or makerFees > ONEHALF):
+    if(periodLength==0 or len(description)==0 || tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > POINTONETWOFIVE or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or makerFees < 0 or makerFees > ONEHALF):
         return(-1)
     if(expirationDate < block.timestamp):
         return(-2)

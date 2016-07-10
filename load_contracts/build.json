@@ -4250,7 +4250,7 @@
         "sig": "extern createBranch: [createSubbranch:[bytes,int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "createMarket": {
-        "address": "0x23618d0d56c35731412b18a27acda097aafdeed2", 
+        "address": "0x51909d3dc8abe4cee71dc17c787c212db7b139dd", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -4289,6 +4289,7 @@
             "EXPEVENTS = 0xd85997ef8419efde3ae6ab680aa376f7e46a414a", 
             "inset('refund.se')", 
             "", 
+            "macro POINTONETWOFIVE: 125000000000000000", 
             "macro POINTZEROSIX: 60000000000000000", 
             "macro COSTPERREPORTER: 3500000", 
             "", 
@@ -4378,7 +4379,7 @@
             "    futurePeriod = expirationDate / periodLength", 
             "    forkPeriod = BRANCHES.getForkPeriod(branch)", 
             "    # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets", 
-            "    if(periodLength==0 or len(description)==0 || tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > 2^61 or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or makerFees < 0 or makerFees > ONEHALF):", 
+            "    if(periodLength==0 or len(description)==0 || tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > POINTONETWOFIVE or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or makerFees < 0 or makerFees > ONEHALF):", 
             "        return(-1)", 
             "    if(expirationDate < block.timestamp):", 
             "        return(-2)", 
