@@ -81,7 +81,7 @@ def get_old_api(api_path, isLocal=False):
 
 # Retrieve "send" and/or "returns" values from the old API
 def get_send_returns(contract_name, method_name, old_api):
-    send, returns = None, None
+    send, returns, mutable = None, None, None
     if old_api and contract_name in old_api and method_name in old_api[contract_name]:
         if "send" in old_api[contract_name][method_name]:
             send = old_api[contract_name][method_name]["send"]
