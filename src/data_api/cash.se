@@ -107,14 +107,14 @@ def setCash(address, balance):
     return(1)
 
 def depositEther():
-    self.cashcoinBalances[msg.sender] += msg.value * ONE / WEITOETH
+    self.cashcoinBalances[msg.sender] += msg.value
     return msg.value
 
 def withdrawEther(to, value):
     if(value < 0):
         return(-1)
-    if self.cashcoinBalances[msg.sender] >= value * ONE / WEITOETH:
-        self.cashcoinBalances[msg.sender] -= value * ONE / WEITOETH
+    if self.cashcoinBalances[msg.sender] >= value:
+        self.cashcoinBalances[msg.sender] -= value
         send(to, value)
         return 1
     else:
