@@ -30,7 +30,7 @@ inset('refund.se')
     # eventIDToIndex returns an event id for a given index in events
     # requiredEvents states whether a given event is required to be reported on or not [a round2 backstop or a fork event are both required]
     # subsidy is money for paying back a user for calculating the targeted num of reports for an event
-    # eventWeight is number of reports on an event in a round 1 event, total rep repord on it in a backstop 1 or fork event
+    # eventWeight is number of reports on an event in a round 1 event, total rep reported on it in a backstop 1 or fork event
     # repEvent is the amount of rep that has reported on an event
     # lesserReportNum is the number of reports an event should have [the lesser of how many it can afford from fees and how many it should have due to outstanding share value]
     # numberEvents is the total number of events in a given reporting period

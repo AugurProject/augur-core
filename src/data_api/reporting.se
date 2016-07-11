@@ -193,15 +193,21 @@ def addRep(branch, index, value):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    self.Reporting[branch].reputation[index].repValue += value
-    return(1)
+    if(safeToAdd(self.Reporting[branch].reputation[index].repValue, value)):
+        self.Reporting[branch].reputation[index].repValue += value
+        return(1)
+    else:
+        return(0)
 
 def subtractRep(branch, index, value):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    self.Reporting[branch].reputation[index].repValue -= value
-    return(1)
+    if(safeToSubtract(self.Reporting[branch].reputation[index].repValue, value)):
+        self.Reporting[branch].reputation[index].repValue -= value
+        return(1)
+    else:
+        return(0)
 
 def setRep(branch, index, newRep):
     refund()
@@ -242,3 +248,10 @@ def setSaleDistribution(addresses: arr, balances: arr, branchID):
         self.Reporting[branchID].numberReporters += 1
         i+=1
     return(1)
+
+# safe adders idea pulled from piper merriam's btcrelay audit
+macro safeToAdd($a, $b):
+    (($a + $b) >= $a)
+
+macro safeToSubtract($a, $b):
+    ($b <= $a)
