@@ -68,6 +68,10 @@ def getDenominator(branch, period):
 def increaseDenominator(branch, period, amount):
     self.branch[branch].period[period].denominator += amount
     return(1)
+    
+def decreaseDenominator(branch, period, amount):
+    self.branch[branch].period[period].denominator -= amount
+    return(1)
 
 def getFeesCollected(branch, address, period):
     return(self.branch[branch].period[period].feesCollected[address])

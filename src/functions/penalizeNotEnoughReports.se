@@ -28,6 +28,17 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
+    originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
+    numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)
+    # events a user should be reporting on
+    # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
+    # a^b=exp(b*ln(a))=e^(b*ln(a)).
+    repConstant = FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(originalRep)/ONE)*2**64/FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getActiveRep(branch))/ONE)
+    baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
+    total = repConstant*baseReporters
+    numRequiredEvents = EXPEVENTS.getNumRequired(branch, lastPeriod)
+    expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn + numRequiredEvents*ONE
+    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, lastPeriod)-EXPEVENTS.getNumRemoved(branch, lastPeriod)
     if(CONSENSUS.getNotEnoughPenalized(branch, reporter, lastPeriod)):
         return(-1)
     if(residual > periodLength/2):
@@ -36,35 +47,20 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     if(BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
         CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
         return(2)
-    # events a user should be reporting on
-    # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
-    # a^b=exp(b*ln(a))=e^(b*ln(a)).
-    prelim = EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)
-    # need to do active rep on a period by period basis.. todo
-    # switch to period rep weight for expe
-    exp = FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(EXPEVENTS.getBeforeRep(branch, lastPeriod, sender))/ONE)*2**64/FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getActiveRep(branch))/ONE)
-    baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
-    # if total [which is mult by num events to report on via the prelim amount] is too high [>1] then numevents will estimate a higher number than reality, so need to correct for this below
-    total = exp*baseReporters
-    numEvents = exp*prelim + EXPEVENTS.getNumRequired(branch, lastPeriod)*ONE
-    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, lastPeriod)-EXPEVENTS.getNumRemoved(branch, lastPeriod)
     if(repConstant >= POINTZEROONE):
-        minimum = min(30+EXPEVENTS.getNumRequired(branch, lastPeriod), eventsInPeriod)
-        if(numEvents/ONE < minimum):
-            numEvents = minimum*ONE
-    # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*40 > 1)
+        minimum = min(30+numRequiredEvents, eventsInPeriod)
+        if(expectedEventsForReporterIncludingRequired/ONE < minimum):
+            expectedEventsForReporterIncludingRequired = minimum*ONE
+    # if total is too high [>1] then expectedEventsForReporterIncludingRequired will estimate a higher number than reality, so need to correct for this below
+    # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*baseReporters > 1)
     if(total > ONE):
-        numEvents = (EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)/baseReporters)*ONE + EXPEVENTS.getNumRequired(branch, lastPeriod)*ONE
+        expectedEventsForReporterIncludingRequired = (numEventsAvailableToReportOn/baseReporters)*ONE + numRequiredEvents*ONE
     numReportsSubmitted = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
     couldveReported = THRESHOLD.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
-    if(numEvents/2 > numReportsSubmitted*ONE && couldveReported):
-        # typically meant for people who did report but not enough [those who didnt at all use pen. catchup] so using before rep is fine, but if not use rep balance
-        originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
-        if(originalRep==0):
-            originalRep = REPORTING.getRepBalance(branch, reporter)
+    if(expectedEventsForReporterIncludingRequired/2 > numReportsSubmitted*ONE && couldveReported):
         # penalize people
-        newRep = POINTONE*numReportsSubmitted*originalRep / numEvents
+        newRep = POINTONE*numReportsSubmitted*originalRep / (expectedEventsForReporterIncludingRequired/2)
         oldRep = originalRep*POINTNINE / ONE
         repChange = (oldRep+newRep) - originalRep
         if(repChange > 0):
@@ -76,9 +72,12 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         EXPEVENTS.setBeforeRep(branch, lastPeriod, oldRep+newRep, reporter)
         afterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, reporter)
         newAfterRep = afterRep + repChange
-        if(afterRep==0):
-            newAfterRep = oldRep+newRep
-        # todo decrease denominator by rep person lost here
+        if(newAfterRep <= 0):
+            newAfterRep = 0
+        # decrease denominator by rep person lost here if they've already done the penalizations / redistributions in consensus
+        if(CONSENSUS.getRepRedistributionDone(branch, reporter)):
+            diff = afterRep - newAfterRep
+            CONSENSUS.decreaseDenominator(branch, lastPeriod, diff)
         EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, reporter)
         CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
         CONSENSUS.doRefund(msg.sender, reporter)
