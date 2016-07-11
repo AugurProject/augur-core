@@ -1,3 +1,8 @@
+#    so if user hasn't claimed rep on the branch yet and it's a fork scenario, don't allow sending rep on the parent branch until they [receiver] claim 
+#    should also perhaps make sender claim too
+
+# also perhaps should just do sendFrom only here too
+
 # This software (Augur) allows buying && selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
 #    This program is free software; you can redistribute it &&/or modify
@@ -76,7 +81,7 @@ def sendReputation(branch, recver, value):
     senderIndex = REPORTING.repIDToIndex(branch, sender)
     receiverIndex = REPORTING.repIDToIndex(branch, recver)
 
-    # if the sender's rep. account doesn't exist, make one, only if in first half of period
+    # if the sender's rep. account doesn't exist, make one, only if in first half of period and not a fork scenario
     if(REPORTING.getReporterID(branch, senderIndex)!=msg.sender):
         REPORTING.addReporter(branch, sender)
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
@@ -131,7 +136,7 @@ def sendRepFrom(branch, from, recver, value):
     senderIndex = REPORTING.repIDToIndex(branch, sender)
     receiverIndex = REPORTING.repIDToIndex(branch, recver)
 
-    # if the sender's rep. account doesn't exist, make one, only if in first half of period
+    # if the sender's rep. account doesn't exist, make one, only if in first half of period and not a fork scenario
     if(REPORTING.getReporterID(branch, senderIndex)!=msg.sender):
         REPORTING.addReporter(branch, sender)
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
@@ -262,7 +267,7 @@ def convertToDormantRep(branch, value):
     sender = msg.sender
     senderIndex = REPORTING.repIDToIndex(branch, sender)
 
-    # if the sender's rep. account doesn't exist, make one
+    # if the sender's rep. account doesn't exist, make one, only if in first half of period and not a fork scenario
     if(REPORTING.getReporterID(branch, senderIndex)!=msg.sender):
         REPORTING.addReporter(branch, sender)
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
@@ -309,6 +314,7 @@ def convertToActiveRep(branch, value):
     senderIndex = REPORTING.repIDToIndex(branch, sender)
 
     # if the sender's rep. account doesn't exist, make one
+    # if the sender's rep. account doesn't exist, make one, only if in first half of period and not a fork scenario
     if(REPORTING.getReporterID(branch, senderIndex)!=msg.sender):
         REPORTING.addReporter(branch, sender)
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))

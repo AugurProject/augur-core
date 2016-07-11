@@ -1,4 +1,7 @@
 macro safeToSubtract($a, $b):
+    ($b >= $a)
+
+macro safeToSubtract($a, $b):
     ($b <= $a)
 
 def ok():

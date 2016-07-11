@@ -55,7 +55,7 @@ def reputationFaucet(branch):
     return(1)
 
 def fundNewAccount(branch):
-    CASH.send(self, 0)
+    CASH.sendFrom(self, 0, self)
     self.reputationFaucet(branch)
     CASH.setCash(msg.sender, 10000*2^64)
     return(1)
@@ -64,6 +64,8 @@ def fundNewAccount(branch):
 # Returns 1 if successful, 0 if already claimed
 # Error:
     # -1: parent isn't the actual parent
+    # -2: penalization catchup failed
+    # -3: only behind one period and not caught up / penalized yet
 def claimInitialRep(parent, branch):
     refund()
     if(BRANCHES.getParent(branch)!=parent):
@@ -74,14 +76,29 @@ def claimInitialRep(parent, branch):
         forkPeriod = BRANCHES.getForkPeriod(parent)
         fork = REPORTING.getFork(parent)
         forkEvent = BRANCHES.getEventForkedOver(parent)
-        report = EXPEVENTS.getReport(parent, forkPeriod, forkEvent, msg.sender)
         outcome = EVENTS.getUncaughtOutcome(forkEvent)
         if(binary(forkEvent)):
             outcome = catch(outcome)
+        report = EXPEVENTS.getReport(parent, forkPeriod, forkEvent, msg.sender)
         ethical = ethic_catch(EVENTS.getEthical(forkEvent))
         ethicReport = EXPEVENTS.getEthicReport(parent, forkPeriod, forkEvent, msg.sender)
-        # todo what if this wasn't set
+        dormantRep = EXPEVENTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branch), msg.sender)
+        # if this wasn't set then use reg. dormant rep balance
+        if(dormantRep==0):
+            dormantRep = REPORTING.balanceOf(parent, msg.sender)
+        # if this wasn't set then use reg. rep balance after catching reporter up
         rep = EXPEVENTS.getBeforeRep(parent, parentPeriod, msg.sender)
+        lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(parent, msg.sender)
+        lastPeriod = BRANCHES.getVotePeriod(parent)-1
+        delta = lastPeriod - lastPeriodPenalized
+        if(delta > 1):
+            if(CATCHUP.penalizationCatchup(parent, msg.sender)!=1):
+                return(-2)
+        #if(REPORTS.getRRUpToDate()!=1):
+        #    doIt()
+        #    return(-3)
+        if(rep==0):
+            rep = REPORTING.getRepBalance(parent, msg.sender)
         repDecrease = 0
         # if forked and (reported with original consensus or didn't report or (reported with original ethicality and forked over ethicality))
         if(fork && ((report >= (outcome-POINTZEROONE) && report <= (outcome+POINTZEROONE)) || report==0 || (BACKSTOPS.getForkedOverEthicality(forkEvent) && ethical==ethicReport))):
@@ -90,7 +107,7 @@ def claimInitialRep(parent, branch):
             rep = rep - repDecrease
             amountLeftToPayBonder = BACKSTOPS.getBondAmount(forkEvent) - BACKSTOPS.getForkBondPaid(forkEvent)
             if(repDecrease < amountLeftToPayBonder):
-                # send all the rep to the fork bond poster
+                # send all the redistributed rep to the fork bond poster
                 REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(forkEvent)), repDecrease)
             else:
                 # send amountLeftToPayBonder [if positive] to the fork bond poster
@@ -100,13 +117,11 @@ def claimInitialRep(parent, branch):
                     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), (repDecrease - amountLeftToPayBonder))
                 else:
                     # send to new branch's redistribution pool
-                    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), repDecrease)
+                    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repDecrease)
         if(fork):
             CONSENSUS.setPenalizedUpTo(branch, msg.sender, forkPeriod)
         else:
             CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
-        # todo this doesn't work if hasn't reported last period
-        dormantRep = EXPEVENTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branch), msg.sender)
         REPORTING.addReporter(branch, msg.sender, rep, dormantRep, repDecrease)
         return(1)
     else:

@@ -53,7 +53,7 @@ def test_exp():
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('functions/output.se')
+    c = s.abi_contract('data_api/output.se')
     c.setReportHash(1010101, 0, 101, 47, 0)
     assert(c.getReportHash(1010101, 0, 101, 0) == 47), "Report hash wrong"
     c.addEvent(1010101, 0, 447)
@@ -92,7 +92,7 @@ def test_markets():
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('functions/output.se')
+    c = s.abi_contract('data_api/output.se')
     gas_use(s)
     c.initializeMarket(444, [445, 446, 447], 1, 2**57, 1010101,
                        1, 2, 3, 2**58, 2**64, 2, "aaa", 500, 20 * 2**64, 2222)
@@ -109,7 +109,7 @@ def test_reporting():
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('functions/output.se')
+    c = s.abi_contract('data_api/output.se')
     gas_use(s)
     assert(c.getRepByIndex(1010101, 0) == 47 * 2**64), "Get rep broken"
     assert(c.getReporterID(1010101, 1) == 1010101), "Get reporter ID broken"
@@ -147,7 +147,7 @@ def test_create_branch():
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('functions/output.se')
+    c = s.abi_contract('data_api/output.se')
     gas_use(s)
     c.initiateOwner(1010101)
     b = c.createSubbranch("new branch", 100, 1010101, 2**55, 0)
@@ -173,7 +173,7 @@ def test_send_rep():
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('functions/output.se')
+    c = s.abi_contract('data_api/output.se')
     gas_use(s)
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
@@ -218,7 +218,7 @@ def test_trading():
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('functions/output.se')
+    c = s.abi_contract('data_api/output.se')
     gas_use(s)
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
@@ -537,7 +537,7 @@ def test_abunch_of_markets():
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('functions/output.se')
+    c = s.abi_contract('data_api/output.se')
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
     i = 0
@@ -559,7 +559,7 @@ def test_close_market():
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('functions/output.se')
+    c = s.abi_contract('data_api/output.se')
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
     i = c.getVotePeriod(1010101)
@@ -681,7 +681,7 @@ def test_consensus():
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('functions/output.se')
+    c = s.abi_contract('data_api/output.se')
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
     blocktime = s.block.timestamp
@@ -836,7 +836,7 @@ def test_consensus():
 def test_consensus_multiple_reporters():
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('functions/output.se')
+    c = s.abi_contract('data_api/output.se')
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
     c.reputationFaucet(1010101, sender=t.k2)
@@ -1242,7 +1242,7 @@ def test_slashrep():
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('functions/output.se')
+    c = s.abi_contract('data_api/output.se')
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
     blocktime = s.block.timestamp
@@ -1319,7 +1319,7 @@ def test_claimrep():
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('functions/output.se')
+    c = s.abi_contract('data_api/output.se')
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
     c.setBeforeRep(1010101, c.getVotePeriod(
@@ -1335,7 +1335,7 @@ def test_catchup():
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('functions/output.se')
+    c = s.abi_contract('data_api/output.se')
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
     s.mine(1)
@@ -1458,7 +1458,7 @@ def test_market_pushback():
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('functions/output.se')
+    c = s.abi_contract('data_api/output.se')
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
     blocktime = s.block.timestamp
@@ -1611,7 +1611,7 @@ def test_pen_not_enough_reports():
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract('functions/output.se')
+    c = s.abi_contract('data_api/output.se')
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
     blocktime = s.block.timestamp
@@ -1652,8 +1652,7 @@ if __name__ == '__main__':
     output = os.path.join(src, 'functions', 'output.se')
     if os.path.exists(output):
         os.remove(output)
-    os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' +
-              os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
+    os.system('python mk_test_file.py \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\'')
 
     # data/api tests
     # test_cash()
