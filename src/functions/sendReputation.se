@@ -25,6 +25,7 @@ import reporting as REPORTING
 import makeReports as REPORTS
 import penalizationCatchup as CATCHUP
 import consensusData as CONSENSUS
+import repContract as REPCONTRACT
 inset('refund.se')
 
 # sender/owner, then spender
@@ -269,6 +270,12 @@ def convertToActiveRep(branch, value):
     else:
         return(0)
         
-    
+def claimRep():
+    balance = REPCONTRACT.balanceOf(msg.sender)
+    if(REPCONTRACT.transferFrom(msg.sender, 0, balance):
+        REPORTING.addReporter(1010101, msg.sender, 0, balance, 0):
+    else:
+        throw()
+
 macro hasReported($branch, $period):
     EXPEVENTS.getNumReportsSubmitted($branch, $period, msg.sender)
