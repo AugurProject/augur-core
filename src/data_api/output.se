@@ -871,6 +871,7 @@ def countReportAsSubmitted(branch, votePeriod, eventID, sender, weight):
 def setLesserReportNum(branch, period, event, num):
     self.periodEventInfo[branch][period].lesserReportNum[event] = num
     return(1)
+
 macro proportionCorrect(event, forkEvent):
     refund()
     p = 0
@@ -899,6 +900,7 @@ macro proportionCorrect(event, forkEvent):
         #elif(outcome == 3 * ONEHALF):
         #    return(0)
     p
+
 macro YES: TWO
 macro NO: ONE
 macro BAD: 3 * ONEHALF

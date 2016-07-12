@@ -59,6 +59,7 @@ def transfer(receiver, value):
     return(value)
     
 # TransferFrom per token api allowing another contract to withdraw on user's behalf
+# also allows transfer if sent from the real owner
 # fails unless from has authorized sender
 def transferFrom(from, receiver, value):
     senderBalance = self.reporting[from]
