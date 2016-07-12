@@ -29,6 +29,7 @@ import subprocess
 import getopt
 import requests
 import serpent
+import sha3
 from progress.bar import Bar
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -104,30 +105,55 @@ def get_input_names(inputs):
 def get_input_types(inputs):
     return [i["type"] for i in inputs]
 
-def update_from_full_signature(name, inputs):
+def update_from_full_signature(name, inputs, outputs):
     split_name = name.split("(")
     method = {"method": split_name[0]}
     if len(inputs):
         method["signature"] = get_input_types(inputs)
         method["inputs"] = get_input_names(inputs)
+    if outputs is not None and len(outputs) and "type" in outputs[0]:
+        if outputs[0]["type"] == "bytes":
+            method["returns"] = "string"
+        else:
+            method["returns"] = outputs[0]["type"]
     return method
 
-# Generate each contract's full signature and update its API info
-def update_contract_api(contract_name, contract_path, old_api):
-    fullsig = serpent.mk_full_signature(contract_path)
+def update_contract_events_api(contract_name, fullsig):
+    api = {}
+    for evt in fullsig:
+        if evt["type"] == "event":
+            split_name = evt["name"].split("(")
+            api[split_name[0]] = {
+                "inputs": evt["inputs"],
+                "name": evt["name"],
+                "signature": "0x" + sha3.sha3_256(evt["name"].encode("ascii")).hexdigest()
+            }
+    return api
+
+def update_contract_functions_api(contract_name, fullsig, old_api):
     api = {}
     for fn in fullsig:
         if fn["type"] == "function" and fn["name"] != "test_callstack()":
-            method = update_from_full_signature(fn["name"], fn["inputs"])
+            outputs = fn["outputs"] if "outputs" in fn else None
+            method = update_from_full_signature(fn["name"], fn["inputs"], outputs)
             api[method["method"]] = update_from_old_api(method, contract_name, method["method"], old_api)
     return api
+
+# Generate a contract's full signature and update its API info
+def update_contract_api(contract_name, contract_path, old_api):
+    fullsig = serpent.mk_full_signature(contract_path)
+    events_api = update_contract_events_api(contract_name, fullsig)
+    functions_api = update_contract_functions_api(contract_name, fullsig, old_api)
+    return events_api, functions_api
 
 # Update the API info for all Augur contracts
 def update_api(contract_paths, old_api):
     bar = Bar("Contracts", max=len(contract_paths))
-    new_api = {}
+    new_api = {"events": {}, "functions": {}}
     for contract_name, contract_path in contract_paths.items():
-        new_api[contract_name] = update_contract_api(contract_name, contract_path, old_api)
+        events_api, functions_api = update_contract_api(contract_name, contract_path, old_api)
+        if bool(events_api): new_api["events"][contract_name] = events_api
+        new_api["functions"][contract_name] = functions_api
         bar.next()
     bar.finish()
     return new_api
