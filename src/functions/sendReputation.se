@@ -49,61 +49,6 @@ def any():
 # error messages otherwise
     # -1: "Your reputation account was just created, earn some rep. before you can send to others"
     # -2: "Receiving address doesn't exist"
-def sendReputation(branch, recver, value):
-    refund()
-    # Rep cannot be simultaneously spent (transferred) and used to vote
-    currentVotePeriod = BRANCHES.getVotePeriod(branch)
-    # you can't trade if you or the person you're sending to have submitted a report, or at all in the second half of the period [b/c you can messup / cheat w/ reporting by gettin extra claims on fees] and you can't trade in the first half of a period until you've been penalized for reporting wrongly/not reporting
-    # use a diff. fun. than getReport here
-    #if(value<=0 || EXPEVENTS.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, recver, 0) != 0):
-    # EXPEVENTS.getNumReportsSubmitted(branch, currentVotePeriod, msg.sender)
-    #    return(0)
-    
-    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
-    lastPeriod = BRANCHES.getVotePeriod(branch)-1
-    delta = lastPeriod - lastPeriodPenalized
-    if(delta > 1):
-        if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
-            return(0)
-
-    # need to check all this for the person it's being sent to as well
-    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
-        return(0)
-    #if(REPORTS.getRRUpToDate()!=1):
-    #    doIt()
-    #    self.RRDone = true
-    #if(hasReported(lastPeriod) && periodOver && hasntcollectedfees && residual > periodLength/2):
-    #    CONSENSUS.collectFees(lastPeriod)
-    # before rep, after rep, balance
-    # person you're sending to needs rr up to date / done as well
-    # auto increment vote period if needed
-    sender = msg.sender
-    senderIndex = REPORTING.repIDToIndex(branch, sender)
-    receiverIndex = REPORTING.repIDToIndex(branch, recver)
-
-    # if the sender's rep. account doesn't exist, make one, only if in first half of period and not a fork scenario
-    if(REPORTING.getReporterID(branch, senderIndex)!=msg.sender):
-        REPORTING.addReporter(branch, sender)
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
-        return(-1)
-
-    if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
-        return(-2)
-
-    senderBalance = REPORTING.getRepBalance(branch, sender)
-    if(senderBalance >= value && value > 0):
-        if(REPORTING.subtractRep(branch, senderIndex, value) && REPORTING.addRep(branch, receiverIndex, value)):
-            return(value)
-        else:
-            return(0)
-    else:
-        return(0)
-
-# send active reputation
-# @return value of reputation sent, 0 if not enough reputation
-# error messages otherwise
-    # -1: "Your reputation account was just created, earn some rep. before you can send to others"
-    # -2: "Receiving address doesn't exist"
 def sendRepFrom(branch, from, recver, value):
     refund()
     # Rep cannot be simultaneously spent (transferred) and used to vote
@@ -132,65 +77,37 @@ def sendRepFrom(branch, from, recver, value):
     # before rep, after rep, balance
     # person you're sending to needs rr up to date / done as well
     # auto increment vote period if needed
-    sender = msg.sender
+    sender = from
     senderIndex = REPORTING.repIDToIndex(branch, sender)
     receiverIndex = REPORTING.repIDToIndex(branch, recver)
 
     # if the sender's rep. account doesn't exist, make one, only if in first half of period and not a fork scenario
-    if(REPORTING.getReporterID(branch, senderIndex)!=msg.sender):
+    if(REPORTING.getReporterID(branch, senderIndex)!=from && from==msg.sender):
+        CONSENSUS.setPenalizedUpTo(branch, from, (BRANCHES.getVotePeriod(branch)-1))
         REPORTING.addReporter(branch, sender)
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
         return(-1)
-
     if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
         return(-2)
 
     senderBalance = REPORTING.getRepBalance(branch, sender)
-    if(senderBalance >= value && value > 0):
+    if(senderBalance >= value && value > 0 && (self.amountCanSpend[from][msg.sender].branch[branch] >= value or from==msg.sender)):
+        if(from!=msg.sender)
+            self.amountCanSpend[from][msg.sender].branch[branch] -= value
         if(REPORTING.subtractRep(branch, senderIndex, value) && REPORTING.addRep(branch, receiverIndex, value)):
+            log(type=Transfer, from, recver, value)
             return(value)
         else:
             return(0)
     else:
         return(0)
+
 
 # Transfer dormant rep
 # @return value of reputation sent, 0 if not enough reputation
 # error messages otherwise
     # -1: "Your reputation account was just created, earn some rep. before you can send to others"
     # -2: "Receiving address doesn't exist"
-# sendDormantRep
-def transfer(branch, recver, value):
-    refund()
-    currentVotePeriod = BRANCHES.getVotePeriod(branch)
-    if(value<=0):
-        return(0)
-    sender = msg.sender
-    senderIndex = REPORTING.repIDToIndex(branch, sender)
-    receiverIndex = REPORTING.repIDToIndex(branch, recver)
-
-    # if the sender's rep. account doesn't exist, make one
-    if(REPORTING.getReporterID(branch, senderIndex)!=msg.sender):
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
-        REPORTING.addReporter(branch, sender)
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
-        return(-1)
-
-    if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
-        return(-2)
-
-    senderBalance = REPORTING.balanceOf(branch, sender)
-    if(senderBalance >= value && value > 0):
-        if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, receiverIndex, value)):
-            log(type=Transfer, msg.sender, recver, value)
-            return(value)
-        else:
-            return(0)
-    else:
-        return(0)
-
-# TransferFrom per token api for dormant rep
-# fails unless from has authorized sender
+# fails unless from has authorized sender [either contract which was approved or the from address is the msg.sender]
 def transferFrom(branch, from, recver, value):
     refund()
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
@@ -201,10 +118,9 @@ def transferFrom(branch, from, recver, value):
     receiverIndex = REPORTING.repIDToIndex(branch, recver)
 
     # if the sender's rep. account doesn't exist, make one
-    if(REPORTING.getReporterID(branch, senderIndex)!=from):
+    if(REPORTING.getReporterID(branch, senderIndex)!=from && from==msg.sender):
         CONSENSUS.setPenalizedUpTo(branch, from, (BRANCHES.getVotePeriod(branch)-1))
         REPORTING.addReporter(branch, sender)
-        CONSENSUS.setPenalizedUpTo(branch, from, (BRANCHES.getVotePeriod(branch)-1))
         return(-1)
 
     if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
@@ -212,8 +128,9 @@ def transferFrom(branch, from, recver, value):
 
     senderBalance = REPORTING.balanceOf(branch, sender)
     if(senderBalance >= value && value > 0 && (self.amountCanSpend[from][msg.sender].branch[branch] >= value or from==msg.sender)):
-        if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, receiverIndex, value)):
+        if(from!=msg.sender)
             self.amountCanSpend[from][msg.sender].branch[branch] -= value
+        if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, receiverIndex, value)):
             log(type=Transfer, from, recver, value)
             return(value)
         else:
