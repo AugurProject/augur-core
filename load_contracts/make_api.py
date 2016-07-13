@@ -61,6 +61,8 @@ def get_local_api(api_path):
     print("Load api.json from file: " + api_path)
     with open(api_path, "r") as api_file:
         old_api = json.load(api_file)
+        if "functions" in old_api:
+            old_api = old_api["functions"]
     return old_api
 
 # Download contract API info from a remote host (Github)
