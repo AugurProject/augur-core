@@ -12,6 +12,7 @@ macro POINTNINE: 16602069666338596864
     # -1: not in first half of reporting period
     # -2: doesn't need to be penalized/caught up
     # -3: user isn't behind or reported in the last period [and should thus use the penalization functions in consensus.se]
+# whitelist this
 def penalizationCatchup(branch, sender):
     refund()
     # find delta between this last period and the last one a reporter was penalized up to
