@@ -19,7 +19,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-# todo fix getoutcome stuff 0 is a valid outcome...
+# todo fix getoutcome stuff 0 is a valid outcome... and anywhere getoutcome is used
 
 import branches as BRANCHES
 import cash as CASH

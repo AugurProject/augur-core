@@ -72,6 +72,8 @@ def claimInitialRep(parent, branch):
         return(-1)
     # have 1 month to claim
     if(REPORTING.repIDToIndex(branch, msg.sender)==0 && block.timestamp < (BRANCHES.getCreationDate(branch) + TWENTYFOURHR*30)):
+        # auto increment vote period if needed
+        INCREMENTPERIOD.incrementPeriodAfterReporting(parent)
         parentPeriod = BRANCHES.getParentPeriod(branch)
         forkPeriod = BRANCHES.getForkPeriod(parent)
         fork = REPORTING.getFork(parent)
@@ -82,7 +84,7 @@ def claimInitialRep(parent, branch):
         report = EXPEVENTS.getReport(parent, forkPeriod, forkEvent, msg.sender)
         ethical = ethic_catch(EVENTS.getEthical(forkEvent))
         ethicReport = EXPEVENTS.getEthicReport(parent, forkPeriod, forkEvent, msg.sender)
-        dormantRep = EXPEVENTS.getPeriodDormantRep(parent, BRANCHES.getParentPeriod(branch), msg.sender)
+        dormantRep = EXPEVENTS.getPeriodDormantRep(parent, parentPeriod, msg.sender)
         # if this wasn't set then use reg. dormant rep balance
         if(dormantRep==0):
             dormantRep = REPORTING.balanceOf(parent, msg.sender)
@@ -94,9 +96,8 @@ def claimInitialRep(parent, branch):
         if(delta > 1):
             if(CATCHUP.penalizationCatchup(parent, msg.sender)!=1):
                 return(-2)
-        #if(REPORTS.getRRUpToDate()!=1):
-        #    doIt()
-        #    return(-3)
+        if(!CONSENSUS.getRepRedistributionDone(parent, msg.sender)):
+            return(-3)
         if(rep==0):
             rep = REPORTING.getRepBalance(parent, msg.sender)
         repDecrease = 0

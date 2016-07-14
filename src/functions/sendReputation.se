@@ -1,6 +1,6 @@
-#    so if user hasn't claimed rep on the branch yet and it's a fork scenario, don't allow sending rep on the parent branch until they [receiver] claim 
+#    todo so if user hasn't claimed rep on the branch yet and it's a fork scenario, don't allow sending rep on the parent branch until they [receiver] claim 
 #    should also perhaps make sender claim too
-#    check overflows
+#    check overflows and underflows
 
 
 # This software (Augur) allows buying && selling event outcomes in ethereum

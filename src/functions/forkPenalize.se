@@ -69,8 +69,8 @@ def penalizeOnForkedEvent(branch, event):
     return(1)
     
 macro handleEthicsAndBondRepRedistribution($numReportedOn):
-    # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
-    if(ethics != ethic_catch(EVENTS.getEthical(event)) && repChange >=0):
+    # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality
+    if(ethics != ethic_catch(EVENTS.getEthical(event)) && repChange >=0 && BACKSTOPS.getForkedOverEthicality(event)):
         if($numReportedOn<10):
             repChange = -ONE/10*repBalance / ONE
         else:

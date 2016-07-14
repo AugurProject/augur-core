@@ -16,9 +16,9 @@ inset('repChange.se')
 #event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
 
 macro POINTZEROONE: 184467440737095520
-macro POINTEIGHT: 14757395258967642112
+macro POINTONE: 1844674407370955264
 macro POINTTWO: 3689348814741910528
-macro POINTFOUR: 7378697629483821056
+macro POINTEIGHT: 14757395258967642112
 macro MINBOND: 200*ONE
 
 # Penalizes a reporter for reporting wrongly on a round 2 reporting / backstop 1 event
@@ -34,7 +34,6 @@ macro MINBOND: 200*ONE
     # -5: needed to collect fees last period which sets the before/after rep
 # force event to be resolved first if it can be
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized
-# todo go over penalty amounts like .2 for ethicality seems too high
 def penalizeRoundTwoWrong(branch, event):
     refund()
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
@@ -87,12 +86,12 @@ def penalizeRoundTwoWrong(branch, event):
     if(BACKSTOPS.getRoundTwo(event) && (BACKSTOPS.getFinal(event) or event==forkEvent) && !CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && (reportValue or oldReport)):
         # Do the first rep redistribution based on first report and final outcome if reported first time
         if(oldReport && outcome!=0):
-            calculateRepChange(oldReport, POINTFOUR)
-            handleEthicsAndBondRepRedistribution(POINTFOUR, oldEthics, numReportedOn)
+            calculateRepChange(oldReport, POINTTWO)
+            handleEthicsAndBondRepRedistribution(POINTTWO, oldEthics, numReportedOn)
         # Do the second (for each user) based on second report and final outcome
         if(reportValue && outcome!=0):
-            calculateRepChange(reportValue, POINTTWO)
-            handleEthicsAndBondRepRedistribution(POINTTWO, ethics, numReportedOn)
+            calculateRepChange(reportValue, POINTONE)
+            handleEthicsAndBondRepRedistribution(POINTONE, ethics, numReportedOn)
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
     else:
@@ -109,7 +108,7 @@ def penalizeRoundTwoWrong(branch, event):
 
 macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn):
     # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max maxPenalty% of their rep respectively
-    if($ethics != ethic_catch(ethical) && repChange >=0):
+    if($ethics != ethic_catch(ethical) && repChange >=0 && BACKSTOPS.getDisputedOverEthics(event)):
         if($numReportedOn<10):
             repChange = -$maxPenalty/10*repBalance / ONE
         else:

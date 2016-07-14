@@ -11,7 +11,7 @@ inset('refund.se')
     # -1: invalid vote period
     # -2: past reveal date
     # -3: reporter being slashed doesn't exist
-    # -4: invalid claim / report hash -     # make sure that the colluding reporter's commit is the same as the info provided in the params
+    # -4: invalid claim / report hash - makes sure that the colluding reporter's commit is the same as the info provided in the params
 def slashRep(branch, salt, report, reporter, eventID):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
