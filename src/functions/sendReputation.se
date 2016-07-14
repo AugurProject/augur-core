@@ -140,7 +140,7 @@ def convertToActiveRep(branch, value):
     senderBalance = REPORTING.balanceOf(branch, msg.sender)
     if(senderBalance < value or value <= 0):
         return(-2)
-    if(!REPORTING.subtractDormantRep(branch, senderIndex, value) || !REPORTING.addRep(branch, senderIndex, value)):
+    if(!REPORTING.subtractDormantRep(branch, senderIndex, value) || !REPORTING.addRep(branch, senderIndex, value) || !safeToAdd(value, REPORTING.getRepBalance(msg.sender))):
         throw()
     REPORTING.adjustActiveRep(branch, value)
     return(1)  

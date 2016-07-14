@@ -27,6 +27,10 @@ data cashcoinBalances[]
 # address -> address mapping of a cash address to the address that owns it
 data owners[]
 
+data withdrawInitiated[]
+
+macro THREEDAYS: 259200
+
 def init():
     # test initial funds
     self.cashcoinBalances[msg.sender] = 100000*ONE
@@ -94,12 +98,25 @@ def depositEther():
     self.cashcoinBalances[msg.sender] += msg.value * ONE / WEITOETH
     return msg.value
 
+# Withdraw ether to an address
+# Returns 2 if withdrawal is initiated [then must wait 3 days]
+# Returns 1 if withdrawal is successful
+# Errors:
+    # 0: Not enough money
+    # -1: Value less than or equal to 0
+    # -2: 3 day withdrawal window isn't up
 def withdrawEther(to, value):
-    if(value < 0):
+    if(!self.withdrawInitiated[msg.sender]):
+        self.withdrawInitiated[msg.sender] = block.timestamp
+        return(2)
+    if(value <= 0):
         return(-1)
-    if self.cashcoinBalances[msg.sender] >= value * ONE / WEITOETH:
+    if((block.timestamp - self.withdrawInitiated[msg.sender])<THREEDAYS):
+        return(-2)
+    if(self.cashcoinBalances[msg.sender] >= value * ONE / WEITOETH):
         self.cashcoinBalances[msg.sender] -= value * ONE / WEITOETH
+        self.withdrawInitiated[msg.sender] = 0
         send(to, value)
-        return 1
+        return(1)
     else:
-        return 0
+        return(0)
