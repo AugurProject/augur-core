@@ -174,7 +174,7 @@ def test_send_rep():
 
 def nearly_equal(a,b,sig_fig=8):
     return(a==b or int(a*10**sig_fig) == int(b*10**sig_fig))
-    
+
 def isclose(a, b, rel_tol=1e-8, abs_tol=0.0):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
@@ -193,7 +193,7 @@ def test_trading():
             i+=2
             continue
         gas_use(s)
-        
+
         blocktime = s.block.timestamp + 500
         # covers binary + scalar events
         e = c.createEvent(1010101, "event"+str(i), blocktime+1, i*2**64, i*i*2**64, 2, "soisoisoi.com")
@@ -237,7 +237,7 @@ def test_trading():
             branchFees = (.75*2**64 + (.5*2**64 - c.getMakerFees(market[a]))/2)*fee / 2**64
             creatorFees = (.25*2**64 + (.5*2**64 - c.getMakerFees(market[a]))/2)*fee / 2**64
             takerFeesTotal = branchFees + creatorFees
-            
+
             # other party [maker] pay their part of the fee here too
             makerFee = fee * c.getMakerFees(market[a]) / 2**64
             makerFee = int(makerFee)
@@ -371,7 +371,7 @@ def test_trading():
             afterog = c.balance(s.block.coinbase)
             assert(isclose((before-after)/2**64, (2**64*.01+fee*(1+((2**63-c.getMakerFees(market[a]))/2**64)))/2**64))
             print beforem
-            
+
             print beforem - afterm
             print makerFee
             assert(isclose((beforem-afterm)/2**64, makerFee/2**64))
@@ -670,7 +670,7 @@ def test_consensus_multiple_reporters():
     sunethicalevent = c.createEvent(1010101, "afafdsnew eventt4", blocktime+1, 0, 250*2**64, 2, "buddyholly.com")
     cindeterminateevent = c.createEvent(1010101, "sssnew evgentt3", blocktime+1, 2**64, 2*2**64, 5, "buddyholly.com")
     sindeterminateevent = c.createEvent(1010101, "aanewg eventt4", blocktime+1, 0, 250*2**64, 2, "buddyholly.com")
-    
+
     binmarket = c.createMarket(1010101, "new market", 184467440737095516, bevent, 1, 2, 3, 0, "yayaya", value=10**19)
     binmarketunethical = c.createMarket(1010101, "new madrket", 184467440737095516, bunethicalevent, 1, 2, 3, 0, "yayaya", value=10**19)
     binmarketindeterminate = c.createMarket(1010101, "new amadrket", 184467440737095516, bindeterminateevent, 1, 2, 3, 0, "yayaya", value=10**19)
@@ -692,39 +692,39 @@ def test_consensus_multiple_reporters():
     binaryeventhash = c.makeHash(0, 2**64, bevent, s.block.coinbase)
     binaryeventhash2 = c.makeHash(0, 3*2**63, bevent, c.getSender(sender=t.k2))
     binaryeventhash3 = c.makeHash(0, 2**64, bevent, c.getSender(sender=t.k3))
-    
+
     binaryunethicaleventhash = c.makeHash(0, 2**64, bunethicalevent, s.block.coinbase)
     binaryunethicaleventhash2 = c.makeHash(0, 2**65, bunethicalevent, c.getSender(sender=t.k2))
     binaryunethicaleventhash3 = c.makeHash(0, 2**65, bunethicalevent, c.getSender(sender=t.k3))
-    
+
     binindeterminateeventhash = c.makeHash(0, 3*2**63, bindeterminateevent, s.block.coinbase)
     binindeterminateeventhash2 = c.makeHash(0, 3*2**63, bindeterminateevent, c.getSender(sender=t.k2))
     binindeterminateeventhash3 = c.makeHash(0, 3*2**63, bindeterminateevent, c.getSender(sender=t.k3))
-    
+
     cateventhash = c.makeHash(0, 2**62, cevent, s.block.coinbase)
     cateventhash2 = c.makeHash(0, 2**64, cevent, c.getSender(sender=t.k2))
     cateventhash3 = c.makeHash(0, 2**64, cevent, c.getSender(sender=t.k3))
-    
+
     cateventunethicalhash = c.makeHash(0, 1, cunethicalevent, s.block.coinbase)
     cateventunethicalhash2 = c.makeHash(0, 1, cunethicalevent, c.getSender(sender=t.k2))
     cateventunethicalhash3 = c.makeHash(0, 2**64, cunethicalevent, c.getSender(sender=t.k3))
-    
+
     cateventindeterminatehash = c.makeHash(0, 2**63, cindeterminateevent, s.block.coinbase)
     cateventindeterminatehash2 = c.makeHash(0, 2**63, cindeterminateevent, c.getSender(sender=t.k2))
     cateventindeterminatehash3 = c.makeHash(0, 1, cindeterminateevent, c.getSender(sender=t.k3))
-    
+
     scalareventhash = c.makeHash(0, 2**64, sevent, s.block.coinbase)
     scalareventhash2 = c.makeHash(0, 1, sevent, c.getSender(sender=t.k2))
     scalareventhash3 = c.makeHash(0, 2**64, sevent, c.getSender(sender=t.k3))
-    
+
     scalareventunethicalhash = c.makeHash(0, 1, sunethicalevent, s.block.coinbase)
     scalareventunethicalhash2 = c.makeHash(0, 1, sunethicalevent, c.getSender(sender=t.k2))
     scalareventunethicalhash3 = c.makeHash(0, 1, sunethicalevent, c.getSender(sender=t.k3))
-    
+
     scalareventindeterminatehash = c.makeHash(0, 2**63, sindeterminateevent, s.block.coinbase)
     scalareventindeterminatehash2 = c.makeHash(0, 2**63, sindeterminateevent, c.getSender(sender=t.k2))
     scalareventindeterminatehash3 = c.makeHash(0, 2**63, sindeterminateevent, c.getSender(sender=t.k3))
-    
+
     c.penalizeWrong(1010101, 0)
     c.penalizeWrong(1010101, 0, sender=t.k2)
     c.penalizeWrong(1010101, 0, sender=t.k3)
@@ -801,7 +801,7 @@ def test_consensus_multiple_reporters():
     c.send(catmarket, 5*2**64)
     c.send(catmarketunethical, 5*2**64)
     c.send(catmarketindeterminate, 5*2**64)
-    
+
     assert(c.closeMarket(1010101, binmarket)==1)
     assert(c.closeMarket(1010101, binmarketunethical)==1)
     assert(c.closeMarket(1010101, binmarketindeterminate)==1)
@@ -845,7 +845,7 @@ def test_consensus_multiple_reporters():
     # same rep
     assert(c.getAfterRep(branch, period, s.block.coinbase) < int(45.9*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(45.6*2**64))
     print c.getRepBalance(branch, s.block.coinbase)
-    
+
     assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k2))==c.getRepBalance(branch, c.getSender(sender=t.k2)))
     assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(47.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(46.9*2**64))
     assert(c.penalizeWrong(1010101, bevent, sender=t.k2)==1)
@@ -877,7 +877,7 @@ def test_consensus_multiple_reporters():
     # same rep
     assert(c.getAfterRep(branch, period, c.getSender(sender=t.k2)) < int(46.2*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k2)) > int(45.9*2**64))
     print c.getRepBalance(branch, c.getSender(sender=t.k2))
-    
+
     assert(c.getBeforeRep(branch, period, c.getSender(sender=t.k3))==c.getRepBalance(branch, c.getSender(sender=t.k3)))
     assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(47.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(46.9*2**64))
     assert(c.penalizeWrong(1010101, bevent, sender=t.k3)==1)
@@ -908,15 +908,15 @@ def test_consensus_multiple_reporters():
     # same rep
     assert(c.getAfterRep(branch, period, c.getSender(sender=t.k3)) < int(46.1*2**64) and c.getAfterRep(branch, period, c.getSender(sender=t.k3)) > int(45.8*2**64))
     print c.getRepBalance(branch, c.getSender(sender=t.k3))
-    
+
     totalRep = c.getRepBalance(branch, c.getSender(sender=t.k3)) + c.getRepBalance(branch, c.getSender(sender=t.k2)) + c.getRepBalance(branch, s.block.coinbase) + c.getRepBalance(1010101, 1010101)
-    
+
     assert(int(totalRep/2**64) > 140 and int(totalRep/2**64) < 142)
-    
+
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
-    
+
     assert(c.collectFees(1010101, s.block.coinbase)==1)
     assert(c.collectFees(1010101, c.getSender(sender=t.k2))==1)
     assert(c.collectFees(1010101, c.getSender(sender=t.k3))==1)
@@ -941,7 +941,7 @@ def test_slashrep():
         c.incrementPeriod(1010101)
         i += 1
     while(s.block.timestamp%c.getPeriodLength(1010101) > c.getPeriodLength(1010101)/2):
-        time.sleep(1)   
+        time.sleep(1)
         s.mine(1)
     c.penalizeWrong(1010101, 0)
     report_hash = c.makeHash(0, 2**64, event1, s.block.coinbase)
@@ -966,7 +966,7 @@ def test_slashrep():
     branch = 1010101
     period = c.getVotePeriod(1010101) - 1
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getAfterRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase))
-    
+
     # assumes user lost no rep after penalizing
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getAfterRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase))
     # need to resolve event first
@@ -1079,7 +1079,7 @@ def test_catchup():
     c.send(bin_market2, 2**64)
     assert(c.closeMarket(1010101, bin_market)==1)
     assert(c.closeMarket(1010101, bin_market2)==1)
-    
+
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getAfterRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase))
     assert(isclose(c.getRepBalance(branch, branch)/2**64, ((47*2**64 - 47*.9**diffInPeriods*2**64)/2**64)))
     assert(c.getTotalRep(branch)==866996971464348925952)
@@ -1091,7 +1091,7 @@ def test_catchup():
     assert(isclose(c.getRepBalance(branch, branch)/2**64, ((47*2**64 - 47*.9**diffInPeriods*2**64)/2**64)))
     assert(c.getTotalRep(branch)==866996971464348925952)
     assert(c.penalizeWrong(1010101, event2)==1)
-    
+
     assert(isclose(c.getBeforeRep(branch, period, s.block.coinbase)/2**64, 47*.9**diffInPeriods*2**64/2**64))
     assert(isclose(c.getRepBalance(branch, s.block.coinbase)/2**64, 47*.9**diffInPeriods*2**64/2**64))
     assert(isclose(c.getRepBalance(branch, branch)/2**64, ((47*2**64 - 47*.9**diffInPeriods*2**64)/2**64)))
@@ -1159,12 +1159,12 @@ def test_market_pushback():
     assert(c.closeMarket(1010101, bin_market)==1)
     assert(c.closeMarket(1010101, bin_market2)==-6)
     # get events in periods both old and new here again and make sure proper
-    # for event 1 
+    # for event 1
     # - early expiration should exist there
     assert(c.getEvents(1010101, c.getVotePeriod(1010101)-1)[0]==event1)
     # - original further off one it shouldn't exist in
     assert(c.getEvents(1010101, int((blocktime+10000)/15))[0]==0)
-    # for event 2 
+    # for event 2
     # - it should have a rejected period and be rejected
     assert(c.getRejected(event2)==1)
     assert(c.getRejectedPeriod(event2)>=1)
@@ -1216,22 +1216,22 @@ def test_market_pushback():
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase))
     assert(c.getAfterRep(branch, period, s.block.coinbase) < int(48*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
-    
+
     assert(c.penalizeWrong(1010101, event2)==1)
     assert(c.getBeforeRep(branch, period, s.block.coinbase)==c.getRepBalance(branch, s.block.coinbase))
     assert(c.getAfterRep(branch, period, s.block.coinbase) < int(48*2**64) and c.getAfterRep(branch, period, s.block.coinbase) > int(46*2**64))
     assert(c.getRepBalance(branch, branch)==0), "Branch magically gained rep..."
-    
+
     while(s.block.timestamp%c.getPeriodLength(1010101) <= periodLength/2):
         time.sleep(int(periodLength/2))
         s.mine(1)
-    
+
     assert(c.collectFees(1010101, s.block.coinbase)==1)
     assert(c.getRepBalance(branch, s.block.coinbase)==47*2**64)
     assert(c.getRepBalance(branch, branch)==0)
     assert(c.getTotalRep(branch)==47*2**64)
     print "Test push back OK"
-    
+
 def test_pen_not_enough_reports():
     global initial_gas
     initial_gas = 0

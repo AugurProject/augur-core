@@ -15,7 +15,7 @@ def init():
     self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
     self.Branches[1010101].periodLength = 15 # 2 hours
     # .5%
-    self.Branches[1010101].minTradingFee = 92233720368547760 
+    self.Branches[1010101].minTradingFee = 92233720368547760
     self.branchListCount = 1
     self.branchList[0] = 1010101
     # since only have to report on half this targets 3
@@ -62,7 +62,7 @@ def setInfo(ID, description: str, creator, fee):
         return(1)
     else:
         return(0)
-        
+
 ### Helper functions [only needed for tester, on chain in a separate file]:
 macro YES: TWO
 macro NO: ONE
@@ -125,7 +125,7 @@ def checkWhitelist(address):
 
 def getActiveRep(branch):
     return(self.Reporting[branch].activeRep)
-    
+
 def adjustActiveRep(branch, amount):
     self.Reporting[branch].activeRep += amount
     return(1)
@@ -133,7 +133,7 @@ def adjustActiveRep(branch, amount):
 def setFork(branch):
     self.Reporting[branch].fork = branch
     return(1)
-    
+
 def getFork(branch):
     return(self.Reporting[branch].fork)
 
@@ -180,7 +180,7 @@ def balanceOf(branch, address):
     if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
         return(0)
     return(self.Reporting[branch].dormantRep[repIndex].repValue)
-    
+
 # return total supply of dormant rep
 def totalSupply(branch):
     return((self.Reporting[branch].totalRep - self.Reporting[branch].activeRep))
@@ -463,7 +463,7 @@ data resolved[][]
 def setRoundTwoRefund(event, amt):
     self.roundTwo[event].refund = amt
     return(1)
-    
+
 def doRoundTwoRefund(sender, event):
     send(sender, self.roundTwo[event].refund)
     return(1)
@@ -481,7 +481,7 @@ def setForkedOverEthicality(event):
 
 def getForkedOverEthicality(event):
     return(self.forking[event].forkedOverEthicality)
-    
+
 def adjForkBondPaid(event, amount):
     self.forking[event].bondPaid += amount
     return(1)
@@ -504,14 +504,14 @@ def setOriginalBranch(event, branch):
 
 def getOriginalBranch(event):
     return(self.forking[event].originalBranch)
-    
+
 def setMoved(event):
     self.forking[event].moved = 1
     return(1)
 
 def getMoved(event):
     return(self.forking[event].moved)
-    
+
 def setResolved(branch, forkPeriod, winner):
     self.resolved[branch][forkPeriod] = winner
     return(1)
@@ -531,7 +531,7 @@ def increaseBondPaid(event, amount):
 # whether a round 2 bond's principle has been returned
 def getBondReturned(event):
     return(self.roundTwo[event].bondReturned)
-    
+
 def setBondReturned(event):
     self.roundTwo[event].bondReturned = 1
     return(1)
@@ -539,11 +539,11 @@ def setBondReturned(event):
 def getRoundTwo(event):
     refund()
     return(self.roundTwo[event].roundTwo)
-    
+
 def setRoundTwo(event, roundTwo):
     self.roundTwo[event].roundTwo = roundTwo
     return(1)
-    
+
 def getBondPoster(event):
     refund()
     return(self.roundTwo[event].bondPoster)
@@ -560,7 +560,7 @@ def getFinal(event):
 def setFinal(event):
     self.roundTwo[event].final = 1
     return(1)
-    
+
 def getOriginalOutcome(event):
     refund()
     return(self.roundTwo[event].originalOutcome)
@@ -572,7 +572,7 @@ def setOriginalOutcome(event, originalOutcome):
 def getOriginalEthicality(event):
     refund()
     return(self.roundTwo[event].originalEthicality)
-    
+
 def setOriginalEthicality(event, ethicality):
     self.roundTwo[event].originalEthicality = ethicality
     return(1)
@@ -615,7 +615,7 @@ inset('refund.se')
     # numReqEvents is the number of events that are required to be reported on in a given reporting period
     # numberRemoved is the number of events that no longer have to be reported on in this period [a good example is an event that was resolved early successfully]
     # numEventsToReportOn is the number of events available for reporting on [not including required events] * base number of reporters per event [this is multiplied by a user's periodRepWeight to figure out how many events they should be reporting on in a given period]
-    # shareValue is the value of all the outstanding shares from markets that have events expiring in this period 
+    # shareValue is the value of all the outstanding shares from markets that have events expiring in this period
 data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], subsidy[], eventWeight[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, shareValue)
 
 # This keeps track of info in a period for the reporters, it takes a branch and votePeriod as params, respectively
@@ -646,7 +646,7 @@ def setSaltyEncryptedHash(branch, period, reporter, saltyEncryptedHash, event):
     #	return(-1)
     self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event] = saltyEncryptedHash
     return(1)
-    
+
 # todo fix sec.
 def refundCost(to, value):
     send(to, value)
@@ -694,7 +694,7 @@ def getCurrentModeItems(period, event):
 
 def getCurrentMode(period, event):
     return(self.modeItems[period][event].currentMode)
-    
+
 # returns weight of a report value for the mode
 def getWeightOfReport(period, event, report):
     return(self.modeItems[period][event].reportValue[report])
@@ -711,7 +711,7 @@ def getBeforeRep(branch, period, sender):
 
 def getAfterRep(branch, period, sender):
     return(self.reporterPeriodInfo[branch][period].afterRep[sender])
-    
+
 def getPeriodDormantRep(branch, period, sender):
     return(self.reporterPeriodInfo[branch][period].periodDormantRep[sender])
 
@@ -732,10 +732,10 @@ def addRoundTwo(branch, period):
 
 def getRequired(event, period, branch):
     return(self.periodEventInfo[branch][period].requiredEvents[event])
-    
+
 def getNumRequired(branch, period):
     return(self.periodEventInfo[branch][period].numReqEvents)
-    
+
 # Return 0 means already required
 def setEventRequired(branch, period, event):
     if(self.periodEventInfo[branch][period].requiredEvents[event]==0):
@@ -756,7 +756,7 @@ def getEvents(branch, period):
         events[i] = self.periodEventInfo[branch][period].events[i]
         i += 1
     return(events: arr)
-    
+
 def getEventsRange(branch, period, start, end):
     refund()
     numEvents = end-start
@@ -768,7 +768,7 @@ def getEventsRange(branch, period, start, end):
         index += 1
         i += 1
     return(events: arr)
-    
+
 def getEventIndex(branch, period, event):
     refund()
     return(self.periodEventInfo[branch][period].eventToIndex[event])
@@ -880,7 +880,7 @@ macro proportionCorrect(event, forkEvent):
         # subtract 1 to get it from 0 to 1
         avgOutcome = uncaught - ONE
     else:
-        uncaught = self.getUncaughtOutcome(event)        
+        uncaught = self.getUncaughtOutcome(event)
         outcome = catch(uncaught)
         # subtract 1 to get it from 0 to 1
         avgOutcome = uncaught - ONE
@@ -958,7 +958,7 @@ data slashed[][](reporter[])
 
 def getSlashed(branch, votePeriod, reporter):
     return(self.slashed[branch][votePeriod].reporter[reporter])
-    
+
 def setSlashed(branch, votePeriod, reporter):
     self.slashed[branch][votePeriod].reporter[reporter] = 1
     return(1)
@@ -966,7 +966,7 @@ def setSlashed(branch, votePeriod, reporter):
 def setRefund(refunder, amt):
     self.refunds[refunder] = amt
     return(1)
-    
+
 def doRefund(sender, refunder):
     send(sender, self.refunds[refunder])
     return(1)
@@ -1005,7 +1005,7 @@ def getDenominator(branch, period):
 def increaseDenominator(branch, period, amount):
     self.branch[branch].period[period].denominator += amount
     return(1)
-    
+
 def decreaseDenominator(branch, period, amount):
     self.branch[branch].period[period].denominator -= amount
     return(1)
@@ -1016,7 +1016,7 @@ def getFeesCollected(branch, address, period):
 def setFeesCollected(branch, address, period):
     self.branch[branch].period[period].feesCollected[address] = 1
     return(1)
-    
+
 def getPenalized(branch, period, sender, event):
     return(self.branch[branch].period[period].penalized[sender].event[event])
 
@@ -1025,7 +1025,7 @@ def setPenalized(branch, period, sender, event):
     return(1)
 
 def getPenalizedNum(branch, period, sender):
-    return(self.branch[branch].period[period].penalized[sender].num)    
+    return(self.branch[branch].period[period].penalized[sender].num)
 
 def increasePenalizedNum(branch, period, sender, amount):
     self.branch[branch].period[period].penalized[sender].num += amount
@@ -1034,10 +1034,10 @@ def increasePenalizedNum(branch, period, sender, amount):
 def setNotEnoughPenalized(branch, address, period):
     self.branch[branch].period[period].penalized[address].notEnoughReportsPenalized = 1
     return(1)
-    
+
 def getNotEnoughPenalized(branch, address, period):
     return(self.branch[branch].period[period].penalized[address].notEnoughReportsPenalized)
-    
+
 def getRepRedistributionDone(branch, reporter):
     refund()
     return(repRedistributionDone(branch, reporter))
@@ -1096,7 +1096,7 @@ def setEventForkedOver(branch, event):
 def getBaseReporters(branch):
     refund()
     return(self.Branches[branch].baseReporters)
-    
+
 def setBaseReporters(branch, num):
     refund()
     self.Branches[branch].baseReporters = num
@@ -1134,8 +1134,8 @@ def getMarketsInBranch(branch):
         markets[i] = self.Branches[branch].markets[i]
         i += 1
     return(markets: arr)
-   
-   
+
+
 def getParent(branch):
     return(self.Branches[branch].parent)
 
@@ -1222,11 +1222,11 @@ def addMarketToBranch(branch, market):
     self.Branches[branch].markets[numMarkets] = market
     self.Branches[branch].numMarkets += 1
     return(1)
-    
+
 def setForkPeriod(branch):
     self.Branches[branch].forkPeriod = self.Branches[branch].currentVotePeriod
     return(1)
-    
+
 # gets the period in which a branch was most recently forked
 def getForkPeriod(branch):
     return(self.Branches[branch].forkPeriod)
@@ -1453,7 +1453,7 @@ def modifyShares(market, outcome, amount):
     #    return(-1)
     sharesPurchased(market)[outcome] += amount
     return(1)
-    
+
 def modifySharesValue(market, amount):
     self.Markets[market].sharesValue += amount
     return(1)
@@ -1468,7 +1468,7 @@ def modifyParticipantShares(market, trader, outcome, amount, cancel):
     if(cancel):
         amount = -1*amount
     self.Markets[market].volume += amount
-    return(1)   
+    return(1)
 
 def setWinningOutcomes(market, outcomes: arr):
     refund()
@@ -1485,7 +1485,7 @@ def getWinningOutcomes(market):
     #    return(-1)
     # largest # of winning outcomes is 8
     return(load(self.Markets[market].winningOutcomes[0], items=8): arr)
-    
+
 def getOneWinningOutcome(market, num):
     refund()
     # whitelist
@@ -1513,7 +1513,7 @@ def getBondsMan(market):
 def getLastTrade(market):
     refund()
     return(self.Markets[market].last_trade)
-    
+
 def addTrade(market, trade_id, last_id):
     refund()
     self.Markets[market].trade_ids[last_id].next_id = trade_id
@@ -1522,7 +1522,7 @@ def addTrade(market, trade_id, last_id):
     self.Markets[market].last_trade = trade_id
     self.Markets[market].total_trades += 1
     return(1)
-    
+
 def remove_trade_from_market(market_id, trade_id):
     refund()
     prev_id = self.Markets[market_id].trade_ids[trade_id].prev_id
@@ -1557,7 +1557,7 @@ def get_trade_ids(market_id):
     if trade_ids:
         return(trade_ids:arr)
     return([FAILURE]:arr)
-    
+
 def get_total_trades(market_id):
     refund()
     return(self.Markets[market_id].total_trades)
@@ -1759,7 +1759,7 @@ def addReportersPaidSoFar(event):
 
 def getEventPushedUp(event):
     return(self.Events[event].pushedUp)
-    
+
 def setEventPushedUp(event, val):
     self.Events[event].pushedUp = val
     return(1)
@@ -1770,7 +1770,7 @@ def getForkOutcome(event):
 def setForkOutcome(event, value):
     self.Events[event].forkOutcome = value
     return(1)
-    
+
 def getForkEthicality(event):
     return(self.Events[event].forkEthicality)
 
@@ -1784,11 +1784,11 @@ def getForked(event):
 def setForked(event):
     self.Events[event].forked = 1
     return(1)
-    
+
 def setForkDone(event):
     self.Events[event].forkOver = 1
     return(1)
-    
+
 def getForkedDone(event):
     return(self.Events[event].forkOver)
 
@@ -1800,14 +1800,14 @@ def getEventInfo(event):
     refund()
     eventinfo = array(7)
     eventinfo[0] = self.Events[event].branch
-    eventinfo[1] = self.Events[event].expirationDate 
+    eventinfo[1] = self.Events[event].expirationDate
     eventinfo[2] = self.Events[event].outcome
     eventinfo[3] = self.Events[event].minValue
     eventinfo[4] = self.Events[event].maxValue
     eventinfo[5] = self.Events[event].numOutcomes
     eventinfo[6] = self.Events[event].bond
     return(eventinfo: arr)
-    
+
 def getResolution(event):
     refund()
     length=self.Events[event].resolutionSourceLength
@@ -1833,7 +1833,7 @@ def getExpiration(event):
 def getOriginalExpiration(event):
     refund()
     return(self.Events[event].originalExp)
-    
+
 def setOriginalExpiration(event, date):
     self.Events[event].originalExp = date
     return(1)
@@ -1930,7 +1930,7 @@ def getMarkets(event):
         markets[i] = self.Events[event].markets[i]
         i += 1
     return(markets: arr)
-    
+
 def getMarket(event, marketIndex):
     refund()
     return(self.Events[event].markets[marketIndex])
@@ -1949,7 +1949,7 @@ def setOutcome(ID, outcome):
 def getReportingThreshold(event):
     refund()
     return(self.Events[event].threshold)
-    
+
 def setThreshold(event, threshold):
     # do whitelist
     self.Events[event].threshold = threshold
@@ -2037,11 +2037,11 @@ def checkHash(tradeHash, sender):
         return(-1)
     else:
         return(1)
-        
+
 def getID(tradeID):
     refund()
     return(self.trades[tradeID].id)
-    
+
 def saveTrade(trade_id, type, market, amount, price, sender, outcome):
     refund()
     self.trades[trade_id].id = trade_id
@@ -2067,12 +2067,12 @@ def get_trade(id):
     trade[7] = self.trades[id].outcome
     if trade:
         return(trade:arr)
-    return([0]:arr)    
+    return([0]:arr)
 
 def get_amount(id):
     refund()
     return(self.trades[id].amount)
-    
+
 def get_price(id):
     refund()
     return(self.trades[id].price)
@@ -2093,7 +2093,7 @@ def remove_trade(id):
     self.trades[id].block = 0
     self.trades[id].outcome = 0
     return(1)
-    
+
 def fill_trade(trade_id, fill):
     refund()
     self.trades[trade_id].amount -= fill
@@ -2262,7 +2262,7 @@ def claimInitialRep(parent, branch):
             else:
                 # send amountLeftToPayBonder [if positive] to the fork bond poster
                 if(amountLeftToPayBonder > 0):
-                    self.addRep(branch, self.repIDToIndex(branch, self.getForkBondPoster(forkEvent)), amountLeftToPayBonder)    
+                    self.addRep(branch, self.repIDToIndex(branch, self.getForkBondPoster(forkEvent)), amountLeftToPayBonder)
                     # send the rest to the new branch's redistribution pool
                     self.addRep(branch, self.repIDToIndex(branch, branch), (repDecrease - amountLeftToPayBonder))
                 else:
@@ -2744,7 +2744,7 @@ def penalizeRoundTwoWrong(branch, event):
             overruled = 1
     elif((self.getOriginalOutcome(event) != catch(uncaught) or self.getOriginalEthicality(event)!=ethic_catch(ethical))):
         overruled = 1
-        
+
     numReportedOn = self.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
     repChange = 0
     # penalization on a round 2 event if not already penalized, it has outcome, and user reported on it
@@ -2936,7 +2936,7 @@ def submitReport(event, salt, report, ethics):
     if(!self.getFeesCollected(branch, msg.sender, votePeriod-1)):
         if(self.collectFees(branch, msg.sender, value=msg.value)<0):
             return(-8)
-   
+
     # actual submitting of report and ethicality
     report = self.validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, weight)
     if(report == -4):
@@ -2961,7 +2961,7 @@ def submitReport(event, salt, report, ethics):
         self.setEthics(event, ethics)
     # round 2 and fork events are weighted by rep, otherwise 1
     self.countReportAsSubmitted(branch, votePeriod, event, msg.sender, weight)
-    
+
     # pay reporters after reporting for their gas costs
     reportsNum = self.getLesserReportNum(branch, votePeriod, event)
     paidBack = self.getReportersPaidSoFar(event)
@@ -3280,7 +3280,7 @@ def buyCompleteSets(market, amount):
 # cost 850k gas
 # Errors:
     # -2: trader doesn't exist
-    # -3: user doesn't own enough shares 
+    # -3: user doesn't own enough shares
 def sellCompleteSets(market, amount):
     refund()
     branch = self.getbranch(market)
@@ -3419,7 +3419,7 @@ def convertToDormantRep(branch, value):
       return(-1)
     if(value<=0):
         return(0)
-    
+
     lastPeriodPenalized = self.getPenalizedUpTo(branch, msg.sender)
     lastPeriod = self.getVotePeriod(branch)-1
     delta = lastPeriod - lastPeriodPenalized
@@ -3459,7 +3459,7 @@ def convertToActiveRep(branch, value):
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
       return(-1)
-      
+
     lastPeriodPenalized = self.getPenalizedUpTo(branch, msg.sender)
     lastPeriod = self.getVotePeriod(branch)-1
     delta = lastPeriod - lastPeriodPenalized
@@ -3493,7 +3493,7 @@ def convertToActiveRep(branch, value):
             return(0)
     else:
         return(0)
-        
+
 def claimRep():
     balance = self.balanceOf(msg.sender)
     if(self.transferFrom(msg.sender, 0, balance) && self.addReporter(1010101, msg.sender, 0, balance, 0)):
@@ -3718,7 +3718,7 @@ def penalizeOnForkedEvent(branch, event):
     if(numReportedOn==self.getPenalizedNum(branch, lastPeriod, msg.sender)):
         sendRedistributedRepToBranch()
     return(1)
-    
+
 macro handleEthicsAndBondRepRedistribution($numReportedOn):
     # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
     if(ethics != ethic_catch(self.getEthics(event)) && repChange >=0):
@@ -3857,7 +3857,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         self.subtractRep(branch, self.repIDToIndex(branch, event), bond)
         self.addRep(branch, self.repIDToIndex(branch, branch), bond)
         # and set final outcome / event bond, etc
-        if(!self.resolve(branch, event)): 
+        if(!self.resolve(branch, event)):
             throw()
         # rep redistribution from original period/orig. outcome stands, rep redistribution from round 2 happens as usual as well
         self.setFinal(event)
@@ -3905,7 +3905,7 @@ def resolve(branch, event):
             scaled_min = ONE
             scaled_max = ONE*self.getNumOutcomes(event)
         fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
-        # sets outcome which is used in calculating payouts 
+        # sets outcome which is used in calculating payouts
         self.setOutcome(event, fxpOutcome)
         ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
         if(mode==ONEHALF || !ethical):
@@ -4099,7 +4099,7 @@ def slashRep(branch, salt, report, reporter, event):
     reporterBalance = self.getRepBalance(branch, reporter)
     # removes rep from colluder
     self.subtractRep(branch, reporterIndex, reporterBalance)
-    # gives truther half 
+    # gives truther half
     self.addRep(branch, trutherIndex, (reporterBalance*ONEHALF / ONE))
     # other half sent to branch
     self.addRep(branch, self.repIDToIndex(branch, branch), reporterBalance*ONEHALF/ONE)
@@ -4112,9 +4112,9 @@ macro POINTZEROONE: 184467440737095520
 # UI has to handle function calls for these
 
 #Notes:
-    #Anyone can pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.  
-    #In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep is redistributed accordingly.  
-    #In the other class/branch, the event is readjudicated and remove the outcome on the pre fork branch and rep is redistributed as normal, except people who said the original outcome in the original fork lose rep.  
+    #Anyone can pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.
+    #In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep is redistributed accordingly.
+    #In the other class/branch, the event is readjudicated and remove the outcome on the pre fork branch and rep is redistributed as normal, except people who said the original outcome in the original fork lose rep.
     # Note: Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets, which would be determined by the fork that represented reality, which would have a higher market cap.  Markets go to the most popular fork by default after 2 months.
 
 # Period where we forked, at the end of it
@@ -4155,7 +4155,7 @@ def move_event(event):
             self.setEthics(event, 0)
             self.setUncaughtOutcome(event, 0)
             # return bond if it's a round 2 event and make it not one anymore
-            self.roundTwoResolve(branch, event, eventIndex)    
+            self.roundTwoResolve(branch, event, eventIndex)
             # if should've resolved in past periods
             if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1)):
                 # push it into next [this] period
@@ -4405,7 +4405,7 @@ macro remove_trade($trade_id, $market):
 # Errors:
     # -1: trade doesn't exist
     # -2: bad trade hash
-    # -4: must buy at least .00000001 in 
+    # -4: must buy at least .00000001 in
     # -5: can't pick up your own trade
     # 10: insufficient balance
     # 22: trade in same block prohibited
@@ -4490,7 +4490,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 self.subtractCash(market, fee)
                 self.addCash(creator, fee/2)
                 self.addCash(branch, fee/2)
-                
+
                 # needed to keep track of how many fees a market has raised
                 # only count branch fees here
                 self.addFees(market, fee/2+branchFees)
@@ -4522,7 +4522,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees/ONE * fee / ONE
                 creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees/ONE * fee / ONE
                 # Transfer cash from user to person who has ask order and pay fee to branch and market creator
-                # 75% to branch + .5% more to branch per maker fee 1% decrease 
+                # 75% to branch + .5% more to branch per maker fee 1% decrease
                 self.addCash(branch, branchFees)
                 # 25% to creator + .5% more to creator per 1% decrease in maker fees
                 self.addCash(creator, creatorFees)
@@ -4534,7 +4534,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 self.subtractCash(market, makerFee)
                 self.addCash(creator, makerFee/2)
                 self.addCash(branch, makerFee/2)
-                
+
                 # only count branch fees here
                 self.addFees(market, makerFee/2+branchFees)
                 # Update max_value
@@ -4602,7 +4602,7 @@ def short_sell(buyer_trade_id, max_amount):
     # Make sure the trade has been mined, obvious HFT prevention
     if block.number <= trade[6]:
         return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
-    
+
     # calculate cost
     creator = self.getCreator(market)
     trading_fee = self.getTradingFee(market)
@@ -4649,7 +4649,7 @@ def short_sell(buyer_trade_id, max_amount):
     self.modifyParticipantShares(market, msg.sender, outcome, -fill, 0)
     self.modifyParticipantShares(market, owner, outcome, fill, 0)
     # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
-    # 75% to branch + .5% more to branch per maker fee 1% decrease 
+    # 75% to branch + .5% more to branch per maker fee 1% decrease
     if(!self.sendFrom(branch, branchFees, msg.sender)):
         throw()
     # 25% to creator + .5% more to creator per 1% decrease in maker fees
@@ -4661,7 +4661,7 @@ def short_sell(buyer_trade_id, max_amount):
     self.subtractCash(market, fee)
     self.addCash(creator, fee/2)
     self.addCash(branch, fee/2)
-    
+
     # only count branch fees here
     self.addFees(market, fee/2+branchFees)
 
@@ -4835,7 +4835,7 @@ def getEventCanReportOn(branch, period, reporter, event):
     x[0] = reporter + event
     # do abs then mult by 2 to ensure pos. and between 0 and 1
     shaHash = sha3(x, items=1)
-    shaHash = (abs(shaHash)/ONE) * 2    
+    shaHash = (abs(shaHash)/ONE) * 2
     if(shaHash < reportingThreshold || self.getRequired(event, period, branch)):
         return(1)
     else:

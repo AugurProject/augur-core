@@ -21,7 +21,7 @@ def init():
 
 def getSlashed(branch, votePeriod, reporter):
     return(self.slashed[branch][votePeriod].reporter[reporter])
-    
+
 def setSlashed(branch, votePeriod, reporter):
     self.slashed[branch][votePeriod].reporter[reporter] = 1
     return(1)
@@ -29,7 +29,7 @@ def setSlashed(branch, votePeriod, reporter):
 def setRefund(refunder, amt):
     self.refunds[refunder] = amt
     return(1)
-    
+
 def doRefund(sender, refunder):
     send(sender, self.refunds[refunder])
     return(1)
@@ -69,7 +69,7 @@ def getDenominator(branch, period):
 def increaseDenominator(branch, period, amount):
     self.branch[branch].period[period].denominator += amount
     return(1)
-    
+
 def decreaseDenominator(branch, period, amount):
     self.branch[branch].period[period].denominator -= amount
     return(1)
@@ -80,7 +80,7 @@ def getFeesCollected(branch, address, period):
 def setFeesCollected(branch, address, period):
     self.branch[branch].period[period].feesCollected[address] = 1
     return(1)
-    
+
 def getPenalized(branch, period, sender, event):
     return(self.branch[branch].period[period].penalized[sender].event[event])
 
@@ -89,7 +89,7 @@ def setPenalized(branch, period, sender, event):
     return(1)
 
 def getPenalizedNum(branch, period, sender):
-    return(self.branch[branch].period[period].penalized[sender].num)    
+    return(self.branch[branch].period[period].penalized[sender].num)
 
 def increasePenalizedNum(branch, period, sender, amount):
     self.branch[branch].period[period].penalized[sender].num += amount
@@ -98,10 +98,10 @@ def increasePenalizedNum(branch, period, sender, amount):
 def setNotEnoughPenalized(branch, address, period):
     self.branch[branch].period[period].penalized[address].notEnoughReportsPenalized = 1
     return(1)
-    
+
 def getNotEnoughPenalized(branch, address, period):
     return(self.branch[branch].period[period].penalized[address].notEnoughReportsPenalized)
-    
+
 def getRepRedistributionDone(branch, reporter):
     return(repRedistributionDone(branch, reporter))
 

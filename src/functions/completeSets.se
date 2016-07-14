@@ -61,7 +61,7 @@ def buyCompleteSets(market, amount):
 # cost 850k gas
 # Errors:
     # -2: trader doesn't exist
-    # -3: user doesn't own enough shares 
+    # -3: user doesn't own enough shares
 def sellCompleteSets(market, amount):
     refund()
     branch = MARKETS.getbranch(market)

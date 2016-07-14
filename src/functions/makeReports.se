@@ -145,7 +145,7 @@ def submitReport(event, salt, report, ethics):
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod-1)):
         if(COLLECTFEES.collectFees(branch, msg.sender, value=msg.value)<0):
             return(-8)
-   
+
     # actual submitting of report and ethicality
     report = self.validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, weight)
     if(report == -4):
@@ -170,7 +170,7 @@ def submitReport(event, salt, report, ethics):
         EVENTS.setEthics(event, ethics)
     # round 2 and fork events are weighted by rep, otherwise 1
     EXPEVENTS.countReportAsSubmitted(branch, votePeriod, event, msg.sender, weight)
-    
+
     # pay reporters after reporting for their gas costs
     reportsNum = EXPEVENTS.getLesserReportNum(branch, votePeriod, event)
     paidBack = EVENTS.getReportersPaidSoFar(event)

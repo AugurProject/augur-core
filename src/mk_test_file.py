@@ -23,11 +23,11 @@ if(os.path.isfile(str(sys.argv[i-1]) + '/output.se')):
     os.remove(str(sys.argv[i-1]) + '/output.se')
 removeintro = 1
 
-	
+
 #----------------------------------------------------------------
 #Read files change the content in memory and save the result as a new file
-#----------------------------------------------------------------	
-	
+#----------------------------------------------------------------
+
 maindataline = []
 initline = []
 initcount = 0
@@ -83,7 +83,7 @@ while index < foldercount:												#loops all selected folders
 
 #----------------------------------------------------------------
 #Remove Duplicate Events
-#----------------------------------------------------------------   
+#----------------------------------------------------------------
 uniqueevent = []        #holds event text before '('
 indexline = 0
 while indexline < len(maindataline):
@@ -110,7 +110,7 @@ while indexline < len(maindataline):
 
 #----------------------------------------------------------------
 #Erase init lines and move them to the top of the data
-#----------------------------------------------------------------	
+#----------------------------------------------------------------
 
 initline = []
 indexline = 0

@@ -48,7 +48,7 @@ def checkWhitelist(address):
 
 def getActiveRep(branch):
     return(self.Reporting[branch].activeRep)
-    
+
 def adjustActiveRep(branch, amount):
     self.Reporting[branch].activeRep += amount
     return(1)
@@ -56,7 +56,7 @@ def adjustActiveRep(branch, amount):
 def setFork(branch):
     self.Reporting[branch].fork = branch
     return(1)
-    
+
 def getFork(branch):
     return(self.Reporting[branch].fork)
 
@@ -97,7 +97,7 @@ def balanceOf(branch, address):
     if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
         return(0)
     return(self.Reporting[branch].dormantRep[repIndex].repValue)
-    
+
 # return total supply of dormant rep
 def totalSupply(branch):
     return((self.Reporting[branch].totalRep - self.Reporting[branch].activeRep))

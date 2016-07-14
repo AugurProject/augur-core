@@ -59,7 +59,7 @@ macro remove_trade($trade_id, $market):
 # Errors:
     # -1: trade doesn't exist
     # -2: bad trade hash
-    # -4: must buy at least .00000001 in 
+    # -4: must buy at least .00000001 in
     # -5: can't pick up your own trade
     # 10: insufficient balance
     # 22: trade in same block prohibited
@@ -144,7 +144,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 CASH.subtractCash(market, fee)
                 CASH.addCash(creator, fee/2)
                 CASH.addCash(branch, fee/2)
-                
+
                 # needed to keep track of how many fees a market has raised
                 # only count branch fees here
                 MARKETS.addFees(market, fee/2+branchFees)
@@ -176,7 +176,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees/ONE * fee / ONE
                 creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees/ONE * fee / ONE
                 # Transfer cash from user to person who has ask order and pay fee to branch and market creator
-                # 75% to branch + .5% more to branch per maker fee 1% decrease 
+                # 75% to branch + .5% more to branch per maker fee 1% decrease
                 CASH.addCash(branch, branchFees)
                 # 25% to creator + .5% more to creator per 1% decrease in maker fees
                 CASH.addCash(creator, creatorFees)
@@ -188,7 +188,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 CASH.subtractCash(market, makerFee)
                 CASH.addCash(creator, makerFee/2)
                 CASH.addCash(branch, makerFee/2)
-                
+
                 # only count branch fees here
                 MARKETS.addFees(market, makerFee/2+branchFees)
                 # Update max_value
@@ -256,7 +256,7 @@ def short_sell(buyer_trade_id, max_amount):
     # Make sure the trade has been mined, obvious HFT prevention
     if block.number <= trade[6]:
         return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
-    
+
     # calculate cost
     creator = INFO.getCreator(market)
     trading_fee = MARKETS.getTradingFee(market)
@@ -303,7 +303,7 @@ def short_sell(buyer_trade_id, max_amount):
     MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 1)
     MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
     # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
-    # 75% to branch + .5% more to branch per maker fee 1% decrease 
+    # 75% to branch + .5% more to branch per maker fee 1% decrease
     if(!CASH.sendFrom(branch, branchFees, msg.sender)):
         throw()
     # 25% to creator + .5% more to creator per 1% decrease in maker fees
@@ -315,7 +315,7 @@ def short_sell(buyer_trade_id, max_amount):
     CASH.subtractCash(market, fee)
     CASH.addCash(creator, fee/2)
     CASH.addCash(branch, fee/2)
-    
+
     # only count branch fees here
     MARKETS.addFees(market, fee/2+branchFees)
 

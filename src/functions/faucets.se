@@ -113,7 +113,7 @@ def claimInitialRep(parent, branch):
             else:
                 # send amountLeftToPayBonder [if positive] to the fork bond poster
                 if(amountLeftToPayBonder > 0):
-                    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(forkEvent)), amountLeftToPayBonder)    
+                    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(forkEvent)), amountLeftToPayBonder)
                     # send the rest to the new branch's redistribution pool
                     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), (repDecrease - amountLeftToPayBonder))
                 else:

@@ -38,7 +38,7 @@ inset('refund.se')
     # numReqEvents is the number of events that are required to be reported on in a given reporting period
     # numberRemoved is the number of events that no longer have to be reported on in this period [a good example is an event that was resolved early successfully]
     # numEventsToReportOn is the number of events available for reporting on [not including required events] * base number of reporters per event [this is multiplied by a user's periodRepWeight to figure out how many events they should be reporting on in a given period]
-    # shareValue is the value of all the outstanding shares from markets that have events expiring in this period 
+    # shareValue is the value of all the outstanding shares from markets that have events expiring in this period
 data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], subsidy[], eventWeight[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, shareValue)
 
 # This keeps track of info in a period for the reporters, it takes a branch and votePeriod as params, respectively
@@ -67,7 +67,7 @@ def setSaltyEncryptedHash(branch, period, reporter, saltyEncryptedHash, event):
     #	return(-1)
     self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event] = saltyEncryptedHash
     return(1)
-    
+
 # Refunds cost to calculate number of reports for an event
 def refundCost(to, branch, period, event):
     send(to, self.periodEventInfo[branch][period].subsidy[event])
@@ -114,7 +114,7 @@ def getCurrentModeItems(period, event):
 
 def getCurrentMode(period, event):
     return(self.modeItems[period][event].currentMode)
-    
+
 # returns weight of a report value for the mode
 def getWeightOfReport(period, event, report):
     return(self.modeItems[period][event].reportValue[report])
@@ -131,7 +131,7 @@ def getBeforeRep(branch, period, sender):
 
 def getAfterRep(branch, period, sender):
     return(self.reporterPeriodInfo[branch][period].afterRep[sender])
-    
+
 def getPeriodDormantRep(branch, period, sender):
     return(self.reporterPeriodInfo[branch][period].periodDormantRep[sender])
 
@@ -150,10 +150,10 @@ def addRoundTwo(branch, period):
 
 def getRequired(event, period, branch):
     return(self.periodEventInfo[branch][period].requiredEvents[event])
-    
+
 def getNumRequired(branch, period):
     return(self.periodEventInfo[branch][period].numReqEvents)
-    
+
 # Return 0 means already required
 def setEventRequired(branch, period, event):
     if(self.periodEventInfo[branch][period].requiredEvents[event]==0):
@@ -173,7 +173,7 @@ def getEvents(branch, period):
         events[i] = self.periodEventInfo[branch][period].events[i]
         i += 1
     return(events: arr)
-    
+
 def getEventsRange(branch, period, start, end):
     numEvents = end-start
     events = array(numEvents)
@@ -184,7 +184,7 @@ def getEventsRange(branch, period, start, end):
         index += 1
         i += 1
     return(events: arr)
-    
+
 def getEventIndex(branch, period, event):
     return(self.periodEventInfo[branch][period].eventToIndex[event])
 

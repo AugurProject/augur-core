@@ -65,7 +65,7 @@ def getEventCanReportOn(branch, period, reporter, event):
     x[0] = reporter + event
     # do abs then mult by 2 to ensure pos. and between 0 and 1
     shaHash = sha3(x, items=1)
-    shaHash = (abs(shaHash)/ONE) * 2    
+    shaHash = (abs(shaHash)/ONE) * 2
     if(shaHash < reportingThreshold || EXPEVENTS.getRequired(event, period, branch)):
         return(1)
     else:

@@ -8,7 +8,7 @@ macro proportionCorrect($event, $forkEvent):
         # subtract 1 to get it from 0 to 1
         avgOutcome = uncaught - ONE
     else:
-        uncaught = EVENTS.getUncaughtOutcome($event)        
+        uncaught = EVENTS.getUncaughtOutcome($event)
         outcome = catch(uncaught)
         # subtract 1 to get it from 0 to 1
         avgOutcome = uncaught - ONE

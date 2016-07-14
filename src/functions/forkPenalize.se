@@ -67,7 +67,7 @@ def penalizeOnForkedEvent(branch, event):
     if(numReportedOn==CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
         sendRedistributedRepToBranch()
     return(1)
-    
+
 macro handleEthicsAndBondRepRedistribution($numReportedOn):
     # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality
     if(ethics != ethic_catch(EVENTS.getEthics(event)) && repChange >=0 && BACKSTOPS.getForkedOverEthicality(event)):

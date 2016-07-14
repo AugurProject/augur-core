@@ -1,4 +1,4 @@
-#    todo so if user hasn't claimed rep on the branch yet and it's a fork scenario, don't allow sending rep on the parent branch until they [receiver] claim 
+#    todo so if user hasn't claimed rep on the branch yet and it's a fork scenario, don't allow sending rep on the parent branch until they [receiver] claim
 #    should also perhaps make sender claim too
 #    check overflows and underflows
 
@@ -100,7 +100,7 @@ def transferFrom(branch, from, recver, value):
        throw()
     log(type=Transfer, from, recver, value)
     return(1)
-    
+
 # Convert active rep to dormant rep
 # error messages
     # -1: sender's rep account didn't exist, just made one
@@ -123,11 +123,11 @@ def convertToDormantRep(branch, value):
         throw()
     REPORTING.adjustActiveRep(branch, -value)
     return(1)
-    
+
 # Convert dormant rep to active rep
 # error messages
     # -1: sender's rep account didn't exist, just made one
-    # -2: 
+    # -2:
 def convertToActiveRep(branch, value):
     checkInvariants(msg.sender)
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
@@ -143,8 +143,8 @@ def convertToActiveRep(branch, value):
     if(!REPORTING.subtractDormantRep(branch, senderIndex, value) || !REPORTING.addRep(branch, senderIndex, value) || !safeToAdd(value, REPORTING.getRepBalance(msg.sender))):
         throw()
     REPORTING.adjustActiveRep(branch, value)
-    return(1)  
-            
+    return(1)
+
 def claimRep():
     balance = REPCONTRACT.balanceOf(msg.sender)
     if(!REPCONTRACT.transferFrom(msg.sender, 0, balance) || !REPORTING.addReporter(1010101, msg.sender, 0, balance, 0)):
@@ -161,7 +161,7 @@ def approve(branch, spender, value):
 # Returns amount spender can withdraw from owner
 def allowance(branch, owner, spender):
     return(self.amountCanSpend[owner][spender].branch[branch])
-    
+
 #  0: only one period behind, need to do penalizations for it
 # -3: not in right part of period
 # -4: couldn't catchup automatically
@@ -184,7 +184,7 @@ macro checkInvariants($account):
             return(-4)
     if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
         return(0)
-        
+
 
 # safe adders idea pulled from piper merriam's btcrelay audit
 macro safeToAdd($a, $b):

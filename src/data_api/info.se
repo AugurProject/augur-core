@@ -59,7 +59,7 @@ def setInfo(ID, description: str, creator, fee):
         return(1)
     else:
         return(0)
-        
+
 ### Helper functions [only needed for tester, on chain in a separate file]:
 macro YES: TWO
 macro NO: ONE

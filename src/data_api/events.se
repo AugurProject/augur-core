@@ -53,7 +53,7 @@ def addReportersPaidSoFar(event):
 
 def getEventPushedUp(event):
     return(self.Events[event].pushedUp)
-    
+
 def setEventPushedUp(event, val):
     self.Events[event].pushedUp = val
     return(1)
@@ -64,7 +64,7 @@ def getForkOutcome(event):
 def setForkOutcome(event, value):
     self.Events[event].forkOutcome = value
     return(1)
-    
+
 def getForkEthicality(event):
     return(self.Events[event].forkEthicality)
 
@@ -78,11 +78,11 @@ def getForked(event):
 def setForked(event):
     self.Events[event].forked = 1
     return(1)
-    
+
 def setForkDone(event):
     self.Events[event].forkOver = 1
     return(1)
-    
+
 def getForkedDone(event):
     return(self.Events[event].forkOver)
 
@@ -93,14 +93,14 @@ def getEventResolution(event):
 def getEventInfo(event):
     eventinfo = array(7)
     eventinfo[0] = self.Events[event].branch
-    eventinfo[1] = self.Events[event].expirationDate 
+    eventinfo[1] = self.Events[event].expirationDate
     eventinfo[2] = self.Events[event].outcome
     eventinfo[3] = self.Events[event].minValue
     eventinfo[4] = self.Events[event].maxValue
     eventinfo[5] = self.Events[event].numOutcomes
     eventinfo[6] = self.Events[event].bond
     return(eventinfo: arr)
-    
+
 def getResolution(event):
     length=self.Events[event].resolutionSourceLength
     return(load(self.Events[event].resolutionSource[0], chars=length): str)
@@ -120,7 +120,7 @@ def getExpiration(event):
 
 def getOriginalExpiration(event):
     return(self.Events[event].originalExp)
-    
+
 def setOriginalExpiration(event, date):
     self.Events[event].originalExp = date
     return(1)
@@ -199,7 +199,7 @@ def getMarkets(event):
         markets[i] = self.Events[event].markets[i]
         i += 1
     return(markets: arr)
-    
+
 def getMarket(event, marketIndex):
     return(self.Events[event].markets[marketIndex])
 

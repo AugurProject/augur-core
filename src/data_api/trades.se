@@ -36,10 +36,10 @@ def checkHash(tradeHash, sender):
         return(-1)
     else:
         return(1)
-        
+
 def getID(tradeID):
     return(self.trades[tradeID].id)
-    
+
 def saveTrade(trade_id, type, market, amount, price, sender, outcome):
     self.trades[trade_id].id = trade_id
     self.trades[trade_id].type = type
@@ -63,11 +63,11 @@ def get_trade(id):
     trade[7] = self.trades[id].outcome
     if trade:
         return(trade:arr)
-    return([0]:arr)    
+    return([0]:arr)
 
 def get_amount(id):
     return(self.trades[id].amount)
-    
+
 def get_price(id):
     return(self.trades[id].price)
 
@@ -86,7 +86,7 @@ def remove_trade(id):
     self.trades[id].block = 0
     self.trades[id].outcome = 0
     return(1)
-    
+
 def fill_trade(trade_id, fill):
     self.trades[trade_id].amount -= fill
     return(1)

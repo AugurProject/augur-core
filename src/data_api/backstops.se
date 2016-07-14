@@ -28,11 +28,11 @@ def getDisputedOverEthics(event):
 def setDisputedOverEthics(event):
     self.roundTwo[event].disputedOverEthics = 1
     return(1)
-    
+
 def setRoundTwoRefund(event, amt):
     self.roundTwo[event].refund = amt
     return(1)
-    
+
 def doRoundTwoRefund(sender, event):
     send(sender, self.roundTwo[event].refund)
     return(1)
@@ -50,7 +50,7 @@ def setForkedOverEthicality(event):
 
 def getForkedOverEthicality(event):
     return(self.forking[event].forkedOverEthicality)
-    
+
 def adjForkBondPaid(event, amount):
     self.forking[event].bondPaid += amount
     return(1)
@@ -73,14 +73,14 @@ def setOriginalBranch(event, branch):
 
 def getOriginalBranch(event):
     return(self.forking[event].originalBranch)
-    
+
 def setMoved(event):
     self.forking[event].moved = 1
     return(1)
 
 def getMoved(event):
     return(self.forking[event].moved)
-    
+
 def setResolved(branch, forkPeriod, winner):
     self.resolved[branch][forkPeriod] = winner
     return(1)
@@ -100,7 +100,7 @@ def increaseBondPaid(event, amount):
 # whether a round 2 bond's principle has been returned
 def getBondReturned(event):
     return(self.roundTwo[event].bondReturned)
-    
+
 def setBondReturned(event):
     self.roundTwo[event].bondReturned = 1
     return(1)
@@ -108,11 +108,11 @@ def setBondReturned(event):
 def getRoundTwo(event):
     refund()
     return(self.roundTwo[event].roundTwo)
-    
+
 def setRoundTwo(event, roundTwo):
     self.roundTwo[event].roundTwo = roundTwo
     return(1)
-    
+
 def getBondPoster(event):
     return(self.roundTwo[event].bondPoster)
 
@@ -127,7 +127,7 @@ def getFinal(event):
 def setFinal(event):
     self.roundTwo[event].final = 1
     return(1)
-    
+
 def getOriginalOutcome(event):
     return(self.roundTwo[event].originalOutcome)
 
@@ -137,7 +137,7 @@ def setOriginalOutcome(event, originalOutcome):
 
 def getOriginalEthicality(event):
     return(self.roundTwo[event].originalEthicality)
-    
+
 def setOriginalEthicality(event, ethicality):
     self.roundTwo[event].originalEthicality = ethicality
     return(1)

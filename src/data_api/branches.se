@@ -54,7 +54,7 @@ def init():
     self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
     self.Branches[1010101].periodLength = 15 # 2 hours
     # .5%
-    self.Branches[1010101].minTradingFee = 92233720368547760 
+    self.Branches[1010101].minTradingFee = 92233720368547760
     self.branchListCount = 1
     self.branchList[0] = 1010101
     # since only have to report on half this targets 3
@@ -74,7 +74,7 @@ def setEventForkedOver(branch, event):
 
 def getBaseReporters(branch):
     return(self.Branches[branch].baseReporters)
-    
+
 def setBaseReporters(branch, num):
     self.Branches[branch].baseReporters = num
     return(1)
@@ -181,11 +181,11 @@ def addMarketToBranch(branch, market):
     self.Branches[branch].markets[numMarkets] = market
     self.Branches[branch].numMarkets += 1
     return(1)
-    
+
 def setForkPeriod(branch):
     self.Branches[branch].forkPeriod = self.Branches[branch].currentVotePeriod
     return(1)
-    
+
 # gets the period in which a branch was most recently forked
 def getForkPeriod(branch):
     return(self.Branches[branch].forkPeriod)

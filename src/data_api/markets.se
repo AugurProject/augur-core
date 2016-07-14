@@ -202,7 +202,7 @@ def modifyShares(market, outcome, amount):
     #    return(-1)
     sharesPurchased(market)[outcome] += amount
     return(1)
-    
+
 def modifySharesValue(market, amount):
     self.Markets[market].sharesValue += amount
     return(1)
@@ -215,7 +215,7 @@ def modifyParticipantShares(market, trader, outcome, amount, actualTrade):
         if(amount<0):
             amount = amount*-1
         self.Markets[market].volume += amount
-    return(1)   
+    return(1)
 
 def setWinningOutcomes(market, outcomes: arr):
     #if(!self.whitelist.check(msg.sender)):
@@ -230,7 +230,7 @@ def getWinningOutcomes(market):
     #    return(-1)
     # largest # of winning outcomes is 8
     return(load(self.Markets[market].winningOutcomes[0], items=8): arr)
-    
+
 def getOneWinningOutcome(market, num):
     # whitelist
     return(self.Markets[market].winningOutcomes[num])
@@ -252,7 +252,7 @@ def getBondsMan(market):
 
 def getLastTrade(market):
     return(self.Markets[market].last_trade)
-    
+
 def addTrade(market, trade_id, last_id):
     self.Markets[market].trade_ids[last_id].next_id = trade_id
     self.Markets[market].trade_ids[trade_id].prev_id = last_id
@@ -260,7 +260,7 @@ def addTrade(market, trade_id, last_id):
     self.Markets[market].last_trade = trade_id
     self.Markets[market].total_trades += 1
     return(1)
-    
+
 def remove_trade_from_market(market_id, trade_id):
     prev_id = self.Markets[market_id].trade_ids[trade_id].prev_id
     next_id = self.Markets[market_id].trade_ids[trade_id].next_id
@@ -293,7 +293,7 @@ def get_trade_ids(market_id):
     if trade_ids:
         return(trade_ids:arr)
     return([FAILURE]:arr)
-    
+
 def get_total_trades(market_id):
     return(self.Markets[market_id].total_trades)
 

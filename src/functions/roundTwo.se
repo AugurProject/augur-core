@@ -129,7 +129,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), bond)
         # and set final outcome / event bond, etc
-        if(!self.resolve(branch, event)): 
+        if(!self.resolve(branch, event)):
             throw()
         # rep redistribution from original period/orig. outcome stands, rep redistribution from round 2 happens as usual as well
         BACKSTOPS.setFinal(event)
@@ -177,7 +177,7 @@ def resolve(branch, event):
             scaled_min = ONE
             scaled_max = ONE*EVENTS.getNumOutcomes(event)
         fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
-        # sets outcome which is used in calculating payouts 
+        # sets outcome which is used in calculating payouts
         EVENTS.setOutcome(event, fxpOutcome)
         ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
         if(mode==ONEHALF || !ethical):
