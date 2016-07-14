@@ -59,12 +59,12 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $fee, $send
         if $type == ASK:
             MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$amount, 0)
             if($fee):
-                CASH.sendFrom($market, ($amount * $price * $fee / ONE^2), $sender)
+                CASH.sendFrom($market, ($amount * $price * $fee / ONE**2), $sender)
         # Send / escrow cash for bids
         if $type == BID:
             CASH.sendFrom($market, $amount * $price / ONE, $sender)
             if($fee):
-                CASH.sendFrom($market, ($amount * $price * $fee / ONE^2), $sender)
+                CASH.sendFrom($market, ($amount * $price * $fee / ONE**2), $sender)
     else:
         return(TRADE_ALREADY_EXISTS)
     log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id)
@@ -100,14 +100,14 @@ def cancel(trade_id):
         # Issue refunds
         if type == BID:
             # cash refund
-            amt = amount * price * (fee + ONE) / ONE^2
+            amt = amount * price * (fee + ONE) / ONE**2
             CASH.subtractCash(market, amt)
             CASH.addCash(msg.sender, amt)
         elif type == ASK:
             # shares refund
             MARKETS.modifyParticipantShares(market, msg.sender, outcome, amount, 0)
-            CASH.subtractCash(market, (amount * price * fee / ONE^2))
-            CASH.addCash(msg.sender, (amount * price * fee / ONE^2))
+            CASH.subtractCash(market, (amount * price * fee / ONE**2))
+            CASH.addCash(msg.sender, (amount * price * fee / ONE**2))
         # Log cancellation
         log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type)
         return(SUCCESS)
@@ -140,7 +140,7 @@ def buy(amount, price, market, outcome):
         return(-1)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
-    if(CASH.balance(msg.sender) < (amount * price * (fee + ONE) / ONE^2)):
+    if(CASH.balance(msg.sender) < (amount * price * (fee + ONE) / ONE**2)):
         return(-3)
     save_trade(BID, amount, price, market, outcome, branch, fee, msg.sender)
     return(FAILURE)
@@ -161,7 +161,8 @@ def sell(amount, price, market, outcome):
     if(MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome) < amount):
         return(-3)
     # check for enough money for fees
-    if(CASH.balance(msg.sender) < (amount * price * fee / ONE^2)):
+    if(CASH.balance(msg.sender) < (amount * price * fee / ONE**2)):
         return(-3)
     save_trade(ASK, amount, price, market, outcome, branch, fee, msg.sender)
     return(FAILURE)
+    

@@ -3,9 +3,9 @@ macro refund():
         if(!send(msg.sender, msg.value)):
             throw()
 
-macro ONE: 2^64
+macro ONE: 2**64
 
-macro WEITOETH: 10^18
+macro WEITOETH: 10**18
 
 macro THREEFOURTHS: 13835058055282163712
 

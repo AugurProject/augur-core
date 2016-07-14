@@ -429,11 +429,11 @@ macro fx_exp2($x):
 macro fx_exp($x):
     fx_exp2($x * 0x10000000000000000 / 0xB17217F7D1CF79AC)
 
-# Calculates the exponential function given a fixed point [base 2^64] number, so e^x
+# Calculates the exponential function given a fixed point [base 2**64] number, so e**x
 def fx_exp(x):
     return(fx_exp(x))
 
-# Calculates the natural log function given a fixed point [base 2^64] number, so ln(x)
+# Calculates the natural log function given a fixed point [base 2**64] number, so ln(x)
 def fx_log(x):
     return(fx_log(x))
 inset('refund.se')
@@ -1234,9 +1234,9 @@ macro refund():
     if(msg.value > 0):
         send(msg.sender, msg.value)
 
-macro ONE: 2^64
+macro ONE: 2**64
 
-macro WEITOETH: 10^18
+macro WEITOETH: 10**18
 
 macro THREEFOURTHS: 13835058055282163712
 
@@ -2207,7 +2207,7 @@ def reputationFaucet(branch):
 def fundNewAccount(branch):
     self.sendFrom(self, 0, self)
     self.reputationFaucet(branch)
-    self.setCash(msg.sender, 10000*2^64)
+    self.setCash(msg.sender, 10000*2**64)
     return(1)
 
 # Used to claim rep on a fork or on a new branch
@@ -2313,12 +2313,12 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $fee, $send
         if $type == ASK:
             self.modifyParticipantShares($market, msg.sender, $outcome, -$amount, 0)
             if($fee):
-                self.sendFrom($market, ($amount * $price * $fee / ONE^2), $sender)
+                self.sendFrom($market, ($amount * $price * $fee / ONE**2), $sender)
         # Send / escrow cash for bids
         if $type == BID:
             self.sendFrom($market, $amount * $price / ONE, $sender)
             if($fee):
-                self.sendFrom($market, ($amount * $price * $fee / ONE^2), $sender)
+                self.sendFrom($market, ($amount * $price * $fee / ONE**2), $sender)
     else:
         return(TRADE_ALREADY_EXISTS)
     log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id)
@@ -2354,14 +2354,14 @@ def cancel(trade_id):
         # Issue refunds
         if type == BID:
             # cash refund
-            amt = amount * price * (fee + ONE) / ONE^2
+            amt = amount * price * (fee + ONE) / ONE**2
             self.subtractCash(market, amt)
             self.addCash(msg.sender, amt)
         elif type == ASK:
             # shares refund
             self.modifyParticipantShares(market, msg.sender, outcome, amount, 1)
-            self.subtractCash(market, (amount * price * fee / ONE^2))
-            self.addCash(msg.sender, (amount * price * fee / ONE^2))
+            self.subtractCash(market, (amount * price * fee / ONE**2))
+            self.addCash(msg.sender, (amount * price * fee / ONE**2))
         # Log cancellation
         log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type)
         return(SUCCESS)
@@ -2394,7 +2394,7 @@ def buy(amount, price, market, outcome):
         return(-1)
     if(self.getOracleOnly(branch)):
         return(-2)
-    if(self.balance(msg.sender) < (amount * price * (fee + ONE) / ONE^2)):
+    if(self.balance(msg.sender) < (amount * price * (fee + ONE) / ONE**2)):
         return(-3)
     save_trade(BID, amount, price, market, outcome, branch, fee, msg.sender)
     return(FAILURE)
@@ -2415,7 +2415,7 @@ def sell(amount, price, market, outcome):
     if(self.getParticipantSharesPurchased(market, msg.sender, outcome) < amount):
         return(-3)
     # check for enough money for fees
-    if(self.balance(msg.sender) < (amount * price * fee / ONE^2)):
+    if(self.balance(msg.sender) < (amount * price * fee / ONE**2)):
         return(-3)
     save_trade(ASK, amount, price, market, outcome, branch, fee, msg.sender)
     return(FAILURE)
@@ -2447,7 +2447,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     numEventsAvailableToReportOn = self.getNumEventsToReportOn(branch, lastPeriod)
     # events a user should be reporting on
     # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
-    # a^b=exp(b*ln(a))=e^(b*ln(a)).
+    # a**b=exp(b*ln(a))=e**(b*ln(a)).
     repConstant = self.fx_exp(ONEPOINTTWO*self.fx_log(originalRep)/ONE)*2**64/self.fx_exp(ONEPOINTTWO*self.fx_log(self.getActiveRep(branch))/ONE)
     baseReporters = self.getBaseReportersLastPeriod(branch)
     total = repConstant*baseReporters
@@ -3133,7 +3133,7 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
     futurePeriod = expirationDate / periodLength
     forkPeriod = self.getForkPeriod(branch)
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
-    if(periodLength==0 or len(description)==0 || tradingFee < self.getMinTradingFee(branch) or tradingFee > 2^61 or self.getEventBranch(event) != branch or !self.getCreator(event) or makerFees < 0 or makerFees > ONEHALF):
+    if(periodLength==0 or len(description)==0 || tradingFee < self.getMinTradingFee(branch) or tradingFee > 2**61 or self.getEventBranch(event) != branch or !self.getCreator(event) or makerFees < 0 or makerFees > ONEHALF):
         return(-1)
     if(expirationDate < block.timestamp):
         return(-2)
@@ -4610,7 +4610,7 @@ def short_sell(buyer_trade_id, max_amount):
     amount = min(orig_amount, max_amount)
     if(amount < 0):
         return([INSUFFICIENT_BALANCE]: arr)
-    fee = amount * price * fee_percent(trading_fee, price, cumScale) / ONE^2
+    fee = amount * price * fee_percent(trading_fee, price, cumScale) / ONE**2
     makerFeeRate = self.getMakerFees(market)
     branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
     creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*fee / ONE
@@ -4677,9 +4677,9 @@ macro refund():
     if(msg.value > 0):
         send(msg.sender, msg.value)
 
-macro ONE: 2^64
+macro ONE: 2**64
 
-macro WEITOETH: 10^18
+macro WEITOETH: 10**18
 
 macro THREEFOURTHS: 13835058055282163712
 
@@ -4783,7 +4783,7 @@ macro POINTZEROONE: 184467440737095520
 
 # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
     # exp(1.2*ln(repbal)) / exp(1.2*ln(totalrep)) is == (reporterList[n]/totalRep)**1.2
-    # a^b=exp(b*ln(a))=e^(b*ln(a)).
+    # a**b=exp(b*ln(a))=e**(b*ln(a)).
 def calculateReportingThreshold(branch, event, votePeriod, sender):
     repConstant = self.getPeriodRepWeight(branch, votePeriod, sender)
     if(!repConstant):

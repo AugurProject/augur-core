@@ -12,7 +12,7 @@ macro POINTZEROONE: 184467440737095520
 # Calculates what a reporter should have to get below as a target to report on any given event
 # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
     # exp(1.2*ln(repbal)) / exp(1.2*ln(totalrep)) is == (reporterList[n]/totalRep)**1.2
-    # a^b=exp(b*ln(a))=e^(b*ln(a)).
+    # a**b=exp(b*ln(a))=e**(b*ln(a)).
 def calculateReportingThreshold(branch, event, votePeriod, sender):
     repConstant = EXPEVENTS.getPeriodRepWeight(branch, votePeriod, sender)
     if(!repConstant):

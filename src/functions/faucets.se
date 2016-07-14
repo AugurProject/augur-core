@@ -57,7 +57,7 @@ def reputationFaucet(branch):
 def fundNewAccount(branch):
     CASH.sendFrom(self, 0, self)
     self.reputationFaucet(branch)
-    CASH.setCash(msg.sender, 10000*2^64)
+    CASH.setCash(msg.sender, 10000*2**64)
     return(1)
 
 # Used to claim rep on a fork or on a new branch

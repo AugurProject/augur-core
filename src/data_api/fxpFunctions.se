@@ -97,10 +97,10 @@ macro fx_exp2($x):
 macro fx_exp($x):
     fx_exp2($x * 0x10000000000000000 / 0xB17217F7D1CF79AC)
 
-# Calculates the exponential function given a fixed point [base 2^64] number, so e^x
+# Calculates the exponential function given a fixed point [base 2**64] number, so e**x
 def fx_exp(x):
     return(fx_exp(x))
 
-# Calculates the natural log function given a fixed point [base 2^64] number, so ln(x)
+# Calculates the natural log function given a fixed point [base 2**64] number, so ln(x)
 def fx_log(x):
     return(fx_log(x))

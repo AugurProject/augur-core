@@ -264,7 +264,7 @@ def short_sell(buyer_trade_id, max_amount):
     amount = min(orig_amount, max_amount)
     if(amount < 0):
         return([INSUFFICIENT_BALANCE]: arr)
-    fee = amount * price * fee_percent(trading_fee, price, cumScale) / ONE^2
+    fee = amount * price * fee_percent(trading_fee, price, cumScale) / ONE**2
     makerFeeRate = MARKETS.getMakerFees(market)
     branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
     creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*fee / ONE
