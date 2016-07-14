@@ -23,7 +23,7 @@ import branches as BRANCHES
 inset('refund.se')
 
 # Storage of all data associated with reporters
-    # Reporting index is the branchID
+    # Reporting index is the branch
     # Reporters index is the rep. address
     # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
     # total rep is all the rep in augur
@@ -162,15 +162,15 @@ def repIDToIndex(branch, repID):
     return(self.Reporting[branch].repIDtoIndex[repID])
 
 # check that msg.sender is one of our function contracts
-def setInitialReporters(parent, branchID):
+def setInitialReporters(parent, branch):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add branch as a "reporter"
-    self.Reporting[branchID].numberReporters = 1
-    self.Reporting[branchID].repIDtoIndex[branchID] = 0
-    self.Reporting[branchID].reputation[0].repValue = 0
-    self.Reporting[branchID].reputation[0].reporterID = branchID
+    self.Reporting[branch].numberReporters = 1
+    self.Reporting[branch].repIDtoIndex[branch] = 0
+    self.Reporting[branch].reputation[0].repValue = 0
+    self.Reporting[branch].reputation[0].reporterID = branch
     return(1)
 
 def addReporter(branch, sender, amount, dormant, repToBonderOrBranch):
@@ -234,17 +234,17 @@ def subtractDormantRep(branch, index, value):
 
 # check that msg.sender is one of our function contracts
 # Sets the initial distribution of rep
-def setSaleDistribution(addresses: arr, balances: arr, branchID):
+def setSaleDistribution(addresses: arr, balances: arr, branch):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     i = 0
     while i < len(addresses):
-        self.Reporting[branchID].reputation[self.Reporting[branchID].numberReporters].reporterID = addresses[i]
-        self.Reporting[branchID].reputation[self.Reporting[branchID].numberReporters].repValue = balances[i]
-        self.Reporting[branchID].dormantRep[self.Reporting[branchID].numberReporters].reporterID = addresses[i]
-        self.Reporting[branchID].repIDtoIndex[addresses[i]] = self.Reporting[branchID].numberReporters
-        self.Reporting[branchID].numberReporters += 1
+        self.Reporting[branch].reputation[self.Reporting[branch].numberReporters].reporterID = addresses[i]
+        self.Reporting[branch].reputation[self.Reporting[branch].numberReporters].repValue = balances[i]
+        self.Reporting[branch].dormantRep[self.Reporting[branch].numberReporters].reporterID = addresses[i]
+        self.Reporting[branch].repIDtoIndex[addresses[i]] = self.Reporting[branch].numberReporters
+        self.Reporting[branch].numberReporters += 1
         i+=1
     return(1)
 

@@ -45,9 +45,9 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod, overEthicality):
     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod)/EXPIRING.getNumberEvents(branch, votePeriod)
     bond = averageAdjudicationCost + MARKETS.getSharesValue(market)*(POINTZEROONE + MARKETS.getTradingFee(market)/2) / ONE
     bond = min(bond, MINBOND)
-    eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
+    event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     # if so, we're in the final 48 hours and event is in this branch + votePeriod
-    if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) && eventID!=0 && event==eventID && !BACKSTOPS.getRoundTwo(event) && !EVENTS.getForked(event)):
+    if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) && event!=0 && event==event && !BACKSTOPS.getRoundTwo(event) && !EVENTS.getForked(event)):
         # send the bond to the branch
         # todo fix this will fail b/c event doesn't have rep acc
         if(!SENDREP.sendReputation(branch, event, bond)):
@@ -88,7 +88,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod-1)/EXPEVENTS.getNumberEvents(branch, votePeriod-1)
     bond = averageAdjudicationCost + MARKETS.getSharesValue(market)*(POINTZEROONE + MARKETS.getTradingFee(market)/2) / ONE
     bond = min(bond, MINBOND)
-    eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
+    event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     votedOnAgain = 0
     overruled = 1
     forked = EVENTS.getForked(event)
@@ -102,7 +102,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         votedOnAgain = 1
     forkPeriod = BRANCHES.getForkPeriod(branch)
     # if forking and this isn't the fork event
-    if(forkPeriod==votePeriod or votePeriod==(forkPeriod+1) && (BRANCHES.getEventForkedOver(branch)!=event && BACKSTOPS.getBondReturned(event)==0 && BACKSTOPS.getRoundTwo(event)) && eventID!=0 && event==eventID):
+    if(forkPeriod==votePeriod or votePeriod==(forkPeriod+1) && (BRANCHES.getEventForkedOver(branch)!=event && BACKSTOPS.getBondReturned(event)==0 && BACKSTOPS.getRoundTwo(event)) && event!=0 && event==event):
         # return the bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
@@ -111,7 +111,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         BACKSTOPS.doRoundTwoRefund(sender, event)
         return(1)
     # overruled and bond poster was right
-    elif(overruled && votedOnAgain && BACKSTOPS.getRoundTwo(event) && votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) && eventID!=0 && event==eventID && !forked && !BACKSTOPS.getBondReturned(event)):
+    elif(overruled && votedOnAgain && BACKSTOPS.getRoundTwo(event) && votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) && event!=0 && event==event && !forked && !BACKSTOPS.getBondReturned(event)):
         # return the bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
@@ -124,7 +124,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         BACKSTOPS.doRoundTwoRefund(sender, event)
         return(2*bond)
     # same as original consensus and bond poster was wrong [or malicious]
-    elif(votedOnAgain && BACKSTOPS.getRoundTwo(event) && votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) && eventID!=0 && event==eventID && !forked && !BACKSTOPS.getBondReturned(event)):
+    elif(votedOnAgain && BACKSTOPS.getRoundTwo(event) && votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) && event!=0 && event==event && !forked && !BACKSTOPS.getBondReturned(event)):
         # lose bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), bond)

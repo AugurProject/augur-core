@@ -33,12 +33,12 @@ import reportingThreshold as THRESHOLD
 inset('refund.se')
 inset('eventHelpers.se')
 
-def makeHash(salt, report, eventID, sender):
+def makeHash(salt, report, event, sender):
     hashInfo = array(4)
     hashInfo[0] = sender
     hashInfo[1] = salt
     hashInfo[2] = report
-    hashInfo[3] = eventID
+    hashInfo[3] = event
     reportHash = sha3(hashInfo, chars=32*len(hashInfo))
     return(reportHash)
 
@@ -57,8 +57,8 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     lastPeriod = votePeriod - 1
     delta = lastPeriod - lastPeriodPenalized
     eventIndex = EXPEVENTS.getEventIndex(branch, votePeriod, event)
-    eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
-    if(eventIndex==0 && (eventID==0 || event!=eventID)):
+    event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
+    if(eventIndex==0 && (event==0 || event!=event)):
         return(-1)
     if(residual > periodLength/2):
         return(-2)
@@ -184,22 +184,22 @@ def submitReport(event, salt, report, ethics):
 # Returns -4 if report is invalid
     # isn't between 1 and 2 if binary
     # if same report as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
-def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, weight):
+def validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, weight):
     outcome = 0
     # binary
-    if(EVENTS.getNumOutcomes(eventID)==2 and EVENTS.getMaxValue(eventID)==TWO and EVENTS.getMinValue(eventID)==ONE):
+    if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==TWO and EVENTS.getMinValue(event)==ONE):
         if(report>2*ONE or report<ONE or report==0):
             return(-4)
         # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
         elif(forkedOverThisEvent):
             # in case of fork remove the original outcome as a possible response if forked over outcome [i.e. didn't fork over ethics]
-            if(!forkedOverEthicality && report == catch(EVENTS.getUncaughtOutcome(eventID))):
+            if(!forkedOverEthicality && report == catch(EVENTS.getUncaughtOutcome(event))):
                 return(-4)
-            outcome = (EVENTS.getForkOutcome(eventID)*EXPEVENTS.getEventWeight(branch, votePeriod, eventID) + report*weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, eventID) + weight)
-            EVENTS.setForkOutcome(eventID, outcome)
+            outcome = (EVENTS.getForkOutcome(event)*EXPEVENTS.getEventWeight(branch, votePeriod, event) + report*weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+            EVENTS.setForkOutcome(event, outcome)
         else:
-            outcome = (EVENTS.getUncaughtOutcome(eventID)*EXPEVENTS.getEventWeight(branch, votePeriod, eventID) + report*weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, eventID) + weight)
-            EVENTS.setUncaughtOutcome(eventID, outcome)
+            outcome = (EVENTS.getUncaughtOutcome(event)*EXPEVENTS.getEventWeight(branch, votePeriod, event) + report*weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+            EVENTS.setUncaughtOutcome(event, outcome)
     # scalar or categorical
     else:
         if(report > ONE):
@@ -208,30 +208,30 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
             # 1 is the new 0 [1/2**64 is basically 0 but able to be differentiated from no report of 0]
             report = 1
         # in case of fork remove the original outcome as a possible response if didn't fork over ethics
-        if(forkedOverThisEvent && (!forkedOverEthicality && report == EVENTS.getUncaughtOutcome(eventID))):
+        if(forkedOverThisEvent && (!forkedOverEthicality && report == EVENTS.getUncaughtOutcome(event))):
             return(-4)
         # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
         # adding weight to a given poss. mode report
-        EXPEVENTS.addToWeightOfReport(votePeriod, eventID, report, weight)
-        if(EXPEVENTS.getWeightOfReport(votePeriod, eventID, report) > EXPEVENTS.getCurrentModeItems(votePeriod, eventID)):
-            EXPEVENTS.setCurrentMode(votePeriod, eventID, report)
-            EXPEVENTS.setCurrentModeItems(votePeriod, eventID, report)
-        outcome = EXPEVENTS.getCurrentMode(votePeriod, eventID)
+        EXPEVENTS.addToWeightOfReport(votePeriod, event, report, weight)
+        if(EXPEVENTS.getWeightOfReport(votePeriod, event, report) > EXPEVENTS.getCurrentModeItems(votePeriod, event)):
+            EXPEVENTS.setCurrentMode(votePeriod, event, report)
+            EXPEVENTS.setCurrentModeItems(votePeriod, event, report)
+        outcome = EXPEVENTS.getCurrentMode(votePeriod, event)
         if(forkedOverThisEvent):
-            EVENTS.setForkOutcome(eventID, outcome)
+            EVENTS.setForkOutcome(event, outcome)
         else:
-            EVENTS.setUncaughtOutcome(eventID, outcome)
+            EVENTS.setUncaughtOutcome(event, outcome)
     return(report)whwe
 
 ### Helper functions:
 # calculates how many reports should be on a given event
 # todo make sure max cost is actually 500k gas here
-def calculateReportTargetForEvent(branch, eventID, votePeriod, sender):
-    numMarkets = EVENTS.getNumMarkets(eventID)
+def calculateReportTargetForEvent(branch, event, votePeriod, sender):
+    numMarkets = EVENTS.getNumMarkets(event)
     if(numMarkets>20):
         numMarkets = 20
     markets = array(numMarkets)
-    markets = EVENTS.getMarkets(eventID, outitems=numMarkets)
+    markets = EVENTS.getMarkets(event, outitems=numMarkets)
     totalFees = 0
     shareValue = 0
     i = 0
@@ -245,7 +245,7 @@ def calculateReportTargetForEvent(branch, eventID, votePeriod, sender):
     totalFeesInWei = totalFees * WEITOETH / ONE
     canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
     lesser = min(canPayForThisManyReporters*ONE, numReportersOnMarket)
-    if(EXPEVENTS.getLesserReportNum(branch, votePeriod, eventID)==0):
-        EXPEVENTS.refundCost(sender, branch, votePeriod, eventID)
-        EXPEVENTS.setLesserReportNum(branch, votePeriod, eventID, lesser)
+    if(EXPEVENTS.getLesserReportNum(branch, votePeriod, event)==0):
+        EXPEVENTS.refundCost(sender, branch, votePeriod, event)
+        EXPEVENTS.setLesserReportNum(branch, votePeriod, event, lesser)
     return(lesser)

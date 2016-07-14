@@ -22,7 +22,7 @@
 inset('refund.se')
 
 # Keeps track of data about events in augur
-# Events' index is the eventID
+# Events' index is the event
 # so max-min/numOutcomes is interval between outcomes (useful for ui for categoricals, e.g. 1 is >50, 2 is >100, etc.)
 # markets keeps track of the markets associated with an event
 # threshold is the min "random" sha threshold for reporting on an event used in the scenario where no one reports on an event
@@ -203,9 +203,9 @@ def setBond(event, bond):
     self.Events[event].bond = bond
     return(1)
 
-def addMarket(event, marketID):
+def addMarket(event, market):
     refund()
-    self.Events[event].markets[self.Events[event].numMarkets] = marketID
+    self.Events[event].markets[self.Events[event].numMarkets] = market
     self.Events[event].numMarkets += 1
     return(1)
 

@@ -2,7 +2,7 @@ import branches as BRANCHES
 inset('refund.se')
 
 # Storage for branch data
-# branch takes a branchID
+# branch takes a branch
     # penalized takes for a given period a user / address reported for a certain event and num of events they reported on in that period in total
     # penalizedUpTo is the latest period a user has done the penalization for
     # fees collected states whether for a given period a user collected fees

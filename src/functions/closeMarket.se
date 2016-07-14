@@ -79,7 +79,7 @@ def closeMarket(branch, market, sender):
         return(-2)
     if(BACKSTOPS.getRoundTwo(event) && !BACKSTOPS.getFinal(event)):
         return(-3)
-    if(MARKETS.getBranchID(market)!=branch):
+    if(MARKETS.getbranch(market)!=branch):
         return(-4)
     # checks whether any events not already resolved
     resolved = 1
@@ -120,7 +120,7 @@ def closeMarket(branch, market, sender):
     # -8: invalid branch
 def claimProceeds(branch, market):
     refund()
-    if(MARKETS.getBranchID(market)!=branch):
+    if(MARKETS.getbranch(market)!=branch):
         return(-8)
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)

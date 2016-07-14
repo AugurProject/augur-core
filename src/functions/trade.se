@@ -104,7 +104,7 @@ def trade(max_value, max_amount, trade_ids:arr):
         # Make sure the trade has been mined, obvious HFT prevention
         if block.number <= trade[6]:
             return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
-        branch = MARKETS.getBranchID(market)
+        branch = MARKETS.getbranch(market)
         fee = fee_percent(MARKETS.getTradingFee(market), price, MARKETS.getCumScale(market))
 
         # Fill buy order
@@ -244,7 +244,7 @@ def short_sell(buyer_trade_id, max_amount):
     if(type!=BID):
         return([-3]: arr)
     market = trade[2]
-    branch = MARKETS.getBranchID(market)
+    branch = MARKETS.getbranch(market)
     if(MARKETS.getOneWinningOutcome(market, 0)):
         return([-4]: arr)
     orig_amount = trade[3]

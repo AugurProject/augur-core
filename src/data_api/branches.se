@@ -23,7 +23,7 @@ import cash as CASH
 inset('refund.se')
 
 # Branches keeps track of data associated with branches in augur
-# Branches' index is the hash of the branch (aka branchID)
+# Branches' index is the hash of the branch (aka branch)
 # currentVotePeriod is the current index in eventsExpDates and tells us which bucket of events are up to be
 # voted on in the current vote period (should always be 1 behind block.timestamp/periodlength or current EventsExpDates index)
 # currentExpPeriod = (block.timestamp / self.Branches[branch].periodLength)

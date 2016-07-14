@@ -12,19 +12,19 @@ inset('refund.se')
     # -2: past reveal date
     # -3: reporter being slashed doesn't exist
     # -4: invalid claim / report hash - makes sure that the colluding reporter's commit is the same as the info provided in the params
-def slashRep(branch, salt, report, reporter, eventID):
+def slashRep(branch, salt, report, reporter, event):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     votePeriod = BRANCHES.getVotePeriod(branch)
     alreadySlashed = CONSENSUS.getSlashed(branch, votePeriod, reporter)
     votePeriodShouldBe = block.timestamp / periodLength - 1
-    realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, eventID)
+    realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, event)
     hashInfo = array(4)
     hashInfo[0] = reporter
     hashInfo[1] = salt
     hashInfo[2] = report
-    hashInfo[3] = eventID
+    hashInfo[3] = event
     reportHash = sha3(hashInfo, chars=32*len(hashInfo))
     if(residual > periodLength/2):
         return(-2)

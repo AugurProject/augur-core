@@ -27,7 +27,7 @@ inset('refund.se')
 
 # This keeps track of info in a period for the events in that period, it takes a branch and votePeriod as params, respectively
     # Events is 0 indexed and stores the events in a period [this allows the client to loop through and detect which events a given user should report on]
-    # eventIDToIndex returns an event id for a given index in events
+    # eventToIndex returns an event id for a given index in events
     # requiredEvents states whether a given event is required to be reported on or not [a round2 backstop or a fork event are both required]
     # subsidy is money for paying back a user for calculating the targeted num of reports for an event
     # eventWeight is number of reports on an event in a round 1 event, total rep reported on it in a backstop 1 or fork event
@@ -39,7 +39,7 @@ inset('refund.se')
     # numberRemoved is the number of events that no longer have to be reported on in this period [a good example is an event that was resolved early successfully]
     # numEventsToReportOn is the number of events available for reporting on [not including required events] * base number of reporters per event [this is multiplied by a user's periodRepWeight to figure out how many events they should be reporting on in a given period]
     # shareValue is the value of all the outstanding shares from markets that have events expiring in this period 
-data periodEventInfo[][](events[], eventIDToIndex[], requiredEvents[], subsidy[], eventWeight[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, shareValue)
+data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], subsidy[], eventWeight[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, shareValue)
 
 # This keeps track of info in a period for the reporters, it takes a branch and votePeriod as params, respectively
     # Before rep is the amount of active rep a user has before any penalizations for reporting incorrectly
@@ -141,8 +141,8 @@ def getPeriodDormantRep(branch, period, sender):
 def getNumReportsSubmitted(branch, votePeriod, sender):
     return(self.reporterPeriodInfo[branch][votePeriod].numReportsSubmitted[sender])
 
-def getEventWeight(branch, votePeriod, eventID):
-    return(self.periodEventInfo[branch][votePeriod].eventWeight[eventID])
+def getEventWeight(branch, votePeriod, event):
+    return(self.periodEventInfo[branch][votePeriod].eventWeight[event])
 
 def getNumRoundTwo(branch, period):
     refund()
@@ -168,7 +168,7 @@ def setEventRequired(branch, period, event):
     else:
         return(0)
 
-# With this function you can get the eventIDs and report on outcomes
+# With this function you can get the events and report on outcomes
 # @return all events in a branch and expiration period
 def getEvents(branch, period):
     refund()
@@ -192,9 +192,9 @@ def getEventsRange(branch, period, start, end):
         i += 1
     return(events: arr)
     
-def getEventIndex(branch, period, eventID):
+def getEventIndex(branch, period, event):
     refund()
-    return(self.periodEventInfo[branch][period].eventIDToIndex[eventID])
+    return(self.periodEventInfo[branch][period].eventToIndex[event])
 
 # gets number of available events to report on, not counting required events
 # -1: voting not started
@@ -222,20 +222,20 @@ def getEvent(branch, period, eventIndex):
     return(self.periodEventInfo[branch][period].events[eventIndex])
 
 # check that msg.sender is one of our function contracts
-def addEvent(branch, futurePeriod, eventID, subsidy):
+def addEvent(branch, futurePeriod, event, subsidy):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
-    self.periodEventInfo[branch][futurePeriod].events[self.periodEventInfo[branch][futurePeriod].numberEvents] = eventID
-    self.periodEventInfo[branch][futurePeriod].eventIDToIndex[eventID] = self.periodEventInfo[branch][futurePeriod].numberEvents
+    self.periodEventInfo[branch][futurePeriod].events[self.periodEventInfo[branch][futurePeriod].numberEvents] = event
+    self.periodEventInfo[branch][futurePeriod].eventToIndex[event] = self.periodEventInfo[branch][futurePeriod].numberEvents
     self.periodEventInfo[branch][futurePeriod].numberEvents += 1
-    self.periodEventInfo[branch][futurePeriod].subsidy[eventID] += subsidy
+    self.periodEventInfo[branch][futurePeriod].subsidy[event] += subsidy
     return(1)
 
 def deleteEvent(branch, period, event):
-    i = self.periodEventInfo[branch][period].eventIDToIndex[event]
+    i = self.periodEventInfo[branch][period].eventToIndex[event]
     self.periodEventInfo[branch][period].events[i] = 0
-    self.periodEventInfo[branch][period].eventIDToIndex[event] = 0
+    self.periodEventInfo[branch][period].eventToIndex[event] = 0
     return(1)
 
 def removeEvent(branch, period):
@@ -282,12 +282,12 @@ def setCurrentModeItems(period, event, modeReport):
     self.modeItems[period][event].currentModeItems = self.modeItems[period][event].reportValue[modeReport]
     return(1)
 
-def setEventWeight(branch, votePeriod, eventID, num):
-    self.periodEventInfo[branch][votePeriod].eventWeight[eventID] = num
+def setEventWeight(branch, votePeriod, event, num):
+    self.periodEventInfo[branch][votePeriod].eventWeight[event] = num
     return(1)
 
-def countReportAsSubmitted(branch, votePeriod, eventID, sender, weight):
-    self.periodEventInfo[branch][votePeriod].eventWeight[eventID] += weight
+def countReportAsSubmitted(branch, votePeriod, event, sender, weight):
+    self.periodEventInfo[branch][votePeriod].eventWeight[event] += weight
     self.reporterPeriodInfo[branch][votePeriod].numReportsSubmitted[sender] += 1
     return(1)
 

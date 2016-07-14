@@ -21,7 +21,7 @@
 
 inset('refund.se')
 
-# Markets' index is the marketID, markets stores data about markets [which are able to be traded on] in augur
+# Markets' index is the market, markets stores data about markets [which are able to be traded on] in augur
     # Events is a 0 indexed array of events in the market in the format of
         # [1, event, event, 2, event, 3, event, event, event]
         # 1 means dimension 1, 2 is events in dimension 2, 3 is the dimension 3 events
@@ -171,68 +171,68 @@ def getTradingFee(market):
     refund()
     return(self.Markets[market].tradingFee)
 
-def getBranchID(market):
+def getbranch(market):
     refund()
     return(self.Markets[market].branch)
 
-macro market($marketID):
-    self.Markets[$marketID]
+macro market($market):
+    self.Markets[$market]
 
-macro cumScale($marketID):
-    market($marketID).cumulativeScale
+macro cumScale($market):
+    market($market).cumulativeScale
 
-macro numOutcomes($marketID):
-    market($marketID).numOutcomes
+macro numOutcomes($market):
+    market($market).numOutcomes
 
-macro sharesPurchased($marketID):
-    market($marketID).sharesPurchased
+macro sharesPurchased($market):
+    market($market).sharesPurchased
 
 # check that msg.sender is one of our function contracts
-def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy, creationFee, lastExpDate):
+def initializeMarket(market, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy, creationFee, lastExpDate):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add event list to the market
-    save(self.Markets[marketID].events[0], events, items=len(events))
-    self.Markets[marketID].lenEvents = len(events)
-    save(self.Markets[marketID].extraInfo[0], extraInfo, chars=len(extraInfo))
-    self.Markets[marketID].extraInfoLen = len(extraInfo)
-    self.Markets[marketID].tradingPeriod = tradingPeriod
-    self.Markets[marketID].originalPeriod = tradingPeriod
-    self.Markets[marketID].tradingFee = tradingFee
-    self.Markets[marketID].branch = branch
-    self.Markets[marketID].cumulativeScale = cumScale
-    self.Markets[marketID].numOutcomes = numOutcomes
-    self.Markets[marketID].tag1 = tag1
-    self.Markets[marketID].tag2 = tag2
-    self.Markets[marketID].gasSubsidy = gasSubsidy
-    self.Markets[marketID].tag3 = tag3
-    self.Markets[marketID].makerFees = makerFees
-    self.Markets[marketID].fees = creationFee
-    self.Markets[marketID].creationTime = block.timestamp
-    self.Markets[marketID].lastExpDate = lastExpDate
+    save(self.Markets[market].events[0], events, items=len(events))
+    self.Markets[market].lenEvents = len(events)
+    save(self.Markets[market].extraInfo[0], extraInfo, chars=len(extraInfo))
+    self.Markets[market].extraInfoLen = len(extraInfo)
+    self.Markets[market].tradingPeriod = tradingPeriod
+    self.Markets[market].originalPeriod = tradingPeriod
+    self.Markets[market].tradingFee = tradingFee
+    self.Markets[market].branch = branch
+    self.Markets[market].cumulativeScale = cumScale
+    self.Markets[market].numOutcomes = numOutcomes
+    self.Markets[market].tag1 = tag1
+    self.Markets[market].tag2 = tag2
+    self.Markets[market].gasSubsidy = gasSubsidy
+    self.Markets[market].tag3 = tag3
+    self.Markets[market].makerFees = makerFees
+    self.Markets[market].fees = creationFee
+    self.Markets[market].creationTime = block.timestamp
+    self.Markets[market].lastExpDate = lastExpDate
     return(1)
 
-def modifyShares(marketID, outcome, amount):
+def modifyShares(market, outcome, amount):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    sharesPurchased(marketID)[outcome] += amount
+    sharesPurchased(market)[outcome] += amount
     return(1)
     
-def modifySharesValue(marketID, amount):
-    self.Markets[marketID].sharesValue += amount
+def modifySharesValue(market, amount):
+    self.Markets[market].sharesValue += amount
     return(1)
 
-def modifyParticipantShares(marketID, trader, outcome, amount, actualTrade):
+def modifyParticipantShares(market, trader, outcome, amount, actualTrade):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    self.Markets[marketID].participants[trader].shares[outcome] += amount
+    self.Markets[market].participants[trader].shares[outcome] += amount
     if(actualTrade):
         if(amount<0):
             amount = amount*-1
-        self.Markets[marketID].volume += amount
+        self.Markets[market].volume += amount
     return(1)   
 
 def setWinningOutcomes(market, outcomes: arr):
