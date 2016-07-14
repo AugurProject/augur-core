@@ -62,7 +62,6 @@ def init():
 
 # call once after uploading (externed method not allowed in init)
 def initDefaultBranch():
-    refund()
     return(CASH.initiateOwner(1010101))
 
 # event a branch was most recently forked over
@@ -74,39 +73,31 @@ def setEventForkedOver(branch, event):
     return(1)
 
 def getBaseReporters(branch):
-    refund()
     return(self.Branches[branch].baseReporters)
     
 def setBaseReporters(branch, num):
-    refund()
     self.Branches[branch].baseReporters = num
     return(1)
 
 def getOracleOnly(branch):
-    refund()
     return(self.Branches[branch].oracleOnly)
 
 def getVotePeriod(branch):
-    refund()
     return(self.Branches[branch].currentVotePeriod)
 
 def getPeriodLength(branch):
-    refund()
     return(self.Branches[branch].periodLength)
 
 # branch cash balance at start of period
 def setInitialBalance(branch, period, balance):
-    refund()
     self.Branches[branch].balance[period] = balance
     return(balance)
 
 def getInitialBalance(branch, period):
-    refund()
     return(self.Branches[branch].balance[period])
 
 # @return all markets in a branch
 def getMarketsInBranch(branch):
-    refund()
     numMarkets = self.Branches[branch].numMarkets
     markets = array(numMarkets)
     i = 0
@@ -114,14 +105,12 @@ def getMarketsInBranch(branch):
         markets[i] = self.Branches[branch].markets[i]
         i += 1
     return(markets: arr)
-   
-   
+
 def getParent(branch):
     return(self.Branches[branch].parent)
 
 # @return all markets in a branch
 def getSomeMarketsInBranch(branch, initial, last):
-    refund()
     numMarkets = last - initial
     markets = array(numMarkets)
     i = 0
@@ -131,16 +120,13 @@ def getSomeMarketsInBranch(branch, initial, last):
     return(markets: arr)
 
 def getNumMarketsBranch(branch):
-    refund()
     return(self.Branches[branch].numMarkets)
 
 def getMinTradingFee(branch):
-    refund()
     return(self.Branches[branch].minTradingFee)
 
 # @return all branches
 def getBranches():
-    refund()
     b = 0
     numBranches = self.branchListCount
     branches = array(numBranches)
@@ -150,22 +136,18 @@ def getBranches():
     return(branches: arr)
 
 def getNumBranches():
-    refund()
     return(self.branchListCount)
 
 def getBranchByNum(branchNumber):
-    refund()
     return(self.branchList[branchNumber])
 
 def getCreationDate(ID):
-    refund()
     return(self.Branches[ID].creationDate)
 
 # check that msg.sender is one of our function contracts
 def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleOnly, parentPeriod, parent):
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
-    refund()
     if(self.Branches[ID].periodLength==0):
         self.Branches[ID].currentVotePeriod = currentVotePeriod
         self.Branches[ID].periodLength = periodLength
@@ -183,13 +165,11 @@ def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleO
         return(0)
 
 def getParentPeriod(branch):
-    refund()
     return(self.Branches[branch].parentPeriod)
 
 def incrementPeriod(branch):
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
-    refund()
     self.Branches[branch].currentVotePeriod += 1
     return(1)
 
@@ -197,7 +177,6 @@ def incrementPeriod(branch):
 def addMarketToBranch(branch, market):
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
-    refund()
     numMarkets = self.Branches[branch].numMarkets
     self.Branches[branch].markets[numMarkets] = market
     self.Branches[branch].numMarkets += 1

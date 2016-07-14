@@ -60,11 +60,9 @@ data reporterPeriodInfo[][](beforeRep[], afterRep[], periodDormantRep[], reportH
 data modeItems[][](reportValue[], currentMode, currentModeItems)
 
 def getSaltyEncryptedHash(branch, period, reporter, event):
-    refund()
     return(self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event])
 
 def setSaltyEncryptedHash(branch, period, reporter, saltyEncryptedHash, event):
-    refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
     self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event] = saltyEncryptedHash
@@ -86,7 +84,6 @@ def setPeriodRepWeight(branch, votePeriod, sender, value):
     return(1)
 
 def getReportHash(branch, period, reporter, event):
-    refund()
     return(self.reporterPeriodInfo[branch][period].reportHash[reporter][event])
 
 def setEthicReport(branch, period, event, ethics, sender):
@@ -145,11 +142,9 @@ def getEventWeight(branch, votePeriod, event):
     return(self.periodEventInfo[branch][votePeriod].eventWeight[event])
 
 def getNumRoundTwo(branch, period):
-    refund()
     return(self.periodEventInfo[branch][period].roundTwoNumEvents)
 
 def addRoundTwo(branch, period):
-    refund()
     self.periodEventInfo[branch][period].roundTwoNumEvents += 1
     return(1)
 
@@ -171,7 +166,6 @@ def setEventRequired(branch, period, event):
 # With this function you can get the events and report on outcomes
 # @return all events in a branch and expiration period
 def getEvents(branch, period):
-    refund()
     numEvents = self.periodEventInfo[branch][period].numberEvents
     events = array(numEvents)
     i = 0
@@ -181,7 +175,6 @@ def getEvents(branch, period):
     return(events: arr)
     
 def getEventsRange(branch, period, start, end):
-    refund()
     numEvents = end-start
     events = array(numEvents)
     i = start
@@ -193,7 +186,6 @@ def getEventsRange(branch, period, start, end):
     return(events: arr)
     
 def getEventIndex(branch, period, event):
-    refund()
     return(self.periodEventInfo[branch][period].eventToIndex[event])
 
 # gets number of available events to report on, not counting required events
@@ -206,24 +198,19 @@ def setNumEventsToReportOn(branch):
 
 # gets number of available events to report on, not counting required events
 def getNumEventsToReportOn(branch, period):
-    refund()
     return(self.periodEventInfo[branch][period].numEventsToReportOn)
 
 def getShareValue(branch, expIndex):
-    refund()
     return(self.periodEventInfo[branch][expIndex].shareValue)
 
 def getNumberEvents(branch, period):
-    refund()
     return(self.periodEventInfo[branch][period].numberEvents)
 
 def getEvent(branch, period, eventIndex):
-    refund()
     return(self.periodEventInfo[branch][period].events[eventIndex])
 
 # check that msg.sender is one of our function contracts
 def addEvent(branch, futurePeriod, event, subsidy):
-    refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
     self.periodEventInfo[branch][futurePeriod].events[self.periodEventInfo[branch][futurePeriod].numberEvents] = event
@@ -239,21 +226,17 @@ def deleteEvent(branch, period, event):
     return(1)
 
 def removeEvent(branch, period):
-    refund()
     self.periodEventInfo[branch][period].numberRemoved += 1
     return(1)
 
 def getNumRemoved(branch, period):
-    refund()
     return(self.periodEventInfo[branch][period].numberRemoved)
 
 def adjustPeriodShareValueOutstanding(branch, expIndex, amount):
-    refund()
     self.periodEventInfo[branch][expIndex].shareValue += amount
     return(1)
 
 def setReportHash(branch, period, reporter, reportHash, event):
-    refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
     self.reporterPeriodInfo[branch][period].reportHash[reporter][event] = reportHash

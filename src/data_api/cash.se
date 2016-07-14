@@ -72,7 +72,6 @@ def sendFrom(recver, value, from):
 
 # make sure only coming from specific contracts
 def subtractCash(ID, amount):
-    refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     #if(msg.sender!=self.owners[ID] && tx.origin!=self.owners[ID]):
@@ -81,14 +80,12 @@ def subtractCash(ID, amount):
     return(1)
 
 def addCash(ID, amount):
-    refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.cashcoinBalances[ID] += amount
     return(1)
 
 def setCash(address, balance):
-    refund()
     #if !self.whitelist.check(msg.sender):
     #    return(-1)
     self.cashcoinBalances[address] = balance
@@ -106,6 +103,7 @@ def depositEther():
     # -1: Value less than or equal to 0
     # -2: 3 day withdrawal window isn't up
 def withdrawEther(to, value):
+    refund()
     if(!self.withdrawInitiated[msg.sender]):
         self.withdrawInitiated[msg.sender] = block.timestamp
         return(2)

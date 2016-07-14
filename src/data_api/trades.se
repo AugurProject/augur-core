@@ -28,23 +28,19 @@ def commitTrade(hash):
     return(1)
 
 def zeroHash():
-    refund()
     self.tradeCommits[msg.sender].hash = 0
     return(1)
 
 def checkHash(tradeHash, sender):
-    refund()
     if(self.tradeCommits[sender].hash != tradeHash || block.number <= self.tradeCommits[sender].block):
         return(-1)
     else:
         return(1)
         
 def getID(tradeID):
-    refund()
     return(self.trades[tradeID].id)
     
 def saveTrade(trade_id, type, market, amount, price, sender, outcome):
-    refund()
     self.trades[trade_id].id = trade_id
     self.trades[trade_id].type = type
     self.trades[trade_id].market = market
@@ -56,7 +52,6 @@ def saveTrade(trade_id, type, market, amount, price, sender, outcome):
     return(1)
 
 def get_trade(id):
-    refund()
     trade = array(8)
     trade[0] = self.trades[id].id
     trade[1] = self.trades[id].type
@@ -71,20 +66,17 @@ def get_trade(id):
     return([0]:arr)    
 
 def get_amount(id):
-    refund()
     return(self.trades[id].amount)
     
 def get_price(id):
-    refund()
     return(self.trades[id].price)
 
+# todo maybe add this in and then check that trade is within limit prices in trade function to allow easy trade updating
 def update_trade(id, price):
-    refund()
     self.trades[id].price = price
     self.trades[id].block = block.number
 
 def remove_trade(id):
-    refund()
     self.trades[id].id = 0
     self.trades[id].type = 0
     self.trades[id].market = 0
@@ -96,6 +88,5 @@ def remove_trade(id):
     return(1)
     
 def fill_trade(trade_id, fill):
-    refund()
     self.trades[trade_id].amount -= fill
     return(1)

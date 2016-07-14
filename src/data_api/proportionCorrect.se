@@ -1,7 +1,6 @@
 # Returns the proportion of reporters who reported correctly on a given binary event
 # Returns 0 if no outcome
 macro proportionCorrect(event, forkEvent):
-    refund()
     p = 0
     if(forkEvent):
         uncaught = EVENTS.getForkOutcome(event)

@@ -34,25 +34,20 @@ def init():
     self.Info[1010101].descriptionLength = len(description)
 
 def getDescription(ID):
-    refund()
     length=self.Info[ID].descriptionLength
     return(load(self.Info[ID].description[0], chars=length): str)
 
 def getDescriptionLength(ID):
-    refund()
     return(self.Info[ID].descriptionLength)
 
 def getCreator(ID):
-    refund()
     return(self.Info[ID].creator)
 
 def getCreationFee(ID):
-    refund()
     return(self.Info[ID].creationFee)
 
 # @return 1 if success, 0 if creator already exists
 def setInfo(ID, description: str, creator, fee):
-    refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
     # check that msg.sender is one of our function contracts

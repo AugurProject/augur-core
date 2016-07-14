@@ -54,6 +54,7 @@ def getPeriodBalance(branch, period):
 
 def setPeriodBalance(branch, period, balance):
     self.branch[branch].period[period].periodBalance = balance
+    return(1)
 
 def getPenalizedUpTo(branch, sender):
     return(self.branch[branch].penalizedUpTo[sender])
@@ -102,7 +103,6 @@ def getNotEnoughPenalized(branch, address, period):
     return(self.branch[branch].period[period].penalized[address].notEnoughReportsPenalized)
     
 def getRepRedistributionDone(branch, reporter):
-    refund()
     return(repRedistributionDone(branch, reporter))
 
 macro repRedistributionDone($branch, $reporter):

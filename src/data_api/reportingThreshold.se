@@ -60,7 +60,6 @@ def getEventsToReportOn(branch, period, sender, start):
 
 # Gets whether a reporter is able to report on a given event or not
 def getEventCanReportOn(branch, period, reporter, event):
-    refund()
     reportingThreshold = self.calculateReportingThreshold(branch, event, period, reporter)
     x = array(1)
     x[0] = reporter + event
@@ -74,7 +73,6 @@ def getEventCanReportOn(branch, period, reporter, event):
 
 #In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold.
 def setReportingThreshold(event):
-    refund()
     # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
     # final check is if no reports on event
     # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this one

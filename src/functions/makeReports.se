@@ -49,6 +49,7 @@ def makeHash(salt, report, event, sender):
 # Error -3: not able to report on this event
 # Error -4: not caught up on penalizations [>1 period behind] and auto catchup failed
 def submitReportHash(event, reportHash, encryptedSaltyHash):
+    refund()
     branch = EVENTS.getBranch(event)
     votePeriod = BRANCHES.getVotePeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -109,6 +110,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     # -7: <48 hr left in period, too late to report, able to put up readj. bonds though
     # -8: fees couldn't be collected
 def submitReport(event, salt, report, ethics):
+    refund()
     branch = EVENTS.getBranch(event)
     balance = REPORTING.getRepBalance(branch, msg.sender)
     votePeriod = BRANCHES.getVotePeriod(branch)

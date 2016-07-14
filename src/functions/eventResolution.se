@@ -60,7 +60,6 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
 
 # Resolves a binary market
 def resolveBinary(event, market, branch, votingPeriodEvent):
-    refund()
     fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
     periodLength = BRANCHES.getPeriodLength(branch)
     ethical = ethic_catch(EVENTS.getEthical(event))
@@ -73,7 +72,6 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
 
 # Resolves a categorical market
 def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, votingPeriodEvent):
-    refund()
     mode = EVENTS.getUncaughtOutcome(event)
     EVENTS.setMode(event, mode)
     fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
@@ -92,7 +90,6 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     # 1D Markets:
         # Binary or Categorical will have 1 winning outcome [1 or 2 for binary, 1 thru numOutcomes for categorical is the poss. value for the winning outcome]
 def determineWinningOutcomes(event):
-    refund()
     winningOutcomes = array(8)
     fxpOutcome = EVENTS.getOutcome(event)
     outcome = fxpOutcome/ONE

@@ -7,7 +7,6 @@ inset('refund.se')
 # Error:
     # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant #0 is really #0]
 def twoOutcomes(market, winningOutcome: arr, event, sender):
-    refund()
     # fetch outcome and min/max values for the scalar
     outcome = EVENTS.getOutcome(event)
     minValue = EVENTS.getMinValue(event)

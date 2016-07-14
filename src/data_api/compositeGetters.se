@@ -33,7 +33,6 @@ macro WINNING_OUTCOMES_FIELDS: 8
 macro BASE_FIELDS: 17
 
 def getOrderBook(market):
-    refund()
     numTrades = MARKETS.get_total_trades(market)
     trades = MARKETS.get_trade_ids(market, outitems=numTrades)
     orderBook = array(TRADE_FIELDS*numTrades)
@@ -48,7 +47,6 @@ def getOrderBook(market):
     return(orderBook:arr)
 
 def getMarketInfo(market):
-    refund()
     index = BASE_FIELDS
     descriptionLength = INFO.getDescriptionLength(market)
     numEvents = MARKETS.getNumEvents(market)
@@ -116,7 +114,6 @@ def getMarketInfo(market):
     return(marketInfo: arr)
 
 def batchGetMarketInfo(markets: arr):
-    refund()
     numMarkets = len(markets)
     totalLength = 0
     marketInfoLength = array(numMarkets)
@@ -144,7 +141,6 @@ def batchGetMarketInfo(markets: arr):
     return(marketsInfo: arr)
 
 def getMarketsInfo(branch, offset, numMarketsToLoad):
-    refund()
     numMarkets = BRANCHES.getNumMarketsBranch(branch)
     if numMarketsToLoad == 0:
         numMarketsToLoad = numMarkets

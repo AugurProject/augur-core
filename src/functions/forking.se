@@ -18,7 +18,7 @@ macro POINTZEROONE: 184467440737095520
 # UI has to handle function calls for these
 
 #Notes:
-    #Anyone can pay some amount significantly greater than the bond amount to force a branching event, splitting rep into two classes.  
+    #Anyone can pay some amount significantly greater than the backstop 1 bond amount to force a branching event, splitting rep into two classes.  
     #In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep is redistributed accordingly.  
     #In the other class/branch, the event is readjudicated and remove the outcome on the pre fork branch and rep is redistributed as normal, except people who said the original outcome in the original fork lose rep.  
     # Note: Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets, which would be determined by the fork that represented reality, which would have a higher market cap.  Markets go to the most popular fork by default after 2 months.
@@ -39,6 +39,7 @@ macro POINTZEROONE: 184467440737095520
     # each event resolving further in the future is pushed into the respective period on whichever fork wins - done
 # todo if already moved once don't allow again after another fork
 def move_event(event):
+    refund()
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     branch = EVENTS.getEventBranch(event)
     eventForkedOver = BRANCHES.getEventForkedOver(branch)
@@ -117,8 +118,8 @@ def exchangeRate(branch):
     return(sha3(branch))
 
 # Forks a contested event
-# In the last 48 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back
-# bond is 1% of rep
+# In the last 48 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back and a fork commences
+# bond for a fork is 1% of rep
 # Errors:
     #  0: not in last 48 hr of period
     # -1: ineligible for forking over, already resolved, forked, or hasn't seen 1st backstop yet
