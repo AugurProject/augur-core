@@ -13,6 +13,7 @@ macro calculateRepChange($report, $maxPenalty):
             p = -(abs(diff)/2) + ONE
         newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
     # (1-k) * old rep + k * new rep where k = maxPenalty [max of 1] / (number of events you reported on last period) for penalization and pen. rate for backstop 1
+    # So if max penalty is 20% for a given period, the max per event is 2%
     if(numReportedOn<10):
         repChange = oldRep * (ONE - $maxPenalty/10)/ONE + newRep*($maxPenalty/10)/ONE - oldRep
     else:

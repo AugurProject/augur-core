@@ -70,9 +70,9 @@ def setSaltyEncryptedHash(branch, period, reporter, saltyEncryptedHash, event):
     self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event] = saltyEncryptedHash
     return(1)
     
-# todo fix sec.
-def refundCost(to, value):
-    send(to, value)
+# Refunds cost to calculate number of reports for an event
+def refundCost(to, branch, period, event):
+    send(to, self.periodEventInfo[branch][period].subsidy[event])
     return(1)
 
 def getSubsidy(branch, period, event):

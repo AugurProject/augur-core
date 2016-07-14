@@ -8,7 +8,7 @@ inset('refund.se')
     # bondPoster is the account which posted the bond
     # original ethicality, outcome, and voteperiod specify the first round of consensus values for ethicality, outcome, and voteperiod, respectively
     # roundTwo states whether an event is a round two event
-data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final, bondPoster, bondReturned, bondPaid, refund)
+data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final, bondPoster, bondReturned, bondPaid, refund, disputedOverEthics)
 
 # Keeps track of data for the forking backstop [wherein the network is forked into two sets of rep] using event as the index
     # moved is used for stating whether an event has been moved to the winning fork
@@ -22,6 +22,13 @@ data forking[](bondPoster, bondAmount, forkedOverEthicality, bondPaid, originalB
 # Given a branch and a forkPeriod it states which fork the winner was
 data resolved[][]
 
+def getDisputedOverEthics(event):
+    return(self.roundTwo[event].disputedOverEthics)
+
+def setDisputedOverEthics(event):
+    self.roundTwo[event].disputedOverEthics = 1
+    return(1)
+    
 def setRoundTwoRefund(event, amt):
     self.roundTwo[event].refund = amt
     return(1)

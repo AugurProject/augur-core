@@ -25,7 +25,6 @@ inset('refund.se')
 # Storage of all data associated with reporters
     # Reporting index is the branchID
     # Reporters index is the rep. address
-    # We 0 index reputation so can walk thru for consensus - todo / wrong don't need 0 indexing anymore
     # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
     # total rep is all the rep in augur
     # active rep is the amount which is actually active
