@@ -128,7 +128,8 @@ def update_contract_events_api(contract_name, fullsig):
             api[split_name[0]] = {
                 "inputs": evt["inputs"],
                 "name": evt["name"],
-                "signature": "0x" + sha3.sha3_256(evt["name"].encode("ascii")).hexdigest()
+                "signature": "0x" + sha3.sha3_256(evt["name"].encode("ascii")).hexdigest(),
+                "contract": contract_name
             }
     return api
 
@@ -154,7 +155,7 @@ def update_api(contract_paths, old_api):
     new_api = {"events": {}, "functions": {}}
     for contract_name, contract_path in contract_paths.items():
         events_api, functions_api = update_contract_api(contract_name, contract_path, old_api)
-        if bool(events_api): new_api["events"][contract_name] = events_api
+        if bool(events_api): new_api["events"].update(events_api)
         new_api["functions"][contract_name] = functions_api
         bar.next()
     bar.finish()
