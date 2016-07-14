@@ -23,7 +23,7 @@
 data reporting[]
 
 # keeps track of total rep in the system
-data totalRep
+data totalSupply
 
 # sender/owner, then spender, e.g. approvedToSpend[owner][spender]
 # 1 if spender is approved, 0 if not
@@ -84,9 +84,9 @@ def setSaleDistribution(addresses: arr, balances: arr):
     while i < len(addresses):
         if(!self.reporting[addresses[i]] && !self.seeded):
             self.reporting[addresses[i]] = balances[i]
-            self.totalRep += balances[i]
+            self.totalSupply += balances[i]
         i+=1
-    if(totalRep == 11000000*ONE):
+    if(totalSupply == 11000000*ONE):
         self.seeded = 1
     return(1)
     
@@ -99,7 +99,7 @@ def balanceOf(address):
     return(self.reporting[address])
 
 def getTotalRep(branch):
-    return(self.totalRep)
+    return(self.totalSupply)
 
 macro throw():
     i = 0
