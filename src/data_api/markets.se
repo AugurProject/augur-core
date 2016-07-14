@@ -224,16 +224,15 @@ def modifySharesValue(marketID, amount):
     self.Markets[marketID].sharesValue += amount
     return(1)
 
-def modifyParticipantShares(marketID, trader, outcome, amount, cancel):
+def modifyParticipantShares(marketID, trader, outcome, amount, actualTrade):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Markets[marketID].participants[trader].shares[outcome] += amount
-    if(amount<0):
-        amount = amount*-1
-    if(cancel):
-        amount = -1*amount
-    self.Markets[marketID].volume += amount
+    if(actualTrade):
+        if(amount<0):
+            amount = amount*-1
+        self.Markets[marketID].volume += amount
     return(1)   
 
 def setWinningOutcomes(market, outcomes: arr):

@@ -105,7 +105,7 @@ def cancel(trade_id):
             CASH.addCash(msg.sender, amt)
         elif type == ASK:
             # shares refund
-            MARKETS.modifyParticipantShares(market, msg.sender, outcome, amount, 1)
+            MARKETS.modifyParticipantShares(market, msg.sender, outcome, amount, 0)
             CASH.subtractCash(market, (amount * price * fee / ONE^2))
             CASH.addCash(msg.sender, (amount * price * fee / ONE^2))
         # Log cancellation
