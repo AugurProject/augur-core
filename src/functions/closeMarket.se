@@ -137,7 +137,7 @@ def claimProceeds(branch, market):
         if(winningOutcomes[0]==0):
             return(0)
         if(winningOutcomes[1]==0):
-            ethical = ethic_catch(EVENTS.getEthical(event))
+            ethical = ethic_catch(EVENTS.getEthics(event))
             # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
             if(categorical(event) && (EVENTS.getMode(event)==ONEHALF or !ethical)):
                 outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))

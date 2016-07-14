@@ -1861,7 +1861,7 @@ def setEthics(event, ethicality):
     self.Events[event].ethical = ethicality
     return(ethicality)
 
-def getEthical(event):
+def getEthics(event):
     refund()
     return(self.Events[event].ethical)
 
@@ -2230,7 +2230,7 @@ def claimInitialRep(parent, branch):
         if(binary(forkEvent)):
             outcome = catch(outcome)
         report = self.getReport(parent, forkPeriod, forkEvent, msg.sender)
-        ethical = ethic_catch(self.getEthical(forkEvent))
+        ethical = ethic_catch(self.getEthics(forkEvent))
         ethicReport = self.getEthicReport(parent, forkPeriod, forkEvent, msg.sender)
         dormantRep = self.getPeriodDormantRep(parent, self.getParentPeriod(branch), msg.sender)
         # if this wasn't set then use reg. dormant rep balance
@@ -2607,7 +2607,7 @@ def claimProceeds(branch, market):
         if(winningOutcomes[0]==0):
             return(0)
         if(winningOutcomes[1]==0):
-            ethical = ethic_catch(self.getEthical(event))
+            ethical = ethic_catch(self.getEthics(event))
             # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
             if(categorical(event) && (self.getMode(event)==ONEHALF or !ethical)):
                 outcome = self.oneOutcome(market, winningOutcomes[0], msg.sender, 1, self.getNumOutcomes(event))
@@ -2722,7 +2722,7 @@ def penalizeRoundTwoWrong(branch, event):
     averageAdjudicationCost = self.getInitialBalance(branch, lastPeriod)/self.getNumberEvents(branch, lastPeriod)
     bond = averageAdjudicationCost + self.getSharesValue(market)*(POINTZEROONE + self.getTradingFee(market)/2) / 2**64
     bond = min(bond, MINBOND)
-    ethical = self.getEthical(event)
+    ethical = self.getEthics(event)
     p = proportionCorrect(event, 0)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     if(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
@@ -2946,7 +2946,7 @@ def submitReport(event, salt, report, ethics):
     if(forkedOverThisEvent):
         # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
         if(forkedOverEthicality):
-            oldEthical = ethic_catch(self.getEthical(event))
+            oldEthical = ethic_catch(self.getEthics(event))
             if(oldEthical == ONE):
                 ethics = 0
             else:
@@ -3615,7 +3615,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
     refund()
     fxpOutcome = catch(self.getUncaughtOutcome(event))
     periodLength = self.getPeriodLength(branch)
-    ethical = ethic_catch(self.getEthical(event))
+    ethical = ethic_catch(self.getEthics(event))
     # outcome is set to the binned version of the raw reported outcome
     self.setOutcome(event, fxpOutcome)
     # ethics is set to the binned version of the raw ethicality outcome
@@ -3633,7 +3633,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     self.setOutcome(event, fxpOutcome)
     periodLength = self.getPeriodLength(branch)
     # ethics is set to the binned version of the raw ethicality outcome
-    ethical = ethic_catch(self.getEthical(event))
+    ethical = ethic_catch(self.getEthics(event))
     ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
     self.setEthics(event, ethical)
     val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
@@ -3721,7 +3721,7 @@ def penalizeOnForkedEvent(branch, event):
     
 macro handleEthicsAndBondRepRedistribution($numReportedOn):
     # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality, but don't take rep beyond that and max at 20% of their rep respectively
-    if(ethics != ethic_catch(self.getEthical(event)) && repChange >=0):
+    if(ethics != ethic_catch(self.getEthics(event)) && repChange >=0):
         if($numReportedOn<10):
             repChange = -ONE/10*repBalance / ONE
         else:
@@ -3798,7 +3798,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod):
             self.setOriginalOutcome(event, self.getUncaughtOutcome(event))
         else:
             self.setOriginalOutcome(event, catch(self.getUncaughtOutcome(event)))
-        self.setOriginalEthicality(event, ethic_catch(self.getEthical(event)))
+        self.setOriginalEthicality(event, ethic_catch(self.getEthics(event)))
         self.addRoundTwo(branch, period)
         self.setBondPoster(event, msg.sender)
         self.setUncaughtOutcome(event, 0)
@@ -3822,9 +3822,9 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     forked = self.getForked(event)
     # checks if the event's outcome was overruled or the same as the original reporting cycle
     if(scalar(event) or categorical(event)):
-        if(self.getOriginalOutcome(event) == self.getUncaughtOutcome(event) && self.getOriginalEthicality(event)==ethic_catch(self.getEthical(event))):
+        if(self.getOriginalOutcome(event) == self.getUncaughtOutcome(event) && self.getOriginalEthicality(event)==ethic_catch(self.getEthics(event))):
             overruled = 0
-    elif(self.getOriginalOutcome(event) == catch(self.getUncaughtOutcome(event)) && self.getOriginalEthicality(event)==ethic_catch(self.getEthical(event))):
+    elif(self.getOriginalOutcome(event) == catch(self.getUncaughtOutcome(event)) && self.getOriginalEthicality(event)==ethic_catch(self.getEthics(event))):
         overruled = 0
     if(votePeriod > (self.getExpiration(event) / self.getPeriodLength(branch))):
         votedOnAgain = 1
@@ -3875,7 +3875,7 @@ def resolve(branch, event):
     refund()
     bond = self.getBond(event)
     # set ethicality to the binned version of the ethics
-    ethical = ethic_catch(self.getEthical(event))
+    ethical = ethic_catch(self.getEthics(event))
     self.setEthics(event, ethical)
     # binary
     if(binary(event)):
@@ -4316,7 +4316,7 @@ def resolveForkEvent(branch, event):
         # original parent won
         if(winner==branch):
             fxpOutcome = catch(self.getUncaughtOutcome(event))
-            ethical = ethic_catch(self.getEthical(event))
+            ethical = ethic_catch(self.getEthics(event))
         # fork won
         else:
             fxpOutcome = catch(self.getForkOutcome(event))
@@ -4342,7 +4342,7 @@ def resolveForkEvent(branch, event):
         # original parent won
         if(winner==branch):
             mode = self.getUncaughtOutcome(event)
-            ethical = ethic_catch(self.getEthical(event))
+            ethical = ethic_catch(self.getEthics(event))
         # fork won
         else:
             mode = self.getForkOutcome(event)

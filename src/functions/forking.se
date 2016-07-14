@@ -223,7 +223,7 @@ def resolveForkEvent(branch, event):
         # original parent won
         if(winner==branch):
             fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
-            ethical = ethic_catch(EVENTS.getEthical(event))
+            ethical = ethic_catch(EVENTS.getEthics(event))
         # fork won
         else:
             fxpOutcome = catch(EVENTS.getForkOutcome(event))
@@ -249,7 +249,7 @@ def resolveForkEvent(branch, event):
         # original parent won
         if(winner==branch):
             mode = EVENTS.getUncaughtOutcome(event)
-            ethical = ethic_catch(EVENTS.getEthical(event))
+            ethical = ethic_catch(EVENTS.getEthics(event))
         # fork won
         else:
             mode = EVENTS.getForkOutcome(event)

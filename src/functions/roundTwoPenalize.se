@@ -56,7 +56,7 @@ def penalizeRoundTwoWrong(branch, event):
     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, lastPeriod)/EXPIRING.getNumberEvents(branch, lastPeriod)
     bond = averageAdjudicationCost + MARKETS.getSharesValue(market)*(POINTZEROONE + MARKETS.getTradingFee(market)/2) / 2**64
     bond = min(bond, MINBOND)
-    ethical = EVENTS.getEthical(event)
+    ethical = EVENTS.getEthics(event)
     p = proportionCorrect(event, 0)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     if(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):

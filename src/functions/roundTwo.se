@@ -68,7 +68,7 @@ def roundTwoPostBond(branch, event, eventIndex, votePeriod, overEthicality):
             BACKSTOPS.setOriginalOutcome(event, EVENTS.getUncaughtOutcome(event))
         else:
             BACKSTOPS.setOriginalOutcome(event, catch(EVENTS.getUncaughtOutcome(event)))
-        BACKSTOPS.setOriginalEthicality(event, ethic_catch(EVENTS.getEthical(event)))
+        BACKSTOPS.setOriginalEthicality(event, ethic_catch(EVENTS.getEthics(event)))
         EXPEVENTS.addRoundTwo(branch, period)
         BACKSTOPS.setBondPoster(event, msg.sender)
         EVENTS.setUncaughtOutcome(event, 0)
@@ -94,9 +94,9 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     forked = EVENTS.getForked(event)
     # checks if the event's outcome was overruled or the same as the original reporting cycle
     if(scalar(event) or categorical(event)):
-        if(BACKSTOPS.getOriginalOutcome(event) == EVENTS.getUncaughtOutcome(event) && BACKSTOPS.getOriginalEthicality(event)==ethic_catch(EVENTS.getEthical(event))):
+        if(BACKSTOPS.getOriginalOutcome(event) == EVENTS.getUncaughtOutcome(event) && BACKSTOPS.getOriginalEthicality(event)==ethic_catch(EVENTS.getEthics(event))):
             overruled = 0
-    elif(BACKSTOPS.getOriginalOutcome(event) == catch(EVENTS.getUncaughtOutcome(event)) && BACKSTOPS.getOriginalEthicality(event)==ethic_catch(EVENTS.getEthical(event))):
+    elif(BACKSTOPS.getOriginalOutcome(event) == catch(EVENTS.getUncaughtOutcome(event)) && BACKSTOPS.getOriginalEthicality(event)==ethic_catch(EVENTS.getEthics(event))):
         overruled = 0
     if(votePeriod > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
         votedOnAgain = 1
@@ -147,7 +147,7 @@ def resolve(branch, event):
     refund()
     bond = EVENTS.getBond(event)
     # set ethicality to the binned version of the ethics
-    ethical = ethic_catch(EVENTS.getEthical(event))
+    ethical = ethic_catch(EVENTS.getEthics(event))
     EVENTS.setEthics(event, ethical)
     # binary
     if(binary(event)):

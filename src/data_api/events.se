@@ -144,9 +144,6 @@ def setEthics(event, ethicality):
     self.Events[event].ethical = ethicality
     return(ethicality)
 
-def getEthical(event):
-    return(self.Events[event].ethical)
-
 def getMinValue(event):
     return(self.Events[event].minValue)
 
