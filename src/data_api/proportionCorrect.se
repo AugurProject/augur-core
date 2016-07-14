@@ -1,20 +1,20 @@
-# Returns the proportion of reporters who reported correctly on a given binary event
+# Returns the proportion of reporters who reported correctly on a given binary $event
 # Returns 0 if no outcome
-macro proportionCorrect(event, forkEvent):
+macro proportionCorrect($event, $forkEvent):
     p = 0
-    if(forkEvent):
-        uncaught = EVENTS.getForkOutcome(event)
+    if($forkEvent):
+        uncaught = EVENTS.getForkOutcome($event)
         outcome = catch(uncaught)
         # subtract 1 to get it from 0 to 1
         avgOutcome = uncaught - ONE
     else:
-        uncaught = EVENTS.getUncaughtOutcome(event)        
+        uncaught = EVENTS.getUncaughtOutcome($event)        
         outcome = catch(uncaught)
         # subtract 1 to get it from 0 to 1
         avgOutcome = uncaught - ONE
         return(0)
     # binary
-    if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==TWO and EVENTS.getMinValue(event)==ONE):
+    if(EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE):
         # say we have outcome of 0, avg is .4, what is p?
             # p is .6 or 60%
         if(outcome == ONE):
