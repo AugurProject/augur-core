@@ -26,7 +26,7 @@ def collectFees(branch, sender):
     newRep = EXPEVENTS.getAfterRep(branch, lastPeriod, sender)
     feesCollected = CONSENSUS.getFeesCollected(branch, sender, lastPeriod)
     # need 1 rep to claim fees
-    if(!feesCollected && newRep>ONE):
+    if(!feesCollected and newRep>ONE):
         denominator = CONSENSUS.getDenominator(branch, lastPeriod)
         # sets the amount of rep available for redistribution in the next period
         if(!CONSENSUS.getFeeFirst(branch, lastPeriod)):

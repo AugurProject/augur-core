@@ -65,7 +65,7 @@ def penalizeRoundTwoWrong(branch, event):
     elif(!EVENTS.getOutcome(event)):
         if(ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriod, event), msg.sender)==0):
             return(-2)
-    elif(BRANCHES.getForkPeriod(branch) == lastPeriod && event!=forkEvent):
+    elif(BRANCHES.getForkPeriod(branch) == lastPeriod and event!=forkEvent):
         return(-3)
     elif(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-4)
@@ -83,13 +83,13 @@ def penalizeRoundTwoWrong(branch, event):
     repChange = 0
     # penalization on a round 2 event if not already penalized, it has outcome, and user reported on it
     # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period
-    if(BACKSTOPS.getRoundTwo(event) && (BACKSTOPS.getFinal(event) or event==forkEvent) && !CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && (reportValue or oldReport)):
+    if(BACKSTOPS.getRoundTwo(event) and (BACKSTOPS.getFinal(event) or event==forkEvent) and !CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) and (reportValue or oldReport)):
         # Do the first rep redistribution based on first report and final outcome if reported first time
-        if(oldReport && outcome!=0):
+        if(oldReport and outcome!=0):
             calculateRepChange(oldReport, POINTTWO)
             handleEthicsAndBondRepRedistribution(POINTTWO, oldEthics, numReportedOn)
         # Do the second (for each user) based on second report and final outcome
-        if(reportValue && outcome!=0):
+        if(reportValue and outcome!=0):
             calculateRepChange(reportValue, POINTONE)
             handleEthicsAndBondRepRedistribution(POINTONE, ethics, numReportedOn)
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
@@ -108,7 +108,7 @@ def penalizeRoundTwoWrong(branch, event):
 
 macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn):
     # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max maxPenalty% of their rep respectively
-    if($ethics != ethic_catch(ethical) && repChange >=0 && BACKSTOPS.getDisputedOverEthics(event)):
+    if($ethics != ethic_catch(ethical) and repChange >=0 and BACKSTOPS.getDisputedOverEthics(event)):
         if($numReportedOn<10):
             repChange = -$maxPenalty/10*repBalance / ONE
         else:
@@ -116,7 +116,7 @@ macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn)
     if(repBalance + repChange <= 0):
         repChange = -1*repBalance
     # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usulater in the process
-    if(overruled && BACKSTOPS.getBondPaid(event) < 2*bond && repChange < 0 && event!=forkEvent):
+    if(overruled and BACKSTOPS.getBondPaid(event) < 2*bond and repChange < 0 and event!=forkEvent):
         # done instead of sending to redistrib. pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
         # sends that rep to the bonded challenger

@@ -70,14 +70,14 @@ def penalizeOnForkedEvent(branch, event):
 
 macro handleEthicsAndBondRepRedistribution($numReportedOn):
     # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality
-    if(ethics != ethic_catch(EVENTS.getEthics(event)) && repChange >=0 && BACKSTOPS.getForkedOverEthicality(event)):
+    if(ethics != ethic_catch(EVENTS.getEthics(event)) and repChange >=0 and BACKSTOPS.getForkedOverEthicality(event)):
         if($numReportedOn<10):
             repChange = -ONE/10*repBalance / ONE
         else:
             repChange = -ONE/$numReportedOn*repBalance / ONE
     if(repBalance + repChange <= 0):
         repChange = -1*repBalance
-    if(BACKSTOPS.getForkBondPaid(event) < BACKSTOPS.getBondAmount(event)*2 && repChange < 0):
+    if(BACKSTOPS.getForkBondPaid(event) < BACKSTOPS.getBondAmount(event)*2 and repChange < 0):
         # done instead of sending to redistrib. pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
         # sends that rep to the bonded challenger

@@ -20,7 +20,7 @@ macro ethic_catch($x):
         ONE
 
 macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
+    ((EVENTS.getMaxValue($event)!=TWO or EVENTS.getMinValue($event)!=ONE) and EVENTS.getNumOutcomes($event)==2)
 
 macro binary($event):
     (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)

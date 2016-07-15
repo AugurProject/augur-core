@@ -1,11 +1,11 @@
-# This software (Augur) allows buying && selling event outcomes in ethereum
+# This software (Augur) allows buying and selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it &&/or modify
+#    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
 #
-#    This program is free software: you can redistribute it &&/or modify
+#    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
@@ -59,13 +59,12 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     delta = lastPeriod - lastPeriodPenalized
     eventIndex = EXPEVENTS.getEventIndex(branch, votePeriod, event)
     event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
-    if(eventIndex==0 && (event==0 || event!=event)):
+    if(eventIndex==0 and (event==0 or event!=event)):
         return(-1)
     if(residual > periodLength/2):
         return(-2)
-    if(delta > 1):
-        if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
-            return(-4)
+    if(delta > 1 and CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
+        return(-4)
     if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
         return(0)
 
@@ -76,7 +75,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
         BRANCHES.setInitialBalance(branch, votePeriod, CASH.balance(branch))
     reportingThreshold = 0
     # if required or threshold has been set b/c wasn't  yet
-    if(EXPEVENTS.getRequired(event, votePeriod, branch) || EVENTS.getReportingThreshold(event)):
+    if(EXPEVENTS.getRequired(event, votePeriod, branch) or EVENTS.getReportingThreshold(event)):
         reportingThreshold = 2**192
     # if number of reports event should have hasn't been calculated yet do it
     elif(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
@@ -131,7 +130,7 @@ def submitReport(event, salt, report, ethics):
     if(residual <= periodLength/2):
         return(-2)
     realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
-    if(self.makeHash(salt, report, event, msg.sender)!=realHash || realHash==0):
+    if(self.makeHash(salt, report, event, msg.sender)!=realHash or realHash==0):
         return(-3)
     if(ethics!=ONE and ethics!=0):
         return(-5)
@@ -195,7 +194,7 @@ def validateReport(event, branch, votePeriod, report, forkedOverEthicality, fork
         # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
         elif(forkedOverThisEvent):
             # in case of fork remove the original outcome as a possible response if forked over outcome [i.e. didn't fork over ethics]
-            if(!forkedOverEthicality && report == catch(EVENTS.getUncaughtOutcome(event))):
+            if(!forkedOverEthicality and report == catch(EVENTS.getUncaughtOutcome(event))):
                 return(-4)
             outcome = (EVENTS.getForkOutcome(event)*EXPEVENTS.getEventWeight(branch, votePeriod, event) + report*weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
             EVENTS.setForkOutcome(event, outcome)
@@ -210,7 +209,7 @@ def validateReport(event, branch, votePeriod, report, forkedOverEthicality, fork
             # 1 is the new 0 [1/2**64 is basically 0 but able to be differentiated from no report of 0]
             report = 1
         # in case of fork remove the original outcome as a possible response if didn't fork over ethics
-        if(forkedOverThisEvent && (!forkedOverEthicality && report == EVENTS.getUncaughtOutcome(event))):
+        if(forkedOverThisEvent and (!forkedOverEthicality and report == EVENTS.getUncaughtOutcome(event))):
             return(-4)
         # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
         # adding weight to a given poss. mode report

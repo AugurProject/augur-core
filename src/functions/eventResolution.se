@@ -13,7 +13,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
     # and $market remains with old expiration date
     # UI needs to call penalizeWrong for ones that are pushed back in both pushed back period and regular period with actual reporting
     $indeterminate = ONEHALF*3
-    if(($fxpOutcome == $indeterminate or $mode==ONEHALF) && EVENTS.getEventPushedUp($event)):
+    if(($fxpOutcome == $indeterminate or $mode==ONEHALF) and EVENTS.getEventPushedUp($event)):
         if(MARKETS.getPushedForward($market)):
             CASH.addCash($branch, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
             CASH.subtractCash($market, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
@@ -32,7 +32,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         #set $event expiration to be the old date
         EVENTS.setExpiration($event, EVENTS.getOriginalExpiration($event))
         -6
-    elif(($fxpOutcome==$indeterminate or $mode==ONEHALF) || !$ethical):
+    elif(($fxpOutcome==$indeterminate or $mode==ONEHALF) or !$ethical):
         # give $event bond money to reporters
         CASH.subtractCash($event, EVENTS.getBond($event))
         CASH.addCash($branch, EVENTS.getBond($event))
@@ -94,7 +94,7 @@ def determineWinningOutcomes(event):
     fxpOutcome = EVENTS.getOutcome(event)
     outcome = fxpOutcome/ONE
     #scalar or .5
-    if(scalar(event) || fxpOutcome==3*ONEHALF):
+    if(scalar(event) or fxpOutcome==3*ONEHALF):
         winningOutcomes[0] = 1
         winningOutcomes[1] = 2
     # anything besides scalar or .5

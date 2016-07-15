@@ -68,7 +68,7 @@ def penalizeWrong(branch, event):
     if(scalar(event) or categorical(event)):
         outcome = uncaught
     p = proportionCorrect(event, 0)
-    if(roundTwo && outcome!=0):
+    if(roundTwo and outcome!=0):
         return(-1)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
@@ -81,7 +81,7 @@ def penalizeWrong(branch, event):
         return(-5)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     # todo fix getoutcome
-    elif(!EVENTS.getOutcome(event) && !(rejected && EVENTS.getRejectedPeriod(event)==lastPeriod)):
+    elif(!EVENTS.getOutcome(event) and !(rejected and EVENTS.getRejectedPeriod(event)==lastPeriod)):
         if(CLOSEMARKET.closeMarket(branch, EVENTS.getMarket(event, 0), msg.sender)!=1):
             return(-6)
     elif(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod)):
@@ -95,15 +95,15 @@ def penalizeWrong(branch, event):
         # shouldn't be penalized until the next period resolution is over [since it's a round 2 event]
     # if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event todo
     # unless this just happened to them last period and they reported correctly then
-    if(roundTwo && !penalizedOnEvent && reportValue):
+    if(roundTwo and !penalizedOnEvent and reportValue):
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
     # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. don't allow rep redistribution until the original period it was supposed to resolve in
-    elif(!penalizedOnEvent && reportValue && rejected && EVENTS.getRejectedPeriod(event)==lastPeriod):
+    elif(!penalizedOnEvent and reportValue and rejected and EVENTS.getRejectedPeriod(event)==lastPeriod):
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
     # penalization on a regular event if not already penalized, it has outcome, and user reported on it
-    elif(!penalizedOnEvent && reportValue && outcome!=0):
+    elif(!penalizedOnEvent and reportValue and outcome!=0):
         calculateRepChange(reportValue, POINTONE)
         newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
         log(type=penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue)

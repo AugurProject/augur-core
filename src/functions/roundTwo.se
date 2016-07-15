@@ -46,7 +46,7 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     bond = min(bond, MINBOND)
     event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     # if so, we're in the final 48 hours and event is in this branch + votePeriod
-    if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) && event!=0 && event==event && !BACKSTOPS.getRoundTwo(event) && !EVENTS.getForked(event)):
+    if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) and event!=0 and event==event and !BACKSTOPS.getRoundTwo(event) and !EVENTS.getForked(event)):
         # send the bond to the branch
         # todo fix this will fail b/c event doesn't have rep acc
         if(!SENDREP.sendReputation(branch, event, bond)):
@@ -84,7 +84,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     refund()
     votePeriod = BRANCHES.getVotePeriod(branch)
     market = EVENTS.getMarket(event, 0)
-    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod-1)/EXPEVENTS.getNumberEvents(branch, votePeriod-1)
+    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod-1)/EX[PEVENTS.getNumberEvents(branch, votePeriod-1)
     bond = averageAdjudicationCost + MARKETS.getSharesValue(market)*(POINTZEROONE + MARKETS.getTradingFee(market)/2) / ONE
     bond = min(bond, MINBOND)
     event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
@@ -93,15 +93,15 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     forked = EVENTS.getForked(event)
     # checks if the event's outcome was overruled or the same as the original reporting cycle
     if(scalar(event) or categorical(event)):
-        if(BACKSTOPS.getOriginalOutcome(event) == EVENTS.getUncaughtOutcome(event) && BACKSTOPS.getOriginalEthicality(event)==ethic_catch(EVENTS.getEthics(event))):
+        if(BACKSTOPS.getOriginalOutcome(event) == EVENTS.getUncaughtOutcome(event) and BACKSTOPS.getOriginalEthicality(event)==ethic_catch(EVENTS.getEthics(event))):
             overruled = 0
-    elif(BACKSTOPS.getOriginalOutcome(event) == catch(EVENTS.getUncaughtOutcome(event)) && BACKSTOPS.getOriginalEthicality(event)==ethic_catch(EVENTS.getEthics(event))):
+    elif(BACKSTOPS.getOriginalOutcome(event) == catch(EVENTS.getUncaughtOutcome(event)) and BACKSTOPS.getOriginalEthicality(event)==ethic_catch(EVENTS.getEthics(event))):
         overruled = 0
     if(votePeriod > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
         votedOnAgain = 1
     forkPeriod = BRANCHES.getForkPeriod(branch)
     # if forking and this isn't the fork event
-    if(forkPeriod==votePeriod or votePeriod==(forkPeriod+1) && (BRANCHES.getEventForkedOver(branch)!=event && BACKSTOPS.getBondReturned(event)==0 && BACKSTOPS.getRoundTwo(event)) && event!=0 && event==event):
+    if(forkPeriod==votePeriod or votePeriod==(forkPeriod+1) and (BRANCHES.getEventForkedOver(branch)!=event and BACKSTOPS.getBondReturned(event)==0 and BACKSTOPS.getRoundTwo(event)) and event!=0 and event==event):
         # return the bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
@@ -110,7 +110,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         BACKSTOPS.doRoundTwoRefund(sender, event)
         return(1)
     # overruled and bond poster was right
-    elif(overruled && votedOnAgain && BACKSTOPS.getRoundTwo(event) && votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) && event!=0 && event==event && !forked && !BACKSTOPS.getBondReturned(event)):
+    elif(overruled and votedOnAgain and BACKSTOPS.getRoundTwo(event) and votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) and event!=0 and event==event and !forked and !BACKSTOPS.getBondReturned(event)):
         # return the bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
@@ -123,7 +123,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         BACKSTOPS.doRoundTwoRefund(sender, event)
         return(2*bond)
     # same as original consensus and bond poster was wrong [or malicious]
-    elif(votedOnAgain && BACKSTOPS.getRoundTwo(event) && votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) && event!=0 && event==event && !forked && !BACKSTOPS.getBondReturned(event)):
+    elif(votedOnAgain and BACKSTOPS.getRoundTwo(event) and votePeriod!=BACKSTOPS.getOriginalVotePeriod(event) and event!=0 and event==event and !forked and !BACKSTOPS.getBondReturned(event)):
         # lose bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), bond)
@@ -153,7 +153,7 @@ def resolve(branch, event):
         # set outcome to the binned version of the outcome
         fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
         EVENTS.setOutcome(event, fxpOutcome)
-        if(fxpOutcome==3*ONEHALF || !ethical):
+        if(fxpOutcome==3*ONEHALF or !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, bond)
             CASH.addCash(branch, bond)
@@ -179,7 +179,7 @@ def resolve(branch, event):
         # sets outcome which is used in calculating payouts
         EVENTS.setOutcome(event, fxpOutcome)
         ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
-        if(mode==ONEHALF || !ethical):
+        if(mode==ONEHALF or !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, bond)
             CASH.addCash(branch, bond)

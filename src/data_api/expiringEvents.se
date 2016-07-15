@@ -1,11 +1,11 @@
-# This software (Augur) allows buying && selling event outcomes in ethereum
+# This software (Augur) allows buying and selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it &&/or modify
+#    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
 #
-#    This program is free software: you can redistribute it &&/or modify
+#    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
@@ -244,7 +244,7 @@ def setReportHash(branch, period, reporter, reportHash, event):
 
 # called in case an event doesn't get reported on at all in a period
 def moveEvent(branch, event):
-    if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch) && !EVENTS.getUncaughtOutcome(event)):
+    if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch) and !EVENTS.getUncaughtOutcome(event)):
         # add to next expiration period
         self.addEvent(branch, block.timestamp/BRANCHES.getPeriodLength(branch), event)
         EVENTS.setExpiration(event, block.timestamp)

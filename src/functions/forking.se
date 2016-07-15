@@ -47,7 +47,7 @@ def move_event(event):
     eventIndex = EXPEVENTS.getEventIndex(expPeriod, event)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     # todo getoutcome may not work
-    if(forkPeriod && currentPeriod == (forkPeriod+2) && !EVENTS.getOutcome(event) && !BACKSTOPS.getMoved(event)):
+    if(forkPeriod and currentPeriod == (forkPeriod+2) and !EVENTS.getOutcome(event) and !BACKSTOPS.getMoved(event)):
         winner = BACKSTOPS.getResolved(branch, forkPeriod)
         if(winner==0):
             winner = self.resolve_fork(branch)
@@ -130,7 +130,7 @@ def exchangeRate(branch):
 def fork(event, branch, forkedOverEthicality):
     forkPeriod = BRANCHES.getForkPeriod(branch)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-    if(!EVENTS.getRoundTwo(event) || BACKSTOPS.getFinal(event) || EVENTS.getForked(event)):
+    if(!EVENTS.getRoundTwo(event) or BACKSTOPS.getFinal(event) or EVENTS.getForked(event)):
         return(-1)
     if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod+1) or currentPeriod == (forkPeriod+2)):
         return(-3)
@@ -145,7 +145,7 @@ def fork(event, branch, forkedOverEthicality):
         throw()
     CONSENSUSDATA.setRefund(event, msg.value)
     # if in last 48 hr of period and is round 2 event with reports attempted
-    if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) && EVENTS.getUncaughtOutcome(event)!=0):
+    if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) and EVENTS.getUncaughtOutcome(event)!=0):
         bond = POINTZEROONE*REPORTING.getTotalRep(branch)/ONE
         BACKSTOPS.setBondAmount(event, bond)
         # lose fork bond in branch 1
@@ -230,7 +230,7 @@ def resolveForkEvent(branch, event):
             ethical = ethic_catch(EVENTS.getForkEthicality(event))
         EVENTS.setOutcome(event, fxpOutcome)
         EVENTS.setEthics(event, ethical)
-        if(fxpOutcome==3*ONEHALF || !ethical):
+        if(fxpOutcome==3*ONEHALF or !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, bond)
             CASH.addCash(branch, bond)
@@ -264,7 +264,7 @@ def resolveForkEvent(branch, event):
         fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
         ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
         EVENTS.setOutcome(event, fxpOutcome)
-        if(mode==ONEHALF || !ethical):
+        if(mode==ONEHALF or !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, bond)
             CASH.addCash(branch, bond)

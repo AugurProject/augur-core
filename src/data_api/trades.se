@@ -32,7 +32,7 @@ def zeroHash():
     return(1)
 
 def checkHash(tradeHash, sender):
-    if(self.tradeCommits[sender].hash != tradeHash || block.number <= self.tradeCommits[sender].block):
+    if(self.tradeCommits[sender].hash != tradeHash or block.number <= self.tradeCommits[sender].block):
         return(-1)
     else:
         return(1)

@@ -1,11 +1,11 @@
-# This software (Augur) allows buying && selling event outcomes in ethereum
+# This software (Augur) allows buying and selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it &&/or modify
+#    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
 #
-#    This program is free software: you can redistribute it &&/or modify
+#    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
@@ -34,7 +34,7 @@ inset('refund.se')
     # -3: branch already exists
 def createSubbranch(description:str, periodLength, parent, minTradingFee, oracleOnly):
     refund()
-    if(periodLength<=0 || !BRANCHES.getPeriodLength(parent) || description==0):
+    if(periodLength<=0 or !BRANCHES.getPeriodLength(parent) or description==0):
         return(-1)
     if(minTradingFee < 0 or minTradingFee > 2**62):
         return(-1)
@@ -51,7 +51,7 @@ def createSubbranch(description:str, periodLength, parent, minTradingFee, oracle
     branchInfo[6] = oracleOnly
     mcopy(branchInfo + 7*32, description, len(description))
     # people can check that these characteristics hash to the ID if they want
-    # people can hand a friend their new branch hash && characteristics && say, "don't trust me? check"
+    # people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
     branch = sha3(branchInfo, chars=len(branchInfo))
     currentVotePeriod = (block.timestamp / periodLength) - 1
     if(CASH.balance(msg.sender)<47*ONE):
@@ -62,7 +62,7 @@ def createSubbranch(description:str, periodLength, parent, minTradingFee, oracle
     else:
         return(-3)
     # pay creation fee, initialize branch info
-    if(CASH.sendFrom(parent, 47*ONE, msg.sender) && INFO.setInfo(branch, description, tx.origin, 47*ONE) && REPORTING.setInitialReporters(parent, branch)):
+    if(CASH.sendFrom(parent, 47*ONE, msg.sender) and INFO.setInfo(branch, description, tx.origin, 47*ONE) and REPORTING.setInitialReporters(parent, branch)):
         return(branch)
     else:
         return(-2)

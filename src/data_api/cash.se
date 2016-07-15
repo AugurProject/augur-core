@@ -1,11 +1,11 @@
-# This software (Augur) allows buying && selling event outcomes in ethereum
+# This software (Augur) allows buying and selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it &&/or modify
+#    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
 #
-#    This program is free software: you can redistribute it &&/or modify
+#    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
@@ -54,7 +54,7 @@ def initiateOwner(account):
 # @return value of cash sent; fail is 0
 def sendFrom(recver, value, from):
     refund()
-    if(self.owners[msg.sender]==0 && from==msg.sender):
+    if(self.owners[msg.sender]==0 and from==msg.sender):
         self.owners[msg.sender] = msg.sender
     # sendFrom would check if the sender had an owner, if it did, then it'd check and see if the msg.sender was the owner.
     # it's not owned by a regular account nor a contract owned account (i.e. a market's hash from markets.)
@@ -63,7 +63,7 @@ def sendFrom(recver, value, from):
     #if(self.owners[recver]==0):
     #    return(0)
     senderBalance = self.cashcoinBalances[from]
-    if(senderBalance >= value && value > 0):
+    if(senderBalance >= value and value > 0):
         self.cashcoinBalances[from] -= value
         self.cashcoinBalances[recver] += value
         return(value)
@@ -74,7 +74,7 @@ def sendFrom(recver, value, from):
 def subtractCash(ID, amount):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    #if(msg.sender!=self.owners[ID] && tx.origin!=self.owners[ID]):
+    #if(msg.sender!=self.owners[ID] and tx.origin!=self.owners[ID]):
     #    return(0)
     self.cashcoinBalances[ID] -= amount
     return(1)
@@ -93,7 +93,7 @@ def setCash(address, balance):
 
 def depositEther():
     self.cashcoinBalances[msg.sender] += msg.value * ONE / WEITOETH
-    return msg.value
+    return(msg.value)
 
 # Withdraw ether to an address
 # Returns 2 if withdrawal is initiated [then must wait 3 days]

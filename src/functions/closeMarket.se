@@ -1,11 +1,11 @@
-# This software (Augur) allows buying && selling event outcomes in ethereum
+# This software (Augur) allows buying and selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it &&/or modify
+#    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
 #
-#    This program is free software: you can redistribute it &&/or modify
+#    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
@@ -57,7 +57,7 @@ macro ethic_catch($x):
     else:
         ONE
 
-# Loop through events in the market, get their outcomes && use those to determine the winning outcomes and resolve a market!
+# Loop through events in the market, get their outcomes and use those to determine the winning outcomes and resolve a market!
 # @return 0 if fail/trading not over yet/event not expired or closed already, if success 1
 # Error messages otherwise
     # -1: Market has no cash anyway / already closed
@@ -77,29 +77,29 @@ def closeMarket(branch, market, sender):
         return(-1)
     if(EVENTS.getUncaughtOutcome(event)==0):
         return(-2)
-    if(BACKSTOPS.getRoundTwo(event) && !BACKSTOPS.getFinal(event)):
+    if(BACKSTOPS.getRoundTwo(event) and !BACKSTOPS.getFinal(event)):
         return(-3)
     if(MARKETS.getbranch(market)!=branch):
         return(-4)
     # checks whether any events not already resolved
     resolved = 1
     # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
-    if(EVENTS.getOutcome(event)==0 && EVENTS.getMode(event)==0):
+    if(EVENTS.getOutcome(event)==0 and EVENTS.getMode(event)==0):
         resolved = 0
-    if((period > tradingPeriod) && !resolved):
-        # look at through event in the market, get its outcomes, resolve it && use those to determine the winning outcomes for a given market!
+    if((period > tradingPeriod) and !resolved):
+        # look at through event in the market, get its outcomes, resolve it and use those to determine the winning outcomes for a given market!
         votingPeriodEvent = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
         fxpOutcome = EVENTS.getOutcome(event)
         resolution = 1
         forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
         currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-        if((EVENTS.getForked(event) && !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):
+        if((EVENTS.getForked(event) and !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):
             return(-5)
-        if(binary(event) && fxpOutcome==0):
+        if(binary(event) and fxpOutcome==0):
                 resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
-        elif(scalar(event) && EVENTS.getMode(event)==0):
+        elif(scalar(event) and EVENTS.getMode(event)==0):
                 resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
-        elif(categorical(event) && EVENTS.getMode(event)==0):
+        elif(categorical(event) and EVENTS.getMode(event)==0):
                 resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
         if(resolution==-6):
             return(-6)
@@ -126,10 +126,10 @@ def claimProceeds(branch, market):
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)
     resolved = 1
-    if(EVENTS.getOutcome(event)==0 && EVENTS.getMode(event)==0):
+    if(EVENTS.getOutcome(event)==0 and EVENTS.getMode(event)==0):
         resolved = 0
     # as long as it's resolved money can be collected
-    if((period > tradingPeriod) && resolved):
+    if((period > tradingPeriod) and resolved):
         winningOutcomes = array(8)
         winningOutcomes = MARKET.getWinningOutcomes(market, outitems=8)
         outcome = 0
@@ -139,7 +139,7 @@ def claimProceeds(branch, market):
         if(winningOutcomes[1]==0):
             ethical = ethic_catch(EVENTS.getEthics(event))
             # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
-            if(categorical(event) && (EVENTS.getMode(event)==ONEHALF or !ethical)):
+            if(categorical(event) and (EVENTS.getMode(event)==ONEHALF or !ethical)):
                 outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))
             # resolves a regular binary market
             else:
@@ -152,7 +152,7 @@ def claimProceeds(branch, market):
         return(0)
 
 macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
+    ((EVENTS.getMaxValue($event)!=TWO or EVENTS.getMinValue($event)!=ONE) and EVENTS.getNumOutcomes($event)==2)
 
 macro binary($event):
     (EVENTS.getNumOutcomes($event)==2 and ONE*EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)

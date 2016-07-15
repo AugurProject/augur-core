@@ -1,11 +1,11 @@
-# This software (Augur) allows buying && selling event outcomes in ethereum
+# This software (Augur) allows buying and selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it &&/or modify
+#    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
 #
-#    This program is free software: you can redistribute it &&/or modify
+#    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
@@ -63,9 +63,9 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
         return(-1)
     if(maxValue < minValue or (maxValue-minValue) < ONE):
         return(-2)
-    if(numOutcomes < 2 || numOutcomes > 8):
+    if(numOutcomes < 2 or numOutcomes > 8):
         return(-3)
-    if(forkPeriod && ((expDate / periodLength)==forkPeriod or (expDate / periodLength)==(forkPeriod+1))):
+    if(forkPeriod and ((expDate / periodLength)==forkPeriod or (expDate / periodLength)==(forkPeriod+1))):
         return(-4)
     eventinfo = string(7*32 + len(description))
     eventinfo[0] = branch                                       #branch
@@ -80,7 +80,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     CASH.initiateOwner(event)
     if(INFO.getCreator(event)):
         return(0)
-    if(INFO.setInfo(event, description, msg.sender, 0) && EVENTS.initializeEvent(event, branch, expDate, minValue, maxValue, numOutcomes, resolution)):
+    if(INFO.setInfo(event, description, msg.sender, 0) and EVENTS.initializeEvent(event, branch, expDate, minValue, maxValue, numOutcomes, resolution)):
         return(event)
     else:
         return(0)
@@ -117,17 +117,17 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
     futurePeriod = expirationDate / periodLength
     forkPeriod = BRANCHES.getForkPeriod(branch)
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
-    if(periodLength==0 or len(description)==0 || tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > 2**61 or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or makerFees < 0 or makerFees > ONEHALF):
+    if(periodLength==0 or len(description)==0 or tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > 2**61 or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or makerFees < 0 or makerFees > ONEHALF):
         return(-1)
     if(expirationDate < block.timestamp):
         return(-2)
-    if(forkPeriod && (futurePeriod == forkPeriod or futurePeriod == (forkPeriod+1))):
+    if(forkPeriod and (futurePeriod == forkPeriod or futurePeriod == (forkPeriod+1))):
         return(-3)
     #scalars
     maxValue = EVENTS.getMaxValue(event)
     minValue = EVENTS.getMinValue(event)
     # is a valid scalar
-    if((maxValue!=TWO || minValue !=ONE) && numOutcomes==2):
+    if((maxValue!=TWO or minValue !=ONE) and numOutcomes==2):
         # cumulativeScale is the range of a scalar
         cumulativeScale += maxValue - minValue
     if(cumulativeScale==0):
@@ -146,12 +146,12 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
     mcopy(marketinfo + 8*32, description, chars=len(description))
     market = sha3(marketinfo, chars=len(marketinfo))
     # if it's already been created return 0
-    if(INFO.getCreator(market) || MARKETS.getMarketNumOutcomes(market)):
+    if(INFO.getCreator(market) or MARKETS.getMarketNumOutcomes(market)):
         return(-4)
     events = array(1)
     events[0] = event
     # initialize market and send money to pay for resolution
-    if(CASH.sendFrom(branch, creationFee, msg.sender) && send(MARKETS, (msg.value-500000*tx.gasprice)) && INFO.setInfo(market, description, msg.sender, creationFee) && BRANCHES.addMarketToBranch(branch, market) && MARKETS.initializeMarket(market, events, futurePeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, expirationDate)):
+    if(CASH.sendFrom(branch, creationFee, msg.sender) and send(MARKETS, (msg.value-500000*tx.gasprice)) and INFO.setInfo(market, description, msg.sender, creationFee) and BRANCHES.addMarketToBranch(branch, market) and MARKETS.initializeMarket(market, events, futurePeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, expirationDate)):
         MARKETS.addToMarketsHash(branch, market)
         CASH.initiateOwner(market)
         EVENTS.addMarket(event, market)
@@ -179,14 +179,14 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
     # -2: invalid new trading fee
 def updateTradingFee(branch, market, tradingFee):
     refund()
-    if(msg.sender != INFO.getCreator(market) || tx.origin != INFO.getCreator(market)):
+    if(msg.sender != INFO.getCreator(market) or tx.origin != INFO.getCreator(market)):
         return(-1)
     oldFee = MARKETS.getTradingFee(market)
     oldCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / oldFee
     newCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / tradingFee
     if(tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > oldFee):
         return(-2)
-    if(!CASH.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender) && MARKETS.setTradingFee(market, tradingFee)):
+    if(!CASH.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender) and MARKETS.setTradingFee(market, tradingFee)):
         throw()
     log(type=tradingFeeUpdated, market, tradingFee)
     return(1)
@@ -214,7 +214,7 @@ def pushMarketForward(branch, market):
         return(-3)
     event = MARKETS.getMarketEvent(market, 0)
     expiration = EVENTS.getExpiration(event)
-    if(EVENTS.getRejectedPeriod(event) || expiration!=EVENTS.getOriginalExpiration(event) || EVENTS.getOutcome(event) || BACKSTOPS.getRoundTwo(event) || expiration/periodLength==block.timestamp/periodLength):
+    if(EVENTS.getRejectedPeriod(event) or expiration!=EVENTS.getOriginalExpiration(event) or EVENTS.getOutcome(event) or BACKSTOPS.getRoundTwo(event) or expiration/periodLength==block.timestamp/periodLength):
             return(-4)
     # push into next vote period
     period = block.timestamp/periodLength

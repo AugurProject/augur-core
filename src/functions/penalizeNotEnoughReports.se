@@ -58,7 +58,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     numReportsSubmitted = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
     couldveReported = THRESHOLD.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
-    if(expectedEventsForReporterIncludingRequired/2 > numReportsSubmitted*ONE && couldveReported):
+    if(expectedEventsForReporterIncludingRequired/2 > numReportsSubmitted*ONE and couldveReported):
         # penalize people
         newRep = POINTONE*numReportsSubmitted*originalRep / (expectedEventsForReporterIncludingRequired/2)
         oldRep = originalRep*POINTNINE / ONE
