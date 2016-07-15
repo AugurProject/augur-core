@@ -44,7 +44,7 @@ def balance(address):
 # needs to be called when making a market, branch, etc. or a new cash user acc.
 def initiateOwner(account):
     refund()
-    if(self.owners[account]==0 and self.cashcoinBalances[account]==0):
+    if(!self.owners[account] and !self.cashcoinBalances[account]):
         self.owners[account] = msg.sender
         return(1)
     else:
@@ -54,13 +54,13 @@ def initiateOwner(account):
 # @return value of cash sent; fail is 0
 def sendFrom(recver, value, from):
     refund()
-    if(self.owners[msg.sender]==0 and from==msg.sender):
+    if(!self.owners[msg.sender] and from==msg.sender):
         self.owners[msg.sender] = msg.sender
     # sendFrom would check if the sender had an owner, if it did, then it'd check and see if the msg.sender was the owner.
     # it's not owned by a regular account nor a contract owned account (i.e. a market's hash from markets.)
     if(from!=tx.origin and msg.sender!=self.owners[from] and msg.sender!=from):
         return(0)
-    #if(self.owners[recver]==0):
+    #if(!self.owners[recver]):
     #    return(0)
     senderBalance = self.cashcoinBalances[from]
     if(senderBalance >= value and value > 0):

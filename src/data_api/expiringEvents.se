@@ -156,7 +156,7 @@ def getNumRequired(branch, period):
 
 # Return 0 means already required
 def setEventRequired(branch, period, event):
-    if(self.periodEventInfo[branch][period].requiredEvents[event]==0):
+    if(!self.periodEventInfo[branch][period].requiredEvents[event]):
         self.periodEventInfo[branch][period].requiredEvents[event] = 1
         self.periodEventInfo[branch][period].numReqEvents += 1
         return(1)

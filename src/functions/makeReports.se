@@ -59,7 +59,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     delta = lastPeriod - lastPeriodPenalized
     eventIndex = EXPEVENTS.getEventIndex(branch, votePeriod, event)
     event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
-    if(eventIndex==0 and (event==0 or event!=event)):
+    if(!eventIndex and (!event or event!=event)):
         return(-1)
     if(residual > periodLength/2):
         return(-2)
@@ -130,7 +130,7 @@ def submitReport(event, salt, report, ethics):
     if(residual <= periodLength/2):
         return(-2)
     realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
-    if(self.makeHash(salt, report, event, msg.sender)!=realHash or realHash==0):
+    if(self.makeHash(salt, report, event, msg.sender)!=realHash or !realHash):
         return(-3)
     if(ethics!=ONE and ethics!=0):
         return(-5)
@@ -189,7 +189,7 @@ def validateReport(event, branch, votePeriod, report, forkedOverEthicality, fork
     outcome = 0
     # binary
     if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==TWO and EVENTS.getMinValue(event)==ONE):
-        if(report>2*ONE or report<ONE or report==0):
+        if(report>2*ONE or report<ONE or !report):
             return(-4)
         # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
         elif(forkedOverThisEvent):
@@ -246,7 +246,7 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
     totalFeesInWei = totalFees * WEITOETH / ONE
     canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
     lesser = min(canPayForThisManyReporters*ONE, numReportersOnMarket)
-    if(EXPEVENTS.getLesserReportNum(branch, votePeriod, event)==0):
+    if(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
         EXPEVENTS.refundCost(sender, branch, votePeriod, event)
         EXPEVENTS.setLesserReportNum(branch, votePeriod, event, lesser)
     return(lesser)

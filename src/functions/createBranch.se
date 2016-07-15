@@ -34,7 +34,7 @@ inset('refund.se')
     # -3: branch already exists
 def createSubbranch(description:str, periodLength, parent, minTradingFee, oracleOnly):
     refund()
-    if(periodLength<=0 or !BRANCHES.getPeriodLength(parent) or description==0):
+    if(periodLength<=0 or !BRANCHES.getPeriodLength(parent) or !description):
         return(-1)
     if(minTradingFee < 0 or minTradingFee > 2**62):
         return(-1)
@@ -57,7 +57,7 @@ def createSubbranch(description:str, periodLength, parent, minTradingFee, oracle
     if(CASH.balance(msg.sender)<47*ONE):
         return(-2)
     # provided event doesn't already exist, create it
-    if(INFO.getCreator(branch)==0):
+    if(!INFO.getCreator(branch)):
         BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, minTradingFee, oracleOnly, parentPeriod, parent)
     else:
         return(-3)

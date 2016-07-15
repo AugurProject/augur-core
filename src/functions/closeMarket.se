@@ -75,7 +75,7 @@ def closeMarket(branch, market, sender):
     event = MARKETS.getMarketEvent(market, 0)
     if(CASH.balance(market)<=0):
         return(-1)
-    if(EVENTS.getUncaughtOutcome(event)==0):
+    if(!EVENTS.getUncaughtOutcome(event)):
         return(-2)
     if(BACKSTOPS.getRoundTwo(event) and !BACKSTOPS.getFinal(event)):
         return(-3)
@@ -84,7 +84,7 @@ def closeMarket(branch, market, sender):
     # checks whether any events not already resolved
     resolved = 1
     # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
-    if(EVENTS.getOutcome(event)==0 and EVENTS.getMode(event)==0):
+    if(!EVENTS.getOutcome(event) and !EVENTS.getMode(event)):
         resolved = 0
     if((period > tradingPeriod) and !resolved):
         # look at through event in the market, get its outcomes, resolve it and use those to determine the winning outcomes for a given market!
@@ -95,11 +95,11 @@ def closeMarket(branch, market, sender):
         currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
         if((EVENTS.getForked(event) and !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):
             return(-5)
-        if(binary(event) and fxpOutcome==0):
+        if(binary(event) and !fxpOutcome):
                 resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
-        elif(scalar(event) and EVENTS.getMode(event)==0):
+        elif(scalar(event) and !EVENTS.getMode(event)):
                 resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
-        elif(categorical(event) and EVENTS.getMode(event)==0):
+        elif(categorical(event) and !EVENTS.getMode(event)):
                 resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
         if(resolution==-6):
             return(-6)
@@ -126,7 +126,7 @@ def claimProceeds(branch, market):
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)
     resolved = 1
-    if(EVENTS.getOutcome(event)==0 and EVENTS.getMode(event)==0):
+    if(!EVENTS.getOutcome(event) and !EVENTS.getMode(event)):
         resolved = 0
     # as long as it's resolved money can be collected
     if((period > tradingPeriod) and resolved):
@@ -134,9 +134,9 @@ def claimProceeds(branch, market):
         winningOutcomes = MARKET.getWinningOutcomes(market, outitems=8)
         outcome = 0
         # market not resolved
-        if(winningOutcomes[0]==0):
+        if(!winningOutcomes[0]):
             return(0)
-        if(winningOutcomes[1]==0):
+        if(!winningOutcomes[1]):
             ethical = ethic_catch(EVENTS.getEthics(event))
             # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
             if(categorical(event) and (EVENTS.getMode(event)==ONEHALF or !ethical)):

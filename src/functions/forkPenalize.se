@@ -47,7 +47,7 @@ def penalizeOnForkedEvent(branch, event):
     if(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
         return(-1)
     # means event / fork isn't resolved
-    if(EVENTS.getForkedDone(event)==0):
+    if(!EVENTS.getForkedDone(event)):
         return(-2)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-3)

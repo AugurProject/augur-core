@@ -71,7 +71,7 @@ def claimInitialRep(parent, branch):
     if(BRANCHES.getParent(branch)!=parent):
         return(-1)
     # have 1 month to claim
-    if(REPORTING.repIDToIndex(branch, msg.sender)==0 and block.timestamp < (BRANCHES.getCreationDate(branch) + TWENTYFOURHR*30)):
+    if(!REPORTING.repIDToIndex(branch, msg.sender) and block.timestamp < (BRANCHES.getCreationDate(branch) + TWENTYFOURHR*30)):
         # auto increment vote period if needed
         INCREMENTPERIOD.incrementPeriodAfterReporting(parent)
         parentPeriod = BRANCHES.getParentPeriod(branch)
@@ -102,7 +102,7 @@ def claimInitialRep(parent, branch):
             rep = REPORTING.getRepBalance(parent, msg.sender)
         repDecrease = 0
         # if forked and (reported with original consensus or didn't report or (reported with original ethicality and forked over ethicality))
-        if(fork and ((report >= (outcome-POINTZEROONE) and report <= (outcome+POINTZEROONE)) or report==0 or (BACKSTOPS.getForkedOverEthicality(forkEvent) and ethical==ethicReport))):
+        if(fork and ((report >= (outcome-POINTZEROONE) and report <= (outcome+POINTZEROONE)) or !report or (BACKSTOPS.getForkedOverEthicality(forkEvent) and ethical==ethicReport))):
             # take away 30% of rep from liars and those who didn't report
             repDecrease = rep - rep*POINTSEVEN/ONE
             rep = rep - repDecrease

@@ -148,7 +148,7 @@ def getCreationDate(ID):
 def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleOnly, parentPeriod, parent):
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
-    if(self.Branches[ID].periodLength==0):
+    if(!self.Branches[ID].periodLength):
         self.Branches[ID].currentVotePeriod = currentVotePeriod
         self.Branches[ID].periodLength = periodLength
         self.Branches[ID].minTradingFee = minTradingFee

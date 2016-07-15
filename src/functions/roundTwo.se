@@ -101,7 +101,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         votedOnAgain = 1
     forkPeriod = BRANCHES.getForkPeriod(branch)
     # if forking and this isn't the fork event
-    if(forkPeriod==votePeriod or votePeriod==(forkPeriod+1) and (BRANCHES.getEventForkedOver(branch)!=event and BACKSTOPS.getBondReturned(event)==0 and BACKSTOPS.getRoundTwo(event)) and event!=0 and event==event):
+    if(forkPeriod==votePeriod or votePeriod==(forkPeriod+1) and (BRANCHES.getEventForkedOver(branch)!=event and !BACKSTOPS.getBondReturned(event) and BACKSTOPS.getRoundTwo(event)) and event!=0 and event==event):
         # return the bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)

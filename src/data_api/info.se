@@ -51,7 +51,7 @@ def setInfo(ID, description: str, creator, fee):
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
     # check that msg.sender is one of our function contracts
-    if(self.Info[ID].creator == 0):
+    if(!self.Info[ID].creator):
         save(self.Info[ID].description[0], description, chars=len(description))
         self.Info[ID].descriptionLength = len(description)
         self.Info[ID].creationFee = fee

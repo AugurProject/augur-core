@@ -83,7 +83,7 @@ def getRepByIndex(branch, repIndex):
 # @return reputation value
 def getRepBalance(branch, address):
     repIndex = self.Reporting[branch].repIDtoIndex[address]
-    if(repIndex==0 and self.Reporting[branch].reputation[repIndex].reporterID!=address):
+    if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID!=address):
         return(0)
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
@@ -94,7 +94,7 @@ def getDormantRepByIndex(branch, repIndex):
 # getDormantRepBalance
 def balanceOf(branch, address):
     repIndex = self.Reporting[branch].repIDtoIndex[address]
-    if(repIndex==0 and self.Reporting[branch].reputation[repIndex].reporterID!=address):
+    if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID!=address):
         return(0)
     return(self.Reporting[branch].dormantRep[repIndex].repValue)
 

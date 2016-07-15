@@ -4,8 +4,13 @@ macro safeToSubtract($a, $b):
 macro safeToSubtract($a, $b):
     ($b <= $a)
 
+data lol[](cat)
+
 def ok():
     if(safeToSubtract(10, 5)):
         return(1)
     else:
         return(0)
+
+def heh():
+    return(self.lol[0].dog)

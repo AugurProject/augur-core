@@ -42,7 +42,7 @@ def getEventsToReportOn(branch, period, sender, start):
     while i < numEvents*2:
         events[i] = EXPEVENTS.getEvent(branch, period, n)
         # calculate report target for event here if not done for purposes of computing this
-        if(EXPEVENTS.getLesserReportNum(branch, period, events[i])==0):
+        if(!EXPEVENTS.getLesserReportNum(branch, period, events[i])):
             MAKEREPORTS.calculateReportTargetForEvent(branch, events[i], period, msg.sender)
         reportingThreshold = self.calculateReportingThreshold(branch, events[i], period, sender)
         x = array(1)

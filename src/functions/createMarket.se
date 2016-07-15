@@ -59,7 +59,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
     forkPeriod = BRANCHES.getForkPeriod(branch)
-    if(!periodLength or description == 0 or expDate < block.timestamp):
+    if(!periodLength or !description or expDate < block.timestamp):
         return(-1)
     if(maxValue < minValue or (maxValue-minValue) < ONE):
         return(-2)
@@ -117,7 +117,7 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
     futurePeriod = expirationDate / periodLength
     forkPeriod = BRANCHES.getForkPeriod(branch)
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
-    if(periodLength==0 or len(description)==0 or tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > 2**61 or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or makerFees < 0 or makerFees > ONEHALF):
+    if(!periodLength or !len(description) or tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > 2**61 or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or makerFees < 0 or makerFees > ONEHALF):
         return(-1)
     if(expirationDate < block.timestamp):
         return(-2)
@@ -130,7 +130,7 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
     if((maxValue!=TWO or minValue !=ONE) and numOutcomes==2):
         # cumulativeScale is the range of a scalar
         cumulativeScale += maxValue - minValue
-    if(cumulativeScale==0):
+    if(!cumulativeScale):
         cumulativeScale = ONE
 
     # formation of market (hash)
@@ -210,7 +210,7 @@ def pushMarketForward(branch, market):
     # if market closed or already pushed forward, return 0
     if(MARKETS.getOneWinningOutcome(market, 0) or MARKETS.getPushedForward(market)):
         return(-2)
-    if(CASH.sendFrom(market, MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE), msg.sender)==0):
+    if(!CASH.sendFrom(market, MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE), msg.sender)):
         return(-3)
     event = MARKETS.getMarketEvent(market, 0)
     expiration = EVENTS.getExpiration(event)

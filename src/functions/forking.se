@@ -49,7 +49,7 @@ def move_event(event):
     # todo getoutcome may not work
     if(forkPeriod and currentPeriod == (forkPeriod+2) and !EVENTS.getOutcome(event) and !BACKSTOPS.getMoved(event)):
         winner = BACKSTOPS.getResolved(branch, forkPeriod)
-        if(winner==0):
+        if(!winner):
             winner = self.resolve_fork(branch)
         BACKSTOPS.setMoved(event)
         if(event == eventForkedOver):
@@ -150,7 +150,7 @@ def fork(event, branch, forkedOverEthicality):
         BACKSTOPS.setBondAmount(event, bond)
         # lose fork bond in branch 1
         # results same as roundtwobond, let it resolve as that on original network
-        if(SENDREP.sendReputation(branch, event, bond)==0):
+        if(!SENDREP.sendReputation(branch, event, bond)):
             return(-2)
         # on branch 2 fork bond isn't lost
         # on fork bond isn't lost, gets paid up to 2x from "liars"
