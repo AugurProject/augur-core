@@ -25,9 +25,8 @@ macro MINBOND: 200*2**64
     # -1: Pushed forward event, bonding not allowed during this
     # -2: branch is in the middle of a fork
     # throw()s if not enough msg.value to cover resolution cost or not a large enough bond
-def roundTwoPostBond(branch, event, eventIndex, votePeriod, overEthicality):
-    if(BRANCHES.getVotePeriod(branch)!=votePeriod):
-        return(0)
+def roundTwoPostBond(branch, event, eventIndex, overEthicality):
+    votePeriod = BRANCHES.getVotePeriod(branch)
     # if pushed forward don't allow until no longer pushed fwd
     if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event)):
         return(-1)
