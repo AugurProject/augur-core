@@ -96,15 +96,30 @@ def update_contracts(in_path=None, out_path=None,
                      rpc_host=RPCHOST, rpc_port=RPCPORT, network_id=None):
     gospel = generate_gospel_from_db()
     contracts = get_contracts(in_path)
-    if network_id is None: network_id = get_network_id(rpc_host, rpc_port)
-    if network_id is not None:
-        print("Network ID: " + str(network_id))
-    else:
-        print("Network ID lookup failed. Using default value: '" + DEFAULT_NETWORK_ID + "'.")
-        network_id = DEFAULT_NETWORK_ID
+    
+    id_requested = network_id 
+
+    #gospel is the contracts from the current_network_id. if a different id 
+    #is passed in, validate it and replace gospel with those from contracts[network_id]
+    current_network_id = get_network_id(rpc_host, rpc_port);
+    if network_id is None:
+        network_id = current_network_id
+    elif network_id != current_network_id:
+        if network_id in contracts:
+            gospel = contracts[network_id]
+        else:
+            print("Network ID: " + str(network_id) + " not found. Using default");
+            network_id = DEFAULT_NETWORK_ID
+
+    print("Network ID: " + str(network_id))
+
     if contracts and out_path is not None:
-        contracts[network_id] = gospel
-        write_contracts(out_path, contracts)
+        if id_requested is not None:
+            write_contracts(out_path, gospel)
+        else:
+            #if -o used w/out -n, write out addressed for all networkIDs
+            contracts[network_id] = gospel
+            write_contracts(out_path, contracts)
     else:
         print(json.dumps(gospel, indent=4, sort_keys=True))
 
