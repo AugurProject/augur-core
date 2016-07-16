@@ -150,7 +150,7 @@ def fork(event, branch, forkedOverEthicality):
         BACKSTOPS.setBondAmount(event, bond)
         # lose fork bond in branch 1
         # results same as roundtwobond, let it resolve as that on original network
-        if(!SENDREP.sendReputation(branch, event, bond)):
+        if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
             return(-2)
         # on branch 2 fork bond isn't lost
         # on fork bond isn't lost, gets paid up to 2x from "liars"

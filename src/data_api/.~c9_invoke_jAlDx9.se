@@ -10,7 +10,8 @@
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 #
-#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 #
@@ -118,6 +119,5 @@ def withdrawEther(to, value):
     else:
         return(0)
 
-def ok():
-    x = self.sendFrom(0, 500, msg.sender)
-    return(x)
+def o
+    return()

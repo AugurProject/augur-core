@@ -15,8 +15,7 @@
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 #
@@ -64,7 +63,7 @@ def sendRepFrom(branch, from, recver, value):
     senderBalance = REPORTING.getRepBalance(branch, from)
     if(senderBalance < value or value <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= value or from==msg.sender)):
         return(-2)
-    if(from!=msg.sender)
+    if(from!=msg.sender):
         self.amountCanSpend[from][msg.sender].branch[branch] -= value
     if(!REPORTING.subtractRep(branch, senderIndex, value) or !REPORTING.addRep(branch, receiverIndex, value)):
         throw()
@@ -93,7 +92,7 @@ def transferFrom(branch, from, recver, value):
     senderBalance = REPORTING.balanceOf(branch, from)
     if(senderBalance < value or value <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= value or from==msg.sender)):
         return(-2)
-    if(from!=msg.sender)
+    if(from!=msg.sender):
         self.amountCanSpend[from][msg.sender].branch[branch] -= value
     if(!REPORTING.subtractDormantRep(branch, senderIndex, value) or !REPORTING.addDormantRep(branch, receiverIndex, value)):
        throw()

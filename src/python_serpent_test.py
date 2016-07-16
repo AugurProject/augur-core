@@ -1649,7 +1649,7 @@ def gas_use(s):
 if __name__ == '__main__':
     src = os.path.join(os.getenv('AUGUR_CORE', os.path.join(
         os.getenv('HOME', '/home/ubuntu'), 'workspace')), 'src')
-    output = os.path.join(src, 'functions', 'output.se')
+    output = os.path.join(src, 'data_api', 'output.se')
     if os.path.exists(output):
         os.remove(output)
     os.system('python mk_test_file.py \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\'')

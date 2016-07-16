@@ -49,7 +49,7 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) and event!=0 and event==event and !BACKSTOPS.getRoundTwo(event) and !EVENTS.getForked(event)):
         # send the bond to the branch
         # todo fix this will fail b/c event doesn't have rep acc
-        if(!SENDREP.sendReputation(branch, event, bond)):
+        if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
             throw()
         period = BRANCHES.getVotePeriod(branch)
         # remove from events in # to report on calc for last period
@@ -84,7 +84,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     refund()
     votePeriod = BRANCHES.getVotePeriod(branch)
     market = EVENTS.getMarket(event, 0)
-    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod-1)/EX[PEVENTS.getNumberEvents(branch, votePeriod-1)
+    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod-1)/EXPEVENTS.getNumberEvents(branch, votePeriod-1)
     bond = averageAdjudicationCost + MARKETS.getSharesValue(market)*(POINTZEROONE + MARKETS.getTradingFee(market)/2) / ONE
     bond = min(bond, MINBOND)
     event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)

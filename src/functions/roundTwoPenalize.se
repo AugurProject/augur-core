@@ -50,7 +50,7 @@ def penalizeRoundTwoWrong(branch, event):
     if(scalar(event) or categorical(event)):
         outcome = uncaught
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
-    oldReport = EXPEVENTS.getReport(branch,lastPenalizationPeriod,event,msg.sender)
+    oldReport = EXPEVENTS.getReport(branch, lastPenalizationPeriod, event, msg.sender)
     ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
     oldEthics = EXPEVENTS.getEthicReport(branch, lastPenalizationPeriod, event, msg.sender)
     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, lastPeriod)/EXPIRING.getNumberEvents(branch, lastPeriod)

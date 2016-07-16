@@ -10,8 +10,7 @@
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 #
@@ -222,7 +221,7 @@ def validateReport(event, branch, votePeriod, report, forkedOverEthicality, fork
             EVENTS.setForkOutcome(event, outcome)
         else:
             EVENTS.setUncaughtOutcome(event, outcome)
-    return(report)whwe
+    return(report)
 
 ### Helper functions:
 # calculates how many reports should be on a given event

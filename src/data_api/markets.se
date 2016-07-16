@@ -10,8 +10,7 @@
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 #
@@ -293,6 +292,9 @@ def get_trade_ids(market_id):
     if trade_ids:
         return(trade_ids:arr)
     return([FAILURE]:arr)
+
+def getPrevID(market, trade):
+    return(self.Markets[markes].trade_ids[trade].prev_id)
 
 def get_total_trades(market_id):
     return(self.Markets[market_id].total_trades)

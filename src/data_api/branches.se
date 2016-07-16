@@ -10,8 +10,7 @@
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 #
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 #
@@ -128,6 +127,15 @@ def getMinTradingFee(branch):
 # @return all branches
 def getBranches():
     b = 0
+    numBranches = self.branchListCount
+    branches = array(numBranches)
+    while b < numBranches:
+        branches[b] = self.branchList[b]
+        b += 1
+    return(branches: arr)
+    
+def getBranchesStartingAt(index):
+    b = index
     numBranches = self.branchListCount
     branches = array(numBranches)
     while b < numBranches:
