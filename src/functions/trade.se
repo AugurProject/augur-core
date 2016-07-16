@@ -4,16 +4,16 @@
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
-#
+# 
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-#
+# 
 #    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-#
+# 
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
@@ -52,9 +52,9 @@ macro remove_trade($trade_id, $market):
     TRADES.remove_trade($trade_id)
     MARKETS.remove_trade_from_market($market, $trade_id)
 
-#
+# 
 # Trade [allows a user to pick up/fill orders off the book]
-#
+# 
 # Errors:
     # -1: trade doesn't exist
     # -2: bad trade hash
@@ -206,15 +206,15 @@ def trade(max_value, max_amount, trade_ids:arr):
 
 # Allows a user to "short" by buying n complete sets and selling n shares of the unwanted outcome to a bid on the book
 # Example:
-    #buyer gives up say 20
-    #complete set cost is say 100
-    #fee is say 2
-    #market should lose 20 from buyer's escrowed money
-    #market should gain 100 from complete set
-    #person short selling should give the market 80 [complete set cost less shares sold]
-    #plus fees
-        #1 should go to branch
-        #1 should go to creator
+    # buyer gives up say 20
+    # complete set cost is say 100
+    # fee is say 2
+    # market should lose 20 from buyer's escrowed money
+    # market should gain 100 from complete set
+    # person short selling should give the market 80 [complete set cost less shares sold]
+    # plus fees
+        # 1 should go to branch
+        # 1 should go to creator
 # Errors:
     # -1: trade doesn't exist
     # -2: invalid trade hash/commitment

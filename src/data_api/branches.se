@@ -4,16 +4,16 @@
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
-#
+# 
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-#
+# 
 #    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-#
+# 
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
@@ -34,11 +34,11 @@ inset('refund.se')
 # eventForkedOver is the event a branch was last forked over
 # parent is the parent branch of the given branch
 # How to set minimum reporting fee guidelines for reporters, abs. minimum should be calc. as follows:
-    #Volume per period * .5 * fee * ev/ebit * 6 >= rep market cap
-    #Say ev/ebit or valuation is 15, so:
-    #45 * fee * volume per period = rep market cap
-    #Want:
-        #Rep market cap >> outstanding shares value at all times
+    # Volume per period * .5 * fee * ev/ebit * 6 >= rep market cap
+    # Say ev/ebit or valuation is 15, so:
+    # 45 * fee * volume per period = rep market cap
+    # Want:
+        # Rep market cap >> outstanding shares value at all times
 # min can be no lower than ~0.0000001 or so otherwise can run into underflow isues
 data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent)
 
@@ -154,8 +154,8 @@ def getCreationDate(ID):
 
 # check that msg.sender is one of our function contracts
 def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleOnly, parentPeriod, parent):
-    #if(!self.whitelist.check(msg.sender)):
-    #	return(-1)
+    # if(!self.whitelist.check(msg.sender)):
+    # 	return(-1)
     if(!self.Branches[ID].periodLength):
         self.Branches[ID].currentVotePeriod = currentVotePeriod
         self.Branches[ID].periodLength = periodLength
@@ -176,15 +176,15 @@ def getParentPeriod(branch):
     return(self.Branches[branch].parentPeriod)
 
 def incrementPeriod(branch):
-    #if(!self.whitelist.check(msg.sender)):
-    #	return(-1)
+    # if(!self.whitelist.check(msg.sender)):
+    # 	return(-1)
     self.Branches[branch].currentVotePeriod += 1
     return(1)
 
 # check that msg.sender is one of our function contracts
 def addMarketToBranch(branch, market):
-    #if(!self.whitelist.check(msg.sender)):
-    #	return(-1)
+    # if(!self.whitelist.check(msg.sender)):
+    # 	return(-1)
     numMarkets = self.Branches[branch].numMarkets
     self.Branches[branch].markets[numMarkets] = market
     self.Branches[branch].numMarkets += 1

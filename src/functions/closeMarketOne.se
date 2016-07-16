@@ -4,7 +4,7 @@ inset('refund.se')
 
 # Payout a trader in a market with one winning outcome [so not scalar]
 # Error:
-    # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant #0 is really #0]
+    # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant # 0 is really # 0]
 def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes):
     cumScale = MARKETS.getCumScale(market)
     # if it's an indeterminate categorical market resolve with all outcomes having an equal value

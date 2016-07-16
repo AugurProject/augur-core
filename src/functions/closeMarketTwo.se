@@ -5,7 +5,7 @@ inset('refund.se')
 
 # Payout traders in markets with number of winningOutcomes of 2 [one scalar with any combination of binary + categorical for the other 2 dimensions, or just 1D with a scalar]
 # Error:
-    # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant #0 is really #0]
+    # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant # 0 is really # 0]
 def twoOutcomes(market, winningOutcome: arr, event, sender):
     # fetch outcome and min/max values for the scalar
     outcome = EVENTS.getOutcome(event)

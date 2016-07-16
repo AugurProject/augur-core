@@ -4,16 +4,16 @@
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
-#
+# 
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-#
+# 
 #    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-#
+# 
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
@@ -69,10 +69,10 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $fee, $send
     log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id)
     return(trade_id)
 
-#
+# 
 # Cancellation: cancels a trade, if a bid refunds money, if an ask returns shares
 # @returns 1 if success, 0 if failure
-#
+# 
 # 200k gas
 def cancel(trade_id):
     refund()
@@ -116,14 +116,14 @@ macro remove_trade($trade_id, $market):
     TRADES.remove_trade($trade_id)
     MARKETS.remove_trade_from_market($market, $trade_id)
 
-#
+# 
 # Buy / Sell actions: puts orders on the book
 # Errors:
     #  0: market doesn't exist
     # -1: amount/price bad
     # -2: oracle only branch
     # -3: not enough money or shares
-#
+# 
 # costs 532k gas
 # smallest trade value is 0.00000001
 def buy(amount, price, market, outcome):
