@@ -1318,7 +1318,7 @@ if __name__ == '__main__':
     #test_send_rep()
     #test_market_pushback()
     #test_close_market()
-    #test_consensus()
+    test_consensus()
     #test_catchup()
     #test_slashrep()
     #test_claimrep()

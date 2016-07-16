@@ -75,16 +75,16 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
         return(-1)
     reportingThreshold = 0
+
+    # check if this is a backstop event
     if(EXPEVENTS.getRequired(event) || EVENTS.getReportingThreshold(event)):
-        reportingThreshold = 2**192
+        reportingThreshold = 2**256 / ONE
     else:
         if(EXPEVENTS.getLesserReportNum(branch, votePeriod, event)==0):
             self.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
         reportingThreshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
-    x = array(1)
-    x[0] = msg.sender + event
     # do abs then mult by 2 to ensure pos. and between 0 and 1
-    shaHash = sha3(x, items=1)
+    shaHash = sha3(msg.sender + event)
     shaHashAbs = abs(shaHash)/ONE
     shaHash = 2*shaHashAbs
     periodLength = BRANCHES.getPeriodLength(branch)

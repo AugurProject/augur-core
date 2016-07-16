@@ -26,7 +26,7 @@ def calculateReportingThreshold(branch, eventID, votePeriod, sender):
                 total = minimum*ONE
                 repConstant = total / numEventsToReportOn
         EXPEVENTS.setPeriodRepConstant(branch, votePeriod, sender, repConstant)
-    # 1 is 2**192 here, lesserreportnum, repconstant, and one are all base 10**18
+    # 1 is 2**256/ONE here, lesserreportnum, repconstant, and one are all base 10**18
     reportingThreshold = EXPEVENTS.getLesserReportNum(branch, votePeriod, eventID)*repConstant*ONE
     return(reportingThreshold)
 
@@ -81,7 +81,7 @@ def setReportingThreshold(event):
     residual = block.timestamp % periodLength
     votePeriod = BRANCHES.getVotePeriod(branch)
     if(votePeriod==EVENTS.getExpiration(event)/periodLength and (((block.timestamp + TWENTYFOURHR) % periodLength) > periodLength/2) and !EVENTS.getUncaughtOutcome(event)):
-        EVENTS.setThreshold(event, 2**192)
+        EVENTS.setThreshold(event, 2**256 / ONE)
         return(1)
     else:
         return(0)
