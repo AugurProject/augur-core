@@ -34,11 +34,11 @@ inset('refund.se')
 # eventForkedOver is the event a branch was last forked over
 # parent is the parent branch of the given branch
 # How to set minimum reporting fee guidelines for reporters, abs. minimum should be calc. as follows:
-    \1 olume per period * .5 * fee * ev/ebit * 6 >= rep market cap
-    \1 ay ev/ebit or valuation is 15, so:
+    #Volume per period * .5 * fee * ev/ebit * 6 >= rep market cap
+    #Say ev/ebit or valuation is 15, so:
     #45 * fee * volume per period = rep market cap
-    \1 ant:
-        \1 ep market cap >> outstanding shares value at all times
+    #Want:
+        #Rep market cap >> outstanding shares value at all times
 # min can be no lower than ~0.0000001 or so otherwise can run into underflow isues
 data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent)
 
@@ -154,7 +154,7 @@ def getCreationDate(ID):
 
 # check that msg.sender is one of our function contracts
 def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleOnly, parentPeriod, parent):
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
     if(!self.Branches[ID].periodLength):
         self.Branches[ID].currentVotePeriod = currentVotePeriod
@@ -176,14 +176,14 @@ def getParentPeriod(branch):
     return(self.Branches[branch].parentPeriod)
 
 def incrementPeriod(branch):
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
     self.Branches[branch].currentVotePeriod += 1
     return(1)
 
 # check that msg.sender is one of our function contracts
 def addMarketToBranch(branch, market):
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
     numMarkets = self.Branches[branch].numMarkets
     self.Branches[branch].markets[numMarkets] = market

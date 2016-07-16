@@ -47,7 +47,7 @@ def getCreationFee(ID):
 
 # @return 1 if success, 0 if creator already exists
 def setInfo(ID, description: str, creator, fee):
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
     # check that msg.sender is one of our function contracts
     if(!self.Info[ID].creator):

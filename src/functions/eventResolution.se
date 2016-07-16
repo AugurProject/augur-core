@@ -20,16 +20,16 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         MARKETS.setTradingPeriod($market, MARKETS.getOriginalTradingPeriod($market))
         MARKETS.setPushedForward($market, 0, msg.sender)
         EXPEVENTS.setEventWeight($branch, $votingPeriodEvent, $event, 0)
-        \1 et outcome to 0
+        #set outcome to 0
         EVENTS.setOutcome($event, 0)
         EVENTS.setMode($event, 0)
         EVENTS.setEthics($event, 0)
-        \1 et uncaughtoutcome to 0
+        #set uncaughtoutcome to 0
         EVENTS.setUncaughtOutcome($event, 0)
         EVENTS.setEventPushedUp($event, 0)
         # need to store which period it was "rejected" in
         EVENTS.setRejected($event, EVENTS.getExpiration($event)/$periodLength)
-        \1 et $event expiration to be the old date
+        #set $event expiration to be the old date
         EVENTS.setExpiration($event, EVENTS.getOriginalExpiration($event))
         -6
     elif(($fxpOutcome==$indeterminate or $mode==ONEHALF) or !$ethical):
@@ -93,7 +93,7 @@ def determineWinningOutcomes(event):
     winningOutcomes = array(8)
     fxpOutcome = EVENTS.getOutcome(event)
     outcome = fxpOutcome/ONE
-    \1 calar or .5
+    #scalar or .5
     if(scalar(event) or fxpOutcome==3*ONEHALF):
         winningOutcomes[0] = 1
         winningOutcomes[1] = 2

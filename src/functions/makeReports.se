@@ -137,7 +137,7 @@ def submitReport(event, salt, report, ethics):
     elif(EVENTS.getOutcome(event)!=0):
         return(-6)
     # commented out for easy testing
-    \1 f(block.timestamp/periodLength!=((block.timestamp + 2*TWENTYFOURHR)/periodLength)):
+    #if(block.timestamp/periodLength!=((block.timestamp + 2*TWENTYFOURHR)/periodLength)):
     #    return(-7)
     # ensures user has collected fees for last reporting period
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod-1)):

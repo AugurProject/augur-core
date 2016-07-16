@@ -173,7 +173,7 @@ macro sharesPurchased($market):
 
 # check that msg.sender is one of our function contracts
 def initializeMarket(market, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy, creationFee, lastExpDate):
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add event list to the market
     save(self.Markets[market].events[0], events, items=len(events))
@@ -197,7 +197,7 @@ def initializeMarket(market, events: arr, tradingPeriod, tradingFee, branch, tag
     return(1)
 
 def modifyShares(market, outcome, amount):
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     sharesPurchased(market)[outcome] += amount
     return(1)
@@ -207,7 +207,7 @@ def modifySharesValue(market, amount):
     return(1)
 
 def modifyParticipantShares(market, trader, outcome, amount, actualTrade):
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Markets[market].participants[trader].shares[outcome] += amount
     if(actualTrade):
@@ -217,7 +217,7 @@ def modifyParticipantShares(market, trader, outcome, amount, actualTrade):
     return(1)
 
 def setWinningOutcomes(market, outcomes: arr):
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # largest # of winning outcomes is 8
     save(self.Markets[market].winningOutcomes[0], outcomes, items=len(outcomes))
@@ -225,7 +225,7 @@ def setWinningOutcomes(market, outcomes: arr):
 
 def getWinningOutcomes(market):
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # largest # of winning outcomes is 8
     return(load(self.Markets[market].winningOutcomes[0], items=8): arr)

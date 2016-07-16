@@ -71,7 +71,7 @@ def getEventCanReportOn(branch, period, reporter, event):
     else:
         return(0)
 
-\1 n the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold.
+#In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold.
 def setReportingThreshold(event):
     # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
     # final check is if no reports on event

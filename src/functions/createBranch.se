@@ -40,9 +40,9 @@ def createSubbranch(description:str, periodLength, parent, minTradingFee, oracle
     parentPeriod = BRANCHES.getVotePeriod(parent)
     branchInfo = string(7*32+len(description))
     branchInfo[0] = msg.sender
-    \1 reation fee
+    #creation fee
     branchInfo[1] = 47*ONE
-    \1 ength of voting cycle
+    #length of voting cycle
     branchInfo[2] = periodLength
     branchInfo[3] = block.timestamp
     branchInfo[4] = parent

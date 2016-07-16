@@ -150,7 +150,7 @@ def repIDToIndex(branch, repID):
 
 # check that msg.sender is one of our function contracts
 def setInitialReporters(parent, branch):
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add branch as a "reporter"
     self.Reporting[branch].numberReporters = 1
@@ -160,7 +160,7 @@ def setInitialReporters(parent, branch):
     return(1)
 
 def addReporter(branch, sender, amount, dormant, repToBonderOrBranch):
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     reporterIndex = self.Reporting[branch].numberReporters
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
@@ -174,7 +174,7 @@ def addReporter(branch, sender, amount, dormant, repToBonderOrBranch):
     return(1)
 
 def addRep(branch, index, value):
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     if(safeToAdd(self.Reporting[branch].reputation[index].repValue, value)):
         self.Reporting[branch].reputation[index].repValue += value
@@ -183,7 +183,7 @@ def addRep(branch, index, value):
         return(0)
 
 def subtractRep(branch, index, value):
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     if(safeToSubtract(self.Reporting[branch].reputation[index].repValue, value)):
         self.Reporting[branch].reputation[index].repValue -= value
@@ -192,7 +192,7 @@ def subtractRep(branch, index, value):
         return(0)
 
 def setRep(branch, index, newRep):
-    \1 f !self.whitelist.check(msg.sender):
+    #if !self.whitelist.check(msg.sender):
     #    return(-1)
     oldRep = self.Reporting[branch].reputation[index].repValue
     self.Reporting[branch].reputation[index].repValue = newRep
@@ -201,13 +201,13 @@ def setRep(branch, index, newRep):
     return(1)
 
 def addDormantRep(branch, index, value):
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Reporting[branch].dormantRep[index].repValue += value
     return(1)
 
 def subtractDormantRep(branch, index, value):
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Reporting[branch].dormantRep[index].repValue -= value
     return(1)
@@ -215,7 +215,7 @@ def subtractDormantRep(branch, index, value):
 # check that msg.sender is one of our function contracts
 # Sets the initial distribution of rep
 def setSaleDistribution(addresses: arr, balances: arr, branch):
-    \1 f(!self.whitelist.check(msg.sender)):
+    #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     i = 0
     while i < len(addresses):
