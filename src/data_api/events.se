@@ -162,7 +162,7 @@ def getUncaughtOutcome(event):
 
 def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes, resolution: str):
     # check that msg.sender is one of our function contracts
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #	return(-1)
     if(!self.Events[ID].expirationDate):
         self.Events[ID].branch = branch
@@ -206,7 +206,7 @@ def getNumMarkets(event):
     return(self.Events[event].numMarkets)
 
 def setOutcome(ID, outcome):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #	return(-1)
     self.Events[ID].outcome = outcome
     return(1)

@@ -206,13 +206,13 @@ def trade(max_value, max_amount, trade_ids:arr):
 
 # Allows a user to "short" by buying n complete sets and selling n shares of the unwanted outcome to a bid on the book
 # Example:
-    #buyer gives up say 20
-    #complete set cost is say 100
-    #fee is say 2
-    #market should lose 20 from buyer's escrowed money
-    #market should gain 100 from complete set
-    #person short selling should give the market 80 [complete set cost less shares sold]
-    #plus fees
+    \1 uyer gives up say 20
+    \1 omplete set cost is say 100
+    \1 ee is say 2
+    \1 arket should lose 20 from buyer's escrowed money
+    \1 arket should gain 100 from complete set
+    \1 erson short selling should give the market 80 [complete set cost less shares sold]
+    \1 lus fees
         #1 should go to branch
         #1 should go to creator
 # Errors:

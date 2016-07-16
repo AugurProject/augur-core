@@ -21,19 +21,19 @@ macro POINTTWO: 1844674407370955264
 # Penalizes a reporter for reporting wrongly on an event
     # examples from the start of a new branch:
         # ex:
-            #period 0 voteperiod -1 - last period penalized should be -1 or starting vote period
-            #add some events to period 0
-            #increment
-            #period 1 voteperiod 0 - shouldn't be penalizing anything yet b/c still reporting on period 0
-            #increment
-            #period 2 voteperiod 1 - penalize on events in voteperiod 0
+            \1 eriod 0 voteperiod -1 - last period penalized should be -1 or starting vote period
+            \1 dd some events to period 0
+            \1 ncrement
+            \1 eriod 1 voteperiod 0 - shouldn't be penalizing anything yet b/c still reporting on period 0
+            \1 ncrement
+            \1 eriod 2 voteperiod 1 - penalize on events in voteperiod 0
         # ex 2:
-            #currently in period 100, voteperiod 99 - last period penalized up to should be 99 or starting vote period
-            #add some events to period 100
-            #increment to period 101
-            #period 101, voteperiod 100 - shouldn't be penalizing anything yet
-            #increment
-            #period 102, voteperiod 101 - penalize on events in voteperiod 100
+            \1 urrently in period 100, voteperiod 99 - last period penalized up to should be 99 or starting vote period
+            \1 dd some events to period 100
+            \1 ncrement to period 101
+            \1 eriod 101, voteperiod 100 - shouldn't be penalizing anything yet
+            \1 ncrement
+            \1 eriod 102, voteperiod 101 - penalize on events in voteperiod 100
 #1. Record rep at start of report period [before rep in make reports]
 #2. Penalize for each event
 #3. Each reporter needs to do this for all events they reported on, if not get docked

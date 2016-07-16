@@ -46,7 +46,7 @@ def getCreationFee(ID):
 
 # @return 1 if success, 0 if creator already exists
 def setInfo(ID, description: str, creator, fee):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #	return(-1)
     # check that msg.sender is one of our function contracts
     if(!self.Info[ID].creator):
@@ -222,7 +222,7 @@ def repIDToIndex(branch, repID):
 
 # check that msg.sender is one of our function contracts
 def setInitialReporters(parent, branch):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add branch as a "reporter"
     self.Reporting[branch].numberReporters = 1
@@ -232,7 +232,7 @@ def setInitialReporters(parent, branch):
     return(1)
 
 def addReporter(branch, sender, amount, dormant, repToBonderOrBranch):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #    return(-1)
     reporterIndex = self.Reporting[branch].numberReporters
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
@@ -246,7 +246,7 @@ def addReporter(branch, sender, amount, dormant, repToBonderOrBranch):
     return(1)
 
 def addRep(branch, index, value):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #    return(-1)
     if(safeToAdd(self.Reporting[branch].reputation[index].repValue, value)):
         self.Reporting[branch].reputation[index].repValue += value
@@ -255,7 +255,7 @@ def addRep(branch, index, value):
         return(0)
 
 def subtractRep(branch, index, value):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #    return(-1)
     if(safeToSubtract(self.Reporting[branch].reputation[index].repValue, value)):
         self.Reporting[branch].reputation[index].repValue -= value
@@ -264,7 +264,7 @@ def subtractRep(branch, index, value):
         return(0)
 
 def setRep(branch, index, newRep):
-    #if !self.whitelist.check(msg.sender):
+    \1 f !self.whitelist.check(msg.sender):
     #    return(-1)
     oldRep = self.Reporting[branch].reputation[index].repValue
     self.Reporting[branch].reputation[index].repValue = newRep
@@ -273,13 +273,13 @@ def setRep(branch, index, newRep):
     return(1)
 
 def addDormantRep(branch, index, value):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Reporting[branch].dormantRep[index].repValue += value
     return(1)
 
 def subtractDormantRep(branch, index, value):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Reporting[branch].dormantRep[index].repValue -= value
     return(1)
@@ -287,7 +287,7 @@ def subtractDormantRep(branch, index, value):
 # check that msg.sender is one of our function contracts
 # Sets the initial distribution of rep
 def setSaleDistribution(addresses: arr, balances: arr, branch):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #    return(-1)
     i = 0
     while i < len(addresses):
@@ -621,7 +621,7 @@ def getSaltyEncryptedHash(branch, period, reporter, event):
     return(self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event])
 
 def setSaltyEncryptedHash(branch, period, reporter, saltyEncryptedHash, event):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #	return(-1)
     self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event] = saltyEncryptedHash
     return(1)
@@ -681,7 +681,7 @@ def getEthicReport(branch, period, event, sender):
     return(self.reporterPeriodInfo[branch][period].ethics[sender][event])
 
 def getReport(branch, period, event, sender):
-    #if(whitelist):
+    \1 f(whitelist):
     return(self.reporterPeriodInfo[branch][period].report[sender][event])
 
 def getBeforeRep(branch, period, sender):
@@ -769,7 +769,7 @@ def getEvent(branch, period, eventIndex):
 
 # check that msg.sender is one of our function contracts
 def addEvent(branch, futurePeriod, event, subsidy):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #	return(-1)
     self.periodEventInfo[branch][futurePeriod].events[self.periodEventInfo[branch][futurePeriod].numberEvents] = event
     self.periodEventInfo[branch][futurePeriod].eventToIndex[event] = self.periodEventInfo[branch][futurePeriod].numberEvents
@@ -795,7 +795,7 @@ def adjustPeriodShareValueOutstanding(branch, expIndex, amount):
     return(1)
 
 def setReportHash(branch, period, reporter, reportHash, event):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #	return(-1)
     self.reporterPeriodInfo[branch][period].reportHash[reporter][event] = reportHash
     return(1)
@@ -860,7 +860,7 @@ macro proportionCorrect($event, $forkEvent):
         elif(outcome == 2 * ONE):
             p = avgOutcome
         # unneeded but nice to know that in indeterminate case it'll return 0
-        #elif(outcome == 3 * ONEHALF):
+        \1 lif(outcome == 3 * ONEHALF):
         #    return(0)
     p
 
@@ -1031,11 +1031,11 @@ inset('refund.se')
 # eventForkedOver is the event a branch was last forked over
 # parent is the parent branch of the given branch
 # How to set minimum reporting fee guidelines for reporters, abs. minimum should be calc. as follows:
-    #Volume per period * .5 * fee * ev/ebit * 6 >= rep market cap
-    #Say ev/ebit or valuation is 15, so:
+    \1 olume per period * .5 * fee * ev/ebit * 6 >= rep market cap
+    \1 ay ev/ebit or valuation is 15, so:
     #45 * fee * volume per period = rep market cap
-    #Want:
-        #Rep market cap >> outstanding shares value at all times
+    \1 ant:
+        \1 ep market cap >> outstanding shares value at all times
 # min can be no lower than ~0.0000001 or so otherwise can run into underflow isues
 data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent)
 
@@ -1133,7 +1133,7 @@ def getCreationDate(ID):
 
 # check that msg.sender is one of our function contracts
 def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleOnly, parentPeriod, parent):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #	return(-1)
     if(!self.Branches[ID].periodLength):
         self.Branches[ID].currentVotePeriod = currentVotePeriod
@@ -1155,14 +1155,14 @@ def getParentPeriod(branch):
     return(self.Branches[branch].parentPeriod)
 
 def incrementPeriod(branch):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #	return(-1)
     self.Branches[branch].currentVotePeriod += 1
     return(1)
 
 # check that msg.sender is one of our function contracts
 def addMarketToBranch(branch, market):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #	return(-1)
     numMarkets = self.Branches[branch].numMarkets
     self.Branches[branch].markets[numMarkets] = market
@@ -1357,7 +1357,7 @@ macro sharesPurchased($market):
 
 # check that msg.sender is one of our function contracts
 def initializeMarket(market, events: arr, tradingPeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumScale, numOutcomes, extraInfo: str, gasSubsidy, creationFee, lastExpDate):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add event list to the market
     save(self.Markets[market].events[0], events, items=len(events))
@@ -1381,7 +1381,7 @@ def initializeMarket(market, events: arr, tradingPeriod, tradingFee, branch, tag
     return(1)
 
 def modifyShares(market, outcome, amount):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #    return(-1)
     sharesPurchased(market)[outcome] += amount
     return(1)
@@ -1391,7 +1391,7 @@ def modifySharesValue(market, amount):
     return(1)
 
 def modifyParticipantShares(market, trader, outcome, amount, actualTrade):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Markets[market].participants[trader].shares[outcome] += amount
     if(actualTrade):
@@ -1401,7 +1401,7 @@ def modifyParticipantShares(market, trader, outcome, amount, actualTrade):
     return(1)
 
 def setWinningOutcomes(market, outcomes: arr):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # largest # of winning outcomes is 8
     save(self.Markets[market].winningOutcomes[0], outcomes, items=len(outcomes))
@@ -1409,7 +1409,7 @@ def setWinningOutcomes(market, outcomes: arr):
 
 def getWinningOutcomes(market):
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # largest # of winning outcomes is 8
     return(load(self.Markets[market].winningOutcomes[0], items=8): arr)
@@ -1783,7 +1783,7 @@ def getUncaughtOutcome(event):
 
 def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes, resolution: str):
     # check that msg.sender is one of our function contracts
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #	return(-1)
     if(!self.Events[ID].expirationDate):
         self.Events[ID].branch = branch
@@ -1827,7 +1827,7 @@ def getNumMarkets(event):
     return(self.Events[event].numMarkets)
 
 def setOutcome(ID, outcome):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #	return(-1)
     self.Events[ID].outcome = outcome
     return(1)
@@ -1947,7 +1947,7 @@ def getEventCanReportOn(branch, period, reporter, event):
     else:
         return(0)
 
-#In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold.
+\1 n the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold.
 def setReportingThreshold(event):
     # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
     # final check is if no reports on event
@@ -2097,7 +2097,7 @@ def sendFrom(recver, value, from):
     # it's not owned by a regular account nor a contract owned account (i.e. a market's hash from markets.)
     if(from!=tx.origin and msg.sender!=self.owners[from] and msg.sender!=from):
         return(0)
-    #if(!self.owners[recver]):
+    \1 f(!self.owners[recver]):
     #    return(0)
     senderBalance = self.cashcoinBalances[from]
     if(senderBalance >= value and value > 0):
@@ -2109,21 +2109,21 @@ def sendFrom(recver, value, from):
 
 # make sure only coming from specific contracts
 def subtractCash(ID, amount):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    #if(msg.sender!=self.owners[ID] and tx.origin!=self.owners[ID]):
+    \1 f(msg.sender!=self.owners[ID] and tx.origin!=self.owners[ID]):
     #    return(0)
     self.cashcoinBalances[ID] -= amount
     return(1)
 
 def addCash(ID, amount):
-    #if(!self.whitelist.check(msg.sender)):
+    \1 f(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.cashcoinBalances[ID] += amount
     return(1)
 
 def setCash(address, balance):
-    #if !self.whitelist.check(msg.sender):
+    \1 f !self.whitelist.check(msg.sender):
     #    return(-1)
     self.cashcoinBalances[address] = balance
     return(1)
@@ -2629,9 +2629,9 @@ def createSubbranch(description:str, periodLength, parent, minTradingFee, oracle
     parentPeriod = self.getVotePeriod(parent)
     branchInfo = string(7*32+len(description))
     branchInfo[0] = msg.sender
-    #creation fee
+    \1 reation fee
     branchInfo[1] = 47*ONE
-    #length of voting cycle
+    \1 ength of voting cycle
     branchInfo[2] = periodLength
     branchInfo[3] = block.timestamp
     branchInfo[4] = parent
@@ -2661,7 +2661,7 @@ inset('redistributeRep.se')
 inset('proportionCorrect.se')
 inset('repChange.se')
 
-#event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
+\1 vent penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
 
 macro POINTZEROONE: 184467440737095520
 macro POINTONE: 1844674407370955264
@@ -2915,7 +2915,7 @@ def submitReport(event, salt, report, ethics):
     elif(self.getOutcome(event)!=0):
         return(-6)
     # commented out for easy testing
-    #if(block.timestamp/periodLength!=((block.timestamp + 2*TWENTYFOURHR)/periodLength)):
+    \1 f(block.timestamp/periodLength!=((block.timestamp + 2*TWENTYFOURHR)/periodLength)):
     #    return(-7)
     # ensures user has collected fees for last reporting period
     if(!self.getFeesCollected(branch, msg.sender, votePeriod-1)):
@@ -3070,13 +3070,13 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     if(forkPeriod and ((expDate / periodLength)==forkPeriod or (expDate / periodLength)==(forkPeriod+1))):
         return(-4)
     eventinfo = string(7*32 + len(description))
-    eventinfo[0] = branch                                       #branch
-    eventinfo[1] = expDate                                      #expiration date
-    eventinfo[2] = msg.sender                                   #creator address
+    eventinfo[0] = branch                                       \1 ranch
+    eventinfo[1] = expDate                                      \1 xpiration date
+    eventinfo[2] = msg.sender                                   \1 reator address
     eventinfo[3] = periodLength
-    eventinfo[4] = minValue                                     #minimum outcome value
-    eventinfo[5] = maxValue                                     #maximum outcome value
-    eventinfo[6] = numOutcomes                                  #number of outcomes
+    eventinfo[4] = minValue                                     \1 inimum outcome value
+    eventinfo[5] = maxValue                                     \1 aximum outcome value
+    eventinfo[6] = numOutcomes                                  \1 umber of outcomes
     mcopy(eventinfo + 7*32, description, len(description))
     event = sha3(eventinfo, chars=len(eventinfo))
     self.initiateOwner(event)
@@ -3125,7 +3125,7 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
         return(-2)
     if(forkPeriod and (futurePeriod == forkPeriod or futurePeriod == (forkPeriod+1))):
         return(-3)
-    #scalars
+    \1 calars
     maxValue = self.getMaxValue(event)
     minValue = self.getMinValue(event)
     # is a valid scalar
@@ -3516,16 +3516,16 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         self.setTradingPeriod($market, self.getOriginalTradingPeriod($market))
         self.setPushedForward($market, 0, msg.sender)
         self.setEventWeight($branch, $votingPeriodEvent, $event, 0)
-        #set outcome to 0
+        \1 et outcome to 0
         self.setOutcome($event, 0)
         self.setMode($event, 0)
         self.setEthics($event, 0)
-        #set uncaughtoutcome to 0
+        \1 et uncaughtoutcome to 0
         self.setUncaughtOutcome($event, 0)
         self.setEventPushedUp($event, 0)
         # need to store which period it was "rejected" in
         self.setRejected($event, self.getExpiration($event)/$periodLength)
-        #set $event expiration to be the old date
+        \1 et $event expiration to be the old date
         self.setExpiration($event, self.getOriginalExpiration($event))
         -6
     elif(($fxpOutcome==$indeterminate or $mode==ONEHALF) or !$ethical):
@@ -3589,7 +3589,7 @@ def determineWinningOutcomes(event):
     winningOutcomes = array(8)
     fxpOutcome = self.getOutcome(event)
     outcome = fxpOutcome/ONE
-    #scalar or .5
+    \1 calar or .5
     if(scalar(event) or fxpOutcome==3*ONEHALF):
         winningOutcomes[0] = 1
         winningOutcomes[1] = 2
@@ -3883,19 +3883,19 @@ macro POINTTWO: 1844674407370955264
 # Penalizes a reporter for reporting wrongly on an event
     # examples from the start of a new branch:
         # ex:
-            #period 0 voteperiod -1 - last period penalized should be -1 or starting vote period
-            #add some events to period 0
-            #increment
-            #period 1 voteperiod 0 - shouldn't be penalizing anything yet b/c still reporting on period 0
-            #increment
-            #period 2 voteperiod 1 - penalize on events in voteperiod 0
+            \1 eriod 0 voteperiod -1 - last period penalized should be -1 or starting vote period
+            \1 dd some events to period 0
+            \1 ncrement
+            \1 eriod 1 voteperiod 0 - shouldn't be penalizing anything yet b/c still reporting on period 0
+            \1 ncrement
+            \1 eriod 2 voteperiod 1 - penalize on events in voteperiod 0
         # ex 2:
-            #currently in period 100, voteperiod 99 - last period penalized up to should be 99 or starting vote period
-            #add some events to period 100
-            #increment to period 101
-            #period 101, voteperiod 100 - shouldn't be penalizing anything yet
-            #increment
-            #period 102, voteperiod 101 - penalize on events in voteperiod 100
+            \1 urrently in period 100, voteperiod 99 - last period penalized up to should be 99 or starting vote period
+            \1 dd some events to period 100
+            \1 ncrement to period 101
+            \1 eriod 101, voteperiod 100 - shouldn't be penalizing anything yet
+            \1 ncrement
+            \1 eriod 102, voteperiod 101 - penalize on events in voteperiod 100
 #1. Record rep at start of report period [before rep in make reports]
 #2. Penalize for each event
 #3. Each reporter needs to do this for all events they reported on, if not get docked
@@ -4060,10 +4060,10 @@ macro POINTZEROONE: 184467440737095520
 
 # UI has to handle function calls for these
 
-#Notes:
-    #Anyone can pay some amount significantly greater than the backstop 1 bond amount to force a branching event, splitting rep into two classes.
-    #In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep is redistributed accordingly.
-    #In the other class/branch, the event is readjudicated and remove the outcome on the pre fork branch and rep is redistributed as normal, except people who said the original outcome in the original fork lose rep.
+\1 otes:
+    \1 nyone can pay some amount significantly greater than the backstop 1 bond amount to force a branching event, splitting rep into two classes.
+    \1 n one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep is redistributed accordingly.
+    \1 n the other class/branch, the event is readjudicated and remove the outcome on the pre fork branch and rep is redistributed as normal, except people who said the original outcome in the original fork lose rep.
     # Note: Whichever outcome was truly the correct one would determine which branch had rep that actually held value.  This would be akin to a Bitcoin hard fork scenario.  The winning fork, of course, would be the one with the most voluminous markets, which would be determined by the fork that represented reality, which would have a higher market cap.  Markets go to the most popular fork by default after 2 months.
 
 # Period where we forked, at the end of it
@@ -4156,7 +4156,7 @@ def resolve_fork(branch):
 # Resolve fork method that gets exchange rate
 def exchangeRate(branch):
     # get rep exchange rate from etherex for (branch)
-    #return(exchangeRate)
+    \1 eturn(exchangeRate)
     # for testing we'll just rng the exchange rate :)
     return(sha3(branch))
 
@@ -4504,13 +4504,13 @@ def trade(max_value, max_amount, trade_ids:arr):
 
 # Allows a user to "short" by buying n complete sets and selling n shares of the unwanted outcome to a bid on the book
 # Example:
-    #buyer gives up say 20
-    #complete set cost is say 100
-    #fee is say 2
-    #market should lose 20 from buyer's escrowed money
-    #market should gain 100 from complete set
-    #person short selling should give the market 80 [complete set cost less shares sold]
-    #plus fees
+    \1 uyer gives up say 20
+    \1 omplete set cost is say 100
+    \1 ee is say 2
+    \1 arket should lose 20 from buyer's escrowed money
+    \1 arket should gain 100 from complete set
+    \1 erson short selling should give the market 80 [complete set cost less shares sold]
+    \1 lus fees
         #1 should go to branch
         #1 should go to creator
 # Errors:
