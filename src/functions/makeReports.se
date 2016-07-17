@@ -34,6 +34,8 @@ inset('refund.se')
 
 event returnValue(x)
 
+macro MAX_FIXED_POINT_VALUE: 0x12725dd1d243aba0e75fe645cc4873f9e65afe688c928e1f21
+
 macro logReturn($x):
     log(type=returnValue, $x)
     return($x)
@@ -61,9 +63,9 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     delta = lastPeriod - lastPeriodPenalized
     if(delta > 1):
         if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
-            return(0)
+            logReturn(0)
     if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
-        return(0)
+        logReturn(0)
 
     # if first report of period, num events not set
     if(EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)==0):
@@ -73,16 +75,17 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
-        return(-1)
-    reportingThreshold = 0
+        logReturn(-1)
+    reportingThreshold = 0    
 
     # check if this is a backstop event
     if(EXPEVENTS.getRequired(event) || EVENTS.getReportingThreshold(event)):
-        reportingThreshold = 2**256 / ONE
+        reportingThreshold = MAX_FIXED_POINT_VALUE
     else:
         if(EXPEVENTS.getLesserReportNum(branch, votePeriod, event)==0):
             self.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
         reportingThreshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
+
     # do abs then mult by 2 to ensure pos. and between 0 and 1
     shaHash = sha3(msg.sender + event)
     shaHashAbs = abs(shaHash)/ONE
@@ -92,8 +95,8 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     if(residual <= periodLength/2 && shaHash <= reportingThreshold):
         EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
         EXPEVENTS.setSaltyHash(branch, votePeriod, msg.sender, encryptedSaltyHash, event)
-        return(1)
-    return(-2)
+        logReturn(1)
+    logReturn(-2)
 
 # Submits / reveals a report for a period
 # @return 1 if success

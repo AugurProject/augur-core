@@ -7,6 +7,7 @@ inset('refund.se')
 
 macro ONEPOINTTWO: 1200000000000000000
 macro POINTZEROONE: 10000000000000000
+macro MAX_FIXED_POINT_VALUE: 0x12725dd1d243aba0e75fe645cc4873f9e65afe688c928e1f21
 
 # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
     # exp(1.2*ln(repbal)) / exp(1.2*ln(totalrep)) is == (reporterList[n]/totalRep)**1.2
@@ -40,13 +41,10 @@ def getEventsToReportOn(branch, expDateIndex, sender):
         # todo or just calculate report target for event here for purposes of computing this
         if(EXPEVENTS.getLesserReportNum(branch, votePeriod, event)==0):
             return([0, event]: arr)
-        # events[i] = self.EventsExpDates[branch][expDateIndex].events[i]
         events[i] = EXPEVENTS.getEvent(branch, expDateIndex, i)
         reportingThreshold = self.calculateReportingThreshold(branch, events[i], expDateIndex, sender)
-        x = array(1)
-        x[0] = sender + events[i]
         # do abs then mult by 2 to ensure pos. and between 0 and 1
-        shaHash = sha3(x, items=1)
+        shaHash = sha3(sender + events[i])
         shaHashAbs = abs(shaHash)/ONE
         shaHash = 2*shaHashAbs
         if((shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(events[i]) || EXPEVENTS.getRequired(events[i])) && !EVENTS.getOutcome(events[i])):
@@ -59,10 +57,8 @@ def getEventsToReportOn(branch, expDateIndex, sender):
 def getEventCanReportOn(branch, expDateIndex, reporter, event):
     refund()
     reportingThreshold = self.calculateReportingThreshold(branch, event, expDateIndex, reporter)
-    x = array(1)
-    x[0] = reporter + event
     # do abs then mult by 2 to ensure pos. and between 0 and 1
-    shaHash = sha3(x, items=1)
+    shaHash = sha3(reporter + event)
     shaHashAbs = abs(shaHash)/ONE
     shaHash = 2*shaHashAbs
     if(shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(event) || EXPEVENTS.getRequired(events)):
@@ -81,7 +77,7 @@ def setReportingThreshold(event):
     residual = block.timestamp % periodLength
     votePeriod = BRANCHES.getVotePeriod(branch)
     if(votePeriod==EVENTS.getExpiration(event)/periodLength and (((block.timestamp + TWENTYFOURHR) % periodLength) > periodLength/2) and !EVENTS.getUncaughtOutcome(event)):
-        EVENTS.setThreshold(event, 2**256 / ONE)
+        EVENTS.setThreshold(event, MAX_FIXED_POINT_VALUE)
         return(1)
     else:
         return(0)
