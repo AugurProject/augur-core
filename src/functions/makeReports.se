@@ -34,7 +34,7 @@ inset('refund.se')
 
 event returnValue(x)
 
-macro MAX_FIXED_POINT_VALUE: 0x12725dd1d243aba0e75fe645cc4873f9e65afe688c928e1f21
+macro MAX_THRESHOLD: 10^54
 
 macro logReturn($x):
     log(type=returnValue, $x)
@@ -63,9 +63,9 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     delta = lastPeriod - lastPeriodPenalized
     if(delta > 1):
         if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
-            logReturn(0)
+            return(0)
     if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
-        logReturn(0)
+        return(0)
 
     # if first report of period, num events not set
     if(EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)==0):
@@ -75,12 +75,12 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
-        logReturn(-1)
-    reportingThreshold = 0    
+        return(-1)
+    reportingThreshold = 0
 
     # check if this is a backstop event
     if(EXPEVENTS.getRequired(event) || EVENTS.getReportingThreshold(event)):
-        reportingThreshold = MAX_FIXED_POINT_VALUE
+        reportingThreshold = MAX_THRESHOLD
     else:
         if(EXPEVENTS.getLesserReportNum(branch, votePeriod, event)==0):
             self.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
@@ -88,15 +88,15 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
 
     # do abs then mult by 2 to ensure pos. and between 0 and 1
     shaHash = sha3(msg.sender + event)
-    shaHashAbs = abs(shaHash)/ONE
-    shaHash = 2*shaHashAbs
+    # max value 10^54: 2^256 / 10^54 = 115792089237316195423570.985...
+    shaHash = abs(shaHash) / 115792089237316195423571
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     if(residual <= periodLength/2 && shaHash <= reportingThreshold):
         EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
         EXPEVENTS.setSaltyHash(branch, votePeriod, msg.sender, encryptedSaltyHash, event)
-        logReturn(1)
-    logReturn(-2)
+        return(1)
+    return(-2)
 
 # Submits / reveals a report for a period
 # @return 1 if success
