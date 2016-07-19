@@ -13323,7 +13323,7 @@
         "sig": "extern slashRep: [slashRep:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "trade": {
-        "address": "0xcd66ba2200b5290207107c2f2e57664b929b8bc2", 
+        "address": "0x6dd4e090d133706c2bcc147a61bd80cc69275128", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -13393,7 +13393,7 @@
             "    return($x)", 
             "", 
             "macro logArrayReturn($a):", 
-            "    log(type=tradeReturnValue, $a)", 
+            "    log(type=tradeArrayReturnValue, $a)", 
             "    return($a: arr)", 
             "", 
             "#", 

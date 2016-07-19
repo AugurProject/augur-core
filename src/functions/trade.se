@@ -60,7 +60,7 @@ macro logReturn($x):
     return($x)
 
 macro logArrayReturn($a):
-    log(type=tradeReturnValue, $a)
+    log(type=tradeArrayReturnValue, $a)
     return($a: arr)
 
 #
