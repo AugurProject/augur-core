@@ -116,36 +116,6 @@ def getMarketInfo(marketID):
         c += 1
     return(marketInfo: arr)
 
-def getMarketInfoCache(marketID):
-    refund()
-    index = BASE_CACHE_FIELDS
-    descriptionLength = INFO.getDescriptionLength(marketID)
-    marketInfo = array(BASE_CACHE_FIELDS + descriptionLength + 1)
-    marketInfo[0] = marketID
-    marketInfo[1] = MARKETS.getMakerFees(marketID)
-    marketInfo[2] = MARKETS.getTradingPeriod(marketID)
-    marketInfo[3] = MARKETS.getTradingFee(marketID)
-    marketInfo[4] = MARKETS.getCreationTime(marketID)
-    marketInfo[5] = MARKETS.getVolume(marketID)
-    tags = slice(MARKETS.returnTags(marketID, outitems=3), items=0, items=3)
-    marketInfo[6] = tags[0]
-    marketInfo[7] = tags[1]
-    marketInfo[8] = tags[2]
-    # Only expirationDate is cached by an augur_node, so ignoring all other event data:
-    events = slice(MARKETS.getMarketEvents(marketID, outitems=1), items=0, items=1)
-    marketInfo[9] = EVENTS.getExpiration(events[0])
-
-    # append description character codes
-    marketInfo[index] = descriptionLength
-    index += 1
-    description = INFO.getDescription(marketID, outchars=descriptionLength)
-    c = 0
-    while c < descriptionLength:
-        marketInfo[index + c] = getch(description, c)
-        c += 1
-
-    return(marketInfo: arr)
-
 def batchGetMarketInfo(marketIDs: arr):
     refund()
     numMarkets = len(marketIDs)
