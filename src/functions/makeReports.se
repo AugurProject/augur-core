@@ -83,7 +83,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
         reportingThreshold = MAX_THRESHOLD
     else:
         if(EXPEVENTS.getLesserReportNum(branch, votePeriod, event)==0):
-            self.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
+            THRESHOLD.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
         reportingThreshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
 
     # do abs then mult by 2 to ensure pos. and between 0 and 1
@@ -183,8 +183,8 @@ def submitReport(event, salt, report, ethics):
         # used to pay reporters after reporting for their gas costs
         if(diff >= 1):
             EXPEVENTS.addReportersPaidSoFar(branch, event)
-            CASH.subtractCash(branch, 3500000*tx.gasprice*ONE / WEITOETH)
-            CASH.addCash(msg.sender, 3500000*tx.gasprice*ONE / WEITOETH)
+            CASH.subtractCash(branch, 3500000*tx.gasprice)
+            CASH.addCash(msg.sender, 3500000*tx.gasprice)
         logReturn(1)
     logReturn(-2)
 
@@ -247,33 +247,6 @@ def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, fo
                 outcome = EXPEVENTS.getCurrentMode(votePeriod, eventID)
             EVENTS.setUncaughtOutcome(eventID, outcome)
     return(report)
-
-### Helper functions:
-# calculates how many reports should be on a given event
-# todo make sure max cost is actually 500k gas here
-def calculateReportTargetForEvent(branch, eventID, votePeriod, sender):
-    numMarkets = EVENTS.getNumMarkets(eventID)
-    if(numMarkets>25):
-        numMarkets = 25
-    markets = array(numMarkets)
-    markets = EVENTS.getMarkets(eventID, outitems=numMarkets)
-    totalFees = 0
-    shareValue = 0
-    i = 0
-    while i < numMarkets:
-        shareValue += MARKETS.getSharesValue(markets[i])
-        totalFees += MARKETS.getFees(markets[i])
-        i += 1
-    totalVal = EXPEVENTS.getShareValue(branch, votePeriod)
-    shareFraction = shareValue*ONE/totalVal
-    numReportersOnMarket = BRANCHES.getBaseReporters(branch)*((-(267*shareFraction**2)/(2*ONE) + (533*shareFraction)/2 + 1*ONE))
-    totalFeesInWei = totalFees * WEITOETH / ONE
-    canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
-    lesser = min(canPayForThisManyReporters*ONE, numReportersOnMarket)
-    if(EXPEVENTS.getLesserReportNum(branch, period, event)==0):
-        EXPEVENTS.refundCost(sender, EXPEVENTS.getSubsidy(branch, votePeriod, eventID))
-        EXPEVENTS.setLesserReportNum(branch, votePeriod, eventID, lesser)
-    return(lesser)
 
 macro YES: TWO
 macro NO: ONE

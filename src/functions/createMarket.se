@@ -107,7 +107,7 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
     periodLength = BRANCHES.getPeriodLength(branch)
     creationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / (2*tradingFee)
     # gives ether/cash amount in fixed point
-    minFee = COSTPERREPORTER*BRANCHES.getBaseReporters(branch)*tx.gasprice*ONE/WEITOETH
+    minFee = COSTPERREPORTER*BRANCHES.getBaseReporters(branch)*tx.gasprice
     if(creationFee < minFee):
         creationFee = minFee
     validity_bond = (creationFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch))))/2

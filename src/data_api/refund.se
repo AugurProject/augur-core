@@ -12,8 +12,6 @@ def test_callstack(): return(1)
 
 macro ONE: 10^18
 
-macro WEITOETH: 10^18
-
 macro THREEFOURTHS: 750000000000000000
 
 macro ONEFOURTH: 250000000000000000
