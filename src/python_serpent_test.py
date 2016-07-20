@@ -431,38 +431,6 @@ def test_trading():
     print "BUY AND SELL OK"
     return(1)
 
-def test_getMarketInfoCache():
-    global initial_gas
-    initial_gas = 0
-    t.gas_limit = 100000000
-    s = t.state()
-    c = s.abi_contract('functions/output.se')
-    c.initiateOwner(1010101)
-    blocktime = s.block.timestamp
-    event = c.createEvent(1010101, "new event", blocktime+1, ONE, TWO, 2, "ok")
-    description = "new market"
-    tradingFee = 184467440737095516
-    tags = [1,2,3]
-    makerFee = 0
-    market = c.createMarket(1010101, description, tradingFee, event, tags[0], tags[1], tags[2], makerFee, "yayaya", value=10**19)
-    info = c.getMarketInfoCache(market)
-    #BASE_CACHE_FIELS + description length
-    expected_size = 10 + len(description) + 1
-    assert(len(info)==expected_size)
-    assert(info[0]==market)
-    assert(info[1]==makerFee)
-    assert(info[2]==c.getTradingPeriod(market))
-    assert(info[3]==tradingFee)
-    #no volume yet
-    assert(info[5]==0)
-    assert(info[6]==tags[0])
-    assert(info[7]==tags[1])
-    assert(info[8]==tags[2])
-    #description starts at index 12, length stored at 11
-    desc_result = ''.join(map(chr,info[11:11+info[10]]))
-    assert(description==desc_result)
-    gas_use(s)
-
 def test_close_market():
     global initial_gas
     initial_gas = 0
@@ -1322,7 +1290,6 @@ if __name__ == '__main__':
     #test_catchup()
     #test_slashrep()
     #test_claimrep()
-    #test_getMarketInfoCache()
     #test_consensus_multiple_reporters()
     #test_pen_not_enough_reports()
     print "DONE TESTING"
