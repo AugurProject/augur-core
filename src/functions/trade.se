@@ -246,7 +246,7 @@ def short_sell(buyer_trade_id, max_amount):
     tradeInfo[1] = max_amount
     tradeInfo[2] = 0
     tradeHash = sha3(tradeInfo, items=3)
-    if(TRADES.checkHash(tradeHash, msg.sender)==-1):
+    if(TRADES.checkHash(tradeHash, msg.sender, buyer_trade_id)==-1):
         logReturn(-2)
     # Get trade
     trade = array(TRADE_FIELDS)
