@@ -13280,7 +13280,7 @@
         "sig": "extern slashRep: [slashRep:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "trade": {
-        "address": "0x8d84fdc055486a5c4f0b4207c94cfe7a018b22e0", 
+        "address": "0x1ff370645d7965cf52ca344964cab8bc91be7adf", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -13536,7 +13536,7 @@
             "    tradeInfo[1] = max_amount", 
             "    tradeInfo[2] = 0", 
             "    tradeHash = sha3(tradeInfo, items=3)", 
-            "    if(TRADES.checkHash(tradeHash, msg.sender)==-1):", 
+            "    if(TRADES.checkHash(tradeHash, msg.sender, buyer_trade_id)==-1):", 
             "        logReturn(-2)", 
             "    # Get trade", 
             "    trade = array(TRADE_FIELDS)", 
