@@ -186,7 +186,9 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes,
         self.Events[ID].minValue = minValue
         self.Events[ID].maxValue = maxValue
         self.Events[ID].numOutcomes = numOutcomes
-        save(self.Events[ID].resolutionSource[0], resolution, chars=len(resolution))
+        resolutionSourceLength = len(resolution)
+        self.Events[ID].resolutionSourceLength = resolutionSourceLength
+        save(self.Events[ID].resolutionSource[0], resolution, chars=resolutionSourceLength)
         return(1)
     else:
         return(0)
