@@ -11,6 +11,29 @@ def ok():
         return(0)
 
 def heh():
-    x
-    x += 2
-    return(5)
+    n = self.balance
+    b = send(MARKETS, (msg.value-500000*tx.gasprice))
+    return([b, self.balance]: arr)
+    
+def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, makerFees, extraInfo:str):
+    # formation of market (hash)
+    marketinfo = string(8*32 + len(description))
+    marketinfo[0] = futurePeriod
+    marketinfo[1] = tradingFee
+    marketinfo[2] = block.timestamp
+    marketinfo[3] = tag1
+    marketinfo[4] = tag2
+    marketinfo[5] = tag3
+    marketinfo[6] = expirationDate
+    marketinfo[7] = len(description)
+    mcopy(marketinfo + 8*32, description, chars=len(description))
+    market = sha3(marketinfo, chars=len(marketinfo))
+    events = array(1)
+    events[0] = event
+    # initialize market and send money to pay for resolution
+    o = self.balance
+    n = msg.value
+    blub = msg.value-500000*tx.gasprice
+    b = send(MARKETS, (msg.value-500000*tx.gasprice))
+    return([b, o, n, blub, msg.value, tx.gasprice]: arr)
+    return(market)

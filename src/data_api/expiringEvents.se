@@ -187,7 +187,7 @@ def getEventsRange(branch, period, start, end):
 def getEventIndex(branch, period, event):
     return(self.periodEventInfo[branch][period].eventToIndex[event])
 
-# gets number of available events to report on, not counting required events
+# gets number of available events to report on multiplied by base reporters per event as a minimum, not counting required or removed events
 # -1: voting not started
 def setNumEventsToReportOn(branch):
     # whitelist to only makeReports

@@ -98,7 +98,7 @@ def approved(owner, spender):
 def balanceOf(address):
     return(self.reporting[address])
 
-def getTotalRep(branch):
+def getTotalRep():
     return(self.totalSupply)
 
 macro throw():

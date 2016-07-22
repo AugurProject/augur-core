@@ -34,14 +34,14 @@ data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoInd
 data whitelists[](addresses[], taken)
 
 def init():
-    self.Reporting[1010101].repIDtoIndex[msg.sender] = 0
+    self.Reporting[1010101].repIDtoIndex[1010101] = 0
     self.Reporting[1010101].reputation[0].repValue = 0
-    self.Reporting[1010101].reputation[0].reporterID = msg.sender
+    self.Reporting[1010101].reputation[0].reporterID = 1010101
     self.Reporting[1010101].numberReporters = 2
-    self.Reporting[1010101].repIDtoIndex[1010101] = 1
+    self.Reporting[1010101].repIDtoIndex[msg.sender] = 1
     self.Reporting[1010101].reputation[1].repValue = 0
-    self.Reporting[1010101].reputation[1].reporterID = 1010101
-
+    self.Reporting[1010101].reputation[1].reporterID = msg.sender
+    
 def checkWhitelist(address):
     return(self.whitelists[msg.sender].addresses[address])
 

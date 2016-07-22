@@ -54,6 +54,7 @@ event tradingFeeUpdated(market, tradingFee)
     # -3: invalid number of outcomes
     # -4: would expire during non-reporting fork period
 # .025 eth to create
+# descriptionWithoutOutcomeLabels + "~|>" + outcome1label + "|"  + outcome2label + "|" + outcome3label is format for a description
 def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution: str):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -158,10 +159,10 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
         throw()
     # add events to the appropriate reporting period
     if(EXPEVENTS.getEvent(branch, futurePeriod, EXPEVENTS.getEventIndex(branch, futurePeriod, event))!=event):
-        EXPEVENTS.addEvent(branch, futurePeriod, event, 500000*tx.gasprice)
         # cost for calculating num. of reports for an event
         if(!send(EXPEVENTS, 500000*tx.gasprice)):
             throw()
+        EXPEVENTS.addEvent(branch, futurePeriod, event, 500000*tx.gasprice)
         if(!EVENTS.getBond(event)):
             # pay validity / indeterminate protection bond
             period = block.timestamp / TWENTYFOURHR

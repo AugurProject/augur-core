@@ -23,7 +23,7 @@ macro proportionCorrect($event, $forkEvent):
             # p is .8 or 80%
         elif(outcome == 2 * ONE):
             p = avgOutcome
-        # unneeded but nice to know that in indeterminate case it'll return 0
-        # elif(outcome == 3 * ONEHALF):
-        #    return(0)
+        # in indeterminate case it'll return 0
+        else:
+            return(0)
     p

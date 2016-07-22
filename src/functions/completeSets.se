@@ -40,7 +40,8 @@ def buyCompleteSets(market, amount):
         return(0)
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
-    if(CASH.balance(msg.sender) < cost):
+    # send money from user acc. to market address/account
+    if(CASH.sendFrom(market, cost, msg.sender)):
         return(-2)
     n = 1
     # send shares of the event to user address and increment the number issued in the market for each outcome
@@ -52,8 +53,6 @@ def buyCompleteSets(market, amount):
     if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
         MARKETS.modifySharesValue(market, amount*cumScale/ONE)
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount*cumScale/ONE)
-    # send money from user acc. to market address/account
-    CASH.sendFrom(market, cost, msg.sender)
     return(1)
 
 # Sells amount of every outcome [if user owns it]

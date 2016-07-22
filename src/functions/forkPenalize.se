@@ -51,7 +51,7 @@ def penalizeOnForkedEvent(branch, event):
         return(-2)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-3)
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod)):
+    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
         return(-4)
     numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
     # penalization on a forked event

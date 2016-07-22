@@ -39,8 +39,8 @@ data amountCanSpend[][](branch[])
 event Transfer(_from:indexed, _to:indexed, _value)
 event Approval(_owner:indexed, _spender:indexed, value)
 
-def any():
-    refund()
+#def any():
+#    refund()
 
 # send active reputation
 # @return value of reputation sent, 0 if not enough reputation

@@ -194,3 +194,4 @@ def resolve(branch, event):
     # (should never be reached)
     else:
         return(0)
+ 

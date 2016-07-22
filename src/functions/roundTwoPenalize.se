@@ -69,7 +69,7 @@ def penalizeRoundTwoWrong(branch, event):
         return(-3)
     elif(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
         return(-4)
-    elif(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod)):
+    elif(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
         return(-5)
     # if overruled / different outcome after reporting on again
     overruled = 0

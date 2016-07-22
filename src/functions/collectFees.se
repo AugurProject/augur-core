@@ -36,12 +36,12 @@ def collectFees(branch, sender):
         # if a user lost rep their newRep should be == EXPEVENTS.getAfterRep(branch, period, sender) + gainedRep
         # if gained rep overall their newRep should be == EXPEVENTS.getBeforeRep(branch, period, sender) + gainedRep
         # give a reporter their portion of redistributed rep
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, sender), gainedRep)
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), gainedRep)
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, sender), gainedRep)
         cash = BRANCHES.getInitialBalance(branch, lastPeriod) * newRep / denominator
         # give a reporter their portion of the trading fees
-        CASH.addCash(sender, cash)
         CASH.subtractCash(branch, cash)
+        CASH.addCash(sender, cash)
         prepareInfoForConsensus()
         return(1)
     elif(!feesCollected):

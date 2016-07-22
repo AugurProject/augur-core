@@ -746,7 +746,7 @@ def getEventsRange(branch, period, start, end):
 def getEventIndex(branch, period, event):
     return(self.periodEventInfo[branch][period].eventToIndex[event])
 
-# gets number of available events to report on, not counting required events
+# gets number of available events to report on multiplied by base reporters per event as a minimum, not counting required or removed events
 # -1: voting not started
 def setNumEventsToReportOn(branch):
     # whitelist to only makeReports
@@ -1121,6 +1121,15 @@ def getBranches():
         branches[b] = self.branchList[b]
         b += 1
     return(branches: arr)
+    
+def getBranchesStartingAt(index):
+    b = index
+    numBranches = self.branchListCount
+    branches = array(numBranches)
+    while b < numBranches:
+        branches[b] = self.branchList[b]
+        b += 1
+    return(branches: arr)
 
 def getNumBranches():
     return(self.branchListCount)
@@ -1476,6 +1485,9 @@ def get_trade_ids(market_id):
     if trade_ids:
         return(trade_ids:arr)
     return([FAILURE]:arr)
+
+def getPrevID(market, trade):
+    return(self.Markets[markes].trade_ids[trade].prev_id)
 
 def get_total_trades(market_id):
     return(self.Markets[market_id].total_trades)
@@ -2080,7 +2092,6 @@ def balance(address):
 # A random market could have a balance, and when that account was created/first used in the subcurrency, it'd have whatever contract that created it be the owner, so for example...
 # needs to be called when making a market, branch, etc. or a new cash user acc.
 def initiateOwner(account):
-    refund()
     if(!self.owners[account] and !self.cashcoinBalances[account]):
         self.owners[account] = msg.sender
         return(1)
@@ -2090,7 +2101,7 @@ def initiateOwner(account):
 # Sends cash from a user to a receiver
 # @return value of cash sent; fail is 0
 def sendFrom(recver, value, from):
-    refund()
+    self.cashcoinBalances[msg.sender] += msg.value * ONE / WEITOETH
     if(!self.owners[msg.sender] and from==msg.sender):
         self.owners[msg.sender] = msg.sender
     # sendFrom would check if the sender had an owner, if it did, then it'd check and see if the msg.sender was the owner.
@@ -2155,6 +2166,10 @@ def withdrawEther(to, value):
         return(1)
     else:
         return(0)
+
+def ok():
+    x = self.sendFrom(0, 500, msg.sender)
+    return(x)
 
 inset('refund.se')
 inset('eventHelpers.se')
@@ -2398,7 +2413,7 @@ def sell(amount, price, market, outcome):
         return(-3)
     save_trade(ASK, amount, price, market, outcome, branch, fee, msg.sender)
     return(FAILURE)
-    
+
 inset('refund.se')
 
 macro ONEPOINTTWO: 22136092888451461120
@@ -3153,23 +3168,23 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
     events = array(1)
     events[0] = event
     # initialize market and send money to pay for resolution
-    x = self.sendFrom(branch, creationFee, msg.sender)
-    y = self.setInfo(market, description, msg.sender, creationFee) 
-    z = self.addMarketToBranch(branch, market)
-    a = self.initializeMarket(market, events, futurePeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, expirationDate)
-    b = send(MARKETS, (msg.value-500000*tx.gasprice))
-    return([x, y, z, a, b, MARKETS, msg.value, tx.gasprice, branch, creationFee, msg.sender]: arr)
+    if(self.sendFrom(branch, creationFee, msg.sender) and send(MARKETS, (msg.value-500000*tx.gasprice)) and self.setInfo(market, description, msg.sender, creationFee) and self.addMarketToBranch(branch, market) and self.initializeMarket(market, events, futurePeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, expirationDate)):
+        self.addToMarketsHash(branch, market)
+        self.initiateOwner(market)
+        self.addMarket(event, market)
+    else:
+        throw()
     # add events to the appropriate reporting period
     if(self.getEvent(branch, futurePeriod, self.getEventIndex(branch, futurePeriod, event))!=event):
         self.addEvent(branch, futurePeriod, event, 500000*tx.gasprice)
         # cost for calculating num. of reports for an event
         if(!send(EXPEVENTS, 500000*tx.gasprice)):
-            return(-222)
+            throw()
         if(!self.getBond(event)):
             # pay validity / indeterminate protection bond
             period = block.timestamp / TWENTYFOURHR
             if(!self.sendFrom(event, validity_bond, msg.sender)):
-                return(-22)
+                throw()
             self.setBond(event, validity_bond)
             self.addPast24(period)
     log(type=marketCreated, market)
@@ -3239,7 +3254,7 @@ inset('refund.se')
     # -2: not enough money
 def buyCompleteSets(market, amount):
     refund()
-    branch =self.getbranch(market)
+    branch = self.getbranch(market)
     numOutcomes = self.getMarketNumOutcomes(market)
     cumScale = self.getCumScale(market)
     cost = amount*cumScale/ONE
@@ -3302,8 +3317,8 @@ data amountCanSpend[][](branch[])
 event Transfer(_from:indexed, _to:indexed, _value)
 event Approval(_owner:indexed, _spender:indexed, value)
 
-def any():
-    refund()
+#def any():
+#    refund()
 
 # send active reputation
 # @return value of reputation sent, 0 if not enough reputation
@@ -3926,7 +3941,7 @@ def penalizeWrong(branch, event):
     uncaught = self.getUncaughtOutcome(event)
     outcome = catch(uncaught)
     if(repBalance < ONE):
-        return(0)
+        return([repBalance, ONE, branch, msg.sender]: arr)
     if(scalar(event) or categorical(event)):
         outcome = uncaught
     p = proportionCorrect(event, 0)

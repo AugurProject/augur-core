@@ -42,7 +42,6 @@ def balance(address):
 # A random market could have a balance, and when that account was created/first used in the subcurrency, it'd have whatever contract that created it be the owner, so for example...
 # needs to be called when making a market, branch, etc. or a new cash user acc.
 def initiateOwner(account):
-    refund()
     if(!self.owners[account] and !self.cashcoinBalances[account]):
         self.owners[account] = msg.sender
         return(1)
@@ -52,7 +51,7 @@ def initiateOwner(account):
 # Sends cash from a user to a receiver
 # @return value of cash sent; fail is 0
 def sendFrom(recver, value, from):
-    refund()
+    self.cashcoinBalances[msg.sender] += msg.value * ONE / WEITOETH
     if(!self.owners[msg.sender] and from==msg.sender):
         self.owners[msg.sender] = msg.sender
     # sendFrom would check if the sender had an owner, if it did, then it'd check and see if the msg.sender was the owner.
@@ -117,7 +116,3 @@ def withdrawEther(to, value):
         return(1)
     else:
         return(0)
-
-def ok():
-    x = self.sendFrom(0, 500, msg.sender)
-    return(x)

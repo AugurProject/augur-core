@@ -84,7 +84,7 @@ def penalizeWrong(branch, event):
     elif(!EVENTS.getOutcome(event) and !(rejected and EVENTS.getRejectedPeriod(event)==lastPeriod)):
         if(CLOSEMARKET.closeMarket(branch, EVENTS.getMarket(event, 0), msg.sender)!=1):
             return(-6)
-    elif(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod)):
+    elif(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
         return(-7)
 
     repChange = 0

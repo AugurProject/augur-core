@@ -164,4 +164,3 @@ def sell(amount, price, market, outcome):
         return(-3)
     save_trade(ASK, amount, price, market, outcome, branch, fee, msg.sender)
     return(FAILURE)
-    
