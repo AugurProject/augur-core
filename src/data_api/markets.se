@@ -129,6 +129,9 @@ def getSharesPurchased(market, outcome):
     refund()
     return(self.Markets[market].sharesPurchased[outcome])
 
+def getExtraInfoLength(market):
+    return(self.Markets[market].extraInfoLen)
+
 def getExtraInfo(market):
     refund()
     length=self.Markets[market].extraInfoLen
