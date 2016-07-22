@@ -45,7 +45,7 @@ def getOrderBook(marketID):
         if tradeInfo[0] != 0:
             j = 0
             while j < 8:
-                orderBook[8*i + j] = tradeInfo[j]
+                orderBook[8*numAvailableTrades + j] = tradeInfo[j]
                 j += 1
             numAvailableTrades += 1
         i += 1
