@@ -141,9 +141,11 @@ def batchGetMarketInfo(marketIDs: arr):
     while i < numMarkets:
         marketID = marketIDs[i]
         descriptionLength = INFO.getDescriptionLength(marketID)
-        numEvents = MARKETS.getNumEvents(marketID)
+        eventID = MARKETS.getMarketEvent(marketID, 0)
+        resolutionLength = EVENTS.getResolutionLength(eventID)
+        extraInfoLength = MARKETS.getExtraInfoLength(marketID)
         numOutcomes = MARKETS.getMarketNumOutcomes(marketID)
-        marketInfoLength[i] = BASE_FIELDS + numEvents*EVENTS_FIELDS + numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + 2
+        marketInfoLength[i] = BASE_FIELDS + EVENTS_FIELDS + numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + resolutionLength + extraInfoLength + 4
         totalLength += marketInfoLength[i]
         i += 1
     marketsInfo = array(totalLength)
