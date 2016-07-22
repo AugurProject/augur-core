@@ -178,16 +178,16 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
 # Errors
     # -1: not the market creator
     # -2: invalid new trading fee
-def updateTradingFee(branch, market, tradingFee):
+def updateTradingFee(branch, market, tradingFee, makerFees):
     refund()
     if(msg.sender != INFO.getCreator(market) || tx.origin != INFO.getCreator(market)):
         return(-1)
     oldFee = MARKETS.getTradingFee(market)
     oldCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / oldFee
     newCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / tradingFee
-    if(tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > oldFee):
+    if(tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > oldFee or makerFees < 0 or makerFees > ONEHALF):
         return(-2)
-    if(!CASH.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender) && MARKETS.setTradingFee(market, tradingFee)):
+    if(!CASH.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender) && MARKETS.setTradingFee(market, tradingFee) && MARKETS.setTradingFee(market, makerFees)):
         throw()
     log(type=tradingFeeUpdated, market, tradingFee)
     return(1)

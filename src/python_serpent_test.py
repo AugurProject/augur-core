@@ -1260,6 +1260,34 @@ def test_pen_not_enough_reports():
     c.proveReporterDidntReportEnough(1010101, s.block.coinbase, event1, sender=t.k2)
     print "Test penalize not enough OK"
 
+def test_update_trading_fee():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    c.initiateOwner(1010101)
+    blocktime = s.block.timestamp
+    event = c.createEvent(1010101, "new event", blocktime+1, ONE, TWO, 2, "ok")
+    description = "new market"
+    tradingFee = 184467440737095516
+    tradingFee = 46666666666666667
+    tags = [1,2,3]
+    feeSplit = int(random.random()*HALF)
+    market = c.createMarket(1010101, description, tradingFee, event, tags[0], tags[1], tags[2], feeSplit, "yayaya", value=10**19)
+    tradingFee = tradingFee*HALF
+    #feeSplit = feeSplit*HALF
+    print market
+    print tradingFee
+    print feeSplit
+    print c.getTradingFee(market)
+    print c.getMakerFees(market)
+    c.updateTradingFee(1010101, market, tradingFee, feeSplit);
+    print c.getTradingFee(market)
+    print c.getMakerFees(market)
+    assert(c.getTradingFee(market) == tradingFee);
+    assert(c.getMakerFees(market) == makerFee);
+
 def gas_use(s):
     global initial_gas
     print "Gas Used:"
@@ -1286,10 +1314,11 @@ if __name__ == '__main__':
     #test_send_rep()
     #test_market_pushback()
     #test_close_market()
-    test_consensus()
+    #test_consensus()
     #test_catchup()
     #test_slashrep()
     #test_claimrep()
     #test_consensus_multiple_reporters()
     #test_pen_not_enough_reports()
+    test_update_trading_fee()
     print "DONE TESTING"
