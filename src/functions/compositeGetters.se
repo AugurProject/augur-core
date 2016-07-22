@@ -76,24 +76,6 @@ def getMarketInfo(marketID):
     marketInfo[12] = tags[1]
     marketInfo[13] = tags[2]
 
-    # # marketInfo[1] = MARKETS.getCurrentParticipantNumber(marketID)
-    # marketInfo[2] = MARKETS.getMakerFees(marketID)
-    # # marketInfo[3] = MARKETS.getParticipantNumber(marketID, msg.sender)
-    # marketInfo[4] = numOutcomes
-    # marketInfo[5] = MARKETS.getTradingPeriod(marketID)
-    # marketInfo[6] = MARKETS.getTradingFee(marketID)
-    # marketInfo[7] = MARKETS.getBranchID(marketID)
-    # # marketInfo[8] = 1 # numEvents
-    # marketInfo[9] = MARKETS.getCumScale(marketID)
-    # marketInfo[10] = MARKETS.getCreationTime(marketID)
-    # marketInfo[11] = MARKETS.getVolume(marketID)
-    # marketInfo[12] = INFO.getCreationFee(marketID)
-    # marketInfo[13] = INFO.getCreator(marketID)
-    # tags = MARKETS.returnTags(marketID, outitems=3)
-    # marketInfo[14] = tags[0]
-    # marketInfo[15] = tags[1]
-    # marketInfo[16] = tags[2]
-
     # gather event(s) info:
     # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
     eventInfo = EVENTS.getEventInfo(eventID, outitems=EVENTS_FIELDS)
