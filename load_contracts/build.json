@@ -2137,7 +2137,7 @@
         "sig": "extern refund.se: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, test_callstack:[]:int256, withdrawEther:[int256,int256]:int256]"
     }, 
     "closeMarket": {
-        "address": "0xd68c8eca9d58bdf56ec30c2d47837da12f9bc0e8", 
+        "address": "0x2baa265c61f077484669350f3c50f59a3746b727", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -2177,6 +2177,12 @@
             "extern eventResolution: [determineWinningOutcomes:[int256]:int256[], resolveBinary:[int256,int256,int256,int256]:int256, resolveCategoricalOrScalar:[int256,int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]", 
             "RESOLVE = 0x5a5eb923bc11d6a0add6c25e42a4538a9abece03", 
             "inset('refund.se')", 
+            "", 
+            "event closeMarketReturnValue(returnValue)", 
+            "", 
+            "macro logReturn($returnValue):", 
+            "    log(type=closeMarketReturnValue, $returnValue)", 
+            "    return($returnValue)", 
             "", 
             "# first param is the market, second param is the subcurrency contract", 
             "data cash[][]", 
@@ -2222,13 +2228,13 @@
             "    period = BRANCHES.getVotePeriod(branch)", 
             "    event = MARKETS.getMarketEvent(market, 0)", 
             "    if(CASH.balance(market)<=0):", 
-            "        return(-1)", 
+            "        logReturn(-1)", 
             "    if(EVENTS.getUncaughtOutcome(event)==0):", 
-            "        return(-2)", 
+            "        logReturn(-2)", 
             "    if(BACKSTOPS.getRoundTwo(event) && !BACKSTOPS.getFinal(event)):", 
-            "        return(-3)", 
+            "        logReturn(-3)", 
             "    if(MARKETS.getBranchID(market)!=branch):", 
-            "        return(-4)", 
+            "        logReturn(-4)", 
             "    # checks whether any events not already resolved", 
             "    resolved = 1", 
             "    # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo", 
@@ -2242,7 +2248,7 @@
             "        forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))", 
             "        currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)", 
             "        if((EVENTS.getForked(event) && !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):", 
-            "            return(-5)", 
+            "            logReturn(-5)", 
             "        if(binary(event) && fxpOutcome==0):", 
             "                resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)", 
             "        elif(scalar(event) && EVENTS.getmode(event)==0):", 
@@ -2250,15 +2256,15 @@
             "        elif(categorical(event) && EVENTS.getmode(event)==0):", 
             "                resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)", 
             "        if(resolution==-6):", 
-            "            return(-6)", 
+            "            logReturn(-6)", 
             "        winningOutcomes = array(8)", 
             "        winningOutcomes = RESOLVE.determineWinningOutcomes(event, outitems=8)", 
             "        MARKETS.setWinningOutcomes(market, winningOutcomes)", 
             "        # refunds closing cost", 
             "        MARKETS.refundClosing(market, sender)", 
-            "        return(1)", 
+            "        logReturn(1)", 
             "    else:", 
-            "        return(0)", 
+            "        logReturn(0)", 
             "", 
             "# Claim trading profits/value per share after a market is resolved", 
             "# @returns 1 if successful", 
@@ -2347,12 +2353,7 @@
                     }
                 ], 
                 "name": "closeMarket(int256,int256,int256)", 
-                "outputs": [
-                    {
-                        "name": "out", 
-                        "type": "int256"
-                    }
-                ], 
+                "outputs": [], 
                 "type": "function"
             }, 
             {
@@ -2366,9 +2367,20 @@
                     }
                 ], 
                 "type": "function"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "indexed": false, 
+                        "name": "returnValue", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "closeMarketReturnValue(int256)", 
+                "type": "event"
             }
         ], 
-        "sig": "extern closeMarket: [claimProceeds:[int256,int256]:int256, closeMarket:[int256,int256,int256]:int256, test_callstack:[]:int256]"
+        "sig": "extern closeMarket: [claimProceeds:[int256,int256]:int256, closeMarket:[int256,int256,int256]:_, test_callstack:[]:int256]"
     }, 
     "closeMarketOne": {
         "address": "0x660ba541bd81f76b53b6f47f93f91b2d450a1db0", 
@@ -3111,7 +3123,7 @@
         "sig": "extern compositeGetters: [batchGetMarketInfo:[int256[]]:int256[], getMarketInfo:[int256]:int256[], getMarketsInfo:[int256,int256,int256]:int256[], getOrderBook:[int256]:int256[], test_callstack:[]:int256]"
     }, 
     "consensus": {
-        "address": "0x90236a526dcd40a8fbe4b139e2596d3983071598", 
+        "address": "0x6c63af66786b184949d3b198aaf987f791394fb3", 
         "code": [
             "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOf:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getFork:[int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setFork:[int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, test_callstack:[]:int256, totalSupply:[int256]:int256]", 
             "REPORTING = 0x5e01114ea15cdbe85e286e65e6101c2f1ff58c60", 
@@ -3125,8 +3137,8 @@
             "EVENTS = 0xe59fe52605286adcf28cf7bd09e185e3956ecc9b", 
             "extern refund.se: [adjForkBondPaid:[int256,int256]:int256, doRoundTwoRefund:[int256,int256]:int256, getBondAmount:[int256]:int256, getBondPaid:[int256]:int256, getBondPoster:[int256]:int256, getBondReturned:[int256]:int256, getFinal:[int256]:int256, getForkBondPaid:[int256]:int256, getForkBondPoster:[int256]:int256, getForkedOverEthicality:[int256]:int256, getMoved:[int256]:int256, getOriginalBranch:[int256]:int256, getOriginalEthicality:[int256]:int256, getOriginalOutcome:[int256]:int256, getOriginalVotePeriod:[int256]:int256, getResolved:[int256,int256]:int256, getRoundTwo:[int256]:int256, increaseBondPaid:[int256,int256]:int256, setBondAmount:[int256,int256]:int256, setBondPoster:[int256,int256]:int256, setBondReturned:[int256]:int256, setFinal:[int256]:int256, setForkBondPoster:[int256,int256]:int256, setForkedOverEthicality:[int256]:int256, setMoved:[int256]:int256, setOriginalBranch:[int256,int256]:int256, setOriginalEthicality:[int256,int256]:int256, setOriginalOutcome:[int256,int256]:int256, setOriginalVotePeriod:[int256,int256]:int256, setResolved:[int256,int256,int256]:int256, setRoundTwo:[int256,int256]:int256, setRoundTwoRefund:[int256,int256]:int256, test_callstack:[]:int256]", 
             "BACKSTOPS = 0xa2ac6ef02115a2bf2743432760e81939890a25b5", 
-            "extern closeMarket: [claimProceeds:[int256,int256]:int256, closeMarket:[int256,int256,int256]:int256, test_callstack:[]:int256]", 
-            "CLOSEMARKET = 0xd68c8eca9d58bdf56ec30c2d47837da12f9bc0e8", 
+            "extern closeMarket: [claimProceeds:[int256,int256]:int256, closeMarket:[int256,int256,int256]:_, test_callstack:[]:int256]", 
+            "CLOSEMARKET = 0x2baa265c61f077484669350f3c50f59a3746b727", 
             "extern consensusData: [doRefund:[int256,int256]:int256, getBaseReportersLastPeriod:[int256]:int256, getDenominator:[int256,int256]:int256, getFeeFirst:[int256,int256]:int256, getFeesCollected:[int256,int256,int256]:int256, getNotEnoughPenalized:[int256,int256,int256]:int256, getPenalized:[int256,int256,int256,int256]:int256, getPenalizedNum:[int256,int256,int256]:int256, getPenalizedUpTo:[int256,int256]:int256, getPeriodBalance:[int256,int256]:int256, getRepRedistributionDone:[int256,int256]:int256, getSlashed:[int256,int256,int256]:int256, increaseDenominator:[int256,int256,int256]:int256, increasePenalizedNum:[int256,int256,int256,int256]:int256, setBaseReportersLastPeriod:[int256,int256]:int256, setFeeFirst:[int256,int256,int256]:int256, setFeesCollected:[int256,int256,int256]:int256, setNotEnoughPenalized:[int256,int256,int256]:int256, setPenalized:[int256,int256,int256,int256]:int256, setPenalizedUpTo:[int256,int256,int256]:int256, setPeriodBalance:[int256,int256,int256]:_, setRefund:[int256,int256]:int256, setSlashed:[int256,int256,int256]:int256, test_callstack:[]:int256]", 
             "CONSENSUS = 0x0f2fdb5399fad3ca0780f3de3d80b984a4b4cf6a", 
             "", 
