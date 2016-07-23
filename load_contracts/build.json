@@ -1471,7 +1471,7 @@
         "sig": "extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "buy&sellShares": {
-        "address": "0x9c7615be3fd8dbb2bc43df602c460d5cc33954c6", 
+        "address": "0xe5e416c0699106420e54d0e5d8753201129e7031", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -1506,6 +1506,12 @@
             "", 
             "event log_add_tx(market:indexed, sender:indexed, type, price, amount, outcome, tradeid)", 
             "event log_cancel(market:indexed, sender:indexed, price, amount, tradeid, outcome, type)", 
+            "", 
+            "event buyAndSellSharesReturnValue(returnValue)", 
+            "", 
+            "macro logReturn($returnValue):", 
+            "    log(type=buyAndSellSharesReturnValue, $returnValue)", 
+            "    return($returnValue)", 
             "", 
             "# Trade types", 
             "macro BID: 1", 
@@ -1545,9 +1551,9 @@
             "            if($fee):", 
             "                CASH.sendFrom($market, ($amount * $price / ONE * $fee / ONE), $sender)", 
             "    else:", 
-            "        return(TRADE_ALREADY_EXISTS)", 
+            "        logReturn(TRADE_ALREADY_EXISTS)", 
             "    log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id)", 
-            "    return(trade_id)", 
+            "    logReturn(trade_id)", 
             "", 
             "#", 
             "# Cancellation: cancels a trade, if a bid refunds money, if an ask returns shares", 
@@ -1561,7 +1567,7 @@
             "    trade = array(TRADE_FIELDS)", 
             "    trade = TRADES.get_trade(trade_id, outitems=TRADE_FIELDS)", 
             "    if !trade:", 
-            "        return(0)", 
+            "        logReturn(0)", 
             "    type = trade[1]", 
             "    market = trade[2]", 
             "    amount = trade[3]", 
@@ -1589,8 +1595,8 @@
             "            CASH.addCash(msg.sender, (amount * price / ONE * fee / ONE))", 
             "        # Log cancellation", 
             "        log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type)", 
-            "        return(SUCCESS)", 
-            "    return(FAILURE)", 
+            "        logReturn(SUCCESS)", 
+            "    logReturn(FAILURE)", 
             "", 
             "macro remove_trade($trade_id, $market):", 
             "    TRADES.remove_trade($trade_id)", 
@@ -1614,16 +1620,16 @@
             "    fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE", 
             "    branch = MARKETS.getBranchID(market)", 
             "    if(!MARKETS.getCreationTime(market)):", 
-            "        return(0)", 
+            "        logReturn(0)", 
             "    # price cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues", 
             "    if(price>cumScale or amount*price < 3402823669209384705829531287552 or amount*price >= 2**190):", 
-            "        return(-1)", 
+            "        logReturn(-1)", 
             "    if(BRANCHES.getOracleOnly(branch)):", 
-            "        return(-2)", 
+            "        logReturn(-2)", 
             "    if(CASH.balance(msg.sender) < (amount * price / ONE * (fee + ONE) / ONE)):", 
-            "        return(-4)", 
+            "        logReturn(-4)", 
             "    save_trade(BID, amount, price, market, outcome, branch, fee, msg.sender)", 
-            "    return(FAILURE)", 
+            "    logReturn(FAILURE)", 
             "", 
             "# costs 532k gas", 
             "# smallest trade value is 0.00000001", 
@@ -1635,16 +1641,16 @@
             "    fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE", 
             "    # price cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues", 
             "    if(price>cumScale or amount*price < 3402823669209384705829531287552 or amount*price >= 2**190):", 
-            "        return(-1)", 
+            "        logReturn(-1)", 
             "    if(BRANCHES.getOracleOnly(branch)):", 
-            "        return(-2)", 
+            "        logReturn(-2)", 
             "    if(MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome) < amount):", 
-            "        return(-4)", 
+            "        logReturn(-4)", 
             "    # check for enough money for fees", 
             "    if(CASH.balance(msg.sender) < (amount * price / ONE * fee / ONE)):", 
-            "        return(-4)", 
+            "        logReturn(-4)", 
             "    save_trade(ASK, amount, price, market, outcome, branch, fee, msg.sender)", 
-            "    return(FAILURE)"
+            "    logReturn(FAILURE)"
         ], 
         "fullsig": [
             {
@@ -1668,12 +1674,7 @@
                     }
                 ], 
                 "name": "buy(int256,int256,int256,int256)", 
-                "outputs": [
-                    {
-                        "name": "out", 
-                        "type": "int256"
-                    }
-                ], 
+                "outputs": [], 
                 "type": "function"
             }, 
             {
@@ -1685,12 +1686,7 @@
                     }
                 ], 
                 "name": "cancel(int256)", 
-                "outputs": [
-                    {
-                        "name": "out", 
-                        "type": "int256"
-                    }
-                ], 
+                "outputs": [], 
                 "type": "function"
             }, 
             {
@@ -1714,12 +1710,7 @@
                     }
                 ], 
                 "name": "sell(int256,int256,int256,int256)", 
-                "outputs": [
-                    {
-                        "name": "out", 
-                        "type": "int256"
-                    }
-                ], 
+                "outputs": [], 
                 "type": "function"
             }, 
             {
@@ -1733,6 +1724,17 @@
                     }
                 ], 
                 "type": "function"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "indexed": false, 
+                        "name": "returnValue", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "buyAndSellSharesReturnValue(int256)", 
+                "type": "event"
             }, 
             {
                 "inputs": [
@@ -1817,7 +1819,7 @@
                 "type": "event"
             }
         ], 
-        "sig": "extern buy&sellShares: [buy:[int256,int256,int256,int256]:int256, cancel:[int256]:int256, sell:[int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
+        "sig": "extern buy&sellShares: [buy:[int256,int256,int256,int256]:_, cancel:[int256]:_, sell:[int256,int256,int256,int256]:_, test_callstack:[]:int256]"
     }, 
     "cash": {
         "address": "0xca2591192a379e04960941693fca04e51031aae4", 
@@ -2660,7 +2662,7 @@
         "sig": "extern collectFees: [collectFees:[int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "completeSets": {
-        "address": "0x15c8df240ef26a69226c84588de21302dcd26b9c", 
+        "address": "0xcf0f5a0e242090e764f4ea4aff2b443dd0cb4c9d", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -2693,6 +2695,12 @@
             "MARKETS = 0xaecd771f40705ec1edb1463d7002f047af5b05df", 
             "inset('refund.se')", 
             "", 
+            "event completeSetsReturnValue(returnValue)", 
+            "", 
+            "macro logReturn($returnValue):", 
+            "    log(type=completeSetsReturnValue, $returnValue)", 
+            "    return($returnValue)", 
+            "", 
             "# Buys amount of every outcome", 
             "# cost 850k gas", 
             "# Errors:", 
@@ -2706,11 +2714,11 @@
             "    cumScale = MARKETS.getCumScale(market)", 
             "    cost = amount*cumScale/ONE", 
             "    if(!MARKETS.getCreationTime(market)):", 
-            "        return(0)", 
+            "        logReturn(0)", 
             "    if(BRANCHES.getOracleOnly(branch)):", 
-            "        return(-1)", 
+            "        logReturn(-1)", 
             "    if(CASH.balance(msg.sender) < cost):", 
-            "        return(-2)", 
+            "        logReturn(-2)", 
             "    n = 1", 
             "    # send shares of the event to user address and increment the number issued in the market for each outcome", 
             "    while n <= numOutcomes:", 
@@ -2723,7 +2731,7 @@
             "        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount*cumScale/ONE)", 
             "    # send money from user acc. to market address/account", 
             "    CASH.sendFrom(market, cost, msg.sender)", 
-            "    return(1)", 
+            "    logReturn(1)", 
             "", 
             "# Sells amount of every outcome [if user owns it]", 
             "# cost 850k gas", 
@@ -2738,11 +2746,11 @@
             "    cumScale = MARKETS.getCumScale(market)", 
             "    cost = amount*cumScale/ONE", 
             "    if(BRANCHES.getOracleOnly(branch)):", 
-            "        return(-1)", 
+            "        logReturn(-1)", 
             "    n = 1", 
             "    while n <= numOutcomes:", 
             "        if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < amount):", 
-            "            return(-3)", 
+            "            logReturn(-3)", 
             "        n += 1", 
             "    n = 1", 
             "    # Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets", 
@@ -2757,7 +2765,7 @@
             "    # send funds from the market to the user acc.", 
             "    CASH.subtractCash(market, cost)", 
             "    CASH.addCash(msg.sender, cost)", 
-            "    return(1)"
+            "    logReturn(1)"
         ], 
         "fullsig": [
             {
@@ -2773,12 +2781,7 @@
                     }
                 ], 
                 "name": "buyCompleteSets(int256,int256)", 
-                "outputs": [
-                    {
-                        "name": "out", 
-                        "type": "int256"
-                    }
-                ], 
+                "outputs": [], 
                 "type": "function"
             }, 
             {
@@ -2794,12 +2797,7 @@
                     }
                 ], 
                 "name": "sellCompleteSets(int256,int256)", 
-                "outputs": [
-                    {
-                        "name": "out", 
-                        "type": "int256"
-                    }
-                ], 
+                "outputs": [], 
                 "type": "function"
             }, 
             {
@@ -2813,9 +2811,20 @@
                     }
                 ], 
                 "type": "function"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "indexed": false, 
+                        "name": "returnValue", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "completeSetsReturnValue(int256)", 
+                "type": "event"
             }
         ], 
-        "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:int256, sellCompleteSets:[int256,int256]:int256, test_callstack:[]:int256]"
+        "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:_, sellCompleteSets:[int256,int256]:_, test_callstack:[]:int256]"
     }, 
     "compositeGetters": {
         "address": "0x2b94719fa4fe3ca680a7edba668a5d86b7c1b3a6", 
