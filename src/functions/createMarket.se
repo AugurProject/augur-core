@@ -187,7 +187,7 @@ def updateTradingFee(branch, market, tradingFee, makerFees):
     newCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / tradingFee
     if(tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > oldFee or makerFees < 0 or makerFees > ONEHALF):
         return(-2)
-    if(!CASH.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender) && MARKETS.setTradingFee(market, tradingFee) && MARKETS.setTradingFee(market, makerFees)):
+    if(!CASH.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender) || !MARKETS.setTradingFee(market, tradingFee) || !MARKETS.setMakerFees(market, makerFees)):
         throw()
     log(type=tradingFeeUpdated, market, tradingFee)
     return(1)

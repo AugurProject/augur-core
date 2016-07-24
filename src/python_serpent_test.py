@@ -1267,26 +1267,30 @@ def test_update_trading_fee():
     s = t.state()
     c = s.abi_contract('functions/output.se')
     c.initiateOwner(1010101)
+    c.reputationFaucet(1010101)
     blocktime = s.block.timestamp
-    event = c.createEvent(1010101, "new event", blocktime+1, ONE, TWO, 2, "ok")
-    description = "new market"
-    tradingFee = 184467440737095516
-    tradingFee = 46666666666666667
-    tags = [1,2,3]
-    feeSplit = int(random.random()*HALF)
-    market = c.createMarket(1010101, description, tradingFee, event, tags[0], tags[1], tags[2], feeSplit, "yayaya", value=10**19)
-    tradingFee = tradingFee*HALF
-    #feeSplit = feeSplit*HALF
-    print market
-    print tradingFee
-    print feeSplit
-    print c.getTradingFee(market)
-    print c.getMakerFees(market)
-    c.updateTradingFee(1010101, market, tradingFee, feeSplit);
-    print c.getTradingFee(market)
-    print c.getMakerFees(market)
-    assert(c.getTradingFee(market) == tradingFee);
+    event1 = c.createEvent(1010101, "new event", blocktime+1, ONE, 2*ONE, 2, "www.roflcopter.com")
+    tradingFee = 120000000000000000  #.12
+    makerFee = 250000000000000000  #.25
+    market = c.createMarket(1010101, "new market", tradingFee, event1, 1, 2, 3, makerFee, "yayaya", value=10**19)
+    tradingFee = 110000000000000000 #.11
+    makerFee = 220000000000000000 #.22
+    #test valid tradingFees
+    result = c.updateTradingFee(1010101, market, tradingFee, makerFee);
+    assert(result == 1);
+    assert(c.getTradingFee(market) == tradingFee)
     assert(c.getMakerFees(market) == makerFee);
+    #the fees are too damn high
+    tradingFee = 120000000000000000  #.12
+    result = c.updateTradingFee(1010101, market, tradingFee, makerFee);
+    assert(result == -2);
+    assert(c.getTradingFee(market) != tradingFee)
+    tradingFee = 100000000000000000  #.10
+    makerFee = 510000000000000000  #.51
+    result = c.updateTradingFee(1010101, market, tradingFee, makerFee);
+    assert(result == -2);
+    assert(c.getMakerFees(market) != makerFee)
+    print "Test update trading fees ok"
 
 def gas_use(s):
     global initial_gas
@@ -1299,7 +1303,6 @@ if __name__ == '__main__':
     output = os.path.join(src, 'functions', 'output.se')
     if os.path.exists(output): os.remove(output)
     os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
-
     # data/api tests
     #test_cash()
     #test_ether()
