@@ -95,6 +95,7 @@ def move_event(event):
 # parent branch is branch here
 # todo fork use address picked in market creation to resolve it and have a default fork resolve option
 def resolve_fork(branch):
+    callstackCheck()
     # do whitelist
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
@@ -112,6 +113,7 @@ def resolve_fork(branch):
 
 # Resolve fork method that gets exchange rate
 def exchangeRate(branch):
+    callstackCheck()
     # get rep exchange rate from etherex for (branch)
     # return(exchangeRate)
     # for testing we'll just rng the exchange rate :)
@@ -128,6 +130,7 @@ def exchangeRate(branch):
     # -4: event was pushed forward, not allowed yet
     # -5: invalid branch
 def fork(event, branch, forkedOverEthicality):
+    callstackCheck()
     forkPeriod = BRANCHES.getForkPeriod(branch)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     if(!EVENTS.getRoundTwo(event) or BACKSTOPS.getFinal(event) or EVENTS.getForked(event)):

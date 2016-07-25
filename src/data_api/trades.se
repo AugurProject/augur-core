@@ -41,6 +41,7 @@ def getID(tradeID):
     return(self.trades[tradeID].id)
 
 def saveTrade(trade_id, type, market, amount, price, sender, outcome):
+    callstackCheck()
     self.trades[trade_id].id = trade_id
     self.trades[trade_id].type = type
     self.trades[trade_id].market = market
@@ -52,6 +53,7 @@ def saveTrade(trade_id, type, market, amount, price, sender, outcome):
     return(1)
 
 def get_trade(id):
+    callstackCheck()
     trade = array(8)
     trade[0] = self.trades[id].id
     trade[1] = self.trades[id].type
@@ -73,10 +75,12 @@ def get_price(id):
 
 # todo maybe add this in and then check that trade is within limit prices in trade function to allow easy trade updating
 def update_trade(id, price):
+    callstackCheck()
     self.trades[id].price = price
     self.trades[id].block = block.number
 
 def remove_trade(id):
+    callstackCheck()
     self.trades[id].id = 0
     self.trades[id].type = 0
     self.trades[id].market = 0

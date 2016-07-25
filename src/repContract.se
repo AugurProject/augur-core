@@ -86,7 +86,7 @@ def setSaleDistribution(addresses: arr, balances: arr):
             self.reporting[addresses[i]] = balances[i]
             self.totalSupply += balances[i]
         i+=1
-    if(totalSupply == 11000000*ONE):
+    if(self.totalSupply == 11000000*ONE):
         self.seeded = 1
     return(1)
     
@@ -100,6 +100,9 @@ def balanceOf(address):
 
 def getTotalRep():
     return(self.totalSupply)
+    
+def getSender():
+    return(msg.sender)
 
 macro throw():
     i = 0

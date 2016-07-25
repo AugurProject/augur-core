@@ -185,6 +185,7 @@ def submitReport(event, salt, report, ethics):
     # isn't between 1 and 2 if binary
     # if same report as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
 def validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, weight):
+    callstackCheck()
     outcome = 0
     # binary
     if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==TWO and EVENTS.getMinValue(event)==ONE):
@@ -227,6 +228,7 @@ def validateReport(event, branch, votePeriod, report, forkedOverEthicality, fork
 # calculates how many reports should be on a given event
 # todo make sure max cost is actually 500k gas here
 def calculateReportTargetForEvent(branch, event, votePeriod, sender):
+    callstackCheck()
     numMarkets = EVENTS.getNumMarkets(event)
     if(numMarkets>20):
         numMarkets = 20

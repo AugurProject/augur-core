@@ -144,6 +144,7 @@ def convertToActiveRep(branch, value):
     return(1)
 
 def claimRep():
+    callstackCheck()
     balance = REPCONTRACT.balanceOf(msg.sender)
     if(!REPCONTRACT.transferFrom(msg.sender, 0, balance) or !REPORTING.addReporter(1010101, msg.sender, 0, balance, 0)):
         throw()
@@ -152,12 +153,14 @@ def claimRep():
 # Allows spender to withdraw from your dormant rep account
 # fix to be branch specific todo
 def approve(branch, spender, value):
+    callstackCheck()
     self.amountCanSpend[msg.sender][spender].branch[branch] = value
     log(type=Approval, msg.sender, spender, value)
     return(1)
 
 # Returns amount spender can withdraw from owner
 def allowance(branch, owner, spender):
+    callstackCheck()
     return(self.amountCanSpend[owner][spender].branch[branch])
 
 #  0: only one period behind, need to do penalizations for it

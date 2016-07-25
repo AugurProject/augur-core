@@ -67,8 +67,7 @@ macro remove_trade($trade_id, $market):
 # 500k gas cost
 # picks orders off the book
 def trade(max_value, max_amount, trade_ids:arr):
-    if(msg.value > 0):
-        send(msg.sender, msg.value)
+    refund()
     i = 0
     trades = 0
     while i < len(trade_ids):
@@ -103,7 +102,7 @@ def trade(max_value, max_amount, trade_ids:arr):
         # Make sure the trade has been mined, obvious HFT prevention
         if block.number <= trade[6]:
             return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
-        branch = MARKETS.getbranch(market)
+        branch = MARKETS.getBranch(market)
         fee = fee_percent(MARKETS.getTradingFee(market), price, MARKETS.getCumScale(market))
 
         # Fill buy order
@@ -223,8 +222,7 @@ def trade(max_value, max_amount, trade_ids:arr):
     # -5: can't pickup your own trade
     # -7: not a large enough trade
 def short_sell(buyer_trade_id, max_amount):
-    if(msg.value > 0):
-        send(msg.sender, msg.value)
+    refund()
     # check trade hash
     tradeInfo = array(3)
     tradeInfo[0] = buyer_trade_id
@@ -243,7 +241,7 @@ def short_sell(buyer_trade_id, max_amount):
     if(type!=BID):
         return([-3]: arr)
     market = trade[2]
-    branch = MARKETS.getbranch(market)
+    branch = MARKETS.getBranch(market)
     if(MARKETS.getOneWinningOutcome(market, 0)):
         return([-4]: arr)
     orig_amount = trade[3]

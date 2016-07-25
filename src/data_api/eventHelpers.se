@@ -32,9 +32,3 @@ macro abs($a):
     if($a<0):
         $a = -$a
     $a
-
-macro ethic_catch($x):
-    if($x < ONEHALF):
-        0
-    else:
-        ONE

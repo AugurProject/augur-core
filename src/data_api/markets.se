@@ -156,7 +156,7 @@ def setTradingPeriod(market, period):
 def getTradingFee(market):
     return(self.Markets[market].tradingFee)
 
-def getbranch(market):
+def getBranch(market):
     return(self.Markets[market].branch)
 
 macro market($market):
@@ -253,6 +253,7 @@ def getLastTrade(market):
     return(self.Markets[market].last_trade)
 
 def addTrade(market, trade_id, last_id):
+    callstackCheck()
     self.Markets[market].trade_ids[last_id].next_id = trade_id
     self.Markets[market].trade_ids[trade_id].prev_id = last_id
     self.Markets[market].trade_ids[trade_id].id = trade_id
@@ -261,6 +262,7 @@ def addTrade(market, trade_id, last_id):
     return(1)
 
 def remove_trade_from_market(market_id, trade_id):
+    callstackCheck()
     prev_id = self.Markets[market_id].trade_ids[trade_id].prev_id
     next_id = self.Markets[market_id].trade_ids[trade_id].next_id
     if prev_id and next_id:

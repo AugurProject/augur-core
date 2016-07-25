@@ -14,6 +14,7 @@ macro POINTZEROONE: 184467440737095520
     # exp(1.2*ln(repbal)) / exp(1.2*ln(totalrep)) is == (reporterList[n]/totalRep)**1.2
     # a**b=exp(b*ln(a))=e**(b*ln(a)).
 def calculateReportingThreshold(branch, event, votePeriod, sender):
+    callstackCheck()
     repConstant = EXPEVENTS.getPeriodRepWeight(branch, votePeriod, sender)
     if(!repConstant):
         repConstant = FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getRepBalance(branch, sender))/ONE)*2**64/FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getActiveRep(branch))/ONE)
@@ -35,6 +36,7 @@ def calculateReportingThreshold(branch, event, votePeriod, sender):
 
 # Gets events a reporter should report on
 def getEventsToReportOn(branch, period, sender, start):
+    callstackCheck()
     numEvents = EXPEVENTS.getNumberEvents(branch, period)
     events = array(numEvents*2)
     i = 0
@@ -60,6 +62,7 @@ def getEventsToReportOn(branch, period, sender, start):
 
 # Gets whether a reporter is able to report on a given event or not
 def getEventCanReportOn(branch, period, reporter, event):
+    callstackCheck()
     reportingThreshold = self.calculateReportingThreshold(branch, event, period, reporter)
     x = array(1)
     x[0] = reporter + event
@@ -73,6 +76,7 @@ def getEventCanReportOn(branch, period, reporter, event):
 
 # In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold.
 def setReportingThreshold(event):
+    callstackCheck()
     # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
     # final check is if no reports on event
     # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this one

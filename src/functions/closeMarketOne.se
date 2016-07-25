@@ -6,6 +6,7 @@ inset('refund.se')
 # Error:
     # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant # 0 is really # 0]
 def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes):
+    callstackCheck()
     cumScale = MARKETS.getCumScale(market)
     # if it's an indeterminate categorical market resolve with all outcomes having an equal value
     if(categoricalPointFive):

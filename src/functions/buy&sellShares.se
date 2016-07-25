@@ -88,7 +88,7 @@ def cancel(trade_id):
     price = trade[4]
     owner = trade[5]
     outcome = trade[7]
-    branch = MARKETS.getbranch(market)
+    branch = MARKETS.getBranch(market)
     trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
     fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE
@@ -131,7 +131,7 @@ def buy(amount, price, market, outcome):
     trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
     fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE
-    branch = MARKETS.getbranch(market)
+    branch = MARKETS.getBranch(market)
     if(!MARKETS.getCreationTime(market)):
         return(0)
     # price cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
@@ -148,7 +148,7 @@ def buy(amount, price, market, outcome):
 # smallest trade value is 0.00000001
 def sell(amount, price, market, outcome):
     refund()
-    branch = MARKETS.getbranch(market)
+    branch = MARKETS.getBranch(market)
     trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
     fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE

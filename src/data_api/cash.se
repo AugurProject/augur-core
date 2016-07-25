@@ -51,6 +51,7 @@ def initiateOwner(account):
 # Sends cash from a user to a receiver
 # @return value of cash sent; fail is 0
 def sendFrom(recver, value, from):
+    callstackCheck()
     self.cashcoinBalances[msg.sender] += msg.value * ONE / WEITOETH
     if(!self.owners[msg.sender] and from==msg.sender):
         self.owners[msg.sender] = msg.sender

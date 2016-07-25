@@ -58,7 +58,7 @@ def getMarketInfo(market):
     marketInfo[4] = numOutcomes
     marketInfo[5] = MARKETS.getTradingPeriod(market)
     marketInfo[6] = MARKETS.getTradingFee(market)
-    marketInfo[7] = MARKETS.getbranch(market)
+    marketInfo[7] = MARKETS.getBranch(market)
     marketInfo[8] = numEvents
     marketInfo[9] = MARKETS.getCumScale(market)
     marketInfo[10] = MARKETS.getCreationTime(market)

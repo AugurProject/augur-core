@@ -81,17 +81,20 @@ def getRepByIndex(branch, repIndex):
 
 # @return reputation value
 def getRepBalance(branch, address):
+    callstackCheck()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
     if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID!=address):
         return(0)
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
 def getDormantRepByIndex(branch, repIndex):
+    callstackCheck()
     return(self.Reporting[branch].dormantRep[repIndex].repValue)
 
 # @return reputation value
 # getDormantRepBalance
 def balanceOf(branch, address):
+    callstackCheck()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
     if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID!=address):
         return(0)
@@ -99,12 +102,15 @@ def balanceOf(branch, address):
 
 # return total supply of dormant rep
 def totalSupply(branch):
+    callstackCheck()
     return((self.Reporting[branch].totalRep - self.Reporting[branch].activeRep))
 
 def getReporterID(branch, index):
+    callstackCheck()
     return(self.Reporting[branch].reputation[index].reporterID)
 
 def getTotalRep(branch):
+    callstackCheck()
     return(self.Reporting[branch].totalRep)
 
 # will return 0s for array values after it's looped through all the ones you
@@ -146,6 +152,7 @@ def getNumberReporters(branch):
     return(self.Reporting[branch].numberReporters)
 
 def repIDToIndex(branch, repID):
+    callstackCheck()
     return(self.Reporting[branch].repIDtoIndex[repID])
 
 # check that msg.sender is one of our function contracts
@@ -153,6 +160,7 @@ def setInitialReporters(parent, branch):
     # if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add branch as a "reporter"
+    callstackCheck()
     self.Reporting[branch].numberReporters = 1
     self.Reporting[branch].repIDtoIndex[branch] = 0
     self.Reporting[branch].reputation[0].repValue = 0
@@ -162,6 +170,7 @@ def setInitialReporters(parent, branch):
 def addReporter(branch, sender, amount, dormant, repToBonderOrBranch):
     # if(!self.whitelist.check(msg.sender)):
     #    return(-1)
+    callstackCheck()
     reporterIndex = self.Reporting[branch].numberReporters
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
     self.Reporting[branch].reputation[reporterIndex].repValue = amount
@@ -176,6 +185,7 @@ def addReporter(branch, sender, amount, dormant, repToBonderOrBranch):
 def addRep(branch, index, value):
     # if(!self.whitelist.check(msg.sender)):
     #    return(-1)
+    callstackCheck()
     if(safeToAdd(self.Reporting[branch].reputation[index].repValue, value)):
         self.Reporting[branch].reputation[index].repValue += value
         return(1)
@@ -185,6 +195,7 @@ def addRep(branch, index, value):
 def subtractRep(branch, index, value):
     # if(!self.whitelist.check(msg.sender)):
     #    return(-1)
+    callstackCheck()
     if(safeToSubtract(self.Reporting[branch].reputation[index].repValue, value)):
         self.Reporting[branch].reputation[index].repValue -= value
         return(1)
@@ -194,6 +205,7 @@ def subtractRep(branch, index, value):
 def setRep(branch, index, newRep):
     # if !self.whitelist.check(msg.sender):
     #    return(-1)
+    callstackCheck()
     oldRep = self.Reporting[branch].reputation[index].repValue
     self.Reporting[branch].reputation[index].repValue = newRep
     self.Reporting[branch].activeRep += newRep - oldRep
@@ -203,12 +215,14 @@ def setRep(branch, index, newRep):
 def addDormantRep(branch, index, value):
     # if(!self.whitelist.check(msg.sender)):
     #    return(-1)
+    callstackCheck()
     self.Reporting[branch].dormantRep[index].repValue += value
     return(1)
 
 def subtractDormantRep(branch, index, value):
     # if(!self.whitelist.check(msg.sender)):
     #    return(-1)
+    callstackCheck()
     self.Reporting[branch].dormantRep[index].repValue -= value
     return(1)
 
@@ -217,6 +231,7 @@ def subtractDormantRep(branch, index, value):
 def setSaleDistribution(addresses: arr, balances: arr, branch):
     # if(!self.whitelist.check(msg.sender)):
     #    return(-1)
+    callstackCheck()
     i = 0
     while i < len(addresses):
         self.Reporting[branch].reputation[self.Reporting[branch].numberReporters].reporterID = addresses[i]

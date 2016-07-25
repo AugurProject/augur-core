@@ -1,4 +1,5 @@
 macro refund():
+    callstackCheck()
     if(msg.value > 0):
         if(!send(msg.sender, msg.value)):
             throw()
@@ -22,3 +23,10 @@ macro throw():
     while(1):
         i += 1
     i
+
+def checkCallstack():
+    return(1)
+    
+macro callstackCheck():
+    if(!checkCallstack()):
+        throw()

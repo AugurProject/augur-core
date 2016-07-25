@@ -32,7 +32,7 @@ inset('refund.se')
     # -2: not enough money
 def buyCompleteSets(market, amount):
     refund()
-    branch = MARKETS.getbranch(market)
+    branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumScale = MARKETS.getCumScale(market)
     cost = amount*cumScale/ONE
@@ -62,7 +62,7 @@ def buyCompleteSets(market, amount):
     # -3: user doesn't own enough shares
 def sellCompleteSets(market, amount):
     refund()
-    branch = MARKETS.getbranch(market)
+    branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumScale = MARKETS.getCumScale(market)
     cost = amount*cumScale/ONE
