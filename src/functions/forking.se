@@ -139,7 +139,7 @@ def fork(event, branch, forkedOverEthicality):
         return(-3)
     if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event)):
         return(-4)
-    if(EVENTS.getBranch(event)!=branch):
+    if(EVENTS.getEventBranch(event)!=branch):
         return(-5)
     # todo find actual gas cost for resolution here and charge that
     if(msg.value < 200000*tx.gasprice):
@@ -197,7 +197,7 @@ def resolveForkedEvent(branch, event):
     refund()
     votedOnAgain = 0
     # checks for orig. branch
-    if(EVENTS.getBranch(event)!=branch or BRANCHES.getEventForkedOver(branch)!=event):
+    if(EVENTS.getEventBranch(event)!=branch or BRANCHES.getEventForkedOver(branch)!=event):
         return(0)
     if(BRANCHES.getVotePeriod(branch) > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
         votedOnAgain = 1

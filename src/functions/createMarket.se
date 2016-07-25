@@ -89,7 +89,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
 # @param branch is the branch of the market
 # @param description is the description for a market
 # @param tradingFee is percent in fixedPoint
-# @param events array is the list of events in a market [up to 3]
+# @param events array is the list of events in a market [only 1 for now]
 # @params tag1, tag2, and tag3 are the tags describing a market
 # @param makerFees are the percent of the trading fee a maker pays [0-50% in fixed point]
 # @param extraInfo is a string of any extra info associated with a market

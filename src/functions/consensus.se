@@ -1,4 +1,4 @@
-]import reporting as REPORTING
+import reporting as REPORTING
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import events as EVENTS
@@ -71,7 +71,7 @@ def penalizeWrong(branch, event):
     if(roundTwo and outcome!=0):
         return(-1)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
-    elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
+    elif(residual > periodLength/2 or (block.timestamp / periodLength - 2) != lastPeriod):
         return(-2)
     elif(BRANCHES.getForkPeriod(branch) == lastPeriod):
         return(-3)

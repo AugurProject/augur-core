@@ -111,9 +111,6 @@ def addPast24(period):
     self.past24Hours[period] += 1
     return(1)
 
-def getEventBranch(event):
-    return(self.Events[event].branch)
-
 def getExpiration(event):
     return(self.Events[event].expirationDate)
 
@@ -185,7 +182,7 @@ def addMarket(event, market):
     self.Events[event].numMarkets += 1
     return(1)
 
-def getBranch(event):
+def getEventBranch(event):
     return(self.Events[event].branch)
 
 def getBond(event):

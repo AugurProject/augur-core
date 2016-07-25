@@ -1,3 +1,6 @@
+def checkCallstack():
+    return(1)
+
 def init():
     description = text("Root branch")
     save(self.Info[1010101].description[0], description, chars=len(description))
@@ -47,6 +50,7 @@ def getCreationFee(ID):
 
 # @return 1 if success, 0 if creator already exists
 def setInfo(ID, description: str, creator, fee):
+    callstackCheck()
     # if(!self.whitelist.check(msg.sender)):
     # 	return(-1)
     # check that msg.sender is one of our function contracts
@@ -153,17 +157,20 @@ def getRepByIndex(branch, repIndex):
 
 # @return reputation value
 def getRepBalance(branch, address):
+    callstackCheck()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
     if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID!=address):
         return(0)
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
 def getDormantRepByIndex(branch, repIndex):
+    callstackCheck()
     return(self.Reporting[branch].dormantRep[repIndex].repValue)
 
 # @return reputation value
 # getDormantRepBalance
 def balanceOf(branch, address):
+    callstackCheck()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
     if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID!=address):
         return(0)
@@ -171,12 +178,15 @@ def balanceOf(branch, address):
 
 # return total supply of dormant rep
 def totalSupply(branch):
+    callstackCheck()
     return((self.Reporting[branch].totalRep - self.Reporting[branch].activeRep))
 
 def getReporterID(branch, index):
+    callstackCheck()
     return(self.Reporting[branch].reputation[index].reporterID)
 
 def getTotalRep(branch):
+    callstackCheck()
     return(self.Reporting[branch].totalRep)
 
 # will return 0s for array values after it's looped through all the ones you
@@ -218,6 +228,7 @@ def getNumberReporters(branch):
     return(self.Reporting[branch].numberReporters)
 
 def repIDToIndex(branch, repID):
+    callstackCheck()
     return(self.Reporting[branch].repIDtoIndex[repID])
 
 # check that msg.sender is one of our function contracts
@@ -225,6 +236,7 @@ def setInitialReporters(parent, branch):
     # if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add branch as a "reporter"
+    callstackCheck()
     self.Reporting[branch].numberReporters = 1
     self.Reporting[branch].repIDtoIndex[branch] = 0
     self.Reporting[branch].reputation[0].repValue = 0
@@ -234,6 +246,7 @@ def setInitialReporters(parent, branch):
 def addReporter(branch, sender, amount, dormant, repToBonderOrBranch):
     # if(!self.whitelist.check(msg.sender)):
     #    return(-1)
+    callstackCheck()
     reporterIndex = self.Reporting[branch].numberReporters
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
     self.Reporting[branch].reputation[reporterIndex].repValue = amount
@@ -248,6 +261,7 @@ def addReporter(branch, sender, amount, dormant, repToBonderOrBranch):
 def addRep(branch, index, value):
     # if(!self.whitelist.check(msg.sender)):
     #    return(-1)
+    callstackCheck()
     if(safeToAdd(self.Reporting[branch].reputation[index].repValue, value)):
         self.Reporting[branch].reputation[index].repValue += value
         return(1)
@@ -257,6 +271,7 @@ def addRep(branch, index, value):
 def subtractRep(branch, index, value):
     # if(!self.whitelist.check(msg.sender)):
     #    return(-1)
+    callstackCheck()
     if(safeToSubtract(self.Reporting[branch].reputation[index].repValue, value)):
         self.Reporting[branch].reputation[index].repValue -= value
         return(1)
@@ -266,6 +281,7 @@ def subtractRep(branch, index, value):
 def setRep(branch, index, newRep):
     # if !self.whitelist.check(msg.sender):
     #    return(-1)
+    callstackCheck()
     oldRep = self.Reporting[branch].reputation[index].repValue
     self.Reporting[branch].reputation[index].repValue = newRep
     self.Reporting[branch].activeRep += newRep - oldRep
@@ -275,12 +291,14 @@ def setRep(branch, index, newRep):
 def addDormantRep(branch, index, value):
     # if(!self.whitelist.check(msg.sender)):
     #    return(-1)
+    callstackCheck()
     self.Reporting[branch].dormantRep[index].repValue += value
     return(1)
 
 def subtractDormantRep(branch, index, value):
     # if(!self.whitelist.check(msg.sender)):
     #    return(-1)
+    callstackCheck()
     self.Reporting[branch].dormantRep[index].repValue -= value
     return(1)
 
@@ -289,6 +307,7 @@ def subtractDormantRep(branch, index, value):
 def setSaleDistribution(addresses: arr, balances: arr, branch):
     # if(!self.whitelist.check(msg.sender)):
     #    return(-1)
+    callstackCheck()
     i = 0
     while i < len(addresses):
         self.Reporting[branch].reputation[self.Reporting[branch].numberReporters].reporterID = addresses[i]
@@ -898,12 +917,6 @@ macro abs($a):
         $a = -$a
     $a
 
-macro ethic_catch($x):
-    if($x < ONEHALF):
-        0
-    else:
-        ONE
-
 inset('refund.se')
 
 # Storage for branch data
@@ -1446,6 +1459,7 @@ def getLastTrade(market):
     return(self.Markets[market].last_trade)
 
 def addTrade(market, trade_id, last_id):
+    callstackCheck()
     self.Markets[market].trade_ids[last_id].next_id = trade_id
     self.Markets[market].trade_ids[trade_id].prev_id = last_id
     self.Markets[market].trade_ids[trade_id].id = trade_id
@@ -1454,6 +1468,7 @@ def addTrade(market, trade_id, last_id):
     return(1)
 
 def remove_trade_from_market(market_id, trade_id):
+    callstackCheck()
     prev_id = self.Markets[market_id].trade_ids[trade_id].prev_id
     next_id = self.Markets[market_id].trade_ids[trade_id].next_id
     if prev_id and next_id:
@@ -1818,9 +1833,6 @@ def addMarket(event, market):
     self.Events[event].numMarkets += 1
     return(1)
 
-def getBranch(event):
-    return(self.Events[event].branch)
-
 def getBond(event):
     return(self.Events[event].bond)
 
@@ -1902,6 +1914,7 @@ macro POINTZEROONE: 184467440737095520
     # exp(1.2*ln(repbal)) / exp(1.2*ln(totalrep)) is == (reporterList[n]/totalRep)**1.2
     # a**b=exp(b*ln(a))=e**(b*ln(a)).
 def calculateReportingThreshold(branch, event, votePeriod, sender):
+    callstackCheck()
     repConstant = self.getPeriodRepWeight(branch, votePeriod, sender)
     if(!repConstant):
         repConstant = self.fx_exp(ONEPOINTTWO*self.fx_log(self.getRepBalance(branch, sender))/ONE)*2**64/self.fx_exp(ONEPOINTTWO*self.fx_log(self.getActiveRep(branch))/ONE)
@@ -1923,6 +1936,7 @@ def calculateReportingThreshold(branch, event, votePeriod, sender):
 
 # Gets events a reporter should report on
 def getEventsToReportOn(branch, period, sender, start):
+    callstackCheck()
     numEvents = self.getNumberEvents(branch, period)
     events = array(numEvents*2)
     i = 0
@@ -1948,6 +1962,7 @@ def getEventsToReportOn(branch, period, sender, start):
 
 # Gets whether a reporter is able to report on a given event or not
 def getEventCanReportOn(branch, period, reporter, event):
+    callstackCheck()
     reportingThreshold = self.calculateReportingThreshold(branch, event, period, reporter)
     x = array(1)
     x[0] = reporter + event
@@ -1961,10 +1976,11 @@ def getEventCanReportOn(branch, period, reporter, event):
 
 # In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold.
 def setReportingThreshold(event):
+    callstackCheck()
     # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
     # final check is if no reports on event
     # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this one
-    branch = self.getBranch(event)
+    branch = self.getEventBranch(event)
     periodLength = self.getPeriodLength(branch)
     votePeriod = self.getVotePeriod(branch)
     if(votePeriod==self.getExpiration(event)/periodLength and (((block.timestamp + TWENTYFOURHR) % periodLength) > periodLength/2) and !self.getUncaughtOutcome(event)):
@@ -2021,6 +2037,7 @@ def getID(tradeID):
     return(self.trades[tradeID].id)
 
 def saveTrade(trade_id, type, market, amount, price, sender, outcome):
+    callstackCheck()
     self.trades[trade_id].id = trade_id
     self.trades[trade_id].type = type
     self.trades[trade_id].market = market
@@ -2032,6 +2049,7 @@ def saveTrade(trade_id, type, market, amount, price, sender, outcome):
     return(1)
 
 def get_trade(id):
+    callstackCheck()
     trade = array(8)
     trade[0] = self.trades[id].id
     trade[1] = self.trades[id].type
@@ -2053,10 +2071,12 @@ def get_price(id):
 
 # todo maybe add this in and then check that trade is within limit prices in trade function to allow easy trade updating
 def update_trade(id, price):
+    callstackCheck()
     self.trades[id].price = price
     self.trades[id].block = block.number
 
 def remove_trade(id):
+    callstackCheck()
     self.trades[id].id = 0
     self.trades[id].type = 0
     self.trades[id].market = 0
@@ -2101,6 +2121,7 @@ def initiateOwner(account):
 # Sends cash from a user to a receiver
 # @return value of cash sent; fail is 0
 def sendFrom(recver, value, from):
+    callstackCheck()
     self.cashcoinBalances[msg.sender] += msg.value * ONE / WEITOETH
     if(!self.owners[msg.sender] and from==msg.sender):
         self.owners[msg.sender] = msg.sender
@@ -2794,6 +2815,7 @@ inset('refund.se')
 # Error:
     # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant # 0 is really # 0]
 def twoOutcomes(market, winningOutcome: arr, event, sender):
+    callstackCheck()
     # fetch outcome and min/max values for the scalar
     outcome = self.getOutcome(event)
     minValue = self.getMinValue(event)
@@ -2976,6 +2998,7 @@ def submitReport(event, salt, report, ethics):
     # isn't between 1 and 2 if binary
     # if same report as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
 def validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, weight):
+    callstackCheck()
     outcome = 0
     # binary
     if(self.getNumOutcomes(event)==2 and self.getMaxValue(event)==TWO and self.getMinValue(event)==ONE):
@@ -3018,6 +3041,7 @@ def validateReport(event, branch, votePeriod, report, forkedOverEthicality, fork
 # calculates how many reports should be on a given event
 # todo make sure max cost is actually 500k gas here
 def calculateReportTargetForEvent(branch, event, votePeriod, sender):
+    callstackCheck()
     numMarkets = self.getNumMarkets(event)
     if(numMarkets>20):
         numMarkets = 20
@@ -3105,7 +3129,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
 # @param branch is the branch of the market
 # @param description is the description for a market
 # @param tradingFee is percent in fixedPoint
-# @param events array is the list of events in a market [up to 3]
+# @param events array is the list of events in a market [only 1 for now]
 # @params tag1, tag2, and tag3 are the tags describing a market
 # @param makerFees are the percent of the trading fee a maker pays [0-50% in fixed point]
 # @param extraInfo is a string of any extra info associated with a market
@@ -3120,6 +3144,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
 # need at least 1.2M gas @ gas price to cover resolution 500k per event to calc. num reports for it - this is passed as value to this function
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
 def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, makerFees, extraInfo:str):
+    callstackCheck()
     periodLength = self.getPeriodLength(branch)
     creationFee = POINTZEROSIX * self.getBaseReporters(branch) * ONE / (2*tradingFee)
     # gives ether/cash amount in fixed point
@@ -3193,8 +3218,9 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
 # Errors
     # -1: not the market creator
     # -2: invalid new trading fee
-def updateTradingFee(branch, market, tradingFee):
+def updateTradingFee(market, tradingFee):
     refund()
+    branch = self.getBranch(market)
     if(msg.sender != self.getCreator(market) or tx.origin != self.getCreator(market)):
         return(-1)
     oldFee = self.getTradingFee(market)
@@ -3420,6 +3446,7 @@ def convertToActiveRep(branch, value):
     return(1)
 
 def claimRep():
+    callstackCheck()
     balance = self.balanceOf(msg.sender)
     if(!self.transferFrom(msg.sender, 0, balance) or !self.addReporter(1010101, msg.sender, 0, balance, 0)):
         throw()
@@ -3428,12 +3455,14 @@ def claimRep():
 # Allows spender to withdraw from your dormant rep account
 # fix to be branch specific todo
 def approve(branch, spender, value):
+    callstackCheck()
     self.amountCanSpend[msg.sender][spender].branch[branch] = value
     log(type=Approval, msg.sender, spender, value)
     return(1)
 
 # Returns amount spender can withdraw from owner
 def allowance(branch, owner, spender):
+    callstackCheck()
     return(self.amountCanSpend[owner][spender].branch[branch])
 
 #  0: only one period behind, need to do penalizations for it
@@ -3518,6 +3547,7 @@ inset('eventHelpers.se')
 
 ## helper function to close an event for resolution
 macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $periodLength, $ethical, $scalarorcat, $mode, $ethicOutcome):
+    callstackCheck()
     # In the $event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and $market remains with old expiration date
     # UI needs to call penalizeWrong for ones that are pushed back in both pushed back period and regular period with actual reporting
@@ -3599,6 +3629,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     # 1D Markets:
         # Binary or Categorical will have 1 winning outcome [1 or 2 for binary, 1 thru numOutcomes for categorical is the poss. value for the winning outcome]
 def determineWinningOutcomes(event):
+    callstackCheck()
     winningOutcomes = array(8)
     fxpOutcome = self.getOutcome(event)
     outcome = fxpOutcome/ONE
@@ -3712,6 +3743,7 @@ macro MINBOND: 200*2**64
     # -2: branch is in the middle of a fork
     # throw()s if not enough msg.value to cover resolution cost or not a large enough bond
 def roundTwoPostBond(branch, event, eventIndex, overEthicality):
+    callstackCheck()
     votePeriod = self.getVotePeriod(branch)
     # if pushed forward don't allow until no longer pushed fwd
     if(self.getOriginalExpiration(event)!=self.getExpiration(event)):
@@ -3939,14 +3971,14 @@ def penalizeWrong(branch, event):
     uncaught = self.getUncaughtOutcome(event)
     outcome = catch(uncaught)
     if(repBalance < ONE):
-        return(0)
+        return([repBalance, branch, msg.sender, ONE]: arr)
     if(scalar(event) or categorical(event)):
         outcome = uncaught
     p = proportionCorrect(event, 0)
     if(roundTwo and outcome!=0):
         return(-1)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
-    elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
+    elif(residual > periodLength/2 or (block.timestamp / periodLength - 2) != lastPeriod):
         return(-2)
     elif(self.getForkPeriod(branch) == lastPeriod):
         return(-3)
@@ -4151,6 +4183,7 @@ def move_event(event):
 # parent branch is branch here
 # todo fork use address picked in market creation to resolve it and have a default fork resolve option
 def resolve_fork(branch):
+    callstackCheck()
     # do whitelist
     forkPeriod = self.getForkPeriod(self.getEventBranch(event))
     currentPeriod = block.timestamp / self.getPeriodLength(branch)
@@ -4168,6 +4201,7 @@ def resolve_fork(branch):
 
 # Resolve fork method that gets exchange rate
 def exchangeRate(branch):
+    callstackCheck()
     # get rep exchange rate from etherex for (branch)
     # return(exchangeRate)
     # for testing we'll just rng the exchange rate :)
@@ -4184,6 +4218,7 @@ def exchangeRate(branch):
     # -4: event was pushed forward, not allowed yet
     # -5: invalid branch
 def fork(event, branch, forkedOverEthicality):
+    callstackCheck()
     forkPeriod = self.getForkPeriod(branch)
     currentPeriod = block.timestamp / self.getPeriodLength(branch)
     if(!self.getRoundTwo(event) or self.getFinal(event) or self.getForked(event)):
@@ -4192,7 +4227,7 @@ def fork(event, branch, forkedOverEthicality):
         return(-3)
     if(self.getOriginalExpiration(event)!=self.getExpiration(event)):
         return(-4)
-    if(self.getBranch(event)!=branch):
+    if(self.getEventBranch(event)!=branch):
         return(-5)
     # todo find actual gas cost for resolution here and charge that
     if(msg.value < 200000*tx.gasprice):
@@ -4250,7 +4285,7 @@ def resolveForkedEvent(branch, event):
     refund()
     votedOnAgain = 0
     # checks for orig. branch
-    if(self.getBranch(event)!=branch or self.getEventForkedOver(branch)!=event):
+    if(self.getEventBranch(event)!=branch or self.getEventForkedOver(branch)!=event):
         return(0)
     if(self.getVotePeriod(branch) > (self.getExpiration(event) / self.getPeriodLength(branch))):
         votedOnAgain = 1
@@ -4378,8 +4413,7 @@ macro remove_trade($trade_id, $market):
 # 500k gas cost
 # picks orders off the book
 def trade(max_value, max_amount, trade_ids:arr):
-    if(msg.value > 0):
-        send(msg.sender, msg.value)
+    refund()
     i = 0
     trades = 0
     while i < len(trade_ids):
@@ -4534,8 +4568,7 @@ def trade(max_value, max_amount, trade_ids:arr):
     # -5: can't pickup your own trade
     # -7: not a large enough trade
 def short_sell(buyer_trade_id, max_amount):
-    if(msg.value > 0):
-        send(msg.sender, msg.value)
+    refund()
     # check trade hash
     tradeInfo = array(3)
     tradeInfo[0] = buyer_trade_id
@@ -4638,6 +4671,7 @@ def short_sell(buyer_trade_id, max_amount):
     return([SUCCESS, max_amount, fill, price]: arr)
 
 macro refund():
+    callstackCheck()
     if(msg.value > 0):
         if(!send(msg.sender, msg.value)):
             throw()
@@ -4668,6 +4702,7 @@ inset('refund.se')
 # Error:
     # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant # 0 is really # 0]
 def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes):
+    callstackCheck()
     cumScale = self.getCumScale(market)
     # if it's an indeterminate categorical market resolve with all outcomes having an equal value
     if(categoricalPointFive):

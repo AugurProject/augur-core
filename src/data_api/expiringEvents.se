@@ -212,7 +212,7 @@ def getEvent(branch, period, eventIndex):
 def addEvent(branch, futurePeriod, event, subsidy):
     # if(!self.whitelist.check(msg.sender)):
     # 	return(-1)
-    self.periodEventInfo[branh][futurePeriod].events[self.periodEventInfo[branch][futurePeriod].numberEvents] = event
+    self.periodEventInfo[branch][futurePeriod].events[self.periodEventInfo[branch][futurePeriod].numberEvents] = event
     self.periodEventInfo[branch][futurePeriod].eventToIndex[event] = self.periodEventInfo[branch][futurePeriod].numberEvents
     self.periodEventInfo[branch][futurePeriod].numberEvents += 1
     self.periodEventInfo[branch][futurePeriod].subsidy[event] += subsidy

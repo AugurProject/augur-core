@@ -1,4 +1,12 @@
+#def checkCallstack():
+#    return(1)
+
+macro callstackCheck():
+    if(!self.checkCallstack()):
+        throw()
+
 macro refund():
+    callstackCheck()
     if(msg.value > 0):
         if(!send(msg.sender, msg.value)):
             throw()

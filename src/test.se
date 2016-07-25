@@ -1,7 +1,6 @@
-def ok(e, a):
-    i = 0
-    x = 222
-    while i < 170:
-        x = x*23/2
-        i += 1
-    return(x)
+def checkCallstack():
+    return(1)
+    
+macro callstackCheck():
+    if(!checkCallstack()):
+        throw()
