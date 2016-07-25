@@ -221,105 +221,113 @@ def trade(max_value, max_amount, trade_ids:arr):
     # -4: market is already resolved
     # -5: can't pickup your own trade
     # -7: not a large enough trade
-def short_sell(buyer_trade_id, max_amount):
+def short_sell(buyer_trade_ids: arr, max_amount):
     refund()
-    # check trade hash
+    i = 0
+    trades = 0
+    while i < len(trade_ids):
+        trades += trade_ids[i]
+        i+=1
     tradeInfo = array(3)
-    tradeInfo[0] = buyer_trade_id
+    tradeInfo[0] = trades
     tradeInfo[1] = max_amount
-    tradeInfo[2] = 0
+    tradeInfo[2] = max_value
     tradeHash = sha3(tradeInfo, items=3)
     if(TRADES.checkHash(tradeHash, msg.sender)==-1):
         return([-2]: arr)
-    # Get trade
-    trade = array(TRADE_FIELDS)
-    trade = TRADES.get_trade(buyer_trade_id, outitems=TRADE_FIELDS)
-    if !trade:
-        return([-1]: arr)
-    # Get market
-    type = trade[1]
-    if(type!=BID):
-        return([-3]: arr)
-    market = trade[2]
-    branch = MARKETS.getBranch(market)
-    if(MARKETS.getOneWinningOutcome(market, 0)):
-        return([-4]: arr)
-    orig_amount = trade[3]
-    price = trade[4]
-    owner = trade[5]
-    outcome = trade[7]
-    if(owner == msg.sender or owner == tx.origin):
-        return([-5]: arr)
-    # Make sure the trade has been mined, obvious HFT prevention
-    if block.number <= trade[6]:
-        return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
-
-    # calculate cost
-    creator = INFO.getCreator(market)
-    trading_fee = MARKETS.getTradingFee(market)
-    cumScale = MARKETS.getCumScale(market)
-    amount = min(orig_amount, max_amount)
-    if(amount < 0):
-        return([INSUFFICIENT_BALANCE]: arr)
-    fee = amount * price * fee_percent(trading_fee, price, cumScale) / ONE**2
-    makerFeeRate = MARKETS.getMakerFees(market)
-    branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
-    creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*fee / ONE
-    takerFeesTotal = branchFees + creatorFees
-    cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)
-    if(CASH.balance(msg.sender) < cost):
-        return([INSUFFICIENT_BALANCE]: arr)
-    if(amount*price/ONE < 184467440738):
-        return([-7]: arr)
-
-    numOutcomes = MARKETS.getMarketNumOutcomes(market)
-
-    i = 1
-    # send shares of the event to user address, buying complete sets
-    while i <= numOutcomes:
-        MARKETS.modifyShares(market, i, amount)
-        MARKETS.modifyParticipantShares(market, msg.sender, i, amount, 0)
-        i += 1
-    if(BRANCHES.getVotePeriod(branch)<MARKETS.getTradingPeriod(market)):
-        MARKETS.modifySharesValue(market, amount*cumScale/ONE)
-        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount*cumScale/ONE)
-    # send money from user acc. to market address/account
-    # cost for shares
-    if(!CASH.sendFrom(market, cost-takerFeesTotal, msg.sender)):
-        throw()
-
-    # Fill buy order [short selling the outcome user doesn't want]
-    # Determine fill amount
-    fill = amount
-    # Update trade amount or remove
-    if fill < orig_amount:
-        TRADES.fill_trade(trade_id, fill)
-    else:
-        remove_trade(trade_id, market)
-    # Update balances
-    MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 1)
-    MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
-    # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
-    # 75% to branch + .5% more to branch per maker fee 1% decrease
-    if(!CASH.sendFrom(branch, branchFees, msg.sender)):
-        throw()
-    # 25% to creator + .5% more to creator per 1% decrease in maker fees
-    if(!CASH.sendFrom(creator, creatorFees, msg.sender)):
-        throw()
-
-    # other party [maker] pay their part of the fee here too
-    fee = fee * makerFeeRate / ONE
-    CASH.subtractCash(market, fee)
-    CASH.addCash(creator, fee/2)
-    CASH.addCash(branch, fee/2)
-
-    # only count branch fees here
-    MARKETS.addFees(market, fee/2+branchFees)
-
-    max_amount -= fill
-    # Log transaction
-    log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)
-    # Log price, fill amount, type and timestamp
-    log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
-    MARKETS.setPrice(market, outcome, price)
+    # Try to fulfill each trade passed
+    t = 0
+    while t < len(buyer_trade_ids):
+        # Get trade
+        trade = array(TRADE_FIELDS)
+        trade = TRADES.get_trade(buyer_trade_ids[t], outitems=TRADE_FIELDS)
+        if !trade:
+            return([-1]: arr)
+        # Get market
+        type = trade[1]
+        if(type!=BID):
+            return([-3]: arr)
+        market = trade[2]
+        branch = MARKETS.getBranch(market)
+        if(MARKETS.getOneWinningOutcome(market, 0)):
+            return([-4]: arr)
+        orig_amount = trade[3]
+        price = trade[4]
+        owner = trade[5]
+        outcome = trade[7]
+        if(owner == msg.sender or owner == tx.origin):
+            return([-5]: arr)
+        # Make sure the trade has been mined, obvious HFT prevention
+        if block.number <= trade[6]:
+            return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
+    
+        # calculate cost
+        creator = INFO.getCreator(market)
+        trading_fee = MARKETS.getTradingFee(market)
+        cumScale = MARKETS.getCumScale(market)
+        amount = min(orig_amount, max_amount)
+        if(amount < 0):
+            return([INSUFFICIENT_BALANCE]: arr)
+        fee = amount * price * fee_percent(trading_fee, price, cumScale) / ONE**2
+        makerFeeRate = MARKETS.getMakerFees(market)
+        branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
+        creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*fee / ONE
+        takerFeesTotal = branchFees + creatorFees
+        cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)
+        if(CASH.balance(msg.sender) < cost):
+            return([INSUFFICIENT_BALANCE]: arr)
+        if(amount*price/ONE < 184467440738):
+            return([-7]: arr)
+    
+        numOutcomes = MARKETS.getMarketNumOutcomes(market)
+    
+        i = 1
+        # send shares of the event to user address, buying complete sets
+        while i <= numOutcomes:
+            MARKETS.modifyShares(market, i, amount)
+            MARKETS.modifyParticipantShares(market, msg.sender, i, amount, 0)
+            i += 1
+        if(BRANCHES.getVotePeriod(branch)<MARKETS.getTradingPeriod(market)):
+            MARKETS.modifySharesValue(market, amount*cumScale/ONE)
+            EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount*cumScale/ONE)
+        # send money from user acc. to market address/account
+        # cost for shares
+        if(!CASH.sendFrom(market, cost-takerFeesTotal, msg.sender)):
+            throw()
+    
+        # Fill buy order [short selling the outcome user doesn't want]
+        # Determine fill amount
+        fill = amount
+        # Update trade amount or remove
+        if fill < orig_amount:
+            TRADES.fill_trade(trade_id, fill)
+        else:
+            remove_trade(trade_id, market)
+        # Update balances
+        MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 1)
+        MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
+        # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
+        # 75% to branch + .5% more to branch per maker fee 1% decrease
+        if(!CASH.sendFrom(branch, branchFees, msg.sender)):
+            throw()
+        # 25% to creator + .5% more to creator per 1% decrease in maker fees
+        if(!CASH.sendFrom(creator, creatorFees, msg.sender)):
+            throw()
+    
+        # other party [maker] pay their part of the fee here too
+        fee = fee * makerFeeRate / ONE
+        CASH.subtractCash(market, fee)
+        CASH.addCash(creator, fee/2)
+        CASH.addCash(branch, fee/2)
+    
+        # only count branch fees here
+        MARKETS.addFees(market, fee/2+branchFees)
+    
+        max_amount -= fill
+        # Log transaction
+        log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)
+        # Log price, fill amount, type and timestamp
+        log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
+        MARKETS.setPrice(market, outcome, price)
+        t += 1
     return([SUCCESS, max_amount, fill, price]: arr)

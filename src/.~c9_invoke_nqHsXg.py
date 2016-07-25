@@ -503,7 +503,7 @@ def test_trading():
             s.mine(1)
             gas_use(s)
             print "Short sell"
-            print c.short_sell([buy], 2**64)
+            print c.short_sell(buy, 2**64)
             assert(isclose(c.getParticipantSharesPurchased(
                 market[a], c.getSender(sender=t.k2), 1) * 1.0, 12.0 * 2**64))
             assert(isclose(c.getParticipantSharesPurchased(
