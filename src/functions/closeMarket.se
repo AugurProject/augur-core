@@ -101,11 +101,11 @@ def closeMarket(branch, market, sender):
         if((EVENTS.getForked(event) && !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):
             logReturn(-5)
         if(binary(event) && fxpOutcome==0):
-                resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
+            resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
         elif(scalar(event) && EVENTS.getmode(event)==0):
-                resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
+            resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
         elif(categorical(event) && EVENTS.getmode(event)==0):
-                resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
+            resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
         if(resolution==-6):
             logReturn(-6)
         winningOutcomes = array(8)
@@ -160,7 +160,7 @@ macro scalar($event):
     ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
 
 macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and ONE*EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
+    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
 
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)

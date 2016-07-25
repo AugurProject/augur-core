@@ -104,7 +104,7 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     periodLength = BRANCHES.getPeriodLength(branch)
     # ethics is set to the binned version of the raw ethicality outcome
     ethical = ethic_catch(EVENTS.getEthical(event))
-    ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
+    ethicOutcome = ONEHALF * (scaled_max - scaled_min)/ONE + scaled_min
     EVENTS.setEthics(event, ethical)
     val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
     return(val)
