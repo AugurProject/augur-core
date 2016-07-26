@@ -192,7 +192,10 @@ def getEventIndex(branch, period, event):
 def setNumEventsToReportOn(branch):
     # whitelist to only makeReports
     period = BRANCHES.getVotePeriod(branch)
-    self.periodEventInfo[branch][period].numEventsToReportOn = (self.periodEventInfo[branch][period].numberEvents - self.periodEventInfo[branch][period].numReqEvents - self.periodEventInfo[branch][period].numberRemoved)*BRANCHES.getBaseReporters(branch)
+    eventsInPeriod = self.periodEventInfo[branch][period].numberEvents
+    numberOfRequiredEvents = self.periodEventInfo[branch][period].numReqEvents
+    numberOfRemovedEvents = self.periodEventInfo[branch][period].numberRemoved
+    self.periodEventInfo[branch][period].numEventsToReportOn = (eventsInPeriod - numberOfRequiredEvents - numberOfRemovedEvents)*BRANCHES.getBaseReporters(branch)
     return(1)
 
 # gets number of available events to report on, not counting required events
@@ -212,8 +215,9 @@ def getEvent(branch, period, eventIndex):
 def addEvent(branch, futurePeriod, event, subsidy):
     # if(!self.whitelist.check(msg.sender)):
     # 	return(-1)
-    self.periodEventInfo[branch][futurePeriod].events[self.periodEventInfo[branch][futurePeriod].numberEvents] = event
-    self.periodEventInfo[branch][futurePeriod].eventToIndex[event] = self.periodEventInfo[branch][futurePeriod].numberEvents
+    numberEvents = self.periodEventInfo[branch][futurePeriod].numberEvents
+    self.periodEventInfo[branch][futurePeriod].events[numberEvents] = event
+    self.periodEventInfo[branch][futurePeriod].eventToIndex[event] = numberEvents
     self.periodEventInfo[branch][futurePeriod].numberEvents += 1
     self.periodEventInfo[branch][futurePeriod].subsidy[event] += subsidy
     return(1)

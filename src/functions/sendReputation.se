@@ -186,7 +186,6 @@ macro checkInvariants($account):
     if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
         return(0)
 
-
 # safe adders idea pulled from piper merriam's btcrelay audit
 macro safeToAdd($a, $b):
     (($a + $b) >= $a)

@@ -1,4 +1,4 @@
-import branches as BRANCHES
+[import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import reporting as REPORTING
 import consensusData as CONSENSUS
