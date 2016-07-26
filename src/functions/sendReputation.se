@@ -24,9 +24,7 @@
 # Any questions please contact joey@augur.net
 
 import branches as BRANCHES
-import expiringEvents as EXPEVENTS
 import reporting as REPORTING
-import makeReports as REPORTS
 import penalizationCatchup as CATCHUP
 import consensusData as CONSENSUS
 import consensus as INCREMENTPERIOD

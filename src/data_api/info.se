@@ -26,39 +26,39 @@ inset('refund.se')
 data Info[](description[2048], descriptionLength, creator, creationFee)
 
 def init():
-    description = text("Root branch")
-    save(self.Info[1010101].description[0], description, chars=len(description))
-    self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
-    self.Info[1010101].creationFee = 10
-    self.Info[1010101].descriptionLength = len(description)
+	description = text("Root branch")
+	save(self.Info[1010101].description[0], description, chars=len(description))
+	self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
+	self.Info[1010101].creationFee = 10
+	self.Info[1010101].descriptionLength = len(description)
 
 def getDescription(ID):
-    length=self.Info[ID].descriptionLength
-    return(load(self.Info[ID].description[0], chars=length): str)
+	length=self.Info[ID].descriptionLength
+	return(load(self.Info[ID].description[0], chars=length): str)
 
 def getDescriptionLength(ID):
-    return(self.Info[ID].descriptionLength)
+	return(self.Info[ID].descriptionLength)
 
 def getCreator(ID):
-    return(self.Info[ID].creator)
+	return(self.Info[ID].creator)
 
 def getCreationFee(ID):
-    return(self.Info[ID].creationFee)
+	return(self.Info[ID].creationFee)
 
 # @return 1 if success, 0 if creator already exists
 def setInfo(ID, description: str, creator, fee):
-    callstackCheck()
-    # if(!self.whitelist.check(msg.sender)):
-    # 	return(-1)
-    # check that msg.sender is one of our function contracts
-    if(!self.Info[ID].creator):
-        save(self.Info[ID].description[0], description, chars=len(description))
-        self.Info[ID].descriptionLength = len(description)
-        self.Info[ID].creationFee = fee
-        self.Info[ID].creator = creator
-        return(1)
-    else:
-        return(0)
+	callstackCheck()
+	# if(!self.whitelist.check(msg.sender)):
+	# 	return(-1)
+	# check that msg.sender is one of our function contracts
+	if(!self.Info[ID].creator):
+		save(self.Info[ID].description[0], description, chars=len(description))
+		self.Info[ID].descriptionLength = len(description)
+		self.Info[ID].creationFee = fee
+		self.Info[ID].creator = creator
+		return(1)
+	else:
+		return(0)
 
 ### Helper functions [only needed for tester, on chain in a separate file]:
 macro YES: TWO
@@ -68,35 +68,35 @@ macro CATCH_TOLERANCE: ONE / 10
 
 # Bins values to 1, 1.5, 2
 macro catch($x):
-    if($x < (BAD - CATCH_TOLERANCE)):
-        NO
-    elif($x > (BAD + CATCH_TOLERANCE)):
-        YES
-    else:
-        BAD
+	if($x < (BAD - CATCH_TOLERANCE)):
+		NO
+	elif($x > (BAD + CATCH_TOLERANCE)):
+		YES
+	else:
+		BAD
 
 macro ethic_catch($x):
-    if($x < ONEHALF):
-        0
-    else:
-        ONE
+	if($x < ONEHALF):
+		0
+	else:
+		ONE
 
 macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=TWO or EVENTS.getMinValue($event)!=ONE) and EVENTS.getNumOutcomes($event)==2)
+	((EVENTS.getMaxValue($event)!=TWO or EVENTS.getMinValue($event)!=ONE) and EVENTS.getNumOutcomes($event)==2)
 
 macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
+	(EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
 
 macro categorical($event):
-    (EVENTS.getNumOutcomes($event)>2)
+	(EVENTS.getNumOutcomes($event)>2)
 
 macro abs($a):
-    if($a<0):
-        $a = -$a
-    $a
+	if($a<0):
+		$a = -$a
+	$a
 
 macro ethic_catch($x):
-    if($x < ONEHALF):
-        0
-    else:
-        ONE
+	if($x < ONEHALF):
+		0
+	else:
+		ONE

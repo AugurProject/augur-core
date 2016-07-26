@@ -1,5 +1,5 @@
 import branches as BRANCHES
-import ev]ents as EVENTS
+import events as EVENTS
 import expiringEvents as EXPEVENTS
 import fxpFunctions as FXP
 import reporting as REPORTING
@@ -7,6 +7,7 @@ import makeReports as MAKEREPORTS
 inset('refund.se')
 
 macro ONEPOINTTWO: 22136092888451461120
+
 macro POINTZEROONE: 184467440737095520
 
 # Calculates what a reporter should have to get below as a target to report on any given event

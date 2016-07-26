@@ -119,7 +119,7 @@ macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn)
             repChange = -$maxPenalty/$numReportedOn*repBalance / ONE
     if(repBalance + repChange <= 0):
         repChange = -1*repBalance
-    # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usulater in the process
+    # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process
     if(overruled and BACKSTOPS.getBondPaid(event) < 2*bond and repChange < 0 and event!=forkEvent):
         # done instead of sending to redistrib. pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)

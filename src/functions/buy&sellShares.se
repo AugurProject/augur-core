@@ -88,7 +88,6 @@ def cancel(trade_id):
     price = trade[4]
     owner = trade[5]
     outcome = trade[7]
-    branch = MARKETS.getBranch(market)
     trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
     fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE
