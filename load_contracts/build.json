@@ -1471,7 +1471,7 @@
         "sig": "extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "buy&sellShares": {
-        "address": "0x7688b85b19eb4a70f64fdc06016785b638c110bc", 
+        "address": "0xf2eee81baef876e8e06b3194ceb77e29ab410255", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -1500,8 +1500,8 @@
             "CASH = 0x608860bfe615a015ac932584af522fb8abc0a146", 
             "extern refund.se: [addFees:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, addTrade:[int256,int256,int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCreationTime:[int256]:int256, getCumScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getLastExpDate:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getLastTrade:[int256]:int256, getMakerFees:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsHash:[int256]:int256, getNumEvents:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSender:[]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], get_total_trades:[int256]:int256, get_trade_ids:[int256]:int256[], getgasSubsidy:[int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, remove_trade_from_market:[int256,int256]:int256, returnTags:[int256]:int256[], setMakerFees:[int256,int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256, test_callstack:[]:int256]", 
             "MARKETS = 0x189759f9fb3f39ea5c9c0b8fe02492c41b6592bd", 
-            "extern refund.se: [checkHash:[int256,int256,int256]:int256, commitTrade:[int256,int256]:int256, fill_trade:[int256,int256]:int256, getID:[int256]:int256, get_amount:[int256]:int256, get_price:[int256]:int256, get_trade:[int256]:int256[], makeTradeHash:[int256,int256,int256[]]:int256, remove_trade:[int256]:int256, saveTrade:[int256,int256,int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256, update_trade:[int256,int256]:_, zeroHash:[int256]:int256]", 
-            "TRADES = 0x0a84f6239215fcdd9c7149221029e34e2bc9fe96", 
+            "extern refund.se: [checkHash:[int256,int256]:int256, commitTrade:[int256]:int256, fill_trade:[int256,int256]:int256, getID:[int256]:int256, get_amount:[int256]:int256, get_price:[int256]:int256, get_trade:[int256]:int256[], makeTradeHash:[int256,int256,int256[]]:int256, remove_trade:[int256]:int256, saveTrade:[int256,int256,int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256, update_trade:[int256,int256]:_, zeroHash:[]:int256]", 
+            "TRADES = 0x9a34d424192968f69656673a30b2bc27f93ab06d", 
             "inset('refund.se')", 
             "", 
             "event log_add_tx(market:indexed, sender:indexed, type, price, amount, outcome, tradeid)", 
@@ -2827,7 +2827,7 @@
         "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:_, sellCompleteSets:[int256,int256]:_, test_callstack:[]:int256]"
     }, 
     "compositeGetters": {
-        "address": "0xfac9c6d2ac546b56eb5bf319d6d55395a8131dd1", 
+        "address": "0x0e30cb6832ee3bb651283d397f79f629ea47c3e9", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -2856,8 +2856,8 @@
             "EVENTS = 0xc9b3674cf37eb269b424646a1fe20f114c50293e", 
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256, test_callstack:[]:int256]", 
             "BRANCHES = 0x27c9cc437fc194adbda0c4ffec219dd7324f0ce0", 
-            "extern refund.se: [checkHash:[int256,int256,int256]:int256, commitTrade:[int256,int256]:int256, fill_trade:[int256,int256]:int256, getID:[int256]:int256, get_amount:[int256]:int256, get_price:[int256]:int256, get_trade:[int256]:int256[], makeTradeHash:[int256,int256,int256[]]:int256, remove_trade:[int256]:int256, saveTrade:[int256,int256,int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256, update_trade:[int256,int256]:_, zeroHash:[int256]:int256]", 
-            "TRADES = 0x0a84f6239215fcdd9c7149221029e34e2bc9fe96", 
+            "extern refund.se: [checkHash:[int256,int256]:int256, commitTrade:[int256]:int256, fill_trade:[int256,int256]:int256, getID:[int256]:int256, get_amount:[int256]:int256, get_price:[int256]:int256, get_trade:[int256]:int256[], makeTradeHash:[int256,int256,int256[]]:int256, remove_trade:[int256]:int256, saveTrade:[int256,int256,int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256, update_trade:[int256,int256]:_, zeroHash:[]:int256]", 
+            "TRADES = 0x9a34d424192968f69656673a30b2bc27f93ab06d", 
             "extern refund.se: [addFees:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, addTrade:[int256,int256,int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCreationTime:[int256]:int256, getCumScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getLastExpDate:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getLastTrade:[int256]:int256, getMakerFees:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsHash:[int256]:int256, getNumEvents:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSender:[]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], get_total_trades:[int256]:int256, get_trade_ids:[int256]:int256[], getgasSubsidy:[int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, remove_trade_from_market:[int256,int256]:int256, returnTags:[int256]:int256[], setMakerFees:[int256,int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256, test_callstack:[]:int256]", 
             "MARKETS = 0x189759f9fb3f39ea5c9c0b8fe02492c41b6592bd", 
             "inset('refund.se')", 
@@ -13364,7 +13364,7 @@
         "sig": "extern slashRep: [slashRep:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "trade": {
-        "address": "0xed0c6c8aedb021433baf244bf33041c706f98520", 
+        "address": "0x920180b1251bdfc40fd349648bc654db563d642f", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -13395,8 +13395,8 @@
             "CASH = 0x608860bfe615a015ac932584af522fb8abc0a146", 
             "extern refund.se: [addFees:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, addTrade:[int256,int256,int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCreationTime:[int256]:int256, getCumScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getLastExpDate:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getLastTrade:[int256]:int256, getMakerFees:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsHash:[int256]:int256, getNumEvents:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSender:[]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], get_total_trades:[int256]:int256, get_trade_ids:[int256]:int256[], getgasSubsidy:[int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, remove_trade_from_market:[int256,int256]:int256, returnTags:[int256]:int256[], setMakerFees:[int256,int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256, test_callstack:[]:int256]", 
             "MARKETS = 0x189759f9fb3f39ea5c9c0b8fe02492c41b6592bd", 
-            "extern refund.se: [checkHash:[int256,int256,int256]:int256, commitTrade:[int256,int256]:int256, fill_trade:[int256,int256]:int256, getID:[int256]:int256, get_amount:[int256]:int256, get_price:[int256]:int256, get_trade:[int256]:int256[], makeTradeHash:[int256,int256,int256[]]:int256, remove_trade:[int256]:int256, saveTrade:[int256,int256,int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256, update_trade:[int256,int256]:_, zeroHash:[int256]:int256]", 
-            "TRADES = 0x0a84f6239215fcdd9c7149221029e34e2bc9fe96", 
+            "extern refund.se: [checkHash:[int256,int256]:int256, commitTrade:[int256]:int256, fill_trade:[int256,int256]:int256, getID:[int256]:int256, get_amount:[int256]:int256, get_price:[int256]:int256, get_trade:[int256]:int256[], makeTradeHash:[int256,int256,int256[]]:int256, remove_trade:[int256]:int256, saveTrade:[int256,int256,int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256, update_trade:[int256,int256]:_, zeroHash:[]:int256]", 
+            "TRADES = 0x9a34d424192968f69656673a30b2bc27f93ab06d", 
             "extern expiringEvents: [addEvent:[int256,int256,int256,int256]:int256, addRepEvent:[int256,int256,int256,int256]:int256, addReportToEvent:[int256,int256,int256,int256]:int256, addReportersPaidSoFar:[int256,int256]:int256, addRoundTwo:[int256,int256]:int256, addToWeightOfReport:[int256,int256,int256,int256]:int256, adjustPeriodShareValueOutstanding:[int256,int256,int256]:int256, deleteEvent:[int256,int256,int256]:int256, getAfterRep:[int256,int256,int256]:int256, getBeforeRep:[int256,int256,int256]:int256, getCurrentMode:[int256,int256]:int256, getCurrentModeItems:[int256,int256]:int256, getEthicReport:[int256,int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getEventsRange:[int256,int256,int256,int256]:int256[], getLesserReportNum:[int256,int256,int256]:int256, getNumEventsToReportOn:[int256,int256]:int256, getNumRemoved:[int256,int256]:int256, getNumReportsActual:[int256,int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumRequired:[int256,int256]:int256, getNumRoundTwo:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodDormantRep:[int256,int256,int256]:int256, getPeriodRepConstant:[int256,int256,int256]:int256, getRepEvent:[int256,int256,int256]:int256, getReport:[int256,int256,int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getReportersPaidSoFar:[int256,int256]:int256, getRequired:[int256]:int256, getSaltyHash:[int256,int256,int256,int256]:int256, getShareValue:[int256,int256]:int256, getSubsidy:[int256,int256,int256]:int256, getWeightOfReport:[int256,int256,int256]:int256, moveEvent:[int256,int256]:int256, refundCost:[int256,int256]:int256, removeEvent:[int256,int256]:int256, setAfterRep:[int256,int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256,int256]:int256, setCurrentMode:[int256,int256,int256]:int256, setCurrentModeItems:[int256,int256,int256]:int256, setEthicReport:[int256,int256,int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setLesserReportNum:[int256,int256,int256,int256]:int256, setNumEventsToReportOn:[int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setPeriodDormantRep:[int256,int256,int256,int256]:int256, setPeriodRepConstant:[int256,int256,int256,int256]:int256, setReport:[int256,int256,int256,int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setSaltyHash:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]", 
             "EXPEVENTS = 0x954a91f82c6cc653f2cb42b1499e3b3b0a751afc", 
             "inset('refund.se')", 
@@ -13466,7 +13466,7 @@
             "    tradeInfo[1] = max_amount", 
             "    tradeInfo[2] = max_value", 
             "    tradeHash = sha3(tradeInfo, items=3)", 
-            "    if(TRADES.checkHash(tradeHash, msg.sender, trades)==-1):", 
+            "    if(TRADES.checkHash(tradeHash, msg.sender)==-1):", 
             "        logReturn(-2)", 
             "    # Try to fulfill each trade passed", 
             "    t = 0", 
@@ -13620,7 +13620,7 @@
             "    tradeInfo[1] = max_amount", 
             "    tradeInfo[2] = 0", 
             "    tradeHash = sha3(tradeInfo, items=3)", 
-            "    if(TRADES.checkHash(tradeHash, msg.sender, buyer_trade_id)==-1):", 
+            "    if(TRADES.checkHash(tradeHash, msg.sender)==-1):", 
             "        logReturn(-2)", 
             "    # Get trade", 
             "    trade = array(TRADE_FIELDS)", 
@@ -13876,14 +13876,14 @@
         "sig": "extern trade: [short_sell:[int256,int256]:_, test_callstack:[]:int256, trade:[int256,int256,int256[]]:_]"
     }, 
     "trades": {
-        "address": "0x0a84f6239215fcdd9c7149221029e34e2bc9fe96", 
+        "address": "0x9a34d424192968f69656673a30b2bc27f93ab06d", 
         "code": [
             "inset('refund.se')", 
             "", 
             "### Storage of all data associated with trades", 
             "", 
             "# reporterID is index", 
-            "data tradeCommits[](hash[], block[])", 
+            "data tradeCommits[](hash, block)", 
             "# tradeID is index", 
             "data trades[](id, type, market, amount, price, owner, block, outcome)", 
             "", 
@@ -13901,20 +13901,20 @@
             "    tradeHash = sha3(tradeInfo, items=3)", 
             "    return(tradeHash)", 
             "", 
-            "def commitTrade(hash, id):", 
+            "def commitTrade(hash):", 
             "    refund()", 
-            "    self.tradeCommits[msg.sender].hash[id] = hash", 
-            "    self.tradeCommits[msg.sender].block[id] = block.number", 
+            "    self.tradeCommits[msg.sender].hash = hash", 
+            "    self.tradeCommits[msg.sender].block = block.number", 
             "    return(1)", 
             "", 
-            "def zeroHash(id):", 
+            "def zeroHash():", 
             "    refund()", 
-            "    self.tradeCommits[msg.sender].hash[id] = 0", 
+            "    self.tradeCommits[msg.sender].hash = 0", 
             "    return(1)", 
             "", 
-            "def checkHash(tradeHash, sender, id):", 
+            "def checkHash(tradeHash, sender):", 
             "    refund()", 
-            "    if(self.tradeCommits[sender].hash[id] != tradeHash || block.number <= self.tradeCommits[sender].block[id]):", 
+            "    if(self.tradeCommits[sender].hash != tradeHash || block.number <= self.tradeCommits[sender].block):", 
             "        return(-1)", 
             "    else:", 
             "        return(1)", 
@@ -13991,13 +13991,9 @@
                     {
                         "name": "sender", 
                         "type": "int256"
-                    }, 
-                    {
-                        "name": "id", 
-                        "type": "int256"
                     }
                 ], 
-                "name": "checkHash(int256,int256,int256)", 
+                "name": "checkHash(int256,int256)", 
                 "outputs": [
                     {
                         "name": "out", 
@@ -14012,13 +14008,9 @@
                     {
                         "name": "hash", 
                         "type": "int256"
-                    }, 
-                    {
-                        "name": "id", 
-                        "type": "int256"
                     }
                 ], 
-                "name": "commitTrade(int256,int256)", 
+                "name": "commitTrade(int256)", 
                 "outputs": [
                     {
                         "name": "out", 
@@ -14229,13 +14221,8 @@
             }, 
             {
                 "constant": false, 
-                "inputs": [
-                    {
-                        "name": "id", 
-                        "type": "int256"
-                    }
-                ], 
-                "name": "zeroHash(int256)", 
+                "inputs": [], 
+                "name": "zeroHash()", 
                 "outputs": [
                     {
                         "name": "out", 
@@ -14245,6 +14232,6 @@
                 "type": "function"
             }
         ], 
-        "sig": "extern refund.se: [checkHash:[int256,int256,int256]:int256, commitTrade:[int256,int256]:int256, fill_trade:[int256,int256]:int256, getID:[int256]:int256, get_amount:[int256]:int256, get_price:[int256]:int256, get_trade:[int256]:int256[], makeTradeHash:[int256,int256,int256[]]:int256, remove_trade:[int256]:int256, saveTrade:[int256,int256,int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256, update_trade:[int256,int256]:_, zeroHash:[int256]:int256]"
+        "sig": "extern refund.se: [checkHash:[int256,int256]:int256, commitTrade:[int256]:int256, fill_trade:[int256,int256]:int256, getID:[int256]:int256, get_amount:[int256]:int256, get_price:[int256]:int256, get_trade:[int256]:int256[], makeTradeHash:[int256,int256,int256[]]:int256, remove_trade:[int256]:int256, saveTrade:[int256,int256,int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256, update_trade:[int256,int256]:_, zeroHash:[]:int256]"
     }
 }

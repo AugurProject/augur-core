@@ -3,7 +3,7 @@ inset('refund.se')
 ### Storage of all data associated with trades
 
 # reporterID is index
-data tradeCommits[](hash[], block[])
+data tradeCommits[](hash, block)
 # tradeID is index
 data trades[](id, type, market, amount, price, owner, block, outcome)
 
@@ -21,20 +21,20 @@ def makeTradeHash(max_value, max_amount, trade_ids: arr):
     tradeHash = sha3(tradeInfo, items=3)
     return(tradeHash)
 
-def commitTrade(hash, id):
+def commitTrade(hash):
     refund()
-    self.tradeCommits[msg.sender].hash[id] = hash
-    self.tradeCommits[msg.sender].block[id] = block.number
+    self.tradeCommits[msg.sender].hash = hash
+    self.tradeCommits[msg.sender].block = block.number
     return(1)
 
-def zeroHash(id):
+def zeroHash():
     refund()
-    self.tradeCommits[msg.sender].hash[id] = 0
+    self.tradeCommits[msg.sender].hash = 0
     return(1)
 
-def checkHash(tradeHash, sender, id):
+def checkHash(tradeHash, sender):
     refund()
-    if(self.tradeCommits[sender].hash[id] != tradeHash || block.number <= self.tradeCommits[sender].block[id]):
+    if(self.tradeCommits[sender].hash != tradeHash || block.number <= self.tradeCommits[sender].block):
         return(-1)
     else:
         return(1)
