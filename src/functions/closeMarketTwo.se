@@ -22,7 +22,7 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
     cumScale = MARKETS.getCumScale(market)
     while(winningOutcome[n]!=0):
         sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, winningOutcome[n])
-        MARKETS.modifyParticipantShares(market, sender, winningOutcome[n], -sharesOwned)
+        MARKETS.modifyParticipantShares(market, sender, winningOutcome[n], -sharesOwned, 0)
         # low side
         if(n==0):
             CASH.subtractCash(market, sharesOwned*cumScale/ONE*pricePerShare1/ONE)

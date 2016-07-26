@@ -62,7 +62,7 @@ def move_event(event):
             EVENTS.setEthics(event, 0)
             EVENTS.setUncaughtOutcome(event, 0)
             # return bond if it's a round 2 event and make it not one anymore
-            ROUNDTWO.roundTwoResolve(branch, event, eventIndex)
+            ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)
             # if should've resolved in past periods
             if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1)):
                 # push it into next [this] period
@@ -78,7 +78,7 @@ def move_event(event):
             EVENTS.setEthics(event, 0)
             EVENTS.setUncaughtOutcome(event, 0)
             # return bond if it's a round 2 event and make it not one anymore
-            ROUNDTWO.roundTwoResolve(branch, event, eventIndex)
+            ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)
             # move event to fork
             # and place it into the next reporting period w/ outcomes to 0
             if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1)):

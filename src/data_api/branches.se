@@ -39,7 +39,7 @@ inset('refund.se')
     # 45 * fee * volume per period = rep market cap
     # Want:
         # Rep market cap >> outstanding shares value at all times
-# min can be no lower than ~0.0000001 or so otherwise can run into underflow isues
+# min can be no lower than ~0.0000001 or so otherwise can run into underflow issues
 data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent)
 
 # first param is the branch, second param is the subcurrency contract
