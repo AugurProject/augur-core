@@ -60,7 +60,7 @@ def createSubbranch(description:str, periodLength, parent, minTradingFee, oracle
     else:
         return(-3)
     # pay creation fee, initialize branch info
-    if(CASH.sendFrom(parent, 47*ONE, msg.sender) and INFO.setInfo(branch, description, tx.origin, 47*ONE) and REPORTING.setInitialReporters(parent, branch)):
+    if(CASH.sendFrom(parent, 47*ONE, msg.sender) and INFO.setInfo(branch, description, tx.origin, 47*ONE) and REPORTING.setInitialReporters(branch)):
         return(branch)
     else:
         throw()

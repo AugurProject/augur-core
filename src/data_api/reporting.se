@@ -156,7 +156,7 @@ def repIDToIndex(branch, repID):
     return(self.Reporting[branch].repIDtoIndex[repID])
 
 # check that msg.sender is one of our function contracts
-def setInitialReporters(parent, branch):
+def setInitialReporters(branch):
     # if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add branch as a "reporter"

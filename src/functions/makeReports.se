@@ -145,7 +145,7 @@ def submitReport(event, salt, report, ethics):
             return(-8)
 
     # actual submitting of report and ethicality
-    report = self.validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, weight)
+    report = self.validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, weight)
     if(report == -4):
         return(-4)
     EXPEVENTS.setReport(branch, votePeriod, event, report, msg.sender)
@@ -184,7 +184,7 @@ def submitReport(event, salt, report, ethics):
 # Returns -4 if report is invalid
     # isn't between 1 and 2 if binary
     # if same report as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
-def validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, weight):
+def validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, weight):
     callstackCheck()
     outcome = 0
     # binary
