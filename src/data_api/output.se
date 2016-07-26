@@ -3971,7 +3971,7 @@ def penalizeWrong(branch, event):
     uncaught = self.getUncaughtOutcome(event)
     outcome = catch(uncaught)
     if(repBalance < ONE):
-        return([repBalance, branch, msg.sender, ONE]: arr)
+        return(repBalance)
     if(scalar(event) or categorical(event)):
         outcome = uncaught
     p = proportionCorrect(event, 0)

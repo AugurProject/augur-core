@@ -1,5 +1,5 @@
 import branches as BRANCHES
-import events as EVENTS
+import ev]ents as EVENTS
 import expiringEvents as EXPEVENTS
 import fxpFunctions as FXP
 import reporting as REPORTING

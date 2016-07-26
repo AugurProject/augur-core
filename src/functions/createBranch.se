@@ -29,7 +29,6 @@ inset('refund.se')
 # @return branch if success
 # error messages otherwise
     # -1: bad input or parent doesn't exist
-    # -2: no money for creation fee
     # -3: branch already exists
 def createSubbranch(description:str, periodLength, parent, minTradingFee, oracleOnly):
     refund()
@@ -64,4 +63,4 @@ def createSubbranch(description:str, periodLength, parent, minTradingFee, oracle
     if(CASH.sendFrom(parent, 47*ONE, msg.sender) and INFO.setInfo(branch, description, tx.origin, 47*ONE) and REPORTING.setInitialReporters(parent, branch)):
         return(branch)
     else:
-        return(-2)
+        throw()

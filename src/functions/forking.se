@@ -125,7 +125,6 @@ def exchangeRate(branch):
 # Errors:
     #  0: not in last 48 hr of period
     # -1: ineligible for forking over, already resolved, forked, or hasn't seen 1st backstop yet
-    # -2: wasn't able to pay for bond
     # -3: no fork allowed for 1 period after a forking event
     # -4: event was pushed forward, not allowed yet
     # -5: invalid branch
@@ -154,7 +153,7 @@ def fork(event, branch, forkedOverEthicality):
         # lose fork bond in branch 1
         # results same as roundtwobond, let it resolve as that on original network
         if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
-            return(-2)
+            throw()
         # on branch 2 fork bond isn't lost
         # on fork bond isn't lost, gets paid up to 2x from "liars"
         # make the fork
@@ -177,7 +176,7 @@ def fork(event, branch, forkedOverEthicality):
         # return round 2 bond on orig. branch
         market = EVENTS.getMarket(event, 0)
         averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period-1)/EXPEVENTS.getNumberEvents(branch, period-1)
-        bond = averageAdjudicationCost + MARKETS.getSharesValue(market)*(184467440737095520 + MARKETS.getTradingFee(market)/2) / 2**64
+        bond = averageAdjudicationCost + MARKETS.getSharesValue(market)*(POINTZEROONE + MARKETS.getTradingFee(market)/2) / 2**64
         bond = min(bond, 200*ONE)
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
@@ -212,6 +211,7 @@ def resolveForkedEvent(branch, event):
         return(0)
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
+    # helper function for resolveForkedEvent
 def resolveForkEvent(branch, event):
     refund()
     # whitelist

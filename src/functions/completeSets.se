@@ -41,7 +41,7 @@ def buyCompleteSets(market, amount):
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
     # send money from user acc. to market address/account
-    if(CASH.sendFrom(market, cost, msg.sender)):
+    if(!CASH.sendFrom(market, cost, msg.sender)):
         return(-2)
     n = 1
     # send shares of the event to user address and increment the number issued in the market for each outcome
