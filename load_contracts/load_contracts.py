@@ -561,7 +561,7 @@ def main():
     if CONTRACT is not None:
         deps = optimize_deps(deps, nodes)
     for fullname in map(get_fullname, deps):
-        print "compiling", fullname
+        print "compiling", os.path.normpath(fullname)
         sys.stdout.flush()
         compile(fullname)
     rpc.save_db(DB)

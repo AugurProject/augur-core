@@ -78,12 +78,6 @@ def getEventsToReportOn(branch, period, sender, start):
             events[i] = thisEvent
             numEventsToReportOn += 1
         i += 1
-    # eventsToReportOn = slice(events, items=0, items=numEventsToReportOn)
-    # eventsToReportOn = array(numEventsToReportOn)
-    # i = 0
-    # while i < numEventsToReportOn:
-    #     eventsToReportOn[i] = events[i]
-    #     i += 1
     return(slice(events, items=0, items=numEventsToReportOn): arr)
 
 def getEventCanReportOn(branch, expDateIndex, reporter, event):

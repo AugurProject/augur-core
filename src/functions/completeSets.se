@@ -25,6 +25,12 @@ import cash as CASH
 import markets as MARKETS
 inset('refund.se')
 
+event completeSetsReturnValue(returnValue)
+
+macro logReturn($returnValue):
+    log(type=completeSetsReturnValue, $returnValue)
+    return($returnValue)
+
 # Buys amount of every outcome
 # cost 850k gas
 # Errors:
@@ -38,11 +44,11 @@ def buyCompleteSets(market, amount):
     cumScale = MARKETS.getCumScale(market)
     cost = amount*cumScale/ONE
     if(!MARKETS.getCreationTime(market)):
-        return(0)
+        logReturn(0)
     if(BRANCHES.getOracleOnly(branch)):
-        return(-1)
+        logReturn(-1)
     if(CASH.balance(msg.sender) < cost):
-        return(-2)
+        logReturn(-2)
     n = 1
     # send shares of the event to user address and increment the number issued in the market for each outcome
     while n <= numOutcomes:
@@ -55,7 +61,7 @@ def buyCompleteSets(market, amount):
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount*cumScale/ONE)
     # send money from user acc. to market address/account
     CASH.sendFrom(market, cost, msg.sender)
-    return(1)
+    logReturn(1)
 
 # Sells amount of every outcome [if user owns it]
 # cost 850k gas
@@ -70,11 +76,11 @@ def sellCompleteSets(market, amount):
     cumScale = MARKETS.getCumScale(market)
     cost = amount*cumScale/ONE
     if(BRANCHES.getOracleOnly(branch)):
-        return(-1)
+        logReturn(-1)
     n = 1
     while n <= numOutcomes:
         if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < amount):
-            return(-3)
+            logReturn(-3)
         n += 1
     n = 1
     # Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets
@@ -89,4 +95,4 @@ def sellCompleteSets(market, amount):
     # send funds from the market to the user acc.
     CASH.subtractCash(market, cost)
     CASH.addCash(msg.sender, cost)
-    return(1)
+    logReturn(1)

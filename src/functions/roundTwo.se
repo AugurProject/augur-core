@@ -203,7 +203,7 @@ def resolve(branch, event):
         fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
         # sets outcome which is used in calculating payouts 
         EVENTS.setOutcome(event, fxpOutcome)
-        ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
+        ethicOutcome = ONEHALF * (scaled_max - scaled_min)/ONE + scaled_min
         if(mode==ONEHALF || !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, bond)

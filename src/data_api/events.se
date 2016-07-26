@@ -79,10 +79,6 @@ def setForkDone(event):
 def getForkedDone(event):
     return(self.Events[event].forkOver)
 
-def getEventResolution(event):
-    resLen = self.Events[event].resolutionSourceLength
-    return(load(self.Events[event].resolutionSource[0], chars=resLen): str)
-
 def getEventInfo(event):
     refund()
     eventinfo = array(7)
@@ -94,6 +90,9 @@ def getEventInfo(event):
     eventinfo[5] = self.Events[event].numOutcomes
     eventinfo[6] = self.Events[event].bond
     return(eventinfo: arr)
+
+def getResolutionLength(event):
+    return(self.Events[event].resolutionSourceLength)
     
 def getResolution(event):
     refund()
@@ -186,7 +185,9 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes,
         self.Events[ID].minValue = minValue
         self.Events[ID].maxValue = maxValue
         self.Events[ID].numOutcomes = numOutcomes
-        save(self.Events[ID].resolutionSource[0], resolution, chars=len(resolution))
+        resolutionSourceLength = len(resolution)
+        self.Events[ID].resolutionSourceLength = resolutionSourceLength
+        save(self.Events[ID].resolutionSource[0], resolution, chars=resolutionSourceLength)
         return(1)
     else:
         return(0)

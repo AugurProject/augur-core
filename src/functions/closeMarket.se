@@ -29,6 +29,12 @@ import backstops as BACKSTOPS
 import eventResolution as RESOLVE
 inset('refund.se')
 
+event closeMarketReturnValue(returnValue)
+
+macro logReturn($returnValue):
+    log(type=closeMarketReturnValue, $returnValue)
+    return($returnValue)
+
 # first param is the market, second param is the subcurrency contract
 data cash[][]
 
@@ -73,13 +79,13 @@ def closeMarket(branch, market, sender):
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)
     if(CASH.balance(market)<=0):
-        return(-1)
+        logReturn(-1)
     if(EVENTS.getUncaughtOutcome(event)==0):
-        return(-2)
+        logReturn(-2)
     if(BACKSTOPS.getRoundTwo(event) && !BACKSTOPS.getFinal(event)):
-        return(-3)
+        logReturn(-3)
     if(MARKETS.getBranchID(market)!=branch):
-        return(-4)
+        logReturn(-4)
     # checks whether any events not already resolved
     resolved = 1
     # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
@@ -93,23 +99,23 @@ def closeMarket(branch, market, sender):
         forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
         currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
         if((EVENTS.getForked(event) && !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):
-            return(-5)
+            logReturn(-5)
         if(binary(event) && fxpOutcome==0):
-                resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
+            resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
         elif(scalar(event) && EVENTS.getmode(event)==0):
-                resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
+            resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
         elif(categorical(event) && EVENTS.getmode(event)==0):
-                resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
+            resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
         if(resolution==-6):
-            return(-6)
+            logReturn(-6)
         winningOutcomes = array(8)
         winningOutcomes = RESOLVE.determineWinningOutcomes(event, outitems=8)
         MARKETS.setWinningOutcomes(market, winningOutcomes)
         # refunds closing cost
         MARKETS.refundClosing(market, sender)
-        return(1)
+        logReturn(1)
     else:
-        return(0)
+        logReturn(0)
 
 # Claim trading profits/value per share after a market is resolved
 # @returns 1 if successful
@@ -154,7 +160,7 @@ macro scalar($event):
     ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
 
 macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and ONE*EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
+    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
 
 macro categorical($event):
     (EVENTS.getNumOutcomes($event)>2)

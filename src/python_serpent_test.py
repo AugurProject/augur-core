@@ -329,7 +329,7 @@ def test_trading():
             assert(isclose((afterm-beforem)/ONE, (makerFee + ONE*.01)/ONE))
             assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 2)==TWO)
             hash = c.makeTradeHash(0, ONE, [buy], sender=t.k2)
-            c.commitTrade(hash, sender=t.k2)
+            c.commitTrade(hash, buy, sender=t.k2)
             s.mine(1)
             c.buyCompleteSets(market[a], 10*ONE, sender=t.k2)
             assert(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 1)==10*ONE)
@@ -352,7 +352,7 @@ def test_trading():
             assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 1)==ONE)
             assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 2)==3*ONE)
             hash = c.makeTradeHash(ONE, 0, [sell], sender=t.k2)
-            c.commitTrade(hash, sender=t.k2)
+            c.commitTrade(hash, sell, sender=t.k2)
             s.mine(1)
             # make sure buyer or k2 got their shares and gets rid of cash, make sure seller got cash & got rid of their shares
             assert(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 1)==10*ONE)
@@ -408,7 +408,7 @@ def test_trading():
             beforem = c.balance(market[a])
             beforeog = c.balance(s.block.coinbase)
             hash = c.makeTradeHash(0, ONE, [buy])
-            c.commitTrade(hash)
+            c.commitTrade(hash, buy)
             s.mine(1)
             gas_use(s)
             print "Short sell"
