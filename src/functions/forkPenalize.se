@@ -24,6 +24,7 @@ inset('repChange.se')
     # -2: fork event isn't resolved yet
     # -3: already done for all events in this period
     # -4: needed to collect fees last period which sets the before/after rep
+    # -5: event branch is invalid/doesn't match
 def penalizeOnForkedEvent(branch, event):
     refund()
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
@@ -33,6 +34,8 @@ def penalizeOnForkedEvent(branch, event):
     newRep = 0
     newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
+    if(EVENTS.getEventBranch(event)!=branch):
+        return(-5)
     if(repBalance < ONE):
         return(0)
     forkOutcome = EVENTS.getForkOutcome(event)

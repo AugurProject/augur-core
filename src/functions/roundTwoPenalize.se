@@ -32,6 +32,7 @@ macro MINBOND: 200*ONE
     # -3: in fork period only thing that rep redistribution is done on is the round 2 event in the original branch via round 2 penalize
     # -4: already done for all events in this period
     # -5: needed to collect fees last period which sets the before/after rep
+    # -6: event isn't in the branch given
 # force event to be resolved first if it can be
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized
 def penalizeRoundTwoWrong(branch, event):
@@ -59,6 +60,8 @@ def penalizeRoundTwoWrong(branch, event):
     bond = min(bond, MINBOND)
     ethical = EVENTS.getEthics(event)
     p = proportionCorrect(event, 0)
+    if(EVENTS.getEventBranch(event)!=branch):
+        return(-6)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     if(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
         return(-1)

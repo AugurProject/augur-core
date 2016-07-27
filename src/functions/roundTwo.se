@@ -47,7 +47,9 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     bond = min(bond, MINBOND)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     # if so, we're in the final 48 hours and event is in this branch + votePeriod
-    if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) and event!=0 and event==eventID and !BACKSTOPS.getRoundTwo(event) and !EVENTS.getForked(event)):
+    currentPeriod = block.timestamp/BRANCHES.getPeriodLength(branch)
+    currentPlus48Hr = (block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)
+    if(currentPeriod!=currentPlus48Hr and event!=0 and event==eventID and !BACKSTOPS.getRoundTwo(event) and !EVENTS.getForked(event)):
         # send the bond to the branch
         # todo fix this will fail b/c event doesn't have rep acc
         if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
@@ -89,7 +91,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod-1)/EXPEVENTS.getNumberEvents(branch, votePeriod-1)
     bond = averageAdjudicationCost + MARKETS.getSharesValue(market)*(POINTZEROONE + MARKETS.getTradingFee(market)/2) / ONE
     bond = min(bond, MINBOND)
-    event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
+    eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     votedOnAgain = 0
     overruled = 1
     forked = EVENTS.getForked(event)

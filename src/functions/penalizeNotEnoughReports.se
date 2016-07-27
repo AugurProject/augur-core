@@ -23,6 +23,7 @@ macro POINTNINE: 16602069666338596864
 # Errors:
     # -1: already done
     # -2: not in right part of period
+    # -3: event isn't in branch
 def proveReporterDidntReportEnough(branch, reporter, eventExample):
     refund()
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
@@ -30,6 +31,8 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     residual = block.timestamp % periodLength
     originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
     numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)
+    if(EVENTS.getEventBranch(eventExample)!=branch):
+        return(-3)
     # events a user should be reporting on
     # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
     # a**b=exp(b*ln(a))=e**(b*ln(a)).

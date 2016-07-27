@@ -157,7 +157,7 @@ def fork(event, branch, forkedOverEthicality):
         # on branch 2 fork bond isn't lost
         # on fork bond isn't lost, gets paid up to 2x from "liars"
         # make the fork
-        newBranch = CREATEBRANCH.createSubbranch(text("fork"), BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), 0)
+        newBranch = CREATEBRANCH.createSubbranch(text("fork"), BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), BRANCHES.getOracleOnly(branch))
         REPORTING.setFork(newBranch)
         period = BRANCHES.getVotePeriod(newBranch)
         EXPEVENTS.setEventRequired(newBranch, period+1, event)
@@ -183,7 +183,6 @@ def fork(event, branch, forkedOverEthicality):
         BACKSTOPS.setBondReturned(event)
     else:
         return(0)
-
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
 # branch is orig. branch

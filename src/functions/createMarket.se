@@ -201,6 +201,7 @@ def updateTradingFee(market, tradingFee):
 # In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration dateevent
 # In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
+# todo add comments re return values and test again
 def pushMarketForward(branch, market):
     refund()
     # can't do while forking
@@ -214,6 +215,8 @@ def pushMarketForward(branch, market):
         return(-2)
     if(!CASH.sendFrom(market, MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE), msg.sender)):
         return(-3)
+    if(MARKETS.getBranch(market)!=branch):
+        return(0)
     event = MARKETS.getMarketEvent(market, 0)
     expiration = EVENTS.getExpiration(event)
     if(EVENTS.getRejectedPeriod(event) or expiration!=EVENTS.getOriginalExpiration(event) or EVENTS.getOutcome(event) or BACKSTOPS.getRoundTwo(event) or expiration/periodLength==block.timestamp/periodLength):
