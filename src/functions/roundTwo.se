@@ -81,6 +81,7 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
 # Resolves a round 2 event scenario
 # Errors:
     # 0: returned if not reported on again yet
+# todo make if/elifs simpler here
 def roundTwoResolve(branch, event, eventIndex, sender):
     refund()
     votePeriod = BRANCHES.getVotePeriod(branch)

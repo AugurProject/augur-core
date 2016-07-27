@@ -265,15 +265,19 @@ def remove_trade_from_market(market_id, trade_id):
     callstackCheck()
     prev_id = self.Markets[market_id].trade_ids[trade_id].prev_id
     next_id = self.Markets[market_id].trade_ids[trade_id].next_id
+    # if the trade had a previous and next trade it connects them directly, remove this trade_id from the sequence/middle
     if prev_id and next_id:
         self.Markets[market_id].trade_ids[prev_id].next_id = next_id
         self.Markets[market_id].trade_ids[next_id].prev_id = prev_id
+    # if it's the most recent trade, update the previous trade to be the most recent one
     elif prev_id:
         self.Markets[market_id].last_trade = prev_id
         self.Markets[market_id].trade_ids[prev_id].next_id = 0
-
+    
+    # if the trade had a trade following it, 0 out that slot
     if next_id:
         self.Markets[market_id].trade_ids[trade_id].next_id = 0
+    # if the trade had a trade before it, 0 out that slot
     if prev_id:
         self.Markets[market_id].trade_ids[trade_id].prev_id = 0
     self.Markets[market_id].trade_ids[trade_id].id = 0

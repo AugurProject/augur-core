@@ -31,5 +31,7 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
         elif(n==1):
             CASH.subtractCash(market, sharesOwned*cumScale/ONE*pricePerShare2/ONE)
             CASH.addCash(sender, sharesOwned*cumScale/ONE*pricePerShare2/ONE)
+        else:
+            throw()
         n+=1
     return(1)

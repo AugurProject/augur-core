@@ -134,7 +134,7 @@ def submitReport(event, salt, report, ethics):
     if(ethics!=ONE and ethics!=0):
         return(-5)
     # todo get outcome may not work / be valid
-    elif(EVENTS.getOutcome(event)!=0):
+    if(EVENTS.getOutcome(event)!=0):
         return(-6)
     # commented out for easy testing
     # if(block.timestamp/periodLength!=((block.timestamp + 2*TWENTYFOURHR)/periodLength)):
@@ -205,7 +205,7 @@ def validateReport(event, branch, votePeriod, report, forkedOverEthicality, fork
     else:
         if(report > ONE):
             report = ONE
-        elif(report <= 0):
+        if(report <= 0):
             # 1 is the new 0 [1/2**64 is basically 0 but able to be differentiated from no report of 0]
             report = 1
         # in case of fork remove the original outcome as a possible response if didn't fork over ethics

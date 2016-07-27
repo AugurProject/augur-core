@@ -148,6 +148,8 @@ def claimProceeds(branch, market):
         # resolves a scalar market
         elif(winningOutcomes[1]):
             outcome = CLOSETWO.twoOutcomes(market, winningOutcomes, event, msg.sender)
+        else:
+            throw()
         return(outcome)
     else:
         return(0)

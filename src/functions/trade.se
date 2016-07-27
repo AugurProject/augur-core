@@ -195,6 +195,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome)
             else:
                 return([INSUFFICIENT_BALANCE]: arr)
+        else:
+            throw()
 
         # Log price, fill amount, type and timestamp
         MARKETS.setPrice(market, outcome, price)
