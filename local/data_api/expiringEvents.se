@@ -1,0 +1,293 @@
+# todo move extern stuff into a new contract
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation OU
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have receive a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256, test_callstack:[]:int256]
+BRANCHES = create('../data_api/branches.se')
+extern refund.se: [addMarket:[int256,int256]:int256, addPast24:[int256]:int256, getBond:[int256]:int256, getBranch:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getEventPushedUp:[int256]:int256, getExpiration:[int256]:int256, getForkEthicality:[int256]:int256, getForkOutcome:[int256]:int256, getForked:[int256]:int256, getForkedDone:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPast24:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getReportingThreshold:[int256]:int256, getResolution:[int256]:bytes, getResolutionLength:[int256]:int256, getUncaughtOutcome:[int256]:int256, getmode:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256,bytes]:int256, setBond:[int256,int256]:int256, setBranch:[int256,int256]:int256, setEthics:[int256,int256]:int256, setEventPushedUp:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setForkDone:[int256]:int256, setForkEthicality:[int256,int256]:int256, setForkOutcome:[int256,int256]:int256, setForked:[int256]:int256, setOriginalExpiration:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setRejected:[int256,int256]:int256, setThreshold:[int256,int256]:int256, setUncaughtOutcome:[int256,int256]:int256, setmode:[int256,int256]:int256, test_callstack:[]:int256]
+EVENTS = create('../data_api/events.se')
+inset('refund.se')
+
+# [branchID][votingPeriod]
+# reporthash is [reporterID][event] = hash
+# subsidy is money for paying back a user for calculating the targeted num of reports for an event
+data EventIDToIndex[][]
+data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], saltyHash[][], shareValue, subsidy[], roundTwoNumEvents)
+
+# numReportsEvent is number of reports on an event, expected is how many have been committed for an event
+# numReportsActual is the amount of reports a user has submitted in a period
+# lesserReportNum is the number of reports an event should have [the lesser of how many it can afford from fees and how many it should have due to outstanding share value]
+# periodRepConstant is
+data branches[](beforeRep[][], afterRep[][], periodDormantRep[][], ethics[][](event[]), report[][](event[]), numReportsEvent[][], numReportsActual[][], repEvent[][], lesserReportNum[][], periodRepConstant[][], reportersPaidSoFarForEvent[])
+
+# branch, period as params
+data numReqEvents[][]
+data requiredEvents[]
+data mode_items[][](report_value[], current_mode, current_mode_items)
+
+def getSaltyHash(branch, expDateIndex, reporter, event):
+    refund()
+    return(self.EventsExpDates[branch][expDateIndex].saltyHash[reporter][event])
+
+def setSaltyHash(branch, expDateIndex, reporter, saltyHash, event):
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #	return(-1)
+    self.EventsExpDates[branch][expDateIndex].saltyHash[reporter][event] = saltyHash
+    return(1)
+
+def getReportersPaidSoFar(branch, event):
+    return(self.branches[branch].reportersPaidSoFarForEvent[event])
+
+def addReportersPaidSoFar(branch, event):
+    self.branches[branch].reportersPaidSoFarForEvent[event] += 1
+    return(1)
+
+def refundCost(to, value):
+    send(to, value)
+    return(1)
+
+def getSubsidy(branch, period, event):
+    return(self.EventsExpDates[branch][period].subsidy[event])
+
+def getPeriodRepConstant(branch, votePeriod, sender):
+    return(self.branches[branch].periodRepConstant[votePeriod][sender])
+
+def setPeriodRepConstant(branch, votePeriod, sender, value):
+    self.branches[branch].periodRepConstant[votePeriod][sender] = value
+    return(1)
+
+def getLesserReportNum(branch, period, event):
+    return(self.branches[branch].lesserReportNum[period][event])
+
+def getCurrentModeItems(period, event):
+    return(self.mode_items[period][event].current_mode_items)
+
+def getCurrentMode(period, event):
+    return(self.mode_items[period][event].current_mode)
+
+# returns weight of a report value for the mode
+def getWeightOfReport(period, event, report):
+    return(self.mode_items[period][event].report_value[report])
+
+def getRepEvent(branch, votePeriod, event):
+    return(self.branches[branch].repEvent[votePeriod][event])
+
+def getEthicReport(branch, period, event, sender):
+    return(self.branches[branch].ethics[period][sender].event[event])
+
+def getNumReportsEvent(branch, votePeriod, eventID):
+    return(self.branches[branch].numReportsEvent[votePeriod][eventID])
+
+def getReport(branch, period, event, sender):
+    #if(whitelist):
+    return(self.branches[branch].report[period][sender].event[event])
+
+def getBeforeRep(branch, period, sender):
+    return(self.branches[branch].beforeRep[period][sender])
+
+def getAfterRep(branch, period, sender):
+    return(self.branches[branch].afterRep[period][sender])
+
+def getPeriodDormantRep(branch, period, sender):
+    return(self.branches[branch].periodDormantRep[period][sender])
+
+def getNumReportsActual(branch, votePeriod, sender):
+    return(self.branches[branch].numReportsActual[sender][votePeriod])
+
+def getNumRoundTwo(branch, period):
+    refund()
+    return(self.EventsExpDates[branch][period].roundTwoNumEvents)
+
+def addRoundTwo(branch, period):
+    refund()
+    self.EventsExpDates[branch][period].roundTwoNumEvents += 1
+    return(1)
+
+def getRequired(event):
+    return(self.requiredEvents[event])
+
+def getNumRequired(branch, period):
+    return(self.numReqEvents[branch][period])
+
+# Return 0 means already required
+def setEventRequired(branch, period, event):
+    if(self.requiredEvents[event]==0):
+        self.requiredEvents[event] = 1
+        self.numReqEvents[branch][period] += 1
+        return(1)
+    else:
+        return(0)
+
+# With this function you can get the eventIDs and report on outcomes
+# @return all events in a branch and expiration period
+def getEvents(branch, expDateIndex):
+    refund()
+    numEvents = self.EventsExpDates[branch][expDateIndex].numberEvents
+    events = array(numEvents)
+    i = 0
+    while i < numEvents:
+        events[i] = self.EventsExpDates[branch][expDateIndex].events[i]
+        i += 1
+    return(events: arr)
+
+def getEventsRange(branch, expDateIndex, start, end):
+    refund()
+    numEvents = end-start
+    events = array(numEvents)
+    i = start
+    index = 0
+    while i < end:
+        events[index] = self.EventsExpDates[branch][expDateIndex].events[i]
+        index += 1
+        i += 1
+    return(events: arr)
+
+def getEventIndex(period, eventID):
+    refund()
+    return(self.EventIDToIndex[period][eventID])
+
+# we should probably make this bonded too
+# -1: voting not started
+def setNumEventsToReportOn(branch):
+    refund()
+    # after voting has started
+    expDateIndex = BRANCHES.getVotePeriod(branch)
+    self.EventsExpDates[branch][expDateIndex].numEventsToReportOn = (self.EventsExpDates[branch][expDateIndex].numberEvents - self.numReqEvents[branch][expDateIndex] - self.EventsExpDates[branch][expDateIndex].numberRemoved)*BRANCHES.getBaseReporters(branch)
+    return(1)
+
+def getNumEventsToReportOn(branch, expDateIndex):
+    refund()
+    return(self.EventsExpDates[branch][expDateIndex].numEventsToReportOn)
+
+def getShareValue(branch, expIndex):
+    refund()
+    return(self.EventsExpDates[branch][expIndex].shareValue)
+
+def getNumberEvents(branch, expDateIndex):
+    refund()
+    return(self.EventsExpDates[branch][expDateIndex].numberEvents)
+
+def getEvent(branch, expDateIndex, eventIndex):
+    refund()
+    return(self.EventsExpDates[branch][expDateIndex].events[eventIndex])
+
+def getReportHash(branch, expDateIndex, reporter, event):
+    refund()
+    return(self.EventsExpDates[branch][expDateIndex].reportHash[reporter][event])
+
+# check that msg.sender is one of our function contracts
+def addEvent(branch, futurePeriod, eventID, subsidy):
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #	return(-1)
+    self.EventsExpDates[branch][futurePeriod].events[self.EventsExpDates[branch][futurePeriod].numberEvents] = eventID
+    self.EventIDToIndex[futurePeriod][eventID] = self.EventsExpDates[branch][futurePeriod].numberEvents
+    self.EventsExpDates[branch][futurePeriod].numberEvents += 1
+    self.EventsExpDates[branch][futurePeriod].subsidy[eventID] += subsidy
+    return(1)
+
+def deleteEvent(branch, period, event):
+    i = self.EventIDToIndex[period][event]
+    self.EventsExpDates[branch][period].events[i] = 0
+    self.EventIDToIndex[period][event] = 0
+    return(1)
+
+def removeEvent(branch, period):
+    refund()
+    self.EventsExpDates[branch][period].numberRemoved += 1
+    return(1)
+
+def getNumRemoved(branch, period):
+    refund()
+    return(self.EventsExpDates[branch][period].numberRemoved)
+
+def adjustPeriodShareValueOutstanding(branch, expIndex, amount):
+    refund()
+    self.EventsExpDates[branch][expIndex].shareValue += amount
+    return(1)
+
+def setReportHash(branch, expDateIndex, reporter, reportHash, event):
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #	return(-1)
+    self.EventsExpDates[branch][expDateIndex].reportHash[reporter][event] = reportHash
+    return(1)
+
+# called in case an event doesn't get reported on at all in a period
+def moveEvent(branch, event):
+    if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch) && !EVENTS.getUncaughtOutcome(event)):
+        # add to next expiration period
+        self.addEvent(branch, block.timestamp/BRANCHES.getPeriodLength(branch), event)
+        EVENTS.setExpiration(event, block.timestamp)
+        return(1)
+    else:
+        return(0)
+
+def addToWeightOfReport(period, event, report, amount):
+    self.mode_items[period][event].report_value[report] += amount
+    return(1)
+
+def setCurrentMode(period, event, mode):
+    self.mode_items[period][event].current_mode = mode
+    return(1)
+
+# basically setting current mode's weight
+def setCurrentModeItems(period, event, modeReport):
+    self.mode_items[period][event].current_mode_items = self.mode_items[period][event].report_value[modeReport]
+    return(1)
+
+def addRepEvent(branch, votePeriod, event, amount):
+    self.branches[branch].repEvent[votePeriod][event] += amount
+    return(1)
+
+def setEthicReport(branch, period, event, ethics, sender):
+    self.branches[branch].ethics[period][sender].event[event] = ethics
+    return(1)
+
+def setNumReportsEvent(branch, votePeriod, eventID, num):
+    self.branches[branch].numReportsEvent[votePeriod][eventID] = num
+    return(1)
+
+def addReportToEvent(branch, votePeriod, eventID, sender):
+    self.branches[branch].numReportsEvent[votePeriod][eventID] += 1
+    self.branches[branch].numReportsActual[sender][votePeriod] += 1
+    return(1)
+
+def setReport(branch, period, event, report, sender):
+    self.branches[branch].report[period][sender].event[event] = report
+    return(1)
+
+def setBeforeRep(branch, period, rep, sender):
+    self.branches[branch].beforeRep[period][sender] = rep
+    return(rep)
+
+def setAfterRep(branch, period, rep, sender):
+    self.branches[branch].afterRep[period][sender] = rep
+    return(rep)
+
+def setPeriodDormantRep(branch, period, rep, sender):
+    self.branches[branch].periodDormantRep[period][sender] = rep
+    return(rep)
+
+def setLesserReportNum(branch, period, event, num):
+    self.branches[branch].lesserReportNum[period][event] = num
+    return(1)

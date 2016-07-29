@@ -1,0 +1,279 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation OU
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256, test_callstack:[]:int256]
+BRANCHES = create('../data_api/branches.se')
+extern expiringEvents: [addEvent:[int256,int256,int256,int256]:int256, addRepEvent:[int256,int256,int256,int256]:int256, addReportToEvent:[int256,int256,int256,int256]:int256, addReportersPaidSoFar:[int256,int256]:int256, addRoundTwo:[int256,int256]:int256, addToWeightOfReport:[int256,int256,int256,int256]:int256, adjustPeriodShareValueOutstanding:[int256,int256,int256]:int256, deleteEvent:[int256,int256,int256]:int256, getAfterRep:[int256,int256,int256]:int256, getBeforeRep:[int256,int256,int256]:int256, getCurrentMode:[int256,int256]:int256, getCurrentModeItems:[int256,int256]:int256, getEthicReport:[int256,int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getEventsRange:[int256,int256,int256,int256]:int256[], getLesserReportNum:[int256,int256,int256]:int256, getNumEventsToReportOn:[int256,int256]:int256, getNumRemoved:[int256,int256]:int256, getNumReportsActual:[int256,int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumRequired:[int256,int256]:int256, getNumRoundTwo:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodDormantRep:[int256,int256,int256]:int256, getPeriodRepConstant:[int256,int256,int256]:int256, getRepEvent:[int256,int256,int256]:int256, getReport:[int256,int256,int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getReportersPaidSoFar:[int256,int256]:int256, getRequired:[int256]:int256, getSaltyHash:[int256,int256,int256,int256]:int256, getShareValue:[int256,int256]:int256, getSubsidy:[int256,int256,int256]:int256, getWeightOfReport:[int256,int256,int256]:int256, moveEvent:[int256,int256]:int256, refundCost:[int256,int256]:int256, removeEvent:[int256,int256]:int256, setAfterRep:[int256,int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256,int256]:int256, setCurrentMode:[int256,int256,int256]:int256, setCurrentModeItems:[int256,int256,int256]:int256, setEthicReport:[int256,int256,int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setLesserReportNum:[int256,int256,int256,int256]:int256, setNumEventsToReportOn:[int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setPeriodDormantRep:[int256,int256,int256,int256]:int256, setPeriodRepConstant:[int256,int256,int256,int256]:int256, setReport:[int256,int256,int256,int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setSaltyHash:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]
+EXPEVENTS = create('../data_api/expiringEvents.se')
+extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOf:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getFork:[int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setFork:[int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, test_callstack:[]:int256, totalSupply:[int256]:int256]
+REPORTING = create('../data_api/reporting.se')
+extern makeReports: [makeHash:[int256,int256,int256,int256]:int256, submitReport:[int256,int256,int256,int256]:_, submitReportHash:[int256,int256,int256]:int256, test_callstack:[]:int256, validateReport:[int256,int256,int256,int256,int256,int256,int256,int256]:int256]
+REPORTS = create('../functions/makeReports.se')
+extern penalizationCatchup: [penalizationCatchup:[int256,int256]:int256, test_callstack:[]:int256]
+CATCHUP = create('../functions/penalizationCatchup.se')
+extern consensusData: [doRefund:[int256,int256]:int256, getBaseReportersLastPeriod:[int256]:int256, getDenominator:[int256,int256]:int256, getFeeFirst:[int256,int256]:int256, getFeesCollected:[int256,int256,int256]:int256, getNotEnoughPenalized:[int256,int256,int256]:int256, getPenalized:[int256,int256,int256,int256]:int256, getPenalizedNum:[int256,int256,int256]:int256, getPenalizedUpTo:[int256,int256]:int256, getPeriodBalance:[int256,int256]:int256, getRepRedistributionDone:[int256,int256]:int256, getSlashed:[int256,int256,int256]:int256, increaseDenominator:[int256,int256,int256]:int256, increasePenalizedNum:[int256,int256,int256,int256]:int256, setBaseReportersLastPeriod:[int256,int256]:int256, setFeeFirst:[int256,int256,int256]:int256, setFeesCollected:[int256,int256,int256]:int256, setNotEnoughPenalized:[int256,int256,int256]:int256, setPenalized:[int256,int256,int256,int256]:int256, setPenalizedUpTo:[int256,int256,int256]:int256, setPeriodBalance:[int256,int256,int256]:_, setRefund:[int256,int256]:int256, setSlashed:[int256,int256,int256]:int256, test_callstack:[]:int256]
+CONSENSUS = create('../data_api/consensusData.se')
+inset('refund.se')
+
+# sender/owner, then spender
+data amountCanSpend[][]
+
+event Transfer(_from:indexed, _to:indexed, _value)
+event Approval(_owner:indexed, _spender:indexed, value)
+
+# fix sender, tx.origin stuff here
+# todo should we check collect fees done or no
+
+# send active reputation
+# @return value of reputation sent, 0 if not enough reputation
+# error messages otherwise
+    # -1: "Your reputation account was just created, earn some rep. before you can send to others"
+    # -2: "Receiving address doesn't exist"
+def sendReputation(branch, recver, value):
+    refund()
+    # Rep cannot be simultaneously spent (transferred) and used to vote
+    currentVotePeriod = BRANCHES.getVotePeriod(branch)
+    # you can't trade if you or the person you're sending to have submitted a report, or at all in the second half of the period [b/c you can messup / cheat w/ reporting by gettin extra claims on fees] and you can't trade in the first half of a period until you've been penalized for reporting wrongly/not reporting
+    # use a diff. fun. than getReport here
+    #if(value<=0 || EXPEVENTS.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, recver, 0) != 0):
+    # EXPEVENTS.getNumReportsActual(branch, currentVotePeriod, msg.sender)
+    #    return(0)
+
+    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
+    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    delta = lastPeriod - lastPeriodPenalized
+    if(delta > 1):
+        if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
+            return(0)
+
+    # need to check all this for the person it's being sent to as well
+    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
+        return(0)
+    #if(REPORTS.getRRUpToDate()!=1):
+    #    doIt()
+    #    self.RRDone = true
+    #if(hasReported(lastPeriod) && periodOver && hasntcollectedfees && residual > periodLength/2):
+    #    CONSENSUS.collectFees(lastPeriod)
+    # before rep, after rep, balance
+    # person you're sending to needs rr up to date / done as well
+    # auto increment vote period if needed
+    sender = tx.origin
+    senderIndex = REPORTING.repIDToIndex(branch, sender)
+    receiverIndex = REPORTING.repIDToIndex(branch, recver)
+
+    # if the sender's rep. account doesn't exist, make one, only if in first half of period
+    if(REPORTING.getReporterID(branch, senderIndex)!=tx.origin):
+        REPORTING.addReporter(branch, sender)
+        CONSENSUS.setPenalizedUpTo(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
+        return(-1)
+
+    if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
+        return(-2)
+
+    senderBalance = REPORTING.getRepBalance(branch, sender)
+    if(senderBalance >= value && value > 0):
+        if(REPORTING.subtractRep(branch, senderIndex, value) && REPORTING.addRep(branch, receiverIndex, value)):
+            return(value)
+        else:
+            return(0)
+    else:
+        return(0)
+
+# Transfer dormant rep
+# @return value of reputation sent, 0 if not enough reputation
+# error messages otherwise
+    # -1: "Your reputation account was just created, earn some rep. before you can send to others"
+    # -2: "Receiving address doesn't exist"
+# sendDormantRep
+def transfer(branch, recver, value):
+    refund()
+    currentVotePeriod = BRANCHES.getVotePeriod(branch)
+    if(value<=0):
+        return(0)
+    sender = msg.sender
+    senderIndex = REPORTING.repIDToIndex(branch, sender)
+    receiverIndex = REPORTING.repIDToIndex(branch, recver)
+
+    # if the sender's rep. account doesn't exist, make one
+    if(REPORTING.getReporterID(branch, senderIndex)!=msg.sender):
+        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
+        REPORTING.addReporter(branch, sender)
+        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
+        return(-1)
+
+    if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
+        return(-2)
+
+    senderBalance = REPORTING.balanceOf(branch, sender)
+    if(senderBalance >= value && value > 0):
+        if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, receiverIndex, value)):
+            log(type=Transfer, msg.sender, recver, value)
+            return(value)
+        else:
+            return(0)
+    else:
+        return(0)
+
+# TransferFrom per token api for dormant rep
+# fails unless from has authorized sender
+def transferFrom(branch, from, recver, value):
+    refund()
+    currentVotePeriod = BRANCHES.getVotePeriod(branch)
+    if(value<=0):
+        return(0)
+    sender = from
+    senderIndex = REPORTING.repIDToIndex(branch, sender)
+    receiverIndex = REPORTING.repIDToIndex(branch, recver)
+
+    # if the sender's rep. account doesn't exist, make one
+    if(REPORTING.getReporterID(branch, senderIndex)!=from):
+        CONSENSUS.setPenalizedUpTo(branch, from, (BRANCHES.getVotePeriod(branch)-1))
+        REPORTING.addReporter(branch, sender)
+        CONSENSUS.setPenalizedUpTo(branch, from, (BRANCHES.getVotePeriod(branch)-1))
+        return(-1)
+
+    if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
+        return(-2)
+
+    senderBalance = REPORTING.balanceOf(branch, sender)
+    if(senderBalance >= value && value > 0 && self.amountCanSpend[from][msg.sender]>=value):
+        if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, receiverIndex, value)):
+            self.amountCanSpend[from][msg.sender] -= value
+            log(type=Transfer, from, recver, value)
+            return(value)
+        else:
+            return(0)
+    else:
+        return(0)
+
+# Allows spender to withdraw from your dormant rep account
+def approve(branch, spender, value):
+    self.amountCanSpend[msg.sender][spender] = value
+    log(type=Approval, msg.sender, spender, value)
+    return(1)
+
+# Returns amount spender can withdraw from owner
+def allowance(owner, spender):
+    return(self.amountCanSpend[owner][spender])
+
+# Convert active rep to dormant rep
+# error messages
+    # -1: not in first half of reporting period
+# shouldn't be penalized for dormant rep when converting back to active due to not reporting beyond the dormant penalization
+# todo when handling dormant rep stuff:
+# if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event
+# unless this just happened to them last period and they reported correctly then
+def convertToDormantRep(branch, value):
+    refund()
+    # if not in first half of reporting period
+    periodLength = BRANCHES.getPeriodLength(branch)
+    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
+        return(0)
+    residual = block.timestamp % periodLength
+    if(residual > periodLength/2):
+      return(-1)
+		# benny comment:
+            #```Maybe still have this sort-of variable "power" to it, but REP initially doesn't have "full-power", or REP that hasn't been used to report over the past week has now let it's "power-meter" drop to only 20% earning power (it's kind-of dormant), that then ramps back up to 100% power once it gets used a bit. Could there be an element of this type of time-decay programmed into the REP that's helps incentive? Something like this would make the system more automatic, rather than relying on the user to manually switch "on" or switch "off" the REP. If a user knows, "I better report this week or my REP's power meter goes down to 20% again, and it's gonna take extra effort to get it back to full-power", well that's pretty good incentive to keep the user active, without actually taking it from them.```
+
+    if(value<=0):
+        return(0)
+
+    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
+    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    delta = lastPeriod - lastPeriodPenalized
+    if(delta > 1):
+        if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
+            return(0)
+
+    #if(REPORTS.getRRUpToDate()!=1):
+    #    doIt()
+
+    #if(hasReported(lastPeriod) && periodOver):
+        #CONSENSUS.collectFees(lastPeriod)
+
+    sender = tx.origin
+    senderIndex = REPORTING.repIDToIndex(branch, sender)
+
+    # if the sender's rep. account doesn't exist, make one
+    if(REPORTING.getReporterID(branch, senderIndex)!=tx.origin):
+        REPORTING.addReporter(branch, sender)
+        CONSENSUS.setPenalizedUpTo(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
+        return(-1)
+
+    senderBalance = REPORTING.getRepBalance(branch, sender)
+    if(senderBalance >= value):
+        if(REPORTING.subtractRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, senderIndex, value)):
+            REPORTING.adjustActiveRep(branch, -value)
+            return(value)
+        else:
+            return(0)
+    else:
+        return(0)
+
+# Convert dormant rep to active rep
+# error messages
+    # -1: not in first half of reporting period
+def convertToActiveRep(branch, value):
+    refund()
+    # if not in first half of reporting period
+    periodLength = BRANCHES.getPeriodLength(branch)
+    residual = block.timestamp % periodLength
+    if(residual > periodLength/2):
+      return(-1)
+
+    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
+    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    delta = lastPeriod - lastPeriodPenalized
+    if(delta > 1):
+        if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
+            return(0)
+    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
+        return(0)
+    if(value<=0):
+        return(0)
+
+    #if(REPORTS.getRRUpToDate()):
+        #doIt()
+    #if(hasReported(lastPeriod) && periodOver):
+        #CONSENSUS.collectFees(lastPeriod)
+
+    sender = tx.origin
+    senderIndex = REPORTING.repIDToIndex(branch, sender)
+
+    # if the sender's rep. account doesn't exist, make one
+    if(REPORTING.getReporterID(branch, senderIndex)!=tx.origin):
+        REPORTING.addReporter(branch, sender)
+        CONSENSUS.setPenalizedUpTo(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
+        return(-1)
+
+    senderBalance = REPORTING.balanceOf(branch, sender)
+    if(senderBalance >= value):
+        if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addRep(branch, senderIndex, value)):
+            REPORTING.adjustActiveRep(branch, value)
+            return(value)
+        else:
+            return(0)
+    else:
+        return(0)
+
+
+macro hasReported($branch, $period):
+    EXPEVENTS.getNumReportsActual($branch, $period, msg.sender)

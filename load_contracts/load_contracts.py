@@ -78,6 +78,7 @@ import traceback
 
 os.chdir(rpc.ROOT)
 SOURCE = os.path.join(rpc.ROOT, os.pardir, 'src')
+LOCAL = os.path.normpath(os.path.join(rpc.ROOT, os.pardir, 'local'))
 IMPORTS = True
 VERBOSITY = 0
 BLOCKTIME = 12
@@ -359,18 +360,18 @@ def get_compile_order():
     while avail:
         curr = avail.pop()
         sorted_nodes.append(curr)
-        print "\n" + curr
+        # print "\n" + curr
         for item, edges in nodes.items():
             if curr in edges:
                 edges.remove(curr)
-            print item, edges
+            # print item, edges
             if not edges:
                 avail.append(item)
                 nodes.pop(item)
-    print sorted_nodes
+    # print sorted_nodes
     return sorted_nodes, nodes_copy
 
-def process_imports(fullname):
+def process_imports(fullname, local=False):
     new_code = []
     for line in open(fullname):
         line = line.rstrip()
@@ -379,7 +380,11 @@ def process_imports(fullname):
             name, sub = line[1], line[3]
             info = DB[name]
             new_code.append(info['sig'])
-            new_code.append(sub + ' = ' + info['address'])
+            if local:
+                localpath = os.path.join(os.pardir, os.path.relpath(get_fullname(name), start=LOCAL))
+                new_code.append(sub + " = create('" + localpath + "')")
+            else:
+                new_code.append(sub + ' = ' + info['address'])
         else:
             new_code.append(line)
     return '\n'.join(new_code)
@@ -546,15 +551,25 @@ def optimize_deps(deps, contract_nodes):
     return new_deps
 
 def main():
+    global SOURCE
     read_options()
     deps, nodes = get_compile_order()
     if TRANSLATE:
-        global SOURCE
-        shutil.copytree(SOURCE, TRANSLATE)
+        source = SOURCE
+        if os.path.exists(TRANSLATE): shutil.rmtree(TRANSLATE)
+        shutil.copytree(source, TRANSLATE)
         SOURCE = TRANSLATE
         for fullname in map(get_fullname, deps):
             print 'translating', fullname
-            new_code = process_imports(fullname)
+            new_code = process_imports(fullname, local=False)
+            with open(fullname, 'w') as f:
+                f.write(new_code)
+        if os.path.exists(LOCAL): shutil.rmtree(LOCAL)
+        shutil.copytree(source, LOCAL)
+        SOURCE = LOCAL
+        for fullname in map(get_fullname, deps):
+            print 'translating for local use:', fullname
+            new_code = process_imports(fullname, local=True)
             with open(fullname, 'w') as f:
                 f.write(new_code)
         return 0

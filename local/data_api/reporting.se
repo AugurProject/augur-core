@@ -1,0 +1,245 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation OU
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256, test_callstack:[]:int256]
+BRANCHES = create('../data_api/branches.se')
+inset('refund.se')
+
+# Storage of all data associated with reporters
+    # Reporting index is the branchID
+    # Reporters index is the rep. address
+    # We 0 index reputation so can walk thru for consensus - todo / wrong don't need 0 indexing anymore
+    # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
+    # total rep is all the rep in augur
+    # active rep is the amount which is actually active
+    # fork is the child branch of a parent which forked
+    # dormant rep stores dormant rep values
+data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), activeRep, fork)
+
+data whitelists[](addresses[], taken)
+
+def init():
+    self.Reporting[1010101].repIDtoIndex[msg.sender] = 0
+    self.Reporting[1010101].reputation[0].repValue = 0
+    self.Reporting[1010101].reputation[0].reporterID = msg.sender
+    self.Reporting[1010101].numberReporters = 2
+    self.Reporting[1010101].repIDtoIndex[1010101] = 1
+    self.Reporting[1010101].reputation[1].repValue = 0
+    self.Reporting[1010101].reputation[1].reporterID = 1010101
+
+def checkWhitelist(address):
+    refund()
+    return(self.whitelists[msg.sender].addresses[address])
+
+def getActiveRep(branch):
+    return(self.Reporting[branch].activeRep)
+
+def adjustActiveRep(branch, amount):
+    self.Reporting[branch].activeRep += amount
+    return(1)
+
+def setFork(branch):
+    self.Reporting[branch].fork = branch
+    return(1)
+
+def getFork(branch):
+    return(self.Reporting[branch].fork)
+
+def checkContractWhitelist(contract, address):
+    refund()
+    return(self.whitelists[contract].addresses[address])
+
+def setWhitelist(contract, addresses:arr):
+    refund()
+    if self.whitelists[contract].taken:
+        return(text("ERROR: you have to vote to change a whitelist"):str)
+    else:
+        self.whitelists[contract].taken = 1
+        i = 0
+        l = len(addresses)
+        while i <l:
+            address = addresses[i]
+            self.whitelists[contract].addresses[addresses] = 1
+            i += 1
+        return(text("SUCCESS"):str)
+
+# @return reputation value
+def getRepByIndex(branch, repIndex):
+    refund()
+    return(self.Reporting[branch].reputation[repIndex].repValue)
+
+# @return reputation value
+def getRepBalance(branch, address):
+    refund()
+    repIndex = self.Reporting[branch].repIDtoIndex[address]
+    if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
+        return(0)
+    return(self.Reporting[branch].reputation[repIndex].repValue)
+
+def getDormantRepByIndex(branch, repIndex):
+    refund()
+    return(self.Reporting[branch].dormantRep[repIndex].repValue)
+
+# @return reputation value
+# getDormantRepBalance
+def balanceOf(branch, address):
+    refund()
+    repIndex = self.Reporting[branch].repIDtoIndex[address]
+    if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
+        return(0)
+    return(self.Reporting[branch].dormantRep[repIndex].repValue)
+
+# return total supply of dormant rep
+def totalSupply(branch):
+    return((self.Reporting[branch].totalRep - self.Reporting[branch].activeRep))
+
+def getReporterID(branch, index):
+    refund()
+    return(self.Reporting[branch].reputation[index].reporterID)
+
+def getTotalRep(branch):
+    refund()
+    return(self.Reporting[branch].totalRep)
+
+# will return 0s for array values after it's looped through all the ones you
+# have an actual balance in
+def getReputation(address):
+    refund()
+    branchListCount = BRANCHES.getNumBranches()
+    if(address):
+        branches = array(2*branchListCount)
+        branchList = array(branchListCount)
+        branchList = BRANCHES.getBranches(outitems=branchListCount)
+        i = 0
+        b = 0
+        while i < branchListCount:
+            branch = branchList[i]
+            balance = self.getRepBalance(branch, address)
+            if(balance!=0):
+                branches[b] = branch
+                branches[b+1] = balance
+                b += 2
+            i += 1
+    else:
+        address = msg.sender
+        branches = array(2*branchListCount)
+        branchList = array(branchListCount)
+        branchList = BRANCHES.getBranches(outitems=branchListCount)
+        i = 0
+        b = 0
+        while i < branchListCount:
+            branch = branchList[i]
+            balance = self.getRepBalance(branch, address)
+            if(balance!=0):
+                branches[b] = branch
+                branches[b+1] = balance
+                b += 2
+            i += 1
+    return(branches: arr)
+
+def getNumberReporters(branch):
+    refund()
+    return(self.Reporting[branch].numberReporters)
+
+def repIDToIndex(branch, repID):
+    refund()
+    return(self.Reporting[branch].repIDtoIndex[repID])
+
+# check that msg.sender is one of our function contracts
+def setInitialReporters(parent, branchID):
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    # add branch as a "reporter"
+    self.Reporting[branchID].numberReporters = 1
+    self.Reporting[branchID].repIDtoIndex[branchID] = 0
+    self.Reporting[branchID].reputation[0].repValue = 0
+    self.Reporting[branchID].reputation[0].reporterID = branchID
+    return(1)
+
+def addReporter(branch, sender, amount, dormant, repToBonderOrBranch):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    refund()
+    reporterIndex = self.Reporting[branch].numberReporters
+    self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
+    self.Reporting[branch].reputation[reporterIndex].repValue = amount
+    self.Reporting[branch].reputation[reporterIndex].reporterID = sender
+    self.Reporting[branch].dormantRep[reporterIndex].reporterID = sender
+    self.Reporting[branch].dormantRep[reporterIndex].repValue = dormant
+    self.Reporting[branch].activeRep += amount + repToBonderOrBranch
+    self.Reporting[branch].totalRep += amount + dormant + repToBonderOrBranch
+    self.Reporting[branch].numberReporters += 1
+    return(1)
+
+def addRep(branch, index, value):
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Reporting[branch].reputation[index].repValue += value
+    return(1)
+
+def subtractRep(branch, index, value):
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Reporting[branch].reputation[index].repValue -= value
+    return(1)
+
+def setRep(branch, index, newRep):
+    refund()
+    #if !self.whitelist.check(msg.sender):
+    #    return(-1)
+    oldRep = self.Reporting[branch].reputation[index].repValue
+    self.Reporting[branch].reputation[index].repValue = newRep
+    self.Reporting[branch].activeRep += newRep - oldRep
+    self.Reporting[branch].totalRep += newRep - oldRep
+    return(1)
+
+def addDormantRep(branch, index, value):
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Reporting[branch].dormantRep[index].repValue += value
+    return(1)
+
+def subtractDormantRep(branch, index, value):
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Reporting[branch].dormantRep[index].repValue -= value
+    return(1)
+
+# check that msg.sender is one of our function contracts
+# Sets the initial distribution of rep
+def setSaleDistribution(addresses: arr, balances: arr, branchID):
+    refund()
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    i = 0
+    while i < len(addresses):
+        self.Reporting[branchID].reputation[self.Reporting[branchID].numberReporters].reporterID = addresses[i]
+        self.Reporting[branchID].reputation[self.Reporting[branchID].numberReporters].repValue = balances[i]
+        self.Reporting[branchID].dormantRep[self.Reporting[branchID].numberReporters].reporterID = addresses[i]
+        self.Reporting[branchID].repIDtoIndex[addresses[i]] = self.Reporting[branchID].numberReporters
+        self.Reporting[branchID].numberReporters += 1
+        i+=1
+    return(1)

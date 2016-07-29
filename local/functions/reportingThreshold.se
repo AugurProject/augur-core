@@ -1,0 +1,118 @@
+extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256, test_callstack:[]:int256]
+BRANCHES = create('../data_api/branches.se')
+extern refund.se: [addMarket:[int256,int256]:int256, addPast24:[int256]:int256, getBond:[int256]:int256, getBranch:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getEventPushedUp:[int256]:int256, getExpiration:[int256]:int256, getForkEthicality:[int256]:int256, getForkOutcome:[int256]:int256, getForked:[int256]:int256, getForkedDone:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPast24:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getReportingThreshold:[int256]:int256, getResolution:[int256]:bytes, getResolutionLength:[int256]:int256, getUncaughtOutcome:[int256]:int256, getmode:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256,bytes]:int256, setBond:[int256,int256]:int256, setBranch:[int256,int256]:int256, setEthics:[int256,int256]:int256, setEventPushedUp:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setForkDone:[int256]:int256, setForkEthicality:[int256,int256]:int256, setForkOutcome:[int256,int256]:int256, setForked:[int256]:int256, setOriginalExpiration:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setRejected:[int256,int256]:int256, setThreshold:[int256,int256]:int256, setUncaughtOutcome:[int256,int256]:int256, setmode:[int256,int256]:int256, test_callstack:[]:int256]
+EVENTS = create('../data_api/events.se')
+extern refund.se: [addFees:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, addTrade:[int256,int256,int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCreationTime:[int256]:int256, getCumScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getLastExpDate:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getLastTrade:[int256]:int256, getMakerFees:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsHash:[int256]:int256, getNumEvents:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSender:[]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], get_total_trades:[int256]:int256, get_trade_ids:[int256]:int256[], getgasSubsidy:[int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, remove_trade_from_market:[int256,int256]:int256, returnTags:[int256]:int256[], setMakerFees:[int256,int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256, test_callstack:[]:int256]
+MARKETS = create('../data_api/markets.se')
+extern expiringEvents: [addEvent:[int256,int256,int256,int256]:int256, addRepEvent:[int256,int256,int256,int256]:int256, addReportToEvent:[int256,int256,int256,int256]:int256, addReportersPaidSoFar:[int256,int256]:int256, addRoundTwo:[int256,int256]:int256, addToWeightOfReport:[int256,int256,int256,int256]:int256, adjustPeriodShareValueOutstanding:[int256,int256,int256]:int256, deleteEvent:[int256,int256,int256]:int256, getAfterRep:[int256,int256,int256]:int256, getBeforeRep:[int256,int256,int256]:int256, getCurrentMode:[int256,int256]:int256, getCurrentModeItems:[int256,int256]:int256, getEthicReport:[int256,int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getEventsRange:[int256,int256,int256,int256]:int256[], getLesserReportNum:[int256,int256,int256]:int256, getNumEventsToReportOn:[int256,int256]:int256, getNumRemoved:[int256,int256]:int256, getNumReportsActual:[int256,int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumRequired:[int256,int256]:int256, getNumRoundTwo:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodDormantRep:[int256,int256,int256]:int256, getPeriodRepConstant:[int256,int256,int256]:int256, getRepEvent:[int256,int256,int256]:int256, getReport:[int256,int256,int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getReportersPaidSoFar:[int256,int256]:int256, getRequired:[int256]:int256, getSaltyHash:[int256,int256,int256,int256]:int256, getShareValue:[int256,int256]:int256, getSubsidy:[int256,int256,int256]:int256, getWeightOfReport:[int256,int256,int256]:int256, moveEvent:[int256,int256]:int256, refundCost:[int256,int256]:int256, removeEvent:[int256,int256]:int256, setAfterRep:[int256,int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256,int256]:int256, setCurrentMode:[int256,int256,int256]:int256, setCurrentModeItems:[int256,int256,int256]:int256, setEthicReport:[int256,int256,int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setLesserReportNum:[int256,int256,int256,int256]:int256, setNumEventsToReportOn:[int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setPeriodDormantRep:[int256,int256,int256,int256]:int256, setPeriodRepConstant:[int256,int256,int256,int256]:int256, setReport:[int256,int256,int256,int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setSaltyHash:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]
+EXPEVENTS = create('../data_api/expiringEvents.se')
+extern refund.se: [fx_exp:[int256]:int256, fx_log:[int256]:int256, sqrt:[int256]:int256, test_callstack:[]:int256]
+FXP = create('../data_api/fxpFunctions.se')
+extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOf:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getFork:[int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setFork:[int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, test_callstack:[]:int256, totalSupply:[int256]:int256]
+REPORTING = create('../data_api/reporting.se')
+inset('refund.se')
+
+macro ONEPOINTTWO: 1200000000000000000
+macro POINTZEROONE: 10000000000000000
+macro MAX_THRESHOLD: 10^54
+
+### Helper functions:
+# calculates how many reports should be on a given event
+# todo make sure max cost is actually 500k gas here
+def calculateReportTargetForEvent(branch, eventID, votePeriod, sender):
+    numMarkets = EVENTS.getNumMarkets(eventID)
+    if(numMarkets>25):
+        numMarkets = 25
+    markets = array(numMarkets)
+    markets = EVENTS.getMarkets(eventID, outitems=numMarkets)
+    totalFees = 0
+    shareValue = 0
+    i = 0
+    while i < numMarkets:
+        shareValue += MARKETS.getSharesValue(markets[i])
+        totalFees += MARKETS.getFees(markets[i])
+        i += 1
+    totalVal = EXPEVENTS.getShareValue(branch, votePeriod)
+    shareFraction = shareValue*ONE/totalVal
+    numReportersOnMarket = BRANCHES.getBaseReporters(branch)*((-(267*shareFraction**2)/(2*ONE) + (533*shareFraction)/2 + 1*ONE))
+    totalFeesInWei = totalFees
+    canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
+    lesser = min(canPayForThisManyReporters*ONE, numReportersOnMarket)
+    if(EXPEVENTS.getLesserReportNum(branch, period, event)==0):
+        EXPEVENTS.refundCost(sender, EXPEVENTS.getSubsidy(branch, votePeriod, eventID))
+        EXPEVENTS.setLesserReportNum(branch, votePeriod, eventID, lesser)
+    return(lesser)
+
+# eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
+    # exp(1.2*ln(repbal)) / exp(1.2*ln(totalrep)) is == (reporterList[n]/totalRep)**1.2
+    # a^b=exp(b*ln(a))=e^(b*ln(a)).
+def calculateReportingThreshold(branch, eventID, votePeriod, sender):
+    repConstant = EXPEVENTS.getPeriodRepConstant(branch, votePeriod, sender)
+    if(repConstant==0):
+        repConstant = FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getRepBalance(branch, sender))/ONE)*ONE/FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getActiveRep(branch))/ONE)
+        numEventsToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
+        expectedEventsForReporter = repConstant * numEventsToReportOn
+        total = expectedEventsForReporter
+        eventsInPeriod = EXPEVENTS.getNumberEvents(branch, expDateIndex)-EXPEVENTS.getNumRemoved(branch, votePeriod)
+        numRequiredEvents = EXPEVENTS.getNumRequired(branch, votePeriod)
+        if(repFraction >= POINTZEROONE):
+            minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
+            if(total/ONE < minimum):
+                total = minimum*ONE
+                repConstant = total / numEventsToReportOn
+        EXPEVENTS.setPeriodRepConstant(branch, votePeriod, sender, repConstant)
+    # 1 is 10**54 here, lesserreportnum, repconstant, and one are all base 10**18
+    reportingThreshold = EXPEVENTS.getLesserReportNum(branch, votePeriod, eventID)*repConstant*ONE
+    return(reportingThreshold)
+
+# remove all your calls to calculateReportTarget and calculateReportingThreshold
+# this is a function that gets all the events to report on automatically
+def getEventsToReportOn(branch, period, sender, start):
+    numEvents = EXPEVENTS.getNumberEvents(branch, period)
+    events = array(numEvents)
+    i = 0
+    numEventsToReportOn = 0
+    while i < numEvents:
+        thisEvent = EXPEVENTS.getEvent(branch, period, start + i)
+        # calculate report target for event here if not done for purposes of computing this
+        if(EXPEVENTS.getLesserReportNum(branch, period, thisEvent)==0):
+            self.calculateReportTargetForEvent(branch, thisEvent, period, msg.sender)
+        reportingThreshold = self.calculateReportingThreshold(branch, thisEvent, period, sender)
+        shaHash = sha3(sender + thisEvent)
+        shaHash = abs(shaHash) / 115792089237316195423571
+        if((shaHash < reportingThreshold || EXPEVENTS.getRequired(thisEvent)) && !EVENTS.getOutcome(thisEvent)):
+            events[i] = thisEvent
+            numEventsToReportOn += 1
+        i += 1
+    return(slice(events, items=0, items=numEventsToReportOn): arr)
+
+def getEventCanReportOn(branch, expDateIndex, reporter, event):
+    refund()
+    reportingThreshold = self.calculateReportingThreshold(branch, event, expDateIndex, reporter)
+    shaHash = sha3(reporter + event)
+    shaHash = abs(shaHash) / 115792089237316195423571
+    if(shaHash < reportingThreshold || shaHash<EVENTS.getReportingThreshold(event) || EXPEVENTS.getRequired(events)):
+        return(1)
+    else:
+        return(0)
+
+#In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold.
+def setReportingThreshold(event):
+    refund()
+    # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
+    # final check is if no reports on event
+    # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this one
+    branch = EVENTS.getBranch(event)
+    periodLength = BRANCHES.getPeriodLength(branch)
+    residual = block.timestamp % periodLength
+    votePeriod = BRANCHES.getVotePeriod(branch)
+    if(votePeriod==EVENTS.getExpiration(event)/periodLength and (((block.timestamp + TWENTYFOURHR) % periodLength) > periodLength/2) and !EVENTS.getUncaughtOutcome(event)):
+        EVENTS.setThreshold(event, MAX_THRESHOLD)
+        return(1)
+    else:
+        return(0)
+
+macro abs($a):
+    if($a<0):
+        $a = -$a
+    $a
