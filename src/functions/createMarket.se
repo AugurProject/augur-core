@@ -31,17 +31,17 @@ macro POINTZEROSIX: 1106804644422573056
 macro COSTPERREPORTER: 3500000
 
 event marketCreated(market)
-event tradingFeeUpdated(market, tradingFee)
+event tradingFeeUpdated(market, fxpTradingFee)
 
-# def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution:str, tradingFee, tag1, tag2, tag3, makerFees, extraInfo:str):
-#     event = self.createEvent(branch, description, expDate, minValue, maxValue, numOutcomes, resolution, call=delegate)
-#     market = self.createMarket(branch, description, tradingFee, [event], tag1, tag2, tag3, makerFees, extraInfo, call=delegate)
+# def createSingleEventMarket(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution:str, fxpTradingFee, tag1, tag2, tag3, fxpMakerFees, extraInfo:str):
+#     event = self.createEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, call=delegate)
+#     market = self.createMarket(branch, description, fxpTradingFee, [event], tag1, tag2, tag3, fxpMakerFees, extraInfo, call=delegate)
 #     return(market)
 
 # Create an event. Events are the basic units / questions that are reported on in Augur by reporters
 # @param numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0 to 11.0 would be 11 outcomes (if incremented by 0.1)
-# @param minValue should be 2**64 for a binary event, maxValue should be 2**65 for a binary event
-# @param minValue for a scalar from 0 to 100 should be 0 and max should be 100*2**64, for -100 to 200, it should be -100*2**64 and 200*2**64 respectively
+# @param fxpMinValue should be 2**64 for a binary event, fxpMaxValue should be 2**65 for a binary event
+# @param fxpMinValue for a scalar from 0 to 100 should be 0 and max should be 100*2**64, for -100 to 200, it should be -100*2**64 and 200*2**64 respectively
 # @param description is a description of the event / the question itself
 # @param resolution is the string source/link to resolve the event
 # @param branch is the branch the event is created in
@@ -55,13 +55,13 @@ event tradingFeeUpdated(market, tradingFee)
     # -4: would expire during non-reporting fork period
 # .025 eth to create
 # descriptionWithoutOutcomeLabels + "~|>" + outcome1label + "|"  + outcome2label + "|" + outcome3label is format for a description
-def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution: str):
+def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
     forkPeriod = BRANCHES.getForkPeriod(branch)
     if(!periodLength or !description or expDate < block.timestamp):
         return(-1)
-    if(maxValue < minValue or (maxValue-minValue) < ONE):
+    if(fxpMaxValue < fxpMinValue or (fxpMaxValue-fxpMinValue) < ONE):
         return(-2)
     if(numOutcomes < 2 or numOutcomes > 8):
         return(-3)
@@ -72,26 +72,26 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
     eventinfo[1] = expDate                                      # expiration date
     eventinfo[2] = msg.sender                                   # creator address
     eventinfo[3] = periodLength
-    eventinfo[4] = minValue                                     # minimum outcome value
-    eventinfo[5] = maxValue                                     # maximum outcome value
+    eventinfo[4] = fxpMinValue                                     # minimum outcome value
+    eventinfo[5] = fxpMaxValue                                     # maximum outcome value
     eventinfo[6] = numOutcomes                                  # number of outcomes
     mcopy(eventinfo + 7*32, description, len(description))
     event = sha3(eventinfo, chars=len(eventinfo))
     CASH.initiateOwner(event)
     if(INFO.getCreator(event)):
         return(0)
-    if(INFO.setInfo(event, description, msg.sender, 0) and EVENTS.initializeEvent(event, branch, expDate, minValue, maxValue, numOutcomes, resolution)):
+    if(INFO.setInfo(event, description, msg.sender, 0) and EVENTS.initializeEvent(event, branch, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution)):
         return(event)
     else:
-        return(0)
+        throw()
 
 # Create a market. Markets are the basic _tradable_ units / questions that are traded on in Augur
 # @param branch is the branch of the market
 # @param description is the description for a market
-# @param tradingFee is percent in fixedPoint
+# @param fxpTradingFee is percent in fixedPoint
 # @param events array is the list of events in a market [only 1 for now]
 # @params tag1, tag2, and tag3 are the tags describing a market
-# @param makerFees are the percent of the trading fee a maker pays [0-50% in fixed point]
+# @param fxpMakerFees are the percent of the trading fee a maker pays [0-50% in fixed point]
 # @param extraInfo is a string of any extra info associated with a market
 # @return market if success or 1 if on an oracle only branch creation we have success
 # error messages otherwise
@@ -103,10 +103,10 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
 # .05 eth to create
 # need at least 1.2M gas @ gas price to cover resolution 500k per event to calc. num reports for it - this is passed as value to this function
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
-def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, makerFees, extraInfo:str):
+def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3, fxpMakerFees, extraInfo:str):
     callstackCheck()
     periodLength = BRANCHES.getPeriodLength(branch)
-    creationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / (2*tradingFee)
+    creationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / (2*fxpTradingFee)
     # gives ether/cash amount in fixed point
     minFee = COSTPERREPORTER*BRANCHES.getBaseReporters(branch)*tx.gasprice*ONE/WEITOETH
     creationFee = max(minFee, creationFee)
@@ -118,26 +118,26 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
     futurePeriod = expirationDate / periodLength
     forkPeriod = BRANCHES.getForkPeriod(branch)
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
-    if(!periodLength or !len(description) or tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > 2**61 or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or makerFees < 0 or makerFees > ONEHALF):
+    if(!periodLength or !len(description) or fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > 2**61 or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or fxpMakerFees < 0 or fxpMakerFees > ONEHALF):
         return(-1)
     if(expirationDate < block.timestamp):
         return(-2)
     if(forkPeriod and (futurePeriod == forkPeriod or futurePeriod == (forkPeriod+1))):
         return(-3)
     # scalars
-    maxValue = EVENTS.getMaxValue(event)
-    minValue = EVENTS.getMinValue(event)
+    fxpMaxValue = EVENTS.getMaxValue(event)
+    fxpMinValue = EVENTS.getMinValue(event)
     # is a valid scalar
-    if((maxValue!=TWO or minValue !=ONE) and numOutcomes==2):
+    if((fxpMaxValue!=TWO or fxpMinValue !=ONE) and numOutcomes==2):
         # cumulativeScale is the range of a scalar
-        cumulativeScale += maxValue - minValue
+        cumulativeScale += fxpMaxValue - fxpMinValue
     if(!cumulativeScale):
         cumulativeScale = ONE
 
     # formation of market (hash)
     marketinfo = string(8*32 + len(description))
     marketinfo[0] = futurePeriod
-    marketinfo[1] = tradingFee
+    marketinfo[1] = fxpTradingFee
     marketinfo[2] = block.timestamp
     marketinfo[3] = tag1
     marketinfo[4] = tag2
@@ -152,7 +152,7 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
     events = array(1)
     events[0] = event
     # initialize market and send money to pay for resolution
-    if(CASH.sendFrom(branch, creationFee, msg.sender) and send(MARKETS, (msg.value-500000*tx.gasprice)) and INFO.setInfo(market, description, msg.sender, creationFee) and BRANCHES.addMarketToBranch(branch, market) and MARKETS.initializeMarket(market, events, futurePeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, expirationDate)):
+    if(CASH.sendFrom(branch, creationFee, msg.sender) and send(MARKETS, (msg.value-500000*tx.gasprice)) and INFO.setInfo(market, description, msg.sender, creationFee) and BRANCHES.addMarketToBranch(branch, market) and MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpMakerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, expirationDate)):
         MARKETS.addToMarketsHash(branch, market)
         CASH.initiateOwner(market)
         EVENTS.addMarket(event, market)
@@ -178,19 +178,19 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
 # Errors
     # -1: not the market creator
     # -2: invalid new trading fee
-def updateTradingFee(market, tradingFee):
+def updateTradingFee(market, fxpTradingFee):
     refund()
     branch = MARKETS.getBranch(market)
     if(msg.sender != INFO.getCreator(market) or tx.origin != INFO.getCreator(market)):
         return(-1)
     oldFee = MARKETS.getTradingFee(market)
     oldCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / oldFee
-    newCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / tradingFee
-    if(tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > oldFee):
+    newCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / fxpTradingFee
+    if(fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > oldFee):
         return(-2)
-    if(!CASH.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender) or !MARKETS.setTradingFee(market, tradingFee)):
+    if(!CASH.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender) or !MARKETS.setTradingFee(market, fxpTradingFee)):
         throw()
-    log(type=tradingFeeUpdated, market, tradingFee)
+    log(type=tradingFeeUpdated, market, fxpTradingFee)
     return(1)
 
 # Anyone can post an "Early Resolution Bond"

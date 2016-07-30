@@ -54,7 +54,7 @@ macro POINTTWO: 1844674407370955264
 def penalizeWrong(branch, event):
     refund()
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
-    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    lastPeriod = BRANCHES.getVotePeriod(branch) - 1
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     newRep = 0
@@ -64,28 +64,28 @@ def penalizeWrong(branch, event):
     roundTwo = BACKSTOPS.getRoundTwo(event)
     uncaught = EVENTS.getUncaughtOutcome(event)
     outcome = catch(uncaught)
-    if(EVENTS.getEventBranch(event)!=branch):
+    if(EVENTS.getEventBranch(event) != branch):
         return(-8)
     if(repBalance < ONE):
         return(0)
     if(scalar(event) or categorical(event)):
         outcome = uncaught
     p = proportionCorrect(event, 0)
-    if(roundTwo and outcome!=0):
+    if(roundTwo and outcome != 0):
         return(-1)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
-    elif(residual > periodLength/2 or (block.timestamp / periodLength - 2) != lastPeriod):
+    elif(residual > periodLength / 2 or (block.timestamp / periodLength - 2) != lastPeriod):
         return(-2)
     elif(BRANCHES.getForkPeriod(branch) == lastPeriod):
         return(-3)
-    elif(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
+    elif(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):
         return(-4)
     elif(EVENTS.getForked(event)):
         return(-5)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     # todo fix getoutcome
-    elif(!EVENTS.getOutcome(event) and !(rejected and EVENTS.getRejectedPeriod(event)==lastPeriod)):
-        if(CLOSEMARKET.closeMarket(branch, EVENTS.getMarket(event, 0), msg.sender)!=1):
+    elif(!EVENTS.getOutcome(event) and !(rejected and EVENTS.getRejectedPeriod(event) == lastPeriod)):
+        if(CLOSEMARKET.closeMarket(branch, EVENTS.getMarket(event, 0), msg.sender) != 1):
             return(-6)
     elif(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
         return(-7)
@@ -102,19 +102,19 @@ def penalizeWrong(branch, event):
             CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
             CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
         # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. don't allow rep redistribution until the original period it was supposed to resolve in
-        elif(!penalizedOnEvent and reportValue and rejected and EVENTS.getRejectedPeriod(event)==lastPeriod):
+        elif(!penalizedOnEvent and reportValue and rejected and EVENTS.getRejectedPeriod(event) == lastPeriod):
             CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
             CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
         # penalization on a regular event if not already penalized, it has outcome, and user reported on it
-        elif(!penalizedOnEvent and reportValue and outcome!=0):
+        elif(!penalizedOnEvent and reportValue and outcome != 0):
             calculateRepChange(reportValue, POINTONE)
             newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
-            log(type=penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue)
+            log(type = penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue)
             EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
             CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
             CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
         # once penalized for all events actually get rid of net rep lost and send it to the branch for redistribution
-        if(numReportedOn==CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
+        if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
             sendRedistributedRepToBranch()
         return(1)
 
@@ -126,12 +126,12 @@ def incrementPeriodAfterReporting(branch):
     if(periodOver(branch)):
         period = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
         lastPeriod = period - 1
-        amountAppealedThisPeriod = EXPEVENTS.getNumRoundTwo(branch, period)*ONE/EXPEVENTS.getNumberEvents(branch, period)
-        amountAppealedLastPeriod = EXPEVENTS.getNumRoundTwo(branch, lastPeriod)*ONE/EXPEVENTS.getNumberEvents(branch, lastPeriod)
+        amountAppealedThisPeriod = EXPEVENTS.getNumRoundTwo(branch, period) * ONE / EXPEVENTS.getNumberEvents(branch, period)
+        amountAppealedLastPeriod = EXPEVENTS.getNumRoundTwo(branch, lastPeriod) * ONE / EXPEVENTS.getNumberEvents(branch, lastPeriod)
         percentAppealed = (amountAppealedThisPeriod + amountAppealedLastPeriod) / 2
         BRANCHES.incrementPeriod(branch)
         # mult. by 2 b/c reporters only have to report on half the things they're selected to report on
-        base_reporter_quantity = 2*(3*ONE + ((333*ONE * percentAppealed/ONE)**3 / 2**128))/ONE
+        base_reporter_quantity = 2 * (3 * ONE + ((333 * ONE * percentAppealed / ONE) ** 3 / 2 ** 128)) / ONE
         CONSENSUS.setBaseReportersLastPeriod(branch, BRANCHES.getBaseReporters(branch))
         BRANCHES.setBaseReporters(branch, base_reporter_quantity)
         return(1)

@@ -8,7 +8,7 @@
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later versionz
+#    (at your option) any later version.
 # 
 #    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -38,7 +38,7 @@ def makeHash(salt, report, event, sender):
     hashInfo[1] = salt
     hashInfo[2] = report
     hashInfo[3] = event
-    reportHash = sha3(hashInfo, chars=32*len(hashInfo))
+    reportHash = sha3(hashInfo, chars = 32 * len(hashInfo))
     return(reportHash)
 
 # Allows a user to submit the hash of their report / commit
@@ -58,11 +58,11 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     delta = lastPeriod - lastPeriodPenalized
     eventIndex = EXPEVENTS.getEventIndex(branch, votePeriod, event)
     event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
-    if(!eventIndex and (!event or event!=event)):
+    if(!eventIndex and (!event or event != event)):
         return(-1)
-    if(residual > periodLength/2):
+    if(residual > periodLength / 2):
         return(-2)
-    if(delta > 1 and CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
+    if(delta > 1 and CATCHUP.penalizationCatchup(branch, msg.sender) != 1):
         return(-4)
     if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
         return(0)
@@ -75,7 +75,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     reportingThreshold = 0
     # if required or threshold has been set b/c wasn't  yet
     if(EXPEVENTS.getRequired(event, votePeriod, branch) or EVENTS.getReportingThreshold(event)):
-        reportingThreshold = 2**192
+        reportingThreshold = 2 ** 192
     # if number of reports event should have hasn't been calculated yet do it
     elif(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
         self.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
@@ -85,8 +85,8 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     x = array(1)
     x[0] = msg.sender + event
     # do abs then mult by 2 to ensure pos. and between 0 and 1
-    shaHash = sha3(x, items=1)
-    shaHash = (abs(shaHash)/ONE) * 2
+    shaHash = sha3(x, items = 1)
+    shaHash = (abs(shaHash) / ONE) * 2
     # shaHash must be <= to the threshold for that user to be able to report on the given event
     if(shaHash <= reportingThreshold):
         EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
@@ -126,22 +126,22 @@ def submitReport(event, salt, report, ethics):
         return(0)
     if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
         return(-1)
-    if(residual <= periodLength/2):
+    if(residual <= periodLength / 2):
         return(-2)
     realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
-    if(self.makeHash(salt, report, event, msg.sender)!=realHash or !realHash):
+    if(self.makeHash(salt, report, event, msg.sender) != realHash or !realHash):
         return(-3)
-    if(ethics!=ONE and ethics!=0):
+    if(ethics != ONE and ethics != 0):
         return(-5)
     # todo get outcome may not work / be valid
-    if(EVENTS.getOutcome(event)!=0):
+    if(EVENTS.getOutcome(event) != 0):
         return(-6)
     # commented out for easy testing
-    # if(block.timestamp/periodLength!=((block.timestamp + 2*TWENTYFOURHR)/periodLength)):
+    # if(block.timestamp / periodLength != ((block.timestamp + 2 * TWENTYFOURHR) / periodLength)):
     #    return(-7)
     # ensures user has collected fees for last reporting period
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod-1)):
-        if(COLLECTFEES.collectFees(branch, msg.sender, value=msg.value)<0):
+    if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod - 1)):
+        if(COLLECTFEES.collectFees(branch, msg.sender, value = msg.value) < 0):
             return(-8)
 
     # actual submitting of report and ethicality
@@ -159,12 +159,12 @@ def submitReport(event, salt, report, ethics):
             else:
                 ethics = ONE
         EXPEVENTS.setEthicReport(branch, votePeriod, event, ethics, msg.sender)
-        ethics = (EVENTS.getForkEthicality(event)*EXPEVENTS.getEventWeight(branch, votePeriod, event) + ethics*weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+        ethics = (EVENTS.getForkEthicality(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + ethics * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
         EVENTS.setForkEthicality(event, ethics)
     # set ethicality for a regular event
     else:
         EXPEVENTS.setEthicReport(branch, votePeriod, event, ethics, msg.sender)
-        ethics = (EVENTS.getEthics(event)*EXPEVENTS.getEventWeight(branch, votePeriod, event) + ethics*weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+        ethics = (EVENTS.getEthics(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + ethics * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
         EVENTS.setEthics(event, ethics)
     # round 2 and fork events are weighted by rep, otherwise 1
     EXPEVENTS.countReportAsSubmitted(branch, votePeriod, event, msg.sender, weight)
@@ -175,8 +175,8 @@ def submitReport(event, salt, report, ethics):
     diff = reportsNum - paidBack
     if(diff >= 1):
         EVENTS.addReportersPaidSoFar(event)
-        CASH.subtractCash(branch, 3500000*tx.gasprice*ONE / WEITOETH)
-        CASH.addCash(msg.sender, 3500000*tx.gasprice*ONE / WEITOETH)
+        CASH.subtractCash(branch, 3500000 * tx.gasprice * ONE / WEITOETH)
+        CASH.addCash(msg.sender, 3500000 * tx.gasprice * ONE / WEITOETH)
     return(1)
 
 # validates and submits report
@@ -188,18 +188,18 @@ def validateReport(event, branch, votePeriod, report, forkedOverEthicality, fork
     callstackCheck()
     outcome = 0
     # binary
-    if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==TWO and EVENTS.getMinValue(event)==ONE):
-        if(report>2*ONE or report<ONE or !report):
+    if(EVENTS.getNumOutcomes(event) == 2 and EVENTS.getMaxValue(event) == TWO and EVENTS.getMinValue(event) == ONE):
+        if(report > 2 * ONE or report < ONE or !report):
             return(-4)
         # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
         elif(forkedOverThisEvent):
             # in case of fork remove the original outcome as a possible response if forked over outcome [i.e. didn't fork over ethics]
             if(!forkedOverEthicality and report == catch(EVENTS.getUncaughtOutcome(event))):
                 return(-4)
-            outcome = (EVENTS.getForkOutcome(event)*EXPEVENTS.getEventWeight(branch, votePeriod, event) + report*weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+            outcome = (EVENTS.getForkOutcome(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + report * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
             EVENTS.setForkOutcome(event, outcome)
         else:
-            outcome = (EVENTS.getUncaughtOutcome(event)*EXPEVENTS.getEventWeight(branch, votePeriod, event) + report*weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+            outcome = (EVENTS.getUncaughtOutcome(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + report * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
             EVENTS.setUncaughtOutcome(event, outcome)
     # scalar or categorical
     else:
@@ -230,7 +230,7 @@ def validateReport(event, branch, votePeriod, report, forkedOverEthicality, fork
 def calculateReportTargetForEvent(branch, event, votePeriod, sender):
     callstackCheck()
     numMarkets = EVENTS.getNumMarkets(event)
-    if(numMarkets>20):
+    if(numMarkets > 20):
         numMarkets = 20
     markets = array(numMarkets)
     markets = EVENTS.getMarkets(event, outitems=numMarkets)
@@ -242,11 +242,11 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
         totalFees += MARKETS.getFees(markets[i])
         i += 1
     totalVal = EXPEVENTS.getShareValue(branch, votePeriod)
-    shareFraction = shareValue*ONE/totalVal
-    numReportersOnMarket = BRANCHES.getBaseReporters(branch)*((-(267*shareFraction**2)/(2*ONE) + (533*shareFraction)/2 + 1*ONE))
+    shareFraction = shareValue * ONE / totalVal
+    numReportersOnMarket = BRANCHES.getBaseReporters(branch) * ((-(267 * shareFraction ** 2) / (2 * ONE) + (533 * shareFraction) / 2 + 1 * ONE))
     totalFeesInWei = totalFees * WEITOETH / ONE
-    canPayForThisManyReporters = totalFeesInWei/(3500000*tx.gasprice)
-    lesser = min(canPayForThisManyReporters*ONE, numReportersOnMarket)
+    canPayForThisManyReporters = totalFeesInWei/(3500000 * tx.gasprice)
+    lesser = min(canPayForThisManyReporters * ONE, numReportersOnMarket)
     if(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
         EXPEVENTS.refundCost(sender, branch, votePeriod, event)
         EXPEVENTS.setLesserReportNum(branch, votePeriod, event, lesser)

@@ -43,11 +43,11 @@ def move_event(event):
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     branch = EVENTS.getEventBranch(event)
     eventForkedOver = BRANCHES.getEventForkedOver(branch)
-    expPeriod = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
+    expPeriod = EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch)
     eventIndex = EXPEVENTS.getEventIndex(expPeriod, event)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     # todo getoutcome may not work
-    if(forkPeriod and currentPeriod == (forkPeriod+2) and !EVENTS.getOutcome(event) and !BACKSTOPS.getMoved(event)):
+    if(forkPeriod and currentPeriod == (forkPeriod + 2) and !EVENTS.getOutcome(event) and !BACKSTOPS.getMoved(event)):
         winner = BACKSTOPS.getResolved(branch, forkPeriod)
         if(!winner):
             winner = self.resolve_fork(branch)
@@ -64,7 +64,7 @@ def move_event(event):
             # return bond if it's a round 2 event and make it not one anymore
             ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)
             # if should've resolved in past periods
-            if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1)):
+            if(expPeriod == forkPeriod or expPeriod == (forkPeriod + 1)):
                 # push it into next [this] period
                 EXPEVENTS.addEvent(branch, currentPeriod, event)
                 EVENTS.setExpiration(event, block.timestamp)
@@ -81,7 +81,7 @@ def move_event(event):
             ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)
             # move event to fork
             # and place it into the next reporting period w/ outcomes to 0
-            if(expPeriod == forkPeriod or expPeriod == (forkPeriod+1)):
+            if(expPeriod == forkPeriod or expPeriod == (forkPeriod + 1)):
                 # push it into next [this] period
                 EXPEVENTS.addEvent(winner, currentPeriod, event)
                 EVENTS.setExpiration(event, block.timestamp)
@@ -134,21 +134,21 @@ def fork(event, branch, forkedOverEthicality):
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     if(!EVENTS.getRoundTwo(event) or BACKSTOPS.getFinal(event) or EVENTS.getForked(event)):
         return(-1)
-    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod+1) or currentPeriod == (forkPeriod+2)):
+    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod + 1) or currentPeriod == (forkPeriod + 2)):
         return(-3)
-    if(EVENTS.getOriginalExpiration(event)!=EVENTS.getExpiration(event)):
+    if(EVENTS.getOriginalExpiration(event) != EVENTS.getExpiration(event)):
         return(-4)
-    if(EVENTS.getEventBranch(event)!=branch):
+    if(EVENTS.getEventBranch(event) != branch):
         return(-5)
     # todo find actual gas cost for resolution here and charge that
-    if(msg.value < 200000*tx.gasprice):
+    if(msg.value < 200000 * tx.gasprice):
         return(0)
     if(!send(CONSENSUSDATA, msg.value)):
         throw()
     CONSENSUSDATA.setRefund(event, msg.value)
     # if in last 48 hr of period and is round 2 event with reports attempted
-    if(block.timestamp/BRANCHES.getPeriodLength(branch)!=((block.timestamp + 2*TWENTYFOURHR)/BRANCHES.getPeriodLength(branch)) and EVENTS.getUncaughtOutcome(event)!=0):
-        bond = POINTZEROONE*REPORTING.getTotalRep(branch)/ONE
+    if(block.timestamp / BRANCHES.getPeriodLength(branch) != ((block.timestamp + 2 * TWENTYFOURHR) / BRANCHES.getPeriodLength(branch)) and EVENTS.getUncaughtOutcome(event) != 0):
+        bond = POINTZEROONE * REPORTING.getTotalRep(branch) / ONE
         BACKSTOPS.setBondAmount(event, bond)
         # lose fork bond in branch 1
         # results same as roundtwobond, let it resolve as that on original network
@@ -160,8 +160,8 @@ def fork(event, branch, forkedOverEthicality):
         newBranch = CREATEBRANCH.createSubbranch(text("fork"), BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), BRANCHES.getOracleOnly(branch))
         REPORTING.setFork(newBranch)
         period = BRANCHES.getVotePeriod(newBranch)
-        EXPEVENTS.setEventRequired(newBranch, period+1, event)
-        EXPEVENTS.addEvent(newBranch, period+1, event)
+        EXPEVENTS.setEventRequired(newBranch, period + 1, event)
+        EXPEVENTS.addEvent(newBranch, period + 1, event)
         EVENTS.setExpiration(event, block.timestamp)
         BACKSTOPS.setOriginalBranch(event, branch)
         BACKSTOPS.setForkBondPoster(event, msg.sender)
@@ -175,9 +175,9 @@ def fork(event, branch, forkedOverEthicality):
             BACKSTOPS.setForkedOverEthicality(event)
         # return round 2 bond on orig. branch
         market = EVENTS.getMarket(event, 0)
-        averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period-1)/EXPEVENTS.getNumberEvents(branch, period-1)
-        bond = averageAdjudicationCost + MARKETS.getSharesValue(market)*(POINTZEROONE + MARKETS.getTradingFee(market)/2) / 2**64
-        bond = min(bond, 200*ONE)
+        averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period - 1)/EXPEVENTS.getNumberEvents(branch, period - 1)
+        bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINTZEROONE + MARKETS.getTradingFee(market) / 2) / 2 ** 64
+        bond = min(bond, 200 * ONE)
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
         BACKSTOPS.setBondReturned(event)
@@ -195,7 +195,7 @@ def resolveForkedEvent(branch, event):
     refund()
     votedOnAgain = 0
     # checks for orig. branch
-    if(EVENTS.getEventBranch(event)!=branch or BRANCHES.getEventForkedOver(branch)!=event):
+    if(EVENTS.getEventBranch(event) != branch or BRANCHES.getEventForkedOver(branch) != event):
         return(0)
     if(BRANCHES.getVotePeriod(branch) > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
         votedOnAgain = 1
@@ -223,7 +223,7 @@ def resolveForkEvent(branch, event):
         fxpOutcome = 0
         ethical = 0
         # original parent won
-        if(winner==branch):
+        if(winner == branch):
             fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
             ethical = ethic_catch(EVENTS.getEthics(event))
         # fork won
@@ -232,12 +232,12 @@ def resolveForkEvent(branch, event):
             ethical = ethic_catch(EVENTS.getForkEthicality(event))
         EVENTS.setOutcome(event, fxpOutcome)
         EVENTS.setEthics(event, ethical)
-        if(fxpOutcome==3*ONEHALF or !ethical):
+        if(fxpOutcome == 3 * ONEHALF or !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, bond)
             CASH.addCash(branch, bond)
             # not ethical is same as .5 outcome
-            fxpOutcome = 3*ONEHALF
+            fxpOutcome = 3 * ONEHALF
             EVENTS.setOutcome(event, fxpOutcome)
         else:
             # return bond
@@ -249,7 +249,7 @@ def resolveForkEvent(branch, event):
         mode = 0
         ethical = 0
         # original parent won
-        if(winner==branch):
+        if(winner == branch):
             mode = EVENTS.getUncaughtOutcome(event)
             ethical = ethic_catch(EVENTS.getEthics(event))
         # fork won
@@ -262,11 +262,11 @@ def resolveForkEvent(branch, event):
         scaled_min = EVENTS.getMinValue(event)
         if(categorical(event)):
             scaled_min = ONE
-            scaled_max = ONE*EVENTS.getNumOutcomes(event)
-        fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
-        ethicOutcome = 2**63 * (scaled_max - scaled_min)/ONE + scaled_min
+            scaled_max = ONE * EVENTS.getNumOutcomes(event)
+        fxpOutcome = mode * (scaled_max - scaled_min) / ONE + scaled_min
+        ethicOutcome = 2 ** 63 * (scaled_max - scaled_min) / ONE + scaled_min
         EVENTS.setOutcome(event, fxpOutcome)
-        if(mode==ONEHALF or !ethical):
+        if(mode == ONEHALF or !ethical):
             # give event bond money to reporters
             CASH.subtractCash(event, bond)
             CASH.addCash(branch, bond)

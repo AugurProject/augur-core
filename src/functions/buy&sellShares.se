@@ -107,7 +107,7 @@ def cancel(trade_id):
             CASH.subtractCash(market, (amount * price * fee / ONE**2))
             CASH.addCash(msg.sender, (amount * price * fee / ONE**2))
         else:
-            throw
+            throw()
         # Log cancellation
         log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type)
         return(SUCCESS)
