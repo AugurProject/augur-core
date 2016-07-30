@@ -24,7 +24,7 @@ inset('repChange.se')
     # -2: fork event isn't resolved yet
     # -3: already done for all events in this period
     # -4: needed to collect fees last period which sets the before/after rep
-    # -5: event branch is invalid/doesn't match
+    # -5: event branch is invalid/doesn't matc
 def penalizeOnForkedEvent(branch, event):
     refund()
     repBalance = REPORTING.getRepBalance(branch, msg.sender)

@@ -38,7 +38,7 @@ inset('refund.se')
 # forkOutcome is the outcome of an event that was forked over
 # forkEthicality is the ethicality of an event that was forked over
 # resolutionSource is a string with the recommended source for resolving a market
-data Events[](branch, expirationDate, outcome, minValue, maxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent)
+data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent)
 
 # Keeps track of number of events created in the past 24 hours
 data past24Hours[]
@@ -94,8 +94,8 @@ def getEventInfo(event):
     eventinfo[0] = self.Events[event].branch
     eventinfo[1] = self.Events[event].expirationDate
     eventinfo[2] = self.Events[event].outcome
-    eventinfo[3] = self.Events[event].minValue
-    eventinfo[4] = self.Events[event].maxValue
+    eventinfo[3] = self.Events[event].fxpMinValue
+    eventinfo[4] = self.Events[event].fxpMaxValue
     eventinfo[5] = self.Events[event].numOutcomes
     eventinfo[6] = self.Events[event].bond
     return(eventinfo: arr)
@@ -141,10 +141,10 @@ def setEthics(event, ethicality):
     return(ethicality)
 
 def getMinValue(event):
-    return(self.Events[event].minValue)
+    return(self.Events[event].fxpMinValue)
 
 def getMaxValue(event):
-    return(self.Events[event].maxValue)
+    return(self.Events[event].fxpMaxValue)
 
 def getNumOutcomes(event):
     return(self.Events[event].numOutcomes)
@@ -157,7 +157,7 @@ def getUncaughtOutcome(event):
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
     return(self.Events[event].uncaughtOutcome)
 
-def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes, resolution: str):
+def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str):
     # check that msg.sender is one of our function contracts
     # if(!self.whitelist.check(msg.sender)):
     # 	return(-1)
@@ -165,8 +165,8 @@ def initializeEvent(ID, branch, expirationDate, minValue, maxValue, numOutcomes,
         self.Events[ID].branch = branch
         self.Events[ID].expirationDate = expirationDate
         self.Events[ID].originalExp = expirationDate
-        self.Events[ID].minValue = minValue
-        self.Events[ID].maxValue = maxValue
+        self.Events[ID].fxpMinValue = fxpMinValue
+        self.Events[ID].fxpMaxValue = fxpMaxValue
         self.Events[ID].numOutcomes = numOutcomes
         save(self.Events[ID].resolutionSource[0], resolution, chars=len(resolution))
         return(1)

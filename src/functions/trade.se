@@ -66,7 +66,7 @@ macro remove_trade($trade_id, $market):
 # max amount is max shares to sell filling bid orders
 # 500k gas cost
 # picks orders off the book
-def trade(max_value, max_amount, trade_ids:arr):
+def trade(fxp_max_value, fxp_max_amount, trade_ids:arr):
     refund()
     i = 0
     trades = 0
@@ -75,8 +75,8 @@ def trade(max_value, max_amount, trade_ids:arr):
         i+=1
     tradeInfo = array(3)
     tradeInfo[0] = trades
-    tradeInfo[1] = max_amount
-    tradeInfo[2] = max_value
+    tradeInfo[1] = fxp_max_amount
+    tradeInfo[2] = fxp_max_value
     tradeHash = sha3(tradeInfo, items=3)
     if(TRADES.checkHash(tradeHash, msg.sender)==-1):
         return([-2]: arr)
@@ -109,10 +109,10 @@ def trade(max_value, max_amount, trade_ids:arr):
         if type == BID:
             # Get available balance of shares
             balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)
-            if(balance > 0 and max_amount > 0):
+            if(balance > 0 and fxp_max_amount > 0):
                 makerFeeRate = MARKETS.getMakerFees(market)
                 # Determine fill amount
-                fill = min(amount, min(balance, max_amount))
+                fill = min(amount, min(balance, fxp_max_amount))
                 # Calculate value
                 value = (fill * price)/ONE
                 # must trade at least 0.00000001 in value
@@ -146,8 +146,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # needed to keep track of how many fees a market has raised
                 # only count branch fees here
                 MARKETS.addFees(market, fee/2+branchFees)
-                # Update max_amount
-                max_amount -= fill
+                # Update fxp_max_amount
+                fxp_max_amount -= fill
                 # Log transaction
                 log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome)
             else:
@@ -158,7 +158,7 @@ def trade(max_value, max_amount, trade_ids:arr):
             takerFee = (ONEPOINTFIVE - makerFeeRate)*fee / ONE
             total_trade_cost = amount * price * (takerFee+ONE) / ONE**2
             # trade value to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilledIncludingFees)
-            value_to_spend = min(total_trade_cost, min(max_value, balance))
+            value_to_spend = min(total_trade_cost, min(fxp_max_value, balance))
             # Determine fill amount
             fill = value_to_spend*ONE / price * ONE / (takerFee+ONE)
             trade_value_excluding_fees = fill*price/ONE
@@ -189,8 +189,8 @@ def trade(max_value, max_amount, trade_ids:arr):
 
                 # only count branch fees here
                 MARKETS.addFees(market, makerFee/2+branchFees)
-                # Update max_value
-                max_value -= value_to_spend
+                # Update fxp_max_value
+                fxp_max_value -= value_to_spend
                 # Log transaction
                 log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome)
             else:
@@ -203,7 +203,7 @@ def trade(max_value, max_amount, trade_ids:arr):
         log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
         # Next trade
         t += 1
-    return([SUCCESS, max_value, max_amount]: arr)
+    return([SUCCESS, fxp_max_value, fxp_max_amount]: arr)
 
 # Allows a user to "short" by buying n complete sets and selling n shares of the unwanted outcome to a bid on the book
 # Example:
@@ -223,7 +223,7 @@ def trade(max_value, max_amount, trade_ids:arr):
     # -4: market is already resolved
     # -5: can't pickup your own trade
     # -7: not a large enough trade
-def short_sell(buyer_trade_ids: arr, max_amount):
+def short_sell(buyer_trade_ids: arr, fxp_max_amount):
     refund()
     i = 0
     trades = 0
@@ -232,8 +232,8 @@ def short_sell(buyer_trade_ids: arr, max_amount):
         i+=1
     tradeInfo = array(3)
     tradeInfo[0] = trades
-    tradeInfo[1] = max_amount
-    tradeInfo[2] = max_value
+    tradeInfo[1] = fxp_max_amount
+    tradeInfo[2] = fxp_max_value
     tradeHash = sha3(tradeInfo, items=3)
     if(TRADES.checkHash(tradeHash, msg.sender)==-1):
         return([-2]: arr)
@@ -267,7 +267,7 @@ def short_sell(buyer_trade_ids: arr, max_amount):
         creator = INFO.getCreator(market)
         trading_fee = MARKETS.getTradingFee(market)
         cumScale = MARKETS.getCumScale(market)
-        amount = min(orig_amount, max_amount)
+        amount = min(orig_amount, fxp_max_amount)
         if(amount < 0):
             return([INSUFFICIENT_BALANCE]: arr)
         fee = amount * price * fee_percent(trading_fee, price, cumScale) / ONE**2
@@ -325,11 +325,11 @@ def short_sell(buyer_trade_ids: arr, max_amount):
         # only count branch fees here
         MARKETS.addFees(market, fee/2+branchFees)
     
-        max_amount -= fill
+        fxp_max_amount -= fill
         # Log transaction
         log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)
         # Log price, fill amount, type and timestamp
         log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
         MARKETS.setPrice(market, outcome, price)
         t += 1
-    return([SUCCESS, max_amount, fill, price]: arr)
+    return([SUCCESS, fxp_max_amount, fill, price]: arr)

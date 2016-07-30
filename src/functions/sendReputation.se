@@ -35,18 +35,18 @@ inset('refund.se')
 data amountCanSpend[][](branch[])
 
 event Transfer(_from:indexed, _to:indexed, _value)
-event Approval(_owner:indexed, _spender:indexed, value)
+event Approval(_owner:indexed, _spender:indexed, fxpValue)
 
 #def any():
 #    refund()
 
 # send active reputation
-# @return value of reputation sent, 0 if not enough reputation
+# @return fxpValue of reputation sent, 0 if not enough reputation
 # error messages otherwise
     # -1: "Your reputation account was just created, earn some rep. before you can send to others"
-    # -2: not enough rep / value too small or not authorized
+    # -2: not enough rep / fxpValue too small or not authorized
     # -3: "Receiving address doesn't exist"
-def sendRepFrom(branch, from, recver, value):
+def sendRepFrom(branch, from, recver, fxpValue):
     checkInvariants(from)
     senderIndex = REPORTING.repIDToIndex(branch, from)
     receiverIndex = REPORTING.repIDToIndex(branch, recver)
@@ -59,22 +59,22 @@ def sendRepFrom(branch, from, recver, value):
         return(-3)
 
     senderBalance = REPORTING.getRepBalance(branch, from)
-    if(senderBalance < value or value <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= value or from==msg.sender)):
+    if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from==msg.sender)):
         return(-2)
     if(from!=msg.sender):
-        self.amountCanSpend[from][msg.sender].branch[branch] -= value
-    if(!REPORTING.subtractRep(branch, senderIndex, value) or !REPORTING.addRep(branch, receiverIndex, value)):
+        self.amountCanSpend[from][msg.sender].branch[branch] -= fxpValue
+    if(!REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, receiverIndex, fxpValue)):
         throw()
-    log(type=Transfer, from, recver, value)
+    log(type=Transfer, from, recver, fxpValue)
     return(1)
 
 # Transfer dormant rep
-# @return value of reputation sent, 0 if not enough reputation
+# @return fxpValue of reputation sent, 0 if not enough reputation
 # error messages otherwise
     # -1: "Your reputation account was just created, earn some rep. before you can send to others"
-    # -2: not enough rep / value too small or not authorized    # -3: "Receiving address doesn't exist"
+    # -2: not enough rep / fxpValue too small or not authorized    # -3: "Receiving address doesn't exist"
 # fails unless from has authorized sender [either contract which was approved or the from address is the msg.sender]
-def transferFrom(branch, from, recver, value):
+def transferFrom(branch, from, recver, fxpValue):
     refund()
     votePeriod = BRANCHES.getVotePeriod(branch)
     senderIndex = REPORTING.repIDToIndex(branch, from)
@@ -88,22 +88,22 @@ def transferFrom(branch, from, recver, value):
         return(-3)
 
     senderBalance = REPORTING.balanceOf(branch, from)
-    if(senderBalance < value or value <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= value or from==msg.sender)):
+    if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from==msg.sender)):
         return(-2)
     if(from!=msg.sender):
-        self.amountCanSpend[from][msg.sender].branch[branch] -= value
-    if(!REPORTING.subtractDormantRep(branch, senderIndex, value) or !REPORTING.addDormantRep(branch, receiverIndex, value)):
+        self.amountCanSpend[from][msg.sender].branch[branch] -= fxpValue
+    if(!REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, receiverIndex, fxpValue)):
        throw()
-    log(type=Transfer, from, recver, value)
+    log(type=Transfer, from, recver, fxpValue)
     return(1)
 
 # Convert active rep to dormant rep
 # error messages
     # -1: sender's rep account didn't exist, just made one
-    # -2: not enough rep / value too small
+    # -2: not enough rep / fxpValue too small
 # if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event todo
 # unless this just happened to them last period and they reported correctly then
-def convertToDormantRep(branch, value):
+def convertToDormantRep(branch, fxpValue):
     checkInvariants(msg.sender)
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
     # if the sender's rep. account doesn't exist, make one, only if in first half of period and not a fork scenario
@@ -113,18 +113,18 @@ def convertToDormantRep(branch, value):
         return(-1)
 
     senderBalance = REPORTING.getRepBalance(branch, msg.sender)
-    if(senderBalance < value or value <= 0):
+    if(senderBalance < fxpValue or fxpValue <= 0):
         return(-2)
-    if(!REPORTING.subtractRep(branch, senderIndex, value) or !REPORTING.addDormantRep(branch, senderIndex, value)):
+    if(!REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, senderIndex, fxpValue)):
         throw()
-    REPORTING.adjustActiveRep(branch, -value)
+    REPORTING.adjustActiveRep(branch, -fxpValue)
     return(1)
 
 # Convert dormant rep to active rep
 # error messages
     # -1: sender's rep account didn't exist, just made one
     # -2:
-def convertToActiveRep(branch, value):
+def convertToActiveRep(branch, fxpValue):
     checkInvariants(msg.sender)
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
     # if the sender's rep. account doesn't exist, make one
@@ -134,11 +134,11 @@ def convertToActiveRep(branch, value):
         return(-1)
 
     senderBalance = REPORTING.balanceOf(branch, msg.sender)
-    if(senderBalance < value or value <= 0):
+    if(senderBalance < fxpValue or fxpValue <= 0):
         return(-2)
-    if(!REPORTING.subtractDormantRep(branch, senderIndex, value) or !REPORTING.addRep(branch, senderIndex, value) or !safeToAdd(value, REPORTING.getRepBalance(msg.sender))):
+    if(!REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, senderIndex, fxpValue) or !safeToAdd(fxpValue, REPORTING.getRepBalance(msg.sender))):
         throw()
-    REPORTING.adjustActiveRep(branch, value)
+    REPORTING.adjustActiveRep(branch, fxpValue)
     return(1)
 
 def claimRep():
@@ -150,10 +150,10 @@ def claimRep():
 
 # Allows spender to withdraw from your dormant rep account
 # fix to be branch specific todo
-def approve(branch, spender, value):
+def approve(branch, spender, fxpValue):
     callstackCheck()
-    self.amountCanSpend[msg.sender][spender].branch[branch] = value
-    log(type=Approval, msg.sender, spender, value)
+    self.amountCanSpend[msg.sender][spender].branch[branch] = fxpValue
+    log(type=Approval, msg.sender, spender, fxpValue)
     return(1)
 
 # Returns amount spender can withdraw from owner

@@ -19,7 +19,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Storage of all data associated with reporters
-# takes reporterID as key, value is rep amount
+# takes reporterID as key, fxpValue is rep amount
 data reporting[]
 
 # keeps track of total rep in the system
@@ -32,7 +32,7 @@ data approvedToSpend[][]
 # whether the contract has been finished seeding
 data seeded
 
-event Transfer(_from:indexed, _to:indexed, _value)
+event Transfer(_from:indexed, _to:indexed, _fxpValue)
 event Approval(_owner:indexed, _spender:indexed)
 
 macro ONE:
@@ -46,31 +46,31 @@ def any():
     refund()
 
 # Transfer rep
-# @return value of reputation sent, 0 if not enough reputation
-def transfer(receiver, value):
+# @return fxpValue of reputation sent, 0 if not enough reputation
+def transfer(receiver, fxpValue):
     senderBalance = self.reporting[msg.sender]
-    if(senderBalance < value or value <= 0 or !self.seeded):
+    if(senderBalance < fxpValue or fxpValue <= 0 or !self.seeded):
         throw()
-    if(!safeToSubtract(self.reporting[msg.sender], value) or !safeToAdd(self.reporting[receiver], value)):
+    if(!safeToSubtract(self.reporting[msg.sender], fxpValue) or !safeToAdd(self.reporting[receiver], fxpValue)):
         throw()
-    self.reporting[msg.sender] -= value
-    self.reporting[receiver] += value
-    log(type=Transfer, msg.sender, receiver, value)
-    return(value)
+    self.reporting[msg.sender] -= fxpValue
+    self.reporting[receiver] += fxpValue
+    log(type=Transfer, msg.sender, receiver, fxpValue)
+    return(fxpValue)
     
 # TransferFrom per token api allowing another contract to withdraw on user's behalf
 # also allows transfer if sent from the real owner
 # fails unless from has authorized sender
-def transferFrom(from, receiver, value):
+def transferFrom(from, receiver, fxpValue):
     senderBalance = self.reporting[from]
-    if(senderBalance < value or value <= 0 or (!self.approvedToSpend[from][msg.sender] and from!=msg.sender) or !self.seeded):
+    if(senderBalance < fxpValue or fxpValue <= 0 or (!self.approvedToSpend[from][msg.sender] and from!=msg.sender) or !self.seeded):
         throw()
-    if(!safeToSubtract(self.reporting[from], value) or !safeToAdd(self.reporting[receiver], value)):
+    if(!safeToSubtract(self.reporting[from], fxpValue) or !safeToAdd(self.reporting[receiver], fxpValue)):
         throw()
-    self.reporting[from] -= value
-    self.reporting[receiver] += value
-    log(type=Transfer, from, receiver, value)
-    return(value)
+    self.reporting[from] -= fxpValue
+    self.reporting[receiver] += fxpValue
+    log(type=Transfer, from, receiver, fxpValue)
+    return(fxpValue)
     
 # Allows spender to withdraw from your rep account
 def approve(spender):
@@ -94,7 +94,7 @@ def setSaleDistribution(addresses: arr, balances: arr):
 def approved(owner, spender):
     return(self.approvedToSpend[owner][spender])
 
-# @return reputation value
+# @return reputation fxpValue
 def balanceOf(address):
     return(self.reporting[address])
 

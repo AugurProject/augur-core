@@ -7,7 +7,7 @@ data tradeCommits[](hash, block)
 # tradeID is index
 data trades[](id, type, market, amount, price, owner, block, outcome)
 
-def makeTradeHash(max_value, max_amount, trade_ids: arr):
+def makeTradeHash(fxp_max_value, fxp_max_amount, trade_ids: arr):
     refund()
     i = 0
     trades = 0
@@ -16,8 +16,8 @@ def makeTradeHash(max_value, max_amount, trade_ids: arr):
         i+=1
     tradeInfo = array(3)
     tradeInfo[0] = trades
-    tradeInfo[1] = max_amount
-    tradeInfo[2] = max_value
+    tradeInfo[1] = fxp_max_amount
+    tradeInfo[2] = fxp_max_value
     tradeHash = sha3(tradeInfo, items=3)
     return(tradeHash)
 

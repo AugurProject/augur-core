@@ -20,7 +20,7 @@
 
 inset('refund.se')
 
-# address -> value map of "cash [a made up subcurrency/token for testing"
+# address -> fxpValue map of "cash [a made up subcurrency/token for testing"
 data cashcoinBalances[]
 
 # address -> address mapping of a cash address to the address that owns it
@@ -49,8 +49,8 @@ def initiateOwner(account):
         return(0)
 
 # Sends cash from a user to a receiver
-# @return value of cash sent; fail is 0
-def sendFrom(recver, value, from):
+# @return fxpValue of cash sent; fail is 0
+def sendFrom(recver, fxpValue, from):
     callstackCheck()
     self.cashcoinBalances[msg.sender] += msg.value * ONE / WEITOETH
     if(!self.owners[msg.sender] and from==msg.sender):
@@ -62,10 +62,10 @@ def sendFrom(recver, value, from):
     # if(!self.owners[recver]):
     #    return(0)
     senderBalance = self.cashcoinBalances[from]
-    if(senderBalance >= value and value > 0):
-        self.cashcoinBalances[from] -= value
-        self.cashcoinBalances[recver] += value
-        return(value)
+    if(senderBalance >= fxpValue and fxpValue > 0):
+        self.cashcoinBalances[from] -= fxpValue
+        self.cashcoinBalances[recver] += fxpValue
+        return(fxpValue)
     else:
         return(0)
 
@@ -99,21 +99,21 @@ def depositEther():
 # Returns 1 if withdrawal is successful
 # Errors:
     # 0: Not enough money
-    # -1: Value less than or equal to 0
+    # -1: fxpValue less than or equal to 0
     # -2: 3 day withdrawal window isn't up
-def withdrawEther(to, value):
+def withdrawEther(to, fxpValue):
     refund()
     if(!self.withdrawInitiated[msg.sender]):
         self.withdrawInitiated[msg.sender] = block.timestamp
         return(2)
-    if(value <= 0):
+    if(fxpValue <= 0):
         return(-1)
     if((block.timestamp - self.withdrawInitiated[msg.sender])<THREEDAYS):
         return(-2)
-    if(self.cashcoinBalances[msg.sender] >= value * ONE / WEITOETH):
-        self.cashcoinBalances[msg.sender] -= value * ONE / WEITOETH
+    if(self.cashcoinBalances[msg.sender] >= fxpValue * ONE / WEITOETH):
+        self.cashcoinBalances[msg.sender] -= fxpValue * ONE / WEITOETH
         self.withdrawInitiated[msg.sender] = 0
-        send(to, value)
+        send(to, fxpValue)
         return(1)
     else:
         return(0)

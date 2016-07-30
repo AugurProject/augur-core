@@ -30,11 +30,11 @@ inset('refund.se')
 # error messages otherwise
     # -1: bad input or parent doesn't exist
     # -3: branch already exists
-def createSubbranch(description:str, periodLength, parent, minTradingFee, oracleOnly):
+def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, oracleOnly):
     refund()
     if(periodLength<=0 or !BRANCHES.getPeriodLength(parent) or !description):
         return(-1)
-    if(minTradingFee < 0 or minTradingFee > 2**62):
+    if(fxpMinTradingFee < 0 or fxpMinTradingFee > 2**62):
         return(-1)
     parentPeriod = BRANCHES.getVotePeriod(parent)
     branchInfo = string(7*32+len(description))
@@ -45,7 +45,7 @@ def createSubbranch(description:str, periodLength, parent, minTradingFee, oracle
     branchInfo[2] = periodLength
     branchInfo[3] = block.timestamp
     branchInfo[4] = parent
-    branchInfo[5] = minTradingFee
+    branchInfo[5] = fxpMinTradingFee
     branchInfo[6] = oracleOnly
     mcopy(branchInfo + 7*32, description, len(description))
     # people can check that these characteristics hash to the ID if they want
@@ -56,7 +56,7 @@ def createSubbranch(description:str, periodLength, parent, minTradingFee, oracle
         return(-2)
     # provided event doesn't already exist, create it
     if(!INFO.getCreator(branch)):
-        BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, minTradingFee, oracleOnly, parentPeriod, parent)
+        BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent)
     else:
         return(-3)
     # pay creation fee, initialize branch info

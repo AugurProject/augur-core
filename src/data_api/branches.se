@@ -40,7 +40,7 @@ inset('refund.se')
     # Want:
         # Rep market cap >> outstanding shares value at all times
 # min can be no lower than ~0.0000001 or so otherwise can run into underflow issues
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, minTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent)
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent)
 
 # first param is the branch, second param is the subcurrency contract
 data cash[][]
@@ -53,7 +53,7 @@ def init():
     self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
     self.Branches[1010101].periodLength = 15 # 2 hours
     # .5%
-    self.Branches[1010101].minTradingFee = 92233720368547760
+    self.Branches[1010101].fxpMinTradingFee = 92233720368547760
     self.branchListCount = 1
     self.branchList[0] = 1010101
     # since only have to report on half this targets 3
@@ -122,7 +122,7 @@ def getNumMarketsBranch(branch):
     return(self.Branches[branch].numMarkets)
 
 def getMinTradingFee(branch):
-    return(self.Branches[branch].minTradingFee)
+    return(self.Branches[branch].fxpMinTradingFee)
 
 # @return all branches
 def getBranches():
@@ -153,13 +153,13 @@ def getCreationDate(ID):
     return(self.Branches[ID].creationDate)
 
 # check that msg.sender is one of our function contracts
-def initializeBranch(ID, currentVotePeriod, periodLength, minTradingFee, oracleOnly, parentPeriod, parent):
+def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent):
     # if(!self.whitelist.check(msg.sender)):
     # 	return(-1)
     if(!self.Branches[ID].periodLength):
         self.Branches[ID].currentVotePeriod = currentVotePeriod
         self.Branches[ID].periodLength = periodLength
-        self.Branches[ID].minTradingFee = minTradingFee
+        self.Branches[ID].fxpMinTradingFee = fxpMinTradingFee
         self.branchList[self.branchListCount] = ID
         self.branchListCount += 1
         self.Branches[ID].creationDate = block.timestamp

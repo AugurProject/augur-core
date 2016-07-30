@@ -24,18 +24,18 @@ import cash as CASH
 import markets as MARKETS
 inset('refund.se')
 
-# Buys amount of every outcome
+# Buys fxpAmount of every outcome
 # cost 850k gas
 # Errors:
     # 0: invalid market/doesn't exist
     # -1: oracle only branch [no trading allowed]
     # -2: not enough money
-def buyCompleteSets(market, amount):
+def buyCompleteSets(market, fxpAmount):
     refund()
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumScale = MARKETS.getCumScale(market)
-    cost = amount*cumScale/ONE
+    cost = fxpAmount*cumScale/ONE
     if(!MARKETS.getCreationTime(market)):
         return(0)
     if(BRANCHES.getOracleOnly(branch)):
@@ -46,41 +46,41 @@ def buyCompleteSets(market, amount):
     n = 1
     # send shares of the event to user address and increment the number issued in the market for each outcome
     while n <= numOutcomes:
-        MARKETS.modifyShares(market, n, amount)
-        MARKETS.modifyParticipantShares(market, msg.sender, n, amount, 0)
+        MARKETS.modifyShares(market, n, fxpAmount)
+        MARKETS.modifyParticipantShares(market, msg.sender, n, fxpAmount, 0)
         n += 1
     # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
     if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
-        MARKETS.modifySharesValue(market, amount*cumScale/ONE)
-        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount*cumScale/ONE)
+        MARKETS.modifySharesValue(market, fxpAmount*cumScale/ONE)
+        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), fxpAmount*cumScale/ONE)
     return(1)
 
-# Sells amount of every outcome [if user owns it]
+# Sells fxpAmount of every outcome [if user owns it]
 # cost 850k gas
 # Errors:
     # -2: trader doesn't exist
     # -3: user doesn't own enough shares
-def sellCompleteSets(market, amount):
+def sellCompleteSets(market, fxpAmount):
     refund()
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumScale = MARKETS.getCumScale(market)
-    cost = amount*cumScale/ONE
+    cost = fxpAmount*cumScale/ONE
     n = 1
     while n <= numOutcomes:
-        if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < amount):
+        if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < fxpAmount):
             return(-3)
         n += 1
     n = 1
-    # Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets
+    # Takes shares away from participant and decreases the fxpAmount issued in the market since we're exchanging complete sets
     while n <= numOutcomes:
-        MARKETS.modifyShares(market, n, -amount)
-        MARKETS.modifyParticipantShares(market, msg.sender, n, -amount, 0)
+        MARKETS.modifyShares(market, n, -fxpAmount)
+        MARKETS.modifyParticipantShares(market, msg.sender, n, -fxpAmount, 0)
         n += 1
     # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
     if(BRANCHES.getVotePeriod(branch)<MARKETS.getTradingPeriod(market)):
-        MARKETS.modifySharesValue(market, -amount*cumScale/ONE)
-        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), -amount*cumScale/ONE)
+        MARKETS.modifySharesValue(market, -fxpAmount*cumScale/ONE)
+        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), -fxpAmount*cumScale/ONE)
     # send funds from the market to the user acc.
     CASH.subtractCash(market, cost)
     CASH.addCash(msg.sender, cost)

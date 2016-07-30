@@ -32,20 +32,20 @@ import reportingThreshold as THRESHOLD
 inset('refund.se')
 inset('eventHelpers.se')
 
-def makeHash(salt, report, event, sender):
+def makeHash(salt, fxpReport, event, sender):
     hashInfo = array(4)
     hashInfo[0] = sender
     hashInfo[1] = salt
-    hashInfo[2] = report
+    hashInfo[2] = fxpReport
     hashInfo[3] = event
     reportHash = sha3(hashInfo, chars = 32 * len(hashInfo))
     return(reportHash)
 
-# Allows a user to submit the hash of their report / commit
+# Allows a user to submit the hash of their fxpReport / commit
 # Error: 0: not caught up on rep redistributions/penalizations so should be done first [only 1 period behind]
 # Error -1: invalid event
 # Error -2: not in first half of period [commit part]
-# Error -3: not able to report on this event
+# Error -3: not able to fxpReport on this event
 # Error -4: not caught up on penalizations [>1 period behind] and auto catchup failed
 def submitReportHash(event, reportHash, encryptedSaltyHash):
     refund()
@@ -67,7 +67,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
         return(0)
 
-    # if first report of period, num events not set
+    # if first fxpReport of period, num events not set
     if(!EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)):
         EXPEVENTS.setNumEventsToReportOn(branch)
         # set amount of fees to be distributed in this period from the branch
@@ -87,7 +87,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     # do abs then mult by 2 to ensure pos. and between 0 and 1
     shaHash = sha3(x, items = 1)
     shaHash = (abs(shaHash) / ONE) * 2
-    # shaHash must be <= to the threshold for that user to be able to report on the given event
+    # shaHash must be <= to the threshold for that user to be able to fxpReport on the given event
     if(shaHash <= reportingThreshold):
         EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
         EXPEVENTS.setSaltyEncryptedHash(branch, votePeriod, msg.sender, encryptedSaltyHash, event)
@@ -95,19 +95,19 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     else:
         return(-3)
 
-# Submits / reveals a report for a period
+# Submits / reveals a fxpReport for a period
 # @return 1 if success
 # Error messages
     # 0: reporter doesn't exist or has <1 rep
     # -1: has already reported
     # -2: not in second half of period [reveal part]
     # -3: hash doesn't match
-    # -4: bad report
-    # -5: invalid ethics
+    # -4: bad fxpReport
+    # -5: invalid fxpEthics
     # -6: already resolved
-    # -7: <48 hr left in period, too late to report, able to put up readj. bonds though
+    # -7: <48 hr left in period, too late to fxpReport, able to put up readj. bonds though
     # -8: fees couldn't be collected
-def submitReport(event, salt, report, ethics):
+def submitReport(event, salt, fxpReport, fxpEthics):
     refund()
     branch = EVENTS.getBranch(event)
     balance = REPORTING.getRepBalance(branch, msg.sender)
@@ -129,9 +129,9 @@ def submitReport(event, salt, report, ethics):
     if(residual <= periodLength / 2):
         return(-2)
     realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
-    if(self.makeHash(salt, report, event, msg.sender) != realHash or !realHash):
+    if(self.makeHash(salt, fxpReport, event, msg.sender) != realHash or !realHash):
         return(-3)
-    if(ethics != ONE and ethics != 0):
+    if(fxpEthics != ONE and fxpEthics != 0):
         return(-5)
     # todo get outcome may not work / be valid
     if(EVENTS.getOutcome(event) != 0):
@@ -144,28 +144,28 @@ def submitReport(event, salt, report, ethics):
         if(COLLECTFEES.collectFees(branch, msg.sender, value = msg.value) < 0):
             return(-8)
 
-    # actual submitting of report and ethicality
-    report = self.validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, weight)
-    if(report == -4):
+    # actual submitting of fxpReport and ethicality
+    fxpReport = self.validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight)
+    if(fxpReport == -4):
         return(-4)
-    EXPEVENTS.setReport(branch, votePeriod, event, report, msg.sender)
+    EXPEVENTS.setReport(branch, votePeriod, event, fxpReport, msg.sender)
     # set ethicality for forked event
     if(forkedOverThisEvent):
         # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
         if(forkedOverEthicality):
             oldEthical = ethic_catch(EVENTS.getEthics(event))
             if(oldEthical == ONE):
-                ethics = 0
+                fxpEthics = 0
             else:
-                ethics = ONE
-        EXPEVENTS.setEthicReport(branch, votePeriod, event, ethics, msg.sender)
-        ethics = (EVENTS.getForkEthicality(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + ethics * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
-        EVENTS.setForkEthicality(event, ethics)
+                fxpEthics = ONE
+        EXPEVENTS.setEthicReport(branch, votePeriod, event, fxpEthics, msg.sender)
+        fxpEthics = (EVENTS.getForkEthicality(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + fxpEthics * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+        EVENTS.setForkEthicality(event, fxpEthics)
     # set ethicality for a regular event
     else:
-        EXPEVENTS.setEthicReport(branch, votePeriod, event, ethics, msg.sender)
-        ethics = (EVENTS.getEthics(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + ethics * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
-        EVENTS.setEthics(event, ethics)
+        EXPEVENTS.setEthicReport(branch, votePeriod, event, fxpEthics, msg.sender)
+        fxpEthics = (EVENTS.getEthics(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + fxpEthics * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+        EVENTS.setEthics(event, fxpEthics)
     # round 2 and fork events are weighted by rep, otherwise 1
     EXPEVENTS.countReportAsSubmitted(branch, votePeriod, event, msg.sender, weight)
 
@@ -179,50 +179,50 @@ def submitReport(event, salt, report, ethics):
         CASH.addCash(msg.sender, 3500000 * tx.gasprice * ONE / WEITOETH)
     return(1)
 
-# validates and submits report
+# validates and submits fxpReport
 # weights reports by rep if round 2 and fork
-# Returns -4 if report is invalid
+# Returns -4 if fxpReport is invalid
     # isn't between 1 and 2 if binary
-    # if same report as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
-def validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, weight):
+    # if same fxpReport as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
+def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight):
     callstackCheck()
     outcome = 0
     # binary
     if(EVENTS.getNumOutcomes(event) == 2 and EVENTS.getMaxValue(event) == TWO and EVENTS.getMinValue(event) == ONE):
-        if(report > 2 * ONE or report < ONE or !report):
+        if(fxpReport > 2 * ONE or fxpReport < ONE or !fxpReport):
             return(-4)
-        # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
+        # outcome is calculated as we go along on a fxpReport by fxpReport basis (i.e. lazily evaluating things)
         elif(forkedOverThisEvent):
-            # in case of fork remove the original outcome as a possible response if forked over outcome [i.e. didn't fork over ethics]
-            if(!forkedOverEthicality and report == catch(EVENTS.getUncaughtOutcome(event))):
+            # in case of fork remove the original outcome as a possible response if forked over outcome [i.e. didn't fork over fxpEthics]
+            if(!forkedOverEthicality and fxpReport == catch(EVENTS.getUncaughtOutcome(event))):
                 return(-4)
-            outcome = (EVENTS.getForkOutcome(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + report * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+            outcome = (EVENTS.getForkOutcome(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + fxpReport * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
             EVENTS.setForkOutcome(event, outcome)
         else:
-            outcome = (EVENTS.getUncaughtOutcome(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + report * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+            outcome = (EVENTS.getUncaughtOutcome(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + fxpReport * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
             EVENTS.setUncaughtOutcome(event, outcome)
     # scalar or categorical
     else:
-        if(report > ONE):
-            report = ONE
-        if(report <= 0):
-            # 1 is the new 0 [1/2**64 is basically 0 but able to be differentiated from no report of 0]
-            report = 1
-        # in case of fork remove the original outcome as a possible response if didn't fork over ethics
-        if(forkedOverThisEvent and (!forkedOverEthicality and report == EVENTS.getUncaughtOutcome(event))):
+        if(fxpReport > ONE):
+            fxpReport = ONE
+        if(fxpReport <= 0):
+            # 1 is the new 0 [1/2**64 is basically 0 but able to be differentiated from no fxpReport of 0]
+            fxpReport = 1
+        # in case of fork remove the original outcome as a possible response if didn't fork over fxpEthics
+        if(forkedOverThisEvent and (!forkedOverEthicality and fxpReport == EVENTS.getUncaughtOutcome(event))):
             return(-4)
-        # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-        # adding weight to a given poss. mode report
-        EXPEVENTS.addToWeightOfReport(votePeriod, event, report, weight)
-        if(EXPEVENTS.getWeightOfReport(votePeriod, event, report) > EXPEVENTS.getCurrentModeItems(votePeriod, event)):
-            EXPEVENTS.setCurrentMode(votePeriod, event, report)
-            EXPEVENTS.setCurrentModeItems(votePeriod, event, report)
+        # outcome (uncaught and mode) is calculated as we go along on a fxpReport by fxpReport basis (i.e. lazily evaluating things)
+        # adding weight to a given poss. mode fxpReport
+        EXPEVENTS.addToWeightOfReport(votePeriod, event, fxpReport, weight)
+        if(EXPEVENTS.getWeightOfReport(votePeriod, event, fxpReport) > EXPEVENTS.getCurrentModeItems(votePeriod, event)):
+            EXPEVENTS.setCurrentMode(votePeriod, event, fxpReport)
+            EXPEVENTS.setCurrentModeItems(votePeriod, event, fxpReport)
         outcome = EXPEVENTS.getCurrentMode(votePeriod, event)
         if(forkedOverThisEvent):
             EVENTS.setForkOutcome(event, outcome)
         else:
             EVENTS.setUncaughtOutcome(event, outcome)
-    return(report)
+    return(fxpReport)
 
 ### Helper functions:
 # calculates how many reports should be on a given event
