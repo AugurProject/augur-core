@@ -227,13 +227,13 @@ def short_sell(buyer_trade_ids: arr, fxp_max_amount):
     refund()
     i = 0
     trades = 0
-    while i < len(trade_ids):
-        trades += trade_ids[i]
+    while i < len(buyer_trade_ids):
+        trades += buyer_trade_ids[i]
         i += 1
     tradeInfo = array(3)
     tradeInfo[0] = trades
     tradeInfo[1] = fxp_max_amount
-    tradeInfo[2] = fxp_max_value
+    tradeInfo[2] = 0
     tradeHash = sha3(tradeInfo, items = 3)
     if(TRADES.checkHash(tradeHash, msg.sender) == -1):
         return([-2]: arr)

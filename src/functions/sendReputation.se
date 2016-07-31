@@ -51,21 +51,21 @@ def sendRepFrom(branch, from, recver, fxpValue):
     senderIndex = REPORTING.repIDToIndex(branch, from)
     receiverIndex = REPORTING.repIDToIndex(branch, recver)
     # if the sender's rep. account doesn't exist, make one, only if in first half of period and not a fork scenario
-    if(REPORTING.getReporterID(branch, senderIndex)!=from and from==msg.sender):
-        CONSENSUS.setPenalizedUpTo(branch, from, (votePeriod-1))
+    if(REPORTING.getReporterID(branch, senderIndex) != from and from == msg.sender):
+        CONSENSUS.setPenalizedUpTo(branch, from, (votePeriod - 1))
         REPORTING.addReporter(branch, from)
         return(-1)
-    if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
+    if(REPORTING.getReporterID(branch, receiverIndex) != recver):
         return(-3)
 
     senderBalance = REPORTING.getRepBalance(branch, from)
-    if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from==msg.sender)):
+    if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from == msg.sender)):
         return(-2)
-    if(from!=msg.sender):
+    if(from != msg.sender):
         self.amountCanSpend[from][msg.sender].branch[branch] -= fxpValue
     if(!REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, receiverIndex, fxpValue)):
         throw()
-    log(type=Transfer, from, recver, fxpValue)
+    log(type = Transfer, from, recver, fxpValue)
     return(1)
 
 # Transfer dormant rep
@@ -80,15 +80,15 @@ def transferFrom(branch, from, recver, fxpValue):
     senderIndex = REPORTING.repIDToIndex(branch, from)
     receiverIndex = REPORTING.repIDToIndex(branch, recver)
     # if the sender's rep. account doesn't exist, make one
-    if(REPORTING.getReporterID(branch, senderIndex)!=from and from==msg.sender):
-        CONSENSUS.setPenalizedUpTo(branch, from, (votePeriod-1))
+    if(REPORTING.getReporterID(branch, senderIndex) != from and from == msg.sender):
+        CONSENSUS.setPenalizedUpTo(branch, from, (votePeriod - 1))
         REPORTING.addReporter(branch, from)
         return(-1)
-    if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
+    if(REPORTING.getReporterID(branch, receiverIndex) != recver):
         return(-3)
 
     senderBalance = REPORTING.balanceOf(branch, from)
-    if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from==msg.sender)):
+    if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from == msg.sender)):
         return(-2)
     if(from!=msg.sender):
         self.amountCanSpend[from][msg.sender].branch[branch] -= fxpValue
@@ -107,7 +107,7 @@ def convertToDormantRep(branch, fxpValue):
     checkInvariants(msg.sender)
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
     # if the sender's rep. account doesn't exist, make one, only if in first half of period and not a fork scenario
-    if(REPORTING.getReporterID(branch, senderIndex)!=msg.sender):
+    if(REPORTING.getReporterID(branch, senderIndex) != msg.sender):
         REPORTING.addReporter(branch, msg.sender)
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, (votePeriod-1))
         return(-1)
@@ -128,9 +128,9 @@ def convertToActiveRep(branch, fxpValue):
     checkInvariants(msg.sender)
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
     # if the sender's rep. account doesn't exist, make one
-    if(REPORTING.getReporterID(branch, senderIndex)!=msg.sender):
+    if(REPORTING.getReporterID(branch, senderIndex) != msg.sender):
         REPORTING.addReporter(branch, msg.sender)
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (votePeriod-1))
+        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (votePeriod - 1))
         return(-1)
 
     senderBalance = REPORTING.balanceOf(branch, msg.sender)
@@ -153,7 +153,7 @@ def claimRep():
 def approve(branch, spender, fxpValue):
     callstackCheck()
     self.amountCanSpend[msg.sender][spender].branch[branch] = fxpValue
-    log(type=Approval, msg.sender, spender, fxpValue)
+    log(type = Approval, msg.sender, spender, fxpValue)
     return(1)
 
 # Returns amount spender can withdraw from owner
@@ -179,7 +179,7 @@ macro checkInvariants($account):
     # auto increment vote period if needed
     INCREMENTPERIOD.incrementPeriodAfterReporting(branch)
     if(delta > 1):
-        if(CATCHUP.penalizationCatchup(branch, $account)!=1):
+        if(CATCHUP.penalizationCatchup(branch, $account) != 1):
             return(-4)
     if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
         return(0)

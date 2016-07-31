@@ -33,11 +33,11 @@ macro BASE_FIELDS: 17
 
 def getOrderBook(market):
     numTrades = MARKETS.get_total_trades(market)
-    trades = MARKETS.get_trade_ids(market, outitems=numTrades)
+    trades = MARKETS.get_trade_ids(market, outitems = numTrades)
     orderBook = array(TRADE_FIELDS*numTrades)
     i = 0
     while i < numTrades:
-        tradeInfo = TRADES.get_trade(trades[i], outitems=TRADE_FIELDS)
+        tradeInfo = TRADES.get_trade(trades[i], outitems = TRADE_FIELDS)
         j = 0
         while j < 8:
             orderBook[8*i + j] = tradeInfo[j]
@@ -65,14 +65,14 @@ def getMarketInfo(market):
     marketInfo[11] = MARKETS.getVolume(market)
     marketInfo[12] = INFO.getCreationFee(market)
     marketInfo[13] = INFO.getCreator(market)
-    tags = slice(MARKETS.returnTags(market, outitems=3), items=0, items=3)
+    tags = slice(MARKETS.returnTags(market, outitems = 3), items = 0, items = 3)
     marketInfo[14] = tags[0]
     marketInfo[15] = tags[1]
     marketInfo[16] = tags[2]
 
     # gather event(s) info:
     # [event, expirationDate, outcome, minValue, maxValue, numOutcomes]
-    events = slice(MARKETS.getMarketEvents(market, outitems=numEvents), items=0, items=numEvents)
+    events = slice(MARKETS.getMarketEvents(market, outitems = numEvents), items = 0, items = numEvents)
     i = 0
     while i < numEvents:
         eventInfo = EVENTS.getEventInfo(events[i], outitems=EVENTS_FIELDS)
@@ -95,7 +95,7 @@ def getMarketInfo(market):
         marketInfo[index + k*OUTCOMES_FIELDS + 1] = MARKETS.getLastOutcomePrice(market, k + 1)
         k += 1
     index += numOutcomes*OUTCOMES_FIELDS
-    winningOutcomes = slice(MARKETS.getWinningOutcomes(market, outitems=8), items=0, items=8)
+    winningOutcomes = slice(MARKETS.getWinningOutcomes(market, outitems = 8), items = 0, items = 8)
     k = 0
     while k < WINNING_OUTCOMES_FIELDS:
         marketInfo[index + k] = winningOutcomes[k]
@@ -105,7 +105,7 @@ def getMarketInfo(market):
     # append description character codes
     marketInfo[index] = descriptionLength
     index += 1
-    description = INFO.getDescription(market, outchars=descriptionLength)
+    description = INFO.getDescription(market, outchars = descriptionLength)
     c = 0
     while c < descriptionLength:
         marketInfo[index + c] = getch(description, c)
@@ -143,7 +143,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
     numMarkets = BRANCHES.getNumMarketsBranch(branch)
     if numMarketsToLoad == 0:
         numMarketsToLoad = numMarkets
-    markets = slice(BRANCHES.getMarketsInBranch(branch, outitems=numMarkets), items=0, items=numMarkets)
+    markets = slice(BRANCHES.getMarketsInBranch(branch, outitems=numMarkets), items = 0, items = numMarkets)
     totalLen = numMarketsToLoad*11
     m = 0
     while m < numMarketsToLoad:
@@ -163,13 +163,13 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
         marketsInfo[c + 3] = MARKETS.getTradingFee(market)
         marketsInfo[c + 4] = MARKETS.getCreationTime(market)
         marketsInfo[c + 5] = MARKETS.getVolume(market)
-        tags = slice(MARKETS.returnTags(market, outitems=3), items=0, items=3)
+        tags = slice(MARKETS.returnTags(market, outitems = 3), items = 0, items = 3)
         marketsInfo[c + 6] = tags[0]
         marketsInfo[c + 7] = tags[1]
         marketsInfo[c + 8] = tags[2]
         marketsInfo[c + 9] = MARKETS.getLastExpDate(market)
         marketsInfo[c + 10] = MARKETS.getMakerFees(market)
-        description = INFO.getDescription(markets[m + offset], outchars=descriptionLength)
+        description = INFO.getDescription(markets[m + offset], outchars = descriptionLength)
         c += 11
         d = 0
         while d < descriptionLength:

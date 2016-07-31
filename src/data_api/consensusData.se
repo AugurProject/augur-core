@@ -17,7 +17,7 @@ data refunds[]
 data slashed[][](reporter[])
 
 def init():
-    self.branch[1010101].baseReportersLastPeriod = 2*3
+    self.branch[1010101].baseReportersLastPeriod = 6
 
 def getSlashed(branch, votePeriod, reporter):
     return(self.slashed[branch][votePeriod].reporter[reporter])
@@ -107,8 +107,8 @@ def getRepRedistributionDone(branch, reporter):
 
 macro repRedistributionDone($branch, $reporter):
     lastPeriodPenalized = self.branch[$branch].penalizedUpTo[$reporter]
-    lastPeriod = BRANCHES.getVotePeriod($branch)-1
-    if(lastPeriod==lastPeriodPenalized):
+    lastPeriod = BRANCHES.getVotePeriod($branch) - 1
+    if(lastPeriod == lastPeriodPenalized):
         1
     else:
         0

@@ -22,6 +22,9 @@ data forking[](bondPoster, bondAmount, forkedOverEthicality, bondPaid, originalB
 # Given a branch and a forkPeriod it states which fork the winner was
 data resolved[][]
 
+def checkCallstack():
+    return(1)
+
 def getDisputedOverEthics(event):
     return(self.roundTwo[event].disputedOverEthics)
 

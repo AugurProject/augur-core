@@ -245,7 +245,7 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
     shareFraction = shareValue * ONE / totalVal
     numReportersOnMarket = BRANCHES.getBaseReporters(branch) * ((-(267 * shareFraction ** 2) / (2 * ONE) + (533 * shareFraction) / 2 + 1 * ONE))
     totalFeesInWei = totalFees * WEITOETH / ONE
-    canPayForThisManyReporters = totalFeesInWei/(3500000 * tx.gasprice)
+    canPayForThisManyReporters = totalFeesInWei / (3500000 * tx.gasprice)
     lesser = min(canPayForThisManyReporters * ONE, numReportersOnMarket)
     if(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
         EXPEVENTS.refundCost(sender, branch, votePeriod, event)

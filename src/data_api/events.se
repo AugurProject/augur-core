@@ -87,7 +87,7 @@ def getForkedDone(event):
 
 def getEventResolution(event):
     resLen = self.Events[event].resolutionSourceLength
-    return(load(self.Events[event].resolutionSource[0], chars=resLen): str)
+    return(load(self.Events[event].resolutionSource[0], chars = resLen): str)
 
 def getEventInfo(event):
     eventinfo = array(7)
@@ -102,7 +102,7 @@ def getEventInfo(event):
 
 def getResolution(event):
     length=self.Events[event].resolutionSourceLength
-    return(load(self.Events[event].resolutionSource[0], chars=length): str)
+    return(load(self.Events[event].resolutionSource[0], chars = length): str)
 
 def getPast24(period):
     return(self.past24Hours[period])
@@ -168,7 +168,7 @@ def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOut
         self.Events[ID].fxpMinValue = fxpMinValue
         self.Events[ID].fxpMaxValue = fxpMaxValue
         self.Events[ID].numOutcomes = numOutcomes
-        save(self.Events[ID].resolutionSource[0], resolution, chars=len(resolution))
+        save(self.Events[ID].resolutionSource[0], resolution, chars = len(resolution))
         return(1)
     else:
         return(0)
