@@ -13,11 +13,11 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
     # In the $event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and $market remains with old expiration date
     # UI needs to call penalizeWrong for ones that are pushed back in both pushed back period and regular period with actual reporting
-    $indeterminate = ONEHALF*3
-    if(($fxpOutcome == $indeterminate or $mode==ONEHALF) and EVENTS.getEventPushedUp($event)):
+    $indeterminate = ONEHALF * 3
+    if(($fxpOutcome == $indeterminate or $mode == ONEHALF) and EVENTS.getEventPushedUp($event)):
         if(MARKETS.getPushedForward($market)):
-            CASH.addCash($branch, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
-            CASH.subtractCash($market, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
+            CASH.addCash($branch, MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE))
+            CASH.subtractCash($market, MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE))
         MARKETS.setTradingPeriod($market, MARKETS.getOriginalTradingPeriod($market))
         MARKETS.setPushedForward($market, 0, msg.sender)
         EXPEVENTS.setEventWeight($branch, $votingPeriodEvent, $event, 0)
@@ -29,11 +29,11 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         EVENTS.setUncaughtOutcome($event, 0)
         EVENTS.setEventPushedUp($event, 0)
         # need to store which period it was "rejected" in
-        EVENTS.setRejected($event, EVENTS.getExpiration($event)/$periodLength)
+        EVENTS.setRejected($event, EVENTS.getExpiration($event) / $periodLength)
         # set $event expiration to be the old date
         EVENTS.setExpiration($event, EVENTS.getOriginalExpiration($event))
         -6
-    elif(($fxpOutcome==$indeterminate or $mode==ONEHALF) or !$ethical):
+    elif(($fxpOutcome == $indeterminate or $mode == ONEHALF) or !$ethical):
         # give $event bond money to reporters
         CASH.subtractCash($event, EVENTS.getBond($event))
         CASH.addCash($branch, EVENTS.getBond($event))
@@ -49,11 +49,11 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         CASH.subtractCash($event, EVENTS.getBond($event))
         CASH.addCash(INFO.getCreator($event), EVENTS.getBond($event))
         if(MARKETS.getPushedForward($market)):
-            CASH.addCash(MARKETS.getBondsMan($market), MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
-            CASH.subtractCash($market, MARKETS.getTradingFee($market)*MARKETS.getTotalSharesPurchased($market)/(2*ONE))
+            CASH.addCash(MARKETS.getBondsMan($market), MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE))
+            CASH.subtractCash($market, MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE))
         if(EVENTS.getEventPushedUp($event)):
             # delete old $event from future events exp
-            $period = EVENTS.getOriginalExpiration($event)/$periodLength
+            $period = EVENTS.getOriginalExpiration($event) / $periodLength
             EXPEVENTS.removeEvent($branch, $period)
             EXPEVENTS.deleteEvent($branch, $period, $event)
             EVENTS.setOriginalExpiration($event, EVENTS.getExpiration($event))
@@ -75,13 +75,13 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
 def resolveCategoricalOrScalar(fxp_scaled_min, fxp_scaled_max, event, market, branch, votingPeriodEvent):
     mode = EVENTS.getUncaughtOutcome(event)
     EVENTS.setMode(event, mode)
-    fxpOutcome = mode * (fxp_scaled_max - fxp_scaled_min)/ONE + fxp_scaled_min
+    fxpOutcome = mode * (fxp_scaled_max - fxp_scaled_min) / ONE + fxp_scaled_min
     # outcome is set to the mode of the reported outcomes
     EVENTS.setOutcome(event, fxpOutcome)
     periodLength = BRANCHES.getPeriodLength(branch)
     # ethics is set to the binned version of the raw ethicality outcome
     ethical = ethic_catch(EVENTS.getEthics(event))
-    ethicOutcome = 2**63 * (fxp_scaled_max - fxp_scaled_min)/ONE + fxp_scaled_min
+    ethicOutcome = 2 ** 63 * (fxp_scaled_max - fxp_scaled_min) / ONE + fxp_scaled_min
     EVENTS.setEthics(event, ethical)
     val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
     return(val)
@@ -94,9 +94,9 @@ def determineWinningOutcomes(event):
     callstackCheck()
     winningOutcomes = array(8)
     fxpOutcome = EVENTS.getOutcome(event)
-    outcome = fxpOutcome/ONE
+    outcome = fxpOutcome / ONE
     # scalar or .5
-    if(scalar(event) or fxpOutcome==3*ONEHALF):
+    if(scalar(event) or fxpOutcome == 3 * ONEHALF):
         winningOutcomes[0] = 1
         winningOutcomes[1] = 2
     # anything besides scalar or .5

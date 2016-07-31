@@ -27,14 +27,14 @@ data Info[](description[2048], descriptionLength, creator, creationFee)
 
 def init():
 	description = text("Root branch")
-	save(self.Info[1010101].description[0], description, chars=len(description))
+	save(self.Info[1010101].description[0], description, chars = len(description))
 	self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
 	self.Info[1010101].creationFee = 10
 	self.Info[1010101].descriptionLength = len(description)
 
 def getDescription(ID):
-	length=self.Info[ID].descriptionLength
-	return(load(self.Info[ID].description[0], chars=length): str)
+	length = self.Info[ID].descriptionLength
+	return(load(self.Info[ID].description[0], chars = length): str)
 
 def getDescriptionLength(ID):
 	return(self.Info[ID].descriptionLength)
@@ -52,7 +52,7 @@ def setInfo(ID, description: str, creator, fxpFee):
 	# 	return(-1)
 	# check that msg.sender is one of our function contracts
 	if(!self.Info[ID].creator):
-		save(self.Info[ID].description[0], description, chars=len(description))
+		save(self.Info[ID].description[0], description, chars = len(description))
 		self.Info[ID].descriptionLength = len(description)
 		self.Info[ID].creationFee = fxpFee
 		self.Info[ID].creator = creator
@@ -82,16 +82,16 @@ macro ethic_catch($x):
 		ONE
 
 macro scalar($event):
-	((EVENTS.getMaxValue($event)!=TWO or EVENTS.getMinValue($event)!=ONE) and EVENTS.getNumOutcomes($event)==2)
+	((EVENTS.getMaxValue($event) != TWO or EVENTS.getMinValue($event) != ONE) and EVENTS.getNumOutcomes($event) == 2)
 
 macro binary($event):
-	(EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
+	(EVENTS.getNumOutcomes($event) == 2 and EVENTS.getMaxValue($event) == TWO and EVENTS.getMinValue($event) == ONE)
 
 macro categorical($event):
-	(EVENTS.getNumOutcomes($event)>2)
+	(EVENTS.getNumOutcomes($event) > 2)
 
 macro abs($a):
-	if($a<0):
+	if($a < 0):
 		$a = -$a
 	$a
 

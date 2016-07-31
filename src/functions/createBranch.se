@@ -32,27 +32,27 @@ inset('refund.se')
     # -3: branch already exists
 def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, oracleOnly):
     refund()
-    if(periodLength<=0 or !BRANCHES.getPeriodLength(parent) or !description):
+    if(periodLength <= 0 or !BRANCHES.getPeriodLength(parent) or !description):
         return(-1)
-    if(fxpMinTradingFee < 0 or fxpMinTradingFee > 2**62):
+    if(fxpMinTradingFee < 0 or fxpMinTradingFee > 2 ** 62):
         return(-1)
     parentPeriod = BRANCHES.getVotePeriod(parent)
-    branchInfo = string(7*32+len(description))
+    branchInfo = string(7 * 32 + len(description))
     branchInfo[0] = msg.sender
     # creation fee
-    branchInfo[1] = 47*ONE
+    branchInfo[1] = 47 * ONE
     # length of voting cycle
     branchInfo[2] = periodLength
     branchInfo[3] = block.timestamp
     branchInfo[4] = parent
     branchInfo[5] = fxpMinTradingFee
     branchInfo[6] = oracleOnly
-    mcopy(branchInfo + 7*32, description, len(description))
+    mcopy(branchInfo + 7 * 32, description, len(description))
     # people can check that these characteristics hash to the ID if they want
     # people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
-    branch = sha3(branchInfo, chars=len(branchInfo))
+    branch = sha3(branchInfo, chars = len(branchInfo))
     currentVotePeriod = (block.timestamp / periodLength) - 1
-    if(CASH.balance(msg.sender)<47*ONE):
+    if(CASH.balance(msg.sender) < 47 * ONE):
         return(-2)
     # provided event doesn't already exist, create it
     if(!INFO.getCreator(branch)):
@@ -60,7 +60,7 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
     else:
         return(-3)
     # pay creation fee, initialize branch info
-    if(CASH.sendFrom(parent, 47*ONE, msg.sender) and INFO.setInfo(branch, description, tx.origin, 47*ONE) and REPORTING.setInitialReporters(branch)):
+    if(CASH.sendFrom(parent, 47 * ONE, msg.sender) and INFO.setInfo(branch, description, tx.origin, 47 * ONE) and REPORTING.setInitialReporters(branch)):
         return(branch)
     else:
         throw()

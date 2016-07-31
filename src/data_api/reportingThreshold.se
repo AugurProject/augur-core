@@ -18,31 +18,31 @@ def calculateReportingThreshold(branch, event, votePeriod, sender):
     callstackCheck()
     repConstant = EXPEVENTS.getPeriodRepWeight(branch, votePeriod, sender)
     if(!repConstant):
-        repConstant = FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getRepBalance(branch, sender))/ONE)*2**64/FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getActiveRep(branch))/ONE)
+        repConstant = FXP.fx_exp(ONEPOINTTWO * FXP.fx_log(REPORTING.getRepBalance(branch, sender)) / ONE) * 2 ** 64 / FXP.fx_exp(ONEPOINTTWO * FXP.fx_log(REPORTING.getActiveRep(branch)) / ONE)
         numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)
         expectedEventsForReporter = repConstant * numEventsAvailableToReportOn
         # this includes required events
-        eventsInPeriod = EXPEVENTS.getNumberEvents(branch, period)-EXPEVENTS.getNumRemoved(branch, votePeriod)
+        eventsInPeriod = EXPEVENTS.getNumberEvents(branch, period) - EXPEVENTS.getNumRemoved(branch, votePeriod)
         numRequiredEvents = EXPEVENTS.getNumRequired(branch, votePeriod)
         # ensures low number of events with highly concentrated rep edge case still get reported on
         if(repFraction >= POINTZEROONE):
-            minimum = min(30-numRequiredEvents, eventsInPeriod-numRequiredEvents)
-            if(expectedEventsForReporter/ONE < minimum):
-                expectedEventsForReporter = minimum*ONE
+            minimum = min(30 - numRequiredEvents, eventsInPeriod - numRequiredEvents)
+            if(expectedEventsForReporter / ONE < minimum):
+                expectedEventsForReporter = minimum * ONE
                 repConstant = expectedEventsForReporter / numEventsAvailableToReportOn
         EXPEVENTS.setPeriodRepWeight(branch, votePeriod, sender, repConstant)
     # 1 is 2**192 here, lesserreportnum, repconstant, and one are all base 2**64
-    reportingThreshold = EXPEVENTS.getLesserReportNum(branch, votePeriod, event)*repConstant*ONE
+    reportingThreshold = EXPEVENTS.getLesserReportNum(branch, votePeriod, event) * repConstant * ONE
     return(reportingThreshold)
 
 # Gets events a reporter should report on
 def getEventsToReportOn(branch, period, sender, start):
     callstackCheck()
     numEvents = EXPEVENTS.getNumberEvents(branch, period)
-    events = array(numEvents*2)
+    events = array(numEvents * 2)
     i = 0
     n = start
-    while i < numEvents*2:
+    while i < numEvents * 2:
         events[i] = EXPEVENTS.getEvent(branch, period, n)
         # calculate report target for event here if not done for purposes of computing this
         if(!EXPEVENTS.getLesserReportNum(branch, period, events[i])):
@@ -51,12 +51,12 @@ def getEventsToReportOn(branch, period, sender, start):
         x = array(1)
         x[0] = sender + events[i]
         # do abs then mult by 2 to ensure pos. and between 0 and 1
-        shaHash = sha3(x, items=1)
-        shaHash = (abs(shaHash)/ONE) * 2
+        shaHash = sha3(x, items = 1)
+        shaHash = (abs(shaHash) / ONE) * 2
         if((shaHash < reportingThreshold or EXPEVENTS.getRequired(events[i], period, branch)) and !EVENTS.getOutcome(events[i])):
-            events[i+1] = 1
+            events[i + 1] = 1
         else:
-            events[i+1] = 0
+            events[i + 1] = 0
         i += 2
         n += 1
     return(events: arr)
@@ -68,8 +68,8 @@ def getEventCanReportOn(branch, period, reporter, event):
     x = array(1)
     x[0] = reporter + event
     # do abs then mult by 2 to ensure pos. and between 0 and 1
-    shaHash = sha3(x, items=1)
-    shaHash = (abs(shaHash)/ONE) * 2
+    shaHash = sha3(x, items = 1)
+    shaHash = (abs(shaHash) / ONE) * 2
     if(shaHash < reportingThreshold or EXPEVENTS.getRequired(event, period, branch)):
         return(1)
     else:
@@ -84,13 +84,13 @@ def setReportingThreshold(event):
     branch = EVENTS.getEventBranch(event)
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = BRANCHES.getVotePeriod(branch)
-    if(votePeriod==EVENTS.getExpiration(event)/periodLength and (((block.timestamp + TWENTYFOURHR) % periodLength) > periodLength/2) and !EVENTS.getUncaughtOutcome(event)):
-        EVENTS.setThreshold(event, 2**192)
+    if(votePeriod == EVENTS.getExpiration(event) / periodLength and (((block.timestamp + TWENTYFOURHR) % periodLength) > periodLength / 2) and !EVENTS.getUncaughtOutcome(event)):
+        EVENTS.setThreshold(event, 2 ** 192)
         return(1)
     else:
         return(0)
 
 macro abs($a):
-    if($a<0):
+    if($a < 0):
         $a = -$a
     $a

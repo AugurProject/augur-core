@@ -72,46 +72,45 @@ def closeMarket(branch, market, sender):
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)
-    if(CASH.balance(market)<=0):
+    if(CASH.balance(market) <= 0):
         return(-1)
     if(!EVENTS.getUncaughtOutcome(event)):
         return(-2)
     if(BACKSTOPS.getRoundTwo(event) and !BACKSTOPS.getFinal(event)):
         return(-3)
-    if(MARKETS.getBranch(market)!=branch):
+    if(MARKETS.getBranch(market) != branch):
         return(-4)
     # checks whether any events not already resolved
     resolved = 1
     # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
     if(!EVENTS.getOutcome(event) and !EVENTS.getMode(event)):
         resolved = 0
-    if((period > tradingPeriod) and !resolved):
-        # look at through event in the market, get its outcomes, resolve it and use those to determine the winning outcomes for a given market!
-        votingPeriodEvent = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
-        fxpOutcome = EVENTS.getOutcome(event)
-        resolution = 1
-        forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
-        currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-        if((EVENTS.getForked(event) and !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):
-            return(-5)
-        if(binary(event) and !fxpOutcome):
-            resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
-        elif(scalar(event) and !EVENTS.getMode(event)):
-            resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
-        elif(categorical(event) and !EVENTS.getMode(event)):
-            resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
-        else:
-            throw()
-        if(resolution==-6):
-            return(-6)
-        winningOutcomes = array(8)
-        winningOutcomes = RESOLVE.determineWinningOutcomes(event, outitems=8)
-        MARKETS.setWinningOutcomes(market, winningOutcomes)
-        # refunds closing cost
-        MARKETS.refundClosing(market, sender)
-        return(1)
-    else:
+    if((period <= tradingPeriod) or resolved):
         return(0)
+    # look at through event in the market, get its outcomes, resolve it and use those to determine the winning outcomes for a given market!
+    votingPeriodEvent = EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch)
+    fxpOutcome = EVENTS.getOutcome(event)
+    resolution = 1
+    forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
+    currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
+    if((EVENTS.getForked(event) and !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod + 1))):
+        return(-5)
+    if(binary(event) and !fxpOutcome):
+        resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
+    elif(scalar(event) and !EVENTS.getMode(event)):
+        resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
+    elif(categorical(event) and !EVENTS.getMode(event)):
+        resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE * EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
+    else:
+        throw()
+    if(resolution == -6):
+        return(-6)
+    winningOutcomes = array(8)
+    winningOutcomes = RESOLVE.determineWinningOutcomes(event, outitems = 8)
+    MARKETS.setWinningOutcomes(market, winningOutcomes)
+    # refunds closing cost
+    MARKETS.refundClosing(market, sender)
+    return(1)
 
 # Claim trading profits/value per share after a market is resolved
 # @returns 1 if successful
@@ -121,7 +120,7 @@ def closeMarket(branch, market, sender):
     # -8: invalid branch
 def claimProceeds(branch, market):
     refund()
-    if(MARKETS.getBranch(market)!=branch):
+    if(MARKETS.getBranch(market) != branch):
         return(-8)
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
@@ -130,35 +129,34 @@ def claimProceeds(branch, market):
     if(!EVENTS.getOutcome(event) and !EVENTS.getMode(event)):
         resolved = 0
     # as long as it's resolved money can be collected
-    if((period > tradingPeriod) and resolved):
-        winningOutcomes = array(8)
-        winningOutcomes = MARKET.getWinningOutcomes(market, outitems=8)
-        outcome = 0
-        # market not resolved
-        if(!winningOutcomes[0]):
-            return(0)
-        if(!winningOutcomes[1]):
-            ethical = ethic_catch(EVENTS.getEthics(event))
-            # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
-            if(categorical(event) and (EVENTS.getMode(event)==ONEHALF or !ethical)):
-                outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))
-            # resolves a regular binary market
-            else:
-                outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, 0)
-        # resolves a scalar market
-        elif(winningOutcomes[1]):
-            outcome = CLOSETWO.twoOutcomes(market, winningOutcomes, event, msg.sender)
-        else:
-            throw()
-        return(outcome)
-    else:
+    if((period <= tradingPeriod) or !resolved):
         return(0)
+    winningOutcomes = array(8)
+    winningOutcomes = MARKET.getWinningOutcomes(market, outitems = 8)
+    outcome = 0
+    # market not resolved
+    if(!winningOutcomes[0]):
+        return(0)
+    if(!winningOutcomes[1]):
+        ethical = ethic_catch(EVENTS.getEthics(event))
+        # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
+        if(categorical(event) and (EVENTS.getMode(event) == ONEHALF or !ethical)):
+            outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))
+        # resolves a regular binary market
+        else:
+            outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, 0)
+    # resolves a scalar market
+    elif(winningOutcomes[1]):
+        outcome = CLOSETWO.twoOutcomes(market, winningOutcomes, event, msg.sender)
+    else:
+        throw()
+    return(outcome)
 
 macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=TWO or EVENTS.getMinValue($event)!=ONE) and EVENTS.getNumOutcomes($event)==2)
+    ((EVENTS.getMaxValue($event) != TWO or EVENTS.getMinValue($event) != ONE) and EVENTS.getNumOutcomes($event) == 2)
 
 macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
+    (EVENTS.getNumOutcomes($event) == 2 and EVENTS.getMaxValue($event) == TWO and EVENTS.getMinValue($event) == ONE)
 
 macro categorical($event):
-    (EVENTS.getNumOutcomes($event)>2)
+    (EVENTS.getNumOutcomes($event) > 2)

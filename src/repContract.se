@@ -36,7 +36,7 @@ event Transfer(_from:indexed, _to:indexed, _fxpValue)
 event Approval(_owner:indexed, _spender:indexed)
 
 macro ONE:
-    2**64
+    2 ** 64
 
 macro refund():
     if(msg.value > 0):
@@ -55,7 +55,7 @@ def transfer(receiver, fxpValue):
         throw()
     self.reporting[msg.sender] -= fxpValue
     self.reporting[receiver] += fxpValue
-    log(type=Transfer, msg.sender, receiver, fxpValue)
+    log(type = Transfer, msg.sender, receiver, fxpValue)
     return(fxpValue)
     
 # TransferFrom per token api allowing another contract to withdraw on user's behalf
@@ -63,19 +63,19 @@ def transfer(receiver, fxpValue):
 # fails unless from has authorized sender
 def transferFrom(from, receiver, fxpValue):
     senderBalance = self.reporting[from]
-    if(senderBalance < fxpValue or fxpValue <= 0 or (!self.approvedToSpend[from][msg.sender] and from!=msg.sender) or !self.seeded):
+    if(senderBalance < fxpValue or fxpValue <= 0 or (!self.approvedToSpend[from][msg.sender] and from != msg.sender) or !self.seeded):
         throw()
     if(!safeToSubtract(self.reporting[from], fxpValue) or !safeToAdd(self.reporting[receiver], fxpValue)):
         throw()
     self.reporting[from] -= fxpValue
     self.reporting[receiver] += fxpValue
-    log(type=Transfer, from, receiver, fxpValue)
+    log(type = Transfer, from, receiver, fxpValue)
     return(fxpValue)
     
 # Allows spender to withdraw from your rep account
 def approve(spender):
     self.approvedToSpend[msg.sender][spender] = 1
-    log(type=Approval, msg.sender, spender)
+    log(type = Approval, msg.sender, spender)
     return(1)
 
 # Sets the initial distribution of rep
@@ -85,8 +85,8 @@ def setSaleDistribution(addresses: arr, balances: arr):
         if(!self.reporting[addresses[i]] && !self.seeded):
             self.reporting[addresses[i]] = balances[i]
             self.totalSupply += balances[i]
-        i+=1
-    if(self.totalSupply == 11000000*ONE):
+        i += 1
+    if(self.totalSupply == 11000000 * ONE):
         self.seeded = 1
     return(1)
     

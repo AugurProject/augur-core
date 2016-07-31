@@ -61,13 +61,13 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     forkPeriod = BRANCHES.getForkPeriod(branch)
     if(!periodLength or !description or expDate < block.timestamp):
         return(-1)
-    if(fxpMaxValue < fxpMinValue or (fxpMaxValue-fxpMinValue) < ONE):
+    if(fxpMaxValue < fxpMinValue or (fxpMaxValue - fxpMinValue) < ONE):
         return(-2)
     if(numOutcomes < 2 or numOutcomes > 8):
         return(-3)
-    if(forkPeriod and ((expDate / periodLength)==forkPeriod or (expDate / periodLength)==(forkPeriod+1))):
+    if(forkPeriod and ((expDate / periodLength) == forkPeriod or (expDate / periodLength) == (forkPeriod + 1))):
         return(-4)
-    eventinfo = string(7*32 + len(description))
+    eventinfo = string(7 * 32 + len(description))
     eventinfo[0] = branch                                       # branch
     eventinfo[1] = expDate                                      # expiration date
     eventinfo[2] = msg.sender                                   # creator address
@@ -75,7 +75,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     eventinfo[4] = fxpMinValue                                     # minimum outcome value
     eventinfo[5] = fxpMaxValue                                     # maximum outcome value
     eventinfo[6] = numOutcomes                                  # number of outcomes
-    mcopy(eventinfo + 7*32, description, len(description))
+    mcopy(eventinfo + 7 * 32, description, len(description))
     event = sha3(eventinfo, chars=len(eventinfo))
     CASH.initiateOwner(event)
     if(INFO.getCreator(event)):
@@ -106,11 +106,11 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
 def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3, fxpMakerFees, extraInfo:str):
     callstackCheck()
     periodLength = BRANCHES.getPeriodLength(branch)
-    creationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / (2*fxpTradingFee)
+    creationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / (2 * fxpTradingFee)
     # gives ether/cash amount in fixed point
-    minFee = COSTPERREPORTER*BRANCHES.getBaseReporters(branch)*tx.gasprice*ONE/WEITOETH
+    minFee = COSTPERREPORTER * BRANCHES.getBaseReporters(branch) * tx.gasprice * ONE / WEITOETH
     creationFee = max(minFee, creationFee)
-    validity_bond = (creationFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch))))/2
+    validity_bond = (creationFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
     numOutcomes = EVENTS.getNumOutcomes(event)
     cumulativeScale = 0
     # market's trading period is the same as the last expiring event in the market
@@ -118,24 +118,24 @@ def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3
     futurePeriod = expirationDate / periodLength
     forkPeriod = BRANCHES.getForkPeriod(branch)
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
-    if(!periodLength or !len(description) or fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > 2**61 or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or fxpMakerFees < 0 or fxpMakerFees > ONEHALF):
+    if(!periodLength or !len(description) or fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > 2 ** 61 or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or fxpMakerFees < 0 or fxpMakerFees > ONEHALF):
         return(-1)
     if(expirationDate < block.timestamp):
         return(-2)
-    if(forkPeriod and (futurePeriod == forkPeriod or futurePeriod == (forkPeriod+1))):
+    if(forkPeriod and (futurePeriod == forkPeriod or futurePeriod == (forkPeriod + 1))):
         return(-3)
     # scalars
     fxpMaxValue = EVENTS.getMaxValue(event)
     fxpMinValue = EVENTS.getMinValue(event)
     # is a valid scalar
-    if((fxpMaxValue!=TWO or fxpMinValue !=ONE) and numOutcomes==2):
+    if((fxpMaxValue != TWO or fxpMinValue !=ONE) and numOutcomes == 2):
         # cumulativeScale is the range of a scalar
         cumulativeScale += fxpMaxValue - fxpMinValue
     if(!cumulativeScale):
         cumulativeScale = ONE
 
     # formation of market (hash)
-    marketinfo = string(8*32 + len(description))
+    marketinfo = string(8 * 32 + len(description))
     marketinfo[0] = futurePeriod
     marketinfo[1] = fxpTradingFee
     marketinfo[2] = block.timestamp
@@ -144,7 +144,7 @@ def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3
     marketinfo[5] = tag3
     marketinfo[6] = expirationDate
     marketinfo[7] = len(description)
-    mcopy(marketinfo + 8*32, description, chars=len(description))
+    mcopy(marketinfo + 8 * 32, description, chars = len(description))
     market = sha3(marketinfo, chars=len(marketinfo))
     # if it's already been created return 0
     if(INFO.getCreator(market) or MARKETS.getMarketNumOutcomes(market)):
@@ -152,18 +152,18 @@ def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3
     events = array(1)
     events[0] = event
     # initialize market and send money to pay for resolution
-    if(CASH.sendFrom(branch, creationFee, msg.sender) and send(MARKETS, (msg.value-500000*tx.gasprice)) and INFO.setInfo(market, description, msg.sender, creationFee) and BRANCHES.addMarketToBranch(branch, market) and MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpMakerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, expirationDate)):
+    if(CASH.sendFrom(branch, creationFee, msg.sender) and send(MARKETS, (msg.value - 500000 * tx.gasprice)) and INFO.setInfo(market, description, msg.sender, creationFee) and BRANCHES.addMarketToBranch(branch, market) and MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpMakerFees, cumulativeScale, numOutcomes, extraInfo, msg.value - 500000 * tx.gasprice, creationFee, expirationDate)):
         MARKETS.addToMarketsHash(branch, market)
         CASH.initiateOwner(market)
         EVENTS.addMarket(event, market)
     else:
         throw()
     # add events to the appropriate reporting period
-    if(EXPEVENTS.getEvent(branch, futurePeriod, EXPEVENTS.getEventIndex(branch, futurePeriod, event))!=event):
+    if(EXPEVENTS.getEvent(branch, futurePeriod, EXPEVENTS.getEventIndex(branch, futurePeriod, event)) != event):
         # cost for calculating num. of reports for an event
-        if(!send(EXPEVENTS, 500000*tx.gasprice)):
+        if(!send(EXPEVENTS, 500000 * tx.gasprice)):
             throw()
-        EXPEVENTS.addEvent(branch, futurePeriod, event, 500000*tx.gasprice)
+        EXPEVENTS.addEvent(branch, futurePeriod, event, 500000 * tx.gasprice)
         if(!EVENTS.getBond(event)):
             # pay validity / indeterminate protection bond
             period = block.timestamp / TWENTYFOURHR
@@ -171,7 +171,7 @@ def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3
                 throw()
             EVENTS.setBond(event, validity_bond)
             EVENTS.addPast24(period)
-    log(type=marketCreated, market)
+    log(type = marketCreated, market)
     return(market)
 
 # Updates a trading fee to be lower in a market
@@ -190,7 +190,7 @@ def updateTradingFee(market, fxpTradingFee):
         return(-2)
     if(!CASH.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender) or !MARKETS.setTradingFee(market, fxpTradingFee)):
         throw()
-    log(type=tradingFeeUpdated, market, fxpTradingFee)
+    log(type = tradingFeeUpdated, market, fxpTradingFee)
     return(1)
 
 # Anyone can post an "Early Resolution Bond"
@@ -208,21 +208,21 @@ def pushMarketForward(branch, market):
     forkPeriod = BRANCHES.getForkPeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
     currentPeriod = block.timestamp / periodLength
-    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod+1)):
+    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod + 1)):
         return(-1)
     # if market closed or already pushed forward, return 0
     if(MARKETS.getOneWinningOutcome(market, 0) or MARKETS.getPushedForward(market)):
         return(-2)
-    if(!CASH.sendFrom(market, MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE), msg.sender)):
+    if(!CASH.sendFrom(market, MARKETS.getTradingFee(market) * MARKETS.getTotalSharesPurchased(market) / (2 * ONE), msg.sender)):
         return(-3)
-    if(MARKETS.getBranch(market)!=branch):
+    if(MARKETS.getBranch(market) != branch):
         return(0)
     event = MARKETS.getMarketEvent(market, 0)
     expiration = EVENTS.getExpiration(event)
-    if(EVENTS.getRejectedPeriod(event) or expiration!=EVENTS.getOriginalExpiration(event) or EVENTS.getOutcome(event) or BACKSTOPS.getRoundTwo(event) or expiration/periodLength==block.timestamp/periodLength):
+    if(EVENTS.getRejectedPeriod(event) or expiration != EVENTS.getOriginalExpiration(event) or EVENTS.getOutcome(event) or BACKSTOPS.getRoundTwo(event) or expiration / periodLength == block.timestamp / periodLength):
             return(-4)
     # push into next vote period
-    period = block.timestamp/periodLength
+    period = block.timestamp / periodLength
     # figure out what's going on with subsidy system here todo
     EXPEVENTS.addEvent(branch, period, event, 0)
     # set event expiration date to be after the current reporting period ends

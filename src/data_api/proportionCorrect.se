@@ -14,7 +14,7 @@ macro proportionCorrect($event, $forkEvent):
         avgOutcome = uncaught - ONE
         return(0)
     # binary
-    if(EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE):
+    if(EVENTS.getNumOutcomes($event) == 2 and EVENTS.getMaxValue($event) == TWO and EVENTS.getMinValue($event) == ONE):
         # say we have outcome of 0, avg is .4, what is p?
             # p is .6 or 60%
         if(outcome == ONE):

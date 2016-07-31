@@ -1,20 +1,20 @@
 macro calculateRepChange($report, $maxPenalty):
     # wrong
     # 184467440737095520 == 0.01 in fxp
-    if($report > outcome+POINTZEROONE or $report < outcome-POINTZEROONE):
-        if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
+    if($report > outcome + POINTZEROONE or $report < outcome - POINTZEROONE):
+        if(scalar(event) or categorical(event) or outcome == 3 * ONEHALF):
             diff = $report - outcome
-            p = -(abs(diff)/2) + ONE
-        newRep = oldRep*(2*p - ONE)/ONE
+            p = -(abs(diff) / 2) + ONE
+        newRep = oldRep * (2 * p - ONE) / ONE
     # right
     else:
-        if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
+        if(scalar(event) or categorical(event) or outcome == 3 * ONEHALF):
             diff = $report - outcome
-            p = -(abs(diff)/2) + ONE
-        newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
+            p = -(abs(diff) / 2) + ONE
+        newRep = oldRep * (2 * (ONE - p) ** 2 / p + ONE) / ONE
     # (1-k) * old rep + k * new rep where k = maxPenalty [max of 1] / (number of events you reported on last period) for penalization and pen. rate for backstop 1
     # So if max penalty is 20% for a given period, the max per event is 2%
-    if(numReportedOn<10):
-        repChange = oldRep * (ONE - $maxPenalty/10)/ONE + newRep*($maxPenalty/10)/ONE - oldRep
+    if(numReportedOn < 10):
+        repChange = oldRep * (ONE - $maxPenalty / 10) / ONE + newRep * ($maxPenalty / 10) / ONE - oldRep
     else:
-        repChange = oldRep * (ONE - $maxPenalty/numReportedOn)/ONE + newRep*($maxPenalty/numReportedOn)/ONE - oldRep
+        repChange = oldRep * (ONE - $maxPenalty / numReportedOn) / ONE + newRep * ($maxPenalty / numReportedOn) / ONE - oldRep

@@ -47,50 +47,50 @@ def move_event(event):
     eventIndex = EXPEVENTS.getEventIndex(expPeriod, event)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     # todo getoutcome may not work
-    if(forkPeriod and currentPeriod == (forkPeriod + 2) and !EVENTS.getOutcome(event) and !BACKSTOPS.getMoved(event)):
-        winner = BACKSTOPS.getResolved(branch, forkPeriod)
-        if(!winner):
-            winner = self.resolve_fork(branch)
-        BACKSTOPS.setMoved(event)
-        if(event == eventForkedOver):
-            return(1)
-        # leave event here in same branch
-        elif(winner == EVENTS.getEventBranch(event)):
-            # set outcomes to 0
-            EVENTS.setOutcome(event, 0)
-            EVENTS.setMode(event, 0)
-            EVENTS.setEthics(event, 0)
-            EVENTS.setUncaughtOutcome(event, 0)
-            # return bond if it's a round 2 event and make it not one anymore
-            ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)
-            # if should've resolved in past periods
-            if(expPeriod == forkPeriod or expPeriod == (forkPeriod + 1)):
-                # push it into next [this] period
-                EXPEVENTS.addEvent(branch, currentPeriod, event)
-                EVENTS.setExpiration(event, block.timestamp)
-            # otherwise it's set to expire in the period it would've expired in as normal, no changes needed
-        # event's branch is changed to winning branch
-        else:
-            EVENTS.setBranch(event, winner)
-            # set outcomes to 0
-            EVENTS.setOutcome(event, 0)
-            EVENTS.setMode(event, 0)
-            EVENTS.setEthics(event, 0)
-            EVENTS.setUncaughtOutcome(event, 0)
-            # return bond if it's a round 2 event and make it not one anymore
-            ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)
-            # move event to fork
-            # and place it into the next reporting period w/ outcomes to 0
-            if(expPeriod == forkPeriod or expPeriod == (forkPeriod + 1)):
-                # push it into next [this] period
-                EXPEVENTS.addEvent(winner, currentPeriod, event)
-                EVENTS.setExpiration(event, block.timestamp)
-            else:
-                # push into period it wouldve expired in
-                EXPEVENTS.addEvent(winner, expPeriod, event)
-                # expiration time doesnt need to change
-    else:
+    if(!forkPeriod or currentPeriod != (forkPeriod + 2) or EVENTS.getOutcome(event) or BACKSTOPS.getMoved(event)):
         return(0)
+    winner = BACKSTOPS.getResolved(branch, forkPeriod)
+    if(!winner):
+        winner = self.resolve_fork(branch)
+    BACKSTOPS.setMoved(event)
+    if(event == eventForkedOver):
+        return(1)
+    # leave event here in same branch
+    elif(winner == EVENTS.getEventBranch(event)):
+        # set outcomes to 0
+        EVENTS.setOutcome(event, 0)
+        EVENTS.setMode(event, 0)
+        EVENTS.setEthics(event, 0)
+        EVENTS.setUncaughtOutcome(event, 0)
+        # return bond if it's a round 2 event and make it not one anymore
+        ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)
+        # if should've resolved in past periods
+        if(expPeriod == forkPeriod or expPeriod == (forkPeriod + 1)):
+            # push it into next [this] period
+            EXPEVENTS.addEvent(branch, currentPeriod, event)
+            EVENTS.setExpiration(event, block.timestamp)
+        # otherwise it's set to expire in the period it would've expired in as normal, no changes needed
+    # event's branch is changed to winning branch
+    else:
+        EVENTS.setBranch(event, winner)
+        # set outcomes to 0
+        EVENTS.setOutcome(event, 0)
+        EVENTS.setMode(event, 0)
+        EVENTS.setEthics(event, 0)
+        EVENTS.setUncaughtOutcome(event, 0)
+        # return bond if it's a round 2 event and make it not one anymore
+        ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)
+        # move event to fork
+        # and place it into the next reporting period w/ outcomes to 0
+        if(expPeriod == forkPeriod or expPeriod == (forkPeriod + 1)):
+            # push it into next [this] period
+            EXPEVENTS.addEvent(winner, currentPeriod, event)
+            EVENTS.setExpiration(event, block.timestamp)
+        else:
+            # push into period it wouldve expired in
+            EXPEVENTS.addEvent(winner, expPeriod, event)
+            # expiration time doesnt need to change
+    return(1)
 
 # parent branch is branch here
 # todo fork use address picked in market creation to resolve it and have a default fork resolve option

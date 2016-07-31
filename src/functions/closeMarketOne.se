@@ -12,15 +12,15 @@ def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes
     if(categoricalPointFive):
         i = 0
         while(i < numOutcomes):
-            sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, i+1)
-            MARKETS.modifyParticipantShares(market, sender, i+1, -sharesOwned, 0)
-            CASH.subtractCash(market, sharesOwned*MARKETS.getCumScale(market)/(numOutcomes*ONE))
-            CASH.addCash(sender, sharesOwned*MARKETS.getCumScale(market)/(numOutcomes*ONE))
-            i+=1
+            sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, i + 1)
+            MARKETS.modifyParticipantShares(market, sender, i + 1, -sharesOwned, 0)
+            CASH.subtractCash(market, sharesOwned * MARKETS.getCumScale(market) / (numOutcomes * ONE))
+            CASH.addCash(sender, sharesOwned * MARKETS.getCumScale(market) / (numOutcomes * ONE))
+            i += 1
     else:
         # distribute profit to the people who won money by holding winning shares
         sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, winningOutcome)
         MARKETS.modifyParticipantShares(market, sender, winningOutcome, -sharesOwned, 0)
-        CASH.subtractCash(market, sharesOwned*cumScale/ONE)
-        CASH.addCash(sender, sharesOwned*cumScale/ONE)
+        CASH.subtractCash(market, sharesOwned * cumScale / ONE)
+        CASH.addCash(sender, sharesOwned * cumScale / ONE)
     return(1)

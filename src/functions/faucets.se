@@ -37,9 +37,9 @@ macro POINTZEROONE: 184467440737095520
 # Error -1: Hey, you're not broke!
 def cashFaucet():
     refund()
-    if CASH.balance(msg.sender) > 5*ONE:
+    if CASH.balance(msg.sender) > 5 * ONE:
         return(-1)
-    CASH.setCash(msg.sender, 10000*ONE)
+    CASH.setCash(msg.sender, 10000 * ONE)
     return(1)
 
 def reputationFaucet(branch):
@@ -49,14 +49,14 @@ def reputationFaucet(branch):
     else:
         index = REPORTING.getNumberReporters(branch)
         REPORTING.addReporter(branch, tx.origin, 0, 0, 0)
-    REPORTING.setRep(branch, index, 47*ONE)
-    CONSENSUS.setPenalizedUpTo(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
+    REPORTING.setRep(branch, index, 47 * ONE)
+    CONSENSUS.setPenalizedUpTo(branch, tx.origin, (BRANCHES.getVotePeriod(branch) - 1))
     return(1)
 
 def fundNewAccount(branch):
     CASH.sendFrom(self, 0, self)
     self.reputationFaucet(branch)
-    CASH.setCash(msg.sender, 10000*2**64)
+    CASH.setCash(msg.sender, 10000 * 2 ** 64)
     return(1)
 
 # Used to claim rep on a fork or on a new branch
@@ -67,10 +67,10 @@ def fundNewAccount(branch):
     # -3: only behind one period and not caught up / penalized yet
 def claimInitialRep(parent, branch):
     refund()
-    if(BRANCHES.getParent(branch)!=parent):
+    if(BRANCHES.getParent(branch) != parent):
         return(-1)
     # have 1 month to claim
-    if(!REPORTING.repIDToIndex(branch, msg.sender) and block.timestamp < (BRANCHES.getCreationDate(branch) + TWENTYFOURHR*30)):
+    if(!REPORTING.repIDToIndex(branch, msg.sender) and block.timestamp < (BRANCHES.getCreationDate(branch) + TWENTYFOURHR * 30)):
         # auto increment vote period if needed
         INCREMENTPERIOD.incrementPeriodAfterReporting(parent)
         parentPeriod = BRANCHES.getParentPeriod(branch)
@@ -85,25 +85,25 @@ def claimInitialRep(parent, branch):
         ethicReport = EXPEVENTS.getEthicReport(parent, forkPeriod, forkEvent, msg.sender)
         dormantRep = EXPEVENTS.getPeriodDormantRep(parent, parentPeriod, msg.sender)
         # if this wasn't set then use reg. dormant rep balance
-        if(dormantRep==0):
+        if(dormantRep == 0):
             dormantRep = REPORTING.balanceOf(parent, msg.sender)
         # if this wasn't set then use reg. rep balance after catching reporter up
         rep = EXPEVENTS.getBeforeRep(parent, parentPeriod, msg.sender)
         lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(parent, msg.sender)
-        lastPeriod = BRANCHES.getVotePeriod(parent)-1
+        lastPeriod = BRANCHES.getVotePeriod(parent) - 1
         delta = lastPeriod - lastPeriodPenalized
         if(delta > 1):
-            if(CATCHUP.penalizationCatchup(parent, msg.sender)!=1):
+            if(CATCHUP.penalizationCatchup(parent, msg.sender) != 1):
                 return(-2)
         if(!CONSENSUS.getRepRedistributionDone(parent, msg.sender)):
             return(-3)
-        if(rep==0):
+        if(rep == 0):
             rep = REPORTING.getRepBalance(parent, msg.sender)
         repDecrease = 0
         # if forked and (reported with original consensus or didn't report or (reported with original ethicality and forked over ethicality))
-        if(fork and ((report >= (outcome-POINTZEROONE) and report <= (outcome+POINTZEROONE)) or !report or (BACKSTOPS.getForkedOverEthicality(forkEvent) and ethical==ethicReport))):
+        if(fork and ((report >= (outcome - POINTZEROONE) and report <= (outcome + POINTZEROONE)) or !report or (BACKSTOPS.getForkedOverEthicality(forkEvent) and ethical == ethicReport))):
             # take away 30% of rep from liars and those who didn't report
-            repDecrease = rep - rep*POINTSEVEN/ONE
+            repDecrease = rep - rep * POINTSEVEN / ONE
             rep = rep - repDecrease
             amountLeftToPayBonder = BACKSTOPS.getBondAmount(forkEvent) - BACKSTOPS.getForkBondPaid(forkEvent)
             if(repDecrease < amountLeftToPayBonder):
@@ -121,7 +121,7 @@ def claimInitialRep(parent, branch):
         if(fork):
             CONSENSUS.setPenalizedUpTo(branch, msg.sender, forkPeriod)
         else:
-            CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
+            CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch) - 1))
         REPORTING.addReporter(branch, msg.sender, rep, dormantRep, repDecrease)
         return(1)
     else:

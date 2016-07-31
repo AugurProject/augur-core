@@ -17,28 +17,28 @@ def penalizationCatchup(branch, sender):
     refund()
     # find delta between this last period and the last one a reporter was penalized up to
     lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, sender)
-    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    lastPeriod = BRANCHES.getVotePeriod(branch) - 1
     delta = lastPeriod - lastPeriodPenalized
     oldRep = REPORTING.getRepBalance(branch, sender)
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
-    if(residual > periodLength/2):
+    if(residual > periodLength / 2):
         return(-1)
     if(delta <= 0):
         return(-2)
     # provided user is at least one period behind and they didn't report in the last period
-    if(lastPeriodPenalized==lastPeriod or EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, sender)):
+    if(lastPeriodPenalized == lastPeriod or EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, sender)):
         return(-3)
     # dock 10% for each period they didn't penalize on
-    smoothedRep = oldRep*POINTNINE/ONE
+    smoothedRep = oldRep * POINTNINE / ONE
     i = 1
     # if delta >22, max is 23 [1 above, 1 below, and 21 in while loop] penalizations simply so we don't run into out of gas issues
-    if(delta>22):
-        smoothedRep = smoothedRep*POINTNINE/ONE
+    if(delta > 22):
+        smoothedRep = smoothedRep * POINTNINE / ONE
         delta = 22
     while i < delta:
-        smoothedRep = smoothedRep*POINTNINE/ONE
+        smoothedRep = smoothedRep * POINTNINE / ONE
         i += 1
     # and send it to branch for penalty rep collection
     repChange = oldRep - smoothedRep

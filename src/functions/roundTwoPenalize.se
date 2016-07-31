@@ -19,7 +19,7 @@ macro POINTZEROONE: 184467440737095520
 macro POINTONE: 1844674407370955264
 macro POINTTWO: 3689348814741910528
 macro POINTEIGHT: 14757395258967642112
-macro MINBOND: 200*ONE
+macro MINBOND: 200 * ONE
 
 # Penalizes a reporter for reporting wrongly on a round 2 reporting / backstop 1 event
 # So we want to do the rep redistribution for both period 1 and period 2 at this time
@@ -37,7 +37,7 @@ macro MINBOND: 200*ONE
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized
 def penalizeRoundTwoWrong(branch, event):
     refund()
-    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    lastPeriod = BRANCHES.getVotePeriod(branch) - 1
     lastPenalizationPeriod = lastPeriod - 1
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
@@ -54,24 +54,24 @@ def penalizeRoundTwoWrong(branch, event):
     oldReport = EXPEVENTS.getReport(branch, lastPenalizationPeriod, event, msg.sender)
     ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
     oldEthics = EXPEVENTS.getEthicReport(branch, lastPenalizationPeriod, event, msg.sender)
-    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, lastPeriod)/EXPIRING.getNumberEvents(branch, lastPeriod)
+    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, lastPeriod) / EXPIRING.getNumberEvents(branch, lastPeriod)
     
-    bond = averageAdjudicationCost + MARKETS.getSharesValue(market)*(POINTZEROONE + MARKETS.getTradingFee(market)/2) / 2**64
+    bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINTZEROONE + MARKETS.getTradingFee(market) / 2) / 2 ** 64
     bond = min(bond, MINBOND)
     ethical = EVENTS.getEthics(event)
     p = proportionCorrect(event, 0)
-    if(EVENTS.getEventBranch(event)!=branch):
+    if(EVENTS.getEventBranch(event) != branch):
         return(-6)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
-    if(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
+    if(residual > periodLength / 2 or (block.timestamp / periodLength - 2) != lastPeriod):
         return(-1)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     elif(!EVENTS.getOutcome(event)):
         if(!ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriod, event), msg.sender)):
             return(-2)
-    elif(BRANCHES.getForkPeriod(branch) == lastPeriod and event!=forkEvent):
+    elif(BRANCHES.getForkPeriod(branch) == lastPeriod and event != forkEvent):
         return(-3)
-    elif(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
+    elif(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):
         return(-4)
     elif(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
         return(-5)
@@ -79,9 +79,9 @@ def penalizeRoundTwoWrong(branch, event):
         # if overruled / different outcome after reporting on again
         overruled = 0
         if(scalar(event) or categorical(event)):
-            if((BACKSTOPS.getOriginalOutcome(event) != EVENTS.getUncaughtOutcome(event) or BACKSTOPS.getOriginalEthicality(event)!=ethic_catch(ethical))):
+            if((BACKSTOPS.getOriginalOutcome(event) != EVENTS.getUncaughtOutcome(event) or BACKSTOPS.getOriginalEthicality(event) != ethic_catch(ethical))):
                 overruled = 1
-        elif((BACKSTOPS.getOriginalOutcome(event) != catch(uncaught) or BACKSTOPS.getOriginalEthicality(event)!=ethic_catch(ethical))):
+        elif((BACKSTOPS.getOriginalOutcome(event) != catch(uncaught) or BACKSTOPS.getOriginalEthicality(event) != ethic_catch(ethical))):
             overruled = 1
     
         numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
@@ -91,13 +91,13 @@ def penalizeRoundTwoWrong(branch, event):
         final = BACKSTOPS.getFinal(event)
         roundTwo = BACKSTOPS.getRoundTwo(event)
         penalizedOnEvent = CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event)
-        if(final and (roundTwo or event==forkEvent) and !penalizedOnEvent and (reportValue or oldReport)):
+        if(final and (roundTwo or event == forkEvent) and !penalizedOnEvent and (reportValue or oldReport)):
             # Do the first rep redistribution based on first report and final outcome if reported first time
-            if(oldReport and outcome!=0):
+            if(oldReport and outcome != 0):
                 calculateRepChange(oldReport, POINTTWO)
                 handleEthicsAndBondRepRedistribution(POINTTWO, oldEthics, numReportedOn)
             # Do the second (for each user) based on second report and final outcome
-            if(reportValue and outcome!=0):
+            if(reportValue and outcome != 0):
                 calculateRepChange(reportValue, POINTONE)
                 handleEthicsAndBondRepRedistribution(POINTONE, ethics, numReportedOn)
             CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
@@ -105,30 +105,30 @@ def penalizeRoundTwoWrong(branch, event):
         else:
             return(0)
         # if a fork event in original branch, only event needed to report on in this period is that one [b/c the original branch resolves it as a regular round 2 event, fork reports again]
-        if(event==forkEvent):
+        if(event == forkEvent):
             CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, (numReportedOn - 1))
         # penalization on a regular event if not already penalized, it has outcome, and user reported on it
         # once penalized for all events actually get rid of net rep lost
-        if(numReportedOn==CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
+        if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
             sendRedistributedRepToBranch()
         return(1)
 
 macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn):
     # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max maxPenalty% of their rep respectively
-    if($ethics != ethic_catch(ethical) and repChange >=0 and BACKSTOPS.getDisputedOverEthics(event)):
-        if($numReportedOn<10):
-            repChange = -$maxPenalty/10*repBalance / ONE
+    if($ethics != ethic_catch(ethical) and repChange >= 0 and BACKSTOPS.getDisputedOverEthics(event)):
+        if($numReportedOn < 10):
+            repChange = -$maxPenalty / 10 * repBalance / ONE
         else:
-            repChange = -$maxPenalty/$numReportedOn*repBalance / ONE
+            repChange = -$maxPenalty / $numReportedOn * repBalance / ONE
     if(repBalance + repChange <= 0):
-        repChange = -1*repBalance
+        repChange = -1 * repBalance
     # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process
-    if(overruled and BACKSTOPS.getBondPaid(event) < 2*bond and repChange < 0 and event!=forkEvent):
+    if(overruled and BACKSTOPS.getBondPaid(event) < 2 * bond and repChange < 0 and event != forkEvent):
         # done instead of sending to redistrib. pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
         # sends that rep to the bonded challenger
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), -repChange)
-        BACKSTOPS.increaseBondPaid(event, (-1*repChange))
+        BACKSTOPS.increaseBondPaid(event, (-1 * repChange))
     # if rep isn't redistributed immediately to bond poster [if they're already paid back] then we adjust the after rep as normal and do it all at the end
     else:
         newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange

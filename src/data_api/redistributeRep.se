@@ -6,7 +6,7 @@ macro sendRedistributedRepToBranch():
     CONSENSUS.increaseDenominator(branch, lastPeriod, newAfterRep)
     totalRepDifference = newAfterRep - oldRep
     if(repBalance + totalRepDifference <= 0):
-        totalRepDifference = -1*repBalance
+        totalRepDifference = -1 * repBalance
     if(totalRepDifference < 0):
         # removes rep from reporter who lost it [those who gained rep will get it in the claim rep phase]
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), totalRepDifference)

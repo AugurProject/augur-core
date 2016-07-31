@@ -26,53 +26,53 @@ macro POINTNINE: 16602069666338596864
     # -3: event isn't in branch
 def proveReporterDidntReportEnough(branch, reporter, eventExample):
     refund()
-    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    lastPeriod = BRANCHES.getVotePeriod(branch) - 1
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
     numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)
-    if(EVENTS.getEventBranch(eventExample)!=branch):
+    if(EVENTS.getEventBranch(eventExample) != branch):
         return(-3)
     # events a user should be reporting on
     # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
     # a**b=exp(b*ln(a))=e**(b*ln(a)).
-    repConstant = FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(originalRep)/ONE)*2**64/FXP.fx_exp(ONEPOINTTWO*FXP.fx_log(REPORTING.getActiveRep(branch))/ONE)
+    repConstant = FXP.fx_exp(ONEPOINTTWO * FXP.fx_log(originalRep) / ONE) * 2 ** 64 / FXP.fx_exp(ONEPOINTTWO * FXP.fx_log(REPORTING.getActiveRep(branch)) / ONE)
     baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
-    total = repConstant*baseReporters
+    total = repConstant * baseReporters
     numRequiredEvents = EXPEVENTS.getNumRequired(branch, lastPeriod)
-    expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn + numRequiredEvents*ONE
-    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, lastPeriod)-EXPEVENTS.getNumRemoved(branch, lastPeriod)
+    expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn + numRequiredEvents * ONE
+    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, lastPeriod) - EXPEVENTS.getNumRemoved(branch, lastPeriod)
     if(CONSENSUS.getNotEnoughPenalized(branch, reporter, lastPeriod)):
         return(-1)
-    if(residual > periodLength/2):
+    if(residual > periodLength / 2):
         return(-2)
     # in period just after fork period no reports required
-    if(BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
+    if(BRANCHES.getForkPeriod(branch) + 1 == lastPeriod):
         CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
         return(2)
     if(repConstant >= POINTZEROONE):
-        minimum = min(30+numRequiredEvents, eventsInPeriod)
-        if(expectedEventsForReporterIncludingRequired/ONE < minimum):
-            expectedEventsForReporterIncludingRequired = minimum*ONE
+        minimum = min(30 + numRequiredEvents, eventsInPeriod)
+        if(expectedEventsForReporterIncludingRequired / ONE < minimum):
+            expectedEventsForReporterIncludingRequired = minimum * ONE
     # if total is too high [>1] then expectedEventsForReporterIncludingRequired will estimate a higher number than reality, so need to correct for this below
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*baseReporters > 1)
     if(total > ONE):
-        expectedEventsForReporterIncludingRequired = (numEventsAvailableToReportOn/baseReporters)*ONE + numRequiredEvents*ONE
+        expectedEventsForReporterIncludingRequired = (numEventsAvailableToReportOn / baseReporters) * ONE + numRequiredEvents * ONE
     numReportsSubmitted = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
     couldveReported = THRESHOLD.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
-    if(expectedEventsForReporterIncludingRequired/2 > numReportsSubmitted*ONE and couldveReported):
+    if(expectedEventsForReporterIncludingRequired / 2 > numReportsSubmitted * ONE and couldveReported):
         # penalize people
-        newRep = POINTONE*numReportsSubmitted*originalRep / (expectedEventsForReporterIncludingRequired/2)
-        oldRep = originalRep*POINTNINE / ONE
-        repChange = (oldRep+newRep) - originalRep
+        newRep = POINTONE * numReportsSubmitted * originalRep / (expectedEventsForReporterIncludingRequired / 2)
+        oldRep = originalRep * POINTNINE / ONE
+        repChange = (oldRep + newRep) - originalRep
         if(repChange > 0):
             return(1)
         # removes rep from reporter who lost it
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, reporter), repChange)
         # sends that rep to the branch rep pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -repChange)
-        EXPEVENTS.setBeforeRep(branch, lastPeriod, oldRep+newRep, reporter)
+        EXPEVENTS.setBeforeRep(branch, lastPeriod, oldRep + newRep, reporter)
         afterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, reporter)
         newAfterRep = afterRep + repChange
         if(newAfterRep <= 0):

@@ -13,12 +13,12 @@ def makeTradeHash(fxp_max_value, fxp_max_amount, trade_ids: arr):
     trades = 0
     while i < len(trade_ids):
         trades += trade_ids[i]
-        i+=1
+        i += 1
     tradeInfo = array(3)
     tradeInfo[0] = trades
     tradeInfo[1] = fxp_max_amount
     tradeInfo[2] = fxp_max_value
-    tradeHash = sha3(tradeInfo, items=3)
+    tradeHash = sha3(tradeInfo, items = 3)
     return(tradeHash)
 
 def commitTrade(hash):

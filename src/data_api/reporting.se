@@ -83,7 +83,7 @@ def getRepByIndex(branch, repIndex):
 def getRepBalance(branch, address):
     callstackCheck()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
-    if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID!=address):
+    if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID != address):
         return(0)
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
@@ -96,7 +96,7 @@ def getDormantRepByIndex(branch, repIndex):
 def balanceOf(branch, address):
     callstackCheck()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
-    if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID!=address):
+    if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID != address):
         return(0)
     return(self.Reporting[branch].dormantRep[repIndex].repValue)
 
@@ -118,32 +118,32 @@ def getTotalRep(branch):
 def getReputation(address):
     branchListCount = BRANCHES.getNumBranches()
     if(address):
-        branches = array(2*branchListCount)
+        branches = array(2 * branchListCount)
         branchList = array(branchListCount)
-        branchList = BRANCHES.getBranches(outitems=branchListCount)
+        branchList = BRANCHES.getBranches(outitems = branchListCount)
         i = 0
         b = 0
         while i < branchListCount:
             branch = branchList[i]
             balance = self.getRepBalance(branch, address)
-            if(balance!=0):
+            if(balance != 0):
                 branches[b] = branch
-                branches[b+1] = balance
+                branches[b + 1] = balance
                 b += 2
             i += 1
     else:
         address = msg.sender
-        branches = array(2*branchListCount)
+        branches = array(2 * branchListCount)
         branchList = array(branchListCount)
-        branchList = BRANCHES.getBranches(outitems=branchListCount)
+        branchList = BRANCHES.getBranches(outitems = branchListCount)
         i = 0
         b = 0
         while i < branchListCount:
             branch = branchList[i]
             balance = self.getRepBalance(branch, address)
-            if(balance!=0):
+            if(balance != 0):
                 branches[b] = branch
-                branches[b+1] = balance
+                branches[b + 1] = balance
                 b += 2
             i += 1
     return(branches: arr)
@@ -239,7 +239,7 @@ def setSaleDistribution(addresses: arr, balances: arr, branch):
         self.Reporting[branch].dormantRep[self.Reporting[branch].numberReporters].reporterID = addresses[i]
         self.Reporting[branch].repIDtoIndex[addresses[i]] = self.Reporting[branch].numberReporters
         self.Reporting[branch].numberReporters += 1
-        i+=1
+        i += 1
     return(1)
 
 # safe adders idea pulled from piper merriam's btcrelay audit

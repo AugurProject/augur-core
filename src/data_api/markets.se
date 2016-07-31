@@ -60,7 +60,7 @@ def addToMarketsHash(branch, newHash):
     x = array(2)
     x[0] = self.marketsHash[branch]
     x[1] = newHash
-    self.marketsHash[branch] = sha3(x, items=2)
+    self.marketsHash[branch] = sha3(x, items = 2)
     return(1)
 
 def addFees(market, fxpAmount):
@@ -119,14 +119,14 @@ def getCreationTime(market):
     return(self.Markets[market].creationTime)
 
 def getMarketEvents(market):
-    return(load(self.Markets[market].events[0], items=self.Markets[market].lenEvents): arr)
+    return(load(self.Markets[market].events[0], items = self.Markets[market].lenEvents): arr)
 
 def getSharesPurchased(market, outcome):
     return(self.Markets[market].sharesPurchased[outcome])
 
 def getExtraInfo(market):
-    length=self.Markets[market].extraInfoLen
-    return(load(self.Markets[market].extraInfo[0], chars=length): str)
+    length = self.Markets[market].extraInfoLen
+    return(load(self.Markets[market].extraInfo[0], chars = length): str)
 
 def getVolume(market):
     return(self.Markets[market].volume)
@@ -176,9 +176,9 @@ def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, 
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add event list to the market
-    save(self.Markets[market].events[0], events, items=len(events))
+    save(self.Markets[market].events[0], events, items = len(events))
     self.Markets[market].lenEvents = len(events)
-    save(self.Markets[market].extraInfo[0], extraInfo, chars=len(extraInfo))
+    save(self.Markets[market].extraInfo[0], extraInfo, chars = len(extraInfo))
     self.Markets[market].extraInfoLen = len(extraInfo)
     self.Markets[market].tradingPeriod = tradingPeriod
     self.Markets[market].originalPeriod = tradingPeriod
@@ -211,8 +211,8 @@ def modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
     #    return(-1)
     self.Markets[market].participants[trader].shares[outcome] += fxpAmount
     if(actualTrade):
-        if(fxpAmount<0):
-            fxpAmount = fxpAmount*-1
+        if(fxpAmount < 0):
+            fxpAmount = fxpAmount * -1
         self.Markets[market].volume += fxpAmount
     return(1)
 
@@ -220,7 +220,7 @@ def setWinningOutcomes(market, outcomes: arr):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # largest # of winning outcomes is 8
-    save(self.Markets[market].winningOutcomes[0], outcomes, items=len(outcomes))
+    save(self.Markets[market].winningOutcomes[0], outcomes, items = len(outcomes))
     return(1)
 
 def getWinningOutcomes(market):
@@ -228,7 +228,7 @@ def getWinningOutcomes(market):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # largest # of winning outcomes is 8
-    return(load(self.Markets[market].winningOutcomes[0], items=8): arr)
+    return(load(self.Markets[market].winningOutcomes[0], items = 8): arr)
 
 def getOneWinningOutcome(market, num):
     # whitelist

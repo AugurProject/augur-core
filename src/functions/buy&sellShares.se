@@ -41,11 +41,11 @@ macro TRADE_ALREADY_EXISTS: 21
 macro TRADE_SAME_BLOCK_PROHIBITED: 22
 
 macro fee_percent($market_fee, $fxpPrice, $cumScale):
-    4 * $market_fee * $fxpPrice * (ONE-$fxpPrice*2**64/$cumScale) / ($cumScale*ONE)
+    4 * $market_fee * $fxpPrice * (ONE - $fxpPrice * 2 ** 64 / $cumScale) / ($cumScale * ONE)
 
 macro save_trade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee, $sender):
     trade = [$type, $market, $fxpAmount, $fxpPrice, $sender, block.number, $outcome]
-    trade_id = sha3(trade, items=7)
+    trade_id = sha3(trade, items = 7)
     cumScale = MARKETS.getCumScale($market)
 
     # Save trade
@@ -58,15 +58,15 @@ macro save_trade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee,
         if $type == ASK:
             MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$fxpAmount, 0)
             if($fee):
-                CASH.sendFrom($market, ($fxpAmount * $fxpPrice * $fee / ONE**2), $sender)
+                CASH.sendFrom($market, ($fxpAmount * $fxpPrice * $fee / ONE ** 2), $sender)
         # Send / escrow cash for bids
         if $type == BID:
             CASH.sendFrom($market, $fxpAmount * $fxpPrice / ONE, $sender)
             if($fee):
-                CASH.sendFrom($market, ($fxpAmount * $fxpPrice * $fee / ONE**2), $sender)
+                CASH.sendFrom($market, ($fxpAmount * $fxpPrice * $fee / ONE ** 2), $sender)
     else:
         return(TRADE_ALREADY_EXISTS)
-    log(type=log_add_tx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, trade_id)
+    log(type = log_add_tx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, trade_id)
     return(trade_id)
 
 # 
@@ -79,7 +79,7 @@ def cancel(trade_id):
     # user can cancel anytime
     # Get trade
     trade = array(TRADE_FIELDS)
-    trade = TRADES.get_trade(trade_id, outitems=TRADE_FIELDS)
+    trade = TRADES.get_trade(trade_id, outitems = TRADE_FIELDS)
     if !trade:
         return(0)
     type = trade[1]
@@ -98,18 +98,18 @@ def cancel(trade_id):
         # Issue refunds
         if type == BID:
             # cash refund
-            amt = fxpAmount * fxpPrice * (fee + ONE) / ONE**2
+            amt = fxpAmount * fxpPrice * (fee + ONE) / ONE ** 2
             CASH.subtractCash(market, amt)
             CASH.addCash(msg.sender, amt)
         elif type == ASK:
             # shares refund
             MARKETS.modifyParticipantShares(market, msg.sender, outcome, fxpAmount, 0)
-            CASH.subtractCash(market, (fxpAmount * fxpPrice * fee / ONE**2))
-            CASH.addCash(msg.sender, (fxpAmount * fxpPrice * fee / ONE**2))
+            CASH.subtractCash(market, (fxpAmount * fxpPrice * fee / ONE ** 2))
+            CASH.addCash(msg.sender, (fxpAmount * fxpPrice * fee / ONE ** 2))
         else:
             throw()
         # Log cancellation
-        log(type=log_cancel, market, msg.sender, fxpPrice, fxpAmount, trade_id, outcome, type)
+        log(type = log_cancel, market, msg.sender, fxpPrice, fxpAmount, trade_id, outcome, type)
         return(SUCCESS)
     return(FAILURE)
 
@@ -136,11 +136,11 @@ def buy(fxpAmount, fxpPrice, market, outcome):
     if(!MARKETS.getCreationTime(market)):
         return(0)
     # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
-    if(fxpPrice>cumScale or fxpAmount*fxpPrice < 3402823669209384705829531287552 or fxpAmount*fxpPrice >= 2**190):
+    if(fxpPrice > cumScale or fxpAmount * fxpPrice < 3402823669209384705829531287552 or fxpAmount * fxpPrice >= 2 ** 190):
         return(-1)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
-    if(CASH.balance(msg.sender) < (fxpAmount * fxpPrice * (fee + ONE) / ONE**2)):
+    if(CASH.balance(msg.sender) < (fxpAmount * fxpPrice * (fee + ONE) / ONE ** 2)):
         return(-3)
     save_trade(BID, fxpAmount, fxpPrice, market, outcome, branch, fee, msg.sender)
     return(FAILURE)
@@ -154,14 +154,14 @@ def sell(fxpAmount, fxpPrice, market, outcome):
     cumScale = MARKETS.getCumScale(market)
     fee = fee_percent(trading_fee, fxpPrice, cumScale) * MARKETS.getMakerFees(market) / ONE
     # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
-    if(fxpPrice>cumScale or fxpAmount*fxpPrice < 3402823669209384705829531287552L or fxpAmount*fxpPrice >= 2**190):
+    if(fxpPrice > cumScale or fxpAmount * fxpPrice < 3402823669209384705829531287552L or fxpAmount * fxpPrice >= 2 ** 190):
         return(-1)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
     if(MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome) < fxpAmount):
         return(-3)
     # check for enough money for fees
-    if(CASH.balance(msg.sender) < (fxpAmount * fxpPrice * fee / ONE**2)):
+    if(CASH.balance(msg.sender) < (fxpAmount * fxpPrice * fee / ONE ** 2)):
         return(-3)
     save_trade(ASK, fxpAmount, fxpPrice, market, outcome, branch, fee, msg.sender)
     return(FAILURE)
