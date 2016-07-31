@@ -68,3 +68,6 @@ python
 Downloads
 src-extern
 notes
+
+local/*.py
+*build-*.json

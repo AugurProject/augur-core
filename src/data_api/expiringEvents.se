@@ -28,7 +28,7 @@ inset('refund.se')
 # reporthash is [reporterID][event] = hash
 # subsidy is money for paying back a user for calculating the targeted num of reports for an event
 data EventIDToIndex[][]
-data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], saltyHash[][], shareValue, subsidy[], roundTwoNumEvents)
+data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], encryptedReport[][](report, salt), shareValue, subsidy[], roundTwoNumEvents)
 
 # numReportsEvent is number of reports on an event, expected is how many have been committed for an event
 # numReportsActual is the amount of reports a user has submitted in a period
@@ -41,15 +41,17 @@ data numReqEvents[][]
 data requiredEvents[]
 data mode_items[][](report_value[], current_mode, current_mode_items)
 
-def getSaltyHash(branch, expDateIndex, reporter, event):
+def getEncryptedReport(branch, expDateIndex, reporter, event):
     refund()
-    return(self.EventsExpDates[branch][expDateIndex].saltyHash[reporter][event])
+    return([self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].report, self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].salt]: arr)
 
-def setSaltyHash(branch, expDateIndex, reporter, saltyHash, event):
+# both the report and the salt should be encrypted
+def setEncryptedReport(branch, expDateIndex, reporter, report, salt, event):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
-    self.EventsExpDates[branch][expDateIndex].saltyHash[reporter][event] = saltyHash
+    self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].report = report
+    self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].salt = salt
     return(1)
 
 def getReportersPaidSoFar(branch, event):
