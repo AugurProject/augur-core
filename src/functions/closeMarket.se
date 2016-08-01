@@ -28,12 +28,9 @@ import closeMarketTwo as CLOSETWO
 import backstops as BACKSTOPS
 import eventResolution as RESOLVE
 inset('refund.se')
+inset('logReturn.se')
 
-event closeMarketReturnValue(returnValue)
-
-macro logReturn($returnValue):
-    log(type=closeMarketReturnValue, $returnValue)
-    return($returnValue)
+event closeMarket_logReturn(returnValue)
 
 # first param is the market, second param is the subcurrency contract
 data cash[][]
@@ -79,13 +76,13 @@ def closeMarket(branch, market, sender):
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)
     if(CASH.balance(market)<=0):
-        logReturn(-1)
+        logReturn(closeMarket_logReturn, -1)
     if(EVENTS.getUncaughtOutcome(event)==0):
-        logReturn(-2)
+        logReturn(closeMarket_logReturn, -2)
     if(BACKSTOPS.getRoundTwo(event) && !BACKSTOPS.getFinal(event)):
-        logReturn(-3)
+        logReturn(closeMarket_logReturn, -3)
     if(MARKETS.getBranchID(market)!=branch):
-        logReturn(-4)
+        logReturn(closeMarket_logReturn, -4)
     # checks whether any events not already resolved
     resolved = 1
     # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
@@ -99,7 +96,7 @@ def closeMarket(branch, market, sender):
         forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
         currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
         if((EVENTS.getForked(event) && !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):
-            logReturn(-5)
+            logReturn(closeMarket_logReturn, -5)
         if(binary(event) && fxpOutcome==0):
             resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
         elif(scalar(event) && EVENTS.getmode(event)==0):
@@ -107,15 +104,15 @@ def closeMarket(branch, market, sender):
         elif(categorical(event) && EVENTS.getmode(event)==0):
             resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
         if(resolution==-6):
-            logReturn(-6)
+            logReturn(closeMarket_logReturn, -6)
         winningOutcomes = array(8)
         winningOutcomes = RESOLVE.determineWinningOutcomes(event, outitems=8)
         MARKETS.setWinningOutcomes(market, winningOutcomes)
         # refunds closing cost
         MARKETS.refundClosing(market, sender)
-        logReturn(1)
+        logReturn(closeMarket_logReturn, 1)
     else:
-        logReturn(0)
+        logReturn(closeMarket_logReturn, 0)
 
 # Claim trading profits/value per share after a market is resolved
 # @returns 1 if successful

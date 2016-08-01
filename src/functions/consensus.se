@@ -6,15 +6,11 @@ import events as EVENTS
 import backstops as BACKSTOPS
 import closeMarket as CLOSEMARKET
 import consensusData as CONSENSUS
-
 inset('refund.se')
+inset('logReturn.se')
 
-# event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
-event penalize(x)
-
-macro logReturn($x):
-    log(type=penalize, $x)
-    return($x)
+event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
+event consensus_logReturn(returnValue)
 
 macro POINTZEROONE: 10000000000000000
 macro POINTEIGHT: 800000000000000000
@@ -64,32 +60,32 @@ def penalizeWrong(branch, event):
     roundTwo = BACKSTOPS.getRoundTwo(event)
     uncaught = EVENTS.getUncaughtOutcome(event)
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod-1)):
-        logReturn(-8)
+        logReturn(consensus_logReturn, -8)
     if(repBalance < ONE):
-        logReturn(0)
+        logReturn(consensus_logReturn, 0)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
-        logReturn(-5)
+        logReturn(consensus_logReturn, -5)
     if(BRANCHES.getForkPeriod(branch) == lastPeriod):
-        logReturn(-4)
+        logReturn(consensus_logReturn, -4)
     elif(EVENTS.getForked(event)):
-        logReturn(-6)
+        logReturn(consensus_logReturn, -6)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     elif(!uncaught && !(rejected && EVENTS.getRejectedPeriod(event)==lastPeriod)):
         if(CLOSEMARKET.closeMarket(branch, EVENTS.getMarket(event, 0), msg.sender)!=1):
-            logReturn(-7)
+            logReturn(consensus_logReturn, -7)
 
     outcome = catch(uncaught)
     if(scalar(event) or categorical(event)):
         outcome = uncaught
     p = PROPORTION.proportionCorrect(event)
     if(roundTwo && outcome!=0):
-        logReturn(-1)
+        logReturn(consensus_logReturn, -1)
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     numReportedOn = EXPEVENTS.getNumReportsActual(branch, lastPeriod, msg.sender)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     # commented for testing
     #elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
-    #    logReturn(-2)
+    #    logReturn(consensus_logReturn, -2)
     # lastperiod is where people who originally voted on a round 2 event voted the first time - want num events penalized to go up but not to actually be penalized for it yet
         # shouldn't be penalized until the next period resolution is over [since it's a round 2 event]
     if(roundTwo && !CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue):
@@ -123,7 +119,7 @@ def penalizeWrong(branch, event):
         else:
             repChange = oldRep * (ONE - POINTTWO/numReportedOn)/ONE + newRep*(POINTTWO/numReportedOn)/ONE - oldRep
         newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
-        # log(type=penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue)
+        log(type=penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue)
         EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
@@ -142,7 +138,7 @@ def penalizeWrong(branch, event):
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), totalRepDifference)
             # sends that rep to the branch
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
-    logReturn(1)
+    logReturn(consensus_logReturn, 1)
 
 # Increments the period after reporting
 # ui has to call this to stay cheap / not check it elsewhere

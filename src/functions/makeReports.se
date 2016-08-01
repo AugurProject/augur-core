@@ -31,14 +31,11 @@ import collectFees as COLLECTFEES
 import penalizationCatchup as CATCHUP
 import reportingThreshold as THRESHOLD
 inset('refund.se')
+inset('logReturn.se')
 
-event returnValue(x)
+event makeReports_logReturn(returnValue)
 
 macro MAX_THRESHOLD: 10^54
-
-macro logReturn($x):
-    log(type=returnValue, $x)
-    return($x)
 
 def makeHash(salt, report, eventID, sender):
     hashInfo = array(4)
@@ -115,29 +112,31 @@ def submitReport(event, salt, report, ethics):
     balance = REPORTING.getRepBalance(branch, msg.sender)
     votePeriod = BRANCHES.getVotePeriod(branch)
     if(balance<ONE):
-        logReturn(0)
+        logReturn(makeReports_logReturn, 0)
     if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
-        logReturn(-1)
+        logReturn(makeReports_logReturn, -1)
     eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
     # makes sure event is in the given branch and vote period
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
-        logReturn(-5)
+        logReturn(makeReports_logReturn, -5)
     elif(EVENTS.getOutcome(event)!=0):
-        logReturn(-6)
+        logReturn(makeReports_logReturn, -6)
     periodLength = BRANCHES.getPeriodLength(branch)
     # ensures user has collected fees for last reporting period
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod-1)):
         if(COLLECTFEES.collectFees(branch, msg.sender)<1):
-            logReturn(-8)
+            logReturn(makeReports_logReturn, -8)
     # commented out for testing
     #if(block.timestamp/periodLength!=((block.timestamp + 2*TWENTYFOURHR)/periodLength)):
-    #    logReturn(-7)
+    #    logReturn(makeReports_logReturn, -7)
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
         realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
         if(self.makeHash(salt, report, eventID, msg.sender)!=realHash || realHash==0):
-            logReturn(-3)
+            # logReturn(makeReports_logReturn, -3)
+            checkRepHash = self.makeHash(salt, report, eventID, msg.sender)
+            logReturn(makeReports_logReturn, checkRepHash)
         forkedOverEthicality = BACKSTOPS.getForkedOverEthicality(event)
         forkedOverThisEvent = 0
         if(BRANCHES.getEventForkedOver(branch) == event):
@@ -145,7 +144,7 @@ def submitReport(event, salt, report, ethics):
         roundTwo = BACKSTOPS.getRoundTwo(event)
         report = self.validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, balance)
         if(report == -4):
-            logReturn(-4)
+            logReturn(makeReports_logReturn, -4)
         EXPEVENTS.setReport(branch, votePeriod, eventID, report, msg.sender)
         # set ethics value for event
         ethics = ethics
@@ -185,8 +184,8 @@ def submitReport(event, salt, report, ethics):
             EXPEVENTS.addReportersPaidSoFar(branch, event)
             CASH.subtractCash(branch, 3500000*tx.gasprice)
             CASH.addCash(msg.sender, 3500000*tx.gasprice)
-        logReturn(1)
-    logReturn(-2)
+        logReturn(makeReports_logReturn, 1)
+    logReturn(makeReports_logReturn, -2)
 
 # validates and submits report
 # weights reports by rep if round 2 and fork

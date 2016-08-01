@@ -6,6 +6,7 @@ import math
 import random
 import os
 import time
+from pprint import pprint
 
 initial_gas = 0
 
@@ -1265,38 +1266,126 @@ def test_update_trading_fee():
     initial_gas = 0
     t.gas_limit = 100000000
     s = t.state()
+    # do the state-modifications have to be in the Serpent code...?
+    # CASH = s.abi_contract('../local/data_api/cash.se')
+    # MARKETS = s.abi_contract('../local/data_api/markets.se')
+    # FAUCETS = s.abi_contract('../local/functions/faucets.se')
+    # CREATEMARKET = s.abi_contract('../local/functions/createMarket.se')
+    # CASH.initiateOwner(1010101)
+    # FAUCETS.reputationFaucet(1010101)
     c = s.abi_contract('functions/output.se')
     c.initiateOwner(1010101)
     c.reputationFaucet(1010101)
     blocktime = s.block.timestamp
+    # event1 = CREATEMARKET.createEvent(1010101, "new event", blocktime+1, ONE, 2*ONE, 2, "www.roflcopter.com")
     event1 = c.createEvent(1010101, "new event", blocktime+1, ONE, 2*ONE, 2, "www.roflcopter.com")
     tradingFee = 120000000000000000  #.12
     makerFee = 250000000000000000  #.25
+    # market = CREATEMARKET.createMarket(1010101, "new market", tradingFee, event1, 1, 2, 3, makerFee, "yayaya", value=10**19)
     market = c.createMarket(1010101, "new market", tradingFee, event1, 1, 2, 3, makerFee, "yayaya", value=10**19)
     tradingFee = 110000000000000000 #.11
     makerFee = 220000000000000000 #.22
     #test valid tradingFees
+    # result = CREATEMARKET.updateTradingFee(1010101, market, tradingFee, makerFee);
     result = c.updateTradingFee(1010101, market, tradingFee, makerFee);
     assert(result == 1);
+    # assert(MARKETS.getTradingFee(market) == tradingFee)
+    # assert(MARKETS.getMakerFees(market) == makerFee);
     assert(c.getTradingFee(market) == tradingFee)
     assert(c.getMakerFees(market) == makerFee);
     #the fees are too damn high
     tradingFee = 120000000000000000  #.12
+    # result = CREATEMARKET.updateTradingFee(1010101, market, tradingFee, makerFee);
     result = c.updateTradingFee(1010101, market, tradingFee, makerFee);
     assert(result == -2);
+    # assert(MARKETS.getTradingFee(market) != tradingFee)
     assert(c.getTradingFee(market) != tradingFee)
     tradingFee = 100000000000000000  #.10
     makerFee = 510000000000000000  #.51
+    # result = CREATEMARKET.updateTradingFee(1010101, market, tradingFee, makerFee);
     result = c.updateTradingFee(1010101, market, tradingFee, makerFee);
     assert(result == -2);
+    # assert(MARKETS.getMakerFees(market) != makerFee)
     assert(c.getMakerFees(market) != makerFee)
     print "Test update trading fees ok"
+
+# calculate the maximum number of ask trade_ids in a single trade
+def calculate_max_asks(s, c, gas_limit):
+    gas_used, num_trades = 0, 0
+    asks = {}
+    while gas_used < gas_limit:
+        num_trades += 1
+        event1 = c.createEvent(1010101, "new event", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
+        market = c.createMarket(1010101, "new market", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+        assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
+        assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
+        s.mine(1)
+        qty = num_trades*ONE
+        c.buyCompleteSets(market, qty)
+        [c.sell(ONE, int(.01*i*ONE), market, 1) for i in range(num_trades + 1)]
+        trades = c.get_trade_ids(market)
+        assert(len(trades) == num_trades)
+        assert(c.commitTrade(c.makeTradeHash(qty, 0, trades), sender=t.k2) == 1)
+        s.mine(1)
+        gas_use(s)
+        c.trade(qty, 0, trades, sender=t.k2)
+        gas_used = gas_use(s)
+        asks[num_trades] = int(gas_limit - gas_used)
+        s.mine(1)
+    return num_trades - 1, asks
+
+# calculate the maximum number of bid trade_ids in a single trade
+def calculate_max_bids(s, c, gas_limit):
+    gas_used, num_trades = 0, 0
+    bids = {}
+    while gas_used < gas_limit:
+        num_trades += 1
+        event1 = c.createEvent(1010101, "new event", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
+        market = c.createMarket(1010101, "new market", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+        assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
+        assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
+        s.mine(1)
+        [c.buy(ONE, int(.01*i*ONE), market, 1) for i in range(num_trades + 1)]
+        trades = c.get_trade_ids(market)
+        assert(len(trades) == num_trades)
+        qty = num_trades*ONE
+        assert(c.commitTrade(c.makeTradeHash(0, qty, trades), sender=t.k2) == 1)
+        c.buyCompleteSets(market, qty, sender=t.k2)
+        s.mine(1)
+        gas_use(s)
+        c.trade(0, qty, trades, sender=t.k2)
+        gas_used = gas_use(s)
+        bids[num_trades] = int(gas_limit - gas_used)
+        s.mine(1)
+    return num_trades - 1, bids
+
+# Calculate the maximum number of trade IDs in a single trade
+# Results for gas_limit=3135000:
+#  - Asks: {1: 2378626, 2: 1762869, 3: 1147052, 4: 531175, 5: -84762}
+#  - Bids: {1: 2347579, 2: 1685754, 3: 1023860, 4: 361896, 5: -300139}
+#  - Max # asks: 4 [531175 of 3135000 gas remaining]
+#  - Max # bids: 4 [361896 of 3135000 gas remaining]
+def calculate_max_trade_ids(gas_limit=3135000):
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    c.initiateOwner(1010101)
+    max_asks, asks = calculate_max_asks(s, c, gas_limit)
+    max_bids, bids = calculate_max_bids(s, c, gas_limit)
+    print "Max # asks: %i [%i of %i gas remaining]" % (max_asks, asks[max_asks], gas_limit)
+    print "Max # bids: %i [%i of %i gas remaining]" % (max_bids, bids[max_bids], gas_limit)
+    pprint(asks)
+    pprint(bids)
 
 def gas_use(s):
     global initial_gas
     print "Gas Used:"
-    print s.block.gas_used - initial_gas
+    gas_used = s.block.gas_used - initial_gas
+    print gas_used
     initial_gas = s.block.gas_used
+    return gas_used
 
 if __name__ == '__main__':
     src = os.path.join(os.getenv('AUGUR_CORE', os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace')), 'src')
@@ -1323,5 +1412,6 @@ if __name__ == '__main__':
     #test_claimrep()
     #test_consensus_multiple_reporters()
     #test_pen_not_enough_reports()
-    test_update_trading_fee()
+    #test_update_trading_fee()
+    calculate_max_trade_ids()
     print "DONE TESTING"

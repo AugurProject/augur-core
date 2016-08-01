@@ -24,15 +24,11 @@ import cash as CASH
 import markets as MARKETS
 import trades as TRADES
 inset('refund.se')
+inset('logReturn.se')
 
+event buyAndSellShares_logReturn(returnValue)
 event log_add_tx(market:indexed, sender:indexed, type, price, amount, outcome, tradeid)
 event log_cancel(market:indexed, sender:indexed, price, amount, tradeid, outcome, type)
-
-event buyAndSellSharesReturnValue(returnValue)
-
-macro logReturn($returnValue):
-    log(type=buyAndSellSharesReturnValue, $returnValue)
-    return($returnValue)
 
 # Trade types
 macro BID: 1
@@ -72,9 +68,9 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $fee, $send
             if($fee):
                 CASH.sendFrom($market, ($amount * $price / ONE * $fee / ONE), $sender)
     else:
-        logReturn(TRADE_ALREADY_EXISTS)
+        logReturn(buyAndSellShares_logReturn, TRADE_ALREADY_EXISTS)
     log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id)
-    logReturn(trade_id)
+    logReturn(buyAndSellShares_logReturn, trade_id)
 
 #
 # Cancellation: cancels a trade, if a bid refunds money, if an ask returns shares
@@ -88,7 +84,7 @@ def cancel(trade_id):
     trade = array(TRADE_FIELDS)
     trade = TRADES.get_trade(trade_id, outitems=TRADE_FIELDS)
     if !trade:
-        logReturn(0)
+        logReturn(buyAndSellShares_logReturn, 0)
     type = trade[1]
     market = trade[2]
     amount = trade[3]
@@ -116,8 +112,8 @@ def cancel(trade_id):
             CASH.addCash(msg.sender, (amount * price / ONE * fee / ONE))
         # Log cancellation
         log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type)
-        logReturn(SUCCESS)
-    logReturn(FAILURE)
+        logReturn(buyAndSellShares_logReturn, SUCCESS)
+    logReturn(buyAndSellShares_logReturn, FAILURE)
 
 macro remove_trade($trade_id, $market):
     TRADES.remove_trade($trade_id)
@@ -141,16 +137,16 @@ def buy(amount, price, market, outcome):
     fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE
     branch = MARKETS.getBranchID(market)
     if(!MARKETS.getCreationTime(market)):
-        logReturn(0)
+        logReturn(buyAndSellShares_logReturn, 0)
     # price cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
     if(price>cumScale or amount*price < 3402823669209384705829531287552 or amount*price >= 2**190):
-        logReturn(-1)
+        logReturn(buyAndSellShares_logReturn, -1)
     if(BRANCHES.getOracleOnly(branch)):
-        logReturn(-2)
+        logReturn(buyAndSellShares_logReturn, -2)
     if(CASH.balance(msg.sender) < (amount * price / ONE * (fee + ONE) / ONE)):
-        logReturn(-4)
+        logReturn(buyAndSellShares_logReturn, -4)
     save_trade(BID, amount, price, market, outcome, branch, fee, msg.sender)
-    logReturn(FAILURE)
+    logReturn(buyAndSellShares_logReturn, FAILURE)
 
 # costs 532k gas
 # smallest trade value is 0.00000001
@@ -162,13 +158,13 @@ def sell(amount, price, market, outcome):
     fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE
     # price cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
     if(price>cumScale or amount*price < 3402823669209384705829531287552 or amount*price >= 2**190):
-        logReturn(-1)
+        logReturn(buyAndSellShares_logReturn, -1)
     if(BRANCHES.getOracleOnly(branch)):
-        logReturn(-2)
+        logReturn(buyAndSellShares_logReturn, -2)
     if(MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome) < amount):
-        logReturn(-4)
+        logReturn(buyAndSellShares_logReturn, -4)
     # check for enough money for fees
     if(CASH.balance(msg.sender) < (amount * price / ONE * fee / ONE)):
-        logReturn(-4)
+        logReturn(buyAndSellShares_logReturn, -4)
     save_trade(ASK, amount, price, market, outcome, branch, fee, msg.sender)
-    logReturn(FAILURE)
+    logReturn(buyAndSellShares_logReturn, FAILURE)

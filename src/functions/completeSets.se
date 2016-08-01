@@ -24,12 +24,9 @@ import expiringEvents as EXPEVENTS
 import cash as CASH
 import markets as MARKETS
 inset('refund.se')
+inset('logReturn.se')
 
-event completeSetsReturnValue(returnValue)
-
-macro logReturn($returnValue):
-    log(type=completeSetsReturnValue, $returnValue)
-    return($returnValue)
+event completeSets_logReturn(returnValue)
 
 # Buys amount of every outcome
 # cost 850k gas
@@ -44,11 +41,11 @@ def buyCompleteSets(market, amount):
     cumScale = MARKETS.getCumScale(market)
     cost = amount*cumScale/ONE
     if(!MARKETS.getCreationTime(market)):
-        logReturn(0)
+        logReturn(completeSets_logReturn, 0)
     if(BRANCHES.getOracleOnly(branch)):
-        logReturn(-1)
+        logReturn(completeSets_logReturn, -1)
     if(CASH.balance(msg.sender) < cost):
-        logReturn(-2)
+        logReturn(completeSets_logReturn, -2)
     n = 1
     # send shares of the event to user address and increment the number issued in the market for each outcome
     while n <= numOutcomes:
@@ -61,7 +58,7 @@ def buyCompleteSets(market, amount):
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount*cumScale/ONE)
     # send money from user acc. to market address/account
     CASH.sendFrom(market, cost, msg.sender)
-    logReturn(1)
+    logReturn(completeSets_logReturn, 1)
 
 # Sells amount of every outcome [if user owns it]
 # cost 850k gas
@@ -76,11 +73,11 @@ def sellCompleteSets(market, amount):
     cumScale = MARKETS.getCumScale(market)
     cost = amount*cumScale/ONE
     if(BRANCHES.getOracleOnly(branch)):
-        logReturn(-1)
+        logReturn(completeSets_logReturn, -1)
     n = 1
     while n <= numOutcomes:
         if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < amount):
-            logReturn(-3)
+            logReturn(completeSets_logReturn, -3)
         n += 1
     n = 1
     # Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets
@@ -95,4 +92,4 @@ def sellCompleteSets(market, amount):
     # send funds from the market to the user acc.
     CASH.subtractCash(market, cost)
     CASH.addCash(msg.sender, cost)
-    logReturn(1)
+    logReturn(completeSets_logReturn, 1)

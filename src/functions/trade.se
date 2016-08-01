@@ -26,14 +26,18 @@ import markets as MARKETS
 import trades as TRADES
 import expiringEvents as EXPEVENTS
 inset('refund.se')
+inset('logReturn.se')
 
-event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
+# event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
 event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
-event tradeReturnValue(returnValue)
-event tradeArrayReturnValue(returnArray: arr)
+event trade_logReturn(returnValue)
+event trade_logArrayReturn(returnArray: arr)
+
+macro logArrayReturn($a):
+    log(type=trade_logArrayReturn, $a)
+    return($a: arr)
 
 macro ONEPOINTFIVE: 1500000000000000000
-
 # Trade types
 macro BID: 1
 macro ASK: 2
@@ -55,14 +59,6 @@ macro remove_trade($trade_id, $market):
     TRADES.remove_trade($trade_id)
     MARKETS.remove_trade_from_market($market, $trade_id)
 
-macro logReturn($x):
-    log(type=tradeReturnValue, $x)
-    return($x)
-
-macro logArrayReturn($a):
-    log(type=tradeArrayReturnValue, $a)
-    return($a: arr)
-
 #
 # Trade [allows a user to pick up/fill orders off the book]
 #
@@ -81,7 +77,7 @@ macro logArrayReturn($a):
 def trade(max_value, max_amount, trade_ids:arr):
     refund()
     if(BRANCHES.getOracleOnly(branch)):
-        logReturn(-1)
+        logReturn(trade_logReturn, -1)
     i = 0
     trades = 0
     while i < len(trade_ids):
@@ -93,7 +89,7 @@ def trade(max_value, max_amount, trade_ids:arr):
     tradeInfo[2] = max_value
     tradeHash = sha3(tradeInfo, items=3)
     if(TRADES.checkHash(tradeHash, msg.sender)==-1):
-        logReturn(-2)
+        logReturn(trade_logReturn, -2)
     # Try to fulfill each trade passed
     t = 0
     while t < len(trade_ids):
@@ -101,7 +97,7 @@ def trade(max_value, max_amount, trade_ids:arr):
         trade = array(TRADE_FIELDS)
         trade = TRADES.get_trade(trade_ids[t], outitems=TRADE_FIELDS)
         if !trade:
-            logReturn(0)
+            logReturn(trade_logReturn, 0)
         # Get market
         type = trade[1]
         market = trade[2]
@@ -111,10 +107,10 @@ def trade(max_value, max_amount, trade_ids:arr):
         owner = trade[5]
         outcome = trade[7]
         if(owner == msg.sender or owner == tx.origin):
-            logReturn(-5)
+            logReturn(trade_logReturn, -5)
         # Make sure the trade has been mined, obvious HFT prevention
         if block.number <= trade[6]:
-            logReturn(TRADE_SAME_BLOCK_PROHIBITED)
+            logReturn(trade_logReturn, TRADE_SAME_BLOCK_PROHIBITED)
         branch = MARKETS.getBranchID(market)
         fee = fee_percent(MARKETS.getTradingFee(market), price, MARKETS.getCumScale(market))
 
@@ -130,7 +126,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 value = (fill * price)/ONE
                 # must trade at least 0.00000001 in value
                 if(value < 184467440738):
-                    logReturn(-4)
+                    logReturn(trade_logReturn, -4)
                 # Update trade amount or remove
                 if fill < amount:
                     TRADES.fill_trade(trade_ids[t], fill)
@@ -164,7 +160,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Log transaction
                 log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome)
             else:
-                logReturn(INSUFFICIENT_BALANCE)
+                logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
         elif type == ASK:
             balance = CASH.balance(msg.sender)
             makerFeeRate = MARKETS.getMakerFees(market)
@@ -207,11 +203,11 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Log transaction
                 log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome)
             else:
-                logReturn(INSUFFICIENT_BALANCE)
+                logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
 
         # Log price, fill amount, type and timestamp
         MARKETS.setPrice(market, outcome, price)
-        log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
+        # log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
         # Next trade
         t += 1
     logArrayReturn([SUCCESS, max_value, max_amount])
@@ -239,7 +235,7 @@ def short_sell(buyer_trade_id, max_amount):
     refund()
     branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
-        logReturn(-6)
+        logReturn(trade_logReturn, -6)
     # check trade hash
     tradeInfo = array(3)
     tradeInfo[0] = buyer_trade_id
@@ -247,28 +243,28 @@ def short_sell(buyer_trade_id, max_amount):
     tradeInfo[2] = 0
     tradeHash = sha3(tradeInfo, items=3)
     if(TRADES.checkHash(tradeHash, msg.sender)==-1):
-        logReturn(-2)
+        logReturn(trade_logReturn, -2)
     # Get trade
     trade = array(TRADE_FIELDS)
     trade = TRADES.get_trade(buyer_trade_id, outitems=TRADE_FIELDS)
     if !trade:
-        logReturn(-1)
+        logReturn(trade_logReturn, -1)
     # Get market
     type = trade[1]
     if(type!=BID):
-        logReturn(-3)
+        logReturn(trade_logReturn, -3)
     market = trade[2]
     if(MARKETS.getOneWinningOutcome(market, 0)):
-        logReturn(-4)
+        logReturn(trade_logReturn, -4)
     orig_amount = trade[3]
     price = trade[4]
     owner = trade[5]
     outcome = trade[7]
     if(owner == msg.sender or owner == tx.origin):
-        logReturn(-5)
+        logReturn(trade_logReturn, -5)
     # Make sure the trade has been mined, obvious HFT prevention
     if block.number <= trade[6]:
-        logReturn(TRADE_SAME_BLOCK_PROHIBITED)
+        logReturn(trade_logReturn, TRADE_SAME_BLOCK_PROHIBITED)
     
     # calculate cost
     creator = INFO.getCreator(market)
@@ -276,7 +272,7 @@ def short_sell(buyer_trade_id, max_amount):
     cumScale = MARKETS.getCumScale(market)
     amount = min(orig_amount, max_amount)
     if(amount < 0):
-        logReturn(INSUFFICIENT_BALANCE)
+        logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
     fee = amount * price / ONE * fee_percent(trading_fee, price, cumScale) / ONE
     makerFeeRate = MARKETS.getMakerFees(market)
     branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
@@ -284,9 +280,9 @@ def short_sell(buyer_trade_id, max_amount):
     takerFeesTotal = branchFees + creatorFees
     cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)
     if(CASH.balance(msg.sender) < cost):
-        logReturn(INSUFFICIENT_BALANCE)
+        logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
     if(amount*price/ONE < 184467440738):
-        logReturn(-7)
+        logReturn(trade_logReturn, -7)
 
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
 
@@ -336,6 +332,6 @@ def short_sell(buyer_trade_id, max_amount):
     # Log transaction
     log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)
     # Log price, fill amount, type and timestamp
-    log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
+    # log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
     MARKETS.setPrice(market, outcome, price)
     logArrayReturn([SUCCESS, max_amount, fill, price])
