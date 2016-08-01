@@ -3,6 +3,7 @@ import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import consensusData as CONSENSUS
 import reporting as REPORTING
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('refund.se')
 
 # Allows a user to collect both redistributed rep and trading fees earned at the end of a period
@@ -12,6 +13,7 @@ inset('refund.se')
     # -2: needs to be second half of reporting period to claim rep [1st half is when redistribution is done]
         # after this window, any unclaimed rep is pushed to the next period's redistrib. pool via the first make report submission
 # 2 means no errors but didnt report last period
+# distribute any eth here too
 def collectFees(branch, sender):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)

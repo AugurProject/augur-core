@@ -20,7 +20,6 @@
 
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
-import cash as CASH
 import events as EVENTS
 import markets as MARKETS
 import reporting as REPORTING
@@ -29,8 +28,11 @@ import consensusData as CONSENSUS
 import collectFees as COLLECTFEES
 import penalizationCatchup as CATCHUP
 import reportingThreshold as THRESHOLD
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('refund.se')
 inset('eventHelpers.se')
+
+ETHCONTRACT = 02323232
 
 def makeHash(salt, fxpReport, event, sender):
     hashInfo = array(4)
@@ -71,6 +73,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     if(!EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)):
         EXPEVENTS.setNumEventsToReportOn(branch)
         # set amount of fees to be distributed in this period from the branch
+        # todo fix this to check if initial balance is set for given currency that the event uses, if not, set it
         BRANCHES.setInitialBalance(branch, votePeriod, CASH.balance(branch))
     reportingThreshold = 0
     # if required or threshold has been set b/c wasn't  yet
@@ -175,8 +178,7 @@ def submitReport(event, salt, fxpReport, fxpEthics):
     diff = reportsNum - paidBack
     if(diff >= 1):
         EVENTS.addReportersPaidSoFar(event)
-        CASH.subtractCash(branch, 3500000 * tx.gasprice * ONE / WEITOETH)
-        CASH.addCash(msg.sender, 3500000 * tx.gasprice * ONE / WEITOETH)
+        BRANCHES.getWallet(branch, ETHCONTRACT).transfer(msg.sender, 3500000 * tx.gasprice * ONE / WEITOETH)
     return(1)
 
 # validates and submits fxpReport

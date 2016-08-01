@@ -1,0 +1,15 @@
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
+#extern whitelist_stuff: [functions:[blam, blam!]]
+
+data currency
+
+def initialize(currency):
+    if(!self.currency):
+        self.currency = currency
+    return(1)
+
+def transfer(receiver, value):
+    # todo need to have market + branch + event $ contracts support all the relevant contract keys in the namereg in the whitelist to allow them to send money from them - so in whitelist add each branch/market contract and then make them support all namereg keys necessary
+    #if(!whitelist_stuff.checkIfSenderInList(msg.sender)):
+    #    throw()
+    return(self.currency.transferFrom(self, receiver, cost))

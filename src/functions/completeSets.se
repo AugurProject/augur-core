@@ -20,8 +20,9 @@
 
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
-import cash as CASH
 import markets as MARKETS
+import info as INFO
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('refund.se')
 
 # Buys fxpAmount of every outcome
@@ -41,7 +42,7 @@ def buyCompleteSets(market, fxpAmount):
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
     # send money from user acc. to market address/account
-    if(!CASH.sendFrom(market, cost, msg.sender)):
+    if(!MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), cost)):
         return(-2)
     n = 1
     # send shares of the event to user address and increment the number issued in the market for each outcome
@@ -82,6 +83,6 @@ def sellCompleteSets(market, fxpAmount):
         MARKETS.modifySharesValue(market, -fxpAmount * cumScale / ONE)
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), -fxpAmount * cumScale / ONE)
     # send funds from the market to the user acc.
-    CASH.subtractCash(market, cost)
-    CASH.addCash(msg.sender, cost)
+    if(!INFO.getWallet(market).transfer(msg.sender, cost)):
+        throw()
     return(1)

@@ -1,5 +1,6 @@
 import markets as MARKETS
-import cash as CASH
+import info as INFO
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('refund.se')
 
 # Payout a trader in a market with one winning outcome [so not scalar]
@@ -14,13 +15,13 @@ def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes
         while(i < numOutcomes):
             sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, i + 1)
             MARKETS.modifyParticipantShares(market, sender, i + 1, -sharesOwned, 0)
-            CASH.subtractCash(market, sharesOwned * MARKETS.getCumScale(market) / (numOutcomes * ONE))
-            CASH.addCash(sender, sharesOwned * MARKETS.getCumScale(market) / (numOutcomes * ONE))
+            if(!INFO.getWallet(market).transfer(sender, sharesOwned * MARKETS.getCumScale(market) / (numOutcomes * ONE))):
+                throw()
             i += 1
     else:
         # distribute profit to the people who won money by holding winning shares
         sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, winningOutcome)
         MARKETS.modifyParticipantShares(market, sender, winningOutcome, -sharesOwned, 0)
-        CASH.subtractCash(market, sharesOwned * cumScale / ONE)
-        CASH.addCash(sender, sharesOwned * cumScale / ONE)
+        if(!INFO.getWallet(market).transfer(sender, sharesOwned * cumScale / ONE)):
+            throw()
     return(1)

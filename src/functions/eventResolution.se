@@ -1,9 +1,9 @@
 import branches as BRANCHES
 import info as INFO
-import cash as CASH
 import markets as MARKETS
 import events as EVENTS
 import expiringEvents as EXPEVENTS
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('refund.se')
 inset('eventHelpers.se')
 
@@ -16,8 +16,9 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
     $indeterminate = ONEHALF * 3
     if(($fxpOutcome == $indeterminate or $mode == ONEHALF) and EVENTS.getEventPushedUp($event)):
         if(MARKETS.getPushedForward($market)):
-            CASH.addCash($branch, MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE))
-            CASH.subtractCash($market, MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE))
+            amount = MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE)
+            branchWallet = BRANCHES.getWallet($branch, INFO.getCurrency($market))
+            INFO.getWallet($market).transfer(branchWallet, amount)
         MARKETS.setTradingPeriod($market, MARKETS.getOriginalTradingPeriod($market))
         MARKETS.setPushedForward($market, 0, msg.sender)
         EXPEVENTS.setEventWeight($branch, $votingPeriodEvent, $event, 0)
@@ -35,8 +36,8 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         -6
     elif(($fxpOutcome == $indeterminate or $mode == ONEHALF) or !$ethical):
         # give $event bond money to reporters
-        CASH.subtractCash($event, EVENTS.getBond($event))
-        CASH.addCash($branch, EVENTS.getBond($event))
+        branchWallet = BRANCHES.getWallet($branch, INFO.getCurrency($event))
+        INFO.getWallet($event).transfer(branchWallet, EVENTS.getBond($event))
         # not $ethical is same as .5 outcome
         if($scalarorcat):
             # the mode is used to compare for reporting accuracy. so still the same as the reported uncaught outcome/mode, but resolving the market as .5 right in the middle of the range so payouts are done right for an unethical [or indeterminate] market
@@ -46,11 +47,10 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         1
     else:
         # return bond as a normal event resolution
-        CASH.subtractCash($event, EVENTS.getBond($event))
-        CASH.addCash(INFO.getCreator($event), EVENTS.getBond($event))
+        INFO.getWallet($event).transfer(INFO.getCreator($event), EVENTS.getBond($event))
         if(MARKETS.getPushedForward($market)):
-            CASH.addCash(MARKETS.getBondsMan($market), MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE))
-            CASH.subtractCash($market, MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE))
+            amount = MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE)
+            INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), amount)
         if(EVENTS.getEventPushedUp($event)):
             # delete old $event from future events exp
             $period = EVENTS.getOriginalExpiration($event) / $periodLength

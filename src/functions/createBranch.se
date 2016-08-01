@@ -20,9 +20,15 @@
 
 import branches as BRANCHES
 import info as INFO
-import cash as CASH
 import reporting as REPORTING
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('refund.se')
+
+data ethContract
+
+def init():
+    # whatever the eth subcurrency contract is goes here
+    self.ethContract = 5
 
 # Create a new branch given a parent branch - a branch is essentially a fork of rep where new markets can be created
 # period length is given in seconds
@@ -50,17 +56,27 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
     mcopy(branchInfo + 7 * 32, description, len(description))
     # people can check that these characteristics hash to the ID if they want
     # people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
-    branch = sha3(branchInfo, chars = len(branchInfo))
+    branch = ripemd160(branchInfo, chars = len(branchInfo))
     currentVotePeriod = (block.timestamp / periodLength) - 1
-    if(CASH.balance(msg.sender) < 47 * ONE):
-        return(-2)
     # provided event doesn't already exist, create it
+    wallet = 0
     if(!INFO.getCreator(branch)):
-        BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent)
+        checkSubcurrencyIsValid(self.ethContract)
+        wallet = create('wallet.se')
+        wallet.initialize(self.ethContract)
+        BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, 47 * ONE, self.ethContract, wallet)
     else:
         return(-3)
     # pay creation fee, initialize branch info
-    if(CASH.sendFrom(parent, 47 * ONE, msg.sender) and INFO.setInfo(branch, description, tx.origin, 47 * ONE) and REPORTING.setInitialReporters(branch)):
+    feePaid = self.ethContract.transferFrom(msg.sender, BRANCHES.getWallet(parent, self.ethContract), 47 * ONE)
+    if(feePaid and INFO.setInfo(branch, description, tx.origin, 47 * ONE, 0, 0) and REPORTING.setInitialReporters(branch)):
         return(branch)
     else:
         throw()
+        
+macro checkSubcurrencyIsValid(contract):
+    allowance = $contract.allowance(msg.sender, self)
+    balance = $contract.balanceOf(self)
+    transfer = $contract.transfer(msg.sender, 0)
+    transferFrom = $contract.transferFrom(self, msg.sender, 0)
+    approve = $contract.approve(self, 0)

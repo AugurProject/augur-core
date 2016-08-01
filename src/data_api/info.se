@@ -23,7 +23,7 @@ inset('refund.se')
 # Every entity in our contract has similar metadata.
 # Instead of putting it in each entity, we put all the metadata here.
 # Info's index is the hash of the item we're getting info on
-data Info[](description[2048], descriptionLength, creator, creationFee)
+data Info[](description[2048], descriptionLength, creator, creationFee, wallet, currency)
 
 def init():
     description = text("Root branch")
@@ -44,9 +44,20 @@ def getCreator(ID):
 
 def getCreationFee(ID):
     return(self.Info[ID].creationFee)
+    
+def getCurrency(ID):
+    return(self.Info[ID].currency)
+
+def getWallet(ID):
+    return(self.Info[ID].wallet)
+    
+def setCurrencyAndWallet(ID, currency, wallet):
+    self.Info[ID].currency = currency
+    self.Info[ID].wallet = wallet
+    return(1)
 
 # @return 1 if success, 0 if creator already exists
-def setInfo(ID, description: str, creator, fxpFee):
+def setInfo(ID, description: str, creator, fxpFee, currency, wallet):
     callstackCheck()
     # if(!self.whitelist.check(msg.sender)):
     # 	return(-1)
@@ -56,6 +67,8 @@ def setInfo(ID, description: str, creator, fxpFee):
         self.Info[ID].descriptionLength = len(description)
         self.Info[ID].creationFee = fxpFee
         self.Info[ID].creator = creator
+        self.Info[ID].currency = currency
+        self.Info[ID].wallet = wallet
         return(1)
     else:
         return(0)

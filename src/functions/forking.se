@@ -1,5 +1,4 @@
 import info as INFO
-import cash as CASH
 import branches as BRANCHES
 import reporting as REPORTING
 import events as EVENTS
@@ -10,6 +9,7 @@ import roundTwo as ROUNDTWO
 import expiringEvents as EXPEVENTS
 import createBranch as CREATEBRANCH
 import consensusData as CONSENSUSDATA
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('refund.se')
 inset('eventHelpers.se')
 
@@ -234,15 +234,15 @@ def resolveForkEvent(branch, event):
         EVENTS.setEthics(event, ethical)
         if(fxpOutcome == 3 * ONEHALF or !ethical):
             # give event bond money to reporters
-            CASH.subtractCash(event, bond)
-            CASH.addCash(branch, bond)
+            branchWallet = BRANCHES.getWallet(branch, INFO.getCurrency(event))
+            INFO.getWallet(event).transfer(branchWallet, bond)
+
             # not ethical is same as .5 outcome
             fxpOutcome = 3 * ONEHALF
             EVENTS.setOutcome(event, fxpOutcome)
         else:
-            # return bond
-            CASH.subtractCash(event, bond)
-            CASH.addCash(INFO.getCreator(event), bond)
+            # return 
+            INFO.getWallet(event).transfer(INFO.getCreator(event), bond)
         return(1)
     # scalar
     elif(scalar(event) or categorical(event)):
@@ -268,14 +268,13 @@ def resolveForkEvent(branch, event):
         EVENTS.setOutcome(event, fxpOutcome)
         if(mode == ONEHALF or !ethical):
             # give event bond money to reporters
-            CASH.subtractCash(event, bond)
-            CASH.addCash(branch, bond)
+            branchWallet = BRANCHES.getWallet(branch, INFO.getCurrency(event))
+            INFO.getWallet(event).transfer(branchWallet, bond)
             # not ethical is same as .5 outcome
             EVENTS.setOutcome(event, ethicOutcome)
         else:
             # return bond
-            CASH.subtractCash(event, bond)
-            CASH.addCash(INFO.getCreator(event), bond)
+            INFO.getWallet(event).transfer(INFO.getCreator(event), bond)
         return(1)
     # (should never be reached)
     else:

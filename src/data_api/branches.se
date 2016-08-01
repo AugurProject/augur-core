@@ -18,7 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-import cash as CASH
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('refund.se')
 
 # Branches keeps track of data associated with branches in augur
@@ -40,10 +40,8 @@ inset('refund.se')
     # Want:
         # Rep market cap >> outstanding shares value at all times
 # min can be no lower than ~0.0000001 or so otherwise can run into underflow issues
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent)
-
-# first param is the branch, second param is the subcurrency contract
-data cash[][]
+# contract[] is a mapping from currency -> wallet contract addr
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[])
 
 # keeps track of a list of all branches
 data branchList[]
@@ -58,10 +56,13 @@ def init():
     self.branchList[0] = 1010101
     # since only have to report on half this targets 3
     self.Branches[1010101].baseReporters = 6
-
-# call once after uploading (externed method not allowed in init)
-def initDefaultBranch():
-    return(CASH.initiateOwner(1010101))
+    ethContract = 5
+    wallet = create('wallet.se')
+    wallet.initialize(ethContract)
+    self.Branches[1010101].contract[ethContract] = wallet
+    
+def getWallet(branch, currency):
+    return(self.Branches[branch].contract[currency])
 
 # event a branch was most recently forked over
 def getEventForkedOver(branch):
@@ -87,9 +88,10 @@ def getVotePeriod(branch):
 def getPeriodLength(branch):
     return(self.Branches[branch].periodLength)
 
-# branch cash balance at start of period
-def setInitialBalance(branch, period, balance):
-    self.Branches[branch].balance[period] = balance
+# branch currency balance at start of period
+# currency index 0 is ETH
+def setInitialBalance(branch, period, balance, currency):
+    self.Branches[branch].balance[period][currency] = balance
     return(balance)
 
 def getInitialBalance(branch, period):
@@ -153,7 +155,7 @@ def getCreationDate(ID):
     return(self.Branches[ID].creationDate)
 
 # check that msg.sender is one of our function contracts
-def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent):
+def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, contract, wallet):
     # if(!self.whitelist.check(msg.sender)):
     # 	return(-1)
     if(!self.Branches[ID].periodLength):
@@ -167,7 +169,7 @@ def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, orac
         self.Branches[ID].oracleOnly = oracleOnly
         self.Branches[ID].parent = parent
         self.Branches[ID].baseReporters = self.Branches[parent].baseReporters
-        CASH.initiateOwner(ID)
+        self.Branches[ID].contract[contract] = wallet
         return(1)
     else:
         return(0)

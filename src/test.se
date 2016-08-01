@@ -1,5 +1,11 @@
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
+
 def checkCallstack():
     return(1)
+
+def lol(c):
+    x = c.balanceOf(5)
+    return(x)
     
 macro callstackCheck():
     if(!checkCallstack()):

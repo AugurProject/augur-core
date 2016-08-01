@@ -69,21 +69,6 @@ def sendFrom(recver, fxpValue, from):
     else:
         return(0)
 
-# make sure only coming from specific contracts
-def subtractCash(ID, amount):
-    # if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
-    # if(msg.sender!=self.owners[ID] and tx.origin!=self.owners[ID]):
-    #    return(0)
-    self.cashcoinBalances[ID] -= amount
-    return(1)
-
-def addCash(ID, amount):
-    # if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
-    self.cashcoinBalances[ID] += amount
-    return(1)
-
 def setCash(address, balance):
     # if !self.whitelist.check(msg.sender):
     #    return(-1)
@@ -108,7 +93,7 @@ def withdrawEther(to, fxpValue):
         return(2)
     if(fxpValue <= 0):
         return(-1)
-    if((block.timestamp - self.withdrawInitiated[msg.sender])<THREEDAYS):
+    if((block.timestamp - self.withdrawInitiated[msg.sender]) < THREEDAYS):
         return(-2)
     if(self.cashcoinBalances[msg.sender] >= fxpValue * ONE / WEITOETH):
         self.cashcoinBalances[msg.sender] -= fxpValue * ONE / WEITOETH

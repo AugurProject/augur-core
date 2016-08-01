@@ -1,6 +1,7 @@
 import markets as MARKETS
-import cash as CASH
 import events as EVENTS
+import info as INFO
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('refund.se')
 
 # Payout traders in markets with number of winningOutcomes of 2 [one scalar with any combination of binary + categorical for the other 2 dimensions, or just 1D with a scalar]
@@ -25,12 +26,12 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
         MARKETS.modifyParticipantShares(market, sender, winningOutcome[n], -sharesOwned, 0)
         # low side
         if(n == 0):
-            CASH.subtractCash(market, sharesOwned * cumScale / ONE * pricePerShare1 / ONE)
-            CASH.addCash(sender, sharesOwned * cumScale / ONE * pricePerShare1 / ONE)
+            if(!INFO.getWallet(market).transfer(sender, sharesOwned * cumScale / ONE * pricePerShare1 / ONE)):
+                throw()
         # high side (of the scalar part)
         elif(n == 1):
-            CASH.subtractCash(market, sharesOwned * cumScale / ONE * pricePerShare2 / ONE)
-            CASH.addCash(sender, sharesOwned * cumScale / ONE * pricePerShare2 / ONE)
+            if(!INFO.getWallet(market).transfer(sender, sharesOwned * cumScale / ONE * pricePerShare2 / ONE)):
+                throw()
         else:
             throw()
         n += 1

@@ -20,6 +20,7 @@
 
 import branches as BRANCHES
 import events as EVENTS
+import info as INFO
 inset('refund.se')
 
 ### This contract keeps track of data associated with reporting periods and the events + reports in them
@@ -212,7 +213,7 @@ def getEvent(branch, period, eventIndex):
     return(self.periodEventInfo[branch][period].events[eventIndex])
 
 # check that msg.sender is one of our function contracts
-def addEvent(branch, futurePeriod, event, subsidy):
+def addEvent(branch, futurePeriod, event, subsidy, currency, wallet):
     # if(!self.whitelist.check(msg.sender)):
     # 	return(-1)
     numberEvents = self.periodEventInfo[branch][futurePeriod].numberEvents
@@ -220,6 +221,7 @@ def addEvent(branch, futurePeriod, event, subsidy):
     self.periodEventInfo[branch][futurePeriod].eventToIndex[event] = numberEvents
     self.periodEventInfo[branch][futurePeriod].numberEvents += 1
     self.periodEventInfo[branch][futurePeriod].subsidy[event] += subsidy
+    INFO.setCurrencyAndWallet(currency, wallet)
     return(1)
 
 def deleteEvent(branch, period, event):
