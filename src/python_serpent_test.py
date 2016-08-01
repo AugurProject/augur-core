@@ -1359,12 +1359,8 @@ def calculate_max_bids(s, c, gas_limit):
         s.mine(1)
     return num_trades - 1, bids
 
-# Calculate the maximum number of trade IDs in a single trade
-# Results for gas_limit=3135000:
-#  - Asks: {1: 2378626, 2: 1762869, 3: 1147052, 4: 531175, 5: -84762}
-#  - Bids: {1: 2347579, 2: 1685754, 3: 1023860, 4: 361896, 5: -300139}
-#  - Max # asks: 4 [531175 of 3135000 gas remaining]
-#  - Max # bids: 4 [361896 of 3135000 gas remaining]
+# Calculate the maximum number of trade IDs allowed for a single trade:
+# 1 + (gas_limit - first_tradeid_gas_cost) // next_tradeid_gas_cost
 def calculate_max_trade_ids(gas_limit=3135000):
     global initial_gas
     initial_gas = 0
@@ -1413,5 +1409,5 @@ if __name__ == '__main__':
     #test_consensus_multiple_reporters()
     #test_pen_not_enough_reports()
     #test_update_trading_fee()
-    calculate_max_trade_ids()
+    calculate_max_trade_ids(gas_limit=4712388)
     print "DONE TESTING"
