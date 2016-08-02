@@ -28,6 +28,7 @@ import consensusData as CONSENSUS
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import backstops as BACKSTOPS
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('refund.se')
 inset('eventHelpers.se')
 

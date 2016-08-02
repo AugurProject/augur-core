@@ -102,3 +102,89 @@ def withdrawEther(to, fxpValue):
         return(1)
     else:
         return(0)
+
+
+
+# etx.se -- Ethereum contract
+#
+# Copyright (c) 2014-2015 EtherEx
+#
+# This software may be modified and distributed under the terms
+# of the MIT license.  See the LICENSE file for details.
+
+#
+# Example ETX subcurrency
+#
+
+data created
+data accounts[2^160](balance, custodians[2^160](maxValue))
+
+event Transfer(_from:indexed, _to:indexed, _value)
+event Approval(_owner:indexed, _spender:indexed, _value)
+
+# Boolean success/failure
+macro SUCCESS: 1
+macro FAILURE: 0
+
+def init():
+    self.created = block.timestamp
+    self.accounts[msg.sender].balance = 1000000 * 10 ** 5
+
+def transfer(_to, _value):
+    # Prevent negative send from stealing funds
+    if _to <= 0 or _value <= 0:
+        return(FAILURE)
+
+    # Get user balance
+    balance = self.accounts[msg.sender].balance
+
+    # Make sure balance is above or equal to amount
+    if balance >= _value:
+
+        # Update balances
+        self.accounts[msg.sender].balance = balance - _value
+        self.accounts[_to].balance += _value
+
+        log(type=Transfer, msg.sender, _to, _value)
+
+        return(SUCCESS)
+    return(FAILURE)
+
+def transferFrom(_from, _to, _value):
+    # Prevent negative send from stealing funds
+    if _from <= 0 or _value <= 0 or _to <= 0:
+        return(FAILURE)
+
+    # Get user balance
+    balance = self.accounts[_from].balance
+
+    # Make sure balance is above or equal to amount, and transfer is approved
+    if balance >= _value and _value <= self.accounts[_from].custodians[msg.sender].maxValue:
+        # Update balances
+        self.accounts[_from].balance = balance - _value
+        self.accounts[_to].balance += _value
+
+        # Update approval
+        self.accounts[_from].custodians[msg.sender].maxValue -= _value
+
+        log(type=Transfer, _from, _to, _value)
+
+        return(SUCCESS)
+    return(FAILURE)
+
+def balance():
+    return(self.accounts[msg.sender].balance)
+
+def balanceOf(_address):
+    return(self.accounts[_address].balance)
+
+def approve(_spender, _value):
+    if _spender <= 0 or _value < 0:
+        return(FAILURE)
+    self.accounts[msg.sender].custodians[_spender].maxValue = _value
+    log(type=Approval, msg.sender, _spender, _value)
+    return(SUCCESS)
+
+# Returns the amount which _spender is still allowed to transfer from _address
+def allowance(_address, _spender):
+    return(self.accounts[_address].custodians[_spender].maxValue)
