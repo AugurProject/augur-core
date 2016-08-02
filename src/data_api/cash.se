@@ -20,171 +20,87 @@
 
 inset('refund.se')
 
-# address -> fxpValue map of "cash [a made up subcurrency/token for testing"
-data cashcoinBalances[]
+data accounts[2**160](balance, spenders[2**160](maxValue))
 
-# address -> address mapping of a cash address to the address that owns it
-data owners[]
+data totalSupply
 
-data withdrawInitiated[]
-
-macro THREEDAYS: 259200
+event Transfer(from:indexed, to:indexed, value)
+event Approval(owner:indexed, spender:indexed, value)
 
 def init():
-    # test initial funds
-    self.cashcoinBalances[msg.sender] = 100000*ONE
+    self.accounts[msg.sender].balance = 100000 * 10 ** 20
 
-# @return: cash balance of address
-def balance(address):
-    refund()
-    return(self.cashcoinBalances[address])
+def transfer(to, value):
+    senderBalance = self.accounts[msg.sender].balance
+    if(senderBalance < value or value <= 0):
+        throw()
+    if(!safeToSubtract(senderBalance, value) or !safeToAdd(self.accounts[to].balance, value)):
+        throw()
+    # Update balances
+    self.accounts[msg.sender].balance -= value
+    self.accounts[to].balance += value
+    log(type = Transfer, msg.sender, to, value)
+    return(1)
 
-# A random market could have a balance, and when that account was created/first used in the subcurrency, it'd have whatever contract that created it be the owner, so for example...
-# needs to be called when making a market, branch, etc. or a new cash user acc.
-def initiateOwner(account):
-    if(!self.owners[account] and !self.cashcoinBalances[account]):
-        self.owners[account] = msg.sender
-        return(1)
-    else:
-        return(0)
+def transferFrom(from, to, value):
+    senderBalance = self.accounts[from].balance
+    if(senderBalance < value or value <= 0 or value > self.accounts[from].spenders[msg.sender].maxValue):
+        throw()
+    if(!safeToSubtract(senderBalance, value) or !safeToAdd(self.accounts[to].balance, value)):
+        throw()
+    # Update balances
+    self.accounts[from].balance -= value
+    self.accounts[to].balance += value
+    log(type = Transfer, from, to, value)
+    self.accounts[from].spenders[msg.sender].maxValue -= value
+    return(1)
 
-# Sends cash from a user to a receiver
-# @return fxpValue of cash sent; fail is 0
-def sendFrom(recver, fxpValue, from):
-    callstackCheck()
-    self.cashcoinBalances[msg.sender] += msg.value * ONE / WEITOETH
-    if(!self.owners[msg.sender] and from == msg.sender):
-        self.owners[msg.sender] = msg.sender
-    # sendFrom would check if the sender had an owner, if it did, then it'd check and see if the msg.sender was the owner.
-    # it's not owned by a regular account nor a contract owned account (i.e. a market's hash from markets.)
-    if(from != tx.origin and msg.sender != self.owners[from] and msg.sender != from):
+def approve(spender, value):
+    if(value <= 0):
         return(0)
-    # if(!self.owners[recver]):
-    #    return(0)
-    senderBalance = self.cashcoinBalances[from]
-    if(senderBalance >= fxpValue and fxpValue > 0):
-        self.cashcoinBalances[from] -= fxpValue
-        self.cashcoinBalances[recver] += fxpValue
-        return(fxpValue)
-    else:
-        return(0)
+    self.accounts[msg.sender].spenders[spender].maxValue = value
+    log(type=Approval, msg.sender, spender, value)
+    return(1)
+
+# Returns the amount which _spender is still allowed to transfer from _address
+def allowance(address, spender):
+    return(self.accounts[address].spenders[spender].maxValue)
+
+def totalSupply():
+    return(self.totalSupply)
+
+def balanceOf(address):
+    return(self.accounts[address].balance)
 
 def setCash(address, balance):
     # if !self.whitelist.check(msg.sender):
     #    return(-1)
-    self.cashcoinBalances[address] = balance
+    delta = balance - self.accounts[address].balance
+    self.accounts[address].balance = balance
+    self.totalSupply += delta
     return(1)
 
 def depositEther():
-    self.cashcoinBalances[msg.sender] += msg.value * ONE / WEITOETH
-    return(msg.value)
+    amount = msg.value * ONE / WEITOETH
+    self.accounts[msg.sender].balance += amount
+    self.totalSupply += amount
+    return(1)
 
 # Withdraw ether to an address
 # Returns 2 if withdrawal is initiated [then must wait 3 days]
-# Returns 1 if withdrawal is successful
+# Returns 1 if withdrawal is 1ful
 # Errors:
     # 0: Not enough money
-    # -1: fxpValue less than or equal to 0
-    # -2: 3 day withdrawal window isn't up
-def withdrawEther(to, fxpValue):
+    # -1: value less than or equal to 0
+def withdrawEther(to, value):
     refund()
-    if(!self.withdrawInitiated[msg.sender]):
-        self.withdrawInitiated[msg.sender] = block.timestamp
-        return(2)
-    if(fxpValue <= 0):
+    if(value <= 0):
         return(-1)
-    if((block.timestamp - self.withdrawInitiated[msg.sender]) < THREEDAYS):
-        return(-2)
-    if(self.cashcoinBalances[msg.sender] >= fxpValue * ONE / WEITOETH):
-        self.cashcoinBalances[msg.sender] -= fxpValue * ONE / WEITOETH
-        self.withdrawInitiated[msg.sender] = 0
+    amount = fxpValue * ONE / WEITOETH
+    if(self.cashcoinBalances[msg.sender] >= amount):
+        self.accounts[msg.sender].balance -= amount
+        self.totalSupply -= amount
         send(to, fxpValue)
         return(1)
     else:
         return(0)
-
-
-
-# etx.se -- Ethereum contract
-#
-# Copyright (c) 2014-2015 EtherEx
-#
-# This software may be modified and distributed under the terms
-# of the MIT license.  See the LICENSE file for details.
-
-#
-# Example ETX subcurrency
-#
-
-data created
-data accounts[2^160](balance, custodians[2^160](maxValue))
-
-event Transfer(_from:indexed, _to:indexed, _value)
-event Approval(_owner:indexed, _spender:indexed, _value)
-
-# Boolean success/failure
-macro SUCCESS: 1
-macro FAILURE: 0
-
-def init():
-    self.created = block.timestamp
-    self.accounts[msg.sender].balance = 1000000 * 10 ** 5
-
-def transfer(_to, _value):
-    # Prevent negative send from stealing funds
-    if _to <= 0 or _value <= 0:
-        return(FAILURE)
-
-    # Get user balance
-    balance = self.accounts[msg.sender].balance
-
-    # Make sure balance is above or equal to amount
-    if balance >= _value:
-
-        # Update balances
-        self.accounts[msg.sender].balance = balance - _value
-        self.accounts[_to].balance += _value
-
-        log(type=Transfer, msg.sender, _to, _value)
-
-        return(SUCCESS)
-    return(FAILURE)
-
-def transferFrom(_from, _to, _value):
-    # Prevent negative send from stealing funds
-    if _from <= 0 or _value <= 0 or _to <= 0:
-        return(FAILURE)
-
-    # Get user balance
-    balance = self.accounts[_from].balance
-
-    # Make sure balance is above or equal to amount, and transfer is approved
-    if balance >= _value and _value <= self.accounts[_from].custodians[msg.sender].maxValue:
-        # Update balances
-        self.accounts[_from].balance = balance - _value
-        self.accounts[_to].balance += _value
-
-        # Update approval
-        self.accounts[_from].custodians[msg.sender].maxValue -= _value
-
-        log(type=Transfer, _from, _to, _value)
-
-        return(SUCCESS)
-    return(FAILURE)
-
-def balance():
-    return(self.accounts[msg.sender].balance)
-
-def balanceOf(_address):
-    return(self.accounts[_address].balance)
-
-def approve(_spender, _value):
-    if _spender <= 0 or _value < 0:
-        return(FAILURE)
-    self.accounts[msg.sender].custodians[_spender].maxValue = _value
-    log(type=Approval, msg.sender, _spender, _value)
-    return(SUCCESS)
-
-# Returns the amount which _spender is still allowed to transfer from _address
-def allowance(_address, _spender):
-    return(self.accounts[_address].custodians[_spender].maxValue)

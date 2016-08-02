@@ -178,6 +178,7 @@ def submitReport(event, salt, fxpReport, fxpEthics):
     diff = reportsNum - paidBack
     if(diff >= 1):
         EVENTS.addReportersPaidSoFar(event)
+        # todo fix this coming from branch b/c it'll get redistributed in collectfees and thus cause issues
         BRANCHES.getWallet(branch, ETHCONTRACT).transfer(msg.sender, 3500000 * tx.gasprice * ONE / WEITOETH)
     return(1)
 

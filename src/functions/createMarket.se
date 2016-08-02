@@ -102,6 +102,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
 # .05 eth to create
 # need at least 1.2M gas @ gas price to cover resolution 500k per event to calc. num reports for it - this is passed as value to this function
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
+# todo fix creation fee to be in eth b/c it covers gas fees...
 def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3, fxpMakerFees, extraInfo:str, currency):
     callstackCheck()
     periodLength = BRANCHES.getPeriodLength(branch)

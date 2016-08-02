@@ -38,7 +38,7 @@ macro POINTZEROONE: 184467440737095520
 # Error -1: Hey, you're not broke!
 def cashFaucet():
     refund()
-    if CASH.balance(msg.sender) > 5 * ONE:
+    if CASH.balanceOf(msg.sender) > 5 * ONE:
         return(-1)
     CASH.setCash(msg.sender, 10000 * ONE)
     return(1)
@@ -55,7 +55,6 @@ def reputationFaucet(branch):
     return(1)
 
 def fundNewAccount(branch):
-    CASH.sendFrom(self, 0, self)
     self.reputationFaucet(branch)
     CASH.setCash(msg.sender, 10000 * 2 ** 64)
     return(1)
