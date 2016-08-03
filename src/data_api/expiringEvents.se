@@ -170,7 +170,7 @@ def getEvents(branch, period):
     numEvents = self.periodEventInfo[branch][period].numberEvents
     events = array(numEvents)
     i = 0
-    while i < numEvents:
+    while(i < numEvents):
         events[i] = self.periodEventInfo[branch][period].events[i]
         i += 1
     return(events: arr)
@@ -180,7 +180,7 @@ def getEventsRange(branch, period, start, end):
     events = array(numEvents)
     i = start
     index = 0
-    while i < end:
+    while(i < end):
         events[index] = self.periodEventInfo[branch][period].events[i]
         index += 1
         i += 1

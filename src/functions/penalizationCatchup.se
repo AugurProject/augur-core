@@ -37,7 +37,7 @@ def penalizationCatchup(branch, sender):
     if(delta > 22):
         smoothedRep = smoothedRep * POINTNINE / ONE
         delta = 22
-    while i < delta:
+    while(i < delta):
         smoothedRep = smoothedRep * POINTNINE / ONE
         i += 1
     # and send it to branch for penalty rep collection

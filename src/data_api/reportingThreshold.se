@@ -42,7 +42,7 @@ def getEventsToReportOn(branch, period, sender, start):
     events = array(numEvents * 2)
     i = 0
     n = start
-    while i < numEvents * 2:
+    while(i < numEvents * 2):
         events[i] = EXPEVENTS.getEvent(branch, period, n)
         # calculate report target for event here if not done for purposes of computing this
         if(!EXPEVENTS.getLesserReportNum(branch, period, events[i])):

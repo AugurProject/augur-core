@@ -69,7 +69,7 @@ def setWhitelist(contract, addresses:arr):
         self.whitelists[contract].taken = 1
         i = 0
         l = len(addresses)
-        while i < l:
+        while(i < l):
             address = addresses[i]
             self.whitelists[contract].addresses[addresses] = 1
             i += 1
@@ -123,7 +123,7 @@ def getReputation(address):
         branchList = BRANCHES.getBranches(outitems = branchListCount)
         i = 0
         b = 0
-        while i < branchListCount:
+        while(i < branchListCount):
             branch = branchList[i]
             balance = self.getRepBalance(branch, address)
             if(balance != 0):
@@ -138,7 +138,7 @@ def getReputation(address):
         branchList = BRANCHES.getBranches(outitems = branchListCount)
         i = 0
         b = 0
-        while i < branchListCount:
+        while(i < branchListCount):
             branch = branchList[i]
             balance = self.getRepBalance(branch, address)
             if(balance != 0):
@@ -233,7 +233,7 @@ def setSaleDistribution(addresses: arr, balances: arr, branch):
     #    return(-1)
     callstackCheck()
     i = 0
-    while i < len(addresses):
+    while(i < len(addresses)):
         self.Reporting[branch].reputation[self.Reporting[branch].numberReporters].reporterID = addresses[i]
         self.Reporting[branch].reputation[self.Reporting[branch].numberReporters].repValue = balances[i]
         self.Reporting[branch].dormantRep[self.Reporting[branch].numberReporters].reporterID = addresses[i]

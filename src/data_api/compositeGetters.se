@@ -36,10 +36,10 @@ def getOrderBook(market):
     trades = MARKETS.get_trade_ids(market, outitems = numTrades)
     orderBook = array(TRADE_FIELDS*numTrades)
     i = 0
-    while i < numTrades:
+    while(i < numTrades):
         tradeInfo = TRADES.get_trade(trades[i], outitems = TRADE_FIELDS)
         j = 0
-        while j < 8:
+        while(j < 8):
             orderBook[8*i + j] = tradeInfo[j]
             j += 1
         i += 1
@@ -74,11 +74,11 @@ def getMarketInfo(market):
     # [event, expirationDate, outcome, minValue, maxValue, numOutcomes]
     events = slice(MARKETS.getMarketEvents(market, outitems = numEvents), items = 0, items = numEvents)
     i = 0
-    while i < numEvents:
+    while(i < numEvents):
         eventInfo = EVENTS.getEventInfo(events[i], outitems=EVENTS_FIELDS)
         marketInfo[index + i*EVENTS_FIELDS] = events[i]
         j = 1
-        while j < EVENTS_FIELDS:
+        while(j < EVENTS_FIELDS):
             marketInfo[index + i*EVENTS_FIELDS + j] = eventInfo[j]
             j += 1
         i += 1
@@ -89,7 +89,7 @@ def getMarketInfo(market):
     numTrades = MARKETS.get_total_trades(market)
     trades = MARKETS.get_trade_ids(market, outitems=numTrades)
     k = 0
-    while k < numOutcomes:
+    while(k < numOutcomes):
         marketInfo[index + k*OUTCOMES_FIELDS] = MARKETS.getSharesPurchased(market, k + 1)
         i = 0
         marketInfo[index + k*OUTCOMES_FIELDS + 1] = MARKETS.getLastOutcomePrice(market, k + 1)
@@ -97,7 +97,7 @@ def getMarketInfo(market):
     index += numOutcomes*OUTCOMES_FIELDS
     winningOutcomes = slice(MARKETS.getWinningOutcomes(market, outitems = 8), items = 0, items = 8)
     k = 0
-    while k < WINNING_OUTCOMES_FIELDS:
+    while(k < WINNING_OUTCOMES_FIELDS):
         marketInfo[index + k] = winningOutcomes[k]
         k += 1
     index += WINNING_OUTCOMES_FIELDS
@@ -107,7 +107,7 @@ def getMarketInfo(market):
     index += 1
     description = INFO.getDescription(market, outchars = descriptionLength)
     c = 0
-    while c < descriptionLength:
+    while(c < descriptionLength):
         marketInfo[index + c] = getch(description, c)
         c += 1
     return(marketInfo: arr)
@@ -117,7 +117,7 @@ def batchGetMarketInfo(markets: arr):
     totalLength = 0
     marketInfoLength = array(numMarkets)
     i = 0
-    while i < numMarkets:
+    while(i < numMarkets):
         market = markets[i]
         descriptionLength = INFO.getDescriptionLength(market)
         numEvents = MARKETS.getNumEvents(market)
@@ -128,11 +128,11 @@ def batchGetMarketInfo(markets: arr):
     marketsInfo = array(totalLength)
     index = 0
     i = 0
-    while i < numMarkets:
+    while(i < numMarkets):
         marketInfo = self.getMarketInfo(markets[i], outitems=marketInfoLength[i] - 1)
         marketsInfo[index] = marketInfoLength[i]
         j = 0
-        while j < marketInfoLength[i] - 1:
+        while(j < marketInfoLength[i] - 1):
             marketsInfo[index + j + 1] = marketInfo[j]
             j += 1
         index += marketInfoLength[i]
@@ -146,7 +146,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
     markets = slice(BRANCHES.getMarketsInBranch(branch, outitems=numMarkets), items = 0, items = numMarkets)
     totalLen = numMarketsToLoad*11
     m = 0
-    while m < numMarketsToLoad:
+    while(m < numMarketsToLoad):
         totalLen += INFO.getDescriptionLength(markets[m + offset])
         m += 1
     marketsInfo = array(totalLen + 1)
@@ -154,7 +154,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
     c = 1
     totalMarkets = min(numMarketsToLoad, numMarkets)
     marketsInfo[0] = totalMarkets
-    while m < totalMarkets:
+    while(m < totalMarkets):
         market = markets[m + offset]
         descriptionLength = INFO.getDescriptionLength(market)
         marketsInfo[c] = 11 + descriptionLength
@@ -172,7 +172,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
         description = INFO.getDescription(markets[m + offset], outchars = descriptionLength)
         c += 11
         d = 0
-        while d < descriptionLength:
+        while(d < descriptionLength):
             marketsInfo[c] = getch(description, d)
             c += 1
             d += 1

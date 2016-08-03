@@ -102,7 +102,7 @@ def getMarketsInBranch(branch):
     numMarkets = self.Branches[branch].numMarkets
     markets = array(numMarkets)
     i = 0
-    while i < numMarkets:
+    while(i < numMarkets):
         markets[i] = self.Branches[branch].markets[i]
         i += 1
     return(markets: arr)
@@ -115,7 +115,7 @@ def getSomeMarketsInBranch(branch, initial, last):
     numMarkets = last - initial
     markets = array(numMarkets)
     i = 0
-    while i < numMarkets:
+    while(i < numMarkets):
         markets[i] = self.Branches[branch].markets[initial+i]
         i += 1
     return(markets: arr)
@@ -131,7 +131,7 @@ def getBranches():
     b = 0
     numBranches = self.branchListCount
     branches = array(numBranches)
-    while b < numBranches:
+    while(b < numBranches):
         branches[b] = self.branchList[b]
         b += 1
     return(branches: arr)
@@ -140,7 +140,7 @@ def getBranchesStartingAt(index):
     b = index
     numBranches = self.branchListCount
     branches = array(numBranches)
-    while b < numBranches:
+    while(b < numBranches):
         branches[b] = self.branchList[b]
         b += 1
     return(branches: arr)

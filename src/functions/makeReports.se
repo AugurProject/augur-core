@@ -241,7 +241,7 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
     totalFees = 0
     shareValue = 0
     i = 0
-    while i < numMarkets:
+    while(i < numMarkets):
         shareValue += MARKETS.getSharesValue(markets[i])
         totalFees += MARKETS.getFees(markets[i])
         i += 1

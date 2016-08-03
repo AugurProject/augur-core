@@ -82,7 +82,7 @@ def approve(spender):
 # Sets the initial distribution of rep
 def setSaleDistribution(addresses: arr, balances: arr):
     i = 0
-    while i < len(addresses):
+    while(i < len(addresses)):
         if(!self.reporting[addresses[i]] && !self.seeded):
             self.reporting[addresses[i]] = balances[i]
             self.totalSupply += balances[i]

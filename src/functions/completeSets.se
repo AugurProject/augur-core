@@ -46,7 +46,7 @@ def buyCompleteSets(market, fxpAmount):
         return(-2)
     n = 1
     # send shares of the event to user address and increment the number issued in the market for each outcome
-    while n <= numOutcomes:
+    while(n <= numOutcomes):
         MARKETS.modifyShares(market, n, fxpAmount)
         MARKETS.modifyParticipantShares(market, msg.sender, n, fxpAmount, 0)
         n += 1
@@ -68,13 +68,13 @@ def sellCompleteSets(market, fxpAmount):
     cumScale = MARKETS.getCumScale(market)
     cost = fxpAmount * cumScale / ONE
     n = 1
-    while n <= numOutcomes:
+    while(n <= numOutcomes):
         if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < fxpAmount):
             return(-3)
         n += 1
     n = 1
     # Takes shares away from participant and decreases the fxpAmount issued in the market since we're exchanging complete sets
-    while n <= numOutcomes:
+    while(n <= numOutcomes):
         MARKETS.modifyShares(market, n, -fxpAmount)
         MARKETS.modifyParticipantShares(market, msg.sender, n, -fxpAmount, 0)
         n += 1

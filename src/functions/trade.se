@@ -69,7 +69,7 @@ def trade(fxp_max_value, fxp_max_amount, trade_ids:arr):
     refund()
     i = 0
     trades = 0
-    while i < len(trade_ids):
+    while(i < len(trade_ids)):
         trades += trade_ids[i]
         i += 1
     tradeInfo = array(3)
@@ -81,11 +81,11 @@ def trade(fxp_max_value, fxp_max_amount, trade_ids:arr):
         return([-2]: arr)
     # Try to fulfill each trade passed
     t = 0
-    while t < len(trade_ids):
+    while(t < len(trade_ids)):
         # Get trade
         trade = array(TRADE_FIELDS)
         trade = TRADES.get_trade(trade_ids[t], outitems = TRADE_FIELDS)
-        if !trade:
+        if(!trade):
             return([0]: arr)
         # Get market
         type = trade[1]
@@ -99,13 +99,13 @@ def trade(fxp_max_value, fxp_max_amount, trade_ids:arr):
         if(owner == msg.sender or owner == tx.origin):
             return([-5]: arr)
         # Make sure the trade has been mined, obvious HFT prevention
-        if block.number <= trade[6]:
+        if(block.number <= trade[6]):
             return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
         branch = MARKETS.getBranch(market)
         fee = fee_percent(MARKETS.getTradingFee(market), price, MARKETS.getCumScale(market))
 
         # Fill buy order
-        if type == BID:
+        if(type == BID):
             # Get available balance of shares
             balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)
             if(balance > 0 and fxp_max_amount > 0):
@@ -118,7 +118,7 @@ def trade(fxp_max_value, fxp_max_amount, trade_ids:arr):
                 if(value < 184467440738):
                     return([-4]: arr)
                 # Update trade amount or remove
-                if fill < amount:
+                if(fill < amount):
                     TRADES.fill_trade(trade_ids[t], fill)
                 else:
                     remove_trade(trade_ids[t], market)
@@ -150,7 +150,7 @@ def trade(fxp_max_value, fxp_max_amount, trade_ids:arr):
                 log(type = log_price, market, msg.sender, owner, ASK, price, fill, block.timestamp, trade_ids[t], outcome)
             else:
                 return([INSUFFICIENT_BALANCE]: arr)
-        elif type == ASK:
+        elif(type == ASK):
             balance = INFO.getCurrency(market).balanceOf(msg.sender)
             makerFeeRate = MARKETS.getMakerFees(market)
             takerFee = (ONEPOINTFIVE - makerFeeRate) * fee / ONE
@@ -162,7 +162,7 @@ def trade(fxp_max_value, fxp_max_amount, trade_ids:arr):
             trade_value_excluding_fees = fill * price / ONE
             if(trade_value_excluding_fees >= 184467440738):
                 # Update trade amount or remove filled trade
-                if fill < amount:
+                if(fill < amount):
                     TRADES.fill_trade(trade_ids[t], fill)
                 else:
                     remove_trade(trade_ids[t], market)
@@ -222,7 +222,7 @@ def short_sell(buyer_trade_ids: arr, fxp_max_amount):
     refund()
     i = 0
     trades = 0
-    while i < len(buyer_trade_ids):
+    while(i < len(buyer_trade_ids)):
         trades += buyer_trade_ids[i]
         i += 1
     tradeInfo = array(3)
@@ -234,11 +234,11 @@ def short_sell(buyer_trade_ids: arr, fxp_max_amount):
         return([-2]: arr)
     # Try to fulfill each trade passed
     t = 0
-    while t < len(buyer_trade_ids):
+    while(t < len(buyer_trade_ids)):
         # Get trade
         trade = array(TRADE_FIELDS)
         trade = TRADES.get_trade(buyer_trade_ids[t], outitems = TRADE_FIELDS)
-        if !trade:
+        if(!trade):
             return([-1]: arr)
         # Get market
         type = trade[1]
@@ -255,7 +255,7 @@ def short_sell(buyer_trade_ids: arr, fxp_max_amount):
         if(owner == msg.sender or owner == tx.origin):
             return([-5]: arr)
         # Make sure the trade has been mined, obvious HFT prevention
-        if block.number <= trade[6]:
+        if(block.number <= trade[6]):
             return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
     
         # calculate cost
@@ -280,7 +280,7 @@ def short_sell(buyer_trade_ids: arr, fxp_max_amount):
     
         i = 1
         # send shares of the event to user address, buying complete sets
-        while i <= numOutcomes:
+        while(i <= numOutcomes):
             MARKETS.modifyShares(market, i, amount)
             MARKETS.modifyParticipantShares(market, msg.sender, i, amount, 0)
             i += 1
@@ -296,7 +296,7 @@ def short_sell(buyer_trade_ids: arr, fxp_max_amount):
         # Determine fill amount
         fill = amount
         # Update trade amount or remove
-        if fill < orig_amount:
+        if(fill < orig_amount):
             TRADES.fill_trade(buyer_trade_ids[t], fill)
         else:
             remove_trade(buyer_trade_ids[t], market)

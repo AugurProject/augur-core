@@ -50,19 +50,19 @@ macro save_trade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee,
     cumScale = MARKETS.getCumScale($market)
 
     # Save trade
-    if !TRADES.getID(trade_id):
+    if(!TRADES.getID(trade_id)):
         TRADES.saveTrade(trade_id, $type, $market, $fxpAmount, $fxpPrice, $sender, $outcome)
         # Update market
         last_id = MARKETS.getLastTrade($market)
         MARKETS.addTrade($market, trade_id, last_id)
         # Update available and trading fxpAmounts for asks
-        if $type == ASK:
+        if($type == ASK):
             MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$fxpAmount, 0)
             if($fee):
                 if(!INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), ($fxpAmount * $fxpPrice * $fee / ONE ** 2))):
                     throw()
         # Send / escrow cash for bids
-        if $type == BID:
+        if($type == BID):
             if(!INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $fxpAmount * $fxpPrice / ONE)):
                 throw()
             if($fee and !INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), ($fxpAmount * $fxpPrice * $fee / ONE ** 2))):
@@ -83,7 +83,7 @@ def cancel(trade_id):
     # Get trade
     trade = array(TRADE_FIELDS)
     trade = TRADES.get_trade(trade_id, outitems = TRADE_FIELDS)
-    if !trade:
+    if(!trade):
         return(0)
     type = trade[1]
     market = trade[2]
@@ -95,16 +95,16 @@ def cancel(trade_id):
     cumScale = MARKETS.getCumScale(market)
     fee = fee_percent(trading_fee, fxpPrice, cumScale) * MARKETS.getMakerFees(market) / ONE
     # Check the owner
-    if msg.sender == owner:
+    if(msg.sender == owner):
         # Clear the trade first
         remove_trade(trade_id, market)
         # Issue refunds
-        if type == BID:
+        if(type == BID):
             # cash refund
             amt = fxpAmount * fxpPrice * (fee + ONE) / ONE ** 2
             if(!INFO.getWallet(market).transfer(msg.sender, amt)):
                 throw()
-        elif type == ASK:
+        elif(type == ASK):
             # shares refund
             MARKETS.modifyParticipantShares(market, msg.sender, outcome, fxpAmount, 0)
             if(!INFO.getWallet(market).transfer(msg.sender, (fxpAmount * fxpPrice * fee / ONE ** 2))):

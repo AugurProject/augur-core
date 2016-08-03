@@ -191,7 +191,7 @@ def getBond(event):
 def getMarkets(event):
     i = 0
     markets = array(self.Events[event].numMarkets)
-    while i < self.Events[event].numMarkets:
+    while(i < self.Events[event].numMarkets):
         markets[i] = self.Events[event].markets[i]
         i += 1
     return(markets: arr)

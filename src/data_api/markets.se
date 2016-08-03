@@ -108,7 +108,7 @@ def getTotalSharesPurchased(market):
     total = 0
     n = self.Markets[market].numOutcomes
     i = 1
-    while i <= n:
+    while(i <= n):
         total += self.Markets[market].sharesPurchased[i]
         i += 1
     return(total)
@@ -267,19 +267,19 @@ def remove_trade_from_market(market_id, trade_id):
     prev_id = self.Markets[market_id].trade_ids[trade_id].prev_id
     next_id = self.Markets[market_id].trade_ids[trade_id].next_id
     # if the trade had a previous and next trade it connects them directly, remove this trade_id from the sequence/middle
-    if prev_id and next_id:
+    if(prev_id and next_id):
         self.Markets[market_id].trade_ids[prev_id].next_id = next_id
         self.Markets[market_id].trade_ids[next_id].prev_id = prev_id
     # if it's the most recent trade, update the previous trade to be the most recent one
-    elif prev_id:
+    elif(prev_id):
         self.Markets[market_id].last_trade = prev_id
         self.Markets[market_id].trade_ids[prev_id].next_id = 0
     
     # if the trade had a trade following it, 0 out that slot
-    if next_id:
+    if(next_id):
         self.Markets[market_id].trade_ids[trade_id].next_id = 0
     # if the trade had a trade before it, 0 out that slot
-    if prev_id:
+    if(prev_id):
         self.Markets[market_id].trade_ids[trade_id].prev_id = 0
     self.Markets[market_id].trade_ids[trade_id].id = 0
     self.Markets[market_id].total_trades -= 1
@@ -291,12 +291,12 @@ def get_trade_ids(market_id):
     trade_ids = array(trades_count)
 
     i = 0
-    while i < trades_count:
+    while(i < trades_count):
         trade_ids[i] = self.Markets[market_id].trade_ids[trade_id].id
         trade_id = self.Markets[market_id].trade_ids[trade_id].prev_id
         i += 1
 
-    if trade_ids:
+    if(trade_ids):
         return(trade_ids:arr)
     return([FAILURE]:arr)
 

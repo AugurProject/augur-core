@@ -38,14 +38,14 @@ macro POINTZEROONE: 184467440737095520
 # Error -1: Hey, you're not broke!
 def cashFaucet():
     refund()
-    if CASH.balanceOf(msg.sender) > 5 * ONE:
+    if(CASH.balanceOf(msg.sender) > 5 * ONE):
         return(-1)
     CASH.setCash(msg.sender, 10000 * ONE)
     return(1)
 
 def reputationFaucet(branch):
     refund()
-    if REPORTING.repIDToIndex(branch, tx.origin) != 0 or REPORTING.getReporterID(branch, 0) == tx.origin:
+    if(REPORTING.repIDToIndex(branch, tx.origin) != 0 or REPORTING.getReporterID(branch, 0) == tx.origin):
         index = REPORTING.repIDToIndex(branch, tx.origin)
     else:
         index = REPORTING.getNumberReporters(branch)
