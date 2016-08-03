@@ -62,7 +62,7 @@ def approve(spender, value):
     log(type=Approval, msg.sender, spender, value)
     return(1)
 
-# Returns the amount which _spender is still allowed to transfer from _address
+# Returns the amount which spender is allowed to transfer from address
 def allowance(address, spender):
     return(self.accounts[address].spenders[spender].maxValue)
 

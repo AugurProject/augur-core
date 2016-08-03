@@ -81,7 +81,7 @@ def claimInitialRep(parent, branch):
         if(binary(forkEvent)):
             outcome = catch(outcome)
         report = EXPEVENTS.getReport(parent, forkPeriod, forkEvent, msg.sender)
-        ethical = ethic_catch(EVENTS.getEthics(forkEvent))
+        ethical = ethicCatch(EVENTS.getEthics(forkEvent))
         ethicReport = EXPEVENTS.getEthicReport(parent, forkPeriod, forkEvent, msg.sender)
         dormantRep = EXPEVENTS.getPeriodDormantRep(parent, parentPeriod, msg.sender)
         # if this wasn't set then use reg. dormant rep balance

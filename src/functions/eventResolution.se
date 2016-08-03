@@ -67,7 +67,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
 def resolveBinary(event, market, branch, votingPeriodEvent):
     fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
     periodLength = BRANCHES.getPeriodLength(branch)
-    ethical = ethic_catch(EVENTS.getEthics(event))
+    ethical = ethicCatch(EVENTS.getEthics(event))
     # outcome is set to the binned version of the raw reported outcome
     EVENTS.setOutcome(event, fxpOutcome)
     # ethics is set to the binned version of the raw ethicality outcome
@@ -76,16 +76,16 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
     return(val)
 
 # Resolves a categorical or scalar market
-def resolveCategoricalOrScalar(fxp_scaled_min, fxp_scaled_max, event, market, branch, votingPeriodEvent):
+def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch, votingPeriodEvent):
     mode = EVENTS.getUncaughtOutcome(event)
     EVENTS.setMode(event, mode)
-    fxpOutcome = mode * (fxp_scaled_max - fxp_scaled_min) / ONE + fxp_scaled_min
+    fxpOutcome = mode * (fxpScaledMax - fxpScaledMin) / ONE + fxpScaledMin
     # outcome is set to the mode of the reported outcomes
     EVENTS.setOutcome(event, fxpOutcome)
     periodLength = BRANCHES.getPeriodLength(branch)
     # ethics is set to the binned version of the raw ethicality outcome
-    ethical = ethic_catch(EVENTS.getEthics(event))
-    ethicOutcome = 2 ** 63 * (fxp_scaled_max - fxp_scaled_min) / ONE + fxp_scaled_min
+    ethical = ethicCatch(EVENTS.getEthics(event))
+    ethicOutcome = 2 ** 63 * (fxpScaledMax - fxpScaledMin) / ONE + fxpScaledMin
     EVENTS.setEthics(event, ethical)
     val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
     return(val)

@@ -88,7 +88,7 @@ macro catch($x):
     else:
         BAD
 
-macro ethic_catch($x):
+macro ethicCatch($x):
     if($x < ONEHALF):
         0
     else:
@@ -108,7 +108,7 @@ macro abs($a):
         $a = -$a
     $a
 
-macro ethic_catch($x):
+macro ethicCatch($x):
     if($x < ONEHALF):
         0
     else:

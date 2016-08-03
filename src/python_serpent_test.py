@@ -70,8 +70,8 @@ def test_log_exp():
     t.gas_limit = 100000000
     s = t.state()
     c = s.abi_contract('data_api/fxpFunctions.se')
-    assert(c.fx_exp(2**64) == 50143449209799256664), "Exp broken"
-    assert(c.fx_log(2**64) == 7685), "Log broken"
+    assert(c.fxExp(2**64) == 50143449209799256664), "Exp broken"
+    assert(c.fxLog(2**64) == 7685), "Log broken"
     print "LOG EXP OK"
     xs = [2**64, 2**80, 2**68, 2**70]
     maximum = max(xs)
@@ -79,11 +79,11 @@ def test_log_exp():
     original_method_sum = 0
     i = 0
     while i < len(xs):
-        sum += c.fx_exp(xs[i] - maximum)
-        original_method_sum += c.fx_exp(xs[i])
+        sum += c.fxExp(xs[i] - maximum)
+        original_method_sum += c.fxExp(xs[i])
         i += 1
-    print maximum + c.fx_log(sum)
-    print c.fx_log(original_method_sum)
+    print maximum + c.fxLog(sum)
+    print c.fxLog(original_method_sum)
     gas_use(s)
 
 
@@ -330,7 +330,7 @@ def test_trading():
                 market[a], s.block.coinbase, 2) == 2**65)
             after = c.balance(s.block.coinbase)
             afterm = c.balance(market[a])
-            assert(len(c.get_trade_ids(market[a])) == 1)
+            assert(len(c.getTradeIDs(market[a])) == 1)
             print makerFee
             print before - after
             assert(isclose((before - after) / 2**64,
@@ -375,7 +375,7 @@ def test_trading():
                            (makerFee + 2**64 * .01) / 2**64, rel_tol=1e-8))
             assert(isclose((afterm - beforem) / 2**64,
                            (makerFee + 2**64 * .01) / 2**64, rel_tol=1e-8))
-            assert(len(c.get_trade_ids(market[a])) == 2)
+            assert(len(c.getTradeIDs(market[a])) == 2)
             # make sure got cost + fee back
             c.cancel(buy)
             afterm = c.balance(market[a])
@@ -503,7 +503,7 @@ def test_trading():
             s.mine(1)
             gas_use(s)
             print "Short sell"
-            print c.short_sell([buy], 2**64)
+            print c.shortSell([buy], 2**64)
             assert(isclose(c.getParticipantSharesPurchased(
                 market[a], c.getSender(sender=t.k2), 1) * 1.0, 12.0 * 2**64))
             assert(isclose(c.getParticipantSharesPurchased(

@@ -32,12 +32,12 @@ macro WINNING_OUTCOMES_FIELDS: 8
 macro BASE_FIELDS: 17
 
 def getOrderBook(market):
-    numTrades = MARKETS.get_total_trades(market)
-    trades = MARKETS.get_trade_ids(market, outitems = numTrades)
+    numTrades = MARKETS.getTotalTrades(market)
+    trades = MARKETS.getTradeIDs(market, outitems = numTrades)
     orderBook = array(TRADE_FIELDS*numTrades)
     i = 0
     while(i < numTrades):
-        tradeInfo = TRADES.get_trade(trades[i], outitems = TRADE_FIELDS)
+        tradeInfo = TRADES.getTrade(trades[i], outitems = TRADE_FIELDS)
         j = 0
         while(j < 8):
             orderBook[8*i + j] = tradeInfo[j]
@@ -86,8 +86,8 @@ def getMarketInfo(market):
 
     # gather outcomes info: [sharesPurchased, price], winningOutcomes
     # (price of outcome = last trade)
-    numTrades = MARKETS.get_total_trades(market)
-    trades = MARKETS.get_trade_ids(market, outitems=numTrades)
+    numTrades = MARKETS.getTotalTrades(market)
+    trades = MARKETS.getTradeIDs(market, outitems=numTrades)
     k = 0
     while(k < numOutcomes):
         marketInfo[index + k*OUTCOMES_FIELDS] = MARKETS.getSharesPurchased(market, k + 1)

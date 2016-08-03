@@ -156,7 +156,7 @@ def submitReport(event, salt, fxpReport, fxpEthics):
     if(forkedOverThisEvent):
         # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
         if(forkedOverEthicality):
-            oldEthical = ethic_catch(EVENTS.getEthics(event))
+            oldEthical = ethicCatch(EVENTS.getEthics(event))
             if(oldEthical == ONE):
                 fxpEthics = 0
             else:

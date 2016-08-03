@@ -38,7 +38,7 @@ macro POINTZEROONE: 184467440737095520
         # stays in parent if it wins, otherwise goes to new fork - done
     # each event resolving further in the future is pushed into the respective period on whichever fork wins - done
 # todo if already moved once don't allow again after another fork
-def move_event(event):
+def moveEvent(event):
     refund()
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     branch = EVENTS.getEventBranch(event)
@@ -51,7 +51,7 @@ def move_event(event):
         return(0)
     winner = BACKSTOPS.getResolved(branch, forkPeriod)
     if(!winner):
-        winner = self.resolve_fork(branch)
+        winner = self.resolveFork(branch)
     BACKSTOPS.setMoved(event)
     if(event == eventForkedOver):
         return(1)
@@ -96,7 +96,7 @@ def move_event(event):
 
 # parent branch is branch here
 # todo fork use address picked in market creation to resolve it and have a default fork resolve option
-def resolve_fork(branch):
+def resolveFork(branch):
     callstackCheck()
     # do whitelist
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
@@ -228,11 +228,11 @@ def resolveForkEvent(branch, event):
         # original parent won
         if(winner == branch):
             fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
-            ethical = ethic_catch(EVENTS.getEthics(event))
+            ethical = ethicCatch(EVENTS.getEthics(event))
         # fork won
         else:
             fxpOutcome = catch(EVENTS.getForkOutcome(event))
-            ethical = ethic_catch(EVENTS.getForkEthicality(event))
+            ethical = ethicCatch(EVENTS.getForkEthicality(event))
         EVENTS.setOutcome(event, fxpOutcome)
         EVENTS.setEthics(event, ethical)
         if(fxpOutcome == 3 * ONEHALF or !ethical):
@@ -256,20 +256,20 @@ def resolveForkEvent(branch, event):
         # original parent won
         if(winner == branch):
             mode = EVENTS.getUncaughtOutcome(event)
-            ethical = ethic_catch(EVENTS.getEthics(event))
+            ethical = ethicCatch(EVENTS.getEthics(event))
         # fork won
         else:
             mode = EVENTS.getForkOutcome(event)
-            ethical = ethic_catch(EVENTS.getForkEthicality(event))
+            ethical = ethicCatch(EVENTS.getForkEthicality(event))
         EVENTS.setMode(event, mode)
         EVENTS.setEthics(event, ethical)
-        scaled_max = EVENTS.getMaxValue(event)
-        scaled_min = EVENTS.getMinValue(event)
+        scaledMax = EVENTS.getMaxValue(event)
+        scaledMin = EVENTS.getMinValue(event)
         if(categorical(event)):
-            scaled_min = ONE
-            scaled_max = ONE * EVENTS.getNumOutcomes(event)
-        fxpOutcome = mode * (scaled_max - scaled_min) / ONE + scaled_min
-        ethicOutcome = 2 ** 63 * (scaled_max - scaled_min) / ONE + scaled_min
+            scaledMin = ONE
+            scaledMax = ONE * EVENTS.getNumOutcomes(event)
+        fxpOutcome = mode * (scaledMax - scaledMin) / ONE + scaledMin
+        ethicOutcome = 2 ** 63 * (scaledMax - scaledMin) / ONE + scaledMin
         EVENTS.setOutcome(event, fxpOutcome)
         if(mode == ONEHALF or !ethical):
             # give event bond money to reporters

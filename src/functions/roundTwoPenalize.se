@@ -79,9 +79,9 @@ def penalizeRoundTwoWrong(branch, event):
         # if overruled / different outcome after reporting on again
         overruled = 0
         if(scalar(event) or categorical(event)):
-            if((BACKSTOPS.getOriginalOutcome(event) != EVENTS.getUncaughtOutcome(event) or BACKSTOPS.getOriginalEthicality(event) != ethic_catch(ethical))):
+            if((BACKSTOPS.getOriginalOutcome(event) != EVENTS.getUncaughtOutcome(event) or BACKSTOPS.getOriginalEthicality(event) != ethicCatch(ethical))):
                 overruled = 1
-        elif((BACKSTOPS.getOriginalOutcome(event) != catch(uncaught) or BACKSTOPS.getOriginalEthicality(event) != ethic_catch(ethical))):
+        elif((BACKSTOPS.getOriginalOutcome(event) != catch(uncaught) or BACKSTOPS.getOriginalEthicality(event) != ethicCatch(ethical))):
             overruled = 1
     
         numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
@@ -115,7 +115,7 @@ def penalizeRoundTwoWrong(branch, event):
 
 macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn):
     # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max maxPenalty% of their rep respectively
-    if($ethics != ethic_catch(ethical) and repChange >= 0 and BACKSTOPS.getDisputedOverEthics(event)):
+    if($ethics != ethicCatch(ethical) and repChange >= 0 and BACKSTOPS.getDisputedOverEthics(event)):
         if($numReportedOn < 10):
             repChange = -$maxPenalty / 10 * repBalance / ONE
         else:

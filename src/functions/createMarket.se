@@ -110,7 +110,7 @@ def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3
     # gives ether/cash amount in fixed point
     minFee = COSTPERREPORTER * BRANCHES.getBaseReporters(branch) * tx.gasprice * ONE / WEITOETH
     creationFee = max(minFee, creationFee)
-    validity_bond = (creationFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
+    validityBond = (creationFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
     numOutcomes = EVENTS.getNumOutcomes(event)
     cumulativeScale = 0
     # market's trading period is the same as the last expiring event in the market
@@ -172,9 +172,9 @@ def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3
         if(!EVENTS.getBond(event)):
             # pay validity / indeterminate protection bond
             period = block.timestamp / TWENTYFOURHR
-            if(!currency.transferFrom(msg.sender, wallet, validity_bond)):
+            if(!currency.transferFrom(msg.sender, wallet, validityBond)):
                 throw()
-            EVENTS.setBond(event, validity_bond)
+            EVENTS.setBond(event, validityBond)
             EVENTS.addPast24(period)
     log(type = marketCreated, market)
     return(market)
@@ -200,7 +200,7 @@ def updateTradingFee(market, fxpTradingFee):
     return(1)
 
 # Anyone can post an "Early Resolution Bond"
-# This bond is equal to 0.5 * Market_Fee * Market_Value
+# This bond is equal to 0.5 * marketFee * marketValue
 # This amount is the amount needed to pay the reporters in case this was frivolous.
 # The market goes up for early resolution and reporters place claim to what is truth, however for early resolution, they have an additional option: 'Market is not ready to resolve'
     # this addl option is just the normal indeterminate (except here it's a bit of a special case, see below)

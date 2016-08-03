@@ -48,7 +48,7 @@ macro catch($x):
         BAD
 
 # If ethicality value <.5 it's 0, otherwise it's ethical
-macro ethic_catch($x):
+macro ethicCatch($x):
     if($x < ONEHALF):
         0
     else:
@@ -139,7 +139,7 @@ def claimProceeds(branch, market):
     if(!winningOutcomes[0]):
         return(0)
     if(!winningOutcomes[1]):
-        ethical = ethic_catch(EVENTS.getEthics(event))
+        ethical = ethicCatch(EVENTS.getEthics(event))
         # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
         if(categorical(event) and (EVENTS.getMode(event) == ONEHALF or !ethical)):
             success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))

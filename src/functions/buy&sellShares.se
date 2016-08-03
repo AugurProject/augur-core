@@ -25,8 +25,8 @@ import info as INFO
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('refund.se')
 
-event log_add_tx(market:indexed, sender:indexed, type, fxpPrice, fxpAmount, outcome, tradeid)
-event log_cancel(market:indexed, sender:indexed, fxpPrice, fxpAmount, tradeid, outcome, type)
+event logAddTx(market:indexed, sender:indexed, type, fxpPrice, fxpAmount, outcome, tradeid)
+event logCancel(market:indexed, sender:indexed, fxpPrice, fxpAmount, tradeid, outcome, type)
 
 # Trade types
 macro BID: 1
@@ -41,20 +41,20 @@ macro INSUFFICIENT_BALANCE: 10
 macro TRADE_ALREADY_EXISTS: 21
 macro TRADE_SAME_BLOCK_PROHIBITED: 22
 
-macro fee_percent($market_fee, $fxpPrice, $cumScale):
-    4 * $market_fee * $fxpPrice * (ONE - $fxpPrice * 2 ** 64 / $cumScale) / ($cumScale * ONE)
+macro feePercent($marketFee, $fxpPrice, $cumScale):
+    4 * $marketFee * $fxpPrice * (ONE - $fxpPrice * 2 ** 64 / $cumScale) / ($cumScale * ONE)
 
-macro save_trade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee, $sender):
+macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee, $sender):
     trade = [$type, $market, $fxpAmount, $fxpPrice, $sender, block.number, $outcome]
-    trade_id = sha3(trade, items = 7)
+    tradeID = sha3(trade, items = 7)
     cumScale = MARKETS.getCumScale($market)
 
     # Save trade
-    if(!TRADES.getID(trade_id)):
-        TRADES.saveTrade(trade_id, $type, $market, $fxpAmount, $fxpPrice, $sender, $outcome)
+    if(!TRADES.getID(tradeID)):
+        TRADES.saveTrade(tradeID, $type, $market, $fxpAmount, $fxpPrice, $sender, $outcome)
         # Update market
-        last_id = MARKETS.getLastTrade($market)
-        MARKETS.addTrade($market, trade_id, last_id)
+        lastID = MARKETS.getLastTrade($market)
+        MARKETS.addTrade($market, tradeID, lastID)
         # Update available and trading fxpAmounts for asks
         if($type == ASK):
             MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$fxpAmount, 0)
@@ -69,20 +69,20 @@ macro save_trade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee,
                 throw()
     else:
         return(TRADE_ALREADY_EXISTS)
-    log(type = log_add_tx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, trade_id)
-    return(trade_id)
+    log(type = logAddTx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, tradeID)
+    return(tradeID)
 
 # 
 # Cancellation: cancels a trade, if a bid refunds money, if an ask returns shares
 # @returns 1 if success, 0 if failure
 # 
 # 200k gas
-def cancel(trade_id):
+def cancel(tradeID):
     refund()
     # user can cancel anytime
     # Get trade
     trade = array(TRADE_FIELDS)
-    trade = TRADES.get_trade(trade_id, outitems = TRADE_FIELDS)
+    trade = TRADES.getTrade(tradeID, outitems = TRADE_FIELDS)
     if(!trade):
         return(0)
     type = trade[1]
@@ -91,13 +91,13 @@ def cancel(trade_id):
     fxpPrice = trade[4]
     owner = trade[5]
     outcome = trade[7]
-    trading_fee = MARKETS.getTradingFee(market)
+    tradingFee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
-    fee = fee_percent(trading_fee, fxpPrice, cumScale) * MARKETS.getMakerFees(market) / ONE
+    fee = feePercent(tradingFee, fxpPrice, cumScale) * MARKETS.getMakerFees(market) / ONE
     # Check the owner
     if(msg.sender == owner):
         # Clear the trade first
-        remove_trade(trade_id, market)
+        removeTrade(tradeID, market)
         # Issue refunds
         if(type == BID):
             # cash refund
@@ -112,13 +112,13 @@ def cancel(trade_id):
         else:
             throw()
         # Log cancellation
-        log(type = log_cancel, market, msg.sender, fxpPrice, fxpAmount, trade_id, outcome, type)
+        log(type = logCancel, market, msg.sender, fxpPrice, fxpAmount, tradeID, outcome, type)
         return(SUCCESS)
     return(FAILURE)
 
-macro remove_trade($trade_id, $market):
-    TRADES.remove_trade($trade_id)
-    MARKETS.remove_trade_from_market($market, $trade_id)
+macro removeTrade($tradeID, $market):
+    TRADES.removeTrade($tradeID)
+    MARKETS.removeTradeFromMarket($market, $tradeID)
 
 # 
 # Buy / Sell actions: puts orders on the book
@@ -132,9 +132,9 @@ macro remove_trade($trade_id, $market):
 # smallest trade value is 0.00000001
 def buy(fxpAmount, fxpPrice, market, outcome):
     refund()
-    trading_fee = MARKETS.getTradingFee(market)
+    tradingFee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
-    fee = fee_percent(trading_fee, fxpPrice, cumScale) * MARKETS.getMakerFees(market) / ONE
+    fee = feePercent(tradingFee, fxpPrice, cumScale) * MARKETS.getMakerFees(market) / ONE
     branch = MARKETS.getBranch(market)
     if(!MARKETS.getCreationTime(market)):
         return(0)
@@ -143,7 +143,7 @@ def buy(fxpAmount, fxpPrice, market, outcome):
         return(-1)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
-    save_trade(BID, fxpAmount, fxpPrice, market, outcome, branch, fee, msg.sender)
+    saveTrade(BID, fxpAmount, fxpPrice, market, outcome, branch, fee, msg.sender)
     return(FAILURE)
 
 # costs 532k gas
@@ -151,9 +151,9 @@ def buy(fxpAmount, fxpPrice, market, outcome):
 def sell(fxpAmount, fxpPrice, market, outcome):
     refund()
     branch = MARKETS.getBranch(market)
-    trading_fee = MARKETS.getTradingFee(market)
+    tradingFee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
-    fee = fee_percent(trading_fee, fxpPrice, cumScale) * MARKETS.getMakerFees(market) / ONE
+    fee = feePercent(tradingFee, fxpPrice, cumScale) * MARKETS.getMakerFees(market) / ONE
     # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
     if(fxpPrice > cumScale or fxpAmount * fxpPrice < 3402823669209384705829531287552L or fxpAmount * fxpPrice >= 2 ** 190):
         return(-1)
@@ -161,5 +161,5 @@ def sell(fxpAmount, fxpPrice, market, outcome):
         return(-2)
     if(MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome) < fxpAmount):
         return(-3)
-    save_trade(ASK, fxpAmount, fxpPrice, market, outcome, branch, fee, msg.sender)
+    saveTrade(ASK, fxpAmount, fxpPrice, market, outcome, branch, fee, msg.sender)
     return(FAILURE)

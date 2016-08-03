@@ -37,9 +37,9 @@ inset('refund.se')
     # pushing forward is whether a market has been pushed forward to attempt early resolution
     # bondsman is the person/address who/that posted the early resolution bond
     # originalPeriod is the original period the market's event would resolve in
-    # trade_ids stores trades for a given market
-    # last_trade is the last trade that happened in a given market
-    # total_trades is the total number of trades in a give market
+    # tradeIDs stores trades for a given market
+    # lastTrade is the last trade that happened in a given market
+    # totalTrades is the total number of trades in a give market
     # tags are the subject tags / categories / keywords for a given market
     # fxpMakerFees - from 0-50% - fxpAmount of fee that the maker orders pay
     # extraInfo is any extra info that didn't fit well in the regular description
@@ -48,7 +48,7 @@ inset('refund.se')
     # fees is total fxpAmount of fees a market has paid to a branch [the reporters]
     # lastExpDate is when the market's last event expires
     # prices keeps track of the latest traded fxpPrice for a given outcome in a market
-data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, fxpMakerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime, lastExpDate, prices[])
+data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, tradeIDs[](id, nextID, prevID), lastTrade, totalTrades, tag1, tag2, tag3, fxpMakerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime, lastExpDate, prices[])
 
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
@@ -251,60 +251,60 @@ def getBondsMan(market):
     return(self.Markets[market].bondsMan)
 
 def getLastTrade(market):
-    return(self.Markets[market].last_trade)
+    return(self.Markets[market].lastTrade)
 
-def addTrade(market, trade_id, last_id):
+def addTrade(market, tradeID, lastID):
     callstackCheck()
-    self.Markets[market].trade_ids[last_id].next_id = trade_id
-    self.Markets[market].trade_ids[trade_id].prev_id = last_id
-    self.Markets[market].trade_ids[trade_id].id = trade_id
-    self.Markets[market].last_trade = trade_id
-    self.Markets[market].total_trades += 1
+    self.Markets[market].tradeIDs[lastID].nextID = tradeID
+    self.Markets[market].tradeIDs[tradeID].prevID = lastID
+    self.Markets[market].tradeIDs[tradeID].id = tradeID
+    self.Markets[market].lastTrade = tradeID
+    self.Markets[market].totalTrades += 1
     return(1)
 
-def remove_trade_from_market(market_id, trade_id):
+def removeTradeFromMarket(marketID, tradeID):
     callstackCheck()
-    prev_id = self.Markets[market_id].trade_ids[trade_id].prev_id
-    next_id = self.Markets[market_id].trade_ids[trade_id].next_id
-    # if the trade had a previous and next trade it connects them directly, remove this trade_id from the sequence/middle
-    if(prev_id and next_id):
-        self.Markets[market_id].trade_ids[prev_id].next_id = next_id
-        self.Markets[market_id].trade_ids[next_id].prev_id = prev_id
+    prevID = self.Markets[marketID].tradeIDs[tradeID].prevID
+    nextID = self.Markets[marketID].tradeIDs[tradeID].nextID
+    # if the trade had a previous and next trade it connects them directly, remove this tradeID from the sequence/middle
+    if(prevID and nextID):
+        self.Markets[marketID].tradeIDs[prevID].nextID = nextID
+        self.Markets[marketID].tradeIDs[nextID].prevID = prevID
     # if it's the most recent trade, update the previous trade to be the most recent one
-    elif(prev_id):
-        self.Markets[market_id].last_trade = prev_id
-        self.Markets[market_id].trade_ids[prev_id].next_id = 0
+    elif(prevID):
+        self.Markets[marketID].lastTrade = prevID
+        self.Markets[marketID].tradeIDs[prevID].nextID = 0
     
     # if the trade had a trade following it, 0 out that slot
-    if(next_id):
-        self.Markets[market_id].trade_ids[trade_id].next_id = 0
+    if(nextID):
+        self.Markets[marketID].tradeIDs[tradeID].nextID = 0
     # if the trade had a trade before it, 0 out that slot
-    if(prev_id):
-        self.Markets[market_id].trade_ids[trade_id].prev_id = 0
-    self.Markets[market_id].trade_ids[trade_id].id = 0
-    self.Markets[market_id].total_trades -= 1
+    if(prevID):
+        self.Markets[marketID].tradeIDs[tradeID].prevID = 0
+    self.Markets[marketID].tradeIDs[tradeID].id = 0
+    self.Markets[marketID].totalTrades -= 1
     return(1)
 
-def get_trade_ids(market_id):
-    trades_count = self.Markets[market_id].total_trades
-    trade_id = self.Markets[market_id].last_trade
-    trade_ids = array(trades_count)
+def getTradeIDs(marketID):
+    tradesCount = self.Markets[marketID].totalTrades
+    tradeID = self.Markets[marketID].lastTrade
+    tradeIDs = array(tradesCount)
 
     i = 0
-    while(i < trades_count):
-        trade_ids[i] = self.Markets[market_id].trade_ids[trade_id].id
-        trade_id = self.Markets[market_id].trade_ids[trade_id].prev_id
+    while(i < tradesCount):
+        tradeIDs[i] = self.Markets[marketID].tradeIDs[tradeID].id
+        tradeID = self.Markets[marketID].tradeIDs[tradeID].prevID
         i += 1
 
-    if(trade_ids):
-        return(trade_ids:arr)
+    if(tradeIDs):
+        return(tradeIDs:arr)
     return([FAILURE]:arr)
 
 def getPrevID(market, trade):
-    return(self.Markets[market].trade_ids[trade].prev_id)
+    return(self.Markets[market].tradeIDs[trade].prevID)
 
-def get_total_trades(market_id):
-    return(self.Markets[market_id].total_trades)
+def getTotalTrades(marketID):
+    return(self.Markets[marketID].totalTrades)
 
 def getSender():
     return(msg.sender)

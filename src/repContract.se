@@ -32,8 +32,8 @@ data approvedToSpend[][]
 # whether the contract has been finished seeding
 data seeded
 
-event Transfer(_from:indexed, _to:indexed, _fxpValue)
-event Approval(_owner:indexed, _spender:indexed)
+event Transfer(from:indexed, to:indexed, fxpValue)
+event Approval(owner:indexed, spender:indexed)
 
 macro ONE:
     2 ** 64

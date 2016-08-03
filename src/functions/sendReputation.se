@@ -34,8 +34,8 @@ inset('refund.se')
 # sender/owner, then spender
 data amountCanSpend[][](branch[])
 
-event Transfer(_from:indexed, _to:indexed, _value)
-event Approval(_owner:indexed, _spender:indexed, fxpValue)
+event Transfer(from:indexed, to:indexed, value)
+event Approval(owner:indexed, spender:indexed, value)
 
 #def any():
 #    refund()

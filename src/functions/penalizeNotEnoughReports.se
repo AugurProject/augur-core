@@ -36,7 +36,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     # events a user should be reporting on
     # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
     # a**b=exp(b*ln(a))=e**(b*ln(a)).
-    repConstant = FXP.fx_exp(ONEPOINTTWO * FXP.fx_log(originalRep) / ONE) * 2 ** 64 / FXP.fx_exp(ONEPOINTTWO * FXP.fx_log(REPORTING.getActiveRep(branch)) / ONE)
+    repConstant = FXP.fxExp(ONEPOINTTWO * FXP.fxLog(originalRep) / ONE) * 2 ** 64 / FXP.fxExp(ONEPOINTTWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
     baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
     total = repConstant * baseReporters
     numRequiredEvents = EXPEVENTS.getNumRequired(branch, lastPeriod)

@@ -7,17 +7,17 @@ data tradeCommits[](hash, block)
 # tradeID is index
 data trades[](id, type, market, amount, price, owner, block, outcome)
 
-def makeTradeHash(fxp_max_value, fxp_max_amount, trade_ids: arr):
+def makeTradeHash(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
     refund()
     i = 0
     trades = 0
-    while(i < len(trade_ids)):
-        trades += trade_ids[i]
+    while(i < len(tradeIDs)):
+        trades += tradeIDs[i]
         i += 1
     tradeInfo = array(3)
     tradeInfo[0] = trades
-    tradeInfo[1] = fxp_max_amount
-    tradeInfo[2] = fxp_max_value
+    tradeInfo[1] = fxpMaxAmount
+    tradeInfo[2] = fxpMaxValue
     tradeHash = sha3(tradeInfo, items = 3)
     return(tradeHash)
 
@@ -40,19 +40,19 @@ def checkHash(tradeHash, sender):
 def getID(tradeID):
     return(self.trades[tradeID].id)
 
-def saveTrade(trade_id, type, market, amount, price, sender, outcome):
+def saveTrade(tradeID, type, market, amount, price, sender, outcome):
     callstackCheck()
-    self.trades[trade_id].id = trade_id
-    self.trades[trade_id].type = type
-    self.trades[trade_id].market = market
-    self.trades[trade_id].amount = amount
-    self.trades[trade_id].price = price
-    self.trades[trade_id].owner = sender
-    self.trades[trade_id].block = block.number
-    self.trades[trade_id].outcome = outcome
+    self.trades[tradeID].id = tradeID
+    self.trades[tradeID].type = type
+    self.trades[tradeID].market = market
+    self.trades[tradeID].amount = amount
+    self.trades[tradeID].price = price
+    self.trades[tradeID].owner = sender
+    self.trades[tradeID].block = block.number
+    self.trades[tradeID].outcome = outcome
     return(1)
 
-def get_trade(id):
+def getTrade(id):
     callstackCheck()
     trade = array(8)
     trade[0] = self.trades[id].id
@@ -67,19 +67,19 @@ def get_trade(id):
         return(trade:arr)
     return([0]:arr)
 
-def get_amount(id):
+def getAmount(id):
     return(self.trades[id].amount)
 
-def get_price(id):
+def getPrice(id):
     return(self.trades[id].price)
 
 # todo maybe add this in and then check that trade is within limit prices in trade function to allow easy trade updating
-def update_trade(id, price):
+def updateTrade(id, price):
     callstackCheck()
     self.trades[id].price = price
     self.trades[id].block = block.number
 
-def remove_trade(id):
+def removeTrade(id):
     callstackCheck()
     self.trades[id].id = 0
     self.trades[id].type = 0
@@ -91,6 +91,6 @@ def remove_trade(id):
     self.trades[id].outcome = 0
     return(1)
 
-def fill_trade(trade_id, fill):
-    self.trades[trade_id].amount -= fill
+def fillTrade(tradeID, fill):
+    self.trades[tradeID].amount -= fill
     return(1)
