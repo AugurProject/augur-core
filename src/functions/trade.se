@@ -29,7 +29,7 @@ inset('refund.se')
 inset('logReturn.se')
 
 # event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
-event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
+event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome, timestamp)
 event trade_logReturn(returnValue)
 event trade_logArrayReturn(returnArray: arr)
 
@@ -158,7 +158,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Update max_amount
                 max_amount -= fill
                 # Log transaction
-                log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome)
+                log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome, block.timestamp)
             else:
                 logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
         elif type == ASK:
@@ -201,7 +201,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Update max_value
                 max_value -= value_to_spend
                 # Log transaction
-                log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome)
+                log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome, block.timestamp)
             else:
                 logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
 
@@ -330,7 +330,7 @@ def short_sell(buyer_trade_id, max_amount):
 
     max_amount -= fill
     # Log transaction
-    log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)
+    log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome, block.timestamp)
     # Log price, fill amount, type and timestamp
     # log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
     MARKETS.setPrice(market, outcome, price)

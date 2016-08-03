@@ -1447,7 +1447,7 @@
         "sig": "extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256]"
     }, 
     "buy&sellShares": {
-        "address": "0x54880a55093097d0ec7e3fbd60f5ad31f8e21449", 
+        "address": "0xe1eaef5116dfedb07eef3aaf20025c35c9b53008", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -1478,6 +1478,8 @@
             "MARKETS = 0xa754a1882b5f34993a889f6d26903ff3b0ea1560", 
             "extern refund.se: [checkHash:[int256,int256]:int256, commitTrade:[int256]:int256, fill_trade:[int256,int256]:int256, getID:[int256]:int256, get_amount:[int256]:int256, get_price:[int256]:int256, get_trade:[int256]:int256[], makeTradeHash:[int256,int256,int256[]]:int256, remove_trade:[int256]:int256, saveTrade:[int256,int256,int256,int256,int256,int256,int256]:int256, update_trade:[int256,int256]:_, zeroHash:[]:int256]", 
             "TRADES = 0x2914d5d2822a5c0f89494194a632032fe2a3fc74", 
+            "extern completeSets: [buyCompleteSets:[int256,int256]:_, sellCompleteSets:[int256,int256]:_]", 
+            "COMPLETESETS = 0x38fb24dd43e2fe26049f12e7f9d261313d2c705d", 
             "inset('refund.se')", 
             "inset('logReturn.se')", 
             "", 
@@ -1526,6 +1528,13 @@
             "        logReturn(buyAndSellShares_logReturn, TRADE_ALREADY_EXISTS)", 
             "    log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id)", 
             "    logReturn(buyAndSellShares_logReturn, trade_id)", 
+            "", 
+            "def buyCompleteSetsThenSell(amount, price, market, outcome):", 
+            "    refund()", 
+            "    buyCompleteSetsResult = COMPLETESETS.buyCompleteSets(market, amount, call=delegate)", 
+            "    if buyCompleteSetsResult != 1:", 
+            "        return(buyCompleteSetsResult)", 
+            "    return(self.sell(amount, price, market, outcome, call=delegate))", 
             "", 
             "#", 
             "# Cancellation: cancels a trade, if a bid refunds money, if an ask returns shares", 
@@ -1647,6 +1656,35 @@
                 ], 
                 "name": "buy(int256,int256,int256,int256)", 
                 "outputs": [], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [
+                    {
+                        "name": "amount", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "price", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "market", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "outcome", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "buyCompleteSetsThenSell(int256,int256,int256,int256)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
                 "type": "function"
             }, 
             {
@@ -1779,7 +1817,7 @@
                 "type": "event"
             }
         ], 
-        "sig": "extern buy&sellShares: [buy:[int256,int256,int256,int256]:_, cancel:[int256]:_, sell:[int256,int256,int256,int256]:_]"
+        "sig": "extern buy&sellShares: [buy:[int256,int256,int256,int256]:_, buyCompleteSetsThenSell:[int256,int256,int256,int256]:int256, cancel:[int256]:_, sell:[int256,int256,int256,int256]:_]"
     }, 
     "cash": {
         "address": "0xeecebff7ee0b308db51ded8041063d2169060819", 
@@ -13002,7 +13040,7 @@
         "sig": "extern slashRep: [slashRep:[int256,int256,int256,int256,int256]:int256]"
     }, 
     "trade": {
-        "address": "0xf4b6c847df304175206a1c2b1fa91b6d65d9dfff", 
+        "address": "0x1eec0978ec705829fce7905cc8344d06309c82cf", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -13040,8 +13078,8 @@
             "inset('refund.se')", 
             "inset('logReturn.se')", 
             "", 
-            "# event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)", 
-            "event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)", 
+            "event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)", 
+            "event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome, timestamp)", 
             "event trade_logReturn(returnValue)", 
             "event trade_logArrayReturn(returnArray: arr)", 
             "", 
@@ -13170,7 +13208,7 @@
             "                # Update max_amount", 
             "                max_amount -= fill", 
             "                # Log transaction", 
-            "                log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome)", 
+            "                log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome, block.timestamp)", 
             "            else:", 
             "                logReturn(trade_logReturn, INSUFFICIENT_BALANCE)", 
             "        elif type == ASK:", 
@@ -13213,13 +13251,13 @@
             "                # Update max_value", 
             "                max_value -= value_to_spend", 
             "                # Log transaction", 
-            "                log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome)", 
+            "                log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome, block.timestamp)", 
             "            else:", 
             "                logReturn(trade_logReturn, INSUFFICIENT_BALANCE)", 
             "", 
             "        # Log price, fill amount, type and timestamp", 
             "        MARKETS.setPrice(market, outcome, price)", 
-            "        # log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)", 
+            "        log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)", 
             "        # Next trade", 
             "        t += 1", 
             "    logArrayReturn([SUCCESS, max_value, max_amount])", 
@@ -13342,9 +13380,9 @@
             "", 
             "    max_amount -= fill", 
             "    # Log transaction", 
-            "    log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)", 
+            "    log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome, block.timestamp)", 
             "    # Log price, fill amount, type and timestamp", 
-            "    # log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)", 
+            "    log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)", 
             "    MARKETS.setPrice(market, outcome, price)", 
             "    logArrayReturn([SUCCESS, max_amount, fill, price])"
         ], 
@@ -13426,9 +13464,55 @@
                         "indexed": false, 
                         "name": "outcome", 
                         "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "timestamp", 
+                        "type": "int256"
                     }
                 ], 
-                "name": "log_fill_tx(int256,int256,int256,int256,int256,int256,int256,int256)", 
+                "name": "log_fill_tx(int256,int256,int256,int256,int256,int256,int256,int256,int256)", 
+                "type": "event"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "indexed": true, 
+                        "name": "market", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "type", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "price", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "amount", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "timestamp", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "outcome", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": true, 
+                        "name": "trader", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "log_price(int256,int256,int256,int256,int256,int256,int256)", 
                 "type": "event"
             }, 
             {
