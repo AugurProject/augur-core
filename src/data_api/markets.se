@@ -75,7 +75,8 @@ def setPrice(market, outcome, fxpPrice):
 def refundClosing(market, to):
     subsidy = self.Markets[market].gasSubsidy
     self.Markets[market].gasSubsidy -= subsidy
-    send(subsidy, to)
+    if(!send(to, subsidy)):
+        throw()
     return(1)
 
 def getLastExpDate(market):

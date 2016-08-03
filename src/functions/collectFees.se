@@ -67,4 +67,5 @@ macro prepareInfoForConsensus():
     EXPEVENTS.setAfterRep(branch, votePeriod, balance, sender)
     EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, sender)
     CONSENSUS.setRefund(sender, msg.value)
-    send(CONSENSUS, msg.value)
+    if(!send(CONSENSUS, msg.value)):
+        throw()

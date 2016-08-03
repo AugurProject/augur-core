@@ -82,7 +82,7 @@ def closeMarket(branch, market, sender):
     # checks whether any events not already resolved
     resolved = 1
     # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
-    if(!EVENTS.getOutcome(event) and !EVENTS.getMode(event)):
+    if(!EVENTS.getOutcome(event)):
         resolved = 0
     if((period <= tradingPeriod) or resolved):
         return(0)
@@ -117,6 +117,8 @@ def closeMarket(branch, market, sender):
     # 0: market not resolved
     # -1: trader doesn't exist
     # -8: invalid branch
+#data withdrawInitiated[]
+# todo macro THREEDAYS: 259200 add to getting $ for shares
 def claimProceeds(branch, market):
     refund()
     if(MARKETS.getBranch(market) != branch):
@@ -125,14 +127,14 @@ def claimProceeds(branch, market):
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)
     resolved = 1
-    if(!EVENTS.getOutcome(event) and !EVENTS.getMode(event)):
+    if(!EVENTS.getOutcome(event)):
         resolved = 0
-    # as long as it's resolved money can be collected
+    # as long as it's resolved and trading period over money can be collected
     if((period <= tradingPeriod) or !resolved):
         return(0)
     winningOutcomes = array(8)
     winningOutcomes = MARKET.getWinningOutcomes(market, outitems = 8)
-    outcome = 0
+    success = 0
     # market not resolved
     if(!winningOutcomes[0]):
         return(0)
@@ -140,16 +142,16 @@ def claimProceeds(branch, market):
         ethical = ethic_catch(EVENTS.getEthics(event))
         # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
         if(categorical(event) and (EVENTS.getMode(event) == ONEHALF or !ethical)):
-            outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))
+            success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))
         # resolves a regular binary market
         else:
-            outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, 0)
+            success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, 0)
     # resolves a scalar market
     elif(winningOutcomes[1]):
-        outcome = CLOSETWO.twoOutcomes(market, winningOutcomes, event, msg.sender)
+        success = CLOSETWO.twoOutcomes(market, winningOutcomes, event, msg.sender)
     else:
         throw()
-    return(outcome)
+    return(success)
 
 macro scalar($event):
     ((EVENTS.getMaxValue($event) != TWO or EVENTS.getMinValue($event) != ONE) and EVENTS.getNumOutcomes($event) == 2)

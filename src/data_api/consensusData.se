@@ -31,7 +31,8 @@ def setRefund(refunder, amt):
     return(1)
 
 def doRefund(sender, refunder):
-    send(sender, self.refunds[refunder])
+    if(!send(sender, self.refunds[refunder])):
+        throw()
     return(1)
 
 def getBaseReportersLastPeriod(branch):

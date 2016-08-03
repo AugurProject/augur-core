@@ -100,7 +100,8 @@ def withdrawEther(to, value):
     if(self.cashcoinBalances[msg.sender] >= amount):
         self.accounts[msg.sender].balance -= amount
         self.totalSupply -= amount
-        send(to, fxpValue)
+        if(!send(to, fxpValue)):
+            throw()
         return(1)
     else:
         return(0)

@@ -63,7 +63,8 @@ def move_event(event):
         EVENTS.setEthics(event, 0)
         EVENTS.setUncaughtOutcome(event, 0)
         # return bond if it's a round 2 event and make it not one anymore
-        ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)
+        if(!ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
+            throw()
         # if should've resolved in past periods
         if(expPeriod == forkPeriod or expPeriod == (forkPeriod + 1)):
             # push it into next [this] period
@@ -79,7 +80,8 @@ def move_event(event):
         EVENTS.setEthics(event, 0)
         EVENTS.setUncaughtOutcome(event, 0)
         # return bond if it's a round 2 event and make it not one anymore
-        ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)
+        if(!ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
+            throw()
         # move event to fork
         # and place it into the next reporting period w/ outcomes to 0
         if(expPeriod == forkPeriod or expPeriod == (forkPeriod + 1)):
@@ -181,6 +183,7 @@ def fork(event, branch, forkedOverEthicality):
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
         BACKSTOPS.setBondReturned(event)
+        return(1)
     else:
         return(0)
 
@@ -235,14 +238,16 @@ def resolveForkEvent(branch, event):
         if(fxpOutcome == 3 * ONEHALF or !ethical):
             # give event bond money to reporters
             branchWallet = BRANCHES.getWallet(branch, INFO.getCurrency(event))
-            INFO.getWallet(event).transfer(branchWallet, bond)
+            if(!INFO.getWallet(event).transfer(branchWallet, bond)):
+                throw()
 
             # not ethical is same as .5 outcome
             fxpOutcome = 3 * ONEHALF
             EVENTS.setOutcome(event, fxpOutcome)
         else:
             # return 
-            INFO.getWallet(event).transfer(INFO.getCreator(event), bond)
+            if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
+                throw()
         return(1)
     # scalar
     elif(scalar(event) or categorical(event)):
@@ -269,12 +274,14 @@ def resolveForkEvent(branch, event):
         if(mode == ONEHALF or !ethical):
             # give event bond money to reporters
             branchWallet = BRANCHES.getWallet(branch, INFO.getCurrency(event))
-            INFO.getWallet(event).transfer(branchWallet, bond)
+            if(!INFO.getWallet(event).transfer(branchWallet, bond)):
+                throw()
             # not ethical is same as .5 outcome
             EVENTS.setOutcome(event, ethicOutcome)
         else:
             # return bond
-            INFO.getWallet(event).transfer(INFO.getCreator(event), bond)
+            if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
+                throw()
         return(1)
     # (should never be reached)
     else:

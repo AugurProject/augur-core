@@ -40,7 +40,8 @@ macro ONE:
 
 macro refund():
     if(msg.value > 0):
-        send(msg.sender, msg.value)
+        if(!send(msg.sender, msg.value)):
+            throw()
 
 def any():
     refund()

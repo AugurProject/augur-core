@@ -160,13 +160,15 @@ def resolve(branch, event):
         if(fxpOutcome == 3 * ONEHALF or !ethical):
             # give event bond money to reporters
             branchWallet = BRANCHES.getWallet(branch, INFO.getCurrency(event))
-            INFO.getWallet(event).transfer(branchWallet, bond)
+            if(!INFO.getWallet(event).transfer(branchWallet, bond)):
+                throw()
             # not ethical is same as 1.5 outcome w/ binary
             fxpOutcome = 3 * ONEHALF
             EVENTS.setOutcome(event, fxpOutcome)
         else:
             # return bond
-            INFO.getWallet(event).transfer(INFO.getCreator(event), bond)
+            if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
+                throw()
         return(1)
     # scalar
     elif(scalar(event) or categorical(event)):
@@ -185,13 +187,15 @@ def resolve(branch, event):
         if(mode == ONEHALF or !ethical):
             # give event bond money to reporters
             branchWallet = BRANCHES.getWallet(branch, INFO.getCurrency(event))
-            INFO.getWallet(event).transfer(branchWallet, bond)
+            if(!INFO.getWallet(event).transfer(branchWallet, bond)):
+                throw()
             # not ethical is same as .5 outcome w/ scalar
             # mode is used to compare for reporting acc. so still the same as reported outcome, but resolving the market as .5
             EVENTS.setOutcome(event, ethicOutcome)
         else:
             # return bond
-            INFO.getWallet(event).transfer(INFO.getCreator(event), bond)
+            if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
+                throw()
         return(1)
     # (should never be reached)
     else:

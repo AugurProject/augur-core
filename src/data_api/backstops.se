@@ -37,7 +37,8 @@ def setRoundTwoRefund(event, amt):
     return(1)
 
 def doRoundTwoRefund(sender, event):
-    send(sender, self.roundTwo[event].refund)
+    if(!send(sender, self.roundTwo[event].refund)):
+        throw()
     return(1)
 
 def setForkBondPoster(event, poster):

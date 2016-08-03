@@ -18,7 +18,8 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         if(MARKETS.getPushedForward($market)):
             amount = MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE)
             branchWallet = BRANCHES.getWallet($branch, INFO.getCurrency($market))
-            INFO.getWallet($market).transfer(branchWallet, amount)
+            if(!INFO.getWallet($market).transfer(branchWallet, amount)):
+                throw()
         MARKETS.setTradingPeriod($market, MARKETS.getOriginalTradingPeriod($market))
         MARKETS.setPushedForward($market, 0, msg.sender)
         EXPEVENTS.setEventWeight($branch, $votingPeriodEvent, $event, 0)
@@ -37,7 +38,8 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
     elif(($fxpOutcome == $indeterminate or $mode == ONEHALF) or !$ethical):
         # give $event bond money to reporters
         branchWallet = BRANCHES.getWallet($branch, INFO.getCurrency($event))
-        INFO.getWallet($event).transfer(branchWallet, EVENTS.getBond($event))
+        if(!INFO.getWallet($event).transfer(branchWallet, EVENTS.getBond($event))):
+            throw()
         # not $ethical is same as .5 outcome
         if($scalarorcat):
             # the mode is used to compare for reporting accuracy. so still the same as the reported uncaught outcome/mode, but resolving the market as .5 right in the middle of the range so payouts are done right for an unethical [or indeterminate] market
@@ -47,10 +49,12 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         1
     else:
         # return bond as a normal event resolution
-        INFO.getWallet($event).transfer(INFO.getCreator($event), EVENTS.getBond($event))
+        if(!INFO.getWallet($event).transfer(INFO.getCreator($event), EVENTS.getBond($event))):
+            throw()
         if(MARKETS.getPushedForward($market)):
             amount = MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE)
-            INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), amount)
+            if(!INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), amount)):
+                throw()
         if(EVENTS.getEventPushedUp($event)):
             # delete old $event from future events exp
             $period = EVENTS.getOriginalExpiration($event) / $periodLength
@@ -71,7 +75,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
     val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 0, 0, 0)
     return(val)
 
-# Resolves a categorical market
+# Resolves a categorical or scalar market
 def resolveCategoricalOrScalar(fxp_scaled_min, fxp_scaled_max, event, market, branch, votingPeriodEvent):
     mode = EVENTS.getUncaughtOutcome(event)
     EVENTS.setMode(event, mode)

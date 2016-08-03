@@ -26,8 +26,7 @@ import expiringEvents as EXPEVENTS
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('refund.se')
 
-event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
-event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
+event log_price(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, tradeid, outcome)
 
 macro ONEPOINTFIVE: 27670116110564327424
 
@@ -147,8 +146,8 @@ def trade(fxp_max_value, fxp_max_amount, trade_ids:arr):
                 MARKETS.addFees(market, fee / 2 + branchFees)
                 # Update fxp_max_amount
                 fxp_max_amount -= fill
-                # Log transaction
-                log(type = log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome)
+                # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
+                log(type = log_price, market, msg.sender, owner, ASK, price, fill, block.timestamp, trade_ids[t], outcome)
             else:
                 return([INSUFFICIENT_BALANCE]: arr)
         elif type == ASK:
@@ -188,8 +187,8 @@ def trade(fxp_max_value, fxp_max_amount, trade_ids:arr):
                 MARKETS.addFees(market, makerFee / 2 + branchFees)
                 # Update fxp_max_value
                 fxp_max_value -= value_to_spend
-                # Log transaction
-                log(type = log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome)
+                # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
+                log(type = log_price, market, msg.sender, owner, BID, price, fill, block.timestamp, trade_ids[t], outcome)
             else:
                 return([INSUFFICIENT_BALANCE]: arr)
         else:
@@ -197,7 +196,6 @@ def trade(fxp_max_value, fxp_max_amount, trade_ids:arr):
 
         # Log price, fill amount, type and timestamp
         MARKETS.setPrice(market, outcome, price)
-        log(type = log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
         # Next trade
         t += 1
     return([SUCCESS, fxp_max_value, fxp_max_amount]: arr)
@@ -299,9 +297,9 @@ def short_sell(buyer_trade_ids: arr, fxp_max_amount):
         fill = amount
         # Update trade amount or remove
         if fill < orig_amount:
-            TRADES.fill_trade(trade_id, fill)
+            TRADES.fill_trade(buyer_trade_ids[t], fill)
         else:
-            remove_trade(trade_id, market)
+            remove_trade(buyer_trade_ids[t], market)
         # Update balances
         MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 1)
         MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
@@ -323,10 +321,8 @@ def short_sell(buyer_trade_ids: arr, fxp_max_amount):
         MARKETS.addFees(market, fee / 2 + branchFees)
     
         fxp_max_amount -= fill
-        # Log transaction
-        log(type = log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)
-        # Log price, fill amount, type and timestamp
-        log(type = log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
+        # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
+        log(type = log_price, market, msg.sender, owner, ASK, price, fill, block.timestamp, buyer_trade_ids[t], outcome)
         MARKETS.setPrice(market, outcome, price)
         t += 1
     return([SUCCESS, fxp_max_amount, fill, price]: arr)
