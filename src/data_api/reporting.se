@@ -84,7 +84,7 @@ def getRepBalance(branch, address):
     callstackCheck()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
     if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID != address):
-        return(0)
+        throw()
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
 def getDormantRepByIndex(branch, repIndex):

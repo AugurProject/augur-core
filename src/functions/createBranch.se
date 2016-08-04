@@ -38,7 +38,7 @@ def init():
     # -3: branch already exists
 def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, oracleOnly):
     refund()
-    if(periodLength <= 0 or !BRANCHES.getPeriodLength(parent) or !description):
+    if(periodLength <= 0 or !BRANCHES.getPeriodLength(parent) or !len(description)):
         return(-1)
     if(fxpMinTradingFee < 0 or fxpMinTradingFee > 2 ** 62):
         return(-1)

@@ -2,17 +2,14 @@
 # Returns 0 if no outcome
 macro proportionCorrect($event, $forkEvent):
     p = 0
+    uncaught = 0
     if($forkEvent):
         uncaught = EVENTS.getForkOutcome($event)
-        outcome = catch(uncaught)
-        # subtract 1 to get it from 0 to 1
-        avgOutcome = uncaught - ONE
     else:
         uncaught = EVENTS.getUncaughtOutcome($event)
-        outcome = catch(uncaught)
-        # subtract 1 to get it from 0 to 1
-        avgOutcome = uncaught - ONE
-        return(0)
+    outcome = catch(uncaught)
+    # subtract 1 to get it from 0 to 1
+    avgOutcome = uncaught - ONE
     # binary
     if(EVENTS.getNumOutcomes($event) == 2 and EVENTS.getMaxValue($event) == TWO and EVENTS.getMinValue($event) == ONE):
         # say we have outcome of 0, avg is .4, what is p?
@@ -25,5 +22,5 @@ macro proportionCorrect($event, $forkEvent):
             p = avgOutcome
         # in indeterminate case it'll return 0
         else:
-            return(0)
+            p = 0
     p

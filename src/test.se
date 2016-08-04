@@ -7,6 +7,9 @@ def lol(c):
     x = c.balanceOf(5)
     return(x)
     
+def ok(blah: str):
+    return(len(blah))
+    
 macro callstackCheck():
     if(!checkCallstack()):
         throw()

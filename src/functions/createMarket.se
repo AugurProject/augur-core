@@ -59,7 +59,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
     forkPeriod = BRANCHES.getForkPeriod(branch)
-    if(!periodLength or !description or expDate < block.timestamp):
+    if(!periodLength or !len(description) or !len(resolution) or expDate < block.timestamp):
         return(-1)
     if(fxpMaxValue < fxpMinValue or (fxpMaxValue - fxpMinValue) < ONE):
         return(-2)
