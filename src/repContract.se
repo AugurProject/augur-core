@@ -20,35 +20,46 @@
 
 # Storage of all data associated with reporters
 # takes reporterID as key, fxpValue is rep amount
-data reporting[]
-
-# keeps track of total rep in the system
-data totalSupply
+data reporting[2**160]
 
 # sender/owner, then spender, e.g. approvedToSpend[owner][spender]
-# 1 if spender is approved, 0 if not
-data approvedToSpend[][]
+# returns amount spender can spend
+data approvedToSpend[2**160][2**160]
 
 # whether the contract has been finished seeding
 data seeded
+# keeps track of total rep in the system
+data totalSupply
+# token name for display
+data name
+# token symbol for display
+data symbol
+# amount of decimals per unit of rep
+data decimals
 
 event Transfer(from:indexed, to:indexed, fxpValue)
-event Approval(owner:indexed, spender:indexed)
+event Approval(owner:indexed, spender:indexed, fxpValue)
 
+# 20 decimals
 macro ONE:
-    2 ** 64
+    10 ** 20
 
 macro refund():
     if(msg.value > 0):
         if(!send(msg.sender, msg.value)):
             throw()
 
+def init():
+    self.name = "Reputation"
+    self.symbol = "REP"
+    self.decimals = 20
+
 def any():
     refund()
 
 # Transfer rep
 # @return fxpValue of reputation sent, 0 if not enough reputation
-def transfer(receiver, fxpValue):
+def transfer(receiver: address, fxpValue: uint256):
     senderBalance = self.reporting[msg.sender]
     if(senderBalance < fxpValue or fxpValue <= 0 or !self.seeded):
         throw()
@@ -57,53 +68,63 @@ def transfer(receiver, fxpValue):
     self.reporting[msg.sender] -= fxpValue
     self.reporting[receiver] += fxpValue
     log(type = Transfer, msg.sender, receiver, fxpValue)
-    return(fxpValue)
+    return(1)
     
 # TransferFrom per token api allowing another contract to withdraw on user's behalf
 # also allows transfer if sent from the real owner
 # fails unless from has authorized sender
-def transferFrom(from, receiver, fxpValue):
+def transferFrom(from: address, receiver: address, fxpValue: uint256):
     senderBalance = self.reporting[from]
-    if(senderBalance < fxpValue or fxpValue <= 0 or (!self.approvedToSpend[from][msg.sender] and from != msg.sender) or !self.seeded):
+    if(senderBalance < fxpValue or fxpValue <= 0 or fxpValue > self.approvedToSpend[from][msg.sender] or !self.seeded):
         throw()
     if(!safeToSubtract(self.reporting[from], fxpValue) or !safeToAdd(self.reporting[receiver], fxpValue)):
         throw()
+    self.approvedToSpend[from][msg.sender] -= fxpValue
     self.reporting[from] -= fxpValue
     self.reporting[receiver] += fxpValue
     log(type = Transfer, from, receiver, fxpValue)
-    return(fxpValue)
+    return(1)
     
 # Allows spender to withdraw from your rep account
-def approve(spender):
-    self.approvedToSpend[msg.sender][spender] = 1
-    log(type = Approval, msg.sender, spender)
+def approve(spender: address, amount: uint256):
+    if(amount <= 0):
+        return(0)
+    self.approvedToSpend[msg.sender][spender] = amount
+    log(type = Approval, msg.sender, spender, amount)
     return(1)
 
+# Returns amount spender can withdraw from owner
+def allowance(owner: address, spender: address):
+    return(self.approvedToSpend[owner][spender])
+
+def totalSupply():
+    return(self.totalSupply)
+
+# @return reputation fxpValue
+def balanceOf(address: address):
+    return(self.reporting[address])
+
 # Sets the initial distribution of rep
-def setSaleDistribution(addresses: arr, balances: arr):
+def setSaleDistribution(addresses: address[], balances: uint256[]):
     i = 0
     while(i < len(addresses)):
         if(!self.reporting[addresses[i]] && !self.seeded):
             self.reporting[addresses[i]] = balances[i]
             self.totalSupply += balances[i]
+            log(type = Transfer, 0, addresses[i], balances[i])
         i += 1
     if(self.totalSupply == 11000000 * ONE):
         self.seeded = 1
     return(1)
-    
-# Returns whether spender can withdraw from owner
-def approved(owner, spender):
-    return(self.approvedToSpend[owner][spender])
 
-# @return reputation fxpValue
-def balanceOf(address):
-    return(self.reporting[address])
-
-def getTotalRep():
-    return(self.totalSupply)
+def getName():
+    return(self.name)
     
-def getSender():
-    return(msg.sender)
+def getDecimals():
+    return(self.decimals)
+    
+def getSymbol():
+    return(self.symbol)
 
 macro throw():
     i = 0
