@@ -135,19 +135,15 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
         cumulativeScale = ONE
 
     # formation of marketID (hash)
-    marketinfo = string(8*32 + len(description))
+    marketinfo = string(4*32 + len(description))
     marketinfo[0] = futurePeriod
     marketinfo[1] = tradingFee
-    marketinfo[2] = block.timestamp
-    marketinfo[3] = tag1
-    marketinfo[4] = tag2
-    marketinfo[5] = tag3
-    marketinfo[6] = expirationDate
-    marketinfo[7] = len(description)
-    mcopy(marketinfo + 8*32, description, chars=len(description))
+    marketinfo[2] = expirationDate
+    marketinfo[3] = len(description)
+    mcopy(marketinfo + 4*32, description, chars=len(description))
     marketID = sha3(marketinfo, chars=len(marketinfo))
     # if it's already been created return 0
-    if(INFO.getCreator(marketID) || MARKETS.getMarketNumOutcomes(marketID)):
+    if(INFO.getCreator(marketID)):
         return(-4)
     events = array(1)
     events[0] = event

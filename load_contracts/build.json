@@ -4121,7 +4121,7 @@
         "sig": "extern createBranch: [createSubbranch:[bytes,int256,int256,int256,int256]:int256]"
     }, 
     "createMarket": {
-        "address": "0xea3fc35beafe2dff9efa562b903f4695c26a60dc", 
+        "address": "0xd840ddbeed91e9610f821a007b3c4faa3dc0068b", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -4267,19 +4267,15 @@
             "        cumulativeScale = ONE", 
             "", 
             "    # formation of marketID (hash)", 
-            "    marketinfo = string(8*32 + len(description))", 
+            "    marketinfo = string(4*32 + len(description))", 
             "    marketinfo[0] = futurePeriod", 
             "    marketinfo[1] = tradingFee", 
-            "    marketinfo[2] = block.timestamp", 
-            "    marketinfo[3] = tag1", 
-            "    marketinfo[4] = tag2", 
-            "    marketinfo[5] = tag3", 
-            "    marketinfo[6] = expirationDate", 
-            "    marketinfo[7] = len(description)", 
-            "    mcopy(marketinfo + 8*32, description, chars=len(description))", 
+            "    marketinfo[2] = expirationDate", 
+            "    marketinfo[3] = len(description)", 
+            "    mcopy(marketinfo + 4*32, description, chars=len(description))", 
             "    marketID = sha3(marketinfo, chars=len(marketinfo))", 
             "    # if it's already been created return 0", 
-            "    if(INFO.getCreator(marketID) || MARKETS.getMarketNumOutcomes(marketID)):", 
+            "    if(INFO.getCreator(marketID)):", 
             "        return(-4)", 
             "    events = array(1)", 
             "    events[0] = event", 
@@ -4539,6 +4535,18 @@
             }, 
             {
                 "constant": false, 
+                "inputs": [], 
+                "name": "test_callstack()", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
                 "inputs": [
                     {
                         "name": "branch", 
@@ -4594,7 +4602,7 @@
                 "type": "event"
             }
         ], 
-        "sig": "extern createMarket: [createEvent:[int256,bytes,int256,int256,int256,int256,bytes]:int256, createMarket:[int256,bytes,int256,int256,int256,int256,int256,int256,bytes]:int256, createSingleEventMarket:[int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256,int256,int256,bytes]:int256, pushMarketForward:[int256,int256]:int256, updateTradingFee:[int256,int256,int256,int256]:int256]"
+        "sig": "extern createMarket: [createEvent:[int256,bytes,int256,int256,int256,int256,bytes]:int256, createMarket:[int256,bytes,int256,int256,int256,int256,int256,int256,bytes]:int256, createSingleEventMarket:[int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256,int256,int256,bytes]:int256, pushMarketForward:[int256,int256]:int256, test_callstack:[]:int256, updateTradingFee:[int256,int256,int256,int256]:int256]"
     }, 
     "eventResolution": {
         "address": "0x7002addf4b8482518d3c19b0be518be60f8f3de1", 
