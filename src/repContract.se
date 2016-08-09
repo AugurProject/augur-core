@@ -40,9 +40,9 @@ data decimals
 event Transfer(from:indexed, to:indexed, fxpValue)
 event Approval(owner:indexed, spender:indexed, fxpValue)
 
-# 20 decimals
+# 18 decimals
 macro ONE:
-    10 ** 20
+    10 ** 18
 
 macro refund():
     if(msg.value > 0):
@@ -52,7 +52,7 @@ macro refund():
 def init():
     self.name = "Reputation"
     self.symbol = "REP"
-    self.decimals = 20
+    self.decimals = 18
 
 def any():
     refund()
