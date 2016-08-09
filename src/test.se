@@ -10,6 +10,9 @@ def lol(c):
 def ok(blah: str):
     return(len(blah))
     
+def getSender():
+    return(msg.sender)
+    
 macro callstackCheck():
     if(!checkCallstack()):
         throw()
