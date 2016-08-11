@@ -69,7 +69,7 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
         return(-3)
     # pay creation fee, initialize branch info
     feePaid = self.ethContract.transferFrom(msg.sender, BRANCHES.getWallet(parent, self.ethContract), 47 * ONE)
-    if(feePaid and INFO.setInfo(branch, description, tx.origin, 47 * ONE, 0, 0) and REPORTING.setInitialReporters(branch)):
+    if(feePaid and INFO.setInfo(branch, description, msg.sender, 47 * ONE, 0, 0) and REPORTING.setInitialReporters(branch)):
         return(branch)
     else:
         throw()

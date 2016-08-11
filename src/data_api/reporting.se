@@ -68,9 +68,9 @@ def setWhitelist(contract, addresses:arr):
     else:
         self.whitelists[contract].taken = 1
         i = 0
-        l = len(addresses)
-        while(i < l):
-            address = addresses[i]
+        numAddr = len(addresses)
+        while(i < numAddr):
+            address = addresses[numAddr]
             self.whitelists[contract].addresses[addresses] = 1
             i += 1
         return(text("SUCCESS"):str)

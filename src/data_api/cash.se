@@ -105,3 +105,10 @@ def withdrawEther(to, value):
         return(1)
     else:
         return(0)
+
+# safe adders idea pulled from piper merriam's btcrelay audit
+macro safeToAdd($a, $b):
+    (($a + $b) >= $a)
+
+macro safeToSubtract($a, $b):
+    ($b <= $a)

@@ -96,7 +96,7 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs:arr):
         owner = trade[5]
         outcome = trade[7]
         fill = 0
-        if(owner == msg.sender or owner == tx.origin):
+        if(owner == msg.sender):
             return([-5]: arr)
         # Make sure the trade has been mined, obvious HFT prevention
         if(block.number <= trade[6]):
@@ -252,7 +252,7 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
         price = trade[4]
         owner = trade[5]
         outcome = trade[7]
-        if(owner == msg.sender or owner == tx.origin):
+        if(owner == msg.sender):
             return([-5]: arr)
         # Make sure the trade has been mined, obvious HFT prevention
         if(block.number <= trade[6]):

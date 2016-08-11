@@ -36,6 +36,7 @@ def calculateReportingThreshold(branch, event, votePeriod, sender):
     return(reportingThreshold)
 
 # Gets events a reporter should report on
+# switch to use start and end
 def getEventsToReportOn(branch, period, sender, start):
     callstackCheck()
     numEvents = EXPEVENTS.getNumberEvents(branch, period)

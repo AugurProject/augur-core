@@ -186,7 +186,7 @@ def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3
 def updateTradingFee(market, fxpTradingFee):
     refund()
     branch = MARKETS.getBranch(market)
-    if(msg.sender != INFO.getCreator(market) or tx.origin != INFO.getCreator(market)):
+    if(msg.sender != INFO.getCreator(market)):
         return(-1)
     oldFee = MARKETS.getTradingFee(market)
     oldCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / oldFee

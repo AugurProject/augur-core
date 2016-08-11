@@ -178,3 +178,30 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
             d += 1
         m += 1
     return(marketsInfo: arr)
+
+# Gets events a reporter should report on
+# switch to use start and end
+def getEventsToReportOn(branch, period, sender, start):
+    callstackCheck()
+    numEvents = EXPEVENTS.getNumberEvents(branch, period)
+    events = array(numEvents * 2)
+    i = 0
+    n = start
+    while(i < numEvents * 2):
+        events[i] = EXPEVENTS.getEvent(branch, period, n)
+        # calculate report target for event here if not done for purposes of computing this
+        if(!EXPEVENTS.getLesserReportNum(branch, period, events[i])):
+            MAKEREPORTS.calculateReportTargetForEvent(branch, events[i], period, msg.sender)
+        reportingThreshold = self.calculateReportingThreshold(branch, events[i], period, sender)
+        x = array(1)
+        x[0] = sender + events[i]
+        # do abs then mult by 2 to ensure pos. and between 0 and 1
+        shaHash = sha3(x, items = 1)
+        shaHash = (abs(shaHash) / ONE) * 2
+        if((shaHash < reportingThreshold or EXPEVENTS.getRequired(events[i], period, branch)) and !EVENTS.getOutcome(events[i])):
+            events[i + 1] = 1
+        else:
+            events[i + 1] = 0
+        i += 2
+        n += 1
+    return(events: arr)
