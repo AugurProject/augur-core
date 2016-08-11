@@ -24,7 +24,7 @@ import markets as MARKETS
 import trades as TRADES
 import expiringEvents as EXPEVENTS
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
-inset('refund.se')
+inset('../data_api/refund.se')
 
 event logPrice(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, tradeid, outcome)
 

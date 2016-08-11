@@ -23,7 +23,7 @@ import markets as MARKETS
 import trades as TRADES
 import info as INFO
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
-inset('refund.se')
+inset('../data_api/refund.se')
 
 event logAddTx(market:indexed, sender:indexed, type, fxpPrice, fxpAmount, outcome, tradeid)
 event logCancel(market:indexed, sender:indexed, fxpPrice, fxpAmount, tradeid, outcome, type)

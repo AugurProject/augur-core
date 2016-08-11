@@ -7,7 +7,7 @@ import markets as MARKETS
 import backstops as BACKSTOPS
 import sendReputation as SENDREP
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
-inset('refund.se')
+inset('../data_api/refund.se')
 inset('eventHelpers.se')
 
 macro POINTZEROONE: 184467440737095520
@@ -130,6 +130,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     elif(votedOnAgain and BACKSTOPS.getRoundTwo(event) and votePeriod != BACKSTOPS.getOriginalVotePeriod(event) and event != 0 and event == eventID and !forked and !BACKSTOPS.getBondReturned(event)):
         # lose bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
+        # todo make sure branch has a rep acc.
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), bond)
         # and set final outcome / event bond, etc
         if(!self.resolve(branch, event)):

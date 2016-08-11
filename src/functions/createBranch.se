@@ -22,7 +22,7 @@ import branches as BRANCHES
 import info as INFO
 import reporting as REPORTING
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
-inset('refund.se')
+inset('../data_api/refund.se')
 
 data ethContract
 

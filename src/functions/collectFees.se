@@ -4,7 +4,7 @@ import expiringEvents as EXPEVENTS
 import consensusData as CONSENSUS
 import reporting as REPORTING
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
-inset('refund.se')
+inset('../data_api/refund.se')
 
 # Allows a user to collect both redistributed rep and trading fees earned at the end of a period
 # Errors:

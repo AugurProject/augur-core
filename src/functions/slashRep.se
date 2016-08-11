@@ -3,7 +3,7 @@ import expiringEvents as EXPEVENTS
 import reporting as REPORTING
 import consensusData as CONSENSUS
 
-inset('refund.se')
+inset('../data_api/refund.se')
 
 # Anti cheat/collusion mechanism: provide ballot and random salt to steal rep from a colluder
 # Returns:

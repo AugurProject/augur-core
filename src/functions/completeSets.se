@@ -23,7 +23,7 @@ import expiringEvents as EXPEVENTS
 import markets as MARKETS
 import info as INFO
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
-inset('refund.se')
+inset('../data_api/refund.se')
 
 # Buys fxpAmount of every outcome
 # cost 850k gas

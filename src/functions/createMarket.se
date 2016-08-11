@@ -25,7 +25,7 @@ import backstops as BACKSTOPS
 import events as EVENTS
 import expiringEvents as EXPEVENTS
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
-inset('refund.se')
+inset('../data_api/refund.se')
 
 macro POINTZEROSIX: 1106804644422573056
 macro COSTPERREPORTER: 3500000

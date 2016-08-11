@@ -3,7 +3,7 @@ import reporting as REPORTING
 import expiringEvents as EXPEVENTS
 import consensusData as CONSENSUS
 
-inset('refund.se')
+inset('../data_api/refund.se')
 
 macro POINTNINE: 16602069666338596864
 

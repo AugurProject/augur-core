@@ -6,7 +6,7 @@ import backstops as BACKSTOPS
 import closeMarket as CLOSEMARKET
 import consensusData as CONSENSUS
 
-inset('refund.se')
+inset('../data_api/refund.se')
 inset('eventHelpers.se')
 inset('redistributeRep.se')
 inset('proportionCorrect.se')
@@ -47,7 +47,7 @@ macro POINTTWO: 1844674407370955264
     # -4: already done for all events in this period
     # -5: forked events should be penalized using the fork penalization function
     # -6: no outcome
-    # -7: needed to collect fees last period [but didn't] which sets the before/after rep so now have to call penalizationCatchup
+    # -7: needed to collect fees last period [but didn't] which sets the before/after rep so now have to call penalizationCatchup - todo fix this, maybe call pencatchup or let anyone call pencatchup
     # -8: invalid branch
 # force event to be resolved first if it can be
 # call with branch, 0 if no events

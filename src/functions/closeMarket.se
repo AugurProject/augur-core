@@ -29,7 +29,7 @@ import backstops as BACKSTOPS
 import eventResolution as RESOLVE
 import info as INFO
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
-inset('refund.se')
+inset('../data_api/refund.se')
 
 macro YES: TWO
 macro NO: ONE

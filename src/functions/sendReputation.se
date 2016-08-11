@@ -29,7 +29,7 @@ import penalizationCatchup as CATCHUP
 import consensusData as CONSENSUS
 import consensus as INCREMENTPERIOD
 import repContract as REPCONTRACT
-inset('refund.se')
+inset('../data_api/refund.se')
 
 # sender/owner, then spender
 data amountCanSpend[][](branch[])

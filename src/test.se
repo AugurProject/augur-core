@@ -1,3 +1,5 @@
+inset('../data_api/refund.se')
+
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 
 def checkCallstack():
@@ -12,6 +14,15 @@ def ok(blah: str):
     
 def getSender():
     return(msg.sender)
+    
+def funTest(n):
+    x = array(n)
+    x[0] = 5
+    return(x: arr)
+    
+def otherTest():
+    throw()
+    return(2)
     
 macro callstackCheck():
     if(!checkCallstack()):

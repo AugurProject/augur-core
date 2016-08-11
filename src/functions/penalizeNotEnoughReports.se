@@ -4,7 +4,7 @@ import consensusData as CONSENSUS
 import reporting as REPORTING
 import reportingThreshold as THRESHOLD
 import fxpFunctions as FXP
-inset('refund.se')
+inset('../data_api/refund.se')
 
 macro ONEPOINTTWO: 22136092888451461120
 
@@ -46,6 +46,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         return(-1)
     if(residual > periodLength / 2):
         return(-2)
+
     # in period just after fork period no reports required
     if(BRANCHES.getForkPeriod(branch) + 1 == lastPeriod):
         CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)

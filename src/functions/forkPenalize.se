@@ -5,7 +5,7 @@ import backstops as BACKSTOPS
 import expiringEvents as EXPEVENTS
 import consensusData as CONSENSUS
 
-inset('refund.se')
+inset('../data_api/refund.se')
 inset('eventHelpers.se')
 inset('redistributeRep.se')
 inset('proportionCorrect.se')

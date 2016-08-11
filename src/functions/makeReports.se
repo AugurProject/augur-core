@@ -29,7 +29,7 @@ import collectFees as COLLECTFEES
 import penalizationCatchup as CATCHUP
 import reportingThreshold as THRESHOLD
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
-inset('refund.se')
+inset('../data_api/refund.se')
 inset('eventHelpers.se')
 
 ETHCONTRACT = 02323232

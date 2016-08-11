@@ -1,16 +1,3 @@
-#def checkCallstack():
-#    return(1)
-
-macro callstackCheck():
-    if(!self.checkCallstack()):
-        throw()
-
-macro refund():
-    callstackCheck()
-    if(msg.value > 0):
-        if(!send(msg.sender, msg.value)):
-            throw()
-
 macro ONE: 2 ** 64
 
 macro WEITOETH: 10 ** 18
@@ -29,4 +16,16 @@ macro throw():
     i = 0
     while(1):
         i += 1
-    i
+        
+#def checkCallstack():
+#    return(1)
+
+macro callstackCheck():
+    if(!self.checkCallstack()):
+        throw()
+
+macro refund():
+    callstackCheck()
+    if(msg.value > 0):
+        if(!send(msg.sender, msg.value)):
+            throw()
