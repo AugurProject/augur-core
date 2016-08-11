@@ -24,6 +24,7 @@ import events as EVENTS
 import branches as BRANCHES
 import trades as TRADES
 import markets as MARKETS
+import expiringEvents as EXPEVENTS
 inset('refund.se')
 
 macro TRADE_FIELDS: 8
@@ -199,5 +200,32 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
         m += 1
     return(marketsInfo: arr)
 
-def getMarketCreatorFeesCollected(market):
-    return((MARKETS.getFees(market) - INFO.getCreationFee(market))/2)
+def getEventsWithSubmittedHashes(branch, period, from, to):
+    test_callstack()
+    numEvents = EXPEVENTS.getNumberEvents(branch, period)
+    events = array(numEvents)
+    i = from
+    n = 0
+    while(i < to):
+        event = EXPEVENTS.getEvent(branch, period, i)
+        if(EXPEVENTS.getReportHash(branch, period, msg.sender, event) != 0):
+            events[n] = event
+            n += 1
+        i += 1
+    return(events: arr)
+
+def getEventsWithReport(branch, period, from, to):
+    test_callstack()
+    numEvents = EXPEVENTS.getNumberEvents(branch, period)
+    events = array(numEvents)
+    i = from
+    n = 0
+    while(i < to):
+        event = EXPEVENTS.getEvent(branch, period, i)
+        if(EXPEVENTS.getReport(branch, period, event, msg.sender) != 0):
+            events[n] = event
+            n += 1
+        i += 1
+    return(events: arr)
+
+
