@@ -214,7 +214,7 @@ def getEventsWithSubmittedHashes(branch, period, from, to):
         i += 1
     return(events: arr)
 
-def getEventsWithReport(branch, period, from, to):
+def getEventsWithSubmittedReport(branch, period, from, to):
     test_callstack()
     numEvents = EXPEVENTS.getNumberEvents(branch, period)
     events = array(numEvents)
