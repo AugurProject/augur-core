@@ -157,7 +157,7 @@ def getCreationDate(ID):
 # check that msg.sender is one of our function contracts
 def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, contract, wallet):
     # if(!self.whitelist.check(msg.sender)):
-    # 	return(-1)
+    #   throw()
     if(!self.Branches[ID].periodLength):
         self.Branches[ID].currentVotePeriod = currentVotePeriod
         self.Branches[ID].periodLength = periodLength
@@ -179,14 +179,14 @@ def getParentPeriod(branch):
 
 def incrementPeriod(branch):
     # if(!self.whitelist.check(msg.sender)):
-    # 	return(-1)
+    #   throw()
     self.Branches[branch].currentVotePeriod += 1
     return(1)
 
 # check that msg.sender is one of our function contracts
 def addMarketToBranch(branch, market):
     # if(!self.whitelist.check(msg.sender)):
-    # 	return(-1)
+    #   throw()
     numMarkets = self.Branches[branch].numMarkets
     self.Branches[branch].markets[numMarkets] = market
     self.Branches[branch].numMarkets += 1

@@ -60,7 +60,7 @@ def setCurrencyAndWallet(ID, currency, wallet):
 def setInfo(ID, description: str, creator, fxpFee, currency, wallet):
     callstackCheck()
     # if(!self.whitelist.check(msg.sender)):
-    # 	return(-1)
+    #   throw()
     # check that msg.sender is one of our function contracts
     if(!self.Info[ID].creator):
         save(self.Info[ID].description[0], description, chars = len(description))

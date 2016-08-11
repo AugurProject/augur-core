@@ -162,7 +162,7 @@ def repIDToIndex(branch, repID):
 # check that msg.sender is one of our function contracts
 def setInitialReporters(branch):
     # if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
+    #   throw()
     # add branch as a "reporter"
     callstackCheck()
     self.Reporting[branch].numberReporters = 1
@@ -173,7 +173,7 @@ def setInitialReporters(branch):
 
 def addReporter(branch, sender, fxpAmount, fxpDormant, fxpRepToBonderOrBranch):
     # if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
+    #   throw()
     callstackCheck()
     reporterIndex = self.Reporting[branch].numberReporters
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
@@ -188,7 +188,7 @@ def addReporter(branch, sender, fxpAmount, fxpDormant, fxpRepToBonderOrBranch):
 
 def addRep(branch, index, fxpValue):
     # if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
+    #   throw()
     callstackCheck()
     if(safeToAdd(self.Reporting[branch].reputation[index].repValue, fxpValue)):
         self.Reporting[branch].reputation[index].repValue += fxpValue
@@ -198,7 +198,7 @@ def addRep(branch, index, fxpValue):
 
 def subtractRep(branch, index, fxpValue):
     # if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
+    #   throw()
     callstackCheck()
     if(safeToSubtract(self.Reporting[branch].reputation[index].repValue, fxpValue)):
         self.Reporting[branch].reputation[index].repValue -= fxpValue
@@ -207,8 +207,8 @@ def subtractRep(branch, index, fxpValue):
         return(0)
 
 def setRep(branch, index, fxpNewRep):
-    # if !self.whitelist.check(msg.sender):
-    #    return(-1)
+    # if(!self.whitelist.check(msg.sender)):
+    #   throw()
     callstackCheck()
     oldRep = self.Reporting[branch].reputation[index].repValue
     self.Reporting[branch].reputation[index].repValue = fxpNewRep
@@ -218,14 +218,14 @@ def setRep(branch, index, fxpNewRep):
 
 def addDormantRep(branch, index, fxpValue):
     # if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
+    #   throw()
     callstackCheck()
     self.Reporting[branch].dormantRep[index].repValue += fxpValue
     return(1)
 
 def subtractDormantRep(branch, index, fxpValue):
     # if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
+    #   throw()
     callstackCheck()
     self.Reporting[branch].dormantRep[index].repValue -= fxpValue
     return(1)
@@ -234,7 +234,7 @@ def subtractDormantRep(branch, index, fxpValue):
 # Sets the initial distribution of rep
 def setSaleDistribution(addresses: arr, balances: arr, branch):
     # if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
+    #   throw()
     callstackCheck()
     i = 0
     while(i < len(addresses)):

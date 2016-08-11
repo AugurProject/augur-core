@@ -130,7 +130,7 @@ def setBranch(event, branch):
     return(1)
 
 def getOutcome(event):
-    # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
+    # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good and for mode etc
     return(self.Events[event].outcome)
 
 def getEthics(event):
@@ -160,7 +160,7 @@ def getUncaughtOutcome(event):
 def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str):
     # check that msg.sender is one of our function contracts
     # if(!self.whitelist.check(msg.sender)):
-    # 	return(-1)
+    #   throw()
     if(!self.Events[ID].expirationDate):
         self.Events[ID].branch = branch
         self.Events[ID].expirationDate = expirationDate
@@ -204,7 +204,7 @@ def getNumMarkets(event):
 
 def setOutcome(ID, outcome):
     # if(!self.whitelist.check(msg.sender)):
-    # 	return(-1)
+    #   throw()
     self.Events[ID].outcome = outcome
     return(1)
 

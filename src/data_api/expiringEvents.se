@@ -64,7 +64,7 @@ def getSaltyEncryptedHash(branch, period, reporter, event):
 
 def setSaltyEncryptedHash(branch, period, reporter, saltyEncryptedHash, event):
     # if(!self.whitelist.check(msg.sender)):
-    # 	return(-1)
+    #   throw()
     self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event] = saltyEncryptedHash
     return(1)
 
@@ -124,7 +124,8 @@ def getEthicReport(branch, period, event, sender):
     return(self.reporterPeriodInfo[branch][period].ethics[sender][event])
 
 def getReport(branch, period, event, sender):
-    # if(whitelist):
+    # if(!self.whitelist.check(msg.sender)):
+        #   throw()
     return(self.reporterPeriodInfo[branch][period].report[sender][event])
 
 def getBeforeRep(branch, period, sender):
@@ -216,7 +217,7 @@ def getEvent(branch, period, eventIndex):
 # check that msg.sender is one of our function contracts
 def addEvent(branch, futurePeriod, event, subsidy, currency, wallet):
     # if(!self.whitelist.check(msg.sender)):
-    # 	return(-1)
+    #   throw()
     numberEvents = self.periodEventInfo[branch][futurePeriod].numberEvents
     self.periodEventInfo[branch][futurePeriod].events[numberEvents] = event
     self.periodEventInfo[branch][futurePeriod].eventToIndex[event] = numberEvents
@@ -244,7 +245,7 @@ def adjustPeriodShareValueOutstanding(branch, expIndex, amount):
 
 def setReportHash(branch, period, reporter, reportHash, event):
     # if(!self.whitelist.check(msg.sender)):
-    # 	return(-1)
+    #   throw()
     self.reporterPeriodInfo[branch][period].reportHash[reporter][event] = reportHash
     return(1)
 
