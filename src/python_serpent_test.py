@@ -276,7 +276,7 @@ def test_trading():
             feePercent = 4 * c.getTradingFee(market[a]) * .01 * 2**64 * (
                 2**64 - .01 * 2**64 * 2**64 / cumScale[a]) / (2**64 * cumScale[a])
             fee = .01 * 2**64 * feePercent / 2**64
-            # THREEFOURTHS is 3/4
+            # THREE_FOURTHS is 3/4
             branchFees = (.75 * 2**64 + (.5 * 2**64 -
                                          c.getMakerFees(market[a])) / 2) * fee / 2**64
             creatorFees = (.25 * 2**64 + (.5 * 2**64 -

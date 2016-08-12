@@ -1,16 +1,16 @@
 macro ONE: 2 ** 64
 
-macro WEITOETH: 10 ** 18
+macro WEI_TO_ETH: 10 ** 18
 
-macro THREEFOURTHS: 13835058055282163712
+macro THREE_FOURTHS: 13835058055282163712
 
-macro ONEFOURTH: 2 ** 62
+macro ONE_FOURTH: 2 ** 62
 
-macro ONEHALF: 2 ** 63
+macro ONE_HALF: 2 ** 63
 
 macro TWO: 2 ** 65
 
-macro TWENTYFOURHR: 86400
+macro TWENTY_FOUR_HR: 86400
 
 macro throw():
     i = 0

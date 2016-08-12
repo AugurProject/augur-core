@@ -32,8 +32,8 @@ extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:i
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
 
-macro POINTSEVEN: 12912720851596685312
-macro POINTZEROONE: 184467440737095520
+macro POINT_SEVEN: 12912720851596685312
+macro POINT_ZERO_ONE: 184467440737095520
 
 # Error -1: Hey, you're not broke!
 def cashFaucet():
@@ -70,7 +70,7 @@ def claimInitialRep(parent, branch):
     if(BRANCHES.getParent(branch) != parent):
         return(-1)
     # have 1 month to claim
-    if(!REPORTING.repIDToIndex(branch, msg.sender) and block.timestamp < (BRANCHES.getCreationDate(branch) + TWENTYFOURHR * 30)):
+    if(!REPORTING.repIDToIndex(branch, msg.sender) and block.timestamp < (BRANCHES.getCreationDate(branch) + TWENTY_FOUR_HR * 30)):
         # auto increment vote period if needed
         INCREMENTPERIOD.incrementPeriodAfterReporting(parent)
         parentPeriod = BRANCHES.getParentPeriod(branch)
@@ -101,9 +101,9 @@ def claimInitialRep(parent, branch):
             rep = REPORTING.getRepBalance(parent, msg.sender)
         repDecrease = 0
         # if forked and (reported with original consensus or didn't report or (reported with original ethicality and forked over ethicality))
-        if(fork and ((report >= (outcome - POINTZEROONE) and report <= (outcome + POINTZEROONE)) or !report or (BACKSTOPS.getForkedOverEthicality(forkEvent) and ethical == ethicReport))):
+        if(fork and ((report >= (outcome - POINT_ZERO_ONE) and report <= (outcome + POINT_ZERO_ONE)) or !report or (BACKSTOPS.getForkedOverEthicality(forkEvent) and ethical == ethicReport))):
             # take away 30% of rep from liars and those who didn't report
-            repDecrease = rep - rep * POINTSEVEN / ONE
+            repDecrease = rep - rep * POINT_SEVEN / ONE
             rep = rep - repDecrease
             amountLeftToPayBonder = BACKSTOPS.getBondAmount(forkEvent) - BACKSTOPS.getForkBondPaid(forkEvent)
             if(repDecrease < amountLeftToPayBonder):

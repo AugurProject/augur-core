@@ -13,8 +13,8 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
     # In the $event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and $market remains with old expiration date
     # UI needs to call penalizeWrong for ones that are pushed back in both pushed back period and regular period with actual reporting
-    $indeterminate = ONEHALF * 3
-    if(($fxpOutcome == $indeterminate or $mode == ONEHALF) and EVENTS.getEventPushedUp($event)):
+    $indeterminate = ONE_HALF * 3
+    if(($fxpOutcome == $indeterminate or $mode == ONE_HALF) and EVENTS.getEventPushedUp($event)):
         if(MARKETS.getPushedForward($market)):
             amount = MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE)
             branchWallet = BRANCHES.getWallet($branch, INFO.getCurrency($market))
@@ -35,7 +35,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         # set $event expiration to be the old date
         EVENTS.setExpiration($event, EVENTS.getOriginalExpiration($event))
         -6
-    elif(($fxpOutcome == $indeterminate or $mode == ONEHALF) or !$ethical):
+    elif(($fxpOutcome == $indeterminate or $mode == ONE_HALF) or !$ethical):
         # give $event bond money to reporters
         branchWallet = BRANCHES.getWallet($branch, INFO.getCurrency($event))
         if(!INFO.getWallet($event).transfer(branchWallet, EVENTS.getBond($event))):
@@ -100,7 +100,7 @@ def determineWinningOutcomes(event):
     fxpOutcome = EVENTS.getOutcome(event)
     outcome = fxpOutcome / ONE
     # scalar or .5
-    if(scalar(event) or fxpOutcome == 3 * ONEHALF):
+    if(scalar(event) or fxpOutcome == 3 * ONE_HALF):
         winningOutcomes[0] = 1
         winningOutcomes[1] = 2
     # anything besides scalar or .5

@@ -1,14 +1,14 @@
 macro calculateRepChange($report, $maxPenalty):
     # wrong
     # 184467440737095520 == 0.01 in fxp
-    if($report > outcome + POINTZEROONE or $report < outcome - POINTZEROONE):
-        if(scalar(event) or categorical(event) or outcome == 3 * ONEHALF):
+    if($report > outcome + POINT_ZERO_ONE or $report < outcome - POINT_ZERO_ONE):
+        if(scalar(event) or categorical(event) or outcome == 3 * ONE_HALF):
             diff = $report - outcome
             p = -(abs(diff) / 2) + ONE
         newRep = oldRep * (2 * p - ONE) / ONE
     # right
     else:
-        if(scalar(event) or categorical(event) or outcome == 3 * ONEHALF):
+        if(scalar(event) or categorical(event) or outcome == 3 * ONE_HALF):
             diff = $report - outcome
             p = -(abs(diff) / 2) + ONE
         newRep = oldRep * (2 * (ONE - p) ** 2 / p + ONE) / ONE

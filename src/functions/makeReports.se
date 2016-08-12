@@ -139,7 +139,7 @@ def submitReport(event, salt, fxpReport, fxpEthics):
     if(EVENTS.getOutcome(event) != 0):
         return(-6)
     # commented out for easy testing
-    # if(block.timestamp / periodLength != ((block.timestamp + 2 * TWENTYFOURHR) / periodLength)):
+    # if(block.timestamp / periodLength != ((block.timestamp + 2 * TWENTY_FOUR_HR) / periodLength)):
     #    return(-7)
     # ensures user has collected fees for last reporting period
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod - 1)):
@@ -180,7 +180,7 @@ def submitReport(event, salt, fxpReport, fxpEthics):
     if(diff >= 1):
         EVENTS.addReportersPaidSoFar(event)
         # todo fix this coming from branch b/c it'll get redistributed in collectfees and thus cause issues
-        if(!BRANCHES.getWallet(branch, ETHCONTRACT).transfer(msg.sender, 3500000 * tx.gasprice * ONE / WEITOETH)):
+        if(!BRANCHES.getWallet(branch, ETHCONTRACT).transfer(msg.sender, 3500000 * tx.gasprice * ONE / WEI_TO_ETH)):
             throw()
     return(1)
 
@@ -249,7 +249,7 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
     totalVal = EXPEVENTS.getShareValue(branch, votePeriod)
     shareFraction = shareValue * ONE / totalVal
     numReportersOnMarket = BRANCHES.getBaseReporters(branch) * ((-(267 * shareFraction ** 2) / (2 * ONE) + (533 * shareFraction) / 2 + 1 * ONE))
-    totalFeesInWei = totalFees * WEITOETH / ONE
+    totalFeesInWei = totalFees * WEI_TO_ETH / ONE
     canPayForThisManyReporters = totalFeesInWei / (3500000 * tx.gasprice)
     lesser = min(canPayForThisManyReporters * ONE, numReportersOnMarket)
     if(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):

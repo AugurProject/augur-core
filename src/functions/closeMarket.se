@@ -33,7 +33,7 @@ inset('../data_api/refund.se')
 
 macro YES: TWO
 macro NO: ONE
-macro BAD: 3 * ONEHALF
+macro BAD: 3 * ONE_HALF
 
 macro CATCH_TOLERANCE: ONE / 10
 
@@ -49,7 +49,7 @@ macro catch($x):
 
 # If ethicality value <.5 it's 0, otherwise it's ethical
 macro ethicCatch($x):
-    if($x < ONEHALF):
+    if($x < ONE_HALF):
         0
     else:
         ONE
@@ -141,7 +141,7 @@ def claimProceeds(branch, market):
     if(!winningOutcomes[1]):
         ethical = ethicCatch(EVENTS.getEthics(event))
         # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
-        if(categorical(event) and (EVENTS.getMode(event) == ONEHALF or !ethical)):
+        if(categorical(event) and (EVENTS.getMode(event) == ONE_HALF or !ethical)):
             success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))
         # resolves a regular binary market
         else:

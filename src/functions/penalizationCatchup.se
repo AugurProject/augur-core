@@ -5,7 +5,7 @@ import consensusData as CONSENSUS
 
 inset('../data_api/refund.se')
 
-macro POINTNINE: 16602069666338596864
+macro POINT_NINE: 16602069666338596864
 
 # Call when a user who hasn't reported for a while [and had their rep active] and wants to start again and needs to catch up on penalizations
 # Errors:
@@ -31,14 +31,14 @@ def penalizationCatchup(branch, sender):
     if(lastPeriodPenalized == lastPeriod or EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, sender)):
         return(-3)
     # dock 10% for each period they didn't penalize on
-    smoothedRep = oldRep * POINTNINE / ONE
+    smoothedRep = oldRep * POINT_NINE / ONE
     i = 1
     # if delta >22, max is 23 [1 above, 1 below, and 21 in while loop] penalizations simply so we don't run into out of gas issues
     if(delta > 22):
-        smoothedRep = smoothedRep * POINTNINE / ONE
+        smoothedRep = smoothedRep * POINT_NINE / ONE
         delta = 22
     while(i < delta):
-        smoothedRep = smoothedRep * POINTNINE / ONE
+        smoothedRep = smoothedRep * POINT_NINE / ONE
         i += 1
     # and send it to branch for penalty rep collection
     repChange = oldRep - smoothedRep

@@ -50,7 +50,7 @@ def slashRep(branch, salt, report, reporter, event):
     # removes rep from colluder
     REPORTING.subtractRep(branch, reporterIndex, reporterBalance)
     # gives truther half
-    REPORTING.addRep(branch, trutherIndex, (reporterBalance * ONEHALF / ONE))
+    REPORTING.addRep(branch, trutherIndex, (reporterBalance * ONE_HALF / ONE))
     # other half sent to branch
-    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), reporterBalance * ONEHALF / ONE)
+    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), reporterBalance * ONE_HALF / ONE)
     return(1)

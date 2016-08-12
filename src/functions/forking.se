@@ -13,8 +13,8 @@ extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:i
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
 
-macro POINTZEROONE: 184467440737095520
-macro FORKTEXT: text("fork")
+macro POINT_ZERO_ONE: 184467440737095520
+macro FORK_TEXT: text("fork")
 
 # UI has to handle function calls for these
 
@@ -150,8 +150,8 @@ def fork(event, branch, forkedOverEthicality):
         throw()
     CONSENSUSDATA.setRefund(event, msg.value)
     # if in last 48 hr of period and is round 2 event with reports attempted
-    if(block.timestamp / BRANCHES.getPeriodLength(branch) != ((block.timestamp + 2 * TWENTYFOURHR) / BRANCHES.getPeriodLength(branch)) and EVENTS.getUncaughtOutcome(event) != 0):
-        bond = POINTZEROONE * REPORTING.getTotalRep(branch) / ONE
+    if(block.timestamp / BRANCHES.getPeriodLength(branch) != ((block.timestamp + 2 * TWENTY_FOUR_HR) / BRANCHES.getPeriodLength(branch)) and EVENTS.getUncaughtOutcome(event) != 0):
+        bond = POINT_ZERO_ONE * REPORTING.getTotalRep(branch) / ONE
         BACKSTOPS.setBondAmount(event, bond)
         # lose fork bond in branch 1
         # results same as roundtwobond, let it resolve as that on original network
@@ -160,7 +160,7 @@ def fork(event, branch, forkedOverEthicality):
         # on branch 2 fork bond isn't lost
         # on fork bond isn't lost, gets paid up to 2x from "liars"
         # make the fork
-        newBranch = CREATEBRANCH.createSubbranch(FORKTEXT, BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), BRANCHES.getOracleOnly(branch))
+        newBranch = CREATEBRANCH.createSubbranch(FORK_TEXT, BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), BRANCHES.getOracleOnly(branch))
         REPORTING.setFork(newBranch)
         period = BRANCHES.getVotePeriod(newBranch)
         EXPEVENTS.setEventRequired(newBranch, period + 1, event)
@@ -179,7 +179,7 @@ def fork(event, branch, forkedOverEthicality):
         # return round 2 bond on orig. branch
         market = EVENTS.getMarket(event, 0)
         averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period - 1)/EXPEVENTS.getNumberEvents(branch, period - 1)
-        bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINTZEROONE + MARKETS.getTradingFee(market) / 2) / 2 ** 64
+        bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2) / 2 ** 64
         bond = min(bond, 200 * ONE)
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
@@ -236,14 +236,14 @@ def resolveForkEvent(branch, event):
             ethical = ethicCatch(EVENTS.getForkEthicality(event))
         EVENTS.setOutcome(event, fxpOutcome)
         EVENTS.setEthics(event, ethical)
-        if(fxpOutcome == 3 * ONEHALF or !ethical):
+        if(fxpOutcome == 3 * ONE_HALF or !ethical):
             # give event bond money to reporters
             branchWallet = BRANCHES.getWallet(branch, INFO.getCurrency(event))
             if(!INFO.getWallet(event).transfer(branchWallet, bond)):
                 throw()
 
             # not ethical is same as .5 outcome
-            fxpOutcome = 3 * ONEHALF
+            fxpOutcome = 3 * ONE_HALF
             EVENTS.setOutcome(event, fxpOutcome)
         else:
             # return 
@@ -272,7 +272,7 @@ def resolveForkEvent(branch, event):
         fxpOutcome = mode * (scaledMax - scaledMin) / ONE + scaledMin
         ethicOutcome = 2 ** 63 * (scaledMax - scaledMin) / ONE + scaledMin
         EVENTS.setOutcome(event, fxpOutcome)
-        if(mode == ONEHALF or !ethical):
+        if(mode == ONE_HALF or !ethical):
             # give event bond money to reporters
             branchWallet = BRANCHES.getWallet(branch, INFO.getCurrency(event))
             if(!INFO.getWallet(event).transfer(branchWallet, bond)):

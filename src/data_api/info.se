@@ -76,7 +76,7 @@ def setInfo(ID, description: str, creator, fxpFee, currency, wallet):
 ### Helper functions [only needed for tester, on chain in a separate file]:
 macro YES: TWO
 macro NO: ONE
-macro BAD: 3 * ONEHALF
+macro BAD: 3 * ONE_HALF
 macro CATCH_TOLERANCE: ONE / 10
 
 # Bins values to 1, 1.5, 2
@@ -89,7 +89,7 @@ macro catch($x):
         BAD
 
 macro ethicCatch($x):
-    if($x < ONEHALF):
+    if($x < ONE_HALF):
         0
     else:
         ONE
@@ -109,7 +109,7 @@ macro abs($a):
     $a
 
 macro ethicCatch($x):
-    if($x < ONEHALF):
+    if($x < ONE_HALF):
         0
     else:
         ONE

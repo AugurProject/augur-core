@@ -6,13 +6,13 @@ import reportingThreshold as THRESHOLD
 import fxpFunctions as FXP
 inset('../data_api/refund.se')
 
-macro ONEPOINTTWO: 22136092888451461120
+macro ONE_POINT_TWO: 22136092888451461120
 
-macro POINTZEROONE: 184467440737095520
+macro POINT_ZERO_ONE: 184467440737095520
 
-macro POINTONE: 1844674407370955264
+macro POINT_ONE: 1844674407370955264
 
-macro POINTNINE: 16602069666338596864
+macro POINT_NINE: 16602069666338596864
 
 # Prove both that a reporter voted on less than he/she actually could have and it was <.5 of what they should have reported on using an example event
 # The rep lost here is then sent to the branch's rep account and distributed like other redistributed rep.
@@ -36,7 +36,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     # events a user should be reporting on
     # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
     # a**b=exp(b*ln(a))=e**(b*ln(a)).
-    repConstant = FXP.fxExp(ONEPOINTTWO * FXP.fxLog(originalRep) / ONE) * 2 ** 64 / FXP.fxExp(ONEPOINTTWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
+    repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(originalRep) / ONE) * 2 ** 64 / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
     baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
     total = repConstant * baseReporters
     numRequiredEvents = EXPEVENTS.getNumRequired(branch, lastPeriod)
@@ -51,7 +51,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     if(BRANCHES.getForkPeriod(branch) + 1 == lastPeriod):
         CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
         return(2)
-    if(repConstant >= POINTZEROONE):
+    if(repConstant >= POINT_ZERO_ONE):
         minimum = min(30 + numRequiredEvents, eventsInPeriod)
         if(expectedEventsForReporterIncludingRequired / ONE < minimum):
             expectedEventsForReporterIncludingRequired = minimum * ONE
@@ -64,8 +64,8 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     couldveReported = THRESHOLD.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
     if(expectedEventsForReporterIncludingRequired / 2 > numReportsSubmitted * ONE and couldveReported):
         # penalize people
-        newRep = POINTONE * numReportsSubmitted * originalRep / (expectedEventsForReporterIncludingRequired / 2)
-        oldRep = originalRep * POINTNINE / ONE
+        newRep = POINT_ONE * numReportsSubmitted * originalRep / (expectedEventsForReporterIncludingRequired / 2)
+        oldRep = originalRep * POINT_NINE / ONE
         repChange = (oldRep + newRep) - originalRep
         if(repChange > 0):
             return(1)

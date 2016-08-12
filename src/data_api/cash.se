@@ -81,7 +81,7 @@ def setCash(address, balance):
     return(1)
 
 def depositEther():
-    amount = msg.value * ONE / WEITOETH
+    amount = msg.value * ONE / WEI_TO_ETH
     self.accounts[msg.sender].balance += amount
     self.totalSupply += amount
     return(1)
@@ -96,7 +96,7 @@ def withdrawEther(to, value):
     refund()
     if(value <= 0):
         return(-1)
-    amount = fxpValue * ONE / WEITOETH
+    amount = fxpValue * ONE / WEI_TO_ETH
     if(self.cashcoinBalances[msg.sender] >= amount):
         self.accounts[msg.sender].balance -= amount
         self.totalSupply -= amount

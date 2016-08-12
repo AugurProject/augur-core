@@ -127,8 +127,8 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs:arr):
                 MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
                 fee = value * fee / ONE
-                branchFees = (THREEFOURTHS + (ONEHALF - makerFeeRate) / 2) * fee / ONE
-                creatorFees = (ONEFOURTH + (ONEHALF - makerFeeRate) / 2) * fee / ONE
+                branchFees = (THREE_FOURTHS + (ONE_HALF - makerFeeRate) / 2) * fee / ONE
+                creatorFees = (ONE_FOURTH + (ONE_HALF - makerFeeRate) / 2) * fee / ONE
                 
                 # 75% to branch + .5% more to branch per maker fee 1% decrease
                 # 25% to creator + .5% more to creator per 1% decrease in maker fees
@@ -169,8 +169,8 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs:arr):
                 # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
                 MARKETS.modifyParticipantShares(market, msg.sender, outcome, fill, 1)
 
-                branchFees = (THREEFOURTHS + (ONEHALF - makerFeeRate) / 2) * tradeValueExcludingFees / ONE * fee / ONE
-                creatorFees = (ONEFOURTH + (ONEHALF - makerFeeRate) / 2) * tradeValueExcludingFees / ONE * fee / ONE
+                branchFees = (THREE_FOURTHS + (ONE_HALF - makerFeeRate) / 2) * tradeValueExcludingFees / ONE * fee / ONE
+                creatorFees = (ONE_FOURTH + (ONE_HALF - makerFeeRate) / 2) * tradeValueExcludingFees / ONE * fee / ONE
                 
                 # Transfer cash from user to person who has ask order and pay fee to branch and market creator
                 # 75% to branch + .5% more to branch per maker fee 1% decrease
@@ -267,8 +267,8 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
             return([INSUFFICIENT_BALANCE]: arr)
         fee = amount * price * feePercent(tradingFee, price, cumScale) / ONE ** 2
         makerFeeRate = MARKETS.getMakerFees(market)
-        branchFees = (THREEFOURTHS + (ONEHALF - makerFeeRate) / 2) * fee / ONE
-        creatorFees = (ONEFOURTH + (ONEHALF - makerFeeRate) / 2) * fee / ONE
+        branchFees = (THREE_FOURTHS + (ONE_HALF - makerFeeRate) / 2) * fee / ONE
+        creatorFees = (ONE_FOURTH + (ONE_HALF - makerFeeRate) / 2) * fee / ONE
         takerFeesTotal = branchFees + creatorFees
         cost = amount * cumScale / ONE - (amount * price / ONE - takerFeesTotal)
         if(INFO.getCurrency(market).balanceOf(msg.sender) < cost):
@@ -326,4 +326,3 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
         MARKETS.setPrice(market, outcome, price)
         t += 1
     return([SUCCESS, fxpMaxAmount, fill, price]: arr)
-]

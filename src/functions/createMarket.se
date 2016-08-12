@@ -27,8 +27,8 @@ import expiringEvents as EXPEVENTS
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 
-macro POINTZEROSIX: 1106804644422573056
-macro COSTPERREPORTER: 3500000
+macro POINT_ZERO_SIX: 1106804644422573056
+macro COST_PER_REPORTER: 3500000
 
 event marketCreated(market)
 event tradingFeeUpdated(market, fxpTradingFee)
@@ -106,9 +106,9 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
 def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3, fxpMakerFees, extraInfo:str, currency):
     callstackCheck()
     periodLength = BRANCHES.getPeriodLength(branch)
-    creationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / (2 * fxpTradingFee)
+    creationFee = POINT_ZERO_SIX * BRANCHES.getBaseReporters(branch) * ONE / (2 * fxpTradingFee)
     # gives ether/cash amount in fixed point
-    minFee = COSTPERREPORTER * BRANCHES.getBaseReporters(branch) * tx.gasprice * ONE / WEITOETH
+    minFee = COST_PER_REPORTER * BRANCHES.getBaseReporters(branch) * tx.gasprice * ONE / WEI_TO_ETH
     creationFee = max(minFee, creationFee)
     validityBond = (creationFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
     numOutcomes = EVENTS.getNumOutcomes(event)
@@ -118,7 +118,7 @@ def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3
     futurePeriod = expirationDate / periodLength
     forkPeriod = BRANCHES.getForkPeriod(branch)
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
-    if(!periodLength or !len(description) or fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > 2 ** 61 or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or fxpMakerFees < 0 or fxpMakerFees > ONEHALF):
+    if(!periodLength or !len(description) or fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > 2 ** 61 or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or fxpMakerFees < 0 or fxpMakerFees > ONE_HALF):
         return(-1)
     if(expirationDate < block.timestamp):
         return(-2)
@@ -171,7 +171,7 @@ def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3
         EXPEVENTS.addEvent(branch, futurePeriod, event, 500000 * tx.gasprice, currency, wallet)
         if(!EVENTS.getBond(event)):
             # pay validity / indeterminate protection bond
-            period = block.timestamp / TWENTYFOURHR
+            period = block.timestamp / TWENTY_FOUR_HR
             if(!currency.transferFrom(msg.sender, wallet, validityBond)):
                 throw()
             EVENTS.setBond(event, validityBond)
@@ -189,8 +189,8 @@ def updateTradingFee(market, fxpTradingFee):
     if(msg.sender != INFO.getCreator(market)):
         return(-1)
     oldFee = MARKETS.getTradingFee(market)
-    oldCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / oldFee
-    newCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / fxpTradingFee
+    oldCreationFee = POINT_ZERO_SIX * BRANCHES.getBaseReporters(branch) * ONE / oldFee
+    newCreationFee = POINT_ZERO_SIX * BRANCHES.getBaseReporters(branch) * ONE / fxpTradingFee
     if(fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > oldFee):
         return(-2)
     currency = INFO.getCurrency(market)
