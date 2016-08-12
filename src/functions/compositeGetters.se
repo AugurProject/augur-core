@@ -200,8 +200,8 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
         m += 1
     return(marketsInfo: arr)
 
-def getEventsWithSubmittedHashes(branch, period, from, to, reporter):
-    test_callstack()
+def getEventsWithSubmittedHash(branch, period, from, to, reporter):
+    self.test_callstack()
     numEvents = EXPEVENTS.getNumberEvents(branch, period)
     events = array(numEvents)
     i = from
@@ -215,7 +215,7 @@ def getEventsWithSubmittedHashes(branch, period, from, to, reporter):
     return(events: arr)
 
 def getEventsWithSubmittedReport(branch, period, from, to, reporter):
-    test_callstack()
+    self.test_callstack()
     numEvents = EXPEVENTS.getNumberEvents(branch, period)
     events = array(numEvents)
     i = from
