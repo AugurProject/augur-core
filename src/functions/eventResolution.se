@@ -65,6 +65,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
 
 # Resolves a binary market
 def resolveBinary(event, market, branch, votingPeriodEvent):
+    callstackCheck()
     fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
     periodLength = BRANCHES.getPeriodLength(branch)
     ethical = ethicCatch(EVENTS.getEthics(event))
@@ -77,6 +78,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
 
 # Resolves a categorical or scalar market
 def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch, votingPeriodEvent):
+    callstackCheck()
     mode = EVENTS.getUncaughtOutcome(event)
     EVENTS.setMode(event, mode)
     fxpOutcome = mode * (fxpScaledMax - fxpScaledMin) / ONE + fxpScaledMin
