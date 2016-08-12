@@ -71,6 +71,10 @@ macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee, 
         return(TRADE_ALREADY_EXISTS)
     log(type = logAddTx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, tradeID)
     return(tradeID)
+    
+macro removeTrade($tradeID, $market):
+    TRADES.removeTrade($tradeID)
+    MARKETS.removeTradeFromMarket($market, $tradeID)
 
 # 
 # Cancellation: cancels a trade, if a bid refunds money, if an ask returns shares
@@ -115,10 +119,6 @@ def cancel(tradeID):
         log(type = logCancel, market, msg.sender, fxpPrice, fxpAmount, tradeID, outcome, type)
         return(SUCCESS)
     return(FAILURE)
-
-macro removeTrade($tradeID, $market):
-    TRADES.removeTrade($tradeID)
-    MARKETS.removeTradeFromMarket($market, $tradeID)
 
 # 
 # Buy / Sell actions: puts orders on the book

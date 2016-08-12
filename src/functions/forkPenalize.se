@@ -11,6 +11,25 @@ inset('redistributeRep.se')
 inset('proportionCorrect.se')
 inset('repChange.se')
 
+macro handleEthicsAndBondRepRedistribution($numReportedOn):
+    # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality
+    if(ethics != ethicCatch(EVENTS.getEthics(event)) and repChange >= 0 and BACKSTOPS.getForkedOverEthicality(event)):
+        if($numReportedOn < 10):
+            repChange = -ONE / 10 * repBalance / ONE
+        else:
+            repChange = -ONE / $numReportedOn * repBalance / ONE
+    if(repBalance + repChange <= 0):
+        repChange = -1 * repBalance
+    if(BACKSTOPS.getForkBondPaid(event) < BACKSTOPS.getBondAmount(event) * 2 and repChange < 0):
+        # done instead of sending to redistrib. pool
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
+        # sends that rep to the bonded challenger
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(event)), -repChange)
+        BACKSTOPS.adjForkBondPaid(event, -1 * repChange)
+    else:
+        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
+        EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+
 # Penalizes a reporter for reporting wrongly on a forked event / backstop 2
 # Notes:
     # essentially penalizeWrong for backstop 2 [where everyone reports on a forked event on the new branch]
@@ -70,22 +89,3 @@ def penalizeOnForkedEvent(branch, event):
     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
         sendRedistributedRepToBranch()
     return(1)
-
-macro handleEthicsAndBondRepRedistribution($numReportedOn):
-    # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality
-    if(ethics != ethicCatch(EVENTS.getEthics(event)) and repChange >= 0 and BACKSTOPS.getForkedOverEthicality(event)):
-        if($numReportedOn < 10):
-            repChange = -ONE / 10 * repBalance / ONE
-        else:
-            repChange = -ONE / $numReportedOn * repBalance / ONE
-    if(repBalance + repChange <= 0):
-        repChange = -1 * repBalance
-    if(BACKSTOPS.getForkBondPaid(event) < BACKSTOPS.getBondAmount(event) * 2 and repChange < 0):
-        # done instead of sending to redistrib. pool
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
-        # sends that rep to the bonded challenger
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(event)), -repChange)
-        BACKSTOPS.adjForkBondPaid(event, -1 * repChange)
-    else:
-        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
-        EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)

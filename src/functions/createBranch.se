@@ -26,6 +26,13 @@ inset('../data_api/refund.se')
 
 data ethContract
 
+macro checkSubcurrencyIsValid(contract):
+    allowance = $contract.allowance(msg.sender, self)
+    balance = $contract.balanceOf(self)
+    transfer = $contract.transfer(msg.sender, 0)
+    transferFrom = $contract.transferFrom(self, msg.sender, 0)
+    approve = $contract.approve(self, 0)
+
 def init():
     # whatever the eth subcurrency contract is goes here
     self.ethContract = 5
@@ -69,14 +76,7 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
         return(-3)
     # pay creation fee, initialize branch info
     feePaid = self.ethContract.transferFrom(msg.sender, BRANCHES.getWallet(parent, self.ethContract), 47 * ONE)
-    if(feePaid and INFO.setInfo(branch, description, msg.sender\, 47 * ONE, 0, 0) and REPORTING.setInitialReporters(branch)):
+    if(feePaid and INFO.setInfo(branch, description, msg.sender, 47 * ONE, 0, 0) and REPORTING.setInitialReporters(branch)):
         return(branch)
     else:
         throw()
-        
-macro checkSubcurrencyIsValid(contract):
-    allowance = $contract.allowance(msg.sender, self)
-    balance = $contract.balanceOf(self)
-    transfer = $contract.transfer(msg.sender, 0)
-    transferFrom = $contract.transferFrom(self, msg.sender, 0)
-    approve = $contract.approve(self, 0)

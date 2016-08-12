@@ -37,6 +37,36 @@ data amountCanSpend[][](branch[])
 event Transfer(from:indexed, to:indexed, value)
 event Approval(owner:indexed, spender:indexed, value)
 
+#  0: only one period behind, need to do penalizations for it
+# -3: not in right part of period
+# -4: couldn't catchup automatically
+macro checkInvariants($account):
+    refund()
+    # need to check all this for the person it's being sent to as well
+    periodLength = BRANCHES.getPeriodLength(branch)
+    votePeriod = BRANCHES.getVotePeriod(branch)
+    lastPeriod = votePeriod - 1
+    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, $account)
+    delta = lastPeriod - lastPeriodPenalized
+    residual = block.timestamp % periodLength
+    # Rep cannot be simultaneously spent (transferred) and used to vote
+    if(residual > periodLength/2):
+        return(-3)
+    # auto increment vote period if needed
+    INCREMENTPERIOD.incrementPeriodAfterReporting(branch)
+    if(delta > 1):
+        if(CATCHUP.penalizationCatchup(branch, $account) != 1):
+            return(-4)
+    if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
+        return(0)
+
+# safe adders idea pulled from piper merriam's btcrelay audit
+macro safeToAdd($a, $b):
+    (($a + $b) >= $a)
+
+macro safeToSubtract($a, $b):
+    ($b <= $a)
+
 #def any():
 #    refund()
 
@@ -160,33 +190,3 @@ def approve(branch, spender, fxpValue):
 def allowance(branch, owner, spender):
     callstackCheck()
     return(self.amountCanSpend[owner][spender].branch[branch])
-
-#  0: only one period behind, need to do penalizations for it
-# -3: not in right part of period
-# -4: couldn't catchup automatically
-macro checkInvariants($account):
-    refund()
-    # need to check all this for the person it's being sent to as well
-    periodLength = BRANCHES.getPeriodLength(branch)
-    votePeriod = BRANCHES.getVotePeriod(branch)
-    lastPeriod = votePeriod - 1
-    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, $account)
-    delta = lastPeriod - lastPeriodPenalized
-    residual = block.timestamp % periodLength
-    # Rep cannot be simultaneously spent (transferred) and used to vote
-    if(residual > periodLength/2):
-        return(-3)
-    # auto increment vote period if needed
-    INCREMENTPERIOD.incrementPeriodAfterReporting(branch)
-    if(delta > 1):
-        if(CATCHUP.penalizationCatchup(branch, $account) != 1):
-            return(-4)
-    if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
-        return(0)
-
-# safe adders idea pulled from piper merriam's btcrelay audit
-macro safeToAdd($a, $b):
-    (($a + $b) >= $a)
-
-macro safeToSubtract($a, $b):
-    ($b <= $a)

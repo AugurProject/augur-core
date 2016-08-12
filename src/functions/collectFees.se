@@ -6,6 +6,24 @@ import reporting as REPORTING
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 
+macro prepareInfoForConsensus():
+    CONSENSUS.setFeesCollected(branch, sender, lastPeriod)
+    # return not reported enough bond if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees
+    if(!CONSENSUS.getNotEnoughPenalized(branch, sender, lastPeriod) or BRANCHES.getForkPeriod(branch) + 1 == lastPeriod):
+        CONSENSUS.doRefund(sender, sender)
+    # need to pay not reporting bond
+    if(msg.value <= 500000 * tx.gasprice):
+        throw()
+    balance = REPORTING.getRepBalance(branch, sender)
+    dormantRep = REPORTING.balanceOf(branch, sender)
+    # Record rep for next report period before any redistributions
+    EXPEVENTS.setBeforeRep(branch, votePeriod, balance, sender)
+    EXPEVENTS.setAfterRep(branch, votePeriod, balance, sender)
+    EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, sender)
+    CONSENSUS.setRefund(sender, msg.value)
+    if(!send(CONSENSUS, msg.value)):
+        throw()
+
 # Allows a user to collect both redistributed rep and trading fees earned at the end of a period
 # Errors:
     #  0: fees already collected
@@ -51,21 +69,3 @@ def collectFees(branch, sender):
         return(2)
     else:
         return(0)
-
-macro prepareInfoForConsensus():
-    CONSENSUS.setFeesCollected(branch, sender, lastPeriod)
-    # return not reported enough bond if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees
-    if(!CONSENSUS.getNotEnoughPenalized(branch, sender, lastPeriod) or BRANCHES.getForkPeriod(branch) + 1 == lastPeriod):
-        CONSENSUS.doRefund(sender, sender)
-    # need to pay not reporting bond
-    if(msg.value <= 500000 * tx.gasprice):
-        throw()
-    balance = REPORTING.getRepBalance(branch, sender)
-    dormantRep = REPORTING.balanceOf(branch, sender)
-    # Record rep for next report period before any redistributions
-    EXPEVENTS.setBeforeRep(branch, votePeriod, balance, sender)
-    EXPEVENTS.setAfterRep(branch, votePeriod, balance, sender)
-    EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, sender)
-    CONSENSUS.setRefund(sender, msg.value)
-    if(!send(CONSENSUS, msg.value)):
-        throw()
