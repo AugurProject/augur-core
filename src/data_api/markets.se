@@ -48,7 +48,7 @@ inset('refund.se')
     # fees is total fxpAmount of fees a market has paid to a branch [the reporters]
     # lastExpDate is when the market's last event expires
     # prices keeps track of the latest traded fxpPrice for a given outcome in a market
-data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, tradeIDs[](id, nextID, prevID), lastTrade, totalTrades, tag1, tag2, tag3, fxpMakerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime, lastExpDate, prices[])
+data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, tradeIDs[](id, nextID, prevID), lastTrade, totalTrades, tag1, tag2, tag3, fxpMakerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[])
 
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
@@ -115,9 +115,6 @@ def getTotalSharesPurchased(market):
 
 def getMarketEvent(market, index):
     return(self.Markets[market].events[index])
-
-def getCreationTime(market):
-    return(self.Markets[market].creationTime)
 
 def getMarketEvents(market):
     return(load(self.Markets[market].events[0], items = self.Markets[market].lenEvents): arr)
@@ -193,7 +190,6 @@ def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, 
     self.Markets[market].tag3 = tag3
     self.Markets[market].fxpMakerFees = fxpMakerFees
     self.Markets[market].fees = fxpCreationFee
-    self.Markets[market].creationTime = block.timestamp
     self.Markets[market].lastExpDate = lastExpDate
     return(1)
 

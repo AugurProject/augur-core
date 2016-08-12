@@ -148,27 +148,29 @@ def submitReport(event, salt, fxpReport, fxpEthics):
             return(-8)
 
     # actual submitting of fxpReport and ethicality
-    fxpReport = self.validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight)
-    if(fxpReport == -4):
+    validatedFxpReport = self.validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight)
+    if(validatedFxpReport == -4):
         return(-4)
-    EXPEVENTS.setReport(branch, votePeriod, event, fxpReport, msg.sender)
+    EXPEVENTS.setReport(branch, votePeriod, event, validatedFxpReport, msg.sender)
     # set ethicality for forked event
+    validatedFxpEthics = fxpEthics
     if(forkedOverThisEvent):
         # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
         if(forkedOverEthicality):
             oldEthical = ethicCatch(EVENTS.getEthics(event))
+            
             if(oldEthical == ONE):
-                fxpEthics = 0
+                validatedFxpEthics = 0
             else:
-                fxpEthics = ONE
-        EXPEVENTS.setEthicReport(branch, votePeriod, event, fxpEthics, msg.sender)
-        fxpEthics = (EVENTS.getForkEthicality(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + fxpEthics * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
-        EVENTS.setForkEthicality(event, fxpEthics)
+                validatedFxpEthics = ONE
+        EXPEVENTS.setEthicReport(branch, votePeriod, event, validatedFxpEthics, msg.sender)
+        eventEthics = (EVENTS.getForkEthicality(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + validatedFxpEthics * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+        EVENTS.setForkEthicality(event, eventEthics)
     # set ethicality for a regular event
     else:
-        EXPEVENTS.setEthicReport(branch, votePeriod, event, fxpEthics, msg.sender)
-        fxpEthics = (EVENTS.getEthics(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + fxpEthics * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
-        EVENTS.setEthics(event, fxpEthics)
+        EXPEVENTS.setEthicReport(branch, votePeriod, event, validatedFxpEthics, msg.sender)
+        eventEthics = (EVENTS.getEthics(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + validatedFxpEthics * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+        EVENTS.setEthics(event, eventEthics)
     # round 2 and fork events are weighted by rep, otherwise 1
     EXPEVENTS.countReportAsSubmitted(branch, votePeriod, event, msg.sender, weight)
 

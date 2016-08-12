@@ -14,6 +14,7 @@ inset('../data_api/refund.se')
 inset('eventHelpers.se')
 
 macro POINTZEROONE: 184467440737095520
+macro FORKTEXT: text("fork")
 
 # UI has to handle function calls for these
 
@@ -159,7 +160,7 @@ def fork(event, branch, forkedOverEthicality):
         # on branch 2 fork bond isn't lost
         # on fork bond isn't lost, gets paid up to 2x from "liars"
         # make the fork
-        newBranch = CREATEBRANCH.createSubbranch(text("fork"), BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), BRANCHES.getOracleOnly(branch))
+        newBranch = CREATEBRANCH.createSubbranch(FORKTEXT, BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), BRANCHES.getOracleOnly(branch))
         REPORTING.setFork(newBranch)
         period = BRANCHES.getVotePeriod(newBranch)
         EXPEVENTS.setEventRequired(newBranch, period + 1, event)

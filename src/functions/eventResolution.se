@@ -96,7 +96,7 @@ def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch
         # Binary or Categorical will have 1 winning outcome [1 or 2 for binary, 1 thru numOutcomes for categorical is the poss. value for the winning outcome]
 def determineWinningOutcomes(event):
     callstackCheck()
-    winningOutcomes = array(8)
+    winningOutcomes = a]rray(8)
     fxpOutcome = EVENTS.getOutcome(event)
     outcome = fxpOutcome / ONE
     # scalar or .5
