@@ -58,7 +58,7 @@ def any():
     refund()
 
 # Transfer rep
-# @return fxpValue of reputation sent, 0 if not enough reputation
+# @return 1 if reputation sent
 def transfer(receiver: address, fxpValue: uint256):
     senderBalance = self.reporting[msg.sender]
     if(senderBalance < fxpValue or fxpValue <= 0 or !self.seeded):
@@ -71,8 +71,8 @@ def transfer(receiver: address, fxpValue: uint256):
     return(1)
 
 # TransferFrom per token api allowing another contract to withdraw on user's behalf
-# also allows transfer if sent from the real owner
 # fails unless from has authorized sender
+# @return 1 if rep sent
 def transferFrom(from: address, receiver: address, fxpValue: uint256):
     senderBalance = self.reporting[from]
     if(senderBalance < fxpValue or fxpValue <= 0 or fxpValue > self.approvedToSpend[from][msg.sender] or !self.seeded):

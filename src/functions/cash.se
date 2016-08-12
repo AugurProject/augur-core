@@ -20,19 +20,33 @@
 
 ### Token wrapper for eth, which allows eth deposits and faucet usage for testing
 
-inset('refund.se')
+inset('../data_api/refund.se')
 
 data accounts[2**160](balance, spenders[2**160](maxValue))
 
 data totalSupply
+# token name for display
+data name
+# token symbol for display
+data symbol
+# amount of decimals per unit of rep
+data decimals
 
 event Transfer(from:indexed, to:indexed, value)
 event Approval(owner:indexed, spender:indexed, value)
 
+# 18 decimals
+macro ONE:
+    10 ** 18
+
 def init():
     self.accounts[msg.sender].balance = 100000 * 10 ** 20
+    self.name = "Cash"
+    self.symbol = "CASH"
+    self.decimals = 18
 
-def transfer(to, value):
+def transfer(to: address, value: uint256):
+    refund()
     senderBalance = self.accounts[msg.sender].balance
     if(senderBalance < value or value <= 0):
         throw()
@@ -44,37 +58,31 @@ def transfer(to, value):
     log(type = Transfer, msg.sender, to, value)
     return(1)
 
-def transferFrom(from, to, value):
+def transferFrom(from: address, to: address, value: uint256):
+    refund()
     senderBalance = self.accounts[from].balance
     if(senderBalance < value or value <= 0 or value > self.accounts[from].spenders[msg.sender].maxValue):
         throw()
     if(!safeToSubtract(senderBalance, value) or !safeToAdd(self.accounts[to].balance, value)):
         throw()
+    self.accounts[from].spenders[msg.sender].maxValue -= value
     # Update balances
     self.accounts[from].balance -= value
     self.accounts[to].balance += value
     log(type = Transfer, from, to, value)
-    self.accounts[from].spenders[msg.sender].maxValue -= value
     return(1)
 
-def approve(spender, value):
+def approve(spender: address, value: uint256):
+    refund()
+    # todo is this poss
     if(value <= 0):
         return(0)
     self.accounts[msg.sender].spenders[spender].maxValue = value
     log(type=Approval, msg.sender, spender, value)
     return(1)
 
-# Returns the amount which spender is allowed to transfer from address
-def allowance(address, spender):
-    return(self.accounts[address].spenders[spender].maxValue)
-
-def totalSupply():
-    return(self.totalSupply)
-
-def balanceOf(address):
-    return(self.accounts[address].balance)
-
-def setCash(address, balance):
+def setCash(address: address, balance: uint256):
+    refund()
     # if !self.whitelist.check(msg.sender):
     #    return(-1)
     delta = balance - self.accounts[address].balance
@@ -94,19 +102,38 @@ def depositEther():
 # Errors:
     # 0: Not enough money
     # -1: value less than or equal to 0
-def withdrawEther(to, value):
+def withdrawEther(to: address, value: uint256):
     refund()
     if(value <= 0):
         return(-1)
-    amount = fxpValue * ONE / WEI_TO_ETH
-    if(self.cashcoinBalances[msg.sender] >= amount):
-        self.accounts[msg.sender].balance -= amount
-        self.totalSupply -= amount
-        if(!send(to, fxpValue)):
+    if(self.accounts[msg.sender].balance >= value):
+        self.accounts[msg.sender].balance -= value
+        self.totalSupply -= value
+        if(!send(to, value)):
             throw()
         return(1)
     else:
         return(0)
+
+# Returns amount spender can withdraw from owner
+def allowance(owner: address, spender: address):
+    return(self.accounts[address].spenders[spender].maxValue)
+
+def totalSupply():
+    return(self.totalSupply)
+
+# @return reputation fxpValue
+def balanceOf(address: address):
+    return(self.accounts[msg.sender].balance)
+
+def getName():
+    return(self.name)
+    
+def getDecimals():
+    return(self.decimals)
+    
+def getSymbol():
+    return(self.symbol)
 
 # safe adders idea pulled from piper merriam's btcrelay audit
 macro safeToAdd($a, $b):
