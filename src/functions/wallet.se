@@ -1,3 +1,5 @@
+### Contract which holds funds for things like markets, events, and branches in various subcurrencies
+
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 #extern whitelistStuff: [functions:[blam, blam!]]
 

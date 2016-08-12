@@ -18,6 +18,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+### This allows users to close markets
+
 # todo fix getoutcome stuff 0 is a valid outcome... and anywhere getoutcome is used
 
 import branches as BRANCHES
@@ -118,45 +120,3 @@ def closeMarket(branch, market, sender):
     # refunds closing cost
     MARKETS.refundClosing(market, sender)
     return(1)
-
-# Claim trading profits/value per share after a market is resolved
-# @returns 1 if successful
-# Errors:
-    # 0: market not resolved
-    # -1: trader doesn't exist
-    # -8: invalid branch
-#data withdrawInitiated[]
-# todo macro THREEDAYS: 259200 add to getting $ for shares
-def claimProceeds(branch, market):
-    refund()
-    if(MARKETS.getBranch(market) != branch):
-        return(-8)
-    tradingPeriod = MARKETS.getTradingPeriod(market)
-    period = BRANCHES.getVotePeriod(branch)
-    event = MARKETS.getMarketEvent(market, 0)
-    resolved = 1
-    if(!EVENTS.getOutcome(event)):
-        resolved = 0
-    # as long as it's resolved and trading period over money can be collected
-    if((period <= tradingPeriod) or !resolved):
-        return(0)
-    winningOutcomes = array(8)
-    winningOutcomes = MARKET.getWinningOutcomes(market, outitems = 8)
-    success = 0
-    # market not resolved
-    if(!winningOutcomes[0]):
-        return(0)
-    if(!winningOutcomes[1]):
-        ethical = ethicCatch(EVENTS.getEthics(event))
-        # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
-        if(categorical(event) and (EVENTS.getMode(event) == ONE_HALF or !ethical)):
-            success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))
-        # resolves a regular binary market
-        else:
-            success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, 0)
-    # resolves a scalar market
-    elif(winningOutcomes[1]):
-        success = CLOSETWO.twoOutcomes(market, winningOutcomes, event, msg.sender)
-    else:
-        throw()
-    return(success)

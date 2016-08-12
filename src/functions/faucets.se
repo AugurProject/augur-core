@@ -21,6 +21,8 @@
 #
 # If you have questions, please contact jack@augur.net or joey@augur.net.
 
+### Faucets - get ~free rep + cash!
+
 import reporting as REPORTING
 import events as EVENTS
 import cash as CASH

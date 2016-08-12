@@ -1,3 +1,5 @@
+### Handles reporter penalization on forked events
+
 import branches as BRANCHES
 import reporting as REPORTING
 import events as EVENTS
@@ -46,6 +48,7 @@ macro handleEthicsAndBondRepRedistribution($numReportedOn):
     # -5: event branch is invalid/doesn't match
 def penalizeOnForkedEvent(branch, event):
     refund()
+    # todo perhaps increment period by default if not done
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     periodLength = BRANCHES.getPeriodLength(branch)

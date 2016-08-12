@@ -18,6 +18,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+### Deals with the reporting process but not consensus / redistribution
+
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import events as EVENTS
@@ -51,6 +53,7 @@ def makeHash(salt, fxpReport, event, sender):
 # Error -4: not caught up on penalizations [>1 period behind] and auto catchup failed
 def submitReportHash(event, reportHash, encryptedSaltyHash):
     refund()
+    # todo perhaps increment period by default if not done
     branch = EVENTS.getBranch(event)
     votePeriod = BRANCHES.getVotePeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)

@@ -18,6 +18,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+### Allows creation of events and markets and manipulating them
+
 import branches as BRANCHES
 import info as INFO
 import markets as MARKETS

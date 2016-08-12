@@ -1,3 +1,5 @@
+### Handles the default consensus cases: redistributions during reporting on the first round and incrementing the branch's period
+
 import reporting as REPORTING
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
@@ -62,6 +64,7 @@ macro periodOver($branch):
 # call with branch, 0 if no events
 def penalizeWrong(branch, event):
     refund()
+    # todo perhaps increment period by default if not done
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
     periodLength = BRANCHES.getPeriodLength(branch)

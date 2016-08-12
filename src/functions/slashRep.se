@@ -1,3 +1,5 @@
+### Allows rep to be taken from colluders
+
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import reporting as REPORTING

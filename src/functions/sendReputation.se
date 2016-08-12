@@ -23,10 +23,13 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+### Allows sending of rep and conversion between dormant and active rep
+
 import branches as BRANCHES
 import reporting as REPORTING
 import penalizationCatchup as CATCHUP
 import consensusData as CONSENSUS
+# should really factor this out so they don't depend on eachother
 import consensus as INCREMENTPERIOD
 import repContract as REPCONTRACT
 inset('../data_api/refund.se')

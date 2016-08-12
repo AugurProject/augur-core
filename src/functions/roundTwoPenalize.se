@@ -1,3 +1,5 @@
+### Handles reporter penalization for the first backstop
+
 import reporting as REPORTING
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
@@ -37,6 +39,7 @@ macro MIN_BOND: 200 * ONE
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized
 def penalizeRoundTwoWrong(branch, event):
     refund()
+    # todo perhaps increment period by default if not done
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
     lastPenalizationPeriod = lastPeriod - 1
     periodLength = BRANCHES.getPeriodLength(branch)

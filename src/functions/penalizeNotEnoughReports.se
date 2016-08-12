@@ -1,3 +1,5 @@
+### Allows a user to prove that a reporter didn't report enough / skimped on their reporting requirements
+
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import consensusData as CONSENSUS

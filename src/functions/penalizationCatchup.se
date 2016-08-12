@@ -1,3 +1,5 @@
+### Allows a user who's had active rep but hasn't reported get caught up on penalizations
+
 import branches as BRANCHES
 import reporting as REPORTING
 import expiringEvents as EXPEVENTS

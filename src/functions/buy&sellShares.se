@@ -18,6 +18,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+### This allows you to place orders on the book and cancel them
+
 import branches as BRANCHES
 import markets as MARKETS
 import trades as TRADES

@@ -1,3 +1,5 @@
+### Deals with whether a reporter can report on a given event
+
 import branches as BRANCHES
 import events as EVENTS
 import expiringEvents as EXPEVENTS

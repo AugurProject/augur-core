@@ -18,6 +18,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+### Token wrapper for eth, which allows eth deposits and faucet usage for testing
+
 inset('refund.se')
 
 data accounts[2**160](balance, spenders[2**160](maxValue))
