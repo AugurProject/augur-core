@@ -51,8 +51,8 @@ data branchList[]
 data branchListCount
 
 def init():
-    self.Branches[1010101].currentVotePeriod = (block.timestamp / 7200) - 1
-    self.Branches[1010101].periodLength = 7200 # 2 hours
+    self.Branches[1010101].currentVotePeriod = (block.timestamp / 172800) - 1
+    self.Branches[1010101].periodLength = 172800 # 1 week
     # .5%
     self.Branches[1010101].minTradingFee = 5000000000000000 
     self.branchListCount = 1
