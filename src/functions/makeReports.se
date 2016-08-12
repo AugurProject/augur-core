@@ -88,8 +88,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     x = array(1)
     x[0] = msg.sender + event
     # do abs then mult by 2 to ensure pos. and between 0 and 1
-    shaHash = sha3(x, items = 1)
-    shaHash = (abs(shaHash) / ONE) * 2
+    shaHash = (abs(sha3(x, items = 1)) / ONE) * 2
     # shaHash must be <= to the threshold for that user to be able to fxpReport on the given event
     if(shaHash <= reportingThreshold):
         EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)

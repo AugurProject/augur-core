@@ -326,3 +326,4 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
         MARKETS.setPrice(market, outcome, price)
         t += 1
     return([SUCCESS, fxpMaxAmount, fill, price]: arr)
+]
