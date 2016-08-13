@@ -1,3 +1,0 @@
-macro logReturn($type, $returnValue):
-    log(type=$type, $returnValue)
-    return($returnValue)

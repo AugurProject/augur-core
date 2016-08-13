@@ -27,9 +27,8 @@ import markets as MARKETS
 inset('refund.se')
 
 macro TRADE_FIELDS: 8
-macro EVENTS_FIELDS: 6
+macro EVENTS_FIELDS: 7
 macro OUTCOMES_FIELDS: 2
-macro WINNING_OUTCOMES_FIELDS: 8
 macro BASE_FIELDS: 14
 macro BASE_CACHE_FIELDS: 10
 
@@ -59,7 +58,7 @@ def getMarketInfo(marketID):
     resolutionLength = EVENTS.getResolutionLength(eventID)
     extraInfoLength = MARKETS.getExtraInfoLength(marketID)
     numOutcomes = MARKETS.getMarketNumOutcomes(marketID)
-    marketInfo = array(BASE_FIELDS + EVENTS_FIELDS + numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + resolutionLength + extraInfoLength + 3)
+    marketInfo = array(BASE_FIELDS + EVENTS_FIELDS + numOutcomes*OUTCOMES_FIELDS + descriptionLength + resolutionLength + extraInfoLength + 3)
     marketInfo[0] = marketID
     marketInfo[1] = MARKETS.getMakerFees(marketID)
     marketInfo[2] = numOutcomes
@@ -78,12 +77,13 @@ def getMarketInfo(marketID):
 
     # gather event(s) info:
     # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
-    eventInfo = EVENTS.getEventInfo(eventID, outitems=EVENTS_FIELDS)
+    eventInfo = EVENTS.getEventInfo(eventID, outitems=EVENTS_FIELDS - 1)
     marketInfo[index] = eventID
     j = 1
-    while j < EVENTS_FIELDS:
+    while j < EVENTS_FIELDS - 1:
         marketInfo[index + j] = eventInfo[j]
         j += 1
+    marketInfo[index + EVENTS_FIELDS] = EVENTS.getEthical(eventID)
     index += EVENTS_FIELDS
 
     # gather outcomes info: [sharesPurchased, price], winningOutcomes
@@ -94,12 +94,6 @@ def getMarketInfo(marketID):
         marketInfo[index + k*OUTCOMES_FIELDS + 1] = MARKETS.getLastOutcomePrice(marketID, k + 1)
         k += 1
     index += numOutcomes*OUTCOMES_FIELDS
-    winningOutcomes = MARKETS.getWinningOutcomes(marketID, outitems=8)
-    k = 0
-    while k < WINNING_OUTCOMES_FIELDS:
-        marketInfo[index + k] = winningOutcomes[k]
-        k += 1
-    index += WINNING_OUTCOMES_FIELDS
 
     # append description character codes
     marketInfo[index] = descriptionLength
@@ -145,7 +139,7 @@ def batchGetMarketInfo(marketIDs: arr):
         resolutionLength = EVENTS.getResolutionLength(eventID)
         extraInfoLength = MARKETS.getExtraInfoLength(marketID)
         numOutcomes = MARKETS.getMarketNumOutcomes(marketID)
-        marketInfoLength[i] = BASE_FIELDS + EVENTS_FIELDS + numOutcomes*OUTCOMES_FIELDS + WINNING_OUTCOMES_FIELDS + descriptionLength + resolutionLength + extraInfoLength + 4
+        marketInfoLength[i] = BASE_FIELDS + EVENTS_FIELDS + numOutcomes*OUTCOMES_FIELDS + descriptionLength + resolutionLength + extraInfoLength + 4
         totalLength += marketInfoLength[i]
         i += 1
     marketsInfo = array(totalLength)
