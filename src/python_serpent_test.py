@@ -259,11 +259,11 @@ def test_trading():
         market = [bin_market, cat_market]
         maxValue = i * i * 2**64
         minValue = i * 2**64
-        cumScale = []
+        cumulativeScale = []
         if(maxValue != 2**65 or minValue != 2**64):
-            cumScale = [maxValue - minValue, 2**64]
+            cumulativeScale = [maxValue - minValue, 2**64]
         else:
-            cumScale = [2**64, 2**64]
+            cumulativeScale = [2**64, 2**64]
         a = 0
         while a < 2:
             initialBranchBal = c.balance(1010101)
@@ -274,7 +274,7 @@ def test_trading():
             # to calc costs need data to do fee calc and whether maker or not
             # etc.
             feePercent = 4 * c.getTradingFee(market[a]) * .01 * 2**64 * (
-                2**64 - .01 * 2**64 * 2**64 / cumScale[a]) / (2**64 * cumScale[a])
+                2**64 - .01 * 2**64 * 2**64 / cumulativeScale[a]) / (2**64 * cumulativeScale[a])
             fee = .01 * 2**64 * feePercent / 2**64
             # THREE_FOURTHS is 3/4
             branchFees = (.75 * 2**64 + (.5 * 2**64 -
@@ -289,10 +289,10 @@ def test_trading():
             assert(c.balance(s.block.coinbase) == 100000 * 2**64)
             assert(c.balance(sender2) == 100000 * 2**64)
             gas_use(s)
-            assert(c.getCumScale(market[a]) == cumScale[a])
+            assert(c.getCumulativeScale(market[a]) == cumulativeScale[a])
             assert(c.buyCompleteSets(market[a], 10 * 2**64) == 1)
             assert(c.balance(s.block.coinbase) == (
-                100000 * 2**64 - 10 * cumScale[a]))
+                100000 * 2**64 - 10 * cumulativeScale[a]))
             print c.balance(s.block.coinbase)
             print "Buy complete sets gas use"
             print gas_use(s)
@@ -301,14 +301,14 @@ def test_trading():
                 assert(c.cancel(sellin) == 1)
             assert(c.sellCompleteSets(market[a], 8 * 2**64) == 1)
             assert(c.balance(s.block.coinbase) == (
-                100000 * 2**64 - 2 * cumScale[a]))
-            assert(c.balance(market[a]) == 2 * cumScale[a])
+                100000 * 2**64 - 2 * cumulativeScale[a]))
+            assert(c.balance(market[a]) == 2 * cumulativeScale[a])
             print "Sell complete sets gas use"
             print gas_use(s)
             print "market vol"
             assert(c.getVolume(market[a]) == 18 *
                    c.getMarketNumOutcomes(market[a]) * 2**64)
-            assert(c.getSharesValue(market[a]) == c.getCumScale(market[a]) * 2)
+            assert(c.getSharesValue(market[a]) == c.getCumulativeScale(market[a]) * 2)
             assert(c.getTotalSharesPurchased(
                 market[a]) == 2 * c.getMarketNumOutcomes(market[a]) * 2**64)
             assert(c.getParticipantSharesPurchased(
@@ -475,14 +475,14 @@ def test_trading():
             assert(nearly_equal(c.getTotalSharesPurchased(
                 market[a]), 12 * c.getMarketNumOutcomes(market[a]) * 2**64))
             assert(nearly_equal(c.getSharesValue(
-                market[a]), c.getCumScale(market[a]) * 12))
+                market[a]), c.getCumulativeScale(market[a]) * 12))
             assert(isclose(c.getVolume(
                 market[a]), (4 * 2**64 + 28 * c.getMarketNumOutcomes(market[a]) * 2**64)))
             assert(isclose((c.balance(1010101) - initialBranchBal) /
                            2**64, fee * 2 / 2**64))
-            # complete sets #*cumscale or 12*cumscale
+            # complete sets #*cumulativeScale or 12*cumulativeScale
             assert(isclose(c.balance(market[a]) /
-                           2**64, 12 * cumScale[a] / 2**64))
+                           2**64, 12 * cumulativeScale[a] / 2**64))
             buy = c.buy(2**64, int(.01 * 2**64), market[a], 1, sender=t.k2)
             # Example:
             # buyer gives up say 20
@@ -518,14 +518,14 @@ def test_trading():
             afterm = c.balance(market[a])
             afterog = c.balance(s.block.coinbase)
             assert(isclose((afterm - beforem) / 2**64,
-                           (cumScale[a] - .01 * 2**64 - makerFee) / 2**64))
+                           (cumulativeScale[a] - .01 * 2**64 - makerFee) / 2**64))
             # lose cost for complete sets and branchfees, creator fees paid by
             # you go back to you, makerfees/2 go to you, get money back from
             # buy order you filled
             assert(isclose((beforeog - afterog) / 2**64,
-                           (cumScale[a] - .01 * 2**64 + branchFees - makerFee / 2) / 2**64) == 1)
+                           (cumulativeScale[a] - .01 * 2**64 + branchFees - makerFee / 2) / 2**64) == 1)
             assert(isclose((beforeog - afterog) / 2**64,
-                           (cumScale[a] - .01 * 2**64 + branchFees - makerFee / 2) / 2**64))
+                           (cumulativeScale[a] - .01 * 2**64 + branchFees - makerFee / 2) / 2**64))
             a += 1
         i += 1
     print "BUY AND SELL OK"

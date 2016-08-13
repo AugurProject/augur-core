@@ -43,13 +43,13 @@ macro INSUFFICIENT_BALANCE: 10
 macro TRADE_ALREADY_EXISTS: 21
 macro TRADE_SAME_BLOCK_PROHIBITED: 22
 
-macro feePercent($marketFee, $fxpPrice, $cumScale):
-    4 * $marketFee * $fxpPrice * (ONE - $fxpPrice * 2 ** 64 / $cumScale) / ($cumScale * ONE)
+macro feePercent($marketFee, $fxpPrice, $cumulativeScale):
+    4 * $marketFee * $fxpPrice * (ONE - $fxpPrice * 2 ** 64 / $cumulativeScale) / ($cumulativeScale * ONE)
 
 macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee, $sender):
     trade = [$type, $market, $fxpAmount, $fxpPrice, $sender, block.number, $outcome]
     tradeID = sha3(trade, items = 7)
-    cumScale = MARKETS.getCumScale($market)
+    cumulativeScale = MARKETS.getCumulativeScale($market)
 
     # Save trade
     if(!TRADES.getID(tradeID)):
@@ -98,8 +98,8 @@ def cancel(tradeID):
     owner = trade[5]
     outcome = trade[7]
     tradingFee = MARKETS.getTradingFee(market)
-    cumScale = MARKETS.getCumScale(market)
-    fee = feePercent(tradingFee, fxpPrice, cumScale) * MARKETS.getMakerFees(market) / ONE
+    cumulativeScale = MARKETS.getCumulativeScale(market)
+    fee = feePercent(tradingFee, fxpPrice, cumulativeScale) * MARKETS.getMakerFees(market) / ONE
     # Check the owner
     if(msg.sender == owner):
         # Clear the trade first
@@ -108,7 +108,7 @@ def cancel(tradeID):
         if(type == BID):
             # cash refund
             amt = fxpAmount * fxpPrice * (fee + ONE) / ONE ** 2
-            if(!INFO.getWallet(market).transfer(msg.sender, amt)):
+            if(!INFO.getWallet(market).msg.sender, amt)):
                 throw()
         elif(type == ASK):
             # shares refund
@@ -135,13 +135,13 @@ def cancel(tradeID):
 def buy(fxpAmount, fxpPrice, market, outcome):
     refund()
     tradingFee = MARKETS.getTradingFee(market)
-    cumScale = MARKETS.getCumScale(market)
-    fee = feePercent(tradingFee, fxpPrice, cumScale) * MARKETS.getMakerFees(market) / ONE
+    cumulativeScale = MARKETS.getCumulativeScale(market)
+    fee = feePercent(tradingFee, fxpPrice, cumulativeScale) * MARKETS.getMakerFees(market) / ONE
     branch = MARKETS.getBranch(market)
-    if(!MARKETS.getCreationTime(market)):
+    if(!branch):
         return(0)
     # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
-    if(fxpPrice > cumScale or fxpAmount * fxpPrice < 3402823669209384705829531287552 or fxpAmount * fxpPrice >= 2 ** 190):
+    if(fxpPrice > cumulativeScale or fxpAmount * fxpPrice < 3402823669209384705829531287552 or fxpAmount * fxpPrice >= 2 ** 190):
         return(-1)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)
@@ -154,10 +154,10 @@ def sell(fxpAmount, fxpPrice, market, outcome):
     refund()
     branch = MARKETS.getBranch(market)
     tradingFee = MARKETS.getTradingFee(market)
-    cumScale = MARKETS.getCumScale(market)
-    fee = feePercent(tradingFee, fxpPrice, cumScale) * MARKETS.getMakerFees(market) / ONE
+    cumulativeScale = MARKETS.getCumulativeScale(market)
+    fee = feePercent(tradingFee, fxpPrice, cumulativeScale) * MARKETS.getMakerFees(market) / ONE
     # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
-    if(fxpPrice > cumScale or fxpAmount * fxpPrice < 3402823669209384705829531287552L or fxpAmount * fxpPrice >= 2 ** 190):
+    if(fxpPrice > cumulativeScale or fxpAmount * fxpPrice < 3402823669209384705829531287552L or fxpAmount * fxpPrice >= 2 ** 190):
         return(-1)
     if(BRANCHES.getOracleOnly(branch)):
         return(-2)

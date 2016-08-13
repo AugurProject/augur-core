@@ -66,6 +66,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         1
 
 # Resolves a binary market
+# whitelist
 def resolveBinary(event, market, branch, votingPeriodEvent):
     callstackCheck()
     fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
@@ -79,6 +80,7 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
     return(val)
 
 # Resolves a categorical or scalar market
+# whitelist
 def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch, votingPeriodEvent):
     callstackCheck()
     mode = EVENTS.getUncaughtOutcome(event)
@@ -100,7 +102,7 @@ def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch
         # Binary or Categorical will have 1 winning outcome [1 or 2 for binary, 1 thru numOutcomes for categorical is the poss. value for the winning outcome]
 def determineWinningOutcomes(event):
     callstackCheck()
-    winningOutcomes = a]rray(8)
+    winningOutcomes = array(8)
     fxpOutcome = EVENTS.getOutcome(event)
     outcome = fxpOutcome / ONE
     # scalar or .5

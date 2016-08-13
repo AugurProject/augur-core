@@ -97,7 +97,7 @@ def penalizeWrong(branch, event):
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     # todo fix getoutcome
     elif(!EVENTS.getOutcome(event) and !(rejected and EVENTS.getRejectedPeriod(event) == lastPeriod)):
-        if(CLOSEMARKET.closeMarket(branch, EVENTS.getMarket(event, 0), msg.sender) != 1):
+        if(CLOSEMARKET.closeMarket(EVENTS.getMarket(event, 0), msg.sender) != 1):
             return(-6)
     elif(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
         return(-7)

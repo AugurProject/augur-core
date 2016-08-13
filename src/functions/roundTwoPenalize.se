@@ -40,6 +40,8 @@ macro MIN_BOND: 200 * ONE
 def penalizeRoundTwoWrong(branch, event):
     refund()
     # todo perhaps increment period by default if not done
+    if(!branch):
+        return(0)
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
     lastPenalizationPeriod = lastPeriod - 1
     periodLength = BRANCHES.getPeriodLength(branch)

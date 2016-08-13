@@ -45,6 +45,8 @@ def moveEvent(event):
     refund()
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     branch = EVENTS.getEventBranch(event)
+    if(!branch or !event):
+        return(0)
     eventForkedOver = BRANCHES.getEventForkedOver(branch)
     expPeriod = EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch)
     eventIndex = EXPEVENTS.getEventIndex(expPeriod, event)
@@ -143,7 +145,7 @@ def fork(event, branch, forkedOverEthicality):
         return(-3)
     if(EVENTS.getOriginalExpiration(event) != EVENTS.getExpiration(event)):
         return(-4)
-    if(EVENTS.getEventBranch(event) != branch):
+    if(EVENTS.getEventBranch(event) != branch or !branch or !event):
         return(-5)
     # todo find actual gas cost for resolution here and charge that
     if(msg.value < 200000 * tx.gasprice):
@@ -201,7 +203,7 @@ def resolveForkedEvent(branch, event):
     refund()
     votedOnAgain = 0
     # checks for orig. branch
-    if(EVENTS.getEventBranch(event) != branch or BRANCHES.getEventForkedOver(branch) != event):
+    if(EVENTS.getEventBranch(event) != branch or BRANCHES.getEventForkedOver(branch) != event or !branch or !event):
         return(0)
     if(BRANCHES.getVotePeriod(branch) > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
         votedOnAgain = 1
@@ -217,6 +219,7 @@ def resolveForkedEvent(branch, event):
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
     # helper function for resolveForkedEvent
+# needs whitelist
 def resolveForkEvent(branch, event):
     refund()
     # whitelist

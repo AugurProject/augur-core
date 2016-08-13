@@ -135,7 +135,7 @@ def getParticipantSharesPurchased(market, trader, outcome):
 def getNumEvents(market):
     return(self.Markets[market].lenEvents)
 
-def getCumScale(market):
+def getCumulativeScale(market):
     return(self.Markets[market].cumulativeScale)
 
 def getMarketNumOutcomes(market):
@@ -160,7 +160,7 @@ def getBranch(market):
 macro market($market):
     self.Markets[$market]
 
-macro fxpCumScale($market):
+macro fxpcumulativeScale($market):
     market($market).cumulativeScale
 
 macro numOutcomes($market):
@@ -170,7 +170,7 @@ macro sharesPurchased($market):
     market($market).sharesPurchased
 
 # check that msg.sender is one of our function contracts
-def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpMakerFees, fxpCumScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate):
+def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpMakerFees, fxpcumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add event list to the market
@@ -182,7 +182,7 @@ def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, 
     self.Markets[market].originalPeriod = tradingPeriod
     self.Markets[market].fxpTradingFee = fxpTradingFee
     self.Markets[market].branch = branch
-    self.Markets[market].cumulativeScale = fxpCumScale
+    self.Markets[market].cumulativeScale = fxpcumulativeScale
     self.Markets[market].numOutcomes = numOutcomes
     self.Markets[market].tag1 = tag1
     self.Markets[market].tag2 = tag2

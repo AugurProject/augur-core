@@ -10,20 +10,20 @@ inset('../data_api/refund.se')
     # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant # 0 is really # 0]
 def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes):
     callstackCheck()
-    cumScale = MARKETS.getCumScale(market)
+    cumulativeScale = MARKETS.getCumulativeScale(market)
     # if it's an indeterminate categorical market resolve with all outcomes having an equal value
     if(categoricalPointFive):
         i = 0
         while(i < numOutcomes):
             sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, i + 1)
             MARKETS.modifyParticipantShares(market, sender, i + 1, -sharesOwned, 0)
-            if(!INFO.getWallet(market).transfer(sender, sharesOwned * MARKETS.getCumScale(market) / (numOutcomes * ONE))):
+            if(!INFO.getWallet(market).transfer(sender, sharesOwned * MARKETS.getCumulativeScale(market) / (numOutcomes * ONE))):
                 throw()
             i += 1
     else:
         # distribute profit to the people who won money by holding winning shares
         sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, winningOutcome)
         MARKETS.modifyParticipantShares(market, sender, winningOutcome, -sharesOwned, 0)
-        if(!INFO.getWallet(market).transfer(sender, sharesOwned * cumScale / ONE)):
+        if(!INFO.getWallet(market).transfer(sender, sharesOwned * cumulativeScale / ONE)):
             throw()
     return(1)

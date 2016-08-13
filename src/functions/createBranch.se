@@ -49,7 +49,7 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
     refund()
     if(periodLength <= 0 or !BRANCHES.getPeriodLength(parent) or !len(description)):
         return(-1)
-    if(fxpMinTradingFee < 0 or fxpMinTradingFee > 2 ** 62):
+    if(fxpMinTradingFee < 0 or fxpMinTradingFee > 2 ** 62 or (oracleOnly != 0 and oracleOnly != 1)):
         return(-1)
     parentPeriod = BRANCHES.getVotePeriod(parent)
     branchInfo = string(7 * 32 + len(description))

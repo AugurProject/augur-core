@@ -70,13 +70,12 @@ macro categorical($event):
     # -1: Market has no cash anyway / already closed
     # -2: 0 outcome / not reported on yet
     # -3: not final round 2 event
-    # -4: market isn't in branch
-    # -5: Event forked and not final yet
-    # -6: bonded pushed forward market not ready to be resolved
-    # -7: already resolved
+    # -4: Event forked and not final yet
+    # -5: bonded pushed forward market not ready to be resolved
 # if market's events have moved due to a fork branch param passed should be the new fork [todo check to make sure it handles the wrong branch param properly here]
-def closeMarket(branch, market, sender):
+def closeMarket(market, sender):
     refund()
+    branch = MARKETS.getBranch(market)
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)
@@ -87,8 +86,7 @@ def closeMarket(branch, market, sender):
         return(-2)
     if(BACKSTOPS.getRoundTwo(event) and !BACKSTOPS.getFinal(event)):
         return(-3)
-    if(MARKETS.getBranch(market) != branch):
-        return(-4)
+
     # checks whether any events not already resolved
     resolved = 1
     # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
@@ -103,7 +101,7 @@ def closeMarket(branch, market, sender):
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     if((EVENTS.getForked(event) and !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod + 1))):
-        return(-5)
+        return(-4)
     if(binary(event) and !fxpOutcome):
         resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
     elif(scalar(event) and !EVENTS.getMode(event)):
@@ -113,7 +111,7 @@ def closeMarket(branch, market, sender):
     else:
         throw()
     if(resolution == -6):
-        return(-6)
+        return(-5)
     winningOutcomes = array(8)
     winningOutcomes = RESOLVE.determineWinningOutcomes(event, outitems = 8)
     MARKETS.setWinningOutcomes(market, winningOutcomes)

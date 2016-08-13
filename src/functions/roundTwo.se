@@ -88,6 +88,8 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
 # todo make if/elifs simpler here
 def roundTwoResolve(branch, event, eventIndex, sender):
     refund()
+    if(!branch):
+        throw()
     votePeriod = BRANCHES.getVotePeriod(branch)
     market = EVENTS.getMarket(event, 0)
     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod - 1) / EXPEVENTS.getNumberEvents(branch, votePeriod - 1)
@@ -149,6 +151,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
 # Actually sets the outcome for a round 2 event
 # Errors:
     # 0: event isn't binary, categorical, or scalar [hell has frozen over or quantum events have been invented]
+# needs whitelist
 def resolve(branch, event):
     refund()
     bond = EVENTS.getBond(event)

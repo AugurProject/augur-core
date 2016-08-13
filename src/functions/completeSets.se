@@ -37,9 +37,9 @@ def buyCompleteSets(market, fxpAmount):
     refund()
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
-    cumScale = MARKETS.getCumScale(market)
-    cost = fxpAmount * cumScale / ONE
-    if(!MARKETS.getCreationTime(market)):
+    cumulativeScale = MARKETS.getCumulativeScale(market)
+    cost = fxpAmount * cumulativeScale / ONE
+    if(!MARKETS.getNumOutcomes(market)):
         return(0)
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
@@ -54,8 +54,8 @@ def buyCompleteSets(market, fxpAmount):
         n += 1
     # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
     if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
-        MARKETS.modifySharesValue(market, fxpAmount * cumScale / ONE)
-        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), fxpAmount * cumScale / ONE)
+        MARKETS.modifySharesValue(market, fxpAmount * cumulativeScale / ONE)
+        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), fxpAmount * cumulativeScale / ONE)
     return(1)
 
 # Sells fxpAmount of every outcome [if user owns it]
@@ -67,8 +67,8 @@ def sellCompleteSets(market, fxpAmount):
     refund()
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
-    cumScale = MARKETS.getCumScale(market)
-    cost = fxpAmount * cumScale / ONE
+    cumulativeScale = MARKETS.getCumulativeScale(market)
+    cost = fxpAmount * cumulativeScale / ONE
     n = 1
     while(n <= numOutcomes):
         if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < fxpAmount):
@@ -82,8 +82,8 @@ def sellCompleteSets(market, fxpAmount):
         n += 1
     # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
     if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
-        MARKETS.modifySharesValue(market, -fxpAmount * cumScale / ONE)
-        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), -fxpAmount * cumScale / ONE)
+        MARKETS.modifySharesValue(market, -fxpAmount * cumulativeScale / ONE)
+        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), -fxpAmount * cumulativeScale / ONE)
     # send funds from the market to the user acc.
     if(!INFO.getWallet(market).transfer(msg.sender, cost)):
         throw()

@@ -38,7 +38,7 @@ inset('../data_api/refund.se')
 data amountCanSpend[][](branch[])
 
 event Transfer(from:indexed, to:indexed, value)
-event Approval(owner:indexed, spender:indexed, value)
+event Approval(owner:indexed, spender:indexed, branch:indexed, value)
 
 #  0: only one period behind, need to do penalizations for it
 # -3: not in right part of period
@@ -182,11 +182,10 @@ def claimRep():
     return(1)
 
 # Allows spender to withdraw from your dormant rep account
-# fix to be branch specific todo
 def approve(branch, spender, fxpValue):
     callstackCheck()
     self.amountCanSpend[msg.sender][spender].branch[branch] = fxpValue
-    log(type = Approval, msg.sender, spender, fxpValue)
+    log(type = Approval, msg.sender, spender, branch, fxpValue)
     return(1)
 
 # Returns amount spender can withdraw from owner

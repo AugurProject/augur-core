@@ -69,7 +69,7 @@ def fundNewAccount(branch):
     # -3: only behind one period and not caught up / penalized yet
 def claimInitialRep(parent, branch):
     refund()
-    if(BRANCHES.getParent(branch) != parent):
+    if(BRANCHES.getParent(branch) != parent && parent && branch):
         return(-1)
     # have 1 month to claim
     if(!REPORTING.repIDToIndex(branch, msg.sender) and block.timestamp < (BRANCHES.getCreationDate(branch) + TWENTY_FOUR_HR * 30)):

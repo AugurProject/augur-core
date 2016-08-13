@@ -16,6 +16,8 @@ def transfer(receiver, value):
     # todo need to have market + branch + event $ contracts support all the relevant contract keys in the namereg in the whitelist to allow them to send money from them - so in whitelist add each branch/market contract and then make them support all namereg keys necessary, should perhaps hardcode closemarket, closemarketone and closemarkettwo to prevent manipulation
     #if(!whitelistStuff.checkIfSenderInList(msg.sender)):
     #    throw()
-    if(receiver == 0):
+    if(receiver == 0 or value <= 0):
         throw()
-    return(self.currency.transferFrom(self, receiver, cost))
+    if(!self.currency.transferFrom(self, receiver, cost)):
+        throw()
+    return(1)

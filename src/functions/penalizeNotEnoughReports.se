@@ -28,6 +28,8 @@ macro POINT_NINE: 16602069666338596864
     # -3: event isn't in branch
 def proveReporterDidntReportEnough(branch, reporter, eventExample):
     refund()
+    if(!branch or !eventExample):
+        return(0)
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength

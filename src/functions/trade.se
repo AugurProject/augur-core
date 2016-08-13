@@ -45,8 +45,8 @@ macro TRADE_SAME_BLOCK_PROHIBITED: 22
 
 # calculates trading fee percentage
 # 4*fee*price*(1-price/range)/range keeps fees lower at the edges
-macro feePercent($marketFee, $price, $cumScale):
-    4 * $marketFee * $price * (ONE - $price * 2 ** 64 / $cumScale) / ($cumScale * ONE)
+macro feePercent($marketFee, $price, $cumulativeScale):
+    4 * $marketFee * $price * (ONE - $price * 2 ** 64 / $cumulativeScale) / ($cumulativeScale * ONE)
 
 # removes a trade from the book
 macro removeTrade($tradeID, $market):
@@ -104,7 +104,7 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs:arr):
         if(block.number <= trade[6]):
             return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
         branch = MARKETS.getBranch(market)
-        fee = feePercent(MARKETS.getTradingFee(market), price, MARKETS.getCumScale(market))
+        fee = feePercent(MARKETS.getTradingFee(market), price, MARKETS.getCumulativeScale(market))
 
         # Fill buy order
         if(type == BID):
@@ -263,16 +263,16 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
         # calculate cost
         creator = INFO.getCreator(market)
         tradingFee = MARKETS.getTradingFee(market)
-        cumScale = MARKETS.getCumScale(market)
+        cumulativeScale = MARKETS.getCumulativeScale(market)
         amount = min(origAmount, fxpMaxAmount)
         if(amount < 0):
             return([INSUFFICIENT_BALANCE]: arr)
-        fee = amount * price * feePercent(tradingFee, price, cumScale) / ONE ** 2
+        fee = amount * price * feePercent(tradingFee, price, cumulativeScale) / ONE ** 2
         makerFeeRate = MARKETS.getMakerFees(market)
         branchFees = (THREE_FOURTHS + (ONE_HALF - makerFeeRate) / 2) * fee / ONE
         creatorFees = (ONE_FOURTH + (ONE_HALF - makerFeeRate) / 2) * fee / ONE
         takerFeesTotal = branchFees + creatorFees
-        cost = amount * cumScale / ONE - (amount * price / ONE - takerFeesTotal)
+        cost = amount * cumulativeScale / ONE - (amount * price / ONE - takerFeesTotal)
         if(INFO.getCurrency(market).balanceOf(msg.sender) < cost):
             return([INSUFFICIENT_BALANCE]: arr)
         if(amount * price / ONE < 184467440738):
@@ -287,8 +287,8 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
             MARKETS.modifyParticipantShares(market, msg.sender, i, amount, 0)
             i += 1
         if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
-            MARKETS.modifySharesValue(market, amount * cumScale / ONE)
-            EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount * cumScale / ONE)
+            MARKETS.modifySharesValue(market, amount * cumulativeScale / ONE)
+            EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount * cumulativeScale / ONE)
         # send money from user acc. to market address/account
         # cost for shares
         if(!INFO.getCurrency(market).transferFrom(msg.sender, market, cost - takerFeesTotal)):
