@@ -98,15 +98,18 @@ def penalizeRoundTwoWrong(branch, event):
         penalizedOnEvent = CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event)
         if(final and (roundTwo or event == forkEvent) and !penalizedOnEvent and (reportValue or oldReport)):
             # Do the first rep redistribution based on first report and final outcome if reported first time
+            # 0 outcome issue
             if(oldReport and outcome != 0):
                 calculateRepChange(oldReport, POINT_TWO)
                 handleEthicsAndBondRepRedistribution(POINT_TWO, oldEthics, numReportedOn)
+                CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
+                CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
             # Do the second (for each user) based on second report and final outcome
             if(reportValue and outcome != 0):
                 calculateRepChange(reportValue, POINT_ONE)
                 handleEthicsAndBondRepRedistribution(POINT_ONE, ethics, numReportedOn)
-            CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
-            CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
+                CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
+                CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
         else:
             return(0)
         # if a fork event in original branch, only event needed to report on in this period is that one [b/c the original branch resolves it as a regular round 2 event, fork reports again]
@@ -127,14 +130,14 @@ macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn)
             repChange = -$maxPenalty / $numReportedOn * repBalance / ONE
     if(repBalance + repChange <= 0):
         repChange = -1 * repBalance
-    # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process
+    # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process # todo fix for this and forking can go over 2x bond, not supposed to: we don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
     if(overruled and BACKSTOPS.getBondPaid(event) < 2 * bond and repChange < 0 and event != forkEvent):
         # done instead of sending to redistrib. pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
         # sends that rep to the bonded challenger
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), -repChange)
         BACKSTOPS.increaseBondPaid(event, (-1 * repChange))
-    # if rep isn't redistributed immediately to bond poster [if they're already paid back] then we adjust the after rep as normal and do it all at the end
+    # if rep isn't redistributed immediately to bond poster [if they're already paid back] then we adjust the after rep as normal and do it all at the end: we want the rep to go to the branch here
     else:
         newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
         EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)

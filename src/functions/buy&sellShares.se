@@ -108,7 +108,7 @@ def cancel(tradeID):
         if(type == BID):
             # cash refund
             amt = fxpAmount * fxpPrice * (fee + ONE) / ONE ** 2
-            if(!INFO.getWallet(market).msg.sender, amt)):
+            if(!INFO.getWallet(market).transfer(msg.sender, amt)):
                 throw()
         elif(type == ASK):
             # shares refund

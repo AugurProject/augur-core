@@ -15,6 +15,7 @@ inset('../data_api/refund.se')
     # -3: reporter being slashed doesn't exist
     # -4: invalid claim / report hash - makes sure that the colluding reporter's commit is the same as the info provided in the params
     # -5: event isn't in the branch
+    # -6: already slashed
 def slashRep(branch, salt, report, reporter, event):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -39,7 +40,7 @@ def slashRep(branch, salt, report, reporter, event):
     if(REPORTING.getReporterID(branch, reporterIndex) != reporter):
         return(-3)
     if(alreadySlashed):
-        return(-5)
+        return(-6)
     if(reportHash != realHash):
         return(-4)
     CONSENSUS.setSlashed(branch, votePeriod, reporter)

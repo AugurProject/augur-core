@@ -150,11 +150,11 @@ def fork(event, branch, forkedOverEthicality):
     # todo find actual gas cost for resolution here and charge that
     if(msg.value < 200000 * tx.gasprice):
         return(0)
-    if(!send(CONSENSUSDATA, msg.value)):
-        throw()
     CONSENSUSDATA.setRefund(event, msg.value)
     # if in last 48 hr of period and is round 2 event with reports attempted
     if(block.timestamp / BRANCHES.getPeriodLength(branch) != ((block.timestamp + 2 * TWENTY_FOUR_HR) / BRANCHES.getPeriodLength(branch)) and EVENTS.getUncaughtOutcome(event) != 0):
+        if(!send(CONSENSUSDATA, msg.value)):
+            throw()
         bond = POINT_ZERO_ONE * REPORTING.getTotalRep(branch) / ONE
         BACKSTOPS.setBondAmount(event, bond)
         # lose fork bond in branch 1

@@ -228,8 +228,6 @@ def pushMarketForward(branch, market):
     # if market closed or already pushed forward, return 0
     if(MARKETS.getOneWinningOutcome(market, 0) or MARKETS.getPushedForward(market)):
         return(-2)
-    if(!MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), MARKETS.getTradingFee(market) * MARKETS.getTotalSharesPurchased(market) / (2 * ONE))):
-        return(-3)
     if(MARKETS.getBranch(market) != branch):
         return(0)
     event = MARKETS.getMarketEvent(market, 0)
@@ -245,4 +243,6 @@ def pushMarketForward(branch, market):
     MARKETS.setTradingPeriod(market, period)
     MARKETS.setPushedForward(market, 1, msg.sender)
     EVENTS.setEventPushedUp(event, 1)
+    if(!MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), MARKETS.getTradingFee(market) * MARKETS.getTotalSharesPurchased(market) / (2 * ONE))):
+        throw()
     return(1)

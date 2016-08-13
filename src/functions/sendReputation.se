@@ -45,6 +45,8 @@ event Approval(owner:indexed, spender:indexed, branch:indexed, value)
 # -4: couldn't catchup automatically
 macro checkInvariants($account):
     refund()
+    # auto increment vote period if needed
+    INCREMENTPERIOD.incrementPeriodAfterReporting(branch)
     # need to check all this for the person it's being sent to as well
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = BRANCHES.getVotePeriod(branch)
@@ -55,8 +57,6 @@ macro checkInvariants($account):
     # Rep cannot be simultaneously spent (transferred) and used to vote
     if(residual > periodLength/2):
         return(-3)
-    # auto increment vote period if needed
-    INCREMENTPERIOD.incrementPeriodAfterReporting(branch)
     if(delta > 1):
         if(CATCHUP.penalizationCatchup(branch, $account) != 1):
             return(-4)

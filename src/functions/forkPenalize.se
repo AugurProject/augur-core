@@ -22,6 +22,7 @@ macro handleEthicsAndBondRepRedistribution($numReportedOn):
             repChange = -ONE / $numReportedOn * repBalance / ONE
     if(repBalance + repChange <= 0):
         repChange = -1 * repBalance
+    # todo fix for this can go over 2x bond, not supposed to: we don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
     if(BACKSTOPS.getForkBondPaid(event) < BACKSTOPS.getBondAmount(event) * 2 and repChange < 0):
         # done instead of sending to redistrib. pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
@@ -86,8 +87,8 @@ def penalizeOnForkedEvent(branch, event):
         if(outcome != 0):
             calculateRepChange(reportValue, ONE)
             handleEthicsAndBondRepRedistribution(numReportedOn)
-        CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
-        CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
+            CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
+            CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
         sendRedistributedRepToBranch()
