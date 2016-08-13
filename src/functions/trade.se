@@ -67,7 +67,8 @@ macro removeTrade($tradeID, $market):
 # max amount is max shares to sell filling bid orders
 # 500k gas cost
 # picks orders off the book
-def trade(fxpMaxValue, fxpMaxAmount, tradeIDs:arr):
+# needs to continue if a trade is filled / removed by the time we get here, not return, issues with insufficient balance ending when it should continue filling other order types
+def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
     refund()
     i = 0
     trades = 0

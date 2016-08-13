@@ -664,7 +664,7 @@ def test_close_market():
            64), "Should only be winning shares remaining issue"
     assert(c.balance(event2) == 0)
     # ensure proceeds returned properly
-    assert(c.claimProceeds(1010101, bin_market2, sender=t.k2) == 1)
+    assert(c.claimProceeds(bin_market2, sender=t.k2) == 1)
     newK = c.balance(c.getSender(sender=t.k2))
     assert((newK - origK) == 10 * 2 **
            64), "Didn't get 10 back from selling winning shares"
