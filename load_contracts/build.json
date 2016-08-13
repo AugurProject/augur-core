@@ -13056,7 +13056,7 @@
         "sig": "extern slashRep: [slashRep:[int256,int256,int256,int256,int256]:int256]"
     }, 
     "trade": {
-        "address": "0x91f8d566bf5e0ea7f41b220d55a246473cdba00f", 
+        "address": "0x8801386ae384e125ab8bb08252e94ff0967427c1", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -13103,6 +13103,7 @@
             "    log(type=trade_logArrayReturn, $a)", 
             "    return($a: arr)", 
             "", 
+            "macro MINIMUM_TRADE_SIZE: 10000000000", 
             "macro ONEPOINTFIVE: 1500000000000000000", 
             "# Trade types", 
             "macro BID: 1", 
@@ -13193,7 +13194,7 @@
             "                # Calculate value", 
             "                value = (fill * price)/ONE", 
             "                # must trade at least 0.00000001 in value", 
-            "                if(value < 184467440738):", 
+            "                if(value < MINIMUM_TRADE_SIZE):", 
             "                    logReturn(trade_logReturn, -4)", 
             "                # Update trade amount or remove", 
             "                if fill < amount:", 
@@ -13237,7 +13238,7 @@
             "            # Determine fill amount", 
             "            fill = value_to_spend*ONE / price * ONE / (takerFee+ONE)", 
             "            trade_value_excluding_fees = fill*price/ONE", 
-            "            if(trade_value_excluding_fees >= 184467440738):", 
+            "            if(trade_value_excluding_fees >= MINIMUM_TRADE_SIZE):", 
             "                # Update trade amount or remove filled trade", 
             "                if fill < amount:", 
             "                    TRADES.fill_trade(trade_ids[t], fill)", 
@@ -13346,7 +13347,7 @@
             "    cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)", 
             "    if(CASH.balance(msg.sender) < cost):", 
             "        logReturn(trade_logReturn, INSUFFICIENT_BALANCE)", 
-            "    if(amount*price/ONE < 184467440738):", 
+            "    if(amount*price/ONE < MINIMUM_TRADE_SIZE):", 
             "        logReturn(trade_logReturn, -7)", 
             "", 
             "    numOutcomes = MARKETS.getMarketNumOutcomes(market)", 

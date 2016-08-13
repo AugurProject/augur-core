@@ -37,6 +37,7 @@ macro logArrayReturn($a):
     log(type=trade_logArrayReturn, $a)
     return($a: arr)
 
+macro MINIMUM_TRADE_SIZE: 10000000000
 macro ONEPOINTFIVE: 1500000000000000000
 # Trade types
 macro BID: 1
@@ -127,7 +128,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Calculate value
                 value = (fill * price)/ONE
                 # must trade at least 0.00000001 in value
-                if(value < 184467440738):
+                if(value < MINIMUM_TRADE_SIZE):
                     logReturn(trade_logReturn, -4)
                 # Update trade amount or remove
                 if fill < amount:
@@ -171,7 +172,7 @@ def trade(max_value, max_amount, trade_ids:arr):
             # Determine fill amount
             fill = value_to_spend*ONE / price * ONE / (takerFee+ONE)
             trade_value_excluding_fees = fill*price/ONE
-            if(trade_value_excluding_fees >= 184467440738):
+            if(trade_value_excluding_fees >= MINIMUM_TRADE_SIZE):
                 # Update trade amount or remove filled trade
                 if fill < amount:
                     TRADES.fill_trade(trade_ids[t], fill)
@@ -280,7 +281,7 @@ def short_sell(buyer_trade_id, max_amount):
     cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)
     if(CASH.balance(msg.sender) < cost):
         logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
-    if(amount*price/ONE < 184467440738):
+    if(amount*price/ONE < MINIMUM_TRADE_SIZE):
         logReturn(trade_logReturn, -7)
 
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
