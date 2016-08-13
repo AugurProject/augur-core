@@ -13056,7 +13056,7 @@
         "sig": "extern slashRep: [slashRep:[int256,int256,int256,int256,int256]:int256]"
     }, 
     "trade": {
-        "address": "0x9332101c76d97ef0212f6c594f4a314e18a4cb9a", 
+        "address": "0x91f8d566bf5e0ea7f41b220d55a246473cdba00f", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -13157,8 +13157,6 @@
             "    if(TRADES.checkHash(tradeHash, msg.sender)==-1):", 
             "        logReturn(trade_logReturn, -2)", 
             "    # Try to fulfill each trade passed", 
-            "    bidOrdersFilled = 0", 
-            "    askOrdersFilled = 0", 
             "    t = 0", 
             "    while t < len(trade_ids):", 
             "        # Get trade", 
@@ -13186,7 +13184,9 @@
             "        if type == BID:", 
             "            # Get available balance of shares", 
             "            balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)", 
-            "            if(balance > 0 and max_amount > 0):", 
+            "            if balance < 0:", 
+            "                logReturn(trade_logReturn, INSUFFICIENT_BALANCE)", 
+            "            if max_amount > 0:", 
             "                makerFeeRate = MARKETS.getMakerFees(market)", 
             "                # Determine fill amount", 
             "                fill = min(amount, min(balance, max_amount))", 
@@ -13227,11 +13227,6 @@
             "                max_amount -= fill", 
             "                # Log transaction", 
             "                log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome, block.timestamp)", 
-            "                if max_amount == 0:", 
-            "                    bidOrdersFilled = 1", 
-            "            else:", 
-            "                if bidOrdersFilled == 0:", 
-            "                    logReturn(trade_logReturn, INSUFFICIENT_BALANCE)", 
             "        elif type == ASK:", 
             "            balance = CASH.balance(msg.sender)", 
             "            makerFeeRate = MARKETS.getMakerFees(market)", 
@@ -13273,11 +13268,8 @@
             "                max_value -= value_to_spend", 
             "                # Log transaction", 
             "                log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome, block.timestamp)", 
-            "                if max_value == 0:", 
-            "                    askOrdersFilled = 1", 
             "            else:", 
-            "                if askOrdersFilled == 0:", 
-            "                    logReturn(trade_logReturn, INSUFFICIENT_BALANCE)", 
+            "                logReturn(trade_logReturn, -4)", 
             "", 
             "        # Log price, fill amount, type and timestamp", 
             "        MARKETS.setPrice(market, outcome, price)", 
@@ -13426,6 +13418,18 @@
             }, 
             {
                 "constant": false, 
+                "inputs": [], 
+                "name": "test_callstack()", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
                 "inputs": [
                     {
                         "name": "max_value", 
@@ -13518,7 +13522,7 @@
                 "type": "event"
             }
         ], 
-        "sig": "extern trade: [short_sell:[int256,int256]:_, trade:[int256,int256,int256[]]:_]"
+        "sig": "extern trade: [short_sell:[int256,int256]:_, test_callstack:[]:int256, trade:[int256,int256,int256[]]:_]"
     }, 
     "trades": {
         "address": "0x51996ae37ab719f126a52ad015fa3c7304a7c136", 
