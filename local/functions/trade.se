@@ -19,27 +19,31 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256, test_callstack:[]:int256]
+extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256]
 BRANCHES = create('../data_api/branches.se')
-extern refund.se: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256, test_callstack:[]:int256]
+extern refund.se: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256]
 INFO = create('../data_api/info.se')
-extern refund.se: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, test_callstack:[]:int256, withdrawEther:[int256,int256]:int256]
+extern refund.se: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]
 CASH = create('../data_api/cash.se')
-extern refund.se: [addFees:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, addTrade:[int256,int256,int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCreationTime:[int256]:int256, getCumScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getLastExpDate:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getLastTrade:[int256]:int256, getMakerFees:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsHash:[int256]:int256, getNumEvents:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSender:[]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], get_total_trades:[int256]:int256, get_trade_ids:[int256]:int256[], getgasSubsidy:[int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, remove_trade_from_market:[int256,int256]:int256, returnTags:[int256]:int256[], setMakerFees:[int256,int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256, test_callstack:[]:int256]
+extern refund.se: [addFees:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, addTrade:[int256,int256,int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCreationTime:[int256]:int256, getCumScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getLastExpDate:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getLastTrade:[int256]:int256, getMakerFees:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsHash:[int256]:int256, getNumEvents:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSender:[]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], get_total_trades:[int256]:int256, get_trade_ids:[int256]:int256[], getgasSubsidy:[int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, remove_trade_from_market:[int256,int256]:int256, returnTags:[int256]:int256[], setMakerFees:[int256,int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]
 MARKETS = create('../data_api/markets.se')
-extern refund.se: [checkHash:[int256,int256]:int256, commitTrade:[int256]:int256, fill_trade:[int256,int256]:int256, getID:[int256]:int256, get_amount:[int256]:int256, get_price:[int256]:int256, get_trade:[int256]:int256[], makeTradeHash:[int256,int256,int256[]]:int256, remove_trade:[int256]:int256, saveTrade:[int256,int256,int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256, update_trade:[int256,int256]:_, zeroHash:[]:int256]
+extern refund.se: [checkHash:[int256,int256]:int256, commitTrade:[int256]:int256, fill_trade:[int256,int256]:int256, getID:[int256]:int256, get_amount:[int256]:int256, get_price:[int256]:int256, get_trade:[int256]:int256[], makeTradeHash:[int256,int256,int256[]]:int256, remove_trade:[int256]:int256, saveTrade:[int256,int256,int256,int256,int256,int256,int256]:int256, update_trade:[int256,int256]:_, zeroHash:[]:int256]
 TRADES = create('../data_api/trades.se')
-extern expiringEvents: [addEvent:[int256,int256,int256,int256]:int256, addRepEvent:[int256,int256,int256,int256]:int256, addReportToEvent:[int256,int256,int256,int256]:int256, addReportersPaidSoFar:[int256,int256]:int256, addRoundTwo:[int256,int256]:int256, addToWeightOfReport:[int256,int256,int256,int256]:int256, adjustPeriodShareValueOutstanding:[int256,int256,int256]:int256, deleteEvent:[int256,int256,int256]:int256, getAfterRep:[int256,int256,int256]:int256, getBeforeRep:[int256,int256,int256]:int256, getCurrentMode:[int256,int256]:int256, getCurrentModeItems:[int256,int256]:int256, getEthicReport:[int256,int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getEventsRange:[int256,int256,int256,int256]:int256[], getLesserReportNum:[int256,int256,int256]:int256, getNumEventsToReportOn:[int256,int256]:int256, getNumRemoved:[int256,int256]:int256, getNumReportsActual:[int256,int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumRequired:[int256,int256]:int256, getNumRoundTwo:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodDormantRep:[int256,int256,int256]:int256, getPeriodRepConstant:[int256,int256,int256]:int256, getRepEvent:[int256,int256,int256]:int256, getReport:[int256,int256,int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getReportersPaidSoFar:[int256,int256]:int256, getRequired:[int256]:int256, getSaltyHash:[int256,int256,int256,int256]:int256, getShareValue:[int256,int256]:int256, getSubsidy:[int256,int256,int256]:int256, getWeightOfReport:[int256,int256,int256]:int256, moveEvent:[int256,int256]:int256, refundCost:[int256,int256]:int256, removeEvent:[int256,int256]:int256, setAfterRep:[int256,int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256,int256]:int256, setCurrentMode:[int256,int256,int256]:int256, setCurrentModeItems:[int256,int256,int256]:int256, setEthicReport:[int256,int256,int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setLesserReportNum:[int256,int256,int256,int256]:int256, setNumEventsToReportOn:[int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setPeriodDormantRep:[int256,int256,int256,int256]:int256, setPeriodRepConstant:[int256,int256,int256,int256]:int256, setReport:[int256,int256,int256,int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setSaltyHash:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]
+extern expiringEvents: [addEvent:[int256,int256,int256,int256]:int256, addRepEvent:[int256,int256,int256,int256]:int256, addReportToEvent:[int256,int256,int256,int256]:int256, addReportersPaidSoFar:[int256,int256]:int256, addRoundTwo:[int256,int256]:int256, addToWeightOfReport:[int256,int256,int256,int256]:int256, adjustPeriodShareValueOutstanding:[int256,int256,int256]:int256, deleteEvent:[int256,int256,int256]:int256, getAfterRep:[int256,int256,int256]:int256, getBeforeRep:[int256,int256,int256]:int256, getCurrentMode:[int256,int256]:int256, getCurrentModeItems:[int256,int256]:int256, getEncryptedReport:[int256,int256,int256,int256]:int256[], getEthicReport:[int256,int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getEventsRange:[int256,int256,int256,int256]:int256[], getLesserReportNum:[int256,int256,int256]:int256, getNumEventsToReportOn:[int256,int256]:int256, getNumRemoved:[int256,int256]:int256, getNumReportsActual:[int256,int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumRequired:[int256,int256]:int256, getNumRoundTwo:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodDormantRep:[int256,int256,int256]:int256, getPeriodRepConstant:[int256,int256,int256]:int256, getRepEvent:[int256,int256,int256]:int256, getReport:[int256,int256,int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getReportersPaidSoFar:[int256,int256]:int256, getRequired:[int256]:int256, getShareValue:[int256,int256]:int256, getSubsidy:[int256,int256,int256]:int256, getWeightOfReport:[int256,int256,int256]:int256, moveEvent:[int256,int256]:int256, refundCost:[int256,int256]:int256, removeEvent:[int256,int256]:int256, setAfterRep:[int256,int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256,int256]:int256, setCurrentMode:[int256,int256,int256]:int256, setCurrentModeItems:[int256,int256,int256]:int256, setEncryptedReport:[int256,int256,int256,int256,int256,int256]:int256, setEthicReport:[int256,int256,int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setLesserReportNum:[int256,int256,int256,int256]:int256, setNumEventsToReportOn:[int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setPeriodDormantRep:[int256,int256,int256,int256]:int256, setPeriodRepConstant:[int256,int256,int256,int256]:int256, setReport:[int256,int256,int256,int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256]
 EXPEVENTS = create('../data_api/expiringEvents.se')
 inset('refund.se')
+inset('logReturn.se')
 
-event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
-event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
-event tradeReturnValue(returnValue)
-event tradeArrayReturnValue(returnArray: arr)
+# event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
+event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome, timestamp)
+event trade_logReturn(returnValue)
+event trade_logArrayReturn(returnArray: arr)
+
+macro logArrayReturn($a):
+    log(type=trade_logArrayReturn, $a)
+    return($a: arr)
 
 macro ONEPOINTFIVE: 1500000000000000000
-
 # Trade types
 macro BID: 1
 macro ASK: 2
@@ -61,14 +65,6 @@ macro remove_trade($trade_id, $market):
     TRADES.remove_trade($trade_id)
     MARKETS.remove_trade_from_market($market, $trade_id)
 
-macro logReturn($x):
-    log(type=tradeReturnValue, $x)
-    return($x)
-
-macro logArrayReturn($a):
-    log(type=tradeArrayReturnValue, $a)
-    return($a: arr)
-
 #
 # Trade [allows a user to pick up/fill orders off the book]
 #
@@ -87,7 +83,7 @@ macro logArrayReturn($a):
 def trade(max_value, max_amount, trade_ids:arr):
     refund()
     if(BRANCHES.getOracleOnly(branch)):
-        logReturn(-1)
+        logReturn(trade_logReturn, -1)
     i = 0
     trades = 0
     while i < len(trade_ids):
@@ -99,15 +95,17 @@ def trade(max_value, max_amount, trade_ids:arr):
     tradeInfo[2] = max_value
     tradeHash = sha3(tradeInfo, items=3)
     if(TRADES.checkHash(tradeHash, msg.sender)==-1):
-        logReturn(-2)
+        logReturn(trade_logReturn, -2)
     # Try to fulfill each trade passed
+    bidOrdersFilled = 0
+    askOrdersFilled = 0
     t = 0
     while t < len(trade_ids):
         # Get trade
         trade = array(TRADE_FIELDS)
         trade = TRADES.get_trade(trade_ids[t], outitems=TRADE_FIELDS)
         if !trade:
-            logReturn(0)
+            logReturn(trade_logReturn, 0)
         # Get market
         type = trade[1]
         market = trade[2]
@@ -117,10 +115,10 @@ def trade(max_value, max_amount, trade_ids:arr):
         owner = trade[5]
         outcome = trade[7]
         if(owner == msg.sender or owner == tx.origin):
-            logReturn(-5)
+            logReturn(trade_logReturn, -5)
         # Make sure the trade has been mined, obvious HFT prevention
         if block.number <= trade[6]:
-            logReturn(TRADE_SAME_BLOCK_PROHIBITED)
+            logReturn(trade_logReturn, TRADE_SAME_BLOCK_PROHIBITED)
         branch = MARKETS.getBranchID(market)
         fee = fee_percent(MARKETS.getTradingFee(market), price, MARKETS.getCumScale(market))
 
@@ -136,7 +134,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 value = (fill * price)/ONE
                 # must trade at least 0.00000001 in value
                 if(value < 184467440738):
-                    logReturn(-4)
+                    logReturn(trade_logReturn, -4)
                 # Update trade amount or remove
                 if fill < amount:
                     TRADES.fill_trade(trade_ids[t], fill)
@@ -168,9 +166,12 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Update max_amount
                 max_amount -= fill
                 # Log transaction
-                log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome)
+                log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome, block.timestamp)
+                if max_amount == 0:
+                    bidOrdersFilled = 1
             else:
-                logReturn(INSUFFICIENT_BALANCE)
+                if bidOrdersFilled == 0:
+                    logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
         elif type == ASK:
             balance = CASH.balance(msg.sender)
             makerFeeRate = MARKETS.getMakerFees(market)
@@ -211,13 +212,15 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Update max_value
                 max_value -= value_to_spend
                 # Log transaction
-                log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome)
+                log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome, block.timestamp)
+                if max_value == 0:
+                    askOrdersFilled = 1
             else:
-                logReturn(INSUFFICIENT_BALANCE)
+                if askOrdersFilled == 0:
+                    logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
 
         # Log price, fill amount, type and timestamp
         MARKETS.setPrice(market, outcome, price)
-        log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
         # Next trade
         t += 1
     logArrayReturn([SUCCESS, max_value, max_amount])
@@ -245,7 +248,7 @@ def short_sell(buyer_trade_id, max_amount):
     refund()
     branch = MARKETS.getBranchID(market)
     if(BRANCHES.getOracleOnly(branch)):
-        logReturn(-6)
+        logReturn(trade_logReturn, -6)
     # check trade hash
     tradeInfo = array(3)
     tradeInfo[0] = buyer_trade_id
@@ -253,28 +256,28 @@ def short_sell(buyer_trade_id, max_amount):
     tradeInfo[2] = 0
     tradeHash = sha3(tradeInfo, items=3)
     if(TRADES.checkHash(tradeHash, msg.sender)==-1):
-        logReturn(-2)
+        logReturn(trade_logReturn, -2)
     # Get trade
     trade = array(TRADE_FIELDS)
     trade = TRADES.get_trade(buyer_trade_id, outitems=TRADE_FIELDS)
     if !trade:
-        logReturn(-1)
+        logReturn(trade_logReturn, -1)
     # Get market
     type = trade[1]
     if(type!=BID):
-        logReturn(-3)
+        logReturn(trade_logReturn, -3)
     market = trade[2]
     if(MARKETS.getOneWinningOutcome(market, 0)):
-        logReturn(-4)
+        logReturn(trade_logReturn, -4)
     orig_amount = trade[3]
     price = trade[4]
     owner = trade[5]
     outcome = trade[7]
     if(owner == msg.sender or owner == tx.origin):
-        logReturn(-5)
+        logReturn(trade_logReturn, -5)
     # Make sure the trade has been mined, obvious HFT prevention
     if block.number <= trade[6]:
-        logReturn(TRADE_SAME_BLOCK_PROHIBITED)
+        logReturn(trade_logReturn, TRADE_SAME_BLOCK_PROHIBITED)
 
     # calculate cost
     creator = INFO.getCreator(market)
@@ -282,7 +285,7 @@ def short_sell(buyer_trade_id, max_amount):
     cumScale = MARKETS.getCumScale(market)
     amount = min(orig_amount, max_amount)
     if(amount < 0):
-        logReturn(INSUFFICIENT_BALANCE)
+        logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
     fee = amount * price / ONE * fee_percent(trading_fee, price, cumScale) / ONE
     makerFeeRate = MARKETS.getMakerFees(market)
     branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
@@ -290,9 +293,9 @@ def short_sell(buyer_trade_id, max_amount):
     takerFeesTotal = branchFees + creatorFees
     cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)
     if(CASH.balance(msg.sender) < cost):
-        logReturn(INSUFFICIENT_BALANCE)
+        logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
     if(amount*price/ONE < 184467440738):
-        logReturn(-7)
+        logReturn(trade_logReturn, -7)
 
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
 
@@ -340,8 +343,6 @@ def short_sell(buyer_trade_id, max_amount):
 
     max_amount -= fill
     # Log transaction
-    log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)
-    # Log price, fill amount, type and timestamp
-    log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
+    log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome, block.timestamp)
     MARKETS.setPrice(market, outcome, price)
     logArrayReturn([SUCCESS, max_amount, fill, price])

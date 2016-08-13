@@ -91,6 +91,8 @@ def trade(max_value, max_amount, trade_ids:arr):
     if(TRADES.checkHash(tradeHash, msg.sender)==-1):
         logReturn(trade_logReturn, -2)
     # Try to fulfill each trade passed
+    bidOrdersFilled = 0
+    askOrdersFilled = 0
     t = 0
     while t < len(trade_ids):
         # Get trade
@@ -159,8 +161,11 @@ def trade(max_value, max_amount, trade_ids:arr):
                 max_amount -= fill
                 # Log transaction
                 log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome, block.timestamp)
+                if max_amount == 0:
+                    bidOrdersFilled = 1
             else:
-                logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
+                if bidOrdersFilled == 0:
+                    logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
         elif type == ASK:
             balance = CASH.balance(msg.sender)
             makerFeeRate = MARKETS.getMakerFees(market)
@@ -202,12 +207,14 @@ def trade(max_value, max_amount, trade_ids:arr):
                 max_value -= value_to_spend
                 # Log transaction
                 log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome, block.timestamp)
+                if max_value == 0:
+                    askOrdersFilled = 1
             else:
-                logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
+                if askOrdersFilled == 0:
+                    logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
 
         # Log price, fill amount, type and timestamp
         MARKETS.setPrice(market, outcome, price)
-        # log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
         # Next trade
         t += 1
     logArrayReturn([SUCCESS, max_value, max_amount])
@@ -331,7 +338,5 @@ def short_sell(buyer_trade_id, max_amount):
     max_amount -= fill
     # Log transaction
     log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome, block.timestamp)
-    # Log price, fill amount, type and timestamp
-    # log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
     MARKETS.setPrice(market, outcome, price)
     logArrayReturn([SUCCESS, max_amount, fill, price])

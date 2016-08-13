@@ -19,7 +19,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-extern refund.se: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, test_callstack:[]:int256, withdrawEther:[int256,int256]:int256]
+extern refund.se: [addCash:[int256,int256]:int256, balance:[int256]:int256, depositEther:[]:int256, initiateOwner:[int256]:int256, send:[int256,int256]:int256, sendFrom:[int256,int256,int256]:int256, setCash:[int256,int256]:int256, subtractCash:[int256,int256]:int256, withdrawEther:[int256,int256]:int256]
 CASH = create('../data_api/cash.se')
 inset('refund.se')
 
@@ -52,8 +52,8 @@ data branchList[]
 data branchListCount
 
 def init():
-    self.Branches[1010101].currentVotePeriod = (block.timestamp / 7200) - 1
-    self.Branches[1010101].periodLength = 7200 # 2 hours
+    self.Branches[1010101].currentVotePeriod = (block.timestamp / 172800) - 1
+    self.Branches[1010101].periodLength = 172800 # 1 week
     # .5%
     self.Branches[1010101].minTradingFee = 5000000000000000
     self.branchListCount = 1

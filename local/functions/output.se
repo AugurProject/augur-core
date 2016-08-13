@@ -270,13 +270,10 @@ def penalizationCatchup(branch, sender):
     return(1)
 
 inset('refund.se')
+inset('logReturn.se')
 
-# event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
-event penalize(x)
-
-macro logReturn($x):
-    log(type=penalize, $x)
-    return($x)
+event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
+event consensus_logReturn(returnValue)
 
 macro POINTZEROONE: 10000000000000000
 macro POINTEIGHT: 800000000000000000
@@ -326,32 +323,32 @@ def penalizeWrong(branch, event):
     roundTwo = self.getRoundTwo(event)
     uncaught = self.getUncaughtOutcome(event)
     if(!self.getFeesCollected(branch, msg.sender, lastPeriod-1)):
-        logReturn(-8)
+        logReturn(consensus_logReturn, -8)
     if(repBalance < ONE):
-        logReturn(0)
+        logReturn(consensus_logReturn, 0)
     if(self.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
-        logReturn(-5)
+        logReturn(consensus_logReturn, -5)
     if(self.getForkPeriod(branch) == lastPeriod):
-        logReturn(-4)
+        logReturn(consensus_logReturn, -4)
     elif(self.getForked(event)):
-        logReturn(-6)
+        logReturn(consensus_logReturn, -6)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     elif(!uncaught && !(rejected && self.getRejectedPeriod(event)==lastPeriod)):
         if(self.closeMarket(branch, self.getMarket(event, 0), msg.sender)!=1):
-            logReturn(-7)
+            logReturn(consensus_logReturn, -7)
 
     outcome = catch(uncaught)
     if(scalar(event) or categorical(event)):
         outcome = uncaught
     p = self.proportionCorrect(event)
     if(roundTwo && outcome!=0):
-        logReturn(-1)
+        logReturn(consensus_logReturn, -1)
     reportValue = self.getReport(branch, lastPeriod, event, msg.sender)
     numReportedOn = self.getNumReportsActual(branch, lastPeriod, msg.sender)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     # commented for testing
     #elif(residual > periodLength/2 or (block.timestamp / periodLength - 2)!=lastPeriod):
-    #    logReturn(-2)
+    #    logReturn(consensus_logReturn, -2)
     # lastperiod is where people who originally voted on a round 2 event voted the first time - want num events penalized to go up but not to actually be penalized for it yet
         # shouldn't be penalized until the next period resolution is over [since it's a round 2 event]
     if(roundTwo && !self.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue):
@@ -385,7 +382,7 @@ def penalizeWrong(branch, event):
         else:
             repChange = oldRep * (ONE - POINTTWO/numReportedOn)/ONE + newRep*(POINTTWO/numReportedOn)/ONE - oldRep
         newAfterRep = self.getAfterRep(branch, lastPeriod, msg.sender) + repChange
-        # log(type=penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue)
+        log(type=penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue)
         self.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
         self.setPenalized(branch, lastPeriod, msg.sender, event)
         self.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
@@ -404,7 +401,7 @@ def penalizeWrong(branch, event):
             self.addRep(branch, self.repIDToIndex(branch, msg.sender), totalRepDifference)
             # sends that rep to the branch
             self.addRep(branch, self.repIDToIndex(branch, branch), -totalRepDifference)
-    logReturn(1)
+    logReturn(consensus_logReturn, 1)
 
 # Increments the period after reporting
 # ui has to call this to stay cheap / not check it elsewhere
@@ -514,15 +511,11 @@ def createSubbranch(description:str, periodLength, parent, minTradingFee, oracle
     else:
         return(-2)
 inset('refund.se')
+inset('logReturn.se')
 
+event buyAndSellShares_logReturn(returnValue)
 event log_add_tx(market:indexed, sender:indexed, type, price, amount, outcome, tradeid)
 event log_cancel(market:indexed, sender:indexed, price, amount, tradeid, outcome, type)
-
-event buyAndSellSharesReturnValue(returnValue)
-
-macro logReturn($returnValue):
-    log(type=buyAndSellSharesReturnValue, $returnValue)
-    return($returnValue)
 
 # Trade types
 macro BID: 1
@@ -562,9 +555,9 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $fee, $send
             if($fee):
                 self.sendFrom($market, ($amount * $price / ONE * $fee / ONE), $sender)
     else:
-        logReturn(TRADE_ALREADY_EXISTS)
+        logReturn(buyAndSellShares_logReturn, TRADE_ALREADY_EXISTS)
     log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id)
-    logReturn(trade_id)
+    logReturn(buyAndSellShares_logReturn, trade_id)
 
 #
 # Cancellation: cancels a trade, if a bid refunds money, if an ask returns shares
@@ -578,7 +571,7 @@ def cancel(trade_id):
     trade = array(TRADE_FIELDS)
     trade = self.get_trade(trade_id, outitems=TRADE_FIELDS)
     if !trade:
-        logReturn(0)
+        logReturn(buyAndSellShares_logReturn, 0)
     type = trade[1]
     market = trade[2]
     amount = trade[3]
@@ -606,8 +599,8 @@ def cancel(trade_id):
             self.addCash(msg.sender, (amount * price / ONE * fee / ONE))
         # Log cancellation
         log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type)
-        logReturn(SUCCESS)
-    logReturn(FAILURE)
+        logReturn(buyAndSellShares_logReturn, SUCCESS)
+    logReturn(buyAndSellShares_logReturn, FAILURE)
 
 macro remove_trade($trade_id, $market):
     self.remove_trade($trade_id)
@@ -631,16 +624,16 @@ def buy(amount, price, market, outcome):
     fee = fee_percent(trading_fee, price, cumScale) * self.getMakerFees(market) / ONE
     branch = self.getBranchID(market)
     if(!self.getCreationTime(market)):
-        logReturn(0)
+        logReturn(buyAndSellShares_logReturn, 0)
     # price cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
     if(price>cumScale or amount*price < 3402823669209384705829531287552 or amount*price >= 2**190):
-        logReturn(-1)
+        logReturn(buyAndSellShares_logReturn, -1)
     if(self.getOracleOnly(branch)):
-        logReturn(-2)
+        logReturn(buyAndSellShares_logReturn, -2)
     if(self.balance(msg.sender) < (amount * price / ONE * (fee + ONE) / ONE)):
-        logReturn(-4)
+        logReturn(buyAndSellShares_logReturn, -4)
     save_trade(BID, amount, price, market, outcome, branch, fee, msg.sender)
-    logReturn(FAILURE)
+    logReturn(buyAndSellShares_logReturn, FAILURE)
 
 # costs 532k gas
 # smallest trade value is 0.00000001
@@ -652,16 +645,16 @@ def sell(amount, price, market, outcome):
     fee = fee_percent(trading_fee, price, cumScale) * self.getMakerFees(market) / ONE
     # price cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
     if(price>cumScale or amount*price < 3402823669209384705829531287552 or amount*price >= 2**190):
-        logReturn(-1)
+        logReturn(buyAndSellShares_logReturn, -1)
     if(self.getOracleOnly(branch)):
-        logReturn(-2)
+        logReturn(buyAndSellShares_logReturn, -2)
     if(self.getParticipantSharesPurchased(market, msg.sender, outcome) < amount):
-        logReturn(-4)
+        logReturn(buyAndSellShares_logReturn, -4)
     # check for enough money for fees
     if(self.balance(msg.sender) < (amount * price / ONE * fee / ONE)):
-        logReturn(-4)
+        logReturn(buyAndSellShares_logReturn, -4)
     save_trade(ASK, amount, price, market, outcome, branch, fee, msg.sender)
-    logReturn(FAILURE)
+    logReturn(buyAndSellShares_logReturn, FAILURE)
 
 inset('refund.se')
 
@@ -1656,12 +1649,9 @@ def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes
         self.addCash(participant, sharesOwned*cumScale/ONE)
     return(1)
 inset('refund.se')
+inset('logReturn.se')
 
-event closeMarketReturnValue(returnValue)
-
-macro logReturn($returnValue):
-    log(type=closeMarketReturnValue, $returnValue)
-    return($returnValue)
+event closeMarket_logReturn(returnValue)
 
 # first param is the market, second param is the subcurrency contract
 data cash[][]
@@ -1707,13 +1697,13 @@ def closeMarket(branch, market, sender):
     period = self.getVotePeriod(branch)
     event = self.getMarketEvent(market, 0)
     if(self.balance(market)<=0):
-        logReturn(-1)
+        logReturn(closeMarket_logReturn, -1)
     if(self.getUncaughtOutcome(event)==0):
-        logReturn(-2)
+        logReturn(closeMarket_logReturn, -2)
     if(self.getRoundTwo(event) && !self.getFinal(event)):
-        logReturn(-3)
+        logReturn(closeMarket_logReturn, -3)
     if(self.getBranchID(market)!=branch):
-        logReturn(-4)
+        logReturn(closeMarket_logReturn, -4)
     # checks whether any events not already resolved
     resolved = 1
     # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
@@ -1727,7 +1717,7 @@ def closeMarket(branch, market, sender):
         forkPeriod = self.getForkPeriod(self.getEventBranch(event))
         currentPeriod = block.timestamp / self.getPeriodLength(branch)
         if((self.getForked(event) && !self.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):
-            logReturn(-5)
+            logReturn(closeMarket_logReturn, -5)
         if(binary(event) && fxpOutcome==0):
             resolution = self.resolveBinary(event, market, branch, votingPeriodEvent)
         elif(scalar(event) && self.getmode(event)==0):
@@ -1735,15 +1725,15 @@ def closeMarket(branch, market, sender):
         elif(categorical(event) && self.getmode(event)==0):
             resolution = self.resolveCategoricalOrScalar(ONE, ONE*self.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
         if(resolution==-6):
-            logReturn(-6)
+            logReturn(closeMarket_logReturn, -6)
         winningOutcomes = array(8)
         winningOutcomes = self.determineWinningOutcomes(event, outitems=8)
         self.setWinningOutcomes(market, winningOutcomes)
         # refunds closing cost
         self.refundClosing(market, sender)
-        logReturn(1)
+        logReturn(closeMarket_logReturn, 1)
     else:
-        logReturn(0)
+        logReturn(closeMarket_logReturn, 0)
 
 # Claim trading profits/value per share after a market is resolved
 # @returns 1 if successful
@@ -2213,14 +2203,11 @@ def resolve(branch, event):
     else:
         return(0)
 inset('refund.se')
+inset('logReturn.se')
 
-event returnValue(x)
+event makeReports_logReturn(returnValue)
 
 macro MAX_THRESHOLD: 10^54
-
-macro logReturn($x):
-    log(type=returnValue, $x)
-    return($x)
 
 def makeHash(salt, report, eventID, sender):
     hashInfo = array(4)
@@ -2235,7 +2222,7 @@ def makeHash(salt, report, eventID, sender):
 # Error: 0: not caught up on rep redistributions
 # Error -1: invalid event
 # Error -2: not in first half of period [commit part]
-def submitReportHash(event, reportHash, encryptedSaltyHash):
+def submitReportHash(event, reportHash, encryptedReport, encryptedSalt):
     branch = self.getBranch(event)
     votePeriod = self.getVotePeriod(branch)
 
@@ -2276,7 +2263,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     residual = block.timestamp % periodLength
     if(residual <= periodLength/2 && shaHash <= reportingThreshold):
         self.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
-        self.setSaltyHash(branch, votePeriod, msg.sender, encryptedSaltyHash, event)
+        self.setEncryptedReport(branch, votePeriod, msg.sender, encryptedReport, encryptedSalt, event)
         return(1)
     return(-2)
 
@@ -2297,29 +2284,31 @@ def submitReport(event, salt, report, ethics):
     balance = self.getRepBalance(branch, msg.sender)
     votePeriod = self.getVotePeriod(branch)
     if(balance<ONE):
-        logReturn(0)
+        logReturn(makeReports_logReturn, 0)
     if(self.getReport(branch, votePeriod, event, msg.sender)):
-        logReturn(-1)
+        logReturn(makeReports_logReturn, -1)
     eventIndex = self.getEventIndex(votePeriod, event)
     # makes sure event is in the given branch and vote period
     eventID = self.getEvent(branch, votePeriod, eventIndex)
     if(eventIndex==0 && (eventID==0 || event!=eventID)):
-        logReturn(-5)
+        logReturn(makeReports_logReturn, -5)
     elif(self.getOutcome(event)!=0):
-        logReturn(-6)
+        logReturn(makeReports_logReturn, -6)
     periodLength = self.getPeriodLength(branch)
     # ensures user has collected fees for last reporting period
     if(!self.getFeesCollected(branch, msg.sender, votePeriod-1)):
         if(self.collectFees(branch, msg.sender)<1):
-            logReturn(-8)
+            logReturn(makeReports_logReturn, -8)
     # commented out for testing
     #if(block.timestamp/periodLength!=((block.timestamp + 2*TWENTYFOURHR)/periodLength)):
-    #    logReturn(-7)
+    #    logReturn(makeReports_logReturn, -7)
     residual = block.timestamp % periodLength
     if(residual > periodLength/2):
         realHash = self.getReportHash(branch, votePeriod, msg.sender, event)
         if(self.makeHash(salt, report, eventID, msg.sender)!=realHash || realHash==0):
-            logReturn(-3)
+            # logReturn(makeReports_logReturn, -3)
+            checkRepHash = self.makeHash(salt, report, eventID, msg.sender)
+            logReturn(makeReports_logReturn, checkRepHash)
         forkedOverEthicality = self.getForkedOverEthicality(event)
         forkedOverThisEvent = 0
         if(self.getEventForkedOver(branch) == event):
@@ -2327,7 +2316,7 @@ def submitReport(event, salt, report, ethics):
         roundTwo = self.getRoundTwo(event)
         report = self.validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, balance)
         if(report == -4):
-            logReturn(-4)
+            logReturn(makeReports_logReturn, -4)
         self.setReport(branch, votePeriod, eventID, report, msg.sender)
         # set ethics value for event
         ethics = ethics
@@ -2367,8 +2356,8 @@ def submitReport(event, salt, report, ethics):
             self.addReportersPaidSoFar(branch, event)
             self.subtractCash(branch, 3500000*tx.gasprice)
             self.addCash(msg.sender, 3500000*tx.gasprice)
-        logReturn(1)
-    logReturn(-2)
+        logReturn(makeReports_logReturn, 1)
+    logReturn(makeReports_logReturn, -2)
 
 # validates and submits report
 # weights reports by rep if round 2 and fork
@@ -2511,14 +2500,18 @@ macro TWO: 2000000000000000000
 
 macro TWENTYFOURHR: 86400
 inset('refund.se')
+inset('logReturn.se')
 
-event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
+# event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
 event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome)
-event tradeReturnValue(returnValue)
-event tradeArrayReturnValue(returnArray: arr)
+event trade_logReturn(returnValue)
+event trade_logArrayReturn(returnArray: arr)
+
+macro logArrayReturn($a):
+    log(type=trade_logArrayReturn, $a)
+    return($a: arr)
 
 macro ONEPOINTFIVE: 1500000000000000000
-
 # Trade types
 macro BID: 1
 macro ASK: 2
@@ -2540,14 +2533,6 @@ macro remove_trade($trade_id, $market):
     self.remove_trade($trade_id)
     self.remove_trade_from_market($market, $trade_id)
 
-macro logReturn($x):
-    log(type=tradeReturnValue, $x)
-    return($x)
-
-macro logArrayReturn($a):
-    log(type=tradeArrayReturnValue, $a)
-    return($a: arr)
-
 #
 # Trade [allows a user to pick up/fill orders off the book]
 #
@@ -2566,7 +2551,7 @@ macro logArrayReturn($a):
 def trade(max_value, max_amount, trade_ids:arr):
     refund()
     if(self.getOracleOnly(branch)):
-        logReturn(-1)
+        logReturn(trade_logReturn, -1)
     i = 0
     trades = 0
     while i < len(trade_ids):
@@ -2578,7 +2563,7 @@ def trade(max_value, max_amount, trade_ids:arr):
     tradeInfo[2] = max_value
     tradeHash = sha3(tradeInfo, items=3)
     if(self.checkHash(tradeHash, msg.sender)==-1):
-        logReturn(-2)
+        logReturn(trade_logReturn, -2)
     # Try to fulfill each trade passed
     t = 0
     while t < len(trade_ids):
@@ -2586,7 +2571,7 @@ def trade(max_value, max_amount, trade_ids:arr):
         trade = array(TRADE_FIELDS)
         trade = self.get_trade(trade_ids[t], outitems=TRADE_FIELDS)
         if !trade:
-            logReturn(0)
+            logReturn(trade_logReturn, 0)
         # Get market
         type = trade[1]
         market = trade[2]
@@ -2596,10 +2581,10 @@ def trade(max_value, max_amount, trade_ids:arr):
         owner = trade[5]
         outcome = trade[7]
         if(owner == msg.sender or owner == tx.origin):
-            logReturn(-5)
+            logReturn(trade_logReturn, -5)
         # Make sure the trade has been mined, obvious HFT prevention
         if block.number <= trade[6]:
-            logReturn(TRADE_SAME_BLOCK_PROHIBITED)
+            logReturn(trade_logReturn, TRADE_SAME_BLOCK_PROHIBITED)
         branch = self.getBranchID(market)
         fee = fee_percent(self.getTradingFee(market), price, self.getCumScale(market))
 
@@ -2615,7 +2600,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 value = (fill * price)/ONE
                 # must trade at least 0.00000001 in value
                 if(value < 184467440738):
-                    logReturn(-4)
+                    logReturn(trade_logReturn, -4)
                 # Update trade amount or remove
                 if fill < amount:
                     self.fill_trade(trade_ids[t], fill)
@@ -2649,7 +2634,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Log transaction
                 log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome)
             else:
-                logReturn(INSUFFICIENT_BALANCE)
+                logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
         elif type == ASK:
             balance = self.balance(msg.sender)
             makerFeeRate = self.getMakerFees(market)
@@ -2692,11 +2677,11 @@ def trade(max_value, max_amount, trade_ids:arr):
                 # Log transaction
                 log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome)
             else:
-                logReturn(INSUFFICIENT_BALANCE)
+                logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
 
         # Log price, fill amount, type and timestamp
         self.setPrice(market, outcome, price)
-        log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
+        # log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
         # Next trade
         t += 1
     logArrayReturn([SUCCESS, max_value, max_amount])
@@ -2724,7 +2709,7 @@ def short_sell(buyer_trade_id, max_amount):
     refund()
     branch = self.getBranchID(market)
     if(self.getOracleOnly(branch)):
-        logReturn(-6)
+        logReturn(trade_logReturn, -6)
     # check trade hash
     tradeInfo = array(3)
     tradeInfo[0] = buyer_trade_id
@@ -2732,28 +2717,28 @@ def short_sell(buyer_trade_id, max_amount):
     tradeInfo[2] = 0
     tradeHash = sha3(tradeInfo, items=3)
     if(self.checkHash(tradeHash, msg.sender)==-1):
-        logReturn(-2)
+        logReturn(trade_logReturn, -2)
     # Get trade
     trade = array(TRADE_FIELDS)
     trade = self.get_trade(buyer_trade_id, outitems=TRADE_FIELDS)
     if !trade:
-        logReturn(-1)
+        logReturn(trade_logReturn, -1)
     # Get market
     type = trade[1]
     if(type!=BID):
-        logReturn(-3)
+        logReturn(trade_logReturn, -3)
     market = trade[2]
     if(self.getOneWinningOutcome(market, 0)):
-        logReturn(-4)
+        logReturn(trade_logReturn, -4)
     orig_amount = trade[3]
     price = trade[4]
     owner = trade[5]
     outcome = trade[7]
     if(owner == msg.sender or owner == tx.origin):
-        logReturn(-5)
+        logReturn(trade_logReturn, -5)
     # Make sure the trade has been mined, obvious HFT prevention
     if block.number <= trade[6]:
-        logReturn(TRADE_SAME_BLOCK_PROHIBITED)
+        logReturn(trade_logReturn, TRADE_SAME_BLOCK_PROHIBITED)
     
     # calculate cost
     creator = self.getCreator(market)
@@ -2761,7 +2746,7 @@ def short_sell(buyer_trade_id, max_amount):
     cumScale = self.getCumScale(market)
     amount = min(orig_amount, max_amount)
     if(amount < 0):
-        logReturn(INSUFFICIENT_BALANCE)
+        logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
     fee = amount * price / ONE * fee_percent(trading_fee, price, cumScale) / ONE
     makerFeeRate = self.getMakerFees(market)
     branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
@@ -2769,9 +2754,9 @@ def short_sell(buyer_trade_id, max_amount):
     takerFeesTotal = branchFees + creatorFees
     cost = amount*cumScale/ONE - (amount*price/ONE - takerFeesTotal)
     if(self.balance(msg.sender) < cost):
-        logReturn(INSUFFICIENT_BALANCE)
+        logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
     if(amount*price/ONE < 184467440738):
-        logReturn(-7)
+        logReturn(trade_logReturn, -7)
 
     numOutcomes = self.getMarketNumOutcomes(market)
 
@@ -2821,9 +2806,13 @@ def short_sell(buyer_trade_id, max_amount):
     # Log transaction
     log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome)
     # Log price, fill amount, type and timestamp
-    log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
+    # log(type=log_price, market, type, price, fill, block.timestamp, outcome, msg.sender)
     self.setPrice(market, outcome, price)
     logArrayReturn([SUCCESS, max_amount, fill, price])
+
+macro logReturn($type, $returnValue):
+    log(type=$type, $returnValue)
+    return($returnValue)
 
 inset('refund.se')
 
@@ -3290,12 +3279,9 @@ macro ethic_catch($x):
     else:
         ONE
 inset('refund.se')
+inset('logReturn.se')
 
-event completeSetsReturnValue(returnValue)
-
-macro logReturn($returnValue):
-    log(type=completeSetsReturnValue, $returnValue)
-    return($returnValue)
+event completeSets_logReturn(returnValue)
 
 # Buys amount of every outcome
 # cost 850k gas
@@ -3310,11 +3296,11 @@ def buyCompleteSets(market, amount):
     cumScale = self.getCumScale(market)
     cost = amount*cumScale/ONE
     if(!self.getCreationTime(market)):
-        logReturn(0)
+        logReturn(completeSets_logReturn, 0)
     if(self.getOracleOnly(branch)):
-        logReturn(-1)
+        logReturn(completeSets_logReturn, -1)
     if(self.balance(msg.sender) < cost):
-        logReturn(-2)
+        logReturn(completeSets_logReturn, -2)
     n = 1
     # send shares of the event to user address and increment the number issued in the market for each outcome
     while n <= numOutcomes:
@@ -3327,7 +3313,7 @@ def buyCompleteSets(market, amount):
         self.adjustPeriodShareValueOutstanding(branch, self.getTradingPeriod(market), amount*cumScale/ONE)
     # send money from user acc. to market address/account
     self.sendFrom(market, cost, msg.sender)
-    logReturn(1)
+    logReturn(completeSets_logReturn, 1)
 
 # Sells amount of every outcome [if user owns it]
 # cost 850k gas
@@ -3342,11 +3328,11 @@ def sellCompleteSets(market, amount):
     cumScale = self.getCumScale(market)
     cost = amount*cumScale/ONE
     if(self.getOracleOnly(branch)):
-        logReturn(-1)
+        logReturn(completeSets_logReturn, -1)
     n = 1
     while n <= numOutcomes:
         if(self.getParticipantSharesPurchased(market, msg.sender, n) < amount):
-            logReturn(-3)
+            logReturn(completeSets_logReturn, -3)
         n += 1
     n = 1
     # Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets
@@ -3361,7 +3347,8 @@ def sellCompleteSets(market, amount):
     # send funds from the market to the user acc.
     self.subtractCash(market, cost)
     self.addCash(msg.sender, cost)
-    logReturn(1)
+    logReturn(completeSets_logReturn, 1)
+
 inset('refund.se')
 
 # Keeps track of data for round two backstop [where everyone reports on something] using event as the index
@@ -3516,7 +3503,7 @@ inset('refund.se')
 # reporthash is [reporterID][event] = hash
 # subsidy is money for paying back a user for calculating the targeted num of reports for an event
 data EventIDToIndex[][]
-data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], saltyHash[][], shareValue, subsidy[], roundTwoNumEvents)
+data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], encryptedReport[][](report, salt), shareValue, subsidy[], roundTwoNumEvents)
 
 # numReportsEvent is number of reports on an event, expected is how many have been committed for an event
 # numReportsActual is the amount of reports a user has submitted in a period
@@ -3529,15 +3516,17 @@ data numReqEvents[][]
 data requiredEvents[]
 data mode_items[][](report_value[], current_mode, current_mode_items)
 
-def getSaltyHash(branch, expDateIndex, reporter, event):
+def getEncryptedReport(branch, expDateIndex, reporter, event):
     refund()
-    return(self.EventsExpDates[branch][expDateIndex].saltyHash[reporter][event])
+    return([self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].report, self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].salt]: arr)
 
-def setSaltyHash(branch, expDateIndex, reporter, saltyHash, event):
+# both the report and the salt should be encrypted
+def setEncryptedReport(branch, expDateIndex, reporter, report, salt, event):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
-    self.EventsExpDates[branch][expDateIndex].saltyHash[reporter][event] = saltyHash
+    self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].report = report
+    self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].salt = salt
     return(1)
 
 def getReportersPaidSoFar(branch, event):

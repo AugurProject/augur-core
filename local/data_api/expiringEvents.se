@@ -20,9 +20,9 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256, test_callstack:[]:int256]
+extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256]
 BRANCHES = create('../data_api/branches.se')
-extern refund.se: [addMarket:[int256,int256]:int256, addPast24:[int256]:int256, getBond:[int256]:int256, getBranch:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getEventPushedUp:[int256]:int256, getExpiration:[int256]:int256, getForkEthicality:[int256]:int256, getForkOutcome:[int256]:int256, getForked:[int256]:int256, getForkedDone:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPast24:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getReportingThreshold:[int256]:int256, getResolution:[int256]:bytes, getResolutionLength:[int256]:int256, getUncaughtOutcome:[int256]:int256, getmode:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256,bytes]:int256, setBond:[int256,int256]:int256, setBranch:[int256,int256]:int256, setEthics:[int256,int256]:int256, setEventPushedUp:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setForkDone:[int256]:int256, setForkEthicality:[int256,int256]:int256, setForkOutcome:[int256,int256]:int256, setForked:[int256]:int256, setOriginalExpiration:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setRejected:[int256,int256]:int256, setThreshold:[int256,int256]:int256, setUncaughtOutcome:[int256,int256]:int256, setmode:[int256,int256]:int256, test_callstack:[]:int256]
+extern refund.se: [addMarket:[int256,int256]:int256, addPast24:[int256]:int256, getBond:[int256]:int256, getBranch:[int256]:int256, getEthical:[int256]:int256, getEthics:[int256]:int256, getEventBranch:[int256]:int256, getEventInfo:[int256]:int256[], getEventPushedUp:[int256]:int256, getExpiration:[int256]:int256, getForkEthicality:[int256]:int256, getForkOutcome:[int256]:int256, getForked:[int256]:int256, getForkedDone:[int256]:int256, getMarket:[int256,int256]:int256, getMarkets:[int256]:int256[], getMaxValue:[int256]:int256, getMinValue:[int256]:int256, getNumMarkets:[int256]:int256, getNumOutcomes:[int256]:int256, getOriginalExpiration:[int256]:int256, getOutcome:[int256]:int256, getPast24:[int256]:int256, getRejected:[int256]:int256, getRejectedPeriod:[int256]:int256, getReportingThreshold:[int256]:int256, getResolution:[int256]:bytes, getResolutionLength:[int256]:int256, getUncaughtOutcome:[int256]:int256, getmode:[int256]:int256, initializeEvent:[int256,int256,int256,int256,int256,int256,bytes]:int256, setBond:[int256,int256]:int256, setBranch:[int256,int256]:int256, setEthics:[int256,int256]:int256, setEventPushedUp:[int256,int256]:int256, setExpiration:[int256,int256]:int256, setForkDone:[int256]:int256, setForkEthicality:[int256,int256]:int256, setForkOutcome:[int256,int256]:int256, setForked:[int256]:int256, setOriginalExpiration:[int256,int256]:int256, setOutcome:[int256,int256]:int256, setRejected:[int256,int256]:int256, setThreshold:[int256,int256]:int256, setUncaughtOutcome:[int256,int256]:int256, setmode:[int256,int256]:int256]
 EVENTS = create('../data_api/events.se')
 inset('refund.se')
 
@@ -30,7 +30,7 @@ inset('refund.se')
 # reporthash is [reporterID][event] = hash
 # subsidy is money for paying back a user for calculating the targeted num of reports for an event
 data EventIDToIndex[][]
-data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], saltyHash[][], shareValue, subsidy[], roundTwoNumEvents)
+data EventsExpDates[][](numberEvents, numberRemoved, events[], numEventsToReportOn, reportHash[][], encryptedReport[][](report, salt), shareValue, subsidy[], roundTwoNumEvents)
 
 # numReportsEvent is number of reports on an event, expected is how many have been committed for an event
 # numReportsActual is the amount of reports a user has submitted in a period
@@ -43,15 +43,17 @@ data numReqEvents[][]
 data requiredEvents[]
 data mode_items[][](report_value[], current_mode, current_mode_items)
 
-def getSaltyHash(branch, expDateIndex, reporter, event):
+def getEncryptedReport(branch, expDateIndex, reporter, event):
     refund()
-    return(self.EventsExpDates[branch][expDateIndex].saltyHash[reporter][event])
+    return([self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].report, self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].salt]: arr)
 
-def setSaltyHash(branch, expDateIndex, reporter, saltyHash, event):
+# both the report and the salt should be encrypted
+def setEncryptedReport(branch, expDateIndex, reporter, report, salt, event):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
-    self.EventsExpDates[branch][expDateIndex].saltyHash[reporter][event] = saltyHash
+    self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].report = report
+    self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].salt = salt
     return(1)
 
 def getReportersPaidSoFar(branch, event):
