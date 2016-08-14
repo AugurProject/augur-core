@@ -103,7 +103,10 @@ def claimInitialRep(parent, branch):
             rep = REPORTING.getRepBalance(parent, msg.sender)
         repDecrease = 0
         # if forked and (reported with original consensus or didn't report or (reported with original ethicality and forked over ethicality))
-        if(fork and ((report >= (outcome - POINT_ZERO_ONE) and report <= (outcome + POINT_ZERO_ONE)) or !report or (BACKSTOPS.getForkedOverEthicality(forkEvent) and ethical == ethicReport))):
+        reportedWithOriginalConsensus = (report >= (outcome - POINT_ZERO_ONE) and report <= (outcome + POINT_ZERO_ONE))
+        reportedWrongEthicality = (BACKSTOPS.getForkedOverEthicality(forkEvent) and ethical == ethicReport)
+        reportedWrongly = (reportedWithOriginalConsensus or !report or reportedWrongEthicality)
+        if(fork and reportedWrongly):
             # take away 30% of rep from liars and those who didn't report
             repDecrease = rep - rep * POINT_SEVEN / ONE
             rep = rep - repDecrease

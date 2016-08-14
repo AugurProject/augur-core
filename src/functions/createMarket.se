@@ -164,14 +164,11 @@ def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3
     # todo if wallet contract doesn't exist for a branch for a given currency need to make it or should we have an approval process for adding a token to a branch?
     wallet = create('wallet.se')
     wallet.initialize(currency)
-    # initialize market and send money to pay for resolution
-    if(currency.transferFrom(msg.sender, INFO.getWallet(branch), creationFee) and send(MARKETS, (msg.value - 500000 * tx.gasprice)) and INFO.setInfo(market, description, msg.sender, creationFee, currency, wallet) and BRANCHES.addMarketToBranch(branch, market) and MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpMakerFees, cumulativeScale, numOutcomes, extraInfo, msg.value - 500000 * tx.gasprice, creationFee, expirationDate)):
-        MARKETS.addToMarketsHash(branch, market)
-        EVENTS.addMarket(event, market)
-    else:
-        throw()
+    makeMarket()
+    
     # add events to the appropriate reporting period
-    if(EXPEVENTS.getEvent(branch, futurePeriod, EXPEVENTS.getEventIndex(branch, futurePeriod, event)) != event):
+    eventNotAddedYet = (EXPEVENTS.getEvent(branch, futurePeriod, EXPEVENTS.getEventIndex(branch, futurePeriod, event)) != event)
+    if(eventNotAddedYet):
         # cost for calculating num. of reports for an event
         if(!send(EXPEVENTS, 500000 * tx.gasprice)):
             throw()
@@ -187,6 +184,17 @@ def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3
             EVENTS.addPast24(period)
     log(type = marketCreated, market)
     return(market)
+    
+# initialize market and send money to pay for resolution
+macro makeMarket():
+    $payCosts = currency.transferFrom(msg.sender, INFO.getWallet(branch), creationFee)
+    $infoSet = INFO.setInfo(market, description, msg.sender, creationFee, currency, wallet)
+    $initializedMarket = MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpMakerFees, cumulativeScale, numOutcomes, extraInfo, msg.value - 500000 * tx.gasprice, creationFee, expirationDate, value = (msg.value - 500000 * tx.gasprice))
+    $makeBranchAndEventAwareOfNewMarket = BRANCHES.addMarketToBranch(branch, market) and EVENTS.addMarket(event, market)
+    if($payCosts and $infoSet and $initializedMarket and $makeBranchAndEventAwareOfNewMarket):
+        1
+    else:
+        throw()
 
 # Updates a trading fee to be lower in a market
 # Errors
@@ -232,8 +240,10 @@ def pushMarketForward(branch, market):
         return(0)
     event = MARKETS.getMarketEvent(market, 0)
     expiration = EVENTS.getExpiration(event)
-    if(EVENTS.getRejectedPeriod(event) or expiration != EVENTS.getOriginalExpiration(event) or EVENTS.getOutcome(event) or BACKSTOPS.getRoundTwo(event) or expiration / periodLength == block.timestamp / periodLength):
-            return(-4)
+    beingReportedOnNow = (expiration / periodLength == block.timestamp / periodLength)
+    alreadyPushedForward = EVENTS.getRejectedPeriod(event) or expiration != EVENTS.getOriginalExpiration(event)
+    if(alreadyPushedForward or beingReportedOnNow or EVENTS.getOutcome(event) or BACKSTOPS.getRoundTwo(event)):
+        return(-4)
     # push into next vote period
     period = block.timestamp / periodLength
     # figure out what's going on with subsidy system here todo
@@ -243,6 +253,7 @@ def pushMarketForward(branch, market):
     MARKETS.setTradingPeriod(market, period)
     MARKETS.setPushedForward(market, 1, msg.sender)
     EVENTS.setEventPushedUp(event, 1)
-    if(!MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), MARKETS.getTradingFee(market) * MARKETS.getTotalSharesPurchased(market) / (2 * ONE))):
+    payEarlyResolutionBond = MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), MARKETS.getTradingFee(market) * MARKETS.getTotalSharesPurchased(market) / (2 * ONE))
+    if(!payEarlyResolutionBond):
         throw()
     return(1)

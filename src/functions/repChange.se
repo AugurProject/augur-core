@@ -9,7 +9,8 @@ macro calculateRepChange($report, $maxPenalty):
         newRep = oldRep * (2 * p - ONE) / ONE
     # right
     else:
-        if(scalar(event) or categorical(event) or outcome == 3 * ONE_HALF):
+        indeterminate = outcome == 3 * ONE_HALF
+        if(scalar(event) or categorical(event) or indeterminate):
             diff = $report - outcome
             p = -(abs(diff) / 2) + ONE
         newRep = oldRep * (2 * (ONE - p) ** 2 / p + ONE) / ONE

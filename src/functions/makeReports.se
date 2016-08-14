@@ -196,7 +196,8 @@ def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, f
     callstackCheck()
     outcome = 0
     # binary
-    if(EVENTS.getNumOutcomes(event) == 2 and EVENTS.getMaxValue(event) == TWO and EVENTS.getMinValue(event) == ONE):
+    binary = EVENTS.getNumOutcomes(event) == 2 and EVENTS.getMaxValue(event) == TWO and EVENTS.getMinValue(event) == ONE
+    if(binary):
         if(fxpReport > 2 * ONE or fxpReport < ONE or !fxpReport):
             return(-4)
         # outcome is calculated as we go along on a fxpReport by fxpReport basis (i.e. lazily evaluating things)
@@ -217,7 +218,8 @@ def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, f
             # 1 is the new 0 [1/2**64 is basically 0 but able to be differentiated from no fxpReport of 0]
             fxpReport = 1
         # in case of fork remove the original outcome as a possible response if didn't fork over fxpEthics
-        if(forkedOverThisEvent and (!forkedOverEthicality and fxpReport == EVENTS.getUncaughtOutcome(event))):
+        reportIsSameAsOutcomeOnOriginalBranch = fxpReport == EVENTS.getUncaughtOutcome(event)
+        if(forkedOverThisEvent and (!forkedOverEthicality and reportIsSameAsOutcomeOnOriginalBranch)):
             return(-4)
         # outcome (uncaught and mode) is calculated as we go along on a fxpReport by fxpReport basis (i.e. lazily evaluating things)
         # adding weight to a given poss. mode fxpReport

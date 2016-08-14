@@ -56,7 +56,9 @@ def getEventsToReportOn(branch, period, sender, start):
         x[0] = sender + events[i]
         # do abs then mult by 2 to ensure pos. and between 0 and 1
         shaHash = (abs(sha3(x, items = 1)) / ONE) * 2
-        if((shaHash < reportingThreshold or EXPEVENTS.getRequired(events[i], period, branch)) and !EVENTS.getOutcome(events[i])):
+        notResolvedYet = !EVENTS.getOutcome(events[i])
+        ableToReportOn = (shaHash < reportingThreshold or EXPEVENTS.getRequired(events[i], period, branch)) and notResolvedYet
+        if(ableToReportOn):
             events[i + 1] = 1
         else:
             events[i + 1] = 0
@@ -67,12 +69,16 @@ def getEventsToReportOn(branch, period, sender, start):
 # Gets whether a reporter is able to report on a given event or not
 def getEventCanReportOn(branch, period, reporter, event):
     callstackCheck()
+    if(!EXPEVENTS.getLesserReportNum(branch, period, events[i])):
+        MAKEREPORTS.calculateReportTargetForEvent(branch, events[i], period, msg.sender)
     reportingThreshold = self.calculateReportingThreshold(branch, event, period, reporter)
+
     x = array(1)
     x[0] = reporter + event
     # do abs then mult by 2 to ensure pos. and between 0 and 1
     shaHash = (abs(sha3(x, items = 1)) / ONE) * 2
-    if(shaHash < reportingThreshold or EXPEVENTS.getRequired(event, period, branch)):
+    wasAbleToReportOn = shaHash < reportingThreshold or EXPEVENTS.getRequired(event, period, branch)
+    if(wasAbleToReportOn):
         return(1)
     else:
         return(0)
@@ -85,8 +91,10 @@ def setReportingThreshold(event):
     # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this one
     branch = EVENTS.getEventBranch(event)
     periodLength = BRANCHES.getPeriodLength(branch)
-    period = BRANCHES.getVotePeriod(branch)
-    if(period == EVENTS.getExpiration(event) / periodLength and (((block.timestamp + TWENTY_FOUR_HR) % periodLength) > periodLength / 2) and !EVENTS.getUncaughtOutcome(event)):
+    inCurrentVotePeriod = (BRANCHES.getVotePeriod(branch) == EVENTS.getExpiration(event) / periodLength)
+    noReportsOnEvent = !EVENTS.getUncaughtOutcome(event)
+    periodEndsInLessThanADay = ((block.timestamp + TWENTY_FOUR_HR) % periodLength) > (periodLength / 2)
+    if(inCurrentVotePeriod and periodEndsInLessThanADay and noReportsOnEvent):
         EVENTS.setThreshold(event, 2 ** 192)
         return(1)
     else:

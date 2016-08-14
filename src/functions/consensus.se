@@ -85,10 +85,11 @@ def penalizeWrong(branch, event):
     p = proportionCorrect(event, 0)
     if(roundTwo and outcome != 0):
         return(-1)
-    # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
-    elif(residual > periodLength / 2 or (block.timestamp / periodLength - 2) != lastPeriod):
+    tooLateToPenalize = (residual > periodLength / 2 or (block.timestamp / periodLength - 2) != lastPeriod)
+    elif(tooLateToPenalize):
         return(-2)
-    elif(BRANCHES.getForkPeriod(branch) == lastPeriod):
+    justForked = BRANCHES.getForkPeriod(branch) == lastPeriod
+    elif(justForked):
         return(-3)
     elif(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):
         return(-4)
@@ -96,7 +97,8 @@ def penalizeWrong(branch, event):
         return(-5)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     # todo fix getoutcome
-    elif(!EVENTS.getOutcome(event) and !(rejected and EVENTS.getRejectedPeriod(event) == lastPeriod)):
+    eventNotResolvedAndNeedsToBe = !EVENTS.getOutcome(event) and !(rejected and EVENTS.getRejectedPeriod(event) == lastPeriod)
+    elif(eventNotResolvedAndNeedsToBe):
         if(CLOSEMARKET.closeMarket(EVENTS.getMarket(event, 0), msg.sender) != 1):
             return(-6)
     elif(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
@@ -109,11 +111,11 @@ def penalizeWrong(branch, event):
         # lastperiod is where people who originally voted on a round 2 event voted the first time - want num events penalized to go up but not to actually be penalized for it yet
             # shouldn't be penalized until the next period resolution is over [since it's a round 2 event]
         # if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event todo
-        # unless this just happened to them last period and they reported correctly then
+        # unless this just happened to them last period and they reported correctly then - todo clarify / fix this if statement
         if(roundTwo and !penalizedOnEvent and reportValue):
             CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
             CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
-        # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. don't allow rep redistribution until the original period it was supposed to resolve in
+        # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. don't allow rep redistribution until the original period it was supposed to resolve in - todo clarify / fix this if statement
         elif(!penalizedOnEvent and reportValue and rejected and EVENTS.getRejectedPeriod(event) == lastPeriod):
             CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
             CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)

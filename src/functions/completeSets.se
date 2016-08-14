@@ -53,7 +53,8 @@ def buyCompleteSets(market, fxpAmount):
         MARKETS.modifyParticipantShares(market, msg.sender, n, fxpAmount, 0)
         n += 1
     # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
-    if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
+    notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
+    if(notVotingOnYet):
         MARKETS.modifySharesValue(market, fxpAmount * cumulativeScale / ONE)
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), fxpAmount * cumulativeScale / ONE)
     return(1)
@@ -81,7 +82,8 @@ def sellCompleteSets(market, fxpAmount):
         MARKETS.modifyParticipantShares(market, msg.sender, n, -fxpAmount, 0)
         n += 1
     # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
-    if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
+    notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
+    if(notVotingOnYet):
         MARKETS.modifySharesValue(market, -fxpAmount * cumulativeScale / ONE)
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), -fxpAmount * cumulativeScale / ONE)
     # send funds from the market to the user acc.

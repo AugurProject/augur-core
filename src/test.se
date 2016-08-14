@@ -20,7 +20,16 @@ def funTest(n, a, b):
         return(0)
 
 def getit(x):
-    return(x)
+    y = x == 3
+    m = x
+    n = x == 5
+    return([y,n]: arr)
     
+def hashIt(n):
+    x = array(1)
+    x[0] = address
+    y = sha3(x, items=1)
+    return(y)
+
 def getitt(x: address):
     return(x)

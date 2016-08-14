@@ -59,8 +59,8 @@ def claimProceeds(market):
     resolved = 1
     if(!EVENTS.getOutcome(event)):
         resolved = 0
-    # as long as it's resolved and trading period over money can be collected
-    if((period <= tradingPeriod) or !resolved):
+    resolved = (period <= tradingPeriod) or !resolved
+    if(!resolved):
         return(0)
     winningOutcomes = array(8)
     winningOutcomes = MARKET.getWinningOutcomes(market, outitems = 8)
@@ -68,7 +68,8 @@ def claimProceeds(market):
     # market not resolved
     if(!winningOutcomes[0]):
         return(0)
-    if(!winningOutcomes[1]):
+    scalar = winningOutcomes[1]
+    if(!scalar):
         ethical = ethicCatch(EVENTS.getEthics(event))
         # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
         if(categorical(event) and (EVENTS.getMode(event) == ONE_HALF or !ethical)):
@@ -77,7 +78,7 @@ def claimProceeds(market):
         else:
             success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, 0)
     # resolves a scalar market
-    elif(winningOutcomes[1]):
+    elif(scalar):
         success = CLOSETWO.twoOutcomes(market, winningOutcomes, event, msg.sender)
     else:
         throw()

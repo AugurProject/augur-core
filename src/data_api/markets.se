@@ -191,6 +191,7 @@ def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, 
     self.Markets[market].fxpMakerFees = fxpMakerFees
     self.Markets[market].fees = fxpCreationFee
     self.Markets[market].lastExpDate = lastExpDate
+    self.addToMarketsHash(branch, market)
     return(1)
 
 def modifyShares(market, outcome, fxpAmount):

@@ -130,18 +130,21 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
                 MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
                 # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
                 fee = value * fee / ONE
+                # 75% to branch + .5% more to branch per maker fee 1% decrease
+                # 25% to creator + .5% more to creator per 1% decrease in maker fees
                 branchFees = (THREE_FOURTHS + (ONE_HALF - makerFeeRate) / 2) * fee / ONE
                 creatorFees = (ONE_FOURTH + (ONE_HALF - makerFeeRate) / 2) * fee / ONE
                 
-                # 75% to branch + .5% more to branch per maker fee 1% decrease
-                # 25% to creator + .5% more to creator per 1% decrease in maker fees
                 # also pay sender for the shares they're selling
-                if(!INFO.getWallet(market).transfer(msg.sender, value - (branchFees + creatorFees)) or !INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), branchFees) or !INFO.getWallet(market).transfer(creator, creatorFees)):
+                payTakerFees = INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), branchFees) and INFO.getWallet(market).transfer(creator, creatorFees)
+                paySenderMinusFees = INFO.getWallet(market).transfer(msg.sender, value - (branchFees + creatorFees))
+                if(!paySenderMinusFees or !payTakerFees):
                     throw()
 
                 # other party [maker] pays their part of the fee here too [they previously escrowed it in the market]
                 fee = fee * makerFeeRate / ONE
-                if(!INFO.getWallet(market).transfer(creator, fee / 2) or !INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), fee / 2)):
+                payMakerFees = INFO.getWallet(market).transfer(creator, fee / 2) or INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), fee / 2)
+                if(!payMakerFees):
                     throw()
 
                 # needed to keep track of how many fees a market has raised
@@ -172,18 +175,22 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
                 # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
                 MARKETS.modifyParticipantShares(market, msg.sender, outcome, fill, 1)
 
+                # 75% to branch + .5% more to branch per maker fee 1% decrease
+                # 25% to creator + .5% more to creator per 1% decrease in maker fees
                 branchFees = (THREE_FOURTHS + (ONE_HALF - makerFeeRate) / 2) * tradeValueExcludingFees / ONE * fee / ONE
                 creatorFees = (ONE_FOURTH + (ONE_HALF - makerFeeRate) / 2) * tradeValueExcludingFees / ONE * fee / ONE
                 
                 # Transfer cash from user to person who has ask order and pay fee to branch and market creator
-                # 75% to branch + .5% more to branch per maker fee 1% decrease
-                # 25% to creator + .5% more to creator per 1% decrease in maker fees
-                if(!INFO.getCurrency(market).transferFrom(msg.sender, owner, valueToSpend - (branchFees + creatorFees)) or !INFO.getCurrency(market).transferFrom(msg.sender, BRANCHES.getWallet(branch, INFO.getCurrency(market)), branchFees) or !INFO.getCurrency(market).transferFrom(msg.sender, creator, creatorFees)):
+                
+                payTakerFees = INFO.getCurrency(market).transferFrom(msg.sender, BRANCHES.getWallet(branch, INFO.getCurrency(market)), branchFees) and INFO.getCurrency(market).transferFrom(msg.sender, creator, creatorFees)
+                payMaker = INFO.getCurrency(market).transferFrom(msg.sender, owner, valueToSpend - (branchFees + creatorFees))
+                if(!payMaker or !payTakerFees):
                     throw()
                 
                 # other party [maker] pay their part of the fee here too
                 makerFee = tradeValueExcludingFees * makerFeeRate / ONE * fee / ONE
-                if(!INFO.getWallet(market).transfer(creator, makerFee / 2) or !INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), makerFee / 2)):
+                payMakerFees = INFO.getWallet(market).transfer(creator, makerFee / 2) and INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), makerFee / 2)
+                if(!payMakerFees):
                     throw()
 
                 # only count branch fees here
@@ -270,6 +277,8 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
             return([INSUFFICIENT_BALANCE]: arr)
         fee = amount * price * feePercent(tradingFee, price, cumulativeScale) / ONE ** 2
         makerFeeRate = MARKETS.getMakerFees(market)
+        # 75% to branch + .5% more to branch per maker fee 1% decrease
+        # 25% to creator + .5% more to creator per 1% decrease in maker fees
         branchFees = (THREE_FOURTHS + (ONE_HALF - makerFeeRate) / 2) * fee / ONE
         creatorFees = (ONE_FOURTH + (ONE_HALF - makerFeeRate) / 2) * fee / ONE
         takerFeesTotal = branchFees + creatorFees
@@ -292,7 +301,8 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
             EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount * cumulativeScale / ONE)
         # send money from user acc. to market address/account
         # cost for shares
-        if(!INFO.getCurrency(market).transferFrom(msg.sender, market, cost - takerFeesTotal)):
+        payTakerCostMinusFees = INFO.getCurrency(market).transferFrom(msg.sender, market, cost - takerFeesTotal)
+        if(!payTakerCostMinusFees):
             throw()
 
         # Fill buy order [short selling the outcome user doesn't want]
@@ -306,18 +316,16 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
         # Update balances
         MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 1)
         MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
-        # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
-        # 75% to branch + .5% more to branch per maker fee 1% decrease
-        if(!INFO.getCurrency(market).transferFrom(msg.sender, branch, branchFees)):
-            throw()
-        # 25% to creator + .5% more to creator per 1% decrease in maker fees
-        if(!INFO.getCurrency(market).transferFrom(msg.sender, creator, creatorFees)):
+
+        payTakerFees = INFO.getCurrency(market).transferFrom(msg.sender, branch, branchFees) and INFO.getCurrency(market).transferFrom(msg.sender, creator, creatorFees)
+        if(!payTakerFees):
             throw()
 
         # other party [maker] pay their part of the fee here too
         fee = fee * makerFeeRate / ONE
         
-        if(!INFO.getWallet(market).transfer(creator, fee / 2) or !INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), fee / 2)):
+        payMakerFees = INFO.getWallet(market).transfer(creator, fee / 2) and INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), fee / 2)
+        if(!payMakerFees):
             throw()
     
         # only count branch fees here

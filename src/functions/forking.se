@@ -52,7 +52,7 @@ def moveEvent(event):
     eventIndex = EXPEVENTS.getEventIndex(expPeriod, event)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     # todo getoutcome may not work
-    if(!forkPeriod or currentPeriod != (forkPeriod + 2) or EVENTS.getOutcome(event) or BACKSTOPS.getMoved(event)):
+    if(currentPeriod != (forkPeriod + 2) or EVENTS.getOutcome(event) or BACKSTOPS.getMoved(event)):
         return(0)
     winner = BACKSTOPS.getResolved(branch, forkPeriod)
     if(!winner):
@@ -151,8 +151,9 @@ def fork(event, branch, forkedOverEthicality):
     if(msg.value < 200000 * tx.gasprice):
         return(0)
     CONSENSUSDATA.setRefund(event, msg.value)
-    # if in last 48 hr of period and is round 2 event with reports attempted
-    if(block.timestamp / BRANCHES.getPeriodLength(branch) != ((block.timestamp + 2 * TWENTY_FOUR_HR) / BRANCHES.getPeriodLength(branch)) and EVENTS.getUncaughtOutcome(event) != 0):
+    last48HoursOfPeriod = (block.timestamp / BRANCHES.getPeriodLength(branch) != ((block.timestamp + 2 * TWENTY_FOUR_HR) / BRANCHES.getPeriodLength(branch)))
+    reportedOnInRoundTwo = EVENTS.getUncaughtOutcome(event)
+    if(last48HoursOfPeriod and reportedOnInRoundTwo):
         if(!send(CONSENSUSDATA, msg.value)):
             throw()
         bond = POINT_ZERO_ONE * REPORTING.getTotalRep(branch) / ONE

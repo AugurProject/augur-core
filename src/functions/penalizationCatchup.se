@@ -30,7 +30,9 @@ def penalizationCatchup(branch, sender):
     if(delta <= 0):
         return(-2)
     # provided user is at least one period behind and they didn't report in the last period
-    if(lastPeriodPenalized == lastPeriod or EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, sender)):
+    alreadyPenalized = (lastPeriodPenalized == lastPeriod)
+    reportedLastPeriod = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, sender)
+    if(alreadyPenalized or reportedLastPeriod):
         return(-3)
     # dock 10% for each period they didn't penalize on
     smoothedRep = oldRep * POINT_NINE / ONE

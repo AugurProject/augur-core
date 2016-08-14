@@ -16,7 +16,9 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
     # and $market remains with old expiration date
     # UI needs to call penalizeWrong for ones that are pushed back in both pushed back period and regular period with actual reporting
     $indeterminate = ONE_HALF * 3
-    if(($fxpOutcome == $indeterminate or $mode == ONE_HALF) and EVENTS.getEventPushedUp($event)):
+    $indeterminateAndReadyToResolve = ($fxpOutcome == $indeterminate or $mode == ONE_HALF)
+    $indeterminateNotReadyToResolveEarlyEvent = ($fxpOutcome == $indeterminate or $mode == ONE_HALF) and EVENTS.getEventPushedUp($event)
+    if($indeterminateNotReadyToResolveEarlyEvent):
         if(MARKETS.getPushedForward($market)):
             amount = MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE)
             branchWallet = BRANCHES.getWallet($branch, INFO.getCurrency($market))
@@ -37,7 +39,8 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         # set $event expiration to be the old date
         EVENTS.setExpiration($event, EVENTS.getOriginalExpiration($event))
         -6
-    elif(($fxpOutcome == $indeterminate or $mode == ONE_HALF) or !$ethical):
+    
+    elif($indeterminateAndReadyToResolve or !ethical):
         # give $event bond money to reporters
         branchWallet = BRANCHES.getWallet($branch, INFO.getCurrency($event))
         if(!INFO.getWallet($event).transfer(branchWallet, EVENTS.getBond($event))):

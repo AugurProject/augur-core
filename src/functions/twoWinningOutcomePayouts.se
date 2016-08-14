@@ -29,11 +29,13 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
         MARKETS.modifyParticipantShares(market, sender, winningOutcome[n], -sharesOwned, 0)
         # low side
         if(n == 0):
-            if(!INFO.getWallet(market).transfer(sender, sharesOwned * cumulativeScale / ONE * pricePerShare1 / ONE)):
+            shareValue = sharesOwned * cumulativeScale / ONE * pricePerShare1 / ONE
+            if(!INFO.getWallet(market).transfer(sender, shareValue)):
                 throw()
         # high side (of the scalar part)
         elif(n == 1):
-            if(!INFO.getWallet(market).transfer(sender, sharesOwned * cumulativeScale / ONE * pricePerShare2 / ONE)):
+            shareValue = sharesOwned * cumulativeScale / ONE * pricePerShare2 / ONE
+            if(!INFO.getWallet(market).transfer(sender, shareValue)):
                 throw()
         else:
             throw()

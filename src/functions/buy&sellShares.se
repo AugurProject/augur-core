@@ -61,14 +61,18 @@ macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee, 
         if($type == ASK):
             MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$fxpAmount, 0)
             if($fee):
-                if(!INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), ($fxpAmount * $fxpPrice * $fee / ONE ** 2))):
+                $feePaid = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), ($fxpAmount * $fxpPrice * $fee / ONE ** 2))
+                if(!$feePaid):
                     throw()
         # Send / escrow cash for bids
         if($type == BID):
-            if(!INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $fxpAmount * $fxpPrice / ONE)):
+            $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $fxpAmount * $fxpPrice / ONE)
+            if(!$paidTradeCost):
                 throw()
-            if($fee and !INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), ($fxpAmount * $fxpPrice * $fee / ONE ** 2))):
-                throw()
+            if($fee):
+                $feePaid = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), ($fxpAmount * $fxpPrice * $fee / ONE ** 2))
+                if(!$feePaid):
+                    throw()
     else:
         return(TRADE_ALREADY_EXISTS)
     log(type = logAddTx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, tradeID)
@@ -108,12 +112,14 @@ def cancel(tradeID):
         if(type == BID):
             # cash refund
             amt = fxpAmount * fxpPrice * (fee + ONE) / ONE ** 2
-            if(!INFO.getWallet(market).transfer(msg.sender, amt)):
+            refunded = INFO.getWallet(market).transfer(msg.sender, amt)
+            if(!refunded):
                 throw()
         elif(type == ASK):
             # shares refund
             MARKETS.modifyParticipantShares(market, msg.sender, outcome, fxpAmount, 0)
-            if(!INFO.getWallet(market).transfer(msg.sender, (fxpAmount * fxpPrice * fee / ONE ** 2))):
+            feesRefunded = INFO.getWallet(market).transfer(msg.sender, (fxpAmount * fxpPrice * fee / ONE ** 2))
+            if(!feesRefunded):
                 throw()
         else:
             throw()
