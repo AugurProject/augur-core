@@ -93,3 +93,4 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         return(1)
     else:
         return(2)
+]

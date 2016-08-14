@@ -45,14 +45,12 @@ def moveEvent(event):
     refund()
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     branch = EVENTS.getEventBranch(event)
-    if(!branch or !event):
-        return(0)
     eventForkedOver = BRANCHES.getEventForkedOver(branch)
     expPeriod = EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch)
     eventIndex = EXPEVENTS.getEventIndex(expPeriod, event)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     # todo getoutcome may not work
-    if(currentPeriod != (forkPeriod + 2) or EVENTS.getOutcome(event) or BACKSTOPS.getMoved(event)):
+    if(!branch or !event or currentPeriod != (forkPeriod + 2) or EVENTS.getOutcome(event) or BACKSTOPS.getMoved(event)):
         return(0)
     winner = BACKSTOPS.getResolved(branch, forkPeriod)
     if(!winner):

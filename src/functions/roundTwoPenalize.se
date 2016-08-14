@@ -35,6 +35,7 @@ macro MIN_BOND: 200 * ONE
     # -4: already done for all events in this period
     # -5: needed to collect fees last period which sets the before/after rep
     # -6: event isn't in the branch given
+    # -7: not able to be reported on
 # force event to be resolved first if it can be
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized
 def penalizeRoundTwoWrong(branch, event):
@@ -114,7 +115,7 @@ def penalizeRoundTwoWrong(branch, event):
                 CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
                 CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
         else:
-            return(0)
+            return(-7)
         # if a fork event in original branch, only event needed to report on in this period is that one [b/c the original branch resolves it as a regular round 2 event, fork reports again]
         if(event == forkEvent):
             CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, (numReportedOn - 1))
@@ -123,8 +124,6 @@ def penalizeRoundTwoWrong(branch, event):
         if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
             sendRedistributedRepToBranch()
         return(1)
-    else:
-        return(0)
 
 macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn):
     # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max maxPenalty% of their rep respectively

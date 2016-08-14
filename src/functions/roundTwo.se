@@ -26,6 +26,7 @@ macro MIN_BOND: 200 * 2**64
     #  0: invalid votePeriod/branch
     # -1: Pushed forward event, bonding not allowed during this
     # -2: branch is in the middle of a fork
+    # -3: not enough money
     # throw()s if not enough msg.value to cover resolution cost or not a large enough bond
 def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     callstackCheck()
@@ -39,7 +40,7 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
         return(-2)
     # todo find actual cost
     if(msg.value < 500000 * tx.gasprice):
-        return(0)
+        return(-3)
     BACKSTOPS.setRoundTwoRefund(event, msg.value)
     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod) / EXPIRING.getNumberEvents(branch, votePeriod)
     bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2) / ONE

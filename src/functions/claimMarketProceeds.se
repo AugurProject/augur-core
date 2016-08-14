@@ -56,12 +56,6 @@ def claimProceeds(market):
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)
-    resolved = 1
-    if(!EVENTS.getOutcome(event)):
-        resolved = 0
-    resolved = (period <= tradingPeriod) or !resolved
-    if(!resolved):
-        return(0)
     winningOutcomes = array(8)
     winningOutcomes = MARKET.getWinningOutcomes(market, outitems = 8)
     success = 0

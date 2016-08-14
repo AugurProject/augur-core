@@ -255,5 +255,5 @@ def pushMarketForward(branch, market):
     EVENTS.setEventPushedUp(event, 1)
     payEarlyResolutionBond = MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), MARKETS.getTradingFee(market) * MARKETS.getTotalSharesPurchased(market) / (2 * ONE))
     if(!payEarlyResolutionBond):
-        throw()
+z        throw()
     return(1)
