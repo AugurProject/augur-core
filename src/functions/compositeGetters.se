@@ -200,32 +200,50 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
         m += 1
     return(marketsInfo: arr)
 
-def getEventsWithSubmittedHash(branch, period, from, to, reporter):
+def getEventsWithSubmittedHash(branch, startPeriod, stopPeriod, reporter):
     self.test_callstack()
-    numEvents = EXPEVENTS.getNumberEvents(branch, period)
+
     events = array(numEvents)
-    i = from
+    stopEventIndex = EXPEVENTS.getNumberEvents(branch, period)
+
     n = 0
-    while(i < to):
-        event = EXPEVENTS.getEvent(branch, period, i)
-        if(EXPEVENTS.getReportHash(branch, period, reporter, event) != 0):
-            events[n] = event
-            n += 1
-        i += 1
+    p = startPeriod
+    while(p <= stopPeriod):
+        i = 0
+        while(i < stopEventIndex):
+            event = EXPEVENTS.getEvent(branch, p, i)
+
+            if(EXPEVENTS.getReportHash(branch, p, reporter, event) != 0):
+                events[n] = event
+                n += 1
+
+            i += 1
+
+        p += 1
+
     return(events: arr)
 
-def getEventsWithSubmittedReport(branch, period, from, to, reporter):
+def getEventsWithSubmittedReport(branch, startPeriod, stopPeriod, reporter):
     self.test_callstack()
-    numEvents = EXPEVENTS.getNumberEvents(branch, period)
+
     events = array(numEvents)
-    i = from
+    stopEventIndex = EXPEVENTS.getNumberEvents(branch, period)
+
     n = 0
-    while(i < to):
-        event = EXPEVENTS.getEvent(branch, period, i)
-        if(EXPEVENTS.getReport(branch, period, event, reporter) != 0):
-            events[n] = event
-            n += 1
-        i += 1
+    p = startPeriod
+    while(p <= stopPeriod):
+        i = 0
+        while(i < stopEventIndex):
+            event = EXPEVENTS.getEvent(branch, p, i)
+
+            if(EXPEVENTS.getReport(branch, p, event, reporter) != 0):
+                events[n] = event
+                n += 1
+
+            i += 1
+
+        p += 1
+
     return(events: arr)
 
 
