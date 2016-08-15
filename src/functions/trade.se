@@ -228,6 +228,8 @@ def trade(max_value, max_amount, trade_ids:arr):
     # -5: can't pickup your own trade
     # -6: can't trade on oracle only branch
     # -7: not a large enough trade
+    # 10: insufficient balance
+    # 22: trade in same block prohibited
 def short_sell(buyer_trade_id, max_amount):
     refund()
     branch = MARKETS.getBranchID(market)
