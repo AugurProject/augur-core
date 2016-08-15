@@ -50,31 +50,25 @@ macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee, 
     trade = [$type, $market, $fxpAmount, $fxpPrice, $sender, block.number, $outcome]
     tradeID = sha3(trade, items = 7)
     cumulativeScale = MARKETS.getCumulativeScale($market)
-
-    # Save trade
-    if(!TRADES.getID(tradeID)):
-        TRADES.saveTrade(tradeID, $type, $market, $fxpAmount, $fxpPrice, $sender, $outcome)
-        # Update market
-        lastID = MARKETS.getLastTrade($market)
-        MARKETS.addTrade($market, tradeID, lastID)
-        # Update available and trading fxpAmounts for asks
-        if($type == ASK):
-            MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$fxpAmount, 0)
-            if($fee):
-                $feePaid = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), ($fxpAmount * $fxpPrice * $fee / ONE ** 2))
-                if(!$feePaid):
-                    throw()
-        # Send / escrow cash for bids
-        if($type == BID):
-            $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $fxpAmount * $fxpPrice / ONE)
-            if(!$paidTradeCost):
-                throw()
-            if($fee):
-                $feePaid = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), ($fxpAmount * $fxpPrice * $fee / ONE ** 2))
-                if(!$feePaid):
-                    throw()
-    else:
+    if(TRADES.getID(tradeID)):
         return(TRADE_ALREADY_EXISTS)
+
+    TRADES.saveTrade(tradeID, $type, $market, $fxpAmount, $fxpPrice, $sender, $outcome)
+    # Update market
+    MARKETS.addTrade($market, tradeID)
+    # Update available and trading fxpAmounts for asks
+    if($type == ASK):
+        MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$fxpAmount, 0)
+    # Send / escrow cash for bids
+    if($type == BID):
+        $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $fxpAmount * $fxpPrice / ONE)
+        if(!$paidTradeCost):
+            throw()
+    # pay fees
+    if($fee):
+        $feePaid = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), ($fxpAmount * $fxpPrice * $fee / ONE ** 2))
+        if(!$feePaid):
+            throw()
     log(type = logAddTx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, tradeID)
     return(tradeID)
     
@@ -105,28 +99,29 @@ def cancel(tradeID):
     cumulativeScale = MARKETS.getCumulativeScale(market)
     fee = feePercent(tradingFee, fxpPrice, cumulativeScale) * MARKETS.getMakerFees(market) / ONE
     # Check the owner
-    if(msg.sender == owner):
-        # Clear the trade first
-        removeTrade(tradeID, market)
-        # Issue refunds
-        if(type == BID):
-            # cash refund
-            amt = fxpAmount * fxpPrice * (fee + ONE) / ONE ** 2
-            refunded = INFO.getWallet(market).transfer(msg.sender, amt)
-            if(!refunded):
-                throw()
-        elif(type == ASK):
-            # shares refund
-            MARKETS.modifyParticipantShares(market, msg.sender, outcome, fxpAmount, 0)
-            feesRefunded = INFO.getWallet(market).transfer(msg.sender, (fxpAmount * fxpPrice * fee / ONE ** 2))
-            if(!feesRefunded):
-                throw()
-        else:
+    if(msg.sender != owner):
+        return(FAILURE)
+    
+    # Clear the trade first
+    removeTrade(tradeID, market)
+    # Issue refunds
+    if(type == BID):
+        # cash refund
+        amt = fxpAmount * fxpPrice * (fee + ONE) / ONE ** 2
+        refunded = INFO.getWallet(market).transfer(msg.sender, amt)
+        if(!refunded):
             throw()
-        # Log cancellation
-        log(type = logCancel, market, msg.sender, fxpPrice, fxpAmount, tradeID, outcome, type)
-        return(SUCCESS)
-    return(FAILURE)
+    elif(type == ASK):
+        # shares refund
+        MARKETS.modifyParticipantShares(market, msg.sender, outcome, fxpAmount, 0)
+        feesRefunded = INFO.getWallet(market).transfer(msg.sender, (fxpAmount * fxpPrice * fee / ONE ** 2))
+        if(!feesRefunded):
+            throw()
+    else:
+        throw()
+    # Log cancellation
+    log(type = logCancel, market, msg.sender, fxpPrice, fxpAmount, tradeID, outcome, type)
+    return(SUCCESS)
 
 # 
 # Buy / Sell actions: puts orders on the book

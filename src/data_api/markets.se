@@ -250,10 +250,10 @@ def getBondsMan(market):
 def getLastTrade(market):
     return(self.Markets[market].lastTrade)
 
-def addTrade(market, tradeID, lastID):
+def addTrade(market, tradeID):
     callstackCheck()
     self.Markets[market].tradeIDs[lastID].nextID = tradeID
-    self.Markets[market].tradeIDs[tradeID].prevID = lastID
+    self.Markets[market].tradeIDs[tradeID].prevID = self.Markets[market].lastTrade
     self.Markets[market].tradeIDs[tradeID].id = tradeID
     self.Markets[market].lastTrade = tradeID
     self.Markets[market].totalTrades += 1
@@ -286,7 +286,6 @@ def getTradeIDs(marketID):
     tradesCount = self.Markets[marketID].totalTrades
     tradeID = self.Markets[marketID].lastTrade
     tradeIDs = array(tradesCount)
-
     i = 0
     while(i < tradesCount):
         tradeIDs[i] = self.Markets[marketID].tradeIDs[tradeID].id

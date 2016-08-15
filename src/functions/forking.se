@@ -151,45 +151,44 @@ def fork(event, branch, forkedOverEthicality):
     CONSENSUSDATA.setRefund(event, msg.value)
     last48HoursOfPeriod = (block.timestamp / BRANCHES.getPeriodLength(branch) != ((block.timestamp + 2 * TWENTY_FOUR_HR) / BRANCHES.getPeriodLength(branch)))
     reportedOnInRoundTwo = EVENTS.getUncaughtOutcome(event)
-    if(last48HoursOfPeriod and reportedOnInRoundTwo):
-        if(!send(CONSENSUSDATA, msg.value)):
-            throw()
-        bond = POINT_ZERO_ONE * REPORTING.getTotalRep(branch) / ONE
-        BACKSTOPS.setBondAmount(event, bond)
-        # lose fork bond in branch 1
-        # results same as roundtwobond, let it resolve as that on original network
-        if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
-            throw()
-        # on branch 2 fork bond isn't lost
-        # on fork bond isn't lost, gets paid up to 2x from "liars"
-        # make the fork
-        newBranch = CREATEBRANCH.createSubbranch(FORK_TEXT, BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), BRANCHES.getOracleOnly(branch))
-        REPORTING.setFork(newBranch)
-        period = BRANCHES.getVotePeriod(newBranch)
-        EXPEVENTS.setEventRequired(newBranch, period + 1, event)
-        EXPEVENTS.addEvent(newBranch, period + 1, event)
-        EVENTS.setExpiration(event, block.timestamp)
-        BACKSTOPS.setOriginalBranch(event, branch)
-        BACKSTOPS.setForkBondPoster(event, msg.sender)
-        EVENTS.setForked(event)
-        BACKSTOPS.setFinal(event)
-        BRANCHES.setForkPeriod(branch)
-        BRANCHES.setForkPeriod(newBranch)
-        BRANCHES.setEventForkedOver(newBranch, event)
-        BRANCHES.setEventForkedOver(branch, event)
-        if(forkedOverEthicality):
-            BACKSTOPS.setForkedOverEthicality(event)
-        # return round 2 bond on orig. branch
-        market = EVENTS.getMarket(event, 0)
-        averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period - 1)/EXPEVENTS.getNumberEvents(branch, period - 1)
-        bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2) / 2 ** 64
-        bond = min(bond, 200 * ONE)
-        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
-        BACKSTOPS.setBondReturned(event)
-        return(1)
-    else:
+    if(!last48HoursOfPeriod or !reportedOnInRoundTwo):
         return(0)
+    if(!send(CONSENSUSDATA, msg.value)):
+        throw()
+    bond = POINT_ZERO_ONE * REPORTING.getTotalRep(branch) / ONE
+    BACKSTOPS.setBondAmount(event, bond)
+    # lose fork bond in branch 1
+    # results same as roundtwobond, let it resolve as that on original network
+    if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
+        throw()
+    # on branch 2 fork bond isn't lost
+    # on fork bond isn't lost, gets paid up to 2x from "liars"
+    # make the fork
+    newBranch = CREATEBRANCH.createSubbranch(FORK_TEXT, BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), BRANCHES.getOracleOnly(branch))
+    REPORTING.setFork(newBranch)
+    period = BRANCHES.getVotePeriod(newBranch)
+    EXPEVENTS.setEventRequired(newBranch, period + 1, event)
+    EXPEVENTS.addEvent(newBranch, period + 1, event)
+    EVENTS.setExpiration(event, block.timestamp)
+    BACKSTOPS.setOriginalBranch(event, branch)
+    BACKSTOPS.setForkBondPoster(event, msg.sender)
+    EVENTS.setForked(event)
+    BACKSTOPS.setFinal(event)
+    BRANCHES.setForkPeriod(branch)
+    BRANCHES.setForkPeriod(newBranch)
+    BRANCHES.setEventForkedOver(newBranch, event)
+    BRANCHES.setEventForkedOver(branch, event)
+    if(forkedOverEthicality):
+        BACKSTOPS.setForkedOverEthicality(event)
+    # return round 2 bond on orig. branch
+    market = EVENTS.getMarket(event, 0)
+    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period - 1)/EXPEVENTS.getNumberEvents(branch, period - 1)
+    bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2) / 2 ** 64
+    bond = min(bond, 200 * ONE)
+    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
+    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
+    BACKSTOPS.setBondReturned(event)
+    return(1)
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
 # branch is orig. branch
