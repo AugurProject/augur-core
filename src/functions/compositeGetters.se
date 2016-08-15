@@ -238,12 +238,13 @@ def getEventsWithSubmittedReport(branch, startPeriod, stopPeriod, reporter):
     while(p <= stopPeriod):
         i = 0
         while(i < numEvents):
-            event = array(3)
+            event = array(4)
             event[0] = i
             event[1] = p
             event[2] = EXPEVENTS.getEvent(branch, p, i)
+            event[3] = EXPEVENTS.getReport(branch, p, event[2], reporter)
 
-            if(EXPEVENTS.getReport(branch, p, event[2], reporter) != 0):
+            if(event[3] != 0):
                 events[n] = event
                 n += 1
 
