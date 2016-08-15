@@ -137,22 +137,8 @@ def fork(event, branch, forkedOverEthicality):
     callstackCheck()
     forkPeriod = BRANCHES.getForkPeriod(branch)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-    if(!EVENTS.getRoundTwo(event) or BACKSTOPS.getFinal(event) or EVENTS.getForked(event)):
-        return(-1)
-    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod + 1) or currentPeriod == (forkPeriod + 2)):
-        return(-3)
-    if(EVENTS.getOriginalExpiration(event) != EVENTS.getExpiration(event)):
-        return(-4)
-    if(EVENTS.getEventBranch(event) != branch or !branch or !event):
-        return(-5)
-    # todo find actual gas cost for resolution here and charge that
-    if(msg.value < 200000 * tx.gasprice):
-        return(0)
-    CONSENSUSDATA.setRefund(event, msg.value)
-    last48HoursOfPeriod = (block.timestamp / BRANCHES.getPeriodLength(branch) != ((block.timestamp + 2 * TWENTY_FOUR_HR) / BRANCHES.getPeriodLength(branch)))
-    reportedOnInRoundTwo = EVENTS.getUncaughtOutcome(event)
-    if(!last48HoursOfPeriod or !reportedOnInRoundTwo):
-        return(0)
+    checkForkPreconditions()
+
     if(!send(CONSENSUSDATA, msg.value)):
         throw()
     bond = POINT_ZERO_ONE * REPORTING.getTotalRep(branch) / ONE
@@ -190,6 +176,7 @@ def fork(event, branch, forkedOverEthicality):
     BACKSTOPS.setBondReturned(event)
     return(1)
 
+
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
 # branch is orig. branch
 # Returns 1
@@ -199,12 +186,9 @@ def fork(event, branch, forkedOverEthicality):
     # -2 wrong branch
 def resolveForkedEvent(branch, event):
     refund()
-    votedOnAgain = 0
     # checks for orig. branch
     if(EVENTS.getEventBranch(event) != branch or BRANCHES.getEventForkedOver(branch) != event or !branch or !event):
         return(0)
-    if(BRANCHES.getVotePeriod(branch) > (EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch))):
-        votedOnAgain = 1
     if(!EVENTS.getForked(event)):
         return(-1)
     if(self.resolveForkEvent(branch, event)):
@@ -289,4 +273,22 @@ def resolveForkEvent(branch, event):
         return(1)
     # (should never be reached)
     else:
+        return(0)
+
+macro checkForkPreconditions():
+    if(!EVENTS.getRoundTwo(event) or BACKSTOPS.getFinal(event) or EVENTS.getForked(event)):
+        return(-1)
+    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod + 1) or currentPeriod == (forkPeriod + 2)):
+        return(-3)
+    if(EVENTS.getOriginalExpiration(event) != EVENTS.getExpiration(event)):
+        return(-4)
+    if(EVENTS.getEventBranch(event) != branch or !branch or !event):
+        return(-5)
+    # todo find actual gas cost for resolution here and charge that
+    if(msg.value < 200000 * tx.gasprice):
+        return(0)
+    CONSENSUSDATA.setRefund(event, msg.value)
+    last48HoursOfPeriod = (block.timestamp / BRANCHES.getPeriodLength(branch) != ((block.timestamp + 2 * TWENTY_FOUR_HR) / BRANCHES.getPeriodLength(branch)))
+    reportedOnInRoundTwo = EVENTS.getUncaughtOutcome(event)
+    if(!last48HoursOfPeriod or !reportedOnInRoundTwo):
         return(0)

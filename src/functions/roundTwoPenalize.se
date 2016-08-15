@@ -66,64 +66,40 @@ def penalizeRoundTwoWrong(branch, event):
     bond = min(bond, MIN_BOND)
     ethical = EVENTS.getEthics(event)
     p = proportionCorrect(event, 0)
-    if(EVENTS.getEventBranch(event) != branch):
-        return(-6)
-    # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
-    if(residual > periodLength / 2 or (block.timestamp / periodLength - 2) != lastPeriod):
-        return(-1)
-    # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
-    elif(!EVENTS.getOutcome(event)):
-        if(!ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriod, event), msg.sender)):
-            return(-2)
-    elif(BRANCHES.getForkPeriod(branch) == lastPeriod and event != forkEvent):
-        return(-3)
-    elif(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):
-        return(-4)
-    elif(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
-        return(-5)
-    else:
-        overruled = 0
-        # checks if the event's outcome was overruled or the same as the original reporting cycle
-        sameEthics = (BACKSTOPS.getOriginalEthicality(event) == ethicCatch(EVENTS.getEthics(event)))
-        originalOutcome = BACKSTOPS.getOriginalOutcome(event)
-        uncaughtOutcome = EVENTS.getUncaughtOutcome(event)
-        if(scalar(event) or categorical(event)):
-            overruled = (originalOutcome != uncaughtOutcome or !sameEthics)
-        else:
-            overruled = (originalOutcome != catch(uncaughtOutcome) or !sameEthics)
+    checkPenalizeWrongRoundTwoPreconditions()
 
-        numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
-        repChange = 0
-        # penalization on a round 2 event if not already penalized, it has outcome, and user reported on it
-        # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period
-        final = BACKSTOPS.getFinal(event)
-        roundTwo = BACKSTOPS.getRoundTwo(event)
-        penalizedOnEvent = CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event)
-        reported = (reportValue or oldReport)
-        if(final and (roundTwo or event == forkEvent) and !penalizedOnEvent and reported):
-            # Do the first rep redistribution based on first report and final outcome if reported first time
-            # 0 outcome issue
-            if(oldReport and outcome != 0):
-                calculateRepChange(oldReport, POINT_TWO)
-                handleEthicsAndBondRepRedistribution(POINT_TWO, oldEthics, numReportedOn)
-                CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
-                CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
-            # Do the second (for each user) based on second report and final outcome
-            if(reportValue and outcome != 0):
-                calculateRepChange(reportValue, POINT_ONE)
-                handleEthicsAndBondRepRedistribution(POINT_ONE, ethics, numReportedOn)
-                CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
-                CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
-        else:
-            return(-7)
-        # if a fork event in original branch, only event needed to report on in this period is that one [b/c the original branch resolves it as a regular round 2 event, fork reports again]
-        if(event == forkEvent):
-            CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, (numReportedOn - 1))
-        # penalization on a regular event if not already penalized, it has outcome, and user reported on it
-        # once penalized for all events actually get rid of net rep lost
-        if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
-            sendRedistributedRepToBranch()
-        return(1)
+    numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
+    repChange = 0
+    # penalization on a round 2 event if not already penalized, it has outcome, and user reported on it
+    # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period
+    final = BACKSTOPS.getFinal(event)
+    roundTwo = BACKSTOPS.getRoundTwo(event)
+    penalizedOnEvent = CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event)
+    reported = (reportValue or oldReport)
+    if(final and (roundTwo or event == forkEvent) and !penalizedOnEvent and reported):
+        # Do the first rep redistribution based on first report and final outcome if reported first time
+        # 0 outcome issue
+        if(oldReport and outcome != 0):
+            calculateRepChange(oldReport, POINT_TWO)
+            handleEthicsAndBondRepRedistribution(POINT_TWO, oldEthics, numReportedOn)
+            CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
+            CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
+        # Do the second (for each user) based on second report and final outcome
+        if(reportValue and outcome != 0):
+            calculateRepChange(reportValue, POINT_ONE)
+            handleEthicsAndBondRepRedistribution(POINT_ONE, ethics, numReportedOn)
+            CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
+            CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
+    else:
+        return(-7)
+    # if a fork event in original branch, only event needed to report on in this period is that one [b/c the original branch resolves it as a regular round 2 event, fork reports again]
+    if(event == forkEvent):
+        CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, (numReportedOn - 1))
+    # penalization on a regular event if not already penalized, it has outcome, and user reported on it
+    # once penalized for all events actually get rid of net rep lost
+    if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
+        sendRedistributedRepToBranch()
+    return(1)
 
 macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn):
     # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max maxPenalty% of their rep respectively
@@ -135,7 +111,7 @@ macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn)
     if(repBalance + repChange <= 0):
         repChange = -1 * repBalance
     # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process # todo fix for this and forking can go over 2x bond, not supposed to: we don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
-    if(overruled and BACKSTOPS.getBondPaid(event) < 2 * bond and repChange < 0 and event != forkEvent):
+    if(overruled() and BACKSTOPS.getBondPaid(event) < 2 * bond and repChange < 0 and event != forkEvent):
         # done instead of sending to redistrib. pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
         # sends that rep to the bonded challenger
@@ -145,3 +121,33 @@ macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn)
     else:
         newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
         EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+
+macro checkPenalizeWrongRoundTwoPreconditions():
+    if(repBalance < ONE):
+        return(0)
+    if(EVENTS.getEventBranch(event) != branch):
+        return(-6)
+    # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
+    if(residual > periodLength / 2 or (block.timestamp / periodLength - 2) != lastPeriod):
+        return(-1)
+    # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
+    if(!EVENTS.getOutcome(event) and !ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriod, event), msg.sender)):
+        return(-2)
+    if(BRANCHES.getForkPeriod(branch) == lastPeriod and event != forkEvent):
+        return(-3)
+    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):
+        return(-4)
+    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
+        return(-5)
+
+macro overruled():
+    overruled = 0
+    # checks if the event's outcome was overruled or the same as the original reporting cycle
+    sameEthics = (BACKSTOPS.getOriginalEthicality(event) == ethicCatch(EVENTS.getEthics(event)))
+    originalOutcome = BACKSTOPS.getOriginalOutcome(event)
+    uncaughtOutcome = EVENTS.getUncaughtOutcome(event)
+    if(scalar(event) or categorical(event)):
+        overruled = (originalOutcome != uncaughtOutcome or !sameEthics)
+    else:
+        overruled = (originalOutcome != catch(uncaughtOutcome) or !sameEthics)
+    overruled

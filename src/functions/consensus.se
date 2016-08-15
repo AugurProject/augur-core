@@ -76,32 +76,8 @@ def penalizeWrong(branch, event):
     roundTwo = BACKSTOPS.getRoundTwo(event)
     uncaught = EVENTS.getUncaughtOutcome(event)
     outcome = catch(uncaught)
-    if(EVENTS.getEventBranch(event) != branch):
-        return(-8)
-    if(repBalance < ONE):
-        return(0)
-    if(scalar(event) or categorical(event)):
-        outcome = uncaught
-    p = proportionCorrect(event, 0)
-    if(roundTwo and outcome != 0):
-        return(-1)
-    tooLateToPenalize = (residual > periodLength / 2 or (block.timestamp / periodLength - 2) != lastPeriod)
-    if(tooLateToPenalize):
-        return(-2)
-    justForked = BRANCHES.getForkPeriod(branch) == lastPeriod
-    if(justForked):
-        return(-3)
-    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):
-        return(-4)
-    if(EVENTS.getForked(event)):
-        return(-5)
-    # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
-    # todo fix getoutcome
-    eventNotResolvedAndNeedsToBe = !EVENTS.getOutcome(event) and !(rejected and EVENTS.getRejectedPeriod(event) == lastPeriod)
-    if(eventNotResolvedAndNeedsToBe and CLOSEMARKET.closeMarket(EVENTS.getMarket(event, 0), msg.sender) != 1):
-            return(-6)
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
-        return(-7)
+    checkPenalizeWrongPreconditions()
+
     repChange = 0
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
@@ -148,3 +124,31 @@ def incrementPeriodAfterReporting(branch):
     CONSENSUS.setBaseReportersLastPeriod(branch, BRANCHES.getBaseReporters(branch))
     BRANCHES.setBaseReporters(branch, baseReporterQuantity)
     return(1)
+
+macro checkPenalizeWrongPreconditions():
+    if(EVENTS.getEventBranch(event) != branch):
+        return(-8)
+    if(repBalance < ONE):
+        return(0)
+    if(scalar(event) or categorical(event)):
+        outcome = uncaught
+    p = proportionCorrect(event, 0)
+    if(roundTwo and outcome != 0):
+        return(-1)
+    tooLateToPenalize = (residual > periodLength / 2 or (block.timestamp / periodLength - 2) != lastPeriod)
+    if(tooLateToPenalize):
+        return(-2)
+    justForked = BRANCHES.getForkPeriod(branch) == lastPeriod
+    if(justForked):
+        return(-3)
+    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):
+        return(-4)
+    if(EVENTS.getForked(event)):
+        return(-5)
+    # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
+    # todo fix getoutcome
+    eventNotResolvedAndNeedsToBe = !EVENTS.getOutcome(event) and !(rejected and EVENTS.getRejectedPeriod(event) == lastPeriod)
+    if(eventNotResolvedAndNeedsToBe and CLOSEMARKET.closeMarket(EVENTS.getMarket(event, 0), msg.sender) != 1):
+            return(-6)
+    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
+        return(-7)

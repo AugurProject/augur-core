@@ -63,14 +63,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     delta = lastPeriod - lastPeriodPenalized
     eventIndex = EXPEVENTS.getEventIndex(branch, votePeriod, event)
     event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
-    if(!eventIndex and (!event or event != event)):
-        return(-1)
-    if(residual > periodLength / 2):
-        return(-2)
-    if(delta > 1 and CATCHUP.penalizationCatchup(branch, msg.sender) != 1):
-        return(-4)
-    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
-        return(0)
+    checkSubmitReportHashPreconditions()
 
     # if first fxpReport of period, num events not set
     if(!EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)):
@@ -123,36 +116,8 @@ def submitReport(event, salt, fxpReport, fxpEthics):
     weight = 1
     residual = block.timestamp % periodLength
     forkedOverEthicality = BACKSTOPS.getForkedOverEthicality(event)
-    if(BRANCHES.getEventForkedOver(branch) == event):
-        forkedOverThisEvent = 1
-    if(roundTwo or forkedOverThisEvent):
-        weight = balance
-    if(balance < ONE):
-        return(0)
-    if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
-        return(-1)
-    if(residual <= periodLength / 2):
-        return(-2)
-    realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
-    if(self.makeHash(salt, fxpReport, event, msg.sender) != realHash or !realHash):
-        return(-3)
-    if(fxpEthics != ONE and fxpEthics != 0):
-        return(-5)
-    # todo get outcome may not work / be valid
-    if(EVENTS.getOutcome(event) != 0):
-        return(-6)
-    # commented out for easy testing
-    # if(block.timestamp / periodLength != ((block.timestamp + 2 * TWENTY_FOUR_HR) / periodLength)):
-    #    return(-7)
-    # ensures user has collected fees for last reporting period
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod - 1)):
-        if(COLLECTFEES.collectFees(branch, msg.sender, value = msg.value) < 0):
-            return(-8)
+    checkSubmitReportPreconditions()
 
-    # actual submitting of fxpReport and ethicality
-    validatedFxpReport = self.validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight)
-    if(validatedFxpReport == -4):
-        return(-4)
     EXPEVENTS.setReport(branch, votePeriod, event, validatedFxpReport, msg.sender)
     # set ethicality for forked event
     validatedFxpEthics = fxpEthics
@@ -160,7 +125,6 @@ def submitReport(event, salt, fxpReport, fxpEthics):
         # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
         if(forkedOverEthicality):
             oldEthical = ethicCatch(EVENTS.getEthics(event))
-            
             if(oldEthical == ONE):
                 validatedFxpEthics = 0
             else:
@@ -262,3 +226,45 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
         EXPEVENTS.refundCost(sender, branch, votePeriod, event)
         EXPEVENTS.setLesserReportNum(branch, votePeriod, event, lesser)
     return(lesser)
+
+macro checkSubmitReportHashPreconditions():
+    if(!eventIndex and (!event or event != event)):
+        return(-1)
+    if(residual > periodLength / 2):
+        return(-2)
+    if(delta > 1 and CATCHUP.penalizationCatchup(branch, msg.sender) != 1):
+        return(-4)
+    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
+        return(0)
+
+macro checkSubmitReportPreconditions():
+    if(BRANCHES.getEventForkedOver(branch) == event):
+        forkedOverThisEvent = 1
+    if(roundTwo or forkedOverThisEvent):
+        weight = balance
+    if(balance < ONE):
+        return(0)
+    if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
+        return(-1)
+    if(residual <= periodLength / 2):
+        return(-2)
+    realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
+    if(self.makeHash(salt, fxpReport, event, msg.sender) != realHash or !realHash):
+        return(-3)
+    if(fxpEthics != ONE and fxpEthics != 0):
+        return(-5)
+    # todo get outcome may not work / be valid
+    if(EVENTS.getOutcome(event) != 0):
+        return(-6)
+    # commented out for easy testing
+    # if(block.timestamp / periodLength != ((block.timestamp + 2 * TWENTY_FOUR_HR) / periodLength)):
+    #    return(-7)
+    # ensures user has collected fees for last reporting period
+    if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod - 1)):
+        if(COLLECTFEES.collectFees(branch, msg.sender, value = msg.value) < 0):
+            return(-8)
+
+    # actual submitting of fxpReport and ethicality
+    validatedFxpReport = self.validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight)
+    if(validatedFxpReport == -4):
+        return(-4)

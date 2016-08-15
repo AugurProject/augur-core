@@ -99,11 +99,7 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
         owner = trade[5]
         outcome = trade[7]
         fill = 0
-        if(owner == msg.sender):
-            return([-5]: arr)
-        # Make sure the trade has been mined, obvious HFT prevention
-        if(block.number <= trade[6]):
-            return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
+        checkTradePreconditions()
         branch = MARKETS.getBranch(market)
         fee = feePercent(MARKETS.getTradingFee(market), price, MARKETS.getCumulativeScale(market))
 
@@ -254,18 +250,12 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
             return([-3]: arr)
         market = trade[2]
         branch = MARKETS.getBranch(market)
-        if(MARKETS.getOneWinningOutcome(market, 0)):
-            return([-4]: arr)
         origAmount = trade[3]
         price = trade[4]
         owner = trade[5]
         outcome = trade[7]
-        if(owner == msg.sender):
-            return([-5]: arr)
-        # Make sure the trade has been mined, obvious HFT prevention
-        if(block.number <= trade[6]):
-            return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
-    
+        checkTradePreconditions()
+
         # calculate cost
         creator = INFO.getCreator(market)
         tradingFee = MARKETS.getTradingFee(market)
@@ -335,3 +325,10 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
         MARKETS.setPrice(market, outcome, price)
         t += 1
     return([SUCCESS, fxpMaxAmount, fill, price]: arr)
+
+macro checkTradePreconditions():
+    if(owner == msg.sender):
+        return([-5]: arr)
+    # Make sure the trade has been mined, obvious HFT prevention
+    if(block.number <= trade[6]):
+        return([TRADE_SAME_BLOCK_PROHIBITED]: arr)

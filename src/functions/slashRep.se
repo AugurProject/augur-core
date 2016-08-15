@@ -30,19 +30,8 @@ def slashRep(branch, salt, report, reporter, event):
     hashInfo[2] = report
     hashInfo[3] = event
     reportHash = sha3(hashInfo, chars = 32 * len(hashInfo))
-    if(EVENTS.getEventBranch(event) != branch):
-        return(-5)
-    if(residual > periodLength / 2):
-        return(-2)
-    if(votePeriodShouldBe != votePeriod):
-        return(-1)
-    reporterIndex = REPORTING.repIDToIndex(branch, reporter)
-    if(REPORTING.getReporterID(branch, reporterIndex) != reporter):
-        return(-3)
-    if(alreadySlashed):
-        return(-6)
-    if(reportHash != realHash):
-        return(-4)
+    checkSlashRepInvariants()
+    
     CONSENSUS.setSlashed(branch, votePeriod, reporter)
     trutherIndex = REPORTING.repIDToIndex(branch, msg.sender)
     # if the truther's rep. account doesn't exist, make one
@@ -57,3 +46,18 @@ def slashRep(branch, salt, report, reporter, event):
     # other half sent to branch
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), reporterBalance * ONE_HALF / ONE)
     return(1)
+
+macro checkSlashRepInvariants():
+    if(EVENTS.getEventBranch(event) != branch):
+        return(-5)
+    if(residual > periodLength / 2):
+        return(-2)
+    if(votePeriodShouldBe != votePeriod):
+        return(-1)
+    reporterIndex = REPORTING.repIDToIndex(branch, reporter)
+    if(REPORTING.getReporterID(branch, reporterIndex) != reporter):
+        return(-3)
+    if(alreadySlashed):
+        return(-6)
+    if(reportHash != realHash):
+        return(-4)

@@ -39,13 +39,8 @@ def buyCompleteSets(market, fxpAmount):
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
     cost = fxpAmount * cumulativeScale / ONE
-    if(!MARKETS.getNumOutcomes(market)):
-        return(0)
-    if(BRANCHES.getOracleOnly(branch)):
-        return(-1)
-    # send money from user acc. to market address/account
-    if(!MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), cost)):
-        return(-2)
+    checkBuyCompleteSetsPreconditions()
+    
     n = 1
     # send shares of the event to user address and increment the number issued in the market for each outcome
     while(n <= numOutcomes):
@@ -70,12 +65,8 @@ def sellCompleteSets(market, fxpAmount):
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
     cost = fxpAmount * cumulativeScale / ONE
-    n = 1
-    while(n <= numOutcomes):
-        if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < fxpAmount):
-            return(-3)
-        n += 1
-    n = 1
+    checkSellCompleteSetsPreconditions()
+
     # Takes shares away from participant and decreases the fxpAmount issued in the market since we're exchanging complete sets
     while(n <= numOutcomes):
         MARKETS.modifyShares(market, n, -fxpAmount)
@@ -90,3 +81,20 @@ def sellCompleteSets(market, fxpAmount):
     if(!INFO.getWallet(market).transfer(msg.sender, cost)):
         throw()
     return(1)
+
+macro checkBuyCompleteSetsPreconditions():
+    if(!MARKETS.getNumOutcomes(market)):
+        return(0)
+    if(BRANCHES.getOracleOnly(branch)):
+        return(-1)
+    # send money from user acc. to market address/account
+    if(!MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), cost)):
+        return(-2)
+
+macro checkSellCompleteSetsPreconditions():
+    n = 1
+    while(n <= numOutcomes):
+        if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < fxpAmount):
+            return(-3)
+        n += 1
+    n = 1

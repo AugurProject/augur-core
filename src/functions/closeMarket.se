@@ -79,29 +79,14 @@ def closeMarket(market, sender):
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)
-
-    if(INFO.getCurrency(market).balanceOf(INFO.getWallet(market)) <= 0):
-        return(-1)
-    if(!EVENTS.getUncaughtOutcome(event)):
-        return(-2)
-    if(BACKSTOPS.getRoundTwo(event) and !BACKSTOPS.getFinal(event)):
-        return(-3)
-
-    # checks whether any events not already resolved
-    resolved = 1
-    # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
-    if(!EVENTS.getOutcome(event)):
-        resolved = 0
-    if((period <= tradingPeriod) or resolved):
-        return(0)
-    # look at through event in the market, get its outcomes, resolve it and use those to determine the winning outcomes for a given market!
     votingPeriodEvent = EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch)
     fxpOutcome = EVENTS.getOutcome(event)
     resolution = 1
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-    if((EVENTS.getForked(event) and !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod + 1))):
-        return(-4)
+    checkCloseMarketPreconditions()
+    
+    # look at event in the market, get its outcomes, resolve it and use those to determine the winning outcomes for a given market!
     if(binary(event) and !fxpOutcome):
         resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
     elif(scalar(event) and !EVENTS.getMode(event)):
@@ -118,3 +103,16 @@ def closeMarket(market, sender):
     # refunds closing cost
     MARKETS.refundClosing(market, sender)
     return(1)
+
+macro checkCloseMarketPreconditions():
+    if(INFO.getCurrency(market).balanceOf(INFO.getWallet(market)) <= 0):
+        return(-1)
+    if(!EVENTS.getUncaughtOutcome(event)):
+        return(-2)
+    if(BACKSTOPS.getRoundTwo(event) and !BACKSTOPS.getFinal(event)):
+        return(-3)
+    # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
+    if((period <= tradingPeriod) or fxpOutcome):
+        return(0)
+    if((EVENTS.getForked(event) and !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod + 1))):
+        return(-4)

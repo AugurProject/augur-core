@@ -139,13 +139,8 @@ def buy(fxpAmount, fxpPrice, market, outcome):
     cumulativeScale = MARKETS.getCumulativeScale(market)
     fee = feePercent(tradingFee, fxpPrice, cumulativeScale) * MARKETS.getMakerFees(market) / ONE
     branch = MARKETS.getBranch(market)
-    if(!branch):
-        return(0)
-    # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
-    if(fxpPrice > cumulativeScale or fxpAmount * fxpPrice < 3402823669209384705829531287552 or fxpAmount * fxpPrice >= 2 ** 190):
-        return(-1)
-    if(BRANCHES.getOracleOnly(branch)):
-        return(-2)
+
+    checkBuyPreconditions()
     saveTrade(BID, fxpAmount, fxpPrice, market, outcome, branch, fee, msg.sender)
     return(FAILURE)
 
@@ -157,6 +152,21 @@ def sell(fxpAmount, fxpPrice, market, outcome):
     tradingFee = MARKETS.getTradingFee(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
     fee = feePercent(tradingFee, fxpPrice, cumulativeScale) * MARKETS.getMakerFees(market) / ONE
+
+    checkSellPreconditions()
+    saveTrade(ASK, fxpAmount, fxpPrice, market, outcome, branch, fee, msg.sender)
+    return(FAILURE)
+
+macro checkBuyPreconditions():
+    if(!branch):
+        return(0)
+    # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
+    if(fxpPrice > cumulativeScale or fxpAmount * fxpPrice < 3402823669209384705829531287552 or fxpAmount * fxpPrice >= 2 ** 190):
+        return(-1)
+    if(BRANCHES.getOracleOnly(branch)):
+        return(-2)
+
+macro checkSellPreconditions():
     # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
     if(fxpPrice > cumulativeScale or fxpAmount * fxpPrice < 3402823669209384705829531287552L or fxpAmount * fxpPrice >= 2 ** 190):
         return(-1)
@@ -164,5 +174,3 @@ def sell(fxpAmount, fxpPrice, market, outcome):
         return(-2)
     if(MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome) < fxpAmount):
         return(-3)
-    saveTrade(ASK, fxpAmount, fxpPrice, market, outcome, branch, fee, msg.sender)
-    return(FAILURE)

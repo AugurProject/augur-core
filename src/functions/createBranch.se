@@ -47,10 +47,7 @@ def init():
     # -3: branch already exists
 def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, oracleOnly):
     refund()
-    if(periodLength <= 0 or !BRANCHES.getPeriodLength(parent) or !len(description)):
-        return(-1)
-    if(fxpMinTradingFee < 0 or fxpMinTradingFee > 2 ** 62 or (oracleOnly != 0 and oracleOnly != 1)):
-        return(-1)
+    checkBranchCreationPreconditions()
     parentPeriod = BRANCHES.getVotePeriod(parent)
     branchInfo = string(7 * 32 + len(description))
     branchInfo[0] = msg.sender
@@ -69,16 +66,21 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
     currentVotePeriod = (block.timestamp / periodLength) - 1
     # provided event doesn't already exist, create it
     wallet = 0
-    if(!INFO.getCreator(branch)):
-        checkSubcurrencyIsValid(self.ethContract)
-        wallet = create('wallet.se')
-        wallet.initialize(self.ethContract)
-        BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, 47 * ONE, self.ethContract, wallet)
-    else:
+    if(INFO.getCreator(branch)):
         return(-3)
+    checkSubcurrencyIsValid(self.ethContract)
+    wallet = create('wallet.se')
+    wallet.initialize(self.ethContract)
+    BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, 47 * ONE, self.ethContract, wallet)
     # pay creation fee, initialize branch info
     feePaid = self.ethContract.transferFrom(msg.sender, BRANCHES.getWallet(parent, self.ethContract), 47 * ONE)
-    if(feePaid and INFO.setInfo(branch, description, msg.sender, 47 * ONE, 0, 0) and REPORTING.setInitialReporters(branch)):
-        return(branch)
-    else:
+    if(!feePaid or !INFO.setInfo(branch, description, msg.sender, 47 * ONE, 0, 0) or !REPORTING.setInitialReporters(branch)):
         throw()
+    return(branch)
+
+macro checkBranchCreationPreconditions():
+    if(periodLength <= 0 or !BRANCHES.getPeriodLength(parent) or !len(description)):
+        return(-1)
+    if(fxpMinTradingFee < 0 or fxpMinTradingFee > 2 ** 62 or (oracleOnly != 0 and oracleOnly != 1)):
+        return(-1)
+    

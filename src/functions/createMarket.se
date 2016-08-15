@@ -68,14 +68,8 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
     forkPeriod = BRANCHES.getForkPeriod(branch)
-    if(!periodLength or !len(description) or !len(resolution) or expDate < block.timestamp):
-        return(-1)
-    if(fxpMaxValue < fxpMinValue or (fxpMaxValue - fxpMinValue) < ONE):
-        return(-2)
-    if(numOutcomes < 2 or numOutcomes > 8):
-        return(-3)
-    if(forkPeriod and ((expDate / periodLength) == forkPeriod or (expDate / periodLength) == (forkPeriod + 1))):
-        return(-4)
+    checkEventCreationPreconditions()
+
     eventinfo = string(7 * 32 + len(description))
     eventinfo[0] = branch                                       # branch
     eventinfo[1] = expDate                                      # expiration date
@@ -126,13 +120,8 @@ def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3
     expirationDate = EVENTS.getExpiration(event)
     futurePeriod = expirationDate / periodLength
     forkPeriod = BRANCHES.getForkPeriod(branch)
-    # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
-    if(!periodLength or !len(description) or fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > 2 ** 62 or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or fxpMakerFees < 0 or fxpMakerFees > ONE_HALF):
-        return(-1)
-    if(expirationDate < block.timestamp):
-        return(-2)
-    if(forkPeriod and (futurePeriod == forkPeriod or futurePeriod == (forkPeriod + 1))):
-        return(-3)
+    checkMarketCreationPreconditions()
+
     # scalars
     fxpMaxValue = EVENTS.getMaxValue(event)
     fxpMinValue = EVENTS.getMinValue(event)
@@ -255,5 +244,24 @@ def pushMarketForward(branch, market):
     EVENTS.setEventPushedUp(event, 1)
     payEarlyResolutionBond = MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), MARKETS.getTradingFee(market) * MARKETS.getTotalSharesPurchased(market) / (2 * ONE))
     if(!payEarlyResolutionBond):
-z        throw()
+        throw()
     return(1)
+
+macro checkEventCreationPreconditions():
+    if(!periodLength or !len(description) or !len(resolution) or expDate < block.timestamp):
+        return(-1)
+    if(fxpMaxValue < fxpMinValue or (fxpMaxValue - fxpMinValue) < ONE):
+        return(-2)
+    if(numOutcomes < 2 or numOutcomes > 8):
+        return(-3)
+    if(forkPeriod and ((expDate / periodLength) == forkPeriod or (expDate / periodLength) == (forkPeriod + 1))):
+        return(-4)
+
+macro checkMarketCreationPreconditions():
+    # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
+    if(!periodLength or !len(description) or fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > 2 ** 62 or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or fxpMakerFees < 0 or fxpMakerFees > ONE_HALF):
+        return(-1)
+    if(expirationDate < block.timestamp):
+        return(-2)
+    if(forkPeriod and (futurePeriod == forkPeriod or futurePeriod == (forkPeriod + 1))):
+        return(-3)

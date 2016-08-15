@@ -70,13 +70,6 @@ def fundNewAccount(branch):
     # -3: only behind one period and not caught up / penalized yet
 def claimInitialRep(parent, branch):
     refund()
-    if(BRANCHES.getParent(branch) != parent && parent && branch):
-        return(-1)
-    # have 1 month to claim, make so cant make a new acc on a new branch w/o at least trying this if it's a fork one and reporter was in old branch todo
-    tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
-    alreadyClaimed = REPORTING.repIDToIndex(branch, msg.sender)
-    if(alreadyClaimed or tooLate):
-        return(0)
     # auto increment vote period if needed
     INCREMENTPERIOD.incrementPeriodAfterReporting(parent)
     parentPeriod = BRANCHES.getParentPeriod(branch)
@@ -95,14 +88,8 @@ def claimInitialRep(parent, branch):
         dormantRep = REPORTING.balanceOf(parent, msg.sender)
     # if this wasn't set then use reg. rep balance after catching reporter up
     rep = EXPEVENTS.getBeforeRep(parent, parentPeriod, msg.sender)
-    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(parent, msg.sender)
-    lastPeriod = BRANCHES.getVotePeriod(parent) - 1
-    delta = lastPeriod - lastPeriodPenalized
-    if(delta > 1):
-        if(CATCHUP.penalizationCatchup(parent, msg.sender) != 1):
-            return(-2)
-    if(!CONSENSUS.getRepRedistributionDone(parent, msg.sender)):
-        return(-3)
+    checkRepClaimPreconditions()
+    
     if(rep == 0):
         rep = REPORTING.getRepBalance(parent, msg.sender)
     repDecrease = 0
@@ -132,3 +119,20 @@ def claimInitialRep(parent, branch):
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch) - 1))
     REPORTING.addReporter(branch, msg.sender, rep, dormantRep, repDecrease)
     return(1)
+
+macro checkRepClaimPreconditions():
+    if(BRANCHES.getParent(branch) != parent && parent && branch):
+        return(-1)
+    # have 1 month to claim, make so cant make a new acc on a new branch w/o at least trying this if it's a fork one and reporter was in old branch todo
+    tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
+    alreadyClaimed = REPORTING.repIDToIndex(branch, msg.sender)
+    if(alreadyClaimed or tooLate):
+        return(0)
+    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(parent, msg.sender)
+    lastPeriod = BRANCHES.getVotePeriod(parent) - 1
+    delta = lastPeriod - lastPeriodPenalized
+    if(delta > 1):
+        if(CATCHUP.penalizationCatchup(parent, msg.sender) != 1):
+            return(-2)
+    if(!CONSENSUS.getRepRedistributionDone(parent, msg.sender)):
+        return(-3)

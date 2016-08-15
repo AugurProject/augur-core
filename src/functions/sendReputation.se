@@ -83,19 +83,9 @@ def sendRepFrom(branch, from, recver, fxpValue):
     checkInvariants(from)
     senderIndex = REPORTING.repIDToIndex(branch, from)
     receiverIndex = REPORTING.repIDToIndex(branch, recver)
-    # if the sender's rep. account doesn't exist, make one, only if in first half of period and not a fork scenario
-    if(REPORTING.getReporterID(branch, senderIndex) != from and from == msg.sender):
-        CONSENSUS.setPenalizedUpTo(branch, from, (votePeriod - 1))
-        REPORTING.addReporter(branch, from)
-        return(-1)
-    if(REPORTING.getReporterID(branch, receiverIndex) != recver):
-        return(-3)
-
     senderBalance = REPORTING.getRepBalance(branch, from)
-    if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from == msg.sender)):
-        return(-2)
-    if(from != msg.sender):
-        self.amountCanSpend[from][msg.sender].branch[branch] -= fxpValue
+    checkSendRepInvariants()
+
     if(!REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, receiverIndex, fxpValue)):
         throw()
     log(type = Transfer, from, recver, fxpValue)
@@ -112,19 +102,9 @@ def transferFrom(branch, from, recver, fxpValue):
     votePeriod = BRANCHES.getVotePeriod(branch)
     senderIndex = REPORTING.repIDToIndex(branch, from)
     receiverIndex = REPORTING.repIDToIndex(branch, recver)
-    # if the sender's rep. account doesn't exist, make one
-    if(REPORTING.getReporterID(branch, senderIndex) != from and from == msg.sender):
-        CONSENSUS.setPenalizedUpTo(branch, from, (votePeriod - 1))
-        REPORTING.addReporter(branch, from)
-        return(-1)
-    if(REPORTING.getReporterID(branch, receiverIndex) != recver):
-        return(-3)
-
     senderBalance = REPORTING.balanceOf(branch, from)
-    if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from == msg.sender)):
-        return(-2)
-    if(from!=msg.sender):
-        self.amountCanSpend[from][msg.sender].branch[branch] -= fxpValue
+    checkSendRepInvariants()    
+
     if(!REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, receiverIndex, fxpValue)):
        throw()
     log(type=Transfer, from, recver, fxpValue)
@@ -139,15 +119,9 @@ def transferFrom(branch, from, recver, fxpValue):
 def convertToDormantRep(branch, fxpValue):
     checkInvariants(msg.sender)
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
-    # if the sender's rep. account doesn't exist, make one, only if in first half of period and not a fork scenario
-    if(REPORTING.getReporterID(branch, senderIndex) != msg.sender):
-        REPORTING.addReporter(branch, msg.sender)
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (votePeriod-1))
-        return(-1)
-
     senderBalance = REPORTING.getRepBalance(branch, msg.sender)
-    if(senderBalance < fxpValue or fxpValue <= 0):
-        return(-2)
+    checkRepConversionInvariants()
+
     if(!REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, senderIndex, fxpValue)):
         throw()
     REPORTING.adjustActiveRep(branch, -fxpValue)
@@ -160,15 +134,9 @@ def convertToDormantRep(branch, fxpValue):
 def convertToActiveRep(branch, fxpValue):
     checkInvariants(msg.sender)
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
-    # if the sender's rep. account doesn't exist, make one
-    if(REPORTING.getReporterID(branch, senderIndex) != msg.sender):
-        REPORTING.addReporter(branch, msg.sender)
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (votePeriod - 1))
-        return(-1)
-
     senderBalance = REPORTING.balanceOf(branch, msg.sender)
-    if(senderBalance < fxpValue or fxpValue <= 0):
-        return(-2)
+    checkRepConversionInvariants()
+
     if(!REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, senderIndex, fxpValue) or !safeToAdd(fxpValue, REPORTING.getRepBalance(msg.sender))):
         throw()
     REPORTING.adjustActiveRep(branch, fxpValue)
@@ -192,3 +160,24 @@ def approve(branch, spender, fxpValue):
 def allowance(branch, owner, spender):
     callstackCheck()
     return(self.amountCanSpend[owner][spender].branch[branch])
+
+macro checkSendRepInvariants():
+    if(REPORTING.getReporterID(branch, senderIndex) != from and from == msg.sender):
+        CONSENSUS.setPenalizedUpTo(branch, from, (votePeriod - 1))
+        REPORTING.addReporter(branch, from)
+        return(-1)
+    if(REPORTING.getReporterID(branch, receiverIndex) != recver):
+        return(-3)
+    if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from == msg.sender)):
+        return(-2)
+    if(from != msg.sender):
+        self.amountCanSpend[from][msg.sender].branch[branch] -= fxpValue
+
+macro checkRepConversionInvariants():
+    # if the sender's rep. account doesn't exist, make one
+    if(REPORTING.getReporterID(branch, senderIndex) != msg.sender):
+        REPORTING.addReporter(branch, msg.sender)
+        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (votePeriod - 1))
+        return(-1)
+    if(senderBalance < fxpValue or fxpValue <= 0):
+        return(-2)
