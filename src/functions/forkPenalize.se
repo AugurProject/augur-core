@@ -12,6 +12,7 @@ inset('eventHelpers.se')
 inset('redistributeRep.se')
 inset('proportionCorrect.se')
 inset('repChange.se')
+inset('../data_api/periodStage.se')
 
 macro handleEthicsAndBondRepRedistribution($numReportedOn):
     # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality
@@ -42,18 +43,18 @@ macro handleEthicsAndBondRepRedistribution($numReportedOn):
     # fork event needs to be resolved first before this can be called
 # Errors:
     #  0: not enough rep to report/penalize
-    # -1: already past first half of new period and needed to penalize before then
-    # -2: fork event isn't resolved yet
-    # -3: already done for all events in this period
-    # -4: needed to collect fees last period which sets the before/after rep
-    # -5: event branch is invalid/doesn't match
+    # -1: period shouldve been incremented
+    # -2: already past 1st half of period
+    # -3: fork event isn't resolved yet
+    # -4: already done for all events in this period
+    # -5: needed to collect fees last period which sets the before/after rep
+    # -6: event branch is invalid/doesn't match
 def penalizeOnForkedEvent(branch, event):
     refund()
     # todo perhaps increment period by default if not done
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch)-1
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.timestamp % periodLength
     newRep = 0
     newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
@@ -83,16 +84,16 @@ def penalizeOnForkedEvent(branch, event):
 
 macro checkForkPenalizationPreconditions():
     if(EVENTS.getEventBranch(event) != branch):
-        return(-5)
+        return(-6)
     if(repBalance < ONE):
         return(0)
-    # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
-    if(residual > periodLength / 2 or (block.timestamp / periodLength - 2) != lastPeriod):
+    atFirstHalfOfPeriod()
+    if((block.timestamp / periodLength - 2) != lastPeriod):
         return(-1)
     # means event / fork isn't resolved
     if(!EVENTS.getForkedDone(event)):
-        return(-2)
-    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):
         return(-3)
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
+    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):
         return(-4)
+    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
+        return(-5)

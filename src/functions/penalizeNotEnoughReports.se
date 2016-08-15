@@ -7,6 +7,7 @@ import reporting as REPORTING
 import reportingThreshold as THRESHOLD
 import fxpFunctions as FXP
 inset('../data_api/refund.se')
+inset('../data_api/periodStage.se')
 
 macro ONE_POINT_TWO: 22136092888451461120
 
@@ -32,7 +33,6 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         return(0)
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.timestamp % periodLength
     originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
     numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)
     # events a user should be reporting on
@@ -93,5 +93,4 @@ macro checkProveReporterDidntReportEnoughPreconditions():
         return(-3)
     if(CONSENSUS.getNotEnoughPenalized(branch, reporter, lastPeriod)):
         return(-1)
-    if(residual > periodLength / 2):
-        return(-2)
+    atFirstHalfOfPeriod()

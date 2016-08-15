@@ -6,6 +6,7 @@ import expiringEvents as EXPEVENTS
 import consensusData as CONSENSUS
 
 inset('../data_api/refund.se')
+inset('../data_api/periodStage.se')
 
 macro POINT_NINE: 16602069666338596864
 
@@ -45,10 +46,8 @@ def penalizationCatchup(branch, sender):
 
 macro checkPenalizationCatchupPreconditions():
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.timestamp % periodLength
     # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
-    if(residual > periodLength / 2):
-        return(-1)
+    atFirstHalfOfPeriod()
     if(delta <= 0):
         return(-2)
     # provided user is at least one period behind and they didn't report in the last period

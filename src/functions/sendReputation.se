@@ -33,7 +33,7 @@ import consensusData as CONSENSUS
 import consensus as INCREMENTPERIOD
 import repContract as REPCONTRACT
 inset('../data_api/refund.se')
-
+inset('../data_api/periodStage.se')
 # sender/owner, then spender
 data amountCanSpend[][](branch[])
 
@@ -41,7 +41,7 @@ event Transfer(from:indexed, to:indexed, value)
 event Approval(owner:indexed, spender:indexed, branch:indexed, value)
 
 #  0: only one period behind, need to do penalizations for it
-# -3: not in right part of period
+# -2: not in right part of period
 # -4: couldn't catchup automatically
 macro checkInvariants($account):
     refund()
@@ -53,10 +53,8 @@ macro checkInvariants($account):
     lastPeriod = votePeriod - 1
     lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, $account)
     delta = lastPeriod - lastPeriodPenalized
-    residual = block.timestamp % periodLength
     # Rep cannot be simultaneously spent (transferred) and used to vote
-    if(residual > periodLength/2):
-        return(-3)
+    atFirstHalfOfPeriod()
     if(delta > 1):
         if(CATCHUP.penalizationCatchup(branch, $account) != 1):
             return(-4)

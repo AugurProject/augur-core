@@ -14,6 +14,7 @@ inset('eventHelpers.se')
 inset('redistributeRep.se')
 inset('proportionCorrect.se')
 inset('repChange.se')
+inset('../data_api/periodStage.se')
 
 # event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
 
@@ -29,13 +30,13 @@ macro MIN_BOND: 200 * ONE
 # in a fork this is called on the original branch and event is reported on again on new branch
 # Errors:
     #  0: event isn't eligible/up for round two penalization
-    # -1: already past first half of new period and needed to penalize before then
-    # -2: round two resolve wasn't successful
-    # -3: in fork period only thing that rep redistribution is done on is the round 2 event in the original branch via round 2 penalize
-    # -4: already done for all events in this period
-    # -5: needed to collect fees last period which sets the before/after rep
-    # -6: event isn't in the branch given
-    # -7: not able to be reported on
+    # -1: vote period needs incrementing
+    # -2: not in 1st half of vote period
+    # -4: in fork period only thing that rep redistribution is done on is the round 2 event in the original branch via round 2 penalize
+    # -5: already done for all events in this period
+    # -6: needed to collect fees last period which sets the before/after rep
+    # -7: event isn't in the branch given
+    # -8: not able to be reported on
 # force event to be resolved first if it can be
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized
 def penalizeRoundTwoWrong(branch, event):
@@ -46,7 +47,6 @@ def penalizeRoundTwoWrong(branch, event):
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
     lastPenalizationPeriod = lastPeriod - 1
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.timestamp % periodLength
     newRep = 0
     newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
@@ -91,7 +91,7 @@ def penalizeRoundTwoWrong(branch, event):
             CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
             CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
     else:
-        return(-7)
+        return(-8)
     # if a fork event in original branch, only event needed to report on in this period is that one [b/c the original branch resolves it as a regular round 2 event, fork reports again]
     if(event == forkEvent):
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, (numReportedOn - 1))
@@ -126,19 +126,20 @@ macro checkPenalizeWrongRoundTwoPreconditions():
     if(repBalance < ONE):
         return(0)
     if(EVENTS.getEventBranch(event) != branch):
-        return(-6)
+        return(-7)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
-    if(residual > periodLength / 2 or (block.timestamp / periodLength - 2) != lastPeriod):
+    atFirstHalfOfPeriod()
+    if((block.timestamp / periodLength - 2) != lastPeriod):
         return(-1)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     if(!EVENTS.getOutcome(event) and !ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriod, event), msg.sender)):
-        return(-2)
-    if(BRANCHES.getForkPeriod(branch) == lastPeriod and event != forkEvent):
         return(-3)
-    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):
+    if(BRANCHES.getForkPeriod(branch) == lastPeriod and event != forkEvent):
         return(-4)
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
+    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):
         return(-5)
+    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
+        return(-6)
 
 macro overruled():
     overruled = 0

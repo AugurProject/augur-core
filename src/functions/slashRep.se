@@ -6,6 +6,7 @@ import reporting as REPORTING
 import consensusData as CONSENSUS
 
 inset('../data_api/refund.se')
+inset('../data_api/periodStage.se')
 
 # Anti cheat/collusion mechanism: provide ballot and random salt to steal rep from a colluder
 # Returns:
@@ -19,7 +20,6 @@ inset('../data_api/refund.se')
 def slashRep(branch, salt, report, reporter, event):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.timestamp % periodLength
     votePeriod = BRANCHES.getVotePeriod(branch)
     alreadySlashed = CONSENSUS.getSlashed(branch, votePeriod, reporter)
     votePeriodShouldBe = block.timestamp / periodLength - 1
@@ -50,8 +50,7 @@ def slashRep(branch, salt, report, reporter, event):
 macro checkSlashRepInvariants():
     if(EVENTS.getEventBranch(event) != branch):
         return(-5)
-    if(residual > periodLength / 2):
-        return(-2)
+    atFirstHalfOfPeriod()
     if(votePeriodShouldBe != votePeriod):
         return(-1)
     reporterIndex = REPORTING.repIDToIndex(branch, reporter)
