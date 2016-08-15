@@ -211,11 +211,13 @@ def getEventsWithSubmittedHash(branch, startPeriod, stopPeriod, reporter):
     while(p <= stopPeriod):
         i = 0
         while(i < numEvents):
-            event = array(2)
+            event = array(4)
             event[0] = i
-            event[1] = EXPEVENTS.getEvent(branch, p, i)
+            event[1] = p
+            event[2] = EXPEVENTS.getEvent(branch, p, i)
+            event[3] = EXPEVENTS.getReportHash(branch, p, reporter, event[2])
 
-            if(EXPEVENTS.getReportHash(branch, p, reporter, event[1]) != 0):
+            if(event[3] != 0):
                 events[n] = event
                 n += 1
 
@@ -236,11 +238,12 @@ def getEventsWithSubmittedReport(branch, startPeriod, stopPeriod, reporter):
     while(p <= stopPeriod):
         i = 0
         while(i < numEvents):
-            event = array(2)
+            event = array(3)
             event[0] = i
-            event[1] = EXPEVENTS.getEvent(branch, p, i)
+            event[1] = p
+            event[2] = EXPEVENTS.getEvent(branch, p, i)
 
-            if(EXPEVENTS.getReport(branch, p, event[1], reporter) != 0):
+            if(EXPEVENTS.getReport(branch, p, event[2], reporter) != 0):
                 events[n] = event
                 n += 1
 
