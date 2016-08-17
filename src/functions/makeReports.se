@@ -85,12 +85,11 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     # do abs then mult by 2 to ensure pos. and between 0 and 1
     shaHash = (abs(sha3(x, items = 1)) / ONE) * 2
     # shaHash must be <= to the threshold for that user to be able to fxpReport on the given event
-    if(shaHash <= reportingThreshold):
-        EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
-        EXPEVENTS.setSaltyEncryptedHash(branch, votePeriod, msg.sender, encryptedSaltyHash, event)
-        return(1)
-    else:
+    if(shaHash > reportingThreshold):
         return(-3)
+    EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
+    EXPEVENTS.setSaltyEncryptedHash(branch, votePeriod, msg.sender, encryptedSaltyHash, event)
+    return(1)
 
 # Submits / reveals a fxpReport for a period
 # @return 1 if success

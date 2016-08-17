@@ -46,50 +46,48 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2) / ONE
     bond = min(bond, MIN_BOND)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
-    # if so, we're in the final 48 hours and event is in this branch + votePeriod
     currentPeriod = block.timestamp/BRANCHES.getPeriodLength(branch)
     currentPlus48Hr = (block.timestamp + 2*TWENTY_FOUR_HR)/BRANCHES.getPeriodLength(branch)
     validEvent = (event != 0 and event == eventID)
-    if(currentPeriod != currentPlus48Hr and validEvent and !BACKSTOPS.getRoundTwo(event) and !EVENTS.getForked(event)):
-        # pays money to cover resolution cost
-        if(!send(BACKSTOPS, msg.value)):
-            throw()
-        # send the bond to the branch
-        # todo fix this will fail b/c event doesn't have rep acc
-        if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
-            throw()
-        period = BRANCHES.getVotePeriod(branch)
-        # remove from events in # to report on calc for last period
-        EXPIRING.removeEvent(branch, period)
-        # makes event required reporting in round 2 (the next period) as well
-        EXPIRING.setEventRequired(branch, period + 1, event)
-        # push event into next period
-        EXPIRING.addEvent(branch, period + 1, event)
-        # set event expiration date to be after the current reporting period ends
-        EVENTS.setExpiration(event, block.timestamp)
-        # set round two to true so can't be done again
-        BACKSTOPS.setRoundTwo(event, 1)
-        BACKSTOPS.setOriginalVotePeriod(event, votePeriod)
-        if(scalar(event) or categorical(event)):
-            BACKSTOPS.setOriginalOutcome(event, EVENTS.getUncaughtOutcome(event))
-        else:
-            BACKSTOPS.setOriginalOutcome(event, catch(EVENTS.getUncaughtOutcome(event)))
-        BACKSTOPS.setOriginalEthicality(event, ethicCatch(EVENTS.getEthics(event)))
-        EXPEVENTS.addRoundTwo(branch, period)
-        BACKSTOPS.setBondPoster(event, msg.sender)
-        EVENTS.setUncaughtOutcome(event, 0)
-        EVENTS.setMode(event, 0)
-        EVENTS.setEthics(event, 0)
-        if(overEthicality):
-            BACKSTOPS.setDisputedOverEthics(event)
-        return(1)
-    else:
+    # if so, we're not in the final 48 hours or event isn't in this branch + votePeriod, or it's already been put into a backstop
+    if(currentPeriod == currentPlus48Hr or !validEvent or BACKSTOPS.getRoundTwo(event) or EVENTS.getForked(event)):
         return(0)
+    # pays money to cover resolution cost
+    if(!send(BACKSTOPS, msg.value)):
+        throw()
+    # send the bond to the branch
+    # todo fix this will fail b/c event doesn't have rep acc
+    if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
+        throw()
+    period = BRANCHES.getVotePeriod(branch)
+    # remove from events in # to report on calc for last period
+    EXPIRING.removeEvent(branch, period)
+    # makes event required reporting in round 2 (the next period) as well
+    EXPIRING.setEventRequired(branch, period + 1, event)
+    # push event into next period
+    EXPIRING.addEvent(branch, period + 1, event)
+    # set event expiration date to be after the current reporting period ends
+    EVENTS.setExpiration(event, block.timestamp)
+    # set round two to true so can't be done again
+    BACKSTOPS.setRoundTwo(event, 1)
+    BACKSTOPS.setOriginalVotePeriod(event, votePeriod)
+    if(scalar(event) or categorical(event)):
+        BACKSTOPS.setOriginalOutcome(event, EVENTS.getUncaughtOutcome(event))
+    else:
+        BACKSTOPS.setOriginalOutcome(event, catch(EVENTS.getUncaughtOutcome(event)))
+    BACKSTOPS.setOriginalEthicality(event, ethicCatch(EVENTS.getEthics(event)))
+    EXPEVENTS.addRoundTwo(branch, period)
+    BACKSTOPS.setBondPoster(event, msg.sender)
+    EVENTS.setUncaughtOutcome(event, 0)
+    EVENTS.setMode(event, 0)
+    EVENTS.setEthics(event, 0)
+    if(overEthicality):
+        BACKSTOPS.setDisputedOverEthics(event)
+    return(1)
 
 # Resolves a round 2 event scenario
 # Errors:
     # 0: returned if not reported on again yet
-# todo make if/elifs simpler here
 def roundTwoResolve(branch, event, eventIndex, sender):
     refund()
     if(!branch):
@@ -114,17 +112,15 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     validEvent = (event != 0 and event == eventID)
     forkPeriod = BRANCHES.getForkPeriod(branch)
     # if forking and this isn't the fork event
-    didntForkOverThisEvent = (BRANCHES.getEventForkedOver(branch) != event)
     roundTwoEventWithBondNotReturned = (!BACKSTOPS.getBondReturned(event) and BACKSTOPS.getRoundTwo(event) and validEvent)
     inForkPhases = forkPeriod == votePeriod or votePeriod == (forkPeriod + 1)
-    if(inForkPhases and didntForkOverThisEvent and roundTwoEventWithBondNotReturned):
+    if(inForkPhases and !forked and roundTwoEventWithBondNotReturned):
         # return the bond
         REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
         BACKSTOPS.setBondReturned(event)
         BACKSTOPS.setRoundTwo(event, 0)
         BACKSTOPS.doRoundTwoRefund(sender, event)
-        return(1)
     # overruled and bond poster was right
     elif(overruled and votedOnAgain and !forked and roundTwoEventWithBondNotReturned):
         # return the bond
@@ -137,7 +133,6 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         BACKSTOPS.setFinal(event)
         BACKSTOPS.setBondReturned(event)
         BACKSTOPS.doRoundTwoRefund(sender, event)
-        return(2*bond)
     # same as original consensus and bond poster was wrong [or malicious]
     elif(votedOnAgain and !forked and roundTwoEventWithBondNotReturned):
         # lose bond
@@ -151,10 +146,9 @@ def roundTwoResolve(branch, event, eventIndex, sender):
         BACKSTOPS.setFinal(event)
         BACKSTOPS.setBondReturned(event)
         BACKSTOPS.doRoundTwoRefund(sender, event)
-        return(1)
-    # not voted on again yet
     else:
         return(0)
+    return(1)
 
 # Actually sets the outcome for a round 2 event
 # Errors:

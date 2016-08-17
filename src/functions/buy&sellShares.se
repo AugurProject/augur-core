@@ -36,45 +36,12 @@ macro ASK: 2
 # Field counts
 macro TRADE_FIELDS: 8
 # Boolean success/failure
-macro SUCCESS: 1
 macro FAILURE: 0
+macro SUCCESS: 1
 # Error codes
 macro INSUFFICIENT_BALANCE: 10
 macro TRADE_ALREADY_EXISTS: 21
 macro TRADE_SAME_BLOCK_PROHIBITED: 22
-
-macro feePercent($marketFee, $fxpPrice, $cumulativeScale):
-    4 * $marketFee * $fxpPrice * (ONE - $fxpPrice * 2 ** 64 / $cumulativeScale) / ($cumulativeScale * ONE)
-
-macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee, $sender):
-    trade = [$type, $market, $fxpAmount, $fxpPrice, $sender, block.number, $outcome]
-    tradeID = sha3(trade, items = 7)
-    cumulativeScale = MARKETS.getCumulativeScale($market)
-    if(TRADES.getID(tradeID)):
-        return(TRADE_ALREADY_EXISTS)
-
-    TRADES.saveTrade(tradeID, $type, $market, $fxpAmount, $fxpPrice, $sender, $outcome)
-    # Update market
-    MARKETS.addTrade($market, tradeID)
-    # Update available and trading fxpAmounts for asks
-    if($type == ASK):
-        MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$fxpAmount, 0)
-    # Send / escrow cash for bids
-    if($type == BID):
-        $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $fxpAmount * $fxpPrice / ONE)
-        if(!$paidTradeCost):
-            throw()
-    # pay fees
-    if($fee):
-        $feePaid = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), ($fxpAmount * $fxpPrice * $fee / ONE ** 2))
-        if(!$feePaid):
-            throw()
-    log(type = logAddTx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, tradeID)
-    return(tradeID)
-    
-macro removeTrade($tradeID, $market):
-    TRADES.removeTrade($tradeID)
-    MARKETS.removeTradeFromMarket($market, $tradeID)
 
 # 
 # Cancellation: cancels a trade, if a bid refunds money, if an ask returns shares
@@ -85,18 +52,7 @@ def cancel(tradeID):
     refund()
     # user can cancel anytime
     # Get trade
-    trade = array(TRADE_FIELDS)
-    trade = TRADES.getTrade(tradeID, outitems = TRADE_FIELDS)
-    if(!trade):
-        return(0)
-    type = trade[1]
-    market = trade[2]
-    fxpAmount = trade[3]
-    fxpPrice = trade[4]
-    owner = trade[5]
-    outcome = trade[7]
-    tradingFee = MARKETS.getTradingFee(market)
-    cumulativeScale = MARKETS.getCumulativeScale(market)
+    fetchTradeCancelInfo()
     fee = feePercent(tradingFee, fxpPrice, cumulativeScale) * MARKETS.getMakerFees(market) / ONE
     # Check the owner
     if(msg.sender != owner):
@@ -104,21 +60,7 @@ def cancel(tradeID):
     
     # Clear the trade first
     removeTrade(tradeID, market)
-    # Issue refunds
-    if(type == BID):
-        # cash refund
-        amt = fxpAmount * fxpPrice * (fee + ONE) / ONE ** 2
-        refunded = INFO.getWallet(market).transfer(msg.sender, amt)
-        if(!refunded):
-            throw()
-    elif(type == ASK):
-        # shares refund
-        MARKETS.modifyParticipantShares(market, msg.sender, outcome, fxpAmount, 0)
-        feesRefunded = INFO.getWallet(market).transfer(msg.sender, (fxpAmount * fxpPrice * fee / ONE ** 2))
-        if(!feesRefunded):
-            throw()
-    else:
-        throw()
+    refundTrade()
     # Log cancellation
     log(type = logCancel, market, msg.sender, fxpPrice, fxpAmount, tradeID, outcome, type)
     return(SUCCESS)
@@ -174,3 +116,67 @@ macro checkSellPreconditions():
         return(-2)
     if(MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome) < fxpAmount):
         return(-3)
+
+macro feePercent($marketFee, $fxpPrice, $cumulativeScale):
+    4 * $marketFee * $fxpPrice * (ONE - $fxpPrice * 2 ** 64 / $cumulativeScale) / ($cumulativeScale * ONE)
+    
+macro removeTrade($tradeID, $market):
+    TRADES.removeTrade($tradeID)
+    MARKETS.removeTradeFromMarket($market, $tradeID)
+
+macro fetchTradeCancelInfo():
+    trade = array(TRADE_FIELDS)
+    trade = TRADES.getTrade(tradeID, outitems = TRADE_FIELDS)
+    if(!trade):
+        return(0)
+    type = trade[1]
+    market = trade[2]
+    fxpAmount = trade[3]
+    fxpPrice = trade[4]
+    owner = trade[5]
+    outcome = trade[7]
+    tradingFee = MARKETS.getTradingFee(market)
+    cumulativeScale = MARKETS.getCumulativeScale(market)
+    
+macro refundTrade():
+    # Issue refunds
+    if(type == BID):
+        # cash refund
+        amt = fxpAmount * fxpPrice * (fee + ONE) / ONE ** 2
+        refunded = INFO.getWallet(market).transfer(msg.sender, amt)
+        if(!refunded):
+            throw()
+    elif(type == ASK):
+        # shares refund
+        MARKETS.modifyParticipantShares(market, msg.sender, outcome, fxpAmount, 0)
+        feesRefunded = INFO.getWallet(market).transfer(msg.sender, (fxpAmount * fxpPrice * fee / ONE ** 2))
+        if(!feesRefunded):
+            throw()
+    else:
+        throw()
+
+macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee, $sender):
+    trade = [$type, $market, $fxpAmount, $fxpPrice, $sender, block.number, $outcome]
+    tradeID = sha3(trade, items = 7)
+    cumulativeScale = MARKETS.getCumulativeScale($market)
+    if(TRADES.getID(tradeID)):
+        return(TRADE_ALREADY_EXISTS)
+
+    TRADES.saveTrade(tradeID, $type, $market, $fxpAmount, $fxpPrice, $sender, $outcome)
+    # Update market
+    MARKETS.addTrade($market, tradeID)
+    # Update available and trading fxpAmounts for asks
+    if($type == ASK):
+        MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$fxpAmount, 0)
+    # Send / escrow cash for bids
+    if($type == BID):
+        $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $fxpAmount * $fxpPrice / ONE)
+        if(!$paidTradeCost):
+            throw()
+    # pay fees
+    if($fee):
+        $feePaid = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), ($fxpAmount * $fxpPrice * $fee / ONE ** 2))
+        if(!$feePaid):
+            throw()
+    log(type = logAddTx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, tradeID)
+    return(tradeID)

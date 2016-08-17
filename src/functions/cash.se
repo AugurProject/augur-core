@@ -106,14 +106,13 @@ def withdrawEther(to: address, value: uint256):
     refund()
     if(value <= 0):
         return(-1)
-    if(self.accounts[msg.sender].balance >= value):
-        self.accounts[msg.sender].balance -= value
-        self.totalSupply -= value
-        if(!send(to, value)):
-            throw()
-        return(1)
-    else:
+    if(self.accounts[msg.sender].balance < value):
         return(0)
+    self.accounts[msg.sender].balance -= value
+    self.totalSupply -= value
+    if(!send(to, value)):
+        throw()
+    return(1)
 
 # Returns amount spender can withdraw from owner
 def allowance(owner: address, spender: address):

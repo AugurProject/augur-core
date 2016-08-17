@@ -67,16 +67,8 @@ def penalizeOnForkedEvent(branch, event):
     ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
     bond = BACKSTOPS.getBondAmount(event)
     checkForkPenalizationPreconditions()
-    
-    numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
-    # penalization on a forked event
-    # if didn't report [reportValue of 0] then it's a bad report here
-    # Do (for each user) based on forking report and final outcome
-    if(!CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) and outcome != 0):
-        calculateRepChange(reportValue, ONE)
-        handleEthicsAndBondRepRedistribution(numReportedOn)
-        CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
-        CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
+
+    penalizeOrRewardReporter()    
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
         sendRedistributedRepToBranch()
@@ -97,3 +89,14 @@ macro checkForkPenalizationPreconditions():
         return(-4)
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
         return(-5)
+
+macro penalizeOrRewardReporter():
+    numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
+    # penalization on a forked event
+    # if didn't report [reportValue of 0] then it's a bad report here
+    # Do (for each user) based on forking report and final outcome
+    if(!CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) and outcome != 0):
+        calculateRepChange(reportValue, ONE)
+        handleEthicsAndBondRepRedistribution(numReportedOn)
+        CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
+        CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)

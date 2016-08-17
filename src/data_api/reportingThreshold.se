@@ -21,19 +21,7 @@ def calculateReportingThreshold(branch, event, period, sender):
     callstackCheck()
     repConstant = EXPEVENTS.getPeriodRepWeight(branch, period, sender)
     if(!repConstant):
-        repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getRepBalance(branch, sender)) / ONE) * 2 ** 64 / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
-        numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, period)
-        expectedEventsForReporter = repConstant * numEventsAvailableToReportOn
-        # this includes required events
-        eventsInPeriod = EXPEVENTS.getNumberEvents(branch, period) - EXPEVENTS.getNumRemoved(branch, period)
-        numRequiredEvents = EXPEVENTS.getNumRequired(branch, period)
-        # ensures low number of events with highly concentrated rep edge case still get reported on
-        if(repFraction >= POINT_ZERO_ONE):
-            minimum = min(30 - numRequiredEvents, eventsInPeriod - numRequiredEvents)
-            if(expectedEventsForReporter / ONE < minimum):
-                expectedEventsForReporter = minimum * ONE
-                repConstant = expectedEventsForReporter / numEventsAvailableToReportOn
-        EXPEVENTS.setPeriodRepWeight(branch, period, sender, repConstant)
+        calculateAndSetRepConstant()
     # 1 is 2**192 here, lesserreportnum, repconstant, and one are all base 2**64
     reportingThreshold = EXPEVENTS.getLesserReportNum(branch, period, event) * repConstant * ONE
     return(reportingThreshold)
@@ -52,6 +40,7 @@ def getEventsToReportOn(branch, period, sender, start):
         if(!EXPEVENTS.getLesserReportNum(branch, period, events[i])):
             MAKEREPORTS.calculateReportTargetForEvent(branch, events[i], period, msg.sender)
         reportingThreshold = self.calculateReportingThreshold(branch, events[i], period, sender)
+
         x = array(1)
         x[0] = sender + events[i]
         # do abs then mult by 2 to ensure pos. and between 0 and 1
@@ -78,10 +67,9 @@ def getEventCanReportOn(branch, period, reporter, event):
     # do abs then mult by 2 to ensure pos. and between 0 and 1
     shaHash = (abs(sha3(x, items = 1)) / ONE) * 2
     wasAbleToReportOn = shaHash < reportingThreshold or EXPEVENTS.getRequired(event, period, branch)
-    if(wasAbleToReportOn):
-        return(1)
-    else:
+    if(!wasAbleToReportOn):
         return(0)
+    return(1)
 
 # In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold, UI calls this.
 def setReportingThreshold(event):
@@ -94,13 +82,27 @@ def setReportingThreshold(event):
     inCurrentVotePeriod = (BRANCHES.getVotePeriod(branch) == EVENTS.getExpiration(event) / periodLength)
     noReportsOnEvent = !EVENTS.getUncaughtOutcome(event)
     periodEndsInLessThanADay = ((block.timestamp + TWENTY_FOUR_HR) % periodLength) > (periodLength / 2)
-    if(inCurrentVotePeriod and periodEndsInLessThanADay and noReportsOnEvent):
-        EVENTS.setThreshold(event, 2 ** 192)
-        return(1)
-    else:
+    if(!inCurrentVotePeriod or !periodEndsInLessThanADay or !noReportsOnEvent):
         return(0)
+    EVENTS.setThreshold(event, 2 ** 192)
+    return(1)
 
 macro abs($a):
     if($a < 0):
         $a = -$a
     $a
+
+macro calculateAndSetRepConstant():
+    repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getRepBalance(branch, sender)) / ONE) * 2 ** 64 / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
+    numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, period)
+    expectedEventsForReporter = repConstant * numEventsAvailableToReportOn
+    # this includes required events
+    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, period) - EXPEVENTS.getNumRemoved(branch, period)
+    numRequiredEvents = EXPEVENTS.getNumRequired(branch, period)
+    # ensures low number of events with highly concentrated rep edge case still get reported on
+    if(repFraction >= POINT_ZERO_ONE):
+        minimum = min(30 - numRequiredEvents, eventsInPeriod - numRequiredEvents)
+        if(expectedEventsForReporter / ONE < minimum):
+            expectedEventsForReporter = minimum * ONE
+            repConstant = expectedEventsForReporter / numEventsAvailableToReportOn
+    EXPEVENTS.setPeriodRepWeight(branch, period, sender, repConstant)

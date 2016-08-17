@@ -28,7 +28,7 @@ inset('refund.se')
 # mode is the mode reported value for a given event [only on categorical / scalar events]
 # uncaughtOutcome is the average reported value for a binary event
 # ethical is the ethicality for a given event
-# originalExp is original expiry date in the case an event was pushed back and the expiration date gets changed - both are in epoch time
+# originalExp is original expiry date in the case an event was pushed into a later period [backstops] or attempted to resolve early [pushed forward] and the expiration date gets changed - both are in epoch time
 # pushedUp states that an event was pushed forward to attempt early resolution
 # rejected states that a pushed forward market's event [so one that attempted to resolve before it was expired] got rejected and shouldn't have actually been pushed forward
     # rejectedPeriod is the period such an event was pushed forward to and failed to be resolved in

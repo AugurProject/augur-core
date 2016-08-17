@@ -94,6 +94,7 @@ def approve(spender: address, amount: uint256):
     return(1)
 
 # Sets the initial distribution of rep
+# only want creator to call this
 def setSaleDistribution(addresses: address[], balances: uint256[]):
     i = 0
     if(len(addresses) != len(balances)):

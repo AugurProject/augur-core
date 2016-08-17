@@ -86,17 +86,7 @@ def closeMarket(market, sender):
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     checkCloseMarketPreconditions()
     
-    # look at event in the market, get its outcomes, resolve it and use those to determine the winning outcomes for a given market!
-    if(binary(event) and !fxpOutcome):
-        resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
-    elif(scalar(event) and !EVENTS.getMode(event)):
-        resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
-    elif(categorical(event) and !EVENTS.getMode(event)):
-        resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE * EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
-    else:
-        throw()
-    if(resolution == -6):
-        return(-5)
+    resolveEventsInMarket()    
     winningOutcomes = array(8)
     winningOutcomes = RESOLVE.determineWinningOutcomes(event, outitems = 8)
     MARKETS.setWinningOutcomes(market, winningOutcomes)
@@ -116,3 +106,16 @@ macro checkCloseMarketPreconditions():
         return(0)
     if((EVENTS.getForked(event) and !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod + 1))):
         return(-4)
+
+macro resolveEventsInMarket():
+    # look at event in the market, get its outcomes, resolve it and use those to determine the winning outcomes for a given market!
+    if(binary(event) and !fxpOutcome):
+        resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
+    elif(scalar(event) and !EVENTS.getMode(event)):
+        resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
+    elif(categorical(event) and !EVENTS.getMode(event)):
+        resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE * EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
+    else:
+        throw()
+    if(resolution == -6):
+        return(-5)

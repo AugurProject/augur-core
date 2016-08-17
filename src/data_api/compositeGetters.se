@@ -205,3 +205,6 @@ def getEventsToReportOn(branch, period, sender, start):
         i += 2
         n += 1
     return(events: arr)
+
+def getMarketCreatorFeesCollected(market):
+    return((MARKETS.getFees(market) - INFO.getCreationFee(market))/2)

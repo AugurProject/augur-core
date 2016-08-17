@@ -1453,7 +1453,7 @@ def test_catchup():
     print "Test catchup OK"
 
 
-def test_market_pushback():
+def test_market_pushforward():
     global initial_gas
     initial_gas = 0
     t.gas_limit = 100000000

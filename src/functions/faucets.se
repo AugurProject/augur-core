@@ -98,21 +98,7 @@ def claimInitialRep(parent, branch):
     reportedWrongEthicality = (BACKSTOPS.getForkedOverEthicality(forkEvent) and ethical == ethicReport)
     reportedWrongly = (reportedWithOriginalConsensus or !report or reportedWrongEthicality)
     if(fork and reportedWrongly):
-        # take away 30% of rep from liars and those who didn't report
-        repDecrease = rep - rep * POINT_SEVEN / ONE
-        rep = rep - repDecrease
-        amountLeftToPayBonder = BACKSTOPS.getBondAmount(forkEvent) - BACKSTOPS.getForkBondPaid(forkEvent)
-        if(repDecrease < amountLeftToPayBonder):
-            # send all the redistributed rep to the fork bond poster
-            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(forkEvent)), repDecrease)
-        # send amountLeftToPayBonder [if positive] to the fork bond poster
-        elif(amountLeftToPayBonder > 0):
-            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(forkEvent)), amountLeftToPayBonder)
-            # send the rest to the new branch's redistribution pool
-            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), (repDecrease - amountLeftToPayBonder))
-        else:
-            # send to new branch's redistribution pool
-            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repDecrease)
+        removeRepFromThoseWhoReportedWrong()
     if(fork):
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, forkPeriod)
     else:
@@ -136,3 +122,20 @@ macro checkRepClaimPreconditions():
             return(-2)
     if(!CONSENSUS.getRepRedistributionDone(parent, msg.sender)):
         return(-3)
+
+macro removeRepFromThoseWhoReportedWrong():
+    # take away 30% of rep from liars and those who didn't report
+    repDecrease = rep - rep * POINT_SEVEN / ONE
+    rep = rep - repDecrease
+    amountLeftToPayBonder = BACKSTOPS.getBondAmount(forkEvent) - BACKSTOPS.getForkBondPaid(forkEvent)
+    if(repDecrease < amountLeftToPayBonder):
+        # send all the redistributed rep to the fork bond poster
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(forkEvent)), repDecrease)
+    # send amountLeftToPayBonder [if positive] to the fork bond poster
+    elif(amountLeftToPayBonder > 0):
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(forkEvent)), amountLeftToPayBonder)
+        # send the rest to the new branch's redistribution pool
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), (repDecrease - amountLeftToPayBonder))
+    else:
+        # send to new branch's redistribution pool
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repDecrease)

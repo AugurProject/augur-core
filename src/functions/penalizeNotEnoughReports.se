@@ -70,6 +70,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     repChange = (oldRep + newRep) - originalRep
     if(repChange > 0):
         return(1)
+    # todo fix issues here w/ withdrawing too much rep and redistribution before/after/etc
     # removes rep from reporter who lost it
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, reporter), repChange)
     # sends that rep to the branch rep pool

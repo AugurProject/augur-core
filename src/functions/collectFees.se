@@ -48,21 +48,8 @@ def collectFees(branch, sender):
     if(!feesCollected and newRep < ONE):
         prepareInfoForConsensus()
         return(2)
-    denominator = CONSENSUS.getDenominator(branch, lastPeriod)
-    # sets the amount of rep available for redistribution in the next period
-    if(!CONSENSUS.getFeeFirst(branch, lastPeriod)):
-        CONSENSUS.setFeeFirst(branch, lastPeriod, 1)
-        CONSENSUS.setPeriodBalance(branch, lastPeriod, REPORTING.getRepBalance(branch, branch))
-    gainedRep = newRep * CONSENSUS.getPeriodBalance(branch, lastPeriod) / denominator
-    # if a user lost rep their newRep should be == EXPEVENTS.getAfterRep(branch, period, sender) + gainedRep
-    # if gained rep overall their newRep should be == EXPEVENTS.getBeforeRep(branch, period, sender) + gainedRep
-    # give a reporter their portion of redistributed rep
-    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), gainedRep)
-    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, sender), gainedRep)
-    cash = BRANCHES.getInitialBalance(branch, lastPeriod) * newRep / denominator
-    # give a reporter their portion of the trading fees
-    CASH.subtractCash(branch, cash)
-    CASH.addCash(sender, cash)
+    collectRedistributedRep()
+    collectTradeFees()
     prepareInfoForConsensus()
     return(1)
 
@@ -74,3 +61,21 @@ macro checkCollectFeesPreconditions():
     if(feesCollected):
         return(0)
     
+macro collectRedistributedRep():
+    denominator = CONSENSUS.getDenominator(branch, lastPeriod)
+    # sets the amount of rep available for redistribution in the next period
+    if(!CONSENSUS.getFeeFirst(branch, lastPeriod)):
+        CONSENSUS.setFeeFirst(branch, lastPeriod, 1)
+        CONSENSUS.setPeriodBalance(branch, lastPeriod, REPORTING.getRepBalance(branch, branch))
+    gainedRep = newRep * CONSENSUS.getPeriodBalance(branch, lastPeriod) / denominator
+    # if a user lost rep their newRep should be == EXPEVENTS.getAfterRep(branch, period, sender) + gainedRep
+    # if gained rep overall their newRep should be == EXPEVENTS.getBeforeRep(branch, period, sender) + gainedRep
+    # give a reporter their portion of redistributed rep
+    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), gainedRep)
+    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, sender), gainedRep)
+
+macro collectTradeFees():
+    cash = BRANCHES.getInitialBalance(branch, lastPeriod) * newRep / denominator
+    # give a reporter their portion of the trading fees
+    CASH.subtractCash(branch, cash)
+    CASH.addCash(sender, cash)

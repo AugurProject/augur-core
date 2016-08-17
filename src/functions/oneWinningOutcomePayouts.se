@@ -16,15 +16,21 @@ def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes
     if(categoricalPointFive):
         i = 0
         while(i < numOutcomes):
-            sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, i + 1)
-            MARKETS.modifyParticipantShares(market, sender, i + 1, -sharesOwned, 0)
-            if(!INFO.getWallet(market).transfer(sender, sharesOwned * MARKETS.getCumulativeScale(market) / (numOutcomes * ONE))):
-                throw()
+            payoutIndeterminateCategorical()    
             i += 1
     else:
-        # distribute profit to the people who won money by holding winning shares
-        sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, winningOutcome)
-        MARKETS.modifyParticipantShares(market, sender, winningOutcome, -sharesOwned, 0)
-        if(!INFO.getWallet(market).transfer(sender, sharesOwned * cumulativeScale / ONE)):
-            throw()
+        payoutRegularOneOutcomeMarket()
     return(1)
+
+macro payoutIndeterminateCategorical():
+    sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, i + 1)
+    MARKETS.modifyParticipantShares(market, sender, i + 1, -sharesOwned, 0)
+    if(!INFO.getWallet(market).transfer(sender, sharesOwned * MARKETS.getCumulativeScale(market) / (numOutcomes * ONE))):
+        throw()
+        
+macro payoutRegularOneOutcomeMarket():
+    # distribute profit to the people who won money by holding winning shares
+    sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, winningOutcome)
+    MARKETS.modifyParticipantShares(market, sender, winningOutcome, -sharesOwned, 0)
+    if(!INFO.getWallet(market).transfer(sender, sharesOwned * cumulativeScale / ONE)):
+        throw()
