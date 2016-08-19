@@ -133,7 +133,7 @@ def claimProceeds(branch, market):
     # as long as it's resolved money can be collected
     if((period > tradingPeriod || reportingDone) && resolved):
         winningOutcomes = array(8)
-        winningOutcomes = MARKET.getWinningOutcomes(market, outitems=8)
+        winningOutcomes = MARKETS.getWinningOutcomes(market, outitems=8)
         outcome = 0
         # market not resolved
         if(winningOutcomes[0]==0):

@@ -196,3 +196,6 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
             d += 1
         m += 1
     return(marketsInfo: arr)
+
+def getMarketCreatorFeesCollected(market):
+    return((MARKETS.getFees(market) - INFO.getCreationFee(market))/2)
