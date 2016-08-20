@@ -2855,7 +2855,7 @@
         "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:_, sellCompleteSets:[int256,int256]:_, test_callstack:[]:int256]"
     }, 
     "compositeGetters": {
-        "address": "0x6ee28ac73e3ebafbd357e46cc0c8bbbe6235e4a7", 
+        "address": "0x27c8fe512983c1bedce37f1e312acb92456a3c5b", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -2892,7 +2892,7 @@
             "", 
             "macro TRADE_FIELDS: 8", 
             "macro EVENTS_FIELDS: 7", 
-            "macro OUTCOMES_FIELDS: 2", 
+            "macro OUTCOMES_FIELDS: 3", 
             "macro BASE_FIELDS: 14", 
             "macro BASE_CACHE_FIELDS: 10", 
             "", 
@@ -2914,7 +2914,7 @@
             "        i += 1", 
             "    return(slice(orderBook, items=0, items=TRADE_FIELDS*numAvailableTrades): arr)", 
             "", 
-            "def getMarketInfo(marketID):", 
+            "def getMarketInfo(marketID, account):", 
             "    refund()", 
             "    index = BASE_FIELDS", 
             "    descriptionLength = INFO.getDescriptionLength(marketID)", 
@@ -2956,6 +2956,8 @@
             "    while k < numOutcomes:", 
             "        marketInfo[index + k*OUTCOMES_FIELDS] = MARKETS.getSharesPurchased(marketID, k + 1)", 
             "        marketInfo[index + k*OUTCOMES_FIELDS + 1] = MARKETS.getLastOutcomePrice(marketID, k + 1)", 
+            "        if account != 0:", 
+            "            marketInfo[index + k*OUTCOMES_FIELDS + 2] = MARKETS.getParticipantSharesPurchased(marketID, account, k + 1)", 
             "        k += 1", 
             "    index += numOutcomes*OUTCOMES_FIELDS", 
             "", 
@@ -2990,7 +2992,7 @@
             "", 
             "    return(marketInfo: arr)", 
             "", 
-            "def batchGetMarketInfo(marketIDs: arr):", 
+            "def batchGetMarketInfo(marketIDs: arr, account):", 
             "    refund()", 
             "    numMarkets = len(marketIDs)", 
             "    totalLength = 0", 
@@ -3010,7 +3012,7 @@
             "    index = 0", 
             "    i = 0", 
             "    while i < numMarkets:", 
-            "        marketInfo = self.getMarketInfo(marketIDs[i], outitems=marketInfoLength[i] - 1)", 
+            "        marketInfo = self.getMarketInfo(marketIDs[i], account, outitems=marketInfoLength[i] - 1)", 
             "        marketsInfo[index] = marketInfoLength[i]", 
             "        j = 0", 
             "        while j < marketInfoLength[i] - 1:", 
@@ -3071,9 +3073,13 @@
                     {
                         "name": "marketIDs", 
                         "type": "int256[]"
+                    }, 
+                    {
+                        "name": "account", 
+                        "type": "int256"
                     }
                 ], 
-                "name": "batchGetMarketInfo(int256[])", 
+                "name": "batchGetMarketInfo(int256[],int256)", 
                 "outputs": [
                     {
                         "name": "out", 
@@ -3105,9 +3111,13 @@
                     {
                         "name": "marketID", 
                         "type": "int256"
+                    }, 
+                    {
+                        "name": "account", 
+                        "type": "int256"
                     }
                 ], 
-                "name": "getMarketInfo(int256)", 
+                "name": "getMarketInfo(int256,int256)", 
                 "outputs": [
                     {
                         "name": "out", 
@@ -3171,7 +3181,7 @@
                 "type": "function"
             }
         ], 
-        "sig": "extern compositeGetters: [batchGetMarketInfo:[int256[]]:int256[], getMarketCreatorFeesCollected:[int256]:int256, getMarketInfo:[int256]:int256[], getMarketsInfo:[int256,int256,int256]:int256[], getOrderBook:[int256]:int256[], test_callstack:[]:int256]"
+        "sig": "extern compositeGetters: [batchGetMarketInfo:[int256[],int256]:int256[], getMarketCreatorFeesCollected:[int256]:int256, getMarketInfo:[int256,int256]:int256[], getMarketsInfo:[int256,int256,int256]:int256[], getOrderBook:[int256]:int256[], test_callstack:[]:int256]"
     }, 
     "consensus": {
         "address": "0xfb262777af60c63de479ba9237861e89ca5dd8ba", 
