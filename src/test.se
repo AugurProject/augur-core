@@ -1,35 +1,150 @@
-extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
+# rules todo: send >50% != possible
+# if send <50% to users then allow someone to call a challenge function to redistribute 50 minus amount done
 
-def checkCallstack():
-    return(1)
+# Storage of all data associated with numeraire
+# takes numeraireID as key, value is numeraire amount
+data numeraire[2**160]
 
-def lol(c):
-    x = c.balanceOf(5)
-    return(x)
-    
-def ok(blah: str):
-    return(len(blah))
-    
-def getSender():
-    return(msg.sender)
+data claimedDividend[2**160]
 
-def funTest(n, a, b):
-    if(n > a >= b):
+# owner [account balance is coming from], then spender, e.g. approvedToSpend[owner][spender]
+# returns amount spender can spend
+data approvedToSpend[2**160][2**160]
+
+# whether the contract has been finished seeding
+data seeded
+# keeps track of total numeraire in the system
+data totalSupply
+# token name for display
+data name
+# token symbol for display
+data symbol
+# amount of decimals per unit of numeraire
+data decimals
+# address of numerai team
+data numeraiAddress
+
+event Transfer(from:indexed, to:indexed, fxpValue)
+event Approval(owner:indexed, spender:indexed, fxpValue)
+
+# 18 decimals
+macro ONE:
+    10 ** 18
+
+macro refund():
+    if(msg.value > 0 && msg.sender != self.numeraiAddress):
+        if(!send(msg.sender, msg.value)):
+            throw()
+
+def init():
+    self.name = "numeraire"
+    self.symbol = "numeraire"
+    self.decimals = 18
+    self.numeraiAddress = msg.sender
+
+def any():
+    refund()
+
+def updateNumeraiAddress(newAddress):
+    if(msg.sender == self.numeraiAddress):
+        self.numeraiAddress = newAddress
         return(1)
     else:
         return(0)
 
-def getit(x):
-    y = x == 3
-    m = x
-    n = x == 5
-    return([y,n]: arr)
-    
-def hashIt(n):
-    x = array(1)
-    x[0] = address
-    y = sha3(x, items=1)
-    return(y)
+# Transfer numeraire
+# @return 1 if numeraire sent
+def transfer(receiver: address, fxpValue: uint256):
+    senderBalance = self.numeraire[msg.sender]
+    if(senderBalance < fxpValue or fxpValue <= 0 or !self.seeded):
+        throw()
+    if(!safeToSubtract(self.numeraire[msg.sender], fxpValue) or !safeToAdd(self.numeraire[receiver], fxpValue)):
+        throw()
+    self.numeraire[msg.sender] -= fxpValue
+    self.numeraire[receiver] += fxpValue
+    log(type = Transfer, msg.sender, receiver, fxpValue)
+    return(1)
 
-def getitt(x: address):
-    return(x)
+# TransferFrom per token api allowing another contract to withdraw on user's behalf
+# fails unless from has authorized sender
+# @return 1 if numeraire sent
+def transferFrom(from: address, receiver: address, fxpValue: uint256):
+    senderBalance = self.numeraire[from]
+    if(senderBalance < fxpValue or fxpValue <= 0 or fxpValue > self.approvedToSpend[from][msg.sender] or !self.seeded):
+        throw()
+    if(!safeToSubtract(self.numeraire[from], fxpValue) or !safeToAdd(self.numeraire[receiver], fxpValue)):
+        throw()
+    self.approvedToSpend[from][msg.sender] -= fxpValue
+    self.numeraire[from] -= fxpValue
+    self.numeraire[receiver] += fxpValue
+    log(type = Transfer, from, receiver, fxpValue)
+    return(1)
+    
+# Allows spender to withdraw from your numeraire account
+def approve(spender: address, amount: uint256):
+    if(amount <= 0):
+        return(0)
+    self.approvedToSpend[msg.sender][spender] = amount
+    log(type = Approval, msg.sender, spender, amount)
+    return(1)
+
+# Sets the initial distribution of numeraire
+# only want creator to call this
+def setInitialDistribution(addresses: address[], balances: uint256[]):
+    i = 0
+    if(len(addresses) != len(balances)):
+        throw()
+    while(i <= len(addresses)):
+        if(!self.numeraire[addresses[i]] && !self.seeded):
+            self.numeraire[addresses[i]] = balances[i]
+            self.totalSupply += balances[i]
+            log(type = Transfer, 0, addresses[i], balances[i])
+        i += 1
+    if(self.totalSupply == 20000 * ONE):
+        self.seeded = 1
+    return(1)
+
+#def claimDividends():
+#    if(self.claimedDividend[msg.sender]):
+        
+    
+#def sendBonuses():
+
+def test():
+    send(0, 5)
+    return(1)
+
+# Returns amount spender can withdraw from owner
+def allowance(owner: address, spender: address):
+    return(self.approvedToSpend[owner][spender])
+
+def totalSupply():
+    return(self.totalSupply)
+
+# @return numeraireutation fxpValue
+def balanceOf(address: address):
+    return(self.numeraire[address])
+
+def getName():
+    return(self.name)
+    
+def getDecimals():
+    return(self.decimals)
+    
+def getSymbol():
+    return(self.symbol)
+
+def getSeeded():
+    return(self.seeded)
+
+macro throw():
+    i = 0
+    while(1):
+        i +=1
+
+# safe adders idea pulled from piper merriam's btcrelay audit
+macro safeToAdd($a, $b):
+    (($a + $b) >= $a)
+
+macro safeToSubtract($a, $b):
+    ($b <= $a)

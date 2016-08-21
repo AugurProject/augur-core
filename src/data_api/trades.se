@@ -59,7 +59,7 @@ def getTrade(id):
     trade = array(8)
     trade[0] = self.trades[id].id
     trade[1] = self.trades[id].type
-    trade[2] = self.trades[id].market]
+    trade[2] = self.trades[id].market
     trade[3] = self.trades[id].amount
     trade[4] = self.trades[id].price
     trade[5] = self.trades[id].owner

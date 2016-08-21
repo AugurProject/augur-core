@@ -3,7 +3,7 @@ import info as INFO
 import markets as MARKETS
 import events as EVENTS
 import expiringEvents as EXPEVENTS
-extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
+extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
 
@@ -20,6 +20,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
     $indeterminateNotReadyToResolveEarlyEvent = ($fxpOutcome == $indeterminate or $mode == ONE_HALF) and EVENTS.getEventPushedUp($event)
     if($indeterminateNotReadyToResolveEarlyEvent):
         if(MARKETS.getPushedForward($market)):
+            # look @ total shares purchase cutoff times for early resolution bonds
             amount = MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE)
             branchWallet = BRANCHES.getWallet($branch, INFO.getCurrency($market))
             if(!INFO.getWallet($market).transfer(branchWallet, amount)):

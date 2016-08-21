@@ -38,6 +38,8 @@ inset('../data_api/periodStage.se')
 # sender/owner, then spender
 data amountCanSpend[][](branch[])
 
+# log all rep changes below todo
+
 event Transfer(from:indexed, to:indexed, value)
 event Approval(owner:indexed, spender:indexed, branch:indexed, value)
 
@@ -56,9 +58,8 @@ macro checkInvariants($account):
     delta = lastPeriod - lastPeriodPenalized
     # Rep cannot be simultaneously spent (transferred) and used to vote
     atFirstHalfOfPeriod()
-    if(delta > 1):
-        if(CATCHUP.penalizationCatchup(branch, $account) != 1):
-            return(-4)
+    if(delta > 1 and CATCHUP.penalizationCatchup(branch, $account) != 1):
+        return(-4)
     if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
         return(0)
 

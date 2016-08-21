@@ -297,7 +297,7 @@ def test_trading():
             print "Buy complete sets gas use"
             print gas_use(s)
             if(a == 2):
-                sellin = c.sell(2**64, int(.01 * 2**64), market[2], 3)
+                sellin = c.ask(2**64, int(.01 * 2**64), market[2], 3)
                 assert(c.cancel(sellin) == 1)
             assert(c.sellCompleteSets(market[a], 8 * 2**64) == 1)
             assert(c.balance(s.block.coinbase) == (
@@ -321,7 +321,7 @@ def test_trading():
             before = c.balance(s.block.coinbase)
             beforem = c.balance(market[a])
             gas_use(s)
-            sell = c.sell(2**64, int(.01 * 2**64), market[a], 1)
+            sell = c.ask(2**64, int(.01 * 2**64), market[a], 1)
             print "selling gas use"
             print gas_use(s)
             assert(c.getParticipantSharesPurchased(
@@ -351,7 +351,7 @@ def test_trading():
                 market[a], s.block.coinbase, 2) == 2**65)
             before = c.balance(s.block.coinbase)
             beforem = c.balance(market[a])
-            sell = c.sell(2**64, int(.01 * 2**64), market[a], 1)
+            sell = c.ask(2**64, int(.01 * 2**64), market[a], 1)
             assert(c.getParticipantSharesPurchased(
                 market[a], s.block.coinbase, 1) == 2**64)
             assert(c.getParticipantSharesPurchased(
@@ -366,7 +366,7 @@ def test_trading():
             beforem = c.balance(market[a])
             gas_use(s)
             # get cash balance before and after, bid includes cost + fee
-            buy = c.buy(2**64, int(.01 * 2**64), market[a], 2)
+            buy = c.bid(2**64, int(.01 * 2**64), market[a], 2)
             print "Buy gas use"
             gas_use(s)
             after = c.balance(s.block.coinbase)
@@ -384,7 +384,7 @@ def test_trading():
             assert(nearly_equal((beforem - afterm), 0))
             before = c.balance(s.block.coinbase)
             beforem = c.balance(market[a])
-            buy = c.buy(2**64, int(.01 * 2**64), market[a], 2)
+            buy = c.bid(2**64, int(.01 * 2**64), market[a], 2)
             after = c.balance(s.block.coinbase)
             afterm = c.balance(market[a])
             assert(isclose((before - after) / 2**64,
@@ -483,7 +483,7 @@ def test_trading():
             # complete sets #*cumulativeScale or 12*cumulativeScale
             assert(isclose(c.balance(market[a]) /
                            2**64, 12 * cumulativeScale[a] / 2**64))
-            buy = c.buy(2**64, int(.01 * 2**64), market[a], 1, sender=t.k2)
+            buy = c.bid(2**64, int(.01 * 2**64), market[a], 1, sender=t.k2)
             # Example:
             # buyer gives up say 20
             # complete set cost is say 100
@@ -503,7 +503,7 @@ def test_trading():
             s.mine(1)
             gas_use(s)
             print "Short sell"
-            print c.shortSell([buy], 2**64)
+            print c.shortask([buy], 2**64)
             assert(isclose(c.getParticipantSharesPurchased(
                 market[a], c.getSender(sender=t.k2), 1) * 1.0, 12.0 * 2**64))
             assert(isclose(c.getParticipantSharesPurchased(

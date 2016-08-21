@@ -11,7 +11,7 @@ import roundTwo as ROUNDTWO
 import expiringEvents as EXPEVENTS
 import createBranch as CREATEBRANCH
 import consensusData as CONSENSUSDATA
-extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
+extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
 
@@ -117,6 +117,7 @@ def resolveFork(branch):
     return(winner)
 
 # Resolve fork method that gets exchange rate
+# add contract for choosing this to create market
 def exchangeRate(branch):
     callstackCheck()
     # get rep exchange rate from etherex for (branch)

@@ -16,7 +16,7 @@ macro throw():
     i = 0
     while(1):
         i += 1
-        
+
 def checkCallstack():
     return(1)
 

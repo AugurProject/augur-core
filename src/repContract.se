@@ -97,9 +97,10 @@ def approve(spender: address, amount: uint256):
 # only want creator to call this
 def setSaleDistribution(addresses: address[], balances: uint256[]):
     i = 0
-    if(len(addresses) != len(balances)):
+    numberOfAddresses = len(addresses)
+    if(numberOfAddresses != len(balances)):
         throw()
-    while(i <= len(addresses)):
+    while(i < numberOfAddresses):
         if(!self.reporting[addresses[i]] && !self.seeded):
             self.reporting[addresses[i]] = balances[i]
             self.totalSupply += balances[i]
@@ -132,10 +133,19 @@ def getSymbol():
 def getSeeded():
     return(self.seeded)
 
+#macro throw():
+#    i = 0
+#    while(1):
+#        i +=1
+
 macro throw():
-    i = 0
-    while(1):
-        i +=1
+   ~jump(2**256)
+
+
+def test(x):
+    if(x==5):
+        throw()
+    return(1)
 
 # safe adders idea pulled from piper merriam's btcrelay audit
 macro safeToAdd($a, $b):
@@ -143,3 +153,4 @@ macro safeToAdd($a, $b):
 
 macro safeToSubtract($a, $b):
     ($b <= $a)
+

@@ -26,7 +26,7 @@ import markets as MARKETS
 import backstops as BACKSTOPS
 import events as EVENTS
 import expiringEvents as EXPEVENTS
-extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
+extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 
 event marketCreated(market)
@@ -145,7 +145,7 @@ def createMarket(branch, description:str, fxpTradingFee, event, tag1, tag2, tag3
     mcopy(marketinfo + 8 * 32, description, chars = len(description))
     market = ripemd160(marketinfo, chars = len(marketinfo))
     # if it's already been created return 0
-    if(INFO.getCreator(market) or MARKETS.getMarketNumOutcomes(market)):
+    if(INFO.getCreator(market)):
         return(-4)
     events = array(1)
     events[0] = event
@@ -254,6 +254,7 @@ macro checkEventCreationPreconditions():
         return(-2)
     if(numOutcomes < 2 or numOutcomes > 8):
         return(-3)
+    # fix to allow event and market creation during forks at own risk
     if(forkPeriod and ((expDate / periodLength) == forkPeriod or (expDate / periodLength) == (forkPeriod + 1))):
         return(-4)
 
