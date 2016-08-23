@@ -3,7 +3,7 @@ import info as INFO
 import markets as MARKETS
 import events as EVENTS
 import expiringEvents as EXPEVENTS
-extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
 
@@ -80,8 +80,8 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
     EVENTS.setOutcome(event, fxpOutcome)
     # ethics is set to the binned version of the raw ethicality outcome
     EVENTS.setEthics(event, ethical)
-    val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 0, 0, 0)
-    return(val)
+    closeResult = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 0, 0, 0)
+    return(closeResult)
 
 # Resolves a categorical or scalar market
 # whitelist
@@ -95,10 +95,10 @@ def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch
     periodLength = BRANCHES.getPeriodLength(branch)
     # ethics is set to the binned version of the raw ethicality outcome
     ethical = ethicCatch(EVENTS.getEthics(event))
-    ethicOutcome = 2 ** 63 * (fxpScaledMax - fxpScaledMin) / ONE + fxpScaledMin
+    ethicOutcome = ONE_HALF * (fxpScaledMax - fxpScaledMin) / ONE + fxpScaledMin
     EVENTS.setEthics(event, ethical)
-    val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
-    return(val)
+    closeResult = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
+    return(closeResult)
 
 # Determines the "winning outcomes" for a given market
 # Easiest to give examples:

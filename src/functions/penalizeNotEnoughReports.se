@@ -22,16 +22,17 @@ macro POINT_NINE: 16602069666338596864
 # Note:
     # Reporters pay an eth bond for this on their first report --- if never called then during collect fees they get it back else it goes back to pay someone who correctly calls this function, so the bond is returned to the poster if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees [which means it's the first period after a fork is initiated]
 # Returns 1 if successful penalization
-# Returns 2 if didn't need to be penalized and thus wasn't
 # Errors:
     # -1: already done
     # -2: not in right part of period
     # -3: event isn't in branch
+    # Returns 2 if didn't need to be penalized and thus wasn't
 def proveReporterDidntReportEnough(branch, reporter, eventExample):
     refund()
     if(!branch or !eventExample):
         return(0)
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
+    periodAfterForkPeriod = BRANCHES.getForkPeriod(branch) + 1 == lastPeriod
     periodLength = BRANCHES.getPeriodLength(branch)
     originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
     numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)
@@ -40,30 +41,28 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     # a**b=exp(b*ln(a))=e**(b*ln(a)).
     repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(originalRep) / ONE) * 2 ** 64 / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
     baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
-    total = repConstant * baseReporters
     numRequiredEvents = EXPEVENTS.getNumRequired(branch, lastPeriod)
     expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn + numRequiredEvents * ONE
     eventsInPeriod = EXPEVENTS.getNumberEvents(branch, lastPeriod) - EXPEVENTS.getNumRemoved(branch, lastPeriod)
+    dealWithWhaleReporters()
+    ensureReporterCouldveReportedOnMoreButDidnt()
     checkProveReporterDidntReportEnoughPreconditions()
+    redistributeNotEnoughReportsRep()
+    # refund gas cost for the sender
+    CONSENSUS.doRefund(msg.sender, reporter)
+    return(1)
 
+macro checkProveReporterDidntReportEnoughPreconditions():
+    if(EVENTS.getEventBranch(eventExample) != branch):
+        return(-3)
+    if(CONSENSUS.getNotEnoughPenalized(branch, reporter, lastPeriod)):
+        return(-1)
     # in period just after fork period no reports required
-    if(BRANCHES.getForkPeriod(branch) + 1 == lastPeriod):
-        CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
-        return(2)
-    if(repConstant >= POINT_ZERO_ONE):
-        minimum = min(30 + numRequiredEvents, eventsInPeriod)
-        if(expectedEventsForReporterIncludingRequired / ONE < minimum):
-            expectedEventsForReporterIncludingRequired = minimum * ONE
-    # if total is too high [>1] then expectedEventsForReporterIncludingRequired will estimate a higher number than reality, so need to correct for this below
-    # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*baseReporters > 1)
-    if(total > ONE):
-        expectedEventsForReporterIncludingRequired = (numEventsAvailableToReportOn / baseReporters) * ONE + numRequiredEvents * ONE
-    numReportsSubmitted = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, reporter)
-    # reporter couldve reported on event example but didnt
-    couldveReported = THRESHOLD.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
-    reportedOnLessThanShouldve = expectedEventsForReporterIncludingRequired / 2 > numReportsSubmitted * ONE and couldveReported
-    if(!reportedOnLessThanShouldve):
-        return(2)
+    if(!reportedOnLessThanShouldve or periodAfterForkPeriod):
+        return(-4)
+    atFirstHalfOfPeriod()
+
+macro redistributeNotEnoughReportsRep():
     # penalize people
     newRep = POINT_ONE * numReportsSubmitted * originalRep / (expectedEventsForReporterIncludingRequired / 2)
     oldRep = originalRep * POINT_NINE / ONE
@@ -86,12 +85,21 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         CONSENSUS.decreaseDenominator(branch, lastPeriod, diff)
     EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, reporter)
     CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
-    CONSENSUS.doRefund(msg.sender, reporter)
-    return(1)
 
-macro checkProveReporterDidntReportEnoughPreconditions():
-    if(EVENTS.getEventBranch(eventExample) != branch):
-        return(-3)
-    if(CONSENSUS.getNotEnoughPenalized(branch, reporter, lastPeriod)):
-        return(-1)
-    atFirstHalfOfPeriod()
+macro dealWithWhaleReporters():
+    reporterIsAWhale = repConstant >= POINT_ZERO_ONE
+    if(reporterIsAWhale):
+        minimum = min(30 + numRequiredEvents, eventsInPeriod)
+        if(expectedEventsForReporterIncludingRequired / ONE < minimum):
+            expectedEventsForReporterIncludingRequired = minimum * ONE
+    total = repConstant * baseReporters
+    # if total is too high [>1] then expectedEventsForReporterIncludingRequired will estimate a higher number than reality, so need to correct for this below
+    # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*baseReporters > 1)
+    if(total > ONE):
+        expectedEventsForReporterIncludingRequired = (numEventsAvailableToReportOn / baseReporters) * ONE + numRequiredEvents * ONE
+
+macro ensureReporterCouldveReportedOnMoreButDidnt()
+    numReportsSubmitted = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, reporter)
+    # reporter couldve reported on event example but didnt
+    couldveReported = THRESHOLD.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
+    reportedOnLessThanShouldve = expectedEventsForReporterIncludingRequired / 2 > numReportsSubmitted * ONE and couldveReported

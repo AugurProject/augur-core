@@ -24,7 +24,24 @@ def penalizationCatchup(branch, sender):
     delta = lastPeriod - lastPeriodPenalized
     oldRep = REPORTING.getRepBalance(branch, sender)
     checkPenalizationCatchupPreconditions()
-    
+
+    redistributeRepFromNotReporting()
+    CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
+    return(1)
+
+macro checkPenalizationCatchupPreconditions():
+    periodLength = BRANCHES.getPeriodLength(branch)
+    # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
+    atFirstHalfOfPeriod()
+    if(delta <= 0):
+        return(-2)
+    # provided user is at least one period behind and they didn't report in the last period
+    alreadyPenalized = (lastPeriodPenalized == lastPeriod)
+    reportedLastPeriod = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, sender)
+    if(alreadyPenalized or reportedLastPeriod):
+        return(-3)
+
+macro redistributeRepFromNotReporting():
     # dock 10% for each period they didn't penalize on
     smoothedRep = oldRep * POINT_NINE / ONE
     i = 1
@@ -41,17 +58,3 @@ def penalizationCatchup(branch, sender):
     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, sender), repChange)
     # sends that rep to the branch rep pool
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repChange)
-    CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
-    return(1)
-
-macro checkPenalizationCatchupPreconditions():
-    periodLength = BRANCHES.getPeriodLength(branch)
-    # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
-    atFirstHalfOfPeriod()
-    if(delta <= 0):
-        return(-2)
-    # provided user is at least one period behind and they didn't report in the last period
-    alreadyPenalized = (lastPeriodPenalized == lastPeriod)
-    reportedLastPeriod = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, sender)
-    if(alreadyPenalized or reportedLastPeriod):
-        return(-3)
