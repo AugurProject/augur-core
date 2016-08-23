@@ -213,4 +213,4 @@ def getEventsWithSubmittedReport(branch, period, reporter):
             n += 1
         i += 1
 
-    return(events: arr)
+    return(slice(events, items=0, items=n): arr)
