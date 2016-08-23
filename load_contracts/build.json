@@ -2855,7 +2855,7 @@
         "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:_, sellCompleteSets:[int256,int256]:_, test_callstack:[]:int256]"
     }, 
     "compositeGetters": {
-        "address": "0x27c8fe512983c1bedce37f1e312acb92456a3c5b", 
+        "address": "0x6cfbb0dc06b3d68af0e832587d09508107a2b550", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -2888,6 +2888,8 @@
             "TRADES = 0xfbe993b523d1829d1dec8fe787a2630eaa2d3e96", 
             "extern refund.se: [addFees:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, addTrade:[int256,int256,int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCreationTime:[int256]:int256, getCumScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getLastExpDate:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getLastTrade:[int256]:int256, getMakerFees:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsHash:[int256]:int256, getNumEvents:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSender:[]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], get_total_trades:[int256]:int256, get_trade_ids:[int256]:int256[], getgasSubsidy:[int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, remove_trade_from_market:[int256,int256]:int256, returnTags:[int256]:int256[], setMakerFees:[int256,int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256, test_callstack:[]:int256]", 
             "MARKETS = 0x9a98b727297eb0869ab07bad057cc4f0acf6ce8a", 
+            "extern expiringEvents: [addEvent:[int256,int256,int256,int256]:int256, addRepEvent:[int256,int256,int256,int256]:int256, addReportToEvent:[int256,int256,int256,int256]:int256, addReportersPaidSoFar:[int256,int256]:int256, addRoundTwo:[int256,int256]:int256, addToWeightOfReport:[int256,int256,int256,int256]:int256, adjustPeriodShareValueOutstanding:[int256,int256,int256]:int256, deleteEvent:[int256,int256,int256]:int256, getAfterRep:[int256,int256,int256]:int256, getBeforeRep:[int256,int256,int256]:int256, getCurrentMode:[int256,int256]:int256, getCurrentModeItems:[int256,int256]:int256, getEncryptedReport:[int256,int256,int256,int256]:int256[], getEthicReport:[int256,int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getEventsRange:[int256,int256,int256,int256]:int256[], getLesserReportNum:[int256,int256,int256]:int256, getNumEventsToReportOn:[int256,int256]:int256, getNumRemoved:[int256,int256]:int256, getNumReportsActual:[int256,int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumRequired:[int256,int256]:int256, getNumRoundTwo:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodDormantRep:[int256,int256,int256]:int256, getPeriodRepConstant:[int256,int256,int256]:int256, getRepEvent:[int256,int256,int256]:int256, getReport:[int256,int256,int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getReportersPaidSoFar:[int256,int256]:int256, getRequired:[int256]:int256, getShareValue:[int256,int256]:int256, getSubsidy:[int256,int256,int256]:int256, getWeightOfReport:[int256,int256,int256]:int256, moveEvent:[int256,int256]:int256, refundCost:[int256,int256]:int256, removeEvent:[int256,int256]:int256, setAfterRep:[int256,int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256,int256]:int256, setCurrentMode:[int256,int256,int256]:int256, setCurrentModeItems:[int256,int256,int256]:int256, setEncryptedReport:[int256,int256,int256,int256,int256,int256]:int256, setEthicReport:[int256,int256,int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setLesserReportNum:[int256,int256,int256,int256]:int256, setNumEventsToReportOn:[int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setPeriodDormantRep:[int256,int256,int256,int256]:int256, setPeriodRepConstant:[int256,int256,int256,int256]:int256, setReport:[int256,int256,int256,int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]", 
+            "EXPEVENTS = 0xadb4d0e959d0224100911b49ff2d61816e50f907", 
             "inset('refund.se')", 
             "", 
             "macro TRADE_FIELDS: 8", 
@@ -3063,8 +3065,20 @@
             "        m += 1", 
             "    return(marketsInfo: arr)", 
             "", 
-            "def getMarketCreatorFeesCollected(market):", 
-            "    return((MARKETS.getFees(market) - INFO.getCreationFee(market))/2)"
+            "def getEventsWithSubmittedReport(branch, period, reporter):", 
+            "    self.test_callstack()", 
+            "    numEvents = EXPEVENTS.getNumberEvents(branch, period)", 
+            "    events = array(numEvents)", 
+            "    n = 0", 
+            "    i = 0", 
+            "    while(i < numEvents):", 
+            "        eventID = EXPEVENTS.getEvent(branch, period, i)", 
+            "        if(EXPEVENTS.getReport(branch, period, eventID, reporter)):", 
+            "            events[n] = eventID", 
+            "            n += 1", 
+            "        i += 1", 
+            "", 
+            "    return(slice(events, items=0, items=n): arr)"
         ], 
         "fullsig": [
             {
@@ -3092,15 +3106,23 @@
                 "constant": false, 
                 "inputs": [
                     {
-                        "name": "market", 
+                        "name": "branch", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "period", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "reporter", 
                         "type": "int256"
                     }
                 ], 
-                "name": "getMarketCreatorFeesCollected(int256)", 
+                "name": "getEventsWithSubmittedReport(int256,int256,int256)", 
                 "outputs": [
                     {
                         "name": "out", 
-                        "type": "int256"
+                        "type": "int256[]"
                     }
                 ], 
                 "type": "function"
@@ -3181,7 +3203,7 @@
                 "type": "function"
             }
         ], 
-        "sig": "extern compositeGetters: [batchGetMarketInfo:[int256[],int256]:int256[], getMarketCreatorFeesCollected:[int256]:int256, getMarketInfo:[int256,int256]:int256[], getMarketsInfo:[int256,int256,int256]:int256[], getOrderBook:[int256]:int256[], test_callstack:[]:int256]"
+        "sig": "extern compositeGetters: [batchGetMarketInfo:[int256[],int256]:int256[], getEventsWithSubmittedReport:[int256,int256,int256]:int256[], getMarketInfo:[int256,int256]:int256[], getMarketsInfo:[int256,int256,int256]:int256[], getOrderBook:[int256]:int256[], test_callstack:[]:int256]"
     }, 
     "consensus": {
         "address": "0xfb262777af60c63de479ba9237861e89ca5dd8ba", 
