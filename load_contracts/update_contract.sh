@@ -9,7 +9,7 @@ set -e
 if [ "$#" -eq 1 ]; then
     ./load_contracts.py --contract $1
 else
-    ./load_contracts.py --blocktime 4
+    ./load_contracts.py
 fi
 ./generate_gospel.py -i $AUGUR_CONTRACTS/contracts.json -o $AUGUR_CONTRACTS/contracts.json
 ./make_api.py -i $AUGUR_CONTRACTS/api.json -o $AUGUR_CONTRACTS/api.json
