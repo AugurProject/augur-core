@@ -38,6 +38,7 @@ def buyCompleteSets(market, fxpAmount):
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
+    adjustForCategorical()
     cost = fxpAmount * cumulativeScale / ONE
     checkBuyCompleteSetsPreconditions()
     
@@ -64,6 +65,7 @@ def sellCompleteSets(market, fxpAmount):
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
+    adjustForCategorical()
     cost = fxpAmount * cumulativeScale / ONE
     checkSellCompleteSetsPreconditions()
 
@@ -98,3 +100,7 @@ macro checkSellCompleteSetsPreconditions():
             return(-3)
         n += 1
     n = 1
+
+macro adjustForCategorical():
+    if(MARKETS.getMarketNumOutcomes(market) > 2):
+        cumulativeScale = ONE

@@ -5,13 +5,12 @@ import info as INFO
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 
-# Payout a trader in a market with one winning outcome [so not scalar]
+# Payout a trader in a market with one winning outcome [so not scalar or determinate categoricals]
 # Error:
     # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant # 0 is really # 0]
 # whitelist this
 def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes):
     callstackCheck()
-    cumulativeScale = MARKETS.getCumulativeScale(market)
     # if it's an indeterminate categorical market resolve with all outcomes having an equal value
     if(categoricalPointFive):
         i = 0
@@ -25,12 +24,12 @@ def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes
 macro payoutIndeterminateCategorical():
     sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, i + 1)
     MARKETS.modifyParticipantShares(market, sender, i + 1, -sharesOwned, 0)
-    if(!INFO.getWallet(market).transfer(sender, sharesOwned * MARKETS.getCumulativeScale(market) / (numOutcomes * ONE))):
+    if(!INFO.getWallet(market).transfer(sender, sharesOwned / numOutcomes)):
         throw()
-        
+
 macro payoutRegularOneOutcomeMarket():
     # distribute profit to the people who won money by holding winning shares
     sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, winningOutcome)
     MARKETS.modifyParticipantShares(market, sender, winningOutcome, -sharesOwned, 0)
-    if(!INFO.getWallet(market).transfer(sender, sharesOwned * cumulativeScale / ONE)):
+    if(!INFO.getWallet(market).transfer(sender, sharesOwned)):
         throw()

@@ -21,6 +21,8 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
     pricePerShare2 = ONE * (outcome - minValue) / (maxValue - minValue)
     # share one goes with the low/short side of the calc
     pricePerShare1 = ONE - pricePerShare2
+    if(pricePerShare1 + pricePerShare2):
+        normalizePrices()
     # for each winning outcome get rid of shares and send money to the trader
     n = 0
     cumulativeScale = MARKETS.getCumulativeScale(market)
@@ -41,3 +43,8 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
             throw()
         n += 1
     return(1)
+
+macro normalizePrices():
+    denominator = pricePerShare1 + pricePerShare1
+    pricePerShare1 = pricePerShare1 / denominator
+    pricePerShare2 = pricePerShare2 / denominator
