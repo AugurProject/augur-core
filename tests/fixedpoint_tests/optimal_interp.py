@@ -19,7 +19,7 @@ LOG2E = gmpy2.log2(gmpy2.exp(1))
 LN2 = gmpy2.log(2)
 # Same, as 192.64 fixedpoint
 FX_PI = int(PI * 2**64)
-FX_LOG2E = int(LOG2E * 2**64)
+fxLog2E = int(LOG2E * 2**64)
 FX_LN2 = int(LN2 * 2**64)
 FX_ONE = 1 << 64
 ## The index of a poly is the power of x,
@@ -129,7 +129,7 @@ def fx_relative_random_error(fx_func, ref_func, trials, a, b):
         bisect.insort(errors, diff*100/expected)
     return sum(map(abs, errors[trials/4:3*trials/4]))*4/trials, min(errors), max(errors), errors[len(errors)/2], max_err, min_err
 
-def fx_floor_log2(x):
+def fxFloorLog2(x):
     y = x >> 64
     lo = 0
     hi = 191
@@ -142,21 +142,21 @@ def fx_floor_log2(x):
         mid = (lo + hi) >> 1 
     return lo
 
-def fx_log2(x, log2_poly):
-    y = fx_floor_log2(x)
+def fxLog2(x, log2_poly):
+    y = fxFloorLog2(x)
     z = x >> y # z = x/2^y
     return (y << 64) + fx_poly_eval(log2_poly, z)
 
-def fx_log(x, log2_poly):
-    return (fx_log2(x, log2_poly) << 64) / FX_LOG2E
+def fxLog(x, log2_poly):
+    return (fxLog2(x, log2_poly) << 64) / fxLog2E
 
-def fx_exp2(x, exp2_poly):
+def fxExp2(x, exp2_poly):
     y = x >> 64
     z = x % (1 << 64)
     return fx_poly_eval(exp2_poly, z) << y
 
-def fx_exp(x, exp2_poly):
-    return fx_exp2((x << 64)/FX_LN2, exp2_poly) 
+def fxExp(x, exp2_poly):
+    return fxExp2((x << 64)/FX_LN2, exp2_poly) 
 
 ## The tests combine the fixedpoint functions
 ## with the interpolation functions above, to
@@ -171,9 +171,9 @@ def test_interps_random(trials, *range_args):
         'max_rel:%E%%', 'mode_rel:%E%%',
         'max_diff:%E%%', 'min_diff:%E%%'
     ])
-    errstr = '\terror in fx_log:\n\t\t'
+    errstr = '\terror in fxLog:\n\t\t'
     errstr += datastr
-    errstr += '\n\terror in fx_exp:\n\t\t'
+    errstr += '\n\terror in fxExp:\n\t\t'
     errstr += datastr
 
     for i in range(*range_args):
@@ -181,8 +181,8 @@ def test_interps_random(trials, *range_args):
         log2_poly = make_fx_poly(optimal_interp(gmpy2.log2, i, 1, 2))
         exp2_poly = make_fx_poly(optimal_interp(gmpy2.exp2, i, 0, 1))
 
-        logf = lambda x: fx_log(x, log2_poly)
-        expf = lambda x: fx_exp(x, exp2_poly)
+        logf = lambda x: fxLog(x, log2_poly)
+        expf = lambda x: fxExp(x, exp2_poly)
         
         max_log_err = fx_relative_random_error(logf, gmpy2.log, trials, log_min, log_max)
         max_exp_err = fx_relative_random_error(expf, gmpy2.exp, trials, exp_min, exp_max)
@@ -201,8 +201,8 @@ def graph_errors(*range_args):
     log_ys = map(gmpy2.log, log_xs)
 
     funcs = [
-        (fx_exp, gmpy2.exp2, 0, 1, exp_xs, exp_ys, 'exp'),
-        (fx_log, gmpy2.log2, 1, 2, log_xs, log_ys, 'log'),
+        (fxExp, gmpy2.exp2, 0, 1, exp_xs, exp_ys, 'exp'),
+        (fxLog, gmpy2.log2, 1, 2, log_xs, log_ys, 'log'),
     ]
 
     for i in range(*range_args):
@@ -237,22 +237,22 @@ def graph_errors(*range_args):
 
 def generate_serpent(*range_args):
     exp_code = '''\
-macro fx_exp2_small($x):
+macro fxExp2Small($x):
     with $result = %s0x{poly[0]:X}:
         with $temp = $x:
             {interp_code}
 
-macro fx_exp2($x):
+macro fxExp2($x):
     with $y = $x / 0x{FX_ONE:X}:
         with $z = $x %% 0x{FX_ONE:X}:
-            fx_exp2_small($z) * 2**y
+            fxExp2Small($z) * 2**y
 
-macro fx_exp($x):
-    fx_exp2($x * 0x{FX_ONE:X} / 0x{FX_LN2:X})
+macro fxExp($x):
+    fxExp2($x * 0x{FX_ONE:X} / 0x{FX_LN2:X})
 '''
 
     log_code = '''
-macro fx_floor_log2($x):
+macro fxFloorLog2($x):
     with $y = $x / 0x{FX_ONE:X}:
         with $lo = 0:
             with $hi = 191:
@@ -265,18 +265,18 @@ macro fx_floor_log2($x):
                         $mid = ($hi + $lo)/2
                     $lo
 
-macro fx_log2_small($x):
+macro fxLog2Small($x):
     with $result = %s0x{poly[0]:X}:
         with $temp = $x:
             {interp_code}
 
-macro fx_log2($x):
-    with $y = fx_floor_log2($x):
+macro fxLog2($x):
+    with $y = fxFloorLog2($x):
         with $z = $x / 2**$y:
-            $y * 0x{FX_ONE:X} + fx_log2_small($z)
+            $y * 0x{FX_ONE:X} + fxLog2Small($z)
 
-macro fx_log($x):
-    fx_log2($x) * 0x{FX_ONE:X} / 0x{FX_LOG2E:X}
+macro fxLog($x):
+    fxLog2($x) * 0x{FX_ONE:X} / 0x{fxLog2E:X}
 '''
 
     code_items = [

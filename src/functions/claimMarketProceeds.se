@@ -30,6 +30,8 @@ import twoWinningOutcomePayouts as CLOSETWO
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 
+macro MAX_WINNING_OUTCOMES: 8
+
 # If ethicality value <.5 it's 0, otherwise it's ethical
 macro ethicCatch($x):
     if($x < ONE_HALF):
@@ -56,8 +58,8 @@ def claimProceeds(market):
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)
-    winningOutcomes = array(8)
-    winningOutcomes = MARKET.getWinningOutcomes(market, outitems = 8)
+    winningOutcomes = array(MAX_WINNING_OUTCOMES)
+    winningOutcomes = MARKET.getWinningOutcomes(market, outitems = MAX_WINNING_OUTCOMES)
     success = 0
     # market not resolved
     if(!winningOutcomes[0]):

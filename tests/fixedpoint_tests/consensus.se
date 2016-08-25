@@ -25,7 +25,7 @@
 # ONE = 2^64
 # TRUE = ONE
 # FALSE = -ONE
-# INDETERMINATE = ONEHALF  # 0.5
+# INDETERMINATE = ONE_HALF  # 0.5
 # NO_RESPONSE = 0       # 0
 
 # Arithmetic mean of an array, takes fixed-point inputs
@@ -231,7 +231,7 @@ macro weighted_mode($data, $weights):
 #     with $i = 0:
 #         while $i < $n:
 
-def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr):
+def interpolate(reports:arr, reputation:arr, scaled:arr, scaledMax:arr, scaledMin:arr):
     # return vector: reports_interp
     # reports_filled: [0, flatsize - 1]
     # reports_mask: [flatsize, 2*flatsize - 1]
@@ -251,7 +251,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                                 scaled_reports[idx] = 0
                                             else:
                                                 if scaled[i] == 1:
-                                                    scaled_reports[idx] = fixed_divide(reports[idx] - scaled_min[i], scaled_max[i] - scaled_min[i])
+                                                    scaled_reports[idx] = fixed_divide(reports[idx] - scaledMin[i], scaledMax[i] - scaledMin[i])
                                                 else:
                                                     scaled_reports[idx] = reports[idx]
                                         j += 1
@@ -326,7 +326,7 @@ def interpolate(reports:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_
                                             i += 1
                                 return(reports_interp, items=two_flatsize)
 
-def center(reports_filled:arr, reputation:arr, scaled:arr, scaled_max:arr, scaled_min:arr, max_iterations):
+def center(reports_filled:arr, reputation:arr, scaled:arr, scaledMax:arr, scaledMin:arr, max_iterations):
     with num_players = len(reputation):
         with flatsize = len(reports_filled):
             with num_events = flatsize / num_players:
@@ -495,7 +495,7 @@ def smooth(adjusted_scores:arr, reputation:arr, num_players, num_events):
                     i += 1
             return(smooth_rep, items=num_players)
 
-def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_min:arr, num_players, num_events):
+def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaledMax:arr, scaledMin:arr, num_players, num_events):
     # outcomes_final: [0, num_events - 1]
     # consensus_reward: [num_events, 2*num_events - 1]
     with two_num_events = 2*num_events:
@@ -529,7 +529,7 @@ def consensus(smooth_rep:arr, reports:arr, scaled:arr, scaled_max:arr, scaled_mi
                     with i = 0:
                         while i < num_events:
                             if scaled[i] == 1:
-                                consensus_outcomes[i] = fixed_multiply(outcomes_adj[i], scaled_max[i] - scaled_min[i]) + scaled_min[i]
+                                consensus_outcomes[i] = fixed_multiply(outcomes_adj[i], scaledMax[i] - scaledMin[i]) + scaledMin[i]
                             else:
                                 consensus_outcomes[i] = outcomes_adj[i]
                             i += 1

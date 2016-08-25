@@ -26,7 +26,7 @@
 macro ONE: 2^64
 macro YES: TWO
 macro NO: 2^64
-macro BAD: 3 * ONEHALF
+macro BAD: 3 * ONE_HALF
 macro NA: 0
 macro COINS: 10^6
 macro CATCH_TOLERANCE: 2^64 / 10

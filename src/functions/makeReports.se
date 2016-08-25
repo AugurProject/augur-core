@@ -36,6 +36,9 @@ inset('eventHelpers.se')
 inset('../data_api/periodStage.se')
 ETHCONTRACT = 02323232
 
+macro GAS_SUBSIDY: 3500000
+macro MAX_REPORT_THRESHOLD: 2 ** 192
+
 def makeHash(salt, fxpReport, event, sender):
     hashInfo = array(4)
     hashInfo[0] = sender
@@ -143,7 +146,7 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
     shareFraction = shareValue * ONE / totalVal
     numReportersOnMarket = BRANCHES.getBaseReporters(branch) * ((-(267 * shareFraction ** 2) / (2 * ONE) + (533 * shareFraction) / 2 + 1 * ONE))
     totalFeesInWei = totalFees * WEI_TO_ETH / ONE
-    canPayForThisManyReporters = totalFeesInWei / (3500000 * tx.gasprice)
+    canPayForThisManyReporters = totalFeesInWei / (GAS_SUBSIDY * tx.gasprice)
     lesser = min(canPayForThisManyReporters * ONE, numReportersOnMarket)
     if(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
         EXPEVENTS.refundCost(sender, branch, votePeriod, event)
@@ -227,14 +230,14 @@ macro coverGasCostIfPossible():
     if(diff >= 1):
         EVENTS.addReportersPaidSoFar(event)
         # todo fix this coming from branch b/c it'll get redistributed in collectfees and thus cause issues
-        if(!BRANCHES.getWallet(branch, ETHCONTRACT).transfer(msg.sender, 3500000 * tx.gasprice * ONE / WEI_TO_ETH)):
+        if(!BRANCHES.getWallet(branch, ETHCONTRACT).transfer(msg.sender, GAS_SUBSIDY * tx.gasprice * ONE / WEI_TO_ETH)):
             throw()
 
 macro calculateReportingThreshold():
     threshold = 0
     # if required or threshold has been set b/c wasn't reported on yet
     if(EXPEVENTS.getRequired(event, votePeriod, branch) or EVENTS.getReportingThreshold(event)):
-        threshold = 2 ** 192
+        threshold = MAX_REPORT_THRESHOLD
     # if number of reports event should have hasn't been calculated yet do it
     if(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
         self.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)

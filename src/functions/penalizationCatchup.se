@@ -9,6 +9,7 @@ inset('../data_api/refund.se')
 inset('../data_api/periodStage.se')
 
 macro POINT_NINE: 16602069666338596864
+macro MAX_DELTA: 22
 
 # Call when a user who hasn't reported for a while [and had their rep active] and wants to start again and needs to catch up on penalizations
 # Errors:
@@ -46,9 +47,9 @@ macro redistributeRepFromNotReporting():
     smoothedRep = oldRep * POINT_NINE / ONE
     i = 1
     # if delta >22, max is 23 [1 above, 1 below, and 21 in while loop] penalizations simply so we don't run into out of gas issues
-    if(delta > 22):
+    if(delta > MAX_DELTA):
         smoothedRep = smoothedRep * POINT_NINE / ONE
-        delta = 22
+        delta = MAX_DELTA
     while(i < delta):
         smoothedRep = smoothedRep * POINT_NINE / ONE
         i += 1

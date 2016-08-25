@@ -30,7 +30,9 @@ inset('../data_api/refund.se')
 
 event logPrice(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, tradeid, outcome)
 
-macro ONEPOINTFIVE: 27670116110564327424
+macro ONE_POINT_FIVE: 27670116110564327424
+
+macro MIN_TRADE_VALUE: 184467440738
 
 # Trade types
 macro BID: 1
@@ -194,7 +196,7 @@ macro fillBid():
     # Calculate value
     value = (fill * price) / ONE
     # must trade at least 0.00000001 in value
-    if(value < 184467440738):
+    if(value < MIN_TRADE_VALUE):
         return([-4]: arr)
     # Update trade amount or remove
     if(fill < amount):
@@ -232,14 +234,14 @@ macro fillBid():
 macro fillAsk():
     balance = INFO.getCurrency(market).balanceOf(msg.sender)
     makerFeeRate = MARKETS.getMakerFees(market)
-    takerFee = (ONEPOINTFIVE - makerFeeRate) * fee / ONE
+    takerFee = (ONE_POINT_FIVE - makerFeeRate) * fee / ONE
     totalTradeCost = amount * price * (takerFee + ONE) / ONE ** 2
     # trade value to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilledIncludingFees)
     valueToSpend = min(totalTradeCost, min(fxpMaxValue, balance))
     # Determine fill amount
     fill = valueToSpend * ONE / price * ONE / (takerFee + ONE)
     tradeValueExcludingFees = fill * price / ONE
-    if(tradeValueExcludingFees < 184467440738):
+    if(tradeValueExcludingFees < MIN_TRADE_VALUE):
         return([INSUFFICIENT_BALANCE]: arr)
     # Update trade amount or remove filled trade
     if(fill < amount):
@@ -293,7 +295,7 @@ macro fillShort():
     cost = amount * cumulativeScale / ONE - (amount * price / ONE - takerFeesTotal)
     if(INFO.getCurrency(market).balanceOf(msg.sender) < cost):
         return([INSUFFICIENT_BALANCE]: arr)
-    if(amount * price / ONE < 184467440738):
+    if(amount * price / ONE < MIN_TRADE_VALUE):
         return([-7]: arr)
     
     numOutcomes = MARKETS.getMarketNumOutcomes(market)

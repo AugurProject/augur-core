@@ -17,6 +17,8 @@ macro POINT_ONE: 1844674407370955264
 
 macro POINT_NINE: 16602069666338596864
 
+macro MIN_EVENTS_FOR_WHALE: 30
+
 # Prove both that a reporter voted on less than he/she actually could have and it was <.5 of what they should have reported on using an example event
 # The rep lost here is then sent to the branch's rep account and distributed like other redistributed rep.
 # Note:
@@ -39,7 +41,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     # events a user should be reporting on
     # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
     # a**b=exp(b*ln(a))=e**(b*ln(a)).
-    repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(originalRep) / ONE) * 2 ** 64 / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
+    repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(originalRep) / ONE) * ONE / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
     baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
     numRequiredEvents = EXPEVENTS.getNumRequired(branch, lastPeriod)
     expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn + numRequiredEvents * ONE
@@ -89,7 +91,7 @@ macro redistributeNotEnoughReportsRep():
 macro dealWithWhaleReporters():
     reporterIsAWhale = repConstant >= POINT_ZERO_ONE
     if(reporterIsAWhale):
-        minimum = min(30 + numRequiredEvents, eventsInPeriod)
+        minimum = min(MIN_EVENTS_FOR_WHALE + numRequiredEvents, eventsInPeriod)
         if(expectedEventsForReporterIncludingRequired / ONE < minimum):
             expectedEventsForReporterIncludingRequired = minimum * ONE
     total = repConstant * baseReporters

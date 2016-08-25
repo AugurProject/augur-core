@@ -21,7 +21,7 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
     pricePerShare2 = ONE * (outcome - minValue) / (maxValue - minValue)
     # share one goes with the low/short side of the calc
     pricePerShare1 = ONE - pricePerShare2
-    if(pricePerShare1 + pricePerShare2):
+    if((pricePerShare1 + pricePerShare2) > ONE):
         normalizePrices()
     # for each winning outcome get rid of shares and send money to the trader
     n = 0

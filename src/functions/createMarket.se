@@ -34,6 +34,7 @@ event tradingFeeUpdated(market, fxpTradingFee)
 
 macro POINT_ZERO_THREE: 553402322211286528
 macro COST_PER_REPORTER: 3500000
+macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 
 macro checkSubcurrencyIsValid(contract):
     allowance = $contract.allowance(msg.sender, self)
@@ -164,10 +165,11 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     return(market)
     
 # initialize market and send money to pay for resolution
+# todo fix something off with paying for resolution here and event adding and what if event already added then -500k issue and what if user doesn't send enough to resolve where is check for that
 macro makeMarket():
     $payCosts = currency.transferFrom(msg.sender, INFO.getWallet(branch), creationFee)
     $infoSet = INFO.setInfo(market, description, msg.sender, creationFee, currency, wallet)
-    $initializedMarket = MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpMakerFees, cumulativeScale, numOutcomes, extraInfo, msg.value - 500000 * tx.gasprice, creationFee, expirationDate, value = (msg.value - 500000 * tx.gasprice))
+    $initializedMarket = MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpMakerFees, cumulativeScale, numOutcomes, extraInfo, msg.value - COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, creationFee, expirationDate, value = (msg.value - COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice))
     $makeBranchAndEventAwareOfNewMarket = BRANCHES.addMarketToBranch(branch, market) and EVENTS.addMarket(event, market)
     if($payCosts and $infoSet and $initializedMarket and $makeBranchAndEventAwareOfNewMarket):
         1
@@ -176,12 +178,12 @@ macro makeMarket():
         
 macro addEvent():
     # cost for calculating num. of reports for an event
-    if(!send(EXPEVENTS, 500000 * tx.gasprice)):
+    if(!send(EXPEVENTS, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice)):
         throw()
     wallet = create('wallet.se')
     if(!wallet.initialize(currency)):
         throw()
-    EXPEVENTS.addEvent(branch, futurePeriod, event, 500000 * tx.gasprice, currency, wallet)
+    EXPEVENTS.addEvent(branch, futurePeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet)
     if(!EVENTS.getBond(event)):
         # pay validity / indeterminate protection bond
         period = block.timestamp / TWENTY_FOUR_HR

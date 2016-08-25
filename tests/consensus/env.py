@@ -79,8 +79,8 @@ reports = np.array([[ YES, YES, YES, YES, YES, YES ],
 #                     [ YES, YES, YES, YES, YES, YES ]])
 reputation = [47] * len(reports)
 scaled = [0, 0, 0, 0, 0, 0]
-scaled_max = np.array([YES, YES, YES, YES, YES, YES]).astype(int).tolist()
-scaled_min = np.array([ NO,  NO,  NO,  NO,  NO,  NO]).astype(int).tolist()
+scaledMax = np.array([YES, YES, YES, YES, YES, YES]).astype(int).tolist()
+scaledMin = np.array([ NO,  NO,  NO,  NO,  NO,  NO]).astype(int).tolist()
 
 # bigger!
 # reports = np.array([[ YES, YES, YES, YES, YES, YES,  YES, YES, YES, YES, YES, YES,  YES, YES, YES, YES, YES, YES,  YES, YES, YES, YES, YES, YES,  YES, YES, YES, YES, YES, YES,  YES, YES, YES, YES, YES, YES ],
@@ -91,8 +91,8 @@ scaled_min = np.array([ NO,  NO,  NO,  NO,  NO,  NO]).astype(int).tolist()
 #                     [  NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA,   NA,  NA,  NA,  NA,  NA,  NA ]])
 # reputation = [47, 47, 47, 47]
 # scaled = np.zeros(36).astype(int).tolist()
-# scaled_max = (np.zeros(36) + 2).astype(int).tolist()
-# scaled_min = (np.zeros(36) + 1).astype(int).tolist()
+# scaledMax = (np.zeros(36) + 2).astype(int).tolist()
+# scaledMin = (np.zeros(36) + 1).astype(int).tolist()
 
 num_events = len(reports[0])
 num_reports = len(reputation)
@@ -109,7 +109,7 @@ reports = map(fix, reports.ravel())
 reputation = map(fix, reputation)
 
 c = s.abi_contract(os.path.join(ROOT, "consensus", "interpolate.se"))
-# results = c.interpolate(reports, reputation, scaled, scaled_max, scaled_min, profiling=True)
+# results = c.interpolate(reports, reputation, scaled, scaledMax, scaledMin, profiling=True)
 results = c.interpolate(reports, reputation, profiling=True)
 reports_interp = np.array(results["output"])
 gas_used = results["gas"]

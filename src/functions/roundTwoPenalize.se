@@ -105,6 +105,7 @@ macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn)
     # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max maxPenalty% of their rep respectively
     if($ethics != ethicCatch(ethical) and repChange >= 0 and BACKSTOPS.getDisputedOverEthics(event)):
         if($numReportedOn < 10):
+            # ensures max penalty is 10% per event
             repChange = -$maxPenalty / 10 * repBalance / ONE
         else:
             repChange = -$maxPenalty / $numReportedOn * repBalance / ONE

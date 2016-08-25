@@ -200,7 +200,7 @@ def resolveForkEvent(branch, event):
             scaledMin = ONE
             scaledMax = ONE * EVENTS.getNumOutcomes(event)
         fxpOutcome = mode * (scaledMax - scaledMin) / ONE + scaledMin
-        ethicOutcome = 2 ** 63 * (scaledMax - scaledMin) / ONE + scaledMin
+        ethicOutcome = ONE_HALF * (scaledMax - scaledMin) / ONE + scaledMin
         EVENTS.setOutcome(event, fxpOutcome)
         if(mode == ONE_HALF or !ethical):
             # give event bond money to reporters
@@ -258,7 +258,8 @@ macro returnRoundTwoBond():
     market = EVENTS.getMarket(event, 0)
     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period - 1)/EXPEVENTS.getNumberEvents(branch, period - 1)
     bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2) / 2 ** 64
-    bond = min(bond, 200 * ONE)
+    minBond = 200 * ONE
+    bond = min(bond, minBond)
     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
     BACKSTOPS.setBondReturned(event)
