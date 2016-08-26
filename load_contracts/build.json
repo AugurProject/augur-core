@@ -13542,7 +13542,7 @@
         "sig": "extern slashRep: [slashRep:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "trade": {
-        "address": "0x2dfc03694eb5f9dbc5c0efbb188a133d6e301471", 
+        "address": "0x70953086c3976e9ce8a2e05a5be2702ea3bfb725", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -13856,9 +13856,9 @@
             "    fill = amount", 
             "    # Update trade amount or remove", 
             "    if fill < orig_amount:", 
-            "        TRADES.fill_trade(trade_id, fill)", 
+            "        TRADES.fill_trade(buyer_trade_id, fill)", 
             "    else:", 
-            "        remove_trade(trade_id, market)", 
+            "        remove_trade(buyer_trade_id, market)", 
             "    # Update balances", 
             "    MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 0)", 
             "    MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)", 
@@ -13881,7 +13881,7 @@
             "", 
             "    max_amount -= fill", 
             "    # Log transaction", 
-            "    log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_id, outcome, block.timestamp)", 
+            "    log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, buyer_trade_id, outcome, block.timestamp)", 
             "    MARKETS.setPrice(market, outcome, price)", 
             "    logArrayReturn([SUCCESS, max_amount, fill, price])"
         ], 
