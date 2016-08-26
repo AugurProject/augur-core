@@ -32,7 +32,7 @@ def slashRep(branch, salt, report, reporter, event):
     reportHash = sha3(hashInfo, chars = 32 * len(hashInfo))
     checkSlashRepInvariants()
     
-    CONSENSUS.setSlashed(branch, votePeriod, reporter)
+    ]CONSENSUS.setSlashed(branch, votePeriod, reporter)
     trutherIndex = REPORTING.repIDToIndex(branch, msg.sender)
     # if the truther's rep. account doesn't exist, make one
     if(REPORTING.getReporterID(branch, trutherIndex) != msg.sender):

@@ -80,7 +80,7 @@ macro penalizeOrRewardReporter():
         handleEthicsAndBondRepRedistribution(numReportedOn)
         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
-    
+
 macro handleEthicsAndBondRepRedistribution($numReportedOn):
     # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality
     if(ethics != ethicCatch(EVENTS.getEthics(event)) and repChange >= 0 and BACKSTOPS.getForkedOverEthicality(event)):

@@ -20,4 +20,4 @@ def transfer(receiver, value):
         throw()
     if(!self.currency.transferFrom(self, receiver, cost)):
         throw()
-    return(1)
+    return(1)]

@@ -90,9 +90,8 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
         # Get trade
         trade = array(TRADE_FIELDS)
         trade = TRADES.getTrade(tradeIDs[t], outitems = TRADE_FIELDS)
-        if(!trade):
+        if(!trade[0]):
             return([0]: arr)
-        # Get market
         type = trade[1]
         market = trade[2]
         creator = INFO.getCreator(market)
@@ -161,18 +160,18 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
         # Get trade
         trade = array(TRADE_FIELDS)
         trade = TRADES.getTrade(buyerTradeIDs[t], outitems = TRADE_FIELDS)
-        if(!trade):
+        if(!trade[0]):
             return([0]: arr)
         # Get market
         type = trade[1]
         if(type != BID):
             return([-6]: arr)
         market = trade[2]
-        branch = MARKETS.getBranch(market)
         origAmount = trade[3]
         price = trade[4]
         owner = trade[5]
         outcome = trade[7]
+        branch = MARKETS.getBranch(market)
         checkTradePreconditions()
         fillShort()
         MARKETS.setPrice(market, outcome, price)
@@ -217,12 +216,12 @@ macro fillBid():
     # also pay sender for the shares they're selling
     payTakerFees = INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), branchFees) and INFO.getWallet(market).transfer(creator, creatorFees)
     paySenderMinusFees = INFO.getWallet(market).transfer(msg.sender, value - (branchFees + creatorFees))
-    if(!paySenderMinusFees or !payTakerFees):
+    if(!paySenderMinusFees or !payTakerFees or !branchFees or !creatorFees):
         throw()
     # other party [maker] pays their part of the fee here too [they previously escrowed it in the market]
     fee = fee * makerFeeRate / ONE
     payMakerFees = INFO.getWallet(market).transfer(creator, fee / 2) or INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), fee / 2)
-    if(!payMakerFees):
+    if(!payMakerFees or !fee):
         throw()
     # needed to keep track of how many fees a market has raised
     # only count branch fees here
@@ -261,13 +260,13 @@ macro fillAsk():
 
     payTakerFees = INFO.getCurrency(market).transferFrom(msg.sender, BRANCHES.getWallet(branch, INFO.getCurrency(market)), branchFees) and INFO.getCurrency(market).transferFrom(msg.sender, creator, creatorFees)
     payMaker = INFO.getCurrency(market).transferFrom(msg.sender, owner, valueToSpend - (branchFees + creatorFees))
-    if(!payMaker or !payTakerFees):
+    if(!payMaker or !payTakerFees or !branchFees or !creatorFees):
         throw()
                 
     # other party [maker] pay their part of the fee here too
     makerFee = tradeValueExcludingFees * makerFeeRate / ONE * fee / ONE
     payMakerFees = INFO.getWallet(market).transfer(creator, makerFee / 2) and INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), makerFee / 2)
-    if(!payMakerFees):
+    if(!payMakerFees or !makerFee):
         throw()
 
     # only count branch fees here
@@ -284,7 +283,7 @@ macro fillShort():
     cumulativeScale = MARKETS.getCumulativeScale(market)
     adjustForCategorical()
     amount = min(origAmount, fxpMaxAmount)
-    if(amount < 0):
+    if(amount <= 0):
         return([INSUFFICIENT_BALANCE]: arr)
     fee = amount * price * feePercent(tradingFee, price, cumulativeScale) / ONE ** 2
     makerFeeRate = MARKETS.getMakerFees(market)
@@ -329,14 +328,14 @@ macro fillShort():
     MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
 
     payTakerFees = INFO.getCurrency(market).transferFrom(msg.sender, branch, branchFees) and INFO.getCurrency(market).transferFrom(msg.sender, creator, creatorFees)
-    if(!payTakerFees):
+    if(!payTakerFees or !takerFeesTotal):
         throw()
 
     # other party [maker] pay their part of the fee here too
     fee = fee * makerFeeRate / ONE
 
     payMakerFees = INFO.getWallet(market).transfer(creator, fee / 2) and INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), fee / 2)
-    if(!payMakerFees):
+    if(!payMakerFees or !fee):
         throw()
     
     # only count branch fees here

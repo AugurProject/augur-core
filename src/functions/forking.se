@@ -154,66 +154,10 @@ def resolveForkEvent(branch, event):
         return(-5)
     # binary
     if(binary(event)):
-        fxpOutcome = 0
-        ethical = 0
-        # original parent won
-        if(winner == branch):
-            fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
-            ethical = ethicCatch(EVENTS.getEthics(event))
-        # fork won
-        else:
-            fxpOutcome = catch(EVENTS.getForkOutcome(event))
-            ethical = ethicCatch(EVENTS.getForkEthicality(event))
-        EVENTS.setOutcome(event, fxpOutcome)
-        EVENTS.setEthics(event, ethical)
-        if(fxpOutcome == 3 * ONE_HALF or !ethical):
-            # give event bond money to reporters
-            branchWallet = BRANCHES.getWallet(branch, INFO.getCurrency(event))
-            if(!INFO.getWallet(event).transfer(branchWallet, bond)):
-                throw()
-
-            # not ethical is same as .5 outcome
-            fxpOutcome = 3 * ONE_HALF
-            EVENTS.setOutcome(event, fxpOutcome)
-        else:
-            # return 
-            if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
-                throw()
-        return(1)
+        binaryForkResolve()
     # scalar or categorical
     elif(scalar(event) or categorical(event)):
-        mode = 0
-        ethical = 0
-        # original parent won
-        if(winner == branch):
-            mode = EVENTS.getUncaughtOutcome(event)
-            ethical = ethicCatch(EVENTS.getEthics(event))
-        # fork won
-        else:
-            mode = EVENTS.getForkOutcome(event)
-            ethical = ethicCatch(EVENTS.getForkEthicality(event))
-        EVENTS.setMode(event, mode)
-        EVENTS.setEthics(event, ethical)
-        scaledMax = EVENTS.getMaxValue(event)
-        scaledMin = EVENTS.getMinValue(event)
-        if(categorical(event)):
-            scaledMin = ONE
-            scaledMax = ONE * EVENTS.getNumOutcomes(event)
-        fxpOutcome = mode * (scaledMax - scaledMin) / ONE + scaledMin
-        ethicOutcome = ONE_HALF * (scaledMax - scaledMin) / ONE + scaledMin
-        EVENTS.setOutcome(event, fxpOutcome)
-        if(mode == ONE_HALF or !ethical):
-            # give event bond money to reporters
-            branchWallet = BRANCHES.getWallet(branch, INFO.getCurrency(event))
-            if(!INFO.getWallet(event).transfer(branchWallet, bond)):
-                throw()
-            # not ethical is same as .5 outcome
-            EVENTS.setOutcome(event, ethicOutcome)
-        else:
-            # return bond
-            if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
-                throw()
-        return(1)
+        scalarOrCategoricalForkResolve()
     # (should never be reached)
     else:
         return(0)
@@ -308,3 +252,65 @@ macro moveEventToWinningBranch():
         # push into period it wouldve expired in
         EXPEVENTS.addEvent(winner, expPeriod, event)
         # expiration time doesnt need to change
+
+macro binaryForkResolve():
+    fxpOutcome = 0
+    ethical = 0
+    # original parent won
+    if(winner == branch):
+        fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
+        ethical = ethicCatch(EVENTS.getEthics(event))
+    # fork won
+    else:
+        fxpOutcome = catch(EVENTS.getForkOutcome(event))
+        ethical = ethicCatch(EVENTS.getForkEthicality(event))
+    EVENTS.setOutcome(event, fxpOutcome)
+    EVENTS.setEthics(event, ethical)
+    if(fxpOutcome == 3 * ONE_HALF or !ethical):
+        # give event bond money to reporters
+        branchWallet = BRANCHES.getWallet(branch, INFO.getCurrency(event))
+        if(!INFO.getWallet(event).transfer(branchWallet, bond)):
+            throw()
+
+        # not ethical is same as .5 outcome
+        fxpOutcome = 3 * ONE_HALF
+        EVENTS.setOutcome(event, fxpOutcome)
+    else:
+        # return 
+        if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
+            throw()
+    return(1)
+
+macro scalarOrCategoricalForkResolve():
+    mode = 0
+    ethical = 0
+    # original parent won
+    if(winner == branch):
+        mode = EVENTS.getUncaughtOutcome(event)
+        ethical = ethicCatch(EVENTS.getEthics(event))
+    # fork won
+    else:
+        mode = EVENTS.getForkOutcome(event)
+        ethical = ethicCatch(EVENTS.getForkEthicality(event))
+    EVENTS.setMode(event, mode)
+    EVENTS.setEthics(event, ethical)
+    scaledMax = EVENTS.getMaxValue(event)
+    scaledMin = EVENTS.getMinValue(event)
+    if(categorical(event)):
+        scaledMin = ONE
+        scaledMax = ONE * EVENTS.getNumOutcomes(event)
+    fxpOutcome = mode * (scaledMax - scaledMin) / ONE + scaledMin
+    ethicOutcome = ONE_HALF * (scaledMax - scaledMin) / ONE + scaledMin
+    EVENTS.setOutcome(event, fxpOutcome)
+    if(mode == ONE_HALF or !ethical):
+        # give event bond money to reporters
+        branchWallet = BRANCHES.getWallet(branch, INFO.getCurrency(event))
+        if(!INFO.getWallet(event).transfer(branchWallet, bond)):
+            throw()
+        # not ethical is same as .5 outcome
+        EVENTS.setOutcome(event, ethicOutcome)
+    else:
+        # return bond
+        if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
+            throw()
+    return(1)

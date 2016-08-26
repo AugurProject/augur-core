@@ -51,7 +51,7 @@ macro collectRedistributedRep():
         CONSENSUS.setPeriodBalance(branch, lastPeriod, REPORTING.getRepBalance(branch, branch))
     gainedRep = newRep * CONSENSUS.getPeriodBalance(branch, lastPeriod) / denominator
     # if a user lost rep their newRep should be == EXPEVENTS.getAfterRep(branch, period, sender) + gainedRep
-    # if gained rep ozerall their newRep should be == EXPEVENTS.getBeforeRep(branch, period, sender) + gainedRep
+    # if gained rep overall their newRep should be == EXPEVENTS.getBeforeRep(branch, period, sender) + gainedRep
     # give a reporter their portion of redistributed rep
     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), gainedRep)
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, sender), gainedRep)

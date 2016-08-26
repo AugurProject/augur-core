@@ -57,14 +57,14 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     return(1)
 
 macro checkProveReporterDidntReportEnoughPreconditions():
-    if(EVENTS.getEventBranch(eventExample) != branch):
-        return(-3)
     if(CONSENSUS.getNotEnoughPenalized(branch, reporter, lastPeriod)):
         return(-1)
+    atFirstHalfOfPeriod()
+    if(EVENTS.getEventBranch(eventExample) != branch):
+        return(-3)
     # in period just after fork period no reports required
     if(periodAfterForkPeriod):
         return(-4)
-    atFirstHalfOfPeriod()
 
 macro ensureReporterCouldveReportedOnMoreButDidnt()
     numReportsSubmitted = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, reporter)

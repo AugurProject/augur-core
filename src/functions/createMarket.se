@@ -195,7 +195,7 @@ macro addEvent():
         EVENTS.setBond(event, validityBond)
         EVENTS.addPast24(period)
 
-# Updates a trading fee to be lower in a market
+7# Updates a trading fee to be lower in a market
 # Errors
     # -1: not the market creator
     # -2: invalid new trading fee
