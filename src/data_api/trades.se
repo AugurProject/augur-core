@@ -97,5 +97,5 @@ def remove_trade(id):
     
 def fill_trade(id, fill):
     refund()
-    self.trades[trade_id].amount -= fill
+    self.trades[id].amount -= fill
     return(1)

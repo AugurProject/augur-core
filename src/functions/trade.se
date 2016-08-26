@@ -117,7 +117,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                 if type == BID:
                     # Get available balance of shares
                     balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)
-                    if balance < 0:
+                    if balance <= 0:
                         logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
                     if max_amount > 0:
                         makerFeeRate = MARKETS.getMakerFees(market)
@@ -161,11 +161,11 @@ def trade(max_value, max_amount, trade_ids:arr):
                             log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome, block.timestamp)
                 elif type == ASK:
                     balance = CASH.balance(msg.sender)
-                    if balance < 0:
+                    if balance <= 0:
                         logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
                     makerFeeRate = MARKETS.getMakerFees(market)
                     takerFee = (ONEPOINTFIVE - makerFeeRate)*fee / ONE
-                    total_trade_cost = amount * price * (takerFee+ONE) / ONE**2
+                    total_trade_cost = amount * price / ONE * (takerFee+ONE) / ONE
                     # trade value to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilledIncludingFees)
                     value_to_spend = min(total_trade_cost, min(max_value, balance))
                     # Determine fill amount
@@ -195,7 +195,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                         CASH.subtractCash(market, makerFee)
                         CASH.addCash(creator, makerFee/2)
                         CASH.addCash(branch, makerFee/2)
-                        
+
                         # only count branch fees here
                         MARKETS.addFees(market, makerFee/2+branchFees)
                         # Update max_value
