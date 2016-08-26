@@ -246,7 +246,7 @@ def short_sell(buyer_trade_id, max_amount):
     # Get trade
     trade = array(TRADE_FIELDS)
     trade = TRADES.get_trade(buyer_trade_id, outitems=TRADE_FIELDS)
-    if !trade:
+    if trade[0] == 0:
         logReturn(trade_logReturn, -1)
     # Get market
     type = trade[1]

@@ -13542,7 +13542,7 @@
         "sig": "extern slashRep: [slashRep:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "trade": {
-        "address": "0x545504d2307967889bbe22ca3e27e5e4bb7b18fe", 
+        "address": "0x9a6b1053f76e9e3ee1dc14d7dfd4463a25a8bfe8", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -13798,7 +13798,7 @@
             "    # Get trade", 
             "    trade = array(TRADE_FIELDS)", 
             "    trade = TRADES.get_trade(buyer_trade_id, outitems=TRADE_FIELDS)", 
-            "    if !trade:", 
+            "    if trade[0] == 0:", 
             "        logReturn(trade_logReturn, -1)", 
             "    # Get market", 
             "    type = trade[1]", 
@@ -13850,8 +13850,6 @@
             "    # cost for shares", 
             "    costForShares = cost - takerFeesTotal", 
             "    if(costForShares and !CASH.sendFrom(market, costForShares, msg.sender)):", 
-            "        # logReturn(trade_logReturn, 100)", 
-            "        # logArrayReturn([buyer_trade_id, max_amount, cost, takerFeesTotal, cost-takerFeesTotal, amount, price, cumScale, branchFees, creatorFees, makerFeeRate, trading_fee])", 
             "        throw()", 
             "", 
             "    # Fill buy order [short selling the outcome user doesn't want]", 
@@ -13868,11 +13866,9 @@
             "    # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]", 
             "    # 75% to branch + .5% more to branch per maker fee 1% decrease", 
             "    if(branchFees and !CASH.sendFrom(branch, branchFees, msg.sender)):", 
-            "        logReturn(trade_logReturn, 101)", 
             "        throw()", 
             "    # 25% to creator + .5% more to creator per 1% decrease in maker fees", 
             "    if(creatorFees and !CASH.sendFrom(creator, creatorFees, msg.sender)):", 
-            "        logReturn(trade_logReturn, 102)", 
             "        throw()", 
             "", 
             "    # other party [maker] pay their part of the fee here too", 
