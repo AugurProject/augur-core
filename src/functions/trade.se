@@ -323,7 +323,7 @@ def short_sell(buyer_trade_id, max_amount):
     CASH.subtractCash(market, fee)
     CASH.addCash(creator, fee/2)
     CASH.addCash(branch, fee/2)
-    
+
     # only count branch fees here
     MARKETS.addFees(market, fee/2+branchFees)
 

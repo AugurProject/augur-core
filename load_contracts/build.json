@@ -13542,7 +13542,7 @@
         "sig": "extern slashRep: [slashRep:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "trade": {
-        "address": "0x70953086c3976e9ce8a2e05a5be2702ea3bfb725", 
+        "address": "0x67271f461d1c363212abb27a8e36d61776b52a91", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
