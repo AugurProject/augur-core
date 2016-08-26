@@ -65,7 +65,7 @@ def moveEvent(event):
 # todo fork use address picked in market creation to resolve it and have a default fork resolve option
 def resolveFork(branch):
     callstackCheck()
-    # do whitelist
+    # do whitelist to only allow call w/ move event - but what if only 1 event and that's the one we fork over, in that case need the ability to call resolve fork manually if it hasn't been done yet within the time parameters which allows a fork to be resolved [2 periods after the start]
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     origCap = self.exchangeRate(branch)
@@ -180,7 +180,7 @@ def resolveForkEvent(branch, event):
             if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
                 throw()
         return(1)
-    # scalar
+    # scalar or categorical
     elif(scalar(event) or categorical(event)):
         mode = 0
         ethical = 0
@@ -264,6 +264,14 @@ macro returnRoundTwoBond():
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
     BACKSTOPS.setBondReturned(event)
 
+macro checkMoveEventPreconditions():
+    # todo getoutcome may not work
+    if(!branch or !event or currentPeriod != (forkPeriod + 2) or EVENTS.getOutcome(event) or BACKSTOPS.getMoved(event)):
+        return(0)
+    winner = BACKSTOPS.getResolved(branch, forkPeriod)
+    if(!winner):
+        winner = self.resolveFork(branch)
+
 macro keepEventInOriginalBranch():
     # set outcomes to 0
     EVENTS.setOutcome(event, 0)
@@ -300,11 +308,3 @@ macro moveEventToWinningBranch():
         # push into period it wouldve expired in
         EXPEVENTS.addEvent(winner, expPeriod, event)
         # expiration time doesnt need to change
-
-macro checkMoveEventPreconditions():
-    # todo getoutcome may not work
-    if(!branch or !event or currentPeriod != (forkPeriod + 2) or EVENTS.getOutcome(event) or BACKSTOPS.getMoved(event)):
-        return(0)
-    winner = BACKSTOPS.getResolved(branch, forkPeriod)
-    if(!winner):
-        winner = self.resolveFork(branch)

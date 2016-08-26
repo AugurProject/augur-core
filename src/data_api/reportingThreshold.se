@@ -32,6 +32,7 @@ def calculateReportingThreshold(branch, event, period, sender):
 
 # Gets events a reporter should report on
 # switch to use start and end todo
+# start is the event index we want to start fetching events to report on from
 def getEventsToReportOn(branch, period, sender, start):
     callstackCheck()
     numEvents = EXPEVENTS.getNumberEvents(branch, period)
@@ -60,6 +61,8 @@ def getEventsToReportOn(branch, period, sender, start):
     return(events: arr)
 
 # Gets whether a reporter is able to report on a given event or not
+# Returns 1 if able
+# Errors: 0 if not
 def getEventCanReportOn(branch, period, reporter, event):
     callstackCheck()
     if(!EXPEVENTS.getLesserReportNum(branch, period, events[i])):
@@ -68,7 +71,7 @@ def getEventCanReportOn(branch, period, reporter, event):
 
     x = array(1)
     x[0] = reporter + event
-    # do abs then mult by 2 to ensure pos. and between 0 and 1
+    # do abs then mult by 2 to ensure it's positive and between 0 and 1
     shaHash = (abs(sha3(x, items = 1)) / ONE) * 2
     wasAbleToReportOn = shaHash < reportingThreshold or EXPEVENTS.getRequired(event, period, branch)
     if(!wasAbleToReportOn):
@@ -76,25 +79,22 @@ def getEventCanReportOn(branch, period, reporter, event):
     return(1)
 
 # In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold, UI calls this.
+# Returns 1 if the event's reporting threshold has been set
+# Errors: 0 if the event can't be reported on
 def setReportingThreshold(event):
     callstackCheck()
     # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
     # final check is if no reports on event
-    # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this one
+    # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this half
     branch = EVENTS.getEventBranch(event)
     periodLength = BRANCHES.getPeriodLength(branch)
     inCurrentVotePeriod = (BRANCHES.getVotePeriod(branch) == EVENTS.getExpiration(event) / periodLength)
     noReportsOnEvent = !EVENTS.getUncaughtOutcome(event)
-    periodEndsInLessThanADay = ((block.timestamp + TWENTY_FOUR_HR) % periodLength) > (periodLength / 2)
-    if(!inCurrentVotePeriod or !periodEndsInLessThanADay or !noReportsOnEvent):
+    periodHalfEndsInLessThanADay = ((block.timestamp + TWENTY_FOUR_HR) % periodLength) > (periodLength / 2)
+    if(!inCurrentVotePeriod or !periodHalfEndsInLessThanADay or !noReportsOnEvent):
         return(0)
     EVENTS.setThreshold(event, MAX_THRESHOLD)
     return(1)
-
-macro abs($a):
-    if($a < 0):
-        $a = -$a
-    $a
 
 macro calculateAndSetRepConstant():
     repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getRepBalance(branch, sender)) / ONE) * ONE / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
@@ -110,3 +110,8 @@ macro calculateAndSetRepConstant():
             expectedEventsForReporter = minimum * ONE
             repConstant = expectedEventsForReporter / numEventsAvailableToReportOn
     EXPEVENTS.setPeriodRepWeight(branch, period, sender, repConstant)
+
+macro abs($a):
+    if($a < 0):
+        $a = -$a
+    $a

@@ -9,8 +9,8 @@ inset('../data_api/refund.se')
 inset('../data_api/periodStage.se')
 
 # Anti cheat/collusion mechanism: provide ballot and random salt to steal rep from a colluder
-# Returns:
-    # 1: on success
+# Returns 1 on success
+# Errors:
     # -1: invalid vote period
     # -2: past reveal date
     # -3: reporter being slashed doesn't exist
@@ -48,15 +48,16 @@ def slashRep(branch, salt, report, reporter, event):
     return(1)
 
 macro checkSlashRepInvariants():
-    if(EVENTS.getEventBranch(event) != branch):
-        return(-5)
-    atFirstHalfOfPeriod()
     if(votePeriodShouldBe != votePeriod):
         return(-1)
+    atFirstHalfOfPeriod()
     reporterIndex = REPORTING.repIDToIndex(branch, reporter)
     if(REPORTING.getReporterID(branch, reporterIndex) != reporter):
         return(-3)
-    if(alreadySlashed):
-        return(-6)
     if(reportHash != realHash):
         return(-4)
+    if(EVENTS.getEventBranch(event) != branch):
+        return(-5)
+    if(alreadySlashed):
+        return(-6)
+    

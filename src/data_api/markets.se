@@ -214,42 +214,6 @@ def modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
         self.Markets[market].volume += fxpAmount
     return(1)
 
-def setWinningOutcomes(market, outcomes: arr):
-    #if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
-    # largest # of winning outcomes is 8
-    save(self.Markets[market].winningOutcomes[0], outcomes, items = len(outcomes))
-    return(1)
-
-def getWinningOutcomes(market):
-    # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
-    #if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
-    # largest # of winning outcomes is 8
-    return(load(self.Markets[market].winningOutcomes[0], items = 8): arr)
-
-def getOneWinningOutcome(market, num):
-    # whitelist
-    return(self.Markets[market].winningOutcomes[num])
-
-def setTradingFee(market, fee):
-    self.Markets[market].fxpTradingFee = fee
-    return(fee)
-
-def setPushedForward(market, bool, sender):
-    self.Markets[market].pushingForward = bool
-    self.Markets[market].bondsMan = sender
-    return(1)
-
-def getPushedForward(market):
-    return(self.Markets[market].pushingForward)
-
-def getBondsMan(market):
-    return(self.Markets[market].bondsMan)
-
-def getLastTrade(market):
-    return(self.Markets[market].lastTrade)
-
 def addTrade(market, tradeID):
     callstackCheck()
     self.Markets[market].tradeIDs[lastID].nextID = tradeID
@@ -295,6 +259,42 @@ def getTradeIDs(marketID):
     if(tradeIDs):
         return(tradeIDs:arr)
     return([FAILURE]:arr)
+
+def setWinningOutcomes(market, outcomes: arr):
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    # largest # of winning outcomes is 8
+    save(self.Markets[market].winningOutcomes[0], outcomes, items = len(outcomes))
+    return(1)
+
+def getWinningOutcomes(market):
+    # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    # largest # of winning outcomes is 8
+    return(load(self.Markets[market].winningOutcomes[0], items = 8): arr)
+
+def getOneWinningOutcome(market, num):
+    # whitelist
+    return(self.Markets[market].winningOutcomes[num])
+
+def setTradingFee(market, fee):
+    self.Markets[market].fxpTradingFee = fee
+    return(fee)
+
+def setPushedForward(market, bool, sender):
+    self.Markets[market].pushingForward = bool
+    self.Markets[market].bondsMan = sender
+    return(1)
+
+def getPushedForward(market):
+    return(self.Markets[market].pushingForward)
+
+def getBondsMan(market):
+    return(self.Markets[market].bondsMan)
+
+def getLastTrade(market):
+    return(self.Markets[market].lastTrade)
 
 def getPrevID(market, trade):
     return(self.Markets[market].tradeIDs[trade].prevID)

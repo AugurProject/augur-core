@@ -13,8 +13,8 @@ macro MAX_DELTA: 22
 
 # Call when a user who hasn't reported for a while [and had their rep active] and wants to start again and needs to catch up on penalizations
 # Errors:
-    # -1: not in first half of reporting period
-    # -2: doesn't need to be penalized/caught up
+    # -1: doesn't need to be penalized/caught up
+    # -2: not in first half of reporting period
     # -3: user isn't behind or reported in the last period [and should thus use the penalization functions in consensus.se]
 # whitelist this
 def penalizationCatchup(branch, sender):
@@ -35,7 +35,7 @@ macro checkPenalizationCatchupPreconditions():
     # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
     atFirstHalfOfPeriod()
     if(delta <= 0):
-        return(-2)
+        return(-1)
     # provided user is at least one period behind and they didn't report in the last period
     alreadyPenalized = (lastPeriodPenalized == lastPeriod)
     reportedLastPeriod = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, sender)

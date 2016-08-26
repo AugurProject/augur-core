@@ -46,15 +46,14 @@ macro categorical($event):
 # @returns 1 if successful
 # Errors:
     # 0: market not resolved
-    # -1: trader doesn't exist
-    # -2: market doesn't exist
+    # -1: market doesn't exist
 #data withdrawInitiated[]
 # todo macro THREEDAYS: 259200 add to getting $ for shares
 def claimProceeds(market):
     refund()
     branch = MARKETS.getBranch(market)
     if(!branch):
-        return(-2)
+        return(-1)
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)

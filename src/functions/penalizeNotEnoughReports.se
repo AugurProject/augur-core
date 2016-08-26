@@ -25,9 +25,11 @@ macro MIN_EVENTS_FOR_WHALE: 30
     # Reporters pay an eth bond for this on their first report --- if never called then during collect fees they get it back else it goes back to pay someone who correctly calls this function, so the bond is returned to the poster if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees [which means it's the first period after a fork is initiated]
 # Returns 1 if successful penalization
 # Errors:
+    # 0: branch or event example don't exist
     # -1: already done
     # -2: not in right part of period
     # -3: event isn't in branch
+    # -4: fork period exemption
     # Returns 2 if didn't need to be penalized and thus wasn't
 def proveReporterDidntReportEnough(branch, reporter, eventExample):
     refund()
@@ -60,9 +62,17 @@ macro checkProveReporterDidntReportEnoughPreconditions():
     if(CONSENSUS.getNotEnoughPenalized(branch, reporter, lastPeriod)):
         return(-1)
     # in period just after fork period no reports required
-    if(!reportedOnLessThanShouldve or periodAfterForkPeriod):
+    if(periodAfterForkPeriod):
         return(-4)
     atFirstHalfOfPeriod()
+
+macro ensureReporterCouldveReportedOnMoreButDidnt()
+    numReportsSubmitted = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, reporter)
+    # reporter couldve reported on event example but didnt
+    couldveReported = THRESHOLD.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
+    reportedOnLessThanShouldve = expectedEventsForReporterIncludingRequired / 2 > numReportsSubmitted * ONE and couldveReported
+    if(!reportedOnLessThanShouldve):
+        return(-4)
 
 macro redistributeNotEnoughReportsRep():
     # penalize people
@@ -99,9 +109,3 @@ macro dealWithWhaleReporters():
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*baseReporters > 1)
     if(total > ONE):
         expectedEventsForReporterIncludingRequired = (numEventsAvailableToReportOn / baseReporters) * ONE + numRequiredEvents * ONE
-
-macro ensureReporterCouldveReportedOnMoreButDidnt()
-    numReportsSubmitted = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, reporter)
-    # reporter couldve reported on event example but didnt
-    couldveReported = THRESHOLD.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
-    reportedOnLessThanShouldve = expectedEventsForReporterIncludingRequired / 2 > numReportsSubmitted * ONE and couldveReported

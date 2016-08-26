@@ -21,15 +21,6 @@ macro POINT_ZERO_ONE: 184467440737095520
 macro POINT_EIGHT: 14757395258967642112
 macro POINT_TWO: 1844674407370955264
 
-macro periodOver($branch):
-    # what the current vote period should be
-    currentVotePeriod = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
-    # if actual vote period is less than what the current one should be, return 1, it can be incremented
-    if(BRANCHES.getVotePeriod($branch) < currentVotePeriod):
-        1
-    else:
-        0
-
 # Penalizes a reporter for reporting wrongly on an event
     # examples from the start of a new branch:
         # ex:
@@ -109,9 +100,9 @@ def incrementPeriodAfterReporting(branch):
     # do this after reporting is finished
     if(!periodOver(branch)):
         return(0)
-    period = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
-    lastPeriod = period - 1
-    amountAppealedThisPeriod = EXPEVENTS.getNumRoundTwo(branch, period) * ONE / EXPEVENTS.getNumberEvents(branch, period)
+    periodVotingOnNow = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
+    lastPeriod = periodVotingOnNow - 1
+    amountAppealedThisPeriod = EXPEVENTS.getNumRoundTwo(branch, periodVotingOnNow) * ONE / EXPEVENTS.getNumberEvents(branch, periodVotingOnNow)
     amountAppealedLastPeriod = EXPEVENTS.getNumRoundTwo(branch, lastPeriod) * ONE / EXPEVENTS.getNumberEvents(branch, lastPeriod)
     percentAppealed = (amountAppealedThisPeriod + amountAppealedLastPeriod) / 2
     BRANCHES.incrementPeriod(branch)
@@ -157,3 +148,12 @@ macro countAsPenalized():
 macro updateAfterRep():
     newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
     EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+
+macro periodOver($branch):
+    # what the current vote period should be
+    currentVotePeriod = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
+    # if actual vote period is less than what the current one should be, return 1, it can be incremented
+    if(BRANCHES.getVotePeriod($branch) < currentVotePeriod):
+        1
+    else:
+        0

@@ -9,66 +9,6 @@ inset('eventHelpers.se')
 
 ### Serves to resolve eents
 
-## helper function to close an event for resolution
-macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $periodLength, $ethical, $scalarorcat, $mode, $ethicOutcome):
-    callstackCheck()
-    # In the $event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
-    # and $market remains with old expiration date
-    # UI needs to call penalizeWrong for ones that are pushed back in both pushed back period and regular period with actual reporting
-    $indeterminate = ONE_HALF * 3
-    $indeterminateAndReadyToResolve = ($fxpOutcome == $indeterminate or $mode == ONE_HALF)
-    $indeterminateNotReadyToResolveEarlyEvent = ($fxpOutcome == $indeterminate or $mode == ONE_HALF) and EVENTS.getEventPushedUp($event)
-    if($indeterminateNotReadyToResolveEarlyEvent):
-        if(MARKETS.getPushedForward($market)):
-            # look @ total shares purchase cutoff times for early resolution bonds
-            amount = MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE)
-            branchWallet = BRANCHES.getWallet($branch, INFO.getCurrency($market))
-            if(!INFO.getWallet($market).transfer(branchWallet, amount)):
-                throw()
-        MARKETS.setTradingPeriod($market, MARKETS.getOriginalTradingPeriod($market))
-        MARKETS.setPushedForward($market, 0, msg.sender)
-        EXPEVENTS.setEventWeight($branch, $votingPeriodEvent, $event, 0)
-        # set outcome to 0
-        EVENTS.setOutcome($event, 0)
-        EVENTS.setMode($event, 0)
-        EVENTS.setEthics($event, 0)
-        # set uncaughtoutcome to 0
-        EVENTS.setUncaughtOutcome($event, 0)
-        EVENTS.setEventPushedUp($event, 0)
-        # need to store which period it was "rejected" in
-        EVENTS.setRejected($event, EVENTS.getExpiration($event) / $periodLength)
-        # set $event expiration to be the old date
-        EVENTS.setExpiration($event, EVENTS.getOriginalExpiration($event))
-        -6
-    
-    elif($indeterminateAndReadyToResolve or !ethical):
-        # give $event bond money to reporters
-        branchWallet = BRANCHES.getWallet($branch, INFO.getCurrency($event))
-        if(!INFO.getWallet($event).transfer(branchWallet, EVENTS.getBond($event))):
-            throw()
-        # not $ethical is same as .5 outcome
-        if($scalarorcat):
-            # the mode is used to compare for reporting accuracy. so still the same as the reported uncaught outcome/mode, but resolving the market as .5 right in the middle of the range so payouts are done right for an unethical [or indeterminate] market
-            EVENTS.setOutcome($event, $ethicOutcome)
-        else:
-            EVENTS.setOutcome($event, $indeterminate)
-        1
-    else:
-        # return bond as a normal event resolution
-        if(!INFO.getWallet($event).transfer(INFO.getCreator($event), EVENTS.getBond($event))):
-            throw()
-        if(MARKETS.getPushedForward($market)):
-            amount = MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE)
-            if(!INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), amount)):
-                throw()
-        if(EVENTS.getEventPushedUp($event)):
-            # delete old $event from future events exp
-            $period = EVENTS.getOriginalExpiration($event) / $periodLength
-            EXPEVENTS.removeEvent($branch, $period)
-            EXPEVENTS.deleteEvent($branch, $period, $event)
-            EVENTS.setOriginalExpiration($event, EVENTS.getExpiration($event))
-        1
-
 # Resolves a binary market
 # whitelist
 def resolveBinary(event, market, branch, votingPeriodEvent):
@@ -117,3 +57,62 @@ def determineWinningOutcomes(event):
     else:
         winningOutcomes[0] += outcome
     return(winningOutcomes: arr)
+
+## helper function to close an event for resolution
+macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $periodLength, $ethical, $scalarorcat, $mode, $ethicOutcome):
+    callstackCheck()
+    # In the $event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
+    # and $market remains with old expiration date
+    # UI needs to call penalizeWrong for ones that are pushed back in both pushed back period and regular period with actual reporting
+    $indeterminate = ONE_HALF * 3
+    $indeterminateAndReadyToResolve = ($fxpOutcome == $indeterminate or $mode == ONE_HALF)
+    $indeterminateNotReadyToResolveEarlyEvent = ($fxpOutcome == $indeterminate or $mode == ONE_HALF) and EVENTS.getEventPushedUp($event)
+    if($indeterminateNotReadyToResolveEarlyEvent):
+        if(MARKETS.getPushedForward($market)):
+            # look @ total shares purchase cutoff times for early resolution bonds
+            amount = MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE)
+            branchWallet = BRANCHES.getWallet($branch, INFO.getCurrency($market))
+            if(!INFO.getWallet($market).transfer(branchWallet, amount)):
+                throw()
+        MARKETS.setTradingPeriod($market, MARKETS.getOriginalTradingPeriod($market))
+        MARKETS.setPushedForward($market, 0, msg.sender)
+        EXPEVENTS.setEventWeight($branch, $votingPeriodEvent, $event, 0)
+        # set outcome to 0
+        EVENTS.setOutcome($event, 0)
+        EVENTS.setMode($event, 0)
+        EVENTS.setEthics($event, 0)
+        # set uncaughtoutcome to 0
+        EVENTS.setUncaughtOutcome($event, 0)
+        EVENTS.setEventPushedUp($event, 0)
+        # need to store which period it was "rejected" in
+        EVENTS.setRejected($event, EVENTS.getExpiration($event) / $periodLength)
+        # set $event expiration to be the old date
+        EVENTS.setExpiration($event, EVENTS.getOriginalExpiration($event))
+        -6
+    elif($indeterminateAndReadyToResolve or !ethical):
+        # give $event bond money to reporters
+        branchWallet = BRANCHES.getWallet($branch, INFO.getCurrency($event))
+        if(!INFO.getWallet($event).transfer(branchWallet, EVENTS.getBond($event))):
+            throw()
+        # not $ethical is same as .5 outcome
+        if($scalarorcat):
+            # the mode is used to compare for reporting accuracy. so still the same as the reported uncaught outcome/mode, but resolving the market as .5 right in the middle of the range so payouts are done right for an unethical [or indeterminate] market
+            EVENTS.setOutcome($event, $ethicOutcome)
+        else:
+            EVENTS.setOutcome($event, $indeterminate)
+        1
+    else:
+        # return bond as a normal event resolution
+        if(!INFO.getWallet($event).transfer(INFO.getCreator($event), EVENTS.getBond($event))):
+            throw()
+        if(MARKETS.getPushedForward($market)):
+            amount = MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE)
+            if(!INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), amount)):
+                throw()
+        if(EVENTS.getEventPushedUp($event)):
+            # delete old $event from future events exp
+            $period = EVENTS.getOriginalExpiration($event) / $periodLength
+            EXPEVENTS.removeEvent($branch, $period)
+            EXPEVENTS.deleteEvent($branch, $period, $event)
+            EVENTS.setOriginalExpiration($event, EVENTS.getExpiration($event))
+        1

@@ -42,8 +42,8 @@ macro TRADE_FIELDS: 8
 # Boolean success/failure
 macro SUCCESS: 1
 # Error codes
-macro INSUFFICIENT_BALANCE: 10
-macro TRADE_SAME_BLOCK_PROHIBITED: 22
+macro INSUFFICIENT_BALANCE: -4
+macro TRADE_SAME_BLOCK_PROHIBITED: -5
 
 # calculates trading fee percentage
 # 4*fee*price*(1-price/range)/range keeps fees lower at the edges
@@ -59,12 +59,12 @@ macro removeTrade($tradeID, $market):
 # Trade [allows a user to pick up/fill orders off the book]
 # 
 # Errors:
-    # -1: trade doesn't exist
-    # -2: bad trade hash
-    # -4: must buy at least .00000001 in
-    # -5: can't pick up your own trade
-    # 10: insufficient balance
-    # 22: trade in same block prohibited
+    # 0: trade doesn't exist
+    # -1: bad trade hash
+    # -2: must buy at least .00000001 in
+    # -3: can't pick up your own trade
+    # -4: insufficient balance
+    # -5: trade in same block prohibited
 # max value is max money to spend to buy [including fees] filling ask orders
 # max amount is max shares to sell filling bid orders
 # 500k gas cost
@@ -83,7 +83,7 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
     tradeInfo[2] = fxpMaxValue
     tradeHash = sha3(tradeInfo, items = 3)
     if(TRADES.checkHash(tradeHash, msg.sender) == -1):
-        return([-2]: arr)
+        return([-1]: arr)
     # Try to fulfill each trade passed
     t = 0
     while(t < len(tradeIDs)):
@@ -134,12 +134,13 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
         # 1 should go to branch
         # 1 should go to creator
 # Errors:
-    # -1: trade doesn't exist
-    # -2: invalid trade hash/commitment
-    # -3: must be a bid, not an ask
-    # -4: market is already resolved
-    # -5: can't pickup your own trade
-    # -7: not a large enough trade
+    # 0: trade doesn't exist
+    # -1: invalid trade hash/commitment
+    # -2: not a large enough trade
+    # -3: can't pickup your own trade
+    # -4: insufficient balance
+    # -5: trade in same block prohibited
+    # -6: must be a bid, not an ask
 def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
     refund()
     i = 0
@@ -153,7 +154,7 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
     tradeInfo[2] = 0
     tradeHash = sha3(tradeInfo, items = 3)
     if(TRADES.checkHash(tradeHash, msg.sender) == -1):
-        return([-2]: arr)
+        return([-1]: arr)
     # Try to fulfill each trade passed
     t = 0
     while(t < len(buyerTradeIDs)):
@@ -161,11 +162,11 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
         trade = array(TRADE_FIELDS)
         trade = TRADES.getTrade(buyerTradeIDs[t], outitems = TRADE_FIELDS)
         if(!trade):
-            return([-1]: arr)
+            return([0]: arr)
         # Get market
         type = trade[1]
         if(type != BID):
-            return([-3]: arr)
+            return([-6]: arr)
         market = trade[2]
         branch = MARKETS.getBranch(market)
         origAmount = trade[3]
@@ -180,7 +181,7 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
 
 macro checkTradePreconditions():
     if(owner == msg.sender):
-        return([-5]: arr)
+        return([-3]: arr)
     # Make sure the trade has been mined, obvious HFT prevention
     if(block.number <= trade[6]):
         return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
@@ -197,7 +198,7 @@ macro fillBid():
     value = (fill * price) / ONE
     # must trade at least 0.00000001 in value
     if(value < MIN_TRADE_VALUE):
-        return([-4]: arr)
+        return([-2]: arr)
     # Update trade amount or remove
     if(fill < amount):
         TRADES.fillTrade(tradeIDs[t], fill)
@@ -257,7 +258,7 @@ macro fillAsk():
     creatorFees = (ONE_FOURTH + (ONE_HALF - makerFeeRate) / 2) * tradeValueExcludingFees / ONE * fee / ONE
 
     # Transfer cash from user to person who has ask order and pay fee to branch and market creator
-                
+
     payTakerFees = INFO.getCurrency(market).transferFrom(msg.sender, BRANCHES.getWallet(branch, INFO.getCurrency(market)), branchFees) and INFO.getCurrency(market).transferFrom(msg.sender, creator, creatorFees)
     payMaker = INFO.getCurrency(market).transferFrom(msg.sender, owner, valueToSpend - (branchFees + creatorFees))
     if(!payMaker or !payTakerFees):
@@ -296,7 +297,7 @@ macro fillShort():
     if(INFO.getCurrency(market).balanceOf(msg.sender) < cost):
         return([INSUFFICIENT_BALANCE]: arr)
     if(amount * price / ONE < MIN_TRADE_VALUE):
-        return([-7]: arr)
+        return([-2]: arr)
     
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
 

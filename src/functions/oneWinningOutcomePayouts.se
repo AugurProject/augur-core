@@ -6,8 +6,6 @@ extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint2
 inset('../data_api/refund.se')
 
 # Payout a trader in a market with one winning outcome [so not scalar or determinate categoricals]
-# Error:
-    # -1: sender doesn't exist / match up with the participant given participant number [this is used as a check to make sure participant # 0 is really # 0]
 # whitelist this
 def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes):
     callstackCheck()

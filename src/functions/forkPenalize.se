@@ -14,27 +14,6 @@ inset('proportionCorrect.se')
 inset('repChange.se')
 inset('../data_api/periodStage.se')
 
-macro handleEthicsAndBondRepRedistribution($numReportedOn):
-    # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality
-    if(ethics != ethicCatch(EVENTS.getEthics(event)) and repChange >= 0 and BACKSTOPS.getForkedOverEthicality(event)):
-        if($numReportedOn < 10):
-            # allows max penalty to be 10% per event
-            repChange = -ONE / 10 * repBalance / ONE
-        else:
-            repChange = -ONE / $numReportedOn * repBalance / ONE
-    if(repBalance + repChange <= 0):
-        repChange = -1 * repBalance
-    # todo fix for this can go over 2x bond, not supposed to: we don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
-    if(BACKSTOPS.getForkBondPaid(event) < BACKSTOPS.getBondAmount(event) * 2 and repChange < 0):
-        # done instead of sending to redistrib. pool
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
-        # sends that rep to the bonded challenger
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(event)), -repChange)
-        BACKSTOPS.adjForkBondPaid(event, -1 * repChange)
-    else:
-        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
-        EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
-
 # Penalizes a reporter for reporting wrongly on a forked event / backstop 2
 # Notes:
     # essentially penalizeWrong for backstop 2 [where everyone reports on a forked event on the new branch]
@@ -54,50 +33,71 @@ def penalizeOnForkedEvent(branch, event):
     refund()
     # todo perhaps increment period by default if not done
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
-    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    lastPeriodVotedOn = BRANCHES.getVotePeriod(branch)-1
     periodLength = BRANCHES.getPeriodLength(branch)
     newRep = 0
-    newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
-    oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
+    newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender)
+    oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriodVotedOn, msg.sender)
     forkOutcome = EVENTS.getForkOutcome(event)
     outcome = catch(forkOutcome)
     if(scalar(event) or categorical(event)):
         outcome = forkOutcome
     p = proportionCorrect(event, 1)
-    reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
-    ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
+    reportValue = EXPEVENTS.getReport(branch, lastPeriodVotedOn, event, msg.sender)
+    ethics = EXPEVENTS.getEthicReport(branch, lastPeriodVotedOn, event, msg.sender)
     bond = BACKSTOPS.getBondAmount(event)
     checkForkPenalizationPreconditions()
 
     penalizeOrRewardReporter()    
     # once penalized for all events actually get rid of net rep lost
-    if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
+    if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriodVotedOn, msg.sender)):
         sendRedistributedRepToBranch()
     return(1)
 
 macro checkForkPenalizationPreconditions():
-    if(EVENTS.getEventBranch(event) != branch):
-        return(-6)
     if(repBalance < ONE):
         return(0)
-    atFirstHalfOfPeriod()
-    if((block.timestamp / periodLength - 2) != lastPeriod):
+    if((block.timestamp / periodLength - 2) != lastPeriodVotedOn):
         return(-1)
+    atFirstHalfOfPeriod()
     # means event / fork isn't resolved
     if(!EVENTS.getForkedDone(event)):
         return(-3)
-    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):
+    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriodVotedOn):
         return(-4)
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
+    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriodVotedOn - 1)):
         return(-5)
+    if(EVENTS.getEventBranch(event) != branch):
+        return(-6)
 
 macro penalizeOrRewardReporter():
-    numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
+    numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriodVotedOn, msg.sender)
     # penalization on a forked event
     # if didn't report [reportValue of 0] then it's a bad report here
     # Do (for each user) based on forking report and final outcome
-    if(!CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) and outcome != 0):
+    if(!CONSENSUS.getPenalized(branch, lastPeriodVotedOn, msg.sender, event) and outcome != 0):
         calculateRepChange(reportValue, ONE)
         handleEthicsAndBondRepRedistribution(numReportedOn)
-        CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
-        CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
+        CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
+        CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
+    
+macro handleEthicsAndBondRepRedistribution($numReportedOn):
+    # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality
+    if(ethics != ethicCatch(EVENTS.getEthics(event)) and repChange >= 0 and BACKSTOPS.getForkedOverEthicality(event)):
+        if($numReportedOn < 10):
+            # allows max penalty to be 10% per event
+            repChange = -ONE / 10 * repBalance / ONE
+        else:
+            repChange = -ONE / $numReportedOn * repBalance / ONE
+    if(repBalance + repChange <= 0):
+        repChange = -1 * repBalance
+    # todo fix for this can go over 2x bond, not supposed to: we don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
+    if(BACKSTOPS.getForkBondPaid(event) < BACKSTOPS.getBondAmount(event) * 2 and repChange < 0):
+        # done instead of sending to redistrib. pool
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
+        # sends that rep to the bonded challenger
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(event)), -repChange)
+        BACKSTOPS.adjForkBondPaid(event, -1 * repChange)
+    else:
+        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + repChange
+        EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)

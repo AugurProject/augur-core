@@ -29,18 +29,11 @@ def commitTrade(hash):
     self.tradeCommits[msg.sender].block = block.number
     return(1)
 
-def zeroHash():
-    self.tradeCommits[msg.sender].hash = 0
-    return(1)
-
 def checkHash(tradeHash, sender):
     if(self.tradeCommits[sender].hash != tradeHash or block.number <= self.tradeCommits[sender].block):
         return(-1)
     else:
         return(1)
-
-def getID(tradeID):
-    return(self.trades[tradeID].id)
 
 def saveTrade(tradeID, type, market, amount, price, sender, outcome):
     callstackCheck()
@@ -69,17 +62,12 @@ def getTrade(id):
         return(trade:arr)
     return([0]:arr)
 
-def getAmount(id):
-    return(self.trades[id].amount)
-
-def getPrice(id):
-    return(self.trades[id].price)
-
 # todo maybe add this in and then check that trade is within limit prices in trade function to allow easy trade updating
 def updateTrade(id, price):
     callstackCheck()
     self.trades[id].price = price
     self.trades[id].block = block.number
+    return(1)
 
 def removeTrade(id):
     callstackCheck()
@@ -96,3 +84,12 @@ def removeTrade(id):
 def fillTrade(tradeID, fill):
     self.trades[tradeID].amount -= fill
     return(1)
+
+def getAmount(id):
+    return(self.trades[id].amount)
+
+def getID(tradeID):
+    return(self.trades[tradeID].id)
+
+def getPrice(id):
+    return(self.trades[id].price)

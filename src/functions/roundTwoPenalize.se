@@ -32,6 +32,7 @@ macro MIN_BOND: 200 * ONE
     #  0: event isn't eligible/up for round two penalization
     # -1: vote period needs incrementing
     # -2: not in 1st half of vote period
+    # -3: not resolved yet and resolution attempt failed
     # -4: in fork period only thing that rep redistribution is done on is the round 2 event in the original branch via round 2 penalize
     # -5: already done for all events in this period
     # -6: needed to collect fees last period which sets the before/after rep
@@ -44,37 +45,37 @@ def penalizeRoundTwoWrong(branch, event):
     # todo perhaps increment period by default if not done
     if(!branch):
         return(0)
-    lastPeriod = BRANCHES.getVotePeriod(branch) - 1
-    lastPenalizationPeriod = lastPeriod - 1
+    lastPeriodVotedOn = BRANCHES.getVotePeriod(branch) - 1
+    lastPenalizationPeriod = lastPeriodVotedOn - 1
     periodLength = BRANCHES.getPeriodLength(branch)
     newRep = 0
-    newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender)
+    newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender)
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
-    oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
+    oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriodVotedOn, msg.sender)
     forkEvent = BRANCHES.getEventForkedOver(branch)
     uncaught = EVENTS.getUncaughtOutcome(event)
     outcome = catch(uncaught)
     if(scalar(event) or categorical(event)):
         outcome = uncaught
-    reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
+    reportValue = EXPEVENTS.getReport(branch, lastPeriodVotedOn, event, msg.sender)
     oldReport = EXPEVENTS.getReport(branch, lastPenalizationPeriod, event, msg.sender)
-    ethics = EXPEVENTS.getEthicReport(branch, lastPeriod, event, msg.sender)
+    ethics = EXPEVENTS.getEthicReport(branch, lastPeriodVotedOn, event, msg.sender)
     oldEthics = EXPEVENTS.getEthicReport(branch, lastPenalizationPeriod, event, msg.sender)
-    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, lastPeriod) / EXPIRING.getNumberEvents(branch, lastPeriod)
-    
+    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, lastPeriodVotedOn) / EXPIRING.getNumberEvents(branch, lastPeriodVotedOn)
+
     bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2) / 2 ** 64
     bond = min(bond, MIN_BOND)
     ethical = EVENTS.getEthics(event)
     p = proportionCorrect(event, 0)
     checkPenalizeWrongRoundTwoPreconditions()
 
-    numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
+    numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriodVotedOn, msg.sender)
     repChange = 0
     # penalization on a round 2 event if not already penalized, it has outcome, and user reported on it
     # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period
     final = BACKSTOPS.getFinal(event)
     roundTwo = BACKSTOPS.getRoundTwo(event)
-    penalizedOnEvent = CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event)
+    penalizedOnEvent = CONSENSUS.getPenalized(branch, lastPeriodVotedOn, msg.sender, event)
     reported = (reportValue or oldReport)
     if(final and (roundTwo or event == forkEvent) and !penalizedOnEvent and reported):
         # Do the first rep redistribution based on first report and final outcome if reported first time
@@ -82,24 +83,43 @@ def penalizeRoundTwoWrong(branch, event):
         if(oldReport and outcome != 0):
             calculateRepChange(oldReport, POINT_TWO)
             handleEthicsAndBondRepRedistribution(POINT_TWO, oldEthics, numReportedOn)
-            CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
-            CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
+            CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
+            CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
         # Do the second (for each user) based on second report and final outcome
         if(reportValue and outcome != 0):
             calculateRepChange(reportValue, POINT_ONE)
             handleEthicsAndBondRepRedistribution(POINT_ONE, ethics, numReportedOn)
-            CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
-            CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
+            CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
+            CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
     else:
         return(-8)
     # if a fork event in original branch, only event needed to report on in this period is that one [b/c the original branch resolves it as a regular round 2 event, fork reports again]
     if(event == forkEvent):
-        CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, (numReportedOn - 1))
+        CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, (numReportedOn - 1))
     # penalization on a regular event if not already penalized, it has outcome, and user reported on it
     # once penalized for all events actually get rid of net rep lost
-    if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
+    if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriodVotedOn, msg.sender)):
         sendRedistributedRepToBranch()
     return(1)
+
+macro checkPenalizeWrongRoundTwoPreconditions():
+    if(repBalance < ONE):
+        return(0)
+    if(EVENTS.getEventBranch(event) != branch):
+        return(-7)
+    # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
+    atFirstHalfOfPeriod()
+    if((block.timestamp / periodLength - 2) != lastPeriodVotedOn):
+        return(-1)
+    # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
+    if(!EVENTS.getOutcome(event) and !ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriodVotedOn, event), msg.sender)):
+        return(-3)
+    if(BRANCHES.getForkPeriod(branch) == lastPeriodVotedOn and event != forkEvent):
+        return(-4)
+    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriodVotedOn):
+        return(-5)
+    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriodVotedOn - 1)):
+        return(-6)
 
 macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn):
     # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max maxPenalty% of their rep respectively
@@ -120,27 +140,8 @@ macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn)
         BACKSTOPS.increaseBondPaid(event, (-1 * repChange))
     # if rep isn't redistributed immediately to bond poster [if they're already paid back] then we adjust the after rep as normal and do it all at the end: we want the rep to go to the branch here
     else:
-        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
-        EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
-
-macro checkPenalizeWrongRoundTwoPreconditions():
-    if(repBalance < ONE):
-        return(0)
-    if(EVENTS.getEventBranch(event) != branch):
-        return(-7)
-    # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
-    atFirstHalfOfPeriod()
-    if((block.timestamp / periodLength - 2) != lastPeriod):
-        return(-1)
-    # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
-    if(!EVENTS.getOutcome(event) and !ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriod, event), msg.sender)):
-        return(-3)
-    if(BRANCHES.getForkPeriod(branch) == lastPeriod and event != forkEvent):
-        return(-4)
-    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):
-        return(-5)
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
-        return(-6)
+        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + repChange
+        EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
 
 macro overruled():
     overruled = 0

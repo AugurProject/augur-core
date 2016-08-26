@@ -47,28 +47,6 @@ macro MIN_ORDER_VALUE: 184467440738
 macro MAX_ORDER_VALUE: 2 ** 190
 
 # 
-# Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
-# @returns 1 if success, 0 if failure
-# 
-# 200k gas
-def cancel(tradeID):
-    refund()
-    # user can cancel anytime
-    # Get trade
-    fetchTradeCancelInfo()
-    fee = feePercent(tradingFee, fxpPrice, cumulativeScale) * MARKETS.getMakerFees(market) / ONE
-    # Check the owner
-    if(msg.sender != owner):
-        return(FAILURE)
-    
-    # Clear the trade first
-    removeTrade(tradeID, market)
-    refundTrade()
-    # Log cancellation
-    log(type = logCancel, market, msg.sender, fxpPrice, fxpAmount, tradeID, outcome, type)
-    return(SUCCESS)
-
-# 
 # Buy / Sell actions: puts orders on the book
 # Errors:
     #  0: market doesn't exist
@@ -103,6 +81,28 @@ def ask(fxpAmount, fxpPrice, market, outcome):
     saveTrade(ASK, fxpAmount, fxpPrice, market, outcome, branch, fee, msg.sender)
     return(FAILURE)
 
+# 
+# Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
+# @returns 1 if success, 0 if failure
+# 
+# 200k gas
+def cancel(tradeID):
+    refund()
+    # user can cancel anytime
+    # Get trade
+    fetchTradeCancelInfo()
+    fee = feePercent(tradingFee, fxpPrice, cumulativeScale) * MARKETS.getMakerFees(market) / ONE
+    # Check the owner
+    if(msg.sender != owner):
+        return(FAILURE)
+    
+    # Clear the trade first
+    removeTrade(tradeID, market)
+    refundTrade()
+    # Log cancellation
+    log(type = logCancel, market, msg.sender, fxpPrice, fxpAmount, tradeID, outcome, type)
+    return(SUCCESS)
+
 macro checkBuyPreconditions():
     if(!branch):
         return(0)
@@ -130,26 +130,12 @@ macro removeTrade($tradeID, $market):
     TRADES.removeTrade($tradeID)
     MARKETS.removeTradeFromMarket($market, $tradeID)
 
-macro fetchTradeCancelInfo():
-    trade = array(TRADE_FIELDS)
-    trade = TRADES.getTrade(tradeID, outitems = TRADE_FIELDS)
-    if(!trade):
-        return(0)
-    type = trade[1]
-    market = trade[2]
-    fxpAmount = trade[3]
-    fxpPrice = trade[4]
-    owner = trade[5]
-    outcome = trade[7]
-    tradingFee = MARKETS.getTradingFee(market)
-    cumulativeScale = MARKETS.getCumulativeScale(market)
-    
 macro refundTrade():
     # Issue refunds
     if(type == BID):
         # cash refund
-        amt = fxpAmount * fxpPrice * (fee + ONE) / ONE ** 2
-        refunded = INFO.getWallet(market).transfer(msg.sender, amt)
+        amount = fxpAmount * fxpPrice * (fee + ONE) / ONE ** 2
+        refunded = INFO.getWallet(market).transfer(msg.sender, amount)
         if(!refunded):
             throw()
     elif(type == ASK):
@@ -186,6 +172,20 @@ macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee, 
             throw()
     log(type = logAddTx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, tradeID)
     return(tradeID)
+
+macro fetchTradeCancelInfo():
+    trade = array(TRADE_FIELDS)
+    trade = TRADES.getTrade(tradeID, outitems = TRADE_FIELDS)
+    if(!trade):
+        return(0)
+    type = trade[1]
+    market = trade[2]
+    fxpAmount = trade[3]
+    fxpPrice = trade[4]
+    owner = trade[5]
+    outcome = trade[7]
+    tradingFee = MARKETS.getTradingFee(market)
+    cumulativeScale = MARKETS.getCumulativeScale(market)
 
 macro adjustForCategorical():
     if(MARKETS.getMarketNumOutcomes(market) > 2):

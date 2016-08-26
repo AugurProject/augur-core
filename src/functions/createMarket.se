@@ -57,6 +57,7 @@ macro checkSubcurrencyIsValid(contract):
 # @param branch is the branch the event is created in
 # @param expDate is the epoch time in which the event expires
 # @return event if success
+# range between min and max should be 1 [in fxp] or greater
 # error messages otherwise
     #  0: not enough money to pay fees or event already exists
     # -1: we're either already past that date, branch doesn't exist, or description is bad
@@ -65,6 +66,7 @@ macro checkSubcurrencyIsValid(contract):
     # -4: would expire during non-reporting fork period
 # .025 eth to create
 # descriptionWithoutOutcomeLabels + "~|>" + outcome1label + "|"  + outcome2label + "|" + outcome3label is format for a description
+# with a categorical user can set min and max to whatever, for reporting 1 is the min and max is the max then reports should be scaled between that range, for payouts it's 1 to the winning outcome or equal for all outcomes if indeterminate, you cannot trade by paying more than 1 for a share as that makes no sense
 def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -110,9 +112,10 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
 def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag3, fxpMakerFees, extraInfo: str, currency):
     callstackCheck()
     periodLength = BRANCHES.getPeriodLength(branch)
-    creationFee = POINT_ZERO_THREE * BRANCHES.getBaseReporters(branch) * ONE / fxpTradingFee
+    baseReporters = BRANCHES.getBaseReporters(branch)
+    creationFee = POINT_ZERO_THREE * baseReporters * ONE / fxpTradingFee
     # gives ether/cash amount in fixed point
-    minFee = COST_PER_REPORTER * BRANCHES.getBaseReporters(branch) * tx.gasprice * ONE / WEI_TO_ETH
+    minFee = COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
     creationFee = max(minFee, creationFee)
     validityBond = (creationFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
     numOutcomes = EVENTS.getNumOutcomes(event)
@@ -175,7 +178,7 @@ macro makeMarket():
         1
     else:
         throw()
-        
+
 macro addEvent():
     # cost for calculating num. of reports for an event
     if(!send(EXPEVENTS, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice)):
@@ -202,12 +205,13 @@ def updateTradingFee(market, fxpTradingFee):
     if(msg.sender != INFO.getCreator(market)):
         return(-1)
     oldFee = MARKETS.getTradingFee(market)
-    oldCreationFee = POINT_ZERO_SIX * BRANCHES.getBaseReporters(branch) * ONE / oldFee
-    newCreationFee = POINT_ZERO_SIX * BRANCHES.getBaseReporters(branch) * ONE / fxpTradingFee
+    baseReporters = BRANCHES.getBaseReporters(branch)
+    oldCreationFee = POINT_ZERO_SIX * baseReporters * ONE / oldFee
+    newCreationFee = POINT_ZERO_SIX * baseReporters * ONE / fxpTradingFee
     if(fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > oldFee):
         return(-2)
     currency = INFO.getCurrency(market)
-    if(!currency.transferFrom(msg.sender, BRANCHES.getWallet(branch, currency), newCreationFee-oldCreationFee) or !MARKETS.setTradingFee(market, fxpTradingFee)):
+    if(!currency.transferFrom(msg.sender, BRANCHES.getWallet(branch, currency), newCreationFee - oldCreationFee) or !MARKETS.setTradingFee(market, fxpTradingFee)):
         throw()
     log(type = tradingFeeUpdated, market, fxpTradingFee)
     return(1)
