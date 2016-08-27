@@ -135,7 +135,7 @@ def resolveForkedEvent(branch, event):
         return(0)
     if(!EVENTS.getForked(event)):
         return(-1)
-    if(self.resolveForkEvent(branch, event)):
+    if(resolveForkEvent()):
         EVENTS.setForkDone(event)
         CONSENSUSDATA.doRefund(msg.sender, event)
         return(1)
@@ -145,8 +145,7 @@ def resolveForkedEvent(branch, event):
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
     # helper function for resolveForkedEvent
-# needs whitelist
-def resolveForkEvent(branch, event):
+macro resolveForkEvent():
     refund()
     # whitelist
     bond = EVENTS.getBond(event)
