@@ -26,6 +26,7 @@ import markets as MARKETS
 import backstops as BACKSTOPS
 import events as EVENTS
 import expiringEvents as EXPEVENTS
+# Warning: subcurrencies/tokens are untrusted contracts
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 
@@ -35,6 +36,7 @@ event tradingFeeUpdated(market, fxpTradingFee)
 macro POINT_ZERO_THREE: 553402322211286528
 macro COST_PER_REPORTER: 3500000
 macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
+macro MAX_FEE: 2 ** 62
 
 macro checkSubcurrencyIsValid(contract):
     allowance = $contract.allowance(msg.sender, self)
@@ -195,7 +197,7 @@ macro addEvent():
         EVENTS.setBond(event, validityBond)
         EVENTS.addPast24(period)
 
-7# Updates a trading fee to be lower in a market
+# Updates a trading fee to be lower in a market
 # Errors
     # -1: not the market creator
     # -2: invalid new trading fee
@@ -243,7 +245,7 @@ def pushMarketForward(branch, market):
     beingReportedOnNow = (expiration / periodLength == block.timestamp / periodLength)
     alreadyPushedForward = EVENTS.getRejectedPeriod(event) or expiration != EVENTS.getOriginalExpiration(event)
     if(alreadyPushedForward or beingReportedOnNow or EVENTS.getOutcome(event) or BACKSTOPS.getRoundTwo(event)):
-        return(-4)
+        return(-3)
     # push into next vote period
     period = block.timestamp / periodLength
     # figure out what's going on with subsidy system here todo
@@ -271,9 +273,10 @@ macro checkEventCreationPreconditions():
 
 macro checkMarketCreationPreconditions():
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
-    if(!periodLength or !len(description) or fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > 2 ** 62 or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or fxpMakerFees < 0 or fxpMakerFees > ONE_HALF):
+    if(!periodLength or !len(description) or fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > MAX_FEE or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or fxpMakerFees < 0 or fxpMakerFees > ONE_HALF):
         return(-1)
     if(expirationDate < block.timestamp):
         return(-2)
+    # todo examine why - perhaps should or shouldn't allow on fork but on regular branch
     if(forkPeriod and (futurePeriod == forkPeriod or futurePeriod == (forkPeriod + 1))):
         return(-3)

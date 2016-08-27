@@ -13,10 +13,9 @@ inset('../data_api/periodStage.se')
 # Errors:
     # -1: invalid vote period
     # -2: past reveal date
-    # -3: reporter being slashed doesn't exist
-    # -4: invalid claim / report hash - makes sure that the colluding reporter's commit is the same as the info provided in the params
-    # -5: event isn't in the branch
-    # -6: already slashed
+    # -3: invalid claim / report hash - makes sure that the colluding reporter's commit is the same as the info provided in the params
+    # -4: event isn't in the branch
+    # -5: already slashed
 def slashRep(branch, salt, report, reporter, event):
     refund()
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -32,7 +31,7 @@ def slashRep(branch, salt, report, reporter, event):
     reportHash = sha3(hashInfo, chars = 32 * len(hashInfo))
     checkSlashRepInvariants()
     
-    ]CONSENSUS.setSlashed(branch, votePeriod, reporter)
+    CONSENSUS.setSlashed(branch, votePeriod, reporter)
     trutherIndex = REPORTING.repIDToIndex(branch, msg.sender)
     # if the truther's rep. account doesn't exist, make one
     if(REPORTING.getReporterID(branch, trutherIndex) != msg.sender):
@@ -52,12 +51,10 @@ macro checkSlashRepInvariants():
         return(-1)
     atFirstHalfOfPeriod()
     reporterIndex = REPORTING.repIDToIndex(branch, reporter)
-    if(REPORTING.getReporterID(branch, reporterIndex) != reporter):
-        return(-3)
     if(reportHash != realHash):
-        return(-4)
+        return(-3)
     if(EVENTS.getEventBranch(event) != branch):
-        return(-5)
+        return(-4)
     if(alreadySlashed):
-        return(-6)
+        return(-5)
     

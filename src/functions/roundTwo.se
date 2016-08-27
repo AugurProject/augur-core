@@ -9,6 +9,7 @@ import markets as MARKETS
 import backstops as BACKSTOPS
 import sendReputation as SENDREP
 import eventResolution as RESOLVE
+# Warning: subcurrencies/tokens are untrusted contracts
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
@@ -149,12 +150,13 @@ roundTwoBondCheckPreconditions():
         return(-1)
     market = EVENTS.getMarket(event, 0)
     forkPeriod = BRANCHES.getForkPeriod(branch)
+    # not doing this in the middle of a fork makes sense, the same for market/event creation otoh does not...
     if(forkPeriod == votePeriod or (forkPeriod + 1) == votePeriod):
         return(-2)
     # todo find actual cost
     if(msg.value < 500000 * tx.gasprice):
         return(-3)
-        
+
 macro loseBond():
     # lose bond
     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
@@ -171,6 +173,7 @@ macro loseBond():
 macro returnRoundTwoBondInForkScenario():
     # return the bond
     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
+    # todo make sure branch has a rep acc.
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
     BACKSTOPS.setBondReturned(event)
     BACKSTOPS.setRoundTwo(event, 0)
@@ -179,6 +182,7 @@ macro returnRoundTwoBondInForkScenario():
 macro returnBond():
     # return the bond
     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
+    # todo make sure branch has a rep acc.
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
     # and set final outcome / event bond, etc
     if(!self.resolve(branch, event)):

@@ -16,7 +16,7 @@ macro MAX_DELTA: 22
     # -1: doesn't need to be penalized/caught up
     # -2: not in first half of reporting period
     # -3: user isn't behind or reported in the last period [and should thus use the penalization functions in consensus.se]
-# whitelist this
+# whitelist this [calling if only 1 period behind for someone else can be bad, so only call when auto/necessary]
 def penalizationCatchup(branch, sender):
     refund()
     # find delta between this last period and the last one a reporter was penalized up to

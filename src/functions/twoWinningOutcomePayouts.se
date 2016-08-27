@@ -3,6 +3,7 @@
 import markets as MARKETS
 import events as EVENTS
 import info as INFO
+# Warning: subcurrencies/tokens are untrusted contracts
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 

@@ -58,6 +58,7 @@ macro checkForkPenalizationPreconditions():
     if(repBalance < ONE):
         return(0)
     if((block.timestamp / periodLength - 2) != lastPeriodVotedOn):
+        # todo why not auto increment period
         return(-1)
     atFirstHalfOfPeriod()
     # means event / fork isn't resolved

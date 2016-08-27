@@ -62,13 +62,6 @@ def getTrade(id):
         return(trade:arr)
     return([0]:arr)
 
-# todo maybe add this in and then check that trade is within limit prices in trade function to allow easy trade updating
-def updateTrade(id, price):
-    callstackCheck()
-    self.trades[id].price = price
-    self.trades[id].block = block.number
-    return(1)
-
 def removeTrade(id):
     callstackCheck()
     self.trades[id].id = 0

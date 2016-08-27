@@ -110,6 +110,7 @@ macro checkPenalizeWrongRoundTwoPreconditions():
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     atFirstHalfOfPeriod()
     if((block.timestamp / periodLength - 2) != lastPeriodVotedOn):
+        # should prob. auto increment period here too todo
         return(-1)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     if(!EVENTS.getOutcome(event) and !ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriodVotedOn, event), msg.sender)):

@@ -23,10 +23,13 @@
 import branches as BRANCHES
 import info as INFO
 import reporting as REPORTING
+# Warning: subcurrencies/tokens are untrusted contracts
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 
 data ethContract
+
+macro MAX_FEE: 2 ** 62
 
 macro checkSubcurrencyIsValid(contract):
     allowance = $contract.allowance(msg.sender, self)
@@ -83,6 +86,5 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
 macro checkBranchCreationPreconditions():
     if(periodLength <= 0 or !BRANCHES.getPeriodLength(parent) or !len(description)):
         return(-1)
-    if(fxpMinTradingFee < 0 or fxpMinTradingFee > 2 ** 62 or (oracleOnly != 0 and oracleOnly != 1)):
+    if(fxpMinTradingFee <= 0 or fxpMinTradingFee > MAX_FEE or (oracleOnly != 0 and oracleOnly != 1)):
         return(-1)
-    

@@ -11,6 +11,7 @@ import roundTwo as ROUNDTWO
 import expiringEvents as EXPEVENTS
 import createBranch as CREATEBRANCH
 import consensusData as CONSENSUSDATA
+# Warning: subcurrencies/tokens are untrusted contracts
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
@@ -200,8 +201,8 @@ macro makeFork():
 
 macro returnRoundTwoBond():
     market = EVENTS.getMarket(event, 0)
-    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period - 1)/EXPEVENTS.getNumberEvents(branch, period - 1)
-    bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2) / 2 ** 64
+    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period - 1) / EXPEVENTS.getNumberEvents(branch, period - 1)
+    bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2) / ONE
     minBond = 200 * ONE
     bond = min(bond, minBond)
     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)

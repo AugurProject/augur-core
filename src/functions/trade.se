@@ -25,6 +25,7 @@ import info as INFO
 import markets as MARKETS
 import trades as TRADES
 import expiringEvents as EXPEVENTS
+# Warning: subcurrencies/tokens are untrusted contracts
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 

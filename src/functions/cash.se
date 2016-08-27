@@ -98,7 +98,7 @@ def depositEther():
 
 # Withdraw ether to an address
 # Returns 2 if withdrawal is initiated [then must wait 3 days]
-# Returns 1 if withdrawal is 1ful
+# Returns 1 if withdrawal is successful
 # Errors:
     # 0: Not enough money
     # -1: value less than or equal to 0

@@ -30,6 +30,7 @@ import consensusData as CONSENSUS
 import collectFees as COLLECTFEES
 import penalizationCatchup as CATCHUP
 import reportingThreshold as THRESHOLD
+# Warning: subcurrencies/tokens are untrusted contracts
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
@@ -38,6 +39,8 @@ ETHCONTRACT = 02323232
 
 macro GAS_SUBSIDY: 3500000
 macro MAX_REPORT_THRESHOLD: 2 ** 192
+# used for gas limit reasons to ensure terminating loop
+macro MARKETS_COUNTING_TOWARDS_SHARE_VALUE: 20
 
 def makeHash(salt, fxpReport, event, sender):
     hashInfo = array(4)
@@ -112,6 +115,7 @@ def submitReport(event, salt, fxpReport, fxpEthics):
 # Returns -4 if fxpReport is invalid
     # isn't between 1 and 2 if binary
     # if same fxpReport as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
+# needs whitelist
 def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight):
     callstackCheck()
     outcome = 0
@@ -131,8 +135,8 @@ def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, f
 def calculateReportTargetForEvent(branch, event, votePeriod, sender):
     callstackCheck()
     numMarkets = EVENTS.getNumMarkets(event)
-    if(numMarkets > 20):
-        numMarkets = 20
+    if(numMarkets > MARKETS_COUNTING_TOWARDS_SHARE_VALUE):
+        numMarkets = MARKETS_COUNTING_TOWARDS_SHARE_VALUE
     markets = array(numMarkets)
     markets = EVENTS.getMarkets(event, outitems=numMarkets)
     totalFees = 0
@@ -183,7 +187,7 @@ macro checkSubmitReportPreconditions():
         return(-3)
     if(fxpEthics != ONE and fxpEthics != 0):
         return(-5)
-    # todo get outcome may not work / be valid
+    # todo get outcome may not work / be valid due to 0 outcome being valid?
     if(EVENTS.getOutcome(event) != 0):
         return(-6)
     # commented out for easy testing
@@ -193,7 +197,6 @@ macro checkSubmitReportPreconditions():
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod - 1)):
         if(COLLECTFEES.collectFees(branch, msg.sender, value = msg.value) < 0):
             return(-8)
-
     # actual submitting of fxpReport and ethicality
     validatedFxpReport = self.validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight)
     if(validatedFxpReport == -4):
@@ -223,7 +226,7 @@ macro saveUsersReportAndHandleEthicality():
     EXPEVENTS.countReportAsSubmitted(branch, votePeriod, event, msg.sender, weight)
 
 macro coverGasCostIfPossible():
-# pay reporters after reporting for their gas costs
+    # pay reporters after reporting for their gas costs
     reportsNum = EXPEVENTS.getLesserReportNum(branch, votePeriod, event)
     paidBack = EVENTS.getReportersPaidSoFar(event)
     diff = reportsNum - paidBack

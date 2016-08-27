@@ -127,6 +127,7 @@ macro checkPenalizeWrongPreconditions():
     if(tooLateToPenalize):
         return(-2)
     justForked = BRANCHES.getForkPeriod(branch) == lastPeriod
+    # todo examine ramifications of allowing events to be made during forks on what we do here with just forked
     if(justForked):
         return(-3)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):

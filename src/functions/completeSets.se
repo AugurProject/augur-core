@@ -24,6 +24,7 @@ import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import markets as MARKETS
 import info as INFO
+# Warning: subcurrencies/tokens are untrusted contracts
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, ]:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 
@@ -33,6 +34,7 @@ inset('../data_api/refund.se')
     # 0: invalid market/doesn't exist
     # -1: oracle only branch [no trading allowed]
     # -2: not enough money
+    # -3: not a large enough amount
 def buyCompleteSets(market, fxpAmount):
     refund()
     branch = MARKETS.getBranch(market)
@@ -58,8 +60,8 @@ def buyCompleteSets(market, fxpAmount):
 # Sells fxpAmount of every outcome [if user owns it]
 # cost 850k gas
 # Errors:
-    # -2: trader doesn't exist
-    # -3: user doesn't own enough shares
+    # -1: user doesn't own enough shares
+    # -2: user hasn't specified a large enough amount
 def sellCompleteSets(market, fxpAmount):
     refund()
     branch = MARKETS.getBranch(market)
@@ -89,15 +91,19 @@ macro checkBuyCompleteSetsPreconditions():
         return(0)
     if(BRANCHES.getOracleOnly(branch)):
         return(-1)
+    if(fxpAmount <= 0):
+        return(-3)
     # send money from user acc. to market address/account
     if(!MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), cost)):
         return(-2)
 
 macro checkSellCompleteSetsPreconditions():
+    if(fxpAmount <= 0):
+        return(-2)
     n = 1
     while(n <= numOutcomes):
         if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < fxpAmount):
-            return(-3)
+            return(-1)
         n += 1
     n = 1
 
