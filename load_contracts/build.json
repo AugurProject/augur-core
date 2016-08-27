@@ -2897,7 +2897,7 @@
         "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:_, sellCompleteSets:[int256,int256]:_, test_callstack:[]:int256]"
     }, 
     "compositeGetters": {
-        "address": "0x68e6bc11d43dd156c0ee13e4251d697f54807959", 
+        "address": "0xf62219bfdd8a00b60fb6c54b81a0b1b4c0117d63", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -3069,6 +3069,8 @@
             "def getMarketsInfo(branch, offset, numMarketsToLoad):", 
             "    refund()", 
             "    numMarkets = BRANCHES.getNumMarketsBranch(branch)", 
+            "    if offset > numMarkets:", 
+            "        return([]: arr)", 
             "    if numMarketsToLoad == 0:", 
             "        numMarketsToLoad = numMarkets", 
             "    marketIDs = slice(BRANCHES.getMarketsInBranch(branch, outitems=numMarkets), items=0, items=numMarkets)", 
@@ -3080,7 +3082,9 @@
             "    marketsInfo = array(totalLen + 1)", 
             "    m = 0", 
             "    c = 1", 
-            "    totalMarkets = min(numMarketsToLoad, numMarkets)", 
+            "    totalMarkets = min(numMarketsToLoad, numMarkets - offset)", 
+            "    # if totalMarkets + offset > numMarkets:", 
+            "    #     totalMarkets = numMarkets - offset", 
             "    marketsInfo[0] = totalMarkets", 
             "    while m < totalMarkets:", 
             "        marketID = marketIDs[m + offset]", 

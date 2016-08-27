@@ -162,6 +162,8 @@ def batchGetMarketInfo(marketIDs: arr, account):
 def getMarketsInfo(branch, offset, numMarketsToLoad):
     refund()
     numMarkets = BRANCHES.getNumMarketsBranch(branch)
+    if offset > numMarkets:
+        return([]: arr)
     if numMarketsToLoad == 0:
         numMarketsToLoad = numMarkets
     marketIDs = slice(BRANCHES.getMarketsInBranch(branch, outitems=numMarkets), items=0, items=numMarkets)
@@ -173,7 +175,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
     marketsInfo = array(totalLen + 1)
     m = 0
     c = 1
-    totalMarkets = min(numMarketsToLoad, numMarkets)
+    totalMarkets = min(numMarketsToLoad, numMarkets - offset)
     marketsInfo[0] = totalMarkets
     while m < totalMarkets:
         marketID = marketIDs[m + offset]
