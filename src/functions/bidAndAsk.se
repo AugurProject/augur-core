@@ -107,7 +107,6 @@ def cancel(tradeID):
 macro checkBuyPreconditions():
     if(!branch):
         return(0)
-    adjustForCategorical()
     # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
     if(fxpPrice > cumulativeScale or fxpAmount * fxpPrice / ONE < MIN_ORDER_VALUE or fxpAmount * fxpPrice >= MAX_ORDER_VALUE):
         return(-1)
@@ -115,7 +114,6 @@ macro checkBuyPreconditions():
         return(-2)
 
 macro checkSellPreconditions():
-    adjustForCategorical()
     # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
     if(fxpPrice > cumulativeScale or fxpAmount * fxpPrice / ONE < MIN_ORDER_VALUE or fxpAmount * fxpPrice >= MAX_ORDER_VALUE):
         return(-1)
@@ -187,7 +185,3 @@ macro fetchTradeCancelInfo():
     outcome = trade[7]
     tradingFee = MARKETS.getTradingFee(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
-
-macro adjustForCategorical():
-    if(MARKETS.getMarketNumOutcomes(market) > 2):
-        cumulativeScale = ONE

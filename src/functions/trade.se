@@ -104,7 +104,6 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
         branch = MARKETS.getBranch(market)
         
         cumulativeScale = MARKETS.getCumulativeScale(market)
-        adjustForCategorical()
         fee = feePercent(MARKETS.getTradingFee(market), price, cumulativeScale)
 
         # Fill buy order
@@ -281,7 +280,6 @@ macro fillShort():
     creator = INFO.getCreator(market)
     tradingFee = MARKETS.getTradingFee(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
-    adjustForCategorical()
     amount = min(origAmount, fxpMaxAmount)
     if(amount <= 0):
         return([INSUFFICIENT_BALANCE]: arr)
@@ -344,7 +342,3 @@ macro fillShort():
     fxpMaxAmount -= fill
     # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
     log(type = logPrice, market, msg.sender, owner, ASK, price, fill, block.timestamp, buyerTradeIDs[t], outcome)
-
-macro adjustForCategorical():
-    if(MARKETS.getMarketNumOutcomes(market) > 2):
-        cumulativeScale = ONE

@@ -46,6 +46,7 @@ def penalizeOnForkedEvent(branch, event):
     reportValue = EXPEVENTS.getReport(branch, lastPeriodVotedOn, event, msg.sender)
     ethics = EXPEVENTS.getEthicReport(branch, lastPeriodVotedOn, event, msg.sender)
     bond = BACKSTOPS.getBondAmount(event)
+    numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriodVotedOn, msg.sender)
     checkForkPenalizationPreconditions()
 
     penalizeOrRewardReporter()    
@@ -72,7 +73,6 @@ macro checkForkPenalizationPreconditions():
         return(-6)
 
 macro penalizeOrRewardReporter():
-    numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriodVotedOn, msg.sender)
     # penalization on a forked event
     # if didn't report [reportValue of 0] then it's a bad report here
     # Do (for each user) based on forking report and final outcome
@@ -86,7 +86,7 @@ macro handleEthicsAndBondRepRedistribution($numReportedOn):
     # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality
     if(ethics != ethicCatch(EVENTS.getEthics(event)) and repChange >= 0 and BACKSTOPS.getForkedOverEthicality(event)):
         if($numReportedOn < 10):
-            # allows max penalty to be 10% per event
+            # allows max penalty to be 10% per event}
             repChange = -ONE / 10 * repBalance / ONE
         else:
             repChange = -ONE / $numReportedOn * repBalance / ONE

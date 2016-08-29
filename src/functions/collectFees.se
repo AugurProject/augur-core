@@ -27,7 +27,7 @@ def collectFees(branch, sender):
     checkCollectFeesPreconditions()
     
     # need 1 rep to claim fees
-    if(!feesCollected and newRep < ONE):
+    if(newRep < ONE):
         prepareInfoForConsensus()
         return(2)
     collectRedistributedRep()
@@ -45,7 +45,7 @@ macro checkCollectFeesPreconditions():
 
 macro collectRedistributedRep():
     denominator = CONSENSUS.getDenominator(branch, lastPeriod)
-    # sets the amount of rep available for redistribution in the next period
+    # sets the amount of rep available for redistribution in this redistribution period
     if(!CONSENSUS.getFeeFirst(branch, lastPeriod)):
         CONSENSUS.setFeeFirst(branch, lastPeriod, 1)
         CONSENSUS.setPeriodBalance(branch, lastPeriod, REPORTING.getRepBalance(branch, branch))
