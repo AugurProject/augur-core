@@ -11,7 +11,6 @@ import roundTwo as ROUNDTWO
 import expiringEvents as EXPEVENTS
 import createBranch as CREATEBRANCH
 import consensusData as CONSENSUSDATA
-# Warning: subcurrencies/tokens are untrusted contracts
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
@@ -135,7 +134,7 @@ def resolveForkedEvent(branch, event):
         return(0)
     if(!EVENTS.getForked(event)):
         return(-1)
-    if(resolveForkEvent()):
+    if(self.resolveForkEvent(branch, event)):
         EVENTS.setForkDone(event)
         CONSENSUSDATA.doRefund(msg.sender, event)
         return(1)
@@ -145,7 +144,8 @@ def resolveForkedEvent(branch, event):
 
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
     # helper function for resolveForkedEvent
-macro resolveForkEvent():
+# needs whitelist
+def resolveForkEvent(branch, event):
     refund()
     # whitelist
     bond = EVENTS.getBond(event)

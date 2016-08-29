@@ -25,9 +25,8 @@
 import branches as BRANCHES
 import markets as MARKETS
 import events as EVENTS
-import oneWinningOutcomePayouts as CLOSEOUTONE
-import twoWinningOutcomePayouts as CLOSEOUTTWO
-# Warning: subcurrencies/tokens are untrusted contracts
+import oneWinningOutcomePayouts as CLOSEONE
+import twoWinningOutcomePayouts as CLOSETWO
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 
@@ -66,13 +65,13 @@ def claimProceeds(market):
         return(0)
     scalar = winningOutcomes[1]
     if(scalar):
-        success = CLOSEOUTTWO.twoOutcomes(market, winningOutcomes, event, msg.sender)
+        success = CLOSETWO.twoOutcomes(market, winningOutcomes, event, msg.sender)
     else:
         ethical = ethicCatch(EVENTS.getEthics(event))
         # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
         if(categorical(event) and (EVENTS.getMode(event) == ONE_HALF or !ethical)):
-            success = CLOSEOUTONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))
+            success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))
         # resolves a regular binary or categorical market
         else:
-            success = CLOSEOUTONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, EVENTS.getNumOutcomes(event))
+            success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, EVENTS.getNumOutcomes(event))
     return(success)
