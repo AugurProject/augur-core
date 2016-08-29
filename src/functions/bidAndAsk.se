@@ -175,7 +175,7 @@ macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee, 
 macro fetchTradeCancelInfo():
     trade = array(TRADE_FIELDS)
     trade = TRADES.getTrade(tradeID, outitems = TRADE_FIELDS)
-    if(!trade):
+    if(!trade[0]):
         return(0)
     type = trade[1]
     market = trade[2]

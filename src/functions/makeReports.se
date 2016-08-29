@@ -228,8 +228,8 @@ macro coverGasCostIfPossible():
     # pay reporters after reporting for their gas costs
     reportsNum = EXPEVENTS.getLesserReportNum(branch, votePeriod, event)
     paidBack = EVENTS.getReportersPaidSoFar(event)
-    diff = reportsNum - paidBack
-    if(diff >= 1):
+    ableToPayForMore = reportsNum - paidBack
+    if(ableToPayForMore):
         EVENTS.addReportersPaidSoFar(event)
         # todo fix this coming from branch b/c it'll get redistributed in collectfees and thus cause issues
         if(!BRANCHES.getWallet(branch, ETHCONTRACT).transfer(msg.sender, GAS_SUBSIDY * tx.gasprice * ONE / WEI_TO_ETH)):

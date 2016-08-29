@@ -57,4 +57,3 @@ macro checkSlashRepInvariants():
         return(-4)
     if(alreadySlashed):
         return(-5)
-    
