@@ -159,40 +159,64 @@ def batchGetMarketInfo(marketIDs: arr, account):
         i += 1
     return(marketsInfo: arr)
 
-def getMarketsInfo(branch, offset, numMarketsToLoad):
+# - if both volumeMin and volumeMax are specified, then
+#   only include markets in the half-open interval: (volumeMin, volumeMax]
+# - if volumeMax = -1 then there is no upper limit
+def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
     refund()
     numMarkets = BRANCHES.getNumMarketsBranch(branch)
     if offset > numMarkets:
         return([]: arr)
     if numMarketsToLoad == 0:
         numMarketsToLoad = numMarkets
-    marketIDs = slice(BRANCHES.getMarketsInBranch(branch, outitems=numMarkets), items=0, items=numMarkets)
-    totalLen = numMarketsToLoad*11
+    totalMarkets = min(numMarketsToLoad, numMarkets - offset)
+    marketIDs = BRANCHES.getSomeMarketsInBranch(branch, offset, offset + totalMarkets, outitems=totalMarkets)
+
+    if volumeMin < volumeMax or volumeMax == -1:
+        numThresholdedMarkets = 0
+        thresholdedMarketIDs = array(numMarkets)
+        m = 0
+        while m < totalMarkets:
+            marketID = marketIDs[m]
+            volume = MARKETS.getVolume(marketID)
+            if volume > volumeMin and (volumeMax == -1 or volume <= volumeMax):
+                thresholdedMarketIDs[numThresholdedMarkets] = marketID
+                numThresholdedMarkets += 1
+                if numThresholdedMarkets == totalMarkets:
+                    m = totalMarkets - 1
+            m += 1
+        totalMarkets = min(numThresholdedMarkets, totalMarkets)
+        marketIDs = slice(thresholdedMarketIDs, items=0, items=numThresholdedMarkets)
+
+    descriptionLengths = array(totalMarkets)
+    totalLen = totalMarkets*11
     m = 0
-    while m < numMarketsToLoad:
-        totalLen += INFO.getDescriptionLength(marketIDs[m + offset])
+    while m < totalMarkets:
+        descriptionLengths[m] = INFO.getDescriptionLength(marketIDs[m])
+        totalLen += descriptionLengths[m]
         m += 1
     marketsInfo = array(totalLen + 1)
+    marketsInfo[0] = totalMarkets
+
+    # get basic market info for each market
     m = 0
     c = 1
-    totalMarkets = min(numMarketsToLoad, numMarkets - offset)
-    marketsInfo[0] = totalMarkets
     while m < totalMarkets:
-        marketID = marketIDs[m + offset]
-        descriptionLength = INFO.getDescriptionLength(marketID)
+        marketID = marketIDs[m]
+        descriptionLength = descriptionLengths[m]
         marketsInfo[c] = 11 + descriptionLength
         marketsInfo[c + 1] = marketID
         marketsInfo[c + 2] = MARKETS.getTradingPeriod(marketID)
         marketsInfo[c + 3] = MARKETS.getTradingFee(marketID)
         marketsInfo[c + 4] = MARKETS.getCreationTime(marketID)
         marketsInfo[c + 5] = MARKETS.getVolume(marketID)
-        tags = slice(MARKETS.returnTags(marketID, outitems=3), items=0, items=3)
+        tags = MARKETS.returnTags(marketID, outitems=3)
         marketsInfo[c + 6] = tags[0]
         marketsInfo[c + 7] = tags[1]
         marketsInfo[c + 8] = tags[2]
         marketsInfo[c + 9] = MARKETS.getLastExpDate(marketID)
         marketsInfo[c + 10] = MARKETS.getMakerFees(marketID)
-        description = INFO.getDescription(marketIDs[m + offset], outchars=descriptionLength)
+        description = INFO.getDescription(marketIDs[m], outchars=descriptionLength)
         c += 11
         d = 0
         while d < descriptionLength:
