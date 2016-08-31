@@ -21,7 +21,7 @@ inset('../data_api/periodStage.se')
 # distribute any eth here too
 def collectFees(branch, sender):
     refund()
-    if(MUTEX.getMutex() && notWhitelisted):
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
     MUTEX.setMutex()
 
@@ -39,7 +39,7 @@ def collectFees(branch, sender):
     collectRedistributedRep()
     collectTradeFees()
     prepareInfoForConsensus()
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
 
@@ -47,11 +47,11 @@ macro checkCollectFeesPreconditions():
     atSecondHalfOfPeriod()
     if(!CONSENSUS.getRepRedistributionDone(branch, sender)):
         # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
     if(feesCollected):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
 

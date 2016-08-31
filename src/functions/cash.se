@@ -48,9 +48,9 @@ def init():
 
 def transfer(to: address, value: uint256):
     refund()
-    if(MUTEX.getMutex() && notWhitelisted):
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.setMutex()
     senderBalance = self.accounts[msg.sender].balance
     if(senderBalance < value):
@@ -61,15 +61,15 @@ def transfer(to: address, value: uint256):
     self.accounts[msg.sender].balance -= value
     self.accounts[to].balance += value
     log(type = Transfer, msg.sender, to, value)
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
 
 def transferFrom(from: address, to: address, value: uint256):
     refund()
-    if(MUTEX.getMutex() && notWhitelisted):
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.setMutex()
     senderBalance = self.accounts[from].balance
     if(senderBalance < value or value > self.accounts[from].spenders[msg.sender].maxValue):
@@ -81,20 +81,20 @@ def transferFrom(from: address, to: address, value: uint256):
     self.accounts[from].balance -= value
     self.accounts[to].balance += value
     log(type = Transfer, from, to, value)
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
 
 def approve(spender: address, value: uint256):
     refund()
-    if(MUTEX.getMutex() && notWhitelisted):
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.setMutex()
 
     self.accounts[msg.sender].spenders[spender].maxValue = value
     log(type=Approval, msg.sender, spender, value)
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
 

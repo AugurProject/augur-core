@@ -71,9 +71,9 @@ macro checkSubcurrencyIsValid(contract):
 # with a categorical user can set min and max to whatever, for reporting 1 is the min and max is the max then reports should be scaled between that range, for payouts it's 1 to the winning outcome or equal for all outcomes if indeterminate, you cannot trade by paying more than 1 for a share as that makes no sense
 def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str):
     refund()
-    if(MUTEX.getMutex() && notWhitelisted):
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.setMutex()
 
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -91,11 +91,11 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     mcopy(eventinfo + 7 * 32, description, len(description))
     event = ripemd160(eventinfo, chars = len(eventinfo))
     if(INFO.getCreator(event)):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
     if(INFO.setInfo(event, description, msg.sender, 0) and EVENTS.initializeEvent(event, branch, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution)):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(event)
     else:
@@ -122,9 +122,9 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
 # todo fix creation fee to be in eth b/c it covers gas fees...
 def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag3, fxpMakerFees, extraInfo: str, currency):
     callstackCheck()
-    if(MUTEX.getMutex() && notWhitelisted):
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.setMutex()
 
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -166,7 +166,7 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     market = ripemd160(marketinfo, chars = len(marketinfo))
     # if it's already been created return 0
     if(INFO.getCreator(market)):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-4)
     events = array(1)
@@ -183,7 +183,7 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     if(eventNotAddedYet):
         addEvent()
     log(type = marketCreated, market)
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(market)
     
@@ -295,35 +295,35 @@ def pushMarketForward(branch, market):
 
 macro checkEventCreationPreconditions():
     if(!periodLength or !len(description) or !len(resolution) or expDate < block.timestamp):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
     if(fxpMaxValue < fxpMinValue or (fxpMaxValue - fxpMinValue) < ONE):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-2)
     if(numOutcomes < 2 or numOutcomes > 8):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-3)
     # fix to allow event and market creation during forks at own risk
     if(forkPeriod and ((expDate / periodLength) == forkPeriod or (expDate / periodLength) == (forkPeriod + 1))):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-4)
 
 macro checkMarketCreationPreconditions():
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
     if(!periodLength or !len(description) or fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > MAX_FEE or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or fxpMakerFees < 0 or fxpMakerFees > ONE_HALF):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
     if(expirationDate < block.timestamp):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-2)
     # todo examine why - perhaps should or shouldn't allow on fork but on regular branch
     if(forkPeriod and (futurePeriod == forkPeriod or futurePeriod == (forkPeriod + 1))):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-3)

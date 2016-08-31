@@ -72,9 +72,9 @@ def moveEvent(event):
 # todo fork use address picked in market creation to resolve it and have a default fork resolve option
 def resolveFork(branch):
     callstackCheck()
-    if(MUTEX.getMutex() && notWhitelisted):
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.setMutex()
     
     # do whitelist to only allow call w/ move event - but what if only 1 event and that's the one we fork over, in that case need the ability to call resolve fork manually if it hasn't been done yet within the time parameters which allows a fork to be resolved [2 periods after the start]
@@ -90,7 +90,7 @@ def resolveFork(branch):
     else:
         winner = fork
     BACKSTOPS.setResolved(branch, forkPeriod, winner)
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(winner)
 

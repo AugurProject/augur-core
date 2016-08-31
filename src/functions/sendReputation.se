@@ -57,9 +57,9 @@ event Approval(owner:indexed, spender:indexed, branch:indexed, value)
     # -5: not enough rep / fxpValue too small or not authorized
 def sendRepFrom(branch, from, recver, fxpValue):
     checkInvariants(from)
-    if(MUTEX.getMutex() && notWhitelisted):
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.setMutex()
 
     senderIndex = REPORTING.repIDToIndex(branch, from)
@@ -70,7 +70,7 @@ def sendRepFrom(branch, from, recver, fxpValue):
     if(!REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, receiverIndex, fxpValue)):
         throw()
     log(type = Transfer, from, recver, fxpValue)
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
 
@@ -83,9 +83,9 @@ def sendRepFrom(branch, from, recver, fxpValue):
 # fails unless from has authorized sender [either contract which was approved or the from address is the msg.sender]
 def transferFrom(branch, from, recver, fxpValue):
     refund()
-    if(MUTEX.getMutex() && notWhitelisted):
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.setMutex()
 
     votePeriod = BRANCHES.getVotePeriod(branch)
@@ -97,7 +97,7 @@ def transferFrom(branch, from, recver, fxpValue):
     if(!REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, receiverIndex, fxpValue)):
        throw()
     log(type=Transfer, from, recver, fxpValue)
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
 
@@ -148,29 +148,29 @@ def convertToActiveRep(branch, fxpValue):
     return(1)
 
 def claimRep():
-    if(MUTEX.getMutex() && notWhitelisted):
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.setMutex()
     callstackCheck()
     balance = REPCONTRACT.balanceOf(msg.sender)
     if(!REPCONTRACT.transferFrom(msg.sender, 0, balance) or !REPORTING.addReporter(1010101, msg.sender, 0, balance, 0)):
         throw()
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
 
 # Allows spender to withdraw from your dormant rep account
 def approve(branch, spender, fxpValue):
     callstackCheck()
-    if(MUTEX.getMutex() && notWhitelisted):
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.setMutex()
 
     self.amountCanSpend[msg.sender][spender].branch[branch] = fxpValue
     log(type = Approval, msg.sender, spender, branch, fxpValue)
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
 
@@ -192,11 +192,11 @@ macro checkInvariants($account):
     # Rep cannot be simultaneously spent (transferred) and used to vote
     atFirstHalfOfPeriod()
     if(delta > 1 and CATCHUP.penalizationCatchup(branch, $account) != 1):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-4)
     if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
 
@@ -204,15 +204,15 @@ macro checkSendRepInvariants():
     if(REPORTING.getReporterID(branch, senderIndex) != from and from == msg.sender):
         CONSENSUS.setPenalizedUpTo(branch, from, (votePeriod - 1))
         REPORTING.addReporter(branch, from)
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
     if(REPORTING.getReporterID(branch, receiverIndex) != recver):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-3)
     if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from == msg.sender)):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-5)
     if(from != msg.sender):

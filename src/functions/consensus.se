@@ -103,14 +103,14 @@ def penalizeWrong(branch, event):
 # ui has to call this to stay cheap / not check it elsewhere
 def incrementPeriodAfterReporting(branch):
     refund()
-    if(MUTEX.getMutex() && notWhitelisted):
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.setMutex()
 
     # do this after reporting is finished
     if(!periodOver(branch)):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
     periodVotingOnNow = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
@@ -123,7 +123,7 @@ def incrementPeriodAfterReporting(branch):
     baseReporterQuantity = 2 * (3 * ONE + ((333 * ONE * percentAppealed / ONE) ** 3 / 2 ** 128)) / ONE
     CONSENSUS.setBaseReportersLastPeriod(branch, BRANCHES.getBaseReporters(branch))
     BRANCHES.setBaseReporters(branch, baseReporterQuantity)
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
 

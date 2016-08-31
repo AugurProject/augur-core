@@ -20,9 +20,9 @@ macro MAX_DELTA: 22
 # whitelist this [calling if only 1 period behind for someone else can be bad, so only call when auto/necessary]
 def penalizationCatchup(branch, sender):
     refund()
-    if(MUTEX.getMutex() && notWhitelisted):
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.setMutex()
 
     # find delta between this last period and the last one a reporter was penalized up to
@@ -34,7 +34,7 @@ def penalizationCatchup(branch, sender):
 
     redistributeRepFromNotReporting()
     CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
-    if(notWhitelisted):
+    if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
 
@@ -43,14 +43,14 @@ macro checkPenalizationCatchupPreconditions():
     # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
     atFirstHalfOfPeriod()
     if(delta <= 0):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
     # provided user is at least one period behind and they didn't report in the last period
     alreadyPenalized = (lastPeriodPenalized == lastPeriod)
     reportedLastPeriod = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, sender)
     if(alreadyPenalized or reportedLastPeriod):
-        if(notWhitelisted):
+        if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-3)
 
