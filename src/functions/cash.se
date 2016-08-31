@@ -149,10 +149,10 @@ def totalSupply():
     checkCallstack()
     return(self.totalSupply)
 
-# @return reputation fxpValue
+# @return fxpValue
 def balanceOf(address: address):
     checkCallstack()
-    return(self.accounts[msg.sender].balance)
+    return(self.accounts[address].balance)
 
 def getName():
     checkCallstack()

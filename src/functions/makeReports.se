@@ -269,6 +269,7 @@ macro calculateReportingThreshold():
         threshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
     else:
         threshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
+    threshold
 
 macro validateReportAndUpdateBinaryEvent():
     if(fxpReport > 2 * ONE or fxpReport < ONE or !fxpReport):

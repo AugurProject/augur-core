@@ -101,6 +101,7 @@ def penalizeWrong(branch, event):
 
 # Increments the period after reporting
 # ui has to call this to stay cheap / not check it elsewhere
+# factor out todo
 def incrementPeriodAfterReporting(branch):
     refund()
     if(MUTEX.getMutex() && !mutexWhitelisted()):

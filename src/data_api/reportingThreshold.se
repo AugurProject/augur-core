@@ -43,7 +43,7 @@ def getEventsToReportOn(branch, period, sender, start):
         events[i] = EXPEVENTS.getEvent(branch, period, n)
         # calculate report target for event here if not done for purposes of computing this
         if(!EXPEVENTS.getLesserReportNum(branch, period, events[i])):
-            MAKEREPORTS.calculateReportTargetForEvent(branch, events[i], period, msg.sender)
+            MAKEREPORTS.calculateReportTargetForEvent(branch, events[i], period, sender)
         reportingThreshold = self.calculateReportingThreshold(branch, events[i], period, sender)
 
         x = array(1)
@@ -67,7 +67,7 @@ def getEventsToReportOn(branch, period, sender, start):
 def getEventCanReportOn(branch, period, reporter, event):
     callstackCheck()
     if(!EXPEVENTS.getLesserReportNum(branch, period, events[i])):
-        MAKEREPORTS.calculateReportTargetForEvent(branch, events[i], period, msg.sender)
+        MAKEREPORTS.calculateReportTargetForEvent(branch, events[i], period, reporter)
     reportingThreshold = self.calculateReportingThreshold(branch, event, period, reporter)
 
     x = array(1)
