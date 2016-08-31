@@ -82,7 +82,6 @@ def getEventCanReportOn(branch, period, reporter, event):
 # In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold, UI calls this.
 # Returns 1 if the event's reporting threshold has been set
 # Errors: 0 if the event can't be reported on
-# whitelist
 def setReportingThreshold(event):
     callstackCheck()
     # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)

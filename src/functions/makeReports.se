@@ -272,13 +272,11 @@ macro calculateReportingThreshold():
 
 macro validateReportAndUpdateBinaryEvent():
     if(fxpReport > 2 * ONE or fxpReport < ONE or !fxpReport):
-        MUTEX.unsetMutex()
         return(-4)
     # outcome is calculated as we go along on a fxpReport by fxpReport basis (i.e. lazily evaluating things)
     elif(forkedOverThisEvent):
         # in case of fork remove the original outcome as a possible response if forked over outcome [i.e. didn't fork over fxpEthics]
         if(!forkedOverEthicality and fxpReport == catch(EVENTS.getUncaughtOutcome(event))):
-            MUTEX.unsetMutex()
             return(-4)
         outcome = (EVENTS.getForkOutcome(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + fxpReport * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
         EVENTS.setForkOutcome(event, outcome)
@@ -295,7 +293,6 @@ macro validateReportAndUpdateScalarOrCategoricalEvent():
     # in case of fork remove the original outcome as a possible response if didn't fork over fxpEthics
     reportIsSameAsOutcomeOnOriginalBranch = fxpReport == EVENTS.getUncaughtOutcome(event)
     if(forkedOverThisEvent and (!forkedOverEthicality and reportIsSameAsOutcomeOnOriginalBranch)):
-        MUTEX.unsetMutex()
         return(-4)
     # outcome (uncaught and mode) is calculated as we go along on a fxpReport by fxpReport basis (i.e. lazily evaluating things)
     # adding weight to a given poss. mode fxpReport
