@@ -6,6 +6,7 @@ import events as EVENTS
 import backstops as BACKSTOPS
 import expiringEvents as EXPEVENTS
 import consensusData as CONSENSUS
+import mutex as MUTEX
 
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
@@ -31,6 +32,10 @@ inset('../data_api/periodStage.se')
     # -6: event branch is invalid/doesn't match
 def penalizeOnForkedEvent(branch, event):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+
     # todo perhaps increment period by default if not done
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriodVotedOn = BRANCHES.getVotePeriod(branch)-1
@@ -53,23 +58,30 @@ def penalizeOnForkedEvent(branch, event):
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriodVotedOn, msg.sender)):
         sendRedistributedRepToBranch()
+    MUTEX.unsetMutex()
     return(1)
 
 macro checkForkPenalizationPreconditions():
     if(repBalance < ONE):
+        MUTEX.unsetMutex()
         return(0)
     if((block.timestamp / periodLength - 2) != lastPeriodVotedOn):
         # todo why not auto increment period
+        MUTEX.unsetMutex()
         return(-1)
     atFirstHalfOfPeriod()
     # means event / fork isn't resolved
     if(!EVENTS.getForkedDone(event)):
+        MUTEX.unsetMutex()
         return(-3)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriodVotedOn):
+        MUTEX.unsetMutex()
         return(-4)
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriodVotedOn - 1)):
+        MUTEX.unsetMutex()
         return(-5)
     if(EVENTS.getEventBranch(event) != branch):
+        MUTEX.unsetMutex()
         return(-6)
 
 macro penalizeOrRewardReporter():
@@ -86,7 +98,7 @@ macro handleEthicsAndBondRepRedistribution($numReportedOn):
     # for ethicality if diff. appeal then pay back the fork bond from people who reported the wrong ethicality
     if(ethics != ethicCatch(EVENTS.getEthics(event)) and repChange >= 0 and BACKSTOPS.getForkedOverEthicality(event)):
         if($numReportedOn < 10):
-            # allows max penalty to be 10% per event}
+            # allows max penalty to be 10% per event
             repChange = -ONE / 10 * repBalance / ONE
         else:
             repChange = -ONE / $numReportedOn * repBalance / ONE

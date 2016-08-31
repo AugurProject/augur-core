@@ -30,6 +30,7 @@ import consensusData as CONSENSUS
 import collectFees as COLLECTFEES
 import penalizationCatchup as CATCHUP
 import reportingThreshold as THRESHOLD
+import mutex as MUTEX
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
@@ -42,6 +43,7 @@ macro MAX_REPORT_THRESHOLD: 2 ** 192
 macro MARKETS_COUNTING_TOWARDS_SHARE_VALUE: 20
 
 def makeHash(salt, fxpReport, event, sender):
+    checkCallstack()
     hashInfo = array(4)
     hashInfo[0] = sender
     hashInfo[1] = salt
@@ -58,6 +60,9 @@ def makeHash(salt, fxpReport, event, sender):
 # Error -4: not caught up on penalizations [>1 period behind] and auto catchup failed
 def submitReportHash(event, reportHash, encryptedSaltyHash):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
     # todo perhaps increment period by default if not done
     branch = EVENTS.getBranch(event)
     votePeriod = BRANCHES.getVotePeriod(branch)
@@ -76,9 +81,11 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     shaHash = (abs(sha3(x, items = 1)) / ONE) * 2
     # shaHash must be <= to the threshold for that user to be able to fxpReport on the given event
     if(shaHash > reportingThresholdForUser):
+        MUTEX.unsetMutex()
         return(-3)
     EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
     EXPEVENTS.setSaltyEncryptedHash(branch, votePeriod, msg.sender, encryptedSaltyHash, event)
+    MUTEX.unsetMutex()
     return(1)
 
 # Submits / reveals a fxpReport for a period
@@ -95,6 +102,11 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     # -8: fees couldn't be collected
 def submitReport(event, salt, fxpReport, fxpEthics):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+    
+
     branch = EVENTS.getBranch(event)
     balance = REPORTING.getRepBalance(branch, msg.sender)
     votePeriod = BRANCHES.getVotePeriod(branch)
@@ -107,6 +119,7 @@ def submitReport(event, salt, fxpReport, fxpEthics):
 
     saveUsersReportAndHandleEthicality()
     coverGasCostIfPossible()
+    MUTEX.unsetMutex()
     return(1)
 
 # validates and submits fxpReport
@@ -158,11 +171,14 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
 
 macro checkSubmitReportHashPreconditions():
     if(!eventIndex and (!event or event != event)):
+        MUTEX.unsetMutex()
         return(-1)
     atFirstHalfOfPeriod()
     if(delta > 1 and CATCHUP.penalizationCatchup(branch, msg.sender) != 1):
+        MUTEX.unsetMutex()
         return(-4)
     if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
+        MUTEX.unsetMutex()
         return(0)
     # if first fxpReport of period, num events not set
     if(!EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)):
@@ -177,17 +193,22 @@ macro checkSubmitReportPreconditions():
     if(roundTwo or forkedOverThisEvent):
         weight = balance
     if(balance < ONE):
+        MUTEX.unsetMutex()
         return(0)
     if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
+        MUTEX.unsetMutex()
         return(-1)
     atSecondHalfOfPeriod()
     realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
     if(self.makeHash(salt, fxpReport, event, msg.sender) != realHash or !realHash):
+        MUTEX.unsetMutex()
         return(-3)
     if(fxpEthics != ONE and fxpEthics != 0):
+        MUTEX.unsetMutex()
         return(-5)
     # todo get outcome may not work / be valid due to 0 outcome being valid?
     if(EVENTS.getOutcome(event) != 0):
+        MUTEX.unsetMutex()
         return(-6)
     # commented out for easy testing
     # if(block.timestamp / periodLength != ((block.timestamp + 2 * TWENTY_FOUR_HR) / periodLength)):
@@ -195,10 +216,12 @@ macro checkSubmitReportPreconditions():
     # ensures user has collected fees for last reporting period
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod - 1)):
         if(COLLECTFEES.collectFees(branch, msg.sender, value = msg.value) < 0):
+            MUTEX.unsetMutex()
             return(-8)
     # actual submitting of fxpReport and ethicality
     validatedFxpReport = self.validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight)
     if(validatedFxpReport == -4):
+        MUTEX.unsetMutex()
         return(-4)
 
 macro saveUsersReportAndHandleEthicality():
@@ -249,11 +272,13 @@ macro calculateReportingThreshold():
 
 macro validateReportAndUpdateBinaryEvent():
     if(fxpReport > 2 * ONE or fxpReport < ONE or !fxpReport):
+        MUTEX.unsetMutex()
         return(-4)
     # outcome is calculated as we go along on a fxpReport by fxpReport basis (i.e. lazily evaluating things)
     elif(forkedOverThisEvent):
         # in case of fork remove the original outcome as a possible response if forked over outcome [i.e. didn't fork over fxpEthics]
         if(!forkedOverEthicality and fxpReport == catch(EVENTS.getUncaughtOutcome(event))):
+            MUTEX.unsetMutex()
             return(-4)
         outcome = (EVENTS.getForkOutcome(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + fxpReport * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
         EVENTS.setForkOutcome(event, outcome)
@@ -270,6 +295,7 @@ macro validateReportAndUpdateScalarOrCategoricalEvent():
     # in case of fork remove the original outcome as a possible response if didn't fork over fxpEthics
     reportIsSameAsOutcomeOnOriginalBranch = fxpReport == EVENTS.getUncaughtOutcome(event)
     if(forkedOverThisEvent and (!forkedOverEthicality and reportIsSameAsOutcomeOnOriginalBranch)):
+        MUTEX.unsetMutex()
         return(-4)
     # outcome (uncaught and mode) is calculated as we go along on a fxpReport by fxpReport basis (i.e. lazily evaluating things)
     # adding weight to a given poss. mode fxpReport

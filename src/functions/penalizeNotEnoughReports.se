@@ -6,6 +6,8 @@ import consensusData as CONSENSUS
 import reporting as REPORTING
 import reportingThreshold as THRESHOLD
 import fxpFunctions as FXP
+import mutex as MUTEX
+
 inset('../data_api/refund.se')
 inset('../data_api/periodStage.se')
 
@@ -33,7 +35,12 @@ macro MIN_EVENTS_FOR_WHALE: 30
     # Returns 2 if didn't need to be penalized and thus wasn't
 def proveReporterDidntReportEnough(branch, reporter, eventExample):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+
     if(!branch or !eventExample):
+        MUTEX.unsetMutex()
         return(0)
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
     periodAfterForkPeriod = BRANCHES.getForkPeriod(branch) + 1 == lastPeriod
@@ -54,16 +61,20 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     redistributeNotEnoughReportsRep()
     # refund gas cost for the sender
     CONSENSUS.doRefund(msg.sender, reporter)
+    MUTEX.unsetMutex()
     return(1)
 
 macro checkProveReporterDidntReportEnoughPreconditions():
     if(CONSENSUS.getNotEnoughPenalized(branch, reporter, lastPeriod)):
+        MUTEX.unsetMutex()
         return(-1)
     atFirstHalfOfPeriod()
     if(EVENTS.getEventBranch(eventExample) != branch):
+        MUTEX.unsetMutex()
         return(-3)
     # in period just after fork period no reports required
     if(periodAfterForkPeriod):
+        MUTEX.unsetMutex()
         return(-4)
 
 macro ensureReporterCouldveReportedOnMoreButDidnt()
@@ -72,6 +83,7 @@ macro ensureReporterCouldveReportedOnMoreButDidnt()
     couldveReported = THRESHOLD.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
     reportedOnLessThanShouldve = expectedEventsForReporterIncludingRequired / 2 > numReportsSubmitted * ONE and couldveReported
     if(!reportedOnLessThanShouldve):
+        MUTEX.unsetMutex()
         return(-4)
 
 macro redistributeNotEnoughReportsRep():
@@ -80,6 +92,7 @@ macro redistributeNotEnoughReportsRep():
     oldRep = originalRep * POINT_NINE / ONE
     repChange = (oldRep + newRep) - originalRep
     if(repChange > 0):
+        MUTEX.unsetMutex()
         return(1)
     # todo fix issues here w/ withdrawing too much rep and redistribution before/after/etc
     # removes rep from reporter who lost it

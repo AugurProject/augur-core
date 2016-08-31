@@ -27,6 +27,7 @@ import markets as MARKETS
 import events as EVENTS
 import oneWinningOutcomePayouts as CLOSEONE
 import twoWinningOutcomePayouts as CLOSETWO
+import mutex as MUTEX
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 
@@ -50,12 +51,16 @@ macro categorical($event):
 # todo macro THREEDAYS: 259200 add to getting $ for shares
 def claimProceeds(market):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
     event = MARKETS.getMarketEvent(market, 0)
     winningOutcomes = array(MAX_WINNING_OUTCOMES)
     winningOutcomes = MARKET.getWinningOutcomes(market, outitems = MAX_WINNING_OUTCOMES)
     success = 0
     # market not resolved
     if(!winningOutcomes[0]):
+        MUTEX.unsetMutex()
         return(0)
     scalar = winningOutcomes[1]
     if(scalar):
@@ -68,4 +73,5 @@ def claimProceeds(market):
         # resolves a regular binary or categorical market
         else:
             success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, EVENTS.getNumOutcomes(event))
+    MUTEX.unsetMutex()
     return(success)

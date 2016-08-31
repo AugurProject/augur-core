@@ -99,8 +99,10 @@ macro fxExp($x):
 
 # Calculates the exponential function given a fixed point [base 2**64] number, so e**x
 def fxExp(fxpX):
+    callstackCheck()
     return(fxExp(fxpX))
 
 # Calculates the natural log function given a fixed point [base 2**64] number, so ln(x)
 def fxLog(fxpX):
+    callstackCheck()
     return(fxLog(fxpX))

@@ -4,7 +4,7 @@ import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import reporting as REPORTING
 import consensusData as CONSENSUS
-
+import mutex as MUTEX
 inset('../data_api/refund.se')
 inset('../data_api/periodStage.se')
 
@@ -18,6 +18,10 @@ inset('../data_api/periodStage.se')
     # -5: already slashed
 def slashRep(branch, salt, report, reporter, event):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = BRANCHES.getVotePeriod(branch)
     alreadySlashed = CONSENSUS.getSlashed(branch, votePeriod, reporter)
@@ -44,16 +48,21 @@ def slashRep(branch, salt, report, reporter, event):
     REPORTING.addRep(branch, trutherIndex, (reporterBalance * ONE_HALF / ONE))
     # other half sent to branch
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), reporterBalance * ONE_HALF / ONE)
+    MUTEX.unsetMutex()
     return(1)
 
 macro checkSlashRepInvariants():
     if(votePeriodShouldBe != votePeriod):
+        MUTEX.unsetMutex()
         return(-1)
     atFirstHalfOfPeriod()
     reporterIndex = REPORTING.repIDToIndex(branch, reporter)
     if(reportHash != realHash):
+        MUTEX.unsetMutex()
         return(-3)
     if(EVENTS.getEventBranch(event) != branch):
+        MUTEX.unsetMutex()
         return(-4)
     if(alreadySlashed):
+        MUTEX.unsetMutex()
         return(-5)

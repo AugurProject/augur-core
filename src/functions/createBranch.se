@@ -23,6 +23,7 @@
 import branches as BRANCHES
 import info as INFO
 import reporting as REPORTING
+import mutex as MUTEX
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 
@@ -49,6 +50,12 @@ def init():
     # -2: branch already exists
 def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, oracleOnly):
     refund()
+    if(MUTEX.getMutex() && notWhitelisted):
+        throw()
+
+    if(notWhitelisted):
+        MUTEX.setMutex()
+
     checkBranchCreationPreconditions()
     parentPeriod = BRANCHES.getVotePeriod(parent)
     branchInfo = string(7 * 32 + len(description))
@@ -69,6 +76,8 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
     # provided event doesn't already exist, create it
     wallet = 0
     if(INFO.getCreator(branch)):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-2)
     checkSubcurrencyIsValid(self.ethContract)
     wallet = create('wallet.se')
@@ -79,11 +88,17 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
     feePaid = self.ethContract.transferFrom(msg.sender, BRANCHES.getWallet(parent, self.ethContract), 47 * ONE)
     if(!feePaid or !INFO.setInfo(branch, description, msg.sender, 47 * ONE, 0, 0) or !REPORTING.setInitialReporters(branch)):
         throw()
+    if(notWhitelisted):
+        MUTEX.unsetMutex()
     return(branch)
 
 # make minimum period len 24 hr
 macro checkBranchCreationPreconditions():
     if(periodLength <= 0 or !BRANCHES.getPeriodLength(parent) or !len(description)):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-1)
     if(fxpMinTradingFee <= 0 or fxpMinTradingFee > MAX_FEE or (oracleOnly != 0 and oracleOnly != 1)):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-1)

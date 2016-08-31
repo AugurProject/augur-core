@@ -8,6 +8,7 @@ import markets as MARKETS
 import backstops as BACKSTOPS
 import consensusData as CONSENSUS
 import roundTwo as ROUNDTWO
+import mutex as MUTEX
 
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
@@ -42,8 +43,12 @@ macro MIN_BOND: 200 * ONE
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized
 def penalizeRoundTwoWrong(branch, event):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
     # todo perhaps increment period by default if not done
     if(!branch):
+        MUTEX.unsetMutex()
         return(0)
     lastPeriodVotedOn = BRANCHES.getVotePeriod(branch) - 1
     lastPenalizationPeriod = lastPeriodVotedOn - 1
@@ -92,6 +97,7 @@ def penalizeRoundTwoWrong(branch, event):
             CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
     else:
+        MUTEX.unsetMutex()
         return(-8)
     # if a fork event in original branch, only event needed to report on in this period is that one [b/c the original branch resolves it as a regular round 2 event, fork reports again]
     if(event == forkEvent):
@@ -100,26 +106,34 @@ def penalizeRoundTwoWrong(branch, event):
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriodVotedOn, msg.sender)):
         sendRedistributedRepToBranch()
+    MUTEX.unsetMutex()
     return(1)
 
 macro checkPenalizeWrongRoundTwoPreconditions():
     if(repBalance < ONE):
+        MUTEX.unsetMutex()
         return(0)
     if(EVENTS.getEventBranch(event) != branch):
+        MUTEX.unsetMutex()
         return(-7)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     atFirstHalfOfPeriod()
     if((block.timestamp / periodLength - 2) != lastPeriodVotedOn):
+        MUTEX.unsetMutex()
         # should prob. auto increment period here too todo
         return(-1)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     if(!EVENTS.getOutcome(event) and !ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriodVotedOn, event), msg.sender)):
+        MUTEX.unsetMutex()
         return(-3)
     if(BRANCHES.getForkPeriod(branch) == lastPeriodVotedOn and event != forkEvent):
+        MUTEX.unsetMutex()
         return(-4)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriodVotedOn):
+        MUTEX.unsetMutex()
         return(-5)
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriodVotedOn - 1)):
+        MUTEX.unsetMutex()
         return(-6)
 
 macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn):
@@ -154,4 +168,4 @@ macro overruled():
         overruled = (originalOutcome != uncaughtOutcome or !sameEthics)
     else:
         overruled = (originalOutcome != catch(uncaughtOutcome) or !sameEthics)
-    overruled\
+    overruled

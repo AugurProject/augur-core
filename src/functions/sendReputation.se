@@ -31,6 +31,7 @@ import consensusData as CONSENSUS
 # should really factor this out so they don't depend on eachother
 import consensus as INCREMENTPERIOD
 import repContract as REPCONTRACT
+import mutex as MUTEX
 inset('../data_api/refund.se')
 inset('../data_api/periodStage.se')
 
@@ -56,6 +57,11 @@ event Approval(owner:indexed, spender:indexed, branch:indexed, value)
     # -5: not enough rep / fxpValue too small or not authorized
 def sendRepFrom(branch, from, recver, fxpValue):
     checkInvariants(from)
+    if(MUTEX.getMutex() && notWhitelisted):
+        throw()
+    if(notWhitelisted):
+        MUTEX.setMutex()
+
     senderIndex = REPORTING.repIDToIndex(branch, from)
     receiverIndex = REPORTING.repIDToIndex(branch, recver)
     senderBalance = REPORTING.getRepBalance(branch, from)
@@ -64,6 +70,8 @@ def sendRepFrom(branch, from, recver, fxpValue):
     if(!REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, receiverIndex, fxpValue)):
         throw()
     log(type = Transfer, from, recver, fxpValue)
+    if(notWhitelisted):
+        MUTEX.unsetMutex()
     return(1)
 
 # Transfer dormant rep
@@ -75,6 +83,11 @@ def sendRepFrom(branch, from, recver, fxpValue):
 # fails unless from has authorized sender [either contract which was approved or the from address is the msg.sender]
 def transferFrom(branch, from, recver, fxpValue):
     refund()
+    if(MUTEX.getMutex() && notWhitelisted):
+        throw()
+    if(notWhitelisted):
+        MUTEX.setMutex()
+
     votePeriod = BRANCHES.getVotePeriod(branch)
     senderIndex = REPORTING.repIDToIndex(branch, from)
     receiverIndex = REPORTING.repIDToIndex(branch, recver)
@@ -84,6 +97,8 @@ def transferFrom(branch, from, recver, fxpValue):
     if(!REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, receiverIndex, fxpValue)):
        throw()
     log(type=Transfer, from, recver, fxpValue)
+    if(notWhitelisted):
+        MUTEX.unsetMutex()
     return(1)
 
 # Convert active rep to dormant rep
@@ -96,6 +111,9 @@ def transferFrom(branch, from, recver, fxpValue):
 # if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event todo
 # unless this just happened to them last period and they reported correctly then
 def convertToDormantRep(branch, fxpValue):
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
     checkInvariants(msg.sender)
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
     senderBalance = REPORTING.getRepBalance(branch, msg.sender)
@@ -104,6 +122,7 @@ def convertToDormantRep(branch, fxpValue):
     if(!REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, senderIndex, fxpValue)):
         throw()
     REPORTING.adjustActiveRep(branch, -fxpValue)
+    MUTEX.unsetMutex()
     return(1)
 
 # Convert dormant rep to active rep
@@ -114,6 +133,9 @@ def convertToDormantRep(branch, fxpValue):
     # -4: couldn't catchup automatically
     # -5: not enough rep
 def convertToActiveRep(branch, fxpValue):
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
     checkInvariants(msg.sender)
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
     senderBalance = REPORTING.balanceOf(branch, msg.sender)
@@ -122,20 +144,34 @@ def convertToActiveRep(branch, fxpValue):
     if(!REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, senderIndex, fxpValue) or !safeToAdd(fxpValue, REPORTING.getRepBalance(msg.sender))):
         throw()
     REPORTING.adjustActiveRep(branch, fxpValue)
+    MUTEX.unsetMutex()
     return(1)
 
 def claimRep():
+    if(MUTEX.getMutex() && notWhitelisted):
+        throw()
+    if(notWhitelisted):
+        MUTEX.setMutex()
     callstackCheck()
     balance = REPCONTRACT.balanceOf(msg.sender)
     if(!REPCONTRACT.transferFrom(msg.sender, 0, balance) or !REPORTING.addReporter(1010101, msg.sender, 0, balance, 0)):
         throw()
+    if(notWhitelisted):
+        MUTEX.unsetMutex()
     return(1)
 
 # Allows spender to withdraw from your dormant rep account
 def approve(branch, spender, fxpValue):
     callstackCheck()
+    if(MUTEX.getMutex() && notWhitelisted):
+        throw()
+    if(notWhitelisted):
+        MUTEX.setMutex()
+
     self.amountCanSpend[msg.sender][spender].branch[branch] = fxpValue
     log(type = Approval, msg.sender, spender, branch, fxpValue)
+    if(notWhitelisted):
+        MUTEX.unsetMutex()
     return(1)
 
 # Returns amount spender can withdraw from owner
@@ -156,18 +192,28 @@ macro checkInvariants($account):
     # Rep cannot be simultaneously spent (transferred) and used to vote
     atFirstHalfOfPeriod()
     if(delta > 1 and CATCHUP.penalizationCatchup(branch, $account) != 1):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-4)
     if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(0)
 
 macro checkSendRepInvariants():
     if(REPORTING.getReporterID(branch, senderIndex) != from and from == msg.sender):
         CONSENSUS.setPenalizedUpTo(branch, from, (votePeriod - 1))
         REPORTING.addReporter(branch, from)
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-1)
     if(REPORTING.getReporterID(branch, receiverIndex) != recver):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-3)
     if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from == msg.sender)):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-5)
     if(from != msg.sender):
         self.amountCanSpend[from][msg.sender].branch[branch] -= fxpValue
@@ -177,8 +223,10 @@ macro checkRepConversionInvariants():
     if(REPORTING.getReporterID(branch, senderIndex) != msg.sender):
         REPORTING.addReporter(branch, msg.sender)
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, (votePeriod - 1))
+        MUTEX.unsetMutex()
         return(-1)
     if(senderBalance < fxpValue or fxpValue <= 0):
+        MUTEX.unsetMutex()
         return(-5)
 
 # safe adders idea pulled from piper merriam's btcrelay audit

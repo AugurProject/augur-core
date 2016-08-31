@@ -26,6 +26,7 @@ import markets as MARKETS
 import backstops as BACKSTOPS
 import events as EVENTS
 import expiringEvents as EXPEVENTS
+import mutex as MUTEX
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 
@@ -70,6 +71,11 @@ macro checkSubcurrencyIsValid(contract):
 # with a categorical user can set min and max to whatever, for reporting 1 is the min and max is the max then reports should be scaled between that range, for payouts it's 1 to the winning outcome or equal for all outcomes if indeterminate, you cannot trade by paying more than 1 for a share as that makes no sense
 def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str):
     refund()
+    if(MUTEX.getMutex() && notWhitelisted):
+        throw()
+    if(notWhitelisted):
+        MUTEX.setMutex()
+
     periodLength = BRANCHES.getPeriodLength(branch)
     forkPeriod = BRANCHES.getForkPeriod(branch)
     checkEventCreationPreconditions()
@@ -85,8 +91,12 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     mcopy(eventinfo + 7 * 32, description, len(description))
     event = ripemd160(eventinfo, chars = len(eventinfo))
     if(INFO.getCreator(event)):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(0)
     if(INFO.setInfo(event, description, msg.sender, 0) and EVENTS.initializeEvent(event, branch, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution)):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(event)
     else:
         throw()
@@ -112,6 +122,11 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
 # todo fix creation fee to be in eth b/c it covers gas fees...
 def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag3, fxpMakerFees, extraInfo: str, currency):
     callstackCheck()
+    if(MUTEX.getMutex() && notWhitelisted):
+        throw()
+    if(notWhitelisted):
+        MUTEX.setMutex()
+
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
     creationFee = POINT_ZERO_THREE * baseReporters * ONE / fxpTradingFee
@@ -151,6 +166,8 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     market = ripemd160(marketinfo, chars = len(marketinfo))
     # if it's already been created return 0
     if(INFO.getCreator(market)):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-4)
     events = array(1)
     events[0] = event
@@ -166,6 +183,8 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     if(eventNotAddedYet):
         addEvent()
     log(type = marketCreated, market)
+    if(notWhitelisted):
+        MUTEX.unsetMutex()
     return(market)
     
 # initialize market and send money to pay for resolution
@@ -202,19 +221,25 @@ macro addEvent():
     # -2: invalid new trading fee
 def updateTradingFee(market, fxpTradingFee):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
     branch = MARKETS.getBranch(market)
     if(msg.sender != INFO.getCreator(market)):
+        MUTEX.unsetMutex()
         return(-1)
     oldFee = MARKETS.getTradingFee(market)
     baseReporters = BRANCHES.getBaseReporters(branch)
     oldCreationFee = POINT_ZERO_SIX * baseReporters * ONE / oldFee
     newCreationFee = POINT_ZERO_SIX * baseReporters * ONE / fxpTradingFee
     if(fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > oldFee):
+        MUTEX.unsetMutex()
         return(-2)
     currency = INFO.getCurrency(market)
     if(!currency.transferFrom(msg.sender, BRANCHES.getWallet(branch, currency), newCreationFee - oldCreationFee) or !MARKETS.setTradingFee(market, fxpTradingFee)):
         throw()
     log(type = tradingFeeUpdated, market, fxpTradingFee)
+    MUTEX.unsetMutex()
     return(1)
 
 # Anyone can post an "Early Resolution Bond"
@@ -228,22 +253,30 @@ def updateTradingFee(market, fxpTradingFee):
 # todo add comments re return values and test again
 def pushMarketForward(branch, market):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+
     # can't do while forking
     forkPeriod = BRANCHES.getForkPeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
     currentPeriod = block.timestamp / periodLength
     if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod + 1)):
+        MUTEX.unsetMutex()
         return(-1)
     # if market closed or already pushed forward, return 0
     if(MARKETS.getOneWinningOutcome(market, 0) or MARKETS.getPushedForward(market)):
+        MUTEX.unsetMutex()
         return(-2)
     if(MARKETS.getBranch(market) != branch):
+        MUTEX.unsetMutex()
         return(0)
     event = MARKETS.getMarketEvent(market, 0)
     expiration = EVENTS.getExpiration(event)
     beingReportedOnNow = (expiration / periodLength == block.timestamp / periodLength)
     alreadyPushedForward = EVENTS.getRejectedPeriod(event) or expiration != EVENTS.getOriginalExpiration(event)
     if(alreadyPushedForward or beingReportedOnNow or EVENTS.getOutcome(event) or BACKSTOPS.getRoundTwo(event)):
+        MUTEX.unsetMutex()
         return(-3)
     # push into next vote period
     period = block.timestamp / periodLength
@@ -257,25 +290,40 @@ def pushMarketForward(branch, market):
     payEarlyResolutionBond = MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), MARKETS.getTradingFee(market) * MARKETS.getTotalSharesPurchased(market) / (2 * ONE))
     if(!payEarlyResolutionBond):
         throw()
+    MUTEX.unsetMutex()
     return(1)
 
 macro checkEventCreationPreconditions():
     if(!periodLength or !len(description) or !len(resolution) or expDate < block.timestamp):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-1)
     if(fxpMaxValue < fxpMinValue or (fxpMaxValue - fxpMinValue) < ONE):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-2)
     if(numOutcomes < 2 or numOutcomes > 8):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-3)
     # fix to allow event and market creation during forks at own risk
     if(forkPeriod and ((expDate / periodLength) == forkPeriod or (expDate / periodLength) == (forkPeriod + 1))):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-4)
 
 macro checkMarketCreationPreconditions():
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
     if(!periodLength or !len(description) or fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > MAX_FEE or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or fxpMakerFees < 0 or fxpMakerFees > ONE_HALF):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-1)
     if(expirationDate < block.timestamp):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-2)
     # todo examine why - perhaps should or shouldn't allow on fork but on regular branch
     if(forkPeriod and (futurePeriod == forkPeriod or futurePeriod == (forkPeriod + 1))):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-3)

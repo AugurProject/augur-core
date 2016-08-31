@@ -4,6 +4,7 @@ import branches as BRANCHES
 import reporting as REPORTING
 import expiringEvents as EXPEVENTS
 import consensusData as CONSENSUS
+import mutex as MUTEX
 
 inset('../data_api/refund.se')
 inset('../data_api/periodStage.se')
@@ -19,6 +20,11 @@ macro MAX_DELTA: 22
 # whitelist this [calling if only 1 period behind for someone else can be bad, so only call when auto/necessary]
 def penalizationCatchup(branch, sender):
     refund()
+    if(MUTEX.getMutex() && notWhitelisted):
+        throw()
+    if(notWhitelisted):
+        MUTEX.setMutex()
+
     # find delta between this last period and the last one a reporter was penalized up to
     lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, sender)
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
@@ -28,6 +34,8 @@ def penalizationCatchup(branch, sender):
 
     redistributeRepFromNotReporting()
     CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
+    if(notWhitelisted):
+        MUTEX.unsetMutex()
     return(1)
 
 macro checkPenalizationCatchupPreconditions():
@@ -35,11 +43,15 @@ macro checkPenalizationCatchupPreconditions():
     # should only be allowed in 1st half of any period b/c rep removal / sending to branch should only be done then
     atFirstHalfOfPeriod()
     if(delta <= 0):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-1)
     # provided user is at least one period behind and they didn't report in the last period
     alreadyPenalized = (lastPeriodPenalized == lastPeriod)
     reportedLastPeriod = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, sender)
     if(alreadyPenalized or reportedLastPeriod):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-3)
 
 macro redistributeRepFromNotReporting():

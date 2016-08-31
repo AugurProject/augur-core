@@ -24,6 +24,7 @@ import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import markets as MARKETS
 import info as INFO
+import mutex as MUTEX
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, ]:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 
@@ -36,6 +37,9 @@ inset('../data_api/refund.se')
     # -3: not a large enough amount
 def buyCompleteSets(market, fxpAmount):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
@@ -53,6 +57,7 @@ def buyCompleteSets(market, fxpAmount):
     if(notVotingOnYet):
         MARKETS.modifySharesValue(market, fxpAmount * cumulativeScale / ONE)
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), fxpAmount * cumulativeScale / ONE)
+    MUTEX.unsetMutex()
     return(1)
 
 # Sells fxpAmount of every outcome [if user owns it]
@@ -62,6 +67,9 @@ def buyCompleteSets(market, fxpAmount):
     # -2: user hasn't specified a large enough amount
 def sellCompleteSets(market, fxpAmount):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
@@ -81,25 +89,32 @@ def sellCompleteSets(market, fxpAmount):
     # send funds from the market to the user acc.
     if(!INFO.getWallet(market).transfer(msg.sender, cost)):
         throw()
+    MUTEX.unsetMutex()
     return(1)
 
 macro checkBuyCompleteSetsPreconditions():
     if(!MARKETS.getNumOutcomes(market)):
+        MUTEX.unsetMutex()
         return(0)
     if(BRANCHES.getOracleOnly(branch)):
+        MUTEX.unsetMutex()
         return(-1)
     if(fxpAmount <= 0):
+        MUTEX.unsetMutex()
         return(-3)
     # send money from user acc. to market address/account
     if(!MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), cost)):
+        MUTEX.unsetMutex()
         return(-2)
 
 macro checkSellCompleteSetsPreconditions():
     if(fxpAmount <= 0):
+        MUTEX.unsetMutex()
         return(-2)
     n = 1
     while(n <= numOutcomes):
         if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < fxpAmount):
+            MUTEX.unsetMutex()
             return(-1)
         n += 1
     n = 1

@@ -30,6 +30,7 @@ def commitTrade(hash):
     return(1)
 
 def checkHash(tradeHash, sender):
+    callstackCheck()
     if(self.tradeCommits[sender].hash != tradeHash or block.number <= self.tradeCommits[sender].block):
         return(-1)
     else:
@@ -75,14 +76,18 @@ def removeTrade(id):
     return(1)
 
 def fillTrade(tradeID, fill):
+    callstackCheck()
     self.trades[tradeID].amount -= fill
     return(1)
 
 def getAmount(id):
+    callstackCheck()
     return(self.trades[id].amount)
 
 def getID(tradeID):
+    callstackCheck()
     return(self.trades[tradeID].id)
 
 def getPrice(id):
+    callstackCheck()
     return(self.trades[id].price)

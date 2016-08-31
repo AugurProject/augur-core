@@ -28,7 +28,9 @@ import events as EVENTS
 import cash as CASH
 import consensusData as CONSENSUS
 import branches as BRANCHES
-import expiringEvents as EXPEVENTSimport backstops as BACKSTOPS
+import expiringEvents as EXPEVENTS
+import backstops as BACKSTOPS
+import mutex as MUTEX
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
@@ -69,6 +71,9 @@ def fundNewAccount(branch):
     # -3: only behind one period and not caught up / penalized yet
 def claimInitialRep(parent, branch):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
     # auto increment vote period if needed
     INCREMENTPERIOD.incrementPeriodAfterReporting(parent)
     parentPeriod = BRANCHES.getParentPeriod(branch)
@@ -103,24 +108,29 @@ def claimInitialRep(parent, branch):
     else:
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch) - 1))
     REPORTING.addReporter(branch, msg.sender, rep, dormantRep, repDecrease)
+    MUTEX.unsetMutex()
     return(1)
 
 macro checkRepClaimPreconditions():
     branchDoesntExist = (!parent or !branch)
     if((BRANCHES.getParent(branch) != parent && parent && branch) or branchDoesntExist):
+        MUTEX.unsetMutex()
         return(-1)
     # have 1 month to claim, make so cant make a new acc on a new branch w/o at least trying this if it's a fork one and reporter was in old branch todo
     tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
     alreadyClaimed = REPORTING.repIDToIndex(branch, msg.sender)
     if(alreadyClaimed or tooLate):
+        MUTEX.unsetMutex()
         return(0)
     lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(parent, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(parent) - 1
     delta = lastPeriod - lastPeriodPenalized
     if(delta > 1):
         if(CATCHUP.penalizationCatchup(parent, msg.sender) != 1):
+            MUTEX.unsetMutex()
             return(-2)
     if(!CONSENSUS.getRepRedistributionDone(parent, msg.sender)):
+        MUTEX.unsetMutex()
         return(-3)
 
 macro removeRepFromThoseWhoReportedWrong():

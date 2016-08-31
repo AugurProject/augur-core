@@ -33,25 +33,32 @@ def init():
     self.Info[1010101].descriptionLength = len(description)
 
 def getDescription(ID):
+    callstackCheck()
     length = self.Info[ID].descriptionLength
     return(load(self.Info[ID].description[0], chars = length): str)
 
 def getDescriptionLength(ID):
+    callstackCheck()
     return(self.Info[ID].descriptionLength)
 
 def getCreator(ID):
+    callstackCheck()
     return(self.Info[ID].creator)
 
 def getCreationFee(ID):
+    callstackCheck()
     return(self.Info[ID].creationFee)
     
 def getCurrency(ID):
+    callstackCheck()
     return(self.Info[ID].currency)
 
 def getWallet(ID):
+    callstackCheck()
     return(self.Info[ID].wallet)
     
 def setCurrencyAndWallet(ID, currency, wallet):
+    callstackCheck()
     self.Info[ID].currency = currency
     self.Info[ID].wallet = wallet
     return(1)

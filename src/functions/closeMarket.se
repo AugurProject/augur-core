@@ -30,6 +30,7 @@ import closeMarketTwo as CLOSETWO
 import backstops as BACKSTOPS
 import eventResolution as RESOLVE
 import info as INFO
+import mutex as MUTEX
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
@@ -46,6 +47,10 @@ inset('eventHelpers.se')
 # if market's events have moved due to a fork branch param passed should be the new fork [todo check to make sure it handles the wrong branch param properly here]
 def closeMarket(market, sender):
     refund()
+    if(MUTEX.getMutex() && notWhitelisted):
+        throw()
+    if(notWhitelisted):
+        MUTEX.setMutex()
     branch = MARKETS.getBranch(market)
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
@@ -62,20 +67,32 @@ def closeMarket(market, sender):
     MARKETS.setWinningOutcomes(market, winningOutcomes)
     # refunds closing cost
     MARKETS.refundClosing(market, sender)
+    if(notWhitelisted):
+        MUTEX.unsetMutex()
     return(1)
 
 macro checkCloseMarketPreconditions():
     # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
     if((period <= tradingPeriod) or fxpOutcome):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(0)
     if(INFO.getCurrency(market).balanceOf(INFO.getWallet(market)) <= 0):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-1)
     if(!EVENTS.getUncaughtOutcome(event)):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-2)
     if(BACKSTOPS.getRoundTwo(event) and !BACKSTOPS.getFinal(event)):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-3)
     # why can't resolve in period after a fork period todo examine
     if((EVENTS.getForked(event) and !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod + 1))):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-4)
 
 macro resolveEventsInMarket():
@@ -89,4 +106,6 @@ macro resolveEventsInMarket():
     else:
         throw()
     if(resolution == -6):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-5)

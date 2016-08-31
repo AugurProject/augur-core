@@ -5,6 +5,8 @@ import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import consensusData as CONSENSUS
 import reporting as REPORTING
+import mutex as MUTEX
+
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 inset('../data_api/periodStage.se')
@@ -19,6 +21,10 @@ inset('../data_api/periodStage.se')
 # distribute any eth here too
 def collectFees(branch, sender):
     refund()
+    if(MUTEX.getMutex() && notWhitelisted):
+        throw()
+    MUTEX.setMutex()
+
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = BRANCHES.getVotePeriod(branch)
     lastPeriod = votePeriod - 1
@@ -33,14 +39,20 @@ def collectFees(branch, sender):
     collectRedistributedRep()
     collectTradeFees()
     prepareInfoForConsensus()
+    if(notWhitelisted):
+        MUTEX.unsetMutex()
     return(1)
 
 macro checkCollectFeesPreconditions():
     atSecondHalfOfPeriod()
     if(!CONSENSUS.getRepRedistributionDone(branch, sender)):
         # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(-1)
     if(feesCollected):
+        if(notWhitelisted):
+            MUTEX.unsetMutex()
         return(0)
 
 macro collectRedistributedRep():

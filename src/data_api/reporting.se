@@ -43,23 +43,29 @@ def init():
     self.Reporting[1010101].reputation[1].reporterID = msg.sender
     
 def checkWhitelist(address):
+    callstackCheck()
     return(self.whitelists[msg.sender].addresses[address])
 
 def getActiveRep(branch):
+    callstackCheck()
     return(self.Reporting[branch].activeRep)
 
 def adjustActiveRep(branch, fxpAmount):
+    callstackCheck()
     self.Reporting[branch].activeRep += fxpAmount
     return(1)
 
 def setFork(branch):
+    callstackCheck()
     self.Reporting[branch].fork = branch
     return(1)
 
 def getFork(branch):
+    callstackCheck()
     return(self.Reporting[branch].fork)
 
 def checkContractWhitelist(contract, address):
+    callstackCheck()
     return(self.whitelists[contract].addresses[address])
 
 def setWhitelist(contract, addresses:arr):
@@ -77,6 +83,7 @@ def setWhitelist(contract, addresses:arr):
 
 # @return reputation fxpValue
 def getRepByIndex(branch, repIndex):
+    callstackCheck()
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
 # @return reputation fxpValue
@@ -116,6 +123,7 @@ def getTotalRep(branch):
 # will return 0s for array values after it's looped through all the ones you
 # have an actual balance in
 def getReputation(address):
+    callstackCheck()
     branchListCount = BRANCHES.getNumBranches()
     if(address):
         branches = array(2 * branchListCount)
@@ -149,6 +157,7 @@ def getReputation(address):
     return(branches: arr)
 
 def getNumberReporters(branch):
+    callstackCheck()
     return(self.Reporting[branch].numberReporters)
 
 def repIDToIndex(branch, repID):

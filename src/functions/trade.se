@@ -25,6 +25,7 @@ import info as INFO
 import markets as MARKETS
 import trades as TRADES
 import expiringEvents as EXPEVENTS
+import mutex as MUTEX
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 
@@ -72,6 +73,10 @@ macro removeTrade($tradeID, $market):
 # needs to continue if a trade is filled / removed by the time we get here, not return, issues with insufficient balance ending when it should continue filling other order types
 def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+
     i = 0
     trades = 0
     while(i < len(tradeIDs)):
@@ -83,6 +88,7 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
     tradeInfo[2] = fxpMaxValue
     tradeHash = sha3(tradeInfo, items = 3)
     if(TRADES.checkHash(tradeHash, msg.sender) == -1):
+        MUTEX.unsetMutex()
         return([-1]: arr)
     # Try to fulfill each trade passed
     t = 0
@@ -91,6 +97,7 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
         trade = array(TRADE_FIELDS)
         trade = TRADES.getTrade(tradeIDs[t], outitems = TRADE_FIELDS)
         if(!trade[0]):
+            MUTEX.unsetMutex()
             return([0]: arr)
         type = trade[1]
         market = trade[2]
@@ -118,6 +125,7 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
         MARKETS.setPrice(market, outcome, price)
         # Next trade
         t += 1
+    MUTEX.unsetMutex()
     return([SUCCESS, fxpMaxValue, fxpMaxAmount]: arr)
 
 # Allows a user to "short" by buying n complete sets and selling n shares of the unwanted outcome to a bid on the book in one tx
@@ -141,6 +149,9 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
     # -6: must be a bid, not an ask
 def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
     i = 0
     trades = 0
     while(i < len(buyerTradeIDs)):
@@ -152,6 +163,7 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
     tradeInfo[2] = 0
     tradeHash = sha3(tradeInfo, items = 3)
     if(TRADES.checkHash(tradeHash, msg.sender) == -1):
+        MUTEX.unsetMutex()
         return([-1]: arr)
     # Try to fulfill each trade passed
     t = 0
@@ -160,10 +172,12 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
         trade = array(TRADE_FIELDS)
         trade = TRADES.getTrade(buyerTradeIDs[t], outitems = TRADE_FIELDS)
         if(!trade[0]):
+            MUTEX.unsetMutex()
             return([0]: arr)
         # Get market
         type = trade[1]
         if(type != BID):
+            MUTEX.unsetMutex()
             return([-6]: arr)
         market = trade[2]
         origAmount = trade[3]
@@ -175,19 +189,23 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
         fillShort()
         MARKETS.setPrice(market, outcome, price)
         t += 1
+    MUTEX.unsetMutex()
     return([SUCCESS, fxpMaxAmount, fill, price]: arr)
 
 macro checkTradePreconditions():
     if(owner == msg.sender):
+        MUTEX.unsetMutex()
         return([-3]: arr)
     # Make sure the trade has been mined, obvious HFT prevention
     if(block.number <= trade[6]):
+        MUTEX.unsetMutex()
         return([TRADE_SAME_BLOCK_PROHIBITED]: arr)
 
 macro fillBid():
     # Get available balance of shares
     balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)
     if(balance <= 0 or fxpMaxAmount <= 0):
+        MUTEX.unsetMutex()
         return([INSUFFICIENT_BALANCE]: arr)
     makerFeeRate = MARKETS.getMakerFees(market)
     # Determine fill amount
@@ -196,6 +214,7 @@ macro fillBid():
     value = (fill * price) / ONE
     # must trade at least 0.00000001 in value
     if(value < MIN_TRADE_VALUE):
+        MUTEX.unsetMutex()
         return([-2]: arr)
     # Update trade amount or remove
     if(fill < amount):
@@ -241,6 +260,7 @@ macro fillAsk():
     fill = valueToSpend * ONE / price * ONE / (takerFee + ONE)
     tradeValueExcludingFees = fill * price / ONE
     if(tradeValueExcludingFees < MIN_TRADE_VALUE):
+        MUTEX.unsetMutex()
         return([INSUFFICIENT_BALANCE]: arr)
     # Update trade amount or remove filled trade
     if(fill < amount):
@@ -282,6 +302,7 @@ macro fillShort():
     cumulativeScale = MARKETS.getCumulativeScale(market)
     amount = min(origAmount, fxpMaxAmount)
     if(amount <= 0):
+        MUTEX.unsetMutex()
         return([INSUFFICIENT_BALANCE]: arr)
     fee = amount * price * feePercent(tradingFee, price, cumulativeScale) / ONE ** 2
     makerFeeRate = MARKETS.getMakerFees(market)
@@ -292,8 +313,10 @@ macro fillShort():
     takerFeesTotal = branchFees + creatorFees
     cost = amount * cumulativeScale / ONE - (amount * price / ONE - takerFeesTotal)
     if(INFO.getCurrency(market).balanceOf(msg.sender) < cost):
+        MUTEX.unsetMutex()
         return([INSUFFICIENT_BALANCE]: arr)
     if(amount * price / ONE < MIN_TRADE_VALUE):
+        MUTEX.unsetMutex()
         return([-2]: arr)
     
     numOutcomes = MARKETS.getMarketNumOutcomes(market)

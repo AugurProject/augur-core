@@ -13,7 +13,7 @@ def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes
     if(categoricalPointFive):
         i = 0
         while(i < numOutcomes):
-            payoutIndeterminateCategorical()    
+            payoutIndeterminateCategorical()
         i += 1
     else:
         payoutRegularOneOutcomeMarket()

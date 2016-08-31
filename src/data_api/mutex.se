@@ -1,0 +1,13 @@
+data mutex
+
+# whitelist these
+def setMutex():
+    self.mutex = 1
+    return(1)
+    
+def unsetMutex():
+    self.mutex = 0
+    return(1)
+
+def getMutex():
+    return(self.mutex)
