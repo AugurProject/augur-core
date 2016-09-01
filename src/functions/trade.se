@@ -48,11 +48,6 @@ macro SUCCESS: 1
 macro INSUFFICIENT_BALANCE: -4
 macro TRADE_SAME_BLOCK_PROHIBITED: -5
 
-# calculates trading fee percentage
-# 4*fee*price*(1-price/range)/range keeps fees lower at the edges
-macro feePercent($marketFee, $price, $cumulativeScale):
-    4 * $marketFee * $price * (ONE - $price * 2 ** 64 / $cumulativeScale) / ($cumulativeScale * ONE)
-
 # removes a trade from the book
 macro removeTrade($tradeID, $market):
     TRADES.removeTrade($tradeID)
@@ -68,7 +63,7 @@ macro removeTrade($tradeID, $market):
     # -3: can't pick up your own trade
     # -4: insufficient balance
     # -5: trade in same block prohibited
-# max value is max money to spend to buy [including fees] filling ask orders
+# max value is max money to spend to buy filling ask orders
 # max amount is max shares to sell filling bid orders
 # 500k gas cost
 # picks orders off the book
@@ -113,7 +108,6 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
         branch = MARKETS.getBranch(market)
         
         cumulativeScale = MARKETS.getCumulativeScale(market)
-        fee = feePercent(MARKETS.getTradingFee(market), price, cumulativeScale)
 
         # Fill buy order
         if(type == BID):
@@ -134,13 +128,9 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
 # Example:
     # buyer gives up say 20
     # complete set cost is say 100
-    # fee is say 2
     # market should lose 20 from buyer's escrowed money
     # market should gain 100 from complete set
     # person short selling should give the market 80 [complete set cost less shares sold]
-    # plus fees
-        # 1 should go to branch
-        # 1 should go to creator
 # Errors:
     # 0: trade doesn't exist
     # -1: invalid trade hash/commitment
@@ -209,7 +199,6 @@ macro fillBid():
     if(balance <= 0 or fxpMaxAmount <= 0):
         MUTEX.unsetMutex()
         return([INSUFFICIENT_BALANCE]: arr)
-    makerFeeRate = MARKETS.getMakerFees(market)
     # Determine fill amount
     fill = min(amount, min(balance, fxpMaxAmount))
     # Calculate value
@@ -227,25 +216,10 @@ macro fillBid():
     MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 1)
     MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
     # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
-    fee = value * fee / ONE
-    # 75% to branch + .5% more to branch per maker fee 1% decrease
-    # 25% to creator + .5% more to creator per 1% decrease in maker fees
-    branchFees = (THREE_FOURTHS + (ONE_HALF - makerFeeRate) / 2) * fee / ONE
-    creatorFees = (ONE_FOURTH + (ONE_HALF - makerFeeRate) / 2) * fee / ONE
 
-    # also pay sender for the shares they're selling
-    payTakerFees = INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), branchFees) and INFO.getWallet(market).transfer(creator, creatorFees)
-    paySenderMinusFees = INFO.getWallet(market).transfer(msg.sender, value - (branchFees + creatorFees))
-    if(!paySenderMinusFees or !payTakerFees or !branchFees or !creatorFees):
+    paySender = INFO.getWallet(market).transfer(msg.sender, value)
+    if(!paySender):
         throw()
-    # other party [maker] pays their part of the fee here too [they previously escrowed it in the market]
-    fee = fee * makerFeeRate / ONE
-    payMakerFees = INFO.getWallet(market).transfer(creator, fee / 2) or INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), fee / 2)
-    if(!payMakerFees or !fee):
-        throw()
-    # needed to keep track of how many fees a market has raised
-    # only count branch fees here
-    MARKETS.addFees(market, fee / 2 + branchFees)
     # Update fxpMaxAmount
     fxpMaxAmount -= fill
     # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
@@ -253,15 +227,13 @@ macro fillBid():
     
 macro fillAsk():
     balance = INFO.getCurrency(market).balanceOf(msg.sender)
-    makerFeeRate = MARKETS.getMakerFees(market)
-    takerFee = (ONE_POINT_FIVE - makerFeeRate) * fee / ONE
-    totalTradeCost = amount * price * (takerFee + ONE) / ONE ** 2
-    # trade value to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilledIncludingFees)
+    totalTradeCost = amount * price / ONE
+    # trade value to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilled)
     valueToSpend = min(totalTradeCost, min(fxpMaxValue, balance))
     # Determine fill amount
-    fill = valueToSpend * ONE / price * ONE / (takerFee + ONE)
-    tradeValueExcludingFees = fill * price / ONE
-    if(tradeValueExcludingFees < MIN_TRADE_VALUE):
+    fill = valueToSpend * ONE / price
+    tradeValue = fill * price / ONE
+    if(tradeValue < MIN_TRADE_VALUE):
         MUTEX.unsetMutex()
         return([INSUFFICIENT_BALANCE]: arr)
     # Update trade amount or remove filled trade
@@ -272,26 +244,11 @@ macro fillAsk():
     # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
     MARKETS.modifyParticipantShares(market, msg.sender, outcome, fill, 1)
 
-    # 75% to branch + .5% more to branch per maker fee 1% decrease
-    # 25% to creator + .5% more to creator per 1% decrease in maker fees
-    branchFees = (THREE_FOURTHS + (ONE_HALF - makerFeeRate) / 2) * tradeValueExcludingFees / ONE * fee / ONE
-    creatorFees = (ONE_FOURTH + (ONE_HALF - makerFeeRate) / 2) * tradeValueExcludingFees / ONE * fee / ONE
-
-    # Transfer cash from user to person who has ask order and pay fee to branch and market creator
-
-    payTakerFees = INFO.getCurrency(market).transferFrom(msg.sender, BRANCHES.getWallet(branch, INFO.getCurrency(market)), branchFees) and INFO.getCurrency(market).transferFrom(msg.sender, creator, creatorFees)
-    payMaker = INFO.getCurrency(market).transferFrom(msg.sender, owner, valueToSpend - (branchFees + creatorFees))
-    if(!payMaker or !payTakerFees or !branchFees or !creatorFees):
+    # Transfer cash from user to person who has ask order
+    payMaker = INFO.getCurrency(market).transferFrom(msg.sender, owner, valueToSpend)
+    if(!payMaker):
         throw()
                 
-    # other party [maker] pay their part of the fee here too
-    makerFee = tradeValueExcludingFees * makerFeeRate / ONE * fee / ONE
-    payMakerFees = INFO.getWallet(market).transfer(creator, makerFee / 2) and INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), makerFee / 2)
-    if(!payMakerFees or !makerFee):
-        throw()
-
-    # only count branch fees here
-    MARKETS.addFees(market, makerFee / 2 + branchFees)
     # Update fxpMaxValue
     fxpMaxValue -= valueToSpend
     # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
@@ -300,20 +257,13 @@ macro fillAsk():
 macro fillShort():
     # calculate cost
     creator = INFO.getCreator(market)
-    tradingFee = MARKETS.getTradingFee(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
     amount = min(origAmount, fxpMaxAmount)
     if(amount <= 0):
         MUTEX.unsetMutex()
         return([INSUFFICIENT_BALANCE]: arr)
-    fee = amount * price * feePercent(tradingFee, price, cumulativeScale) / ONE ** 2
-    makerFeeRate = MARKETS.getMakerFees(market)
-    # 75% to branch + .5% more to branch per maker fee 1% decrease
-    # 25% to creator + .5% more to creator per 1% decrease in maker fees
-    branchFees = (THREE_FOURTHS + (ONE_HALF - makerFeeRate) / 2) * fee / ONE
-    creatorFees = (ONE_FOURTH + (ONE_HALF - makerFeeRate) / 2) * fee / ONE
-    takerFeesTotal = branchFees + creatorFees
-    cost = amount * cumulativeScale / ONE - (amount * price / ONE - takerFeesTotal)
+
+    cost = amount * cumulativeScale / ONE - (amount * price / ONE)
     if(INFO.getCurrency(market).balanceOf(msg.sender) < cost):
         MUTEX.unsetMutex()
         return([INSUFFICIENT_BALANCE]: arr)
@@ -334,8 +284,8 @@ macro fillShort():
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount * cumulativeScale / ONE)
     # send money from user acc. to market address/account
     # cost for shares
-    payTakerCostMinusFees = INFO.getCurrency(market).transferFrom(msg.sender, market, cost - takerFeesTotal)
-    if(!payTakerCostMinusFees):
+    payTakerCost = INFO.getCurrency(market).transferFrom(msg.sender, market, cost)
+    if(!payTakerCost):
         throw()
 
     # Fill buy order [short selling the outcome user doesn't want]
@@ -350,20 +300,6 @@ macro fillShort():
     MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 1)
     MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
 
-    payTakerFees = INFO.getCurrency(market).transferFrom(msg.sender, branch, branchFees) and INFO.getCurrency(market).transferFrom(msg.sender, creator, creatorFees)
-    if(!payTakerFees or !takerFeesTotal):
-        throw()
-
-    # other party [maker] pay their part of the fee here too
-    fee = fee * makerFeeRate / ONE
-
-    payMakerFees = INFO.getWallet(market).transfer(creator, fee / 2) and INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), fee / 2)
-    if(!payMakerFees or !fee):
-        throw()
-    
-    # only count branch fees here
-    MARKETS.addFees(market, fee / 2 + branchFees)
-    
     fxpMaxAmount -= fill
     # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
     log(type = logPriceShort, market, msg.sender, owner, ASK, price, fill, block.timestamp, buyerTradeIDs[t], outcome)

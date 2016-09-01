@@ -2,6 +2,7 @@
 
 import markets as MARKETS
 import info as INFO
+import branches as BRANCHES
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 
@@ -9,6 +10,8 @@ inset('../data_api/refund.se')
 # whitelist this
 def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes):
     callstackCheck()
+    currency = INFO.getCurrency(market)
+    branch = MARKETS.getBranch(market)
     # if it's an indeterminate categorical market resolve with all outcomes having an equal value
     if(categoricalPointFive):
         i = 0
@@ -22,12 +25,20 @@ def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes
 macro payoutIndeterminateCategorical():
     sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, i + 1)
     MARKETS.modifyParticipantShares(market, sender, i + 1, -sharesOwned, 0)
-    if(!INFO.getWallet(market).transfer(sender, sharesOwned / numOutcomes)):
+    value = sharesOwned / numOutcomes
+    fee = MARKETS.getTradingFee(market) * value / ONE
+    if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
+        throw()
+    if(!INFO.getWallet(market).transfer(sender, value - fee)):
         throw()
 
 macro payoutRegularOneOutcomeMarket():
     # distribute profit to the people who won money by holding winning shares
     sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, winningOutcome)
     MARKETS.modifyParticipantShares(market, sender, winningOutcome, -sharesOwned, 0)
-    if(!INFO.getWallet(market).transfer(sender, sharesOwned)):
+    value = sharesOwned
+    fee = MARKETS.getTradingFee(market) * value / ONE
+    if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
+        throw()
+    if(!INFO.getWallet(market).transfer(sender, value - fee)):
         throw()

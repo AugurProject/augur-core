@@ -45,7 +45,10 @@ def buyCompleteSets(market, fxpAmount):
     cumulativeScale = MARKETS.getCumulativeScale(market)
     cost = fxpAmount * cumulativeScale / ONE
     checkBuyCompleteSetsPreconditions()
-
+    # account for fees here even though paid upon selling / resolution so we can assign reporters appropriately
+    fee = MARKETS.getTradingFee(market) * fxpAmount / ONE * cumulativeScale / ONE
+    MARKETS.addFees(market, fee / 2)
+    
     n = 1
     # send shares of the event to user address and increment the number issued in the market for each outcome
     while(n <= numOutcomes):
@@ -75,7 +78,7 @@ def sellCompleteSets(market, fxpAmount):
     cumulativeScale = MARKETS.getCumulativeScale(market)
     cost = fxpAmount * cumulativeScale / ONE
     checkSellCompleteSetsPreconditions()
-
+    
     # Takes shares away from participant and decreases the fxpAmount issued in the market since we're exchanging complete sets
     while(n <= numOutcomes):
         MARKETS.modifyShares(market, n, -fxpAmount)
@@ -87,7 +90,11 @@ def sellCompleteSets(market, fxpAmount):
         MARKETS.modifySharesValue(market, -fxpAmount * cumulativeScale / ONE)
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), -fxpAmount * cumulativeScale / ONE)
     # send funds from the market to the user acc.
-    if(!INFO.getWallet(market).transfer(msg.sender, cost)):
+    fee = MARKETS.getTradingFee(market) * fxpAmount / ONE * cumulativeScale / ONE
+    if(!INFO.getWallet(market).transfer(msg.sender, cost - fee)):
+        throw()
+    currency = INFO.getCurrency(market)
+    if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
         throw()
     MUTEX.unsetMutex()
     return(1)

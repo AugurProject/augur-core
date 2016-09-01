@@ -3,6 +3,7 @@
 import markets as MARKETS
 import events as EVENTS
 import info as INFO
+import branches as BRANCHES
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 
@@ -14,6 +15,8 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
     outcome = EVENTS.getOutcome(event)
     minValue = EVENTS.getMinValue(event)
     maxValue = EVENTS.getMaxValue(event)
+    currency = INFO.getCurrency(market)
+    branch = MARKETS.getBranch(market)
     # price is in fixed point
     # share two goes with the high/long side
     pricePerShare2 = ONE * (outcome - minValue) / (maxValue - minValue)
@@ -30,12 +33,18 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
         # low side
         if(n == 0):
             shareValue = sharesOwned * cumulativeScale / ONE * pricePerShare1 / ONE
-            if(!INFO.getWallet(market).transfer(sender, shareValue)):
+            fee = MARKETS.getTradingFee(market) * shareValue / ONE
+            if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
+                throw()
+            if(!INFO.getWallet(market).transfer(sender, shareValue - fee)):
                 throw()
         # high side (of the scalar part)
         elif(n == 1):
             shareValue = sharesOwned * cumulativeScale / ONE * pricePerShare2 / ONE
-            if(!INFO.getWallet(market).transfer(sender, shareValue)):
+            fee = MARKETS.getTradingFee(market) * shareValue / ONE
+            if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
+                throw()
+            if(!INFO.getWallet(market).transfer(sender, shareValue - fee)):
                 throw()
         else:
             throw()

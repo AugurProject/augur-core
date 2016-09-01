@@ -64,13 +64,11 @@ def bid(fxpAmount, fxpPrice, market, outcome):
         throw()
     MUTEX.setMutex()
 
-    tradingFee = MARKETS.getTradingFee(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
-    fee = feePercent(tradingFee, fxpPrice, cumulativeScale) * MARKETS.getMakerFees(market) / ONE
     branch = MARKETS.getBranch(market)
 
     checkBuyPreconditions()
-    saveTrade(BID, fxpAmount, fxpPrice, market, outcome, branch, fee, msg.sender)
+    saveTrade(BID, fxpAmount, fxpPrice, market, outcome, branch, msg.sender)
     MUTEX.unsetMutex()
     return(FAILURE)
 
@@ -83,12 +81,10 @@ def ask(fxpAmount, fxpPrice, market, outcome):
     MUTEX.setMutex()
 
     branch = MARKETS.getBranch(market)
-    tradingFee = MARKETS.getTradingFee(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
-    fee = feePercent(tradingFee, fxpPrice, cumulativeScale) * MARKETS.getMakerFees(market) / ONE
 
     checkSellPreconditions()
-    saveTrade(ASK, fxpAmount, fxpPrice, market, outcome, branch, fee, msg.sender)
+    saveTrade(ASK, fxpAmount, fxpPrice, market, outcome, branch, msg.sender)
     MUTEX.unsetMutex()
     return(FAILURE)
 
@@ -106,7 +102,6 @@ def cancel(tradeID):
     # user can cancel anytime
     # Get trade
     fetchTradeCancelInfo()
-    fee = feePercent(tradingFee, fxpPrice, cumulativeScale) * MARKETS.getMakerFees(market) / ONE
     # Check the owner
     if(msg.sender != owner):
         MUTEX.unsetMutex()
@@ -143,9 +138,6 @@ macro checkSellPreconditions():
     if(MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome) < fxpAmount):
         MUTEX.unsetMutex()
         return(-3)
-
-macro feePercent($marketFee, $fxpPrice, $cumulativeScale):
-    4 * $marketFee * $fxpPrice * (ONE - $fxpPrice * ONE / $cumulativeScale) / ($cumulativeScale * ONE)
     
 macro removeTrade($tradeID, $market):
     TRADES.removeTrade($tradeID)
@@ -155,23 +147,19 @@ macro refundTrade():
     # Issue refunds
     if(type == BID):
         # cash refund
-        amount = fxpAmount * fxpPrice * (fee + ONE) / ONE ** 2
+        amount = fxpAmount * fxpPrice / ONE
         refunded = INFO.getWallet(market).transfer(msg.sender, amount)
         if(!refunded):
             throw()
     elif(type == ASK):
         # shares refund
         MARKETS.modifyParticipantShares(market, msg.sender, outcome, fxpAmount, 0)
-        feesRefunded = INFO.getWallet(market).transfer(msg.sender, (fxpAmount * fxpPrice * fee / ONE ** 2))
-        if(!feesRefunded):
-            throw()
     else:
         throw()
 
-macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee, $sender):
+macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $sender):
     trade = [$type, $market, $fxpAmount, $fxpPrice, $sender, block.number, $outcome]
     tradeID = sha3(trade, items = 7)
-    cumulativeScale = MARKETS.getCumulativeScale($market)
     if(TRADES.getID(tradeID)):
         MUTEX.unsetMutex()
         return(TRADE_ALREADY_EXISTS)
@@ -186,11 +174,6 @@ macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $fee, 
     if($type == BID):
         $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $fxpAmount * $fxpPrice / ONE)
         if(!$paidTradeCost):
-            throw()
-    # pay fees
-    if($fee):
-        $feePaid = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), ($fxpAmount * $fxpPrice * $fee / ONE ** 2))
-        if(!$feePaid):
             throw()
     log(type = logAddTx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, tradeID)
     MUTEX.unsetMutex()
@@ -208,5 +191,3 @@ macro fetchTradeCancelInfo():
     fxpPrice = trade[4]
     owner = trade[5]
     outcome = trade[7]
-    tradingFee = MARKETS.getTradingFee(market)
-    cumulativeScale = MARKETS.getCumulativeScale(market)

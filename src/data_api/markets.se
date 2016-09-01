@@ -32,7 +32,7 @@ inset('refund.se')
     # cumulativeScale == range of the market for scalars
     # numOutcomes is the number of outcomes in a market [up to 8 for now]
     # a binary outcome state 1 is no, 2 is true, 0 if not done, 1.5 if indeterminate
-    # fxpTradingFee is a percent in fixedPoint and the base trading fee for a market: takers pay 100%-150% of this, makers pay 0-50% of this
+    # fxpTradingFee is a percent in fixedPoint and the base trading fee for a market
     # tradingPeriod is which eventExpPeriod market expires in
     # pushing forward is whether a market has been pushed forward to attempt early resolution
     # bondsman is the person/address who/that posted the early resolution bond
@@ -41,14 +41,13 @@ inset('refund.se')
     # lastTrade is the last trade that happened in a given market
     # totalTrades is the total number of trades in a give market
     # tags are the subject tags / categories / keywords for a given market
-    # fxpMakerFees - from 0-50% - fxpAmount of fee that the maker orders pay
     # extraInfo is any extra info that didn't fit well in the regular description
     # sharesValue is the value of the shares traded in a given market
     # gasSubsidy is paid by the creator to pay for closing the market [closing is just setting the winning outcomes and allowing people to withdraw funds if they own winning shares]
     # fees is total fxpAmount of fees a market has paid to a branch [the reporters]
     # lastExpDate is when the market's last event expires
     # prices keeps track of the latest traded fxpPrice for a given outcome in a market
-data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, tradeIDs[](id, nextID, prevID), lastTrade, totalTrades, tag1, tag2, tag3, fxpMakerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[])
+data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, tradeIDs[](id, nextID, prevID), lastTrade, totalTrades, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[])
 
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
@@ -95,10 +94,6 @@ def getLastOutcomePrice(market, outcome):
 def getFees(market):
     callstackCheck()
     return(self.Markets[market].fees)
-
-def getMakerFees(market):
-    callstackCheck()
-    return(self.Markets[market].fxpMakerFees)
 
 def getgasSubsidy(market):
     callstackCheck()
@@ -197,7 +192,7 @@ macro sharesPurchased($market):
     market($market).sharesPurchased
 
 # check that msg.sender is one of our function contracts
-def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpMakerFees, fxpcumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate):
+def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpcumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate):
     callstackCheck()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
@@ -216,7 +211,6 @@ def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, 
     self.Markets[market].tag2 = tag2
     self.Markets[market].gasSubsidy = gasSubsidy
     self.Markets[market].tag3 = tag3
-    self.Markets[market].fxpMakerFees = fxpMakerFees
     self.Markets[market].fees = fxpCreationFee
     self.Markets[market].lastExpDate = lastExpDate
     self.addToMarketsHash(branch, market)
