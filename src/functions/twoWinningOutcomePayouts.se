@@ -34,18 +34,20 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
         if(n == 0):
             shareValue = sharesOwned * cumulativeScale / ONE * pricePerShare1 / ONE
             fee = MARKETS.getTradingFee(market) * shareValue / ONE
-            if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
-                throw()
-            if(!INFO.getWallet(market).transfer(sender, shareValue - fee)):
-                throw()
+            if(shareValue != 0 && fee != 0):
+                if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
+                    throw()
+                if(!INFO.getWallet(market).transfer(sender, shareValue - fee)):
+                    throw()
         # high side (of the scalar part)
         elif(n == 1):
             shareValue = sharesOwned * cumulativeScale / ONE * pricePerShare2 / ONE
             fee = MARKETS.getTradingFee(market) * shareValue / ONE
-            if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
-                throw()
-            if(!INFO.getWallet(market).transfer(sender, shareValue - fee)):
-                throw()
+            if(shareValue != 0 && fee != 0):
+                if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
+                    throw()
+                if(!INFO.getWallet(market).transfer(sender, shareValue - fee)):
+                    throw()
         else:
             throw()
         n += 1

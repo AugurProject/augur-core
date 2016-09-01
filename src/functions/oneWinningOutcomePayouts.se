@@ -27,10 +27,11 @@ macro payoutIndeterminateCategorical():
     MARKETS.modifyParticipantShares(market, sender, i + 1, -sharesOwned, 0)
     value = sharesOwned / numOutcomes
     fee = MARKETS.getTradingFee(market) * value / ONE
-    if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
-        throw()
-    if(!INFO.getWallet(market).transfer(sender, value - fee)):
-        throw()
+    if(value != 0 && fee != 0):
+        if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
+            throw()
+        if(!INFO.getWallet(market).transfer(sender, value - fee)):
+            throw()
 
 macro payoutRegularOneOutcomeMarket():
     # distribute profit to the people who won money by holding winning shares
@@ -38,7 +39,8 @@ macro payoutRegularOneOutcomeMarket():
     MARKETS.modifyParticipantShares(market, sender, winningOutcome, -sharesOwned, 0)
     value = sharesOwned
     fee = MARKETS.getTradingFee(market) * value / ONE
-    if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
-        throw()
-    if(!INFO.getWallet(market).transfer(sender, value - fee)):
-        throw()
+    if(value != 0 && fee != 0):
+        if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
+            throw()
+        if(!INFO.getWallet(market).transfer(sender, value - fee)):
+            throw()
