@@ -232,8 +232,7 @@ macro fillAsk():
     valueToSpend = min(totalTradeCost, min(fxpMaxValue, balance))
     # Determine fill amount
     fill = valueToSpend * ONE / price
-    tradeValue = fill * price / ONE
-    if(tradeValue < MIN_TRADE_VALUE):
+    if(valueToSpend < MIN_TRADE_VALUE):
         MUTEX.unsetMutex()
         return([INSUFFICIENT_BALANCE]: arr)
     # Update trade amount or remove filled trade
