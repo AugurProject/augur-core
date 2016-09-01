@@ -1471,7 +1471,7 @@
         "sig": "extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "buy&sellShares": {
-        "address": "0xbc537f65f898db72f49dc3b26c2742af4addc2ad", 
+        "address": "0xa7290513a061bca7f01aedc1b8c9edf5130825f8", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -1553,7 +1553,7 @@
             "    log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id)", 
             "    logReturn(buyAndSellShares_logReturn, trade_id)", 
             "", 
-            "def buyCompleteSetsThenSell(amount, price, market, outcome):", 
+            "def shortAsk(amount, price, market, outcome):", 
             "    refund()", 
             "    buyCompleteSetsResult = COMPLETESETS.buyCompleteSets(market, amount, call=delegate)", 
             "    if buyCompleteSetsResult != 1:", 
@@ -1686,35 +1686,6 @@
                 "constant": false, 
                 "inputs": [
                     {
-                        "name": "amount", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "name": "price", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "name": "market", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "name": "outcome", 
-                        "type": "int256"
-                    }
-                ], 
-                "name": "buyCompleteSetsThenSell(int256,int256,int256,int256)", 
-                "outputs": [
-                    {
-                        "name": "out", 
-                        "type": "int256"
-                    }
-                ], 
-                "type": "function"
-            }, 
-            {
-                "constant": false, 
-                "inputs": [
-                    {
                         "name": "trade_id", 
                         "type": "int256"
                     }
@@ -1745,6 +1716,35 @@
                 ], 
                 "name": "sell(int256,int256,int256,int256)", 
                 "outputs": [], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [
+                    {
+                        "name": "amount", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "price", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "market", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "outcome", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "shortAsk(int256,int256,int256,int256)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
                 "type": "function"
             }, 
             {
@@ -1853,7 +1853,7 @@
                 "type": "event"
             }
         ], 
-        "sig": "extern buy&sellShares: [buy:[int256,int256,int256,int256]:_, buyCompleteSetsThenSell:[int256,int256,int256,int256]:int256, cancel:[int256]:_, sell:[int256,int256,int256,int256]:_, test_callstack:[]:int256]"
+        "sig": "extern buy&sellShares: [buy:[int256,int256,int256,int256]:_, cancel:[int256]:_, sell:[int256,int256,int256,int256]:_, shortAsk:[int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "cash": {
         "address": "0x044ad83bf7054789aa73adb0b50a8ed40e779f05", 
@@ -13576,7 +13576,7 @@
         "sig": "extern slashRep: [slashRep:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "trade": {
-        "address": "0xf48d19e92dbb599faac1f4ed9f6b398376171a54", 
+        "address": "0xe1adef39ed412ca387312c0b82ed6f34f34fc331", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -13614,8 +13614,7 @@
             "inset('refund.se')", 
             "inset('logReturn.se')", 
             "", 
-            "# event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)", 
-            "event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome, timestamp)", 
+            "event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome, timestamp, takerFee, makerFee)", 
             "event trade_logReturn(returnValue)", 
             "event trade_logArrayReturn(returnArray: arr)", 
             "", 
@@ -13725,7 +13724,8 @@
             "                            fee = value * fee / ONE", 
             "                            branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE", 
             "                            creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*fee / ONE", 
-            "                            CASH.addCash(msg.sender, value-(branchFees + creatorFees))", 
+            "                            takerFeesTotal = branchFees + creatorFees", 
+            "                            CASH.addCash(msg.sender, value - takerFeesTotal)", 
             "                            # 75% to branch + .5% more to branch per maker fee 1% decrease", 
             "                            CASH.addCash(branch, branchFees)", 
             "                            # 25% to creator + .5% more to creator per 1% decrease in maker fees", 
@@ -13744,7 +13744,7 @@
             "                            # Update max_amount", 
             "                            max_amount -= fill", 
             "                            # Log transaction", 
-            "                            log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome, block.timestamp)", 
+            "                            log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, fee)", 
             "                elif type == ASK:", 
             "                    balance = CASH.balance(msg.sender)", 
             "                    if balance <= 0:", 
@@ -13773,7 +13773,8 @@
             "                        CASH.addCash(branch, branchFees)", 
             "                        # 25% to creator + .5% more to creator per 1% decrease in maker fees", 
             "                        CASH.addCash(creator, creatorFees)", 
-            "                        CASH.addCash(owner, value_to_spend-(branchFees+creatorFees))", 
+            "                        takerFeesTotal = branchFees + creatorFees", 
+            "                        CASH.addCash(owner, value_to_spend - takerFeesTotal)", 
             "                        CASH.subtractCash(msg.sender, value_to_spend)", 
             "", 
             "                        # other party [maker] pay their part of the fee here too", 
@@ -13787,7 +13788,7 @@
             "                        # Update max_value", 
             "                        max_value -= value_to_spend", 
             "                        # Log transaction", 
-            "                        log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome, block.timestamp)", 
+            "                        log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, makerFee)", 
             "", 
             "        # Log price, fill amount, type and timestamp", 
             "        MARKETS.setPrice(market, outcome, price)", 
@@ -13916,7 +13917,7 @@
             "", 
             "    max_amount -= fill", 
             "    # Log transaction", 
-            "    log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, buyer_trade_id, outcome, block.timestamp)", 
+            "    log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee)", 
             "    MARKETS.setPrice(market, outcome, price)", 
             "    logArrayReturn([SUCCESS, max_amount, fill, price])"
         ], 
@@ -14015,9 +14016,19 @@
                         "indexed": false, 
                         "name": "timestamp", 
                         "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "takerFee", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "makerFee", 
+                        "type": "int256"
                     }
                 ], 
-                "name": "log_fill_tx(int256,int256,int256,int256,int256,int256,int256,int256,int256)", 
+                "name": "log_fill_tx(int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256)", 
                 "type": "event"
             }, 
             {

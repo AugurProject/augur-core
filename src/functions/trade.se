@@ -28,8 +28,7 @@ import expiringEvents as EXPEVENTS
 inset('refund.se')
 inset('logReturn.se')
 
-# event log_price(market:indexed, type, price, amount, timestamp, outcome, trader:indexed)
-event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome, timestamp)
+event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome, timestamp, takerFee, makerFee)
 event trade_logReturn(returnValue)
 event trade_logArrayReturn(returnArray: arr)
 
@@ -139,7 +138,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                             fee = value * fee / ONE
                             branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
                             creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*fee / ONE
-                            CASH.addCash(msg.sender, value-(branchFees + creatorFees))
+                            takerFeesTotal = branchFees + creatorFees
+                            CASH.addCash(msg.sender, value - takerFeesTotal)
                             # 75% to branch + .5% more to branch per maker fee 1% decrease
                             CASH.addCash(branch, branchFees)
                             # 25% to creator + .5% more to creator per 1% decrease in maker fees
@@ -158,7 +158,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                             # Update max_amount
                             max_amount -= fill
                             # Log transaction
-                            log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome, block.timestamp)
+                            log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, fee)
                 elif type == ASK:
                     balance = CASH.balance(msg.sender)
                     if balance <= 0:
@@ -187,7 +187,8 @@ def trade(max_value, max_amount, trade_ids:arr):
                         CASH.addCash(branch, branchFees)
                         # 25% to creator + .5% more to creator per 1% decrease in maker fees
                         CASH.addCash(creator, creatorFees)
-                        CASH.addCash(owner, value_to_spend-(branchFees+creatorFees))
+                        takerFeesTotal = branchFees + creatorFees
+                        CASH.addCash(owner, value_to_spend - takerFeesTotal)
                         CASH.subtractCash(msg.sender, value_to_spend)
 
                         # other party [maker] pay their part of the fee here too
@@ -201,7 +202,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                         # Update max_value
                         max_value -= value_to_spend
                         # Log transaction
-                        log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome, block.timestamp)
+                        log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, makerFee)
 
         # Log price, fill amount, type and timestamp
         MARKETS.setPrice(market, outcome, price)
@@ -330,6 +331,6 @@ def short_sell(buyer_trade_id, max_amount):
 
     max_amount -= fill
     # Log transaction
-    log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, buyer_trade_id, outcome, block.timestamp)
+    log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee)
     MARKETS.setPrice(market, outcome, price)
     logArrayReturn([SUCCESS, max_amount, fill, price])

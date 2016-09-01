@@ -73,7 +73,7 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $fee, $send
     log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id)
     logReturn(buyAndSellShares_logReturn, trade_id)
 
-def buyCompleteSetsThenSell(amount, price, market, outcome):
+def shortAsk(amount, price, market, outcome):
     refund()
     buyCompleteSetsResult = COMPLETESETS.buyCompleteSets(market, amount, call=delegate)
     if buyCompleteSetsResult != 1:

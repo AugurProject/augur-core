@@ -1309,6 +1309,103 @@ def test_update_trading_fee():
     assert(c.getMakerFees(market) != makerFee)
     print "Test update trading fees ok"
 
+def sell_gas(s, c):
+    s.mine(1)
+    event1 = c.createEvent(1010101, "new event a", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
+    market = c.createMarket(1010101, "new market a", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
+    assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
+    s.mine(1)
+    c.buyCompleteSets(market, ONE)
+    gas_use(s)
+    c.sell(ONE, ONE, market, 1)
+    print "SELL:", gas_use(s)
+
+def buy_gas(s, c):
+    s.mine(1)
+    event1 = c.createEvent(1010101, "new event b", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
+    market = c.createMarket(1010101, "new market b", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
+    assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
+    s.mine(1)
+    gas_use(s)
+    c.buy(ONE, ONE, market, 1)
+    print "BUY:", gas_use(s)
+
+def cancel_gas(s, c):
+    s.mine(1)
+    event1 = c.createEvent(1010101, "new event b", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
+    market = c.createMarket(1010101, "new market b", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
+    s.mine(1)
+    c.buy(ONE, ONE, market, 1)
+    trades = c.get_trade_ids(market)
+    assert(len(trades) == 1)
+    gas_use(s)
+    c.cancel(trades[0])
+    print "CANCEL BUY:", gas_use(s)
+    s.mine(1)
+    c.buyCompleteSets(market, ONE)
+    c.sell(ONE, ONE, market, 1)
+    trades = c.get_trade_ids(market)
+    assert(len(trades) == 1)
+    gas_use(s)
+    c.cancel(trades[0])
+    print "CANCEL SELL:", gas_use(s)
+
+def short_sell_gas(s, c):
+    s.mine(1)
+    event1 = c.createEvent(1010101, "new event c", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
+    market = c.createMarket(1010101, "new market c", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
+    assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
+    s.mine(1)
+    c.buy(ONE, ONE, market, 1)
+    trades = c.get_trade_ids(market)
+    assert(len(trades) == 1)
+    s.mine(1)
+    gas_use(s)
+    assert(c.commitTrade(c.makeTradeHash(0, ONE, trades), sender=t.k2) == 1)
+    print "COMMIT TRADE:", gas_use(s)
+    s.mine(1)
+    gas_use(s)
+    c.short_sell(trades[0], ONE, sender=t.k2)
+    print "SHORT SELL:", gas_use(s)
+
+def shortAsk_gas(s, c):
+    s.mine(1)
+    event1 = c.createEvent(1010101, "new event c", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
+    market = c.createMarket(1010101, "new market c", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
+    assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
+    s.mine(1)
+    gas_use(s)
+    c.shortAsk(ONE, ONE, market, 1)
+    print "SHORT ASK:", gas_use(s)
+
+def buyCompleteSets_gas(s, c):
+    s.mine(1)
+    event1 = c.createEvent(1010101, "new event d", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
+    market = c.createMarket(1010101, "new market d", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
+    assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
+    s.mine(1)
+    gas_use(s)
+    c.buyCompleteSets(market, ONE)
+    print "BUY COMPLETE SETS:", gas_use(s)
+
+def sellCompleteSets_gas(s, c):
+    s.mine(1)
+    event1 = c.createEvent(1010101, "new event e", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
+    market = c.createMarket(1010101, "new market e", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
+    assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
+    s.mine(1)
+    c.buyCompleteSets(market, ONE)
+    gas_use(s)
+    c.sellCompleteSets(market, ONE)
+    print "SELL COMPLETE SETS:", gas_use(s)
+
 # calculate the maximum number of ask trade_ids in a single trade
 def calculate_max_asks(s, c, gas_limit):
     gas_used, num_trades = 0, 0
@@ -1383,6 +1480,21 @@ def gas_use(s):
     initial_gas = s.block.gas_used
     return gas_used
 
+def trading_gas():
+    global initial_gas
+    initial_gas = 0
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('functions/output.se')
+    c.initiateOwner(1010101)
+    sell_gas(s, c)
+    buy_gas(s, c)
+    buyCompleteSets_gas(s, c)
+    sellCompleteSets_gas(s, c)
+    cancel_gas(s, c)
+    short_sell_gas(s, c)
+    # shortAsk_gas(s, c)
+
 if __name__ == '__main__':
     src = os.path.join(os.getenv('AUGUR_CORE', os.path.join(os.getenv('HOME', '/home/ubuntu'), 'workspace')), 'src')
     output = os.path.join(src, 'functions', 'output.se')
@@ -1410,4 +1522,5 @@ if __name__ == '__main__':
     #test_pen_not_enough_reports()
     #test_update_trading_fee()
     calculate_max_trade_ids(gas_limit=4712388)
+    #trading_gas()
     print "DONE TESTING"

@@ -84,7 +84,7 @@ def get_old_api(api_path, isLocal=False):
 
 # Retrieve "send" and/or "returns" values from the old API
 def get_send_returns(contract_name, method_name, old_api):
-    send, returns, mutable = None, None, None
+    send, returns, mutable, gas = None, None, None, None
     if old_api and contract_name in old_api and method_name in old_api[contract_name]:
         if "send" in old_api[contract_name][method_name]:
             send = old_api[contract_name][method_name]["send"]
@@ -92,13 +92,16 @@ def get_send_returns(contract_name, method_name, old_api):
             returns = old_api[contract_name][method_name]["returns"]
         if "mutable" in old_api[contract_name][method_name]:
             mutable = old_api[contract_name][method_name]["mutable"]
-    return send, returns, mutable
+        if "gas" in old_api[contract_name][method_name]:
+            gas = old_api[contract_name][method_name]["gas"]
+    return send, returns, mutable, gas
 
 def update_from_old_api(method, contract_name, method_name, old_api):
-    send, returns, mutable = get_send_returns(contract_name, method_name, old_api)
+    send, returns, mutable, gas = get_send_returns(contract_name, method_name, old_api)
     if send is not None: method["send"] = send
     if returns is not None: method["returns"] = returns
     if mutable is not None: method["mutable"] = mutable
+    if gas is not None: method["gas"] = gas
     return method
 
 def get_input_names(inputs):
