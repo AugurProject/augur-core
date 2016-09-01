@@ -1471,7 +1471,7 @@
         "sig": "extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "buy&sellShares": {
-        "address": "0xa7290513a061bca7f01aedc1b8c9edf5130825f8", 
+        "address": "0x0213c7f85af139093a6b35cff8d7f4e02f041379", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -1502,8 +1502,8 @@
             "MARKETS = 0x1af249e385ce1f8724894867f5b06d3961e6bec1", 
             "extern refund.se: [checkHash:[int256,int256]:int256, commitTrade:[int256]:int256, fill_trade:[int256,int256]:int256, getID:[int256]:int256, get_amount:[int256]:int256, get_price:[int256]:int256, get_trade:[int256]:int256[], makeTradeHash:[int256,int256,int256[]]:int256, remove_trade:[int256]:int256, saveTrade:[int256,int256,int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256, update_trade:[int256,int256]:_, zeroHash:[]:int256]", 
             "TRADES = 0x1e997132f2aa4b8d52518e3935cccb59f42210f7", 
-            "extern completeSets: [buyCompleteSets:[int256,int256]:_, sellCompleteSets:[int256,int256]:_, test_callstack:[]:int256]", 
-            "COMPLETESETS = 0xfecca16884908c46664637d13a51381bab675f22", 
+            "extern completeSets: [buyCompleteSets:[int256,int256]:int256, sellCompleteSets:[int256,int256]:int256, test_callstack:[]:int256]", 
+            "COMPLETESETS = 0xe72517b7872bdfc820a489294e1182547fffba99", 
             "inset('refund.se')", 
             "inset('logReturn.se')", 
             "", 
@@ -2735,7 +2735,7 @@
         "sig": "extern collectFees: [collectFees:[int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "completeSets": {
-        "address": "0xfecca16884908c46664637d13a51381bab675f22", 
+        "address": "0xe72517b7872bdfc820a489294e1182547fffba99", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -2767,9 +2767,8 @@
             "extern refund.se: [addFees:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, addTrade:[int256,int256,int256]:int256, getBondsMan:[int256]:int256, getBranchID:[int256]:int256, getCreationTime:[int256]:int256, getCumScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getLastExpDate:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getLastTrade:[int256]:int256, getMakerFees:[int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketsHash:[int256]:int256, getNumEvents:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPushedForward:[int256]:int256, getSender:[]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], get_total_trades:[int256]:int256, get_trade_ids:[int256]:int256[], getgasSubsidy:[int256]:int256, initializeMarket:[int256,int256[],int256,int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, remove_trade_from_market:[int256,int256]:int256, returnTags:[int256]:int256[], setMakerFees:[int256,int256]:int256, setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256, test_callstack:[]:int256]", 
             "MARKETS = 0x1af249e385ce1f8724894867f5b06d3961e6bec1", 
             "inset('refund.se')", 
-            "inset('logReturn.se')", 
             "", 
-            "event completeSets_logReturn(returnValue)", 
+            "event completeSets_logReturn(sender: indexed, market: indexed, type: indexed, returnValue, numOutcomes)", 
             "", 
             "# Buys amount of every outcome", 
             "# cost 850k gas", 
@@ -2784,11 +2783,11 @@
             "    cumScale = MARKETS.getCumScale(market)", 
             "    cost = amount*cumScale/ONE", 
             "    if(!MARKETS.getCreationTime(market)):", 
-            "        logReturn(completeSets_logReturn, 0)", 
+            "        log(type=completeSets_logReturn, msg.sender, market, 0)", 
             "    if(BRANCHES.getOracleOnly(branch)):", 
-            "        logReturn(completeSets_logReturn, -1)", 
+            "        log(type=completeSets_logReturn, msg.sender, market, -1)", 
             "    if(CASH.balance(msg.sender) < cost):", 
-            "        logReturn(completeSets_logReturn, -2)", 
+            "        log(type=completeSets_logReturn, msg.sender, market, -2)", 
             "    n = 1", 
             "    # send shares of the event to user address and increment the number issued in the market for each outcome", 
             "    while n <= numOutcomes:", 
@@ -2801,7 +2800,8 @@
             "        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount*cumScale/ONE)", 
             "    # send money from user acc. to market address/account", 
             "    CASH.sendFrom(market, cost, msg.sender)", 
-            "    logReturn(completeSets_logReturn, 1)", 
+            "    log(type=completeSets_logReturn, msg.sender, market, 1, amount, numOutcomes)", 
+            "    return(amount)", 
             "", 
             "# Sells amount of every outcome [if user owns it]", 
             "# cost 850k gas", 
@@ -2816,11 +2816,11 @@
             "    cumScale = MARKETS.getCumScale(market)", 
             "    cost = amount*cumScale/ONE", 
             "    if(BRANCHES.getOracleOnly(branch)):", 
-            "        logReturn(completeSets_logReturn, -1)", 
+            "        log(type=completeSets_logReturn, msg.sender, market, -1)", 
             "    n = 1", 
             "    while n <= numOutcomes:", 
             "        if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < amount):", 
-            "            logReturn(completeSets_logReturn, -3)", 
+            "            log(type=completeSets_logReturn, msg.sender, market, -3)", 
             "        n += 1", 
             "    n = 1", 
             "    # Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets", 
@@ -2835,7 +2835,8 @@
             "    # send funds from the market to the user acc.", 
             "    CASH.subtractCash(market, cost)", 
             "    CASH.addCash(msg.sender, cost)", 
-            "    logReturn(completeSets_logReturn, 1)"
+            "    log(type=completeSets_logReturn, msg.sender, market, 2, amount, numOutcomes)", 
+            "    return(amount)"
         ], 
         "fullsig": [
             {
@@ -2851,7 +2852,12 @@
                     }
                 ], 
                 "name": "buyCompleteSets(int256,int256)", 
-                "outputs": [], 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
                 "type": "function"
             }, 
             {
@@ -2867,7 +2873,12 @@
                     }
                 ], 
                 "name": "sellCompleteSets(int256,int256)", 
-                "outputs": [], 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
                 "type": "function"
             }, 
             {
@@ -2885,16 +2896,36 @@
             {
                 "inputs": [
                     {
+                        "indexed": true, 
+                        "name": "sender", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": true, 
+                        "name": "market", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": true, 
+                        "name": "type", 
+                        "type": "int256"
+                    }, 
+                    {
                         "indexed": false, 
                         "name": "returnValue", 
                         "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "numOutcomes", 
+                        "type": "int256"
                     }
                 ], 
-                "name": "completeSets_logReturn(int256)", 
+                "name": "completeSets_logReturn(int256,int256,int256,int256,int256)", 
                 "type": "event"
             }
         ], 
-        "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:_, sellCompleteSets:[int256,int256]:_, test_callstack:[]:int256]"
+        "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:int256, sellCompleteSets:[int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "compositeGetters": {
         "address": "0x40e847fda473852f6e1749b88ea6a2ce4fcc84a8", 
