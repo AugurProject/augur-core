@@ -68,15 +68,16 @@ def getEventsToReportOn(branch, period, sender, start):
     numEventsToReportOn = 0
     while i < numEvents:
         thisEvent = EXPEVENTS.getEvent(branch, period, start + i)
-        # calculate report target for event here if not done for purposes of computing this
-        if(EXPEVENTS.getLesserReportNum(branch, period, thisEvent)==0):
-            self.calculateReportTargetForEvent(branch, thisEvent, period, msg.sender)
-        reportingThreshold = self.calculateReportingThreshold(branch, thisEvent, period, sender)
-        shaHash = sha3(sender + thisEvent)
-        shaHash = abs(shaHash) / 115792089237316195423571
-        if((shaHash < reportingThreshold || EXPEVENTS.getRequired(thisEvent)) && !EVENTS.getOutcome(thisEvent)):
-            events[i] = thisEvent
-            numEventsToReportOn += 1
+        if thisEvent != 0:
+            # calculate report target for event here if not done for purposes of computing this
+            if(EXPEVENTS.getLesserReportNum(branch, period, thisEvent)==0):
+                self.calculateReportTargetForEvent(branch, thisEvent, period, msg.sender)
+            reportingThreshold = self.calculateReportingThreshold(branch, thisEvent, period, sender)
+            shaHash = sha3(sender + thisEvent)
+            shaHash = abs(shaHash) / 115792089237316195423571
+            if((shaHash < reportingThreshold || EXPEVENTS.getRequired(thisEvent)) && !EVENTS.getOutcome(thisEvent)):
+                events[i] = thisEvent
+                numEventsToReportOn += 1
         i += 1
     return(slice(events, items=0, items=numEventsToReportOn): arr)
 
