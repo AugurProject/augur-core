@@ -13577,7 +13577,7 @@
         "sig": "extern slashRep: [slashRep:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "trade": {
-        "address": "0xe1adef39ed412ca387312c0b82ed6f34f34fc331", 
+        "address": "0xdeebe2062823831949a255e59961e21948caae05", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -13752,11 +13752,11 @@
             "                        logReturn(trade_logReturn, INSUFFICIENT_BALANCE)", 
             "                    makerFeeRate = MARKETS.getMakerFees(market)", 
             "                    takerFee = (ONEPOINTFIVE - makerFeeRate)*fee / ONE", 
-            "                    total_trade_cost = amount * price / ONE * (takerFee+ONE) / ONE", 
+            "                    total_trade_cost = amount * price / ONE * (takerFee + ONE) / ONE", 
             "                    # trade value to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilledIncludingFees)", 
             "                    value_to_spend = min(total_trade_cost, min(max_value, balance))", 
             "                    # Determine fill amount", 
-            "                    fill = value_to_spend*ONE / price * ONE / (takerFee+ONE)", 
+            "                    fill = value_to_spend*ONE / price * ONE / (takerFee + ONE)", 
             "                    trade_value_excluding_fees = fill*price/ONE", 
             "                    if(trade_value_excluding_fees >= MINIMUM_TRADE_SIZE):", 
             "                        # Update trade amount or remove filled trade", 
