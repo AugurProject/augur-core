@@ -118,6 +118,8 @@ def getBondPaid(event):
 # increases how much of round 2 bond has been paid back
 def increaseBondPaid(event, amount):
     checkCallstack()
+    if(amount + self.roundTwo[event].bondPaid < self.roundTwo[event].bondPaid):
+        throw()
     self.roundTwo[event].bondPaid += amount
     return(1)
 

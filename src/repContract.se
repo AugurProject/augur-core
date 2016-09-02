@@ -22,6 +22,8 @@
 # takes reporterID as key, fxpValue is rep amount
 data reporting[2**160]
 
+data x
+
 # owner [account balance is coming from], then spender, e.g. approvedToSpend[owner][spender]
 # returns amount spender can spend
 data approvedToSpend[2**160][2**160]
@@ -142,10 +144,9 @@ macro throw():
    ~jump(2**256)
 
 
-def test(x):
-    if(x==5):
-        throw()
-    return(1)
+def test(y):
+    self.x += y
+    return(self.x)
 
 # safe adders idea pulled from piper merriam's btcrelay audit
 macro safeToAdd($a, $b):

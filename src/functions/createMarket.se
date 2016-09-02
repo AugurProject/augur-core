@@ -298,7 +298,7 @@ macro checkEventCreationPreconditions():
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
-    if(fxpMaxValue < fxpMinValue or (fxpMaxValue - fxpMinValue) < ONE):
+    if(fxpMaxValue < fxpMinValue or (fxpMaxValue - fxpMinValue) < ONE or (fxpMaxValue + fxpMinValue) < fxpMaxValue):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-2)

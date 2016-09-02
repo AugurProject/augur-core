@@ -9,6 +9,7 @@ inset('../data_api/refund.se')
 
 # Payout traders in markets with number of winningOutcomes of 2 [one scalar with any combination of binary + categorical for the other 2 dimensions, or just 1D with a scalar]
 # whitelist
+# refactor
 def twoOutcomes(market, winningOutcome: arr, event, sender):
     callstackCheck()
     # fetch outcome and min/max values for the scalar
@@ -22,6 +23,7 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
     pricePerShare2 = ONE * (outcome - minValue) / (maxValue - minValue)
     # share one goes with the low/short side of the calc
     pricePerShare1 = ONE - pricePerShare2
+    # assert they're not < one as well todo
     if((pricePerShare1 + pricePerShare2) > ONE):
         normalizePrices()
     # for each winning outcome get rid of shares and send money to the trader

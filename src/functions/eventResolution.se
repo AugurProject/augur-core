@@ -7,7 +7,7 @@ extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:i
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
 
-### Serves to resolve eents
+### Serves to resolve events
 
 # Resolves a binary market
 # whitelist
@@ -72,7 +72,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             # look @ total shares purchase cutoff times for early resolution bonds
             amount = MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE)
             branchWallet = BRANCHES.getWallet($branch, INFO.getCurrency($market))
-            if(!INFO.getWallet($market).transfer(branchWallet, amount)):
+            if(amount && !INFO.getWallet($market).transfer(branchWallet, amount)):
                 throw()
         MARKETS.setTradingPeriod($market, MARKETS.getOriginalTradingPeriod($market))
         MARKETS.setPushedForward($market, 0, msg.sender)
@@ -107,7 +107,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             throw()
         if(MARKETS.getPushedForward($market)):
             amount = MARKETS.getTradingFee($market) * MARKETS.getTotalSharesPurchased($market) / (2 * ONE)
-            if(!INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), amount)):
+            if(amount && !INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), amount)):
                 throw()
         if(EVENTS.getEventPushedUp($event)):
             # delete old $event from future events exp

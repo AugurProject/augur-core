@@ -38,7 +38,7 @@ def penalizeOnForkedEvent(branch, event):
 
     # todo perhaps increment period by default if not done
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
-    lastPeriodVotedOn = BRANCHES.getVotePeriod(branch)-1
+    lastPeriodVotedOn = BRANCHES.getVotePeriod(branch) - 1
     periodLength = BRANCHES.getPeriodLength(branch)
     newRep = 0
     newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender)
@@ -69,7 +69,7 @@ macro checkForkPenalizationPreconditions():
         # todo why not auto increment period
         MUTEX.unsetMutex()
         return(-1)
-    atFirstHalfOfPeriod()
+    atFirstHalfOfPeriod()Z
     # means event / fork isn't resolved
     if(!EVENTS.getForkedDone(event)):
         MUTEX.unsetMutex()
@@ -114,3 +114,4 @@ macro handleEthicsAndBondRepRedistribution($numReportedOn):
     else:
         newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + repChange
         EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
+    repBalance = REPORTING.getRepBalance(branch, msg.sender)
