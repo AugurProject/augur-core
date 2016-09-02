@@ -42,13 +42,14 @@ macro MAX_REPORT_THRESHOLD: 2 ** 192
 # used for gas limit reasons to ensure terminating loop
 macro MARKETS_COUNTING_TOWARDS_SHARE_VALUE: 20
 
-def makeHash(salt, fxpReport, event, sender):
+def makeHash(salt, fxpReport, event, sender, ethics):
     checkCallstack()
-    hashInfo = array(4)
+    hashInfo = array(5)
     hashInfo[0] = sender
     hashInfo[1] = salt
     hashInfo[2] = fxpReport
     hashInfo[3] = event
+    hashInfo[4] = ethics
     reportHash = sha3(hashInfo, chars = 32 * len(hashInfo))
     return(reportHash)
 
@@ -148,7 +149,7 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
     callstackCheck()
     numMarkets = EVENTS.getNumMarkets(event)
     if(numMarkets > MARKETS_COUNTING_TOWARDS_SHARE_VALUE):
-        numMarkets = MARKETS_COUNTING_TOWARDS_SHARE_VALUE
+        numMarkets = MARKTS_COUNTING_TOWARDS_SHARE_VALUE
     markets = array(numMarkets)
     markets = EVENTS.getMarkets(event, outitems=numMarkets)
     totalFees = 0
@@ -200,7 +201,7 @@ macro checkSubmitReportPreconditions():
         return(-1)
     atSecondHalfOfPeriod()
     realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
-    if(self.makeHash(salt, fxpReport, event, msg.sender) != realHash or !realHash):
+    if(self.makeHash(salt, fxpReport, event, msg.sender, fxpEthics) != realHash or !realHash):
         MUTEX.unsetMutex()
         return(-3)
     if(fxpEthics != ONE and fxpEthics != 0):

@@ -16,7 +16,7 @@ inset('../data_api/periodStage.se')
     # -3: invalid claim / report hash - makes sure that the colluding reporter's commit is the same as the info provided in the params
     # -4: event isn't in the branch
     # -5: already slashed
-def slashRep(branch, salt, report, reporter, event):
+def slashRep(branch, salt, report, ethics, reporter, event):
     refund()
     if(MUTEX.getMutex()):
         throw()
@@ -27,11 +27,12 @@ def slashRep(branch, salt, report, reporter, event):
     alreadySlashed = CONSENSUS.getSlashed(branch, votePeriod, reporter)
     votePeriodShouldBe = block.timestamp / periodLength - 1
     realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, event)
-    hashInfo = array(4)
+    hashInfo = array(5)
     hashInfo[0] = reporter
     hashInfo[1] = salt
     hashInfo[2] = report
     hashInfo[3] = event
+    hashInfo[4] = ethics
     reportHash = sha3(hashInfo, chars = 32 * len(hashInfo))
     checkSlashRepInvariants()
     

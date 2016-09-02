@@ -57,6 +57,7 @@ macro MAX_ORDER_VALUE: 2 ** 190
     # -3: not enough shares
 # 
 # costs 532k gas
+# price is always in 10**20 fxp, amount is in the market's currency # of decimals, e.g. for 9 10**9 is 1 share [so buy 10**9 complete sets and it'll cost you 1 full unit of that currency or buy 10**9 at a fxpPrice of 10**20 it'll cost you 1 full unit of the currency]
 # smallest trade value is 0.00000001
 def bid(fxpAmount, fxpPrice, market, outcome):
     refund()
