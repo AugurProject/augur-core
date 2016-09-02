@@ -46,15 +46,14 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     periodAfterForkPeriod = BRANCHES.getForkPeriod(branch) + 1 == lastPeriod
     periodLength = BRANCHES.getPeriodLength(branch)
     originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
+    # this includes the baseReporters * numEventsAvailable
     numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)
     # events a user should be reporting on
     # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
     # a**b=exp(b*ln(a))=e**(b*ln(a)).
     repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(originalRep) / ONE) * ONE / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
-    baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
     numRequiredEvents = EXPEVENTS.getNumRequired(branch, lastPeriod)
     expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn + numRequiredEvents * ONE
-    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, lastPeriod) - EXPEVENTS.getNumRemoved(branch, lastPeriod)
     dealWithWhaleReporters()
     ensureReporterCouldveReportedOnMoreButDidnt()
     checkProveReporterDidntReportEnoughPreconditions()
@@ -112,11 +111,13 @@ macro redistributeNotEnoughReportsRep():
     CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
 
 macro dealWithWhaleReporters():
+    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, lastPeriod) - EXPEVENTS.getNumRemoved(branch, lastPeriod)
     reporterIsAWhale = repConstant >= POINT_ZERO_ONE
     if(reporterIsAWhale):
         minimum = min(MIN_EVENTS_FOR_WHALE + numRequiredEvents, eventsInPeriod)
         if(expectedEventsForReporterIncludingRequired / ONE < minimum):
             expectedEventsForReporterIncludingRequired = minimum * ONE
+    baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
     total = repConstant * baseReporters
     # if total is too high [>1] then expectedEventsForReporterIncludingRequired will estimate a higher number than reality, so need to correct for this below
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*baseReporters > 1)

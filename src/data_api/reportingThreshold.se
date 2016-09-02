@@ -28,6 +28,8 @@ def calculateReportingThreshold(branch, event, period, sender):
         calculateAndSetRepConstant()
     # 1 is 2**192 here, lesserreportnum, repconstant, and one are all base 2**64
     reportingThreshold = EXPEVENTS.getLesserReportNum(branch, period, event) * repConstant * ONE
+    if(reportingThreshold > MAX_THRESHOLD):
+        reportingThreshold = MAX_THRESHOLD
     return(reportingThreshold)
 
 # Gets events a reporter should report on
