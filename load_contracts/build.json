@@ -1471,7 +1471,7 @@
         "sig": "extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "buy&sellShares": {
-        "address": "0x0213c7f85af139093a6b35cff8d7f4e02f041379", 
+        "address": "0x674480390ba3eef8e5c0fe5483c3af9cf05a7521", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -1556,7 +1556,7 @@
             "def shortAsk(amount, price, market, outcome):", 
             "    refund()", 
             "    buyCompleteSetsResult = COMPLETESETS.buyCompleteSets(market, amount, call=delegate)", 
-            "    if buyCompleteSetsResult != 1:", 
+            "    if buyCompleteSetsResult != amount:", 
             "        return(buyCompleteSetsResult)", 
             "    return(self.sell(amount, price, market, outcome, call=delegate))", 
             "", 

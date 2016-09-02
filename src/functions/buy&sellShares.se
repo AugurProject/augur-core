@@ -76,7 +76,7 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $fee, $send
 def shortAsk(amount, price, market, outcome):
     refund()
     buyCompleteSetsResult = COMPLETESETS.buyCompleteSets(market, amount, call=delegate)
-    if buyCompleteSetsResult != 1:
+    if buyCompleteSetsResult != amount:
         return(buyCompleteSetsResult)
     return(self.sell(amount, price, market, outcome, call=delegate))
 

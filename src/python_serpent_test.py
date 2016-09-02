@@ -247,7 +247,7 @@ def test_trading():
             assert(c.balance(sender2)==100000*ONE)
             gas_use(s)
             assert(c.getCumScale(market[a])==cumScale[a])
-            assert(c.buyCompleteSets(market[a], 10*ONE)==1)
+            assert(c.buyCompleteSets(market[a], 10*ONE)==10*ONE)
             assert(c.balance(s.block.coinbase)==(100000*ONE - 10*cumScale[a]))
             print c.balance(s.block.coinbase)
             print "Buy complete sets gas use"
@@ -255,7 +255,7 @@ def test_trading():
             if(a==2):
                 sellin = c.sell(ONE, int(.01*ONE), market[2], 3)
                 assert(c.cancel(sellin)==1)
-            assert(c.sellCompleteSets(market[a], 8*ONE)==1)
+            assert(c.sellCompleteSets(market[a], 8*ONE)==8*ONE)
             assert(c.balance(s.block.coinbase)==(100000*ONE - 2*cumScale[a]))
             assert(c.balance(market[a])==2*cumScale[a])
             print "Sell complete sets gas use"
