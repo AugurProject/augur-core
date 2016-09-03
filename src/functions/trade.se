@@ -40,6 +40,7 @@ macro MIN_TRADE_VALUE: 184467440738
 # Trade types
 macro BID: 1
 macro ASK: 2
+macro SHORT_OFFER: 3
 # Field counts
 macro TRADE_FIELDS: 8
 # Boolean success/failure
@@ -114,6 +115,8 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
             fillBid()
         elif(type == ASK):
             fillAsk()
+        elif(type == SHORT_OFFER):
+            fillShortOffer()
         else:
             throw()
 
@@ -302,3 +305,47 @@ macro fillShort():
     fxpMaxAmount -= fill
     # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
     log(type = logPriceShort, market, msg.sender, owner, ASK, price, fill, block.timestamp, buyerTradeIDs[t], outcome)
+
+macro fillShortOrder():
+    balance = INFO.getCurrency(market).balanceOf(msg.sender)
+    totalTradeCost = amount * price / ONE
+    # trade value to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilled)
+    valueToSpend = min(totalTradeCost, min(fxpMaxValue, balance))
+    # Determine fill amount
+    fill = valueToSpend * ONE / price
+    if(valueToSpend < MIN_TRADE_VALUE):
+        MUTEX.unsetMutex()
+        return([INSUFFICIENT_BALANCE]: arr)
+    # Update trade amount or remove filled trade
+    if(fill < amount):
+        TRADES.fillTrade(tradeIDs[t], fill)
+    else:
+        removeTrade(tradeIDs[t], market)
+
+    # Transfer cash from user to market - purchaser sends price*amount to the market and gets outcome n
+    payMaker = INFO.getCurrency(market).transferFrom(msg.sender, market, valueToSpend)
+    if(!payMaker):
+        throw()
+    # Update balances
+    MARKETS.modifyParticipantShares(market, msg.sender, outcome, fill, 1)
+
+    
+	# account for fees here even though paid upon selling complete sets / resolution so we can assign reporters appropriately [since we're issuing a complete set here to fulfill this trade]
+    fee = MARKETS.getTradingFee(market) * fxpAmount / ONE * cumulativeScale / ONE
+    MARKETS.addFees(market, fee / 2)
+    numOutcomes = MARKETS.getMarketNumOutcomes(market)
+    i = 1
+    # send shares of the event to user address, buying complete sets - person who placed the order gets amount shares of n-1 outcomes
+    while(i <= numOutcomes):
+    	if(i != outcome):
+	        MARKETS.modifyShares(market, i, fill)
+    	    MARKETS.modifyParticipantShares(market, msg.sender, i, fill, 0)
+        i += 1
+    if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
+        MARKETS.modifySharesValue(market, amount * cumulativeScale / ONE)
+        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount * cumulativeScale / ONE)
+
+    # Update fxpMaxValue
+    fxpMaxValue -= valueToSpend
+    # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
+    log(type = logPrice, market, msg.sender, owner, BID, price, fill, block.timestamp, tradeIDs[t], outcome)

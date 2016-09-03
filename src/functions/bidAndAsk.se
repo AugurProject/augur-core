@@ -35,6 +35,7 @@ event logCancel(market:indexed, sender:indexed, fxpPrice, fxpAmount, tradeid, ou
 # Trade types
 macro BID: 1
 macro ASK: 2
+macro SHORT_OFFER: 3
 # Field counts
 macro TRADE_FIELDS: 8
 # Boolean success/failure
@@ -89,6 +90,22 @@ def ask(fxpAmount, fxpPrice, market, outcome):
     MUTEX.unsetMutex()
     return(FAILURE)
 
+# costs 532k gas
+# smallest trade value is 0.00000001
+def shortOffer(fxpAmount, fxpPrice, market, outcome):
+    refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+
+    branch = MARKETS.getBranch(market)
+    cumulativeScale = MARKETS.getCumulativeScale(market)
+
+    checkShortOfferPreconditions()
+    saveTrade(SHORT_OFFER, fxpAmount, fxpPrice, market, outcome, branch, msg.sender)
+    MUTEX.unsetMutex()
+    return(FAILURE)
+
 # 
 # Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
 # @returns 1 if success, 0 if failure
@@ -140,6 +157,15 @@ macro checkSellPreconditions():
         MUTEX.unsetMutex()
         return(-3)
     
+macro checkShortOfferPreconditions():
+    # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
+    if(fxpPrice > cumulativeScale or fxpAmount * fxpPrice / ONE < MIN_ORDER_VALUE or fxpAmount * fxpPrice >= MAX_ORDER_VALUE):
+        MUTEX.unsetMutex()
+        return(-1)
+    if(BRANCHES.getOracleOnly(branch)):
+        MUTEX.unsetMutex()
+        return(-2)
+
 macro removeTrade($tradeID, $market):
     TRADES.removeTrade($tradeID)
     MARKETS.removeTradeFromMarket($market, $tradeID)
@@ -155,6 +181,12 @@ macro refundTrade():
     elif(type == ASK):
         # shares refund
         MARKETS.modifyParticipantShares(market, msg.sender, outcome, fxpAmount, 0)
+    elif(type == SHORT_OFFER):
+        # cash refund
+        amount = MARKETS.getCumulativeScale(market) * fxpAmount / ONE - fxpAmount * fxpPrice / ONE
+        refunded = INFO.getWallet(market).transfer(msg.sender, amount)
+        if(!refunded):
+            throw()
     else:
         throw()
 
@@ -174,6 +206,10 @@ macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $sende
     # Send / escrow cash for bids
     if($type == BID):
         $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $fxpAmount * $fxpPrice / ONE)
+        if(!$paidTradeCost):
+            throw()
+    if($type == SHORT_OFFER):
+        $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $fxpAmount * cumulativeScale / ONE - $fxpAmount * $fxpPrice / ONE)
         if(!$paidTradeCost):
             throw()
     log(type = logAddTx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, tradeID)
