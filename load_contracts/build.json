@@ -2928,7 +2928,7 @@
         "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:int256, sellCompleteSets:[int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "compositeGetters": {
-        "address": "0x40e847fda473852f6e1749b88ea6a2ce4fcc84a8", 
+        "address": "0x0cce4d7404d3441a69b933e9f2f42cbb4a46b9d4", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -3154,7 +3154,7 @@
             "        marketsInfo[c + 8] = tags[2]", 
             "        marketsInfo[c + 9] = MARKETS.getLastExpDate(marketID)", 
             "        marketsInfo[c + 10] = MARKETS.getMakerFees(marketID)", 
-            "        description = INFO.getDescription(marketIDs[m], outchars=descriptionLength)", 
+            "        description = INFO.getDescription(marketID, outchars=descriptionLength)", 
             "        c += 11", 
             "        d = 0", 
             "        while d < descriptionLength:", 

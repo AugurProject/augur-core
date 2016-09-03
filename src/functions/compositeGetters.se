@@ -216,7 +216,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
         marketsInfo[c + 8] = tags[2]
         marketsInfo[c + 9] = MARKETS.getLastExpDate(marketID)
         marketsInfo[c + 10] = MARKETS.getMakerFees(marketID)
-        description = INFO.getDescription(marketIDs[m], outchars=descriptionLength)
+        description = INFO.getDescription(marketID, outchars=descriptionLength)
         c += 11
         d = 0
         while d < descriptionLength:
