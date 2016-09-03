@@ -32,6 +32,7 @@ macro MIN_EVENTS_FOR_WHALE: 30
     # -2: not in right part of period
     # -3: event isn't in branch
     # -4: fork period exemption
+    # -5: reported on enough
     # Returns 2 if didn't need to be penalized and thus wasn't
 def proveReporterDidntReportEnough(branch, reporter, eventExample):
     refund()
@@ -83,7 +84,7 @@ macro ensureReporterCouldveReportedOnMoreButDidnt()
     reportedOnLessThanShouldve = expectedEventsForReporterIncludingRequired / 2 > numReportsSubmitted * ONE and couldveReported
     if(!reportedOnLessThanShouldve):
         MUTEX.unsetMutex()
-        return(-4)
+        return(-5)
 
 macro redistributeNotEnoughReportsRep():
     # penalize people

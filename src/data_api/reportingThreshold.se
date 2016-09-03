@@ -118,3 +118,34 @@ macro abs($a):
     if($a < 0):
         $a = -$a
     $a
+
+# simply a helper function / useful to know
+def calculateNumberOfEventsAReporterHasToReportOnAtMinimum(branch, reporter, period):
+    originalRep = EXPEVENTS.getBeforeRep(branch, period, reporter)
+    # this includes the baseReporters * numEventsAvailable
+    numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, period)
+    # events a user should be reporting on
+    # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
+    # a**b=exp(b*ln(a))=e**(b*ln(a)).
+    repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(originalRep) / ONE) * ONE / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
+    numRequiredEvents = EXPEVENTS.getNumRequired(branch, period)
+    expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn + numRequiredEvents * ONE
+    # in period just after fork period no reports required
+    if(periodAfterForkPeriod):
+        return(0)
+    dealWithWhaleReporters()
+    return(expectedEventsForReporterIncludingRequired / 2)
+
+macro dealWithWhaleReporters():
+    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, period) - EXPEVENTS.getNumRemoved(branch, period)
+    reporterIsAWhale = repConstant >= POINT_ZERO_ONE
+    if(reporterIsAWhale):
+        minimum = min(MIN_EVENTS_FOR_WHALE + numRequiredEvents, eventsInPeriod)
+        if(expectedEventsForReporterIncludingRequired / ONE < minimum):
+            expectedEventsForReporterIncludingRequired = minimum * ONE
+    baseReporters = CONSENSUS.getBaseReportersperiod(branch)
+    total = repConstant * baseReporters
+    # if total is too high [>1] then expectedEventsForReporterIncludingRequired will estimate a higher number than reality, so need to correct for this below
+    # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*baseReporters > 1)
+    if(total > ONE):
+        expectedEventsForReporterIncludingRequired = (numEventsAvailableToReportOn / baseReporters) * ONE + numRequiredEvents * ONE
