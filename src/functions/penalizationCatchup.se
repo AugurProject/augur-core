@@ -17,7 +17,7 @@ macro MAX_DELTA: 22
     # -1: doesn't need to be penalized/caught up
     # -2: not in first half of reporting period
     # -3: user isn't behind or reported in the last period [and should thus use the penalization functions in consensus.se]
-# whitelist this [calling if only 1 period behind for someone else can be bad, so only call when auto/necessary]
+# whitelist this [calling if only 1 period behind for someone else can be bad, so only call when auto/necessary, can also call for ones self]
 def penalizationCatchup(branch, sender):
     refund()
     if(MUTEX.getMutex() && !mutexWhitelisted()):

@@ -1,0 +1,230 @@
+# This software (Augur) allows buying and selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation OU
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+# 
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+# 
+#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+# 
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+### This allows you to place orders on the book and cancel them
+
+import branches as BRANCHES
+import markets as MARKETS
+import trades as TRADES
+import info as INFO
+import mutex as MUTEX
+# Warning: subcurrencies/tokens are untrusted contracts
+extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
+inset('../data_api/refund.se')
+
+event logAddTx(market:indexed, sender:indexed, type, fxpPrice, fxpAmount, outcome, tradeid)
+event logCancel(market:indexed, sender:indexed, fxpPrice, fxpAmount, tradeid, outcome, type)
+
+# Trade types
+macro BID: 1
+macro ASK: 2
+macro SHORT_OFFER: 3
+# Field counts
+macro TRADE_FIELDS: 8
+# Boolean success/failure
+macro FAILURE: 0
+macro SUCCESS: 1
+# Error codes
+macro INSUFFICIENT_BALANCE: 10
+macro TRADE_ALREADY_EXISTS: 21
+macro TRADE_SAME_BLOCK_PROHIBITED: 22
+
+macro MIN_ORDER_VALUE: 184467440738
+macro MAX_ORDER_VALUE: 2 ** 190
+
+# 
+# Buy / Sell actions: puts orders on the book
+# Errors:
+    #  0: market doesn't exist
+    # -1: fxpAmount/fxpPrice bad
+    # -2: oracle only branch
+    # -3: not enough shares
+# 
+# costs 532k gas
+# price is always in 10**20 fxp, amount is in the market's currency # of decimals, e.g. for 9 10**9 is 1 share [so buy 10**9 complete sets and it'll cost you 1 full unit of that currency or buy 10**9 at a fxpPrice of 10**20 it'll cost you 1 full unit of the currency]
+# smallest trade value is 0.00000001
+def bid(fxpAmount, fxpPrice, market, outcome):
+    refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+
+    cumulativeScale = MARKETS.getCumulativeScale(market)
+    branch = MARKETS.getBranch(market)
+
+    checkBuyPreconditions()
+    saveTrade(BID, fxpAmount, fxpPrice, market, outcome, branch, msg.sender)
+    MUTEX.unsetMutex()
+    return(FAILURE)
+
+# costs 532k gas
+# smallest trade value is 0.00000001
+def ask(fxpAmount, fxpPrice, market, outcome):
+    refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+
+    branch = MARKETS.getBranch(market)
+    cumulativeScale = MARKETS.getCumulativeScale(market)
+
+    checkSellPreconditions()
+    saveTrade(ASK, fxpAmount, fxpPrice, market, outcome, branch, msg.sender)
+    MUTEX.unsetMutex()
+    return(FAILURE)
+
+# costs 532k gas
+# smallest trade value is 0.00000001
+def shortOffer(fxpAmount, fxpPrice, market, outcome):
+    refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+
+    branch = MARKETS.getBranch(market)
+    cumulativeScale = MARKETS.getCumulativeScale(market)
+
+    checkShortOfferPreconditions()
+    saveTrade(SHORT_OFFER, fxpAmount, fxpPrice, market, outcome, branch, msg.sender)
+    MUTEX.unsetMutex()
+    return(FAILURE)
+
+# 
+# Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
+# @returns 1 if success, 0 if failure
+# 
+# 200k gas
+def cancel(tradeID):
+    refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+
+    # user can cancel anytime
+    # Get trade
+    fetchTradeCancelInfo()
+    # Check the owner
+    if(msg.sender != owner):
+        MUTEX.unsetMutex()
+        return(FAILURE)
+    
+    # Clear the trade first
+    removeTrade(tradeID, market)
+    refundTrade()
+    # Log cancellation
+    log(type = logCancel, market, msg.sender, fxpPrice, fxpAmount, tradeID, outcome, type)
+    MUTEX.unsetMutex()
+    return(SUCCESS)
+
+macro checkBuyPreconditions():
+    if(!branch):
+        MUTEX.unsetMutex()
+        return(0)
+    # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
+    if(fxpPrice > cumulativeScale or fxpAmount * fxpPrice / ONE < MIN_ORDER_VALUE or fxpAmount * fxpPrice >= MAX_ORDER_VALUE):
+        MUTEX.unsetMutex()
+        return(-1)
+    if(BRANCHES.getOracleOnly(branch)):
+        MUTEX.unsetMutex()
+        return(-2)
+
+macro checkSellPreconditions():
+    # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
+    if(fxpPrice > cumulativeScale or fxpAmount * fxpPrice / ONE < MIN_ORDER_VALUE or fxpAmount * fxpPrice >= MAX_ORDER_VALUE):
+        MUTEX.unsetMutex()
+        return(-1)
+    if(BRANCHES.getOracleOnly(branch)):
+        MUTEX.unsetMutex()
+        return(-2)
+    if(MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome) < fxpAmount):
+        MUTEX.unsetMutex()
+        return(-3)
+    
+macro checkShortOfferPreconditions():
+    # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
+    if(fxpPrice > cumulativeScale or fxpAmount * fxpPrice / ONE < MIN_ORDER_VALUE or fxpAmount * fxpPrice >= MAX_ORDER_VALUE):
+        MUTEX.unsetMutex()
+        return(-1)
+    if(BRANCHES.getOracleOnly(branch)):
+        MUTEX.unsetMutex()
+        return(-2)
+
+macro removeTrade($tradeID, $market):
+    TRADES.removeTrade($tradeID)
+    MARKETS.removeTradeFromMarket($market, $tradeID)
+
+macro refundTrade():
+    # Issue refunds
+    if(type == BID):
+        # cash refund
+        amount = fxpAmount * fxpPrice / ONE
+        refunded = INFO.getWallet(market).transfer(msg.sender, amount)
+        if(!refunded):
+            throw()
+    elif(type == ASK):
+        # shares refund
+        MARKETS.modifyParticipantShares(market, msg.sender, outcome, fxpAmount, 0)
+    elif(type == SHORT_OFFER):
+        # cash refund
+        amount = MARKETS.getCumulativeScale(market) * fxpAmount / ONE - fxpAmount * fxpPrice / ONE
+        refunded = INFO.getWallet(market).transfer(msg.sender, amount)
+        if(!refunded):
+            throw()
+    else:
+        throw()
+
+macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $sender):
+    trade = [$type, $market, $fxpAmount, $fxpPrice, $sender, block.number, $outcome]
+    tradeID = sha3(trade, items = 7)
+    if(TRADES.getID(tradeID)):
+        MUTEX.unsetMutex()
+        return(TRADE_ALREADY_EXISTS)
+
+    TRADES.saveTrade(tradeID, $type, $market, $fxpAmount, $fxpPrice, $sender, $outcome)
+    # Update market
+    MARKETS.addTrade($market, tradeID)
+    # Update available and trading fxpAmounts for asks
+    if($type == ASK):
+        MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$fxpAmount, 0)
+    # Send / escrow cash for bids
+    if($type == BID):
+        $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $fxpAmount * $fxpPrice / ONE)
+        if(!$paidTradeCost):
+            throw()
+    if($type == SHORT_OFFER):
+        $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $fxpAmount * cumulativeScale / ONE - $fxpAmount * $fxpPrice / ONE)
+        if(!$paidTradeCost):
+            throw()
+    log(type = logAddTx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, tradeID)
+    MUTEX.unsetMutex()
+    return(tradeID)
+
+macro fetchTradeCancelInfo():
+    trade = array(TRADE_FIELDS)
+    trade = TRADES.getTrade(tradeID, outitems = TRADE_FIELDS)
+    if(!trade[0]):
+        MUTEX.unsetMutex()
+        return(0)
+    type = trade[1]
+    market = trade[2]
+    fxpAmount = trade[3]
+    fxpPrice = trade[4]
+    owner = trade[5]
+    outcome = trade[7]

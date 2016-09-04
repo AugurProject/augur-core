@@ -54,7 +54,7 @@ def makeHash(salt, fxpReport, event, sender, ethics):
     return(reportHash)
 
 # Allows a user to submit the hash of their fxpReport / commit
-# Error: 0: not caught up on rep redistributions/penalizations so should be done first [only 1 period behind]
+# Error: 0: not caught up on rep redistributions/penalizations so should be done first [only 1 period behind] - if reported last period and called collectfees then call the penalization functions in consensus, if didn't report last period or didn't call collectfees last period then call penalizationCatchup
 # Error -1: invalid event
 # Error -2: not in first half of period [commit part]
 # Error -3: not able to fxpReport on this event
