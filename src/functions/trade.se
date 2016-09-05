@@ -41,6 +41,7 @@ macro ONEPOINTFIVE: 1500000000000000000
 # Trade types
 macro BID: 1
 macro ASK: 2
+macro SHORT_SELL: 3
 # Field counts
 macro TRADE_FIELDS: 8
 # Boolean success/failure
@@ -331,6 +332,6 @@ def short_sell(buyer_trade_id, max_amount):
 
     max_amount -= fill
     # Log transaction
-    log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee)
+    log(type=log_fill_tx, market, msg.sender, owner, SHORT_SELL, price, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee)
     MARKETS.setPrice(market, outcome, price)
     logArrayReturn([SUCCESS, max_amount, fill, price])
