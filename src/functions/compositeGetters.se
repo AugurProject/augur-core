@@ -241,5 +241,13 @@ def getEventsWithSubmittedReport(branch, period, reporter):
             events[n] = eventID
             n += 1
         i += 1
-
     return(slice(events, items=0, items=n): arr)
+
+def getPositionInMarket(market, account):
+    numOutcomes = MARKETS.getMarketNumOutcomes(market)
+    position = array(numOutcomes)
+    i = 0
+    while i < numOutcomes:
+        position[i] = MARKETS.getParticipantSharesPurchased(market, account, i + 1)
+        i += 1
+    return(position: arr)

@@ -2928,7 +2928,7 @@
         "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:int256, sellCompleteSets:[int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "compositeGetters": {
-        "address": "0x0cce4d7404d3441a69b933e9f2f42cbb4a46b9d4", 
+        "address": "0xfee435381e2c281fb48b0f33045702639220404c", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -3179,8 +3179,16 @@
             "            events[n] = eventID", 
             "            n += 1", 
             "        i += 1", 
+            "    return(slice(events, items=0, items=n): arr)", 
             "", 
-            "    return(slice(events, items=0, items=n): arr)"
+            "def getPositionInMarket(market, account):", 
+            "    numOutcomes = MARKETS.getMarketNumOutcomes(market)", 
+            "    position = array(numOutcomes)", 
+            "    i = 0", 
+            "    while i < numOutcomes:", 
+            "        position[i] = MARKETS.getParticipantSharesPurchased(market, account, i + 1)", 
+            "        i += 1", 
+            "    return(position: arr)"
         ], 
         "fullsig": [
             {
@@ -3319,6 +3327,27 @@
             }, 
             {
                 "constant": false, 
+                "inputs": [
+                    {
+                        "name": "market", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "account", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "getPositionInMarket(int256,int256)", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256[]"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
                 "inputs": [], 
                 "name": "test_callstack()", 
                 "outputs": [
@@ -3330,7 +3359,7 @@
                 "type": "function"
             }
         ], 
-        "sig": "extern compositeGetters: [batchGetMarketInfo:[int256[],int256]:int256[], getEventsWithSubmittedReport:[int256,int256,int256]:int256[], getMarketCreatorFeesCollected:[int256]:int256, getMarketInfo:[int256,int256]:int256[], getMarketsInfo:[int256,int256,int256,int256,int256]:int256[], getOrderBook:[int256]:int256[], test_callstack:[]:int256]"
+        "sig": "extern compositeGetters: [batchGetMarketInfo:[int256[],int256]:int256[], getEventsWithSubmittedReport:[int256,int256,int256]:int256[], getMarketCreatorFeesCollected:[int256]:int256, getMarketInfo:[int256,int256]:int256[], getMarketsInfo:[int256,int256,int256,int256,int256]:int256[], getOrderBook:[int256]:int256[], getPositionInMarket:[int256,int256]:int256[], test_callstack:[]:int256]"
     }, 
     "consensus": {
         "address": "0xe68918529dc9f11fc45bfe17d464472cbb104282", 
