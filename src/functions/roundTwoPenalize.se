@@ -22,7 +22,6 @@ inset('../data_api/periodStage.se')
 macro POINT_ZERO_ONE: 184467440737095520
 macro POINT_ONE: 1844674407370955264
 macro POINT_TWO: 3689348814741910528
-macro POINT_EIGHT: 14757395258967642112
 macro MIN_BOND: 200 * ONE
 
 # Penalizes a reporter for reporting wrongly on a round 2 reporting / backstop 1 event

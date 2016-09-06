@@ -169,6 +169,7 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
         if(!trade[0]):
             MUTEX.unsetMutex()
             return([0]: arr)
+        # Get market
         type = trade[1]
         if(type != BID):
             MUTEX.unsetMutex()
@@ -328,6 +329,7 @@ macro fillShortOrder():
     # Update balances
     MARKETS.modifyParticipantShares(market, msg.sender, outcome, fill, 1)
 
+    
 	# account for fees here even though paid upon selling complete sets / resolution so we can assign reporters appropriately [since we're issuing a complete set here to fulfill this trade]
     fee = MARKETS.getTradingFee(market) * fxpAmount / ONE * cumulativeScale / ONE
     MARKETS.addFees(market, fee / 2)

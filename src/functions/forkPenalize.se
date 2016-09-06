@@ -15,6 +15,9 @@ inset('proportionCorrect.se')
 inset('repChange.se')
 inset('../data_api/periodStage.se')
 
+macro POINT_ZERO_ONE: 184467440737095520
+macro MIN_BOND: 200 * ONE
+
 # Penalizes a reporter for reporting wrongly on a forked event / backstop 2
 # Notes:
     # essentially penalizeWrong for backstop 2 [where everyone reports on a forked event on the new branch]
@@ -69,7 +72,7 @@ macro checkForkPenalizationPreconditions():
         # todo why not auto increment period
         MUTEX.unsetMutex()
         return(-1)
-    atFirstHalfOfPeriod()Z
+    atFirstHalfOfPeriod()
     # means event / fork isn't resolved
     if(!EVENTS.getForkedDone(event)):
         MUTEX.unsetMutex()

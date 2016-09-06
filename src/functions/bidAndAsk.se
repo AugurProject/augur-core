@@ -166,30 +166,6 @@ macro checkShortOfferPreconditions():
         MUTEX.unsetMutex()
         return(-2)
 
-macro removeTrade($tradeID, $market):
-    TRADES.removeTrade($tradeID)
-    MARKETS.removeTradeFromMarket($market, $tradeID)
-
-macro refundTrade():
-    # Issue refunds
-    if(type == BID):
-        # cash refund
-        amount = fxpAmount * fxpPrice / ONE
-        refunded = INFO.getWallet(market).transfer(msg.sender, amount)
-        if(!refunded):
-            throw()
-    elif(type == ASK):
-        # shares refund
-        MARKETS.modifyParticipantShares(market, msg.sender, outcome, fxpAmount, 0)
-    elif(type == SHORT_OFFER):
-        # cash refund
-        amount = MARKETS.getCumulativeScale(market) * fxpAmount / ONE - fxpAmount * fxpPrice / ONE
-        refunded = INFO.getWallet(market).transfer(msg.sender, amount)
-        if(!refunded):
-            throw()
-    else:
-        throw()
-
 macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $sender):
     trade = [$type, $market, $fxpAmount, $fxpPrice, $sender, block.number, $outcome]
     tradeID = sha3(trade, items = 7)
@@ -215,6 +191,30 @@ macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $sende
     log(type = logAddTx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, tradeID)
     MUTEX.unsetMutex()
     return(tradeID)
+
+macro refundTrade():
+    # Issue refunds
+    if(type == BID):
+        # cash refund
+        amount = fxpAmount * fxpPrice / ONE
+        refunded = INFO.getWallet(market).transfer(msg.sender, amount)
+        if(!refunded):
+            throw()
+    elif(type == ASK):
+        # shares refund
+        MARKETS.modifyParticipantShares(market, msg.sender, outcome, fxpAmount, 0)
+    elif(type == SHORT_OFFER):
+        # cash refund
+        amount = MARKETS.getCumulativeScale(market) * fxpAmount / ONE - fxpAmount * fxpPrice / ONE
+        refunded = INFO.getWallet(market).transfer(msg.sender, amount)
+        if(!refunded):
+            throw()
+    else:
+        throw()
+
+macro removeTrade($tradeID, $market):
+    TRADES.removeTrade($tradeID)
+    MARKETS.removeTradeFromMarket($market, $tradeID)
 
 macro fetchTradeCancelInfo():
     trade = array(TRADE_FIELDS)
