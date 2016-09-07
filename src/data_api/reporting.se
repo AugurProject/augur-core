@@ -68,7 +68,7 @@ def checkContractWhitelist(contract, address):
     callstackCheck()
     return(self.whitelists[contract].addresses[address])
 
-def setWhitelist(contract, addresses:arr):
+def setWhitelist(contract, addresses: arr):
     if self.whitelists[contract].taken:
         return(text("ERROR: you have to vote to change a whitelist"):str)
     else:

@@ -60,8 +60,8 @@ def getTrade(id):
     trade[6] = self.trades[id].block
     trade[7] = self.trades[id].outcome
     if(trade):
-        return(trade:arr)
-    return([0]:arr)
+        return(trade: arr)
+    return([0]: arr)
 
 def removeTrade(id):
     callstackCheck()

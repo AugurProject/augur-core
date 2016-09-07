@@ -283,8 +283,8 @@ def getTradeIDs(marketID):
         i += 1
 
     if(tradeIDs):
-        return(tradeIDs:arr)
-    return([FAILURE]:arr)
+        return(tradeIDs: arr)
+    return([FAILURE]: arr)
 
 def setWinningOutcomes(market, outcomes: arr):
     callstackCheck()

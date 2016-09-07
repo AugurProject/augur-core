@@ -76,8 +76,9 @@ def sellCompleteSets(market, fxpAmount):
     cumulativeScale = MARKETS.getCumulativeScale(market)
     cost = fxpAmount * cumulativeScale / ONE
     checkSellCompleteSetsPreconditions()
-    
+
     # Takes shares away from participant and decreases the fxpAmount issued in the market since we're exchanging complete sets
+    n = 1
     while(n <= numOutcomes):
         MARKETS.modifyShares(market, n, -fxpAmount)
         MARKETS.modifyParticipantShares(market, msg.sender, n, -fxpAmount, 0)
@@ -122,7 +123,7 @@ macro checkSellCompleteSetsPreconditions():
             MUTEX.unsetMutex()
             return(-1)
         n += 1
-    n = 1
+
 
 macro accountForFees():
     # account for fees here even though paid upon selling / resolution so we can assign reporters appropriately

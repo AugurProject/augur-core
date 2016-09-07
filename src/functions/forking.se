@@ -76,7 +76,7 @@ def resolveFork(branch):
         throw()
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
-    
+    winner = 0
     # do whitelist to only allow call w/ move event - but what if only 1 event and that's the one we fork over, in that case need the ability to call resolve fork manually if it hasn't been done yet within the time parameters which allows a fork to be resolved [2 periods after the start]
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)

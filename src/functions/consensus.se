@@ -16,7 +16,7 @@ inset('proportionCorrect.se')
 inset('repChange.se')
 inset('../data_api/periodStage.se')
 
-event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
+event penalize(user: indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
 
 macro POINT_ZERO_ONE: 184467440737095520
 macro POINT_ONE: 1844674407370955264

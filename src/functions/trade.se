@@ -169,7 +169,6 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
         if(!trade[0]):
             MUTEX.unsetMutex()
             return([0]: arr)
-        # Get market
         type = trade[1]
         if(type != BID):
             MUTEX.unsetMutex()

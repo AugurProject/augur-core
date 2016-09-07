@@ -43,7 +43,7 @@ def getOrderBook(market):
             orderBook[8*i + j] = tradeInfo[j]
             j += 1
         i += 1
-    return(orderBook:arr)
+    return(orderBook: arr)
 
 def getMarketInfo(market):
     index = BASE_FIELDS
@@ -87,7 +87,7 @@ def getMarketInfo(market):
     # gather outcomes info: [sharesPurchased, price], winningOutcomes
     # (price of outcome = last trade)
     numTrades = MARKETS.getTotalTrades(market)
-    trades = MARKETS.getTradeIDs(market, outitems=numTrades)
+    trades = MARKETS.getTradeIDs(market, outitems = numTrades)
     k = 0
     while(k < numOutcomes):
         marketInfo[index + k*OUTCOMES_FIELDS] = MARKETS.getSharesPurchased(market, k + 1)
@@ -143,7 +143,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
     numMarkets = BRANCHES.getNumMarketsBranch(branch)
     if numMarketsToLoad == 0:
         numMarketsToLoad = numMarkets
-    markets = slice(BRANCHES.getMarketsInBranch(branch, outitems=numMarkets), items = 0, items = numMarkets)
+    markets = slice(BRANCHES.getMarketsInBranch(branch, outitems = numMarkets), items = 0, items = numMarkets)
     totalLen = numMarketsToLoad*11
     m = 0
     while(m < numMarketsToLoad):

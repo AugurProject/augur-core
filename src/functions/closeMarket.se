@@ -25,8 +25,6 @@
 import branches as BRANCHES
 import markets as MARKETS
 import events as EVENTS
-import closeMarketOne as CLOSEONE
-import closeMarketTwo as CLOSETWO
 import backstops as BACKSTOPS
 import eventResolution as RESOLVE
 import info as INFO
@@ -96,6 +94,7 @@ macro checkCloseMarketPreconditions():
         return(-4)
 
 macro resolveEventsInMarket():
+    resolution = 0
     # look at event in the market, get its outcomes, resolve it and use those to determine the winning outcomes for a given market!
     if(binary(event) and !fxpOutcome):
         resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)

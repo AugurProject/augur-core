@@ -95,7 +95,7 @@ def transferFrom(branch, from, recver, fxpValue):
     checkSendRepInvariants()    
 
     if(!REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, receiverIndex, fxpValue)):
-       throw()
+        throw()
     log(type=Transfer, from, recver, fxpValue)
     if(!mutexWhitelisted()):
         MUTEX.unsetMutex()

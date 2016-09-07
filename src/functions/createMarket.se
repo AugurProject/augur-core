@@ -69,7 +69,7 @@ macro checkSubcurrencyIsValid(contract):
 # .025 eth to create
 # descriptionWithoutOutcomeLabels + "~|>" + outcome1label + "|"  + outcome2label + "|" + outcome3label is format for a description
 # with a categorical user can set min and max to whatever, for reporting 1 is the min and max is the max then reports should be scaled between that range, for payouts it's 1 to the winning outcome or equal for all outcomes if indeterminate, you cannot trade by paying more than 1 for a share as that makes no sense
-def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str):
+def createEvent(branch, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str):
     refund()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
@@ -80,16 +80,16 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     forkPeriod = BRANCHES.getForkPeriod(branch)
     checkEventCreationPreconditions()
 
-    eventinfo = string(7 * 32 + len(description))
-    eventinfo[0] = branch                                       # branch
-    eventinfo[1] = expDate                                      # expiration date
-    eventinfo[2] = msg.sender                                   # creator address
-    eventinfo[3] = periodLength
-    eventinfo[4] = fxpMinValue                                     # minimum outcome value
-    eventinfo[5] = fxpMaxValue                                     # maximum outcome value
-    eventinfo[6] = numOutcomes                                  # number of outcomes
-    mcopy(eventinfo + 7 * 32, description, len(description))
-    event = ripemd160(eventinfo, chars = len(eventinfo))
+    eventInfo = string(7 * 32 + len(description))
+    eventInfo[0] = branch                                       # branch
+    eventInfo[1] = expDate                                      # expiration date
+    eventInfo[2] = msg.sender                                   # creator address
+    eventInfo[3] = periodLength
+    eventInfo[4] = fxpMinValue                                     # minimum outcome value
+    eventInfo[5] = fxpMaxValue                                     # maximum outcome value
+    eventInfo[6] = numOutcomes                                  # number of outcomes
+    mcopy(eventInfo + 7 * 32, description, len(description))
+    event = ripemd160(eventInfo, chars = len(eventInfo))
     if(INFO.getCreator(event)):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
@@ -133,7 +133,9 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     # gives ether/cash amount in fixed point
     minFee = COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
     creationFee = max(minFee, creationFee)
-    validityBond = (creationFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
+    period = BRANCHES.getVotePeriod(branch)
+    # todo 24hrperiod = blah  for past24 or is it reg period?
+    validityBond = (creationFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, period))) / 2
     numOutcomes = EVENTS.getNumOutcomes(event)
     cumulativeScale = 0
     # market's trading period is the same as the last expiring event in the market
@@ -153,17 +155,17 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
         cumulativeScale = ONE
 
     # formation of market (hash)
-    marketinfo = string(8 * 32 + len(description))
-    marketinfo[0] = futurePeriod
-    marketinfo[1] = fxpTradingFee
-    marketinfo[2] = block.timestamp
-    marketinfo[3] = tag1
-    marketinfo[4] = tag2
-    marketinfo[5] = tag3
-    marketinfo[6] = expirationDate
-    marketinfo[7] = len(description)
-    mcopy(marketinfo + 8 * 32, description, chars = len(description))
-    market = ripemd160(marketinfo, chars = len(marketinfo))
+    marketInfo = string(8 * 32 + len(description))
+    marketInfo[0] = futurePeriod
+    marketInfo[1] = fxpTradingFee
+    marketInfo[2] = block.timestamp
+    marketInfo[3] = tag1
+    marketInfo[4] = tag2
+    marketInfo[5] = tag3
+    marketInfo[6] = expirationDate
+    marketInfo[7] = len(description)
+    mcopy(marketInfo + 8 * 32, description, chars = len(description))
+    market = ripemd160(marketInfo, chars = len(marketInfo))
     # if it's already been created return 0
     if(INFO.getCreator(market)):
         if(!mutexWhitelisted()):

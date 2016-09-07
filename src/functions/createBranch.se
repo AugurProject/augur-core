@@ -73,8 +73,7 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
     # people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
     branch = ripemd160(branchInfo, chars = len(branchInfo))
     currentVotePeriod = (block.timestamp / periodLength) - 1
-    # provided event doesn't already exist, create it
-    wallet = 0
+    # provided branch doesn't already exist, create it
     if(INFO.getCreator(branch)):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
