@@ -2933,7 +2933,7 @@
         "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:int256, sellCompleteSets:[int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "compositeGetters": {
-        "address": "0xfee435381e2c281fb48b0f33045702639220404c", 
+        "address": "0x56b7212e4920a12cf9f263f3965f7fcd495d0832", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -2976,14 +2976,19 @@
             "macro BASE_FIELDS: 14", 
             "macro BASE_CACHE_FIELDS: 10", 
             "", 
-            "def getOrderBook(marketID):", 
+            "def getOrderBook(marketID, offset, numTradesToLoad):", 
             "    refund()", 
-            "    numTrades = MARKETS.get_total_trades(marketID)", 
-            "    trades = MARKETS.get_trade_ids(marketID, outitems=numTrades)", 
-            "    orderBook = array(TRADE_FIELDS*numTrades)", 
+            "    numTrades = MARKETS.get_total_trades(marketID) # TODO chunk get_total_trades", 
+            "    if offset > numTrades:", 
+            "        return([]: arr)", 
+            "    if numTradesToLoad == 0:", 
+            "        numTradesToLoad = numTrades", 
+            "    totalTrades = min(numTradesToLoad, numTrades - offset)", 
+            "    trades = slice(MARKETS.get_trade_ids(marketID, outitems=numTrades), items=offset, items=offset+numTradesToLoad)", 
+            "    orderBook = array(TRADE_FIELDS*totalTrades)", 
             "    numAvailableTrades = 0", 
             "    i = 0", 
-            "    while i < numTrades:", 
+            "    while i < totalTrades:", 
             "        tradeInfo = TRADES.get_trade(trades[i], outitems=TRADE_FIELDS)", 
             "        if tradeInfo[0] != 0:", 
             "            j = 0", 
@@ -3319,9 +3324,17 @@
                     {
                         "name": "marketID", 
                         "type": "int256"
+                    }, 
+                    {
+                        "name": "offset", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "name": "numTradesToLoad", 
+                        "type": "int256"
                     }
                 ], 
-                "name": "getOrderBook(int256)", 
+                "name": "getOrderBook(int256,int256,int256)", 
                 "outputs": [
                     {
                         "name": "out", 
@@ -3364,7 +3377,7 @@
                 "type": "function"
             }
         ], 
-        "sig": "extern compositeGetters: [batchGetMarketInfo:[int256[],int256]:int256[], getEventsWithSubmittedReport:[int256,int256,int256]:int256[], getMarketCreatorFeesCollected:[int256]:int256, getMarketInfo:[int256,int256]:int256[], getMarketsInfo:[int256,int256,int256,int256,int256]:int256[], getOrderBook:[int256]:int256[], getPositionInMarket:[int256,int256]:int256[], test_callstack:[]:int256]"
+        "sig": "extern compositeGetters: [batchGetMarketInfo:[int256[],int256]:int256[], getEventsWithSubmittedReport:[int256,int256,int256]:int256[], getMarketCreatorFeesCollected:[int256]:int256, getMarketInfo:[int256,int256]:int256[], getMarketsInfo:[int256,int256,int256,int256,int256]:int256[], getOrderBook:[int256,int256,int256]:int256[], getPositionInMarket:[int256,int256]:int256[], test_callstack:[]:int256]"
     }, 
     "consensus": {
         "address": "0xe68918529dc9f11fc45bfe17d464472cbb104282", 
