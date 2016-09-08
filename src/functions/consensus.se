@@ -94,6 +94,7 @@ def penalizeWrong(branch, event):
         log(type = penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue)
     # once penalized for all events actually get rid of net rep lost and send it to the branch for redistribution
     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
+        repBalance = REPORTING.getRepBalance(branch, msg.sender)
         sendRedistributedRepToBranch()
     MUTEX.unsetMutex()
     return(1)

@@ -57,7 +57,7 @@ def penalizeOnForkedEvent(branch, event):
     numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriodVotedOn, msg.sender)
     checkForkPenalizationPreconditions()
 
-    penalizeOrRewardReporter()    
+    penalizeOrRewardReporter()
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriodVotedOn, msg.sender)):
         sendRedistributedRepToBranch()
