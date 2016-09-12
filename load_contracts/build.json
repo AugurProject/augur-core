@@ -13655,7 +13655,7 @@
         "sig": "extern slashRep: [slashRep:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "trade": {
-        "address": "0x024892dfaec607abd60f1d7357624d3b74fb19a5", 
+        "address": "0xb293ca705fe4b44c3a89933b6c73e87864136c02", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -13694,6 +13694,7 @@
             "inset('logReturn.se')", 
             "", 
             "event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome, timestamp, takerFee, makerFee)", 
+            "event log_short_fill_tx(market:indexed, sender:indexed, owner:indexed, price, amount, tradeid, outcome, timestamp, takerFee, makerFee)", 
             "event trade_logReturn(returnValue)", 
             "event trade_logArrayReturn(returnArray: arr)", 
             "", 
@@ -13706,7 +13707,6 @@
             "# Trade types", 
             "macro BID: 1", 
             "macro ASK: 2", 
-            "macro SHORT_SELL: 3", 
             "# Field counts", 
             "macro TRADE_FIELDS: 8", 
             "# Boolean success/failure", 
@@ -13997,7 +13997,7 @@
             "", 
             "    max_amount -= fill", 
             "    # Log transaction", 
-            "    log(type=log_fill_tx, market, msg.sender, owner, SHORT_SELL, price, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee)", 
+            "    log(type=log_short_fill_tx, market, msg.sender, owner, price, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee)", 
             "    MARKETS.setPrice(market, outcome, price)", 
             "    logArrayReturn([SUCCESS, max_amount, fill, price])"
         ], 
@@ -14109,6 +14109,62 @@
                     }
                 ], 
                 "name": "log_fill_tx(int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256)", 
+                "type": "event"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "indexed": true, 
+                        "name": "market", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": true, 
+                        "name": "sender", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": true, 
+                        "name": "owner", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "price", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "amount", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "tradeid", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "outcome", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "timestamp", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "takerFee", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "makerFee", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "log_short_fill_tx(int256,int256,int256,int256,int256,int256,int256,int256,int256,int256)", 
                 "type": "event"
             }, 
             {
