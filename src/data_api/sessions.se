@@ -1,0 +1,22 @@
+inset('refund.se')
+
+macro REGISTER: 1
+macro LOGIN: 2
+macro LOGOUT: 3
+
+event session(sender: indexed, type: indexed, timestamp)
+
+def register():
+    refund()
+    log(type=session, msg.sender, REGISTER, block.timestamp)
+    return(1)
+
+def login():
+    refund()
+    log(type=session, msg.sender, LOGIN, block.timestamp)
+    return(1)
+
+def logout():
+    refund()
+    log(type=session, msg.sender, LOGOUT, block.timestamp)
+    return(1)
