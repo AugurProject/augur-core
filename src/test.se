@@ -1,0 +1,8 @@
+data foo
+
+def getSender():
+    return(msg.sender)
+    
+def ok(x):
+    self.foo = x
+    return(self.foo)

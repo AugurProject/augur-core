@@ -116,8 +116,8 @@ macro checkRepClaimPreconditions():
     if((BRANCHES.getParent(branch) != parent && parent && branch) or branchDoesntExist):
         MUTEX.unsetMutex()
         return(-1)
-    # have 1 month to claim [or actually 1/2 voting period length], make so cant make a new acc on a new branch w/o at least trying this if it's a fork one and reporter was in old branch todo
-    tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + BRANCH.getPeriodLength(branch) /2)
+    # have 1 month to claim, make so cant make a new acc on a new branch w/o at least trying this if it's a fork one and reporter was in old branch todo
+    tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
     alreadyClaimed = REPORTING.repIDToIndex(branch, msg.sender)
     if(alreadyClaimed or tooLate):
         MUTEX.unsetMutex()

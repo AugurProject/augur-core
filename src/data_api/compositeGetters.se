@@ -25,7 +25,7 @@ import trades as TRADES
 import markets as MARKETS
 inset('refund.se')
 
-macro TRADE_FIELDS: 8
+macro TRADE_FIELDS: 10
 macro EVENTS_FIELDS: 6
 macro OUTCOMES_FIELDS: 2
 macro WINNING_OUTCOMES_FIELDS: 8
@@ -39,8 +39,8 @@ def getOrderBook(market):
     while(i < numTrades):
         tradeInfo = TRADES.getTrade(trades[i], outitems = TRADE_FIELDS)
         j = 0
-        while(j < 8):
-            orderBook[8*i + j] = tradeInfo[j]
+        while(j < 10):
+            orderBook[10*i + j] = tradeInfo[j]
             j += 1
         i += 1
     return(orderBook: arr)

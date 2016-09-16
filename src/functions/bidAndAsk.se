@@ -37,7 +37,7 @@ macro BID: 1
 macro ASK: 2
 macro SHORT_OFFER: 3
 # Field counts
-macro TRADE_FIELDS: 8
+macro TRADE_FIELDS: 10
 # Boolean success/failure
 macro FAILURE: 0
 macro SUCCESS: 1

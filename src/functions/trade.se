@@ -42,7 +42,7 @@ macro BID: 1
 macro ASK: 2
 macro SHORT_OFFER: 3
 # Field counts
-macro TRADE_FIELDS: 8
+macro TRADE_FIELDS: 10
 # Boolean success/failure
 macro SUCCESS: 1
 # Error codes
@@ -169,6 +169,7 @@ def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
         if(!trade[0]):
             MUTEX.unsetMutex()
             return([0]: arr)
+        # Get market
         type = trade[1]
         if(type != BID):
             MUTEX.unsetMutex()

@@ -150,3 +150,10 @@ macro dealWithWhaleReporters():
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*baseReporters > 1)
     if(total > ONE):
         expectedEventsForReporterIncludingRequired = (numEventsAvailableToReportOn / baseReporters) * ONE + numRequiredEvents * ONE
+
+
+
+calculateNumberOfEventsAReporterHasToReportOnAtMinimum
+
+
+If anyone w/ 1 rep or more in active rep could've reported but didn't they need to be penalized.  Get a list of people who did this and an example event they could've reported on but didn't. - Loop through the list of all reporters in a period and branch and check if they couldve reported on anything --- this is people who called collectFees last period and are setup to collect fees next period but didn't report enough [or at all], although this bit of information isn't really relevant to implementation of this function. - So what you need to do is given a vote period and branch add a function to compositegetters.se and using getBeforeRep in expiringEvents.se

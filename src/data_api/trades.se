@@ -5,7 +5,7 @@ inset('refund.se')
 # reporterID is index
 data tradeCommits[](hash, block)
 # tradeID is index
-data trades[](id, type, market, amount, price, owner, block, outcome)
+data trades[](id, type, market, amount, price, owner, block, outcome, sharesEscrowed, moneyEscrowed)
 
 event logAddTx(market:indexed, sender:indexed, type, fxpPrice, fxpAmount, outcome, tradeid)
 
@@ -36,7 +36,7 @@ def checkHash(tradeHash, sender):
     else:
         return(1)
 
-def saveTrade(tradeID, type, market, amount, price, sender, outcome):
+def saveTrade(tradeID, type, market, amount, price, sender, outcome, money, shares):
     callstackCheck()
     self.trades[tradeID].id = tradeID
     self.trades[tradeID].type = type
@@ -46,11 +46,13 @@ def saveTrade(tradeID, type, market, amount, price, sender, outcome):
     self.trades[tradeID].owner = sender
     self.trades[tradeID].block = block.number
     self.trades[tradeID].outcome = outcome
+    self.trades[tradeID].moneyEscrowed = money
+    self.trades[tradeID].sharesEscrowed = shares
     return(1)
 
 def getTrade(id):
     callstackCheck()
-    trade = array(8)
+    trade = array(10)
     trade[0] = self.trades[id].id
     trade[1] = self.trades[id].type
     trade[2] = self.trades[id].market
@@ -59,6 +61,8 @@ def getTrade(id):
     trade[5] = self.trades[id].owner
     trade[6] = self.trades[id].block
     trade[7] = self.trades[id].outcome
+    trade[8] = self.trades[id].moneyEscrowed
+    trade[9] = self.trades[id].sharesEscrowed
     if(trade):
         return(trade: arr)
     return([0]: arr)
@@ -73,6 +77,8 @@ def removeTrade(id):
     self.trades[id].owner = 0
     self.trades[id].block = 0
     self.trades[id].outcome = 0
+    self.trades[id].moneyEscrowed = 0
+    self.trades[id].sharesEscrowed = 0
     return(1)
 
 def fillTrade(tradeID, fill):

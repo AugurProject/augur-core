@@ -29,7 +29,6 @@ import backstops as BACKSTOPS
 import consensusData as CONSENSUS
 import collectFees as COLLECTFEES
 import penalizationCatchup as CATCHUP
-# fix circular dependency
 import reportingThreshold as THRESHOLD
 import mutex as MUTEX
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
@@ -107,6 +106,7 @@ def submitReport(event, salt, fxpReport, fxpEthics):
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()
+    
 
     branch = EVENTS.getBranch(event)
     balance = REPORTING.getRepBalance(branch, msg.sender)
