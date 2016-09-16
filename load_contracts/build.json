@@ -13544,6 +13544,105 @@
         ], 
         "sig": "extern sendReputation: [allowance:[int256,int256]:int256, approve:[int256,int256,int256]:int256, convertToActiveRep:[int256,int256]:int256, convertToDormantRep:[int256,int256]:int256, sendReputation:[int256,int256,int256]:int256, test_callstack:[]:int256, transfer:[int256,int256,int256]:int256, transferFrom:[int256,int256,int256,int256]:int256]"
     }, 
+    "sessions": {
+        "address": "0xda41d613542f0f3f05e54d21e6aabbb1acc265b8", 
+        "code": [
+            "inset('refund.se')", 
+            "", 
+            "macro REGISTER: 1", 
+            "macro LOGIN: 2", 
+            "macro LOGOUT: 3", 
+            "", 
+            "event session(sender: indexed, type: indexed, timestamp)", 
+            "", 
+            "def register():", 
+            "    refund()", 
+            "    log(type=session, msg.sender, REGISTER, block.timestamp)", 
+            "    return(1)", 
+            "", 
+            "def login():", 
+            "    refund()", 
+            "    log(type=session, msg.sender, LOGIN, block.timestamp)", 
+            "    return(1)", 
+            "", 
+            "def logout():", 
+            "    refund()", 
+            "    log(type=session, msg.sender, LOGOUT, block.timestamp)", 
+            "    return(1)"
+        ], 
+        "fullsig": [
+            {
+                "constant": false, 
+                "inputs": [], 
+                "name": "login()", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [], 
+                "name": "logout()", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [], 
+                "name": "register()", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [], 
+                "name": "test_callstack()", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "indexed": true, 
+                        "name": "sender", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": true, 
+                        "name": "type", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "timestamp", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "session(int256,int256,int256)", 
+                "type": "event"
+            }
+        ], 
+        "sig": "extern refund.se: [login:[]:int256, logout:[]:int256, register:[]:int256, test_callstack:[]:int256]"
+    }, 
     "slashRep": {
         "address": "0xaf0b38b11949930453c9ccaaddb284e8c7b662a5", 
         "code": [
