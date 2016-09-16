@@ -102,7 +102,7 @@ def setSaleDistribution(addresses: address[], balances: uint256[]):
     numberOfAddresses = len(addresses)
     if(numberOfAddresses != len(balances)):
         throw()
-    if(self.seeded):
+    if(self.seeded or !stillCreating()):
         throw()
     if(msg.sender != self.creator):
         throw()
