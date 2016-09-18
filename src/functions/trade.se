@@ -29,7 +29,7 @@ inset('refund.se')
 inset('logReturn.se')
 
 event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome, timestamp, takerFee, makerFee)
-event log_short_fill_tx(market:indexed, sender:indexed, owner:indexed, price, amount, tradeid, outcome, timestamp, takerFee, makerFee)
+event log_short_fill_tx(market:indexed, sender:indexed, owner:indexed, price, amount, tradeid, outcome, timestamp, takerFee, makerFee, numOutcomes)
 event trade_logReturn(returnValue)
 event trade_logArrayReturn(returnArray: arr)
 
@@ -332,6 +332,6 @@ def short_sell(buyer_trade_id, max_amount):
 
     max_amount -= fill
     # Log transaction
-    log(type=log_short_fill_tx, market, msg.sender, owner, price, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee)
+    log(type=log_short_fill_tx, market, msg.sender, owner, price, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee, numOutcomes)
     MARKETS.setPrice(market, outcome, price)
     logArrayReturn([SUCCESS, max_amount, fill, price])
