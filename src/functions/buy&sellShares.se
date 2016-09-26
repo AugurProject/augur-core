@@ -29,7 +29,7 @@ inset('logReturn.se')
 
 event buyAndSellShares_logReturn(returnValue)
 event log_add_tx(market:indexed, sender:indexed, type, price, amount, outcome, tradeid)
-event log_cancel(market:indexed, sender:indexed, price, amount, tradeid, outcome, type)
+event log_cancel(market:indexed, sender:indexed, price, amount, tradeid, outcome, type, cashRefund)
 
 # Trade types
 macro BID: 1
@@ -110,16 +110,17 @@ def cancel(trade_id):
         # Issue refunds
         if type == BID:
             # cash refund
-            amt = amount * price / ONE * (fee + ONE) / ONE
-            CASH.subtractCash(market, amt)
-            CASH.addCash(msg.sender, amt)
+            cashRefund = amount * price / ONE * (fee + ONE) / ONE
+            CASH.subtractCash(market, cashRefund)
+            CASH.addCash(msg.sender, cashRefund)
         elif type == ASK:
             # shares refund
             MARKETS.modifyParticipantShares(market, msg.sender, outcome, amount, 1)
-            CASH.subtractCash(market, (amount * price / ONE * fee / ONE))
-            CASH.addCash(msg.sender, (amount * price / ONE * fee / ONE))
+            cashRefund = (amount * price / ONE * fee / ONE)
+            CASH.subtractCash(market, cashRefund)
+            CASH.addCash(msg.sender, cashRefund)
         # Log cancellation
-        log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type)
+        log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type, cashRefund)
         logReturn(buyAndSellShares_logReturn, SUCCESS)
     logReturn(buyAndSellShares_logReturn, FAILURE)
 

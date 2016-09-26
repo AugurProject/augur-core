@@ -1471,7 +1471,7 @@
         "sig": "extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "buy&sellShares": {
-        "address": "0x61b9b76af602cde7a6abf0036c9cfd4b23fcc552", 
+        "address": "0x70630ee38affa41ea4ca94fe2893b3741a35cb95", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -1509,7 +1509,7 @@
             "", 
             "event buyAndSellShares_logReturn(returnValue)", 
             "event log_add_tx(market:indexed, sender:indexed, type, price, amount, outcome, tradeid)", 
-            "event log_cancel(market:indexed, sender:indexed, price, amount, tradeid, outcome, type)", 
+            "event log_cancel(market:indexed, sender:indexed, price, amount, tradeid, outcome, type, cashRefund)", 
             "", 
             "# Trade types", 
             "macro BID: 1", 
@@ -1590,16 +1590,17 @@
             "        # Issue refunds", 
             "        if type == BID:", 
             "            # cash refund", 
-            "            amt = amount * price / ONE * (fee + ONE) / ONE", 
-            "            CASH.subtractCash(market, amt)", 
-            "            CASH.addCash(msg.sender, amt)", 
+            "            cashRefund = amount * price / ONE * (fee + ONE) / ONE", 
+            "            CASH.subtractCash(market, cashRefund)", 
+            "            CASH.addCash(msg.sender, cashRefund)", 
             "        elif type == ASK:", 
             "            # shares refund", 
             "            MARKETS.modifyParticipantShares(market, msg.sender, outcome, amount, 1)", 
-            "            CASH.subtractCash(market, (amount * price / ONE * fee / ONE))", 
-            "            CASH.addCash(msg.sender, (amount * price / ONE * fee / ONE))", 
+            "            cashRefund = (amount * price / ONE * fee / ONE)", 
+            "            CASH.subtractCash(market, cashRefund)", 
+            "            CASH.addCash(msg.sender, cashRefund)", 
             "        # Log cancellation", 
-            "        log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type)", 
+            "        log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type, cashRefund)", 
             "        logReturn(buyAndSellShares_logReturn, SUCCESS)", 
             "    logReturn(buyAndSellShares_logReturn, FAILURE)", 
             "", 
@@ -1847,9 +1848,14 @@
                         "indexed": false, 
                         "name": "type", 
                         "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "cashRefund", 
+                        "type": "int256"
                     }
                 ], 
-                "name": "log_cancel(int256,int256,int256,int256,int256,int256,int256)", 
+                "name": "log_cancel(int256,int256,int256,int256,int256,int256,int256,int256)", 
                 "type": "event"
             }
         ], 
