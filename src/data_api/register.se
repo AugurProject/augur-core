@@ -1,0 +1,8 @@
+inset('refund.se')
+
+event registration(sender: indexed, timestamp)
+
+def register():
+    refund()
+    log(type=registration, msg.sender, block.timestamp)
+    return(1)

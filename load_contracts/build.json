@@ -11373,6 +11373,62 @@
         ], 
         "sig": "extern proportionCorrect: [proportionCorrect:[int256]:int256, test_callstack:[]:int256]"
     }, 
+    "register": {
+        "address": "0xc97dd45f17a0a2862f6a014f18f8c450eb75c827", 
+        "code": [
+            "inset('refund.se')", 
+            "", 
+            "event registration(sender: indexed, timestamp)", 
+            "", 
+            "def register():", 
+            "    refund()", 
+            "    log(type=registration, msg.sender, block.timestamp)", 
+            "    return(1)"
+        ], 
+        "fullsig": [
+            {
+                "constant": false, 
+                "inputs": [], 
+                "name": "register()", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
+                "inputs": [], 
+                "name": "test_callstack()", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "inputs": [
+                    {
+                        "indexed": true, 
+                        "name": "sender", 
+                        "type": "int256"
+                    }, 
+                    {
+                        "indexed": false, 
+                        "name": "timestamp", 
+                        "type": "int256"
+                    }
+                ], 
+                "name": "registration(int256,int256)", 
+                "type": "event"
+            }
+        ], 
+        "sig": "extern refund.se: [register:[]:int256, test_callstack:[]:int256]"
+    }, 
     "reporting": {
         "address": "0xa18d840b7517fdb6357c06825f5acabd9e19af01", 
         "code": [
