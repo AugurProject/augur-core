@@ -126,7 +126,7 @@ def getRidOfDustForLaunch():
         self.reporting[0x0000000000000000000000000000000000000000] = 0
         return(1)
     else:
-        return(0)
+        throw()
 
 # Returns amount spender can withdraw from owner
 def allowance(owner: address, spender: address):

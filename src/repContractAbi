@@ -27,6 +27,13 @@
     "outputs": [{ "name": "out", "type": "uint256" }]
 },
 {
+    "name": "getRidOfDustForLaunch",
+    "type": "function",
+    "constant": false,
+    "inputs": [],
+    "outputs": [{ "name": "out", "type": "int256" }]
+},
+{
     "name": "getSeeded",
     "type": "function",
     "constant": true,
