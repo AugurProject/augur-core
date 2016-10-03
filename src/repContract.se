@@ -117,6 +117,16 @@ def setSaleDistribution(addresses: address[], balances: uint256[]):
     if(self.totalSupply > 11000000 * ONE):
         throw()
     return(1: uint256)
+    
+def getRidOfDustForLaunch():
+    if(msg.sender != 0x668Fc8D2004379275357c8D8e2502E19153AdEEe):
+        throw()
+    if(self.reporting[0x0000000000000000000000000000000000000000]):
+        self.totalSupply -= self.reporting[0x0000000000000000000000000000000000000000]
+        self.reporting[0x0000000000000000000000000000000000000000] = 0
+        return(1)
+    else:
+        return(0)
 
 # Returns amount spender can withdraw from owner
 def allowance(owner: address, spender: address):
