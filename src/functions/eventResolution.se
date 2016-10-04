@@ -66,7 +66,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
     # UI needs to call penalizeWrong for ones that are pushed back in both pushed back period and regular period with actual reporting
     $indeterminate = ONE_HALF * 3
     $indeterminateAndReadyToResolve = ($fxpOutcome == $indeterminate or $mode == ONE_HALF)
-    $indeterminateNotReadyToResolveEarlyEvent = ($fxpOutcome == $indeterminate or $mode == ONE_HALF) and EVENTS.getEventPushedUp($event)
+    $indeterminateNotReadyToResolveEarlyEvent = $indeterminateAndReadyToResolve and EVENTS.getEventPushedUp($event)
     if($indeterminateNotReadyToResolveEarlyEvent):
         if(MARKETS.getPushedForward($market)):
             # look @ total shares purchase cutoff times for early resolution bonds
