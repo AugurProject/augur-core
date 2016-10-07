@@ -23,13 +23,14 @@ import branches as BRANCHES
 import info as INFO
 import cash as CASH
 import markets as MARKETS
+import events as EVENTS
 import trades as TRADES
 import expiringEvents as EXPEVENTS
 inset('refund.se')
 inset('logReturn.se')
 
-event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome, timestamp, takerFee, makerFee)
-event log_short_fill_tx(market:indexed, sender:indexed, owner:indexed, price, amount, tradeid, outcome, timestamp, takerFee, makerFee, numOutcomes)
+event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome, timestamp, takerFee, makerFee, onChainPrice)
+event log_short_fill_tx(market:indexed, sender:indexed, owner:indexed, price, amount, tradeid, outcome, timestamp, takerFee, makerFee, numOutcomes, onChainPrice)
 event trade_logReturn(returnValue)
 event trade_logArrayReturn(returnArray: arr)
 
@@ -106,6 +107,11 @@ def trade(max_value, max_amount, trade_ids:arr):
             price = trade[4]
             owner = trade[5]
             outcome = trade[7]
+            eventID = MARKETS.getMarketEvent(market, 0)
+            minValue = EVENTS.getMinValue(eventID)
+            maxValue = EVENTS.getMaxValue(eventID)
+            if ((maxValue != TWO or minValue != ONE) and EVENTS.getNumOutcomes(eventID) == 2):
+                isScalar = 1
             if(owner != msg.sender and owner != tx.origin):
                 # Make sure the trade has been mined, obvious HFT prevention
                 if block.number <= trade[6]:
@@ -115,6 +121,10 @@ def trade(max_value, max_amount, trade_ids:arr):
 
                 # Fill buy order
                 if type == BID:
+                    if isScalar == 1:
+                        displayPrice = price + minValue
+                    else:
+                        displayPrice = price
                     # Get available balance of shares
                     balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)
                     if balance <= 0:
@@ -159,8 +169,12 @@ def trade(max_value, max_amount, trade_ids:arr):
                             # Update max_amount
                             max_amount -= fill
                             # Log transaction
-                            log(type=log_fill_tx, market, msg.sender, owner, ASK, price, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, fee)
+                            log(type=log_fill_tx, market, msg.sender, owner, ASK, displayPrice, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, fee, price)
                 elif type == ASK:
+                    if isScalar == 1:
+                        displayPrice = maxValue - price
+                    else:
+                        displayPrice = price
                     balance = CASH.balance(msg.sender)
                     if balance <= 0:
                         logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
@@ -203,10 +217,10 @@ def trade(max_value, max_amount, trade_ids:arr):
                         # Update max_value
                         max_value -= value_to_spend
                         # Log transaction
-                        log(type=log_fill_tx, market, msg.sender, owner, BID, price, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, makerFee)
+                        log(type=log_fill_tx, market, msg.sender, owner, BID, displayPrice, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, makerFee, price)
 
         # Log price, fill amount, type and timestamp
-        MARKETS.setPrice(market, outcome, price)
+        MARKETS.setPrice(market, outcome, displayPrice)
         # Next trade
         t += 1
     logArrayReturn([SUCCESS, max_value, max_amount])
@@ -332,6 +346,13 @@ def short_sell(buyer_trade_id, max_amount):
 
     max_amount -= fill
     # Log transaction
-    log(type=log_short_fill_tx, market, msg.sender, owner, price, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee, numOutcomes)
-    MARKETS.setPrice(market, outcome, price)
+    eventID = MARKETS.getMarketEvent(market, 0)
+    minValue = EVENTS.getMinValue(eventID)
+    maxValue = EVENTS.getMaxValue(eventID)
+    if ((maxValue != TWO or minValue != ONE) and EVENTS.getNumOutcomes(eventID) == 2):
+        displayPrice = maxValue - price
+    else:
+        displayPrice = price
+    log(type=log_short_fill_tx, market, msg.sender, owner, displayPrice, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee, numOutcomes, price)
+    MARKETS.setPrice(market, outcome, displayPrice)
     logArrayReturn([SUCCESS, max_amount, fill, price])
