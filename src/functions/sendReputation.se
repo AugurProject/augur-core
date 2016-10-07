@@ -55,7 +55,7 @@ event Approval(owner:indexed, spender:indexed, branch:indexed, value)
     # -3: "Receiving address doesn't exist"
     # -4: couldn't catchup automatically
     # -5: not enough rep / fxpValue too small or not authorized
-def sendRepFrom(branch, from, recver, fxpValue):
+def sendRepFrom(branch, from, receiver, fxpValue):
     checkInvariants(from)
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
@@ -63,13 +63,13 @@ def sendRepFrom(branch, from, recver, fxpValue):
         MUTEX.setMutex()
 
     senderIndex = REPORTING.repIDToIndex(branch, from)
-    receiverIndex = REPORTING.repIDToIndex(branch, recver)
+    receiverIndex = REPORTING.repIDToIndex(branch, receiver)
     senderBalance = REPORTING.getRepBalance(branch, from)
     checkSendRepInvariants()
 
     if(!REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, receiverIndex, fxpValue)):
         throw()
-    log(type = Transfer, from, recver, fxpValue)
+    log(type = Transfer, from, receiver, fxpValue)
     if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
@@ -81,7 +81,7 @@ def sendRepFrom(branch, from, recver, fxpValue):
     # -3: "Receiving address doesn't exist"
     # -5: not enough rep / fxpValue too small or not authorized    # -3: "Receiving address doesn't exist"
 # fails unless from has authorized sender [either contract which was approved or the from address is the msg.sender]
-def transferFrom(branch, from, recver, fxpValue):
+def transferFrom(branch, from, receiver, fxpValue):
     refund()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
@@ -90,13 +90,13 @@ def transferFrom(branch, from, recver, fxpValue):
 
     votePeriod = BRANCHES.getVotePeriod(branch)
     senderIndex = REPORTING.repIDToIndex(branch, from)
-    receiverIndex = REPORTING.repIDToIndex(branch, recver)
+    receiverIndex = REPORTING.repIDToIndex(branch, receiver)
     senderBalance = REPORTING.balanceOf(branch, from)
     checkSendRepInvariants()    
 
     if(!REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, receiverIndex, fxpValue)):
        throw()
-    log(type=Transfer, from, recver, fxpValue)
+    log(type=Transfer, from, receiver, fxpValue)
     if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
@@ -207,7 +207,7 @@ macro checkSendRepInvariants():
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
-    if(REPORTING.getReporterID(branch, receiverIndex) != recver):
+    if(REPORTING.getReporterID(branch, receiverIndex) != receiver):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-3)
