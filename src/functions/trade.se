@@ -111,20 +111,17 @@ def trade(max_value, max_amount, trade_ids:arr):
             minValue = EVENTS.getMinValue(eventID)
             maxValue = EVENTS.getMaxValue(eventID)
             if ((maxValue != TWO or minValue != ONE) and EVENTS.getNumOutcomes(eventID) == 2):
-                isScalar = 1
+                displayPrice = price + minValue
+            else:
+                displayPrice = price
             if(owner != msg.sender and owner != tx.origin):
                 # Make sure the trade has been mined, obvious HFT prevention
                 if block.number <= trade[6]:
                     logReturn(trade_logReturn, TRADE_SAME_BLOCK_PROHIBITED)
                 branch = MARKETS.getBranchID(market)
                 fee = fee_percent(MARKETS.getTradingFee(market), price, MARKETS.getCumScale(market))
-
                 # Fill buy order
                 if type == BID:
-                    if isScalar == 1:
-                        displayPrice = price + minValue
-                    else:
-                        displayPrice = price
                     # Get available balance of shares
                     balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)
                     if balance <= 0:
@@ -171,10 +168,6 @@ def trade(max_value, max_amount, trade_ids:arr):
                             # Log transaction
                             log(type=log_fill_tx, market, msg.sender, owner, ASK, displayPrice, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, fee, price)
                 elif type == ASK:
-                    if isScalar == 1:
-                        displayPrice = maxValue - price
-                    else:
-                        displayPrice = price
                     balance = CASH.balance(msg.sender)
                     if balance <= 0:
                         logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
