@@ -19,6 +19,8 @@
 # Any questions please contact joey@augur.net
 
 import branches as BRANCHES
+extern repContract.se: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, getRidOfDustForLaunch:[]:int256, getSeeded:[]:uint256, name:[]:uint256, setSaleDistribution:[address[],uint256[]]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
+REPCONTRACT = 0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5
 inset('refund.se')
 
 # Storage of all data associated with reporters
@@ -35,6 +37,7 @@ data whitelists[](addresses[], taken)
 
 def init():
     self.Reporting[1010101].repIDtoIndex[1010101] = 0
+    # repValue should be == rep in 0x0 address from rep contract for initial redistribution
     self.Reporting[1010101].reputation[0].repValue = 0
     self.Reporting[1010101].reputation[0].reporterID = 1010101
     self.Reporting[1010101].numberReporters = 2
@@ -261,4 +264,26 @@ def setSaleDistribution(addresses: arr, balances: arr, branch):
         self.Reporting[branch].repIDtoIndex[addresses[i]] = self.Reporting[branch].numberReporters
         self.Reporting[branch].numberReporters += 1
         i += 1
+    return(1)
+
+def claimInitialRep():
+    # if(!self.whitelist.check(msg.sender)):
+    #   throw()
+    branch = 1010101
+    sender = msg.sender
+    dormantRep = REPCONTRACT.balanceOf(sender)
+    callstackCheck()
+    if(!dormantRep):
+        throw()
+    if(dormantRep != REPCONTRACT.allowance(sender, self)):
+        throw()
+    if(!REPCONTRACT.transferFrom(sender, 0x0000000000000000000000000000000000000000, dormantRep)):
+        throw()
+    reporterIndex = self.Reporting[branch].numberReporters
+    self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
+    self.Reporting[branch].reputation[reporterIndex].reporterID = sender
+    self.Reporting[branch].dormantRep[reporterIndex].reporterID = sender
+    self.Reporting[branch].dormantRep[reporterIndex].repValue = dormantRep
+    self.Reporting[branch].totalRep += dormantRep
+    self.Reporting[branch].numberReporters += 1
     return(1)

@@ -152,7 +152,7 @@ def getSeeded():
     return(self.seeded: uint256)
 
 macro stillCreating():
-    block.timestamp < (self.creation + 10000)
+    block.timestamp < (self.creation + 1)
 
 macro throw():
    ~jump(2**256)

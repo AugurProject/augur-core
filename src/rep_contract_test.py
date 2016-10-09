@@ -12,6 +12,7 @@ c.setSaleDistribution(accounts, amounts)
 assert(c.getSeeded())
 assert(c.decimals()==18)
 assert(c.totalSupply()==11000000*10**18)
+s.mine(1)
 for x in range(10):
 	assert(c.balanceOf(accounts[x])==amounts[x])
 for x in range(5):

@@ -10,7 +10,7 @@
     "type": "function",
     "constant": false,
     "inputs": [{ "name": "spender", "type": "address" }, { "name": "amount", "type": "uint256" }],
-    "outputs": [{ "name": "out", "type": "uint256" }]
+    "outputs": [{ "name": "out", "typ   e": "uint256" }]
 },
 {
     "name": "balanceOf",
