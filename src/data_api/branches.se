@@ -107,23 +107,12 @@ def getInitialBalance(branch, period):
     checkCallstack()
     return(self.Branches[branch].balance[period])
 
-# @return all markets in a branch
-def getMarketsInBranch(branch):
-    checkCallstack()
-    numMarkets = self.Branches[branch].numMarkets
-    markets = array(numMarkets)
-    i = 0
-    while(i < numMarkets):
-        markets[i] = self.Branches[branch].markets[i]
-        i += 1
-    return(markets: arr)
-
 def getParent(branch):
     checkCallstack()
     return(self.Branches[branch].parent)
 
-# @return all markets in a branch
-def getSomeMarketsInBranch(branch, initial, last):
+# @return markets in a branch from initial to last
+def getMarketIDsInBranch(branch, initial, last):
     checkCallstack()
     numMarkets = last - initial
     markets = array(numMarkets)

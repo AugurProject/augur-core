@@ -102,9 +102,12 @@ macro handleEthicsAndBondRepRedistribution($numReportedOn):
     if(ethics != ethicCatch(EVENTS.getEthics(event)) and repChange >= 0 and BACKSTOPS.getForkedOverEthicality(event)):
         if($numReportedOn < 10):
             # allows max penalty to be 10% per event
-            repChange = -ONE / 10 * repBalance / ONE
+            $penalty = -ONE / 10
+            repChange = $penalty * repBalance / ONE
         else:
-            repChange = -ONE / $numReportedOn * repBalance / ONE
+            $penalty = -ONE / $numReportedOn
+            repChange = $penalty * repBalance / ONE
+    # can only lose max of current balance
     if(repBalance + repChange <= 0):
         repChange = -1 * repBalance
     # todo fix for this can go over 2x bond, not supposed to: we don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
@@ -114,6 +117,7 @@ macro handleEthicsAndBondRepRedistribution($numReportedOn):
         # sends that rep to the bonded challenger
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(event)), -repChange)
         BACKSTOPS.adjForkBondPaid(event, -1 * repChange)
+    # no need to pay bond poster
     else:
         newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + repChange
         EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
