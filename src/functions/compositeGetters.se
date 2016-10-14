@@ -277,3 +277,19 @@ def getPositionInMarket(market, account):
         position[i] = MARKETS.getParticipantSharesPurchased(market, account, i + 1)
         i += 1
     return(position: arr)
+
+def getMarketsCreatedByMarketCreator(branch, creator, initial, last):
+    if(last < initial):
+        throw()
+    markets = array(last - initial)
+    marketsByCreator = array(last - initial)
+    markets = BRANCHES.getSomeMarketsInBranch(branch, initial, last, outitems = (last - initial))
+    i = 0
+    n = 0
+    while i < len(markets):
+        if(INFO.getCreator(markets[i]) == creator):
+            marketsByCreator[n] = markets[i]
+            n += 1
+        i += 1
+    marketsByCreator = slice(marketsByCreator, items = 0, items = n)
+    return(marketsByCreator: arr)
