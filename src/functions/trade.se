@@ -343,7 +343,7 @@ def short_sell(buyer_trade_id, max_amount):
     minValue = EVENTS.getMinValue(eventID)
     maxValue = EVENTS.getMaxValue(eventID)
     if ((maxValue != TWO or minValue != ONE) and EVENTS.getNumOutcomes(eventID) == 2):
-        displayPrice = maxValue - price
+        displayPrice = minValue + price
     else:
         displayPrice = price
     log(type=log_short_fill_tx, market, msg.sender, owner, displayPrice, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee, numOutcomes, price)

@@ -13804,7 +13804,7 @@
         "sig": "extern slashRep: [slashRep:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "trade": {
-        "address": "0xc553303f504f8ee1d7b4abc92a01f78236c43d8a", 
+        "address": "0x4b9f5c03e5edca6e3e41e6fbb6325fc71d9f83ae", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -14158,217 +14158,14 @@
             "    minValue = EVENTS.getMinValue(eventID)", 
             "    maxValue = EVENTS.getMaxValue(eventID)", 
             "    if ((maxValue != TWO or minValue != ONE) and EVENTS.getNumOutcomes(eventID) == 2):", 
-            "        displayPrice = maxValue - price", 
+            "        displayPrice = minValue + price", 
             "    else:", 
             "        displayPrice = price", 
             "    log(type=log_short_fill_tx, market, msg.sender, owner, displayPrice, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee, numOutcomes, price)", 
             "    MARKETS.setPrice(market, outcome, displayPrice)", 
             "    logArrayReturn([SUCCESS, max_amount, fill, price])"
         ], 
-        "fullsig": [
-            {
-                "constant": false, 
-                "inputs": [
-                    {
-                        "name": "buyer_trade_id", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "name": "max_amount", 
-                        "type": "int256"
-                    }
-                ], 
-                "name": "short_sell(int256,int256)", 
-                "outputs": [], 
-                "type": "function"
-            }, 
-            {
-                "constant": false, 
-                "inputs": [], 
-                "name": "test_callstack()", 
-                "outputs": [
-                    {
-                        "name": "out", 
-                        "type": "int256"
-                    }
-                ], 
-                "type": "function"
-            }, 
-            {
-                "constant": false, 
-                "inputs": [
-                    {
-                        "name": "max_value", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "name": "max_amount", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "name": "trade_ids", 
-                        "type": "int256[]"
-                    }
-                ], 
-                "name": "trade(int256,int256,int256[])", 
-                "outputs": [], 
-                "type": "function"
-            }, 
-            {
-                "inputs": [
-                    {
-                        "indexed": true, 
-                        "name": "market", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": true, 
-                        "name": "sender", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": true, 
-                        "name": "owner", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "type", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "price", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "amount", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "tradeid", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "outcome", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "timestamp", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "takerFee", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "makerFee", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "onChainPrice", 
-                        "type": "int256"
-                    }
-                ], 
-                "name": "log_fill_tx(int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256)", 
-                "type": "event"
-            }, 
-            {
-                "inputs": [
-                    {
-                        "indexed": true, 
-                        "name": "market", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": true, 
-                        "name": "sender", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": true, 
-                        "name": "owner", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "price", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "amount", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "tradeid", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "outcome", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "timestamp", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "takerFee", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "makerFee", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "numOutcomes", 
-                        "type": "int256"
-                    }, 
-                    {
-                        "indexed": false, 
-                        "name": "onChainPrice", 
-                        "type": "int256"
-                    }
-                ], 
-                "name": "log_short_fill_tx(int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256)", 
-                "type": "event"
-            }, 
-            {
-                "inputs": [
-                    {
-                        "indexed": false, 
-                        "name": "returnArray", 
-                        "type": "int256[]"
-                    }
-                ], 
-                "name": "trade_logArrayReturn(int256[])", 
-                "type": "event"
-            }, 
-            {
-                "inputs": [
-                    {
-                        "indexed": false, 
-                        "name": "returnValue", 
-                        "type": "int256"
-                    }
-                ], 
-                "name": "trade_logReturn(int256)", 
-                "type": "event"
-            }
-        ], 
+        "fullsig": "[{\n    \"name\": \"short_sell(int256,int256)\",\n    \"type\": \"function\",\n    \"inputs\": [{ \"name\": \"buyer_trade_id\", \"type\": \"int256\" }, { \"name\": \"max_amount\", \"type\": \"int256\" }],\n    \"outputs\": []\n},\n{\n    \"name\": \"test_callstack()\",\n    \"type\": \"function\",\n    \"inputs\": [],\n    \"outputs\": [{ \"name\": \"out\", \"type\": \"int256\" }]\n},\n{\n    \"name\": \"trade(int256,int256,int256[])\",\n    \"type\": \"function\",\n    \"inputs\": [{ \"name\": \"max_value\", \"type\": \"int256\" }, { \"name\": \"max_amount\", \"type\": \"int256\" }, { \"name\": \"trade_ids\", \"type\": \"int256[]\" }],\n    \"outputs\": []\n},\n{\n    \"name\": \"log_fill_tx(int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256)\",\n    \"type\": \"event\",\n    \"inputs\": [{ \"name\": \"market\", \"type\": \"int256\", \"indexed\": true }, { \"name\": \"sender\", \"type\": \"int256\", \"indexed\": true }, { \"name\": \"owner\", \"type\": \"int256\", \"indexed\": true }, { \"name\": \"type\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"price\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"amount\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"tradeid\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"outcome\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"timestamp\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"takerFee\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"makerFee\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"onChainPrice\", \"type\": \"int256\", \"indexed\": false }]\n},\n{\n    \"name\": \"log_short_fill_tx(int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256)\",\n    \"type\": \"event\",\n    \"inputs\": [{ \"name\": \"market\", \"type\": \"int256\", \"indexed\": true }, { \"name\": \"sender\", \"type\": \"int256\", \"indexed\": true }, { \"name\": \"owner\", \"type\": \"int256\", \"indexed\": true }, { \"name\": \"price\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"amount\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"tradeid\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"outcome\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"timestamp\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"takerFee\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"makerFee\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"numOutcomes\", \"type\": \"int256\", \"indexed\": false }, { \"name\": \"onChainPrice\", \"type\": \"int256\", \"indexed\": false }]\n},\n{\n    \"name\": \"trade_logArrayReturn(int256[])\",\n    \"type\": \"event\",\n    \"inputs\": [{ \"name\": \"returnArray\", \"type\": \"int256[]\", \"indexed\": false }]\n},\n{\n    \"name\": \"trade_logReturn(int256)\",\n    \"type\": \"event\",\n    \"inputs\": [{ \"name\": \"returnValue\", \"type\": \"int256\", \"indexed\": false }]\n}]", 
         "sig": "extern trade: [short_sell:[int256,int256]:_, test_callstack:[]:int256, trade:[int256,int256,int256[]]:_]"
     }, 
     "trades": {

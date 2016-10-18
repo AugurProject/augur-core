@@ -147,7 +147,7 @@ def update_contract_functions_api(contract_name, fullsig, old_api):
 
 # Generate a contract's full signature and update its API info
 def update_contract_api(contract_name, contract_path, old_api):
-    fullsig = serpent.mk_full_signature(contract_path)
+    fullsig = json.loads(serpent.mk_full_signature(contract_path))
     events_api = update_contract_events_api(contract_name, fullsig)
     functions_api = update_contract_functions_api(contract_name, fullsig, old_api)
     return events_api, functions_api
