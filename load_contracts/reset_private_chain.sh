@@ -3,7 +3,7 @@
 # @author Jack Peterson (jack@tinybike.net)
 
 set -e
-rm -Rf $HOME/.ethereum-9000/chaindata
+geth --datadir $HOME/.ethereum-9000 removedb
 geth --datadir $HOME/.ethereum-9000 init $AUGURJS/data/genesis-9000.json
 geth --mine --minerthreads 2 --ws --wsapi eth,net,web3,admin,personal,miner,txpool --wsport 8546 --wsorigins '*' --cache 2048 --networkid 9000 --datadir $HOME/.ethereum-9000 --rpc --rpcapi eth,net,web3,admin,personal,miner,txpool --ipcapi admin,eth,debug,miner,net,txpool,personal,web3 --rpccorsdomain '*' --maxpeers 128 --etherbase 0x05ae1d0ca6206c6168b42efcd1fbe0ed144e821b --unlock 0x05ae1d0ca6206c6168b42efcd1fbe0ed144e821b --password $HOME/.ethereum-9000/.password &
 gethpid=$!
