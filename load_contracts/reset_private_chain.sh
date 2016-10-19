@@ -14,7 +14,11 @@ sleep 5
 $AUGURJS/scripts/new-contracts.js
 $AUGURJS/scripts/canned-markets.js
 kill $gethpid
-ssh jack@45.33.62.72 sudo service geth stop && rm -Rf /home/jack/.ethereum-9000 && sudo service augur stop && rm -Rf /home/jack/augur
-scp -rp $HOME/.ethereum-9000 jack@45.33.62.72:/home/jack/.ethereum-9000
-scp -rp $HOME/src/augur jack@45.33.62.72:/home/jack/augur
-ssh jack@45.33.62.72 sudo service geth start && cp /home/jack/augur/src/env-9000.json /home/jack/augur/src/env.json && sudo service augur start
+cd $AUGUR_CONTRACTS
+git commit -am "Upgraded network 9000 contracts"
+npm version patch -m "Upgraded network 9000 contracts"
+npm publish
+git push origin master && git push --tags origin master
+ssh jack@45.33.62.72 sudo service geth stop && rm -Rf /home/jack/.ethereum-9000/geth/chaindata
+scp -rp $HOME/.ethereum-9000/geth/chaindata jack@45.33.62.72:/home/jack/.ethereum-9000/geth/chaindata
+ssh jack@45.33.62.72 sudo service geth start && cd /home/jack/augur && ./update-local.sh && cp /home/jack/augur/src/env-9000.json /home/jack/augur/src/env.json && sudo service augur restart
