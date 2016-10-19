@@ -13,30 +13,14 @@ sleep 5
 ./make_api.py -i $AUGUR_CONTRACTS/api.json -o $AUGUR_CONTRACTS/api.json
 $AUGURJS/scripts/new-contracts.js
 $AUGURJS/scripts/canned-markets.js
+sleep 5
 kill $gethpid
-cd $AUGUR_CONTRACTS
-git commit -am "Upgraded network 9000 contracts"
-npm version patch -m "Upgraded network 9000 contracts"
-npm publish
-git push origin master
-cd $HOME/src/ethereumjs-connect
-gulp
-npm install augur-contracts@* --save
-git commit -am "Upgraded network 9000 contracts"
-npm version patch -m "Upgraded network 9000 contracts"
-npm publish
-git push origin master
-cd $AUGURJS
-gulp
-npm install augur-contracts@* ethereumjs-connect@* --save
-git commit -am "Upgraded network 9000 contracts"
-npm version patch -m "Upgraded network 9000 contracts"
-npm publish
-git push origin master
-cd $HOME/src/augur
-npm install augur.js@* --save
-git commit -am "Upgraded network 9000 contracts"
-git push origin master
-ssh jack@45.33.62.72 sudo service geth stop && rm -Rf /home/jack/.ethereum-9000/geth/chaindata
+ssh jack@45.33.62.72 sudo service geth stop
+ssh jack@45.33.62.72 rm -Rf /home/jack/.ethereum-9000/geth/chaindata
 scp -rp $HOME/.ethereum-9000/geth/chaindata jack@45.33.62.72:/home/jack/.ethereum-9000/geth/chaindata
-ssh jack@45.33.62.72 sudo service geth start && cd /home/jack/augur && ./update-local.sh && cp /home/jack/augur/src/env-9000.json /home/jack/augur/src/env.json && sudo service augur restart
+ssh jack@45.33.62.72 sudo service geth start
+ssh jack@45.33.62.72 sudo service augur stop
+ssh jack@45.33.62.72 rm -Rf /home/jack/augur/build
+scp -rp $HOME/src/augur/build jack@45.33.62.72:/home/jack/augur/build
+ssh jack@45.33.62.72 cp /home/jack/augur/src/env-9000.json /home/jack/augur/build/env.json
+ssh jack@45.33.62.72 sudo service augur restart
