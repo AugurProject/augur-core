@@ -38,10 +38,30 @@ inset('refund.se')
 # forkOutcome is the outcome of an event that was forked over
 # forkEthicality is the ethicality of an event that was forked over
 # resolutionSource is a string with the recommended source for resolving a market
-data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent)
+# resolutionAddress is the address used to resolve an event in the beginning
+# extraBond is a bond to challenge the initial resolution
+# firstPreliminaryOutcome is the outcome submitted by the resolutionAddress
+# challenged is whether an event has been challenged already
+data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent, resolutionAddress, extraBond, firstPreliminaryOutcome, challenged)
 
 # Keeps track of number of events created in the past 24 hours
 data past24Hours[]
+
+def getChallenged(event):
+    return(self.Events[event].challenged)
+    
+def setChallenged(event):
+    self.Events[event].challenged = 1
+    return(1)
+    
+def getFirstPreliminaryOutcome(event):
+    callstackCheck()
+    return(self.Events[event].firstPreliminaryOutcome)
+    
+def setFirstPreliminaryOutcome(event, outcome):
+    callstackCheck()
+    self.Events[event].firstPreliminaryOutcome = outcome
+    return(1)
 
 def getReportersPaidSoFar(event):
     callstackCheck()
@@ -55,6 +75,10 @@ def addReportersPaidSoFar(event):
 def getEventPushedUp(event):
     callstackCheck()
     return(self.Events[event].pushedUp)
+
+def getResolutionAddress(event):
+    callstackCheck()
+    return(self.Events[event].resolutionAddress)
 
 def setEventPushedUp(event, val):
     callstackCheck()
@@ -104,7 +128,7 @@ def getEventResolution(event):
 
 def getEventInfo(event):
     callstackCheck()
-    eventinfo = array(7)
+    eventinfo = array(8)
     eventinfo[0] = self.Events[event].branch
     eventinfo[1] = self.Events[event].expirationDate
     eventinfo[2] = self.Events[event].outcome
@@ -112,6 +136,7 @@ def getEventInfo(event):
     eventinfo[4] = self.Events[event].fxpMaxValue
     eventinfo[5] = self.Events[event].numOutcomes
     eventinfo[6] = self.Events[event].bond
+    eventinfo[7] = self.Events[event].resolutionAddress
     return(eventinfo: arr)
 
 def getResolution(event):
@@ -151,6 +176,11 @@ def setBranch(event, branch):
     self.Events[event].branch = branch
     return(1)
 
+def setExtraBond(event, extraBond):
+    callstackCheck()
+    self.Events[event].extraBond = extraBond
+    return(1)
+
 def getOutcome(event):
     callstackCheck()
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good and for mode etc
@@ -186,7 +216,7 @@ def getUncaughtOutcome(event):
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
     return(self.Events[event].uncaughtOutcome)
 
-def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str):
+def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionSource):
     callstackCheck()
     # check that msg.sender is one of our function contracts
     # if(!self.whitelist.check(msg.sender)):
@@ -198,6 +228,7 @@ def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOut
         self.Events[ID].fxpMinValue = fxpMinValue
         self.Events[ID].fxpMaxValue = fxpMaxValue
         self.Events[ID].numOutcomes = numOutcomes
+        self.Events[ID].resolutionSource = resolutionSource
         save(self.Events[ID].resolutionSource[0], resolution, chars = len(resolution))
         return(1)
     else:
@@ -217,6 +248,10 @@ def addMarket(event, market):
 def getEventBranch(event):
     callstackCheck()
     return(self.Events[event].branch)
+
+def getExtraBond(event):
+    callstackCheck()
+    return(self.Events[event].extraBond)
 
 def getBond(event):
     callstackCheck()

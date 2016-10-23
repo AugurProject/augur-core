@@ -71,6 +71,7 @@ def closeMarket(market, sender):
 
 macro checkCloseMarketPreconditions():
     # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
+    # fix for early res
     if((period <= tradingPeriod) or fxpOutcome):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
@@ -79,10 +80,12 @@ macro checkCloseMarketPreconditions():
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
+    # fix for early res
     if(!EVENTS.getUncaughtOutcome(event)):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-2)
+    # as long as resolved and not challenged we can then resolve, i.e. if not challenged and > 6 days then can take prelim outcome and make it final outcome
     if(BACKSTOPS.getRoundTwo(event) and !BACKSTOPS.getFinal(event)):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
@@ -108,3 +111,17 @@ macro resolveEventsInMarket():
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-5)
+
+def closeChallengeBond(event):
+    extraBond = EVENTS.getExtraBond(event)
+    if(EVENTS.getChallenged(event)):
+        
+        
+        
+    if(EVENTS.getFirstPreliminaryOutcome(event) == EVENTS.getOutcome(event)):
+        
+    - [ ] If challenge outcome is the same as original and isnt challenged again, lose bond
+    - [ ] If challenge outcome is the same and is challenged again (so backstop 1 here), bond returned
+    - [ ] If challenge outcome is different and isn't challenged again, bond returned + n profit
+    - [ ] If challenge outcome is different and is challenged again (so backstop 1 here), bond returned
+    - pay half of validity bond to the challenger if successful and return challenger's bond

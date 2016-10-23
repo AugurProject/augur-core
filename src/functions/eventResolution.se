@@ -56,7 +56,7 @@ def determineWinningOutcomes(event):
     # anything besides scalar or .5
     else:
         winningOutcomes[0] += outcome
-    return(winningOutcomes: arr)
+    return(winningOutcom]es: arr)
 
 ## helper function to close an event for resolution
 macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $periodLength, $ethical, $scalarorcat, $mode, $ethicOutcome):

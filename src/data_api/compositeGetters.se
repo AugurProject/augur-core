@@ -26,7 +26,7 @@ import markets as MARKETS
 inset('refund.se')
 
 macro TRADE_FIELDS: 10
-macro EVENTS_FIELDS: 6
+macro EVENTS_FIELDS: 8
 macro OUTCOMES_FIELDS: 2
 macro WINNING_OUTCOMES_FIELDS: 8
 macro BASE_FIELDS: 17
@@ -181,6 +181,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad):
 
 # Gets events a reporter should report on
 # switch to use start and end
+# make more efficient todo
 def getEventsToReportOn(branch, period, sender, start):
     callstackCheck()
     numEvents = EXPEVENTS.getNumberEvents(branch, period)
@@ -209,3 +210,19 @@ def getEventsToReportOn(branch, period, sender, start):
 def getMarketCreatorFeesCollected(market):
     checkCallstack()
     return((MARKETS.getFees(market) - INFO.getCreationFee(market))/2)
+
+def getMarketsCreatedByMarketCreator(branch, creator, initial, last):
+    if(last < initial):
+        throw()
+    markets = array(last - initial)
+    marketsByCreator = array(last - initial)
+    markets = BRANCHES.getMarketIDsInBranch(branch, initial, last, outitems = (last - initial))
+    i = 0
+    n = 0
+    while i < len(markets):
+        if(INFO.getCreator(markets[i]) == creator):
+            marketsByCreator[n] = markets[i]
+            n += 1
+        i += 1
+    marketsByCreator = slice(marketsByCreator, items = 0, items = n)
+    return(marketsByCreator: arr)

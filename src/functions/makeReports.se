@@ -106,7 +106,6 @@ def submitReport(event, salt, fxpReport, fxpEthics):
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()
-    
 
     branch = EVENTS.getBranch(event)
     balance = REPORTING.getRepBalance(branch, msg.sender)
@@ -161,6 +160,7 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
         i += 1
     totalVal = EXPEVENTS.getShareValue(branch, votePeriod)
     shareFraction = shareValue * ONE / totalVal
+    # simplify this
     numReportersOnMarket = BRANCHES.getBaseReporters(branch) * ((-(267 * shareFraction ** 2) / (2 * ONE) + (533 * shareFraction) / 2 + 1 * ONE))
     totalFeesInWei = totalFees * WEI_TO_ETH / ONE
     canPayForThisManyReporters = totalFeesInWei / (GAS_SUBSIDY * tx.gasprice)

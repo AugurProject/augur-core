@@ -1,4 +1,5 @@
 # Calculates the amount of rep to be redistributed
+# clarify ones w/ a new type system
 macro calculateRepChange($report, $maxPenalty):
     indeterminate = outcome == 3 * ONE_HALF
     adjustForNonBinaryResolution()

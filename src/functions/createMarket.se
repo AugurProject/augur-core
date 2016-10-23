@@ -37,6 +37,7 @@ macro POINT_ZERO_THREE: 553402322211286528
 macro COST_PER_REPORTER: 3500000
 macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 macro MAX_FEE: 2 ** 62
+macro THREE_DAYS: 259200
 
 macro checkSubcurrencyIsValid(contract):
     allowance = $contract.allowance(msg.sender, self)
@@ -58,6 +59,7 @@ macro checkSubcurrencyIsValid(contract):
 # @param resolution is the string source/link to resolve the event
 # @param branch is the branch the event is created in
 # @param expDate is the epoch time in which the event expires
+# @param resolutionAddress is the address that resolves an event in the beginning
 # @return event if success
 # range between min and max should be 1 [in fxp] or greater
 # error messages otherwise
@@ -69,7 +71,7 @@ macro checkSubcurrencyIsValid(contract):
 # .025 eth to create
 # descriptionWithoutOutcomeLabels + "~|>" + outcome1label + "|"  + outcome2label + "|" + outcome3label is format for a description
 # with a categorical user can set min and max to whatever, for reporting 1 is the min and max is the max then reports should be scaled between that range, for payouts it's 1 to the winning outcome or equal for all outcomes if indeterminate, you cannot trade by paying more than 1 for a share as that makes no sense
-def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str):
+def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency):
     refund()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
@@ -80,7 +82,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     forkPeriod = BRANCHES.getForkPeriod(branch)
     checkEventCreationPreconditions()
 
-    eventinfo = string(7 * 32 + len(description))
+    eventinfo = string(8 * 32 + len(description))
     eventinfo[0] = branch                                       # branch
     eventinfo[1] = expDate                                      # expiration date
     eventinfo[2] = msg.sender                                   # creator address
@@ -88,13 +90,17 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     eventinfo[4] = fxpMinValue                                     # minimum outcome value
     eventinfo[5] = fxpMaxValue                                     # maximum outcome value
     eventinfo[6] = numOutcomes                                  # number of outcomes
-    mcopy(eventinfo + 7 * 32, description, len(description))
+    eventinfo[7] = resolutionAddress
+    mcopy(eventinfo + 8 * 32, description, len(description))
     event = ripemd160(eventinfo, chars = len(eventinfo))
     if(INFO.getCreator(event)):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
-    if(INFO.setInfo(event, description, msg.sender, 0) and EVENTS.initializeEvent(event, branch, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution)):
+    wallet = create('wallet.se')
+    if(!wallet.initialize(currency)):
+        throw()
+    if(INFO.setInfo(event, description, msg.sender, 0, currency, wallet) and EVENTS.initializeEvent(event, branch, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress)):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(event)
@@ -177,11 +183,7 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     if(!wallet.initialize(currency)):
         throw()
     makeMarket()
-    
-    # add events to the appropriate reporting period
-    eventNotAddedYet = (EXPEVENTS.getEvent(branch, futurePeriod, EXPEVENTS.getEventIndex(branch, futurePeriod, event)) != event)
-    if(eventNotAddedYet):
-        addEvent()
+
     log(type = marketCreated, market)
     if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
@@ -203,15 +205,13 @@ macro addEvent():
     # cost for calculating num. of reports for an event
     if(!send(EXPEVENTS, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice)):
         throw()
-    wallet = create('wallet.se')
-    if(!wallet.initialize(currency)):
-        throw()
     EXPEVENTS.addEvent(branch, futurePeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet)
     if(!EVENTS.getBond(event)):
         # pay validity / indeterminate protection bond
         period = block.timestamp / TWENTY_FOUR_HR
         if(!currency.transferFrom(msg.sender, wallet, validityBond)):
             throw()
+        EVENTS.setExpiration(event, block.timestamp)
         EVENTS.setBond(event, validityBond)
         EVENTS.addPast24(period)
 
@@ -327,3 +327,84 @@ macro checkMarketCreationPreconditions():
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-3)
+
+def putEventIntoReportingPeriod(event):
+    callstackCheck()
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
+        throw()
+    if(!mutexWhitelisted()):
+        MUTEX.setMutex()
+    currency = INFO.getCurrency(event)
+    # add events to the appropriate reporting period
+    branch = EVENTS.getEventBranch(event)
+    periodLength = BRANCHES.getPeriodLength(branch)
+    baseReporters = BRANCHES.getBaseReporters(branch)
+    # gives ether/cash amount in fixed point
+    minFee = COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
+    period = block.timestamp / TWENTY_FOUR_HR
+    validityBond = (minFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
+    # want to resolve as soon as possible
+    futurePeriod = block.number / periodLength
+
+    if(!EVENTS.getChallenged(event) && !EVENTS.getFirstPreliminaryOutcome(event) && block.timestamp > (EVENTS.getOriginalExpiration(event) + THREE_DAYS)):
+        addEvent()
+        EVENTS.setChallenged(event)
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(1)
+    else:
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(0)
+
+def challengeInitialResolution(event):
+    callstackCheck()
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
+        throw()
+    if(!mutexWhitelisted()):
+        MUTEX.setMutex()
+    # add events to the appropriate reporting period
+    branch = EVENTS.getEventBranch(event)
+    currency = INFO.getCurrency(event)
+    periodLength = BRANCHES.getPeriodLength(branch)
+    baseReporters = BRANCHES.getBaseReporters(branch)
+    # gives ether/cash amount in fixed point
+    minFee = COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
+    period = block.timestamp / TWENTY_FOUR_HR
+    validityBond = (minFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
+    # want to resolve as soon as possible
+    futurePeriod = block.number / periodLength
+
+    if(!EVENTS.getChallenged(event) && block.timestamp < (EVENTS.getOriginalExpiration(event) + 2*THREE_DAYS) && EVENTS.getFirstPreliminaryOutcome(event)):
+        addEvent()
+        EVENTS.setChallenged(event)
+        payExtraBond()
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(1)
+    else:
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(0)
+
+macro payExtraBond():
+    baseReporters = BRANCHES.getBaseReporters(branch)
+    amount = 5*COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
+    if(!currency.transferFrom(msg.sender, wallet, amount)):
+        throw()
+    EVENTS.setExtraBond(event, amount)
+
+def resolveEarly(event, outcome):
+    callstackCheck()
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
+        throw()
+    if(!mutexWhitelisted()):
+        MUTEX.setMutex()
+    if(msg.sender == EVENTS.getResolutionAddress(event) && block.timestamp > EVENTS.getExpiration(event) && block.timestamp < (EVENTS.getExpiration(event) + 86400*3)):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        EVENTS.setFirstPreliminaryOutcome(event, outcome)
+    else:
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(0)
