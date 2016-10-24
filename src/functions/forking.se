@@ -311,6 +311,8 @@ macro binaryForkResolve():
         # return 
         if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
             throw()
+    EVENTS.setBranch(event, winner)
+    BACKSTOPS.setMoved(event)
     return(1)
 
 macro scalarOrCategoricalForkResolve():
@@ -345,4 +347,6 @@ macro scalarOrCategoricalForkResolve():
         # return bond
         if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
             throw()
+    EVENTS.setBranch(event, winner)
+    BACKSTOPS.setMoved(event)
     return(1)
