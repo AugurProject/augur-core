@@ -114,14 +114,22 @@ macro resolveEventsInMarket():
 
 def closeChallengeBond(event):
     extraBond = EVENTS.getExtraBond(event)
-    if(EVENTS.getChallenged(event)):
-        
-        
-        
+    branch = EVENTS.getEventBranch(event)
+    if(!EVENTS.getChallenged(event)):
+        throw()
+    periodLength = BRANCHES.getPeriodLength(branch)
+    votePeriod = EVENTS.getExpiration(event) / periodLength
+    if(BRANCHES.getVotePeriod(branch) <= votePeriod):
+        throw()
+    forkPeriod = BRANCHES.getForkPeriod(branch)
+    forking = forkPeriod == votePeriod or votePeriod == (forkPeriod + 1)
+    if(BACKSTOPS.getRoundTwo(event) or forking):
+        returnBond()
+    if(!EVENTS.getOutcome(event)):
+        throw()
     if(EVENTS.getFirstPreliminaryOutcome(event) == EVENTS.getOutcome(event)):
-        
-    - [ ] If challenge outcome is the same as original and isnt challenged again, lose bond
-    - [ ] If challenge outcome is the same and is challenged again (so backstop 1 here), bond returned
-    - [ ] If challenge outcome is different and isn't challenged again, bond returned + n profit
-    - [ ] If challenge outcome is different and is challenged again (so backstop 1 here), bond returned
-    - pay half of validity bond to the challenger if successful and return challenger's bond
+        loseBond
+    # outcome is different
+    else:
+        returnBond + pay half of validity bond to challenger
+    return(1)

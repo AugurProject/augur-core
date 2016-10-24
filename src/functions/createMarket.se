@@ -389,11 +389,14 @@ def challengeInitialResolution(event):
 
 macro payExtraBond():
     baseReporters = BRANCHES.getBaseReporters(branch)
+    # todo change this to be based off of reporting costs for market given outstanding shares
     amount = 5*COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
     if(!currency.transferFrom(msg.sender, wallet, amount)):
         throw()
     EVENTS.setExtraBond(event, amount)
 
+# could create a contract which is the sender which uses ecrecover to verify a realitykeys signature on a hash + result, 0 goes to 2**64, 1 goes to 2**65
+# with oraclize.it do value = parseInt(result, 18) to get it in the proper 10**18 base, then do (value - min) * 2**64 / range to submit the result to augur
 def resolveEarly(event, outcome):
     callstackCheck()
     if(MUTEX.getMutex() && !mutexWhitelisted()):

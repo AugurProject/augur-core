@@ -225,7 +225,6 @@ macro makeFork():
     BACKSTOPS.setFinal(event)
     BRANCHES.setForkPeriod(branch)
     BRANCHES.setForkPeriod(newBranch)
-    BRANCHES.setEventForkedOver(newBranch, event)
     BRANCHES.setEventForkedOver(branch, event)
     if(forkedOverEthicality):
         BACKSTOPS.setForkedOverEthicality(event)
