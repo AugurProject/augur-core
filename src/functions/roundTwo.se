@@ -29,6 +29,7 @@ macro MIN_BOND: 200 * 2**64
     # -1: Pushed forward event, bonding not allowed during this
     # -2: branch is in the middle of a fork
     # -3: not enough money
+    # -4: event has no votes so far
     # throw()s if not enough msg.value to cover resolution cost or not a large enough bond
 def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     callstackCheck()
@@ -165,6 +166,8 @@ roundTwoBondCheckPreconditions():
     if(forkPeriod == votePeriod or (forkPeriod + 1) == votePeriod):
         MUTEX.unsetMutex()
         return(-2)
+    if(noVotes()):
+        return(-4)
     # todo find actual cost
     if(msg.value < 500000 * tx.gasprice):
         MUTEX.unsetMutex()
@@ -204,3 +207,6 @@ macro returnBond():
     BACKSTOPS.setFinal(event)
     BACKSTOPS.setBondReturned(event)
     BACKSTOPS.doRoundTwoRefund(sender, event)
+
+macro noVotes():
+    !EXPEVENTS.getCurrentModeItems(votePeriod, event)
