@@ -59,6 +59,8 @@ data reporterPeriodInfo[][](beforeRep[], afterRep[], periodDormantRep[], reportH
     # currentModeItems is how many reports or rep reported the current mode has, which is used in determining whether there's a new mode
 data modeItems[][](reportValue[], currentMode, currentModeItems)
 
+macro MAX_THRESHOLD: 2**192
+
 def getSaltyEncryptedHash(branch, period, reporter, event):
     callstackCheck()
     return(self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event])
@@ -298,6 +300,7 @@ def moveEvent(branch, event):
         # add to next expiration period
         self.addEvent(branch, block.timestamp/BRANCHES.getPeriodLength(branch), event)
         EVENTS.setExpiration(event, block.timestamp)
+        EVENTS.setThreshold(event, MAX_THRESHOLD)
         return(1)
     else:
         return(0)
