@@ -27,8 +27,9 @@ inset('refund.se')
 
 # This keeps track of info in a period for the events in that period, it takes a branch and votePeriod as params, respectively
     # Events is 0 indexed and stores the events in a period [this allows the client to loop through and detect which events a given user should report on]
-    # eventToIndex returns an event id for a given index in events
+    # eventToIndex returns an event index for a given eventid
     # requiredEvents states whether a given event is required to be reported on or not [a round2 backstop or a fork event are both required]
+    # committed takes an event id and maps to how many reports committed it has
     # subsidy is money for paying back a user for calculating the targeted num of reports for an event
     # eventWeight is number of reports on an event in a round 1 event, total rep reported on it in a backstop 1 or fork event
     # repEvent is the amount of rep that has reported on an event
@@ -39,7 +40,7 @@ inset('refund.se')
     # numberRemoved is the number of events that no longer have to be reported on in this period [a good example is an event that was resolved early successfully]
     # numEventsToReportOn is the number of events available for reporting on [not including required events] * base number of reporters per event [this is multiplied by a user's periodRepWeight to figure out how many events they should be reporting on in a given period]
     # shareValue is the value of all the outstanding shares from markets that have events expiring in this period
-data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], subsidy[], eventWeight[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, shareValue)
+data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], committed[], subsidy[], eventWeight[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, shareValue)
 
 # This keeps track of info in a period for the reporters, it takes a branch and votePeriod as params, respectively
     # Before rep is the amount of active rep a user has before any penalizations for reporting incorrectly
@@ -219,6 +220,10 @@ def getEventsRange(branch, period, start, end):
         i += 1
     return(events: arr)
 
+def getReportsCommitted(branch, period, event):
+    callstackCheck()
+    return(self.periodEventInfo[branch][period].committed[event])
+
 def getEventIndex(branch, period, event):
     callstackCheck()
     return(self.periodEventInfo[branch][period].eventToIndex[event])
@@ -291,6 +296,7 @@ def setReportHash(branch, period, reporter, reportHash, event):
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
     self.reporterPeriodInfo[branch][period].reportHash[reporter][event] = reportHash
+    self.periodEventInfo[branch][period].committed[event] += 1
     return(1)
 
 # called in case an event doesn't get reported on at all in a period

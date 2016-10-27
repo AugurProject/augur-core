@@ -82,7 +82,7 @@ def getEventCanReportOn(branch, period, reporter, event):
         return(0)
     return(1)
 
-# In the rare possibility that no one gets randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold, UI calls this.
+# In the rare possibility that less than 3 reporters get randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold, UI calls this.
 # Returns 1 if the event's reporting threshold has been set
 # Errors: 0 if the event can't be reported on
 def setReportingThreshold(event):
@@ -92,10 +92,11 @@ def setReportingThreshold(event):
     # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this half
     branch = EVENTS.getEventBranch(event)
     periodLength = BRANCHES.getPeriodLength(branch)
-    inCurrentVotePeriod = (BRANCHES.getVotePeriod(branch) == EVENTS.getExpiration(event) / periodLength)
-    noReportsOnEvent = !EVENTS.getUncaughtOutcome(event)
+    currentVotePeriod = BRANCHES.getVotePeriod(branch)
+    inCurrentVotePeriod = (currentVotePeriod == EVENTS.getExpiration(event) / periodLength)
+    reportsCommitted = EXPEVENTS.getReportsCommitted(branch, currentVotePeriod, event)
     periodHalfEndsInLessThanADay = ((block.timestamp + TWENTY_FOUR_HR) % periodLength) > (periodLength / 2)
-    if(!inCurrentVotePeriod or !periodHalfEndsInLessThanADay or !noReportsOnEvent):
+    if(!inCurrentVotePeriod or !periodHalfEndsInLessThanADay or reportsCommitted >= 3):
         return(0)
     EVENTS.setThreshold(event, MAX_THRESHOLD)
     return(1)

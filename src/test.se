@@ -1,8 +1,14 @@
-data foo
+data foo: uint256
 
-def getSender():
-    return(msg.sender)
-    
-def ok(x):
+def ok(x: uint256):
     self.foo = x
-    return(self.foo)
+    return(self.foo: uint256)
+    
+def okk(y):
+    x = self.foo
+    valueToSpend = min(x, y)
+    if(x < y):
+        return(1)
+    else:
+        return(0)
+    #return(valueToSpend: uint256)
