@@ -26,6 +26,7 @@ macro MIN_BOND: 200 * ONE
     # branch is the fork, not the parent
     # fork event needs to be resolved first before this can be called
 # perhaps prevent people from calling this on parent [to prevent user error]
+# todo should check for no report here or not
 # Errors:
     #  0: not enough rep to report/penalize
     # -1: period shouldve been incremented

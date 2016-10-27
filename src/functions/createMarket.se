@@ -64,7 +64,7 @@ macro checkSubcurrencyIsValid(contract):
 # range between min and max should be 1 [in fxp] or greater
 # error messages otherwise
     #  0: not enough money to pay fees or event already exists
-    # -1: we're either already past that date, branch doesn't exist, or description is bad
+    # -1: we're either already past that date, branch doesn't exist, or description or resolver address is bad
     # -2: max value < min value or range < 1
     # -3: invalid number of outcomes
     # -4: would expire during non-reporting fork period
@@ -97,6 +97,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
+    
     wallet = create('wallet.se')
     if(!wallet.initialize(currency)):
         throw()
@@ -294,7 +295,7 @@ def pushMarketForward(branch, market):
     return(1)
 
 macro checkEventCreationPreconditions():
-    if(!periodLength or !len(description) or !len(resolution) or expDate < block.timestamp):
+    if(!periodLength or !len(description) or !len(resolution) or expDate < block.timestamp or !resolutionAddress):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
