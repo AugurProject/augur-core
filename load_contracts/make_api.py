@@ -84,7 +84,7 @@ def get_old_api(api_path, isLocal=False):
 
 # Retrieve "send" and/or "returns" values from the old API
 def get_send_returns(contract_name, method_name, old_api):
-    send, returns, mutable, gas = None, None, None, None
+    send, returns, mutable, gas, parser, fixed = None, None, None, None, None, None
     if old_api and contract_name in old_api and method_name in old_api[contract_name]:
         if "send" in old_api[contract_name][method_name]:
             send = old_api[contract_name][method_name]["send"]
@@ -94,14 +94,20 @@ def get_send_returns(contract_name, method_name, old_api):
             mutable = old_api[contract_name][method_name]["mutable"]
         if "gas" in old_api[contract_name][method_name]:
             gas = old_api[contract_name][method_name]["gas"]
-    return send, returns, mutable, gas
+        if "parser" in old_api[contract_name][method_name]:
+            parser = old_api[contract_name][method_name]["parser"]
+        if "fixed" in old_api[contract_name][method_name]:
+            fixed = old_api[contract_name][method_name]["fixed"]
+    return send, returns, mutable, gas, parser, fixed
 
 def update_from_old_api(method, contract_name, method_name, old_api):
-    send, returns, mutable, gas = get_send_returns(contract_name, method_name, old_api)
+    send, returns, mutable, gas, parser, fixed = get_send_returns(contract_name, method_name, old_api)
     if send is not None: method["send"] = send
     if returns is not None: method["returns"] = returns
     if mutable is not None: method["mutable"] = mutable
     if gas is not None: method["gas"] = gas
+    if parser is not None: method["parser"] = parser
+    if fixed is not None: method["fixed"] = fixed
     return method
 
 def get_input_names(inputs):
