@@ -22,6 +22,7 @@ macro MIN_EVENTS_FOR_WHALE_TO_REPORT_ON: 30
     # exp(1.2*ln(repbal)) / exp(1.2*ln(totalrep)) is == (reporterList[n]/totalRep)**1.2
     # a**b=exp(b*ln(a))=e**(b*ln(a)).
 # whitelist
+# @return fxp
 def calculateReportingThreshold(branch, event, period, sender):
     callstackCheck()
     repConstant = EXPEVENTS.getPeriodRepWeight(branch, period, sender)
@@ -122,6 +123,7 @@ macro abs($a):
     $a
 
 # simply a helper function / useful to know
+# @return fxp
 def calculateNumberOfEventsAReporterHasToReportOnAtMinimum(branch, reporter, period):
     originalRep = EXPEVENTS.getBeforeRep(branch, period, reporter)
     # this includes the baseReporters * numEventsAvailable

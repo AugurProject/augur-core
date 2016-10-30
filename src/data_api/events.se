@@ -54,6 +54,7 @@ def setChallenged(event):
     self.Events[event].challenged = 1
     return(1)
     
+# @return fxp
 def getFirstPreliminaryOutcome(event):
     callstackCheck()
     return(self.Events[event].firstPreliminaryOutcome)
@@ -85,6 +86,7 @@ def setEventPushedUp(event, val):
     self.Events[event].pushedUp = val
     return(1)
 
+# @return fxp
 def getForkOutcome(event):
     callstackCheck()
     return(self.Events[event].forkOutcome)
@@ -94,6 +96,7 @@ def setForkOutcome(event, value):
     self.Events[event].forkOutcome = value
     return(1)
 
+# @return fxp
 def getForkEthicality(event):
     callstackCheck()
     return(self.Events[event].forkEthicality)
@@ -181,11 +184,13 @@ def setExtraBond(event, extraBond):
     self.Events[event].extraBond = extraBond
     return(1)
 
+# @return fxp
 def getOutcome(event):
     callstackCheck()
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good and for mode etc
     return(self.Events[event].outcome)
 
+# @return fxp
 def getEthics(event):
     callstackCheck()
     return(self.Events[event].ethical)
@@ -195,9 +200,11 @@ def setEthics(event, ethicality):
     self.Events[event].ethical = ethicality
     return(ethicality)
 
+# @return fxp
 def getMinValue(event):
     return(self.Events[event].fxpMinValue)
 
+# @return fxp
 def getMaxValue(event):
     callstackCheck()
     return(self.Events[event].fxpMaxValue)
@@ -211,6 +218,7 @@ def setUncaughtOutcome(event, outcome):
     self.Events[event].uncaughtOutcome = outcome
     return(1)
 
+# @return fxp
 def getUncaughtOutcome(event):
     callstackCheck()
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
@@ -249,10 +257,12 @@ def getEventBranch(event):
     callstackCheck()
     return(self.Events[event].branch)
 
+# @return fxp
 def getExtraBond(event):
     callstackCheck()
     return(self.Events[event].extraBond)
 
+# @return fxp
 def getBond(event):
     callstackCheck()
     return(self.Events[event].bond)
@@ -281,6 +291,7 @@ def setOutcome(ID, outcome):
     self.Events[ID].outcome = outcome
     return(1)
 
+# @return fxp
 def getReportingThreshold(event):
     callstackCheck()
     return(self.Events[event].threshold)
@@ -291,6 +302,7 @@ def setThreshold(event, threshold):
     self.Events[event].threshold = threshold
     return(1)
 
+# @return fxp
 def getMode(event):
     callstackCheck()
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good

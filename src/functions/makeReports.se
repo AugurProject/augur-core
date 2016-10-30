@@ -144,6 +144,7 @@ def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, f
 # calculates how many reports should be on a given event
 # todo make sure max cost is actually 500k gas here
 # whitelist
+# @return fxp
 def calculateReportTargetForEvent(branch, event, votePeriod, sender):
     callstackCheck()
     numMarkets = EVENTS.getNumMarkets(event)

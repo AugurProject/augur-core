@@ -147,10 +147,12 @@ def withdrawEther(to: address, value: uint256):
     return(1)
 
 # Returns amount spender can withdraw from owner
+# @return fxp
 def allowance(owner: address, spender: address):
     checkCallstack()
     return(self.accounts[address].spenders[spender].maxValue)
 
+# @return fxp
 def totalSupply():
     checkCallstack()
     return(self.totalSupply)

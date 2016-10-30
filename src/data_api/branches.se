@@ -97,11 +97,13 @@ def getPeriodLength(branch):
 
 # branch currency balance at start of period
 # currency index 0 is ETH
+# @return fxp
 def setInitialBalance(branch, period, balance, currency):
     checkCallstack()
     self.Branches[branch].balance[period][currency] = balance
     return(balance)
 
+# @return fxp
 def getInitialBalance(branch, period):
     checkCallstack()
     return(self.Branches[branch].balance[period])
@@ -125,6 +127,7 @@ def getNumMarketsBranch(branch):
     checkCallstack()
     return(self.Branches[branch].numMarkets)
 
+# @return fxp
 def getMinTradingFee(branch):
     checkCallstack()
     return(self.Branches[branch].fxpMinTradingFee)

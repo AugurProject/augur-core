@@ -49,6 +49,7 @@ def checkWhitelist(address):
     callstackCheck()
     return(self.whitelists[msg.sender].addresses[address])
 
+# @return fxp
 def getActiveRep(branch):
     callstackCheck()
     return(self.Reporting[branch].activeRep)
@@ -84,12 +85,12 @@ def setWhitelist(contract, addresses: arr):
             i += 1
         return(text("SUCCESS"):str)
 
-# @return reputation fxpValue
+# @return fxp
 def getRepByIndex(branch, repIndex):
     callstackCheck()
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
-# @return reputation fxpValue
+# @return fxp
 def getRepBalance(branch, address):
     callstackCheck()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
@@ -101,8 +102,8 @@ def getDormantRepByIndex(branch, repIndex):
     callstackCheck()
     return(self.Reporting[branch].dormantRep[repIndex].repValue)
 
-# @return reputation fxpValue
 # getDormantRepBalance
+# @return fxp
 def balanceOf(branch, address):
     callstackCheck()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
@@ -111,6 +112,7 @@ def balanceOf(branch, address):
     return(self.Reporting[branch].dormantRep[repIndex].repValue)
 
 # return total supply of fxpDormant rep
+# @return fxp
 def totalSupply(branch):
     callstackCheck()
     return((self.Reporting[branch].totalRep - self.Reporting[branch].activeRep))

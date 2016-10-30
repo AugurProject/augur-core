@@ -80,10 +80,12 @@ def refundCost(to, branch, period, event):
         throw()
     return(1)
 
+# @return fxp
 def getSubsidy(branch, period, event):
     callstackCheck()
     return(self.periodEventInfo[branch][period].subsidy[event])
 
+# @return fxp
 def getPeriodRepWeight(branch, votePeriod, sender):
     callstackCheck()
     return(self.reporterPeriodInfo[branch][votePeriod].periodRepWeight[sender])
@@ -107,21 +109,25 @@ def setReport(branch, period, event, report, sender):
     self.reporterPeriodInfo[branch][period].report[sender][event] = report
     return(1)
 
+# @return fxp
 def setBeforeRep(branch, period, rep, sender):
     callstackCheck()
     self.reporterPeriodInfo[branch][period].beforeRep[sender] = rep
     return(rep)
 
+# @return fxp
 def setAfterRep(branch, period, rep, sender):
     callstackCheck()
     self.reporterPeriodInfo[branch][period].afterRep[sender] = rep
     return(rep)
 
+# @return fxp
 def setPeriodDormantRep(branch, period, rep, sender):
     callstackCheck()
     self.reporterPeriodInfo[branch][period].periodDormantRep[sender] = rep
     return(rep)
 
+# @return fxp
 def getLesserReportNum(branch, period, event):
     callstackCheck()
     return(self.periodEventInfo[branch][period].lesserReportNum[event])
@@ -130,33 +136,40 @@ def getCurrentModeItems(period, event):
     callstackCheck()
     return(self.modeItems[period][event].currentModeItems)
 
+# @return fxp
 def getCurrentMode(period, event):
     callstackCheck()
     return(self.modeItems[period][event].currentMode)
 
 # returns weight of a report value for the mode
+# @return fxp
 def getWeightOfReport(period, event, report):
     callstackCheck()
     return(self.modeItems[period][event].reportValue[report])
 
+# @return fxp
 def getEthicReport(branch, period, event, sender):
     callstackCheck()
     return(self.reporterPeriodInfo[branch][period].ethics[sender][event])
 
+# @return fxp
 def getReport(branch, period, event, sender):
     callstackCheck()
     # if(!self.whitelist.check(msg.sender)):
         #   throw()
     return(self.reporterPeriodInfo[branch][period].report[sender][event])
 
+# @return fxp
 def getBeforeRep(branch, period, sender):
     callstackCheck()
     return(self.reporterPeriodInfo[branch][period].beforeRep[sender])
 
+# @return fxp
 def getAfterRep(branch, period, sender):
     callstackCheck()
     return(self.reporterPeriodInfo[branch][period].afterRep[sender])
 
+# @return fxp
 def getPeriodDormantRep(branch, period, sender):
     callstackCheck()
     return(self.reporterPeriodInfo[branch][period].periodDormantRep[sender])
@@ -165,6 +178,7 @@ def getNumReportsSubmitted(branch, votePeriod, sender):
     callstackCheck()
     return(self.reporterPeriodInfo[branch][votePeriod].numReportsSubmitted[sender])
 
+# @return fxp
 def getEventWeight(branch, votePeriod, event):
     callstackCheck()
     return(self.periodEventInfo[branch][votePeriod].eventWeight[event])
@@ -245,6 +259,7 @@ def getNumEventsToReportOn(branch, period):
     callstackCheck()
     return(self.periodEventInfo[branch][period].numEventsToReportOn)
 
+# @return fxp
 def getShareValue(branch, expIndex):
     callstackCheck()
     return(self.periodEventInfo[branch][expIndex].shareValue)

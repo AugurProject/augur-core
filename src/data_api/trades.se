@@ -86,6 +86,7 @@ def fillTrade(tradeID, fill):
     self.trades[tradeID].amount -= fill
     return(1)
 
+# @return fxp
 def getAmount(id):
     callstackCheck()
     return(self.trades[id].amount)
@@ -94,6 +95,7 @@ def getID(tradeID):
     callstackCheck()
     return(self.trades[tradeID].id)
 
+# @return fxp
 def getPrice(id):
     callstackCheck()
     return(self.trades[id].price)

@@ -68,6 +68,7 @@ def adjForkBondPaid(event, amount):
     self.forking[event].bondPaid += amount
     return(1)
 
+# @return fxp
 def getForkBondPaid(event):
     checkCallstack()
     return(self.forking[event].bondPaid)
@@ -79,6 +80,7 @@ def setBondAmount(event, amount):
     return(1)
 
 # gets bond amount for a fork bond
+# @return fxp
 def getBondAmount(event):
     checkCallstack()
     return(self.forking[event].bondAmount)
@@ -111,6 +113,7 @@ def getResolved(branch, forkPeriod):
     return(self.resolved[branch][forkPeriod])
 
 # gets how much of round 2 bond has been paid back
+# @return fxp
 def getBondPaid(event):
     checkCallstack()
     return(self.roundTwo[event].bondPaid)

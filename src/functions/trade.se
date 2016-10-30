@@ -69,6 +69,7 @@ macro removeTrade($tradeID, $market):
 # 500k gas cost
 # picks orders off the book
 # needs to continue if a trade is filled / removed by the time we get here, not return, issues with insufficient balance ending when it should continue filling other order types
+# @return fxp
 def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
     refund()
     if(MUTEX.getMutex()):
@@ -142,6 +143,7 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
     # -4: insufficient balance
     # -5: trade in same block prohibited
     # -6: must be a bid, not an ask
+# @return fxp
 def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
     refund()
     if(MUTEX.getMutex()):

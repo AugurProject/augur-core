@@ -405,9 +405,10 @@ def resolveEarly(event, outcome):
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
     if(msg.sender == EVENTS.getResolutionAddress(event) && block.timestamp > EVENTS.getExpiration(event) && block.timestamp < (EVENTS.getExpiration(event) + 86400*3)):
+        EVENTS.setFirstPreliminaryOutcome(event, outcome)
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
-        EVENTS.setFirstPreliminaryOutcome(event, outcome)
+        return(1)
     else:
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()

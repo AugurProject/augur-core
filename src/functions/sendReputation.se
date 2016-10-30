@@ -175,6 +175,7 @@ def approve(branch, spender, fxpValue):
     return(1)
 
 # Returns amount spender can withdraw from owner
+# @return fxp
 def allowance(branch, owner, spender):
     callstackCheck()
     return(self.amountCanSpend[owner][spender].branch[branch])

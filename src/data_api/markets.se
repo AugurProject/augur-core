@@ -87,10 +87,12 @@ def getLastExpDate(market):
     callstackCheck()
     return(self.Markets[market].lastExpDate)
 
+# @return fxp
 def getLastOutcomePrice(market, outcome):
     callstackCheck()
     return(self.Markets[market].prices[outcome])
 
+# @return fxp
 def getFees(market):
     callstackCheck()
     return(self.Markets[market].fees)
@@ -99,6 +101,7 @@ def getgasSubsidy(market):
     callstackCheck()
     return(self.Markets[market].gasSubsidy)
 
+# @return fxp
 def getSharesValue(market):
     callstackCheck()
     return(self.Markets[market].sharesValue)
@@ -111,6 +114,7 @@ def returnTags(market):
     tags[2] = self.Markets[market].tag3
     return(tags: arr)
 
+# @return fxp
 def getTotalSharesPurchased(market):
     callstackCheck()
     total = 0
@@ -129,6 +133,7 @@ def getMarketEvents(market):
     callstackCheck()
     return(load(self.Markets[market].events[0], items = self.Markets[market].lenEvents): arr)
 
+# @return fxp
 def getSharesPurchased(market, outcome):
     callstackCheck()
     return(self.Markets[market].sharesPurchased[outcome])
@@ -138,10 +143,12 @@ def getExtraInfo(market):
     length = self.Markets[market].extraInfoLen
     return(load(self.Markets[market].extraInfo[0], chars = length): str)
 
+# @return fxp
 def getVolume(market):
     callstackCheck()
     return(self.Markets[market].volume)
 
+# @return fxp
 def getParticipantSharesPurchased(market, trader, outcome):
     callstackCheck()
     return(self.Markets[market].participants[trader].shares[outcome])
@@ -150,6 +157,7 @@ def getNumEvents(market):
     callstackCheck()
     return(self.Markets[market].lenEvents)
 
+# @return fxp
 def getCumulativeScale(market):
     callstackCheck()
     return(self.Markets[market].cumulativeScale)

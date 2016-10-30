@@ -76,6 +76,7 @@ def setPenalizedUpTo(branch, sender, period):
     self.branch[branch].penalizedUpTo[sender] = period
     return(1)
 
+# @return fxp
 def getDenominator(branch, period):
     callstackCheck()
     return(self.branch[branch].period[period].denominator)
@@ -90,6 +91,7 @@ def decreaseDenominator(branch, period, amount):
     self.branch[branch].period[period].denominator -= amount
     return(1)
 
+# @return fxp
 def getFeesCollected(branch, address, period):
     callstackCheck()
     return(self.branch[branch].period[period].feesCollected[address])
