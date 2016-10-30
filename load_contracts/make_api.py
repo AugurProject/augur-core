@@ -116,12 +116,21 @@ def get_input_names(inputs):
 def get_input_types(inputs):
     return [i["type"] for i in inputs]
 
+def get_fixedpoint_inputs(input_list):
+    fxp_inputs = []
+    for i, input_name in enumerate(input_list):
+        if input_name.startswith("fxp"):
+            fxp_inputs.append(i)
+    return fxp_inputs
+
 def update_from_full_signature(name, inputs, outputs):
     split_name = name.split("(")
     method = {"method": split_name[0]}
     if len(inputs):
         method["signature"] = get_input_types(inputs)
         method["inputs"] = get_input_names(inputs)
+        fxp_inputs = get_fixedpoint_inputs(method["inputs"])
+        if len(fxp_inputs): method["fixed"] = fxp_inputs
     if outputs is not None and len(outputs) and "type" in outputs[0]:
         if outputs[0]["type"] == "bytes":
             method["returns"] = "string"
@@ -151,6 +160,16 @@ def update_contract_functions_api(contract_name, fullsig, old_api):
             api[method["method"]] = update_from_old_api(method, contract_name, method["method"], old_api)
     return api
 
+def get_fixedpoint_outputs(contract_path):
+    has_fixedpoint_output = []
+    with open(contract_path) as srcfile:
+        for linenum, line in enumerate(srcfile):
+            if line.startswith("def "):
+                if prevline == "# @return fxp\n":
+                    has_fixedpoint_output.append(line.split("def ")[1].split("(")[0])
+            prevline = line
+    return has_fixedpoint_output
+
 # Generate a contract's full signature and update its API info
 def update_contract_api(contract_name, contract_path, old_api):
     fullsig = serpent.mk_full_signature(contract_path)
@@ -158,6 +177,9 @@ def update_contract_api(contract_name, contract_path, old_api):
         fullsig = json.loads(fullsig)
     events_api = update_contract_events_api(contract_name, fullsig)
     functions_api = update_contract_functions_api(contract_name, fullsig, old_api)
+    fixedpoint_output_methods = get_fixedpoint_outputs(contract_path)
+    for method_name in fixedpoint_output_methods:
+        functions_api[method_name]["returns"] = "unfix"
     return events_api, functions_api
 
 # Update the API info for all Augur contracts
