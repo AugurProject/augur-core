@@ -43,15 +43,16 @@ data mode_items[][](report_value[], current_mode, current_mode_items)
 
 def getEncryptedReport(branch, expDateIndex, reporter, event):
     refund()
-    return([self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].report, self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].salt]: arr)
+    return([self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].report, self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].salt, self.branches[branch].ethics[expDateIndex][reporter].event[event]]: arr)
 
 # both the report and the salt should be encrypted
-def setEncryptedReport(branch, expDateIndex, reporter, report, salt, event):
+def setEncryptedReport(branch, expDateIndex, reporter, report, salt, ethics, event):
     refund()
     #if(!self.whitelist.check(msg.sender)):
     #	return(-1)
     self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].report = report
     self.EventsExpDates[branch][expDateIndex].encryptedReport[reporter][event].salt = salt
+    self.branches[branch].ethics[expDateIndex][reporter].event[event] = ethics
     return(1)
 
 def getReportersPaidSoFar(branch, event):
