@@ -53,7 +53,7 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
 
-    if(!mutexWhitelisted()):https://www.tesla.com/solar
+    if(!mutexWhitelisted()):
         MUTEX.setMutex()
 
     checkBranchCreationPreconditions()
