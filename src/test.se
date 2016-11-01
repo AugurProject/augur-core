@@ -1,14 +1,13 @@
 data foo: uint256
 
-def ok(x: uint256):
-    self.foo = x
-    return(self.foo: uint256)
+def ok(x, y, z):
+    n = sha3([x,y,z], items=3)
+    return(n)
     
 def okk(y):
     x = self.foo
     valueToSpend = min(x, y)
     if(x < y):
         return(1)
-    else:
-        return(0)
-    #return(valueToSpend: uint256)
+        
+    return(valueToSpend: uint256)
