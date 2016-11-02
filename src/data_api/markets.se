@@ -18,7 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, ]:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256, changeTokens:[int256, int256]:int256]
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, ]:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256, changeTokens:[int256, int256]:int256, modifySupply:[int256]:int256]
 inset('refund.se')
 #todo remove redundant data
 
@@ -49,7 +49,8 @@ inset('refund.se')
     # fees is total fxpAmount of fees a market has paid to a branch [the reporters]
     # lastExpDate is when the market's last event expires
     # prices keeps track of the latest traded fxpPrice for a given outcome in a market
-data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, tradeIDs[](id, nextID, prevID), lastTrade, totalTrades, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[])
+    # shareContracts stores the erc-20 token contract address for each outcome in the market
+data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, tradeIDs[](id, nextID, prevID), lastTrade, totalTrades, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[], shareContracts[])
 
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
