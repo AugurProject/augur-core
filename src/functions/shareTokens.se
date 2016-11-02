@@ -41,8 +41,8 @@ macro ONE:
     10 ** 18
 
 def init():
-    self.name = "Cash"
-    self.symbol = "CASH"
+    self.name = "Shares"
+    self.symbol = "SHARE"
     self.decimals = 18
 
 def transfer(to: address, value: uint256):
@@ -97,52 +97,6 @@ def approve(spender: address, value: uint256):
         MUTEX.unsetMutex()
     return(1)
 
-# used for faucets
-def setCash(address: address, balance: uint256):
-    refund()
-    # if !self.whitelist.check(msg.sender):
-    #    return(-1)
-    delta = balance - self.accounts[address].balance
-    self.accounts[address].balance = balance
-    self.totalSupply += delta
-    return(1)
-
-def depositEther():
-    checkCallstack()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
-
-    amount = msg.value * ONE / WEI_TO_ETH
-    if(!safeToAdd(amount, self.accounts[msg.sender].balance) or !safeToAdd(amount, self.totalSupply)):
-        throw()
-    self.accounts[msg.sender].balance += amount
-    self.totalSupply += amount
-    MUTEX.unsetMutex()
-    return(1)
-
-# Withdraw ether to an address
-# Returns 2 if withdrawal is initiated [then must wait 3 days]
-# Returns 1 if withdrawal is successful
-# Errors:
-    # 0: Not enough money
-def withdrawEther(to: address, value: uint256):
-    refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
-
-    if(self.accounts[msg.sender].balance < value):
-        return(0)
-    if(!safeToSubtract(self.accounts[msg.sender].balance, value) or !safeToSubtract(self.totalSupply, value)):
-        throw()
-    self.accounts[msg.sender].balance -= value
-    self.totalSupply -= value
-    if(!send(to, value)):
-        throw()
-    MUTEX.unsetMutex()
-    return(1)
-
 # Returns amount spender can withdraw from owner
 # @return fxp
 def allowance(owner: address, spender: address):
@@ -177,3 +131,13 @@ macro safeToAdd($a, $b):
 
 macro safeToSubtract($a, $b):
     ($b <= $a)
+
+def changeTokens(trader, amount):
+    # whitelist sender to be markets
+    self.accounts[trader].balance += amount
+    return(1)
+
+def modifySupply(amount):
+    # whitelist sender to be markets.se
+    self.totalSupply += amount
+    return(1)

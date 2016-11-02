@@ -131,5 +131,6 @@ def closeChallengeBond(event):
         loseBond
     # outcome is different
     else:
+        # challenger is paying validity bond though... we need to move its payment to event creation time and then it'll be a valid use of funds
         returnBond + pay half of validity bond to challenger
     return(1)

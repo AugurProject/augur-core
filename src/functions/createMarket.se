@@ -195,8 +195,14 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
 macro makeMarket():
     $payCosts = currency.transferFrom(msg.sender, INFO.getWallet(branch), creationFee)
     $infoSet = INFO.setInfo(market, description, msg.sender, creationFee, currency, wallet)
-    $initializedMarket = MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, msg.value - COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, creationFee, expirationDate, value = (msg.value - COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice))
+    $i = 0
+    $shareContracts = array(numOutcomes)
+    while $i < numOutcomes:
+        $shareContracts[$i] = create('shareTokens.se')
+        $i += 1
+    $initializedMarket = MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, msg.value - COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, creationFee, expirationDate, shareContracts, value = (msg.value - COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice))
     $makeBranchAndEventAwareOfNewMarket = BRANCHES.addMarketToBranch(branch, market) and EVENTS.addMarket(event, market)
+
     if($payCosts and $infoSet and $initializedMarket and $makeBranchAndEventAwareOfNewMarket):
         1
     else:
@@ -377,6 +383,7 @@ def challengeInitialResolution(event):
     futurePeriod = block.number / periodLength
 
     if(!EVENTS.getChallenged(event) && block.timestamp < (EVENTS.getOriginalExpiration(event) + 2*THREE_DAYS) && EVENTS.getFirstPreliminaryOutcome(event)):
+        # challenger here shouldn't have to pay validity bond
         addEvent()
         EVENTS.setChallenged(event)
         payExtraBond()

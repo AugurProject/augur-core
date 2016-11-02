@@ -29,7 +29,7 @@ macro TRADE_FIELDS: 10
 macro EVENTS_FIELDS: 8
 macro OUTCOMES_FIELDS: 2
 macro WINNING_OUTCOMES_FIELDS: 8
-macro BASE_FIELDS: 17
+macro BASE_FIELDS: 25
 
 def getOrderBook(market):
     numTrades = MARKETS.getTotalTrades(market)
@@ -69,10 +69,15 @@ def getMarketInfo(market):
     marketInfo[14] = tags[0]
     marketInfo[15] = tags[1]
     marketInfo[16] = tags[2]
-
+    shareContracts = slice(MARKETS.getMarketShareContracts(market, outitems = numOutcomes), items = 0, items = numOutcomes)
+    i = 0
+    while i < numOutcomes:
+        marketInfo[17 + i] = shareContracts[i]
+        i += 1
     # gather event(s) info:
     # [event, expirationDate, outcome, minValue, maxValue, numOutcomes]
     events = slice(MARKETS.getMarketEvents(market, outitems = numEvents), items = 0, items = numEvents)
+    
     i = 0
     while(i < numEvents):
         eventInfo = EVENTS.getEventInfo(events[i], outitems=EVENTS_FIELDS)

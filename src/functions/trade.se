@@ -32,7 +32,6 @@ inset('../data_api/refund.se')
 event logPrice(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, tradeid, outcome)
 event logPriceShort(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, tradeid, outcome)
 
-
 macro ONE_POINT_FIVE: 27670116110564327424
 
 macro MIN_TRADE_VALUE: 184467440738

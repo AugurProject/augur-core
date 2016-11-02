@@ -18,7 +18,9 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, ]:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256, changeTokens:[int256, int256]:int256]
 inset('refund.se')
+#todo remove redundant data
 
 # Markets' index is the market, markets stores data about markets [which are able to be traded on] in augur
     # Events is a 0 indexed array of events in the market in the format of
@@ -132,6 +134,10 @@ def getMarketEvent(market, index):
 def getMarketEvents(market):
     callstackCheck()
     return(load(self.Markets[market].events[0], items = self.Markets[market].lenEvents): arr)
+    
+def getMarketShareContracts(market):
+    callstackCheck()
+    return(load(self.Markets[market].shareContracts[0], items = self.Markets[market].numOutcomes): arr)
 
 # @return fxp
 def getSharesPurchased(market, outcome):
@@ -151,7 +157,7 @@ def getVolume(market):
 # @return fxp
 def getParticipantSharesPurchased(market, trader, outcome):
     callstackCheck()
-    return(self.Markets[market].participants[trader].shares[outcome])
+    return(self.Markets[market].shareContracts[outcome].balanceOf(trader))
 
 def getNumEvents(market):
     callstackCheck()
@@ -200,12 +206,13 @@ macro sharesPurchased($market):
     market($market).sharesPurchased
 
 # check that msg.sender is one of our function contracts
-def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpcumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate):
+def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpcumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr):
     callstackCheck()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add event list to the market
     save(self.Markets[market].events[0], events, items = len(events))
+    save(self.Markets[market].shareContracts[0], shareContracts, items = numOutcomes)
     self.Markets[market].lenEvents = len(events)
     save(self.Markets[market].extraInfo[0], extraInfo, chars = len(extraInfo))
     self.Markets[market].extraInfoLen = len(extraInfo)
@@ -229,6 +236,7 @@ def modifyShares(market, outcome, fxpAmount):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     sharesPurchased(market)[outcome] += fxpAmount
+    self.Markets[market].shareContracts[outcome].modifySupply(fxpAmount)
     return(1)
 
 def modifySharesValue(market, fxpAmount):
@@ -240,7 +248,7 @@ def modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
     callstackCheck()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    self.Markets[market].participants[trader].shares[outcome] += fxpAmount
+    self.Markets[market].shareContracts[outcome].changeTokens(trader, fxpAmount)
     if(actualTrade):
         if(fxpAmount < 0):
             fxpAmount = fxpAmount * -1
