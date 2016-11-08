@@ -1,14 +1,3 @@
-macro ONE: 2 ** 64
-
-macro WEI_TO_ETH: 10 ** 18
-
-macro throw():
-    i = 0
-    while(1):
-        i += 1
-
-def test_callstack(): return(1)
-
 macro ONE: 10^18
 
 macro THREE_FOURTHS: 750000000000000000
@@ -18,6 +7,18 @@ macro ONE_FOURTH: 250000000000000000
 macro ONE_HALF: 500000000000000000
 
 macro TWO: 2000000000000000000
+
+macro TWENTYFOURHR: 86400
+
+macro WEI_TO_ETH: 10 ** 18
+
+macro throw():
+    i = 0
+    while(1):
+        i += 1
+
+def checkCallstack(): 
+    return(1)
 
 macro callstackCheck():
     if(!self.checkCallstack()):
