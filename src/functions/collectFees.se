@@ -12,7 +12,6 @@ inset('refund.se')
         # after this window, any unclaimed rep is pushed to the next period's redistrib. pool via the first make report submission
 # 2 means no errors but didnt report
 def collectFees(branch, sender):
-    refund()
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
     if(residual <= periodLength/2):
@@ -46,7 +45,7 @@ def collectFees(branch, sender):
         if(CONSENSUS.getNotEnoughPenalized(branch, msg.sender, lastPeriod)==0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
             CONSENSUS.doRefund(msg.sender, msg.sender)
         # need to pay not reporting bond
-        if(msg.value <= 500000*tx.gasprice):
+        if(msg.value < 500000*tx.gasprice):
             throw()
         balance = REPORTING.getRepBalance(branch, msg.sender)
         dormantRep = REPORTING.balanceOf(branch, msg.sender)

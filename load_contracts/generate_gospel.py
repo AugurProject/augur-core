@@ -39,6 +39,30 @@ RPCHOST = "127.0.0.1"
 RPCPORT = 8545
 DEFAULT_NETWORK_ID = "2"
 CONTRACTS_URL = "https://raw.githubusercontent.com/AugurProject/augur-contracts/master/contracts.json"
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+def build_for_network_id(network_id):
+    new_contracts = get_contracts(None)[str(network_id)]
+    with open(os.path.join(HERE, "build.json")) as in_file:
+        build = json.load(in_file)
+    addresses = {}
+    for contract_name, contract_data in build.items():
+        if contract_name == "buy&sellShares":
+            pretty_contract_name = "buyAndSellShares"
+        else:
+            pretty_contract_name = contract_name
+        addresses[contract_name] = {
+            "old": contract_data["address"],
+            "new": new_contracts[pretty_contract_name[0].upper() + pretty_contract_name[1:]]
+        }
+        build[contract_name]["address"] = addresses[contract_name]["new"]
+    for contract_name, contract_data in build.items():
+        contract_code = json.dumps(contract_data["code"])
+        for cname, cvals in addresses.items():
+            contract_code = contract_code.replace(str(cvals["old"]), str(cvals["new"]))
+        build[contract_name]["code"] = json.loads(contract_code)
+    with open(os.path.join(HERE, "build.json"), "w+") as out_file:
+        json.dump(build, out_file, indent=4, sort_keys=True)
 
 def make_groups():
     groups = {}
@@ -126,13 +150,14 @@ def update_contracts(in_path=None, out_path=None,
 def main(argv=None):
     if argv is None: argv = sys.argv
     try:
-        short_opts = "hjn:i:o:"
-        long_opts = ["help", "json", "networkid=", "infile=", "outfile="]
+        short_opts = "hjn:i:o:b:"
+        long_opts = ["help", "json", "networkid=", "infile=", "outfile=", "build="]
         opts, vals = getopt.getopt(argv[1:], short_opts, long_opts)
     except getopt.GetoptError as e:
         sys.stderr.write(e.msg)
         sys.stderr.write("for help use --help")
         return 2
+    build_network_id = None
     in_path, out_path, network_id = None, None, None
     for opt, arg in opts:
         if opt in ("-h", "--help"):
@@ -146,11 +171,16 @@ def main(argv=None):
             out_path = arg
         elif opt in ("-n", "--networkid"):
             network_id = arg
-    update_contracts(in_path=in_path,
-                     out_path=out_path,
-                     rpc_host=RPCHOST,
-                     rpc_port=RPCPORT,
-                     network_id=network_id)
+        elif opt in ("-b", "--build"):
+            build_network_id = arg
+    if build_network_id is not None:
+        build_for_network_id(build_network_id)
+    else:
+        update_contracts(in_path=in_path,
+                         out_path=out_path,
+                         rpc_host=RPCHOST,
+                         rpc_port=RPCPORT,
+                         network_id=network_id)
     return 0
 
 if __name__ == "__main__":
