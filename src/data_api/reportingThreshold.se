@@ -70,10 +70,8 @@ def getEventCanReportOn(branch, period, reporter, event):
         MAKEREPORTS.calculateReportTargetForEvent(branch, events[i], period, reporter)
     reportingThreshold = self.calculateReportingThreshold(branch, event, period, reporter)
 
-    x = array(1)
-    x[0] = reporter + event
     # do abs then mult by 2 to ensure it's positive and between 0 and 1
-    shaHash = (abs(sha3(x, items = 1)) / ONE) * 2
+    shaHash = (abs(sha3(reporter + event)) / ONE) * 2
     shaHash = shaHash / 115792089237316195423571 * ONE
     wasAbleToReportOn = shaHash < reportingThreshold or EXPEVENTS.getRequired(event, period, branch)
     if(!wasAbleToReportOn):
