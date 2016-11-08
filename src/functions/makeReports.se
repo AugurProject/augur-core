@@ -81,12 +81,10 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     checkSubmitReportHashPreconditions()
 
     reportingThresholdForUser = calculateReportingThreshold()
-    x = array(1)
-    x[0] = msg.sender + event
     # do abs then mult by 2 to ensure pos. and between 0 and 1
-    shaHash = (abs(sha3(x, items = 1)) / ONE) * 2
+    shaHash = (abs(sha3(msg.sender + event)) / ONE) * 2
     # max value 10^54: 2^256 / 10^54 = 115792089237316195423570.985...
-    shaHash = abs(shaHash) / 115792089237316195423571 * ONE
+    shaHash = shaHash / 115792089237316195423571 * ONE
     # shaHash must be <= to the threshold for that user to be able to fxpReport on the given event
     if(shaHash > reportingThresholdForUser):
         MUTEX.unsetMutex()
