@@ -19,7 +19,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-# Reporting index is the branchID
+# Reporting index is the branch
 # Reporters index is the rep. address
 # We 0 index reputation so can walk thru for consensus
 # EventsExpDates index is the currentVotePeriod or in the future if an event expires in the future
@@ -483,7 +483,7 @@ def hashReport(report: arr, salt):
     return(reportHash)
 
 # check that msg.sender is one of our function contracts
-def setInitialReporters(parent, branchID):
+def setInitialReporters(parent, branch):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # first vote period won't be until after the current (in this case first) basket of things has expired
@@ -495,11 +495,11 @@ def setInitialReporters(parent, branchID):
     i = 0
     while i < self.Reporting[parent].numberReporters:
         reporterID = self.Reporting[parent].reputation[i].reporterID
-        self.Reporting[branchID].reputation[i].reporterID = reporterID
-        self.Reporting[branchID].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
-        self.Reporting[branchID].repIDtoIndex[reporterID] = i
+        self.Reporting[branch].reputation[i].reporterID = reporterID
+        self.Reporting[branch].reputation[i].repValue = self.Reporting[parent].reputation[i].repValue
+        self.Reporting[branch].repIDtoIndex[reporterID] = i
         i+=1
-    self.Reporting[branchID].numberReporters = i
+    self.Reporting[branch].numberReporters = i
     return(1)
 
 def addReporter(branch, sender):

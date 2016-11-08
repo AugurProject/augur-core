@@ -1,220 +1,292 @@
-# This software (Augur) allows buying && selling event outcomes in ethereum
+# This software (Augur) allows buying and selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it &&/or modify
+#    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
-#
-#    This program is free software: you can redistribute it &&/or modify
+# 
+#    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+# 
+#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-#
+# 
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+### Allows creation of events and markets and manipulating them
+
 import branches as BRANCHES
 import info as INFO
-import cash as CASH
 import markets as MARKETS
 import backstops as BACKSTOPS
 import events as EVENTS
 import expiringEvents as EXPEVENTS
-inset('refund.se')
+import mutex as MUTEX
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
+inset('../data_api/refund.se')
 
-macro POINTONETWOFIVE: 125000000000000000
-macro POINTZEROSIX: 60000000000000000
-macro COSTPERREPORTER: 3500000
+event marketCreated(market)
+event tradingFeeUpdated(market, fxpTradingFee)
 
-event marketCreated(marketID)
-event tradingFeeUpdated(marketID, tradingFee)
+macro POINT_ZERO_THREE: 553402322211286528
+macro COST_PER_REPORTER: 3500000
+macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
+macro MAX_FEE: 2 ** 62
+macro THREE_DAYS: 259200
 
-def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution:str, tradingFee, tag1, tag2, tag3, makerFees, extraInfo:str):
-    eventID = self.createEvent(branch, description, expDate, minValue, maxValue, numOutcomes, resolution, call=delegate)
-    marketID = self.createMarket(branch, description, tradingFee, eventID, tag1, tag2, tag3, makerFees, extraInfo, call=delegate)
-    return(marketID)
+macro checkSubcurrencyIsValid(contract):
+    allowance = $contract.allowance(msg.sender, self)
+    balance = $contract.balanceOf(self)
+    transfer = $contract.transfer(msg.sender, 0)
+    transferFrom = $contract.transferFrom(self, msg.sender, 0)
+    approve = $contract.approve(self, 0)
+
+# def createSingleEventMarket(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution:str, fxpTradingFee, tag1, tag2, tag3, fxpMakerFees, extraInfo:str):
+#     event = self.createEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, call=delegate)
+#     market = self.createMarket(branch, description, fxpTradingFee, [event], tag1, tag2, tag3, fxpMakerFees, extraInfo, call=delegate)
+#     return(market)
 
 # Create an event. Events are the basic units / questions that are reported on in Augur by reporters
 # @param numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0 to 11.0 would be 11 outcomes (if incremented by 0.1)
-# @param minValue should be 10**18 for a binary event, maxValue should be 2*10**18 for a binary event
-# @param minValue for a scalar from 0 to 100 should be 0 and max should be 100*10**18, for -100 to 200, it should be -100*10**18 and 200*10**18 respectively
+# @param fxpMinValue should be 2**64 for a binary event, fxpMaxValue should be 2**65 for a binary event
+# @param fxpMinValue for a scalar from 0 to 100 should be 0 and max should be 100*2**64, for -100 to 200, it should be -100*2**64 and 200*2**64 respectively
 # @param description is a description of the event / the question itself
 # @param resolution is the string source/link to resolve the event
 # @param branch is the branch the event is created in
 # @param expDate is the epoch time in which the event expires
-# @return eventID if success
+# @param resolutionAddress is the address that resolves an event in the beginning
+# @return event if success
+# range between min and max should be 1 [in fxp] or greater
 # error messages otherwise
     #  0: not enough money to pay fees or event already exists
-    # -1: we're either already past that date, branch doesn't exist, or description is bad
+    # -1: we're either already past that date, branch doesn't exist, or description or resolver address is bad
     # -2: max value < min value or range < 1
     # -3: invalid number of outcomes
     # -4: would expire during non-reporting fork period
 # .025 eth to create
-def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution: str):
+# descriptionWithoutOutcomeLabels + "~|>" + outcome1label + "|"  + outcome2label + "|" + outcome3label is format for a description
+# with a categorical user can set min and max to whatever, for reporting 1 is the min and max is the max then reports should be scaled between that range, for payouts it's 1 to the winning outcome or equal for all outcomes if indeterminate, you cannot trade by paying more than 1 for a share as that makes no sense
+def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency):
+    refund()
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
+        throw()
+    if(!mutexWhitelisted()):
+        MUTEX.setMutex()
+
     periodLength = BRANCHES.getPeriodLength(branch)
     forkPeriod = BRANCHES.getForkPeriod(branch)
-    if(!periodLength or description == 0 or expDate < block.timestamp):
-        return(-1)
-    if(maxValue < minValue or (maxValue-minValue) < ONE):
-        return(-2)
-    if(numOutcomes < 2 || numOutcomes > 8):
-        return(-3)
-    if(forkPeriod && ((expDate / periodLength)==forkPeriod or (expDate / periodLength)==(forkPeriod+1))):
-        return(-4)
-    eventinfo = string(7*32 + len(description))
-    eventinfo[0] = branch                                       #branchID
-    eventinfo[1] = expDate                                      #expiration date
-    eventinfo[2] = msg.sender                                   #creator address
+    checkEventCreationPreconditions()
+
+    eventinfo = string(8 * 32 + len(description))
+    eventinfo[0] = branch                                       # branch
+    eventinfo[1] = expDate                                      # expiration date
+    eventinfo[2] = msg.sender                                   # creator address
     eventinfo[3] = periodLength
-    eventinfo[4] = minValue                                     #minimum outcome value
-    eventinfo[5] = maxValue                                     #maximum outcome value
-    eventinfo[6] = numOutcomes                                  #number of outcomes
-    mcopy(eventinfo + 7*32, description, len(description))
-    eventID = sha3(eventinfo, chars=len(eventinfo))
-    CASH.initiateOwner(eventID)
-    if(INFO.getCreator(eventID)):
+    eventinfo[4] = fxpMinValue                                     # minimum outcome value
+    eventinfo[5] = fxpMaxValue                                     # maximum outcome value
+    eventinfo[6] = numOutcomes                                  # number of outcomes
+    eventinfo[7] = resolutionAddress
+    mcopy(eventinfo + 8 * 32, description, len(description))
+    event = ripemd160(eventinfo, chars = len(eventinfo))
+    if(INFO.getCreator(event)):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
         return(0)
-    if(INFO.setInfo(eventID, description, msg.sender, 0) && EVENTS.initializeEvent(eventID, branch, expDate, minValue, maxValue, numOutcomes, resolution)):
-        return(eventID)
+    
+    wallet = create('wallet.se')
+    if(!wallet.initialize(currency)):
+        throw()
+    if(INFO.setInfo(event, description, msg.sender, 0, currency, wallet) and EVENTS.initializeEvent(event, branch, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress)):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(event)
     else:
-        return(0)
+        throw()
 
 # Create a market. Markets are the basic _tradable_ units / questions that are traded on in Augur
 # @param branch is the branch of the market
 # @param description is the description for a market
-# @param tradingFee is percent in fixedPoint
-# @param events array is the list of events in a market [up to 3]
+# @param fxpTradingFee is percent in fixedPoint
+# @param events array is the list of events in a market [only 1 for now]
 # @params tag1, tag2, and tag3 are the tags describing a market
-# @param makerFees are the percent of the trading fee a maker pays [0-50% in fixed point]
+# @param fxpMakerFees are the percent of the trading fee a maker pays [0-50% in fixed point]
 # @param extraInfo is a string of any extra info associated with a market
-# @return marketID if success or 1 if on an oracle only branch creation we have success
+# @return market if success or 1 if on an oracle only branch creation we have success
 # error messages otherwise
     # -1: bad input or event doesn't exist
     # -2: event already expired
     # -3: would expire during non-reporting fork period
     # -4: market already exists
-    # throws if not enough money to create the market and place event in the appropriate reporting period
+    # throw()s if not enough money to create the market and place event in the appropriate reporting period
 # .05 eth to create
 # need at least 1.2M gas @ gas price to cover resolution 500k per event to calc. num reports for it - this is passed as value to this function
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
-def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, makerFees, extraInfo:str):
+# todo fix creation fee to be in eth b/c it covers gas fees...
+def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag3, extraInfo: str, currency):
+    callstackCheck()
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
+        throw()
+    if(!mutexWhitelisted()):
+        MUTEX.setMutex()
+
     periodLength = BRANCHES.getPeriodLength(branch)
-    creationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / (2*tradingFee)
+    baseReporters = BRANCHES.getBaseReporters(branch)
+    creationFee = POINT_ZERO_THREE * baseReporters * ONE / fxpTradingFee
     # gives ether/cash amount in fixed point
-    minFee = COSTPERREPORTER*BRANCHES.getBaseReporters(branch)*tx.gasprice
-    if(creationFee < minFee):
-        creationFee = minFee
-    validity_bond = (creationFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch))))/2
+    minFee = COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
+    creationFee = max(minFee, creationFee)
+    validityBond = (creationFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
     numOutcomes = EVENTS.getNumOutcomes(event)
     cumulativeScale = 0
     # market's trading period is the same as the last expiring event in the market
     expirationDate = EVENTS.getExpiration(event)
     futurePeriod = expirationDate / periodLength
     forkPeriod = BRANCHES.getForkPeriod(branch)
-    # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
-    if(periodLength==0 or len(description)==0 || tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > POINTONETWOFIVE or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or makerFees < 0 or makerFees > ONEHALF):
-        return(-1)
-    if(expirationDate < block.timestamp):
-        return(-2)
-    if(forkPeriod && (futurePeriod == forkPeriod or futurePeriod == (forkPeriod+1))):
-        return(-3)
-    #scalars
-    maxValue = EVENTS.getMaxValue(event)
-    minValue = EVENTS.getMinValue(event)
-    # is a valid scalar
-    if((maxValue!=TWO || minValue !=ONE) && numOutcomes==2):
+    checkMarketCreationPreconditions()
+
+    # scalars
+    fxpMaxValue = EVENTS.getMaxValue(event)
+    fxpMinValue = EVENTS.getMinValue(event)
+    scalar = (fxpMaxValue != TWO or fxpMinValue != ONE) and numOutcomes == 2
+    if(scalar):
         # cumulativeScale is the range of a scalar
-        cumulativeScale += maxValue - minValue
-    if(cumulativeScale==0):
+        cumulativeScale += fxpMaxValue - fxpMinValue
+    if(!cumulativeScale):
         cumulativeScale = ONE
 
-    # formation of marketID (hash)
-    marketinfo = string(4*32 + len(description))
+    # formation of market (hash)
+    marketinfo = string(8 * 32 + len(description))
     marketinfo[0] = futurePeriod
-    marketinfo[1] = tradingFee
-    marketinfo[2] = expirationDate
-    marketinfo[3] = len(description)
-    mcopy(marketinfo + 4*32, description, chars=len(description))
-    marketID = sha3(marketinfo, chars=len(marketinfo))
+    marketinfo[1] = fxpTradingFee
+    marketinfo[2] = block.timestamp
+    marketinfo[3] = tag1
+    marketinfo[4] = tag2
+    marketinfo[5] = tag3
+    marketinfo[6] = expirationDate
+    marketinfo[7] = len(description)
+    mcopy(marketinfo + 8 * 32, description, chars = len(description))
+    market = ripemd160(marketinfo, chars = len(marketinfo))
     # if it's already been created return 0
-    if(INFO.getCreator(marketID)):
+    if(INFO.getCreator(market)):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
         return(-4)
     events = array(1)
     events[0] = event
-    # initialize market and send money to pay for resolution
-    if(CASH.sendFrom(branch, creationFee, msg.sender) && send(MARKETS, (msg.value-500000*tx.gasprice)) && INFO.setInfo(marketID, description, msg.sender, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, futurePeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, expirationDate)):
-        MARKETS.addToMarketsHash(branch, marketID)
-        CASH.initiateOwner(marketID)
-        EVENTS.addMarket(event, marketID)
+    checkSubcurrencyIsValid(currency)
+    # todo if wallet contract doesn't exist for a branch for a given currency need to make it or should we have an approval process for adding a token to a branch?
+    wallet = create('wallet.se')
+    if(!wallet.initialize(currency)):
+        throw()
+    makeMarket()
+
+    log(type = marketCreated, market)
+    if(!mutexWhitelisted()):
+        MUTEX.unsetMutex()
+    return(market)
+    
+# initialize market and send money to pay for resolution
+# todo fix something off with paying for resolution here and event adding and what if event already added then -500k issue and what if user doesn't send enough to resolve where is check for that
+macro makeMarket():
+    $payCosts = currency.transferFrom(msg.sender, INFO.getWallet(branch), creationFee)
+    $infoSet = INFO.setInfo(market, description, msg.sender, creationFee, currency, wallet)
+    $i = 0
+    $shareContracts = array(numOutcomes)
+    while $i < numOutcomes:
+        $shareContracts[$i] = create('shareTokens.se')
+        $i += 1
+    $initializedMarket = MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, msg.value - COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, creationFee, expirationDate, shareContracts, value = (msg.value - COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice))
+    $makeBranchAndEventAwareOfNewMarket = BRANCHES.addMarketToBranch(branch, market) and EVENTS.addMarket(event, market)
+
+    if($payCosts and $infoSet and $initializedMarket and $makeBranchAndEventAwareOfNewMarket):
+        1
     else:
         throw()
-    # add events to the appropriate reporting period
-    if(EXPEVENTS.getEvent(branch, futurePeriod, EXPEVENTS.getEventIndex(futurePeriod, event))!=event):
-        EXPEVENTS.addEvent(branch, futurePeriod, event, 500000*tx.gasprice)
-        # cost for calculating num. of reports for an event
-        if(!send(EXPEVENTS, 500000*tx.gasprice)):
+
+macro addEvent():
+    # cost for calculating num. of reports for an event
+    if(!send(EXPEVENTS, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice)):
+        throw()
+    EXPEVENTS.addEvent(branch, futurePeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet)
+    if(!EVENTS.getBond(event)):
+        # pay validity / indeterminate protection bond
+        period = block.timestamp / TWENTY_FOUR_HR
+        if(!currency.transferFrom(msg.sender, wallet, validityBond)):
             throw()
-        if(!EVENTS.getBond(event)):
-            # pay validity / indeterminate protection bond
-            period = block.timestamp / TWENTYFOURHR
-            if(!CASH.sendFrom(event, validity_bond, msg.sender)):
-                throw()
-            EVENTS.setBond(event, validity_bond)
-            EVENTS.addPast24(period)
-    log(type=marketCreated, marketID)
-    return(marketID)
+        EVENTS.setExpiration(event, block.timestamp)
+        EVENTS.setBond(event, validityBond)
+        EVENTS.addPast24(period)
 
 # Updates a trading fee to be lower in a market
 # Errors
     # -1: not the market creator
     # -2: invalid new trading fee
-def updateTradingFee(branch, market, tradingFee, makerFees):
+def updateTradingFee(market, fxpTradingFee):
     refund()
-    if(msg.sender != INFO.getCreator(market) || tx.origin != INFO.getCreator(market)):
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+    branch = MARKETS.getBranch(market)
+    if(msg.sender != INFO.getCreator(market)):
+        MUTEX.unsetMutex()
         return(-1)
     oldFee = MARKETS.getTradingFee(market)
-    oldCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / oldFee
-    newCreationFee = POINTZEROSIX * BRANCHES.getBaseReporters(branch) * ONE / tradingFee
-    if(tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > oldFee or makerFees < 0 or makerFees > ONEHALF):
+    baseReporters = BRANCHES.getBaseReporters(branch)
+    oldCreationFee = POINT_ZERO_SIX * baseReporters * ONE / oldFee
+    newCreationFee = POINT_ZERO_SIX * baseReporters * ONE / fxpTradingFee
+    if(fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > oldFee):
+        MUTEX.unsetMutex()
         return(-2)
-    if(!CASH.sendFrom(branch, newCreationFee-oldCreationFee, msg.sender) || !MARKETS.setTradingFee(market, tradingFee) || !MARKETS.setMakerFees(market, makerFees)):
+    currency = INFO.getCurrency(market)
+    if(!currency.transferFrom(msg.sender, BRANCHES.getWallet(branch, currency), newCreationFee - oldCreationFee) or !MARKETS.setTradingFee(market, fxpTradingFee)):
         throw()
-    log(type=tradingFeeUpdated, market, tradingFee)
+    log(type = tradingFeeUpdated, market, fxpTradingFee)
+    MUTEX.unsetMutex()
     return(1)
 
 # Anyone can post an "Early Resolution Bond"
-# This bond is equal to 0.5 * Market_Fee * Market_Value
+# This bond is equal to 0.5 * marketFee * marketValue
 # This amount is the amount needed to pay the reporters in case this was frivolous.
 # The market goes up for early resolution and reporters place claim to what is truth, however for early resolution, they have an additional option: 'Market is not ready to resolve'
     # this addl option is just the normal indeterminate (except here it's a bit of a special case, see below)
 # In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration dateevent
 # In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
+# todo add comments re return values and test again
 def pushMarketForward(branch, market):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+
     # can't do while forking
     forkPeriod = BRANCHES.getForkPeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
     currentPeriod = block.timestamp / periodLength
-    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod+1)):
+    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod + 1)):
+        MUTEX.unsetMutex()
         return(-1)
     # if market closed or already pushed forward, return 0
     if(MARKETS.getOneWinningOutcome(market, 0) or MARKETS.getPushedForward(market)):
+        MUTEX.unsetMutex()
         return(-2)
-    if(CASH.sendFrom(market, MARKETS.getTradingFee(market)*MARKETS.getTotalSharesPurchased(market)/(2*ONE), msg.sender)==0):
-        return(-3)
+    if(MARKETS.getBranch(market) != branch):
+        MUTEX.unsetMutex()
+        return(0)
     event = MARKETS.getMarketEvent(market, 0)
     expiration = EVENTS.getExpiration(event)
-    if(EVENTS.getRejectedPeriod(event) || expiration!=EVENTS.getOriginalExpiration(event) || EVENTS.getOutcome(event) || BACKSTOPS.getRoundTwo(event) || expiration/periodLength==block.timestamp/periodLength):
-            return(-4)
+    beingReportedOnNow = (expiration / periodLength == block.timestamp / periodLength)
+    alreadyPushedForward = EVENTS.getRejectedPeriod(event) or expiration != EVENTS.getOriginalExpiration(event)
+    if(alreadyPushedForward or beingReportedOnNow or EVENTS.getOutcome(event) or BACKSTOPS.getRoundTwo(event)):
+        MUTEX.unsetMutex()
+        return(-3)
     # push into next vote period
-    period = block.timestamp/periodLength
+    period = block.timestamp / periodLength
     # figure out what's going on with subsidy system here todo
     EXPEVENTS.addEvent(branch, period, event, 0)
     # set event expiration date to be after the current reporting period ends
@@ -222,4 +294,129 @@ def pushMarketForward(branch, market):
     MARKETS.setTradingPeriod(market, period)
     MARKETS.setPushedForward(market, 1, msg.sender)
     EVENTS.setEventPushedUp(event, 1)
+    payEarlyResolutionBond = MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), MARKETS.getTradingFee(market) * MARKETS.getTotalSharesPurchased(market) / (2 * ONE))
+    if(!payEarlyResolutionBond):
+        throw()
+    MUTEX.unsetMutex()
     return(1)
+
+macro checkEventCreationPreconditions():
+    if(!periodLength or !len(description) or !len(resolution) or expDate < block.timestamp or !resolutionAddress):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(-1)
+    if(fxpMaxValue < fxpMinValue or (fxpMaxValue - fxpMinValue) < ONE or (fxpMaxValue + fxpMinValue) < fxpMaxValue):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(-2)
+    if(numOutcomes < 2 or numOutcomes > 8):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(-3)
+    # fix to allow event and market creation during forks at own risk
+    if(forkPeriod and ((expDate / periodLength) == forkPeriod or (expDate / periodLength) == (forkPeriod + 1))):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(-4)
+
+macro checkMarketCreationPreconditions():
+    # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
+    if(!periodLength or !len(description) or fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > MAX_FEE or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event)):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(-1)
+    if(expirationDate < block.timestamp):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(-2)
+    # todo examine why - perhaps should or shouldn't allow on fork but on regular branch
+    if(forkPeriod and (futurePeriod == forkPeriod or futurePeriod == (forkPeriod + 1))):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(-3)
+
+def putEventIntoReportingPeriod(event):
+    callstackCheck()
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
+        throw()
+    if(!mutexWhitelisted()):
+        MUTEX.setMutex()
+    currency = INFO.getCurrency(event)
+    # add events to the appropriate reporting period
+    branch = EVENTS.getEventBranch(event)
+    periodLength = BRANCHES.getPeriodLength(branch)
+    baseReporters = BRANCHES.getBaseReporters(branch)
+    # gives ether/cash amount in fixed point
+    minFee = COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
+    period = block.timestamp / TWENTY_FOUR_HR
+    validityBond = (minFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
+    # want to resolve as soon as possible
+    futurePeriod = block.number / periodLength
+
+    if(!EVENTS.getChallenged(event) && !EVENTS.getFirstPreliminaryOutcome(event) && block.timestamp > (EVENTS.getOriginalExpiration(event) + THREE_DAYS)):
+        addEvent()
+        EVENTS.setChallenged(event)
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(1)
+    else:
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(0)
+
+def challengeInitialResolution(event):
+    callstackCheck()
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
+        throw()
+    if(!mutexWhitelisted()):
+        MUTEX.setMutex()
+    # add events to the appropriate reporting period
+    branch = EVENTS.getEventBranch(event)
+    currency = INFO.getCurrency(event)
+    periodLength = BRANCHES.getPeriodLength(branch)
+    baseReporters = BRANCHES.getBaseReporters(branch)
+    # gives ether/cash amount in fixed point
+    minFee = COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
+    period = block.timestamp / TWENTY_FOUR_HR
+    validityBond = (minFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
+    # want to resolve as soon as possible
+    futurePeriod = block.number / periodLength
+
+    if(!EVENTS.getChallenged(event) && block.timestamp < (EVENTS.getOriginalExpiration(event) + 2*THREE_DAYS) && EVENTS.getFirstPreliminaryOutcome(event)):
+        # challenger here shouldn't have to pay validity bond
+        addEvent()
+        EVENTS.setChallenged(event)
+        payExtraBond()
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(1)
+    else:
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(0)
+
+macro payExtraBond():
+    baseReporters = BRANCHES.getBaseReporters(branch)
+    # todo change this to be based off of reporting costs for market given outstanding shares
+    amount = 5*COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
+    if(!currency.transferFrom(msg.sender, wallet, amount)):
+        throw()
+    EVENTS.setExtraBond(event, amount)
+
+# could create a contract which is the sender which uses ecrecover to verify a realitykeys signature on a hash + result, 0 goes to 2**64, 1 goes to 2**65
+# with oraclize.it do value = parseInt(result, 18) to get it in the proper 10**18 base, then do (value - min) * 2**64 / range to submit the result to augur
+def resolveEarly(event, outcome):
+    callstackCheck()
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
+        throw()
+    if(!mutexWhitelisted()):
+        MUTEX.setMutex()
+    if(msg.sender == EVENTS.getResolutionAddress(event) && block.timestamp > EVENTS.getExpiration(event) && block.timestamp < (EVENTS.getExpiration(event) + 86400*3)):
+        EVENTS.setFirstPreliminaryOutcome(event, outcome)
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(1)
+    else:
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(0)

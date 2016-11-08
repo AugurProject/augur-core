@@ -1,64 +1,93 @@
+### Used to allow users to collect fees from reporting
+
 import cash as CASH
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import consensusData as CONSENSUS
 import reporting as REPORTING
-inset('refund.se')
+import mutex as MUTEX
+
+extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
+inset('../data_api/refund.se')
+inset('../data_api/periodStage.se')
 
 # Allows a user to collect both redistributed rep and trading fees earned at the end of a period
 # Errors:
+    #  0: fees already collected
     # -1: rep redistribution/rewards/penalizations in consensus not done yet
     # -2: needs to be second half of reporting period to claim rep [1st half is when redistribution is done]
         # after this window, any unclaimed rep is pushed to the next period's redistrib. pool via the first make report submission
-# 2 means no errors but didnt report
+# 2 means no errors but didnt report last period
+# distribute any eth here too
 def collectFees(branch, sender):
-    refund()
+    callstackCheck()
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
+        throw()
+    MUTEX.setMutex()
+
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.timestamp % periodLength
-    if(residual <= periodLength/2):
-        return(-2)
-    if(!CONSENSUS.getRepRedistributionDone(branch, sender)):
-        # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
-        return(-1)
     votePeriod = BRANCHES.getVotePeriod(branch)
     lastPeriod = votePeriod - 1
     newRep = EXPEVENTS.getAfterRep(branch, lastPeriod, sender)
+    feesCollected = CONSENSUS.getFeesCollected(branch, sender, lastPeriod)
+    checkCollectFeesPreconditions()
+    
     # need 1 rep to claim fees
-    if(!CONSENSUS.getFeesCollected(branch, sender, lastPeriod) && newRep>ONE):
-        denominator = CONSENSUS.getDenominator(branch, lastPeriod)
-        # sets the amount of rep available for redistribution in the next period
-        if(!CONSENSUS.getFeeFirst(branch, lastPeriod)):
-            CONSENSUS.setFeeFirst(branch, lastPeriod, 1)
-            CONSENSUS.setPeriodBalance(branch, lastPeriod, REPORTING.getRepBalance(branch, branch))
-        gainedRep = newRep * CONSENSUS.getPeriodBalance(branch, lastPeriod) / denominator
-        #if(lostRep) newRep should be == EXPEVENTS.getAfterRep(branch, period, sender) + gainedRep
-        #if(gainedRep) newRep should be == EXPEVENTS.getBeforeRep(branch, period, sender) + gainedRep
-        # give a reporter their portion of redistributed rep
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, sender), gainedRep)
-        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), gainedRep)
-        cash = BRANCHES.getInitialBalance(branch, lastPeriod) * newRep / denominator
-        # give a reporter their portion of the trading fees
-        CASH.addCash(sender, cash)
-        CASH.subtractCash(branch, cash)
-        CONSENSUS.setFeesCollected(branch, sender, lastPeriod)
-        # return not reported enough bond if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees
-        # todo first period this won't have been paid?
-        if(CONSENSUS.getNotEnoughPenalized(branch, msg.sender, lastPeriod)==0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
-            CONSENSUS.doRefund(msg.sender, msg.sender)
-        # need to pay not reporting bond
-        if(msg.value <= 500000*tx.gasprice):
-            throw()
-        balance = REPORTING.getRepBalance(branch, msg.sender)
-        dormantRep = REPORTING.balanceOf(branch, msg.sender)
-        # Record rep for next report period before any redistributions
-        # todo what if in first period these before/after/etc haven't been set?
-        EXPEVENTS.setBeforeRep(branch, votePeriod, balance, msg.sender)
-        EXPEVENTS.setAfterRep(branch, votePeriod, balance, msg.sender)
-        EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, msg.sender)
-        CONSENSUS.setRefund(msg.sender, msg.value)
-        send(CONSENSUS, msg.value)
-        return(1)
-    # shouldn't be reached / if so no effect
-    elif(!CONSENSUS.getFeesCollected(branch, sender, lastPeriod)):
-        CONSENSUS.setFeesCollected(branch, sender, lastPeriod)
+    if(newRep < ONE):
+        prepareInfoForConsensus()
         return(2)
+    collectRedistributedRep()
+    collectTradeFees()
+    prepareInfoForConsensus()
+    if(!mutexWhitelisted()):
+        MUTEX.unsetMutex()
+    return(1)
+
+macro checkCollectFeesPreconditions():
+    atSecondHalfOfPeriod()
+    if(!CONSENSUS.getRepRedistributionDone(branch, sender)):
+        # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(-1)
+    if(feesCollected):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(0)
+
+macro collectRedistributedRep():
+    denominator = CONSENSUS.getDenominator(branch, lastPeriod)
+    # sets the amount of rep available for redistribution in this redistribution period
+    if(!CONSENSUS.getFeeFirst(branch, lastPeriod)):
+        CONSENSUS.setFeeFirst(branch, lastPeriod, 1)
+        CONSENSUS.setPeriodBalance(branch, lastPeriod, REPORTING.getRepBalance(branch, branch))
+    gainedRep = newRep * CONSENSUS.getPeriodBalance(branch, lastPeriod) / denominator
+    # if a user lost rep their newRep should be == EXPEVENTS.getAfterRep(branch, period, sender) + gainedRep
+    # if gained rep overall their newRep should be == EXPEVENTS.getBeforeRep(branch, period, sender) + gainedRep
+    # give a reporter their portion of redistributed rep
+    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), gainedRep)
+    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, sender), gainedRep)
+
+macro collectTradeFees():
+    cash = BRANCHES.getInitialBalance(branch, lastPeriod) * newRep / denominator
+    # give a reporter their portion of the trading fees
+    CASH.subtractCash(branch, cash)
+    CASH.addCash(sender, cash)
+
+macro prepareInfoForConsensus():
+    CONSENSUS.setFeesCollected(branch, sender, lastPeriod)
+    # return not reported enough bond if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees
+    if(!CONSENSUS.getNotEnoughPenalized(branch, sender, lastPeriod) or BRANCHES.getForkPeriod(branch) + 1 == lastPeriod):
+        CONSENSUS.doRefund(sender, sender)
+    # need to pay not reporting bond
+    if(msg.value <= 500000 * tx.gasprice):
+        throw()
+    balance = REPORTING.getRepBalance(branch, sender)
+    dormantRep = REPORTING.balanceOf(branch, sender)
+    # Record rep for next report period before any redistributions
+    EXPEVENTS.setBeforeRep(branch, votePeriod, balance, sender)
+    EXPEVENTS.setAfterRep(branch, votePeriod, balance, sender)
+    EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, sender)
+    CONSENSUS.setRefund(sender, msg.value)
+    if(!send(CONSENSUS, msg.value)):
+        throw()

@@ -8,7 +8,7 @@ inset('refund.se')
     # bondPoster is the account which posted the bond
     # original ethicality, outcome, and voteperiod specify the first round of consensus values for ethicality, outcome, and voteperiod, respectively
     # roundTwo states whether an event is a round two event
-data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final, bondPoster, bondReturned, bondPaid, refund)
+data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicality, final, bondPoster, bondReturned, bondPaid, refund, disputedOverEthics)
 
 # Keeps track of data for the forking backstop [wherein the network is forked into two sets of rep] using event as the index
     # moved is used for stating whether an event has been moved to the winning fork
@@ -22,127 +22,171 @@ data forking[](bondPoster, bondAmount, forkedOverEthicality, bondPaid, originalB
 # Given a branch and a forkPeriod it states which fork the winner was
 data resolved[][]
 
+def checkCallstack():
+    return(1)
+
+def getDisputedOverEthics(event):
+    checkCallstack()
+    return(self.roundTwo[event].disputedOverEthics)
+
+def setDisputedOverEthics(event):
+    checkCallstack()
+    self.roundTwo[event].disputedOverEthics = 1
+    return(1)
+
 def setRoundTwoRefund(event, amt):
+    checkCallstack()
     self.roundTwo[event].refund = amt
     return(1)
-    
+
 def doRoundTwoRefund(sender, event):
-    send(sender, self.roundTwo[event].refund)
+    checkCallstack()
+    if(!send(sender, self.roundTwo[event].refund)):
+        throw()
     return(1)
 
 def setForkBondPoster(event, poster):
+    checkCallstack()
     self.forking[event].bondPoster = poster
     return(1)
 
 def getForkBondPoster(event):
+    checkCallstack()
     return(self.forking[event].bondPoster)
 
 def setForkedOverEthicality(event):
+    checkCallstack()
     self.forking[event].forkedOverEthicality = 1
     return(1)
 
 def getForkedOverEthicality(event):
+    checkCallstack()
     return(self.forking[event].forkedOverEthicality)
-    
+
 def adjForkBondPaid(event, amount):
+    checkCallstack()
     self.forking[event].bondPaid += amount
     return(1)
 
+# @return fxp
 def getForkBondPaid(event):
+    checkCallstack()
     return(self.forking[event].bondPaid)
 
 # sets bond amount for a fork bond
 def setBondAmount(event, amount):
+    checkCallstack()
     self.forking[event].bondAmount = amount
     return(1)
 
 # gets bond amount for a fork bond
+# @return fxp
 def getBondAmount(event):
+    checkCallstack()
     return(self.forking[event].bondAmount)
 
 def setOriginalBranch(event, branch):
+    checkCallstack()
     self.forking[event].originalBranch = branch
     return(1)
 
 def getOriginalBranch(event):
+    checkCallstack()
     return(self.forking[event].originalBranch)
-    
+
 def setMoved(event):
+    checkCallstack()
     self.forking[event].moved = 1
     return(1)
 
 def getMoved(event):
+    checkCallstack()
     return(self.forking[event].moved)
-    
+
 def setResolved(branch, forkPeriod, winner):
+    checkCallstack()
     self.resolved[branch][forkPeriod] = winner
     return(1)
 
 def getResolved(branch, forkPeriod):
+    checkCallstack()
     return(self.resolved[branch][forkPeriod])
 
 # gets how much of round 2 bond has been paid back
+# @return fxp
 def getBondPaid(event):
+    checkCallstack()
     return(self.roundTwo[event].bondPaid)
 
 # increases how much of round 2 bond has been paid back
 def increaseBondPaid(event, amount):
+    checkCallstack()
+    if(amount + self.roundTwo[event].bondPaid < self.roundTwo[event].bondPaid):
+        throw()
     self.roundTwo[event].bondPaid += amount
     return(1)
 
 # whether a round 2 bond's principle has been returned
 def getBondReturned(event):
+    checkCallstack()
     return(self.roundTwo[event].bondReturned)
-    
+
 def setBondReturned(event):
+    checkCallstack()
     self.roundTwo[event].bondReturned = 1
     return(1)
 
 def getRoundTwo(event):
     refund()
     return(self.roundTwo[event].roundTwo)
-    
+
 def setRoundTwo(event, roundTwo):
+    checkCallstack()
     self.roundTwo[event].roundTwo = roundTwo
     return(1)
-    
+
 def getBondPoster(event):
-    refund()
+    checkCallstack()
     return(self.roundTwo[event].bondPoster)
 
 def setBondPoster(event, bondPoster):
+    checkCallstack()
     self.roundTwo[event].bondPoster = bondPoster
     return(1)
 
 # whether a round 2 event is final
 def getFinal(event):
-    refund()
+    checkCallstack()
     return(self.roundTwo[event].final)
 
 def setFinal(event):
+    checkCallstack()
     self.roundTwo[event].final = 1
     return(1)
-    
+
 def getOriginalOutcome(event):
-    refund()
+    checkCallstack()
     return(self.roundTwo[event].originalOutcome)
 
 def setOriginalOutcome(event, originalOutcome):
+    checkCallstack()
     self.roundTwo[event].originalOutcome = originalOutcome
     return(1)
 
 def getOriginalEthicality(event):
-    refund()
+    checkCallstack()
     return(self.roundTwo[event].originalEthicality)
-    
+
 def setOriginalEthicality(event, ethicality):
+    checkCallstack()
     self.roundTwo[event].originalEthicality = ethicality
     return(1)
 
 def getOriginalVotePeriod(event):
-    refund()
+    checkCallstack()
     return(self.roundTwo[event].originalVotePeriod)
 
 def setOriginalVotePeriod(event, period):
+    checkCallstack()
     self.roundTwo[event].originalVotePeriod = period
     return(1)

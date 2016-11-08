@@ -1,163 +1,140 @@
-# This software (Augur) allows buying && selling event outcomes in ethereum
+# This software (Augur) allows buying and selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it &&/or modify
+#    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
-#
-#    This program is free software: you can redistribute it &&/or modify
+# 
+#    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+# 
+#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-#
+# 
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+### This allows users to close markets
+
+# todo fix getoutcome stuff 0 is a valid outcome... and anywhere getoutcome is used
+
 import branches as BRANCHES
-import cash as CASH
 import markets as MARKETS
 import events as EVENTS
-import closeMarketOne as CLOSEONE
-import closeMarketTwo as CLOSETWO
 import backstops as BACKSTOPS
 import eventResolution as RESOLVE
-inset('refund.se')
+import info as INFO
+import mutex as MUTEX
+extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
+inset('../data_api/refund.se')
+inset('eventHelpers.se')
 inset('logReturn.se')
 
-event closeMarket_logReturn(returnValue)
-
-# first param is the market, second param is the subcurrency contract
-data cash[][]
-
-macro YES: TWO
-macro NO: ONE
-macro BAD: 3 * ONEHALF
-
-macro CATCH_TOLERANCE: ONE / 10
+event closeMarketLogReturn(returnValue)
 
 
-# Bins values to 1, 1.5, 2
-macro catch($x):
-    if($x < (BAD - CATCH_TOLERANCE)):
-        NO
-    elif($x > (BAD + CATCH_TOLERANCE)):
-        YES
-    else:
-        BAD
-
-# If ethicality value <.5 it's 0, otherwise it's ethical
-macro ethic_catch($x):
-    if($x < ONEHALF):
-        0
-    else:
-        ONE
-
-# Loop through events in the market, get their outcomes && use those to determine the winning outcomes and resolve a market!
+# Loop through events in the market, get their outcomes and use those to determine the winning outcomes and resolve a market!
 # @return 0 if fail/trading not over yet/event not expired or closed already, if success 1
 # Error messages otherwise
+    # 0: hasn't been reported on yet or already resolved
     # -1: Market has no cash anyway / already closed
     # -2: 0 outcome / not reported on yet
     # -3: not final round 2 event
-    # -4: market isn't in branch
-    # -5: Event forked and not final yet
-    # -6: bonded pushed forward market not ready to be resolved
-    # -7: already resolved
+    # -4: Event forked and not final yet
+    # -5: bonded pushed forward market not ready to be resolved
 # if market's events have moved due to a fork branch param passed should be the new fork [todo check to make sure it handles the wrong branch param properly here]
-def closeMarket(branch, market, sender):
+def closeMarket(market, sender):
     refund()
-    numberEvents = MARKETS.getNumEvents(market)
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
+        throw()
+    if(!mutexWhitelisted()):
+        MUTEX.setMutex()
+    branch = MARKETS.getBranch(market)
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)
-    if(CASH.balance(market)<=0):
-        logReturn(closeMarket_logReturn, -1)
-    if(EVENTS.getUncaughtOutcome(event)==0):
-        logReturn(closeMarket_logReturn, -2)
-    if(BACKSTOPS.getRoundTwo(event) && !BACKSTOPS.getFinal(event)):
-        logReturn(closeMarket_logReturn, -3)
-    if(MARKETS.getBranchID(market)!=branch):
-        logReturn(closeMarket_logReturn, -4)
-    # checks whether any events not already resolved
-    resolved = 1
+    fxpOutcome = EVENTS.getOutcome(event)
+    resolution = 1
+    forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
+    currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
+    checkCloseMarketPreconditions()
+    
+    resolveEventsInMarket()    
+    winningOutcomes = array(8)
+    winningOutcomes = RESOLVE.determineWinningOutcomes(event, outitems = 8)
+    MARKETS.setWinningOutcomes(market, winningOutcomes)
+    # refunds closing cost
+    MARKETS.refundClosing(market, sender)
+    if(!mutexWhitelisted()):
+        MUTEX.unsetMutex()
+    logReturn(closeMarketLogReturn, 1)
+
+macro checkCloseMarketPreconditions():
     # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
-    if(EVENTS.getOutcome(event)==0 && EVENTS.getmode(event)==0):
-        resolved = 0
-    if((period > tradingPeriod) && !resolved):
-        # look at through event in the market, get its outcomes, resolve it && use those to determine the winning outcomes for a given market!
-        votingPeriodEvent = EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch)
-        fxpOutcome = EVENTS.getOutcome(event)
-        resolution = 1
-        forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
-        currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-        if((EVENTS.getForked(event) && !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod+1))):
-            logReturn(closeMarket_logReturn, -5)
-        if(binary(event) && fxpOutcome==0):
-            resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
-        elif(scalar(event) && EVENTS.getmode(event)==0):
-            resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
-        elif(categorical(event) && EVENTS.getmode(event)==0):
-            resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE*EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
-        if(resolution==-6):
-            logReturn(closeMarket_logReturn, -6)
-        winningOutcomes = array(8)
-        winningOutcomes = RESOLVE.determineWinningOutcomes(event, outitems=8)
-        MARKETS.setWinningOutcomes(market, winningOutcomes)
-        # refunds closing cost
-        MARKETS.refundClosing(market, sender)
-        logReturn(closeMarket_logReturn, 1)
+    # fix for early res
+    if((period <= tradingPeriod) or fxpOutcome):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        logReturn(closeMarketLogReturn, 0)
+    if(INFO.getCurrency(market).balanceOf(INFO.getWallet(market)) <= 0):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        logReturn(closeMarketLogReturn, -1)
+    # fix for early res
+    if(!EVENTS.getUncaughtOutcome(event)):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        logReturn(closeMarketLogReturn, -2)
+    # as long as resolved and not challenged we can then resolve, i.e. if not challenged and > 6 days then can take prelim outcome and make it final outcome
+    if(BACKSTOPS.getRoundTwo(event) and !BACKSTOPS.getFinal(event)):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        logReturn(closeMarketLogReturn, -3)
+    # why can't resolve in period after a fork period todo examine
+    if((EVENTS.getForked(event) and !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod + 1))):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        logReturn(closeMarketLogReturn, -4)
+
+macro resolveEventsInMarket():
+    resolution = 0
+    # look at event in the market, get its outcomes, resolve it and use those to determine the winning outcomes for a given market!
+    if(binary(event) and !fxpOutcome):
+        resolution = RESOLVE.resolveBinary(event, market, branch, votingPeriodEvent)
+    elif(scalar(event) and !EVENTS.getMode(event)):
+        resolution = RESOLVE.resolveCategoricalOrScalar(EVENTS.getMinValue(event), EVENTS.getMaxValue(event), event, market, branch, votingPeriodEvent)
+    elif(categorical(event) and !EVENTS.getMode(event)):
+        resolution = RESOLVE.resolveCategoricalOrScalar(ONE, ONE * EVENTS.getNumOutcomes(event), event, market, branch, votingPeriodEvent)
     else:
-        logReturn(closeMarket_logReturn, 0)
+        throw()
+    if(resolution == -6):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        logReturn(closeMarketLogReturn, -5)
 
-# Claim trading profits/value per share after a market is resolved
-# @returns 1 if successful
-# Errors:
-    # 0: market not resolved
-    # -1: trader doesn't exist
-    # -8: invalid branch
-def claimProceeds(branch, market):
-    refund()
-    if(MARKETS.getBranchID(market)!=branch):
-        return(-8)
-    tradingPeriod = MARKETS.getTradingPeriod(market)
-    period = BRANCHES.getVotePeriod(branch)
-    event = MARKETS.getMarketEvent(market, 0)
-    resolved = 1
-    if(EVENTS.getOutcome(event)==0 && EVENTS.getmode(event)==0):
-        resolved = 0
-    # as long as it's resolved money can be collected
-    if((period > tradingPeriod || reportingDone) && resolved):
-        winningOutcomes = array(8)
-        winningOutcomes = MARKETS.getWinningOutcomes(market, outitems=8)
-        outcome = 0
-        # market not resolved
-        if(winningOutcomes[0]==0):
-            return(0)
-        if(winningOutcomes[1]==0):
-            ethical = ethic_catch(EVENTS.getEthical(event))
-            # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
-            if(categorical(event) && (EVENTS.getmode(event)==ONEHALF or !ethical)):
-                outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))
-            # resolves a regular binary market
-            else:
-                outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, 0)
-        # resolves a scalar market
-        elif(winningOutcomes[1]):
-            outcome = CLOSETWO.twoOutcomes(market, winningOutcomes, event, msg.sender)
-        return(outcome)
+def closeChallengeBond(event):
+    extraBond = EVENTS.getExtraBond(event)
+    branch = EVENTS.getEventBranch(event)
+    if(!EVENTS.getChallenged(event)):
+        throw()
+    periodLength = BRANCHES.getPeriodLength(branch)
+    votePeriod = EVENTS.getExpiration(event) / periodLength
+    if(BRANCHES.getVotePeriod(branch) <= votePeriod):
+        throw()
+    forkPeriod = BRANCHES.getForkPeriod(branch)
+    forking = forkPeriod == votePeriod or votePeriod == (forkPeriod + 1)
+    if(BACKSTOPS.getRoundTwo(event) or forking):
+        returnBond()
+    if(!EVENTS.getOutcome(event)):
+        throw()
+    if(EVENTS.getFirstPreliminaryOutcome(event) == EVENTS.getOutcome(event)):
+        loseBond
+    # outcome is different
     else:
-        return(0)
-
-macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
-
-macro binary($event):
-    (EVENTS.getNumOutcomes($event)==2 and EVENTS.getMaxValue($event)==TWO and EVENTS.getMinValue($event)==ONE)
-
-macro categorical($event):
-    (EVENTS.getNumOutcomes($event)>2)
+        # challenger is paying validity bond though... we need to move its payment to event creation time and then it'll be a valid use of funds
+        returnBond + pay half of validity bond to challenger
+    return(1)

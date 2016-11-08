@@ -1,4 +1,4 @@
-macro fx_floor_log2($x):
+macro fxFloorLog2($x):
     with $y = $x / 0x10000000000000000:
         with $lo = 0:
             with $hi = 191:
@@ -11,7 +11,7 @@ macro fx_floor_log2($x):
                         $mid = ($hi + $lo)/2
                     $lo
 
-macro fx_log2_small($x):
+macro fxLog2Small($x):
     with $result = -0x48A49EAD9B2CD16BE:
         with $temp = $x:
             $result += 0x124DC64B2741E5F083*$temp / 0x10000000000000000
@@ -50,15 +50,15 @@ macro fx_log2_small($x):
             $temp = $temp*$x / 0x10000000000000000
             $result - 0x5D5316875D9E3*$temp / 0x10000000000000000
 
-macro fx_log2($x):
-    with $y = fx_floor_log2($x):
+macro fxLog2($x):
+    with $y = fxFloorLog2($x):
         with $z = $x / 2**$y:
-            $y * 0x10000000000000000 + fx_log2_small($z)
+            $y * 0x10000000000000000 + fxLog2Small($z)
 
-macro fx_log($x):
-    fx_log2($x) * 0x10000000000000000 / 0x171547652B82FE177
+macro fxLog($x):
+    fxLog2($x) * 0x10000000000000000 / 0x171547652B82FE177
 
-macro fx_exp2_small($x):
+macro fxExp2Small($x):
     with $result = 0x10000000000000000:
         with $temp = $x:
             $result += 0xB17217F7D1CF79AC*$temp / 0x10000000000000000
@@ -89,10 +89,10 @@ macro fx_exp2_small($x):
             $temp = $temp*$x / 0x10000000000000000
             $result + 0x1B08D3*$temp / 0x10000000000000000
 
-macro fx_exp2($x):
+macro fxExp2($x):
     with $y = $x / 0x10000000000000000:
         with $z = $x % 0x10000000000000000:
-            fx_exp2_small($z) * 2**$y
+            fxExp2Small($z) * 2**$y
 
-macro fx_exp($x):
-    fx_exp2($x * 0x10000000000000000 / 0xB17217F7D1CF79AC)
+macro fxExp($x):
+    fxExp2($x * 0x10000000000000000 / 0xB17217F7D1CF79AC)

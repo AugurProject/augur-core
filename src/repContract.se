@@ -19,79 +19,151 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Storage of all data associated with reporters
-# takes reporterID as key, value is rep amount
-data reporting[]
+# takes reporterID as key, fxpValue is rep amount
+data reporting[2**160]
 
-# keeps track of total rep in the system
-data totalRep
-
-# sender/owner, then spender, e.g. approvedToSpend[owner][spender]
-# 1 if spender is approved, 0 if not
-data approvedToSpend[][]
+# owner [account balance is coming from], then spender, e.g. approvedToSpend[owner][spender]
+# returns amount spender can spend
+data approvedToSpend[2**160][2**160]
 
 # whether the contract has been finished seeding
 data seeded
+# keeps track of total rep in the system
+data totalSupply
+# token name for display
+data name
+# token symbol for display
+data symbol
+# amount of decimals per unit of rep
+data decimals
 
-event Transfer(_from:indexed, _to:indexed, _value)
-event Approval(_owner:indexed, _spender:indexed)
+data creator
+data creation
 
+event Transfer(from:address:indexed, to:address:indexed, value:uint256)
+event Approval(owner:address:indexed, spender:address:indexed, fxpValue:uint256)
+
+# 18 decimals
 macro ONE:
+<<<<<<< HEAD
     10**18
+=======
+    10 ** 18
+>>>>>>> develop
 
 macro refund():
     if(msg.value > 0):
-        send(msg.sender, msg.value)
+        if(!send(msg.sender, msg.value)):
+            throw()
+
+def init():
+    self.name = "Reputation"
+    self.symbol = "REP"
+    self.decimals = 18
+    self.creator = msg.sender
+    self.creation = block.timestamp
 
 def any():
     refund()
 
 # Transfer rep
-# @return value of reputation sent, 0 if not enough reputation
-def transfer(receiver, value):
+# @return 1 if reputation sent
+def transfer(receiver: address, fxpValue: uint256):
     senderBalance = self.reporting[msg.sender]
-    if(senderBalance < value or value <= 0 or !self.seeded):
-        throw
-    self.reporting[msg.sender] -= value
-    self.reporting[receiver] += value
-    log(type=Transfer, msg.sender, receiver, value)
-    return(value)
-    
-# TransferFrom per token api for rep
+    if(senderBalance < fxpValue or !self.seeded or stillCreating()):
+        throw()
+    if(!safeToSubtract(self.reporting[msg.sender], fxpValue) or !safeToAdd(self.reporting[receiver], fxpValue)):
+        throw()
+    self.reporting[msg.sender] -= fxpValue
+    self.reporting[receiver] += fxpValue
+    log(type = Transfer, msg.sender, receiver, fxpValue)
+    return(1: uint256)
+
+# TransferFrom per token api allowing another contract to withdraw on user's behalf
 # fails unless from has authorized sender
-def transferFrom(from, receiver, value):
+# @return 1 if rep sent
+def transferFrom(from: address, receiver: address, fxpValue: uint256):
     senderBalance = self.reporting[from]
-    if(senderBalance < value or value <= 0 or !self.approvedToSpend[from][msg.sender] or !self.seeded):
-        throw
-    self.reporting[from] -= value
-    self.reporting[receiver] += value
-    log(type=Transfer, from, receiver, value)
-    return(value)
+    if(senderBalance < fxpValue or fxpValue > self.approvedToSpend[from][msg.sender] or !self.seeded or stillCreating()):
+        throw()
+    if(!safeToSubtract(self.reporting[from], fxpValue) or !safeToAdd(self.reporting[receiver], fxpValue)):
+        throw()
+    self.approvedToSpend[from][msg.sender] -= fxpValue
+    self.reporting[from] -= fxpValue
+    self.reporting[receiver] += fxpValue
+    log(type = Transfer, from, receiver, fxpValue)
+    return(1: uint256)
     
 # Allows spender to withdraw from your rep account
-def approve(spender):
-    self.approvedToSpend[msg.sender][spender] = 1
-    log(type=Approval, msg.sender, spender)
-    return(1)
+def approve(spender: address, amount: uint256):
+    self.approvedToSpend[msg.sender][spender] = amount
+    log(type = Approval, msg.sender, spender, amount)
+    return(1: uint256)
 
 # Sets the initial distribution of rep
-def setSaleDistribution(addresses: arr, balances: arr):
+def setSaleDistribution(addresses: address[], balances: uint256[]):
     i = 0
-    while i < len(addresses):
+    numberOfAddresses = len(addresses)
+    if(numberOfAddresses != len(balances)):
+        throw()
+    if(self.seeded or !stillCreating()):
+        throw()
+    if(msg.sender != self.creator):
+        throw()
+    while(i < numberOfAddresses):
         if(!self.reporting[addresses[i]] && !self.seeded):
             self.reporting[addresses[i]] = balances[i]
-            self.totalRep += balances[i]
-        i+=1
-    if(totalRep == 11000000*ONE):
+            self.totalSupply += balances[i]
+            log(type = Transfer, 0, addresses[i], balances[i])
+        i += 1
+    if(self.totalSupply == 11000000 * ONE):
         self.seeded = 1
-    return(1)
+    if(self.totalSupply > 11000000 * ONE):
+        throw()
+    return(1: uint256)
     
-# Returns whether spender can withdraw from owner
-def approved(owner, spender):
-    return(self.approvedToSpend[owner][spender])
+def getRidOfDustForLaunch():
+    if(msg.sender != 0x668Fc8D2004379275357c8D8e2502E19153AdEEe):
+        throw()
+    if(self.reporting[0x0000000000000000000000000000000000000000]):
+        self.totalSupply -= self.reporting[0x0000000000000000000000000000000000000000]
+        self.reporting[0x0000000000000000000000000000000000000000] = 0
+        return(1)
+    else:
+        throw()
 
-# @return reputation value
-def balanceOf(address):
-    return(self.reporting[address])
+# Returns amount spender can withdraw from owner
+def allowance(owner: address, spender: address):
+    return(self.approvedToSpend[owner][spender]: uint256)
 
-def getTotalRep(branch):
-    return(self.totalRep)
+def totalSupply():
+    return(self.totalSupply: uint256)
+
+# @return reputation fxpValue
+def balanceOf(address: address):
+    return(self.reporting[address]: uint256)
+
+def name():
+    return(self.name: uint256)
+    
+def decimals():
+    return(self.decimals: uint256)
+    
+def symbol():
+    return(self.symbol: uint256)
+
+def getSeeded():
+    return(self.seeded: uint256)
+
+macro stillCreating():
+    block.timestamp < (self.creation + 15000)
+
+macro throw():
+   ~jump(2**256)
+
+# safe adders idea pulled from piper merriam's btcrelay audit
+macro safeToAdd($a, $b):
+    (($a + $b) >= $a)
+
+macro safeToSubtract($a, $b):
+    ($b <= $a)

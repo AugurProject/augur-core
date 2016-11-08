@@ -1,20 +1,19 @@
-# This software (Augur) allows buying && selling event outcomes in ethereum
+# This software (Augur) allows buying and selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it &&/or modify
+#    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
-#
-#    This program is free software: you can redistribute it &&/or modify
+# 
+#    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+# 
+#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-#
+# 
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
@@ -24,43 +23,60 @@ inset('refund.se')
 # Every entity in our contract has similar metadata.
 # Instead of putting it in each entity, we put all the metadata here.
 # Info's index is the hash of the item we're getting info on
-data Info[](description[2048], descriptionLength, creator, creationFee)
+data Info[](description[2048], descriptionLength, creator, creationFee, wallet, currency)
 
 def init():
     description = text("Root branch")
-    save(self.Info[1010101].description[0], description, chars=len(description))
+    save(self.Info[1010101].description[0], description, chars = len(description))
     self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
     self.Info[1010101].creationFee = 10
     self.Info[1010101].descriptionLength = len(description)
 
 def getDescription(ID):
-	refund()
-	length=self.Info[ID].descriptionLength
-	return(load(self.Info[ID].description[0], chars=length): str)
+    callstackCheck()
+    length = self.Info[ID].descriptionLength
+    return(load(self.Info[ID].description[0], chars = length): str)
 
 def getDescriptionLength(ID):
-	refund()
-	return(self.Info[ID].descriptionLength)
+    callstackCheck()
+    return(self.Info[ID].descriptionLength)
 
 def getCreator(ID):
-	refund()
-	return(self.Info[ID].creator)
+    callstackCheck()
+    return(self.Info[ID].creator)
 
+# @return fxp
 def getCreationFee(ID):
-	refund()
-	return(self.Info[ID].creationFee)
+    callstackCheck()
+    return(self.Info[ID].creationFee)
+    
+def getCurrency(ID):
+    callstackCheck()
+    return(self.Info[ID].currency)
+
+def getWallet(ID):
+    callstackCheck()
+    return(self.Info[ID].wallet)
+    
+def setCurrencyAndWallet(ID, currency, wallet):
+    callstackCheck()
+    self.Info[ID].currency = currency
+    self.Info[ID].wallet = wallet
+    return(1)
 
 # @return 1 if success, 0 if creator already exists
-def setInfo(ID, description: str, creator, fee):
-	refund()
-	#if(!self.whitelist.check(msg.sender)):
-	#	return(-1)
-	# check that msg.sender is one of our function contracts
-	if(self.Info[ID].creator == 0):
-		save(self.Info[ID].description[0], description, chars=len(description))
-		self.Info[ID].descriptionLength = len(description)
-		self.Info[ID].creationFee = fee
-		self.Info[ID].creator = creator
-		return(1)
-	else:
-		return(0)
+def setInfo(ID, description: str, creator, fxpFee, currency, wallet):
+    callstackCheck()
+    # if(!self.whitelist.check(msg.sender)):
+    #   throw()
+    # check that msg.sender is one of our function contracts
+    if(!self.Info[ID].creator):
+        save(self.Info[ID].description[0], description, chars = len(description))
+        self.Info[ID].descriptionLength = len(description)
+        self.Info[ID].creationFee = fxpFee
+        self.Info[ID].creator = creator
+        self.Info[ID].currency = currency
+        self.Info[ID].wallet = wallet
+        return(1)
+    else:
+        return(0)

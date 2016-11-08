@@ -47,8 +47,14 @@ def init():
 # @return branch if success
 # error messages otherwise
     # -1: bad input or parent doesn't exist
+<<<<<<< HEAD
+    # -2: no money for creation fee
+    # -3: branch already exists
+def createSubbranch(description:str, periodLength, parent, minTradingFee, oracleOnly):
+=======
     # -2: branch already exists
 def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, oracleOnly):
+>>>>>>> develop
     refund()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()

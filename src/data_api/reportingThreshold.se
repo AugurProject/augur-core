@@ -1,0 +1,162 @@
+### Deals with whether a reporter can report on a given event
+
+import branches as BRANCHES
+import events as EVENTS
+import expiringEvents as EXPEVENTS
+import fxpFunctions as FXP
+import reporting as REPORTING
+# fix circular dependency
+import makeReports as MAKEREPORTS
+inset('refund.se')
+
+macro ONE_POINT_TWO: 22136092888451461120
+
+macro POINT_ZERO_ONE: 184467440737095520
+
+macro MAX_THRESHOLD: 2 ** 192
+
+macro MIN_EVENTS_FOR_WHALE_TO_REPORT_ON: 30
+
+# Calculates what a reporter should have to get below as a target to report on any given event
+# eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
+    # exp(1.2*ln(repbal)) / exp(1.2*ln(totalrep)) is == (reporterList[n]/totalRep)**1.2
+    # a**b=exp(b*ln(a))=e**(b*ln(a)).
+# whitelist
+# @return fxp
+def calculateReportingThreshold(branch, event, period, sender):
+    callstackCheck()
+    repConstant = EXPEVENTS.getPeriodRepWeight(branch, period, sender)
+    if(!repConstant):
+        calculateAndSetRepConstant()
+    # 1 is 2**192 here, lesserreportnum, repconstant, and one are all base 2**64
+    reportingThreshold = EXPEVENTS.getLesserReportNum(branch, period, event) * repConstant * ONE
+    if(reportingThreshold > MAX_THRESHOLD):
+        reportingThreshold = MAX_THRESHOLD
+    return(reportingThreshold)
+
+# Gets events a reporter should report on
+# switch to use start and end todo
+# start is the event index we want to start fetching events to report on from
+def getEventsToReportOn(branch, period, sender, start):
+    callstackCheck()
+    numEvents = EXPEVENTS.getNumberEvents(branch, period)
+    events = array(numEvents * 2)
+    i = 0
+    n = start
+    while(i < numEvents * 2):
+        events[i] = EXPEVENTS.getEvent(branch, period, n)
+        # calculate report target for event here if not done for purposes of computing this
+        if(!EXPEVENTS.getLesserReportNum(branch, period, events[i])):
+            MAKEREPORTS.calculateReportTargetForEvent(branch, events[i], period, sender)
+        reportingThreshold = self.calculateReportingThreshold(branch, events[i], period, sender)
+
+        x = array(1)
+        x[0] = sender + events[i]
+        # do abs then mult by 2 to ensure pos. and between 0 and 1
+        shaHash = (abs(sha3(x, items = 1)) / ONE) * 2
+        notResolvedYet = !EVENTS.getOutcome(events[i])
+        ableToReportOn = (shaHash < reportingThreshold or EXPEVENTS.getRequired(events[i], period, branch)) and notResolvedYet
+        if(ableToReportOn):
+            events[i + 1] = 1
+        else:
+            events[i + 1] = 0
+        i += 2
+        n += 1
+    return(events: arr)
+
+# Gets whether a reporter is able to report on a given event or not
+# Returns 1 if able
+# Errors: 0 if not
+# whitelist
+def getEventCanReportOn(branch, period, reporter, event):
+    callstackCheck()
+    if(!EXPEVENTS.getLesserReportNum(branch, period, events[i])):
+        MAKEREPORTS.calculateReportTargetForEvent(branch, events[i], period, reporter)
+    reportingThreshold = self.calculateReportingThreshold(branch, event, period, reporter)
+
+    x = array(1)
+    x[0] = reporter + event
+    # do abs then mult by 2 to ensure it's positive and between 0 and 1
+    shaHash = (abs(sha3(x, items = 1)) / ONE) * 2
+    wasAbleToReportOn = shaHash < reportingThreshold or EXPEVENTS.getRequired(event, period, branch)
+    if(!wasAbleToReportOn):
+        return(0)
+    return(1)
+
+# In the rare possibility that less than 3 reporters get randomly selected to report on a market in a given period, on the last day, we can change the sha3 threshold, UI calls this.
+# Returns 1 if the event's reporting threshold has been set
+# Errors: 0 if the event can't be reported on
+def setReportingThreshold(event):
+    callstackCheck()
+    # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
+    # final check is if no reports on event
+    # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this half
+    branch = EVENTS.getEventBranch(event)
+    periodLength = BRANCHES.getPeriodLength(branch)
+    currentVotePeriod = BRANCHES.getVotePeriod(branch)
+    inCurrentVotePeriod = (currentVotePeriod == EVENTS.getExpiration(event) / periodLength)
+    reportsCommitted = EXPEVENTS.getReportsCommitted(branch, currentVotePeriod, event)
+    periodHalfEndsInLessThanADay = ((block.timestamp + TWENTY_FOUR_HR) % periodLength) > (periodLength / 2)
+    if(!inCurrentVotePeriod or !periodHalfEndsInLessThanADay or reportsCommitted >= 3):
+        return(0)
+    EVENTS.setThreshold(event, MAX_THRESHOLD)
+    return(1)
+
+macro calculateAndSetRepConstant():
+    repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getRepBalance(branch, sender)) / ONE) * ONE / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
+    numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, period)
+    expectedEventsForReporter = repConstant * numEventsAvailableToReportOn
+    # this includes required events
+    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, period) - EXPEVENTS.getNumRemoved(branch, period)
+    numRequiredEvents = EXPEVENTS.getNumRequired(branch, period)
+    # ensures low number of events with highly concentrated rep edge case still get reported on
+    if(repFraction >= POINT_ZERO_ONE):
+        minimum = min(MIN_EVENTS_FOR_WHALE_TO_REPORT_ON - numRequiredEvents, eventsInPeriod - numRequiredEvents)
+        if(expectedEventsForReporter / ONE < minimum):
+            expectedEventsForReporter = minimum * ONE
+            repConstant = expectedEventsForReporter / numEventsAvailableToReportOn
+    EXPEVENTS.setPeriodRepWeight(branch, period, sender, repConstant)
+
+macro abs($a):
+    if($a < 0):
+        $a = -$a
+    $a
+
+# simply a helper function / useful to know
+# @return fxp
+def calculateNumberOfEventsAReporterHasToReportOnAtMinimum(branch, reporter, period):
+    originalRep = EXPEVENTS.getBeforeRep(branch, period, reporter)
+    # this includes the baseReporters * numEventsAvailable
+    numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, period)
+    # events a user should be reporting on
+    # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
+    # a**b=exp(b*ln(a))=e**(b*ln(a)).
+    repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(originalRep) / ONE) * ONE / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
+    numRequiredEvents = EXPEVENTS.getNumRequired(branch, period)
+    expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn + numRequiredEvents * ONE
+    # in period just after fork period no reports required
+    if(periodAfterForkPeriod):
+        return(0)
+    dealWithWhaleReporters()
+    return(expectedEventsForReporterIncludingRequired / 2)
+
+macro dealWithWhaleReporters():
+    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, period) - EXPEVENTS.getNumRemoved(branch, period)
+    reporterIsAWhale = repConstant >= POINT_ZERO_ONE
+    if(reporterIsAWhale):
+        minimum = min(MIN_EVENTS_FOR_WHALE + numRequiredEvents, eventsInPeriod)
+        if(expectedEventsForReporterIncludingRequired / ONE < minimum):
+            expectedEventsForReporterIncludingRequired = minimum * ONE
+    baseReporters = CONSENSUS.getBaseReportersperiod(branch)
+    total = repConstant * baseReporters
+    # if total is too high [>1] then expectedEventsForReporterIncludingRequired will estimate a higher number than reality, so need to correct for this below
+    # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*baseReporters > 1)
+    if(total > ONE):
+        expectedEventsForReporterIncludingRequired = (numEventsAvailableToReportOn / baseReporters) * ONE + numRequiredEvents * ONE
+
+
+
+calculateNumberOfEventsAReporterHasToReportOnAtMinimum
+
+
+If anyone w/ 1 rep or more in active rep could've reported but didn't they need to be penalized.  Get a list of people who did this and an example event they could've reported on but didn't. - Loop through the list of all reporters in a period and branch and check if they couldve reported on anything --- this is people who called collectFees last period and are setup to collect fees next period but didn't report enough [or at all], although this bit of information isn't really relevant to implementation of this function. - So what you need to do is given a vote period and branch add a function to compositegetters.se and using getBeforeRep in expiringEvents.se

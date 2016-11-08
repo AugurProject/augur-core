@@ -1,244 +1,291 @@
-# This software (Augur) allows buying && selling event outcomes in ethereum
+# This software (Augur) allows buying and selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it &&/or modify
+#    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
-#
-#    This program is free software: you can redistribute it &&/or modify
+# 
+#    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+# 
+#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-#
+# 
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
 import branches as BRANCHES
+extern repContract.se: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, getRidOfDustForLaunch:[]:int256, getSeeded:[]:uint256, name:[]:uint256, setSaleDistribution:[address[],uint256[]]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
+REPCONTRACT = 0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5
 inset('refund.se')
 
 # Storage of all data associated with reporters
-    # Reporting index is the branchID
+    # Reporting index is the branch
     # Reporters index is the rep. address
-    # We 0 index reputation so can walk thru for consensus - todo / wrong don't need 0 indexing anymore
     # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
     # total rep is all the rep in augur
-    # active rep is the amount which is actually active
+    # active rep is the fxpAmount which is actually active
     # fork is the child branch of a parent which forked
-    # dormant rep stores dormant rep values
+    # fxpDormant rep stores fxpDormant rep values
 data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), activeRep, fork)
 
 data whitelists[](addresses[], taken)
 
 def init():
-    self.Reporting[1010101].repIDtoIndex[msg.sender] = 0
+    self.Reporting[1010101].repIDtoIndex[1010101] = 0
+    # repValue should be == rep in 0x0 address from rep contract for initial redistribution
     self.Reporting[1010101].reputation[0].repValue = 0
-    self.Reporting[1010101].reputation[0].reporterID = msg.sender
+    self.Reporting[1010101].reputation[0].reporterID = 1010101
     self.Reporting[1010101].numberReporters = 2
-    self.Reporting[1010101].repIDtoIndex[1010101] = 1
+    self.Reporting[1010101].repIDtoIndex[msg.sender] = 1
     self.Reporting[1010101].reputation[1].repValue = 0
-    self.Reporting[1010101].reputation[1].reporterID = 1010101
-
+    self.Reporting[1010101].reputation[1].reporterID = msg.sender
+    
 def checkWhitelist(address):
-    refund()
+    callstackCheck()
     return(self.whitelists[msg.sender].addresses[address])
 
+# @return fxp
 def getActiveRep(branch):
+    callstackCheck()
     return(self.Reporting[branch].activeRep)
-    
-def adjustActiveRep(branch, amount):
-    self.Reporting[branch].activeRep += amount
+
+def adjustActiveRep(branch, fxpAmount):
+    callstackCheck()
+    self.Reporting[branch].activeRep += fxpAmount
     return(1)
 
 def setFork(branch):
+    callstackCheck()
     self.Reporting[branch].fork = branch
     return(1)
-    
+
 def getFork(branch):
+    callstackCheck()
     return(self.Reporting[branch].fork)
 
 def checkContractWhitelist(contract, address):
-    refund()
+    callstackCheck()
     return(self.whitelists[contract].addresses[address])
 
-def setWhitelist(contract, addresses:arr):
-    refund()
+def setWhitelist(contract, addresses: arr):
     if self.whitelists[contract].taken:
         return(text("ERROR: you have to vote to change a whitelist"):str)
     else:
         self.whitelists[contract].taken = 1
         i = 0
-        l = len(addresses)
-        while i <l:
-            address = addresses[i]
+        numAddr = len(addresses)
+        while(i < numAddr):
+            address = addresses[numAddr]
             self.whitelists[contract].addresses[addresses] = 1
             i += 1
         return(text("SUCCESS"):str)
 
-# @return reputation value
+# @return fxp
 def getRepByIndex(branch, repIndex):
-    refund()
+    callstackCheck()
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
-# @return reputation value
+# @return fxp
 def getRepBalance(branch, address):
-    refund()
+    callstackCheck()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
-    if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
-        return(0)
+    if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID != address):
+        throw()
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
 def getDormantRepByIndex(branch, repIndex):
-    refund()
+    callstackCheck()
     return(self.Reporting[branch].dormantRep[repIndex].repValue)
 
-# @return reputation value
 # getDormantRepBalance
+# @return fxp
 def balanceOf(branch, address):
-    refund()
+    callstackCheck()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
-    if(repIndex==0 && self.Reporting[branch].reputation[repIndex].reporterID!=address):
+    if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID != address):
         return(0)
     return(self.Reporting[branch].dormantRep[repIndex].repValue)
-    
-# return total supply of dormant rep
+
+# return total supply of fxpDormant rep
+# @return fxp
 def totalSupply(branch):
+    callstackCheck()
     return((self.Reporting[branch].totalRep - self.Reporting[branch].activeRep))
 
 def getReporterID(branch, index):
-    refund()
+    callstackCheck()
     return(self.Reporting[branch].reputation[index].reporterID)
 
 def getTotalRep(branch):
-    refund()
+    callstackCheck()
     return(self.Reporting[branch].totalRep)
 
 # will return 0s for array values after it's looped through all the ones you
 # have an actual balance in
 def getReputation(address):
-    refund()
+    callstackCheck()
     branchListCount = BRANCHES.getNumBranches()
     if(address):
-        branches = array(2*branchListCount)
+        branches = array(2 * branchListCount)
         branchList = array(branchListCount)
-        branchList = BRANCHES.getBranches(outitems=branchListCount)
+        branchList = BRANCHES.getBranches(outitems = branchListCount)
         i = 0
         b = 0
-        while i < branchListCount:
+        while(i < branchListCount):
             branch = branchList[i]
             balance = self.getRepBalance(branch, address)
-            if(balance!=0):
+            if(balance != 0):
                 branches[b] = branch
-                branches[b+1] = balance
+                branches[b + 1] = balance
                 b += 2
             i += 1
     else:
         address = msg.sender
-        branches = array(2*branchListCount)
+        branches = array(2 * branchListCount)
         branchList = array(branchListCount)
-        branchList = BRANCHES.getBranches(outitems=branchListCount)
+        branchList = BRANCHES.getBranches(outitems = branchListCount)
         i = 0
         b = 0
-        while i < branchListCount:
+        while(i < branchListCount):
             branch = branchList[i]
             balance = self.getRepBalance(branch, address)
-            if(balance!=0):
+            if(balance != 0):
                 branches[b] = branch
-                branches[b+1] = balance
+                branches[b + 1] = balance
                 b += 2
             i += 1
     return(branches: arr)
 
 def getNumberReporters(branch):
-    refund()
+    callstackCheck()
     return(self.Reporting[branch].numberReporters)
 
 def repIDToIndex(branch, repID):
-    refund()
-    return(self.Reporting[branch].repIDtoIndex[repID])
+    callstackCheck()
+    repIndex = self.Reporting[branch].repIDtoIndex[repID]
+    # means repID didn't matchup with 0 index reporterID
+    if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID != repID):
+        throw()
+    return(repIndex)
 
 # check that msg.sender is one of our function contracts
-def setInitialReporters(parent, branchID):
-    refund()
-    #if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
+def setInitialReporters(branch):
+    # if(!self.whitelist.check(msg.sender)):
+    #   throw()
     # add branch as a "reporter"
-    self.Reporting[branchID].numberReporters = 1
-    self.Reporting[branchID].repIDtoIndex[branchID] = 0
-    self.Reporting[branchID].reputation[0].repValue = 0
-    self.Reporting[branchID].reputation[0].reporterID = branchID
+    callstackCheck()
+    self.Reporting[branch].numberReporters = 1
+    self.Reporting[branch].repIDtoIndex[branch] = 0
+    self.Reporting[branch].reputation[0].repValue = 0
+    self.Reporting[branch].reputation[0].reporterID = branch
     return(1)
 
-def addReporter(branch, sender, amount, dormant, repToBonderOrBranch):
-    #if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
-    refund()
+def addReporter(branch, sender, fxpAmount, fxpDormant, fxpRepToBonderOrBranch):
+    # if(!self.whitelist.check(msg.sender)):
+    #   throw()
+    callstackCheck()
     reporterIndex = self.Reporting[branch].numberReporters
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
-    self.Reporting[branch].reputation[reporterIndex].repValue = amount
+    self.Reporting[branch].reputation[reporterIndex].repValue = fxpAmount
     self.Reporting[branch].reputation[reporterIndex].reporterID = sender
     self.Reporting[branch].dormantRep[reporterIndex].reporterID = sender
-    self.Reporting[branch].dormantRep[reporterIndex].repValue = dormant
-    self.Reporting[branch].activeRep += amount + repToBonderOrBranch
-    self.Reporting[branch].totalRep += amount + dormant + repToBonderOrBranch
+    self.Reporting[branch].dormantRep[reporterIndex].repValue = fxpDormant
+    self.Reporting[branch].activeRep += fxpAmount + fxpRepToBonderOrBranch
+    self.Reporting[branch].totalRep += fxpAmount + fxpDormant + fxpRepToBonderOrBranch
     self.Reporting[branch].numberReporters += 1
     return(1)
 
-def addRep(branch, index, value):
-    refund()
-    #if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
-    self.Reporting[branch].reputation[index].repValue += value
-    return(1)
+def addRep(branch, index, fxpValue):
+    # if(!self.whitelist.check(msg.sender)):
+    #   throw()
+    callstackCheck()
+    if(safeToAdd(self.Reporting[branch].reputation[index].repValue, fxpValue)):
+        self.Reporting[branch].reputation[index].repValue += fxpValue
+        return(1)
+    else:
+        return(0)
 
-def subtractRep(branch, index, value):
-    refund()
-    #if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
-    self.Reporting[branch].reputation[index].repValue -= value
-    return(1)
+def subtractRep(branch, index, fxpValue):
+    # if(!self.whitelist.check(msg.sender)):
+    #   throw()
+    callstackCheck()
+    if(safeToSubtract(self.Reporting[branch].reputation[index].repValue, fxpValue)):
+        self.Reporting[branch].reputation[index].repValue -= fxpValue
+        return(1)
+    else:
+        return(0)
 
-def setRep(branch, index, newRep):
-    refund()
-    #if !self.whitelist.check(msg.sender):
-    #    return(-1)
+# safe adders idea pulled from piper merriam's btcrelay audit
+macro safeToAdd($a, $b):
+    (($a + $b) >= $a)
+
+macro safeToSubtract($a, $b):
+    ($b <= $a)
+
+### Test Faucet Functions that need to be removed at launch
+def setRep(branch, index, fxpNewRep):
+    # if(!self.whitelist.check(msg.sender)):
+    #   throw()
+    callstackCheck()
     oldRep = self.Reporting[branch].reputation[index].repValue
-    self.Reporting[branch].reputation[index].repValue = newRep
-    self.Reporting[branch].activeRep += newRep - oldRep
-    self.Reporting[branch].totalRep += newRep - oldRep
+    self.Reporting[branch].reputation[index].repValue = fxpNewRep
+    self.Reporting[branch].activeRep += fxpNewRep - oldRep
+    self.Reporting[branch].totalRep += fxpNewRep - oldRep
     return(1)
 
-def addDormantRep(branch, index, value):
-    refund()
-    #if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
-    self.Reporting[branch].dormantRep[index].repValue += value
+def addDormantRep(branch, index, fxpValue):
+    # if(!self.whitelist.check(msg.sender)):
+    #   throw()
+    callstackCheck()
+    self.Reporting[branch].dormantRep[index].repValue += fxpValue
     return(1)
 
-def subtractDormantRep(branch, index, value):
-    refund()
-    #if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
-    self.Reporting[branch].dormantRep[index].repValue -= value
+def subtractDormantRep(branch, index, fxpValue):
+    # if(!self.whitelist.check(msg.sender)):
+    #   throw()
+    callstackCheck()
+    self.Reporting[branch].dormantRep[index].repValue -= fxpValue
     return(1)
 
 # check that msg.sender is one of our function contracts
 # Sets the initial distribution of rep
-def setSaleDistribution(addresses: arr, balances: arr, branchID):
-    refund()
-    #if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
+def setSaleDistribution(addresses: arr, balances: arr, branch):
+    # if(!self.whitelist.check(msg.sender)):
+    #   throw()
+    callstackCheck()
     i = 0
-    while i < len(addresses):
-        self.Reporting[branchID].reputation[self.Reporting[branchID].numberReporters].reporterID = addresses[i]
-        self.Reporting[branchID].reputation[self.Reporting[branchID].numberReporters].repValue = balances[i]
-        self.Reporting[branchID].dormantRep[self.Reporting[branchID].numberReporters].reporterID = addresses[i]
-        self.Reporting[branchID].repIDtoIndex[addresses[i]] = self.Reporting[branchID].numberReporters
-        self.Reporting[branchID].numberReporters += 1
-        i+=1
+    while(i < len(addresses)):
+        self.Reporting[branch].reputation[self.Reporting[branch].numberReporters].reporterID = addresses[i]
+        self.Reporting[branch].reputation[self.Reporting[branch].numberReporters].repValue = balances[i]
+        self.Reporting[branch].dormantRep[self.Reporting[branch].numberReporters].reporterID = addresses[i]
+        self.Reporting[branch].repIDtoIndex[addresses[i]] = self.Reporting[branch].numberReporters
+        self.Reporting[branch].numberReporters += 1
+        i += 1
+    return(1)
+
+def claimInitialRep():
+    # if(!self.whitelist.check(msg.sender)):
+    #   throw()
+    branch = 1010101
+    sender = msg.sender
+    dormantRep = REPCONTRACT.balanceOf(sender)
+    callstackCheck()
+    if(!dormantRep):
+        throw()
+    if(dormantRep != REPCONTRACT.allowance(sender, self)):
+        throw()
+    if(!REPCONTRACT.transferFrom(sender, 0x0000000000000000000000000000000000000000, dormantRep)):
+        throw()
+    reporterIndex = self.Reporting[branch].numberReporters
+    self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
+    self.Reporting[branch].reputation[reporterIndex].reporterID = sender
+    self.Reporting[branch].dormantRep[reporterIndex].reporterID = sender
+    self.Reporting[branch].dormantRep[reporterIndex].repValue = dormantRep
+    self.Reporting[branch].totalRep += dormantRep
+    self.Reporting[branch].numberReporters += 1
     return(1)

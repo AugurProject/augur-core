@@ -1,19 +1,17 @@
-import events as EVENTS
-
-inset('refund.se')
-
-# Returns the proportion of reporters who reported correctly on a given binary event
+# Returns the proportion of reporters who reported correctly on a given binary $event
 # Returns 0 if no outcome
-def proportionCorrect(event):
-    refund()
+macro proportionCorrect($event, $forkEvent):
     p = 0
-    outcome = catch(EVENTS.getUncaughtOutcome(event))
-    if(outcome==0):
-        return(0)
-    # binary
-    if(EVENTS.getNumOutcomes(event)==2 and EVENTS.getMaxValue(event)==TWO and EVENTS.getMinValue(event)==ONE):
-        # subtract 1 to get it from 0 to 1
-        avgOutcome = EVENTS.getUncaughtOutcome(event) - ONE
+    uncaught = 0
+    if($forkEvent):
+        uncaught = EVENTS.getForkOutcome($event)
+    else:
+        uncaught = EVENTS.getUncaughtOutcome($event)
+    outcome = catch(uncaught)
+    # subtract 1 to get it from 0 to 1
+    avgOutcome = uncaught - ONE
+    binary = EVENTS.getNumOutcomes($event) == 2 and EVENTS.getMaxValue($event) == TWO and EVENTS.getMinValue($event) == ONE
+    if(binary):
         # say we have outcome of 0, avg is .4, what is p?
             # p is .6 or 60%
         if(outcome == ONE):
@@ -22,22 +20,7 @@ def proportionCorrect(event):
             # p is .8 or 80%
         elif(outcome == 2 * ONE):
             p = avgOutcome
-        # unneeded but nice to know that in indeterminate case it'll return 0
-        #elif(outcome == 3 * ONEHALF):
-        #    return(0)
-    return(p)
-
-### Helper functions:
-macro YES: TWO
-macro NO: ONE
-macro BAD: 3 * ONEHALF
-macro CATCH_TOLERANCE: ONE / 10
-
-# Bins values to 1, 1.5, 2
-macro catch($x):
-    if($x < (BAD - CATCH_TOLERANCE)):
-        NO
-    elif($x > (BAD + CATCH_TOLERANCE)):
-        YES
-    else:
-        BAD
+        # in indeterminate case it'll return 0
+        else:
+            p = 0
+    p

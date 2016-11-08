@@ -1,273 +1,238 @@
-# This software (Augur) allows buying && selling event outcomes in ethereum
+#    todo so if user hasn't claimed rep on the branch yet and it's a fork scenario, don't allow sending rep on the parent branch until they [receiver] claim
+#    should also perhaps make sender claim too
+#    check overflows and underflows
+
+# This software (Augur) allows buying and selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it &&/or modify
+#    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
-#
-#    This program is free software: you can redistribute it &&/or modify
+# 
+#    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+# 
+#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-#
+# 
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+### Allows sending of rep and conversion between dormant and active rep
+
 import branches as BRANCHES
-import expiringEvents as EXPEVENTS
 import reporting as REPORTING
-import makeReports as REPORTS
 import penalizationCatchup as CATCHUP
 import consensusData as CONSENSUS
-inset('refund.se')
+# should really factor this out so they don't depend on eachother
+import consensus as INCREMENTPERIOD
+import repContract as REPCONTRACT
+import mutex as MUTEX
+inset('../data_api/refund.se')
+inset('../data_api/periodStage.se')
 
 # sender/owner, then spender
-data amountCanSpend[][]
+data amountCanSpend[][](branch[])
 
-event Transfer(_from:indexed, _to:indexed, _value)
-event Approval(_owner:indexed, _spender:indexed, value)
+# log all rep changes below todo
 
-# fix sender, tx.origin stuff here
-# todo should we check collect fees done or no
+event Transfer(from:indexed, to:indexed, value)
+event Approval(owner:indexed, spender:indexed, branch:indexed, value)
+
+#def any():
+#    refund()
 
 # send active reputation
-# @return value of reputation sent, 0 if not enough reputation
+# @return fxpValue of reputation sent
 # error messages otherwise
+    # 0: only one period behind, need to do penalizations for it
     # -1: "Your reputation account was just created, earn some rep. before you can send to others"
-    # -2: "Receiving address doesn't exist"
-def sendReputation(branch, recver, value):
-    refund()
-    # Rep cannot be simultaneously spent (transferred) and used to vote
-    currentVotePeriod = BRANCHES.getVotePeriod(branch)
-    # you can't trade if you or the person you're sending to have submitted a report, or at all in the second half of the period [b/c you can messup / cheat w/ reporting by gettin extra claims on fees] and you can't trade in the first half of a period until you've been penalized for reporting wrongly/not reporting
-    # use a diff. fun. than getReport here
-    #if(value<=0 || EXPEVENTS.getReport(branch, currentVotePeriod, tx.origin, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, msg.sender, 0) != 0 || EXPEVENTS.getReport(branch, currentVotePeriod, recver, 0) != 0):
-    # EXPEVENTS.getNumReportsActual(branch, currentVotePeriod, msg.sender)
-    #    return(0)
-    
-    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
-    lastPeriod = BRANCHES.getVotePeriod(branch)-1
-    delta = lastPeriod - lastPeriodPenalized
-    if(delta > 1):
-        if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
-            return(0)
+    # -2: not in right part of period
+    # -3: "Receiving address doesn't exist"
+    # -4: couldn't catchup automatically
+    # -5: not enough rep / fxpValue too small or not authorized
+def sendRepFrom(branch, from, receiver, fxpValue):
+    checkInvariants(from)
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
+        throw()
+    if(!mutexWhitelisted()):
+        MUTEX.setMutex()
 
-    # need to check all this for the person it's being sent to as well
-    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
-        return(0)
-    #if(REPORTS.getRRUpToDate()!=1):
-    #    doIt()
-    #    self.RRDone = true
-    #if(hasReported(lastPeriod) && periodOver && hasntcollectedfees && residual > periodLength/2):
-    #    CONSENSUS.collectFees(lastPeriod)
-    # before rep, after rep, balance
-    # person you're sending to needs rr up to date / done as well
-    # auto increment vote period if needed
-    sender = tx.origin
-    senderIndex = REPORTING.repIDToIndex(branch, sender)
-    receiverIndex = REPORTING.repIDToIndex(branch, recver)
+    senderIndex = REPORTING.repIDToIndex(branch, from)
+    receiverIndex = REPORTING.repIDToIndex(branch, receiver)
+    senderBalance = REPORTING.getRepBalance(branch, from)
+    checkSendRepInvariants()
 
-    # if the sender's rep. account doesn't exist, make one, only if in first half of period
-    if(REPORTING.getReporterID(branch, senderIndex)!=tx.origin):
-        REPORTING.addReporter(branch, sender)
-        CONSENSUS.setPenalizedUpTo(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
-        return(-1)
-
-    if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
-        return(-2)
-
-    senderBalance = REPORTING.getRepBalance(branch, sender)
-    if(senderBalance >= value && value > 0):
-        if(REPORTING.subtractRep(branch, senderIndex, value) && REPORTING.addRep(branch, receiverIndex, value)):
-            return(value)
-        else:
-            return(0)
-    else:
-        return(0)
-
-# Transfer dormant rep
-# @return value of reputation sent, 0 if not enough reputation
-# error messages otherwise
-    # -1: "Your reputation account was just created, earn some rep. before you can send to others"
-    # -2: "Receiving address doesn't exist"
-# sendDormantRep
-def transfer(branch, recver, value):
-    refund()
-    currentVotePeriod = BRANCHES.getVotePeriod(branch)
-    if(value<=0):
-        return(0)
-    sender = msg.sender
-    senderIndex = REPORTING.repIDToIndex(branch, sender)
-    receiverIndex = REPORTING.repIDToIndex(branch, recver)
-
-    # if the sender's rep. account doesn't exist, make one
-    if(REPORTING.getReporterID(branch, senderIndex)!=msg.sender):
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
-        REPORTING.addReporter(branch, sender)
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch)-1))
-        return(-1)
-
-    if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
-        return(-2)
-
-    senderBalance = REPORTING.balanceOf(branch, sender)
-    if(senderBalance >= value && value > 0):
-        if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, receiverIndex, value)):
-            log(type=Transfer, msg.sender, recver, value)
-            return(value)
-        else:
-            return(0)
-    else:
-        return(0)
-
-# TransferFrom per token api for dormant rep
-# fails unless from has authorized sender
-def transferFrom(branch, from, recver, value):
-    refund()
-    currentVotePeriod = BRANCHES.getVotePeriod(branch)
-    if(value<=0):
-        return(0)
-    sender = from
-    senderIndex = REPORTING.repIDToIndex(branch, sender)
-    receiverIndex = REPORTING.repIDToIndex(branch, recver)
-
-    # if the sender's rep. account doesn't exist, make one
-    if(REPORTING.getReporterID(branch, senderIndex)!=from):
-        CONSENSUS.setPenalizedUpTo(branch, from, (BRANCHES.getVotePeriod(branch)-1))
-        REPORTING.addReporter(branch, sender)
-        CONSENSUS.setPenalizedUpTo(branch, from, (BRANCHES.getVotePeriod(branch)-1))
-        return(-1)
-
-    if(REPORTING.getReporterID(branch, receiverIndex)!=recver):
-        return(-2)
-
-    senderBalance = REPORTING.balanceOf(branch, sender)
-    if(senderBalance >= value && value > 0 && self.amountCanSpend[from][msg.sender]>=value):
-        if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, receiverIndex, value)):
-            self.amountCanSpend[from][msg.sender] -= value
-            log(type=Transfer, from, recver, value)
-            return(value)
-        else:
-            return(0)
-    else:
-        return(0)
-    
-# Allows spender to withdraw from your dormant rep account
-def approve(branch, spender, value):
-    self.amountCanSpend[msg.sender][spender] = value
-    log(type=Approval, msg.sender, spender, value)
+    if(!REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, receiverIndex, fxpValue)):
+        throw()
+    log(type = Transfer, from, receiver, fxpValue)
+    if(!mutexWhitelisted()):
+        MUTEX.unsetMutex()
     return(1)
 
-# Returns amount spender can withdraw from owner
-def allowance(owner, spender):
-    return(self.amountCanSpend[owner][spender])
+# Transfer dormant rep
+# @return fxpValue of reputation sent, 0 if not enough reputation
+# error messages otherwise
+    # -1: "Your reputation account was just created, earn some rep. before you can send to others"
+    # -3: "Receiving address doesn't exist"
+    # -5: not enough rep / fxpValue too small or not authorized    # -3: "Receiving address doesn't exist"
+# fails unless from has authorized sender [either contract which was approved or the from address is the msg.sender]
+def transferFrom(branch, from, receiver, fxpValue):
+    refund()
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
+        throw()
+    if(!mutexWhitelisted()):
+        MUTEX.setMutex()
+
+    votePeriod = BRANCHES.getVotePeriod(branch)
+    senderIndex = REPORTING.repIDToIndex(branch, from)
+    receiverIndex = REPORTING.repIDToIndex(branch, receiver)
+    senderBalance = REPORTING.balanceOf(branch, from)
+    checkSendRepInvariants()    
+
+    if(!REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, receiverIndex, fxpValue)):
+       throw()
+    log(type=Transfer, from, receiver, fxpValue)
+    if(!mutexWhitelisted()):
+        MUTEX.unsetMutex()
+    return(1)
 
 # Convert active rep to dormant rep
 # error messages
-    # -1: not in first half of reporting period
-# shouldn't be penalized for dormant rep when converting back to active due to not reporting beyond the dormant penalization
-# todo when handling dormant rep stuff:
-# if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event
+    #  0: only one period behind, need to do penalizations for it
+    # -1: sender's rep account didn't exist, just made one
+    # -2: not in right part of period
+    # -4: couldn't catchup automatically
+    # -5: not enough rep / fxpValue too small
+# if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event todo
 # unless this just happened to them last period and they reported correctly then
-def convertToDormantRep(branch, value):
-    refund()
-    # if not in first half of reporting period
-    periodLength = BRANCHES.getPeriodLength(branch)
-    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
-        return(0)
-    residual = block.timestamp % periodLength
-    if(residual > periodLength/2):
-      return(-1)
-		# benny comment:
-            #```Maybe still have this sort-of variable "power" to it, but REP initially doesn't have "full-power", or REP that hasn't been used to report over the past week has now let it's "power-meter" drop to only 20% earning power (it's kind-of dormant), that then ramps back up to 100% power once it gets used a bit. Could there be an element of this type of time-decay programmed into the REP that's helps incentive? Something like this would make the system more automatic, rather than relying on the user to manually switch "on" or switch "off" the REP. If a user knows, "I better report this week or my REP's power meter goes down to 20% again, and it's gonna take extra effort to get it back to full-power", well that's pretty good incentive to keep the user active, without actually taking it from them.```
+def convertToDormantRep(branch, fxpValue):
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+    checkInvariants(msg.sender)
+    senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
+    senderBalance = REPORTING.getRepBalance(branch, msg.sender)
+    checkRepConversionInvariants()
 
-    if(value<=0):
-        return(0)
-    
-    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
-    lastPeriod = BRANCHES.getVotePeriod(branch)-1
-    delta = lastPeriod - lastPeriodPenalized
-    if(delta > 1):
-        if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
-            return(0)
-
-    #if(REPORTS.getRRUpToDate()!=1):
-    #    doIt()
-
-    #if(hasReported(lastPeriod) && periodOver):
-        #CONSENSUS.collectFees(lastPeriod)
-
-    sender = tx.origin
-    senderIndex = REPORTING.repIDToIndex(branch, sender)
-
-    # if the sender's rep. account doesn't exist, make one
-    if(REPORTING.getReporterID(branch, senderIndex)!=tx.origin):
-        REPORTING.addReporter(branch, sender)
-        CONSENSUS.setPenalizedUpTo(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
-        return(-1)
-
-    senderBalance = REPORTING.getRepBalance(branch, sender)
-    if(senderBalance >= value):
-        if(REPORTING.subtractRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, senderIndex, value)):
-            REPORTING.adjustActiveRep(branch, -value)
-            return(value)
-        else:
-            return(0)
-    else:
-        return(0)
+    if(!REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, senderIndex, fxpValue)):
+        throw()
+    REPORTING.adjustActiveRep(branch, -fxpValue)
+    MUTEX.unsetMutex()
+    return(1)
 
 # Convert dormant rep to active rep
 # error messages
-    # -1: not in first half of reporting period
-def convertToActiveRep(branch, value):
+    #  0: only one period behind, need to do penalizations for it
+    # -1: sender's rep account didn't exist, just made one
+    # -2: not in right part of period
+    # -4: couldn't catchup automatically
+    # -5: not enough rep
+def convertToActiveRep(branch, fxpValue):
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+    checkInvariants(msg.sender)
+    senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
+    senderBalance = REPORTING.balanceOf(branch, msg.sender)
+    checkRepConversionInvariants()
+
+    if(!REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, senderIndex, fxpValue) or !safeToAdd(fxpValue, REPORTING.getRepBalance(msg.sender))):
+        throw()
+    REPORTING.adjustActiveRep(branch, fxpValue)
+    MUTEX.unsetMutex()
+    return(1)
+
+def claimRep():
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
+        throw()
+    if(!mutexWhitelisted()):
+        MUTEX.setMutex()
+    callstackCheck()
+    balance = REPCONTRACT.balanceOf(msg.sender)
+    if(!REPCONTRACT.transferFrom(msg.sender, 0, balance) or !REPORTING.addReporter(1010101, msg.sender, 0, balance, 0)):
+        throw()
+    if(!mutexWhitelisted()):
+        MUTEX.unsetMutex()
+    return(1)
+
+# Allows spender to withdraw from your dormant rep account
+def approve(branch, spender, fxpValue):
+    callstackCheck()
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
+        throw()
+    if(!mutexWhitelisted()):
+        MUTEX.setMutex()
+
+    self.amountCanSpend[msg.sender][spender].branch[branch] = fxpValue
+    log(type = Approval, msg.sender, spender, branch, fxpValue)
+    if(!mutexWhitelisted()):
+        MUTEX.unsetMutex()
+    return(1)
+
+# Returns amount spender can withdraw from owner
+# @return fxp
+def allowance(branch, owner, spender):
+    callstackCheck()
+    return(self.amountCanSpend[owner][spender].branch[branch])
+
+macro checkInvariants($account):
     refund()
-    # if not in first half of reporting period
+    # auto increment vote period if needed
+    INCREMENTPERIOD.incrementPeriodAfterReporting(branch)
+    # need to check all this for the person it's being sent to as well
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.timestamp % periodLength
-    if(residual > periodLength/2):
-      return(-1)
-      
-    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
-    lastPeriod = BRANCHES.getVotePeriod(branch)-1
+    votePeriod = BRANCHES.getVotePeriod(branch)
+    lastPeriod = votePeriod - 1
+    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, $account)
     delta = lastPeriod - lastPeriodPenalized
-    if(delta > 1):
-        if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
-            return(0)
-    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
+    # Rep cannot be simultaneously spent (transferred) and used to vote
+    atFirstHalfOfPeriod()
+    if(delta > 1 and CATCHUP.penalizationCatchup(branch, $account) != 1):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(-4)
+    if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
         return(0)
-    if(value<=0):
-        return(0)
 
-    #if(REPORTS.getRRUpToDate()):
-        #doIt()
-    #if(hasReported(lastPeriod) && periodOver):
-        #CONSENSUS.collectFees(lastPeriod)
-
-    sender = tx.origin
-    senderIndex = REPORTING.repIDToIndex(branch, sender)
-
-    # if the sender's rep. account doesn't exist, make one
-    if(REPORTING.getReporterID(branch, senderIndex)!=tx.origin):
-        REPORTING.addReporter(branch, sender)
-        CONSENSUS.setPenalizedUpTo(branch, tx.origin, (BRANCHES.getVotePeriod(branch)-1))
+macro checkSendRepInvariants():
+    if(REPORTING.getReporterID(branch, senderIndex) != from and from == msg.sender):
+        CONSENSUS.setPenalizedUpTo(branch, from, (votePeriod - 1))
+        REPORTING.addReporter(branch, from)
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
         return(-1)
+    if(REPORTING.getReporterID(branch, receiverIndex) != receiver):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(-3)
+    if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from == msg.sender)):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(-5)
+    if(from != msg.sender):
+        self.amountCanSpend[from][msg.sender].branch[branch] -= fxpValue
 
-    senderBalance = REPORTING.balanceOf(branch, sender)
-    if(senderBalance >= value):
-        if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addRep(branch, senderIndex, value)):
-            REPORTING.adjustActiveRep(branch, value)
-            return(value)
-        else:
-            return(0)
-    else:
-        return(0)
-        
-    
-macro hasReported($branch, $period):
-    EXPEVENTS.getNumReportsActual($branch, $period, msg.sender)
+macro checkRepConversionInvariants():
+    # if the sender's rep. account doesn't exist, make one
+    if(REPORTING.getReporterID(branch, senderIndex) != msg.sender):
+        REPORTING.addReporter(branch, msg.sender)
+        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (votePeriod - 1))
+        MUTEX.unsetMutex()
+        return(-1)
+    if(senderBalance < fxpValue or fxpValue <= 0):
+        MUTEX.unsetMutex()
+        return(-5)
+
+# safe adders idea pulled from piper merriam's btcrelay audit
+macro safeToAdd($a, $b):
+    (($a + $b) >= $a)
+
+macro safeToSubtract($a, $b):
+    ($b <= $a)

@@ -1,0 +1,25 @@
+### Contract which holds funds for things like markets, events, and branches in various subcurrencies
+
+inset('../data_api/refund.se')
+
+extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
+#extern whitelistStuff: [functions:[blam, blam!]]
+
+data currency
+
+def initialize(currency):
+    checkCallstack()
+    if(!self.currency):
+        self.currency = currency
+    return(1)
+
+def transfer(receiver, value):
+    # todo need to have market + branch + event $ contracts support all the relevant contract keys in the namereg in the whitelist to allow them to send money from them - so in whitelist add each branch/market contract and then make them support all namereg keys necessary, should perhaps hardcode closemarket, closemarketone and closemarkettwo to prevent manipulation
+    #if(!whitelistStuff.checkIfSenderInList(msg.sender)):
+    #    throw()
+    checkCallstack()
+    if(receiver == 0 or value <= 0):
+        throw()
+    if(!self.currency.transfer(receiver, value)):
+        throw()
+    return(1)

@@ -50,7 +50,7 @@ def initiateOwner(account):
         return(0)
 
 # Send cash to a receiver from msg.sender
-# should send values as fixed point in UI (1 is ONE, 4 is 4*ONE, .5 is ONEHALF, etc.)
+# should send values as fixed point in UI (1 is ONE, 4 is 4*ONE, .5 is ONE_HALF, etc.)
 # @return: value sent, 0 if fails
 def send(recver, value):
     refund()

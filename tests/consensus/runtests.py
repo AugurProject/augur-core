@@ -91,9 +91,9 @@ def binary_input_example():
                         [  NO,  NO, YES, YES]])
     reputation = [2, 10, 4, 2, 7, 1]
     scaled = [0, 0, 0, 0]
-    scaled_max = [YES, YES, YES, YES]
-    scaled_min = [NO, NO, NO, NO]
-    return (reports, reputation, scaled, scaled_max, scaled_min)
+    scaledMax = [YES, YES, YES, YES]
+    scaledMin = [NO, NO, NO, NO]
+    return (reports, reputation, scaled, scaledMax, scaledMin)
 
 def scalar_input_example():
     print BW("Testing with binary and scalar inputs")
@@ -106,9 +106,9 @@ def scalar_input_example():
                         [  NO,  NO, YES, YES, 435, 19999.00 ]])
     reputation = [1, 1, 1, 1, 1, 1]
     scaled = [0, 0, 0, 0, 1, 1]
-    scaled_max = [ YES, YES, YES, YES, 435, 20000 ]
-    scaled_min = [  NO,  NO,  NO,  NO, 0,    8000 ]
-    return (reports, reputation, scaled, scaled_max, scaled_min)
+    scaledMax = [ YES, YES, YES, YES, 435, 20000 ]
+    scaledMin = [  NO,  NO,  NO,  NO, 0,    8000 ]
+    return (reports, reputation, scaled, scaledMax, scaledMin)
 
 def randomized_inputs(num_reports=10, num_events=5):
     print BW("Testing with randomized inputs")
@@ -116,15 +116,15 @@ def randomized_inputs(num_reports=10, num_events=5):
     reports = np.random.randint(-1, 2, (num_reports, num_events)).astype(float)
     reputation = np.random.randint(1, 100, num_reports).tolist()
     scaled = np.random.randint(0, 2, num_events).tolist()
-    scaled_max = np.ones(num_events)
-    scaled_min = -np.ones(num_events)
+    scaledMax = np.ones(num_events)
+    scaledMin = -np.ones(num_events)
     for i in range(num_events):
         if scaled[i]:
-            scaled_max[i] = np.random.randint(1, 100)
-            scaled_min[i] = np.random.randint(0, scaled_max[i])
-    scaled_max = scaled_max.astype(int).tolist()
-    scaled_min = scaled_min.astype(int).tolist()
-    return (reports, reputation, scaled, scaled_max, scaled_min)
+            scaledMax[i] = np.random.randint(1, 100)
+            scaledMin[i] = np.random.randint(0, scaledMax[i])
+    scaledMax = scaledMax.astype(int).tolist()
+    scaledMin = scaledMin.astype(int).tolist()
+    return (reports, reputation, scaled, scaledMax, scaledMin)
 
 def fix(x):
     return int(x * 0x10000000000000000)
@@ -201,15 +201,15 @@ def profile(contract, fn, *args, **kwargs):
 
 def test_consensus(example, verbose=False):
 
-    reports, reputation, scaled, scaled_max, scaled_min = example()
+    reports, reputation, scaled, scaledMax, scaledMin = example()
 
     num_reports = len(reputation)
     num_events = len(reports[0])
     flatsize = num_reports * num_events
     reputation_fixed = map(fix, reputation)
     reports_fixed = map(fix, reports.ravel())
-    scaled_max_fixed = map(fix, scaled_max)
-    scaled_min_fixed = map(fix, scaled_min)
+    scaledMax_fixed = map(fix, scaledMax)
+    scaledMin_fixed = map(fix, scaledMin)
     if verbose:
         display(np.array(reports_fixed), "reports (raw):", refold=num_events, show_all=True)
 
@@ -219,8 +219,8 @@ def test_consensus(example, verbose=False):
     result = profile(c, "interpolate", reports_fixed,
                                        reputation_fixed,
                                        scaled,
-                                       scaled_max_fixed,
-                                       scaled_min_fixed)
+                                       scaledMax_fixed,
+                                       scaledMin_fixed)
     result = np.array(result)
     reports_filled = result[0:flatsize].tolist()
     reports_mask = result[flatsize:].tolist()
@@ -231,8 +231,8 @@ def test_consensus(example, verbose=False):
     result = profile(c, "center", reports_filled,
                                   reputation_fixed,
                                   scaled,
-                                  scaled_max_fixed,
-                                  scaled_min_fixed,
+                                  scaledMax_fixed,
+                                  scaledMin_fixed,
                                   max_iterations,
                                   max_components)
     result = np.array(result)
@@ -424,8 +424,8 @@ def test_consensus(example, verbose=False):
     event_outcomes = profile(c, "resolve", smooth_rep,
                                            reports_filled,
                                            scaled,
-                                           scaled_max_fixed,
-                                           scaled_min_fixed,
+                                           scaledMax_fixed,
+                                           scaledMin_fixed,
                                            num_reports,
                                            num_events)
 
@@ -451,8 +451,8 @@ def test_consensus(example, verbose=False):
     for i, s in enumerate(scaled):
         event_bounds.append({
             'scaled': 0 if s == False else 1,
-            'min': scaled_min[i],
-            'max': scaled_max[i],
+            'min': scaledMin[i],
+            'max': scaledMax[i],
         })
     for j in range(num_events):
         for i in range(num_reports):
@@ -494,14 +494,14 @@ def test_consensus(example, verbose=False):
 def test_redeem(example, verbose=False):
     branch = 1
     period = 1
-    reports, reputation, scaled, scaled_max, scaled_min = example()
+    reports, reputation, scaled, scaledMax, scaledMin = example()
     num_reports = len(reputation)
     num_events = len(reports[0])
     flatsize = num_reports * num_events
     reputation_fixed = map(fix, reputation)
     reports_fixed = map(fix, reports.ravel())
-    scaled_max_fixed = map(fix, scaled_max)
-    scaled_min_fixed = map(fix, scaled_min)
+    scaledMax_fixed = map(fix, scaledMax)
+    scaledMin_fixed = map(fix, scaledMin)
     mock = 0 if example.__name__ == "binary_input_example" else 1
 
     s = init_chain(gas_limit=750000000)
@@ -513,14 +513,14 @@ def test_redeem(example, verbose=False):
 def test_dispatch(example, verbose=False):
     branch = 1
     period = 1
-    reports, reputation, scaled, scaled_max, scaled_min = example()
+    reports, reputation, scaled, scaledMax, scaledMin = example()
     num_reports = len(reputation)
     num_events = len(reports[0])
     flatsize = num_reports * num_events
     reputation_fixed = map(fix, reputation)
     reports_fixed = map(fix, reports.ravel())
-    scaled_max_fixed = map(fix, scaled_max)
-    scaled_min_fixed = map(fix, scaled_min)
+    scaledMax_fixed = map(fix, scaledMax)
+    scaledMin_fixed = map(fix, scaledMin)
     mock = 0 if example.__name__ == "binary_input_example" else 1
 
     s = init_chain(gas_limit=750000000)

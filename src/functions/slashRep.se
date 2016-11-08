@@ -1,53 +1,69 @@
+### Allows rep to be taken from colluders
+
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import reporting as REPORTING
 import consensusData as CONSENSUS
-
-inset('refund.se')
+import mutex as MUTEX
+inset('../data_api/refund.se')
+inset('../data_api/periodStage.se')
 
 # Anti cheat/collusion mechanism: provide ballot and random salt to steal rep from a colluder
-# Returns:
-    # 1: on success
+# Returns 1 on success
+# Errors:
     # -1: invalid vote period
     # -2: past reveal date
-    # -3: reporter being slashed doesn't exist
-    # -4: invalid claim / report hash -     # make sure that the colluding reporter's commit is the same as the info provided in the params
-def slashRep(branch, salt, report, reporter, eventID):
+    # -3: invalid claim / report hash - makes sure that the colluding reporter's commit is the same as the info provided in the params
+    # -4: event isn't in the branch
+    # -5: already slashed
+def slashRep(branch, salt, report, ethics, reporter, event):
     refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.timestamp % periodLength
     votePeriod = BRANCHES.getVotePeriod(branch)
     alreadySlashed = CONSENSUS.getSlashed(branch, votePeriod, reporter)
     votePeriodShouldBe = block.timestamp / periodLength - 1
-    realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, eventID)
-    hashInfo = array(4)
+    realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, event)
+    hashInfo = array(5)
     hashInfo[0] = reporter
     hashInfo[1] = salt
     hashInfo[2] = report
-    hashInfo[3] = eventID
-    reportHash = sha3(hashInfo, chars=32*len(hashInfo))
-    if(residual > periodLength/2):
-        return(-2)
-    if(votePeriodShouldBe!=votePeriod):
-        return(-1)
-    if(REPORTING.getReporterID(branch, reporterIndex)!=reporter):
-        return(-3)
-    if(alreadySlashed):
-        return(-5)
-    if(reportHash!=realHash):
-        return(-4)
+    hashInfo[3] = event
+    hashInfo[4] = ethics
+    reportHash = sha3(hashInfo, chars = 32 * len(hashInfo))
+    checkSlashRepInvariants()
+    
     CONSENSUS.setSlashed(branch, votePeriod, reporter)
-    reporterIndex = REPORTING.repIDToIndex(branch, reporter)
     trutherIndex = REPORTING.repIDToIndex(branch, msg.sender)
     # if the truther's rep. account doesn't exist, make one
-    if(REPORTING.getReporterID(branch, trutherIndex)!=msg.sender):
+    if(REPORTING.getReporterID(branch, trutherIndex) != msg.sender):
         trutherIndex = REPORTING.getNumberReporters(branch)
         REPORTING.addReporter(branch, msg.sender, 0, 0, 0)
     reporterBalance = REPORTING.getRepBalance(branch, reporter)
     # removes rep from colluder
     REPORTING.subtractRep(branch, reporterIndex, reporterBalance)
-    # gives truther half 
-    REPORTING.addRep(branch, trutherIndex, (reporterBalance*ONEHALF / ONE))
+    # gives truther half
+    REPORTING.addRep(branch, trutherIndex, (reporterBalance * ONE_HALF / ONE))
     # other half sent to branch
-    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), reporterBalance*ONEHALF/ONE)
+    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), reporterBalance * ONE_HALF / ONE)
+    MUTEX.unsetMutex()
     return(1)
+
+macro checkSlashRepInvariants():
+    if(votePeriodShouldBe != votePeriod):
+        MUTEX.unsetMutex()
+        return(-1)
+    atFirstHalfOfPeriod()
+    reporterIndex = REPORTING.repIDToIndex(branch, reporter)
+    if(reportHash != realHash):
+        MUTEX.unsetMutex()
+        return(-3)
+    if(EVENTS.getEventBranch(event) != branch):
+        MUTEX.unsetMutex()
+        return(-4)
+    if(alreadySlashed):
+        MUTEX.unsetMutex()
+        return(-5)

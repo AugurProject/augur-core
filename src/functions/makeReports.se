@@ -1,27 +1,27 @@
-# This software (Augur) allows buying && selling event outcomes in ethereum
+# This software (Augur) allows buying and selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
-#    This program is free software; you can redistribute it &&/or modify
+#    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
-#
-#    This program is free software: you can redistribute it &&/or modify
+# 
+#    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+# 
+#    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-#
+# 
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+### Deals with the reporting process but not consensus / redistribution
+
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
-import cash as CASH
 import events as EVENTS
 import markets as MARKETS
 import reporting as REPORTING
@@ -30,242 +30,288 @@ import consensusData as CONSENSUS
 import collectFees as COLLECTFEES
 import penalizationCatchup as CATCHUP
 import reportingThreshold as THRESHOLD
-inset('refund.se')
+import mutex as MUTEX
+extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
+
+inset('../data_api/refund.se')
+inset('eventHelpers.se')
+inset('../data_api/periodStage.se')
 inset('logReturn.se')
 
-event makeReports_logReturn(returnValue)
+event makeReportsLogReturn(returnValue)
 
-macro MAX_THRESHOLD: 10^54
+ETHCONTRACT = 02323232
 
-def makeHash(salt, report, eventID, sender):
-    hashInfo = array(4)
+macro GAS_SUBSIDY: 3500000
+macro MAX_REPORT_THRESHOLD: 10^54
+# used for gas limit reasons to ensure terminating loop
+macro MARKETS_COUNTING_TOWARDS_SHARE_VALUE: 20
+
+def makeHash(salt, fxpReport, event, sender, ethics):
+    checkCallstack()
+    hashInfo = array(5)
     hashInfo[0] = sender
     hashInfo[1] = salt
-    hashInfo[2] = report
-    hashInfo[3] = eventID
-    reportHash = sha3(hashInfo, chars=32*len(hashInfo))
+    hashInfo[2] = fxpReport
+    hashInfo[3] = event
+    hashInfo[4] = ethics
+    reportHash = sha3(hashInfo, chars = 32 * len(hashInfo))
     return(reportHash)
 
-# Allows a user to submit the hash of their report / commit
-# Error: 0: not caught up on rep redistributions
+# Allows a user to submit the hash of their fxpReport / commit
+# Error: 0: not caught up on rep redistributions/penalizations so should be done first [only 1 period behind] - if reported last period and called collectfees then call the penalization functions in consensus, if didn't report last period or didn't call collectfees last period then call penalizationCatchup
 # Error -1: invalid event
 # Error -2: not in first half of period [commit part]
-def submitReportHash(event, reportHash, encryptedReport, encryptedSalt, ethics):
+# Error -3: not able to fxpReport on this event
+# Error -4: not caught up on penalizations [>1 period behind] and auto catchup failed
+def submitReportHash(event, reportHash, encryptedSaltyHash):
+    refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+    # todo perhaps increment period by default if not done
     branch = EVENTS.getBranch(event)
     votePeriod = BRANCHES.getVotePeriod(branch)
-
-    # makes sure a user is up to date on penalizations
-    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
-    lastPeriod = BRANCHES.getVotePeriod(branch)-1
-    delta = lastPeriod - lastPeriodPenalized
-    if(delta > 1):
-        if(CATCHUP.penalizationCatchup(branch, msg.sender)!=1):
-            return(0)
-    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
-        return(0)
-
-    # if first report of period, num events not set
-    if(EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)==0):
-        EXPEVENTS.setNumEventsToReportOn(branch)
-        # set amount of fees to be distributed in this period from the branch
-        BRANCHES.setInitialBalance(branch, votePeriod, CASH.balance(branch))
-    eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
-    eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
-    if(eventIndex==0 && (eventID==0 || event!=eventID)):
-        return(-1)
-    reportingThreshold = 0
-
-    # check if this is a backstop event
-    if(EXPEVENTS.getRequired(event) || EVENTS.getReportingThreshold(event)):
-        reportingThreshold = MAX_THRESHOLD
-    else:
-        if(EXPEVENTS.getLesserReportNum(branch, votePeriod, event)==0):
-            THRESHOLD.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
-        reportingThreshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
-
-    # do abs then mult by 2 to ensure pos. and between 0 and 1
-    shaHash = sha3(msg.sender + event)
-    # max value 10^54: 2^256 / 10^54 = 115792089237316195423570.985...
-    shaHash = abs(shaHash) / 115792089237316195423571
     periodLength = BRANCHES.getPeriodLength(branch)
-    residual = block.timestamp % periodLength
-    if(residual <= periodLength/2 && shaHash <= reportingThreshold):
-        EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
-        EXPEVENTS.setEncryptedReport(branch, votePeriod, msg.sender, encryptedReport, encryptedSalt, ethics, event)
-        return(1)
-    return(-2)
+    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, msg.sender)
+    lastPeriod = votePeriod - 1
+    delta = lastPeriod - lastPeriodPenalized
+    eventIndex = EXPEVENTS.getEventIndex(branch, votePeriod, event)
+    event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
+    checkSubmitReportHashPreconditions()
 
-# Submits / reveals a report for a period
+    reportingThresholdForUser = calculateReportingThreshold()
+    x = array(1)
+    x[0] = msg.sender + event
+    # do abs then mult by 2 to ensure pos. and between 0 and 1
+    shaHash = (abs(sha3(x, items = 1)) / ONE) * 2
+    # max value 10^54: 2^256 / 10^54 = 115792089237316195423570.985...
+    shaHash = abs(shaHash) / 115792089237316195423571 * ONE
+    # shaHash must be <= to the threshold for that user to be able to fxpReport on the given event
+    if(shaHash > reportingThresholdForUser):
+        MUTEX.unsetMutex()
+        logReturn(makeReportsLogReturn, -3)
+    EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
+    EXPEVENTS.setSaltyEncryptedHash(branch, votePeriod, msg.sender, encryptedSaltyHash, event)
+    MUTEX.unsetMutex()
+    logReturn(makeReportsLogReturn, 1)
+
+# Submits / reveals a fxpReport for a period
 # @return 1 if success
 # Error messages
     # 0: reporter doesn't exist or has <1 rep
     # -1: has already reported
     # -2: not in second half of period [reveal part]
     # -3: hash doesn't match
-    # -4: bad report
-    # -5: invalid event
+    # -4: bad fxpReport
+    # -5: invalid fxpEthics
     # -6: already resolved
-    # -7: <48 hr left in period, too late to report, able to put up readj. bonds though
+    # -7: <48 hr left in period, too late to fxpReport, able to put up readj. bonds though
     # -8: fees couldn't be collected
-def submitReport(event, salt, report, ethics):
+def submitReport(event, salt, fxpReport, fxpEthics):
+    refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
+
     branch = EVENTS.getBranch(event)
     balance = REPORTING.getRepBalance(branch, msg.sender)
     votePeriod = BRANCHES.getVotePeriod(branch)
-    if(balance<ONE):
-        logReturn(makeReports_logReturn, 0)
-    if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
-        logReturn(makeReports_logReturn, -1)
-    eventIndex = EXPEVENTS.getEventIndex(votePeriod, event)
-    # makes sure event is in the given branch and vote period
-    eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
-    if(eventIndex==0 && (eventID==0 || event!=eventID)):
-        logReturn(makeReports_logReturn, -5)
-    elif(EVENTS.getOutcome(event)!=0):
-        logReturn(makeReports_logReturn, -6)
     periodLength = BRANCHES.getPeriodLength(branch)
-    # ensures user has collected fees for last reporting period
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod-1)):
-        if(COLLECTFEES.collectFees(branch, msg.sender)<1):
-            logReturn(makeReports_logReturn, -8)
-    # commented out for testing
-    #if(block.timestamp/periodLength!=((block.timestamp + 2*TWENTYFOURHR)/periodLength)):
-    #    logReturn(makeReports_logReturn, -7)
-    residual = block.timestamp % periodLength
-    if(residual > periodLength/2):
-        realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
-        if(self.makeHash(salt, report, eventID, msg.sender)!=realHash || realHash==0):
-            logReturn(makeReports_logReturn, -3)
-        forkedOverEthicality = BACKSTOPS.getForkedOverEthicality(event)
-        forkedOverThisEvent = 0
-        if(BRANCHES.getEventForkedOver(branch) == event):
-            forkedOverThisEvent = 1
-        roundTwo = BACKSTOPS.getRoundTwo(event)
-        report = self.validateReport(event, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, balance)
-        if(report == -4):
-            logReturn(makeReports_logReturn, -4)
-        EXPEVENTS.setReport(branch, votePeriod, eventID, report, msg.sender)
-        # set ethics value for event
-        ethics = ethics
-        if(ethics!=ONE and ethics!=0):
-            ethics = ONE
-        # set ethicality for forked event
-        if(forkedOverThisEvent):
-            # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
-            if(forkedOverEthicality):
-                oldEthical = ethic_catch(EVENTS.getEthical(event))
-                if(oldEthical == ONE):
-                    ethics = 0
-                else:
-                    ethics = ONE
-            EXPEVENTS.setEthicReport(branch, votePeriod, event, ethics, msg.sender)
-            ethics = (EVENTS.getForkEthicality(event)*EXPEVENTS.getRepEvent(branch, votePeriod, event) + ethics*balance) / (EXPEVENTS.getRepEvent(branch, votePeriod, event) + balance)
-            EVENTS.setForkEthicality(event, ethics)
-        # set ethicality for a regular event
-        else:
-            EXPEVENTS.setEthicReport(branch, votePeriod, event, ethics, msg.sender)
-            # weight by rep
-            if(roundTwo):
-                ethics = (EVENTS.getEthics(event)*EXPEVENTS.getRepEvent(branch, votePeriod, event) + ethics*balance) / (EXPEVENTS.getRepEvent(branch, votePeriod, event) + balance)
-            # just a simple avg.
-            else:
-                ethics = (EVENTS.getEthics(event)*EXPEVENTS.getNumReportsEvent(branch, votePeriod, event) + ethics) / (EXPEVENTS.getNumReportsEvent(branch, votePeriod, event) + 1)
-            EVENTS.setEthics(eventID, ethics)
-        EXPEVENTS.addReportToEvent(branch, votePeriod, eventID, msg.sender)
-        # round 2 and fork events are weighted by rep    
-        if(roundTwo or forkedOverThisEvent):
-            EXPEVENTS.addRepEvent(branch, votePeriod, event, EXPEVENTS.getBeforeRep(branch, votePeriod, msg.sender))
-        reportsNum = EXPEVENTS.getLesserReportNum(branch, votePeriod, event)
-        paidBack = EXPEVENTS.getReportersPaidSoFar(branch, event)
-        diff = reportsNum - paidBack
-        # used to pay reporters after reporting for their gas costs
-        if(diff >= 1):
-            EXPEVENTS.addReportersPaidSoFar(branch, event)
-            CASH.subtractCash(branch, 3500000*tx.gasprice)
-            CASH.addCash(msg.sender, 3500000*tx.gasprice)
-        logReturn(makeReports_logReturn, 1)
-    logReturn(makeReports_logReturn, -2)
+    forkedOverThisEvent = 0
+    roundTwo = BACKSTOPS.getRoundTwo(event)
+    weight = 1
+    forkedOverEthicality = BACKSTOPS.getForkedOverEthicality(event)
+    checkSubmitReportPreconditions()
 
-# validates and submits report
+    saveUsersReportAndHandleEthicality()
+    coverGasCostIfPossible()
+    MUTEX.unsetMutex()
+    logReturn(makeReportsLogReturn, 1)
+
+# validates and submits fxpReport
 # weights reports by rep if round 2 and fork
-# Returns -4 if report is invalid
+# Returns -4 if fxpReport is invalid
     # isn't between 1 and 2 if binary
-    # if same report as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
-def validateReport(eventID, branch, votePeriod, report, forkedOverEthicality, forkedOverThisEvent, roundTwo, balance):
+    # if same fxpReport as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
+# needs whitelist
+def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight):
+    callstackCheck()
     outcome = 0
     # binary
-    if(EVENTS.getNumOutcomes(eventID)==2 and EVENTS.getMaxValue(eventID)==TWO && EVENTS.getMinValue(eventID)==ONE):
-        if(report>2*ONE or report<ONE or report==0):
-            return(-4)
-        # outcome is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-        elif(forkedOverThisEvent):
-            # in case of fork remove the original outcome as a possible response if didn't fork over ethics
-            if(!forkedOverEthicality && report == catch(EVENTS.getUncaughtOutcome(eventID))):
-                return(-4)
-            outcome = (EVENTS.getForkOutcome(eventID)*EXPEVENTS.getRepEvent(branch, votePeriod, eventID) + report*balance) / (EXPEVENTS.getRepEvent(branch, votePeriod, eventID) + balance)
-            EVENTS.setForkOutcome(eventID, outcome)
-        else:
-            if(roundTwo):
-                outcome = (EVENTS.getUncaughtOutcome(eventID)*EXPEVENTS.getRepEvent(branch, votePeriod, eventID) + report*balance) / (EXPEVENTS.getRepEvent(branch, votePeriod, eventID) + balance)
-            else:
-                outcome = (EVENTS.getUncaughtOutcome(eventID)*EXPEVENTS.getNumReportsEvent(branch, votePeriod, eventID) + report) / (EXPEVENTS.getNumReportsEvent(branch, votePeriod, eventID) + 1)
-            EVENTS.setUncaughtOutcome(eventID, outcome)
+    binary = EVENTS.getNumOutcomes(event) == 2 and EVENTS.getMaxValue(event) == TWO and EVENTS.getMinValue(event) == ONE
+    if(binary):
+        validateReportAndUpdateBinaryEvent()
     # scalar or categorical
     else:
-        if(report > ONE):
-            report = ONE
-        elif(report<=0):
-            # 1 is the new 0 [1/10**18 is basically 0 but able to be differentiated from no report of 0]
-            report = 1
-        if(forkedOverThisEvent):
-            # in case of fork remove the original outcome as a possible response if didn't fork over ethics
-            if(!forkedOverEthicality && report == EVENTS.getUncaughtOutcome(eventID)):
-                return(-4)
-            # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-            EXPEVENTS.addToWeightOfReport(votePeriod, eventID, report, balance)
-            if(EXPEVENTS.getWeightOfReport(votePeriod, eventID, report) > EXPEVENTS.getCurrentModeItems(votePeriod, eventID)):
-                EXPEVENTS.setCurrentMode(votePeriod, eventID, report)
-                EXPEVENTS.setCurrentModeItems(votePeriod, eventID, report)
-            outcome = EXPEVENTS.getCurrentMode(votePeriod, eventID)
-            EVENTS.setForkOutcome(eventID, outcome)
-        else:
-            if(roundTwo):
-                # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-                EXPEVENTS.addToWeightOfReport(votePeriod, eventID, report, balance)
-                if(EXPEVENTS.getWeightOfReport(votePeriod, eventID, report) > EXPEVENTS.getCurrentModeItems(votePeriod, eventID)):
-                    EXPEVENTS.setCurrentMode(votePeriod, eventID, report)
-                    EXPEVENTS.setCurrentModeItems(votePeriod, eventID, report)
-                outcome = EXPEVENTS.getCurrentMode(votePeriod, eventID)
+        validateReportAndUpdateScalarOrCategoricalEvent()
+    return(fxpReport)
+
+### Helper functions:
+# calculates how many reports should be on a given event
+# todo make sure max cost is actually 500k gas here
+# whitelist
+# @return fxp
+def calculateReportTargetForEvent(branch, event, votePeriod, sender):
+    callstackCheck()
+    numMarkets = EVENTS.getNumMarkets(event)
+    if(numMarkets > MARKETS_COUNTING_TOWARDS_SHARE_VALUE):
+        numMarkets = MARKTS_COUNTING_TOWARDS_SHARE_VALUE
+    markets = array(numMarkets)
+    markets = EVENTS.getMarkets(event, outitems=numMarkets)
+    totalFees = 0
+    shareValue = 0
+    i = 0
+    while(i < numMarkets):
+        shareValue += MARKETS.getSharesValue(markets[i])
+        totalFees += MARKETS.getFees(markets[i])
+        i += 1
+    totalVal = EXPEVENTS.getShareValue(branch, votePeriod)
+    shareFraction = shareValue * ONE / totalVal
+    # simplify this
+    numReportersOnMarket = BRANCHES.getBaseReporters(branch) * ((-(267 * shareFraction ** 2) / (2 * ONE) + (533 * shareFraction) / 2 + 1 * ONE))
+    totalFeesInWei = totalFees * WEI_TO_ETH / ONE
+    canPayForThisManyReporters = totalFeesInWei / (GAS_SUBSIDY * tx.gasprice)
+    lesser = min(canPayForThisManyReporters * ONE, numReportersOnMarket)
+    if(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
+        EXPEVENTS.refundCost(sender, branch, votePeriod, event)
+        EXPEVENTS.setLesserReportNum(branch, votePeriod, event, lesser)
+    return(lesser)
+
+macro checkSubmitReportHashPreconditions():
+    if(!eventIndex and (!event or event != event)):
+        MUTEX.unsetMutex()
+        logReturn(makeReportsLogReturn, -1)
+    atFirstHalfOfPeriod()
+    if(delta > 1 and CATCHUP.penalizationCatchup(branch, msg.sender) != 1):
+        MUTEX.unsetMutex()
+        logReturn(makeReportsLogReturn, -4)
+    if(!CONSENSUS.getRepRedistributionDone(branch, msg.sender)):
+        MUTEX.unsetMutex()
+        logReturn(makeReportsLogReturn, 0)
+    # if first fxpReport of period, num events not set
+    if(!EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)):
+        EXPEVENTS.setNumEventsToReportOn(branch)
+        # set amount of fees to be distributed in this period from the branch
+        # todo fix this to check if initial balance is set for given currency that the event uses, if not, set it
+        BRANCHES.setInitialBalance(branch, votePeriod, CASH.balance(branch))
+
+macro checkSubmitReportPreconditions():
+    if(BRANCHES.getEventForkedOver(branch) == event):
+        forkedOverThisEvent = 1
+    if(roundTwo or forkedOverThisEvent):
+        weight = balance
+    if(balance < ONE):
+        MUTEX.unsetMutex()
+        logReturn(makeReportsLogReturn, 0)
+    if(EXPEVENTS.getReport(branch, votePeriod, event, msg.sender)):
+        MUTEX.unsetMutex()
+        logReturn(makeReportsLogReturn, -1)
+    atSecondHalfOfPeriod()
+    realHash = EXPEVENTS.getReportHash(branch, votePeriod, msg.sender, event)
+    if(self.makeHash(salt, fxpReport, event, msg.sender, fxpEthics) != realHash or !realHash):
+        MUTEX.unsetMutex()
+        logReturn(makeReportsLogReturn, -3)
+    if(fxpEthics != ONE and fxpEthics != 0):
+        MUTEX.unsetMutex()
+        logReturn(makeReportsLogReturn, -5)
+    # todo get outcome may not work / be valid due to 0 outcome being valid?
+    if(EVENTS.getOutcome(event) != 0):
+        MUTEX.unsetMutex()
+        logReturn(makeReportsLogReturn, -6)
+    # commented out for easy testing
+    # if(block.timestamp / periodLength != ((block.timestamp + 2 * TWENTY_FOUR_HR) / periodLength)):
+    #    logReturn(makeReportsLogReturn, -7)
+    # ensures user has collected fees for last reporting period
+    if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod - 1)):
+        if(COLLECTFEES.collectFees(branch, msg.sender, value = msg.value) < 0):
+            MUTEX.unsetMutex()
+            logReturn(makeReportsLogReturn, -8)
+    # actual submitting of fxpReport and ethicality
+    validatedFxpReport = self.validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight)
+    if(validatedFxpReport == -4):
+        MUTEX.unsetMutex()
+        logReturn(makeReportsLogReturn, -4)
+
+macro saveUsersReportAndHandleEthicality():
+    EXPEVENTS.setReport(branch, votePeriod, event, validatedFxpReport, msg.sender)
+    # set ethicality for forked event
+    validatedFxpEthics = fxpEthics
+    if(forkedOverThisEvent):
+        # fork remove ethicality option if was forked over ethicality, other ethicality choice is the ethicality
+        if(forkedOverEthicality):
+            oldEthical = ethicCatch(EVENTS.getEthics(event))
+            if(oldEthical == ONE):
+                validatedFxpEthics = 0
             else:
-                # outcome (uncaught and mode) is calculated as we go along on a report by report basis (i.e. lazily evaluating things)
-                EXPEVENTS.addToWeightOfReport(votePeriod, eventID, report, 1)
-                if(EXPEVENTS.getWeightOfReport(votePeriod, eventID, report) > EXPEVENTS.getCurrentModeItems(votePeriod, eventID)):
-                    EXPEVENTS.setCurrentMode(votePeriod, eventID, report)
-                    EXPEVENTS.setCurrentModeItems(votePeriod, eventID, report)
-                outcome = EXPEVENTS.getCurrentMode(votePeriod, eventID)
-            EVENTS.setUncaughtOutcome(eventID, outcome)
-    return(report)
-
-macro YES: TWO
-macro NO: ONE
-macro BAD: 3 * ONEHALF
-macro CATCH_TOLERANCE: ONE / 10
-
-# Bins values to 1, 1.5, 2
-macro catch($x):
-    if($x < (BAD - CATCH_TOLERANCE)):
-        NO
-    elif($x > (BAD + CATCH_TOLERANCE)):
-        YES
+                validatedFxpEthics = ONE
+        EXPEVENTS.setEthicReport(branch, votePeriod, event, validatedFxpEthics, msg.sender)
+        eventEthics = (EVENTS.getForkEthicality(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + validatedFxpEthics * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+        EVENTS.setForkEthicality(event, eventEthics)
+    # set ethicality for a regular event
     else:
-        BAD
-        
-macro ethic_catch($x):
-    if($x < ONEHALF):
-        0
+        EXPEVENTS.setEthicReport(branch, votePeriod, event, validatedFxpEthics, msg.sender)
+        eventEthics = (EVENTS.getEthics(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + validatedFxpEthics * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+        EVENTS.setEthics(event, eventEthics)
+    # round 2 and fork events are weighted by rep, otherwise 1
+    EXPEVENTS.countReportAsSubmitted(branch, votePeriod, event, msg.sender, weight)
+
+macro coverGasCostIfPossible():
+    # pay reporters after reporting for their gas costs
+    reportsNum = EXPEVENTS.getLesserReportNum(branch, votePeriod, event)
+    paidBack = EVENTS.getReportersPaidSoFar(event)
+    ableToPayForMore = reportsNum - paidBack
+    if(ableToPayForMore):
+        EVENTS.addReportersPaidSoFar(event)
+        # todo fix this coming from branch b/c it'll get redistributed in collectfees and thus cause issues
+        if(!BRANCHES.getWallet(branch, ETHCONTRACT).transfer(msg.sender, GAS_SUBSIDY * tx.gasprice * ONE / WEI_TO_ETH)):
+            throw()
+
+macro calculateReportingThreshold():
+    threshold = 0
+    # if required or threshold has been set b/c wasn't reported on yet
+    if(EXPEVENTS.getRequired(event, votePeriod, branch) or EVENTS.getReportingThreshold(event)):
+        threshold = MAX_REPORT_THRESHOLD
+    # if number of reports event should have hasn't been calculated yet do it
+    if(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
+        self.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
+        threshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
     else:
-        ONE
-        
-macro abs($a):
-    if($a<0):
-        $a = -$a
-    $a
+        threshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
+    threshold
+
+macro validateReportAndUpdateBinaryEvent():
+    if(fxpReport > 2 * ONE or fxpReport < ONE or !fxpReport):
+        logReturn(makeReportsLogReturn, -4)
+    # outcome is calculated as we go along on a fxpReport by fxpReport basis (i.e. lazily evaluating things)
+    elif(forkedOverThisEvent):
+        # in case of fork remove the original outcome as a possible response if forked over outcome [i.e. didn't fork over fxpEthics]
+        if(!forkedOverEthicality and fxpReport == catch(EVENTS.getUncaughtOutcome(event))):
+            logReturn(makeReportsLogReturn, -4)
+        outcome = (EVENTS.getForkOutcome(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + fxpReport * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+        EVENTS.setForkOutcome(event, outcome)
+    else:
+        outcome = (EVENTS.getUncaughtOutcome(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + fxpReport * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+        EVENTS.setUncaughtOutcome(event, outcome)
+
+macro validateReportAndUpdateScalarOrCategoricalEvent():
+    if(fxpReport > ONE):
+        fxpReport = ONE
+    if(fxpReport <= 0):
+        # 1 is the new 0 [1/2**64 is basically 0 but able to be differentiated from no fxpReport of 0]
+        fxpReport = 1
+    # in case of fork remove the original outcome as a possible response if didn't fork over fxpEthics
+    reportIsSameAsOutcomeOnOriginalBranch = fxpReport == EVENTS.getUncaughtOutcome(event)
+    if(forkedOverThisEvent and (!forkedOverEthicality and reportIsSameAsOutcomeOnOriginalBranch)):
+        logReturn(makeReportsLogReturn, -4)
+    # outcome (uncaught and mode) is calculated as we go along on a fxpReport by fxpReport basis (i.e. lazily evaluating things)
+    # adding weight to a given poss. mode fxpReport
+    EXPEVENTS.addToWeightOfReport(votePeriod, event, fxpReport, weight)
+    if(EXPEVENTS.getWeightOfReport(votePeriod, event, fxpReport) > EXPEVENTS.getCurrentModeItems(votePeriod, event)):
+        EXPEVENTS.setCurrentMode(votePeriod, event, fxpReport)
+        EXPEVENTS.setCurrentModeItems(votePeriod, event, fxpReport)
+    outcome = EXPEVENTS.getCurrentMode(votePeriod, event)
+    if(forkedOverThisEvent):
+        EVENTS.setForkOutcome(event, outcome)
+    else:
+        EVENTS.setUncaughtOutcome(event, outcome)

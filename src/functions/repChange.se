@@ -1,0 +1,24 @@
+# Calculates the amount of rep to be redistributed
+# clarify ones w/ a new type system
+macro calculateRepChange($report, $maxPenalty):
+    indeterminate = outcome == 3 * ONE_HALF
+    adjustForNonBinaryResolution()
+    $wrong = $report > outcome + POINT_ZERO_ONE or $report < outcome - POINT_ZERO_ONE
+    if($wrong):
+        newRep = oldRep * (2 * p - ONE) / ONE
+    # right/reported correctly
+    else:
+        newRep = oldRep * (2 * (ONE - p) ** 2 / p + ONE) / ONE
+    # (1-k) * old rep + k * new rep is the weighted new rep value where k = maxPenalty [max of 1] / (number of events you reported on last period) for penalization rate for backstop 1 and round 1 / regular randomized reporting
+    # So if max penalty is 20% for a given period, the max per event is 2%
+    if(numReportedOn < 10):
+        k = $maxPenalty / 10
+    else:
+        k = $maxPenalty / numReportedOn
+    smoothedWeightedNewRep = (oldRep * (ONE - k) / ONE) + (newRep * k / ONE)
+    repChange = smoothedWeightedNewRep - oldRep
+
+macro adjustForNonBinaryResolution():
+    if(scalar(event) or categorical(event) or indeterminate):
+        diff = $report - outcome
+        p = -(abs(diff) / 2) + ONE

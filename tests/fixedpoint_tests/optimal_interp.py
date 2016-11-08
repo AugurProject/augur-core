@@ -23,6 +23,7 @@ PI = gmpy2.acos(-1)
 LOG2E = gmpy2.log2(gmpy2.exp(1))
 LN2 = gmpy2.log(2)
 # Same, as 192.64 fixedpoint
+<<<<<<< HEAD
 FX_BASE = 2
 FX_POWER = 64
 FX_BASE = 10
@@ -32,6 +33,12 @@ FX_ONE = FX_BASE**FX_POWER
 FX_PI = int(PI * FX_ONE)
 FX_LOG2E = int(LOG2E * FX_ONE)
 FX_LN2 = int(LN2 * FX_ONE)
+=======
+FX_PI = int(PI * 2**64)
+fxLog2E = int(LOG2E * 2**64)
+FX_LN2 = int(LN2 * 2**64)
+FX_ONE = 1 << 64
+>>>>>>> develop
 ## The index of a poly is the power of x,
 ## the val at the index is the coefficient.
 ##
@@ -139,8 +146,13 @@ def fx_relative_random_error(fx_func, ref_func, trials, a, b):
         bisect.insort(errors, diff*100/expected)
     return sum(map(abs, errors[trials/4:3*trials/4]))*4/trials, min(errors), max(errors), errors[len(errors)/2], max_err, min_err
 
+<<<<<<< HEAD
 def fx_floor_log2(x):
     y = x / FX_ONE
+=======
+def fxFloorLog2(x):
+    y = x >> 64
+>>>>>>> develop
     lo = 0
     hi = MAX_POWER
     mid = (hi + lo)/2
@@ -152,6 +164,7 @@ def fx_floor_log2(x):
         mid = (hi + lo)/2
     return lo
 
+<<<<<<< HEAD
 def fx_log2(x, log2_poly):
     y = fx_floor_log2(x)
     z = x / 2**y
@@ -167,6 +180,23 @@ def fx_exp2(x, exp2_poly):
 
 def fx_exp(x, exp2_poly):
     return fx_exp2((x * FX_ONE)/FX_LN2, exp2_poly)
+=======
+def fxLog2(x, log2_poly):
+    y = fxFloorLog2(x)
+    z = x >> y # z = x/2^y
+    return (y << 64) + fx_poly_eval(log2_poly, z)
+
+def fxLog(x, log2_poly):
+    return (fxLog2(x, log2_poly) << 64) / fxLog2E
+
+def fxExp2(x, exp2_poly):
+    y = x >> 64
+    z = x % (1 << 64)
+    return fx_poly_eval(exp2_poly, z) << y
+
+def fxExp(x, exp2_poly):
+    return fxExp2((x << 64)/FX_LN2, exp2_poly) 
+>>>>>>> develop
 
 ## The tests combine the fixedpoint functions
 ## with the interpolation functions above, to
@@ -181,9 +211,9 @@ def test_interps_random(trials, *range_args):
         'max_rel:%E%%', 'mode_rel:%E%%',
         'max_diff:%E%%', 'min_diff:%E%%'
     ])
-    errstr = '\terror in fx_log:\n\t\t'
+    errstr = '\terror in fxLog:\n\t\t'
     errstr += datastr
-    errstr += '\n\terror in fx_exp:\n\t\t'
+    errstr += '\n\terror in fxExp:\n\t\t'
     errstr += datastr
 
     for i in range(*range_args):
@@ -191,8 +221,8 @@ def test_interps_random(trials, *range_args):
         log2_poly = make_fx_poly(optimal_interp(gmpy2.log2, i, 1, 2))
         exp2_poly = make_fx_poly(optimal_interp(gmpy2.exp2, i, 0, 1))
 
-        logf = lambda x: fx_log(x, log2_poly)
-        expf = lambda x: fx_exp(x, exp2_poly)
+        logf = lambda x: fxLog(x, log2_poly)
+        expf = lambda x: fxExp(x, exp2_poly)
         
         max_log_err = fx_relative_random_error(logf, gmpy2.log, trials, log_min, log_max)
         max_exp_err = fx_relative_random_error(expf, gmpy2.exp, trials, exp_min, exp_max)
@@ -211,8 +241,8 @@ def graph_errors(*range_args):
     log_ys = map(gmpy2.log, log_xs)
 
     funcs = [
-        (fx_exp, gmpy2.exp2, 0, 1, exp_xs, exp_ys, 'exp'),
-        (fx_log, gmpy2.log2, 1, 2, log_xs, log_ys, 'log'),
+        (fxExp, gmpy2.exp2, 0, 1, exp_xs, exp_ys, 'exp'),
+        (fxLog, gmpy2.log2, 1, 2, log_xs, log_ys, 'log'),
     ]
 
     for i in range(*range_args):
@@ -248,14 +278,15 @@ def graph_errors(*range_args):
 def generate_serpent(*range_args):
 
     exp_code = '''\
-macro fx_exp2_small($x):
+macro fxExp2Small($x):
     with $result = %s0x{poly[0]:X}:
         with $temp = $x:
             {interp_code}
 
-macro fx_exp2($x):
+macro fxExp2($x):
     with $y = $x / 0x{FX_ONE:X}:
         with $z = $x %% 0x{FX_ONE:X}:
+<<<<<<< HEAD
             fx_exp2_small($z) * 2**$y
 
 macro fx_exp($x):
@@ -264,10 +295,16 @@ macro fx_exp($x):
 # Calculates the exponential function given a fixed point [base 10^18] number, so e^x
 def fx_exp(x):
     return(fx_exp(x))
+=======
+            fxExp2Small($z) * 2**y
+
+macro fxExp($x):
+    fxExp2($x * 0x{FX_ONE:X} / 0x{FX_LN2:X})
+>>>>>>> develop
 '''
 
     log_code = '''
-macro fx_floor_log2($x):
+macro fxFloorLog2($x):
     with $y = $x / 0x{FX_ONE:X}:
         with $lo = 0:
             with $hi = {MAX_POWER}:
@@ -280,22 +317,27 @@ macro fx_floor_log2($x):
                         $mid = ($hi + $lo)/2
                     $lo
 
-macro fx_log2_small($x):
+macro fxLog2Small($x):
     with $result = %s0x{poly[0]:X}:
         with $temp = $x:
             {interp_code}
 
-macro fx_log2($x):
-    with $y = fx_floor_log2($x):
+macro fxLog2($x):
+    with $y = fxFloorLog2($x):
         with $z = $x / 2**$y:
-            $y * 0x{FX_ONE:X} + fx_log2_small($z)
+            $y * 0x{FX_ONE:X} + fxLog2Small($z)
 
+<<<<<<< HEAD
 macro fx_log($x):
     fx_log2($x) * 0x{FX_ONE:X} / 0x{FX_LOG2E:X}
 
 # Calculates the natural log function given a fixed point [base 10^18] number, so ln(x)
 def fx_log(x):
     return(fx_log(x))
+=======
+macro fxLog($x):
+    fxLog2($x) * 0x{FX_ONE:X} / 0x{fxLog2E:X}
+>>>>>>> develop
 '''
 
     code_items = [
