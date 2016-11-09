@@ -201,7 +201,7 @@ def addReporter(branch, sender, fxpAmount, fxpDormant, fxpRepToBonderOrBranch):
     return(1)
 
 def addRep(branch, index, fxpValue):
-    # if(!self.whitelist.check(msg.sender)):
+    # if(!self.whitelist.check(msg.sender) or megakeywhitelistinearlydays):
     #   throw()
     callstackCheck()
     if(safeToAdd(self.Reporting[branch].reputation[index].repValue, fxpValue)):
@@ -211,7 +211,7 @@ def addRep(branch, index, fxpValue):
         return(0)
 
 def subtractRep(branch, index, fxpValue):
-    # if(!self.whitelist.check(msg.sender)):
+    # if(!self.whitelist.check(msg.sender) or megakeywhitelistinearlydays):
     #   throw()
     callstackCheck()
     if(safeToSubtract(self.Reporting[branch].reputation[index].repValue, fxpValue)):
@@ -239,14 +239,14 @@ def setRep(branch, index, fxpNewRep):
     return(1)
 
 def addDormantRep(branch, index, fxpValue):
-    # if(!self.whitelist.check(msg.sender)):
+    # if(!self.whitelist.check(msg.sender) or megakeywhitelistinearlydays):
     #   throw()
     callstackCheck()
     self.Reporting[branch].dormantRep[index].repValue += fxpValue
     return(1)
 
 def subtractDormantRep(branch, index, fxpValue):
-    # if(!self.whitelist.check(msg.sender)):
+    # if(!self.whitelist.check(msg.sender) or megakeywhitelistinearlydays):
     #   throw()
     callstackCheck()
     self.Reporting[branch].dormantRep[index].repValue -= fxpValue
