@@ -268,7 +268,7 @@ def getEventsWithSubmittedReport(branch, period, reporter):
     i = 0
     while(i < numEvents):
         eventID = EXPEVENTS.getEvent(branch, period, i)
-        if(EXPEVENTS.getReport(branch, period, eventID, reporter) == 0):
+        if(EXPEVENTS.getReport(branch, period, eventID, reporter) != 0):
             events[n] = eventID
             n += 1
         i += 1

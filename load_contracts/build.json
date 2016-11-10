@@ -2938,7 +2938,7 @@
         "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:int256, sellCompleteSets:[int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "compositeGetters": {
-        "address": "0x3b3bf0bc196b85a5624dc5d1fffdf05c97fac8a0", 
+        "address": "0x53f3c6eebb33db6cdaf3a1222045b79b29950add", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -3216,7 +3216,7 @@
             "    i = 0", 
             "    while(i < numEvents):", 
             "        eventID = EXPEVENTS.getEvent(branch, period, i)", 
-            "        if(EXPEVENTS.getReport(branch, period, eventID, reporter) == 0):", 
+            "        if(EXPEVENTS.getReport(branch, period, eventID, reporter) != 0):", 
             "            events[n] = eventID", 
             "            n += 1", 
             "        i += 1", 
