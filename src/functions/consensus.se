@@ -9,6 +9,7 @@ import consensusData as CONSENSUS
 inset('refund.se')
 inset('logReturn.se')
 
+# p: proportion correct
 event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
 event consensus_logReturn(returnValue)
 

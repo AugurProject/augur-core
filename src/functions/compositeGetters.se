@@ -215,7 +215,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
         marketIDs = slice(thresholdedMarketIDs, items=0, items=numThresholdedMarkets)
 
     descriptionLengths = array(totalMarkets)
-    totalLen = totalMarkets*11
+    totalLen = totalMarkets*15
     m = 0
     while m < totalMarkets:
         descriptionLengths[m] = INFO.getDescriptionLength(marketIDs[m])
@@ -230,7 +230,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
     while m < totalMarkets:
         marketID = marketIDs[m]
         descriptionLength = descriptionLengths[m]
-        marketsInfo[c] = 11 + descriptionLength
+        marketsInfo[c] = 15 + descriptionLength
         marketsInfo[c + 1] = marketID
         marketsInfo[c + 2] = MARKETS.getTradingPeriod(marketID)
         marketsInfo[c + 3] = MARKETS.getTradingFee(marketID)
@@ -242,8 +242,13 @@ def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
         marketsInfo[c + 8] = tags[2]
         marketsInfo[c + 9] = MARKETS.getLastExpDate(marketID)
         marketsInfo[c + 10] = MARKETS.getMakerFees(marketID)
+        eventID = MARKETS.getMarketEvent(marketID, 0)
+        marketsInfo[c + 11] = eventID
+        marketsInfo[c + 12] = EVENTS.getMinValue(eventID)
+        marketsInfo[c + 13] = EVENTS.getMaxValue(eventID)
+        marketsInfo[c + 14] = EVENTS.getNumOutcomes(eventID)
         description = INFO.getDescription(marketID, outchars=descriptionLength)
-        c += 11
+        c += 15
         d = 0
         while d < descriptionLength:
             marketsInfo[c] = getch(description, d)
@@ -263,7 +268,7 @@ def getEventsWithSubmittedReport(branch, period, reporter):
     i = 0
     while(i < numEvents):
         eventID = EXPEVENTS.getEvent(branch, period, i)
-        if(EXPEVENTS.getReport(branch, period, eventID, reporter)):
+        if(EXPEVENTS.getReport(branch, period, eventID, reporter) == 0):
             events[n] = eventID
             n += 1
         i += 1
