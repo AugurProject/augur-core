@@ -71,7 +71,7 @@ def penalizeWrong(branch, event):
     elif(EVENTS.getForked(event)):
         logReturn(consensus_logReturn, -6)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
-    elif(!uncaught && !(rejected && EVENTS.getRejectedPeriod(event)==lastPeriod)):
+    elif(!uncaught && EVENTS.getEventBranch(event) == branch && !(rejected && EVENTS.getRejectedPeriod(event)==lastPeriod)):
         if(CLOSEMARKET.closeMarket(branch, EVENTS.getMarket(event, 0), msg.sender)!=1):
             logReturn(consensus_logReturn, -7)
 
