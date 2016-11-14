@@ -20,8 +20,6 @@
 
 ### This allows users to close markets
 
-# todo fix getoutcome stuff 0 is a valid outcome... and anywhere getoutcome is used
-
 import branches as BRANCHES
 import markets as MARKETS
 import events as EVENTS
@@ -35,7 +33,6 @@ inset('eventHelpers.se')
 inset('logReturn.se')
 
 event closeMarketLogReturn(returnValue)
-
 
 # Loop through events in the market, get their outcomes and use those to determine the winning outcomes and resolve a market!
 # @return 0 if fail/trading not over yet/event not expired or closed already, if success 1
@@ -133,6 +130,7 @@ def closeChallengeBond(event):
         throw()
     if(EVENTS.getFirstPreliminaryOutcome(event) == EVENTS.getOutcome(event)):
         loseBond
+
     # outcome is different
     else:
         # challenger is paying validity bond though... we need to move its payment to event creation time and then it'll be a valid use of funds

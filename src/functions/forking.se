@@ -334,6 +334,8 @@ macro scalarOrCategoricalForkResolve():
         scaledMin = ONE
         scaledMax = ONE * EVENTS.getNumOutcomes(event)
     fxpOutcome = mode * (scaledMax - scaledMin) / ONE + scaledMin
+    if(categorical(event)):
+        fxpOutcome = round(fxpOutcome)
     ethicOutcome = ONE_HALF * (scaledMax - scaledMin) / ONE + scaledMin
     EVENTS.setOutcome(event, fxpOutcome)
     if(mode == ONE_HALF or !ethical):

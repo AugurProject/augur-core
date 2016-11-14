@@ -70,7 +70,7 @@ def claimProceeds(market):
         # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
         if(categorical(event) and (EVENTS.getMode(event) == ONE_HALF or !ethical)):
             success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))
-        # resolves a regular binary or categorical market
+        # claims winnings for a regular binary or categorical market
         else:
             success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, EVENTS.getNumOutcomes(event))
     MUTEX.unsetMutex()

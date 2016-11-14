@@ -55,7 +55,7 @@ macro POINT_ONE: 100000000000000000
     # -7: needed to collect fees last period [but didn't] which sets the before/after rep so now have to call penalizationCatchup - todo fix this, maybe call pencatchup or let anyone call pencatchup
     # -8: invalid branch
 # force event to be resolved first if it can be
-# call with branch, 0 if no events
+# call with branch, 0 if no events --- todo handle this
 def penalizeWrong(branch, event):
     refund()
     if(MUTEX.getMutex()):
@@ -73,6 +73,8 @@ def penalizeWrong(branch, event):
     roundTwo = BACKSTOPS.getRoundTwo(event)
     uncaught = EVENTS.getUncaughtOutcome(event)
     outcome = catch(uncaught)
+    if(scalar(event) or categorical(event)):
+        outcome = uncaught
     checkPenalizeWrongPreconditions()
 
     repChange = 0
@@ -138,8 +140,6 @@ macro checkPenalizeWrongPreconditions():
     if(repBalance < ONE):
         MUTEX.unsetMutex()
         logReturn(consensusLogReturn, 0)
-    if(scalar(event) or categorical(event)):
-        outcome = uncaught
     p = proportionCorrect(event, 0)
     # todo fix
     if(roundTwo and outcome != 0):
@@ -162,7 +162,6 @@ macro checkPenalizeWrongPreconditions():
         MUTEX.unsetMutex()
         logReturn(consensusLogReturn, -5)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
-    # todo fix getoutcome
     eventNotResolvedAndNeedsToBe = !EVENTS.getOutcome(event) and !(rejected and EVENTS.getRejectedPeriod(event) == lastPeriod)
     if(eventNotResolvedAndNeedsToBe and CLOSEMARKET.closeMarket(EVENTS.getMarket(event, 0), msg.sender) != 1):
         MUTEX.unsetMutex()

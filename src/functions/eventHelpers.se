@@ -32,3 +32,9 @@ macro abs($a):
     if($a < 0):
         $a = -$a
     $a
+
+macro round($x):
+    if(($x + ONE_HALF) / ONE != ($x / ONE)):
+        ($x + ONE_HALF) / ONE * ONE
+    else:
+        $x / ONE * ONE

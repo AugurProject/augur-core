@@ -31,6 +31,8 @@ def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch
     EVENTS.setMode(event, mode)
     fxpOutcome = mode * (fxpScaledMax - fxpScaledMin) / ONE + fxpScaledMin
     # outcome is set to the mode of the reported outcomes
+    if(categorical(event)):
+        fxpOutcome = round(fxpOutcome)
     EVENTS.setOutcome(event, fxpOutcome)
     periodLength = BRANCHES.getPeriodLength(branch)
     # ethics is set to the binned version of the raw ethicality outcome
@@ -54,6 +56,7 @@ def determineWinningOutcomes(event):
         winningOutcomes[0] = 1
         winningOutcomes[1] = 2
     # anything besides scalar or .5
+    # note: this will be the outcome in the middle if a categorical is resolved as indeterminate, it'll still payout 1/n per outcome though
     else:
         winningOutcomes[0] += outcome
     return(winningOutcomes: arr)
@@ -116,4 +119,3 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             EXPEVENTS.deleteEvent($branch, $period, $event)
             EVENTS.setOriginalExpiration($event, EVENTS.getExpiration($event))
         1
-
