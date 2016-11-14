@@ -99,6 +99,8 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     mode = EVENTS.getUncaughtOutcome(event)
     EVENTS.setmode(event, mode)
     fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
+    if(categorical(event)):
+        fxpOutcome = round(fxpOutcome)
     # outcome is set to the mode of the reported outcomes
     EVENTS.setOutcome(event, fxpOutcome)
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -108,6 +110,12 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     EVENTS.setEthics(event, ethical)
     val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
     return(val)
+
+macro round($x):
+    if(($x + ONE_HALF) / ONE != ($x / ONE)):
+        ($x + ONE_HALF) / ONE * ONE
+    else:
+        $x / ONE * ONE
 
 # Determines the "winning outcomes" for a given market
 # Easiest to give examples:
