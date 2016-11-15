@@ -116,6 +116,9 @@ macro round($x):
         ($x + ONE_HALF) / ONE * ONE
     else:
         $x / ONE * ONE
+        
+macro categorical($event):
+    (EVENTS.getNumOutcomes($event) > 2)
 
 # Determines the "winning outcomes" for a given market
 # Easiest to give examples:
