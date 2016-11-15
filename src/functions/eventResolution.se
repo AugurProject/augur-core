@@ -112,8 +112,8 @@ def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, vo
     return(val)
 
 macro round($x):
-    if(($x + ONE_HALF) / ONE != ($x / ONE)):
-        ($x + ONE_HALF) / ONE * ONE
+    if(($x + ONEHALF) / ONE != ($x / ONE)):
+        ($x + ONEHALF) / ONE * ONE
     else:
         $x / ONE * ONE
         
