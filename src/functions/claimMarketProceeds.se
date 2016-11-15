@@ -32,6 +32,7 @@ extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:i
 inset('../data_api/refund.se')
 
 macro MAX_WINNING_OUTCOMES: 8
+macro THREE_DAYS: 259200
 
 # If ethicality value <.5 it's 0, otherwise it's ethical
 macro ethicCatch($x):
@@ -48,7 +49,7 @@ macro categorical($event):
 # Errors:
     # 0: market not resolved
 #data withdrawInitiated[]
-# todo macro THREEDAYS: 259200 add to getting $ for shares
+# todo macro add to getting $ for shares
 def claimProceeds(market):
     refund()
     if(MUTEX.getMutex()):
@@ -58,6 +59,13 @@ def claimProceeds(market):
     winningOutcomes = array(MAX_WINNING_OUTCOMES)
     winningOutcomes = MARKET.getWinningOutcomes(market, outitems = MAX_WINNING_OUTCOMES)
     success = 0
+    periodLength = BRANCHES.getPeriodLength(MARKETS.getBranch(market))
+    currentPeriodMinus3Days = (block.timestamp - THREE_DAYS) / periodLength
+    expiryPeriod = MARKETS.getLastExpDate(market) / periodLength
+    if(currentPeriodMinus3Days <= expiryPeriod):
+        # can't withdraw funds until 3 days after market resolves
+        MUTEX.unsetMutex()
+        return(-1)
     # market not resolved
     if(!winningOutcomes[0]):
         MUTEX.unsetMutex()
@@ -75,4 +83,3 @@ def claimProceeds(market):
             success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, EVENTS.getNumOutcomes(event))
     MUTEX.unsetMutex()
     return(success)
-    
