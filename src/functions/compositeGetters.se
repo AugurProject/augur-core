@@ -25,10 +25,11 @@ import branches as BRANCHES
 import trades as TRADES
 import markets as MARKETS
 import expiringEvents as EXPEVENTS
+import proportionCorrect as PROPORTION
 inset('refund.se')
 
 macro TRADE_FIELDS: 8
-macro EVENTS_FIELDS: 7
+macro EVENTS_FIELDS: 8
 macro OUTCOMES_FIELDS: 3
 macro BASE_FIELDS: 14
 macro BASE_CACHE_FIELDS: 10
@@ -104,16 +105,17 @@ def getMarketInfo(marketID, account):
 
     # gather event(s) info:
     # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]
-    eventInfo = EVENTS.getEventInfo(eventID, outitems=EVENTS_FIELDS - 1)
+    eventInfo = EVENTS.getEventInfo(eventID, outitems=EVENTS_FIELDS - 2)
     marketInfo[index] = eventID
     j = 1
-    while j < EVENTS_FIELDS - 1:
+    while j < EVENTS_FIELDS - 2:
         marketInfo[index + j] = eventInfo[j]
         j += 1
-    marketInfo[index + EVENTS_FIELDS] = EVENTS.getEthical(eventID)
+    marketInfo[index + EVENTS_FIELDS - 1] = EVENTS.getEthical(eventID)
+    marketInfo[index + EVENTS_FIELDS] = PROPORTION.proportionCorrect(eventID)
     index += EVENTS_FIELDS
 
-    # gather outcomes info: [sharesPurchased, price], winningOutcomes
+    # gather outcomes info: [sharesPurchased, price]
     # (price of outcome = last trade)
     k = 0
     while k < numOutcomes:
@@ -215,7 +217,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
         marketIDs = slice(thresholdedMarketIDs, items=0, items=numThresholdedMarkets)
 
     descriptionLengths = array(totalMarkets)
-    totalLen = totalMarkets*15
+    totalLen = totalMarkets*16
     m = 0
     while m < totalMarkets:
         descriptionLengths[m] = INFO.getDescriptionLength(marketIDs[m])
@@ -230,7 +232,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
     while m < totalMarkets:
         marketID = marketIDs[m]
         descriptionLength = descriptionLengths[m]
-        marketsInfo[c] = 15 + descriptionLength
+        marketsInfo[c] = 16 + descriptionLength
         marketsInfo[c + 1] = marketID
         marketsInfo[c + 2] = MARKETS.getTradingPeriod(marketID)
         marketsInfo[c + 3] = MARKETS.getTradingFee(marketID)
@@ -247,8 +249,9 @@ def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
         marketsInfo[c + 12] = EVENTS.getMinValue(eventID)
         marketsInfo[c + 13] = EVENTS.getMaxValue(eventID)
         marketsInfo[c + 14] = EVENTS.getNumOutcomes(eventID)
+        marketsInfo[c + 15] = EVENTS.getOutcome(eventID)
         description = INFO.getDescription(marketID, outchars=descriptionLength)
-        c += 15
+        c += 16
         d = 0
         while d < descriptionLength:
             marketsInfo[c] = getch(description, d)
