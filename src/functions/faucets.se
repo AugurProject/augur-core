@@ -37,6 +37,7 @@ inset('eventHelpers.se')
 
 macro POINT_ZERO_ONE: 10000000000000000
 macro ONE_MONTH: 2592000
+macro POINT_SIX: 600000000000000000
 
 # Error -1: Hey, you're not broke!
 def cashFaucet():
@@ -48,7 +49,6 @@ def cashFaucet():
 
 def reputationFaucet(branch):
     refund()
-    if(REPORTING.repIDToIndex(branch, msg.sender) != 0 or REPORTING.getReporterID(branch, 0) == msg.sender):
         index = REPORTING.repIDToIndex(branch, msg.sender)
     else:
         index = REPORTING.getNumberReporters(branch)
@@ -134,8 +134,8 @@ macro checkRepClaimPreconditions():
         return(-3)
 
 macro removeRepFromThoseWhoReportedWrong():
-    # take away 30% of rep from liars and those who didn't report
-    repDecrease = rep - rep * POINT_SEVEN / ONE
+    # take away 40% of rep from liars and those who didn't report
+    repDecrease = rep - rep * POINT_SIX / ONE
     rep = rep - repDecrease
     amountLeftToPayBonder = BACKSTOPS.getBondAmount(forkEvent) - BACKSTOPS.getForkBondPaid(forkEvent)
     if(repDecrease < amountLeftToPayBonder):

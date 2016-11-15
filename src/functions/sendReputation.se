@@ -43,6 +43,8 @@ data amountCanSpend[][](branch[])
 event Transfer(from:indexed, to:indexed, value)
 event Approval(owner:indexed, spender:indexed, branch:indexed, value)
 
+macro 48_HOURS: 172800
+
 #def any():
 #    refund()
 
@@ -57,11 +59,13 @@ event Approval(owner:indexed, spender:indexed, branch:indexed, value)
     # -5: not enough rep / fxpValue too small or not authorized
 def sendRepFrom(branch, from, receiver, fxpValue):
     checkInvariants(from)
+    if(first48HoursOfPeriod()):
+        throw()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
-
+    
     senderIndex = REPORTING.repIDToIndex(branch, from)
     receiverIndex = REPORTING.repIDToIndex(branch, receiver)
     senderBalance = REPORTING.getRepBalance(branch, from)
@@ -115,6 +119,8 @@ def convertToDormantRep(branch, fxpValue):
         throw()
     MUTEX.setMutex()
     checkInvariants(msg.sender)
+    if(first48HoursOfPeriod()):
+        throw()
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
     senderBalance = REPORTING.getRepBalance(branch, msg.sender)
     checkRepConversionInvariants()
@@ -137,6 +143,8 @@ def convertToActiveRep(branch, fxpValue):
         throw()
     MUTEX.setMutex()
     checkInvariants(msg.sender)
+    if(first48HoursOfPeriod()):
+        throw()
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
     senderBalance = REPORTING.balanceOf(branch, msg.sender)
     checkRepConversionInvariants()
@@ -236,3 +244,12 @@ macro safeToAdd($a, $b):
 
 macro safeToSubtract($a, $b):
     ($b <= $a)
+
+macro first48HoursOfPeriod():
+    residual = block.timestamp % periodLength
+    currentPeriod = block.timestamp / periodLength
+    currentMinus48Hours = (block.timestamp - 48_HOURS) / periodLength
+    if(currentPeriod != currentMinus48Hours):
+        1
+    else:
+        0
