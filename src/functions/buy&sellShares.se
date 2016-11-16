@@ -136,11 +136,21 @@ macro remove_trade($trade_id, $market):
     # -2: oracle only branch
     # -3: trader doesn't exist in market
     # -4: not enough money or shares
+    # -5: bid price exceeds best ask
 #
 # costs 532k gas
 # smallest trade value is 0.00000001
 def buy(amount, price, market, outcome):
     refund()
+
+    # Check if there are any "crossed orders" in this block (i.e., ask orders
+    # at a price less than or equal to the buy price).
+    bestAskID = TRADES.getBestAskID(market, outcome)
+    if bestAskID != 0:
+        bestAskPrice = TRADES.get_price(bestAskID)
+        if price >= bestAskPrice:
+            logReturn(buyAndSellShares_logReturn, -5)
+
     trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
     fee = fee_percent(trading_fee, price, cumScale) * MARKETS.getMakerFees(market) / ONE
@@ -159,8 +169,24 @@ def buy(amount, price, market, outcome):
 
 # costs 532k gas
 # smallest trade value is 0.00000001
+# Errors:
+    #  0: market doesn't exist
+    # -1: amount/price bad
+    # -2: oracle only branch
+    # -3: trader doesn't exist in market
+    # -4: not enough money or shares
+    # -5: best bid exceeds ask price
 def sell(amount, price, market, outcome):
     refund()
+
+    # Check if there are any "crossed orders" in this block (i.e., bid orders
+    # at a price greater than or equal to the sell price).
+    bestBidID = TRADES.getBestBidID(market, outcome)
+    if bestBidID != 0:
+        bestBidPrice = TRADES.get_price(bestBidID)
+        if price <= bestBidPrice:
+            logReturn(buyAndSellShares_logReturn, -5)
+
     branch = MARKETS.getBranchID(market)
     trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
