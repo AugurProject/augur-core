@@ -103,6 +103,10 @@ def get_trade(id):
         return(trade:arr)
     return([0]:arr)    
 
+def get_trade_block(id):
+    refund()
+    return(self.trades[id].block)
+
 def get_amount(id):
     refund()
     return(self.trades[id].amount)
