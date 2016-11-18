@@ -11,7 +11,6 @@ inset('../data_api/refund.se')
 # whitelist
 # refactor
 def twoOutcomes(market, winningOutcome: arr, event, sender):
-    callstackCheck()
     # fetch outcome and min/max values for the scalar
     outcome = EVENTS.getOutcome(event)
     minValue = EVENTS.getMinValue(event)

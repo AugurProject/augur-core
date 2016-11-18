@@ -48,7 +48,6 @@ macro MAX_REPORT_THRESHOLD: 10^54
 macro MARKETS_COUNTING_TOWARDS_SHARE_VALUE: 20
 
 def makeHash(salt, fxpReport, event, sender, ethics):
-    checkCallstack()
     hashInfo = array(5)
     hashInfo[0] = sender
     hashInfo[1] = salt
@@ -134,7 +133,6 @@ def submitReport(event, salt, fxpReport, fxpEthics):
     # if same fxpReport as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
 # needs whitelist
 def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight):
-    callstackCheck()
     outcome = 0
     # binary
     binary = EVENTS.getNumOutcomes(event) == 2 and EVENTS.getMaxValue(event) == TWO and EVENTS.getMinValue(event) == ONE
@@ -151,7 +149,6 @@ def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, f
 # whitelist
 # @return fxp
 def calculateReportTargetForEvent(branch, event, votePeriod, sender):
-    callstackCheck()
     numMarkets = EVENTS.getNumMarkets(event)
     if(numMarkets > MARKETS_COUNTING_TOWARDS_SHARE_VALUE):
         numMarkets = MARKTS_COUNTING_TOWARDS_SHARE_VALUE

@@ -256,7 +256,6 @@ def getMarketCreatorFeesCollected(market):
     return((MARKETS.getFees(market) - INFO.getCreationFee(market))/2)
 
 def getEventsWithSubmittedReport(branch, period, reporter):
-    self.test_callstack()
     numEvents = EXPEVENTS.getNumberEvents(branch, period)
     events = array(numEvents)
     n = 0

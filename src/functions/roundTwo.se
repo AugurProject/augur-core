@@ -32,7 +32,6 @@ macro MIN_BOND: 200 * ONE
     # -4: event has no votes so far
     # throw()s if not enough msg.value to cover resolution cost or not a large enough bond
 def roundTwoPostBond(branch, event, eventIndex, overEthicality):
-    callstackCheck()
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()

@@ -56,81 +56,64 @@ def setChallenged(event):
     
 # @return fxp
 def getFirstPreliminaryOutcome(event):
-    callstackCheck()
     return(self.Events[event].firstPreliminaryOutcome)
     
 def setFirstPreliminaryOutcome(event, outcome):
-    callstackCheck()
     self.Events[event].firstPreliminaryOutcome = outcome
     return(1)
 
 def getReportersPaidSoFar(event):
-    callstackCheck()
     return(self.Events[event].reportersPaidSoFarForEvent)
 
 def addReportersPaidSoFar(event):
-    callstackCheck()
     self.Events[event].reportersPaidSoFarForEvent += 1
     return(1)
 
 def getEventPushedUp(event):
-    callstackCheck()
     return(self.Events[event].pushedUp)
 
 def getResolutionAddress(event):
-    callstackCheck()
     return(self.Events[event].resolutionAddress)
 
 def setEventPushedUp(event, val):
-    callstackCheck()
     self.Events[event].pushedUp = val
     return(1)
 
 # @return fxp
 def getForkOutcome(event):
-    callstackCheck()
     return(self.Events[event].forkOutcome)
 
 def setForkOutcome(event, value):
-    callstackCheck()
     self.Events[event].forkOutcome = value
     return(1)
 
 # @return fxp
 def getForkEthicality(event):
-    callstackCheck()
     return(self.Events[event].forkEthicality)
 
 def setForkEthicality(event, value):
-    callstackCheck()
     self.Events[event].forkEthicality = value
     return(1)
 
 def getForked(event):
-    callstackCheck()
     return(self.Events[event].forked)
 
 def setForked(event):
-    callstackCheck()
     self.Events[event].forked = 1
     return(1)
 
 def setForkDone(event):
-    callstackCheck()
     self.Events[event].forkOver = 1
     return(1)
 
 def getForkedDone(event):
-    callstackCheck()
     return(self.Events[event].forkOver)
 
 def getEventResolution(event):
-    callstackCheck()
     resLen = self.Events[event].resolutionSourceLength
     return(load(self.Events[event].resolutionSource[0], chars = resLen): str)
 
 def getEventInfo(event):
-    callstackCheck()
     eventinfo = array(8)
     eventinfo[0] = self.Events[event].branch
     eventinfo[1] = self.Events[event].expirationDate
@@ -146,55 +129,44 @@ def getResolutionLength(event):
     return(self.Events[event].resolutionSourceLength)
 
 def getPast24(period):
-    callstackCheck()
     return(self.past24Hours[period])
 
 def addPast24(period):
-    callstackCheck()
     self.past24Hours[period] += 1
     return(1)
 
 def getExpiration(event):
-    callstackCheck()
     return(self.Events[event].expirationDate)
 
 def getOriginalExpiration(event):
-    callstackCheck()
     return(self.Events[event].originalExp)
 
 def setOriginalExpiration(event, date):
-    callstackCheck()
     self.Events[event].originalExp = date
     return(1)
 
 def setExpiration(event, date):
-    callstackCheck()
     self.Events[event].expirationDate = date
     return(1)
 
 def setBranch(event, branch):
-    callstackCheck()
     self.Events[event].branch = branch
     return(1)
 
 def setExtraBond(event, extraBond):
-    callstackCheck()
     self.Events[event].extraBond = extraBond
     return(1)
 
 # @return fxp
 def getOutcome(event):
-    callstackCheck()
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good and for mode etc
     return(self.Events[event].outcome)
 
 # @return fxp
 def getEthics(event):
-    callstackCheck()
     return(self.Events[event].ethical)
 
 def setEthics(event, ethicality):
-    callstackCheck()
     self.Events[event].ethical = ethicality
     return(ethicality)
 
@@ -204,26 +176,21 @@ def getMinValue(event):
 
 # @return fxp
 def getMaxValue(event):
-    callstackCheck()
     return(self.Events[event].fxpMaxValue)
 
 def getNumOutcomes(event):
-    callstackCheck()
     return(self.Events[event].numOutcomes)
 
 def setUncaughtOutcome(event, outcome):
-    callstackCheck()
     self.Events[event].uncaughtOutcome = outcome
     return(1)
 
 # @return fxp
 def getUncaughtOutcome(event):
-    callstackCheck()
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
     return(self.Events[event].uncaughtOutcome)
 
 def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionSource):
-    callstackCheck()
     # check that msg.sender is one of our function contracts
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
@@ -242,32 +209,26 @@ def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOut
         return(0)
 
 def setBond(event, bond):
-    callstackCheck()
     self.Events[event].bond = bond
     return(1)
 
 def addMarket(event, market):
-    callstackCheck()
     self.Events[event].markets[self.Events[event].numMarkets] = market
     self.Events[event].numMarkets += 1
     return(1)
 
 def getEventBranch(event):
-    callstackCheck()
     return(self.Events[event].branch)
 
 # @return fxp
 def getExtraBond(event):
-    callstackCheck()
     return(self.Events[event].extraBond)
 
 # @return fxp
 def getBond(event):
-    callstackCheck()
     return(self.Events[event].bond)
 
 def getMarkets(event):
-    callstackCheck()
     i = 0
     markets = array(self.Events[event].numMarkets)
     while(i < self.Events[event].numMarkets):
@@ -276,15 +237,12 @@ def getMarkets(event):
     return(markets: arr)
 
 def getMarket(event, marketIndex):
-    callstackCheck()
     return(self.Events[event].markets[marketIndex])
 
 def getNumMarkets(event):
-    callstackCheck()
     return(self.Events[event].numMarkets)
 
 def setOutcome(ID, outcome):
-    callstackCheck()
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
     self.Events[ID].outcome = outcome
@@ -292,36 +250,29 @@ def setOutcome(ID, outcome):
 
 # @return fxp
 def getReportingThreshold(event):
-    callstackCheck()
     return(self.Events[event].threshold)
 
 def setThreshold(event, threshold):
-    callstackCheck()
     # do whitelist
     self.Events[event].threshold = threshold
     return(1)
 
 # @return fxp
 def getMode(event):
-    callstackCheck()
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
     return(self.Events[event].mode)
 
 def setMode(event, mode):
-    callstackCheck()
     self.Events[event].mode = mode
     return(1)
 
 def setRejected(event, period):
-    callstackCheck()
     self.Events[event].rejected = 1
     self.Events[event].rejectedPeriod = period
     return(1)
 
 def getRejected(event):
-    callstackCheck()
     return(self.Events[event].rejected)
 
 def getRejectedPeriod(event):
-    callstackCheck()
     return(self.Events[event].rejectedPeriod)

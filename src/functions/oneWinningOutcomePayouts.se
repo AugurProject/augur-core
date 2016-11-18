@@ -9,7 +9,6 @@ inset('../data_api/refund.se')
 # Payout a trader in a market with one winning outcome [so not scalar or determinate categoricals]
 # whitelist this
 def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes):
-    callstackCheck()
     currency = INFO.getCurrency(market)
     branch = MARKETS.getBranch(market)
     # if it's an indeterminate categorical market resolve with all outcomes having an equal value

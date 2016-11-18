@@ -71,7 +71,6 @@ def moveEvent(event):
 # parent branch is branch here
 # todo fork use address picked in market creation to resolve it and have a default fork resolve option
 def resolveFork(branch):
-    callstackCheck()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
     if(!mutexWhitelisted()):
@@ -97,7 +96,6 @@ def resolveFork(branch):
 # Resolve fork method that gets exchange rate
 # add contract for choosing this to create market
 def exchangeRate(branch):
-    callstackCheck()
     # get rep exchange rate from etherex for (branch)
     # return(exchangeRate)
     # for testing we'll just rng the exchange rate :)
@@ -113,7 +111,6 @@ def exchangeRate(branch):
     # -4: event was pushed forward, not allowed yet
     # -5: invalid branch
 def fork(event, branch, forkedOverEthicality):
-    callstackCheck()
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()

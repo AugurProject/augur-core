@@ -24,7 +24,6 @@ macro MIN_EVENTS_FOR_WHALE_TO_REPORT_ON: 30
 # whitelist
 # @return fxp
 def calculateReportingThreshold(branch, event, period, sender):
-    callstackCheck()
     repConstant = EXPEVENTS.getPeriodRepWeight(branch, period, sender)
     if(!repConstant):
         calculateAndSetRepConstant()
@@ -38,7 +37,6 @@ def calculateReportingThreshold(branch, event, period, sender):
 # switch to use start and end todo
 # start is the event index we want to start fetching events to report on from
 def getEventsToReportOn(branch, period, sender, start):
-    callstackCheck()
     numEvents = EXPEVENTS.getNumberEvents(branch, period)
     events = array(numEvents)
     i = 0
@@ -65,7 +63,6 @@ def getEventsToReportOn(branch, period, sender, start):
 # Errors: 0 if not
 # whitelist
 def getEventCanReportOn(branch, period, reporter, event):
-    callstackCheck()
     if(!EXPEVENTS.getLesserReportNum(branch, period, events[i])):
         MAKEREPORTS.calculateReportTargetForEvent(branch, events[i], period, reporter)
     reportingThreshold = self.calculateReportingThreshold(branch, event, period, reporter)
@@ -82,7 +79,6 @@ def getEventCanReportOn(branch, period, reporter, event):
 # Returns 1 if the event's reporting threshold has been set
 # Errors: 0 if the event can't be reported on
 def setReportingThreshold(event):
-    callstackCheck()
     # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
     # final check is if no reports on event
     # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this half

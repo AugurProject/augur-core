@@ -20,7 +20,6 @@ inset('../data_api/periodStage.se')
 # 2 means no errors but didnt report last period
 # distribute any eth here too
 def collectFees(branch, sender):
-    callstackCheck()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
     MUTEX.setMutex()

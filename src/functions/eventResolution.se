@@ -12,7 +12,6 @@ inset('eventHelpers.se')
 # Resolves a binary market
 # whitelist
 def resolveBinary(event, market, branch, votingPeriodEvent):
-    callstackCheck()
     fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
     periodLength = BRANCHES.getPeriodLength(branch)
     ethical = ethicCatch(EVENTS.getEthics(event))
@@ -26,7 +25,6 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
 # Resolves a categorical or scalar market
 # whitelist
 def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch, votingPeriodEvent):
-    callstackCheck()
     mode = EVENTS.getUncaughtOutcome(event)
     EVENTS.setMode(event, mode)
     fxpOutcome = mode * (fxpScaledMax - fxpScaledMin) / ONE + fxpScaledMin
@@ -47,7 +45,6 @@ def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch
     # 1D Markets:
         # Binary or Categorical will have 1 winning outcome [1 or 2 for binary, 1 thru numOutcomes for categorical is the poss. value for the winning outcome]
 def determineWinningOutcomes(event):
-    callstackCheck()
     winningOutcomes = array(8)
     fxpOutcome = EVENTS.getOutcome(event)
     outcome = fxpOutcome / ONE
@@ -63,7 +60,6 @@ def determineWinningOutcomes(event):
 
 ## helper function to close an event for resolution
 macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $periodLength, $ethical, $scalarorcat, $mode, $ethicOutcome):
-    callstackCheck()
     # In the $event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and $market remains with old expiration date
     # UI needs to call penalizeWrong for ones that are pushed back in both pushed back period and regular period with actual reporting

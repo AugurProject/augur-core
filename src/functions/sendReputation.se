@@ -160,7 +160,6 @@ def claimRep():
         throw()
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
-    callstackCheck()
     balance = REPCONTRACT.balanceOf(msg.sender)
     if(!REPCONTRACT.transferFrom(msg.sender, 0, balance) or !REPORTING.addReporter(1010101, msg.sender, 0, balance, 0)):
         throw()
@@ -170,7 +169,6 @@ def claimRep():
 
 # Allows spender to withdraw from your dormant rep account
 def approve(branch, spender, fxpValue):
-    callstackCheck()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
     if(!mutexWhitelisted()):
@@ -185,7 +183,6 @@ def approve(branch, spender, fxpValue):
 # Returns amount spender can withdraw from owner
 # @return fxp
 def allowance(branch, owner, spender):
-    callstackCheck()
     return(self.amountCanSpend[owner][spender].branch[branch])
 
 macro checkInvariants($account):

@@ -128,7 +128,6 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
 # todo fix creation fee to be in eth b/c it covers gas fees...
 def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag3, extraInfo: str, currency):
-    callstackCheck()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
     if(!mutexWhitelisted()):
@@ -337,7 +336,6 @@ macro checkMarketCreationPreconditions():
         return(-3)
 
 def putEventIntoReportingPeriod(event):
-    callstackCheck()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
     if(!mutexWhitelisted()):
@@ -366,7 +364,6 @@ def putEventIntoReportingPeriod(event):
         return(0)
 
 def challengeInitialResolution(event):
-    callstackCheck()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
     if(!mutexWhitelisted()):
@@ -407,7 +404,6 @@ macro payExtraBond():
 # with oraclize.it do value = parseInt(result, 18) to get it in the proper 10**18 base, then do (value - min) * 2**64 / range to submit the result to augur
 # unethical is just a .5 outcome for scalar/categorical, 1.5 for binary as usual
 def resolveEarly(event, outcome):
-    callstackCheck()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
     if(!mutexWhitelisted()):

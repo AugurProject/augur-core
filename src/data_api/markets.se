@@ -56,11 +56,9 @@ data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]),
 data marketsHash[]
 
 def getMarketsHash(branch):
-    callstackCheck()
     return(self.marketsHash[branch])
 
 def addToMarketsHash(branch, newHash):
-    callstackCheck()
     x = array(2)
     x[0] = self.marketsHash[branch]
     x[1] = newHash
@@ -68,18 +66,15 @@ def addToMarketsHash(branch, newHash):
     return(1)
 
 def addFees(market, fxpAmount):
-    callstackCheck()
     self.Markets[market].fees += fxpAmount
     return(1)
 
 def setPrice(market, outcome, fxpPrice):
-    callstackCheck()
     self.Markets[market].prices[outcome] = fxpPrice
     return(1)
 
 # refund closing cost for a market
 def refundClosing(market, to):
-    callstackCheck()
     subsidy = self.Markets[market].gasSubsidy
     self.Markets[market].gasSubsidy -= subsidy
     if(!send(to, subsidy)):
@@ -87,30 +82,24 @@ def refundClosing(market, to):
     return(1)
 
 def getLastExpDate(market):
-    callstackCheck()
     return(self.Markets[market].lastExpDate)
 
 # @return fxp
 def getLastOutcomePrice(market, outcome):
-    callstackCheck()
     return(self.Markets[market].prices[outcome])
 
 # @return fxp
 def getFees(market):
-    callstackCheck()
     return(self.Markets[market].fees)
 
 def getgasSubsidy(market):
-    callstackCheck()
     return(self.Markets[market].gasSubsidy)
 
 # @return fxp
 def getSharesValue(market):
-    callstackCheck()
     return(self.Markets[market].sharesValue)
 
 def returnTags(market):
-    callstackCheck()
     tags = array(3)
     tags[0] = self.Markets[market].tag1
     tags[1] = self.Markets[market].tag2
@@ -119,7 +108,6 @@ def returnTags(market):
 
 # @return fxp
 def getTotalSharesPurchased(market):
-    callstackCheck()
     total = 0
     n = self.Markets[market].numOutcomes
     i = 1
@@ -129,72 +117,57 @@ def getTotalSharesPurchased(market):
     return(total)
 
 def getMarketEvent(market, index):
-    callstackCheck()
     return(self.Markets[market].events[index])
 
 def getMarketEvents(market):
-    callstackCheck()
     return(load(self.Markets[market].events[0], items = self.Markets[market].lenEvents): arr)
     
 def getMarketShareContracts(market):
-    callstackCheck()
     return(load(self.Markets[market].shareContracts[0], items = self.Markets[market].numOutcomes): arr)
 
 # @return fxp
 def getSharesPurchased(market, outcome):
-    callstackCheck()
     return(self.Markets[market].sharesPurchased[outcome])
 
 def getExtraInfoLength(market):
     return(self.Markets[market].extraInfoLen)
 
 def getExtraInfo(market):
-    callstackCheck()
     length = self.Markets[market].extraInfoLen
     return(load(self.Markets[market].extraInfo[0], chars = length): str)
 
 # @return fxp
 def getVolume(market):
-    callstackCheck()
     return(self.Markets[market].volume)
 
 # @return fxp
 def getParticipantSharesPurchased(market, trader, outcome):
-    callstackCheck()
     return(self.Markets[market].shareContracts[outcome].balanceOf(trader))
 
 def getNumEvents(market):
-    callstackCheck()
     return(self.Markets[market].lenEvents)
 
 # @return fxp
 def getCumulativeScale(market):
-    callstackCheck()
     return(self.Markets[market].cumulativeScale)
 
 def getMarketNumOutcomes(market):
-    callstackCheck()
     return(self.Markets[market].numOutcomes)
 
 def getTradingPeriod(market):
-    callstackCheck()
     return(self.Markets[market].tradingPeriod)
 
 def getOriginalTradingPeriod(market):
-    callstackCheck()
     return(self.Markets[market].originalPeriod)
 
 def setTradingPeriod(market, period):
-    callstackCheck()
     self.Markets[market].tradingPeriod = period
     return(1)
 
 def getTradingFee(market):
-    callstackCheck()
     return(self.Markets[market].fxpTradingFee)
 
 def getBranch(market):
-    callstackCheck()
     return(self.Markets[market].branch)
 
 macro market($market):
@@ -211,7 +184,6 @@ macro sharesPurchased($market):
 
 # check that msg.sender is one of our function contracts
 def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpcumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr):
-    callstackCheck()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add event list to the market
@@ -236,7 +208,6 @@ def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, 
     return(1)
 
 def modifyShares(market, outcome, fxpAmount):
-    callstackCheck()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     sharesPurchased(market)[outcome] += fxpAmount
@@ -244,12 +215,10 @@ def modifyShares(market, outcome, fxpAmount):
     return(1)
 
 def modifySharesValue(market, fxpAmount):
-    callstackCheck()
     self.Markets[market].sharesValue += fxpAmount
     return(1)
 
 def modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
-    callstackCheck()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     self.Markets[market].shareContracts[outcome].changeTokens(trader, fxpAmount)
@@ -260,7 +229,6 @@ def modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
     return(1)
 
 def addTrade(market, tradeID):
-    callstackCheck()
     self.Markets[market].tradeIDs[lastID].nextID = tradeID
     self.Markets[market].tradeIDs[tradeID].prevID = self.Markets[market].lastTrade
     self.Markets[market].tradeIDs[tradeID].id = tradeID
@@ -269,7 +237,6 @@ def addTrade(market, tradeID):
     return(1)
 
 def removeTradeFromMarket(marketID, tradeID):
-    callstackCheck()
     prevID = self.Markets[marketID].tradeIDs[tradeID].prevID
     nextID = self.Markets[marketID].tradeIDs[tradeID].nextID
     # if the trade had a previous and next trade it connects them directly, remove this tradeID from the sequence/middle
@@ -292,7 +259,6 @@ def removeTradeFromMarket(marketID, tradeID):
     return(1)
 
 def getTradeIDs(marketID):
-    callstackCheck()
     tradesCount = self.Markets[marketID].totalTrades
     tradeID = self.Markets[marketID].lastTrade
     tradeIDs = array(tradesCount)
@@ -307,7 +273,6 @@ def getTradeIDs(marketID):
     return([FAILURE]: arr)
 
 def setWinningOutcomes(market, outcomes: arr):
-    callstackCheck()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # largest # of winning outcomes is 8
@@ -315,7 +280,6 @@ def setWinningOutcomes(market, outcomes: arr):
     return(1)
 
 def getWinningOutcomes(market):
-    callstackCheck()
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
@@ -324,11 +288,9 @@ def getWinningOutcomes(market):
 
 def getOneWinningOutcome(market, num):
     # whitelist
-    callstackCheck()
     return(self.Markets[market].winningOutcomes[num])
 
 def setTradingFee(market, fee):
-    callstackCheck()
     self.Markets[market].fxpTradingFee = fee
     return(fee)
 
@@ -338,31 +300,24 @@ def setMakerFees(market, makerFees):
     return(makerFees)
 
 def setPushedForward(market, bool, sender):
-    callstackCheck()
     self.Markets[market].pushingForward = bool
     self.Markets[market].bondsMan = sender
     return(1)
 
 def getPushedForward(market):
-    callstackCheck()
     return(self.Markets[market].pushingForward)
 
 def getBondsMan(market):
-    callstackCheck()
     return(self.Markets[market].bondsMan)
 
 def getLastTrade(market):
-    callstackCheck()
     return(self.Markets[market].lastTrade)
 
 def getPrevID(market, trade):
-    callstackCheck()
     return(self.Markets[market].tradeIDs[trade].prevID)
 
 def getTotalTrades(marketID):
-    callstackCheck()
     return(self.Markets[marketID].totalTrades)
 
 def getSender():
-    callstackCheck()
     return(msg.sender)

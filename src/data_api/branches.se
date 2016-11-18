@@ -61,60 +61,48 @@ def init():
     self.Branches[1010101].contract[ethContract] = wallet
     
 def getWallet(branch, currency):
-    checkCallstack()
     return(self.Branches[branch].contract[currency])
 
 # event a branch was most recently forked over
 def getEventForkedOver(branch):
-    checkCallstack()
     return(self.Branches[branch].eventForkedOver)
 
 def setEventForkedOver(branch, event):
-    checkCallstack()
     self.Branches[branch].eventForkedOver = event
     return(1)
 
 def getBaseReporters(branch):
-    checkCallstack()
     return(self.Branches[branch].baseReporters)
 
 def setBaseReporters(branch, num):
-    checkCallstack()
     self.Branches[branch].baseReporters = num
     return(1)
 
 def getOracleOnly(branch):
-    checkCallstack()
     return(self.Branches[branch].oracleOnly)
 
 def getVotePeriod(branch):
-    checkCallstack()
     return(self.Branches[branch].currentVotePeriod)
 
 def getPeriodLength(branch):
-    checkCallstack()
     return(self.Branches[branch].periodLength)
 
 # branch currency balance at start of period
 # currency index 0 is ETH
 # @return fxp
 def setInitialBalance(branch, period, balance, currency):
-    checkCallstack()
     self.Branches[branch].balance[period][currency] = balance
     return(balance)
 
 # @return fxp
 def getInitialBalance(branch, period):
-    checkCallstack()
     return(self.Branches[branch].balance[period])
 
 def getParent(branch):
-    checkCallstack()
     return(self.Branches[branch].parent)
 
 # @return markets in a branch from initial to last
 def getMarketIDsInBranch(branch, initial, last):
-    checkCallstack()
     numMarkets = last - initial
     markets = array(numMarkets)
     i = 0
@@ -124,17 +112,14 @@ def getMarketIDsInBranch(branch, initial, last):
     return(markets: arr)
 
 def getNumMarketsBranch(branch):
-    checkCallstack()
     return(self.Branches[branch].numMarkets)
 
 # @return fxp
 def getMinTradingFee(branch):
-    checkCallstack()
     return(self.Branches[branch].fxpMinTradingFee)
 
 # @return all branches
 def getBranches():
-    checkCallstack()
     b = 0
     numBranches = self.branchListCount
     branches = array(numBranches)
@@ -144,7 +129,6 @@ def getBranches():
     return(branches: arr)
     
 def getBranchesStartingAt(index):
-    checkCallstack()
     b = index
     numBranches = self.branchListCount
     branches = array(numBranches)
@@ -154,22 +138,18 @@ def getBranchesStartingAt(index):
     return(branches: arr)
 
 def getNumBranches():
-    checkCallstack()
     return(self.branchListCount)
 
 def getBranchByNum(branchNumber):
-    checkCallstack()
     return(self.branchList[branchNumber])
 
 def getCreationDate(ID):
-    checkCallstack()
     return(self.Branches[ID].creationDate)
 
 # check that msg.sender is one of our function contracts
 def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, contract, wallet):
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
-    checkCallstack()
     if(!self.Branches[ID].periodLength):
         self.Branches[ID].currentVotePeriod = currentVotePeriod
         self.Branches[ID].periodLength = periodLength
@@ -187,11 +167,9 @@ def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, orac
         return(0)
 
 def getParentPeriod(branch):
-    checkCallstack()
     return(self.Branches[branch].parentPeriod)
 
 def incrementPeriod(branch):
-    checkCallstack()
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
     self.Branches[branch].currentVotePeriod += 1
@@ -199,7 +177,6 @@ def incrementPeriod(branch):
 
 # check that msg.sender is one of our function contracts
 def addMarketToBranch(branch, market):
-    checkCallstack()
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
     numMarkets = self.Branches[branch].numMarkets
@@ -208,11 +185,9 @@ def addMarketToBranch(branch, market):
     return(1)
 
 def setForkPeriod(branch):
-    checkCallstack()
     self.Branches[branch].forkPeriod = self.Branches[branch].currentVotePeriod
     return(1)
 
 # gets the period in which a branch was most recently forked
 def getForkPeriod(branch):
-    checkCallstack()
     return(self.Branches[branch].forkPeriod)
