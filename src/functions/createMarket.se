@@ -383,8 +383,7 @@ def challengeInitialResolution(event):
     # want to resolve as soon as possible
     futurePeriod = block.number / periodLength
 
-    if(!EVENTS.getChallenged(event) && block.timestamp < (EVENTS.getOriginalExpiration(event) + 2*THREE_DAYS) && EVENTS.getFirstPreliminaryOutcome(event)):
-        # challenger here shouldn't have to pay validity bond
+    if(!EVENTS.getChallenged(event) && block.timestamp < (EVENTS.getOriginalExpiration(event) + 2 * THREE_DAYS) && EVENTS.getFirstPreliminaryOutcome(event)):
         addEvent()
         EVENTS.setChallenged(event)
         payExtraBond()
@@ -406,6 +405,7 @@ macro payExtraBond():
 
 # could create a contract which is the sender which uses ecrecover to verify a realitykeys signature on a hash + result, 0 goes to 2**64, 1 goes to 2**65
 # with oraclize.it do value = parseInt(result, 18) to get it in the proper 10**18 base, then do (value - min) * 2**64 / range to submit the result to augur
+# unethical is just a .5 outcome for scalar/categorical, 1.5 for binary as usual
 def resolveEarly(event, outcome):
     callstackCheck()
     if(MUTEX.getMutex() && !mutexWhitelisted()):

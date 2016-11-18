@@ -93,7 +93,7 @@ def penalizeWrong(branch, event):
     # penalization on a regular event if not already penalized, it has outcome, and user reported on it
     elif(!penalizedOnEvent and reportValue and outcome != 0):
         # .25% per event / 2.5% max
-        calculateRepChange(reportValue, POINT_ONE/4)
+        calculateRepChange(reportValue, POINT_ONE / 4)
         updateAfterRep()
         countAsPenalized()
         log(type = penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue)

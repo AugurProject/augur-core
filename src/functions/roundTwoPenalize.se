@@ -92,8 +92,8 @@ def penalizeRoundTwoWrong(branch, event):
             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
         # Do the second (for each user) based on second report and final outcome
         if(reportValue and outcome != 0):
-            calculateRepChange(reportValue, POINT_ONE/4)
-            handleEthicsAndBondRepRedistribution(POINT_ONE/4, ethics, numReportedOn)
+            calculateRepChange(reportValue, POINT_ONE / 4)
+            handleEthicsAndBondRepRedistribution(POINT_ONE / 4, ethics, numReportedOn)
             CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
     else:

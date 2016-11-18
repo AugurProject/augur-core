@@ -317,9 +317,9 @@ def setReportHash(branch, period, reporter, reportHash, event):
 # called in case an event doesn't get reported on at all in a period
 def moveEvent(branch, event):
     callstackCheck()
-    if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch) and !EVENTS.getUncaughtOutcome(event)):
+    if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch) and !EVENTS.getUncaughtOutcome(event)):
         # add to next expiration period
-        self.addEvent(branch, block.timestamp/BRANCHES.getPeriodLength(branch), event)
+        self.addEvent(branch, block.timestamp / BRANCHES.getPeriodLength(branch), event)
         EVENTS.setExpiration(event, block.timestamp)
         EVENTS.setThreshold(event, MAX_THRESHOLD)
         return(1)
