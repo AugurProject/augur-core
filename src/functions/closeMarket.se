@@ -81,8 +81,7 @@ macro checkCloseMarketPreconditions():
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         logReturn(closeMarketLogReturn, -1)
-    # fix for early res
-    if(!EVENTS.getUncaughtOutcome(event)):
+    if(!EVENTS.getUncaughtOutcome(event) && !EVENTS.getFirstPreliminaryOutcome(event)):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         logReturn(closeMarketLogReturn, -2)
@@ -133,6 +132,5 @@ def closeChallengeBond(event):
 
     # outcome is different
     else:
-        # challenger is paying validity bond though... we need to move its payment to event creation time and then it'll be a valid use of funds
-        returnBond + pay half of validity bond to challenger
+        returnBond + pay half of validity bond to challenger [but it's already been paid back to event creator by now, todo fixs]
     return(1)

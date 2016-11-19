@@ -97,11 +97,21 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
-    
+
     wallet = create('wallet.se')
     if(!wallet.initialize(currency)):
         throw()
     if(INFO.setInfo(event, description, msg.sender, 0, currency, wallet) and EVENTS.initializeEvent(event, branch, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress)):
+        if(!EVENTS.getBond(event)):
+            # pay validity / indeterminate protection bond
+            period = block.timestamp / TWENTY_FOUR_HR
+            minFee = COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
+            validityBond = (minFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
+            if(!currency.transferFrom(msg.sender, wallet, validityBond)):
+                throw()
+            EVENTS.setExpiration(event, block.timestamp)
+            EVENTS.setBond(event, validityBond)
+            EVENTS.addPast24(period)
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(event)
@@ -139,7 +149,7 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     # gives ether/cash amount in fixed point
     minFee = COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
     creationFee = max(minFee, creationFee)
-    validityBond = (creationFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
+    period = block.timestamp / TWENTY_FOUR_HR
     numOutcomes = EVENTS.getNumOutcomes(event)
     cumulativeScale = 0
     # market's trading period is the same as the last expiring event in the market
@@ -213,14 +223,6 @@ macro addEvent():
     if(!send(EXPEVENTS, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice)):
         throw()
     EXPEVENTS.addEvent(branch, futurePeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet)
-    if(!EVENTS.getBond(event)):
-        # pay validity / indeterminate protection bond
-        period = block.timestamp / TWENTY_FOUR_HR
-        if(!currency.transferFrom(msg.sender, wallet, validityBond)):
-            throw()
-        EVENTS.setExpiration(event, block.timestamp)
-        EVENTS.setBond(event, validityBond)
-        EVENTS.addPast24(period)
 
 # Updates a trading fee to be lower in a market
 # Errors
@@ -340,7 +342,6 @@ def putEventIntoReportingPeriod(event):
         throw()
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
-    currency = INFO.getCurrency(event)
     # add events to the appropriate reporting period
     branch = EVENTS.getEventBranch(event)
     periodLength = BRANCHES.getPeriodLength(branch)

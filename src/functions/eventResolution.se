@@ -13,8 +13,16 @@ inset('eventHelpers.se')
 # whitelist
 def resolveBinary(event, market, branch, votingPeriodEvent):
     fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
+    prelimOutcome = EVENTS.getFirstPreliminaryOutcome(event)
+    if(prelimOutcome && !fxpOutcome):
+        fxpOutcome = prelimOutcome
     periodLength = BRANCHES.getPeriodLength(branch)
-    ethical = ethicCatch(EVENTS.getEthics(event))
+    ethics = EVENTS.getEthics(event)
+    if(prelimOutcome && !fxpOutcome && prelimOutcome == 3 * ONE_HALF):
+        ethics = 0
+    elif(prelimOutcome && !fxpOutcome):
+        ethics = ONE
+    ethical = ethicCatch(ethics)
     # outcome is set to the binned version of the raw reported outcome
     EVENTS.setOutcome(event, fxpOutcome)
     # ethics is set to the binned version of the raw ethicality outcome
@@ -26,6 +34,9 @@ def resolveBinary(event, market, branch, votingPeriodEvent):
 # whitelist
 def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch, votingPeriodEvent):
     mode = EVENTS.getUncaughtOutcome(event)
+    prelimOutcome = EVENTS.getFirstPreliminaryOutcome(event)
+    if(prelimOutcome && !mode):
+        mode = prelimOutcome
     EVENTS.setMode(event, mode)
     fxpOutcome = mode * (fxpScaledMax - fxpScaledMin) / ONE + fxpScaledMin
     # outcome is set to the mode of the reported outcomes
@@ -34,7 +45,12 @@ def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch
     EVENTS.setOutcome(event, fxpOutcome)
     periodLength = BRANCHES.getPeriodLength(branch)
     # ethics is set to the binned version of the raw ethicality outcome
-    ethical = ethicCatch(EVENTS.getEthics(event))
+    ethics = EVENTS.getEthics(event)
+    if(prelimOutcome && !mode && prelimOutcome == ONE_HALF):
+        ethics = 0
+    elif(prelimOutcome && !mode):
+        ethics = ONE
+    ethical = ethicCatch(ethics)
     ethicOutcome = ONE_HALF * (fxpScaledMax - fxpScaledMin) / ONE + fxpScaledMin
     EVENTS.setEthics(event, ethical)
     closeResult = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
