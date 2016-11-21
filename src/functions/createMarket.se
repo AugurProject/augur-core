@@ -24,6 +24,7 @@ import branches as BRANCHES
 import info as INFO
 import markets as MARKETS
 import backstops as BACKSTOPS
+import reporting as REPORTING
 import events as EVENTS
 import expiringEvents as EXPEVENTS
 import mutex as MUTEX
@@ -38,6 +39,7 @@ macro COST_PER_REPORTER: 3500000
 macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 macro MAX_FEE: 2 ** 62
 macro THREE_DAYS: 259200
+macro FIRST_RESOLVE_BOND: 10 * ONE
 
 macro checkSubcurrencyIsValid(contract):
     allowance = $contract.allowance(msg.sender, self)
@@ -101,7 +103,18 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     wallet = create('wallet.se')
     if(!wallet.initialize(currency)):
         throw()
-    if(INFO.setInfo(event, description, msg.sender, 0, currency, wallet) and EVENTS.initializeEvent(event, branch, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress)):
+    REPORTING.addReporter(branch, event, 0, 0, 0)
+    firstResolveBondPaid = 0
+    firstResolveBondPoster = 0
+    resolverPaid = REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, resolutionAddress), FIRST_RESOLVE_BOND) && REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, event), FIRST_RESOLVE_BOND)
+    if(resolverPaid)
+        firstResolveBondPaid = 1
+        firstResolveBondPoster = resolutionAddress
+    # sender / event creator paid
+    elif(REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, msg.sender), FIRST_RESOLVE_BOND) && REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, event), FIRST_RESOLVE_BOND))
+        firstResolveBondPaid = 1
+        firstResolveBondPoster = msg.sender
+    if(INFO.setInfo(event, description, msg.sender, 0, currency, wallet) and EVENTS.initializeEvent(event, branch, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, firstResolveBondPoster) && firstResolveBondPaid):
         if(!EVENTS.getBond(event)):
             # pay validity / indeterminate protection bond
             period = block.timestamp / TWENTY_FOUR_HR
@@ -260,6 +273,7 @@ def updateTradingFee(market, fxpTradingFee):
     # and market remains with old expiration dateevent
 # In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
 # todo add comments re return values and test again
+# test this w/ new early first resolver thing too
 def pushMarketForward(branch, market):
     refund()
     if(MUTEX.getMutex()):

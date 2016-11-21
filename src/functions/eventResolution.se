@@ -7,6 +7,8 @@ extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:i
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
 
+macro FIRST_RESOLVE_BOND: 10 * ONE
+
 ### Serves to resolve events
 
 # Resolves a binary market
@@ -103,6 +105,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         EVENTS.setRejected($event, EVENTS.getExpiration($event) / $periodLength)
         # set $event expiration to be the old date
         EVENTS.setExpiration($event, EVENTS.getOriginalExpiration($event))
+        handleFirstResolverBond()
         -6
     elif($indeterminateAndReadyToResolve or !ethical):
         # give $event bond money to reporters
@@ -115,6 +118,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             EVENTS.setOutcome($event, $ethicOutcome)
         else:
             EVENTS.setOutcome($event, $indeterminate)
+        handleFirstResolverBond()
         1
     else:
         # return bond as a normal event resolution
@@ -130,4 +134,14 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             EXPEVENTS.removeEvent($branch, $period)
             EXPEVENTS.deleteEvent($branch, $period, $event)
             EVENTS.setOriginalExpiration($event, EVENTS.getExpiration($event))
+        handleFirstResolverBond()
         1
+
+macro handleFirstResolverBond():
+    $resolverBondPoster = EVENTS.getResolveBondPoster($event)
+    
+    # if different outcome then first resolver bond goes to reporters, any other normal case it is returned
+    if(EVENTS.getFirstPreliminaryOutcome($event) != EVENTS.getOutcome($event)):
+        REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) && REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $branch), FIRST_RESOLVE_BOND)
+    else:
+        REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) && REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $resolverBondPoster), FIRST_RESOLVE_BOND)

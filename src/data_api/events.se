@@ -42,10 +42,14 @@ inset('refund.se')
 # extraBond is a bond to challenge the initial resolution
 # firstPreliminaryOutcome is the outcome submitted by the resolutionAddress
 # challenged is whether an event has been challenged already
-data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent, resolutionAddress, extraBond, firstPreliminaryOutcome, challenged)
+# resolveBondPoster is the address which posted the rep bond for the first resolution period
+data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent, resolutionAddress, extraBond, firstPreliminaryOutcome, challenged, resolveBondPoster)
 
 # Keeps track of number of events created in the past 24 hours
 data past24Hours[]
+
+def getResolveBondPoster(event):
+    return(self.Events[event].resolveBondPoster)
 
 def getChallenged(event):
     return(self.Events[event].challenged)
@@ -190,7 +194,7 @@ def getUncaughtOutcome(event):
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
     return(self.Events[event].uncaughtOutcome)
 
-def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionSource):
+def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionSource, resolveBondPoster):
     # check that msg.sender is one of our function contracts
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
@@ -201,6 +205,7 @@ def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOut
         self.Events[ID].fxpMinValue = fxpMinValue
         self.Events[ID].fxpMaxValue = fxpMaxValue
         self.Events[ID].numOutcomes = numOutcomes
+        self.Events[ID].resolveBondPoster = resolveBondPoster
         resolutionSourceLength = len(resolution)
         self.Events[ID].resolutionSourceLength = resolutionSourceLength
         save(self.Events[ID].resolutionSource[0], resolution, chars=resolutionSourceLength)
