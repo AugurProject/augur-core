@@ -1,0 +1,45 @@
+type float: [a, b, c]
+
+macro float($x) + float($y):
+	if(!safeToAdd($x, $y)):
+		throw()
+	float($x + $y)
+
+macro float($x) - float($y):
+	if(!safeToSubtract($x, $y)):
+		throw()
+	float($x - $y)
+
+macro float($x) * float($y):
+	if(!safeToMultiply($x, $y)):
+		throw()
+	float($x * $y / 10^18)
+
+macro float($x) / float($y):
+	if($y == 0):
+		throw()
+	float($x * 10^18 / $y)
+	
+macro unfloat($x):
+	$x / 10^18
+
+macro floatfy($x):
+	float($x * 10^18)
+
+macro float($x) = float($y):
+	$x = $y
+
+macro with(float($x), float($y), $z):
+	with($x, $y, $z)
+
+macro safeToAdd($a, $b):
+	$c = $a + $b
+	($c >= $a && $c >= $b)
+    (($a + $b) >= $a)
+
+macro safeToSubtract($a, $b):
+    ($b <= $a)
+
+macro safeToMultiply($a, $b):
+	$c = $a * $b
+	($a == 0 || ($c / $a) == $b)
