@@ -58,6 +58,7 @@ def collectFees(branch, sender):
         send(CONSENSUS, msg.value)
         return(1)
     # shouldn't be reached / if so no effect
-    elif(!CONSENSUS.getFeesCollected(branch, sender, lastPeriod)):
-        CONSENSUS.setFeesCollected(branch, sender, lastPeriod)
+    else:
+        if(!CONSENSUS.getFeesCollected(branch, sender, lastPeriod)):
+            CONSENSUS.setFeesCollected(branch, sender, lastPeriod)
         return(2)
