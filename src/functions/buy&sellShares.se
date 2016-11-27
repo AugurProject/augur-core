@@ -143,25 +143,11 @@ macro remove_trade($trade_id, $market):
 def buy(amount, price, market, outcome):
     refund()
 
-    # Check if there are any "crossed orders" in this block (i.e., ask orders
+    # Check if there are any "crossed orders" (i.e., ask orders
     # at a price less than or equal to the buy price).
     bestAskID = TRADES.getBestAskID(market, outcome)
-    if bestAskID != 0:
-        if TRADES.get_trade_block(bestAskID) == block.number:
-            bestAskPrice = TRADES.get_price(bestAskID)
-            if price >= bestAskPrice:
-                logReturn(buyAndSellShares_logReturn, -5)
-                # bestAskAmount = TRADES.get_amount(bestAskID)
-                # if amount > bestAskAmount:
-                #     tradeHash = TRADES.makeTradeHash(bestAskAmount * price / ONE, 0, [bestAskID])
-                #     if TRADES.commitTrade(tradeHash, call=delegate) != 1:
-                #         logReturn(buyAndSellShares_logReturn, -5)
-                #     amount -= bestAskAmount
-                # else:
-                #     tradeHash = TRADES.makeTradeHash(amount * price / ONE, 0, [bestAskID])
-                #     if TRADES.commitTrade(tradeHash, call=delegate) != 1:
-                #         logReturn(buyAndSellShares_logReturn, -5)
-                #     logReturn(buyAndSellShares_logReturn, SUCCESS)
+    if bestAskID != 0 and price >= TRADES.get_price(bestAskID):
+        logReturn(buyAndSellShares_logReturn, -5)
 
     trading_fee = MARKETS.getTradingFee(market)
     cumScale = MARKETS.getCumScale(market)
@@ -191,25 +177,11 @@ def buy(amount, price, market, outcome):
 def sell(amount, price, market, outcome):
     refund()
 
-    # Check if there are any "crossed orders" in this block (i.e., bid orders
+    # Check if there are any "crossed orders" (i.e., bid orders
     # at a price greater than or equal to the sell price).
     bestBidID = TRADES.getBestBidID(market, outcome)
-    if bestBidID != 0:
-        if TRADES.get_trade_block(bestBidID) == block.number:
-            bestBidPrice = TRADES.get_price(bestBidID)
-            if price <= bestBidPrice:
-                logReturn(buyAndSellShares_logReturn, -5)
-                # bestBidAmount = TRADES.get_amount(bestBidID)
-                # if amount > bestBidAmount:
-                #     tradeHash = TRADES.makeTradeHash(0, bestBidAmount, [bestBidID])
-                #     if TRADES.commitTrade(tradeHash, call=delegate) != 1:
-                #         logReturn(buyAndSellShares_logReturn, -5)
-                #     amount -= bestBidAmount
-                # else:
-                #     tradeHash = TRADES.makeTradeHash(0, amount, [bestBidID])
-                #     if TRADES.commitTrade(tradeHash, call=delegate) != 1:
-                #         logReturn(buyAndSellShares_logReturn, -5)
-                #     logReturn(buyAndSellShares_logReturn, SUCCESS)
+    if bestBidID != 0 and price <= TRADES.get_price(bestBidID):
+        logReturn(buyAndSellShares_logReturn, -5)
 
     branch = MARKETS.getBranchID(market)
     trading_fee = MARKETS.getTradingFee(market)

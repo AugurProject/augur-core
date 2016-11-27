@@ -6,7 +6,6 @@ inset('refund.se')
 data tradeCommits[](hash, block)
 # tradeID is index
 data trades[](id, type, market, amount, price, owner, block, outcome)
-
 # indices are marketID and outcomeID
 data bestTrade[][](bid, ask)
 
@@ -64,22 +63,17 @@ def saveTrade(trade_id, type, market, amount, price, sender, outcome):
     self.trades[trade_id].outcome = outcome
 
     # Update best bid and ask trade IDs:
-    #  - if this block's best trade is set, but this trade price is better,
+    #  - if this outcome's best trade is set, but this trade price is better,
     #    then this trade ID is the new best trade
-    #  - if this block's best trade is unset, then this trade ID is best trade
+    #  - if this outcome's best trade is unset, then this trade ID is the new
+    #    best trade
     if type == 1:
         bestBidID = self.bestTrade[market][outcome].bid
-        if bestBidID != 0 and self.trades[bestBidID].block == block.number:
-            if price > self.trades[bestBidID].price:
-                self.bestTrade[market][outcome].bid = trade_id
-        else:
+        if bestBidID == 0 or price > self.trades[bestBidID].price:
             self.bestTrade[market][outcome].bid = trade_id
-    elif type == 2:
+    else:
         bestAskID = self.bestTrade[market][outcome].ask
-        if bestAskID != 0 and self.trades[bestAskID].block == block.number:
-            if price < self.trades[bestAskID].price:
-                self.bestTrade[market][outcome].ask = trade_id
-        else:
+        if bestAskID == 0 or price < self.trades[bestAskID].price:
             self.bestTrade[market][outcome].ask = trade_id
 
     return(1)
