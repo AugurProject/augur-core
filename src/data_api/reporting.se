@@ -202,6 +202,8 @@ def subtractRep(branch, index, fxpValue):
 
 # safe adders idea pulled from piper merriam's btcrelay audit
 macro safeToAdd($a, $b):
+    $c = $a + $b
+    ($c >= $a && $c >= $b)
     (($a + $b) >= $a)
 
 macro safeToSubtract($a, $b):
@@ -226,6 +228,8 @@ def addDormantRep(branch, index, fxpValue):
 def subtractDormantRep(branch, index, fxpValue):
     # if(!self.whitelist.check(msg.sender) or megakeywhitelistinearlydays):
     #   throw()
+    if(fxpValue > self.Reporting[branch].dormantRep[index].repValue):
+        throw()
     self.Reporting[branch].dormantRep[index].repValue -= fxpValue
     return(1)
 

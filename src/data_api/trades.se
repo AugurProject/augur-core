@@ -78,6 +78,8 @@ def removeTrade(id):
     return(1)
 
 def fillTrade(tradeID, fill):
+    if(fill > self.trades[tradeID].amount):
+        throw()
     self.trades[tradeID].amount -= fill
     return(1)
 

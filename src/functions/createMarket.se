@@ -104,6 +104,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     if(!wallet.initialize(currency)):
         throw()
     REPORTING.addReporter(branch, event, 0, 0, 0)
+
     firstResolveBondPaid = 0
     firstResolveBondPoster = 0
     resolverPaid = REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, resolutionAddress), FIRST_RESOLVE_BOND) && REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, event), FIRST_RESOLVE_BOND)

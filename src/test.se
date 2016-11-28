@@ -1,13 +1,6 @@
-data foo: uint256
+data foo
+inset('data_api/float.se')
 
-def ok(x, y, z):
-    n = sha3([x,y,z], items=3)
-    return(n)
-    
-def okk(y):
-    x = self.foo
-    valueToSpend = min(x, y)
-    if(x < y):
-        return(1)
-        
-    return(valueToSpend: uint256)
+def ok(x):
+    n = floatfy(55)
+    return(unfloat(n))

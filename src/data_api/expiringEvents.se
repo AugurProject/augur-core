@@ -218,7 +218,7 @@ def setNumEventsToReportOn(branch):
     eventsInPeriod = self.periodEventInfo[branch][period].numberEvents
     numberOfRequiredEvents = self.periodEventInfo[branch][period].numReqEvents
     numberOfRemovedEvents = self.periodEventInfo[branch][period].numberRemoved
-    self.periodEventInfo[branch][period].numEventsToReportOn = (eventsInPeriod - numberOfRequiredEvents - numberOfRemovedEvents)*BRANCHES.getBaseReporters(branch)
+    self.periodEventInfo[branch][period].numEventsToReportOn = (eventsInPeriod - numberOfRequiredEvents - numberOfRemovedEvents) * BRANCHES.getBaseReporters(branch)
     return(1)
 
 # gets number of available events to report on, not counting required events

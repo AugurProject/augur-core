@@ -1,26 +1,30 @@
 type float: [a, b, c]
 
 macro float($x) + float($y):
-	if(!safeToAdd($x, $y)):
-		throw()
-	float($x + $y)
+    float:
+    	if(!safeToAdd($x, $y)):
+	    	~invalid()
+	    $x + $y
 
 macro float($x) - float($y):
-	if(!safeToSubtract($x, $y)):
-		throw()
-	float($x - $y)
+    float:
+	    if(!safeToSubtract($x, $y)):
+		    ~invalid()
+	    $x - $y
 
 macro float($x) * float($y):
-	if(!safeToMultiply($x, $y)):
-		throw()
-	float($x * $y / 10^18)
+    float:
+	    if(!safeToMultiply($x, $y)):
+		    ~invalid()
+	    $x * $y / 10^18
 
 macro float($x) / float($y):
-	if($y == 0):
-		throw()
-	float($x * 10^18 / $y)
+    float:
+	    if($y == 0):
+		    ~invalid()
+	    $x * 10^18 / $y
 	
-macro unfloat($x):
+macro unfloat(float($x)):
 	$x / 10^18
 
 macro floatfy($x):
@@ -35,7 +39,6 @@ macro with(float($x), float($y), $z):
 macro safeToAdd($a, $b):
 	$c = $a + $b
 	($c >= $a && $c >= $b)
-    (($a + $b) >= $a)
 
 macro safeToSubtract($a, $b):
     ($b <= $a)
