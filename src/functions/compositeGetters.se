@@ -29,7 +29,7 @@ import proportionCorrect as PROPORTION
 inset('refund.se')
 
 macro TRADE_FIELDS: 8
-macro EVENTS_FIELDS: 8
+macro EVENTS_FIELDS: 9
 macro OUTCOMES_FIELDS: 3
 macro BASE_FIELDS: 14
 macro BASE_CACHE_FIELDS: 10
@@ -111,8 +111,8 @@ def getMarketInfo(marketID, account):
     while j < EVENTS_FIELDS - 2:
         marketInfo[index + j] = eventInfo[j]
         j += 1
-    marketInfo[index + EVENTS_FIELDS - 1] = EVENTS.getEthical(eventID)
-    marketInfo[index + EVENTS_FIELDS] = PROPORTION.proportionCorrect(eventID)
+    marketInfo[index + EVENTS_FIELDS - 2] = EVENTS.getEthical(eventID)
+    marketInfo[index + EVENTS_FIELDS - 1] = PROPORTION.proportionCorrect(eventID)
     index += EVENTS_FIELDS
 
     # gather outcomes info: [sharesPurchased, price]
