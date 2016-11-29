@@ -2961,7 +2961,7 @@
         "sig": "extern completeSets: [buyCompleteSets:[int256,int256]:int256, sellCompleteSets:[int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "compositeGetters": {
-        "address": "0x5f67ab9ff79be97b27ac8f26ef9f4b429b82e2df", 
+        "address": "0x7c8c360e897ecf0fc377a1eace3ce5ebcc12fa70", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -3001,7 +3001,7 @@
             "inset('refund.se')", 
             "", 
             "macro TRADE_FIELDS: 8", 
-            "macro EVENTS_FIELDS: 8", 
+            "macro EVENTS_FIELDS: 9", 
             "macro OUTCOMES_FIELDS: 3", 
             "macro BASE_FIELDS: 14", 
             "macro BASE_CACHE_FIELDS: 10", 
@@ -3083,8 +3083,8 @@
             "    while j < EVENTS_FIELDS - 2:", 
             "        marketInfo[index + j] = eventInfo[j]", 
             "        j += 1", 
-            "    marketInfo[index + EVENTS_FIELDS - 1] = EVENTS.getEthical(eventID)", 
-            "    marketInfo[index + EVENTS_FIELDS] = PROPORTION.proportionCorrect(eventID)", 
+            "    marketInfo[index + EVENTS_FIELDS - 2] = EVENTS.getEthical(eventID)", 
+            "    marketInfo[index + EVENTS_FIELDS - 1] = PROPORTION.proportionCorrect(eventID)", 
             "    index += EVENTS_FIELDS", 
             "", 
             "    # gather outcomes info: [sharesPurchased, price]", 
