@@ -19,6 +19,7 @@
 # Any questions please contact joey@augur.net
 
 inset('refund.se')
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 
 # Branches keeps track of data associated with branches in augur
 # Branches' index is the hash of the branch (aka branch)
@@ -49,6 +50,13 @@ data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTr
 data branchList[]
 data branchListCount
 
+macro checkSubcurrencyIsValid(contract):
+    allowance = $contract.allowance(msg.sender, self)
+    balance = $contract.balanceOf(self)
+    transfer = $contract.transfer(msg.sender, 0)
+    transferFrom = $contract.transferFrom(self, msg.sender, 0)
+    approve = $contract.approve(self, 0)
+
 def init():
     self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
     self.Branches[1010101].periodLength = 15 # 2 hours
@@ -63,11 +71,35 @@ def init():
     wallet.initialize(ethContract)
     self.Branches[1010101].contract[ethContract] = wallet
     
-def addCurrency()
+# todo whitelist updates
+def updateNumCurrencies(branch, num):
+    self.Branches[branch].numCurrencies = num
+    
+# todo whitelist updates
+def addCurrency(branch, currency):
+    checkSubcurrencyIsValid(currency)
+    self.Branches[branch].currencies[self.Branches[branch].numCurrencies] = currency
+    self.Branches[branch].numCurrencies += 1
+    wallet = create('wallet.se')
+    wallet.initialize(currency)
+    self.Branches[branch].contract[currency] = wallet
+    return(1)
+  
+# todo whitelist updates
+def replaceCurrency(branch, oldCurrencyIndex, newCurrency):
+    checkSubcurrencyIsValid(newCurrency)
+    self.Branches[branch].currencies[oldCurrencyIndex] = newCurrency
+    wallet = create('wallet.se')
+    wallet.initialize(newCurrency)
+    self.Branches[branch].contract[newCurrency] = wallet
+    return(1)
 
-def replaceCurrency()
-
-def removeCurrency()
+# todo whitelist updates
+def removeLastCurrency(branch):
+    self.Branches[branch].contract[self.Branches[branch].currencies[self.Branches[branch].numCurrencies]] = 0
+    self.Branches[branch].currencies[self.Branches[branch].numCurrencies] = 0
+    self.Branches[branch].numCurrencies -= 1
+    return(1)
 
 def getCurrency(branch, index):
     return(self.Branches[branch].currencies[index])
