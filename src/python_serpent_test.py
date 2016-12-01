@@ -17,6 +17,43 @@ HALF = ONE/2
 =======
 >>>>>>> develop
 
+def test_trades():
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract('data_api/trades.se')
+
+    marketID = 42
+    outcomeID = 1
+    tradeID = 1000
+    sender = 2827
+    assert(c.saveTrade(tradeID, 1, marketID, 1, 2, sender, outcomeID)==1), "Saving trade failed"
+    assert(c.getBestBidID(marketID, outcomeID)==tradeID), "Best bid ID not assigned correctly"
+    assert(c.getBestAskID(marketID, outcomeID)==0), "Best ask ID incorrectly assigned"
+
+    tradeID1 = 1001
+    assert(c.saveTrade(tradeID1, 1, marketID, 1, 3, sender, outcomeID)==1), "Saving trade failed"
+    assert(c.getBestBidID(marketID, outcomeID)==tradeID1), "Best bid ID not assigned correctly"
+    assert(c.getBestAskID(marketID, outcomeID)==0), "Best ask ID incorrectly assigned"
+
+    tradeID2 = 1002
+    assert(c.saveTrade(tradeID2, 2, marketID, 1, 2, sender, outcomeID)==1), "Saving trade failed"
+    assert(c.getBestBidID(marketID, outcomeID)==tradeID1), "Best bid ID reassigned incorrectly"
+    assert(c.getBestAskID(marketID, outcomeID)==tradeID2), "Best ask ID not assigned correctly"
+
+    tradeID3 = 1003
+    assert(c.saveTrade(tradeID3, 2, marketID, 1, 1, sender, outcomeID)==1), "Saving trade failed"
+    assert(c.getBestBidID(marketID, outcomeID)==tradeID1), "Best bid ID reassigned incorrectly"
+    assert(c.getBestAskID(marketID, outcomeID)==tradeID3), "Best ask ID not assigned correctly"
+
+    assert(c.remove_trade(tradeID1)==1), "Remove trade failed"
+    assert(c.getBestBidID(marketID, outcomeID)==0), "Best bid ID not removed correctly"
+    assert(c.getBestAskID(marketID, outcomeID)==tradeID3), "Best ask ID removed incorrectly"
+
+    tradeID4 = 1004
+    assert(c.saveTrade(tradeID4, 1, marketID, 1, 1, sender, outcomeID)==1), "Saving trade failed"
+    assert(c.getBestBidID(marketID, outcomeID)==tradeID4), "Best bid ID not assigned correctly"
+    print "TRADES OK"
+
 def test_cash():
     t.gas_limit = 100000000
     s = t.state()
@@ -2655,12 +2692,22 @@ if __name__ == '__main__':
 
 >>>>>>> develop
     # data/api tests
+<<<<<<< HEAD
     # test_cash()
     # test_ether()
     # test_log_exp()
     # test_exp()
     # test_markets()
     # test_reporting()
+=======
+    test_trades()
+    #test_cash()
+    #test_ether()
+    #test_log_exp()
+    #test_exp()
+    #test_markets()
+    #test_reporting()
+>>>>>>> 9e986d104e7a1392a43310b2414fe0073bffbf60
 
     # function tests
 <<<<<<< HEAD
@@ -2676,7 +2723,7 @@ if __name__ == '__main__':
     #test_consensus_multiple_reporters()
     #test_pen_not_enough_reports()
     #test_update_trading_fee()
-    calculate_max_trade_ids(gas_limit=4712388)
+    #calculate_max_trade_ids(gas_limit=4712388)
     #trading_gas()
 =======
     # test_trading()

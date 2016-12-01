@@ -117,3 +117,64 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
             EVENTS.setOriginalExpiration($event, EVENTS.getExpiration($event))
         1
 
+<<<<<<< HEAD
+=======
+# Resolves a binary market
+def resolveBinary(event, market, branch, votingPeriodEvent):
+    refund()
+    fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
+    periodLength = BRANCHES.getPeriodLength(branch)
+    ethical = ethic_catch(EVENTS.getEthical(event))
+    # outcome is set to the binned version of the raw reported outcome
+    EVENTS.setOutcome(event, fxpOutcome)
+    # ethics is set to the binned version of the raw ethicality outcome
+    EVENTS.setEthics(event, ethical)
+    val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 0, 0, 0)
+    return(val)
+
+# Resolves a categorical market
+def resolveCategoricalOrScalar(scaled_min, scaled_max, event, market, branch, votingPeriodEvent):
+    refund()
+    mode = EVENTS.getUncaughtOutcome(event)
+    EVENTS.setmode(event, mode)
+    fxpOutcome = mode * (scaled_max - scaled_min)/ONE + scaled_min
+    if(categorical(event)):
+        fxpOutcome = round(fxpOutcome)
+    # outcome is set to the mode of the reported outcomes
+    EVENTS.setOutcome(event, fxpOutcome)
+    periodLength = BRANCHES.getPeriodLength(branch)
+    # ethics is set to the binned version of the raw ethicality outcome
+    ethical = ethic_catch(EVENTS.getEthical(event))
+    ethicOutcome = ONEHALF * (scaled_max - scaled_min)/ONE + scaled_min
+    EVENTS.setEthics(event, ethical)
+    val = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
+    return(val)
+
+macro round($x):
+    if(($x + ONEHALF) / ONE != ($x / ONE)):
+        ($x + ONEHALF) / ONE * ONE
+    else:
+        $x / ONE * ONE
+        
+macro categorical($event):
+    (EVENTS.getNumOutcomes($event) > 2)
+
+# Determines the "winning outcomes" for a given market
+# Easiest to give examples:
+    # 1D Markets:
+        # Binary or Categorical will have 1 winning outcome [1 or 2 for binary, 1 thru numOutcomes for categorical is the poss. value for the winning outcome]
+def determineWinningOutcomes(event):
+    refund()
+    winningOutcomes = array(8)
+    fxpOutcome = EVENTS.getOutcome(event)
+    outcome = fxpOutcome/ONE
+    if(n==0):
+        #scalar or .5
+        if(scalar(event) || fxpOutcome==3*ONEHALF):
+            winningOutcomes[0] = 1
+            winningOutcomes[1] = 2
+        # anything besides scalar or .5
+        else:
+            winningOutcomes[0] += outcome
+    return(winningOutcomes: arr)
+>>>>>>> 9e986d104e7a1392a43310b2414fe0073bffbf60

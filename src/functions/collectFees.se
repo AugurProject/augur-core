@@ -20,11 +20,14 @@ inset('../data_api/periodStage.se')
 # 2 means no errors but didnt report last period
 # distribute any eth here too
 def collectFees(branch, sender):
+<<<<<<< HEAD
     callstackCheck()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
     MUTEX.setMutex()
 
+=======
+>>>>>>> 9e986d104e7a1392a43310b2414fe0073bffbf60
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = BRANCHES.getVotePeriod(branch)
     lastPeriod = votePeriod - 1
@@ -33,6 +36,7 @@ def collectFees(branch, sender):
     checkCollectFeesPreconditions()
     
     # need 1 rep to claim fees
+<<<<<<< HEAD
     if(newRep < ONE):
         prepareInfoForConsensus()
         return(2)
@@ -91,3 +95,44 @@ macro prepareInfoForConsensus():
     CONSENSUS.setRefund(sender, msg.value)
     if(!send(CONSENSUS, msg.value)):
         throw()
+=======
+    if(!CONSENSUS.getFeesCollected(branch, sender, lastPeriod) && newRep>ONE):
+        denominator = CONSENSUS.getDenominator(branch, lastPeriod)
+        # sets the amount of rep available for redistribution in the next period
+        if(!CONSENSUS.getFeeFirst(branch, lastPeriod)):
+            CONSENSUS.setFeeFirst(branch, lastPeriod, 1)
+            CONSENSUS.setPeriodBalance(branch, lastPeriod, REPORTING.getRepBalance(branch, branch))
+        gainedRep = newRep * CONSENSUS.getPeriodBalance(branch, lastPeriod) / denominator
+        #if(lostRep) newRep should be == EXPEVENTS.getAfterRep(branch, period, sender) + gainedRep
+        #if(gainedRep) newRep should be == EXPEVENTS.getBeforeRep(branch, period, sender) + gainedRep
+        # give a reporter their portion of redistributed rep
+        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, sender), gainedRep)
+        REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, branch), gainedRep)
+        cash = BRANCHES.getInitialBalance(branch, lastPeriod) * newRep / denominator
+        # give a reporter their portion of the trading fees
+        CASH.addCash(sender, cash)
+        CASH.subtractCash(branch, cash)
+        CONSENSUS.setFeesCollected(branch, sender, lastPeriod)
+        # return not reported enough bond if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees
+        # todo first period this won't have been paid?
+        if(CONSENSUS.getNotEnoughPenalized(branch, msg.sender, lastPeriod)==0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
+            CONSENSUS.doRefund(msg.sender, msg.sender)
+        # need to pay not reporting bond
+        if(msg.value < 500000*tx.gasprice):
+            throw()
+        balance = REPORTING.getRepBalance(branch, msg.sender)
+        dormantRep = REPORTING.balanceOf(branch, msg.sender)
+        # Record rep for next report period before any redistributions
+        # todo what if in first period these before/after/etc haven't been set?
+        EXPEVENTS.setBeforeRep(branch, votePeriod, balance, msg.sender)
+        EXPEVENTS.setAfterRep(branch, votePeriod, balance, msg.sender)
+        EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, msg.sender)
+        CONSENSUS.setRefund(msg.sender, msg.value)
+        send(CONSENSUS, msg.value)
+        return(1)
+    # shouldn't be reached / if so no effect
+    else:
+        if(!CONSENSUS.getFeesCollected(branch, sender, lastPeriod)):
+            CONSENSUS.setFeesCollected(branch, sender, lastPeriod)
+        return(2)
+>>>>>>> 9e986d104e7a1392a43310b2414fe0073bffbf60

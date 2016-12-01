@@ -24,6 +24,7 @@ Optional flags:
 import sys
 import os
 import json
+import re
 import shutil
 import subprocess
 import getopt
@@ -84,7 +85,7 @@ def get_old_api(api_path, isLocal=False):
 
 # Retrieve "send" and/or "returns" values from the old API
 def get_send_returns(contract_name, method_name, old_api):
-    send, returns, mutable, gas, parser, fixed = None, None, None, None, None, None
+    send, returns, mutable, gas, parser, fixed, label, description = None, None, None, None, None, None, None, None
     if old_api and contract_name in old_api and method_name in old_api[contract_name]:
         if "send" in old_api[contract_name][method_name]:
             send = old_api[contract_name][method_name]["send"]
@@ -98,16 +99,22 @@ def get_send_returns(contract_name, method_name, old_api):
             parser = old_api[contract_name][method_name]["parser"]
         if "fixed" in old_api[contract_name][method_name]:
             fixed = old_api[contract_name][method_name]["fixed"]
-    return send, returns, mutable, gas, parser, fixed
+        if "label" in old_api[contract_name][method_name]:
+            label = old_api[contract_name][method_name]["label"]
+        if "description" in old_api[contract_name][method_name]:
+            description = old_api[contract_name][method_name]["description"]
+    return send, returns, mutable, gas, parser, fixed, label, description
 
 def update_from_old_api(method, contract_name, method_name, old_api):
-    send, returns, mutable, gas, parser, fixed = get_send_returns(contract_name, method_name, old_api)
+    send, returns, mutable, gas, parser, fixed, label, description = get_send_returns(contract_name, method_name, old_api)
     if send is not None: method["send"] = send
     if returns is not None: method["returns"] = returns
     if mutable is not None: method["mutable"] = mutable
     if gas is not None: method["gas"] = gas
     if parser is not None: method["parser"] = parser
     if fixed is not None: method["fixed"] = fixed
+    if label is not None: method["label"] = label
+    if description is not None: method["description"] = description
     return method
 
 def get_input_names(inputs):
@@ -123,9 +130,14 @@ def get_fixedpoint_inputs(input_list):
             fxp_inputs.append(i)
     return fxp_inputs
 
+def make_method_label(method):
+    label = re.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', method)
+    return label[0].upper() + label.replace('_', ' ')[1:]
+
 def update_from_full_signature(name, inputs, outputs):
     split_name = name.split("(")
     method = {"method": split_name[0]}
+    method["label"] = make_method_label(method["method"])
     if len(inputs):
         method["signature"] = get_input_types(inputs)
         method["inputs"] = get_input_names(inputs)
