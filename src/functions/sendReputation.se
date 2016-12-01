@@ -34,6 +34,7 @@ import repContract as REPCONTRACT
 import mutex as MUTEX
 inset('../data_api/refund.se')
 inset('../data_api/periodStage.se')
+inset('../data_api/float.se')
 
 # sender/owner, then spender
 data amountCanSpend[][](branch[])

@@ -7,6 +7,7 @@ import consensusData as CONSENSUS
 import mutex as MUTEX
 inset('../data_api/refund.se')
 inset('../data_api/periodStage.se')
+inset('../data_api/float.se')
 
 # Anti cheat/collusion mechanism: provide ballot and random salt to steal rep from a colluder
 # Returns 1 on success
@@ -25,7 +26,7 @@ def slashRep(branch, salt, report, ethics, reporter, event):
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = BRANCHES.getVotePeriod(branch)
     alreadySlashed = CONSENSUS.getSlashed(branch, votePeriod, reporter)
-    votePeriodShouldBe = block.timestamp / periodLength - 1
+    votePeriodShouldBe = safeSub(safeDiv(block.timestamp, periodLength), 1)
     realHash = EXPEVENTS.getReportHash(branch, votePeriod, reporter, event)
     hashInfo = array(5)
     hashInfo[0] = reporter
@@ -46,9 +47,9 @@ def slashRep(branch, salt, report, ethics, reporter, event):
     # removes rep from colluder
     REPORTING.subtractRep(branch, reporterIndex, reporterBalance)
     # gives truther half
-    REPORTING.addRep(branch, trutherIndex, (reporterBalance * ONE_HALF / ONE))
+    REPORTING.addRep(branch, trutherIndex, safeFxpMul(reporterBalance, ONE_HALF))
     # other half sent to branch
-    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), reporterBalance * ONE_HALF / ONE)
+    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), safeFxpMul(reporterBalance, ONE_HALF))
     MUTEX.unsetMutex()
     return(1)
 

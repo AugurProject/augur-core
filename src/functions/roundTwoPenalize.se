@@ -15,6 +15,8 @@ inset('eventHelpers.se')
 inset('redistributeRep.se')
 inset('proportionCorrect.se')
 inset('repChange.se')
+inset('../data_api/float.se')
+
 inset('../data_api/periodStage.se')
 
 # event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
@@ -68,7 +70,7 @@ def penalizeRoundTwoWrong(branch, event):
     oldEthics = EXPEVENTS.getEthicReport(branch, lastPenalizationPeriod, event, msg.sender)
     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, lastPeriodVotedOn) / EXPIRING.getNumberEvents(branch, lastPeriodVotedOn)
 
-    bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2) / 2 ** 64
+    bond = safeAdd(averageAdjudicationCost, safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2)))
     bond = min(bond, MIN_BOND)
     ethical = EVENTS.getEthics(event)
     p = proportionCorrect(event, 0)
@@ -141,21 +143,21 @@ macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn)
     if($ethics != ethicCatch(ethical) and repChange >= 0 and BACKSTOPS.getDisputedOverEthics(event)):
         if($numReportedOn < 10):
             # ensures max penalty is 10% per event
-            repChange = -$maxPenalty / 10 * repBalance / ONE
+            repChange = safeFxpMul(-$maxPenalty / 10, repBalance)
         else:
-            repChange = -$maxPenalty / $numReportedOn * repBalance / ONE
+            repChange = safeFxpMul(-$maxPenalty / $numReportedOn, repBalance)
     if(repBalance + repChange <= 0):
-        repChange = -1 * repBalance
+        repChange = -repBalance
     # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process # todo fix for this and forking can go over 2x bond, not supposed to: we don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
     if(overruled() and BACKSTOPS.getBondPaid(event) < 2 * bond and repChange < 0 and event != forkEvent):
         # done instead of sending to redistrib. pool
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
         # sends that rep to the bonded challenger
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), -repChange)
-        BACKSTOPS.increaseBondPaid(event, (-1 * repChange))
+        BACKSTOPS.increaseBondPaid(event, (-repChange))
     # if rep isn't redistributed immediately to bond poster [if they're already paid back] then we adjust the after rep as normal and do it all at the end: we want the rep to go to the branch here
     else:
-        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + repChange
+        newAfterRep = safeAdd(EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender), repChange)
         EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
 

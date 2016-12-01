@@ -13,6 +13,7 @@ import mutex as MUTEX
 
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
+inset('../data_api/float.se')
 
 macro POINT_ZERO_ONE: 10000000000000000
 
@@ -39,7 +40,7 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     roundTwoBondCheckPreconditions()
     BACKSTOPS.setRoundTwoRefund(event, msg.value)
     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod) / EXPIRING.getNumberEvents(branch, votePeriod)
-    bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2) / ONE
+    bond = averageAdjudicationCost + safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2))
     bond = min(bond, MIN_BOND)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
@@ -97,7 +98,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     votePeriod = EVENTS.getExpiration(event) / periodLength
     market = EVENTS.getMarket(event, 0)
     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod - 1) / EXPEVENTS.getNumberEvents(branch, votePeriod - 1)
-    bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2) / ONE
+    bond = averageAdjudicationCost + safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2))
     bond = min(bond, MIN_BOND)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     overruled = 0

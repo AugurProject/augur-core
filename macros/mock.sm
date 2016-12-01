@@ -75,12 +75,12 @@ macro scalar_mock($branch, $period):
         with $reputation = [1, 1, 1, 1, 1, 1]:
             with $num_reports = len($reporters):
                 with $reports = array($num_reports):
-                    $reports[0] = [ TWO, TWO, 2^64, 2^64, 2^64*233, 2^64*1602759/100 ]
-                    $reports[1] = [ TWO, 2^64, 2^64, 2^64, 2^64*199, 0 ]
-                    $reports[2] = [ TWO, TWO, 2^64, 2^64, 2^64*233, 2^64*1602759/100 ]
-                    $reports[3] = [ TWO, TWO, TWO, 2^64, 2^64*250, 0 ]
-                    $reports[4] = [ 2^64, 2^64, TWO, TWO, 2^64*435, 2^64* 8001 ]
-                    $reports[5] = [ 2^64, 2^64, TWO, TWO, 2^64*435, 2^64*19999 ]
+                    $reports[0] = [ TWO, TWO, 10^18, 10^18, 10^18*233, 10^18*1602759/100 ]
+                    $reports[1] = [ TWO, 10^18, 10^18, 10^18, 10^18*199, 0 ]
+                    $reports[2] = [ TWO, TWO, 10^18, 10^18, 10^18*233, 10^18*1602759/100 ]
+                    $reports[3] = [ TWO, TWO, TWO, 10^18, 10^18*250, 0 ]
+                    $reports[4] = [ 10^18, 10^18, TWO, TWO, 10^18*435, 10^18* 8001 ]
+                    $reports[5] = [ 10^18, 10^18, TWO, TWO, 10^18*435, 10^18*19999 ]
                     with $num_events = len($reports[0]):
                         BRANCHES.initializeBranch($branch, $period, 3, 1)
                         with $j = 0:

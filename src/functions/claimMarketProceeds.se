@@ -30,6 +30,7 @@ import twoWinningOutcomePayouts as CLOSETWO
 import mutex as MUTEX
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
+inset('../data_api/float.se')
 
 macro MAX_WINNING_OUTCOMES: 8
 macro THREE_DAYS: 259200

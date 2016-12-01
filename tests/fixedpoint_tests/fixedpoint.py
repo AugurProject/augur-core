@@ -25,7 +25,7 @@
 # the multiple of 1/2, the next bit 1/4, etc.
 # the top 192 bits represent the "integer" part,
 # in the usual binary way.
-# So the fixedpoint version of 1 is 1 << 64, a.k.a. 2**64.
+# So the fixedpoint version of 1 is 1 << 64, a.k.a. 10**18.
 #
 # This code is written to work on both python and serpent.
 # To test check the output of this code in python, do something like:
@@ -34,8 +34,8 @@
 ## gmpy2.get_context().precision = 256
 ## 
 ## def exp_err(n):
-##     expected = int(gmpy2.exp(n)*2**64)
-##     result = fixedpoint.exp_e(n*2**64)
+##     expected = int(gmpy2.exp(n)*10**18)
+##     result = fixedpoint.exp_e(n*10**18)
 ##     return float(abs(result - expected))/expected
 
 def exp_e(x):

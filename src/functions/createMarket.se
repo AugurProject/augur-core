@@ -30,6 +30,7 @@ import expiringEvents as EXPEVENTS
 import mutex as MUTEX
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
+inset('../data_api/float.se')
 
 event marketCreated(market)
 event tradingFeeUpdated(market, fxpTradingFee)
@@ -55,8 +56,8 @@ macro checkSubcurrencyIsValid(contract):
 
 # Create an event. Events are the basic units / questions that are reported on in Augur by reporters
 # @param numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0 to 11.0 would be 11 outcomes (if incremented by 0.1)
-# @param fxpMinValue should be 2**64 for a binary event, fxpMaxValue should be 2**65 for a binary event
-# @param fxpMinValue for a scalar from 0 to 100 should be 0 and max should be 100*2**64, for -100 to 200, it should be -100*2**64 and 200*2**64 respectively
+# @param fxpMinValue should be 10**18 for a binary event, fxpMaxValue should be 2**65 for a binary event
+# @param fxpMinValue for a scalar from 0 to 100 should be 0 and max should be 100*10**18, for -100 to 200, it should be -100*10**18 and 200*10**18 respectively
 # @param description is a description of the event / the question itself
 # @param resolution is the string source/link to resolve the event
 # @param branch is the branch the event is created in
@@ -119,7 +120,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
         if(!EVENTS.getBond(event)):
             # pay validity / indeterminate protection bond
             period = block.timestamp / TWENTY_FOUR_HR
-            minFee = COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
+            minFee = safeDiv(safeMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), ONE), WEI_TO_ETH)
             validityBond = (minFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
             if(!currency.transferFrom(msg.sender, wallet, validityBond)):
                 throw()
@@ -159,9 +160,9 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
 
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
-    creationFee = POINT_ZERO_THREE * baseReporters * ONE / fxpTradingFee
+    creationFee = safeFxpDiv(POINT_ZERO_THREE * baseReporters, fxpTradingFee)
     # gives ether/cash amount in fixed point
-    minFee = COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
+    minFee = safeFxpDiv(COST_PER_REPORTER * baseReporters * tx.gasprice, WEI_TO_ETH)
     creationFee = max(minFee, creationFee)
     period = block.timestamp / TWENTY_FOUR_HR
     numOutcomes = EVENTS.getNumOutcomes(event)
@@ -253,8 +254,8 @@ def updateTradingFee(market, fxpTradingFee):
         return(-1)
     oldFee = MARKETS.getTradingFee(market)
     baseReporters = BRANCHES.getBaseReporters(branch)
-    oldCreationFee = POINT_ZERO_SIX * baseReporters * ONE / oldFee
-    newCreationFee = POINT_ZERO_SIX * baseReporters * ONE / fxpTradingFee
+    oldCreationFee = safeFxpDiv(POINT_ZERO_SIX * baseReporters, oldFee)
+    newCreationFee = safeFxpDiv(POINT_ZERO_SIX * baseReporters, fxpTradingFee)
     if(fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > oldFee):
         MUTEX.unsetMutex()
         return(-2)
@@ -311,7 +312,7 @@ def pushMarketForward(branch, market):
     MARKETS.setTradingPeriod(market, period)
     MARKETS.setPushedForward(market, 1, msg.sender)
     EVENTS.setEventPushedUp(event, 1)
-    payEarlyResolutionBond = MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), MARKETS.getTradingFee(market) * MARKETS.getTotalSharesPurchased(market) / (2 * ONE))
+    payEarlyResolutionBond = MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), safeFxpMul(MARKETS.getTradingFee(market), MARKETS.getTotalSharesPurchased(market)) / 2)
     if(!payEarlyResolutionBond):
         throw()
     MUTEX.unsetMutex()
@@ -362,7 +363,7 @@ def putEventIntoReportingPeriod(event):
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
     # gives ether/cash amount in fixed point
-    minFee = COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
+    minFee = safeFxpDiv(COST_PER_REPORTER * baseReporters * tx.gasprice, WEI_TO_ETH)
     period = block.timestamp / TWENTY_FOUR_HR
     validityBond = (minFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
     # want to resolve as soon as possible
@@ -390,7 +391,7 @@ def challengeInitialResolution(event):
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
     # gives ether/cash amount in fixed point
-    minFee = COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
+    minFee = safeFxpDiv(COST_PER_REPORTER * baseReporters * tx.gasprice, WEI_TO_ETH)
     period = block.timestamp / TWENTY_FOUR_HR
     validityBond = (minFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
     # want to resolve as soon as possible
@@ -411,13 +412,13 @@ def challengeInitialResolution(event):
 macro payExtraBond():
     baseReporters = BRANCHES.getBaseReporters(branch)
     # todo change this to be based off of reporting costs for market given outstanding shares
-    amount = 5*COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
+    amount = safeFxpDiv(5*COST_PER_REPORTER * baseReporters * tx.gasprice, WEI_TO_ETH)
     if(!currency.transferFrom(msg.sender, wallet, amount)):
         throw()
     EVENTS.setExtraBond(event, amount)
 
-# could create a contract which is the sender which uses ecrecover to verify a realitykeys signature on a hash + result, 0 goes to 2**64, 1 goes to 2**65
-# with oraclize.it do value = parseInt(result, 18) to get it in the proper 10**18 base, then do (value - min) * 2**64 / range to submit the result to augur
+# could create a contract which is the sender which uses ecrecover to verify a realitykeys signature on a hash + result, 0 goes to 10**18, 1 goes to 2**65
+# with oraclize.it do value = parseInt(result, 18) to get it in the proper 10**18 base, then do (value - min) * 10**18 / range to submit the result to augur
 # unethical is just a .5 outcome for scalar/categorical, 1.5 for binary as usual
 def resolveEarly(event, outcome):
     if(MUTEX.getMutex() && !mutexWhitelisted()):

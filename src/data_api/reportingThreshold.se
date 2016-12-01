@@ -27,7 +27,7 @@ def calculateReportingThreshold(branch, event, period, sender):
     repConstant = EXPEVENTS.getPeriodRepWeight(branch, period, sender)
     if(!repConstant):
         calculateAndSetRepConstant()
-    # 1 is 2**192 here, lesserreportnum, repconstant, and one are all base 2**64
+    # 1 is 10**54 here, lesserreportnum, repconstant, and one are all base 10**18
     reportingThreshold = EXPEVENTS.getLesserReportNum(branch, period, event) * repConstant * ONE
     if(reportingThreshold > MAX_THRESHOLD):
         reportingThreshold = MAX_THRESHOLD
@@ -48,8 +48,8 @@ def getEventsToReportOn(branch, period, sender, start):
             if(!EXPEVENTS.getLesserReportNum(branch, period, thisEvent)):
                 MAKEREPORTS.calculateReportTargetForEvent(branch, thisEvent, period, msg.sender)
             reportingThreshold = self.calculateReportingThreshold(branch, thisEvent, period, sender)
-            shaHash = sha3(sender + thisEvent)
-            shaHash = abs(shaHash) / 115792089237316195423571
+            shaHash = (abs(sha3(sender + thisEvent)) / ONE) * 2
+            shaHash = shaHash / 57896044618658097711785L * ONE
             notResolvedYet = !EVENTS.getOutcome(thisEvent)
             ableToReportOn = (shaHash < reportingThreshold or EXPEVENTS.getRequired(thisEvent, period, branch)) and notResolvedYet
             if(ableToReportOn):
@@ -69,7 +69,7 @@ def getEventCanReportOn(branch, period, reporter, event):
 
     # do abs then mult by 2 to ensure it's positive and between 0 and 1
     shaHash = (abs(sha3(reporter + event)) / ONE) * 2
-    shaHash = shaHash / 115792089237316195423571 * ONE
+    shaHash = shaHash / 57896044618658097711785L * ONE
     wasAbleToReportOn = shaHash < reportingThreshold or EXPEVENTS.getRequired(event, period, branch)
     if(!wasAbleToReportOn):
         return(0)

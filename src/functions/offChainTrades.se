@@ -8,6 +8,7 @@
 import mutex as MUTEX
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
+inset('../data_api/float.se')
 
 event Order(tokenX:address:indexed, orderSize, tokenY:address:indexed, fxpPrice, expiration, user:address:indexed)
 
@@ -36,20 +37,20 @@ def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, 
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
-    if(!checkHasAbilityToSpend(maker, tokenX, orderSize) || !checkHasAbilityToSpend(msg.sender, tokenY, takerAmount * fxpPrice / ONE)):
+    if(!checkHasAbilityToSpend(maker, tokenX, orderSize) || !checkHasAbilityToSpend(msg.sender, tokenY, safeFxpMul(takerAmount, fxpPrice))):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-2)
-    if((self.amountFilled[orderHash] + takerAmount) > orderSize):
+    if(safeAdd(self.amountFilled[orderHash], takerAmount) > orderSize):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-3)
     
-    self.claimed[orderHash] += takerAmount
+    self.amountFilled[orderHash] += takerAmount
     # fxpPrice is in units of y per x
     # amount of x * fxpPrice = amount of y
     # amount of x * y / x = amount of y
-    if(!tokenX.transferFrom(maker, msg.sender, takerAmount) || !tokenY.transferFrom(msg.sender, maker, takerAmount * fxpPrice / ONE)):
+    if(!tokenX.transferFrom(maker, msg.sender, takerAmount) || !tokenY.transferFrom(msg.sender, maker, safeFxpMul(takerAmount, fxpPrice))):
         throw()
     log(type = Trade, maker, msg.sender, tokenX, tokenY, amount, fxpPrice, orderHash)
     if(!mutexWhitelisted()):

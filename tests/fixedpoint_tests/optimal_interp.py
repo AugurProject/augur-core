@@ -34,9 +34,9 @@ FX_PI = int(PI * FX_ONE)
 FX_LOG2E = int(LOG2E * FX_ONE)
 FX_LN2 = int(LN2 * FX_ONE)
 =======
-FX_PI = int(PI * 2**64)
-fxLog2E = int(LOG2E * 2**64)
-FX_LN2 = int(LN2 * 2**64)
+FX_PI = int(PI * 10**18)
+fxLog2E = int(LOG2E * 10**18)
+FX_LN2 = int(LN2 * 10**18)
 FX_ONE = 1 << 64
 >>>>>>> develop
 ## The index of a poly is the power of x,

@@ -33,6 +33,7 @@ import backstops as BACKSTOPS
 import mutex as MUTEX
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
+
 inset('eventHelpers.se')
 
 macro POINT_ZERO_ONE: 10000000000000000
@@ -59,7 +60,7 @@ def reputationFaucet(branch):
 
 def fundNewAccount(branch):
     self.reputationFaucet(branch, call=delegate)
-    CASH.setCash(msg.sender, 10000 * 2 ** 64)
+    CASH.setCash(msg.sender, 10000 * 10 ** 18)
     return(1)
 
 # Used to claim rep on a fork or on a new branch
@@ -135,8 +136,8 @@ macro checkRepClaimPreconditions():
 
 macro removeRepFromThoseWhoReportedWrong():
     # take away 40% of rep from liars and those who didn't report
-    repDecrease = rep - rep * POINT_SIX / ONE
-    rep = rep - repDecrease
+    repDecrease = rep - safeFxpMul(rep, POINT_SIX)
+    rep = safeSub(rep, repDecrease)
     amountLeftToPayBonder = BACKSTOPS.getBondAmount(forkEvent) - BACKSTOPS.getForkBondPaid(forkEvent)
     if(repDecrease < amountLeftToPayBonder):
         # send all the redistributed rep to the fork bond poster

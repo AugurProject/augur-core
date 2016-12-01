@@ -1,40 +1,38 @@
-type float: [a, b, c]
+macro safeAdd($x, $y):
+    if(!safeToAdd($x, $y)):
+        ~invalid()
+    $x + $y
+    
+macro safeSub($x, $y):
+    if(!safeToSubtract($x, $y)):
+        ~invalid()
+    $x - $y
 
-macro float($x) + float($y):
-    float:
-    	if(!safeToAdd($x, $y)):
-	    	~invalid()
-	    $x + $y
+macro safeMul($x, $y):
+    if(!safeToMultiply($x, $y)):
+        ~invalid()
+    $x * $y
 
-macro float($x) - float($y):
-    float:
-	    if(!safeToSubtract($x, $y)):
-		    ~invalid()
-	    $x - $y
+macro safeFxpMul($x, $y):
+    if(!safeToMultiply($x, $y)):
+        ~invalid()
+    $x * $y / 10 ** 18
 
-macro float($x) * float($y):
-    float:
-	    if(!safeToMultiply($x, $y)):
-		    ~invalid()
-	    $x * $y / 10^18
+macro safeDiv($x, $y):
+    if($y == 0):
+	    ~invalid()
+    $x / $y
 
-macro float($x) / float($y):
-    float:
-	    if($y == 0):
-		    ~invalid()
-	    $x * 10^18 / $y
-	
-macro unfloat(float($x)):
-	$x / 10^18
+macro safeFxpDiv($x, $y):
+    if($y == 0):
+	    ~invalid()
+    $x * 10 ** 18 / $y
 
-macro floatfy($x):
-	float($x * 10^18)
+macro unfix($x):
+	$x / 10 ** 18
 
-macro float($x) = float($y):
-	$x = $y
-
-macro with(float($x), float($y), $z):
-	with($x, $y, $z)
+macro fix($x):
+	$x * 10 ** 18
 
 macro safeToAdd($a, $b):
 	$c = $a + $b

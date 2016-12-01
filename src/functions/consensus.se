@@ -14,6 +14,7 @@ inset('eventHelpers.se')
 inset('redistributeRep.se')
 inset('proportionCorrect.se')
 inset('repChange.se')
+inset('../data_api/float.se')
 inset('logReturn.se')
 inset('../data_api/periodStage.se')
 
@@ -120,13 +121,13 @@ def incrementPeriodAfterReporting(branch):
         return(0)
     periodVotingOnNow = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
     lastPeriod = periodVotingOnNow - 1
-    amountAppealedThisPeriod = EXPEVENTS.getNumRoundTwo(branch, periodVotingOnNow) * ONE / EXPEVENTS.getNumberEvents(branch, periodVotingOnNow)
-    amountAppealedLastPeriod = EXPEVENTS.getNumRoundTwo(branch, lastPeriod) * ONE / EXPEVENTS.getNumberEvents(branch, lastPeriod)
-    percentAppealed = (amountAppealedThisPeriod + amountAppealedLastPeriod) / 2
+    amountAppealedThisPeriod = safeFxpDiv(EXPEVENTS.getNumRoundTwo(branch, periodVotingOnNow), EXPEVENTS.getNumberEvents(branch, periodVotingOnNow))
+    amountAppealedLastPeriod = safeFxpDiv(EXPEVENTS.getNumRoundTwo(branch, lastPeriod), EXPEVENTS.getNumberEvents(branch, lastPeriod))
+    percentAppealed = safeAdd(amountAppealedThisPeriod, amountAppealedLastPeriod) / 2
     BRANCHES.incrementPeriod(branch)
     # mult. by 2 b/c reporters only have to report on half the things they're selected to report on
     # clarify
-    baseReporterQuantity = 2 * (3 * ONE + ((333 * ONE * percentAppealed / ONE) ** 3 / 2 ** 128)) / ONE
+    baseReporterQuantity = 2 * (3 * ONE + ((333 * percentAppealed)^3 / ONE^2)) / ONE
     CONSENSUS.setBaseReportersLastPeriod(branch, BRANCHES.getBaseReporters(branch))
     BRANCHES.setBaseReporters(branch, baseReporterQuantity)
     if(!mutexWhitelisted()):
@@ -175,7 +176,7 @@ macro countAsPenalized():
     CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
 
 macro updateAfterRep():
-    newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
+    newAfterRep = safeAdd(EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender), repChange)
     EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
 
 macro periodOver($branch):

@@ -14,7 +14,7 @@ inset('redistributeRep.se')
 inset('proportionCorrect.se')
 inset('repChange.se')
 inset('../data_api/periodStage.se')
-
+inset('../data_api/float.se')
 macro POINT_ZERO_ONE: 184467440737095520
 macro MIN_BOND: 200 * ONE
 
@@ -105,10 +105,10 @@ macro handleEthicsAndBondRepRedistribution($numReportedOn):
         if($numReportedOn < 10):
             # allows max penalty to be 10% per event
             $penalty = -ONE / 10
-            repChange = $penalty * repBalance / ONE
+            repChange = safeFxpMul($penalty, repBalance)
         else:
             $penalty = -ONE / $numReportedOn
-            repChange = $penalty * repBalance / ONE
+            repChange = safeFxpMul($penalty, repBalance)
     # can only lose max of current balance
     if(repBalance + repChange <= 0):
         repChange = -1 * repBalance
@@ -118,9 +118,9 @@ macro handleEthicsAndBondRepRedistribution($numReportedOn):
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
         # sends that rep to the bonded challenger
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(event)), -repChange)
-        BACKSTOPS.adjForkBondPaid(event, -1 * repChange)
+        BACKSTOPS.adjForkBondPaid(event, -repChange)
     # no need to pay bond poster
     else:
-        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + repChange
+        newAfterRep = safeAdd(EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender), repChange)
         EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
     repBalance = REPORTING.getRepBalance(branch, msg.sender)

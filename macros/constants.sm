@@ -23,13 +23,13 @@
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
 # Constant macros
-macro ONE: 2^64
+macro ONE: 10^18
 macro YES: TWO
-macro NO: 2^64
+macro NO: 10^18
 macro BAD: 3 * ONE_HALF
 macro NA: 0
 macro COINS: 10^6
-macro CATCH_TOLERANCE: 2^64 / 10
+macro CATCH_TOLERANCE: 10^18 / 10
 macro MAX_ITERATIONS: 5
 macro MAX_COMPONENTS: 2
 macro BOND: 42 * ONE

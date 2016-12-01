@@ -73,10 +73,10 @@ def test_log_exp():
     t.gas_limit = 100000000
     s = t.state()
     c = s.abi_contract('data_api/fxpFunctions.se')
-    assert(c.fxExp(2**64) == 50143449209799256664), "Exp broken"
-    assert(c.fxLog(2**64) == 7685), "Log broken"
+    assert(c.fxExp(10**18) == 50143449209799256664), "Exp broken"
+    assert(c.fxLog(10**18) == 7685), "Log broken"
     print "LOG EXP OK"
-    xs = [2**64, 2**80, 2**68, 2**70]
+    xs = [10**18, 2**80, 2**68, 2**70]
     maximum = max(xs)
     sum = 0
     original_method_sum = 0

@@ -55,7 +55,7 @@ def thunks(contract, func_dict):
         def thunk(name=name, bounds=bounds, ref_func=ref_func):
             test_func = vars(contract)[name]
             x = random.random()*(bounds[1] - bounds[0]) + bounds[0]
-            return ref_func(x), test_func(int(x*2**64), profiling=True)
+            return ref_func(x), test_func(int(x*10**18), profiling=True)
         thunk.__name__ = name
         yield thunk
 

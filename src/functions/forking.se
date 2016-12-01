@@ -15,6 +15,7 @@ import mutex as MUTEX
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
+inset('../data_api/float.se')
 
 macro FORK_TEXT: text("fork")
 macro POINT_ZERO_ONE: 10000000000000000
@@ -121,7 +122,7 @@ def fork(event, branch, forkedOverEthicality):
 
     if(!send(CONSENSUSDATA, msg.value)):
         throw()
-    bond = POINT_ZERO_ONE * REPORTING.getTotalRep(branch) / ONE
+    bond = safeFxpDiv(POINT_ZERO_ONE, REPORTING.getTotalRep(branch))
     BACKSTOPS.setBondAmount(event, bond)
     # lose fork bond in branch 1
     # results same as roundtwobond, let it resolve as that on original network
@@ -229,7 +230,7 @@ macro makeFork():
 macro returnRoundTwoBond():
     market = EVENTS.getMarket(event, 0)
     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period - 1) / EXPEVENTS.getNumberEvents(branch, period - 1)
-    bond = averageAdjudicationCost + MARKETS.getSharesValue(market) * (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2) / ONE
+    bond = safeAdd(averageAdjudicationCost, safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2)))
     minBond = 200 * ONE
     bond = min(bond, minBond)
     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
@@ -330,10 +331,10 @@ macro scalarOrCategoricalForkResolve():
     if(categorical(event)):
         scaledMin = ONE
         scaledMax = ONE * EVENTS.getNumOutcomes(event)
-    fxpOutcome = mode * (scaledMax - scaledMin) / ONE + scaledMin
+    fxpOutcome = safeFxpMul(mode, (scaledMax - scaledMin)) + scaledMin
     if(categorical(event)):
         fxpOutcome = round(fxpOutcome)
-    ethicOutcome = ONE_HALF * (scaledMax - scaledMin) / ONE + scaledMin
+    ethicOutcome = safeFxpMul(ONE_HALF, (scaledMax - scaledMin)) + scaledMin
     EVENTS.setOutcome(event, fxpOutcome)
     if(mode == ONE_HALF or !ethical):
         # give event bond money to reporters

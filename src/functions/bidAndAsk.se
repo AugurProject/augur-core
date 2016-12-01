@@ -29,6 +29,7 @@ import mutex as MUTEX
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 inset('logReturn.se')
+inset('../data_api/float.se')
 
 event logAddTx(market:indexed, sender:indexed, type, fxpPrice, fxpAmount, outcome, tradeid)
 event logCancel(market:indexed, sender:indexed, fxpPrice, fxpAmount, tradeid, outcome, type)
@@ -49,7 +50,7 @@ macro TRADE_ALREADY_EXISTS: 21
 macro TRADE_SAME_BLOCK_PROHIBITED: 22
 
 macro MIN_ORDER_VALUE: 184467440738
-macro MAX_ORDER_VALUE: 2 ** 190
+macro MAX_ORDER_VALUE: 1569275433846670190958947355801916604025L
 
 # 
 # Buy / Sell actions: puts orders on the book
@@ -140,7 +141,7 @@ macro checkBuyPreconditions():
         MUTEX.unsetMutex()
         return(0)
     # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
-    if(fxpPrice > cumulativeScale or fxpAmount * fxpPrice / ONE < MIN_ORDER_VALUE or fxpAmount * fxpPrice >= MAX_ORDER_VALUE):
+    if(fxpPrice > cumulativeScale or safeFxpMul(fxpAmount, fxpPrice) < MIN_ORDER_VALUE or safeFxpMul(fxpAmount, fxpPrice) >= MAX_ORDER_VALUE):
         MUTEX.unsetMutex()
         return(-1)
     if(BRANCHES.getOracleOnly(branch)):
@@ -149,7 +150,7 @@ macro checkBuyPreconditions():
 
 macro checkSellPreconditions():
     # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
-    if(fxpPrice > cumulativeScale or fxpAmount * fxpPrice / ONE < MIN_ORDER_VALUE or fxpAmount * fxpPrice >= MAX_ORDER_VALUE):
+    if(fxpPrice > cumulativeScale or safeFxpMul(fxpAmount, fxpPrice) < MIN_ORDER_VALUE or safeFxpMul(fxpAmount, fxpPrice) >= MAX_ORDER_VALUE):
         MUTEX.unsetMutex()
         return(-1)
     if(BRANCHES.getOracleOnly(branch)):
@@ -164,7 +165,7 @@ macro checkShortOfferPreconditions():
         MUTEX.unsetMutex()
         return(0)
     # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
-    if(fxpPrice > cumulativeScale or fxpAmount * fxpPrice / ONE < MIN_ORDER_VALUE or fxpAmount * fxpPrice >= MAX_ORDER_VALUE):
+    if(fxpPrice > cumulativeScale or safeFxpMul(fxpAmount, fxpPrice) < MIN_ORDER_VALUE or safeFxpMul(fxpAmount, fxpPrice) >= MAX_ORDER_VALUE):
         MUTEX.unsetMutex()
         return(-1)
     if(BRANCHES.getOracleOnly(branch)):
@@ -186,11 +187,11 @@ macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $sende
         MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$fxpAmount, 0)
     # Send / escrow cash for bids
     if($type == BID):
-        $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $fxpAmount * $fxpPrice / ONE)
+        $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), safeFxpMul($fxpAmount, $fxpPrice))
         if(!$paidTradeCost):
             throw()
     if($type == SHORT_OFFER):
-        $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $fxpAmount * cumulativeScale / ONE - $fxpAmount * $fxpPrice / ONE)
+        $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), safeSub(safeFxpMul($fxpAmount, cumulativeScale), safeFxpMul($fxpAmount, $fxpPrice)))
         if(!$paidTradeCost):
             throw()
     log(type = logAddTx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, tradeID)
@@ -210,7 +211,7 @@ macro refundTrade():
         MARKETS.modifyParticipantShares(market, msg.sender, outcome, fxpAmount, 0)
     elif(type == SHORT_OFFER):
         # cash refund
-        amount = MARKETS.getCumulativeScale(market) * fxpAmount / ONE - fxpAmount * fxpPrice / ONE
+        amount = safeSub(safeFxpMul(MARKETS.getCumulativeScale(market), fxpAmount), safeFxpMul(fxpAmount, fxpPrice))
         refunded = INFO.getWallet(market).transfer(msg.sender, amount)
         if(!refunded):
             throw()

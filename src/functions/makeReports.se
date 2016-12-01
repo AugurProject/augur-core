@@ -37,6 +37,7 @@ inset('../data_api/refund.se')
 inset('eventHelpers.se')
 inset('../data_api/periodStage.se')
 inset('logReturn.se')
+inset('../data_api/float.se')
 
 event makeReportsLogReturn(returnValue)
 
@@ -80,10 +81,10 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     checkSubmitReportHashPreconditions()
 
     reportingThresholdForUser = calculateReportingThreshold()
-    # do abs then mult by 2 to ensure pos. and between 0 and 1
+    # do abs then mult by 2 to ensure pos. and between 0 and 1 
     shaHash = (abs(sha3(msg.sender + event)) / ONE) * 2
-    # max value 10^54: 2^256 / 10^54 = 115792089237316195423570.985...
-    shaHash = shaHash / 115792089237316195423571 * ONE
+    # max value 10^54
+    shaHash = shaHash / 57896044618658097711785L * ONE
     # shaHash must be <= to the threshold for that user to be able to fxpReport on the given event
     if(shaHash > reportingThresholdForUser):
         MUTEX.unsetMutex()
@@ -162,10 +163,9 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
         totalFees += MARKETS.getFees(markets[i])
         i += 1
     totalVal = EXPEVENTS.getShareValue(branch, votePeriod)
-    shareFraction = shareValue * ONE / totalVal
-    # simplify this
-    numReportersOnMarket = BRANCHES.getBaseReporters(branch) * ((-(267 * shareFraction ** 2) / (2 * ONE) + (533 * shareFraction) / 2 + 1 * ONE))
-    totalFeesInWei = totalFees * WEI_TO_ETH / ONE
+    shareFraction = safeFxpDiv(shareValue, totalVal)
+    numReportersOnMarket = BRANCHES.getBaseReporters(branch) * (safeMul(-267, safeFxpMul(shareFraction, shareFraction))/2 + safeMul(533, shareFraction)/2 + ONE)
+    totalFeesInWei = safeFxpMul(totalFees, WEI_TO_ETH)
     canPayForThisManyReporters = totalFeesInWei / (GAS_SUBSIDY * tx.gasprice)
     lesser = min(canPayForThisManyReporters * ONE, numReportersOnMarket)
     if(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
@@ -241,12 +241,12 @@ macro saveUsersReportAndHandleEthicality():
             else:
                 validatedFxpEthics = ONE
         EXPEVENTS.setEthicReport(branch, votePeriod, event, validatedFxpEthics, msg.sender)
-        eventEthics = (EVENTS.getForkEthicality(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + validatedFxpEthics * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+        eventEthics = safeDiv(safeAdd(safeMul(EVENTS.getForkEthicality(event), EXPEVENTS.getEventWeight(branch, votePeriod, event)), safeMul(validatedFxpEthics, weight)), safeAdd(EXPEVENTS.getEventWeight(branch, votePeriod, event), weight))
         EVENTS.setForkEthicality(event, eventEthics)
     # set ethicality for a regular event
     else:
         EXPEVENTS.setEthicReport(branch, votePeriod, event, validatedFxpEthics, msg.sender)
-        eventEthics = (EVENTS.getEthics(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + validatedFxpEthics * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+        eventEthics = safeDiv(safeAdd(safeMul(EVENTS.getEthics(event), EXPEVENTS.getEventWeight(branch, votePeriod, event)), safeMul(validatedFxpEthics, weight)), safeAdd(EXPEVENTS.getEventWeight(branch, votePeriod, event), weight))
         EVENTS.setEthics(event, eventEthics)
     # round 2 and fork events are weighted by rep, otherwise 1
     EXPEVENTS.countReportAsSubmitted(branch, votePeriod, event, msg.sender, weight)
@@ -259,7 +259,7 @@ macro coverGasCostIfPossible():
     if(ableToPayForMore):
         EVENTS.addReportersPaidSoFar(event)
         # todo fix this coming from branch b/c it'll get redistributed in collectfees and thus cause issues
-        if(!BRANCHES.getWallet(branch, ETHCONTRACT).transfer(msg.sender, GAS_SUBSIDY * tx.gasprice * ONE / WEI_TO_ETH)):
+        if(!BRANCHES.getWallet(branch, ETHCONTRACT).transfer(msg.sender, safeFxpDiv(GAS_SUBSIDY*tx.gasprice, WEI_TO_ETH)):
             throw()
 
 macro calculateReportingThreshold():
@@ -283,17 +283,17 @@ macro validateReportAndUpdateBinaryEvent():
         # in case of fork remove the original outcome as a possible response if forked over outcome [i.e. didn't fork over fxpEthics]
         if(!forkedOverEthicality and fxpReport == catch(EVENTS.getUncaughtOutcome(event))):
             logReturn(makeReportsLogReturn, -4)
-        outcome = (EVENTS.getForkOutcome(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + fxpReport * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+        outcome = safeDiv(safeAdd(safeMul(EVENTS.getForkOutcome(event), EXPEVENTS.getEventWeight(branch, votePeriod, event)), safeMul(fxpReport, weight)), safeAdd(EXPEVENTS.getEventWeight(branch, votePeriod, event), weight))
         EVENTS.setForkOutcome(event, outcome)
     else:
-        outcome = (EVENTS.getUncaughtOutcome(event) * EXPEVENTS.getEventWeight(branch, votePeriod, event) + fxpReport * weight) / (EXPEVENTS.getEventWeight(branch, votePeriod, event) + weight)
+        outcome = safeDiv(safeAdd(safeMul(EVENTS.getUncaughtOutcome(event), EXPEVENTS.getEventWeight(branch, votePeriod, event)), safeMul(fxpReport, weight)), safeAdd(EXPEVENTS.getEventWeight(branch, votePeriod, event), weight))
         EVENTS.setUncaughtOutcome(event, outcome)
 
 macro validateReportAndUpdateScalarOrCategoricalEvent():
     if(fxpReport > ONE):
         fxpReport = ONE
     if(fxpReport <= 0):
-        # 1 is the new 0 [1/2**64 is basically 0 but able to be differentiated from no fxpReport of 0]
+        # 1 is the new 0 [1/10**18 is basically 0 but able to be differentiated from no fxpReport of 0]
         fxpReport = 1
     # in case of fork remove the original outcome as a possible response if didn't fork over fxpEthics
     reportIsSameAsOutcomeOnOriginalBranch = fxpReport == EVENTS.getUncaughtOutcome(event)

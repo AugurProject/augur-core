@@ -28,6 +28,7 @@ import mutex as MUTEX
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, ]:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 inset('logReturn.se')
+inset('../data_api/float.se')
 
 event completeSetsLogReturn(sender: indexed, market: indexed, type: indexed, returnValue, numOutcomes)
 
@@ -46,7 +47,7 @@ def buyCompleteSets(market, fxpAmount):
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
-    cost = fxpAmount * cumulativeScale / ONE
+    cost = safeFxpMul(fxpAmount, cumulativeScale)
     checkBuyCompleteSetsPreconditions()
     accountForFees()
     
@@ -59,8 +60,8 @@ def buyCompleteSets(market, fxpAmount):
     # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
     notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
     if(notVotingOnYet):
-        MARKETS.modifySharesValue(market, fxpAmount * cumulativeScale / ONE)
-        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), fxpAmount * cumulativeScale / ONE)
+        MARKETS.modifySharesValue(market, safeFxpMul(fxpAmount, cumulativeScale))
+        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), safeFxpMul(fxpAmount, cumulativeScale))
     MUTEX.unsetMutex()
     logReturn(completeSetsLogReturn, 1)
 
@@ -77,7 +78,7 @@ def sellCompleteSets(market, fxpAmount):
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
-    cost = fxpAmount * cumulativeScale / ONE
+    cost = safeFxpMul(fxpAmount, cumulativeScale)
     checkSellCompleteSetsPreconditions()
     
     # Takes shares away from participant and decreases the fxpAmount issued in the market since we're exchanging complete sets
@@ -88,14 +89,14 @@ def sellCompleteSets(market, fxpAmount):
     # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
     notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
     if(notVotingOnYet):
-        MARKETS.modifySharesValue(market, -fxpAmount * cumulativeScale / ONE)
-        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), -fxpAmount * cumulativeScale / ONE)
+        MARKETS.modifySharesValue(market, safeFxpMul(-fxpAmount, cumulativeScale))
+        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), safeFxpMul(-fxpAmount, cumulativeScale))
     # send funds from the market to the user acc.
-    fee = MARKETS.getTradingFee(market) * fxpAmount / ONE * cumulativeScale / ONE
-    if(!INFO.getWallet(market).transfer(msg.sender, cost - fee)):
+    fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpAmount), cumulativeScale)
+    if(!INFO.getWallet(market).transfer(msg.sender, safeSub(cost, fee))):
         throw()
     currency = INFO.getCurrency(market)
-    if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
+    if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
         throw()
     MUTEX.unsetMutex()
     logReturn(completeSetsLogReturn, 1)
@@ -129,5 +130,5 @@ macro checkSellCompleteSetsPreconditions():
 
 macro accountForFees():
     # account for fees here even though paid upon selling / resolution so we can assign reporters appropriately
-    fee = MARKETS.getTradingFee(market) * fxpAmount / ONE * cumulativeScale / ONE
-    MARKETS.addFees(market, fee / 2)
+    fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpAmount), cumulativeScale)
+    MARKETS.addFees(market, safeDiv(fee, 2))

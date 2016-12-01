@@ -28,18 +28,18 @@ macro print_fixed_array($a):
         with $i = 0:
             while $i < $n:
                 # print 8 decimal points (adjustable)
-                with $decimal = ($a[$i] & (2^64 - 1)) * 10^8 / 2^64:
+                with $decimal = ($a[$i] & (10^18 - 1)) * 10^8 / 10^18:
                     if $decimal > 0:
-                        log(type=stdout, $a[$i] / 2^64, $decimal)
+                        log(type=stdout, $a[$i] / 10^18, $decimal)
                     else:
-                        log(type=stdout, $a[$i] / 2^64)
+                        log(type=stdout, $a[$i] / 10^18)
                     $i += 1
 
 # Prints a single entry (for integer values) or two entries (for fixed point
 # numbers, the first entry is the integer and the second is the decimal).
 macro print_fixed($x):
-    with $d = ($x & (2^64 - 1)) * 10^8 / 2^64:
+    with $d = ($x & (10^18 - 1)) * 10^8 / 10^18:
         if $d > 0:
-            log(type=stdout, $x / 2^64, $d)
+            log(type=stdout, $x / 10^18, $d)
         else:
-            log(type=stdout, $x / 2^64)
+            log(type=stdout, $x / 10^18)
