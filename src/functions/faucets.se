@@ -49,10 +49,8 @@ def reputationFaucet(branch):
     else:
         index = REPORTING.getNumberReporters(branch)
         REPORTING.addReporter(branch, tx.origin, 0, 0, 0)
-    rep = 47*ONE
-    REPORTING.setRep(branch, index, rep)
-    lastPeriod = BRANCHES.getVotePeriod(branch) - 1
-    CONSENSUS.setPenalizedUpTo(branch, tx.origin, lastPeriod)
+    REPORTING.setRep(branch, index, 47*ONE)
+    CONSENSUS.setPenalizedUpTo(branch, tx.origin, BRANCHES.getVotePeriod(branch))
     return(1)
 
 def fundNewAccount(branch):
