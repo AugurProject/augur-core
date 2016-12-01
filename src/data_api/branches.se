@@ -39,8 +39,11 @@ inset('refund.se')
     # Want:
         # Rep market cap >> outstanding shares value at all times
 # min can be no lower than ~0.0000001 or so otherwise can run into underflow issues
+# balance[][] takes a branch and currency and gives current balance of it
 # contract[] is a mapping from currency -> wallet contract addr
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[])
+# numCurrencies is the number of currencies a branch has
+# currencies[] is a 0 indexed list of the n currencies a branch allows
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[])
 
 # keeps track of a list of all branches
 data branchList[]
@@ -55,13 +58,25 @@ def init():
     self.branchList[0] = 1010101
     # since only have to report on half this targets 3
     self.Branches[1010101].baseReporters = 6
-    ethContract = 5
+    ethContract = 0
     wallet = create('wallet.se')
     wallet.initialize(ethContract)
     self.Branches[1010101].contract[ethContract] = wallet
     
+def addCurrency()
+
+def replaceCurrency()
+
+def removeCurrency()
+
+def getCurrency(branch, index):
+    return(self.Branches[branch].currencies[index])
+
 def getWallet(branch, currency):
     return(self.Branches[branch].contract[currency])
+    
+def getNumCurrencies(branch):
+    return(self.Branches[branch].numCurrencies)
 
 # event a branch was most recently forked over
 def getEventForkedOver(branch):
@@ -88,15 +103,14 @@ def getPeriodLength(branch):
     return(self.Branches[branch].periodLength)
 
 # branch currency balance at start of period
-# currency index 0 is ETH
 # @return fxp
 def setInitialBalance(branch, period, balance, currency):
     self.Branches[branch].balance[period][currency] = balance
     return(balance)
 
 # @return fxp
-def getInitialBalance(branch, period):
-    return(self.Branches[branch].balance[period])
+def getInitialBalance(branch, period, currency):
+    return(self.Branches[branch].balance[period][currency])
 
 def getParent(branch):
     return(self.Branches[branch].parent)

@@ -26,6 +26,7 @@ import events as EVENTS
 import markets as MARKETS
 import reporting as REPORTING
 import backstops as BACKSTOPS
+import info as INFO
 import consensusData as CONSENSUS
 import collectFees as COLLECTFEES
 import penalizationCatchup as CATCHUP
@@ -41,7 +42,7 @@ inset('../data_api/float.se')
 
 event makeReportsLogReturn(returnValue)
 
-ETHCONTRACT = 02323232
+ETHCONTRACT = 0
 
 macro GAS_SUBSIDY: 3500000
 macro MAX_REPORT_THRESHOLD: 10^54
@@ -188,8 +189,12 @@ macro checkSubmitReportHashPreconditions():
     if(!EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)):
         EXPEVENTS.setNumEventsToReportOn(branch)
         # set amount of fees to be distributed in this period from the branch
-        # todo fix this to check if initial balance is set for given currency that the event uses, if not, set it
-        BRANCHES.setInitialBalance(branch, votePeriod, CASH.balance(branch))
+        i = 0
+        numCurrencies = BRANCHES.getNumCurrencies(branch)
+        while i < numCurrencies:
+            currency = BRANCHES.getCurrency(branch, i)
+            BRANCHES.setInitialBalance(branch, votePeriod, currency.balanceOf(BRANCHES.getWallet(branch, currency)), currency)
+            i += 1
 
 macro checkSubmitReportPreconditions():
     if(BRANCHES.getEventForkedOver(branch) == event):

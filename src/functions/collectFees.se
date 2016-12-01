@@ -69,10 +69,13 @@ macro collectRedistributedRep():
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, sender), gainedRep)
 
 macro collectTradeFees():
-    cash = safeFxpDiv(safeFxpMul(BRANCHES.getInitialBalance(branch, lastPeriod), newRep), denominator)
-    # give a reporter their portion of the trading fees
-    CASH.subtractCash(branch, cash)
-    CASH.addCash(sender, cash)
+    numCurrencies = BRANCHES.getNumCurrencies(branch)
+    while i < numCurrencies:
+        currency = BRANCHES.getCurrency(branch, i)
+        fees = safeFxpDiv(safeFxpMul(BRANCHES.getInitialBalance(branch, lastPeriod, currency), newRep), denominator)
+        # give a reporter their portion of the trading fees
+        BRANCHES.getWallet(branch, currency).transfer(sender, fees)
+        i += 1
 
 macro prepareInfoForConsensus():
     CONSENSUS.setFeesCollected(branch, sender, lastPeriod)

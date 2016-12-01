@@ -203,7 +203,7 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     events = array(1)
     events[0] = event
     checkSubcurrencyIsValid(currency)
-    # todo if wallet contract doesn't exist for a branch for a given currency need to make it or should we have an approval process for adding a token to a branch?
+    # todo if wallet contract doesn't exist for a branch for a given currency need to make it or should we have an approval process for adding a token to a branch and otherwise don't allow if not in the allowed list?
     wallet = create('wallet.se')
     #winningOutcomeAddress = getOneWinningOutcomeContractAddr if 1 and getTwoWinningOutcomeContractAddrFromWhitelist if 2
     if(!wallet.setWinningOutcomeContractAddressInitialize(currency, winningOutcomeAddress)):

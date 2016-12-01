@@ -41,7 +41,7 @@ macro checkSubcurrencyIsValid(contract):
 
 def init():
     # whatever the eth subcurrency contract is goes here
-    self.ethContract = 5
+    self.ethContract = 0
 
 # Create a new branch given a parent branch - a branch is essentially a fork of rep where new markets can be created
 # period length is given in seconds
