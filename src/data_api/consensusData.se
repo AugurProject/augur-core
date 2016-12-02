@@ -8,7 +8,7 @@ inset('refund.se')
     # fees collected states whether for a given period a user collected fees
     # rep collected states whether for a given period a user collected rep
     # base reporters last period is the minimum number of reporters for the last period
-data branch[](period[](denominator, penalized[](event[], num, notEnoughReportsPenalized), feesCollected[], feeFirst, periodBalance), penalizedUpTo[], baseReportersLastPeriod)
+data branch[](period[](denominator, penalized[](event[], num, notEnoughReportsPenalized), feesCollected[], repCollected[], feeFirst, periodBalance), penalizedUpTo[], baseReportersLastPeriod)
 
 # refunds keeps track of subsidies for various consensus function calls paid for by the market creator or bonders
 data refunds[]
@@ -79,11 +79,19 @@ def decreaseDenominator(branch, period, amount):
     return(1)
 
 # @return fxp
-def getFeesCollected(branch, address, period):
+def getFeesCollected(branch, address, period, currency):
     return(self.branch[branch].period[period].feesCollected[address])
 
-def setFeesCollected(branch, address, period):
+def setFeesCollected(branch, address, period, currency):
     self.branch[branch].period[period].feesCollected[address] = 1
+    return(1)
+
+# @return fxp
+def getRepCollected(branch, address, period):
+    return(self.branch[branch].period[period].repCollected[address])
+
+def setRepCollected(branch, address, period):
+    self.branch[branch].period[period].repCollected[address] = 1
     return(1)
 
 def getPenalized(branch, period, sender, event):

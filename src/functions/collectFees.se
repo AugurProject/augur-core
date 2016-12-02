@@ -14,34 +14,68 @@ inset('../data_api/float.se')
 
 # Allows a user to collect both redistributed rep and trading fees earned at the end of a period
 # Errors:
-    #  0: fees already collected
+    #  0: rep or fees already collected
     # -1: rep redistribution/rewards/penalizations in consensus not done yet
     # -2: needs to be second half of reporting period to claim rep [1st half is when redistribution is done]
         # after this window, any unclaimed rep is pushed to the next period's redistrib. pool via the first make report submission
+    # -3: rep not collected yet
 # 2 means no errors but didnt report last period
-# distribute any eth here too
-def collectFees(branch, sender):
+
+def collectRep(branch, sender):
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
     MUTEX.setMutex()
-
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = BRANCHES.getVotePeriod(branch)
     lastPeriod = votePeriod - 1
     newRep = EXPEVENTS.getAfterRep(branch, lastPeriod, sender)
-    feesCollected = CONSENSUS.getFeesCollected(branch, sender, lastPeriod)
-    checkCollectFeesPreconditions()
-    
+    repCollected = CONSENSUS.getRepCollected(branch, sender, lastPeriod)
+    denominator = CONSENSUS.getDenominator(branch, lastPeriod)
+    checkCollectRepPreconditions()
     # need 1 rep to claim fees
     if(newRep < ONE):
         prepareInfoForConsensus()
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
         return(2)
     collectRedistributedRep()
-    collectTradeFees()
     prepareInfoForConsensus()
     if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
+
+def collectFees(branch, sender, currency):
+    if(MUTEX.getMutex() && !mutexWhitelisted()):
+        throw()
+    MUTEX.setMutex()
+    periodLength = BRANCHES.getPeriodLength(branch)
+    votePeriod = BRANCHES.getVotePeriod(branch)
+    lastPeriod = votePeriod - 1
+    newRep = EXPEVENTS.getAfterRep(branch, lastPeriod, sender)
+    repCollected = CONSENSUS.getRepCollected(branch, sender, lastPeriod)
+    denominator = CONSENSUS.getDenominator(branch, lastPeriod)
+    checkCollectFeesPreconditions()
+    # need 1 rep to claim fees
+    if(newRep < ONE):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(2)
+    collectTradeFees()
+    if(!mutexWhitelisted()):
+        MUTEX.unsetMutex()
+    return(1)
+
+macro checkCollectRepPreconditions():
+    atSecondHalfOfPeriod()
+    if(!CONSENSUS.getRepRedistributionDone(branch, sender)):
+        # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(-1)
+    if(repCollected):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(0)
 
 macro checkCollectFeesPreconditions():
     atSecondHalfOfPeriod()
@@ -50,13 +84,15 @@ macro checkCollectFeesPreconditions():
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
+    feesCollected = CONSENSUS.getFeesCollected(branch, sender, lastPeriod, currency)
     if(feesCollected):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
+    if(!repCollected):
+        return(-3)
 
 macro collectRedistributedRep():
-    denominator = CONSENSUS.getDenominator(branch, lastPeriod)
     # sets the amount of rep available for redistribution in this redistribution period
     if(!CONSENSUS.getFeeFirst(branch, lastPeriod)):
         CONSENSUS.setFeeFirst(branch, lastPeriod, 1)
@@ -69,16 +105,17 @@ macro collectRedistributedRep():
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, sender), gainedRep)
 
 macro collectTradeFees():
-    numCurrencies = BRANCHES.getNumCurrencies(branch)
-    while i < numCurrencies:
-        currency = BRANCHES.getCurrency(branch, i)
-        fees = safeFxpDiv(safeFxpMul(BRANCHES.getInitialBalance(branch, lastPeriod, currency), newRep), denominator)
-        # give a reporter their portion of the trading fees
-        BRANCHES.getWallet(branch, currency).transfer(sender, fees)
-        i += 1
+    initialBalance = BRANCHES.getInitialBalance(branch, lastPeriod, currency)
+    if(!initialBalance):
+        # set amount of fees to be distributed in this period from the branch
+        BRANCHES.setInitialBalance(branch, lastPeriod, currency.balanceOf(BRANCHES.getWallet(branch, currency)), currency)
+    fees = safeFxpDiv(safeFxpMul(initialBalance, newRep), denominator)
+    # give a reporter their portion of the trading fees
+    BRANCHES.getWallet(branch, currency).transfer(sender, fees)
+    CONSENSUS.setFeesCollected(branch, sender, lastPeriod, currency)
 
 macro prepareInfoForConsensus():
-    CONSENSUS.setFeesCollected(branch, sender, lastPeriod)
+    CONSENSUS.setRepCollected(branch, sender, lastPeriod)
     # return not reported enough bond if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees
     if(!CONSENSUS.getNotEnoughPenalized(branch, sender, lastPeriod) or safeAdd(BRANCHES.getForkPeriod(branch), 1) == lastPeriod):
         CONSENSUS.doRefund(sender, sender)

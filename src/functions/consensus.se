@@ -167,7 +167,7 @@ macro checkPenalizeWrongPreconditions():
     if(eventNotResolvedAndNeedsToBe and CLOSEMARKET.closeMarket(EVENTS.getMarket(event, 0), msg.sender) != 1):
         MUTEX.unsetMutex()
         logReturn(consensusLogReturn, -6)
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
+    if(!CONSENSUS.getRepCollected(branch, msg.sender, lastPeriod - 1)):
         MUTEX.unsetMutex()
         logReturn(consensusLogReturn, -7)
 

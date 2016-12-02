@@ -77,7 +77,7 @@ macro checkCloseMarketPreconditions():
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         logReturn(closeMarketLogReturn, 0)
-    if(INFO.getCurrency(market).balanceOf(INFO.getWallet(market)) <= 0):
+    if(MARKETS.getOneWinningOutcome(market, 0)):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         logReturn(closeMarketLogReturn, -1)

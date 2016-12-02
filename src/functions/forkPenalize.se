@@ -82,7 +82,7 @@ macro checkForkPenalizationPreconditions():
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriodVotedOn):
         MUTEX.unsetMutex()
         return(-4)
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriodVotedOn - 1)):
+    if(!CONSENSUS.getRepCollected(branch, msg.sender, lastPeriodVotedOn - 1)):
         MUTEX.unsetMutex()
         return(-5)
     if(EVENTS.getEventBranch(event) != branch):

@@ -188,13 +188,6 @@ macro checkSubmitReportHashPreconditions():
     # if first fxpReport of period, num events not set
     if(!EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)):
         EXPEVENTS.setNumEventsToReportOn(branch)
-        # set amount of fees to be distributed in this period from the branch
-        i = 0
-        numCurrencies = BRANCHES.getNumCurrencies(branch)
-        while i < numCurrencies:
-            currency = BRANCHES.getCurrency(branch, i)
-            BRANCHES.setInitialBalance(branch, votePeriod, currency.balanceOf(BRANCHES.getWallet(branch, currency)), currency)
-            i += 1
 
 macro checkSubmitReportPreconditions():
     if(BRANCHES.getEventForkedOver(branch) == event):
@@ -223,7 +216,7 @@ macro checkSubmitReportPreconditions():
     # if(block.timestamp / periodLength != ((block.timestamp + 2 * TWENTY_FOUR_HR) / periodLength)):
     #    logReturn(makeReportsLogReturn, -7)
     # ensures user has collected fees for last reporting period
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod - 1)):
+    if(!CONSENSUS.getRepCollected(branch, msg.sender, votePeriod - 1)):
         if(COLLECTFEES.collectFees(branch, msg.sender, value = msg.value) < 0):
             MUTEX.unsetMutex()
             logReturn(makeReportsLogReturn, -8)

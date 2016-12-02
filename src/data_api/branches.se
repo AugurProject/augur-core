@@ -40,7 +40,7 @@ extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:i
     # Want:
         # Rep market cap >> outstanding shares value at all times
 # min can be no lower than ~0.0000001 or so otherwise can run into underflow issues
-# balance[][] takes a branch and currency and gives current balance of it
+# balance[][] takes a branch and currency and gives current balance of it at start of a fee distribution period
 # contract[] is a mapping from currency -> wallet contract addr
 # numCurrencies is the number of currencies a branch has
 # currencies[] is a 0 indexed list of the n currencies a branch allows
@@ -134,7 +134,7 @@ def getVotePeriod(branch):
 def getPeriodLength(branch):
     return(self.Branches[branch].periodLength)
 
-# branch currency balance at start of period
+# branch currency balance at start of the fee distribution period
 # @return fxp
 def setInitialBalance(branch, period, balance, currency):
     self.Branches[branch].balance[period][currency] = balance
