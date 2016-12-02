@@ -8170,7 +8170,7 @@
         "sig": "extern expiringEvents: [addEvent:[int256,int256,int256,int256]:int256, addRepEvent:[int256,int256,int256,int256]:int256, addReportToEvent:[int256,int256,int256,int256]:int256, addReportersPaidSoFar:[int256,int256]:int256, addRoundTwo:[int256,int256]:int256, addToWeightOfReport:[int256,int256,int256,int256]:int256, adjustPeriodShareValueOutstanding:[int256,int256,int256]:int256, deleteEvent:[int256,int256,int256]:int256, getAfterRep:[int256,int256,int256]:int256, getBeforeRep:[int256,int256,int256]:int256, getCurrentMode:[int256,int256]:int256, getCurrentModeItems:[int256,int256]:int256, getEncryptedReport:[int256,int256,int256,int256]:int256[], getEthicReport:[int256,int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getEventsRange:[int256,int256,int256,int256]:int256[], getLesserReportNum:[int256,int256,int256]:int256, getNumEventsToReportOn:[int256,int256]:int256, getNumRemoved:[int256,int256]:int256, getNumReportsActual:[int256,int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumRequired:[int256,int256]:int256, getNumRoundTwo:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodDormantRep:[int256,int256,int256]:int256, getPeriodRepConstant:[int256,int256,int256]:int256, getRepEvent:[int256,int256,int256]:int256, getReport:[int256,int256,int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getReportersPaidSoFar:[int256,int256]:int256, getRequired:[int256]:int256, getShareValue:[int256,int256]:int256, getSubsidy:[int256,int256,int256]:int256, getWeightOfReport:[int256,int256,int256]:int256, moveEvent:[int256,int256]:int256, refundCost:[int256,int256]:int256, removeEvent:[int256,int256]:int256, setAfterRep:[int256,int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256,int256]:int256, setCurrentMode:[int256,int256,int256]:int256, setCurrentModeItems:[int256,int256,int256]:int256, setEncryptedReport:[int256,int256,int256,int256,int256,int256,int256]:int256, setEthicReport:[int256,int256,int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setLesserReportNum:[int256,int256,int256,int256]:int256, setNumEventsToReportOn:[int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setPeriodDormantRep:[int256,int256,int256,int256]:int256, setPeriodRepConstant:[int256,int256,int256,int256]:int256, setReport:[int256,int256,int256,int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "faucets": {
-        "address": "0xfcd3c9fff5f761cb2f5b04757925e2932bd7f88b", 
+        "address": "0x575ee98fe3d1ca1526c8ce9e541a54319fad4210", 
         "code": [
             "# This software (Augur) allows buying and selling event options in Ethereum.", 
             "#", 
@@ -8230,10 +8230,13 @@
             "    else:", 
             "        index = REPORTING.getNumberReporters(branch)", 
             "        REPORTING.addReporter(branch, tx.origin, 0, 0, 0)", 
-            "    rep = 47*ONE", 
-            "    REPORTING.setRep(branch, index, rep)", 
-            "    lastPeriod = BRANCHES.getVotePeriod(branch) - 1", 
-            "    CONSENSUS.setPenalizedUpTo(branch, tx.origin, lastPeriod)", 
+            "    REPORTING.setRep(branch, index, 47*ONE)", 
+            "    periodLength = BRANCHES.getPeriodLength(branch)", 
+            "    if block.timestamp % periodLength <= periodLength / 2:", 
+            "        penalizedUpTo = BRANCHES.getVotePeriod(branch)", 
+            "    else:", 
+            "        penalizedUpTo = BRANCHES.getVotePeriod(branch) - 1", 
+            "    CONSENSUS.setPenalizedUpTo(branch, tx.origin, penalizedUpTo)", 
             "    return(1)", 
             "", 
             "def fundNewAccount(branch):", 
