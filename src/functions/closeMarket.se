@@ -75,7 +75,7 @@ def closeMarket(branch, market, sender):
     tradingPeriod = MARKETS.getTradingPeriod(market)
     period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)
-    if(CASH.balance(market)<=0):
+    if(MARKETS.getOneWinningOutcome(market, 0)):
         logReturn(closeMarket_logReturn, -1)
     if(EVENTS.getUncaughtOutcome(event)==0):
         logReturn(closeMarket_logReturn, -2)
