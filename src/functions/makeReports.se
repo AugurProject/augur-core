@@ -50,6 +50,7 @@ def makeHash(salt, report, eventID, sender):
 # Error: 0: not caught up on rep redistributions
 # Error -1: invalid event
 # Error -2: not in first half of period [commit part]
+# Error -3: not eligible to report on this event
 def submitReportHash(event, reportHash, encryptedReport, encryptedSalt, ethics):
     branch = EVENTS.getBranch(event)
     votePeriod = BRANCHES.getVotePeriod(branch)
@@ -87,9 +88,11 @@ def submitReportHash(event, reportHash, encryptedReport, encryptedSalt, ethics):
     shaHash = sha3(msg.sender + event)
     # max value 10^54: 2^256 / 10^54 = 115792089237316195423570.985...
     shaHash = abs(shaHash) / 115792089237316195423571
+    if(shaHash > reportingThreshold):
+        return(-3)
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
-    if(residual <= periodLength/2 && shaHash <= reportingThreshold):
+    if(residual <= periodLength/2):
         EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
         EXPEVENTS.setEncryptedReport(branch, votePeriod, msg.sender, encryptedReport, encryptedSalt, ethics, event)
         return(1)
