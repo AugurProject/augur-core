@@ -52,9 +52,9 @@ def reputationFaucet(branch):
     REPORTING.setRep(branch, index, 47*ONE)
     periodLength = BRANCHES.getPeriodLength(branch)
     if block.timestamp % periodLength <= periodLength / 2:
-        penalizedUpTo = BRANCHES.getVotePeriod(branch)
-    else:
         penalizedUpTo = BRANCHES.getVotePeriod(branch) - 1
+    else:
+        penalizedUpTo = BRANCHES.getVotePeriod(branch)
     CONSENSUS.setPenalizedUpTo(branch, tx.origin, penalizedUpTo)
     return(1)
 
