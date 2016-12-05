@@ -23,8 +23,7 @@ import branches as BRANCHES
 import cash as CASH
 import markets as MARKETS
 import events as EVENTS
-import closeMarketOne as CLOSEONE
-import closeMarketTwo as CLOSETWO
+import payout as PAYOUT
 import backstops as BACKSTOPS
 import eventResolution as RESOLVE
 inset('refund.se')
@@ -142,13 +141,13 @@ def claimProceeds(branch, market):
             ethical = ethic_catch(EVENTS.getEthical(event))
             # unethical or .5 categorical 1d market is resolved with all outcomes having equal values
             if(categorical(event) && (EVENTS.getmode(event)==ONEHALF or !ethical)):
-                outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))
+                outcome = PAYOUT.oneOutcome(market, winningOutcomes[0], msg.sender, 1, EVENTS.getNumOutcomes(event))
             # resolves a regular binary market
             else:
-                outcome = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, 0)
+                outcome = PAYOUT.oneOutcome(market, winningOutcomes[0], msg.sender, 0, 0)
         # resolves a scalar market
         elif(winningOutcomes[1]):
-            outcome = CLOSETWO.twoOutcomes(market, winningOutcomes, event, msg.sender)
+            outcome = PAYOUT.twoOutcomes(market, winningOutcomes, event, msg.sender)
         return(outcome)
     else:
         return(0)
