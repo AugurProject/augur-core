@@ -18,7 +18,7 @@ def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes
             MARKETS.modifyParticipantShares(market, sender, i+1, -sharesOwned)
             cashPayout = sharesOwned*MARKETS.getCumScale(market)/(numOutcomes*ONE)
             CASH.subtractCash(market, cashPayout)
-            CASH.addCash(participant, cashPayout)
+            CASH.addCash(sender, cashPayout)
             i+=1
     else:
         # distribute profit to the people who won money by holding winning shares
@@ -26,7 +26,7 @@ def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes
         MARKETS.modifyParticipantShares(market, sender, winningOutcome, -sharesOwned)
         cashPayout = sharesOwned*cumScale/ONE
         CASH.subtractCash(market, cashPayout)
-        CASH.addCash(participant, cashPayout)
+        CASH.addCash(sender, cashPayout)
     log(type=payout, sender, market, cashPayout, sharesOwned)
     return(1)
 
@@ -47,19 +47,22 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
     # for each winning outcome get rid of shares and send money to the trader
     n = 0
     cumScale = MARKETS.getCumScale(market)
+    cashPayout = 0
     while(winningOutcome[n]!=0):
         sharesOwned = MARKETS.getParticipantSharesPurchased(market, sender, winningOutcome[n])
         MARKETS.modifyParticipantShares(market, sender, winningOutcome[n], -sharesOwned)
         # low side
         if(n==0):
-            cashPayout = sharesOwned*cumScale/ONE*pricePerShare1/ONE
-            CASH.subtractCash(market, cashPayout)
-            CASH.addCash(participant, cashPayout)
+            cashPayoutLow = sharesOwned*cumScale/ONE*pricePerShare1/ONE
+            CASH.subtractCash(market, cashPayoutLow)
+            CASH.addCash(sender, cashPayoutLow)
+            cashPayout += cashPayoutLow
         # high side (of the scalar part)
         elif(n==1):
-            cashPayout = sharesOwned*cumScale/ONE*pricePerShare2/ONE
-            CASH.subtractCash(market, cashPayout)
-            CASH.addCash(participant, cashPayout)
+            cashPayoutHigh = sharesOwned*cumScale/ONE*pricePerShare2/ONE
+            CASH.subtractCash(market, cashPayoutHigh)
+            CASH.addCash(sender, cashPayoutHigh)
+            cashPayout += cashPayoutHigh
         n+=1
     log(type=payout, sender, market, cashPayout, sharesOwned)
     return(1)
