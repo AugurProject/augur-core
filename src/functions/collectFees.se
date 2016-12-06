@@ -10,7 +10,7 @@ inset('refund.se')
     # -1: rep redistribution/rewards/penalizations in consensus not done yet
     # -2: needs to be second half of reporting period to claim rep [1st half is when redistribution is done]
         # after this window, any unclaimed rep is pushed to the next period's redistrib. pool via the first make report submission
-# 2 means no errors but didnt report
+# 2 means already claimed
 def collectFees(branch, sender):
     periodLength = BRANCHES.getPeriodLength(branch)
     residual = block.timestamp % periodLength
@@ -56,3 +56,5 @@ def collectFees(branch, sender):
         CONSENSUS.setRefund(msg.sender, msg.value)
         send(CONSENSUS, msg.value)
         return(1)
+    else:
+        return(2)
