@@ -27,7 +27,6 @@ import markets as MARKETS
 import reporting as REPORTING
 import backstops as BACKSTOPS
 import consensusData as CONSENSUS
-import collectFees as COLLECTFEES
 import penalizationCatchup as CATCHUP
 import reportingThreshold as THRESHOLD
 inset('refund.se')
@@ -128,8 +127,7 @@ def submitReport(event, salt, report, ethics):
     periodLength = BRANCHES.getPeriodLength(branch)
     # ensures user has collected fees for last reporting period
     if(!CONSENSUS.getFeesCollected(branch, msg.sender, votePeriod-1)):
-        if(COLLECTFEES.collectFees(branch, msg.sender)<1):
-            logReturn(makeReports_logReturn, -8)
+        logReturn(makeReports_logReturn, -8)
     # commented out for testing
     #if(block.timestamp/periodLength!=((block.timestamp + 2*TWENTYFOURHR)/periodLength)):
     #    logReturn(makeReports_logReturn, -7)
