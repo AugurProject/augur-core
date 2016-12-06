@@ -23,7 +23,7 @@ def collectFees(branch, sender):
     lastPeriod = votePeriod - 1
     newRep = EXPEVENTS.getAfterRep(branch, lastPeriod, sender)
     # need 1 rep to claim fees
-    if(!CONSENSUS.getFeesCollected(branch, sender, lastPeriod) && newRep>ONE):
+    if(!CONSENSUS.getFeesCollected(branch, sender, lastPeriod)):
         denominator = CONSENSUS.getDenominator(branch, lastPeriod)
         # sets the amount of rep available for redistribution in the next period
         if(!CONSENSUS.getFeeFirst(branch, lastPeriod)):
@@ -50,15 +50,9 @@ def collectFees(branch, sender):
         balance = REPORTING.getRepBalance(branch, msg.sender)
         dormantRep = REPORTING.balanceOf(branch, msg.sender)
         # Record rep for next report period before any redistributions
-        # todo what if in first period these before/after/etc haven't been set?
         EXPEVENTS.setBeforeRep(branch, votePeriod, balance, msg.sender)
         EXPEVENTS.setAfterRep(branch, votePeriod, balance, msg.sender)
         EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, msg.sender)
         CONSENSUS.setRefund(msg.sender, msg.value)
         send(CONSENSUS, msg.value)
         return(1)
-    # shouldn't be reached / if so no effect
-    else:
-        if(!CONSENSUS.getFeesCollected(branch, sender, lastPeriod)):
-            CONSENSUS.setFeesCollected(branch, sender, lastPeriod)
-        return(2)
