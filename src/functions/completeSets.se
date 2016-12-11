@@ -25,7 +25,7 @@ import cash as CASH
 import markets as MARKETS
 inset('refund.se')
 
-event completeSets_logReturn(sender: indexed, market: indexed, type: indexed, returnValue, numOutcomes)
+event completeSets_logReturn(sender: indexed, market: indexed, type: indexed, returnValue, numOutcomes, timestamp)
 
 # Buys amount of every outcome
 # cost 850k gas
@@ -60,7 +60,7 @@ def buyCompleteSets(market, amount):
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount*cumScale/ONE)
     # send money from user acc. to market address/account
     CASH.sendFrom(market, cost, msg.sender)
-    log(type=completeSets_logReturn, msg.sender, market, 1, amount, numOutcomes)
+    log(type=completeSets_logReturn, msg.sender, market, 1, amount, numOutcomes, block.timestamp)
     return(amount)
 
 # Sells amount of every outcome [if user owns it]
@@ -97,5 +97,5 @@ def sellCompleteSets(market, amount):
     # send funds from the market to the user acc.
     CASH.subtractCash(market, cost)
     CASH.addCash(msg.sender, cost)
-    log(type=completeSets_logReturn, msg.sender, market, 2, amount, numOutcomes)
+    log(type=completeSets_logReturn, msg.sender, market, 2, amount, numOutcomes, block.timestamp)
     return(amount)
