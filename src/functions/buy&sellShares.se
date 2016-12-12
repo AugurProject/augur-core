@@ -28,8 +28,8 @@ inset('refund.se')
 inset('logReturn.se')
 
 event buyAndSellShares_logReturn(returnValue)
-event log_add_tx(market:indexed, sender:indexed, type, price, amount, outcome, tradeid)
-event log_cancel(market:indexed, sender:indexed, price, amount, tradeid, outcome, type, cashRefund)
+event log_add_tx(market:indexed, sender:indexed, type, price, amount, outcome, tradeid, timestamp)
+event log_cancel(market:indexed, sender:indexed, price, amount, tradeid, outcome, type, cashRefund, timestamp)
 
 # Trade types
 macro BID: 1
@@ -70,7 +70,7 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $fee, $send
                 CASH.sendFrom($market, ($amount * $price / ONE * $fee / ONE), $sender)
     else:
         logReturn(buyAndSellShares_logReturn, TRADE_ALREADY_EXISTS)
-    log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id)
+    log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id, block.timestamp)
     logReturn(buyAndSellShares_logReturn, trade_id)
 
 def shortAsk(amount, price, market, outcome):
@@ -120,7 +120,7 @@ def cancel(trade_id):
             CASH.subtractCash(market, cashRefund)
             CASH.addCash(msg.sender, cashRefund)
         # Log cancellation
-        log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type, cashRefund)
+        log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type, cashRefund, block.timestamp)
         logReturn(buyAndSellShares_logReturn, SUCCESS)
     logReturn(buyAndSellShares_logReturn, FAILURE)
 
