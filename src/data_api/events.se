@@ -19,6 +19,7 @@
 # Any questions please contact joey@augur.net
 
 inset('refund.se')
+import info as INFO
 
 # Keeps track of data about events in augur
 # Events' index is the event
@@ -47,6 +48,8 @@ data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutc
 
 # Keeps track of number of events created in the past 24 hours
 data past24Hours[]
+
+event logOutcome(event:indexed, outcome)
 
 def getResolveBondPoster(event):
     return(self.Events[event].resolveBondPoster)
@@ -164,7 +167,11 @@ def setExtraBond(event, extraBond):
 # @return fxp
 def getOutcome(event):
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good and for mode etc
-    return(self.Events[event].outcome)
+    whitelist = 1
+    if(msg.sender == INFO.getCreator(event) or whitelist):
+        return(self.Events[event].outcome)
+    else:
+        log(type = logOutcome, event, self.Events[event].outcome)
 
 # @return fxp
 def getEthics(event):

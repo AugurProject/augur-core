@@ -296,7 +296,6 @@ macro fillShort():
         i += 1
     if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
         MARKETS.modifySharesValue(market, safeFxpMul(amount, cumulativeScale))
-        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), safeFxpMul(amount, cumulativeScale))
     # send money from user acc. to market address/account
     # cost for shares
     payTakerCost = INFO.getCurrency(market).transferFrom(msg.sender, market, cost)
@@ -356,7 +355,6 @@ macro fillShortOrder():
         i += 1
     if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
         MARKETS.modifySharesValue(market, safeFxpMul(amount, cumulativeScale))
-        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), safeFxpMul(amount, cumulativeScale))
 
     # Update fxpMaxValue
     fxpMaxValue -= valueToSpend

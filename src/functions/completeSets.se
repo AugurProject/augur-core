@@ -49,7 +49,6 @@ def buyCompleteSets(market, fxpAmount):
     cumulativeScale = MARKETS.getCumulativeScale(market)
     cost = safeFxpMul(fxpAmount, cumulativeScale)
     checkBuyCompleteSetsPreconditions()
-    accountForFees()
     
     n = 1
     # send shares of the event to user address and increment the number issued in the market for each outcome
@@ -57,11 +56,16 @@ def buyCompleteSets(market, fxpAmount):
         MARKETS.modifyShares(market, n, fxpAmount)
         MARKETS.modifyParticipantShares(market, msg.sender, n, fxpAmount, 0)
         n += 1
-    # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
+    # if still before voting period has started count the share value
+    # also account for fees paid to branch here even though paid upon selling / resolution so we can assign reporters appropriately
     notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
     if(notVotingOnYet):
         MARKETS.modifySharesValue(market, safeFxpMul(fxpAmount, cumulativeScale))
-        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), safeFxpMul(fxpAmount, cumulativeScale))
+        fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpAmount), cumulativeScale)
+        fees = safeDiv(fee, 2)
+        MARKETS.addFees(market, fees)
+        MARKETS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), fees)
+
     MUTEX.unsetMutex()
     logReturn(completeSetsLogReturn, 1)
 
@@ -86,15 +90,14 @@ def sellCompleteSets(market, fxpAmount):
         MARKETS.modifyShares(market, n, -fxpAmount)
         MARKETS.modifyParticipantShares(market, msg.sender, n, -fxpAmount, 0)
         n += 1
-    # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
-    notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
-    if(notVotingOnYet):
-        MARKETS.modifySharesValue(market, safeFxpMul(-fxpAmount, cumulativeScale))
-        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), safeFxpMul(-fxpAmount, cumulativeScale))
     # send funds from the market to the user acc.
     fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpAmount), cumulativeScale)
     if(!INFO.getWallet(market).transfer(msg.sender, safeSub(cost, fee))):
         throw()
+    # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
+    notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
+    if(notVotingOnYet):
+        MARKETS.modifySharesValue(market, safeFxpMul(-fxpAmount, cumulativeScale))
     currency = INFO.getCurrency(market)
     if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
         throw()
@@ -127,8 +130,3 @@ macro checkSellCompleteSetsPreconditions():
             logReturn(completeSetsLogReturn, -1)
         n += 1
     n = 1
-
-macro accountForFees():
-    # account for fees here even though paid upon selling / resolution so we can assign reporters appropriately
-    fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpAmount), cumulativeScale)
-    MARKETS.addFees(market, safeDiv(fee, 2))

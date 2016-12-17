@@ -39,8 +39,8 @@ inset('refund.se')
     # numReqEvents is the number of events that are required to be reported on in a given reporting period
     # numberRemoved is the number of events that no longer have to be reported on in this period [a good example is an event that was resolved early successfully]
     # numEventsToReportOn is the number of events available for reporting on [not including required events] * base number of reporters per event [this is multiplied by a user's periodRepWeight to figure out how many events they should be reporting on in a given period]
-    # shareValue is the value of all the outstanding shares from markets that have events expiring in this period
-data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], committed[], subsidy[], eventWeight[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, shareValue)
+    # feeValue is the value of all fees for all markets that have events expiring in this period.
+data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], committed[], subsidy[], eventWeight[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, feeValue)
 
 # This keeps track of info in a period for the reporters, it takes a branch and votePeriod as params, respectively
     # Before rep is the amount of active rep a user has before any penalizations for reporting incorrectly
@@ -224,10 +224,10 @@ def setNumEventsToReportOn(branch):
 # gets number of available events to report on, not counting required events
 def getNumEventsToReportOn(branch, period):
     return(self.periodEventInfo[branch][period].numEventsToReportOn)
-
+    
 # @return fxp
-def getShareValue(branch, expIndex):
-    return(self.periodEventInfo[branch][expIndex].shareValue)
+def getFeeValue(branch, expIndex):
+    return(self.periodEventInfo[branch][expIndex].feeValue)
 
 def getNumberEvents(branch, period):
     return(self.periodEventInfo[branch][period].numberEvents)
@@ -260,8 +260,8 @@ def removeEvent(branch, period):
 def getNumRemoved(branch, period):
     return(self.periodEventInfo[branch][period].numberRemoved)
 
-def adjustPeriodShareValueOutstanding(branch, expIndex, amount):
-    self.periodEventInfo[branch][expIndex].shareValue += amount
+def adjustPeriodFeeValue(branch, expIndex, amount):
+    self.periodEventInfo[branch][expIndex].feeValue += amount
     return(1)
 
 def setReportHash(branch, period, reporter, reportHash, event):

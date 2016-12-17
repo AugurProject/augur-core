@@ -160,12 +160,11 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
     shareValue = 0
     i = 0
     while(i < numMarkets):
-        shareValue += MARKETS.getSharesValue(markets[i])
         totalFees += MARKETS.getFees(markets[i])
         i += 1
-    totalVal = EXPEVENTS.getShareValue(branch, votePeriod)
-    shareFraction = safeFxpDiv(shareValue, totalVal)
-    numReportersOnMarket = BRANCHES.getBaseReporters(branch) * (safeMul(-267, safeFxpMul(shareFraction, shareFraction))/2 + safeMul(533, shareFraction)/2 + ONE)
+    allFeesForAllMarkets = EXPEVENTS.getFeeValue(branch, votePeriod) 
+    feeFraction = safeFxpDiv(totalFees, allFeesForAllMarkets)
+    numReportersOnMarket = BRANCHES.getBaseReporters(branch) * (safeMul(-267, safeFxpMul(feeFraction, feeFraction))/2 + safeMul(533, feeFraction)/2 + ONE)
     totalFeesInWei = safeFxpMul(totalFees, WEI_TO_ETH)
     canPayForThisManyReporters = totalFeesInWei / (GAS_SUBSIDY * tx.gasprice)
     lesser = min(canPayForThisManyReporters * ONE, numReportersOnMarket)
