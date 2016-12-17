@@ -432,3 +432,17 @@ def resolveEarly(event, outcome):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
+
+# Allows a user to directly add fees / effectively pay for oracle usage w/o having to trade using the default contracts
+# Returns 1 if successful, 0 if too late to send additional fees
+def addFees(market, amount):
+    branch = MARKETS.getBranch(market)
+    notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
+    if(notVotingOnYet):
+        if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), amount)):
+            throw()
+        MARKETS.addFees(market, amount)
+        MARKETS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), amount)
+        return(1)
+    else:
+        return(0)
