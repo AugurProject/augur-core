@@ -439,7 +439,8 @@ def addFees(market, amount):
     branch = MARKETS.getBranch(market)
     notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
     if(notVotingOnYet):
-        if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), amount)):
+        currency = MARKETS.getCurrency(market)
+        if(!currency.transferFrom(msg.sender, BRANCHES.getWallet(branch, currency), amount)):
             throw()
         MARKETS.addFees(market, amount)
         MARKETS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), amount)
