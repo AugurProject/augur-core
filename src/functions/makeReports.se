@@ -32,6 +32,8 @@ import reportingThreshold as THRESHOLD
 inset('refund.se')
 inset('logReturn.se')
 
+event submittedReportHash(sender: indexed, event: indexed, reportHash, encryptedReport, encryptedSalt, ethics, timestamp)
+event submittedReport(sender: indexed, event: indexed, salt, report, ethics, timestamp)
 event makeReports_logReturn(returnValue)
 
 macro MAX_THRESHOLD: 10^54
@@ -94,6 +96,7 @@ def submitReportHash(event, reportHash, encryptedReport, encryptedSalt, ethics):
     if(residual <= periodLength/2):
         EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
         EXPEVENTS.setEncryptedReport(branch, votePeriod, msg.sender, encryptedReport, encryptedSalt, ethics, event)
+        log(type=submittedReportHash, msg.sender, event, reportHash, encryptedReport, encryptedSalt, ethics, block.timestamp)
         return(1)
     return(-2)
 
@@ -183,6 +186,7 @@ def submitReport(event, salt, report, ethics):
             EXPEVENTS.addReportersPaidSoFar(branch, event)
             CASH.subtractCash(branch, 3500000*tx.gasprice)
             CASH.addCash(msg.sender, 3500000*tx.gasprice)
+        log(type=submittedReport, msg.sender, event, salt, report, ethics, block.timestamp)
         logReturn(makeReports_logReturn, 1)
     logReturn(makeReports_logReturn, -2)
 
