@@ -5,6 +5,8 @@ import consensusData as CONSENSUS
 
 inset('refund.se')
 
+event penalizationCaughtUp(branch: indexed, sender: indexed, penalizedFrom, penalizedUpTo, repChange, newRepBalance, timestamp)
+
 macro POINTNINE: 900000000000000000
 
 # Call when a user who hasn't reported for a while [and had their rep active] and wants to start again and needs to catch up on penalizations
@@ -46,4 +48,5 @@ def penalizationCatchup(branch, sender):
     # sends that rep to the branch rep pool
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repChange)
     CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
+    log(type=penalizationCaughtUp, branch, sender, lastPeriodPenalized, lastPeriod, repChange, smoothedRep, block.timestamp)
     return(1)
