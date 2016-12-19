@@ -27,8 +27,8 @@ data cashcoinBalances[]
 # address -> address mapping of a cash address to the address that owns it
 data owners[]
 
-event deposit(sender:indexed, value)
-event withdraw(sender:indexed, to:indexed, value)
+event deposit(sender:indexed, value, timestamp)
+event withdraw(sender:indexed, to:indexed, value, timestamp)
 
 def init():
     # test initial funds
@@ -111,7 +111,7 @@ def setCash(address, balance):
 
 def depositEther():
     self.cashcoinBalances[msg.sender] += msg.value
-    log(type=deposit, msg.sender, msg.value)
+    log(type=deposit, msg.sender, msg.value, block.timestamp)
     return msg.value
 
 def withdrawEther(to, value):
@@ -120,7 +120,7 @@ def withdrawEther(to, value):
     if self.cashcoinBalances[msg.sender] >= value:
         self.cashcoinBalances[msg.sender] -= value
         send(to, value)
-        log(type=withdraw, msg.sender, to, value)
+        log(type=withdraw, msg.sender, to, value, block.timestamp)
         return 1
     else:
         return 0

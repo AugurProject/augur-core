@@ -3,7 +3,7 @@ import cash as CASH
 import events as EVENTS
 inset('refund.se')
 
-event payout(sender:indexed, market:indexed, payoutValue, shares)
+event payout(sender:indexed, market:indexed, cashPayout, cashBalance, shares, timestamp)
 
 # Payout a trader in a market with one winning outcome [so not scalar]
 # Error:
@@ -27,7 +27,7 @@ def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes
         cashPayout = sharesOwned*cumScale/ONE
         CASH.subtractCash(market, cashPayout)
         CASH.addCash(sender, cashPayout)
-    log(type=payout, sender, market, cashPayout, sharesOwned)
+    log(type=payout, sender, market, cashPayout, CASH.balance(sender), sharesOwned, block.timestamp)
     return(1)
 
 # Payout traders in markets with number of winningOutcomes of 2 [one scalar with any combination of binary + categorical for the other 2 dimensions, or just 1D with a scalar]
@@ -64,5 +64,5 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
             CASH.addCash(sender, cashPayoutHigh)
             cashPayout += cashPayoutHigh
         n+=1
-    log(type=payout, sender, market, cashPayout, sharesOwned)
+    log(type=payout, sender, market, cashPayout, CASH.balance(sender), sharesOwned, block.timestamp)
     return(1)
