@@ -10,7 +10,7 @@ inset('refund.se')
 inset('logReturn.se')
 
 # p: proportion correct
-event penalize(sender: indexed, outcome, oldrep, repchange, newafterrep, p, reportValue, penalizedUpTo, timestamp)
+event penalize(sender: indexed, event: indexed, outcome, oldrep, repchange, newafterrep, p, reportValue, penalizedUpTo, timestamp)
 event consensus_logReturn(returnValue)
 
 macro POINTZEROONE: 10000000000000000
@@ -120,7 +120,7 @@ def penalizeWrong(branch, event):
         else:
             repChange = oldRep * (ONE - POINTTWO/numReportedOn)/ONE + newRep*(POINTTWO/numReportedOn)/ONE - oldRep
         newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
-        log(type=penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue, lastPeriod, block.timestamp)
+        log(type=penalize, msg.sender, event, outcome, oldRep, repChange, newAfterRep, p, reportValue, lastPeriod, block.timestamp)
         EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
         CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
