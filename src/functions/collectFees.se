@@ -5,6 +5,8 @@ import consensusData as CONSENSUS
 import reporting as REPORTING
 inset('refund.se')
 
+event collectedFees(branch: indexed, sender: indexed, cashFeesCollected, repChange, newRepBalance, dormantRepBalance, notReportingBond, totalReportingRep, period, timestamp)
+
 # Allows a user to collect both redistributed rep and trading fees earned at the end of a period
 # Errors:
     # -1: rep redistribution/rewards/penalizations in consensus not done yet
@@ -44,7 +46,8 @@ def collectFees(branch, sender):
         if(CONSENSUS.getNotEnoughPenalized(branch, sender, lastPeriod)==0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod):
             CONSENSUS.doRefund(sender, sender)
         # need to pay not reporting bond
-        if(msg.value < 500000*tx.gasprice):
+        notReportingBond = msg.value
+        if(notReportingBond < 500000*tx.gasprice):
             throw()
         balance = REPORTING.getRepBalance(branch, sender)
         dormantRep = REPORTING.balanceOf(branch, sender)
@@ -52,8 +55,9 @@ def collectFees(branch, sender):
         EXPEVENTS.setBeforeRep(branch, votePeriod, balance, sender)
         EXPEVENTS.setAfterRep(branch, votePeriod, balance, sender)
         EXPEVENTS.setPeriodDormantRep(branch, votePeriod, dormantRep, sender)
-        CONSENSUS.setRefund(sender, msg.value)
-        send(CONSENSUS, msg.value)
+        CONSENSUS.setRefund(sender, notReportingBond)
+        send(CONSENSUS, notReportingBond)
+        log(type=collectedFees, branch, sender, cash, gainedRep, balance, dormantRep, denominator, notReportingBond, lastPeriod, block.timestamp)
         return(1)
     else:
         return(2)
