@@ -32,7 +32,7 @@ macro POINTONETWOFIVE: 125000000000000000
 macro POINTZEROSIX: 60000000000000000
 macro COSTPERREPORTER: 3500000
 
-event marketCreated(sender: indexed, marketID, timestamp)
+event marketCreated(sender: indexed, marketID, marketCreationFee, eventBond, timestamp)
 event tradingFeeUpdated(sender: indexed, marketID: indexed, tradingFee, timestamp)
 
 def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution:str, tradingFee, tag1, tag2, tag3, makerFees, extraInfo:str):
@@ -167,7 +167,7 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
                 throw()
             EVENTS.setBond(event, validity_bond)
             EVENTS.addPast24(period)
-    log(type=marketCreated, msg.sender, marketID, block.timestamp)
+    log(type=marketCreated, msg.sender, marketID, 500000*tx.gasprice, validity_bond, block.timestamp)
     return(marketID)
 
 # Updates a trading fee to be lower in a market

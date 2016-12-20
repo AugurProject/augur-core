@@ -5,7 +5,7 @@ import consensusData as CONSENSUS
 
 inset('refund.se')
 
-event penalizationCaughtUp(branch: indexed, sender: indexed, penalizedFrom, penalizedUpTo, repChange, newRepBalance, timestamp)
+event penalizationCaughtUp(branch: indexed, sender: indexed, penalizedFrom, penalizedUpTo, repLost, newRepBalance, timestamp)
 
 macro POINTNINE: 900000000000000000
 
