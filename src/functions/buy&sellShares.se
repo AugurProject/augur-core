@@ -73,12 +73,12 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $fee, $send
     log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id, block.timestamp)
     logReturn(buyAndSellShares_logReturn, trade_id)
 
-def shortAsk(amount, price, market, outcome):
+def shortAsk(amount, price, market, outcome, minimumTradeSize):
     refund()
     buyCompleteSetsResult = COMPLETESETS.buyCompleteSets(market, amount, call=delegate)
     if buyCompleteSetsResult != amount:
         return(buyCompleteSetsResult)
-    return(self.sell(amount, price, market, outcome, call=delegate))
+    return(self.sell(amount, price, market, outcome, minimumTradeSize, call=delegate))
 
 #
 # Cancellation: cancels a trade, if a bid refunds money, if an ask returns shares
@@ -140,13 +140,13 @@ macro remove_trade($trade_id, $market):
 #
 # costs 532k gas
 # smallest trade value is 0.00000001
-def buy(amount, price, market, outcome):
+def buy(amount, price, market, outcome, minimumTradeSize):
     refund()
 
     # Check if there are any "crossed orders" (i.e., ask orders
     # at a price less than or equal to the buy price).
     bestAskID = TRADES.getBestAskID(market, outcome)
-    if bestAskID != 0 and price >= TRADES.get_price(bestAskID):
+    if bestAskID != 0 and price >= TRADES.get_price(bestAskID) and TRADES.get_amount(bestAskID) >= minimumTradeSize:
         logReturn(buyAndSellShares_logReturn, -5)
 
     trading_fee = MARKETS.getTradingFee(market)
@@ -174,13 +174,13 @@ def buy(amount, price, market, outcome):
     # -3: trader doesn't exist in market
     # -4: not enough money or shares
     # -5: best bid exceeds ask price
-def sell(amount, price, market, outcome):
+def sell(amount, price, market, outcome, minimumTradeSize):
     refund()
 
     # Check if there are any "crossed orders" (i.e., bid orders
     # at a price greater than or equal to the sell price).
     bestBidID = TRADES.getBestBidID(market, outcome)
-    if bestBidID != 0 and price <= TRADES.get_price(bestBidID):
+    if bestBidID != 0 and price <= TRADES.get_price(bestBidID) and TRADES.get_amount(bestBidID) >= minimumTradeSize:
         logReturn(buyAndSellShares_logReturn, -5)
 
     branch = MARKETS.getBranchID(market)
