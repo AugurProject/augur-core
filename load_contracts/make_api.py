@@ -195,6 +195,19 @@ def update_contract_api(contract_name, contract_path, old_api):
         functions_api[method_name]["returns"] = "unfix"
     return events_api, functions_api
 
+def extract_macros(contract_path):
+    macros = []
+    with open(contract_path) as srcfile:
+        startline = None
+        for linenum, line in enumerate(srcfile):
+            if line.startswith("inset("):
+                inset_filename = line.strip().split("inset(")[1].split(")")[0].strip("'").strip("\"")
+                inset_filename = os.path.join(os.path.dirname(os.path.abspath(contract_path)), inset_filename)
+                macros.extend(extract_macros(inset_filename))
+            if line.startswith("macro ") and "(" in line:
+                macros.append(line.strip().split("macro ")[1].split(":")[0].split("(")[0])
+    return list(set(macros))
+
 def get_events_in_method(contract_path, method_name, all_methods):
     events_in_method = []
     check_methods = deepcopy(all_methods)
@@ -203,24 +216,29 @@ def get_events_in_method(contract_path, method_name, all_methods):
             check_methods.pop(i)
     with open(contract_path) as srcfile:
         startline = None
+        submethods = []
         for linenum, line in enumerate(srcfile):
             if startline is not None:
                 if line.strip().startswith("log(type="):
                     events_in_method.append(line.strip().split("log(type=")[1].split(",")[0])
-                if line.startswith("def "):
+                if line.startswith("def ") or line.startswith("macro "):
                     break
-            if line.startswith("def " + method_name):
-                startline = linenum
-            else:
-                submethods = []
                 for i, submethod in enumerate(check_methods):
                     if submethod["finder"] in line:
-                        submethods.append(check_methods.pop(i))
-                for submethod in submethods:
-                    submethod_events = get_events_in_method(submethod["contract_path"], submethod["method"], check_methods)
-                    if len(submethod_events):
-                        print("  - " + submethod["method"])
-                        events_in_method.extend(submethod_events)
+                        check_method = check_methods.pop(i)
+                        already_appended = False
+                        for s in submethods:
+                            if s["method"] == check_method["method"]:
+                                already_appended = True
+                        if not already_appended:
+                            submethods.append(check_method)
+            if line.startswith("def " + method_name) or line.startswith("macro " + method_name):
+                startline = linenum
+    for submethod in submethods:
+        submethod_events = get_events_in_method(submethod["contract_path"], submethod["method"], check_methods)
+        if len(submethod_events):
+            print("  - " + submethod["method"])
+            events_in_method.extend(submethod_events)
     events_in_method = list(set(events_in_method))
     return events_in_method
 
@@ -237,14 +255,20 @@ def update_api(contract_paths, old_api):
             if contract_name != "CompositeGetters" and not contract_method.startswith("get"):
                 contract_methods_list.append({
                     "method": contract_method,
-                    "contract_path": contract_path
+                    "contract_path": contract_path,
+                    "finder":  "." + contract_method + "("
+                })
+        if "data_api" not in contract_path:
+            for macro in extract_macros(contract_path):
+                contract_methods_list.append({
+                    "method": macro,
+                    "contract_path": contract_path,
+                    "finder": macro + "("
                 })
         all_methods.extend(contract_methods_list)
         new_api["functions"][contract_name] = functions_api
         bar.next()
     bar.finish()
-    for i, method in enumerate(all_methods):
-        all_methods[i]["finder"] = "." + method["method"] + "("
     for contract_name, contract_path in contract_paths.items():
         functions_api = new_api["functions"][contract_name]
         for method_name in functions_api.keys():
