@@ -29,6 +29,7 @@ import eventResolution as RESOLVE
 inset('refund.se')
 inset('logReturn.se')
 
+event closedMarket(market: indexed, branch: indexed, sender: indexed)
 event closeMarket_logReturn(returnValue)
 
 # first param is the market, second param is the subcurrency contract
@@ -109,6 +110,7 @@ def closeMarket(branch, market, sender):
         MARKETS.setWinningOutcomes(market, winningOutcomes)
         # refunds closing cost
         MARKETS.refundClosing(market, sender)
+        log(type=closedMarket, market, branch, sender)
         logReturn(closeMarket_logReturn, 1)
     else:
         logReturn(closeMarket_logReturn, 0)
