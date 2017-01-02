@@ -11,6 +11,7 @@ sleep 5
 ./load_contracts.py --blocktime 2
 ./generate_gospel.py -i $AUGUR_CONTRACTS/contracts.json -o $AUGUR_CONTRACTS/contracts.json
 ./make_api.py -i $AUGUR_CONTRACTS/api.json -o $AUGUR_CONTRACTS/api.json
+cp $AUGUR_CORE/load_contracts/build.json $AUGUR_CORE/load_contracts/build-9000.json
 $AUGURJS/scripts/new-contracts.js
 $AUGURJS/scripts/canned-markets.js
 sleep 5
