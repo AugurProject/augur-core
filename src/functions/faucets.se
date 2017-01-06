@@ -34,7 +34,7 @@ inset('refund.se')
 macro POINTSEVEN: 700000000000000000
 macro POINTZEROONE: 10000000000000000
 
-event fundedAccount(branch: indexed, sender: indexed, cashBalance, repBalance)
+event fundedAccount(branch: indexed, sender: indexed, cashBalance, repBalance, timestamp)
 
 # Error -1: Hey, you're not broke!
 def cashFaucet():
@@ -65,7 +65,7 @@ def fundNewAccount(branch):
     CASH.send(self, 0)
     self.reputationFaucet(branch)
     CASH.setCash(msg.sender, 10000*ONE)
-    log(type=fundedAccount, branch, msg.sender, 10000*ONE, 47*ONE)
+    log(type=fundedAccount, branch, msg.sender, 10000*ONE, 47*ONE, block.timestamp)
     return(1)
 
 # Used to claim rep on a fork or on a new branch
