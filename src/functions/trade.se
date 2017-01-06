@@ -29,8 +29,8 @@ import expiringEvents as EXPEVENTS
 inset('refund.se')
 inset('logReturn.se')
 
-event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome, timestamp, takerFee, makerFee, onChainPrice)
-event log_short_fill_tx(market:indexed, sender:indexed, owner:indexed, price, amount, tradeid, outcome, timestamp, takerFee, makerFee, numOutcomes, onChainPrice)
+event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome, timestamp, takerFee, makerFee, onChainPrice, tradeHash)
+event log_short_fill_tx(market:indexed, sender:indexed, owner:indexed, price, amount, tradeid, outcome, timestamp, takerFee, makerFee, numOutcomes, onChainPrice, tradeHash)
 event trade_logReturn(returnValue)
 event trade_logArrayReturn(returnArray: arr)
 
@@ -210,7 +210,7 @@ def trade(max_value, max_amount, trade_ids:arr):
                         # Update max_value
                         max_value -= value_to_spend
                         # Log transaction
-                        log(type=log_fill_tx, market, msg.sender, owner, BID, displayPrice, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, makerFee, price)
+                        log(type=log_fill_tx, market, msg.sender, owner, BID, displayPrice, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, makerFee, price, tradeHash)
 
         # Log price, fill amount, type and timestamp
         MARKETS.setPrice(market, outcome, displayPrice)
@@ -346,6 +346,6 @@ def short_sell(buyer_trade_id, max_amount):
         displayPrice = minValue + price
     else:
         displayPrice = price
-    log(type=log_short_fill_tx, market, msg.sender, owner, displayPrice, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee, numOutcomes, price)
+    log(type=log_short_fill_tx, market, msg.sender, owner, displayPrice, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee, numOutcomes, price, tradeHash)
     MARKETS.setPrice(market, outcome, displayPrice)
     logArrayReturn([SUCCESS, max_amount, fill, price])
