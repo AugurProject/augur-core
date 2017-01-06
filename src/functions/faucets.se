@@ -65,7 +65,7 @@ def fundNewAccount(branch):
     CASH.send(self, 0)
     self.reputationFaucet(branch)
     CASH.setCash(msg.sender, 10000*ONE)
-    log(type=fundedAccount, branch, msg.sender, 10000*ONE, 47*REP)
+    log(type=fundedAccount, branch, msg.sender, 10000*ONE, 47*ONE)
     return(1)
 
 # Used to claim rep on a fork or on a new branch
