@@ -27,6 +27,7 @@ data cashcoinBalances[]
 # address -> address mapping of a cash address to the address that owns it
 data owners[]
 
+event sentCash(_from:indexed, _to:indexed, _value)
 event deposit(sender:indexed, value, timestamp)
 event withdraw(sender:indexed, to:indexed, value, timestamp)
 
@@ -63,6 +64,7 @@ def send(recver, value):
     if(senderBalance >= value && value > 0):
         self.cashcoinBalances[sender] -= value
         self.cashcoinBalances[recver] += value
+        log(type=sentCash, msg.sender, recver, value)
         return(value)
     else:
         return(0)
@@ -81,6 +83,7 @@ def sendFrom(recver, value, from):
     if(senderBalance >= value && value > 0):
         self.cashcoinBalances[from] -= value
         self.cashcoinBalances[recver] += value
+        log(type=sentCash, from, recver, value)
         return(value)
     else:
         return(0)
