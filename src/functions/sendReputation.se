@@ -30,8 +30,8 @@ inset('refund.se')
 # sender/owner, then spender
 data amountCanSpend[][]
 
-event Transfer(_from:indexed, _to:indexed, _value)
-event Approval(_owner:indexed, _spender:indexed, value)
+event Transfer(_from:indexed, _to:indexed, _value, timestamp)
+event Approval(_owner:indexed, _spender:indexed, value, timestamp)
 
 # fix sender, tx.origin stuff here
 # todo should we check collect fees done or no
@@ -85,6 +85,7 @@ def sendReputation(branch, recver, value):
     senderBalance = REPORTING.getRepBalance(branch, sender)
     if(senderBalance >= value && value > 0):
         if(REPORTING.subtractRep(branch, senderIndex, value) && REPORTING.addRep(branch, receiverIndex, value)):
+            log(type=Transfer, msg.sender, recver, value, timestamp)
             return(value)
         else:
             return(0)
@@ -119,7 +120,7 @@ def transfer(branch, recver, value):
     senderBalance = REPORTING.balanceOf(branch, sender)
     if(senderBalance >= value && value > 0):
         if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, receiverIndex, value)):
-            log(type=Transfer, msg.sender, recver, value)
+            log(type=Transfer, msg.sender, recver, value, block.timestamp)
             return(value)
         else:
             return(0)
@@ -151,7 +152,7 @@ def transferFrom(branch, from, recver, value):
     if(senderBalance >= value && value > 0 && self.amountCanSpend[from][msg.sender]>=value):
         if(REPORTING.subtractDormantRep(branch, senderIndex, value) && REPORTING.addDormantRep(branch, receiverIndex, value)):
             self.amountCanSpend[from][msg.sender] -= value
-            log(type=Transfer, from, recver, value)
+            log(type=Transfer, from, recver, value, block.timestamp)
             return(value)
         else:
             return(0)
@@ -161,7 +162,7 @@ def transferFrom(branch, from, recver, value):
 # Allows spender to withdraw from your dormant rep account
 def approve(branch, spender, value):
     self.amountCanSpend[msg.sender][spender] = value
-    log(type=Approval, msg.sender, spender, value)
+    log(type=Approval, msg.sender, spender, value, block.timestamp)
     return(1)
 
 # Returns amount spender can withdraw from owner
