@@ -432,6 +432,7 @@ def resolveEarly(event, outcome):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
+        
 
 # Allows a user to directly add fees / effectively pay for oracle usage w/o having to trade using the default contracts
 # Returns 1 if successful, 0 if too late to send additional fees
