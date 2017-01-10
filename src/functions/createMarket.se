@@ -120,7 +120,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
         if(!EVENTS.getBond(event)):
             # pay validity / indeterminate protection bond
             period = block.timestamp / TWENTY_FOUR_HR
-            minFee = safeDiv(safeMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), ONE), WEI_TO_ETH)
+            minFee = safeMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), BRANCHES.getCurrencyRate(branch, currency))
             validityBond = (minFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
             if(!currency.transferFrom(msg.sender, wallet, validityBond)):
                 throw()
@@ -160,9 +160,9 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
 
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
-    creationFee = safeFxpDiv(POINT_ZERO_THREE * baseReporters, fxpTradingFee)
+    creationFee = safeMul(safeFxpDiv(POINT_ZERO_THREE * baseReporters, fxpTradingFee), BRANCHES.getCurrencyRate(branch, currency))
     # gives ether/cash amount in fixed point
-    minFee = safeFxpDiv(COST_PER_REPORTER * baseReporters * tx.gasprice, WEI_TO_ETH)
+    minFee = safeMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), BRANCHES.getCurrencyRate(branch, currency))
     creationFee = max(minFee, creationFee)
     period = block.timestamp / TWENTY_FOUR_HR
     numOutcomes = EVENTS.getNumOutcomes(event)
@@ -203,7 +203,7 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     events = array(1)
     events[0] = event
     checkSubcurrencyIsValid(currency)
-    # todo if wallet contract doesn't exist for a branch for a given currency need to make it or should we have an approval process for adding a token to a branch and otherwise don't allow if not in the allowed list?
+    # todo if wallet contract doesn't exist for a branch for a given currency need to make it or should we have an approval process for adding a token to a branch and otherwise don't allow if not in the allowed list? if currency rate is 0 then that's one
     wallet = create('wallet.se')
     #winningOutcomeAddress = getOneWinningOutcomeContractAddr if 1 and getTwoWinningOutcomeContractAddrFromWhitelist if 2
     if(!wallet.setWinningOutcomeContractAddressInitialize(currency, winningOutcomeAddress)):
@@ -254,8 +254,8 @@ def updateTradingFee(market, fxpTradingFee):
         return(-1)
     oldFee = MARKETS.getTradingFee(market)
     baseReporters = BRANCHES.getBaseReporters(branch)
-    oldCreationFee = safeFxpDiv(POINT_ZERO_SIX * baseReporters, oldFee)
-    newCreationFee = safeFxpDiv(POINT_ZERO_SIX * baseReporters, fxpTradingFee)
+    oldCreationFee = safeMul(safeFxpDiv(POINT_ZERO_SIX * baseReporters, oldFee), BRANCHES.getCurrencyRate(branch, currency))
+    newCreationFee = safeMul(safeFxpDiv(POINT_ZERO_SIX * baseReporters, fxpTradingFee), BRANCHES.getCurrencyRate(branch, currency))
     if(fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > oldFee):
         MUTEX.unsetMutex()
         return(-2)
@@ -363,7 +363,7 @@ def putEventIntoReportingPeriod(event):
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
     # gives ether/cash amount in fixed point
-    minFee = safeFxpDiv(COST_PER_REPORTER * baseReporters * tx.gasprice, WEI_TO_ETH)
+    minFee = safeMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), BRANCHES.getCurrencyRate(branch, currency))
     period = block.timestamp / TWENTY_FOUR_HR
     # want to resolve as soon as possible
     futurePeriod = block.number / periodLength
@@ -390,7 +390,7 @@ def challengeInitialResolution(event):
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
     # gives ether/cash amount in fixed point
-    minFee = safeFxpDiv(COST_PER_REPORTER * baseReporters * tx.gasprice, WEI_TO_ETH)
+    minFee = safeMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), BRANCHES.getCurrencyRate(branch, currency))
     period = block.timestamp / TWENTY_FOUR_HR
     # want to resolve as soon as possible
     futurePeriod = block.number / periodLength

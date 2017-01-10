@@ -44,8 +44,9 @@ extern rateContract: [rateFunction:[]:int256]
 # balance[][] takes a branch and currency and gives current balance of it at start of a fee distribution period
 # contract[] is a mapping from currency -> wallet contract addr
 # numCurrencies is the number of currencies a branch has
-# currencies[] is a 0 indexed list of the n currencies a branch allows with contract being the currency itself, rate being a fixed exchange rate, and rateContract being a contract w/ rates for the currency
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[](rate, rateContract, contract))
+# currencies[] is a 0 indexed list of the n currencies a branch allows with contract being the currency itself, rate being a fixed exchange rate, and rateContract being a contract w/ rates for the currency from currency to eth in wei
+# currencyToIndex is a reverse mapping from currencies to their indices
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[](rate, rateContract, contract), currencyToIndex[])
 
 # keeps track of a list of all branches
 data branchList[]
@@ -83,6 +84,7 @@ def addCurrency(branch, currency, rate, rateContract, rateFunction):
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract = currency
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rate = rate
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rateContract = rateContract
+    self.Branches[branch].currencyToIndex[currency] = self.Branches[branch].numCurrencies
     self.Branches[branch].numCurrencies += 1
     wallet = create('wallet.se')
     wallet.initialize(currency)
@@ -92,9 +94,11 @@ def addCurrency(branch, currency, rate, rateContract, rateFunction):
 # todo whitelist updates
 def replaceCurrency(branch, oldCurrencyIndex, newCurrency, newRate, newRateContract, newRateFunction):
     checkSubcurrencyIsValid(newCurrency)
+    self.Branches[branch].currencyToIndex[self.Branches[branch].currencies[oldCurrencyIndex].contract] = 0
     self.Branches[branch].currencies[oldCurrencyIndex].contract = newCurrency
     self.Branches[branch].currencies[oldCurrencyIndex].rate = newRate
     self.Branches[branch].currencies[oldCurrencyIndex].rateContract = newRateContract
+    self.Branches[branch].currencyToIndex[newCurrency] = oldCurrencyIndex
     wallet = create('wallet.se')
     wallet.initialize(newCurrency)
     self.Branches[branch].contract[newCurrency] = wallet
@@ -102,19 +106,30 @@ def replaceCurrency(branch, oldCurrencyIndex, newCurrency, newRate, newRateContr
 
 # todo whitelist updates
 def removeLastCurrency(branch):
+    self.Branches[branch].currencyToIndex[self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract] = 0
     self.Branches[branch].contract[self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract] = 0
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract = 0
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rate = 0
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rateContract = 0
     self.Branches[branch].numCurrencies -= 1
     return(1)
-    
-def getCurrencyRate():
-    rate = self.Branches[branch].currencies[index].rate
+
+# todo whitelist updates
+def updateCurrencyRate(branch, currency, rate, rateContract):
+    if(rate == 0 && !rateContract):
+        throw()
+    self.Branches[branch].currencies[self.Branches[branch].currencyToIndex[currency]].rate = rate
+    self.Branches[branch].currencies[self.Branches[branch].currencyToIndex[currency]].rateContract = rateContract
+    return(1)
+
+# todo whitelist updates
+def getCurrencyRate(branch, currency):
+    currencyIndex = self.Branches[branch].currencyToIndex[currency]
+    rate = self.Branches[branch].currencies[currencyIndex].rate
     if(rate):
-        return(self.Branches[branch].currencies[index].rate)
+        return(self.Branches[branch].currencies[currencyIndex].rate)
     else:
-        return(self.Branches[branch].currencies[index].rateContract.rateFunction())
+        return(self.Branches[branch].currencies[currencyIndex].rateContract.rateFunction())
 
 def getCurrency(branch, index):
     return(self.Branches[branch].currencies[index].contract)
