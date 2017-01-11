@@ -341,10 +341,12 @@ macro fillShortOrder():
     # Update balances
     MARKETS.modifyParticipantShares(market, msg.sender, outcome, fill, 1)
 
-    
 	# account for fees here even though paid upon selling complete sets / resolution so we can assign reporters appropriately [since we're issuing a complete set here to fulfill this trade]
     fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpAmount), cumulativeScale)
-    MARKETS.addFees(market, fee / 2)
+    feesInWei = safeFxpMul(BRANCHES.getCurrencyRate(branch, INFO.getCurrency(market)), safeDiv(fee, 2))
+    MARKETS.addFees(market, feesInWei)
+    if(!feesInWei):
+        throw()
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     i = 1
     # send shares of the event to user address, buying complete sets - person who placed the order gets amount shares of n-1 outcomes

@@ -46,7 +46,7 @@ inset('refund.se')
     # extraInfo is any extra info that didn't fit well in the regular description
     # sharesValue is the value of the shares traded in a given market
     # gasSubsidy is paid by the creator to pay for closing the market [closing is just setting the winning outcomes and allowing people to withdraw funds if they own winning shares]
-    # fees is total fxpAmount of fees a market has paid to a branch [the reporters]
+    # fees is total amount of fees a market has paid to a branch [the reporters] denominated in wei
     # lastExpDate is when the market's last event expires
     # prices keeps track of the latest traded fxpPrice for a given outcome in a market
     # shareContracts stores the erc-20 token contract address for each outcome in the market
@@ -89,11 +89,10 @@ def getLastExpDate(market):
 def getLastOutcomePrice(market, outcome):
     return(self.Markets[market].prices[outcome])
 
-# @return fxp
 def getFees(market):
     return(self.Markets[market].fees)
 
-def getgasSubsidy(market):
+def getGasSubsidy(market):
     return(self.Markets[market].gasSubsidy)
 
 # @return fxp

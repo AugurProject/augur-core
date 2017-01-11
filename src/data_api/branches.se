@@ -123,6 +123,7 @@ def updateCurrencyRate(branch, currency, rate, rateContract):
     return(1)
 
 # todo whitelist updates
+# currency rate should be a number in fixed point 10**18
 def getCurrencyRate(branch, currency):
     currencyIndex = self.Branches[branch].currencyToIndex[currency]
     rate = self.Branches[branch].currencies[currencyIndex].rate

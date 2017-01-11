@@ -100,7 +100,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
 # Error messages
     # 0: reporter doesn't exist or has <1 rep
     # -1: has already reported
-    # -2: not in second half of period [reveal part]
+    # -2: not in second half of period
     # -3: hash doesn't match
     # -4: bad fxpReport
     # -5: invalid fxpEthics
@@ -160,12 +160,11 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
     shareValue = 0
     i = 0
     while(i < numMarkets):
-        totalFees += MARKETS.getFees(markets[i])
+        totalFeesInWei += MARKETS.getFees(markets[i])
         i += 1
-    allFeesForAllMarkets = EXPEVENTS.getFeeValue(branch, votePeriod) 
-    feeFraction = safeFxpDiv(totalFees, allFeesForAllMarkets)
+    allFeesForAllMarkets = EXPEVENTS.getFeeValue(branch, votePeriod)
+    feeFraction = safeFxpDiv(totalFeesInWei, allFeesForAllMarkets)
     numReportersOnMarket = BRANCHES.getBaseReporters(branch) * (safeMul(-267, safeFxpMul(feeFraction, feeFraction))/2 + safeMul(533, feeFraction)/2 + ONE)
-    totalFeesInWei = safeFxpMul(totalFees, WEI_TO_ETH)
     canPayForThisManyReporters = totalFeesInWei / (GAS_SUBSIDY * tx.gasprice)
     lesser = min(canPayForThisManyReporters * ONE, numReportersOnMarket)
     if(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):

@@ -120,7 +120,9 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
         if(!EVENTS.getBond(event)):
             # pay validity / indeterminate protection bond
             period = block.timestamp / TWENTY_FOUR_HR
-            minFee = safeMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), BRANCHES.getCurrencyRate(branch, currency))
+            minFee = safeFxpMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), BRANCHES.getCurrencyRate(branch, currency))
+            if(!minFee):
+                throw()
             validityBond = (minFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
             if(!currency.transferFrom(msg.sender, wallet, validityBond)):
                 throw()
@@ -160,10 +162,12 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
 
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
-    creationFee = safeMul(safeFxpDiv(POINT_ZERO_THREE * baseReporters, fxpTradingFee), BRANCHES.getCurrencyRate(branch, currency))
+    creationFee = safeFxpMul(safeFxpDiv(POINT_ZERO_THREE * baseReporters, fxpTradingFee), BRANCHES.getCurrencyRate(branch, currency))
     # gives ether/cash amount in fixed point
-    minFee = safeMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), BRANCHES.getCurrencyRate(branch, currency))
+    minFee = safeFxpMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), BRANCHES.getCurrencyRate(branch, currency))
     creationFee = max(minFee, creationFee)
+    if(!creationFee):
+        throw()
     period = block.timestamp / TWENTY_FOUR_HR
     numOutcomes = EVENTS.getNumOutcomes(event)
     cumulativeScale = 0
@@ -254,8 +258,8 @@ def updateTradingFee(market, fxpTradingFee):
         return(-1)
     oldFee = MARKETS.getTradingFee(market)
     baseReporters = BRANCHES.getBaseReporters(branch)
-    oldCreationFee = safeMul(safeFxpDiv(POINT_ZERO_SIX * baseReporters, oldFee), BRANCHES.getCurrencyRate(branch, currency))
-    newCreationFee = safeMul(safeFxpDiv(POINT_ZERO_SIX * baseReporters, fxpTradingFee), BRANCHES.getCurrencyRate(branch, currency))
+    oldCreationFee = safeFxpMul(safeFxpDiv(POINT_ZERO_SIX * baseReporters, oldFee), BRANCHES.getCurrencyRate(branch, currency))
+    newCreationFee = safeFxpMul(safeFxpDiv(POINT_ZERO_SIX * baseReporters, fxpTradingFee), BRANCHES.getCurrencyRate(branch, currency))
     if(fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > oldFee):
         MUTEX.unsetMutex()
         return(-2)
@@ -312,7 +316,7 @@ def pushMarketForward(branch, market):
     MARKETS.setTradingPeriod(market, period)
     MARKETS.setPushedForward(market, 1, msg.sender)
     EVENTS.setEventPushedUp(event, 1)
-    payEarlyResolutionBond = MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), safeFxpMul(MARKETS.getTradingFee(market), MARKETS.getTotalSharesPurchased(market)) / 2)
+    payEarlyResolutionBond = INFO.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), safeFxpMul(MARKETS.getTradingFee(market), MARKETS.getTotalSharesPurchased(market)) / 2)
     if(!payEarlyResolutionBond):
         throw()
     MUTEX.unsetMutex()
@@ -363,7 +367,9 @@ def putEventIntoReportingPeriod(event):
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
     # gives ether/cash amount in fixed point
-    minFee = safeMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), BRANCHES.getCurrencyRate(branch, currency))
+    minFee = safeFxpMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), BRANCHES.getCurrencyRate(branch, currency))
+    if(!minFee):
+        throw()
     period = block.timestamp / TWENTY_FOUR_HR
     # want to resolve as soon as possible
     futurePeriod = block.number / periodLength
@@ -390,7 +396,9 @@ def challengeInitialResolution(event):
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
     # gives ether/cash amount in fixed point
-    minFee = safeMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), BRANCHES.getCurrencyRate(branch, currency))
+    minFee = safeFxpMul(safeMul(safeMul(COST_PER_REPORTER, baseReporters), tx.gasprice), BRANCHES.getCurrencyRate(branch, currency))
+    if(!minFee):
+        throw()
     period = block.timestamp / TWENTY_FOUR_HR
     # want to resolve as soon as possible
     futurePeriod = block.number / periodLength
@@ -436,15 +444,18 @@ def resolveEarly(event, outcome):
 
 # Allows a user to directly add fees / effectively pay for oracle usage w/o having to trade using the default contracts
 # Returns 1 if successful, 0 if too late to send additional fees
-def addFees(market, amount):
+def addFees(market, fxpAmount):
     branch = MARKETS.getBranch(market)
     notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
     if(notVotingOnYet):
-        currency = MARKETS.getCurrency(market)
+        currency = INFO.getCurrency(market)
         if(!currency.transferFrom(msg.sender, BRANCHES.getWallet(branch, currency), amount)):
             throw()
-        MARKETS.addFees(market, amount)
-        MARKETS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), amount)
+        amountInWei = safeFxpMul(fxpAmount, BRANCHES.getCurrencyRate(branch, currency))
+        if(!amountInWei):
+            throw()
+        MARKETS.addFees(market, amountInWei)
+        EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), amountInWei)
         return(1)
     else:
         return(0)

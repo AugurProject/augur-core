@@ -39,7 +39,7 @@ inset('refund.se')
     # numReqEvents is the number of events that are required to be reported on in a given reporting period
     # numberRemoved is the number of events that no longer have to be reported on in this period [a good example is an event that was resolved early successfully]
     # numEventsToReportOn is the number of events available for reporting on [not including required events] * base number of reporters per event [this is multiplied by a user's periodRepWeight to figure out how many events they should be reporting on in a given period]
-    # feeValue is the value of all fees for all markets that have events expiring in this period.
+    # feeValue is the value of all fees for all markets that have events expiring in this period denominated in wei
 data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], committed[], subsidy[], eventWeight[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, feeValue)
 
 # This keeps track of info in a period for the reporters, it takes a branch and votePeriod as params, respectively
@@ -225,7 +225,7 @@ def setNumEventsToReportOn(branch):
 def getNumEventsToReportOn(branch, period):
     return(self.periodEventInfo[branch][period].numEventsToReportOn)
     
-# @return fxp
+# @return wei
 def getFeeValue(branch, expIndex):
     return(self.periodEventInfo[branch][expIndex].feeValue)
 

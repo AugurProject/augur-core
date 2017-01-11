@@ -62,9 +62,11 @@ def buyCompleteSets(market, fxpAmount):
     if(notVotingOnYet):
         MARKETS.modifySharesValue(market, safeFxpMul(fxpAmount, cumulativeScale))
         fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpAmount), cumulativeScale)
-        fees = safeDiv(fee, 2)
-        MARKETS.addFees(market, fees)
-        MARKETS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), fees)
+        feesInWei = safeFxpMul(BRANCHES.getCurrencyRate(branch, INFO.getCurrency(market)), safeDiv(fee, 2))
+        if(!feesInWei):
+            throw()
+        MARKETS.addFees(market, feesInWei)
+        EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
 
     MUTEX.unsetMutex()
     logReturn(completeSetsLogReturn, 1)
@@ -115,7 +117,7 @@ macro checkBuyCompleteSetsPreconditions():
         MUTEX.unsetMutex()
         logReturn(completeSetsLogReturn, -3)
     # send money from user acc. to market address/account
-    if(!MARKETS.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), cost)):
+    if(!INFO.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), cost)):
         MUTEX.unsetMutex()
         logReturn(completeSetsLogReturn, -2)
 
