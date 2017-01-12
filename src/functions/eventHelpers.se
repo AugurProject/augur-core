@@ -3,6 +3,7 @@ macro YES: TWO
 macro NO: ONE
 macro BAD: 3 * ONE_HALF
 macro CATCH_TOLERANCE: ONE / 10
+macro POINT_FOUR: 400000000000000000
 
 # Bins values to 1, 1.5, 2
 macro catch($x):
@@ -13,8 +14,9 @@ macro catch($x):
     else:
         BAD
 
+# If greater than 60% of reporters report a market as unethical (0), the market is considered unethical.
 macro ethicCatch($x):
-    if($x < ONE_HALF):
+    if($x < POINT_FOUR):
         0
     else:
         ONE
