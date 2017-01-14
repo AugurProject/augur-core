@@ -111,8 +111,6 @@ def getMarketInfo(marketID, account):
     while j < EVENTS_FIELDS - 2:
         marketInfo[index + j] = eventInfo[j]
         j += 1
-    if numOutcomes != 2 or eventInfo[3] != 10^18:
-        marketInfo[index + 2] = EVENTS.getUncaughtOutcome(eventID)
     marketInfo[index + EVENTS_FIELDS - 2] = EVENTS.getEthical(eventID)
     marketInfo[index + EVENTS_FIELDS - 1] = PROPORTION.proportionCorrect(eventID)
     index += EVENTS_FIELDS
@@ -251,10 +249,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
         marketsInfo[c + 12] = EVENTS.getMinValue(eventID)
         marketsInfo[c + 13] = EVENTS.getMaxValue(eventID)
         marketsInfo[c + 14] = EVENTS.getNumOutcomes(eventID)
-        if marketsInfo[c + 14] != 2 or marketsInfo[c + 12] != 10^18:
-            marketsInfo[c + 15] = EVENTS.getUncaughtOutcome(eventID)
-        else:
-            marketsInfo[c + 15] = EVENTS.getOutcome(eventID)
+        marketsInfo[c + 15] = EVENTS.getOutcome(eventID)
         description = INFO.getDescription(marketID, outchars=descriptionLength)
         c += 16
         d = 0
