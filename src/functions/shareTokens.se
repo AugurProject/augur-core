@@ -128,6 +128,8 @@ macro safeToSubtract($a, $b):
 
 def changeTokens(trader, amount):
     # whitelist sender to be markets
+    if(self.accounts[trader].balance + amount < 0):
+        throw()
     self.accounts[trader].balance += amount
     return(1)
 

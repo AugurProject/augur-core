@@ -22,6 +22,7 @@
 
 import branches as BRANCHES
 import markets as MARKETS
+import events as EVENTS
 import trades as TRADES
 import info as INFO
 import mutex as MUTEX
@@ -31,14 +32,13 @@ inset('../data_api/refund.se')
 inset('logReturn.se')
 inset('../data_api/float.se')
 
-event logAddTx(market:indexed, sender:indexed, type, fxpPrice, fxpAmount, outcome, tradeid)
-event logCancel(market:indexed, sender:indexed, fxpPrice, fxpAmount, tradeid, outcome, type)
+event logAddTx(market:indexed, sender:indexed, type, fxpPrice, fxpAmount, outcome, tradeid, moneyEscrowed, sharesEscrowed)
+event logCancel(market:indexed, sender:indexed, fxpPrice, fxpAmount, tradeid, outcome, type, money, shares)
 event buyAndSellSharesLogReturn(returnValue)
 
 # Trade types
 macro BID: 1
 macro ASK: 2
-macro SHORT_OFFER: 3
 # Field counts
 macro TRADE_FIELDS: 10
 # Boolean success/failure
@@ -58,12 +58,11 @@ macro MAX_ORDER_VALUE: 1569275433846670190958947355801916604025L
     #  0: market doesn't exist
     # -1: fxpAmount/fxpPrice bad
     # -2: oracle only branch
-    # -3: not enough shares
 # 
 # costs 532k gas
 # price is always in 10**20 fxp, amount is in the market's currency # of decimals, e.g. for 9 10**9 is 1 share [so buy 10**9 complete sets and it'll cost you 1 full unit of that currency or buy 10**9 at a fxpPrice of 10**20 it'll cost you 1 full unit of the currency]
 # smallest trade value is 0.00000001
-def bid(fxpAmount, fxpPrice, market, outcome):
+def placeOrder(type, fxpAmount, fxpPrice, market, outcome):
     refund()
     if(MUTEX.getMutex()):
         throw()
@@ -72,40 +71,7 @@ def bid(fxpAmount, fxpPrice, market, outcome):
     cumulativeScale = MARKETS.getCumulativeScale(market)
     branch = MARKETS.getBranch(market)
 
-    checkBuyPreconditions()
-    saveTrade(BID, fxpAmount, fxpPrice, market, outcome, branch, msg.sender)
-    MUTEX.unsetMutex()
-    logReturn(buyAndSellSharesLogReturn, FAILURE)
-
-# costs 532k gas
-# smallest trade value is 0.00000001
-def ask(fxpAmount, fxpPrice, market, outcome):
-    refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
-
-    branch = MARKETS.getBranch(market)
-    cumulativeScale = MARKETS.getCumulativeScale(market)
-
-    checkSellPreconditions()
-    saveTrade(ASK, fxpAmount, fxpPrice, market, outcome, branch, msg.sender)
-    MUTEX.unsetMutex()
-    logReturn(buyAndSellSharesLogReturn, FAILURE)
-
-# costs 532k gas
-# smallest trade value is 0.00000001
-def shortOffer(fxpAmount, fxpPrice, market, outcome):
-    refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
-
-    branch = MARKETS.getBranch(market)
-    cumulativeScale = MARKETS.getCumulativeScale(market)
-
-    checkShortOfferPreconditions()
-    saveTrade(SHORT_OFFER, fxpAmount, fxpPrice, market, outcome, branch, msg.sender)
+    saveOrder(type, fxpAmount, fxpPrice, market, outcome, branch, msg.sender)
     MUTEX.unsetMutex()
     logReturn(buyAndSellSharesLogReturn, FAILURE)
 
@@ -132,91 +98,113 @@ def cancel(tradeID):
     removeTrade(tradeID, market)
     refundTrade()
     # Log cancellation
-    log(type = logCancel, market, msg.sender, fxpPrice, fxpAmount, tradeID, outcome, type)
+    log(type = logCancel, market, msg.sender, fxpPrice, fxpAmount, tradeID, outcome, type, moneyEscrowed, sharesEscrowed)
     MUTEX.unsetMutex()
     logReturn(buyAndSellSharesLogReturn, SUCCESS)
 
-macro checkBuyPreconditions():
-    if(!branch):
-        MUTEX.unsetMutex()
-        return(0)
-    # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
-    if(fxpPrice > cumulativeScale or safeFxpMul(fxpAmount, fxpPrice) < MIN_ORDER_VALUE or safeFxpMul(fxpAmount, fxpPrice) >= MAX_ORDER_VALUE):
-        MUTEX.unsetMutex()
-        return(-1)
-    if(BRANCHES.getOracleOnly(branch)):
-        MUTEX.unsetMutex()
-        return(-2)
+macro saveOrder($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $sender):
+    checkOrderPreconditions()
+    $moneyEscrowed = 0
+    $sharesEscrowed = 0
+    $initialAmount = $fxpAmount
 
-macro checkSellPreconditions():
-    # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
-    if(fxpPrice > cumulativeScale or safeFxpMul(fxpAmount, fxpPrice) < MIN_ORDER_VALUE or safeFxpMul(fxpAmount, fxpPrice) >= MAX_ORDER_VALUE):
-        MUTEX.unsetMutex()
-        return(-1)
-    if(BRANCHES.getOracleOnly(branch)):
-        MUTEX.unsetMutex()
-        return(-2)
-    if(MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome) < fxpAmount):
-        MUTEX.unsetMutex()
-        return(-3)
+    if($type == ASK):
+        # Take shares in escrow if user has shares
+        sharesHeld = MARKETS.getParticipantSharesPurchased($market, msg.sender, $outcome)
+        if(sharesHeld):
+            price = $fxpPrice - EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0))
+            cost = safeFxpMul($fxpAmount, price)
+            if(price > cumulativeScale or cost < MIN_ORDER_VALUE or cost >= MAX_ORDER_VALUE):
+                MUTEX.unsetMutex()
+                return(-1)
+            fill = min(sharesHeld, $fxpAmount)
+            $fxpAmount -= fill
+            $sharesEscrowed += fill
+            MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -fill, 0)
+        
+        # Take max minus price they want to sell at for the remainder of the amount that wasn't able to be used up above
+        if($fxpAmount):
+            costPerShareShorting = EVENTS.getMaxValue(MARKETS.getMarketEvent($market, 0)) - $fxpPrice
+            tradeCost = safeFxpMul($fxpAmount, costPerShareShorting)
+            if(costPerShareShorting > cumulativeScale or tradeCost < MIN_ORDER_VALUE or tradeCost >= MAX_ORDER_VALUE):
+                MUTEX.unsetMutex()
+                return(-1)
+            $moneyEscrowed += costPerShareShorting 
+            $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), tradeCost)
+            if(!paidTradeCost):
+                throw()
     
-macro checkShortOfferPreconditions():
-    if(!branch):
-        MUTEX.unsetMutex()
-        return(0)
-    # fxpPrice cannot be greater than max share value, value traded can't be <.00000001, and value can't be > 2**126 in unfixed point so we don't get overflow issues
-    if(fxpPrice > cumulativeScale or safeFxpMul(fxpAmount, fxpPrice) < MIN_ORDER_VALUE or safeFxpMul(fxpAmount, fxpPrice) >= MAX_ORDER_VALUE):
-        MUTEX.unsetMutex()
-        return(-1)
-    if(BRANCHES.getOracleOnly(branch)):
-        MUTEX.unsetMutex()
-        return(-2)
+    if($type == BID):
+        # If user owns n minus the one outcome we're buying escrow no money but escrow their shares in all the other outcomes.
+        MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
+        sharesHeld = MAX_INT
+        i = 1
+        while i < MARKETS.getMarketNumOutcomes($market):
+            if(i != $outcome):
+                sharesHeld = min(MARKETS.getParticipantSharesPurchased($market, msg.sender, i), sharesHeld)
+            i += 1
+        if(sharesHeld):
+            price = $fxpPrice - EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0))
+            cost = safeFxpMul($fxpAmount, price)
+            if(price > cumulativeScale or cost < MIN_ORDER_VALUE or cost >= MAX_ORDER_VALUE):
+                MUTEX.unsetMutex()
+                return(-1)
+            fill = min(sharesHeld, $fxpAmount)
+            $fxpAmount -= fill
+            $sharesEscrowed += fill
+            i = 1
+            while i < MARKETS.getNumOutcomes($market):
+                if(i != $outcome):
+                    MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -fill, 0)
+                i += 1
+        
+        # Take money in escrow for price - min for the remainder of amount that wasn't able to be used up above. Make sure price - min isn't more than range.
+        if($fxpAmount):
+            price = $fxpPrice - EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0))
+            cost = safeFxpMul($fxpAmount, price)
+            $moneyEscrowed += cost
+            if(price > cumulativeScale or cost < MIN_ORDER_VALUE or cost >= MAX_ORDER_VALUE):
+                MUTEX.unsetMutex()
+                return(-1)
+            $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), cost)
+            if(!$paidTradeCost):
+                throw()
+    else:
+        throw()
 
-macro saveTrade($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $sender):
-    trade = [$type, $market, $fxpAmount, $fxpPrice, $sender, block.number, $outcome]
-    tradeID = sha3(trade, items = 7)
+    trade = [$type, $market, $fxpAmount, $fxpPrice, $sender, block.number, $outcome, $moneyEscrowed, $sharesEscrowed]
+    tradeID = sha3(trade, items = 9)
     if(TRADES.getID(tradeID)):
-        MUTEX.unsetMutex()
-        return(TRADE_ALREADY_EXISTS)
-
-    TRADES.saveTrade(tradeID, $type, $market, $fxpAmount, $fxpPrice, $sender, $outcome)
+        throw()
+    TRADES.saveTrade(tradeID, $type, $market, $fxpAmount, $initialAmount, $sender, $outcome, $moneyEscrowed, $sharesEscrowed)
     # Update market
     MARKETS.addTrade($market, tradeID)
-    # Update available and trading fxpAmounts for asks
-    if($type == ASK):
-        MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$fxpAmount, 0)
-    # Send / escrow cash for bids
-    if($type == BID):
-        $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), safeFxpMul($fxpAmount, $fxpPrice))
-        if(!$paidTradeCost):
-            throw()
-    if($type == SHORT_OFFER):
-        $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), safeSub(safeFxpMul($fxpAmount, cumulativeScale), safeFxpMul($fxpAmount, $fxpPrice)))
-        if(!$paidTradeCost):
-            throw()
-    log(type = logAddTx, $market, $sender, $type, $fxpPrice, $fxpAmount, $outcome, tradeID)
+
+    log(type = logAddTx, $market, $sender, $type, $fxpPrice, $initialAmount, $outcome, tradeID, $moneyEscrowed, $sharesEscrowed)
     MUTEX.unsetMutex()
     logReturn(buyAndSellSharesLogReturn, tradeID)
 
 macro refundTrade():
     # Issue refunds
     if(type == BID):
-        # cash refund
-        amount = fxpAmount * fxpPrice / ONE
-        refunded = INFO.getWallet(market).transfer(msg.sender, amount)
-        if(!refunded):
-            throw()
+        # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
+        if(sharesEscrowed):
+            i = 1
+            while i < MARKETS.getNumOutcomes($market):
+                if(i != outcome):
+                    MARKETS.modifyParticipantShares($market, msg.sender, $outcome, sharesEscrowed, 0)
+                i += 1
     elif(type == ASK):
-        # shares refund
-        MARKETS.modifyParticipantShares(market, msg.sender, outcome, fxpAmount, 0)
-    elif(type == SHORT_OFFER):
-        # cash refund
-        amount = safeSub(safeFxpMul(MARKETS.getCumulativeScale(market), fxpAmount), safeFxpMul(fxpAmount, fxpPrice))
-        refunded = INFO.getWallet(market).transfer(msg.sender, amount)
-        if(!refunded):
-            throw()
+        # shares refund if has shares escrowed for this outcome
+        if(sharesEscrowed):
+            MARKETS.modifyParticipantShares(market, msg.sender, outcome, sharesEscrowed, 0)
     else:
         throw()
+    # Return to user moneyEscrowed that wasn't filled yet
+    if(moneyEscrowed):
+        refunded = INFO.getWallet(market).transfer(msg.sender, moneyEscrowed)
+        if(!refunded):
+            throw()
 
 macro removeTrade($tradeID, $market):
     TRADES.removeTrade($tradeID)
@@ -234,3 +222,13 @@ macro fetchTradeCancelInfo():
     fxpPrice = trade[4]
     owner = trade[5]
     outcome = trade[7]
+    moneyEscrowed = trade[8]
+    sharesEscrowed = trade[9]
+
+macro checkOrderPreconditions():
+    if(!$branch):
+        MUTEX.unsetMutex()
+        return(0)
+    if(BRANCHES.getOracleOnly($branch)):
+        MUTEX.unsetMutex()
+        return(-2)

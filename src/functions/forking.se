@@ -116,7 +116,7 @@ def fork(event, branch, forkedOverEthicality):
         throw()
     MUTEX.setMutex()
 
-     forkPeriod = BRANCHES.getForkPeriod(branch)
+    forkPeriod = BRANCHES.getForkPeriod(branch)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     checkForkPreconditions()
 
@@ -190,6 +190,7 @@ macro checkForkPreconditions():
     if(!EVENTS.getRoundTwo(event) or BACKSTOPS.getFinal(event) or EVENTS.getForked(event)):
         MUTEX.unsetMutex()
         return(-1)
+    # todo should we really block next two periods here too
     if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod + 1) or currentPeriod == (forkPeriod + 2)):
         MUTEX.unsetMutex()
         return(-3)
