@@ -32,7 +32,7 @@ macro POINTONETWOFIVE: 125000000000000000
 macro POINTZEROSIX: 60000000000000000
 macro COSTPERREPORTER: 3500000
 
-event marketCreated(sender: indexed, branch: indexed, marketID, marketCreationFee, eventBond, timestamp)
+event marketCreated(sender: indexed, branch: indexed, marketID: indexed, marketCreationFee, eventBond, timestamp)
 event tradingFeeUpdated(sender: indexed, branch: indexed, marketID: indexed, tradingFee, timestamp)
 
 def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution:str, tradingFee, tag1, tag2, tag3, makerFees, extraInfo:str):
