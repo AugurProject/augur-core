@@ -166,7 +166,7 @@ def trade(max_value, max_amount, trade_ids:arr, tradeGroupID):
                             # Update max_amount
                             max_amount -= fill
                             # Log transaction
-                            log(type=log_fill_tx, market, msg.sender, owner, ASK, displayPrice, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, fee, price)
+                            log(type=log_fill_tx, market, msg.sender, owner, ASK, displayPrice, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, fee, price, tradeHash, tradeGroupID)
                 elif type == ASK:
                     balance = CASH.balance(msg.sender)
                     if balance <= 0:
