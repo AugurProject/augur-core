@@ -129,7 +129,7 @@ macro saveOrder($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $sende
             if(costPerShareShorting > cumulativeScale or tradeCost < MIN_ORDER_VALUE or tradeCost >= MAX_ORDER_VALUE):
                 MUTEX.unsetMutex()
                 return(-1)
-            $moneyEscrowed += costPerShareShorting 
+            $moneyEscrowed += tradeCost 
             $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), tradeCost)
             if(!paidTradeCost):
                 throw()
@@ -158,7 +158,7 @@ macro saveOrder($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $sende
                     MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -fill, 0)
                 i += 1
         
-        # Take money in escrow for price - min for the remainder of amount that wasn't able to be used up above. Make sure price - min isn't more than range.
+        # Take money in escrow for price - min for the remainder of amount that wasn't able to be used up above. Make sure price - min isn't more than range
         if($fxpAmount):
             price = $fxpPrice - EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0))
             cost = safeFxpMul($fxpAmount, price)
