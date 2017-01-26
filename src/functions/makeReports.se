@@ -215,7 +215,7 @@ macro checkSubmitReportPreconditions():
     #    logReturn(makeReportsLogReturn, -7)
     # ensures user has collected fees for last reporting period
     if(!CONSENSUS.getRepCollected(branch, msg.sender, votePeriod - 1)):
-        if(COLLECTFEES.collectFees(branch, msg.sender, value = msg.value) < 0):
+        if(COLLECTFEES.collectRep(branch, msg.sender, value = msg.value) < 0):
             MUTEX.unsetMutex()
             logReturn(makeReportsLogReturn, -8)
     # actual submitting of fxpReport and ethicality
