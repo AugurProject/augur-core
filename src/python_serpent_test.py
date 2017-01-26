@@ -14,6 +14,97 @@ ONE = 10**18
 TWO = 2*ONE
 HALF = ONE/2
 
+def test_tags():
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract("data_api/tags.se")
+    gas_use(s)
+
+    branchID = 1010101
+    tag1 = 123456789
+    assert(len(c.getTagsInBranch(branchID)) == 0), "Initial tag array not empty"
+    assert(c.getNumTagsInBranch(branchID) == 0), "Number of tags not equal to zero"
+    assert(c.getTagPopularity(branchID, tag1) == 0), "Popularity not equal to zero"
+    assert(len(c.getTagsInfo(branchID)) == 0), "Tags info array not empty"
+
+    assert(c.increaseTagPopularity(branchID, tag1, ONE) == 1), "Add popularity failed"
+    tagsInBranch = c.getTagsInBranch(branchID)
+    assert(len(tagsInBranch) == 1), "Tag array not 1 element as expected"
+    assert(c.getNumTagsInBranch(branchID) == 1), "Number of tags not equal to one"
+    assert(tagsInBranch[0] == tag1), "Tag array element not equal to input tag"
+    assert(c.getTagPopularity(branchID, tag1) == ONE), "Popularity not equal to " + str(ONE)
+    tagsInfo = c.getTagsInfo(branchID)
+    assert(len(tagsInfo) == 2), "Number of tagsInfo elements not equal to two"
+    assert(tagsInfo[0] == tag1), "First tagsInfo element not equal to tag 1"
+    assert(tagsInfo[1] == ONE), "Second tagsInfo element not equal to tag 1 popularity"
+
+    assert(c.increaseTagPopularity(branchID, tag1, TWO) == 1), "Add popularity failed"
+    tagsInBranch = c.getTagsInBranch(branchID)
+    assert(len(tagsInBranch) == 1), "Tag array not 1 element as expected"
+    assert(c.getNumTagsInBranch(branchID) == 1), "Number of tags not equal to one"
+    assert(tagsInBranch[0] == tag1), "Tag array element not equal to input tag"
+    assert(c.getTagPopularity(branchID, tag1) == 3*ONE), "Popularity not equal to " + str(3*ONE)
+    tagsInfo = c.getTagsInfo(branchID)
+    assert(len(tagsInfo) == 2), "Number of tagsInfo elements not equal to two"
+    assert(tagsInfo[0] == tag1), "First tagsInfo element not equal to tag 1"
+    assert(tagsInfo[1] == 3*ONE), "Second tagsInfo element not equal to tag 1 popularity"
+
+    tag2 = 987654321
+    assert(c.increaseTagPopularity(branchID, tag2, TWO) == 1), "Add popularity failed"
+    tagsInBranch = c.getTagsInBranch(branchID)
+    assert(len(tagsInBranch) == 2), "Tag array not 2 elements as expected"
+    assert(c.getNumTagsInBranch(branchID) == 2), "Number of tags not equal to 2"
+    assert(tagsInBranch[0] == tag1), "Tag array element not equal to input tag"
+    assert(tagsInBranch[1] == tag2), "Second tag array element not equal to second input tag"
+    assert(c.getTagPopularity(branchID, tag1) == 3*ONE), "Tag 1 popularity not equal to " + str(3*ONE)
+    assert(c.getTagPopularity(branchID, tag2) == TWO), "Tag 2 popularity not equal to " + str(TWO)
+    tagsInfo = c.getTagsInfo(branchID)
+    assert(len(tagsInfo) == 4), "Number of tagsInfo elements not equal to four"
+    assert(tagsInfo[0] == tag1), "First tagsInfo element not equal to tag 1"
+    assert(tagsInfo[1] == 3*ONE), "Second tagsInfo element not equal to tag 1 popularity"
+    assert(tagsInfo[2] == tag2), "Third tagsInfo element not equal to tag 2"
+    assert(tagsInfo[3] == TWO), "Fourth tagsInfo element not equal to tag 2 popularity"
+
+    # Test tag offset / chunked getters
+    for n in range(1, 10):
+        assert(c.increaseTagPopularity(branchID, n, ONE // n) == 1), "Add popularity failed"
+    tagsInBranch = c.getTagsInBranch(branchID)
+    assert(len(tagsInBranch) == 11), "Tag array does not have 11 elements"
+    assert(c.getNumTagsInBranch(branchID) == 11), "Number of tags not equal to 11"
+    tagsInfo = c.getTagsInfo(branchID)
+    assert(len(tagsInfo) == 22), "Number of tagsInfo elements not equal to 22"
+    assert(tagsInfo[0] == tag1), "First tagsInfo element not equal to tag 1"
+    assert(tagsInfo[1] == 3*ONE), "Second tagsInfo element not equal to tag 1 popularity"
+    assert(tagsInfo[2] == tag2), "Third tagsInfo element not equal to tag 2"
+    assert(tagsInfo[3] == TWO), "Fourth tagsInfo element not equal to tag 2 popularity"
+    offsetTags = c.getTagsInBranch(branchID, 1)
+    assert(len(offsetTags) == 10), "Number of offsetTags elements not equal to 10"
+    assert(offsetTags[0] == tag2), "First offsetTags element not equal to tag 2"
+    offsetTagsInfo = c.getTagsInfo(branchID, 1)
+    assert(len(offsetTagsInfo) == 20), "Number of offsetTagsInfo elements not equal to 20"
+    assert(offsetTagsInfo[0] == tag2), "First offsetTagsInfo element not equal to tag 2"
+    assert(offsetTagsInfo[1] == TWO), "Second offsetTagsInfo element not equal to tag 2 popularity"
+    tagsFirstChunk = c.getTagsInBranch(branchID, 0, 5)
+    assert(len(tagsFirstChunk) == 5), "Number of tagsFirstChunk elements not equal to 5"
+    assert(tagsFirstChunk[0] == tag1), "First tagsFirstChunk element not equal to tag 1"
+    assert(tagsFirstChunk[1] == tag2), "Second tagsFirstChunk element not equal to tag 2"
+    tagsInfoFirstChunk = c.getTagsInfo(branchID, 0, 5)
+    assert(len(tagsInfoFirstChunk) == 10), "Number of tagsInfoFirstChunk elements not equal to 10"
+    assert(tagsInfoFirstChunk[0] == tag1), "First tagsInfoFirstChunk element not equal to tag 1"
+    assert(tagsInfoFirstChunk[1] == 3*ONE), "Second tagsInfoFirstChunk element not equal to tag 1 popularity"
+    assert(tagsInfoFirstChunk[2] == tag2), "Third tagsInfoFirstChunk element not equal to tag 2"
+    assert(tagsInfoFirstChunk[3] == TWO), "Fourth tagsInfoFirstChunk element not equal to tag 2 popularity"
+    tagsSecondChunk = c.getTagsInBranch(branchID, 5, 5)
+    assert(len(tagsSecondChunk) == 5), "Number of tagsSecondChunk elements not equal to 5"
+    tagsInfoSecondChunk = c.getTagsInfo(branchID, 5, 5)
+    assert(len(tagsInfoSecondChunk) == 10), "Number of tagsInfoSecondChunk elements not equal to 10"
+    tagsThirdChunk = c.getTagsInBranch(branchID, 10, 5)
+    assert(len(tagsThirdChunk) == 1), "Number of tagsThirdChunk elements not equal to 5"
+    tagsThirdChunk = c.getTagsInfo(branchID, 10, 5)
+    assert(len(tagsThirdChunk) == 2), "Number of tagsThirdChunk elements not equal to 10"
+
+    print "TAGS OK"
+
 def test_trades():
     t.gas_limit = 100000000
     s = t.state()
@@ -130,11 +221,104 @@ def test_markets():
     s = t.state()
     c = s.abi_contract('functions/output.se')
     gas_use(s)
-    c.initializeMarket(444, [445, 446, 447], 1, 2**57, 1010101, 1, 2, 3, 2**58, ONE, 2, "aaa", 500, 20*ONE, 2222)
-    c.setWinningOutcomes(444, [2])
-    assert(c.getWinningOutcomes(444)[0] == 2), "Winning outcomes wrong"
+    marketID = 444
+    c.initializeMarket(marketID, [445, 446, 447], 1, 2**57, 1010101, 1, 2, 3, 2**58, ONE, 2, "aaa", 500, 20*ONE, 2222)
+    c.setWinningOutcomes(marketID, [2])
+    assert(c.getWinningOutcomes(marketID)[0] == 2), "Winning outcomes wrong"
     # getMarketEvent singular
-    assert(c.getMarketEvents(444) == [445, 446, 447]), "Market events load/save broken"
+    assert(c.getMarketEvents(marketID) == [445, 446, 447]), "Market events load/save broken"
+
+    # test order (trade) IDs stored with the market
+    assert(c.getLastTrade(marketID) == 0), "Last order ID should equal 0"
+    assert(len(c.get_trade_ids(marketID)) == 0), "Order IDs array should be empty"
+    assert(c.addTrade(marketID, 9000, 0) == 1), "Add trade to market failed"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 1), "Order ID array does not contain a single element"
+    assert(orderIDs[0] == 9000), "Order ID element should equal input order ID"
+    assert(c.getLastTrade(marketID) == 9000), "Last order ID should equal 9000"
+    assert(c.addTrade(marketID, 9001, 9000) == 1), "Add trade to market failed"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 2), "Order ID array does not contain two elements"
+    assert(orderIDs[0] == 9001), "Order ID element 1 should equal input order ID 2"
+    assert(orderIDs[1] == 9000), "Order ID element 0 should equal input order ID 1"
+    assert(c.getLastTrade(marketID) == 9001), "Last order ID should equal 9001"
+    assert(c.addTrade(marketID, 9002, 9001) == 1), "Add trade to market failed"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 3), "Order ID array does not contain three elements"
+    assert(orderIDs[0] == 9002), "Order ID element 0 should equal input order ID 3"
+    assert(orderIDs[1] == 9001), "Order ID element 1 should equal input order ID 2"
+    assert(orderIDs[2] == 9000), "Order ID element 2 should equal input order ID 1"
+    assert(c.getLastTrade(marketID) == 9002), "Last order ID should equal 9002"
+    assert(c.addTrade(marketID, 9003, 9002) == 1), "Add trade to market failed"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 4), "Order ID array does not contain four elements"
+    assert(orderIDs[0] == 9003), "Order ID element 0 should equal input order ID 4"
+    assert(orderIDs[1] == 9002), "Order ID element 1 should equal input order ID 3"
+    assert(orderIDs[2] == 9001), "Order ID element 2 should equal input order ID 2"
+    assert(orderIDs[3] == 9000), "Order ID element 3 should equal input order ID 1"
+    assert(c.getLastTrade(marketID) == 9003), "Last order ID should equal 9003"
+    assert(c.addTrade(marketID, 9004, 9003) == 1), "Add trade to market failed"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 5), "Order ID array does not contain five elements"
+    assert(orderIDs[0] == 9004), "Order ID element 0 should equal input order ID 5"
+    assert(orderIDs[1] == 9003), "Order ID element 1 should equal input order ID 4"
+    assert(orderIDs[2] == 9002), "Order ID element 2 should equal input order ID 3"
+    assert(orderIDs[3] == 9001), "Order ID element 3 should equal input order ID 2"
+    assert(orderIDs[4] == 9000), "Order ID element 4 should equal input order ID 1"
+    assert(c.getLastTrade(marketID) == 9004), "Last order ID should equal 9004"
+
+    # test chunked get_trade_ids
+    offsetOrderIDs = c.get_trade_ids(marketID, 2)
+    assert(len(offsetOrderIDs) == 3), "Order ID array does not contain three elements"
+    assert(offsetOrderIDs[0] == 9002), "Order ID element 0 should equal input order ID 3"
+    assert(offsetOrderIDs[1] == 9001), "Order ID element 1 should equal input order ID 2"
+    assert(offsetOrderIDs[2] == 9000), "Order ID element 2 should equal input order ID 1"
+    chunkedOrderIDs = c.get_trade_ids(marketID, 0, 2)
+    assert(len(chunkedOrderIDs) == 2), "Order ID array does not contain two elements"
+    assert(chunkedOrderIDs[0] == 9004), "Order ID element 0 should equal input order ID 5"
+    assert(chunkedOrderIDs[1] == 9003), "Order ID element 1 should equal input order ID 4"
+    chunkedOrderIDs = c.get_trade_ids(marketID, 2, 2)
+    assert(len(chunkedOrderIDs) == 2), "Order ID array does not contain two elements"
+    assert(chunkedOrderIDs[0] == 9002), "Order ID element 0 should equal input order ID 3"
+    assert(chunkedOrderIDs[1] == 9001), "Order ID element 1 should equal input order ID 2"
+    chunkedOrderIDs = c.get_trade_ids(marketID, 4, 2)
+    assert(len(chunkedOrderIDs) == 1), "Order ID array does not contain one element"
+    assert(chunkedOrderIDs[0] == 9000), "Order ID element 0 should equal input order ID 1"
+
+    # test order ID removal
+    assert(c.getLastTrade(marketID) == 9004), "Last order ID should equal 9004"
+    assert(c.remove_trade_from_market(marketID, 9001) == 1), "Remove order 9001 from market"
+    assert(c.getLastTrade(marketID) == 9004), "Last order ID should equal 9004"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 4), "Order ID array does not contain four elements"
+    assert(orderIDs[0] == 9004), "Order ID element 0 should equal input order ID 5"
+    assert(orderIDs[1] == 9003), "Order ID element 1 should equal input order ID 4"
+    assert(orderIDs[2] == 9002), "Order ID element 2 should equal input order ID 3"
+    assert(orderIDs[3] == 9000), "Order ID element 3 should equal input order ID 1"
+    assert(c.remove_trade_from_market(marketID, 9000) == 1), "Remove oldest order (order 9000) from market"
+    assert(c.getLastTrade(marketID) == 9004), "Last order ID should equal 9004"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 3), "Order ID array does not contain three elements"
+    assert(orderIDs[0] == 9004), "Order ID element 0 should equal input order ID 5"
+    assert(orderIDs[1] == 9003), "Order ID element 1 should equal input order ID 4"
+    assert(orderIDs[2] == 9002), "Order ID element 2 should equal input order ID 3"
+    assert(c.remove_trade_from_market(marketID, 9004) == 1), "Remove newest order (order 9004) from market"
+    assert(c.getLastTrade(marketID) == 9003), "Last order ID should equal 9003"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 2), "Order ID array does not contain two elements"
+    assert(orderIDs[0] == 9003), "Order ID element 0 should equal input order ID 4"
+    assert(orderIDs[1] == 9002), "Order ID element 1 should equal input order ID 3"
+    assert(c.remove_trade_from_market(marketID, 9002) == 1), "Remove order 9002 from market"
+    assert(c.getLastTrade(marketID) == 9003), "Last order ID should equal 9003"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 1), "Order ID array does not contain one element"
+    assert(orderIDs[0] == 9003), "Order ID element 0 should equal input order ID 4"
+    assert(c.remove_trade_from_market(marketID, 9003) == 1), "Remove order 9003 from market"
+    # should this be 0 instead?
+    assert(c.getLastTrade(marketID) == 9000), "Last order ID should equal 9000"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 0), "Order ID array is not empty"
+
     print "MARKETS OK"
 
 def test_reporting():
@@ -1538,12 +1722,13 @@ if __name__ == '__main__':
     if os.path.exists(output): os.remove(output)
     os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
     # data/api tests
-    test_trades()
+    #test_trades()
+    #test_tags()
     #test_cash()
     #test_ether()
     #test_log_exp()
     #test_exp()
-    #test_markets()
+    test_markets()
     #test_reporting()
 
     # function tests
