@@ -239,7 +239,8 @@ def modifyParticipantShares(marketID, trader, outcome, amount, cancel):
     if(cancel):
         amount = -1*amount
     self.Markets[marketID].volume += amount
-    TAGS.increaseTagPopularity(self.Markets[marketID].branch, self.Markets[marketID].tag1, amount)
+    if(self.Markets[marketID].tag1):
+        TAGS.increaseTagPopularity(self.Markets[marketID].branch, self.Markets[marketID].tag1, amount)
     return(1)   
 
 def setWinningOutcomes(market, outcomes: arr):
