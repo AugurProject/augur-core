@@ -90,7 +90,7 @@ def createEvent(branch, description:str, expDate, minValue, maxValue, numOutcome
 # @param description is the description for a market
 # @param tradingFee is percent in fixedPoint
 # @param events array is the list of events in a market [up to 3]
-# @params tag1, tag2, and tag3 are the tags describing a market
+# @params tag1, tag2, and tag3 are the tags describing a market (tag1 is the "main topic")
 # @param makerFees are the percent of the trading fee a maker pays [0-50% in fixed point]
 # @param extraInfo is a string of any extra info associated with a market
 # @return marketID if success or 1 if on an oracle only branch creation we have success

@@ -1,0 +1,58 @@
+inset('refund.se')
+
+# Tags[] is indexed by branch ID
+#   numTags is the number of distinct tags on the branch
+#   tags[] is an array with all distinct tags in this branch
+#   popularity[] is indexed by tag, values are the total "popularity" of all markets using the tag.
+#       (Volume is a crude popularity metric which will be refined by testing.)
+# Note: sorting and/or ranking must be done by the client!
+data Tags[](numTags, tags[], popularity[])
+
+def getTagsInBranch(branch, offset, numTagsToLoad):
+    numTags = self.Tags[branch].numTags
+    if offset > numTags or numTags == 0:
+        return([]: arr)
+    if numTagsToLoad == 0:
+        numTagsToLoad = numTags
+    numTagsToLoad = min(numTagsToLoad, numTags - offset)
+    tagsInBranch = array(numTagsToLoad)
+    i = 0
+    while i < numTagsToLoad:
+        tagsInBranch[i] = self.Tags[branch].tags[i + offset]
+        i += 1
+    return(tagsInBranch: arr)
+
+def getTagsInfo(branch, offset, numTagsToLoad):
+    numTags = self.Tags[branch].numTags
+    if offset > numTags or numTags == 0:
+        return([]: arr)
+    if numTagsToLoad == 0:
+        numTagsToLoad = numTags
+    numTagsToLoad = min(numTagsToLoad, numTags - offset)
+    tagsInfo = array(numTagsToLoad * 2)
+    i = 0
+    j = 0
+    while i < numTagsToLoad:
+        tag = self.Tags[branch].tags[i + offset]
+        tagsInfo[j] = tag
+        tagsInfo[j + 1] = self.Tags[branch].popularity[tag]
+        i += 1
+        j += 2
+    return(tagsInfo: arr)
+
+# @return fxp
+def getTagPopularity(branch, tag):
+    return(self.Tags[branch].popularity[tag])
+
+def getNumTagsInBranch(branch):
+    return(self.Tags[branch].numTags)
+
+def increaseTagPopularity(branch, tag, fxpAmount):
+    refund()
+    # if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    if self.Tags[branch].popularity[tag] == 0:
+        self.Tags[branch].tags[self.Tags[branch].numTags] = tag
+        self.Tags[branch].numTags += 1
+    self.Tags[branch].popularity[tag] += fxpAmount
+    return(1)
