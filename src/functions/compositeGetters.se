@@ -42,8 +42,8 @@ def getOrderBook(marketID, offset, numTradesToLoad):
     if numTradesToLoad == 0:
         numTradesToLoad = numTrades
     totalTrades = min(numTradesToLoad, numTrades - offset)
-    # TODO chunk get_trade_ids
-    trades = slice(MARKETS.get_trade_ids(marketID, outitems=numTrades), items=offset, items=offset+numTradesToLoad)
+    trades = MARKETS.get_trade_ids(marketID, offset, numTrades, outitems=numTrades)
+    # trades = slice(MARKETS.get_trade_ids(marketID, outitems=numTrades), items=offset, items=offset+numTradesToLoad)
     orderBook = array(TRADE_FIELDS*totalTrades)
     numAvailableTrades = 0
     i = 0
@@ -61,7 +61,7 @@ def getOrderBook(marketID, offset, numTradesToLoad):
 def getAccountOrderBook(marketID, account):
     refund()
     numTrades = MARKETS.get_total_trades(marketID)
-    trades = MARKETS.get_trade_ids(marketID, outitems=numTrades)
+    trades = MARKETS.get_trade_ids(marketID, 0, 0, outitems=numTrades)
     orderBook = array(TRADE_FIELDS*numTrades)
     numAccountTrades = 0
     i = 0
