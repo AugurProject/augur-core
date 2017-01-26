@@ -19,6 +19,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+import tags as TAGS
+
 inset('refund.se')
 
 # Markets' index is the marketID, markets stores data about markets [which are able to be traded on] in augur
@@ -237,6 +239,7 @@ def modifyParticipantShares(marketID, trader, outcome, amount, cancel):
     if(cancel):
         amount = -1*amount
     self.Markets[marketID].volume += amount
+    TAGS.increaseTagPopularity(self.Markets[marketID].branch, self.Markets[marketID].tag1, amount)
     return(1)   
 
 def setWinningOutcomes(market, outcomes: arr):
@@ -316,18 +319,26 @@ def remove_trade_from_market(market_id, trade_id):
     self.Markets[market_id].total_trades -= 1
     return(1)
 
-def get_trade_ids(market_id):
+def get_trade_ids(market_id, offset, numTradesToLoad):
     refund()
-    trades_count = self.Markets[market_id].total_trades
+    numTrades = self.Markets[market_id].total_trades
+    if offset > numTrades or numTrades == 0:
+        return([]: arr)
+    if numTradesToLoad == 0:
+        numTradesToLoad = numTrades
+    numTradesToLoad = min(numTradesToLoad, numTrades - offset)
     trade_id = self.Markets[market_id].last_trade
-    trade_ids = array(trades_count)
-
+    if offset > 0:
+        i = 0
+        while i < offset:
+            trade_id = self.Markets[market_id].trade_ids[trade_id].prev_id
+            i += 1
+    trade_ids = array(numTradesToLoad)
     i = 0
-    while i < trades_count:
+    while i < numTradesToLoad:
         trade_ids[i] = self.Markets[market_id].trade_ids[trade_id].id
         trade_id = self.Markets[market_id].trade_ids[trade_id].prev_id
         i = i + 1
-
     if trade_ids:
         return(trade_ids:arr)
     return([FAILURE]:arr)
