@@ -68,10 +68,7 @@ def placeOrder(type, fxpAmount, fxpPrice, market, outcome):
         throw()
     MUTEX.setMutex()
 
-    cumulativeScale = MARKETS.getCumulativeScale(market)
-    branch = MARKETS.getBranch(market)
-
-    saveOrder(type, fxpAmount, fxpPrice, market, outcome, branch, msg.sender)
+    saveOrder(type, fxpAmount, fxpPrice, market, outcome, msg.sender)
     MUTEX.unsetMutex()
     logReturn(buyAndSellSharesLogReturn, FAILURE)
 
@@ -102,73 +99,19 @@ def cancel(tradeID):
     MUTEX.unsetMutex()
     logReturn(buyAndSellSharesLogReturn, SUCCESS)
 
-macro saveOrder($type, $fxpAmount, $fxpPrice, $market, $outcome, $branch, $sender):
+macro saveOrder($type, $fxpAmount, $fxpPrice, $market, $outcome, $sender):
+    $cumulativeScale = MARKETS.getCumulativeScale(market)
+    $branch = MARKETS.getBranch(market)
     checkOrderPreconditions()
+
     $moneyEscrowed = 0
     $sharesEscrowed = 0
     $initialAmount = $fxpAmount
 
     if($type == ASK):
-        # Take shares in escrow if user has shares
-        sharesHeld = MARKETS.getParticipantSharesPurchased($market, msg.sender, $outcome)
-        if(sharesHeld):
-            price = $fxpPrice - EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0))
-            cost = safeFxpMul($fxpAmount, price)
-            if(price > cumulativeScale or cost < MIN_ORDER_VALUE or cost >= MAX_ORDER_VALUE):
-                MUTEX.unsetMutex()
-                return(-1)
-            fill = min(sharesHeld, $fxpAmount)
-            $fxpAmount -= fill
-            $sharesEscrowed += fill
-            MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -fill, 0)
-        
-        # Take max minus price they want to sell at for the remainder of the amount that wasn't able to be used up above
-        if($fxpAmount):
-            costPerShareShorting = EVENTS.getMaxValue(MARKETS.getMarketEvent($market, 0)) - $fxpPrice
-            tradeCost = safeFxpMul($fxpAmount, costPerShareShorting)
-            if(costPerShareShorting > cumulativeScale or tradeCost < MIN_ORDER_VALUE or tradeCost >= MAX_ORDER_VALUE):
-                MUTEX.unsetMutex()
-                return(-1)
-            $moneyEscrowed += tradeCost 
-            $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), tradeCost)
-            if(!paidTradeCost):
-                throw()
-    
+        placeAsk()    
     if($type == BID):
-        # If user owns n minus the one outcome we're buying escrow no money but escrow their shares in all the other outcomes.
-        MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
-        sharesHeld = MAX_INT
-        i = 1
-        while i < MARKETS.getMarketNumOutcomes($market):
-            if(i != $outcome):
-                sharesHeld = min(MARKETS.getParticipantSharesPurchased($market, msg.sender, i), sharesHeld)
-            i += 1
-        if(sharesHeld):
-            price = $fxpPrice - EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0))
-            cost = safeFxpMul($fxpAmount, price)
-            if(price > cumulativeScale or cost < MIN_ORDER_VALUE or cost >= MAX_ORDER_VALUE):
-                MUTEX.unsetMutex()
-                return(-1)
-            fill = min(sharesHeld, $fxpAmount)
-            $fxpAmount -= fill
-            $sharesEscrowed += fill
-            i = 1
-            while i < MARKETS.getNumOutcomes($market):
-                if(i != $outcome):
-                    MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -fill, 0)
-                i += 1
-        
-        # Take money in escrow for price - min for the remainder of amount that wasn't able to be used up above. Make sure price - min isn't more than range
-        if($fxpAmount):
-            price = $fxpPrice - EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0))
-            cost = safeFxpMul($fxpAmount, price)
-            $moneyEscrowed += cost
-            if(price > cumulativeScale or cost < MIN_ORDER_VALUE or cost >= MAX_ORDER_VALUE):
-                MUTEX.unsetMutex()
-                return(-1)
-            $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), cost)
-            if(!$paidTradeCost):
-                throw()
+        placeBid()
     else:
         throw()
 
@@ -232,3 +175,85 @@ macro checkOrderPreconditions():
     if(BRANCHES.getOracleOnly($branch)):
         MUTEX.unsetMutex()
         return(-2)
+
+macro placeAsk():
+    # Take shares in escrow if user has shares
+    sharesHeld = MARKETS.getParticipantSharesPurchased($market, msg.sender, $outcome)
+    if(sharesHeld):
+        $minValue = 0
+        if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent($market, 0)) > 2):
+            $minValue = ONE
+        else:
+            $minValue = EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0)
+        price = $fxpPrice - $minValue
+        cost = safeFxpMul($fxpAmount, price)
+        if(price > cumulativeScale or cost < MIN_ORDER_VALUE or cost >= MAX_ORDER_VALUE):
+            MUTEX.unsetMutex()
+            return(-1)
+        fill = min(sharesHeld, $fxpAmount)
+        $fxpAmount -= fill
+        $sharesEscrowed += fill
+        MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -fill, 0)
+        
+    # Take max minus price they want to sell at for the remainder of the amount that wasn't able to be used up above
+    if($fxpAmount):
+        $maxValue = 0
+        if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent($market, 0)) > 2):
+            $maxValue = ONE
+        else:
+            $maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent($market, 0)
+        costPerShareShorting = $maxValue - $fxpPrice
+        tradeCost = safeFxpMul($fxpAmount, costPerShareShorting)
+        if(costPerShareShorting > cumulativeScale or tradeCost < MIN_ORDER_VALUE or tradeCost >= MAX_ORDER_VALUE):
+            MUTEX.unsetMutex()
+            return(-1)
+        $moneyEscrowed += tradeCost 
+        $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), tradeCost)
+        if(!paidTradeCost):
+            throw()
+
+macro placeBid():
+    # If user owns n minus the one outcome we're buying escrow no money but escrow their shares in all the other outcomes.
+    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
+    sharesHeld = MAX_INT
+    i = 1
+    while i < MARKETS.getMarketNumOutcomes($market):
+        if(i != $outcome):
+            sharesHeld = min(MARKETS.getParticipantSharesPurchased($market, msg.sender, i), sharesHeld)
+        i += 1
+    if(sharesHeld):
+        $minValue = 0
+        if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent($market, 0)) > 2):
+            $minValue = ONE
+        else:
+            $minValue = EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0)
+        price = $fxpPrice - $minValue
+        cost = safeFxpMul($fxpAmount, price)
+        if(price > cumulativeScale or cost < MIN_ORDER_VALUE or cost >= MAX_ORDER_VALUE):
+            MUTEX.unsetMutex()
+            return(-1)
+        fill = min(sharesHeld, $fxpAmount)
+        $fxpAmount -= fill
+        $sharesEscrowed += fill
+        i = 1
+        while i < MARKETS.getNumOutcomes($market):
+            if(i != $outcome):
+                MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -fill, 0)
+            i += 1
+        
+    # Take money in escrow for price - min for the remainder of amount that wasn't able to be used up above. Make sure price - min isn't more than range
+    if($fxpAmount):
+        $minValue = 0
+        if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent($market, 0)) > 2):
+            $minValue = ONE
+        else:
+            $minValue = EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0)
+        price = $fxpPrice - $minValue
+        cost = safeFxpMul($fxpAmount, price)
+        $moneyEscrowed += cost
+        if(price > cumulativeScale or cost < MIN_ORDER_VALUE or cost >= MAX_ORDER_VALUE):
+            MUTEX.unsetMutex()
+            return(-1)
+        $paidTradeCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), cost)
+        if(!$paidTradeCost):
+            throw()
