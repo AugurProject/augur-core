@@ -62,7 +62,7 @@ def build_for_network_id(network_id):
             contract_code = contract_code.replace(str(cvals["old"]), str(cvals["new"]))
         build[contract_name]["code"] = json.loads(contract_code)
     with open(os.path.join(HERE, "build.json"), "w+") as out_file:
-        json.dump(build, out_file, indent=4, sort_keys=True)
+        json.dump(build, out_file, indent=2, sort_keys=True)
 
 def make_groups():
     groups = {}
