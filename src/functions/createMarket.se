@@ -149,7 +149,6 @@ def createMarket(branch, description:str, tradingFee, event, tag1, tag2, tag3, m
     events[0] = event
     # initialize market and send money to pay for resolution
     if(CASH.sendFrom(branch, creationFee, msg.sender) && send(MARKETS, (msg.value-500000*tx.gasprice)) && INFO.setInfo(marketID, description, msg.sender, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, futurePeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, expirationDate)):
-        MARKETS.addToMarketsHash(branch, marketID)
         CASH.initiateOwner(marketID)
         EVENTS.addMarket(event, marketID)
     else:

@@ -53,19 +53,6 @@ inset('refund.se')
     # prices keeps track of the latest traded price for a given outcome in a market
 data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime, lastExpDate, prices[])
 
-# takes branch as param, composite hash of all markets in the system
-data marketsHash[]
-
-def getMarketsHash(branch):
-    return(self.marketsHash[branch])
-
-def addToMarketsHash(branch, newHash):
-    x = array(2)
-    x[0] = self.marketsHash[branch]
-    x[1] = newHash
-    self.marketsHash[branch] = sha3(x, items=2)
-    return(1)
-
 def addFees(market, amount):
     self.Markets[market].fees += amount
     return(1)
@@ -300,7 +287,7 @@ def addTrade(market, trade_id, last_id):
     self.Markets[market].last_trade = trade_id
     self.Markets[market].total_trades += 1
     return(1)
-    
+  
 def remove_trade_from_market(market_id, trade_id):
     refund()
     prev_id = self.Markets[market_id].trade_ids[trade_id].prev_id

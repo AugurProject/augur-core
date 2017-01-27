@@ -43,7 +43,6 @@ def getOrderBook(marketID, offset, numTradesToLoad):
         numTradesToLoad = numTrades
     totalTrades = min(numTradesToLoad, numTrades - offset)
     trades = MARKETS.get_trade_ids(marketID, offset, numTrades, outitems=numTrades)
-    # trades = slice(MARKETS.get_trade_ids(marketID, outitems=numTrades), items=offset, items=offset+numTradesToLoad)
     orderBook = array(TRADE_FIELDS*totalTrades)
     numAvailableTrades = 0
     i = 0
