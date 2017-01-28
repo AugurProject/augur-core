@@ -62,12 +62,12 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $fee, $send
         if $type == ASK:
             MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$amount, 0)
             if($fee):
-                CASH.sendFrom($market, ($amount * $price / ONE * $fee / ONE), $sender)
+                CASH.sendFrom($market, ($amount * $price / ONE * $fee / ONE), $sender, 1)
         # Send / escrow cash for bids
         if $type == BID:
-            CASH.sendFrom($market, $amount * $price / ONE, $sender)
+            CASH.sendFrom($market, $amount * $price / ONE, $sender, 1)
             if($fee):
-                CASH.sendFrom($market, ($amount * $price / ONE * $fee / ONE), $sender)
+                CASH.sendFrom($market, ($amount * $price / ONE * $fee / ONE), $sender, 1)
     else:
         logReturn(buyAndSellShares_logReturn, TRADE_ALREADY_EXISTS)
     log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id, $isShortAsk, block.timestamp, $tradeGroupID)

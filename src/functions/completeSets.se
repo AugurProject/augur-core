@@ -59,7 +59,7 @@ def buyCompleteSets(market, amount):
         MARKETS.modifySharesValue(market, amount*cumScale/ONE)
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount*cumScale/ONE)
     # send money from user acc. to market address/account
-    CASH.sendFrom(market, cost, msg.sender)
+    CASH.sendFrom(market, cost, msg.sender, 1)
     log(type=completeSets_logReturn, msg.sender, market, 1, amount, numOutcomes, block.timestamp)
     return(amount)
 

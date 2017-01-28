@@ -71,7 +71,7 @@ def send(recver, value):
 
 # Sends cash from a user to a receiver
 # @return value of cash sent; fail is 0
-def sendFrom(recver, value, from):
+def sendFrom(recver, value, from, doNotLog):
     refund()
     # sendFrom would check if the sender had an owner, if it did, then it'd check and see if the msg.sender was the owner.
     # it's not owned by a regular account nor a contract owned account (i.e. a market's hash from markets.)
@@ -83,7 +83,8 @@ def sendFrom(recver, value, from):
     if(senderBalance >= value && value > 0):
         self.cashcoinBalances[from] -= value
         self.cashcoinBalances[recver] += value
-        log(type=sentCash, from, recver, value, block.timestamp)
+        if(doNotLog == 0):
+            log(type=sentCash, from, recver, value, block.timestamp)
         return(value)
     else:
         return(0)
