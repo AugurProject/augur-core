@@ -322,10 +322,10 @@ def short_sell(buyer_trade_id, max_amount, tradeGroupID):
     MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
     # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
     # 75% to branch + .5% more to branch per maker fee 1% decrease 
-    if(branchFees and !CASH.sendFrom(branch, branchFees, msg.sender, 1)):
+    if(branchFees and !CASH.sendFrom(branch, branchFees, msg.sender)):
         throw()
     # 25% to creator + .5% more to creator per 1% decrease in maker fees
-    if(creatorFees and !CASH.sendFrom(creator, creatorFees, msg.sender, 1)):
+    if(creatorFees and !CASH.sendFrom(creator, creatorFees, msg.sender)):
         throw()
 
     # other party [maker] pay their part of the fee here too
