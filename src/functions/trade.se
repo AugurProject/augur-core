@@ -306,7 +306,7 @@ def short_sell(buyer_trade_id, max_amount, tradeGroupID):
     # send money from user acc. to market address/account
     # cost for shares
     costForShares = cost - takerFeesTotal
-    if(costForShares and !CASH.sendFrom(market, costForShares, msg.sender, 1)):
+    if(costForShares and !CASH.sendFrom(market, costForShares, msg.sender)):
         throw()
 
     # Fill buy order [short selling the outcome user doesn't want]
