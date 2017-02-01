@@ -5,6 +5,8 @@ import consensusData as CONSENSUS
 
 inset('refund.se')
 
+event slashedRep(branch: indexed, sender: indexed, reporter: indexed, event, repSlashed, slasherBalance)
+
 # Anti cheat/collusion mechanism: provide ballot and random salt to steal rep from a colluder
 # Returns:
     # 1: on success
@@ -50,4 +52,5 @@ def slashRep(branch, salt, report, reporter, eventID):
     REPORTING.addRep(branch, trutherIndex, (reporterBalance*ONEHALF / ONE))
     # other half sent to branch
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), reporterBalance*ONEHALF/ONE)
+    log(type=slashedRep, branch, msg.sender, reporter, event, reporterBalance, REPORTING.getRepBalance(branch, msg.sender))
     return(1)
