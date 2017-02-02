@@ -18,7 +18,25 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-### Allows users to take orders off the book and short sell
+### Allows users to take orders off the book (i.e. fill trades)
+
+# Trade scenarios:
+
+    # - Buying and have all but one and bidding, seller doesn't have outcome.
+
+    # - Buying and have all but one and bidding, seller has outcome.
+
+    # - Buying and don't own anything and bidding, seller doesn't have outcome
+
+    # - Buying and don't own anything doesn't bidding, seller has outcome
+
+    # - Buying and have all but one and taking, seller doesn't have outcome.
+
+    # - Buying and have all but one and taking, seller has outcome.
+
+    # - Buying and don't own anything and taking, seller doesn't have outcome
+
+    # - Buying and don't own anything doesn't taking, seller has outcome
 
 import branches as BRANCHES
 import info as INFO
@@ -33,7 +51,6 @@ inset('logReturn.se')
 inset('../data_api/float.se')
 
 event logPrice(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, tradeid, outcome)
-event logPriceShort(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, tradeid, outcome)
 
 event tradeLogReturn(returnValue)
 event tradeLogArrayReturn(returnArray: arr)
@@ -46,12 +63,10 @@ macro ONE_POINT_FIVE: 1500000000000000000
 
 macro MIN_TRADE_VALUE: 10000000000
 
-macro MINIMUM_TRADE_SIZE: 10000000000
 macro ONEPOINTFIVE: 1500000000000000000
 # Trade types
 macro BID: 1
 macro ASK: 2
-macro SHORT_OFFER: 3
 # Field counts
 macro TRADE_FIELDS: 10
 # Boolean success/failure
@@ -127,8 +142,6 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
             fillBid()
         elif(type == ASK):
             fillAsk()
-        elif(type == SHORT_OFFER):
-            fillShortOffer()
         else:
             throw()
 
@@ -138,67 +151,6 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
         t += 1
     MUTEX.unsetMutex()
     logArrayReturn([SUCCESS, fxpMaxValue, fxpMaxAmount])
-
-# Allows a user to "short" by buying n complete sets and selling n shares of the unwanted outcome to a bid on the book in one tx
-# Example:
-    # buyer gives up say 20
-    # complete set cost is say 100
-    # market should lose 20 from buyer's escrowed money
-    # market should gain 100 from complete set
-    # person short selling should give the market 80 [complete set cost less shares sold]
-# Errors:
-    # 0: trade doesn't exist
-    # -1: invalid trade hash/commitment
-    # -2: not a large enough trade
-    # -3: can't pickup your own trade
-    # -4: insufficient balance
-    # -5: trade in same block prohibited
-    # -6: must be a bid, not an ask
-# @return fxp
-def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
-    refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
-    i = 0
-    trades = 0
-    while(i < len(buyerTradeIDs)):
-        trades += buyerTradeIDs[i]
-        i += 1
-    tradeInfo = array(3)
-    tradeInfo[0] = trades
-    tradeInfo[1] = fxpMaxAmount
-    tradeInfo[2] = 0
-    tradeHash = sha3(tradeInfo, items = 3)
-    if(TRADES.checkHash(tradeHash, msg.sender) == -1):
-        MUTEX.unsetMutex()
-        logArrayReturn([-1])
-    # Try to fulfill each trade passed
-    t = 0
-    while(t < len(buyerTradeIDs)):
-        # Get trade
-        trade = array(TRADE_FIELDS)
-        trade = TRADES.getTrade(buyerTradeIDs[t], outitems = TRADE_FIELDS)
-        if(!trade[0]):
-            MUTEX.unsetMutex()
-            logArrayReturn([0])
-        # Get market
-        type = trade[1]
-        if(type != BID):
-            MUTEX.unsetMutex()
-            logArrayReturn([-6])
-        market = trade[2]
-        origAmount = trade[3]
-        price = trade[4]
-        owner = trade[5]
-        outcome = trade[7]
-        branch = MARKETS.getBranch(market)
-        checkTradePreconditions()
-        fillShort()
-        MARKETS.setPrice(market, outcome, price)
-        t += 1
-    MUTEX.unsetMutex()
-    logArrayReturn([SUCCESS, fxpMaxAmount, fill, price])
 
 macro checkTradePreconditions():
     if(owner == msg.sender):
@@ -264,100 +216,6 @@ macro fillAsk():
     if(!payMaker):
         throw()
                 
-    # Update fxpMaxValue
-    fxpMaxValue -= valueToSpend
-    # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
-    log(type = logPrice, market, msg.sender, owner, BID, price, fill, block.timestamp, tradeIDs[t], outcome)
-    
-macro fillShort():
-    # calculate cost
-    creator = INFO.getCreator(market)
-    cumulativeScale = MARKETS.getCumulativeScale(market)
-    amount = min(origAmount, fxpMaxAmount)
-    if(amount <= 0):
-        MUTEX.unsetMutex()
-        logArrayReturn([INSUFFICIENT_BALANCE])
-
-    cost = safeSub(safeFxpMul(amount, cumulativeScale), safeFxpMul(amount, price))
-    if(INFO.getCurrency(market).balanceOf(msg.sender) < cost):
-        MUTEX.unsetMutex()
-        logArrayReturn([INSUFFICIENT_BALANCE])
-    if(safeFxpMul(amount, price) < MIN_TRADE_VALUE):
-        MUTEX.unsetMutex()
-        logArrayReturn([-2])
-    
-    numOutcomes = MARKETS.getMarketNumOutcomes(market)
-
-    i = 1
-    # send shares of the event to user address, buying complete sets
-    while(i <= numOutcomes):
-        MARKETS.modifyShares(market, i, amount)
-        MARKETS.modifyParticipantShares(market, msg.sender, i, amount, 0)
-        i += 1
-    if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
-        MARKETS.modifySharesValue(market, safeFxpMul(amount, cumulativeScale))
-    # send money from user acc. to market address/account
-    # cost for shares
-    payTakerCost = INFO.getCurrency(market).transferFrom(msg.sender, market, cost)
-    if(!payTakerCost):
-        throw()
-
-    # Fill buy order [short selling the outcome user doesn't want]
-    # Determine fill amount
-    fill = amount
-    # Update trade amount or remove
-    if(fill < origAmount):
-        TRADES.fillTrade(buyerTradeIDs[t], fill)
-    else:
-        removeTrade(buyerTradeIDs[t], market)
-    # Update balances
-    MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 1)
-    MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
-
-    fxpMaxAmount -= fill
-    # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
-    log(type = logPriceShort, market, msg.sender, owner, ASK, price, fill, block.timestamp, buyerTradeIDs[t], outcome)
-
-macro fillShortOrder():
-    balance = INFO.getCurrency(market).balanceOf(msg.sender)
-    totalTradeCost = safeFxpMul(amount, price)
-    # trade value to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilled)
-    valueToSpend = min(totalTradeCost, min(fxpMaxValue, balance))
-    # Determine fill amount
-    fill = safeFxpDiv(valueToSpend, price)
-    if(valueToSpend < MIN_TRADE_VALUE):
-        MUTEX.unsetMutex()
-        logArrayReturn([INSUFFICIENT_BALANCE])
-    # Update trade amount or remove filled trade
-    if(fill < amount):
-        TRADES.fillTrade(tradeIDs[t], fill)
-    else:
-        removeTrade(tradeIDs[t], market)
-
-    # Transfer cash from user to market - purchaser sends price*amount to the market and gets outcome n
-    payMaker = INFO.getCurrency(market).transferFrom(msg.sender, market, valueToSpend)
-    if(!payMaker):
-        throw()
-    # Update balances
-    MARKETS.modifyParticipantShares(market, msg.sender, outcome, fill, 1)
-
-	# account for fees here even though paid upon selling complete sets / resolution so we can assign reporters appropriately [since we're issuing a complete set here to fulfill this trade]
-    fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), fxpAmount), cumulativeScale)
-    feesInWei = safeFxpMul(BRANCHES.getCurrencyRate(branch, INFO.getCurrency(market)), safeDiv(fee, 2))
-    MARKETS.addFees(market, feesInWei)
-    if(!feesInWei):
-        throw()
-    numOutcomes = MARKETS.getMarketNumOutcomes(market)
-    i = 1
-    # send shares of the event to user address, buying complete sets - person who placed the order gets amount shares of n-1 outcomes
-    while(i <= numOutcomes):
-    	if(i != outcome):
-	        MARKETS.modifyShares(market, i, fill)
-    	    MARKETS.modifyParticipantShares(market, msg.sender, i, fill, 0)
-        i += 1
-    if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
-        MARKETS.modifySharesValue(market, safeFxpMul(amount, cumulativeScale))
-
     # Update fxpMaxValue
     fxpMaxValue -= valueToSpend
     # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]

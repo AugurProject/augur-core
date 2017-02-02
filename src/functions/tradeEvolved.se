@@ -1,22 +1,3 @@
-Trade scenarios:
-
-    - Buying and have all but one and bidding, seller doesn't have outcome.
-
-    - Buying and have all but one and bidding, seller has outcome.
-
-    - Buying and don't own anything and bidding, seller doesn't have outcome
-
-    - Buying and don't own anything doesn't bidding, seller has outcome
-
-    - Buying and have all but one and taking, seller doesn't have outcome.
-
-    - Buying and have all but one and taking, seller has outcome.
-
-    - Buying and don't own anything and taking, seller doesn't have outcome
-
-    - Buying and don't own anything doesn't taking, seller has outcome
-
-
 Filling a bid [aka selling shares]
 
 Scenarios:
@@ -24,8 +5,8 @@ Scenarios:
 
     Or asker has shares and expects to be paid price - min for them
 
-    Bidder owns all shares except the one theyre buying and has escrowed them and wants to pay price - min for the share and then sell the complete set for range thus getting max - price at the end
 
+    Bidder owns all shares except the one theyre buying and has escrowed them and wants to pay price - min for the share and then sell the complete set for range thus getting max - price at the end
     Or bidder has escrowed price - min for their shares
 
         sumOfFills = 0
