@@ -42,111 +42,111 @@ macro POINT_SIX: 600000000000000000
 
 # Error -1: Hey, you're not broke!
 def cashFaucet():
-    refund()
-    if(CASH.balanceOf(msg.sender) > 5 * ONE):
-        return(-1)
-    CASH.setCash(msg.sender, 10000 * ONE)
-    return(1)
+	refund()
+	if(CASH.balanceOf(msg.sender) > 5 * ONE):
+		return(-1)
+	CASH.setCash(msg.sender, 10000 * ONE)
+	return(1)
 
 def reputationFaucet(branch):
-    refund()
-        index = REPORTING.repIDToIndex(branch, msg.sender)
-    else:
-        index = REPORTING.getNumberReporters(branch)
-        REPORTING.addReporter(branch, msg.sender, 0, 0, 0)
-    REPORTING.setRep(branch, index, 47 * ONE)
-    CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch) - 1))
-    return(1)
+	refund()
+	index = REPORTING.repIDToIndex(branch, msg.sender)
+	else:
+		index = REPORTING.getNumberReporters(branch)
+		REPORTING.addReporter(branch, msg.sender, 0, 0, 0)
+	REPORTING.setRep(branch, index, 47 * ONE)
+	CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch) - 1))
+	return(1)
 
 def fundNewAccount(branch):
-    self.reputationFaucet(branch, call=delegate)
-    CASH.setCash(msg.sender, 10000 * 10 ** 18)
-    return(1)
+	self.reputationFaucet(branch, call=delegate)
+	CASH.setCash(msg.sender, 10000 * 10 ** 18)
+	return(1)
 
 # Used to claim rep on a fork or on a new branch
 # Returns 1 if successful, 0 if already claimed/too late
 # Error:
-    # -1: parent isn't the actual parent
-    # -2: penalization catchup failed
-    # -3: only behind one period and not caught up / penalized yet
+	# -1: parent isn't the actual parent
+	# -2: penalization catchup failed
+	# -3: only behind one period and not caught up / penalized yet
 def claimInitialRep(parent, branch):
-    refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
-    # auto increment vote period if needed
-    INCREMENTPERIOD.incrementPeriodAfterReporting(parent)
-    parentPeriod = BRANCHES.getParentPeriod(branch)
-    forkPeriod = BRANCHES.getForkPeriod(parent)
-    fork = REPORTING.getFork(parent)
-    forkEvent = BRANCHES.getEventForkedOver(parent)
-    outcome = EVENTS.getUncaughtOutcome(forkEvent)
-    if(binary(forkEvent)):
-        outcome = catch(outcome)
-    report = EXPEVENTS.getReport(parent, forkPeriod, forkEvent, msg.sender)
-    ethical = ethicCatch(EVENTS.getEthics(forkEvent))
-    ethicReport = EXPEVENTS.getEthicReport(parent, forkPeriod, forkEvent, msg.sender)
-    dormantRep = EXPEVENTS.getPeriodDormantRep(parent, parentPeriod, msg.sender)
-    # if this wasn't set then use reg. dormant rep balance
-    if(dormantRep == 0):
-        dormantRep = REPORTING.balanceOf(parent, msg.sender)
-    # if this wasn't set then use reg. rep balance after catching reporter up
-    rep = EXPEVENTS.getBeforeRep(parent, parentPeriod, msg.sender)
-    checkRepClaimPreconditions()
-    
-    if(rep == 0):
-        rep = REPORTING.getRepBalance(parent, msg.sender)
-    repDecrease = 0
-    # if forked and (reported with original consensus or didn't report or (reported with original ethicality and forked over ethicality))
-    reportedWithOriginalConsensus = (report >= (outcome - POINT_ZERO_ONE) and report <= (outcome + POINT_ZERO_ONE))
-    reportedWrongEthicality = (BACKSTOPS.getForkedOverEthicality(forkEvent) and ethical == ethicReport)
-    reportedWrongly = (reportedWithOriginalConsensus or !report or reportedWrongEthicality)
-    if(fork and reportedWrongly):
-        removeRepFromThoseWhoReportedWrong()
-    if(fork):
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, forkPeriod)
-    else:
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch) - 1))
-    REPORTING.addReporter(branch, msg.sender, rep, dormantRep, repDecrease)
-    MUTEX.unsetMutex()
-    return(1)
+	refund()
+	if(MUTEX.getMutex()):
+		throw()
+	MUTEX.setMutex()
+	# auto increment vote period if needed
+	INCREMENTPERIOD.incrementPeriodAfterReporting(parent)
+	parentPeriod = BRANCHES.getParentPeriod(branch)
+	forkPeriod = BRANCHES.getForkPeriod(parent)
+	fork = REPORTING.getFork(parent)
+	forkEvent = BRANCHES.getEventForkedOver(parent)
+	outcome = EVENTS.getUncaughtOutcome(forkEvent)
+	if(binary(forkEvent)):
+		outcome = catch(outcome)
+	report = EXPEVENTS.getReport(parent, forkPeriod, forkEvent, msg.sender)
+	ethical = ethicCatch(EVENTS.getEthics(forkEvent))
+	ethicReport = EXPEVENTS.getEthicReport(parent, forkPeriod, forkEvent, msg.sender)
+	dormantRep = EXPEVENTS.getPeriodDormantRep(parent, parentPeriod, msg.sender)
+	# if this wasn't set then use reg. dormant rep balance
+	if(dormantRep == 0):
+		dormantRep = REPORTING.balanceOf(parent, msg.sender)
+	# if this wasn't set then use reg. rep balance after catching reporter up
+	rep = EXPEVENTS.getBeforeRep(parent, parentPeriod, msg.sender)
+	checkRepClaimPreconditions()
+	
+	if(rep == 0):
+		rep = REPORTING.getRepBalance(parent, msg.sender)
+	repDecrease = 0
+	# if forked and (reported with original consensus or didn't report or (reported with original ethicality and forked over ethicality))
+	reportedWithOriginalConsensus = (report >= (outcome - POINT_ZERO_ONE) and report <= (outcome + POINT_ZERO_ONE))
+	reportedWrongEthicality = (BACKSTOPS.getForkedOverEthicality(forkEvent) and ethical == ethicReport)
+	reportedWrongly = (reportedWithOriginalConsensus or !report or reportedWrongEthicality)
+	if(fork and reportedWrongly):
+		removeRepFromThoseWhoReportedWrong()
+	if(fork):
+		CONSENSUS.setPenalizedUpTo(branch, msg.sender, forkPeriod)
+	else:
+		CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch) - 1))
+	REPORTING.addReporter(branch, msg.sender, rep, dormantRep, repDecrease)
+	MUTEX.unsetMutex()
+	return(1)
 
 macro checkRepClaimPreconditions():
-    branchDoesntExist = (!parent or !branch)
-    # simplify
-    if((BRANCHES.getParent(branch) != parent && parent && branch) or branchDoesntExist):
-        MUTEX.unsetMutex()
-        return(-1)
-    # have 1 month to claim, make so cant make a new acc on a new branch w/o at least trying this if it's a fork one and reporter was in old branch todo
-    tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
-    alreadyClaimed = REPORTING.repIDToIndex(branch, msg.sender)
-    if(alreadyClaimed or tooLate):
-        MUTEX.unsetMutex()
-        return(0)
-    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(parent, msg.sender)
-    lastPeriod = BRANCHES.getVotePeriod(parent) - 1
-    delta = lastPeriod - lastPeriodPenalized
-    if(delta > 1):
-        if(CATCHUP.penalizationCatchup(parent, msg.sender) != 1):
-            MUTEX.unsetMutex()
-            return(-2)
-    if(!CONSENSUS.getRepRedistributionDone(parent, msg.sender)):
-        MUTEX.unsetMutex()
-        return(-3)
+	branchDoesntExist = (!parent or !branch)
+	# simplify
+	if((BRANCHES.getParent(branch) != parent && parent && branch) or branchDoesntExist):
+		MUTEX.unsetMutex()
+		return(-1)
+	# have 1 month to claim, make so cant make a new acc on a new branch w/o at least trying this if it's a fork one and reporter was in old branch todo
+	tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
+	alreadyClaimed = REPORTING.repIDToIndex(branch, msg.sender)
+	if(alreadyClaimed or tooLate):
+		MUTEX.unsetMutex()
+		return(0)
+	lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(parent, msg.sender)
+	lastPeriod = BRANCHES.getVotePeriod(parent) - 1
+	delta = lastPeriod - lastPeriodPenalized
+	if(delta > 1):
+		if(CATCHUP.penalizationCatchup(parent, msg.sender) != 1):
+			MUTEX.unsetMutex()
+			return(-2)
+	if(!CONSENSUS.getRepRedistributionDone(parent, msg.sender)):
+		MUTEX.unsetMutex()
+		return(-3)
 
 macro removeRepFromThoseWhoReportedWrong():
-    # take away 40% of rep from liars and those who didn't report
-    repDecrease = rep - safeFxpMul(rep, POINT_SIX)
-    rep = safeSub(rep, repDecrease)
-    amountLeftToPayBonder = BACKSTOPS.getBondAmount(forkEvent) - BACKSTOPS.getForkBondPaid(forkEvent)
-    if(repDecrease < amountLeftToPayBonder):
-        # send all the redistributed rep to the fork bond poster
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(forkEvent)), repDecrease)
-    # send amountLeftToPayBonder [if positive] to the fork bond poster
-    elif(amountLeftToPayBonder > 0):
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(forkEvent)), amountLeftToPayBonder)
-        # send the rest to the new branch's redistribution pool
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), (repDecrease - amountLeftToPayBonder))
-    else:
-        # send to new branch's redistribution pool
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repDecrease)
+	# take away 40% of rep from liars and those who didn't report
+	repDecrease = rep - safeFxpMul(rep, POINT_SIX)
+	rep = safeSub(rep, repDecrease)
+	amountLeftToPayBonder = BACKSTOPS.getBondAmount(forkEvent) - BACKSTOPS.getForkBondPaid(forkEvent)
+	if(repDecrease < amountLeftToPayBonder):
+		# send all the redistributed rep to the fork bond poster
+		REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(forkEvent)), repDecrease)
+	# send amountLeftToPayBonder [if positive] to the fork bond poster
+	elif(amountLeftToPayBonder > 0):
+		REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(forkEvent)), amountLeftToPayBonder)
+		# send the rest to the new branch's redistribution pool
+		REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), (repDecrease - amountLeftToPayBonder))
+	else:
+		# send to new branch's redistribution pool
+		REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repDecrease)

@@ -1,0 +1,129 @@
+Trade scenarios:
+
+    - Buying and have all but one and bidding, seller doesn't have outcome.
+
+    - Buying and have all but one and bidding, seller has outcome.
+
+    - Buying and don't own anything and bidding, seller doesn't have outcome
+
+    - Buying and don't own anything doesn't bidding, seller has outcome
+
+    - Buying and have all but one and taking, seller doesn't have outcome.
+
+    - Buying and have all but one and taking, seller has outcome.
+
+    - Buying and don't own anything and taking, seller doesn't have outcome
+
+    - Buying and don't own anything doesn't taking, seller has outcome
+
+
+Filling a bid [aka selling shares]
+
+Scenarios:
+    Asker has max - price and expects complete set minus the one theyre selling
+
+    Or asker has shares and expects to be paid price - min for them
+
+    Bidder owns all shares except the one theyre buying and has escrowed them and wants to pay price - min for the share and then sell the complete set for range thus getting max - price at the end
+
+    Or bidder has escrowed price - min for their shares
+
+        sumOfFills = 0
+        # all in shares including the money here
+        askerSharesFilled = 0
+        askerMoneyFilled = 0
+        bidderSharesFilled = 0
+        bidderMoneyFilled = 0
+
+        if(sharesEscrowed):
+            fill = min(sharesEscrowed, amountTakerWants)
+            sharesEscrowed -= fill
+            amountTakerWants -= fill
+            sumOfFills += fill
+            bidderSharesFilled = fill
+            sendSharesEscrowedByBidderBackToBidder(fill amount)
+
+        if(amountTakerWants && moneyEscrowed):
+            fill = min(moneyEscrowed/(price - min), amountTakerWants)
+            moneyEscrowed -= fill * (price - min)
+            amountTakerWants -= fill
+            sumOfFills += fill
+            bidderMoneyFilled = fill
+
+        remainderToFill = sumOfFills
+
+        if(msg.sender owns shares of outcome):
+            fill = min(sharesOwned, remainderToFill)
+            askerSharesFilled = fill
+            remainderToFill -= fill
+
+        if(remainderToFill):
+            issueAskerCompleteSetsForRemainderAmountAndDontChargeYet()
+            askerMoneyFilled = remainderToFill
+            remainderToFill -= remainderToFill
+
+        sendBidderSharesFromAsker(amount of sumOfFills)
+        sellBidderCompleteSetsUsingMinAndGiveMoneyToBidder(sharesOwnedPerOutcome)
+        transfer((price - min) * bidderSharesFilled) to market from bidder since market hasnt been paid yet after complete sets selling
+        transfer((price - min) * sumOfFills) from the market to the asker.
+        transfer(range * askerMoneyFilled) to the market from asker for the amount of shares in askerMoneyFilled
+        Sell the askers complete sets using min(shares per outcome they own).
+
+
+
+Filling an ask [aka buying shares]
+
+Scenarios:
+    Asker either escrowed max - price and expects complete set minus the one they're selling
+
+    Or asker had shares and escrowed them and expects to be paid price - min for them
+
+    Bidder owns all shares except the one they're buying and will pay price - min for the shares they're buying
+
+    Or bidder will pay price - min for their shares
+
+        sumOfFills = 0
+        # all in shares including the money here
+        askerSharesFilled = 0
+        askerMoneyFilled = 0
+        bidderSharesFilled = 0
+        bidderMoneyFilled = 0
+
+        if(sharesEscrowed):
+            fill = min(sharesEscrowed, amountTakerWants)
+            sharesEscrowed -= fill
+            amountTakerWants -= fill
+            sumOfFills += fill
+            askerSharesFilled = fill
+
+        if(amountTakerWants && moneyEscrowed):
+            fill = min(moneyEscrowed/(max - price), amountTakerWants)
+            moneyEscrowed -= fill * (max - price)
+            amountTakerWants -= fill
+            sumOfFills += fill
+            askerMoneyFilled = fill
+            issueAskerCompleteSetsMinusOutcomeSellingInFillAmountAndDontChargeBecauseAlreadyPaid()
+
+        remainderToFill = sumOfFills
+
+        if(msg.sender owns shares of all outcomes besides the one theyre buying):
+            fill = min(sharesOwned, remainderToFill)
+            bidderSharesFilled = fill
+            remainderToFill -= fill
+
+        if(remainderToFill):
+            bidderMoneyFilled = remainderToFill
+            remainderToFill -= remainderToFill
+        
+        sendBidderSumOfFillsSharesByJustCreatingThemAndGivingThemToThem()
+        sellBidderCompleteSetsUsingMin(sharesOwnedPerOutcome)
+        transfer((price - min) * (bidderSharesFilled + bidderMoneyFilled)) to market from bidder since market hasnt been paid yet
+        transfer((price - min) * askerSharesFilled) from the market to the asker, dont need to send for askerMoneyFilled because asker only escrowed max - price and thus has "already been paid" for those shares
+        Sell the askers complete sets using min(shares per outcome they now own).
+
+
+
+
+
+
+

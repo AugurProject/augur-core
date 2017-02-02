@@ -184,7 +184,7 @@ macro placeAsk():
         if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent($market, 0)) > 2):
             $minValue = ONE
         else:
-            $minValue = EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0)
+            $minValue = EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0))
         price = $fxpPrice - $minValue
         cost = safeFxpMul($fxpAmount, price)
         if(price > cumulativeScale or cost < MIN_ORDER_VALUE or cost >= MAX_ORDER_VALUE):
@@ -201,7 +201,7 @@ macro placeAsk():
         if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent($market, 0)) > 2):
             $maxValue = ONE
         else:
-            $maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent($market, 0)
+            $maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent($market, 0))
         costPerShareShorting = $maxValue - $fxpPrice
         tradeCost = safeFxpMul($fxpAmount, costPerShareShorting)
         if(costPerShareShorting > cumulativeScale or tradeCost < MIN_ORDER_VALUE or tradeCost >= MAX_ORDER_VALUE):
@@ -226,7 +226,7 @@ macro placeBid():
         if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent($market, 0)) > 2):
             $minValue = ONE
         else:
-            $minValue = EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0)
+            $minValue = EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0))
         price = $fxpPrice - $minValue
         cost = safeFxpMul($fxpAmount, price)
         if(price > cumulativeScale or cost < MIN_ORDER_VALUE or cost >= MAX_ORDER_VALUE):
@@ -247,7 +247,7 @@ macro placeBid():
         if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent($market, 0)) > 2):
             $minValue = ONE
         else:
-            $minValue = EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0)
+            $minValue = EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0))
         price = $fxpPrice - $minValue
         cost = safeFxpMul($fxpAmount, price)
         $moneyEscrowed += cost
