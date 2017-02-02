@@ -52,5 +52,5 @@ def slashRep(branch, salt, report, reporter, eventID):
     REPORTING.addRep(branch, trutherIndex, (reporterBalance*ONEHALF / ONE))
     # other half sent to branch
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), reporterBalance*ONEHALF/ONE)
-    log(type=slashedRep, branch, msg.sender, reporter, event, reporterBalance, REPORTING.getRepBalance(branch, msg.sender))
+    log(type=slashedRep, branch, msg.sender, reporter, eventID, reporterBalance, REPORTING.getRepBalance(branch, msg.sender))
     return(1)
