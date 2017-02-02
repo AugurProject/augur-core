@@ -150,7 +150,7 @@ macro refundTrade():
             throw()
 
 macro removeTrade($tradeID, $market):
-    TRADES.removeTrade($tradeID)
+    TRADES.removeTrade($trade ID)
     MARKETS.removeTradeFromMarket($market, $tradeID)
 
 macro fetchTradeCancelInfo():

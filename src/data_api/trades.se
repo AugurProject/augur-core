@@ -77,10 +77,12 @@ def removeTrade(id):
     self.trades[id].sharesEscrowed = 0
     return(1)
 
-def fillTrade(tradeID, fill):
-    if(fill > self.trades[tradeID].amount):
+def fillTrade(tradeID, fill, money, shares):
+    if(fill > self.trades[tradeID].amount or money > self.trades[tradeID].moneyEscrowed or shares > self.trades[tradeID].sharesEscrowed):
         throw()
     self.trades[tradeID].amount -= fill
+    self.trades[tradeID].moneyEscrowed -= money
+    self.trades[tradeID].sharesEscrowed -= shares
     return(1)
 
 # @return fxp
