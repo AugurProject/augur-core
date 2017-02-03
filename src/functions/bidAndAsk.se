@@ -238,7 +238,7 @@ macro placeBid():
         i = 1
         while i < MARKETS.getNumOutcomes($market):
             if(i != $outcome):
-                MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -fill, 0)
+                MARKETS.modifyParticipantShares($market, msg.sender, i, -fill, 0)
             i += 1
         
     # Take money in escrow for price - min for the remainder of amount that wasn't able to be used up above. Make sure price - min isn't more than range
