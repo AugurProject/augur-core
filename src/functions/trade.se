@@ -98,6 +98,8 @@ def trade(tradeID, amountTakerWants):
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()
+    if(amountTakerWants <= 0):
+        throw()
 
     tradeInfo = array(2)
     tradeInfo[0] = orderID
@@ -165,9 +167,7 @@ macro fillBid():
     askerMoneyFilled = 0
     bidderSharesFilled = 0
     bidderMoneyFilled = 0
-    if(amountTakerWants <= 0):
-        throw()
-    
+
     if(sharesEscrowed):
         fill = min(sharesEscrowed, amountTakerWants)
         amountTakerWants -= fill
@@ -186,7 +186,6 @@ macro fillBid():
         bidderMoneyFilled = fill
 
     remainderToFill = sumOfFills
-
     # Calculate value
     value = safeFxpMul(sumOfFills, price)
     # must trade at least 0.00000001 in value
@@ -209,6 +208,11 @@ macro fillBid():
             i += 1
         askerMoneyFilled = remainderToFill
         remainderToFill -= remainderToFill
+        # if still before voting period has started count the share value
+        notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
+        if(notVotingOnYet):
+            MARKETS.modifySharesValue(market, safeFxpMul(askerMoneyFilled, cumulativeScale))
+
 
     # send bidder shares from asker
     MARKETS.modifyParticipantShares(market, msg.sender, outcome, -sumOfFills, 1)
@@ -223,10 +227,6 @@ macro fillBid():
     # transfer range * askerMoneyFilled to the market from asker for the amount of shares in askerMoneyFilled
     if(askerMoneyFilled && !INFO.getCurrency(market).transferFrom(msg.sender, market, cumulativeScale * askerMoneyFilled)):
         throw()
-    # if still before voting period has started count the share value
-    notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
-    if(notVotingOnYet):
-        MARKETS.modifySharesValue(market, safeFxpMul(askerMoneyFilled, cumulativeScale))
     
     MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
     sharesHeld = MAX_INT
@@ -265,38 +265,35 @@ macro fillAsk():
 
     if(sharesEscrowed):
         fill = min(sharesEscrowed, amountTakerWants)
-        sharesEscrowed -= fill
         amountTakerWants -= fill
         sumOfFills += fill
         askerSharesFilled = fill
 
     if(amountTakerWants && moneyEscrowed):
         fill = min(moneyEscrowed/(max - price), amountTakerWants)
-        moneyEscrowed -= fill * (max - price)
         amountTakerWants -= fill
         sumOfFills += fill
         askerMoneyFilled = fill
-        issueAskerCompleteSetsMinusOutcomeSellingInFillAmountAndDontChargeBecauseAlreadyPaid()
+        # issue asker complete sets for fill amount and dont charge because already paid
+        i = 1
+        while i < MARKETS.getNumOutcomes(market):
+            if(i != outcome):
+                MARKETS.modifyShares(market, i, fill)
+                MARKETS.modifyParticipantShares(market, owner, i, fill, 0)
+            i += 1
+        # if still before voting period has started count the share value
+        notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
+        if(notVotingOnYet):
+            MARKETS.modifySharesValue(market, safeFxpMul(askerMoneyFilled, cumulativeScale))
+    
 
     remainderToFill = sumOfFills
-
-    balance = INFO.getCurrency(market).balanceOf(msg.sender)
-    # Determine fill amount
-    
     # Calculate value
     value = safeFxpMul(sumOfFills, price)
     # must trade at least 0.00000001 in value
     if(value < MIN_TRADE_VALUE):
         MUTEX.unsetMutex()
         throw()
-    
-    # Update trade amount or remove filled trade
-    if(fill < amount):
-        TRADES.fillTrade(tradeIDs[t], fill)
-    else:
-        removeTrade(tradeIDs[t], market)
-    # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
-    MARKETS.modifyParticipantShares(market, msg.sender, outcome, fill, 1)
 
     # Transfer cash from user to person who has ask order
     payMaker = INFO.getCurrency(market).transferFrom(msg.sender, owner, valueToSpend)
@@ -312,16 +309,39 @@ macro fillAsk():
         bidderMoneyFilled = remainderToFill
         remainderToFill -= remainderToFill
 
-    # Update fxpMaxValue
-    fxpMaxValue -= valueToSpend
-    # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
-    log(type = logPrice, market, msg.sender, owner, BID, price, fill, block.timestamp, tradeIDs[t], outcome)
+    # send bidder sumOfFills shares by just creating them and giving them to them
+    MARKETS.modifyParticipantShares(market, msg.sender, outcome, sumOfFills, 1)
+
     
-    sendBidderSumOfFillsSharesByJustCreatingThemAndGivingThemToThem()
-    sellBidderCompleteSetsUsingMin(sharesOwnedPerOutcome)
-    transfer((price - min) * (bidderSharesFilled + bidderMoneyFilled)) to market from bidder since market hasnt been paid yet
-    transfer((price - min) * askerSharesFilled) from the market to the asker, dont need to send for askerMoneyFilled because asker only escrowed max - price and thus has "already been paid" for those shares
-    Sell the askers complete sets using min(shares per outcome they now own).
+    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
+    sharesHeld = MAX_INT
+    i = 1
+    while i < MARKETS.getMarketNumOutcomes(market):
+        sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, msg.sender, i), sharesHeld)
+        i += 1
+    # Sell the bidder's [msg.sender] complete sets if they have any
+    if(sharesHeld):
+        COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegate)
+
+    # Transfer (price - min) * (bidderSharesFilled + bidderMoneyFilled) to market from bidder since market hasnt been paid yet
+    if((bidderMoneyFilled or bidderSharesFilled) and !INFO.getCurrency(market).transferFrom(msg.sender, market, (price - min) * (bidderSharesFilled + bidderMoneyFilled))):
+        throw()
+
+    # Transfer (price - min) * askerSharesFilled from the market to the asker, dont need to send for askerMoneyFilled because asker only escrowed max - price and thus has "already been paid" for those shares.  Note: bidder has already sent their money to the market so this money comes from the market    
+    if(askerSharesFilled and !INFO.getWallet(market).transfer(owner, safeFxpMul((price - min), askerSharesFilled))):
+        throw()
+
+    sellAskerCompleteSetsIfTheyHaveAnyAndGiveMoneyToAsker()
+
+    # Update trade amount or remove
+    if(sumOfFills < amount):
+        TRADES.fillTrade(tradeIDs[t], sumOfFills, (askerMoneyFilled * (max - price)), askerSharesFilled)
+    else:
+        removeTrade(tradeIDs[t], market)
+
+    # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
+    log(type = logPrice, market, msg.sender, owner, BID, price, sumOfFills, block.timestamp, tradeID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
+
 
 macro sellBidderCompleteSetsIfTheyHaveAnyAndGiveMoneyToBidder():
     MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
@@ -334,7 +354,7 @@ macro sellBidderCompleteSetsIfTheyHaveAnyAndGiveMoneyToBidder():
         i = 1
         while i < MARKETS.getMarketNumOutcomes(market):
             MARKETS.modifyShares(market, i, -sharesHeld)
-            MARKETS.modifyParticipantShares(market, owner, i, sharesHeld, 0)
+            MARKETS.modifyParticipantShares(market, owner, i, -sharesHeld, 0)
         cost = safeFxpMul(sharesHeld, cumulativeScale)
         # send funds from the market to the user acc.
         if(!INFO.getWallet(market).transfer(owner, cost)):
@@ -343,3 +363,25 @@ macro sellBidderCompleteSetsIfTheyHaveAnyAndGiveMoneyToBidder():
         notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
         if(notVotingOnYet):
             MARKETS.modifySharesValue(market, safeFxpMul(-sharesHeld, cumulativeScale))
+
+macro sellAskerCompleteSetsIfTheyHaveAnyAndGiveMoneyToAsker():
+    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
+    sharesHeld = MAX_INT
+    i = 1
+    while i < MARKETS.getMarketNumOutcomes(market):
+        sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, owner, i), sharesHeld)
+        i += 1
+    if(sharesHeld):
+        i = 1
+        while i < MARKETS.getMarketNumOutcomes(market):
+            MARKETS.modifyShares(market, i, -sharesHeld)
+            MARKETS.modifyParticipantShares(market, owner, i, -sharesHeld, 0)
+        cost = safeFxpMul(sharesHeld, cumulativeScale)
+        # send funds from the market to the user acc.
+        if(!INFO.getWallet(market).transfer(owner, cost)):
+            throw()
+        # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
+        notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
+        if(notVotingOnYet):
+            MARKETS.modifySharesValue(market, safeFxpMul(-sharesHeld, cumulativeScale))
+
