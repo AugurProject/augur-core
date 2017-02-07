@@ -14,96 +14,96 @@ ONE = 10**18
 TWO = 2*ONE
 HALF = ONE/2
 
-def test_tags():
+def test_topics():
     t.gas_limit = 100000000
     s = t.state()
-    c = s.abi_contract("data_api/tags.se")
+    c = s.abi_contract("data_api/topics.se")
     gas_use(s)
 
     branchID = 1010101
-    tag1 = 123456789
-    assert(len(c.getTagsInBranch(branchID)) == 0), "Initial tag array not empty"
-    assert(c.getNumTagsInBranch(branchID) == 0), "Number of tags not equal to zero"
-    assert(c.getTagPopularity(branchID, tag1) == 0), "Popularity not equal to zero"
-    assert(len(c.getTagsInfo(branchID)) == 0), "Tags info array not empty"
+    topic1 = 123456789
+    assert(len(c.getTopicsInBranch(branchID)) == 0), "Initial topic array not empty"
+    assert(c.getNumTopicsInBranch(branchID) == 0), "Number of topics not equal to zero"
+    assert(c.getTopicPopularity(branchID, topic1) == 0), "Popularity not equal to zero"
+    assert(len(c.getTopicsInfo(branchID)) == 0), "Topics info array not empty"
 
-    assert(c.increaseTagPopularity(branchID, tag1, ONE) == 1), "Add popularity failed"
-    tagsInBranch = c.getTagsInBranch(branchID)
-    assert(len(tagsInBranch) == 1), "Tag array not 1 element as expected"
-    assert(c.getNumTagsInBranch(branchID) == 1), "Number of tags not equal to one"
-    assert(tagsInBranch[0] == tag1), "Tag array element not equal to input tag"
-    assert(c.getTagPopularity(branchID, tag1) == ONE), "Popularity not equal to " + str(ONE)
-    tagsInfo = c.getTagsInfo(branchID)
-    assert(len(tagsInfo) == 2), "Number of tagsInfo elements not equal to two"
-    assert(tagsInfo[0] == tag1), "First tagsInfo element not equal to tag 1"
-    assert(tagsInfo[1] == ONE), "Second tagsInfo element not equal to tag 1 popularity"
+    assert(c.increaseTopicPopularity(branchID, topic1, ONE) == 1), "Add popularity failed"
+    topicsInBranch = c.getTopicsInBranch(branchID)
+    assert(len(topicsInBranch) == 1), "Topic array not 1 element as expected"
+    assert(c.getNumTopicsInBranch(branchID) == 1), "Number of topics not equal to one"
+    assert(topicsInBranch[0] == topic1), "Topic array element not equal to input topic"
+    assert(c.getTopicPopularity(branchID, topic1) == ONE), "Popularity not equal to " + str(ONE)
+    topicsInfo = c.getTopicsInfo(branchID)
+    assert(len(topicsInfo) == 2), "Number of topicsInfo elements not equal to two"
+    assert(topicsInfo[0] == topic1), "First topicsInfo element not equal to topic 1"
+    assert(topicsInfo[1] == ONE), "Second topicsInfo element not equal to topic 1 popularity"
 
-    assert(c.increaseTagPopularity(branchID, tag1, TWO) == 1), "Add popularity failed"
-    tagsInBranch = c.getTagsInBranch(branchID)
-    assert(len(tagsInBranch) == 1), "Tag array not 1 element as expected"
-    assert(c.getNumTagsInBranch(branchID) == 1), "Number of tags not equal to one"
-    assert(tagsInBranch[0] == tag1), "Tag array element not equal to input tag"
-    assert(c.getTagPopularity(branchID, tag1) == 3*ONE), "Popularity not equal to " + str(3*ONE)
-    tagsInfo = c.getTagsInfo(branchID)
-    assert(len(tagsInfo) == 2), "Number of tagsInfo elements not equal to two"
-    assert(tagsInfo[0] == tag1), "First tagsInfo element not equal to tag 1"
-    assert(tagsInfo[1] == 3*ONE), "Second tagsInfo element not equal to tag 1 popularity"
+    assert(c.increaseTopicPopularity(branchID, topic1, TWO) == 1), "Add popularity failed"
+    topicsInBranch = c.getTopicsInBranch(branchID)
+    assert(len(topicsInBranch) == 1), "Topic array not 1 element as expected"
+    assert(c.getNumTopicsInBranch(branchID) == 1), "Number of topics not equal to one"
+    assert(topicsInBranch[0] == topic1), "Topic array element not equal to input topic"
+    assert(c.getTopicPopularity(branchID, topic1) == 3*ONE), "Popularity not equal to " + str(3*ONE)
+    topicsInfo = c.getTopicsInfo(branchID)
+    assert(len(topicsInfo) == 2), "Number of topicsInfo elements not equal to two"
+    assert(topicsInfo[0] == topic1), "First topicsInfo element not equal to topic 1"
+    assert(topicsInfo[1] == 3*ONE), "Second topicsInfo element not equal to topic 1 popularity"
 
-    tag2 = 987654321
-    assert(c.increaseTagPopularity(branchID, tag2, TWO) == 1), "Add popularity failed"
-    tagsInBranch = c.getTagsInBranch(branchID)
-    assert(len(tagsInBranch) == 2), "Tag array not 2 elements as expected"
-    assert(c.getNumTagsInBranch(branchID) == 2), "Number of tags not equal to 2"
-    assert(tagsInBranch[0] == tag1), "Tag array element not equal to input tag"
-    assert(tagsInBranch[1] == tag2), "Second tag array element not equal to second input tag"
-    assert(c.getTagPopularity(branchID, tag1) == 3*ONE), "Tag 1 popularity not equal to " + str(3*ONE)
-    assert(c.getTagPopularity(branchID, tag2) == TWO), "Tag 2 popularity not equal to " + str(TWO)
-    tagsInfo = c.getTagsInfo(branchID)
-    assert(len(tagsInfo) == 4), "Number of tagsInfo elements not equal to four"
-    assert(tagsInfo[0] == tag1), "First tagsInfo element not equal to tag 1"
-    assert(tagsInfo[1] == 3*ONE), "Second tagsInfo element not equal to tag 1 popularity"
-    assert(tagsInfo[2] == tag2), "Third tagsInfo element not equal to tag 2"
-    assert(tagsInfo[3] == TWO), "Fourth tagsInfo element not equal to tag 2 popularity"
+    topic2 = 987654321
+    assert(c.increaseTopicPopularity(branchID, topic2, TWO) == 1), "Add popularity failed"
+    topicsInBranch = c.getTopicsInBranch(branchID)
+    assert(len(topicsInBranch) == 2), "Topic array not 2 elements as expected"
+    assert(c.getNumTopicsInBranch(branchID) == 2), "Number of topics not equal to 2"
+    assert(topicsInBranch[0] == topic1), "Topic array element not equal to input topic"
+    assert(topicsInBranch[1] == topic2), "Second topic array element not equal to second input topic"
+    assert(c.getTopicPopularity(branchID, topic1) == 3*ONE), "Topic 1 popularity not equal to " + str(3*ONE)
+    assert(c.getTopicPopularity(branchID, topic2) == TWO), "Topic 2 popularity not equal to " + str(TWO)
+    topicsInfo = c.getTopicsInfo(branchID)
+    assert(len(topicsInfo) == 4), "Number of topicsInfo elements not equal to four"
+    assert(topicsInfo[0] == topic1), "First topicsInfo element not equal to topic 1"
+    assert(topicsInfo[1] == 3*ONE), "Second topicsInfo element not equal to topic 1 popularity"
+    assert(topicsInfo[2] == topic2), "Third topicsInfo element not equal to topic 2"
+    assert(topicsInfo[3] == TWO), "Fourth topicsInfo element not equal to topic 2 popularity"
 
-    # Test tag offset / chunked getters
+    # Test topic offset / chunked getters
     for n in range(1, 10):
-        assert(c.increaseTagPopularity(branchID, n, ONE // n) == 1), "Add popularity failed"
-    tagsInBranch = c.getTagsInBranch(branchID)
-    assert(len(tagsInBranch) == 11), "Tag array does not have 11 elements"
-    assert(c.getNumTagsInBranch(branchID) == 11), "Number of tags not equal to 11"
-    tagsInfo = c.getTagsInfo(branchID)
-    assert(len(tagsInfo) == 22), "Number of tagsInfo elements not equal to 22"
-    assert(tagsInfo[0] == tag1), "First tagsInfo element not equal to tag 1"
-    assert(tagsInfo[1] == 3*ONE), "Second tagsInfo element not equal to tag 1 popularity"
-    assert(tagsInfo[2] == tag2), "Third tagsInfo element not equal to tag 2"
-    assert(tagsInfo[3] == TWO), "Fourth tagsInfo element not equal to tag 2 popularity"
-    offsetTags = c.getTagsInBranch(branchID, 1)
-    assert(len(offsetTags) == 10), "Number of offsetTags elements not equal to 10"
-    assert(offsetTags[0] == tag2), "First offsetTags element not equal to tag 2"
-    offsetTagsInfo = c.getTagsInfo(branchID, 1)
-    assert(len(offsetTagsInfo) == 20), "Number of offsetTagsInfo elements not equal to 20"
-    assert(offsetTagsInfo[0] == tag2), "First offsetTagsInfo element not equal to tag 2"
-    assert(offsetTagsInfo[1] == TWO), "Second offsetTagsInfo element not equal to tag 2 popularity"
-    tagsFirstChunk = c.getTagsInBranch(branchID, 0, 5)
-    assert(len(tagsFirstChunk) == 5), "Number of tagsFirstChunk elements not equal to 5"
-    assert(tagsFirstChunk[0] == tag1), "First tagsFirstChunk element not equal to tag 1"
-    assert(tagsFirstChunk[1] == tag2), "Second tagsFirstChunk element not equal to tag 2"
-    tagsInfoFirstChunk = c.getTagsInfo(branchID, 0, 5)
-    assert(len(tagsInfoFirstChunk) == 10), "Number of tagsInfoFirstChunk elements not equal to 10"
-    assert(tagsInfoFirstChunk[0] == tag1), "First tagsInfoFirstChunk element not equal to tag 1"
-    assert(tagsInfoFirstChunk[1] == 3*ONE), "Second tagsInfoFirstChunk element not equal to tag 1 popularity"
-    assert(tagsInfoFirstChunk[2] == tag2), "Third tagsInfoFirstChunk element not equal to tag 2"
-    assert(tagsInfoFirstChunk[3] == TWO), "Fourth tagsInfoFirstChunk element not equal to tag 2 popularity"
-    tagsSecondChunk = c.getTagsInBranch(branchID, 5, 5)
-    assert(len(tagsSecondChunk) == 5), "Number of tagsSecondChunk elements not equal to 5"
-    tagsInfoSecondChunk = c.getTagsInfo(branchID, 5, 5)
-    assert(len(tagsInfoSecondChunk) == 10), "Number of tagsInfoSecondChunk elements not equal to 10"
-    tagsThirdChunk = c.getTagsInBranch(branchID, 10, 5)
-    assert(len(tagsThirdChunk) == 1), "Number of tagsThirdChunk elements not equal to 5"
-    tagsThirdChunk = c.getTagsInfo(branchID, 10, 5)
-    assert(len(tagsThirdChunk) == 2), "Number of tagsThirdChunk elements not equal to 10"
+        assert(c.increaseTopicPopularity(branchID, n, ONE // n) == 1), "Add popularity failed"
+    topicsInBranch = c.getTopicsInBranch(branchID)
+    assert(len(topicsInBranch) == 11), "Topic array does not have 11 elements"
+    assert(c.getNumTopicsInBranch(branchID) == 11), "Number of topics not equal to 11"
+    topicsInfo = c.getTopicsInfo(branchID)
+    assert(len(topicsInfo) == 22), "Number of topicsInfo elements not equal to 22"
+    assert(topicsInfo[0] == topic1), "First topicsInfo element not equal to topic 1"
+    assert(topicsInfo[1] == 3*ONE), "Second topicsInfo element not equal to topic 1 popularity"
+    assert(topicsInfo[2] == topic2), "Third topicsInfo element not equal to topic 2"
+    assert(topicsInfo[3] == TWO), "Fourth topicsInfo element not equal to topic 2 popularity"
+    offsetTopics = c.getTopicsInBranch(branchID, 1)
+    assert(len(offsetTopics) == 10), "Number of offsetTopics elements not equal to 10"
+    assert(offsetTopics[0] == topic2), "First offsetTopics element not equal to topic 2"
+    offsetTopicsInfo = c.getTopicsInfo(branchID, 1)
+    assert(len(offsetTopicsInfo) == 20), "Number of offsetTopicsInfo elements not equal to 20"
+    assert(offsetTopicsInfo[0] == topic2), "First offsetTopicsInfo element not equal to topic 2"
+    assert(offsetTopicsInfo[1] == TWO), "Second offsetTopicsInfo element not equal to topic 2 popularity"
+    topicsFirstChunk = c.getTopicsInBranch(branchID, 0, 5)
+    assert(len(topicsFirstChunk) == 5), "Number of topicsFirstChunk elements not equal to 5"
+    assert(topicsFirstChunk[0] == topic1), "First topicsFirstChunk element not equal to topic 1"
+    assert(topicsFirstChunk[1] == topic2), "Second topicsFirstChunk element not equal to topic 2"
+    topicsInfoFirstChunk = c.getTopicsInfo(branchID, 0, 5)
+    assert(len(topicsInfoFirstChunk) == 10), "Number of topicsInfoFirstChunk elements not equal to 10"
+    assert(topicsInfoFirstChunk[0] == topic1), "First topicsInfoFirstChunk element not equal to topic 1"
+    assert(topicsInfoFirstChunk[1] == 3*ONE), "Second topicsInfoFirstChunk element not equal to topic 1 popularity"
+    assert(topicsInfoFirstChunk[2] == topic2), "Third topicsInfoFirstChunk element not equal to topic 2"
+    assert(topicsInfoFirstChunk[3] == TWO), "Fourth topicsInfoFirstChunk element not equal to topic 2 popularity"
+    topicsSecondChunk = c.getTopicsInBranch(branchID, 5, 5)
+    assert(len(topicsSecondChunk) == 5), "Number of topicsSecondChunk elements not equal to 5"
+    topicsInfoSecondChunk = c.getTopicsInfo(branchID, 5, 5)
+    assert(len(topicsInfoSecondChunk) == 10), "Number of topicsInfoSecondChunk elements not equal to 10"
+    topicsThirdChunk = c.getTopicsInBranch(branchID, 10, 5)
+    assert(len(topicsThirdChunk) == 1), "Number of topicsThirdChunk elements not equal to 5"
+    topicsThirdChunk = c.getTopicsInfo(branchID, 10, 5)
+    assert(len(topicsThirdChunk) == 2), "Number of topicsThirdChunk elements not equal to 10"
 
-    print "TAGS OK"
+    print "TOPICS OK"
 
 def test_trades():
     t.gas_limit = 100000000
@@ -1723,12 +1723,12 @@ if __name__ == '__main__':
     os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
     # data/api tests
     #test_trades()
-    #test_tags()
+    test_topics()
     #test_cash()
     #test_ether()
     #test_log_exp()
     #test_exp()
-    test_markets()
+    #test_markets()
     #test_reporting()
 
     # function tests
