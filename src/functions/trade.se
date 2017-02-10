@@ -191,7 +191,6 @@ macro fillBid():
     value = safeFxpMul(sumOfFills, price)
     # must trade at least 0.00000001 in value
     if(value < MIN_TRADE_VALUE):
-        MUTEX.unsetMutex()
         throw()
 
     balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)        
