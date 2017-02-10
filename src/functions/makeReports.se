@@ -152,8 +152,9 @@ def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, f
 # @return fxp
 def calculateReportTargetForEvent(branch, event, votePeriod, sender):
     numMarkets = EVENTS.getNumMarkets(event)
+    # we should prob todo switch this to when we send fees don't add to a market but rather the event associated w/ the market, then assign reporters based on fees on event / total fees for all events, this'll save cost and be more appropriate for what we actually want
     if(numMarkets > MARKETS_COUNTING_TOWARDS_SHARE_VALUE):
-        numMarkets = MARKTS_COUNTING_TOWARDS_SHARE_VALUE
+        numMarkets = MAREKTS_COUNTING_TOWARDS_SHARE_VALUE
     markets = array(numMarkets)
     markets = EVENTS.getMarkets(event, outitems=numMarkets)
     totalFees = 0

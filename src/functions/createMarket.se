@@ -443,6 +443,7 @@ def resolveEarly(event, outcome):
         
 
 # Allows a user to directly add fees / effectively pay for oracle usage w/o having to trade using the default contracts
+# should make this be to an event directly, so every addFees and getFees call will be effected by fixing this
 # Returns 1 if successful, 0 if too late to send additional fees
 def addFees(market, fxpAmount):
     branch = MARKETS.getBranch(market)

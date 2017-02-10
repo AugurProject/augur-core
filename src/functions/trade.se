@@ -21,22 +21,23 @@
 ### Allows users to take orders off the book (i.e. fill trades)
 
 # Trade scenarios:
+    # Note: all [] scenarios are typical, if a user somehow gets an extra complete set it'll also be sold when doing a trade, typically complete sets only sold when closing out a position or closing out a short
 
-    # - Buying and have all but one and bidding, seller doesn't have outcome.
+    # - Buying and have all but one and bidding, seller doesn't have outcome and is taking [complete set fee charged on buyer b/c selling complete sets].
 
-    # - Buying and have all but one and bidding, seller has outcome.
+    # - Buying and have all but one and bidding, seller has outcome and is taking [complete set fee charged on buyer].
 
-    # - Buying and don't own anything and bidding, seller doesn't have outcome
+    # - Buying and don't own anything and bidding, seller doesn't have outcome and is taking [no complete set fee charged b/c none sold].
 
-    # - Buying and don't own anything doesn't bidding, seller has outcome
+    # - Buying and don't own anything and bidding, seller has outcome and is taking [no complete set fee charged b/c none sold].
 
-    # - Buying and have all but one and taking, seller doesn't have outcome.
+    # - Buying and have all but one and taking, seller doesn't have outcome and is asking [complete set fee charged on buyer].
 
-    # - Buying and have all but one and taking, seller has outcome.
+    # - Buying and have all but one and taking, seller has outcome and is asking [complete set fee charged on buyer].
 
-    # - Buying and don't own anything and taking, seller doesn't have outcome
+    # - Buying and don't own anything and taking, seller doesn't have outcome and is asking [no complete set fee charged].
 
-    # - Buying and don't own anything doesn't taking, seller has outcome
+    # - Buying and don't own anything and taking, seller has outcome and is asking [no complete set fee charged].
 
 import branches as BRANCHES
 import info as INFO
@@ -212,7 +213,12 @@ macro fillBid():
         notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
         if(notVotingOnYet):
             MARKETS.modifySharesValue(market, safeFxpMul(askerMoneyFilled, cumulativeScale))
-
+            fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), askerMoneyFilled), cumulativeScale)
+            feesInWei = safeFxpMul(BRANCHES.getCurrencyRate(branch, INFO.getCurrency(market)), safeDiv(fee, 2))
+            if(!feesInWei):
+                throw()
+            MARKETS.addFees(market, feesInWei)
+            EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
 
     # send bidder shares from asker
     MARKETS.modifyParticipantShares(market, msg.sender, outcome, -sumOfFills, 1)
@@ -285,6 +291,12 @@ macro fillAsk():
         notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
         if(notVotingOnYet):
             MARKETS.modifySharesValue(market, safeFxpMul(askerMoneyFilled, cumulativeScale))
+            fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), askerMoneyFilled), cumulativeScale)
+            feesInWei = safeFxpMul(BRANCHES.getCurrencyRate(branch, INFO.getCurrency(market)), safeDiv(fee, 2))
+            if(!feesInWei):
+                throw()
+            MARKETS.addFees(market, feesInWei)
+            EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
 
     remainderToFill = sumOfFills
     # Calculate value
@@ -356,12 +368,17 @@ macro sellBidderCompleteSetsIfTheyHaveAnyAndGiveMoneyToBidder():
             MARKETS.modifyParticipantShares(market, owner, i, -sharesHeld, 0)
         cost = safeFxpMul(sharesHeld, cumulativeScale)
         # send funds from the market to the user acc.
-        if(!INFO.getWallet(market).transfer(owner, cost)):
+        fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), sharesHeld), cumulativeScale)
+        if(!INFO.getWallet(market).transfer(owner, safeSub(cost, fee))):
             throw()
         # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
         notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
         if(notVotingOnYet):
             MARKETS.modifySharesValue(market, safeFxpMul(-sharesHeld, cumulativeScale))
+                currency = INFO.getCurrency(market)
+        if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+            throw()
+
 
 macro sellAskerCompleteSetsIfTheyHaveAnyAndGiveMoneyToAsker():
     MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
@@ -377,10 +394,12 @@ macro sellAskerCompleteSetsIfTheyHaveAnyAndGiveMoneyToAsker():
             MARKETS.modifyParticipantShares(market, owner, i, -sharesHeld, 0)
         cost = safeFxpMul(sharesHeld, cumulativeScale)
         # send funds from the market to the user acc.
-        if(!INFO.getWallet(market).transfer(owner, cost)):
+        fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), sharesHeld), cumulativeScale)
+        if(!INFO.getWallet(market).transfer(owner, safeSub(cost, fee))):
             throw()
         # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
         notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
         if(notVotingOnYet):
             MARKETS.modifySharesValue(market, safeFxpMul(-sharesHeld, cumulativeScale))
-
+        if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+            throw()
