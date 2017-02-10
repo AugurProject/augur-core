@@ -39,7 +39,7 @@ macro safeToAdd($a, $b):
 	($c >= $a && $c >= $b)
 
 macro safeToSubtract($a, $b):
-    ($b <= $a)
+    ($b <= $a && (($a - $b) <= $a))
 
 macro safeToMultiply($a, $b):
 	$c = $a * $b
