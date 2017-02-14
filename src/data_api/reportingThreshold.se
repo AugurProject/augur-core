@@ -36,12 +36,13 @@ def calculateReportingThreshold(branch, event, period, sender):
 # Gets events a reporter should report on
 # switch to use start and end todo
 # start is the event index we want to start fetching events to report on from
-def getEventsToReportOn(branch, period, sender, start):
-    numEvents = EXPEVENTS.getNumberEvents(branch, period)
+def getEventsToReportOn(branch, period, sender, start, end):
+    if(end == 0):
+        end = EXPEVENTS.getNumberEvents(branch, period)
     events = array(numEvents)
     i = 0
     numEventsToReportOn = 0
-    while i < numEvents:
+    while i < end:
         thisEvent = EXPEVENTS.getEvent(branch, period, start + i)
         if thisEvent != 0:
             # calculate report target for event here if not done for purposes of computing this

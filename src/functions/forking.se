@@ -22,6 +22,7 @@ macro POINT_ZERO_ONE: 10000000000000000
 
 # UI has to handle function calls for these
 
+# todo allow event creation during forks
 # Notes:
     # Anyone can pay some amount significantly greater than the backstop 1 bond amount to force a branching event, splitting rep into two classes.
     # In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep is redistributed accordingly.

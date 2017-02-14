@@ -93,7 +93,7 @@ macro removeTrade($tradeID, $market):
     # -5: trade in same block prohibited
 # amountTakerWants is amount of shares the taker wants to fill
 # picks orders off the book
-# make simpler
+# todo make simpler
 # @return fxp
 def trade(tradeID, amountTakerWants):
     refund()
