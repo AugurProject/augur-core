@@ -435,6 +435,9 @@ def resolveEarly(event, outcome):
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
     if(msg.sender == EVENTS.getResolutionAddress(event) && block.timestamp > EVENTS.getExpiration(event) && block.timestamp < (EVENTS.getExpiration(event) + 86400*3)):
+        # outcome of 1 is 1/10**18 or basically 0, but allows us to still check if outcome is 0 or not to see if an outcome has been set
+        if(outcome == 0):
+            outcome = 1
         EVENTS.setFirstPreliminaryOutcome(event, outcome)
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()

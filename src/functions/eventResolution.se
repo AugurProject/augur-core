@@ -46,6 +46,9 @@ def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch
     # outcome is set to the mode of the reported outcomes
     if(categorical(event)):
         fxpOutcome = round(fxpOutcome)
+    # outcome of 1 is 1/10**18 or basically 0, but allows us to still check if outcome is 0 or not to see if an outcome has been set
+    if(fxpOutcome == 0):
+        fxpOutcome = 1
     EVENTS.setOutcome(event, fxpOutcome)
     periodLength = BRANCHES.getPeriodLength(branch)
     # ethics is set to the binned version of the raw ethicality outcome
@@ -56,6 +59,9 @@ def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch
         ethics = ONE
     ethical = ethicCatch(ethics)
     ethicOutcome = safeFxpMul(ONE_HALF, fxpScaledMax - fxpScaledMin) + fxpScaledMin
+    # outcome of 1 is 1/10**18 or basically 0, but allows us to still check if outcome is 0 or not to see if an outcome has been set
+    if(ethicOutcome == 0):
+        ethicOutcome = 1
     EVENTS.setEthics(event, ethical)
     closeResult = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
     return(closeResult)

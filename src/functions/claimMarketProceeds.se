@@ -20,8 +20,6 @@
 
 ### This allows users to claim their money from a market by exchanging their shares which hold value
 
-# todo fix getoutcome stuff 0 is a valid outcome... and anywhere getoutcome is used
-
 import branches as BRANCHES
 import markets as MARKETS
 import events as EVENTS
@@ -49,8 +47,6 @@ macro categorical($event):
 # @returns 1 if successful
 # Errors:
     # 0: market not resolved
-#data withdrawInitiated[]
-# todo macro add to getting $ for shares
 def claimProceeds(market):
     refund()
     if(MUTEX.getMutex()):
