@@ -337,6 +337,11 @@ macro scalarOrCategoricalForkResolve():
     if(categorical(event)):
         fxpOutcome = round(fxpOutcome)
     ethicOutcome = safeFxpMul(ONE_HALF, (scaledMax - scaledMin)) + scaledMin
+    # outcome of 1 is 1/10**18 or basically 0, but allows us to still check if outcome is 0 or not to see if an outcome has been set
+    if(ethicOutcome == 0):
+        ethicOutcome = 1
+    if(fxpOutcome == 0):
+        fxpOutcome = 1
     EVENTS.setOutcome(event, fxpOutcome)
     if(mode == ONE_HALF or !ethical):
         # give event bond money to reporters
