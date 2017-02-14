@@ -93,6 +93,7 @@ macro removeTrade($tradeID, $market):
     # -5: trade in same block prohibited
 # amountTakerWants is amount of shares the taker wants to fill
 # picks orders off the book
+# make simpler
 # @return fxp
 def trade(tradeID, amountTakerWants):
     refund()
@@ -128,8 +129,12 @@ def trade(tradeID, amountTakerWants):
     branch = MARKETS.getBranch(market)
         
     cumulativeScale = MARKETS.getCumulativeScale(market)
-    maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent($market, 0))
-    minValue = EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0))
+    maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent(market, 0))
+    minValue = 0
+    if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent(market, 0)) > 2):
+        minValue = ONE
+    else:
+        minValue = EVENTS.getMinValue(MARKETS.getMarketEvent(market, 0))
 
     # Fill buy order
     if(type == BID):
@@ -192,6 +197,11 @@ macro fillBid():
     # must trade at least 0.00000001 in value
     if(value < MIN_TRADE_VALUE):
         throw()
+    # Update trade amount or remove
+    if(sumOfFills < amount):
+        TRADES.fillTrade(tradeID, sumOfFills, safeFxpMul(bidderMoneyFilled, safeSub(price, minValue)), bidderSharesFilled)
+    else:
+        removeTrade(tradeID, market)
 
     balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)        
     # msg.sender owns shares of outcome
@@ -202,7 +212,7 @@ macro fillBid():
     if(remainderToFill):
         # issue asker complete sets for remainder amount and dont charge yet
         i = 1
-        while i < MARKETS.getNumOutcomes($market):
+        while i < MARKETS.getNumOutcomes(market):
             MARKETS.modifyShares(market, i, remainderToFill)
             MARKETS.modifyParticipantShares(market, msg.sender, i, remainderToFill, 0)
             i += 1
@@ -242,12 +252,6 @@ macro fillBid():
     # Sell the asker's [msg.sender] complete sets if they have any
     if(sharesHeld):
         COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegate)
-    
-    # Update trade amount or remove
-    if(sumOfFills < amount):
-        TRADES.fillTrade(tradeIDs[t], sumOfFills, safeFxpMul(bidderMoneyFilled, safeSub(price, minValue)), bidderSharesFilled)
-    else:
-        removeTrade(tradeIDs[t], market)
 
     # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
     log(type = logPrice, market, msg.sender, owner, ASK, price, sumOfFills, block.timestamp, tradeID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
@@ -304,13 +308,25 @@ macro fillAsk():
     if(value < MIN_TRADE_VALUE):
         MUTEX.unsetMutex()
         throw()
+    # Update trade amount or remove
+    if(sumOfFills < amount):
+        TRADES.fillTrade(tradeID, sumOfFills, safeFxpMul(askerMoneyFilled, safeSub(maxValue, price)), askerSharesFilled)
+    else:
+        removeTrade(tradeID, market)
 
     # Transfer cash from user to person who has ask order
     payMaker = INFO.getCurrency(market).transferFrom(msg.sender, owner, valueToSpend)
     if(!payMaker):
         throw()
-                
-    if(msg.sender owns shares of all outcomes besides the one theyre buying):
+
+    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
+    sharesHeld = MAX_INT
+    i = 1
+    while i < MARKETS.getMarketNumOutcomes(market):
+        if(i != outcome):
+            sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, msg.sender, i), sharesHeld)
+        i += 1
+    if(sharesHeld):
         fill = min(sharesOwned, remainderToFill)
         bidderSharesFilled = fill
         remainderToFill = safeSub(remainderToFill, fill)
@@ -342,12 +358,6 @@ macro fillAsk():
         throw()
 
     sellAskerCompleteSetsIfTheyHaveAnyAndGiveMoneyToAsker()
-
-    # Update trade amount or remove
-    if(sumOfFills < amount):
-        TRADES.fillTrade(tradeIDs[t], sumOfFills, safeFxpMul(askerMoneyFilled, safeSub(maxValue, price)), askerSharesFilled)
-    else:
-        removeTrade(tradeIDs[t], market)
 
     # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
     log(type = logPrice, market, msg.sender, owner, BID, price, sumOfFills, block.timestamp, tradeID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
