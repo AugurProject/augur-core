@@ -54,7 +54,6 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     if(!send(BACKSTOPS, msg.value)):
         throw()
     # send the bond to the branch
-    # todo fix this will fail b/c event doesn't have rep acc
     if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
         throw()
     period = BRANCHES.getVotePeriod(branch)
@@ -176,7 +175,6 @@ roundTwoBondCheckPreconditions():
 macro loseBond():
     # lose bond
     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
-    # todo make sure branch has a rep acc.
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), bond)
     # and set final outcome / event bond, etc
     if(!self.resolve(branch, event)):
@@ -189,7 +187,6 @@ macro loseBond():
 macro returnRoundTwoBondInForkScenario():
     # return the bond
     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
-    # todo make sure branch has a rep acc.
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
     BACKSTOPS.setBondReturned(event)
     BACKSTOPS.setRoundTwo(event, 0)
@@ -198,7 +195,6 @@ macro returnRoundTwoBondInForkScenario():
 macro returnBond():
     # return the bond
     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
-    # todo make sure branch has a rep acc.
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
     # and set final outcome / event bond, etc
     if(!self.resolve(branch, event)):

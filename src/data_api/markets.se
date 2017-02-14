@@ -20,7 +20,6 @@
 
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, ]:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256, changeTokens:[int256, int256]:int256, modifySupply:[int256]:int256]
 inset('refund.se')
-#todo remove redundant data
 
 # Markets' index is the market, markets stores data about markets [which are able to be traded on] in augur
     # Events is a 0 indexed array of events in the market in the format of

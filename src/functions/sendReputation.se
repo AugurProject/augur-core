@@ -210,6 +210,10 @@ macro checkInvariants($account):
 macro checkSendRepInvariants():
     if(REPORTING.getReporterID(branch, senderIndex) != from and from == msg.sender):
         CONSENSUS.setPenalizedUpTo(branch, from, (votePeriod - 1))
+        # have 1 month to claim, make so cant make a new acc on a new branch w/o at least trying to claim rep if it's a forked branch if it's a fork one and reporter was in old branch todo
+        BRANCHES.getParent(branch)
+    	tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
+
         REPORTING.addReporter(branch, from)
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()

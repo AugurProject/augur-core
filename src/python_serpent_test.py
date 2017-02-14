@@ -549,7 +549,6 @@ def test_close_market():
     assert((newK - origK)==10*ONE), "Didn't get 10 back from selling winning shares"
     assert(c.balance(bin_market2)==0), "Payouts not done successfully"
     assert(c.balance(sender)==10000*ONE)
-    # todo check winning outcomes
     gas_use(s)
     gas_use(s)
     print "Test close market OK"

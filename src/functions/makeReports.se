@@ -70,7 +70,6 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()
-    # todo perhaps increment period by default if not done
     branch = EVENTS.getBranch(event)
     votePeriod = BRANCHES.getVotePeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -147,12 +146,11 @@ def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, f
 
 ### Helper functions:
 # calculates how many reports should be on a given event
-# todo make sure max cost is actually 500k gas here
 # whitelist
 # @return fxp
 def calculateReportTargetForEvent(branch, event, votePeriod, sender):
     numMarkets = EVENTS.getNumMarkets(event)
-    # we should prob todo switch this to when we send fees don't add to a market but rather the event associated w/ the market, then assign reporters based on fees on event / total fees for all events, this'll save cost and be more appropriate for what we actually want
+    # todo we should prob switch this to when we send fees don't add to a market but rather the event associated w/ the market, then assign reporters based on fees on event / total fees for all events, this'll save cost and be more appropriate for what we actually want
     if(numMarkets > MARKETS_COUNTING_TOWARDS_SHARE_VALUE):
         numMarkets = MAREKTS_COUNTING_TOWARDS_SHARE_VALUE
     markets = array(numMarkets)
@@ -207,7 +205,6 @@ macro checkSubmitReportPreconditions():
     if(fxpEthics != ONE and fxpEthics != 0):
         MUTEX.unsetMutex()
         logReturn(makeReportsLogReturn, -5)
-    # todo get outcome may not work / be valid due to 0 outcome being valid?
     if(EVENTS.getOutcome(event) != 0):
         MUTEX.unsetMutex()
         logReturn(makeReportsLogReturn, -6)

@@ -53,17 +53,16 @@ macro POINT_ONE: 100000000000000000
     # -4: already done for all events in this period
     # -5: forked events should be penalized using the fork penalization function
     # -6: no outcome
-    # -7: needed to collect fees last period [but didn't] which sets the before/after rep so now have to call penalizationCatchup - todo fix this, maybe call pencatchup or let anyone call pencatchup
+    # -7: needed to collect fees last period [but didn't] which sets the before/after rep so now have to call penalizationCatchup
     # -8: invalid branch
 # force event to be resolved first if it can be
-# call with branch, 0 if no events --- todo handle this
+# call with branch and 0 for the event if no events in a given period [otherwise user won't be "penalized up to" for this period]
 def penalizeWrong(branch, event):
     refund()
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()
 
-    # todo perhaps increment period by default if not done
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -106,7 +105,6 @@ def penalizeWrong(branch, event):
 
 # Increments the period after reporting
 # ui has to call this to stay cheap / not check it elsewhere
-# factor out todo
 def incrementPeriodAfterReporting(branch):
     refund()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
@@ -142,7 +140,6 @@ macro checkPenalizeWrongPreconditions():
         MUTEX.unsetMutex()
         logReturn(consensusLogReturn, 0)
     p = proportionCorrect(event, 0)
-    # todo fix
     if(roundTwo and outcome != 0):
         MUTEX.unsetMutex()
         logReturn(consensusLogReturn, -1)

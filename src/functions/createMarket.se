@@ -420,9 +420,8 @@ def challengeInitialResolution(event):
 
 macro payExtraBond():
     baseReporters = BRANCHES.getBaseReporters(branch)
-    # todo change this to be based off of reporting costs for market given outstanding shares
     amount = safeFxpDiv(5*COST_PER_REPORTER * baseReporters * tx.gasprice, WEI_TO_ETH)
-    if(!currency.transferFrom(msg.sender, wallet, amount)):
+    if(!currency.transferFrom(msg.sender, INFO.getWallet(event), amount)):
         throw()
     EVENTS.setExtraBond(event, amount)
 

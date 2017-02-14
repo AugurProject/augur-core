@@ -124,7 +124,7 @@ def closeChallengeBond(event):
     forkPeriod = BRANCHES.getForkPeriod(branch)
     forking = forkPeriod == votePeriod or votePeriod == (forkPeriod + 1)
     if(BACKSTOPS.getRoundTwo(event) or forking):
-        returnBond()
+        returnBond() from event wallet
     if(!EVENTS.getOutcome(event)):
         throw()
     if(EVENTS.getFirstPreliminaryOutcome(event) == EVENTS.getOutcome(event)):
@@ -132,5 +132,5 @@ def closeChallengeBond(event):
 
     # outcome is different
     else:
-        returnBond + pay half of validity bond to challenger [but it's already been paid back to event creator by now, todo fixs]
+        returnBond + pay half of validity bond to challenger [but it's already been paid back to event creator by now, todo fixes]
     return(1)

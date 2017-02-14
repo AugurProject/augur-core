@@ -240,7 +240,6 @@ macro returnRoundTwoBond():
     BACKSTOPS.setBondReturned(event)
 
 macro checkMoveEventPreconditions():
-    # todo getoutcome may not work
     if(!branch or !event or currentPeriod != (forkPeriod + 2) or EVENTS.getOutcome(event) or BACKSTOPS.getMoved(event)):
         MUTEX.unsetMutex()
         return(0)

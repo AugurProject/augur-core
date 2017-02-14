@@ -42,7 +42,6 @@ macro MIN_BOND: 200 * ONE
     # -8: not able to be reported on
 # force event to be resolved first if it can be
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized
-# refactor
 def penalizeRoundTwoWrong(branch, event):
     refund()
     if(MUTEX.getMutex()):
