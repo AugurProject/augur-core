@@ -25,7 +25,6 @@ macro MIN_BOND: 200 * ONE
     # some rep from this goes to bond poster
     # branch is the fork, not the parent
     # fork event needs to be resolved first before this can be called
-# todo perhaps prevent people from calling this on parent [to prevent user error]
 # Errors:
     #  0: not enough rep to report/penalize
     # -1: period shouldve been incremented
@@ -33,13 +32,12 @@ macro MIN_BOND: 200 * ONE
     # -3: fork event isn't resolved yet
     # -4: already done for all events in this period
     # -5: needed to collect fees last period which sets the before/after rep
-    # -6: event branch is invalid/doesn't match [maybe user called on parent branch / not winning by accident]
+    # -6: only should be called on fork child branch, not the parent
 def penalizeOnForkedEvent(branch, event):
     refund()
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()
-
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriodVotedOn = BRANCHES.getVotePeriod(branch) - 1
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -82,7 +80,8 @@ macro checkForkPenalizationPreconditions():
     if(!CONSENSUS.getRepCollected(branch, msg.sender, lastPeriodVotedOn - 1)):
         MUTEX.unsetMutex()
         return(-5)
-    if(EVENTS.getEventBranch(event) != branch):
+    branchIsParent = BRANCHES.getEventForkedOver(branch) == event
+    if(branchIsParent):
         MUTEX.unsetMutex()
         return(-6)
 
