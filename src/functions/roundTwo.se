@@ -167,8 +167,7 @@ roundTwoBondCheckPreconditions():
         return(-2)
     if(noVotes()):
         return(-4)
-    # todo find actual cost
-    if(msg.value < 500000 * tx.gasprice):
+    if(msg.value < 1000000 * tx.gasprice):
         MUTEX.unsetMutex()
         return(-3)
 

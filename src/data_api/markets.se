@@ -182,7 +182,7 @@ macro sharesPurchased($market):
     market($market).sharesPurchased
 
 # check that msg.sender is one of our function contracts
-def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpcumulativeScale, numOutcomes, extraInfo: str, \, fxpCreationFee, lastExpDate, shareContracts: arr):
+def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpcumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add event list to the market

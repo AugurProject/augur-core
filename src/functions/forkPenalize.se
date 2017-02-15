@@ -109,13 +109,23 @@ macro handleEthicsAndBondRepRedistribution($numReportedOn):
     # can only lose max of current balance
     if(repBalance + repChange <= 0):
         repChange = -1 * repBalance
-    # todo fix for this can go over 2x bond, not supposed to: we don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
+    # We don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
     if(BACKSTOPS.getForkBondPaid(event) < BACKSTOPS.getBondAmount(event) * 2 and repChange < 0):
-        # done instead of sending to redistrib. pool
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
-        # sends that rep to the bonded challenger
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(event)), -repChange)
-        BACKSTOPS.adjForkBondPaid(event, -repChange)
+        amountLeftToPayBonder = 2 * BACKSTOPS.getBondAmount(event) - BACKSTOPS.getForkBondPaid(event)
+        if(-repChange < amountLeftToPayBonder):
+            # done instead of sending to redistrib. pool
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
+            # sends that rep to the bonded challenger
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(event)), -repChange)
+            BACKSTOPS.adjForkBondPaid(event, (-repChange))
+        elif(amountLeftToPayBonder > 0):
+            # done instead of sending to redistrib. pool
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), -amountLeftToPayBonder)
+            # sends that rep to the bonded challenger
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(event)), amountLeftToPayBonder)
+            BACKSTOPS.adjForkBondPaid(event, amountLeftToPayBonder)
+            newAfterRep = safeAdd(EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender), -(-repChange - amountLeftToPayBonder)
+            EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
     # no need to pay bond poster
     else:
         newAfterRep = safeAdd(EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender), repChange)
