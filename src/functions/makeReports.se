@@ -187,7 +187,7 @@ macro checkSubmitReportHashPreconditions():
         EXPEVENTS.setNumEventsToReportOn(branch)
 
 macro checkSubmitReportPreconditions():
-    if(BRANCHES.getEventForkedOver(branch) == event):
+    if(BRANCHES.getEventForkedOver(BRANCHES.getParent(branch)) == event):
         forkedOverThisEvent = 1
     if(roundTwo or forkedOverThisEvent):
         weight = balance

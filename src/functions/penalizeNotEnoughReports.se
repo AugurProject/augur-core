@@ -7,7 +7,7 @@ import reporting as REPORTING
 import reportingThreshold as THRESHOLD
 import fxpFunctions as FXP
 import mutex as MUTEX
-
+=   
 inset('../data_api/refund.se')
 inset('../data_api/periodStage.se')
 inset('../data_api/float.se')
@@ -95,7 +95,9 @@ macro redistributeNotEnoughReportsRep():
     if(repChange > 0):
         MUTEX.unsetMutex()
         return(1)
-    # todo fix issues here w/ withdrawing too much rep and redistribution before/after/etc
+    repBalance = REPORTING.getRepBalance(branch, reporter)
+    if(repBalance + repChange <= 0):
+        repChange = -1 * repBalance
     # removes rep from reporter who lost it
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, reporter), repChange)
     # sends that rep to the branch rep pool
