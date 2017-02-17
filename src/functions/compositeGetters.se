@@ -80,8 +80,8 @@ def getAccountOrderBook(marketID, account):
 def getMarketInfo(marketID, account):
     refund()
     index = BASE_FIELDS
-    descriptionLength = INFO.getDescriptionLength(marketID)
     eventID = MARKETS.getMarketEvent(marketID, 0)
+    descriptionLength = INFO.getDescriptionLength(eventID)
     resolutionLength = EVENTS.getResolutionLength(eventID)
     extraInfoLength = MARKETS.getExtraInfoLength(marketID)
     numOutcomes = MARKETS.getMarketNumOutcomes(marketID)
@@ -128,7 +128,7 @@ def getMarketInfo(marketID, account):
     # append description character codes
     marketInfo[index] = descriptionLength
     index += 1
-    description = INFO.getDescription(marketID, outchars=descriptionLength)
+    description = INFO.getDescription(eventID, outchars=descriptionLength)
     c = 0
     while c < descriptionLength:
         marketInfo[index + c] = getch(description, c)
@@ -164,8 +164,8 @@ def batchGetMarketInfo(marketIDs: arr, account):
     i = 0
     while i < numMarkets:
         marketID = marketIDs[i]
-        descriptionLength = INFO.getDescriptionLength(marketID)
         eventID = MARKETS.getMarketEvent(marketID, 0)
+        descriptionLength = INFO.getDescriptionLength(eventID)
         resolutionLength = EVENTS.getResolutionLength(eventID)
         extraInfoLength = MARKETS.getExtraInfoLength(marketID)
         numOutcomes = MARKETS.getMarketNumOutcomes(marketID)
@@ -219,7 +219,8 @@ def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
     totalLen = totalMarkets*16
     m = 0
     while m < totalMarkets:
-        descriptionLengths[m] = INFO.getDescriptionLength(marketIDs[m])
+        eventID = MARKETS.getMarketEvent(marketIDs[m], 0)
+        descriptionLengths[m] = INFO.getDescriptionLength(eventID)
         totalLen += descriptionLengths[m]
         m += 1
     marketsInfo = array(totalLen + 1)
@@ -249,7 +250,7 @@ def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
         marketsInfo[c + 13] = EVENTS.getMaxValue(eventID)
         marketsInfo[c + 14] = EVENTS.getNumOutcomes(eventID)
         marketsInfo[c + 15] = EVENTS.getOutcome(eventID)
-        description = INFO.getDescription(marketID, outchars=descriptionLength)
+        description = INFO.getDescription(eventID, outchars=descriptionLength)
         c += 16
         d = 0
         while d < descriptionLength:
