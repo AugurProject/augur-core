@@ -147,17 +147,32 @@ macro dealWithWhaleReporters():
 
 
 # If anyone w/ 1 rep or more in active rep could've reported in a period but didn't enough they need to be penalized.  
-# Loop through the list of all reporters in a period and branch and check their expected minimum number of events to report on, if they've reported on less than this then find an example event they could've reported on but didn't, then return those addresses and events
-def findLazyReportersAndLeechers(branch, votePeriod, reporter):
-    beforeRep = EXPEVENTS.getBeforeRep(branch, votePeriod, reporter)
-    i = 0
-    while i < REPORTING.getNumberReporters(branch):
+# Loop through the list of all active reporters in a period and branch and check their expected minimum number of events to report on, if they've reported on less than this then find an example event they could've reported on but didn't, then return those addresses and events
+def findLazyReportersAndLeechers(branch, votePeriod, reporterStart, reporterEnd, eventStart, eventEnd):
+    if(reporterEnd == 0):
+        reporterEnd = EXPEVENTS.getNumActiveReporters(branch, votePeriod)
+    numberReportersChecking = (reporterEnd - reporterStart)
+    activeReporters = array(numberReportersChecking)
+    activeReporters = EXPEVENTS.getActiveReporters(branch, votePeriod, reporterStart, reporterEnd, outitems = numberReportersChecking)
+    lazyReportersAndExampleEventsTheyCouldveReportedOn = array(numberReportersChecking * 2)
+    reporterIndex = 0
+    leecherIndex = 0
+    while(reporterIndex < numberReportersChecking):
+        reporter = activeReporters[reporterIndex]
         if(EXPEVENTS.getNumReportsSubmitted(branch, votePeriod, reporter) < self.calculateNumberOfEventsAReporterHasToReportOnAtMinimum(branch, reporter, votePeriod)):
-            EXPEVENTS.getEventsRange()
-            EXPEVENTS.getNumberEvents(branch, period)
-            def getEvents(branch, period):
-
-def getEventsRange(branch, period, start, end):
-            
-            self.getEventCanReportOn(branch, period, reporter, event)
-        
+            if(eventEnd == 0):
+                eventEnd = EXPEVENTS.getNumberEvents(branch, votePeriod)
+            numberEventsChecking = eventEnd - eventStart
+            events = array(numberEventsChecking)
+            events = EXPEVENTS.getEventsRange(branch, votePeriod, eventStart, eventEnd, outitems = numberEventsChecking)
+            eventIndex = 0
+            while(eventIndex < numberEventsChecking):
+                if(self.getEventCanReportOn(branch, votePeriod, reporter, events[e])
+                    lazyReportersAndExampleEventsTheyCouldveReportedOn[leecherIndex] = reporter
+                    lazyReportersAndExampleEventsTheyCouldveReportedOn[leecherIndex+1] = events[e]
+                    leecherIndex += 2
+                    eventIndex = numberEventsChecking
+                else:
+                    eventIndex += 1
+        reporterIndex += 1
+    return(slice(lazyReportersAndExampleEventsTheyCouldveReportedOn, items=0, items=leecherIndex): arr)

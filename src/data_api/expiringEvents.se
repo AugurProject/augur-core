@@ -321,3 +321,6 @@ def getActiveReporters(branch, period, from, to):
             reporters[i] = self.reporterPeriodInfo[branch][period].reporters[i]
             i += 1
         return(reporters: arr)
+
+def getNumActiveReporters(branch, period):
+    return(self.reporterPeriodInfo[branch][period].numberOfActiveReporters)
