@@ -367,7 +367,7 @@ def test_create_branch():
     c.cashFaucet()
     event1 = c.createEvent(b, "new event", s.block.timestamp+50, ONE, TWO, 2, "hehe")
     print hex(event1)
-    bin_market = c.createMarket(b, "new market", 2**58, [event1], 1, 2, 3, 2**60, "hehehe", value=10**18)
+    bin_market = c.createMarket(b, 2**58, [event1], 1, 2, 3, 2**60, "hehehe", value=10**18)
     print hex(bin_market)
     print "Test branch OK"
 
@@ -433,8 +433,8 @@ def test_trading():
         assert(f>0 or f<-9), "binary Event creation broken"
         feeSplit = int(random.random()*HALF)
         gas_use(s)
-        bin_market = c.createMarket(1010101, "new market", 184467440737095516, e, 1, 2, 3, feeSplit, "yayaya", value=10**19)
-        cat_market = c.createMarket(1010101, "new markesst", 184467440737095516, f, 4, 2, 3, feeSplit, "yayaya", value=10**19)
+        bin_market = c.createMarket(1010101, 184467440737095516, e, 1, 2, 3, feeSplit, "yayaya", value=10**19)
+        cat_market = c.createMarket(1010101, 184467440737095516, f, 4, 2, 3, feeSplit, "yayaya", value=10**19)
         print "Market creation gas use"
         print gas_use(s)
         assert(bin_market>0 or bin_market<-9), "market creation broken"
@@ -667,13 +667,13 @@ def test_close_market():
         i += 1
     blocktime = s.block.timestamp
     event1 = c.createEvent(1010101, "new event", blocktime+1, ONE, TWO, 2, "ok")
-    bin_market = c.createMarket(1010101, "new market", 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market = c.createMarket(1010101, 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
     event2 = c.createEvent(1010101, "new ok event", blocktime+1, ONE, TWO, 2, "ok")
-    bin_market2 = c.createMarket(1010101, "new mfsatrket", 184467440737095516, event2, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market2 = c.createMarket(1010101, 184467440737095516, event2, 1, 2, 3, 0, "yayaya", value=10**19)
     event3 = c.createEvent(1010101, "new sdok event", blocktime+1, ONE, TWO, 2, "ok")
-    bin_market3 = c.createMarket(1010101, "new msatrket", 184467440737095516, event3, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market3 = c.createMarket(1010101, 184467440737095516, event3, 1, 2, 3, 0, "yayaya", value=10**19)
     event4 = c.createEvent(1010101, "newsdf sdok event", blocktime+1, ONE, TWO, 2, "ok")
-    bin_market4 = c.createMarket(1010101, "a matrket", 184467440737095516, event4, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market4 = c.createMarket(1010101, 184467440737095516, event4, 1, 2, 3, 0, "yayaya", value=10**19)
 
     # categorical
     event5 = c.createEvent(1010101, "new sdokdf event", blocktime+1, ONE, 5*ONE, 3, "ok")
@@ -760,13 +760,13 @@ def test_consensus():
     c.reputationFaucet(1010101)
     blocktime = s.block.timestamp
     event1 = c.createEvent(1010101, "new event", blocktime+1, ONE, 2*ONE, 2, "www.roflcopter.com")
-    bin_market = c.createMarket(1010101, "new market", 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market = c.createMarket(1010101, 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
     event2 = c.createEvent(1010101, "new eventt", blocktime+1, ONE, 2*ONE, 2, "buddyholly.com")
-    bin_market2 = c.createMarket(1010101, "new madrket", 184467440737095516, event2, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market2 = c.createMarket(1010101, 184467440737095516, event2, 1, 2, 3, 0, "yayaya", value=10**19)
     event3 = c.createEvent(1010101, "new eventt3", blocktime+1, ONE, 2*ONE, 5, "buddyholly.com")
     event4 = c.createEvent(1010101, "new eventt4", blocktime+1, 0, 250*ONE, 2, "buddyholly.com")
-    catmarket = c.createMarket(1010101, "newsd madrket", 184467440737095516, event3, 1, 2, 3, 0, "yayaya", value=10**19)
-    scalarmarket = c.createMarket(1010101, "nescw madrket", 184467440737095516, event4, 1, 2, 3, 0, "yayaya", value=10**19)
+    catmarket = c.createMarket(1010101, 184467440737095516, event3, 1, 2, 3, 0, "yayaya", value=10**19)
+    scalarmarket = c.createMarket(1010101, 184467440737095516, event4, 1, 2, 3, 0, "yayaya", value=10**19)
     s.mine(1)
     periodLength = c.getPeriodLength(1010101)
     i = c.getVotePeriod(1010101)
@@ -895,15 +895,15 @@ def test_consensus_multiple_reporters():
     cindeterminateevent = c.createEvent(1010101, "sssnew evgentt3", blocktime+1, ONE, 2*ONE, 5, "buddyholly.com")
     sindeterminateevent = c.createEvent(1010101, "aanewg eventt4", blocktime+1, 0, 250*ONE, 2, "buddyholly.com")
     
-    binmarket = c.createMarket(1010101, "new market", 184467440737095516, bevent, 1, 2, 3, 0, "yayaya", value=10**19)
-    binmarketunethical = c.createMarket(1010101, "new madrket", 184467440737095516, bunethicalevent, 1, 2, 3, 0, "yayaya", value=10**19)
-    binmarketindeterminate = c.createMarket(1010101, "new amadrket", 184467440737095516, bindeterminateevent, 1, 2, 3, 0, "yayaya", value=10**19)
-    catmarket = c.createMarket(1010101, "newsd madrket", 184467440737095516, cevent, 1, 2, 3, 0, "yayaya", value=10**19)
-    scalarmarket = c.createMarket(1010101, "nescw madrket", 184467440737095516, sevent, 1, 2, 3, 0, "yayaya", value=10**19)
-    catmarketunethical = c.createMarket(1010101, "newsdsfs madrggket", 184467440737095516, cunethicalevent, 1, 2, 3, 0, "yayaya", value=10**19)
-    scalarmarketunethical = c.createMarket(1010101, "nescwsfss madrket", 184467440737095516, sunethicalevent, 1, 2, 3, 0, "yayaya", value=10**19)
-    catmarketindeterminate = c.createMarket(1010101, "newsd mabasdrket", 184467440737095516, cindeterminateevent, 1, 2, 3, 0, "yayaya", value=10**19)
-    scalarmarketindeterminate = c.createMarket(1010101, "aaaaaanewrscw madrket", 184467440737095516, sindeterminateevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    binmarket = c.createMarket(1010101, 184467440737095516, bevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    binmarketunethical = c.createMarket(1010101, 184467440737095516, bunethicalevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    binmarketindeterminate = c.createMarket(1010101, 184467440737095516, bindeterminateevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    catmarket = c.createMarket(1010101, 184467440737095516, cevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    scalarmarket = c.createMarket(1010101, 184467440737095516, sevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    catmarketunethical = c.createMarket(1010101, 184467440737095516, cunethicalevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    scalarmarketunethical = c.createMarket(1010101, 184467440737095516, sunethicalevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    catmarketindeterminate = c.createMarket(1010101, 184467440737095516, cindeterminateevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    scalarmarketindeterminate = c.createMarket(1010101, 184467440737095516, sindeterminateevent, 1, 2, 3, 0, "yayaya", value=10**19)
     s.mine(1)
     periodLength = c.getPeriodLength(1010101)
     i = c.getVotePeriod(1010101)
@@ -1157,9 +1157,9 @@ def test_slashrep():
     c.reputationFaucet(1010101)
     blocktime = s.block.timestamp
     event1 = c.createEvent(1010101, "new event", blocktime+1, ONE, TWO, 2, "ok")
-    bin_market = c.createMarket(1010101, "new market", 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market = c.createMarket(1010101, 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
     event2 = c.createEvent(1010101, "new eventt", blocktime+1, ONE, TWO, 2, "ok")
-    bin_market2 = c.createMarket(1010101, "new market2", 184467440737095516, event2, 1, 2, 3, 0, "ayayaya", value=10**19)
+    bin_market2 = c.createMarket(1010101, 184467440737095516, event2, 1, 2, 3, 0, "ayayaya", value=10**19)
     i = c.getVotePeriod(1010101)
     while i < (int((blocktime+1)/c.getPeriodLength(1010101))):
         c.incrementPeriod(1010101)
@@ -1256,9 +1256,9 @@ def test_catchup():
     print blocktime / 15
     assert(isclose(c.getRepBalance(1010101, s.block.coinbase)/ONE, 47*.9**diffInPeriods*ONE/ONE))
     event1 = c.createEvent(1010101, "new event", blocktime+1, ONE, TWO, 2, "ok")
-    bin_market = c.createMarket(1010101, "new market", 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market = c.createMarket(1010101, 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
     event2 = c.createEvent(1010101, "new eventt", blocktime+1, ONE, TWO, 2, "ok")
-    bin_market2 = c.createMarket(1010101, "new market2", 184467440737095516, event2, 1, 2, 3, 0, "ayayaya", value=10**19)
+    bin_market2 = c.createMarket(1010101, 184467440737095516, event2, 1, 2, 3, 0, "ayayaya", value=10**19)
     report_hash = c.makeHash(0, ONE, event1, s.block.coinbase)
     report_hash2 = c.makeHash(0, 2*ONE, event2, s.block.coinbase)
     i = c.getVotePeriod(1010101)
@@ -1339,9 +1339,9 @@ def test_market_pushback():
     c.reputationFaucet(1010101)
     blocktime = s.block.timestamp
     event1 = c.createEvent(1010101, "new event", blocktime+10000, ONE, 2*ONE, 2, "www.roflcopter.com")
-    bin_market = c.createMarket(1010101, "new market", 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market = c.createMarket(1010101, 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
     event2 = c.createEvent(1010101, "new eventa", blocktime+10000, ONE, 2*ONE, 2, "www.roflcopter.coms")
-    bin_market2 = c.createMarket(1010101, "new vmarket", 184467440737095516, event2, 1, 2, 3, 0, "yayayam", value=10**19)
+    bin_market2 = c.createMarket(1010101, 184467440737095516, event2, 1, 2, 3, 0, "yayayam", value=10**19)
     c.buyCompleteSets(bin_market, TWO)
     c.buyCompleteSets(bin_market2, TWO)
     c.pushMarketForward(1010101, bin_market)
@@ -1469,9 +1469,9 @@ def test_pen_not_enough_reports():
     c.reputationFaucet(1010101)
     blocktime = s.block.timestamp
     event1 = c.createEvent(1010101, "new event", blocktime+1, ONE, 2*ONE, 2, "www.roflcopter.com")
-    bin_market = c.createMarket(1010101, "new market", 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market = c.createMarket(1010101, 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
     event2 = c.createEvent(1010101, "new eventt", blocktime+1, ONE, 2*ONE, 2, "buddyholly.com")
-    bin_market2 = c.createMarket(1010101, "new madrket", 184467440737095516, event2, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market2 = c.createMarket(1010101, 184467440737095516, event2, 1, 2, 3, 0, "yayaya", value=10**19)
     c.buyCompleteSets(bin_market, TWO)
     c.buyCompleteSets(bin_market2, TWO)
     c.incrementPeriod(1010101)
@@ -1502,8 +1502,8 @@ def test_update_trading_fee():
     event1 = c.createEvent(1010101, "new event", blocktime+1, ONE, 2*ONE, 2, "www.roflcopter.com")
     tradingFee = 120000000000000000  #.12
     makerFee = 250000000000000000  #.25
-    # market = CREATEMARKET.createMarket(1010101, "new market", tradingFee, event1, 1, 2, 3, makerFee, "yayaya", value=10**19)
-    market = c.createMarket(1010101, "new market", tradingFee, event1, 1, 2, 3, makerFee, "yayaya", value=10**19)
+    # market = CREATEMARKET.createMarket(1010101, tradingFee, event1, 1, 2, 3, makerFee, "yayaya", value=10**19)
+    market = c.createMarket(1010101, tradingFee, event1, 1, 2, 3, makerFee, "yayaya", value=10**19)
     tradingFee = 110000000000000000 #.11
     makerFee = 220000000000000000 #.22
     #test valid tradingFees
@@ -1533,7 +1533,7 @@ def test_update_trading_fee():
 def sell_gas(s, c):
     s.mine(1)
     event1 = c.createEvent(1010101, "new event a", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-    market = c.createMarket(1010101, "new market a", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
     assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
     assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
     s.mine(1)
@@ -1545,7 +1545,7 @@ def sell_gas(s, c):
 def buy_gas(s, c):
     s.mine(1)
     event1 = c.createEvent(1010101, "new event b", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-    market = c.createMarket(1010101, "new market b", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
     assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
     assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
     s.mine(1)
@@ -1556,7 +1556,7 @@ def buy_gas(s, c):
 def cancel_gas(s, c):
     s.mine(1)
     event1 = c.createEvent(1010101, "new event b", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-    market = c.createMarket(1010101, "new market b", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
     assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
     s.mine(1)
     c.buy(ONE, ONE, market, 1)
@@ -1577,7 +1577,7 @@ def cancel_gas(s, c):
 def short_sell_gas(s, c):
     s.mine(1)
     event1 = c.createEvent(1010101, "new event c", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-    market = c.createMarket(1010101, "new market c", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
     assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
     assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
     s.mine(1)
@@ -1596,7 +1596,7 @@ def short_sell_gas(s, c):
 def shortAsk_gas(s, c):
     s.mine(1)
     event1 = c.createEvent(1010101, "new event c", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-    market = c.createMarket(1010101, "new market c", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
     assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
     assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
     s.mine(1)
@@ -1607,7 +1607,7 @@ def shortAsk_gas(s, c):
 def buyCompleteSets_gas(s, c):
     s.mine(1)
     event1 = c.createEvent(1010101, "new event d", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-    market = c.createMarket(1010101, "new market d", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
     assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
     assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
     s.mine(1)
@@ -1618,7 +1618,7 @@ def buyCompleteSets_gas(s, c):
 def sellCompleteSets_gas(s, c):
     s.mine(1)
     event1 = c.createEvent(1010101, "new event e", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-    market = c.createMarket(1010101, "new market e", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
     assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
     assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
     s.mine(1)
@@ -1634,7 +1634,7 @@ def calculate_max_asks(s, c, gas_limit):
     while gas_used < gas_limit:
         num_trades += 1
         event1 = c.createEvent(1010101, "new event", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-        market = c.createMarket(1010101, "new market", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+        market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
         assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
         assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
         s.mine(1)
@@ -1659,7 +1659,7 @@ def calculate_max_bids(s, c, gas_limit):
     while gas_used < gas_limit:
         num_trades += 1
         event1 = c.createEvent(1010101, "new event", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-        market = c.createMarket(1010101, "new market", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+        market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
         assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
         assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
         s.mine(1)
@@ -1723,13 +1723,13 @@ if __name__ == '__main__':
     os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
     # data/api tests
     #test_trades()
-    test_topics()
+    #test_topics()
     #test_cash()
     #test_ether()
     #test_log_exp()
     #test_exp()
     #test_markets()
-    #test_reporting()
+    test_reporting()
 
     # function tests
     #test_trading()
