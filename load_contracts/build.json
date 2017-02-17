@@ -2366,6 +2366,8 @@
             "BACKSTOPS = 0x708fdfe18bf28afe861a69e95419d183ace003eb", 
             "extern eventResolution: [determineWinningOutcomes:[int256]:int256[], resolveBinary:[int256,int256,int256,int256]:int256, resolveCategoricalOrScalar:[int256,int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]", 
             "RESOLVE = 0x3f3276849a878a176b2f02dd48a483e8182a49e4", 
+            "extern refund.se: [getNumTopicsInBranch:[int256]:int256, getTopicPopularity:[int256,int256]:int256, getTopicsInBranch:[int256,int256,int256]:int256[], getTopicsInfo:[int256,int256,int256]:int256[], test_callstack:[]:int256, updateTopicPopularity:[int256,int256,int256]:int256]", 
+            "TOPICS = 0x8caf2c0ce7cdc2e81b58f74322cefdef440b3f8d", 
             "inset('refund.se')", 
             "inset('logReturn.se')", 
             "", 
@@ -2450,6 +2452,8 @@
             "        MARKETS.setWinningOutcomes(market, winningOutcomes)", 
             "        # refunds closing cost", 
             "        MARKETS.refundClosing(market, sender)", 
+            "        tags = MARKETS.returnTags(market, outitems=3)", 
+            "        TOPICS.updateTopicPopularity(branch, tags[0], -1*MARKETS.getVolume(market))", 
             "        log(type=closedMarket, market, branch, sender)", 
             "        logReturn(closeMarket_logReturn, 1)", 
             "    else:", 
@@ -10098,7 +10102,7 @@
             "#    along with this program.  If not, see <http://www.gnu.org/licenses/>.", 
             "# Any questions please contact joey@augur.net", 
             "", 
-            "extern refund.se: [getNumTopicsInBranch:[int256]:int256, getTopicPopularity:[int256,int256]:int256, getTopicsInBranch:[int256,int256,int256]:int256[], getTopicsInfo:[int256,int256,int256]:int256[], increaseTopicPopularity:[int256,int256,int256]:int256, test_callstack:[]:int256]", 
+            "extern refund.se: [getNumTopicsInBranch:[int256]:int256, getTopicPopularity:[int256,int256]:int256, getTopicsInBranch:[int256,int256,int256]:int256[], getTopicsInfo:[int256,int256,int256]:int256[], test_callstack:[]:int256, updateTopicPopularity:[int256,int256,int256]:int256]", 
             "TOPICS = 0x8caf2c0ce7cdc2e81b58f74322cefdef440b3f8d", 
             "", 
             "inset('refund.se')", 
@@ -10307,7 +10311,7 @@
             "        amount = -1*amount", 
             "    self.Markets[marketID].volume += amount", 
             "    if(self.Markets[marketID].tag1):", 
-            "        TOPICS.increaseTopicPopularity(self.Markets[marketID].branch, self.Markets[marketID].tag1, amount)", 
+            "        TOPICS.updateTopicPopularity(self.Markets[marketID].branch, self.Markets[marketID].tag1, amount)", 
             "    return(1)", 
             "", 
             "def setWinningOutcomes(market, outcomes: arr):", 
@@ -14351,7 +14355,7 @@
             "def getNumTopicsInBranch(branch):", 
             "    return(self.Topics[branch].numTopics)", 
             "", 
-            "def increaseTopicPopularity(branch, topic, fxpAmount):", 
+            "def updateTopicPopularity(branch, topic, fxpAmount):", 
             "    refund()", 
             "    # if(!self.whitelist.check(msg.sender)):", 
             "    #    return(-1)", 
@@ -14452,6 +14456,18 @@
             }, 
             {
                 "constant": false, 
+                "inputs": [], 
+                "name": "test_callstack()", 
+                "outputs": [
+                    {
+                        "name": "out", 
+                        "type": "int256"
+                    }
+                ], 
+                "type": "function"
+            }, 
+            {
+                "constant": false, 
                 "inputs": [
                     {
                         "name": "branch", 
@@ -14466,19 +14482,7 @@
                         "type": "int256"
                     }
                 ], 
-                "name": "increaseTopicPopularity(int256,int256,int256)", 
-                "outputs": [
-                    {
-                        "name": "out", 
-                        "type": "int256"
-                    }
-                ], 
-                "type": "function"
-            }, 
-            {
-                "constant": false, 
-                "inputs": [], 
-                "name": "test_callstack()", 
+                "name": "updateTopicPopularity(int256,int256,int256)", 
                 "outputs": [
                     {
                         "name": "out", 
@@ -14488,7 +14492,7 @@
                 "type": "function"
             }
         ], 
-        "sig": "extern refund.se: [getNumTopicsInBranch:[int256]:int256, getTopicPopularity:[int256,int256]:int256, getTopicsInBranch:[int256,int256,int256]:int256[], getTopicsInfo:[int256,int256,int256]:int256[], increaseTopicPopularity:[int256,int256,int256]:int256, test_callstack:[]:int256]"
+        "sig": "extern refund.se: [getNumTopicsInBranch:[int256]:int256, getTopicPopularity:[int256,int256]:int256, getTopicsInBranch:[int256,int256,int256]:int256[], getTopicsInfo:[int256,int256,int256]:int256[], test_callstack:[]:int256, updateTopicPopularity:[int256,int256,int256]:int256]"
     }, 
     "trade": {
         "address": "0xd2e9f7c2fd4635199b8cc9e8128fc4d27c693945", 

@@ -26,6 +26,7 @@ import events as EVENTS
 import payout as PAYOUT
 import backstops as BACKSTOPS
 import eventResolution as RESOLVE
+import topics as TOPICS
 inset('refund.se')
 inset('logReturn.se')
 
@@ -110,6 +111,8 @@ def closeMarket(branch, market, sender):
         MARKETS.setWinningOutcomes(market, winningOutcomes)
         # refunds closing cost
         MARKETS.refundClosing(market, sender)
+        tags = MARKETS.returnTags(market, outitems=3)
+        TOPICS.updateTopicPopularity(branch, tags[0], -1*MARKETS.getVolume(market))
         log(type=closedMarket, market, branch, sender)
         logReturn(closeMarket_logReturn, 1)
     else:

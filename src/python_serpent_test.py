@@ -27,7 +27,7 @@ def test_topics():
     assert(c.getTopicPopularity(branchID, topic1) == 0), "Popularity not equal to zero"
     assert(len(c.getTopicsInfo(branchID)) == 0), "Topics info array not empty"
 
-    assert(c.increaseTopicPopularity(branchID, topic1, ONE) == 1), "Add popularity failed"
+    assert(c.updateTopicPopularity(branchID, topic1, ONE) == 1), "Add popularity failed"
     topicsInBranch = c.getTopicsInBranch(branchID)
     assert(len(topicsInBranch) == 1), "Topic array not 1 element as expected"
     assert(c.getNumTopicsInBranch(branchID) == 1), "Number of topics not equal to one"
@@ -38,7 +38,7 @@ def test_topics():
     assert(topicsInfo[0] == topic1), "First topicsInfo element not equal to topic 1"
     assert(topicsInfo[1] == ONE), "Second topicsInfo element not equal to topic 1 popularity"
 
-    assert(c.increaseTopicPopularity(branchID, topic1, TWO) == 1), "Add popularity failed"
+    assert(c.updateTopicPopularity(branchID, topic1, TWO) == 1), "Add popularity failed"
     topicsInBranch = c.getTopicsInBranch(branchID)
     assert(len(topicsInBranch) == 1), "Topic array not 1 element as expected"
     assert(c.getNumTopicsInBranch(branchID) == 1), "Number of topics not equal to one"
@@ -50,7 +50,7 @@ def test_topics():
     assert(topicsInfo[1] == 3*ONE), "Second topicsInfo element not equal to topic 1 popularity"
 
     topic2 = 987654321
-    assert(c.increaseTopicPopularity(branchID, topic2, TWO) == 1), "Add popularity failed"
+    assert(c.updateTopicPopularity(branchID, topic2, TWO) == 1), "Add popularity failed"
     topicsInBranch = c.getTopicsInBranch(branchID)
     assert(len(topicsInBranch) == 2), "Topic array not 2 elements as expected"
     assert(c.getNumTopicsInBranch(branchID) == 2), "Number of topics not equal to 2"
@@ -67,7 +67,7 @@ def test_topics():
 
     # Test topic offset / chunked getters
     for n in range(1, 10):
-        assert(c.increaseTopicPopularity(branchID, n, ONE // n) == 1), "Add popularity failed"
+        assert(c.updateTopicPopularity(branchID, n, ONE // n) == 1), "Add popularity failed"
     topicsInBranch = c.getTopicsInBranch(branchID)
     assert(len(topicsInBranch) == 11), "Topic array does not have 11 elements"
     assert(c.getNumTopicsInBranch(branchID) == 11), "Number of topics not equal to 11"
@@ -1723,13 +1723,13 @@ if __name__ == '__main__':
     os.system('python mk_test_file.py \'' + os.path.join(src, 'functions') + '\' \'' + os.path.join(src, 'data_api') + '\' \'' + os.path.join(src, 'functions') + '\'')
     # data/api tests
     #test_trades()
-    #test_topics()
+    test_topics()
     #test_cash()
     #test_ether()
     #test_log_exp()
     #test_exp()
     #test_markets()
-    test_reporting()
+    #test_reporting()
 
     # function tests
     #test_trading()
