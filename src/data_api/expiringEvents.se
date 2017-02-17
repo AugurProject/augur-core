@@ -52,7 +52,9 @@ data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], committed[]
     # Ethics is the ethicality a reporter submitted for a given event [takes reporter, event as params]
     # numReportsSubmitted is the number of a reports a reporter has submitted for this period
     # periodRepWeight is a weighting used to calculate how many events a reporter should report on in a given period
-data reporterPeriodInfo[][](beforeRep[], afterRep[], periodDormantRep[], reportHash[][], saltyEncryptedHash[][], report[][], ethics[][], numReportsSubmitted[], periodRepWeight[])
+    # numberOfActiveReporters is number of reporters active in this reporting period who are able to claim fees for reporting
+    # reporters is a 0 indexed array of the active reporters
+data reporterPeriodInfo[][](beforeRep[], afterRep[], periodDormantRep[], reportHash[][], saltyEncryptedHash[][], report[][], ethics[][], numReportsSubmitted[], periodRepWeight[], numberOfActiveReporters, reporters[])
 
 # This takes a period and event as params (e.g self.modeItems[period][event]) and stores mode data for categorical & scalar event reports
     # reportValue takes a possible reported value [say .72 in fixed point] as a key and the value is how many reports that event has, or in the case of a backstop, how much rep has reported on that event
@@ -103,6 +105,8 @@ def setReport(branch, period, event, report, sender):
 # @return fxp
 def setBeforeRep(branch, period, rep, sender):
     self.reporterPeriodInfo[branch][period].beforeRep[sender] = rep
+    self.reporterPeriodInfo[branch][period].reporters[self.reporterPeriodInfo[branch][period].numberOfActiveReporters] = sender
+    self.reporterPeriodInfo[branch][period].numberOfActiveReporters += 1
     return(rep)
 
 # @return fxp
@@ -307,3 +311,13 @@ def countReportAsSubmitted(branch, votePeriod, event, sender, weight):
 def setLesserReportNum(branch, period, event, num):
     self.periodEventInfo[branch][period].lesserReportNum[event] = num
     return(1)
+
+def getActiveReporters(branch, period, from, to):
+        if(to == 0):
+            to = self.reporterPeriodInfo[branch][period].numberOfActiveReporters
+        i = from
+        reporters = array((to - from))
+        while i < to:
+            reporters[i] = self.reporterPeriodInfo[branch][period].reporters[i]
+            i += 1
+        return(reporters: arr)

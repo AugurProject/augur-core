@@ -39,8 +39,6 @@ inset('../data_api/float.se')
 # sender/owner, then spender
 data amountCanSpend[][](branch[])
 
-# log all rep changes below todo
-
 event Transfer(from:indexed, to:indexed, value)
 event Approval(owner:indexed, spender:indexed, branch:indexed, value)
 
@@ -208,6 +206,7 @@ macro checkInvariants($account):
         return(0)
 
 macro checkSendRepInvariants():
+    refund()
     if(REPORTING.getReporterID(branch, senderIndex) != from and from == msg.sender):
         CONSENSUS.setPenalizedUpTo(branch, from, (votePeriod - 1))
         # have 1 month to claim, make so cant make a new acc on a new branch w/o at least trying to claim rep if it's a forked branch if it's a fork one and reporter was in old branch todo

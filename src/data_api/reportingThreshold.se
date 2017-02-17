@@ -146,8 +146,18 @@ macro dealWithWhaleReporters():
         expectedEventsForReporterIncludingRequired = (numEventsAvailableToReportOn / baseReporters) * ONE + numRequiredEvents * ONE
 
 
+# If anyone w/ 1 rep or more in active rep could've reported in a period but didn't enough they need to be penalized.  
+# Loop through the list of all reporters in a period and branch and check their expected minimum number of events to report on, if they've reported on less than this then find an example event they could've reported on but didn't, then return those addresses and events
+def findLazyReportersAndLeechers(branch, votePeriod, reporter):
+    beforeRep = EXPEVENTS.getBeforeRep(branch, votePeriod, reporter)
+    i = 0
+    while i < REPORTING.getNumberReporters(branch):
+        if(EXPEVENTS.getNumReportsSubmitted(branch, votePeriod, reporter) < self.calculateNumberOfEventsAReporterHasToReportOnAtMinimum(branch, reporter, votePeriod)):
+            EXPEVENTS.getEventsRange()
+            EXPEVENTS.getNumberEvents(branch, period)
+            def getEvents(branch, period):
 
-calculateNumberOfEventsAReporterHasToReportOnAtMinimum
-
-
-If anyone w/ 1 rep or more in active rep could've reported but didn't they need to be penalized.  Get a list of people who did this and an example event they could've reported on but didn't. - Loop through the list of all reporters in a period and branch and check if they couldve reported on anything --- this is people who called collectFees last period and are setup to collect fees next period but didn't report enough [or at all], although this bit of information isn't really relevant to implementation of this function. - So what you need to do is given a vote period and branch add a function to compositegetters.se and using getBeforeRep in expiringEvents.se todo
+def getEventsRange(branch, period, start, end):
+            
+            self.getEventCanReportOn(branch, period, reporter, event)
+        

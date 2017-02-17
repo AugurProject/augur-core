@@ -146,7 +146,6 @@ macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn)
     if(repBalance + repChange <= 0):
         repChange = -repBalance
     # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process
-    # todo fix for this can go over 2x bond, not supposed to
     # we don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
     if(overruled() and BACKSTOPS.getBondPaid(event) < 2 * bond and repChange < 0 and event != forkEvent):
         amountLeftToPayBonder = 2*bond - BACKSTOPS.getBondPaid(event)
