@@ -134,14 +134,15 @@ def createMarket(branch, tradingFee, event, tag1, tag2, tag3, makerFees, extraIn
         cumulativeScale = ONE
 
     # formation of marketID (hash)
-    descriptionLength = INFO.getDescriptionLength(event)
-    description = INFO.getDescription(event, outchars=descriptionLength)
-    marketinfo = string(4*32 + descriptionLength)
+    # descriptionLength = INFO.getDescriptionLength(event)
+    # description = INFO.getDescription(event, outchars=descriptionLength)
+    # marketinfo = string(4*32 + descriptionLength)
+    marketinfo = string(3*32)
     marketinfo[0] = futurePeriod
     marketinfo[1] = tradingFee
     marketinfo[2] = expirationDate
-    marketinfo[3] = descriptionLength
-    mcopy(marketinfo + 4*32, description, chars=descriptionLength)
+    # marketinfo[3] = descriptionLength
+    # mcopy(marketinfo + 4*32, description, chars=descriptionLength)
     marketID = sha3(marketinfo, chars=len(marketinfo))
     # if it's already been created return 0
     if(INFO.getCreator(marketID)):
@@ -149,7 +150,7 @@ def createMarket(branch, tradingFee, event, tag1, tag2, tag3, makerFees, extraIn
     events = array(1)
     events[0] = event
     # initialize market and send money to pay for resolution
-    if(CASH.sendFrom(branch, creationFee, msg.sender) && send(MARKETS, (msg.value-500000*tx.gasprice)) && INFO.setInfo(marketID, "", msg.sender, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, futurePeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, expirationDate)):
+    if(CASH.sendFrom(branch, creationFee, msg.sender) && send(MARKETS, (msg.value-500000*tx.gasprice)) && INFO.setInfo(marketID, text(""), msg.sender, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, futurePeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, expirationDate)):
         CASH.initiateOwner(marketID)
         EVENTS.addMarket(event, marketID)
     else:
