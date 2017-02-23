@@ -83,11 +83,9 @@ def penalizeWrong(branch, event):
     penalizedOnEvent = CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event)
     # lastperiod is where people who originally voted on a round 2 event voted the first time - want num events penalized to go up but not to actually be penalized for it yet
         # shouldn't be penalized until the next period resolution is over [since it's a round 2 event]
-    # if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event todo
-    # unless this just happened to them last period and they reported correctly then - todo clarify / fix this if statement b/c it's not actually right
     if(roundTwo and !penalizedOnEvent and reportValue):
         countAsPenalized()
-    # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. don't allow rep redistribution until the original period it was supposed to resolve in - todo clarify / fix this if statement
+    # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. don't allow rep redistribution until the original period it was supposed to resolve in
     elif(!penalizedOnEvent and reportValue and rejected and EVENTS.getRejectedPeriod(event) == lastPeriod):
         countAsPenalized()
     # penalization on a regular event if not already penalized, it has outcome, and user reported on it
@@ -149,7 +147,6 @@ macro checkPenalizeWrongPreconditions():
         MUTEX.unsetMutex()
         logReturn(consensusLogReturn, -2)
     justForked = BRANCHES.getForkPeriod(branch) == lastPeriod
-    # todo examine ramifications of allowing events to be made during forks on what we do here with just forked
     if(justForked):
         MUTEX.unsetMutex()
         logReturn(consensusLogReturn, -3)

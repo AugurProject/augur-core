@@ -22,7 +22,7 @@ macro POINT_ZERO_ONE: 10000000000000000
 
 # UI has to handle function calls for these
 
-# todo allow event creation during forks
+# todo allow event creation during forks and examine ramifications of allowing events to be made during forks on what we do here with just forked justForked var and should we really block next two periods too in checkForkPreconditions
 # Notes:
     # Anyone can pay some amount significantly greater than the backstop 1 bond amount to force a branching event, splitting rep into two classes.
     # In one class the reported outcome for whatever event was the cause of dispute is said to be right, and rep is redistributed accordingly.
@@ -43,7 +43,6 @@ macro POINT_ZERO_ONE: 10000000000000000
     # each event which should've resolved in the past 2 periods and this one is pushed up into this period and voted on in period after this - done
         # stays in parent if it wins, otherwise goes to new fork - done
     # each event resolving further in the future is pushed into the respective period on whichever fork wins - done
-# todo if already moved once don't allow again after another fork
 def moveEvent(event):
     refund()
     if(MUTEX.getMutex()):
@@ -191,7 +190,6 @@ macro checkForkPreconditions():
     if(!EVENTS.getRoundTwo(event) or BACKSTOPS.getFinal(event) or EVENTS.getForked(event)):
         MUTEX.unsetMutex()
         return(-1)
-    # todo should we really block next two periods here too
     if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod + 1) or currentPeriod == (forkPeriod + 2)):
         MUTEX.unsetMutex()
         return(-3)
@@ -201,8 +199,7 @@ macro checkForkPreconditions():
     if(EVENTS.getEventBranch(event) != branch or !branch or !event):
         MUTEX.unsetMutex()
         return(-5)
-    # todo find actual gas cost for resolution here and charge that
-    if(msg.value < 200000 * tx.gasprice):
+    if(msg.value < 350000 * tx.gasprice):
         MUTEX.unsetMutex()
         return(0)
     CONSENSUSDATA.setRefund(event, msg.value)
