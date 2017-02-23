@@ -60,7 +60,7 @@ macro MAX_ORDER_VALUE: 1569275433846670190958947355801916604025L
     # -2: oracle only branch
 # 
 # costs 532k gas
-# price is always in 10**20 fxp, amount is in the market's currency # of decimals, e.g. for 9 10**9 is 1 share [so buy 10**9 complete sets and it'll cost you 1 full unit of that currency or buy 10**9 at a fxpPrice of 10**20 it'll cost you 1 full unit of the currency]
+# price is always in 10**18 fxp, amount is in the market's currency # of decimals, e.g. for 9 10**9 is 1 share [so buy 10**9 complete sets and it'll cost you 1 full unit of that currency or buy 10**9 at a fxpPrice of 10**18 it'll cost you 1 full unit of the currency]
 # smallest trade value is 0.00000001
 def placeOrder(type, fxpAmount, fxpPrice, market, outcome):
     refund()
