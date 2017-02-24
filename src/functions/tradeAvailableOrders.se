@@ -1,24 +1,24 @@
 import trades as TRADES
 import trade as TRADE
 
-event tradeFirstAvailableOrderLogArrayReturn(returnArray: arr)
+event tradeAvailableOrdersLogArrayReturn(returnArray: arr)
 
 macro logArrayReturn($a):
-    log(type = tradeFirstAvailableOrderLogArrayReturn, $a)
+    log(type = tradeAvailableOrdersLogArrayReturn, $a)
     return($a: arr)
 
 # Minimum gas needed to execute the trade function.
 # TODO update with profiled value from the new trade function
 macro MINIMUM_GAS_NEEDED_TO_TRADE: 787421
 
-# tradeFirstAvailableOrder [fills the first orderID in the orderIDs array with a balance at or above fxpMinimumOrderBalance]
+# tradeAvailableOrders [fills the first orderID in the orderIDs array with a balance at or above fxpMinimumOrderBalance]
 # Errors:
 #   -6: no available orders found
 # @param amountTakerWants Number of shares to take (buy or sell).
 # @param orderIDs Array of order IDs from which to pick one to fill.
 # @param fxpMinimumOrderBalance Fill the first order that has a balance at or above this value.
 # @return array [error code] or [response code, unfilled value, unfilled amount]
-def tradeFirstAvailableOrder(orderIDs: arr, amountTakerWants, fxpMinimumOrderBalance):
+def tradeAvailableOrders(orderIDs: arr, amountTakerWants, fxpMinimumOrderBalance):
     numOrders = len(orderIDs)
     originalBalance = fxpMinimumOrderBalance
     i = 0
