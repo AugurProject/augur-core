@@ -11,7 +11,7 @@ macro logArrayReturn($a):
 # TODO update with profiled value from the new trade function
 macro MINIMUM_GAS_NEEDED_TO_TRADE: 787421
 
-# tradeAvailableOrders [fills the first orderID in the orderIDs array with a balance at or above fxpMinimumOrderBalance]
+# tradeAvailableOrders [fills the orderIDs in the orderIDs array with a balance at or above fxpMinimumOrderBalance]
 # Errors:
 #   -6: no available orders found
 # @param amountTakerWants Number of shares to take (buy or sell).
