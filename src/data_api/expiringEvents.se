@@ -235,7 +235,10 @@ def setReportHash(branch, expDateIndex, reporter, reportHash, event):
 
 # called in case an event doesn't get reported on at all in a period
 def moveEvent(branch, event):
-    if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch) && !EVENTS.getUncaughtOutcome(event)):
+    period = EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch)
+    if(BRANCHES.getVotePeriod(branch) > period && !EVENTS.getUncaughtOutcome(event)):
+        self.deleteEvent(branch, period, event)
+        self.removeEvent(branch, period)
         # add to next expiration period
         self.addEvent(branch, block.timestamp/BRANCHES.getPeriodLength(branch), event)
         EVENTS.setExpiration(event, block.timestamp)
