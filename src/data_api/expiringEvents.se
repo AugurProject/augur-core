@@ -237,8 +237,6 @@ def setReportHash(branch, expDateIndex, reporter, reportHash, event):
 def moveEvent(branch, event):
     period = EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch)
     if(BRANCHES.getVotePeriod(branch) > period && !EVENTS.getUncaughtOutcome(event)):
-        self.deleteEvent(branch, period, event)
-        self.removeEvent(branch, period)
         # add to next expiration period
         self.addEvent(branch, block.timestamp/BRANCHES.getPeriodLength(branch), event)
         EVENTS.setExpiration(event, block.timestamp)
