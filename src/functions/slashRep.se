@@ -8,6 +8,8 @@ import mutex as MUTEX
 inset('../data_api/refund.se')
 inset('../data_api/periodStage.se')
 
+event slashedRep(branch: indexed, sender: indexed, reporter: indexed, event, repSlashed, slasherBalance, timestamp)
+
 # Anti cheat/collusion mechanism: provide ballot and random salt to steal rep from a colluder
 # Returns 1 on success
 # Errors:
@@ -31,12 +33,29 @@ def slashRep(branch, salt, report, ethics, reporter, event):
     hashInfo[0] = reporter
     hashInfo[1] = salt
     hashInfo[2] = report
+<<<<<<< HEAD
     hashInfo[3] = event
     hashInfo[4] = ethics
     reportHash = sha3(hashInfo, chars = 32 * len(hashInfo))
     checkSlashRepInvariants()
     
     CONSENSUS.setSlashed(branch, votePeriod, reporter)
+=======
+    hashInfo[3] = eventID
+    reportHash = sha3(hashInfo, chars=32*len(hashInfo))
+    if(residual > periodLength/2):
+        return(-2)
+    if(votePeriodShouldBe!=votePeriod):
+        return(-1)
+    if(alreadySlashed):
+        return(-5)
+    if(reportHash!=realHash):
+        return(-4)
+    CONSENSUS.setSlashed(branch, votePeriod, reporter)
+    reporterIndex = REPORTING.repIDToIndex(branch, reporter)
+    if(REPORTING.getReporterID(branch, reporterIndex)!=reporter):
+        return(-3)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     trutherIndex = REPORTING.repIDToIndex(branch, msg.sender)
     # if the truther's rep. account doesn't exist, make one
     if(REPORTING.getReporterID(branch, trutherIndex) != msg.sender):
@@ -48,6 +67,7 @@ def slashRep(branch, salt, report, ethics, reporter, event):
     # gives truther half
     REPORTING.addRep(branch, trutherIndex, (reporterBalance * ONE_HALF / ONE))
     # other half sent to branch
+<<<<<<< HEAD
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), reporterBalance * ONE_HALF / ONE)
     MUTEX.unsetMutex()
     return(1)
@@ -67,3 +87,8 @@ macro checkSlashRepInvariants():
     if(alreadySlashed):
         MUTEX.unsetMutex()
         return(-5)
+=======
+    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), reporterBalance*ONEHALF/ONE)
+    log(type=slashedRep, branch, msg.sender, reporter, eventID, reporterBalance, REPORTING.getRepBalance(branch, msg.sender), block.timestamp)
+    return(1)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26

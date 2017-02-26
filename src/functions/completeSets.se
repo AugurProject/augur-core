@@ -29,7 +29,11 @@ extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:i
 inset('../data_api/refund.se')
 inset('logReturn.se')
 
+<<<<<<< HEAD
 event completeSetsLogReturn(sender: indexed, market: indexed, type: indexed, returnValue, numOutcomes)
+=======
+event completeSets_logReturn(sender: indexed, market: indexed, type: indexed, returnValue, numOutcomes, timestamp)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
 
 # Buys fxpAmount of every outcome
 # cost 850k gas
@@ -57,12 +61,22 @@ def buyCompleteSets(market, fxpAmount):
         MARKETS.modifyParticipantShares(market, msg.sender, n, fxpAmount, 0)
         n += 1
     # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
+<<<<<<< HEAD
     notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
     if(notVotingOnYet):
         MARKETS.modifySharesValue(market, fxpAmount * cumulativeScale / ONE)
         EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), fxpAmount * cumulativeScale / ONE)
     MUTEX.unsetMutex()
     logReturn(completeSetsLogReturn, 1)
+=======
+    if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
+        MARKETS.modifySharesValue(market, amount*cumScale/ONE)
+        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount*cumScale/ONE)
+    # send money from user acc. to market address/account
+    CASH.sendFrom(market, cost, msg.sender)
+    log(type=completeSets_logReturn, msg.sender, market, 1, amount, numOutcomes, block.timestamp)
+    return(amount)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
 
 # Sells fxpAmount of every outcome [if user owns it]
 # cost 850k gas
@@ -126,8 +140,25 @@ macro checkSellCompleteSetsPreconditions():
             logReturn(completeSetsLogReturn, -1)
         n += 1
     n = 1
+<<<<<<< HEAD
 
 macro accountForFees():
     # account for fees here even though paid upon selling / resolution so we can assign reporters appropriately
     fee = MARKETS.getTradingFee(market) * fxpAmount / ONE * cumulativeScale / ONE
     MARKETS.addFees(market, fee / 2)
+=======
+    # Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets
+    while n <= numOutcomes:
+        MARKETS.modifyShares(market, n, -amount)
+        MARKETS.modifyParticipantShares(market, msg.sender, n, -amount, 0)
+        n += 1
+    # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
+    if(BRANCHES.getVotePeriod(branch)<MARKETS.getTradingPeriod(market)):
+        MARKETS.modifySharesValue(market, -amount*cumScale/ONE)
+        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), -amount*cumScale/ONE)
+    # send funds from the market to the user acc.
+    CASH.subtractCash(market, cost)
+    CASH.addCash(msg.sender, cost)
+    log(type=completeSets_logReturn, msg.sender, market, 2, amount, numOutcomes, block.timestamp)
+    return(amount)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26

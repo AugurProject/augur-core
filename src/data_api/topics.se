@@ -1,0 +1,58 @@
+inset('refund.se')
+
+# Topics[] is indexed by branch ID
+#   numTopics is the number of distinct topics on the branch
+#   topics[] is an array with all distinct topics in this branch
+#   popularity[] is indexed by topic, values are the total "popularity" of all markets using the topic.
+#       (Volume is a crude popularity metric which will be refined by testing.)
+# Note: sorting and/or ranking must be done by the client!
+data Topics[](numTopics, topics[], popularity[])
+
+def getTopicsInBranch(branch, offset, numTopicsToLoad):
+    numTopics = self.Topics[branch].numTopics
+    if offset > numTopics or numTopics == 0:
+        return([]: arr)
+    if numTopicsToLoad == 0:
+        numTopicsToLoad = numTopics
+    numTopicsToLoad = min(numTopicsToLoad, numTopics - offset)
+    topicsInBranch = array(numTopicsToLoad)
+    i = 0
+    while i < numTopicsToLoad:
+        topicsInBranch[i] = self.Topics[branch].topics[i + offset]
+        i += 1
+    return(topicsInBranch: arr)
+
+def getTopicsInfo(branch, offset, numTopicsToLoad):
+    numTopics = self.Topics[branch].numTopics
+    if offset > numTopics or numTopics == 0:
+        return([]: arr)
+    if numTopicsToLoad == 0:
+        numTopicsToLoad = numTopics
+    numTopicsToLoad = min(numTopicsToLoad, numTopics - offset)
+    topicsInfo = array(numTopicsToLoad * 2)
+    i = 0
+    j = 0
+    while i < numTopicsToLoad:
+        topic = self.Topics[branch].topics[i + offset]
+        topicsInfo[j] = topic
+        topicsInfo[j + 1] = self.Topics[branch].popularity[topic]
+        i += 1
+        j += 2
+    return(topicsInfo: arr)
+
+# @return fxp
+def getTopicPopularity(branch, topic):
+    return(self.Topics[branch].popularity[topic])
+
+def getNumTopicsInBranch(branch):
+    return(self.Topics[branch].numTopics)
+
+def updateTopicPopularity(branch, topic, fxpAmount):
+    refund()
+    # if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    if self.Topics[branch].popularity[topic] == 0:
+        self.Topics[branch].topics[self.Topics[branch].numTopics] = topic
+        self.Topics[branch].numTopics += 1
+    self.Topics[branch].popularity[topic] += fxpAmount
+    return(1)

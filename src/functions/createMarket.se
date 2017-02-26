@@ -39,6 +39,7 @@ macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 macro MAX_FEE: 2 ** 62
 macro THREE_DAYS: 259200
 
+<<<<<<< HEAD
 macro checkSubcurrencyIsValid(contract):
     allowance = $contract.allowance(msg.sender, self)
     balance = $contract.balanceOf(self)
@@ -50,6 +51,15 @@ macro checkSubcurrencyIsValid(contract):
 #     event = self.createEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, call=delegate)
 #     market = self.createMarket(branch, description, fxpTradingFee, [event], tag1, tag2, tag3, fxpMakerFees, extraInfo, call=delegate)
 #     return(market)
+=======
+event marketCreated(sender: indexed, marketID: indexed, topic: indexed, branch, marketCreationFee, eventBond, timestamp)
+event tradingFeeUpdated(sender: indexed, branch: indexed, marketID: indexed, tradingFee, timestamp)
+
+def createSingleEventMarket(branch, description:str, expDate, minValue, maxValue, numOutcomes, resolution:str, tradingFee, tag1, tag2, tag3, makerFees, extraInfo:str):
+    eventID = self.createEvent(branch, description, expDate, minValue, maxValue, numOutcomes, resolution, call=delegate)
+    marketID = self.createMarket(branch, tradingFee, eventID, tag1, tag2, tag3, makerFees, extraInfo, call=delegate)
+    return(marketID)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
 
 # Create an event. Events are the basic units / questions that are reported on in Augur by reporters
 # @param numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0 to 11.0 would be 11 outcomes (if incremented by 0.1)
@@ -110,11 +120,18 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
 
 # Create a market. Markets are the basic _tradable_ units / questions that are traded on in Augur
 # @param branch is the branch of the market
+<<<<<<< HEAD
 # @param description is the description for a market
 # @param fxpTradingFee is percent in fixedPoint
 # @param events array is the list of events in a market [only 1 for now]
 # @params tag1, tag2, and tag3 are the tags describing a market
 # @param fxpMakerFees are the percent of the trading fee a maker pays [0-50% in fixed point]
+=======
+# @param tradingFee is percent in fixedPoint
+# @param events array is the list of events in a market [up to 3]
+# @params tag1, tag2, and tag3 are the tags describing a market (tag1 is the "main topic")
+# @param makerFees are the percent of the trading fee a maker pays [0-50% in fixed point]
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
 # @param extraInfo is a string of any extra info associated with a market
 # @return market if success or 1 if on an oracle only branch creation we have success
 # error messages otherwise
@@ -126,6 +143,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
 # .05 eth to create
 # need at least 1.2M gas @ gas price to cover resolution 500k per event to calc. num reports for it - this is passed as value to this function
 # need to check that it's an actual subcurrency upon market creation (maybe check send/balance funs)
+<<<<<<< HEAD
 # todo fix creation fee to be in eth b/c it covers gas fees...
 def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag3, extraInfo: str, currency):
     callstackCheck()
@@ -134,19 +152,30 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
 
+=======
+def createMarket(branch, tradingFee, event, tag1, tag2, tag3, makerFees, extraInfo:str):
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
     creationFee = POINT_ZERO_THREE * baseReporters * ONE / fxpTradingFee
     # gives ether/cash amount in fixed point
+<<<<<<< HEAD
     minFee = COST_PER_REPORTER * baseReporters * tx.gasprice * ONE / WEI_TO_ETH
     creationFee = max(minFee, creationFee)
     validityBond = (creationFee * (1 + EVENTS.getPast24(period)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch)))) / 2
+=======
+    minFee = COSTPERREPORTER*BRANCHES.getBaseReporters(branch)*tx.gasprice
+    if(creationFee < minFee):
+        creationFee = minFee
+    validity_bond = (creationFee * (1 + EVENTS.getPast24(block.timestamp / periodLength)) / (1 + EXPEVENTS.getNumberEvents(branch, BRANCHES.getVotePeriod(branch))))/2
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     numOutcomes = EVENTS.getNumOutcomes(event)
     cumulativeScale = 0
     # market's trading period is the same as the last expiring event in the market
     expirationDate = EVENTS.getExpiration(event)
     futurePeriod = expirationDate / periodLength
     forkPeriod = BRANCHES.getForkPeriod(branch)
+<<<<<<< HEAD
     checkMarketCreationPreconditions()
 
     # scalars
@@ -154,11 +183,26 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     fxpMinValue = EVENTS.getMinValue(event)
     scalar = (fxpMaxValue != TWO or fxpMinValue != ONE) and numOutcomes == 2
     if(scalar):
+=======
+    # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
+    if(periodLength==0 or tradingFee < BRANCHES.getMinTradingFee(branch) or tradingFee > POINTONETWOFIVE or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event) or makerFees < 0 or makerFees > ONEHALF):
+        return(-1)
+    if(expirationDate < block.timestamp):
+        return(-2)
+    if(forkPeriod && (futurePeriod == forkPeriod or futurePeriod == (forkPeriod+1))):
+        return(-3)
+    #scalars
+    maxValue = EVENTS.getMaxValue(event)
+    minValue = EVENTS.getMinValue(event)
+    # is a valid scalar
+    if((maxValue!=TWO || minValue !=ONE) && numOutcomes==2):
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
         # cumulativeScale is the range of a scalar
         cumulativeScale += fxpMaxValue - fxpMinValue
     if(!cumulativeScale):
         cumulativeScale = ONE
 
+<<<<<<< HEAD
     # formation of market (hash)
     marketinfo = string(8 * 32 + len(description))
     marketinfo[0] = futurePeriod
@@ -171,6 +215,18 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     marketinfo[7] = len(description)
     mcopy(marketinfo + 8 * 32, description, chars = len(description))
     market = ripemd160(marketinfo, chars = len(marketinfo))
+=======
+    # formation of marketID (hash)
+    descriptionLength = INFO.getDescriptionLength(event)
+    description = INFO.getDescription(event, outchars=descriptionLength)
+    marketinfo = string(4*32 + descriptionLength)
+    marketinfo[0] = futurePeriod
+    marketinfo[1] = tradingFee
+    marketinfo[2] = expirationDate
+    marketinfo[3] = descriptionLength
+    mcopy(marketinfo + 4*32, description, chars=descriptionLength)
+    marketID = sha3(marketinfo, chars=len(marketinfo))
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     # if it's already been created return 0
     if(INFO.getCreator(market)):
         if(!mutexWhitelisted()):
@@ -178,6 +234,7 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
         return(-4)
     events = array(1)
     events[0] = event
+<<<<<<< HEAD
     checkSubcurrencyIsValid(currency)
     # todo if wallet contract doesn't exist for a branch for a given currency need to make it or should we have an approval process for adding a token to a branch?
     wallet = create('wallet.se')
@@ -205,6 +262,12 @@ macro makeMarket():
 
     if($payCosts and $infoSet and $initializedMarket and $makeBranchAndEventAwareOfNewMarket):
         1
+=======
+    # initialize market and send money to pay for resolution
+    if(CASH.sendFrom(branch, creationFee, msg.sender) && send(MARKETS, (msg.value-500000*tx.gasprice)) && INFO.setInfo(marketID, text(""), msg.sender, creationFee) && BRANCHES.addMarketToBranch(branch, marketID) && MARKETS.initializeMarket(marketID, events, futurePeriod, tradingFee, branch, tag1, tag2, tag3, makerFees, cumulativeScale, numOutcomes, extraInfo, msg.value-500000*tx.gasprice, creationFee, expirationDate)):
+        CASH.initiateOwner(marketID)
+        EVENTS.addMarket(event, marketID)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     else:
         throw()
 
@@ -218,9 +281,21 @@ macro addEvent():
         period = block.timestamp / TWENTY_FOUR_HR
         if(!currency.transferFrom(msg.sender, wallet, validityBond)):
             throw()
+<<<<<<< HEAD
         EVENTS.setExpiration(event, block.timestamp)
         EVENTS.setBond(event, validityBond)
         EVENTS.addPast24(period)
+=======
+        if(!EVENTS.getBond(event)):
+            # pay validity / indeterminate protection bond
+            period = block.timestamp / TWENTYFOURHR
+            if(!CASH.sendFrom(event, validity_bond, msg.sender)):
+                throw()
+            EVENTS.setBond(event, validity_bond)
+            EVENTS.addPast24(period)
+    log(type=marketCreated, msg.sender, marketID, tag1, branch, 500000*tx.gasprice, validity_bond, block.timestamp)
+    return(marketID)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
 
 # Updates a trading fee to be lower in a market
 # Errors
@@ -245,8 +320,12 @@ def updateTradingFee(market, fxpTradingFee):
     currency = INFO.getCurrency(market)
     if(!currency.transferFrom(msg.sender, BRANCHES.getWallet(branch, currency), newCreationFee - oldCreationFee) or !MARKETS.setTradingFee(market, fxpTradingFee)):
         throw()
+<<<<<<< HEAD
     log(type = tradingFeeUpdated, market, fxpTradingFee)
     MUTEX.unsetMutex()
+=======
+    log(type=tradingFeeUpdated, msg.sender, branch, market, tradingFee, block.timestamp)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     return(1)
 
 # Anyone can post an "Early Resolution Bond"

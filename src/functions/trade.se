@@ -31,11 +31,18 @@ extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint2
 inset('../data_api/refund.se')
 inset('logReturn.se')
 
+<<<<<<< HEAD
 event logPrice(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, tradeid, outcome)
 event logPriceShort(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, tradeid, outcome)
 
 event tradeLogReturn(returnValue)
 event tradeLogArrayReturn(returnArray: arr)
+=======
+event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome, timestamp, takerFee, makerFee, onChainPrice, tradeHash, tradeGroupID)
+event log_short_fill_tx(market:indexed, sender:indexed, owner:indexed, price, amount, tradeid, outcome, timestamp, takerFee, makerFee, numOutcomes, onChainPrice, tradeHash, tradeGroupID)
+event trade_logReturn(returnValue)
+event trade_logArrayReturn(returnArray: arr)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
 
 macro logArrayReturn($a):
     log(type=tradeLogArrayReturn, $a)
@@ -78,9 +85,13 @@ macro removeTrade($tradeID, $market):
 # max amount is max shares to sell filling bid orders
 # 500k gas cost
 # picks orders off the book
+<<<<<<< HEAD
 # needs to continue if a trade is filled / removed by the time we get here, not return, issues with insufficient balance ending when it should continue filling other order types
 # @return fxp
 def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
+=======
+def trade(max_value, max_amount, trade_ids:arr, tradeGroupID):
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     refund()
     if(MUTEX.getMutex()):
         throw()
@@ -104,6 +115,7 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
     while(t < len(tradeIDs)):
         # Get trade
         trade = array(TRADE_FIELDS)
+<<<<<<< HEAD
         trade = TRADES.getTrade(tradeIDs[t], outitems = TRADE_FIELDS)
         if(!trade[0]):
             MUTEX.unsetMutex()
@@ -130,6 +142,122 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
             fillShortOffer()
         else:
             throw()
+=======
+        trade = TRADES.get_trade(trade_ids[t], outitems=TRADE_FIELDS)
+        if trade[0] != 0:
+            # Get market
+            type = trade[1]
+            market = trade[2]
+            creator = INFO.getCreator(market)
+            amount = trade[3]
+            price = trade[4]
+            owner = trade[5]
+            outcome = trade[7]
+            eventID = MARKETS.getMarketEvent(market, 0)
+            minValue = EVENTS.getMinValue(eventID)
+            maxValue = EVENTS.getMaxValue(eventID)
+            if ((maxValue != TWO or minValue != ONE) and EVENTS.getNumOutcomes(eventID) == 2):
+                displayPrice = price + minValue
+            else:
+                displayPrice = price
+            if(owner != msg.sender and owner != tx.origin):
+                # Make sure the trade has been mined, obvious HFT prevention
+                if block.number <= trade[6]:
+                    logReturn(trade_logReturn, TRADE_SAME_BLOCK_PROHIBITED)
+                branch = MARKETS.getBranchID(market)
+                fee = fee_percent(MARKETS.getTradingFee(market), price, MARKETS.getCumScale(market))
+                # Fill buy order
+                if type == BID:
+                    # Get available balance of shares
+                    balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)
+                    if balance <= 0:
+                        logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
+                    if max_amount > 0:
+                        makerFeeRate = MARKETS.getMakerFees(market)
+                        # Determine fill amount
+                        fill = min(amount, min(balance, max_amount))
+                        # Calculate value
+                        value = (fill * price)/ONE
+                        # must trade at least 0.00000001 in value
+                        if value >= MINIMUM_TRADE_SIZE:
+                            # Update trade amount or remove
+                            if fill < amount:
+                                TRADES.fill_trade(trade_ids[t], fill)
+                            else:
+                                remove_trade(trade_ids[t], market)
+                            # Update balances
+                            MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 0)
+                            MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
+                            # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
+                            fee = value * fee / ONE
+                            branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
+                            creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*fee / ONE
+                            takerFeesTotal = branchFees + creatorFees
+                            CASH.addCash(msg.sender, value - takerFeesTotal)
+                            # 75% to branch + .5% more to branch per maker fee 1% decrease
+                            CASH.addCash(branch, branchFees)
+                            # 25% to creator + .5% more to creator per 1% decrease in maker fees
+                            CASH.addCash(creator, creatorFees)
+                            CASH.subtractCash(market, value)
+
+                            # other party [maker] pays their part of the fee here too [they previously escrowed it in the market]
+                            fee = fee * makerFeeRate / ONE
+                            CASH.subtractCash(market, fee)
+                            CASH.addCash(creator, fee/2)
+                            CASH.addCash(branch, fee/2)
+
+                            # needed to keep track of how many fees a market has raised
+                            # only count branch fees here
+                            MARKETS.addFees(market, fee/2+branchFees)
+                            # Update max_amount
+                            max_amount -= fill
+                            # Log transaction
+                            log(type=log_fill_tx, market, msg.sender, owner, ASK, displayPrice, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, fee, price, tradeHash, tradeGroupID)
+                elif type == ASK:
+                    balance = CASH.balance(msg.sender)
+                    if balance <= 0:
+                        logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
+                    makerFeeRate = MARKETS.getMakerFees(market)
+                    takerFee = (ONEPOINTFIVE - makerFeeRate)*fee / ONE
+                    total_trade_cost = amount * price / ONE * (takerFee+ONE) / ONE
+                    # trade value to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilledIncludingFees)
+                    value_to_spend = min(total_trade_cost, min(max_value, balance))
+                    # Determine fill amount
+                    fill = value_to_spend*ONE / price * ONE / (takerFee+ONE)
+                    trade_value_excluding_fees = fill*price/ONE
+                    if(trade_value_excluding_fees >= MINIMUM_TRADE_SIZE):
+                        # Update trade amount or remove filled trade
+                        if fill < amount:
+                            TRADES.fill_trade(trade_ids[t], fill)
+                        else:
+                            remove_trade(trade_ids[t], market)
+                        # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
+                        MARKETS.modifyParticipantShares(market, msg.sender, outcome, fill, 0)
+
+                        branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees/ONE * fee / ONE
+                        creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees/ONE * fee / ONE
+                        # Transfer cash from user to person who has ask order and pay fee to branch and market creator
+                        # 75% to branch + .5% more to branch per maker fee 1% decrease 
+                        CASH.addCash(branch, branchFees)
+                        # 25% to creator + .5% more to creator per 1% decrease in maker fees
+                        CASH.addCash(creator, creatorFees)
+                        takerFeesTotal = branchFees + creatorFees
+                        CASH.addCash(owner, value_to_spend - takerFeesTotal)
+                        CASH.subtractCash(msg.sender, value_to_spend)
+
+                        # other party [maker] pay their part of the fee here too
+                        makerFee = trade_value_excluding_fees * makerFeeRate / ONE * fee / ONE
+                        CASH.subtractCash(market, makerFee)
+                        CASH.addCash(creator, makerFee/2)
+                        CASH.addCash(branch, makerFee/2)
+
+                        # only count branch fees here
+                        MARKETS.addFees(market, makerFee/2+branchFees)
+                        # Update max_value
+                        max_value -= value_to_spend
+                        # Log transaction
+                        log(type=log_fill_tx, market, msg.sender, owner, BID, displayPrice, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, makerFee, price, tradeHash, tradeGroupID)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
 
         # Log price, fill amount, type and timestamp
         MARKETS.setPrice(market, outcome, price)
@@ -146,6 +274,7 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
     # market should gain 100 from complete set
     # person short selling should give the market 80 [complete set cost less shares sold]
 # Errors:
+<<<<<<< HEAD
     # 0: trade doesn't exist
     # -1: invalid trade hash/commitment
     # -2: not a large enough trade
@@ -155,6 +284,18 @@ def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
     # -6: must be a bid, not an ask
 # @return fxp
 def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
+=======
+    # -1: trade doesn't exist
+    # -2: invalid trade hash/commitment
+    # -3: must be a bid, not an ask
+    # -4: market is already resolved
+    # -5: can't pickup your own trade
+    # -6: can't trade on oracle only branch
+    # -7: not a large enough trade
+    # 10: insufficient balance
+    # 22: trade in same block prohibited
+def short_sell(buyer_trade_id, max_amount, tradeGroupID):
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     refund()
     if(MUTEX.getMutex()):
         throw()
@@ -332,6 +473,7 @@ macro fillShortOrder():
     if(fill < amount):
         TRADES.fillTrade(tradeIDs[t], fill)
     else:
+<<<<<<< HEAD
         removeTrade(tradeIDs[t], market)
 
     # Transfer cash from user to market - purchaser sends price*amount to the market and gets outcome n
@@ -361,3 +503,9 @@ macro fillShortOrder():
     fxpMaxValue -= valueToSpend
     # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
     log(type = logPrice, market, msg.sender, owner, BID, price, fill, block.timestamp, tradeIDs[t], outcome)
+=======
+        displayPrice = price
+    log(type=log_short_fill_tx, market, msg.sender, owner, displayPrice, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee, numOutcomes, price, tradeHash, tradeGroupID)
+    MARKETS.setPrice(market, outcome, displayPrice)
+    logArrayReturn([SUCCESS, max_amount, fill, price])
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26

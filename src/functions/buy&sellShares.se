@@ -28,8 +28,8 @@ inset('refund.se')
 inset('logReturn.se')
 
 event buyAndSellShares_logReturn(returnValue)
-event log_add_tx(market:indexed, sender:indexed, type, price, amount, outcome, tradeid)
-event log_cancel(market:indexed, sender:indexed, price, amount, tradeid, outcome, type, cashRefund)
+event log_add_tx(market:indexed, sender:indexed, type, price, amount, outcome, tradeid, isShortAsk, timestamp, tradeGroupID)
+event log_cancel(market:indexed, sender:indexed, price, amount, tradeid, outcome, type, cashRefund, timestamp)
 
 # Trade types
 macro BID: 1
@@ -47,7 +47,7 @@ macro TRADE_SAME_BLOCK_PROHIBITED: 22
 macro fee_percent($market_fee, $price, $cumScale):
     4 * $market_fee * $price * (ONE-$price*ONE/$cumScale) / ($cumScale*ONE)
 
-macro save_trade($type, $amount, $price, $market, $outcome, $branch, $fee, $sender):
+macro save_trade($type, $amount, $price, $market, $outcome, $branch, $fee, $sender, $isShortAsk, $tradeGroupID):
     trade = [$type, $market, $amount, $price, $sender, block.number, $outcome]
     trade_id = sha3(trade, items=7)
     cumScale = MARKETS.getCumScale($market)
@@ -70,15 +70,15 @@ macro save_trade($type, $amount, $price, $market, $outcome, $branch, $fee, $send
                 CASH.sendFrom($market, ($amount * $price / ONE * $fee / ONE), $sender)
     else:
         logReturn(buyAndSellShares_logReturn, TRADE_ALREADY_EXISTS)
-    log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id)
+    log(type=log_add_tx, $market, $sender, $type, $price, $amount, $outcome, trade_id, $isShortAsk, block.timestamp, $tradeGroupID)
     logReturn(buyAndSellShares_logReturn, trade_id)
 
-def shortAsk(amount, price, market, outcome):
+def shortAsk(amount, price, market, outcome, minimumTradeSize, tradeGroupID):
     refund()
     buyCompleteSetsResult = COMPLETESETS.buyCompleteSets(market, amount, call=delegate)
     if buyCompleteSetsResult != amount:
         return(buyCompleteSetsResult)
-    return(self.sell(amount, price, market, outcome, call=delegate))
+    return(self.sell(amount, price, market, outcome, minimumTradeSize, 1, tradeGroupID, call=delegate))
 
 #
 # Cancellation: cancels a trade, if a bid refunds money, if an ask returns shares
@@ -120,7 +120,7 @@ def cancel(trade_id):
             CASH.subtractCash(market, cashRefund)
             CASH.addCash(msg.sender, cashRefund)
         # Log cancellation
-        log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type, cashRefund)
+        log(type=log_cancel, market, msg.sender, price, amount, trade_id, outcome, type, cashRefund, block.timestamp)
         logReturn(buyAndSellShares_logReturn, SUCCESS)
     logReturn(buyAndSellShares_logReturn, FAILURE)
 
@@ -140,13 +140,13 @@ macro remove_trade($trade_id, $market):
 #
 # costs 532k gas
 # smallest trade value is 0.00000001
-def buy(amount, price, market, outcome):
+def buy(amount, price, market, outcome, minimumTradeSize, tradeGroupID):
     refund()
 
     # Check if there are any "crossed orders" (i.e., ask orders
     # at a price less than or equal to the buy price).
     bestAskID = TRADES.getBestAskID(market, outcome)
-    if bestAskID != 0 and price >= TRADES.get_price(bestAskID):
+    if bestAskID != 0 and price >= TRADES.get_price(bestAskID) and TRADES.get_amount(bestAskID) >= minimumTradeSize:
         logReturn(buyAndSellShares_logReturn, -5)
 
     trading_fee = MARKETS.getTradingFee(market)
@@ -162,7 +162,7 @@ def buy(amount, price, market, outcome):
         logReturn(buyAndSellShares_logReturn, -2)
     if(CASH.balance(msg.sender) < (amount * price / ONE * (fee + ONE) / ONE)):
         logReturn(buyAndSellShares_logReturn, -4)
-    save_trade(BID, amount, price, market, outcome, branch, fee, msg.sender)
+    save_trade(BID, amount, price, market, outcome, branch, fee, msg.sender, 0, tradeGroupID)
     logReturn(buyAndSellShares_logReturn, FAILURE)
 
 # costs 532k gas
@@ -174,13 +174,13 @@ def buy(amount, price, market, outcome):
     # -3: trader doesn't exist in market
     # -4: not enough money or shares
     # -5: best bid exceeds ask price
-def sell(amount, price, market, outcome):
+def sell(amount, price, market, outcome, minimumTradeSize, isShortAsk, tradeGroupID):
     refund()
 
     # Check if there are any "crossed orders" (i.e., bid orders
     # at a price greater than or equal to the sell price).
     bestBidID = TRADES.getBestBidID(market, outcome)
-    if bestBidID != 0 and price <= TRADES.get_price(bestBidID):
+    if bestBidID != 0 and price <= TRADES.get_price(bestBidID) and TRADES.get_amount(bestBidID) >= minimumTradeSize:
         logReturn(buyAndSellShares_logReturn, -5)
 
     branch = MARKETS.getBranchID(market)
@@ -197,5 +197,5 @@ def sell(amount, price, market, outcome):
     # check for enough money for fees
     if(CASH.balance(msg.sender) < (amount * price / ONE * fee / ONE)):
         logReturn(buyAndSellShares_logReturn, -4)
-    save_trade(ASK, amount, price, market, outcome, branch, fee, msg.sender)
+    save_trade(ASK, amount, price, market, outcome, branch, fee, msg.sender, isShortAsk, tradeGroupID)
     logReturn(buyAndSellShares_logReturn, FAILURE)

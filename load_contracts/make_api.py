@@ -31,6 +31,7 @@ import getopt
 import requests
 import serpent
 import sha3
+from copy import deepcopy
 from progress.bar import Bar
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -194,16 +195,89 @@ def update_contract_api(contract_name, contract_path, old_api):
         functions_api[method_name]["returns"] = "unfix"
     return events_api, functions_api
 
+def extract_macros(contract_path):
+    macros = []
+    with open(contract_path) as srcfile:
+        startline = None
+        for linenum, line in enumerate(srcfile):
+            if line.startswith("inset("):
+                inset_filename = line.strip().split("inset(")[1].split(")")[0].strip("'").strip("\"")
+                inset_filename = os.path.join(os.path.dirname(os.path.abspath(contract_path)), inset_filename)
+                macros.extend(extract_macros(inset_filename))
+            if line.startswith("macro ") and "(" in line:
+                macros.append(line.strip().split("macro ")[1].split(":")[0].split("(")[0])
+    return list(set(macros))
+
+def get_events_in_method(contract_path, method_name, all_methods):
+    events_in_method = []
+    check_methods = deepcopy(all_methods)
+    for i, submethod in enumerate(check_methods):
+        if submethod["method"] == method_name:
+            check_methods.pop(i)
+    with open(contract_path) as srcfile:
+        startline = None
+        submethods = []
+        for linenum, line in enumerate(srcfile):
+            if startline is not None:
+                if line.strip().startswith("log(type="):
+                    events_in_method.append(line.strip().split("log(type=")[1].split(",")[0])
+                if line.startswith("def ") or line.startswith("macro "):
+                    break
+                for i, submethod in enumerate(check_methods):
+                    if submethod["finder"] in line:
+                        check_method = check_methods.pop(i)
+                        already_appended = False
+                        for s in submethods:
+                            if s["method"] == check_method["method"]:
+                                already_appended = True
+                        if not already_appended:
+                            submethods.append(check_method)
+            if line.startswith("def " + method_name) or line.startswith("macro " + method_name):
+                startline = linenum
+    for submethod in submethods:
+        submethod_events = get_events_in_method(submethod["contract_path"], submethod["method"], check_methods)
+        if len(submethod_events):
+            print("  - " + submethod["method"])
+            events_in_method.extend(submethod_events)
+    events_in_method = list(set(events_in_method))
+    return events_in_method
+
 # Update the API info for all Augur contracts
 def update_api(contract_paths, old_api):
     bar = Bar("Contracts", max=len(contract_paths))
     new_api = {"events": {}, "functions": {}}
+    all_methods = []
     for contract_name, contract_path in contract_paths.items():
         events_api, functions_api = update_contract_api(contract_name, contract_path, old_api)
         if bool(events_api): new_api["events"].update(events_api)
+        contract_methods_list = []
+        for contract_method in functions_api.keys():
+            if contract_name != "CompositeGetters" and not contract_method.startswith("get"):
+                contract_methods_list.append({
+                    "method": contract_method,
+                    "contract_path": contract_path,
+                    "finder":  "." + contract_method + "("
+                })
+        if "data_api" not in contract_path:
+            for macro in extract_macros(contract_path):
+                contract_methods_list.append({
+                    "method": macro,
+                    "contract_path": contract_path,
+                    "finder": macro + "("
+                })
+        all_methods.extend(contract_methods_list)
         new_api["functions"][contract_name] = functions_api
         bar.next()
     bar.finish()
+    for contract_name, contract_path in contract_paths.items():
+        functions_api = new_api["functions"][contract_name]
+        for method_name in functions_api.keys():
+            if contract_name != "CompositeGetters" and not method_name.startswith("get"):
+                print(contract_name + "." + method_name)
+                events_in_method = get_events_in_method(contract_path, method_name, all_methods)
+                if len(events_in_method):
+                    print("    events: " + str(events_in_method))
+                    new_api["functions"][contract_name][method_name]["events"] = events_in_method
     return new_api
 
 # Save the updated API info to a file (if path is set) or print to screen

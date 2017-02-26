@@ -38,6 +38,8 @@ inset('eventHelpers.se')
 macro POINT_ZERO_ONE: 10000000000000000
 macro ONE_MONTH: 2592000
 
+event fundedAccount(branch: indexed, sender: indexed, cashBalance, repBalance, timestamp)
+
 # Error -1: Hey, you're not broke!
 def cashFaucet():
     refund()
@@ -59,6 +61,7 @@ def reputationFaucet(branch):
 =======
         REPORTING.addReporter(branch, tx.origin, 0, 0, 0)
     REPORTING.setRep(branch, index, 47*ONE)
+<<<<<<< HEAD
     CONSENSUS.setPenalizedUpTo(branch, tx.origin, BRANCHES.getVotePeriod(branch))
 >>>>>>> 9e986d104e7a1392a43310b2414fe0073bffbf60
     return(1)
@@ -66,6 +69,22 @@ def reputationFaucet(branch):
 def fundNewAccount(branch):
     self.reputationFaucet(branch, call=delegate)
     CASH.setCash(msg.sender, 10000 * 2 ** 64)
+=======
+    periodLength = BRANCHES.getPeriodLength(branch)
+    if block.timestamp % periodLength <= periodLength / 2:
+        penalizedUpTo = BRANCHES.getVotePeriod(branch) - 1
+    else:
+        penalizedUpTo = BRANCHES.getVotePeriod(branch)
+    CONSENSUS.setPenalizedUpTo(branch, tx.origin, penalizedUpTo)
+    CONSENSUS.setFeesCollected(branch, tx.origin, penalizedUpTo)
+    return(1)
+
+def fundNewAccount(branch):
+    CASH.send(self, 0)
+    self.reputationFaucet(branch)
+    CASH.setCash(msg.sender, 10000*ONE)
+    log(type=fundedAccount, branch, msg.sender, 10000*ONE, 47*ONE, block.timestamp)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     return(1)
 
 # Used to claim rep on a fork or on a new branch

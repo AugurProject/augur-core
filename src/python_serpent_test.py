@@ -17,6 +17,97 @@ HALF = ONE/2
 =======
 >>>>>>> develop
 
+def test_topics():
+    t.gas_limit = 100000000
+    s = t.state()
+    c = s.abi_contract("data_api/topics.se")
+    gas_use(s)
+
+    branchID = 1010101
+    topic1 = 123456789
+    assert(len(c.getTopicsInBranch(branchID)) == 0), "Initial topic array not empty"
+    assert(c.getNumTopicsInBranch(branchID) == 0), "Number of topics not equal to zero"
+    assert(c.getTopicPopularity(branchID, topic1) == 0), "Popularity not equal to zero"
+    assert(len(c.getTopicsInfo(branchID)) == 0), "Topics info array not empty"
+
+    assert(c.updateTopicPopularity(branchID, topic1, ONE) == 1), "Add popularity failed"
+    topicsInBranch = c.getTopicsInBranch(branchID)
+    assert(len(topicsInBranch) == 1), "Topic array not 1 element as expected"
+    assert(c.getNumTopicsInBranch(branchID) == 1), "Number of topics not equal to one"
+    assert(topicsInBranch[0] == topic1), "Topic array element not equal to input topic"
+    assert(c.getTopicPopularity(branchID, topic1) == ONE), "Popularity not equal to " + str(ONE)
+    topicsInfo = c.getTopicsInfo(branchID)
+    assert(len(topicsInfo) == 2), "Number of topicsInfo elements not equal to two"
+    assert(topicsInfo[0] == topic1), "First topicsInfo element not equal to topic 1"
+    assert(topicsInfo[1] == ONE), "Second topicsInfo element not equal to topic 1 popularity"
+
+    assert(c.updateTopicPopularity(branchID, topic1, TWO) == 1), "Add popularity failed"
+    topicsInBranch = c.getTopicsInBranch(branchID)
+    assert(len(topicsInBranch) == 1), "Topic array not 1 element as expected"
+    assert(c.getNumTopicsInBranch(branchID) == 1), "Number of topics not equal to one"
+    assert(topicsInBranch[0] == topic1), "Topic array element not equal to input topic"
+    assert(c.getTopicPopularity(branchID, topic1) == 3*ONE), "Popularity not equal to " + str(3*ONE)
+    topicsInfo = c.getTopicsInfo(branchID)
+    assert(len(topicsInfo) == 2), "Number of topicsInfo elements not equal to two"
+    assert(topicsInfo[0] == topic1), "First topicsInfo element not equal to topic 1"
+    assert(topicsInfo[1] == 3*ONE), "Second topicsInfo element not equal to topic 1 popularity"
+
+    topic2 = 987654321
+    assert(c.updateTopicPopularity(branchID, topic2, TWO) == 1), "Add popularity failed"
+    topicsInBranch = c.getTopicsInBranch(branchID)
+    assert(len(topicsInBranch) == 2), "Topic array not 2 elements as expected"
+    assert(c.getNumTopicsInBranch(branchID) == 2), "Number of topics not equal to 2"
+    assert(topicsInBranch[0] == topic1), "Topic array element not equal to input topic"
+    assert(topicsInBranch[1] == topic2), "Second topic array element not equal to second input topic"
+    assert(c.getTopicPopularity(branchID, topic1) == 3*ONE), "Topic 1 popularity not equal to " + str(3*ONE)
+    assert(c.getTopicPopularity(branchID, topic2) == TWO), "Topic 2 popularity not equal to " + str(TWO)
+    topicsInfo = c.getTopicsInfo(branchID)
+    assert(len(topicsInfo) == 4), "Number of topicsInfo elements not equal to four"
+    assert(topicsInfo[0] == topic1), "First topicsInfo element not equal to topic 1"
+    assert(topicsInfo[1] == 3*ONE), "Second topicsInfo element not equal to topic 1 popularity"
+    assert(topicsInfo[2] == topic2), "Third topicsInfo element not equal to topic 2"
+    assert(topicsInfo[3] == TWO), "Fourth topicsInfo element not equal to topic 2 popularity"
+
+    # Test topic offset / chunked getters
+    for n in range(1, 10):
+        assert(c.updateTopicPopularity(branchID, n, ONE // n) == 1), "Add popularity failed"
+    topicsInBranch = c.getTopicsInBranch(branchID)
+    assert(len(topicsInBranch) == 11), "Topic array does not have 11 elements"
+    assert(c.getNumTopicsInBranch(branchID) == 11), "Number of topics not equal to 11"
+    topicsInfo = c.getTopicsInfo(branchID)
+    assert(len(topicsInfo) == 22), "Number of topicsInfo elements not equal to 22"
+    assert(topicsInfo[0] == topic1), "First topicsInfo element not equal to topic 1"
+    assert(topicsInfo[1] == 3*ONE), "Second topicsInfo element not equal to topic 1 popularity"
+    assert(topicsInfo[2] == topic2), "Third topicsInfo element not equal to topic 2"
+    assert(topicsInfo[3] == TWO), "Fourth topicsInfo element not equal to topic 2 popularity"
+    offsetTopics = c.getTopicsInBranch(branchID, 1)
+    assert(len(offsetTopics) == 10), "Number of offsetTopics elements not equal to 10"
+    assert(offsetTopics[0] == topic2), "First offsetTopics element not equal to topic 2"
+    offsetTopicsInfo = c.getTopicsInfo(branchID, 1)
+    assert(len(offsetTopicsInfo) == 20), "Number of offsetTopicsInfo elements not equal to 20"
+    assert(offsetTopicsInfo[0] == topic2), "First offsetTopicsInfo element not equal to topic 2"
+    assert(offsetTopicsInfo[1] == TWO), "Second offsetTopicsInfo element not equal to topic 2 popularity"
+    topicsFirstChunk = c.getTopicsInBranch(branchID, 0, 5)
+    assert(len(topicsFirstChunk) == 5), "Number of topicsFirstChunk elements not equal to 5"
+    assert(topicsFirstChunk[0] == topic1), "First topicsFirstChunk element not equal to topic 1"
+    assert(topicsFirstChunk[1] == topic2), "Second topicsFirstChunk element not equal to topic 2"
+    topicsInfoFirstChunk = c.getTopicsInfo(branchID, 0, 5)
+    assert(len(topicsInfoFirstChunk) == 10), "Number of topicsInfoFirstChunk elements not equal to 10"
+    assert(topicsInfoFirstChunk[0] == topic1), "First topicsInfoFirstChunk element not equal to topic 1"
+    assert(topicsInfoFirstChunk[1] == 3*ONE), "Second topicsInfoFirstChunk element not equal to topic 1 popularity"
+    assert(topicsInfoFirstChunk[2] == topic2), "Third topicsInfoFirstChunk element not equal to topic 2"
+    assert(topicsInfoFirstChunk[3] == TWO), "Fourth topicsInfoFirstChunk element not equal to topic 2 popularity"
+    topicsSecondChunk = c.getTopicsInBranch(branchID, 5, 5)
+    assert(len(topicsSecondChunk) == 5), "Number of topicsSecondChunk elements not equal to 5"
+    topicsInfoSecondChunk = c.getTopicsInfo(branchID, 5, 5)
+    assert(len(topicsInfoSecondChunk) == 10), "Number of topicsInfoSecondChunk elements not equal to 10"
+    topicsThirdChunk = c.getTopicsInBranch(branchID, 10, 5)
+    assert(len(topicsThirdChunk) == 1), "Number of topicsThirdChunk elements not equal to 5"
+    topicsThirdChunk = c.getTopicsInfo(branchID, 10, 5)
+    assert(len(topicsThirdChunk) == 2), "Number of topicsThirdChunk elements not equal to 10"
+
+    print "TOPICS OK"
+
 def test_trades():
     t.gas_limit = 100000000
     s = t.state()
@@ -150,6 +241,7 @@ def test_markets():
     c = s.abi_contract('data_api/output.se')
     gas_use(s)
 <<<<<<< HEAD
+<<<<<<< HEAD
     c.initializeMarket(444, [445, 446, 447], 1, 2**57, 1010101, 1, 2, 3, 2**58, ONE, 2, "aaa", 500, 20*ONE, 2222)
 =======
     c.initializeMarket(444, [445, 446, 447], 1, 2**57, 1010101,
@@ -160,6 +252,106 @@ def test_markets():
     # getMarketEvent singular
     assert(c.getMarketEvents(444) == [
            445, 446, 447]), "Market events load/save broken"
+=======
+    marketID = 444
+    c.initializeMarket(marketID, [445, 446, 447], 1, 2**57, 1010101, 1, 2, 3, 2**58, ONE, 2, "aaa", 500, 20*ONE, 2222)
+    c.setWinningOutcomes(marketID, [2])
+    assert(c.getWinningOutcomes(marketID)[0] == 2), "Winning outcomes wrong"
+    # getMarketEvent singular
+    assert(c.getMarketEvents(marketID) == [445, 446, 447]), "Market events load/save broken"
+
+    # test order (trade) IDs stored with the market
+    assert(c.getLastTrade(marketID) == 0), "Last order ID should equal 0"
+    assert(len(c.get_trade_ids(marketID)) == 0), "Order IDs array should be empty"
+    assert(c.addTrade(marketID, 9000, 0) == 1), "Add trade to market failed"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 1), "Order ID array does not contain a single element"
+    assert(orderIDs[0] == 9000), "Order ID element should equal input order ID"
+    assert(c.getLastTrade(marketID) == 9000), "Last order ID should equal 9000"
+    assert(c.addTrade(marketID, 9001, 9000) == 1), "Add trade to market failed"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 2), "Order ID array does not contain two elements"
+    assert(orderIDs[0] == 9001), "Order ID element 1 should equal input order ID 2"
+    assert(orderIDs[1] == 9000), "Order ID element 0 should equal input order ID 1"
+    assert(c.getLastTrade(marketID) == 9001), "Last order ID should equal 9001"
+    assert(c.addTrade(marketID, 9002, 9001) == 1), "Add trade to market failed"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 3), "Order ID array does not contain three elements"
+    assert(orderIDs[0] == 9002), "Order ID element 0 should equal input order ID 3"
+    assert(orderIDs[1] == 9001), "Order ID element 1 should equal input order ID 2"
+    assert(orderIDs[2] == 9000), "Order ID element 2 should equal input order ID 1"
+    assert(c.getLastTrade(marketID) == 9002), "Last order ID should equal 9002"
+    assert(c.addTrade(marketID, 9003, 9002) == 1), "Add trade to market failed"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 4), "Order ID array does not contain four elements"
+    assert(orderIDs[0] == 9003), "Order ID element 0 should equal input order ID 4"
+    assert(orderIDs[1] == 9002), "Order ID element 1 should equal input order ID 3"
+    assert(orderIDs[2] == 9001), "Order ID element 2 should equal input order ID 2"
+    assert(orderIDs[3] == 9000), "Order ID element 3 should equal input order ID 1"
+    assert(c.getLastTrade(marketID) == 9003), "Last order ID should equal 9003"
+    assert(c.addTrade(marketID, 9004, 9003) == 1), "Add trade to market failed"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 5), "Order ID array does not contain five elements"
+    assert(orderIDs[0] == 9004), "Order ID element 0 should equal input order ID 5"
+    assert(orderIDs[1] == 9003), "Order ID element 1 should equal input order ID 4"
+    assert(orderIDs[2] == 9002), "Order ID element 2 should equal input order ID 3"
+    assert(orderIDs[3] == 9001), "Order ID element 3 should equal input order ID 2"
+    assert(orderIDs[4] == 9000), "Order ID element 4 should equal input order ID 1"
+    assert(c.getLastTrade(marketID) == 9004), "Last order ID should equal 9004"
+
+    # test chunked get_trade_ids
+    offsetOrderIDs = c.get_trade_ids(marketID, 2)
+    assert(len(offsetOrderIDs) == 3), "Order ID array does not contain three elements"
+    assert(offsetOrderIDs[0] == 9002), "Order ID element 0 should equal input order ID 3"
+    assert(offsetOrderIDs[1] == 9001), "Order ID element 1 should equal input order ID 2"
+    assert(offsetOrderIDs[2] == 9000), "Order ID element 2 should equal input order ID 1"
+    chunkedOrderIDs = c.get_trade_ids(marketID, 0, 2)
+    assert(len(chunkedOrderIDs) == 2), "Order ID array does not contain two elements"
+    assert(chunkedOrderIDs[0] == 9004), "Order ID element 0 should equal input order ID 5"
+    assert(chunkedOrderIDs[1] == 9003), "Order ID element 1 should equal input order ID 4"
+    chunkedOrderIDs = c.get_trade_ids(marketID, 2, 2)
+    assert(len(chunkedOrderIDs) == 2), "Order ID array does not contain two elements"
+    assert(chunkedOrderIDs[0] == 9002), "Order ID element 0 should equal input order ID 3"
+    assert(chunkedOrderIDs[1] == 9001), "Order ID element 1 should equal input order ID 2"
+    chunkedOrderIDs = c.get_trade_ids(marketID, 4, 2)
+    assert(len(chunkedOrderIDs) == 1), "Order ID array does not contain one element"
+    assert(chunkedOrderIDs[0] == 9000), "Order ID element 0 should equal input order ID 1"
+
+    # test order ID removal
+    assert(c.getLastTrade(marketID) == 9004), "Last order ID should equal 9004"
+    assert(c.remove_trade_from_market(marketID, 9001) == 1), "Remove order 9001 from market"
+    assert(c.getLastTrade(marketID) == 9004), "Last order ID should equal 9004"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 4), "Order ID array does not contain four elements"
+    assert(orderIDs[0] == 9004), "Order ID element 0 should equal input order ID 5"
+    assert(orderIDs[1] == 9003), "Order ID element 1 should equal input order ID 4"
+    assert(orderIDs[2] == 9002), "Order ID element 2 should equal input order ID 3"
+    assert(orderIDs[3] == 9000), "Order ID element 3 should equal input order ID 1"
+    assert(c.remove_trade_from_market(marketID, 9000) == 1), "Remove oldest order (order 9000) from market"
+    assert(c.getLastTrade(marketID) == 9004), "Last order ID should equal 9004"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 3), "Order ID array does not contain three elements"
+    assert(orderIDs[0] == 9004), "Order ID element 0 should equal input order ID 5"
+    assert(orderIDs[1] == 9003), "Order ID element 1 should equal input order ID 4"
+    assert(orderIDs[2] == 9002), "Order ID element 2 should equal input order ID 3"
+    assert(c.remove_trade_from_market(marketID, 9004) == 1), "Remove newest order (order 9004) from market"
+    assert(c.getLastTrade(marketID) == 9003), "Last order ID should equal 9003"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 2), "Order ID array does not contain two elements"
+    assert(orderIDs[0] == 9003), "Order ID element 0 should equal input order ID 4"
+    assert(orderIDs[1] == 9002), "Order ID element 1 should equal input order ID 3"
+    assert(c.remove_trade_from_market(marketID, 9002) == 1), "Remove order 9002 from market"
+    assert(c.getLastTrade(marketID) == 9003), "Last order ID should equal 9003"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 1), "Order ID array does not contain one element"
+    assert(orderIDs[0] == 9003), "Order ID element 0 should equal input order ID 4"
+    assert(c.remove_trade_from_market(marketID, 9003) == 1), "Remove order 9003 from market"
+    # should this be 0 instead?
+    assert(c.getLastTrade(marketID) == 9000), "Last order ID should equal 9000"
+    orderIDs = c.get_trade_ids(marketID)
+    assert(len(orderIDs) == 0), "Order ID array is not empty"
+
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     print "MARKETS OK"
 
 
@@ -241,8 +433,12 @@ def test_create_branch():
         b, "new event", s.block.timestamp + 50, 2**64, 2**65, 2, "hehe")
 >>>>>>> develop
     print hex(event1)
+<<<<<<< HEAD
     bin_market = c.createMarket(
         b, "new market", 2**58, [event1], 1, 2, 3, 2**60, "hehehe", value=10**18)
+=======
+    bin_market = c.createMarket(b, 2**58, [event1], 1, 2, 3, 2**60, "hehehe", value=10**18)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     print hex(bin_market)
     print "Test branch OK"
 
@@ -356,10 +552,15 @@ def test_trading():
         feeSplit = int(random.random() * 2**63)
 >>>>>>> develop
         gas_use(s)
+<<<<<<< HEAD
         bin_market = c.createMarket(
             1010101, "new market", 184467440737095516, e, 1, 2, 3, feeSplit, "yayaya", value=10**19)
         cat_market = c.createMarket(
             1010101, "new markesst", 184467440737095516, f, 4, 2, 3, feeSplit, "yayaya", value=10**19)
+=======
+        bin_market = c.createMarket(1010101, 184467440737095516, e, 1, 2, 3, feeSplit, "yayaya", value=10**19)
+        cat_market = c.createMarket(1010101, 184467440737095516, f, 4, 2, 3, feeSplit, "yayaya", value=10**19)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
         print "Market creation gas use"
         print gas_use(s)
         assert(bin_market > 0 or bin_market < -9), "market creation broken"
@@ -842,13 +1043,13 @@ def test_close_market():
     blocktime = s.block.timestamp
 <<<<<<< HEAD
     event1 = c.createEvent(1010101, "new event", blocktime+1, ONE, TWO, 2, "ok")
-    bin_market = c.createMarket(1010101, "new market", 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market = c.createMarket(1010101, 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
     event2 = c.createEvent(1010101, "new ok event", blocktime+1, ONE, TWO, 2, "ok")
-    bin_market2 = c.createMarket(1010101, "new mfsatrket", 184467440737095516, event2, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market2 = c.createMarket(1010101, 184467440737095516, event2, 1, 2, 3, 0, "yayaya", value=10**19)
     event3 = c.createEvent(1010101, "new sdok event", blocktime+1, ONE, TWO, 2, "ok")
-    bin_market3 = c.createMarket(1010101, "new msatrket", 184467440737095516, event3, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market3 = c.createMarket(1010101, 184467440737095516, event3, 1, 2, 3, 0, "yayaya", value=10**19)
     event4 = c.createEvent(1010101, "newsdf sdok event", blocktime+1, ONE, TWO, 2, "ok")
-    bin_market4 = c.createMarket(1010101, "a matrket", 184467440737095516, event4, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market4 = c.createMarket(1010101, 184467440737095516, event4, 1, 2, 3, 0, "yayaya", value=10**19)
 
     # categorical
     event5 = c.createEvent(1010101, "new sdokdf event", blocktime+1, ONE, 5*ONE, 3, "ok")
@@ -1019,11 +1220,12 @@ def test_consensus():
     blocktime = s.block.timestamp
 <<<<<<< HEAD
     event1 = c.createEvent(1010101, "new event", blocktime+1, ONE, 2*ONE, 2, "www.roflcopter.com")
-    bin_market = c.createMarket(1010101, "new market", 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market = c.createMarket(1010101, 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
     event2 = c.createEvent(1010101, "new eventt", blocktime+1, ONE, 2*ONE, 2, "buddyholly.com")
-    bin_market2 = c.createMarket(1010101, "new madrket", 184467440737095516, event2, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market2 = c.createMarket(1010101, 184467440737095516, event2, 1, 2, 3, 0, "yayaya", value=10**19)
     event3 = c.createEvent(1010101, "new eventt3", blocktime+1, ONE, 2*ONE, 5, "buddyholly.com")
     event4 = c.createEvent(1010101, "new eventt4", blocktime+1, 0, 250*ONE, 2, "buddyholly.com")
+<<<<<<< HEAD
     catmarket = c.createMarket(1010101, "newsd madrket", 184467440737095516, event3, 1, 2, 3, 0, "yayaya", value=10**19)
     scalarmarket = c.createMarket(1010101, "nescw madrket", 184467440737095516, event4, 1, 2, 3, 0, "yayaya", value=10**19)
 =======
@@ -1044,6 +1246,10 @@ def test_consensus():
     scalarmarket = c.createMarket(
         1010101, "nescw madrket", 184467440737095516, event4, 1, 2, 3, 0, "yayaya", value=10**19)
 >>>>>>> develop
+=======
+    catmarket = c.createMarket(1010101, 184467440737095516, event3, 1, 2, 3, 0, "yayaya", value=10**19)
+    scalarmarket = c.createMarket(1010101, 184467440737095516, event4, 1, 2, 3, 0, "yayaya", value=10**19)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     s.mine(1)
     periodLength = c.getPeriodLength(1010101)
     i = c.getVotePeriod(1010101)
@@ -1260,6 +1466,7 @@ def test_consensus_multiple_reporters():
     cindeterminateevent = c.createEvent(1010101, "sssnew evgentt3", blocktime+1, ONE, 2*ONE, 5, "buddyholly.com")
     sindeterminateevent = c.createEvent(1010101, "aanewg eventt4", blocktime+1, 0, 250*ONE, 2, "buddyholly.com")
     
+<<<<<<< HEAD
     binmarket = c.createMarket(1010101, "new market", 184467440737095516, bevent, 1, 2, 3, 0, "yayaya", value=10**19)
     binmarketunethical = c.createMarket(1010101, "new madrket", 184467440737095516, bunethicalevent, 1, 2, 3, 0, "yayaya", value=10**19)
     binmarketindeterminate = c.createMarket(1010101, "new amadrket", 184467440737095516, bindeterminateevent, 1, 2, 3, 0, "yayaya", value=10**19)
@@ -1308,6 +1515,17 @@ def test_consensus_multiple_reporters():
     scalarmarketindeterminate = c.createMarket(
         1010101, "aaaaaanewrscw madrket", 184467440737095516, sindeterminateevent, 1, 2, 3, 0, "yayaya", value=10**19)
 >>>>>>> develop
+=======
+    binmarket = c.createMarket(1010101, 184467440737095516, bevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    binmarketunethical = c.createMarket(1010101, 184467440737095516, bunethicalevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    binmarketindeterminate = c.createMarket(1010101, 184467440737095516, bindeterminateevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    catmarket = c.createMarket(1010101, 184467440737095516, cevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    scalarmarket = c.createMarket(1010101, 184467440737095516, sevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    catmarketunethical = c.createMarket(1010101, 184467440737095516, cunethicalevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    scalarmarketunethical = c.createMarket(1010101, 184467440737095516, sunethicalevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    catmarketindeterminate = c.createMarket(1010101, 184467440737095516, cindeterminateevent, 1, 2, 3, 0, "yayaya", value=10**19)
+    scalarmarketindeterminate = c.createMarket(1010101, 184467440737095516, sindeterminateevent, 1, 2, 3, 0, "yayaya", value=10**19)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     s.mine(1)
     periodLength = c.getPeriodLength(1010101)
     i = c.getVotePeriod(1010101)
@@ -1872,8 +2090,9 @@ def test_slashrep():
     blocktime = s.block.timestamp
 <<<<<<< HEAD
     event1 = c.createEvent(1010101, "new event", blocktime+1, ONE, TWO, 2, "ok")
-    bin_market = c.createMarket(1010101, "new market", 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market = c.createMarket(1010101, 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
     event2 = c.createEvent(1010101, "new eventt", blocktime+1, ONE, TWO, 2, "ok")
+<<<<<<< HEAD
     bin_market2 = c.createMarket(1010101, "new market2", 184467440737095516, event2, 1, 2, 3, 0, "ayayaya", value=10**19)
 =======
     event1 = c.createEvent(1010101, "new event",
@@ -1885,6 +2104,9 @@ def test_slashrep():
     bin_market2 = c.createMarket(
         1010101, "new market2", 184467440737095516, event2, 1, 2, 3, 0, "ayayaya", value=10**19)
 >>>>>>> develop
+=======
+    bin_market2 = c.createMarket(1010101, 184467440737095516, event2, 1, 2, 3, 0, "ayayaya", value=10**19)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     i = c.getVotePeriod(1010101)
     while i < (int((blocktime + 1) / c.getPeriodLength(1010101))):
         c.incrementPeriod(1010101)
@@ -2021,9 +2243,9 @@ def test_catchup():
 <<<<<<< HEAD
     assert(isclose(c.getRepBalance(1010101, s.block.coinbase)/ONE, 47*.9**diffInPeriods*ONE/ONE))
     event1 = c.createEvent(1010101, "new event", blocktime+1, ONE, TWO, 2, "ok")
-    bin_market = c.createMarket(1010101, "new market", 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market = c.createMarket(1010101, 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
     event2 = c.createEvent(1010101, "new eventt", blocktime+1, ONE, TWO, 2, "ok")
-    bin_market2 = c.createMarket(1010101, "new market2", 184467440737095516, event2, 1, 2, 3, 0, "ayayaya", value=10**19)
+    bin_market2 = c.createMarket(1010101, 184467440737095516, event2, 1, 2, 3, 0, "ayayaya", value=10**19)
     report_hash = c.makeHash(0, ONE, event1, s.block.coinbase)
     report_hash2 = c.makeHash(0, 2*ONE, event2, s.block.coinbase)
 =======
@@ -2176,9 +2398,9 @@ def test_market_pushforward():
     blocktime = s.block.timestamp
 <<<<<<< HEAD
     event1 = c.createEvent(1010101, "new event", blocktime+10000, ONE, 2*ONE, 2, "www.roflcopter.com")
-    bin_market = c.createMarket(1010101, "new market", 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market = c.createMarket(1010101, 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
     event2 = c.createEvent(1010101, "new eventa", blocktime+10000, ONE, 2*ONE, 2, "www.roflcopter.coms")
-    bin_market2 = c.createMarket(1010101, "new vmarket", 184467440737095516, event2, 1, 2, 3, 0, "yayayam", value=10**19)
+    bin_market2 = c.createMarket(1010101, 184467440737095516, event2, 1, 2, 3, 0, "yayayam", value=10**19)
     c.buyCompleteSets(bin_market, TWO)
     c.buyCompleteSets(bin_market2, TWO)
 =======
@@ -2411,9 +2633,9 @@ def test_pen_not_enough_reports():
     blocktime = s.block.timestamp
 <<<<<<< HEAD
     event1 = c.createEvent(1010101, "new event", blocktime+1, ONE, 2*ONE, 2, "www.roflcopter.com")
-    bin_market = c.createMarket(1010101, "new market", 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market = c.createMarket(1010101, 184467440737095516, event1, 1, 2, 3, 0, "yayaya", value=10**19)
     event2 = c.createEvent(1010101, "new eventt", blocktime+1, ONE, 2*ONE, 2, "buddyholly.com")
-    bin_market2 = c.createMarket(1010101, "new madrket", 184467440737095516, event2, 1, 2, 3, 0, "yayaya", value=10**19)
+    bin_market2 = c.createMarket(1010101, 184467440737095516, event2, 1, 2, 3, 0, "yayaya", value=10**19)
     c.buyCompleteSets(bin_market, TWO)
     c.buyCompleteSets(bin_market2, TWO)
 =======
@@ -2460,8 +2682,8 @@ def test_update_trading_fee():
     event1 = c.createEvent(1010101, "new event", blocktime+1, ONE, 2*ONE, 2, "www.roflcopter.com")
     tradingFee = 120000000000000000  #.12
     makerFee = 250000000000000000  #.25
-    # market = CREATEMARKET.createMarket(1010101, "new market", tradingFee, event1, 1, 2, 3, makerFee, "yayaya", value=10**19)
-    market = c.createMarket(1010101, "new market", tradingFee, event1, 1, 2, 3, makerFee, "yayaya", value=10**19)
+    # market = CREATEMARKET.createMarket(1010101, tradingFee, event1, 1, 2, 3, makerFee, "yayaya", value=10**19)
+    market = c.createMarket(1010101, tradingFee, event1, 1, 2, 3, makerFee, "yayaya", value=10**19)
     tradingFee = 110000000000000000 #.11
     makerFee = 220000000000000000 #.22
     #test valid tradingFees
@@ -2491,7 +2713,7 @@ def test_update_trading_fee():
 def sell_gas(s, c):
     s.mine(1)
     event1 = c.createEvent(1010101, "new event a", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-    market = c.createMarket(1010101, "new market a", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
     assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
     assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
     s.mine(1)
@@ -2503,7 +2725,7 @@ def sell_gas(s, c):
 def buy_gas(s, c):
     s.mine(1)
     event1 = c.createEvent(1010101, "new event b", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-    market = c.createMarket(1010101, "new market b", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
     assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
     assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
     s.mine(1)
@@ -2514,7 +2736,7 @@ def buy_gas(s, c):
 def cancel_gas(s, c):
     s.mine(1)
     event1 = c.createEvent(1010101, "new event b", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-    market = c.createMarket(1010101, "new market b", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
     assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
     s.mine(1)
     c.buy(ONE, ONE, market, 1)
@@ -2535,7 +2757,7 @@ def cancel_gas(s, c):
 def short_sell_gas(s, c):
     s.mine(1)
     event1 = c.createEvent(1010101, "new event c", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-    market = c.createMarket(1010101, "new market c", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
     assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
     assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
     s.mine(1)
@@ -2554,7 +2776,7 @@ def short_sell_gas(s, c):
 def shortAsk_gas(s, c):
     s.mine(1)
     event1 = c.createEvent(1010101, "new event c", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-    market = c.createMarket(1010101, "new market c", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
     assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
     assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
     s.mine(1)
@@ -2565,7 +2787,7 @@ def shortAsk_gas(s, c):
 def buyCompleteSets_gas(s, c):
     s.mine(1)
     event1 = c.createEvent(1010101, "new event d", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-    market = c.createMarket(1010101, "new market d", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
     assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
     assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
     s.mine(1)
@@ -2576,7 +2798,7 @@ def buyCompleteSets_gas(s, c):
 def sellCompleteSets_gas(s, c):
     s.mine(1)
     event1 = c.createEvent(1010101, "new event e", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-    market = c.createMarket(1010101, "new market e", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+    market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
     assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
     assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
     s.mine(1)
@@ -2592,7 +2814,7 @@ def calculate_max_asks(s, c, gas_limit):
     while gas_used < gas_limit:
         num_trades += 1
         event1 = c.createEvent(1010101, "new event", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-        market = c.createMarket(1010101, "new market", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+        market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
         assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
         assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
         s.mine(1)
@@ -2617,7 +2839,7 @@ def calculate_max_bids(s, c, gas_limit):
     while gas_used < gas_limit:
         num_trades += 1
         event1 = c.createEvent(1010101, "new event", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
-        market = c.createMarket(1010101, "new market", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
+        market = c.createMarket(1010101, 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
         assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
         assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
         s.mine(1)
@@ -2693,6 +2915,7 @@ if __name__ == '__main__':
 >>>>>>> develop
     # data/api tests
 <<<<<<< HEAD
+<<<<<<< HEAD
     # test_cash()
     # test_ether()
     # test_log_exp()
@@ -2701,6 +2924,10 @@ if __name__ == '__main__':
     # test_reporting()
 =======
     test_trades()
+=======
+    #test_trades()
+    test_topics()
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     #test_cash()
     #test_ether()
     #test_log_exp()

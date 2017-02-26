@@ -18,7 +18,12 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+<<<<<<< HEAD
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, ]:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256, changeTokens:[int256, int256]:int256, modifySupply:[int256]:int256]
+=======
+import topics as TOPICS
+
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
 inset('refund.se')
 #todo remove redundant data
 
@@ -52,6 +57,7 @@ inset('refund.se')
     # shareContracts stores the erc-20 token contract address for each outcome in the market
 data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, tradeIDs[](id, nextID, prevID), lastTrade, totalTrades, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[], shareContracts[])
 
+<<<<<<< HEAD
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
 
@@ -70,6 +76,10 @@ def addToMarketsHash(branch, newHash):
 def addFees(market, fxpAmount):
     callstackCheck()
     self.Markets[market].fees += fxpAmount
+=======
+def addFees(market, amount):
+    self.Markets[market].fees += amount
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     return(1)
 
 def setPrice(market, outcome, fxpPrice):
@@ -252,6 +262,7 @@ def modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
     callstackCheck()
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
+<<<<<<< HEAD
     self.Markets[market].shareContracts[outcome].changeTokens(trader, fxpAmount)
     if(actualTrade):
         if(fxpAmount < 0):
@@ -305,6 +316,17 @@ def getTradeIDs(marketID):
     if(tradeIDs):
         return(tradeIDs: arr)
     return([FAILURE]: arr)
+=======
+    self.Markets[marketID].participants[trader].shares[outcome] += amount
+    if(amount<0):
+        amount = amount*-1
+    if(cancel):
+        amount = -1*amount
+    self.Markets[marketID].volume += amount
+    if(self.Markets[marketID].tag1):
+        TOPICS.updateTopicPopularity(self.Markets[marketID].branch, self.Markets[marketID].tag1, amount)
+    return(1)   
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
 
 def setWinningOutcomes(market, outcomes: arr):
     callstackCheck()
@@ -352,6 +374,7 @@ def getBondsMan(market):
     return(self.Markets[market].bondsMan)
 
 def getLastTrade(market):
+<<<<<<< HEAD
     callstackCheck()
     return(self.Markets[market].lastTrade)
 
@@ -362,6 +385,66 @@ def getPrevID(market, trade):
 def getTotalTrades(marketID):
     callstackCheck()
     return(self.Markets[marketID].totalTrades)
+=======
+    refund()
+    return(self.Markets[market].last_trade)
+    
+def addTrade(market, trade_id, last_id):
+    refund()
+    self.Markets[market].trade_ids[last_id].next_id = trade_id
+    self.Markets[market].trade_ids[trade_id].prev_id = last_id
+    self.Markets[market].trade_ids[trade_id].id = trade_id
+    self.Markets[market].last_trade = trade_id
+    self.Markets[market].total_trades += 1
+    return(1)
+  
+def remove_trade_from_market(market_id, trade_id):
+    refund()
+    prev_id = self.Markets[market_id].trade_ids[trade_id].prev_id
+    next_id = self.Markets[market_id].trade_ids[trade_id].next_id
+    if prev_id and next_id:
+        self.Markets[market_id].trade_ids[prev_id].next_id = next_id
+        self.Markets[market_id].trade_ids[next_id].prev_id = prev_id
+    elif prev_id:
+        self.Markets[market_id].last_trade = prev_id
+        self.Markets[market_id].trade_ids[prev_id].next_id = 0
+
+    if next_id:
+        self.Markets[market_id].trade_ids[trade_id].next_id = 0
+    if prev_id:
+        self.Markets[market_id].trade_ids[trade_id].prev_id = 0
+    self.Markets[market_id].trade_ids[trade_id].id = 0
+    self.Markets[market_id].total_trades -= 1
+    return(1)
+
+def get_trade_ids(market_id, offset, numTradesToLoad):
+    refund()
+    numTrades = self.Markets[market_id].total_trades
+    if offset > numTrades or numTrades == 0:
+        return([]: arr)
+    if numTradesToLoad == 0:
+        numTradesToLoad = numTrades
+    numTradesToLoad = min(numTradesToLoad, numTrades - offset)
+    trade_id = self.Markets[market_id].last_trade
+    if offset > 0:
+        i = 0
+        while i < offset:
+            trade_id = self.Markets[market_id].trade_ids[trade_id].prev_id
+            i += 1
+    trade_ids = array(numTradesToLoad)
+    i = 0
+    while i < numTradesToLoad:
+        trade_ids[i] = self.Markets[market_id].trade_ids[trade_id].id
+        trade_id = self.Markets[market_id].trade_ids[trade_id].prev_id
+        i = i + 1
+    if trade_ids:
+        return(trade_ids:arr)
+    return([FAILURE]:arr)
+    
+def get_total_trades(market_id):
+    refund()
+    return(self.Markets[market_id].total_trades)
+>>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
 
 def getSender():
     callstackCheck()
