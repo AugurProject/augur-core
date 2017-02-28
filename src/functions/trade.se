@@ -18,10 +18,10 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-### Allows users to take orders off the book (i.e. fill trades)
+### Allows users to take orders off the book (i.e. fill orders)
 
 # Trade scenarios:
-    # Note: all [] scenarios are typical, if a user somehow gets an extra complete set it'll also be sold when doing a trade, typically complete sets only sold when closing out a position or closing out a short
+    # Note: all [] scenarios are typical, if a user somehow gets an extra complete set it'll also be sold when doing a order, typically complete sets only sold when closing out a position or closing out a short
 
     # - Buying and have all but one and bidding, seller doesn't have outcome and is taking [complete set fee charged on buyer b/c selling complete sets].
 
@@ -43,7 +43,7 @@ import branches as BRANCHES
 import info as INFO
 import markets as MARKETS
 import events as EVENTS
-import trades as TRADES
+import orders as ORDERS
 import expiringEvents as EXPEVENTS
 import mutex as MUTEX
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
@@ -51,7 +51,7 @@ inset('../data_api/refund.se')
 inset('logReturn.se')
 inset('../data_api/float.se')
 
-event logPrice(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, tradeid, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
+event logPrice(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
 
 event tradeLogReturn(returnValue)
 event tradeLogArrayReturn(returnArray: arr)
@@ -70,32 +70,32 @@ macro ONEPOINTFIVE: 1500000000000000000
 macro BID: 1
 macro ASK: 2
 # Field counts
-macro TRADE_FIELDS: 10
+macro ORDER_FIELDS: 10
 # Boolean success/failure
 macro SUCCESS: 1
 # Error codes
 macro INSUFFICIENT_BALANCE: -4
 macro TRADE_SAME_BLOCK_PROHIBITED: -5
 
-# removes a trade from the book
-macro removeTrade($tradeID, $market):
-    TRADES.removeTrade($tradeID)
-    MARKETS.removeTradeFromMarket($market, $tradeID)
+# removes a order from the book
+macro removeOrder($orderID, $market):
+    ORDERS.removeOrder($orderID)
+    MARKETS.removeOrderFromMarket($market, $orderID)
 
 # 
 # Trade [allows a user to pick up/fill orders off the book]
 # 
 # Errors:
-    # 0: trade doesn't exist
-    # -1: bad trade hash
+    # 0: order doesn't exist
+    # -1: bad order hash
     # -2: must buy at least .00000001 in
-    # -3: can't pick up your own trade
+    # -3: can't pick up your own order
     # -4: insufficient balance
-    # -5: trade in same block prohibited
+    # -5: order in same block prohibited
 # amountTakerWants is amount of shares the taker wants to fill
 # picks orders off the book
 # @return fxp
-def trade(tradeID, amountTakerWants):
+def trade(orderID, amountTakerWants):
     refund()
     if(MUTEX.getMutex()):
         throw()
@@ -103,28 +103,28 @@ def trade(tradeID, amountTakerWants):
     if(amountTakerWants <= 0):
         throw()
 
-    tradeInfo = array(2)
-    tradeInfo[0] = orderID
-    tradeInfo[1] = amountTakerWants
-    tradeHash = sha3(tradeInfo, items = 2)
-    if(TRADES.checkHash(tradeHash, msg.sender) == -1):
+    orderInfo = array(2)
+    orderInfo[0] = orderID
+    orderInfo[1] = amountTakerWants
+    orderHash = sha3(orderInfo, items = 2)
+    if(ORDERS.checkHash(orderHash, msg.sender) == -1):
         MUTEX.unsetMutex()
         logArrayReturn([-1])
-    # Get trade
-    trade = array(TRADE_FIELDS)
-    trade = TRADES.getTrade(tradeID, outitems = TRADE_FIELDS)
-    if(!trade[0]):
+    # Get order
+    order = array(ORDER_FIELDS)
+    order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
+    if(!order[0]):
         MUTEX.unsetMutex()
         logArrayReturn([0])
-    type = trade[1]
-    market = trade[2]
+    type = order[1]
+    market = order[2]
     creator = INFO.getCreator(market)
-    amount = trade[3]
-    price = trade[4]
-    owner = trade[5]
-    outcome = trade[7]
-    moneyEscrowed = trade[8]
-    sharesEscrowed = trade[9]
+    amount = order[3]
+    price = order[4]
+    owner = order[5]
+    outcome = order[7]
+    moneyEscrowed = order[8]
+    sharesEscrowed = order[9]
     checkTradePreconditions()
     branch = MARKETS.getBranch(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
@@ -151,13 +151,13 @@ macro checkTradePreconditions():
     if(owner == msg.sender):
         MUTEX.unsetMutex()
         logArrayReturn([-3])
-    # Make sure the trade has been mined, obvious HFT prevention
-    if(block.number <= trade[6]):
+    # Make sure the order has been mined, obvious HFT prevention
+    if(block.number <= order[6]):
         MUTEX.unsetMutex()
         logArrayReturn([TRADE_SAME_BLOCK_PROHIBITED])
 
 # Filling a bid [aka selling shares]
-# Users need to have approved markets to spend their money, simulate trade client side to check in case an order is invalid due to someone not having approved
+# Users need to have approved markets to spend their money, simulate fill client side to check in case an order is invalid due to someone not having approved
 # Scenarios:
     # Asker has maxValue - price and expects complete set minus the one theyre selling
     # Or asker has shares and expects to be paid price - minValue for them
@@ -191,14 +191,14 @@ macro fillBid():
     remainderToFill = sumOfFills
     # Calculate value
     value = safeFxpMul(sumOfFills, price)
-    # must trade at least 0.00000001 in value
+    # must fill at least 0.00000001 in value
     if(value < MIN_TRADE_VALUE):
         throw()
-    # Update trade amount or remove
+    # Update order amount or remove
     if(sumOfFills < amount):
-        TRADES.fillTrade(tradeID, sumOfFills, safeFxpMul(bidderMoneyFilled, safeSub(price, minValue)), bidderSharesFilled)
+        ORDERS.fillOrder(orderID, sumOfFills, safeFxpMul(bidderMoneyFilled, safeSub(price, minValue)), bidderSharesFilled)
     else:
-        removeTrade(tradeID, market)
+        removeOrder(orderID, market)
 
     balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)        
     # msg.sender owns shares of outcome
@@ -251,7 +251,7 @@ macro fillBid():
         COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegate)
 
     # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
-    log(type = logPrice, market, msg.sender, owner, ASK, price, sumOfFills, block.timestamp, tradeID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
+    log(type = logPrice, market, msg.sender, owner, ASK, price, sumOfFills, block.timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
 
 
 
@@ -301,15 +301,15 @@ macro fillAsk():
     remainderToFill = sumOfFills
     # Calculate value
     value = safeFxpMul(sumOfFills, price)
-    # must trade at least 0.00000001 in value
+    # must fill at least 0.00000001 in value
     if(value < MIN_TRADE_VALUE):
         MUTEX.unsetMutex()
         throw()
-    # Update trade amount or remove
+    # Update order amount or remove
     if(sumOfFills < amount):
-        TRADES.fillTrade(tradeID, sumOfFills, safeFxpMul(askerMoneyFilled, safeSub(maxValue, price)), askerSharesFilled)
+        ORDERS.fillOrder(orderID, sumOfFills, safeFxpMul(askerMoneyFilled, safeSub(maxValue, price)), askerSharesFilled)
     else:
-        removeTrade(tradeID, market)
+        removeOrder(orderID, market)
 
     # Transfer cash from user to person who has ask order
     payMaker = INFO.getCurrency(market).transferFrom(msg.sender, owner, valueToSpend)
@@ -357,7 +357,7 @@ macro fillAsk():
     sellMakersCompleteSets()
 
     # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
-    log(type = logPrice, market, msg.sender, owner, BID, price, sumOfFills, block.timestamp, tradeID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
+    log(type = logPrice, market, msg.sender, owner, BID, price, sumOfFills, block.timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
 
 
 macro sellMakersCompleteSets():

@@ -1,4 +1,4 @@
-import trades as TRADES
+import orders as ORDERS
 import trade as TRADE
 
 event tradeAvailableOrdersLogArrayReturn(returnArray: arr)
@@ -23,7 +23,7 @@ def tradeAvailableOrders(orderIDs: arr, amountTakerWants, fxpMinimumOrderBalance
     originalBalance = fxpMinimumOrderBalance
     i = 0
     while (i < numOrders and tx.gas > MINIMUM_GAS_NEEDED_TO_TRADE and fxpMinimumOrderBalance):
-        if(TRADES.getAmount(orderIDs[i]) > fxpMinimumOrderBalance):
+        if(ORDERS.getAmount(orderIDs[i]) > fxpMinimumOrderBalance):
             tradeReturn = array(2)
             tradeReturn = TRADE.trade(orderIDs[i], amountTakerWants, call = delegate, outitems = 2)
             fxpMinimumOrderBalance = tradeReturn[1]

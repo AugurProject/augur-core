@@ -22,59 +22,59 @@
 import info as INFO
 import events as EVENTS
 import branches as BRANCHES
-import trades as TRADES
+import orders as ORDERS
 import markets as MARKETS
 import expiringEvents as EXPEVENTS
 inset('refund.se')
 
-macro TRADE_FIELDS: 8
+macro ORDER_FIELDS: 10
 macro EVENTS_FIELDS: 7
 macro OUTCOMES_FIELDS: 3
 macro BASE_FIELDS: 14
 macro BASE_CACHE_FIELDS: 10
 
-def getOrderBook(marketID, offset, numTradesToLoad):
+def getOrderBook(marketID, offset, numOrdersToLoad):
     refund()
-    numTrades = MARKETS.get_total_trades(marketID)
-    if offset > numTrades:
+    numOrders = MARKETS.getTotalOrders(marketID)
+    if offset > numOrders:
         return([]: arr)
-    if numTradesToLoad == 0:
-        numTradesToLoad = numTrades
-    totalTrades = min(numTradesToLoad, numTrades - offset)
-    trades = slice(MARKETS.get_trade_ids(marketID, outitems=numTrades), items=offset, items=offset+numTradesToLoad)
-    orderBook = array(TRADE_FIELDS*totalTrades)
-    numAvailableTrades = 0
+    if numOrdersToLoad == 0:
+        numOrdersToLoad = numOrders
+    totalOrders = min(numOrdersToLoad, numOrders - offset)
+    orders = slice(MARKETS.getOrderIDs(marketID, outitems=numOrders), items=offset, items=offset+numOrdersToLoad)
+    orderBook = array(ORDER_FIELDS*totalOrders)
+    numAvailableOrders = 0
     i = 0
-    while i < totalTrades:
-        tradeInfo = TRADES.get_trade(trades[i], outitems=TRADE_FIELDS)
-        if tradeInfo[0] != 0:
+    while i < totalOrders:
+        orderInfo = ORDERS.getOrder(orders[i], outitems=ORDER_FIELDS)
+        if orderInfo[0] != 0:
             j = 0
             while j < 8:
-                orderBook[8*numAvailableTrades + j] = tradeInfo[j]
+                orderBook[8*numAvailableOrders + j] = orderInfo[j]
                 j += 1
-            numAvailableTrades += 1
+            numAvailableOrders += 1
         i += 1
-    return(slice(orderBook, items=0, items=TRADE_FIELDS*numAvailableTrades): arr)
+    return(slice(orderBook, items=0, items=ORDER_FIELDS*numAvailableOrders): arr)
 
 def getAccountOrderBook(marketID, account):
     refund()
-    numTrades = MARKETS.get_total_trades(marketID)
-    trades = MARKETS.get_trade_ids(marketID, outitems=numTrades)
-    orderBook = array(TRADE_FIELDS*numTrades)
-    numAccountTrades = 0
+    numOrders = MARKETS.getTotalOrders(marketID)
+    orders = MARKETS.getOrderIDs(marketID, outitems=numOrders)
+    orderBook = array(ORDER_FIELDS*numOrders)
+    numAccountOrders = 0
     i = 0
-    while i < numTrades:
-        owner = TRADES.getTradeOwner(trades[i])
+    while i < numOrders:
+        owner = ORDERS.getOrderOwner(orders[i])
         if owner == account:
-            tradeInfo = TRADES.get_trade(trades[i], outitems=TRADE_FIELDS)
-            if tradeInfo[0] != 0:
+            orderInfo = ORDERS.getOrder(orders[i], outitems=ORDER_FIELDS)
+            if orderInfo[0] != 0:
                 j = 0
                 while j < 8:
-                    orderBook[8*numAccountTrades + j] = tradeInfo[j]
+                    orderBook[8*numAccountOrders + j] = orderInfo[j]
                     j += 1
-                numAccountTrades += 1
+                numAccountOrders += 1
         i += 1
-    return(slice(orderBook, items=0, items=TRADE_FIELDS*numAccountTrades): arr)
+    return(slice(orderBook, items=0, items=ORDER_FIELDS*numAccountOrders): arr)
 
 def getMarketInfo(marketID, account):
     refund()

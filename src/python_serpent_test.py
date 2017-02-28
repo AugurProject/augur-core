@@ -299,7 +299,7 @@ def test_trading():
             assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 2)==TWO)
             after = c.balance(s.block.coinbase)
             afterm = c.balance(market[a])
-            assert(len(c.getTradeIDs(market[a])) == 1)
+            assert(len(c.getOrderIDs(market[a])) == 1)
             print makerFee
             print before-after
             assert(isclose((before-after)/ONE, makerFee/ONE, rel_tol=1e-8))
@@ -334,7 +334,7 @@ def test_trading():
             afterm = c.balance(market[a])
             assert(isclose((before-after)/ONE, (makerFee + ONE*.01)/ONE, rel_tol=1e-8))
             assert(isclose((afterm-beforem)/ONE, (makerFee + ONE*.01)/ONE, rel_tol=1e-8))
-            assert(len(c.get_trade_ids(market[a]))==2)
+            assert(len(c.getOrderIDs(market[a]))==2)
             # make sure got cost + fee back
             c.cancel(buy)
             afterm = c.balance(market[a])
@@ -349,8 +349,8 @@ def test_trading():
             assert(isclose((before-after)/ONE, (makerFee + ONE*.01)/ONE, rel_tol=1e-8))
             assert(isclose((afterm-beforem)/ONE, (makerFee + ONE*.01)/ONE))
             assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 2)==TWO)
-            hash = c.makeTradeHash(0, ONE, [buy], sender=t.k2)
-            c.commitTrade(hash, buy, sender=t.k2)
+            hash = c.makeOrderHash(0, ONE, [buy], sender=t.k2)
+            c.commitOrder(hash, buy, sender=t.k2)
             s.mine(1)
             c.buyCompleteSets(market[a], 10*ONE, sender=t.k2)
             assert(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 1)==10*ONE)
@@ -373,8 +373,8 @@ def test_trading():
             assert(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 2)==9*ONE)
             assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 1)==ONE)
             assert(c.getParticipantSharesPurchased(market[a], s.block.coinbase, 2)==3*ONE)
-            hash = c.makeTradeHash(ONE, 0, [sell], sender=t.k2)
-            c.commitTrade(hash, sell, sender=t.k2)
+            hash = c.makeOrderHash(ONE, 0, [sell], sender=t.k2)
+            c.commitOrder(hash, sell, sender=t.k2)
             s.mine(1)
             # make sure buyer or k2 got their shares and gets rid of cash, make sure seller got cash & got rid of their shares
             assert(c.getParticipantSharesPurchased(market[a], c.getSender(sender=t.k2), 1)==10*ONE)
@@ -429,8 +429,8 @@ def test_trading():
             before = c.balance(sender2)
             beforem = c.balance(market[a])
             beforeog = c.balance(s.block.coinbase)
-            hash = c.makeTradeHash(0, ONE, [buy])
-            c.commitTrade(hash, buy)
+            hash = c.makeOrderHash(0, ONE, [buy])
+            c.commitOrder(hash, buy)
             s.mine(1)
             gas_use(s)
             print "Short sell"
@@ -1412,18 +1412,18 @@ def cancel_gas(s, c):
     assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
     s.mine(1)
     c.buy(ONE, ONE, market, 1)
-    trades = c.get_trade_ids(market)
-    assert(len(trades) == 1)
+    orders = c.getOrderIDs(market)
+    assert(len(orders) == 1)
     gas_use(s)
-    c.cancel(trades[0])
+    c.cancel(orders[0])
     print "CANCEL BUY:", gas_use(s)
     s.mine(1)
     c.buyCompleteSets(market, ONE)
     c.sell(ONE, ONE, market, 1)
-    trades = c.get_trade_ids(market)
-    assert(len(trades) == 1)
+    orders = c.getOrderIDs(market)
+    assert(len(orders) == 1)
     gas_use(s)
-    c.cancel(trades[0])
+    c.cancel(orders[0])
     print "CANCEL SELL:", gas_use(s)
 
 def short_sell_gas(s, c):
@@ -1434,15 +1434,15 @@ def short_sell_gas(s, c):
     assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
     s.mine(1)
     c.buy(ONE, ONE, market, 1)
-    trades = c.get_trade_ids(market)
-    assert(len(trades) == 1)
+    orders = c.getOrderIDs(market)
+    assert(len(orders) == 1)
     s.mine(1)
     gas_use(s)
-    assert(c.commitTrade(c.makeTradeHash(0, ONE, trades), sender=t.k2) == 1)
-    print "COMMIT TRADE:", gas_use(s)
+    assert(c.commitOrder(c.makeOrderHash(0, ONE, orders), sender=t.k2) == 1)
+    print "COMMIT ORDER:", gas_use(s)
     s.mine(1)
     gas_use(s)
-    c.short_sell(trades[0], ONE, sender=t.k2)
+    c.short_sell(orders[0], ONE, sender=t.k2)
     print "SHORT SELL:", gas_use(s)
 
 def shortAsk_gas(s, c):
@@ -1479,59 +1479,59 @@ def sellCompleteSets_gas(s, c):
     c.sellCompleteSets(market, ONE)
     print "SELL COMPLETE SETS:", gas_use(s)
 
-# calculate the maximum number of ask trade_ids in a single trade
+# calculate the maximum number of ask orderIDs in a single trade
 def calculate_max_asks(s, c, gas_limit):
-    gas_used, num_trades = 0, 0
+    gas_used, num_orders = 0, 0
     asks = {}
     while gas_used < gas_limit:
-        num_trades += 1
+        num_orders += 1
         event1 = c.createEvent(1010101, "new event", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
         market = c.createMarket(1010101, "new market", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
         assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
         assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
         s.mine(1)
-        qty = num_trades*ONE
+        qty = num_orders*ONE
         c.buyCompleteSets(market, qty)
-        [c.sell(ONE, int(.01*i*ONE), market, 1) for i in range(num_trades + 1)]
-        trades = c.get_trade_ids(market)
-        assert(len(trades) == num_trades)
-        assert(c.commitTrade(c.makeTradeHash(qty, 0, trades), sender=t.k2) == 1)
+        [c.sell(ONE, int(.01*i*ONE), market, 1) for i in range(num_orders + 1)]
+        orders = c.getOrderIDs(market)
+        assert(len(orders) == num_orders)
+        assert(c.commitOrder(c.makeOrderHash(qty, 0, orders), sender=t.k2) == 1)
         s.mine(1)
         gas_use(s)
-        c.trade(qty, 0, trades, sender=t.k2)
+        c.trade(qty, 0, orders, sender=t.k2)
         gas_used = gas_use(s)
-        asks[num_trades] = int(gas_limit - gas_used)
+        asks[num_orders] = int(gas_limit - gas_used)
         s.mine(1)
-    return num_trades - 1, asks
+    return num_orders - 1, asks
 
-# calculate the maximum number of bid trade_ids in a single trade
+# calculate the maximum number of bid orderIDs in a single trade
 def calculate_max_bids(s, c, gas_limit):
-    gas_used, num_trades = 0, 0
+    gas_used, num_orders = 0, 0
     bids = {}
     while gas_used < gas_limit:
-        num_trades += 1
+        num_orders += 1
         event1 = c.createEvent(1010101, "new event", s.block.timestamp+1, ONE, 2*ONE, 2, "lmgtfy.com")
         market = c.createMarket(1010101, "new market", 120000000000000000, event1, 1, 2, 3, 250000000000000000, "best market ever", value=10**19)
         assert(c.setCash(s.block.coinbase, 10000000000*ONE) == 1)
         assert(c.setCash(c.getSender(sender=t.k2), 10000000000*ONE) == 1)
         s.mine(1)
-        [c.buy(ONE, int(.01*i*ONE), market, 1) for i in range(num_trades + 1)]
-        trades = c.get_trade_ids(market)
-        assert(len(trades) == num_trades)
-        qty = num_trades*ONE
-        assert(c.commitTrade(c.makeTradeHash(0, qty, trades), sender=t.k2) == 1)
+        [c.buy(ONE, int(.01*i*ONE), market, 1) for i in range(num_orders + 1)]
+        orders = c.getOrderIDs(market)
+        assert(len(orders) == num_orders)
+        qty = num_orders*ONE
+        assert(c.commitOrder(c.makeOrderHash(0, qty, orders), sender=t.k2) == 1)
         c.buyCompleteSets(market, qty, sender=t.k2)
         s.mine(1)
         gas_use(s)
-        c.trade(0, qty, trades, sender=t.k2)
+        c.trade(0, qty, orders, sender=t.k2)
         gas_used = gas_use(s)
-        bids[num_trades] = int(gas_limit - gas_used)
+        bids[num_orders] = int(gas_limit - gas_used)
         s.mine(1)
-    return num_trades - 1, bids
+    return num_orders - 1, bids
 
-# Calculate the maximum number of trade IDs allowed for a single trade:
-# 1 + (gas_limit - first_tradeid_gas_cost) // next_tradeid_gas_cost
-def calculate_max_trade_ids(gas_limit=3135000):
+# Calculate the maximum number of order IDs allowed for a single trade:
+# 1 + (gas_limit - first_orderID_gas_cost) // next_orderID_gas_cost
+def calculate_max_order_ids(gas_limit=3135000):
     global initial_gas
     initial_gas = 0
     t.gas_limit = 100000000
@@ -1594,6 +1594,6 @@ if __name__ == '__main__':
     #test_consensus_multiple_reporters()
     #test_pen_not_enough_reports()
     #test_update_trading_fee()
-    calculate_max_trade_ids(gas_limit=4712388)
+    calculate_max_order_ids(gas_limit=4712388)
     #trading_gas()
     print "DONE TESTING"

@@ -84,9 +84,9 @@ def cancelOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiratio
         MUTEX.unsetMutex()
     return(1)
 
-def getAmountFilled(tradeHash):
+def getAmountFilled(orderHash):
     refund()
-    return(self.amountFilled[tradeHash])
+    return(self.amountFilled[orderHash])
 
 macro checkSig(signer, hash, v, r, s):
     ecrecover(hash, v, r, s) == signer

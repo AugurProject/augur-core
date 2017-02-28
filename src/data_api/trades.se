@@ -1,97 +1,97 @@
 inset('refund.se')
 
-### Storage of all data associated with trades
+### Storage of all data associated with orders
 
 # reporterID is index
-data tradeCommits[](hash, block)
-# tradeID is index
-data trades[](id, type, market, amount, price, owner, block, outcome, sharesEscrowed, moneyEscrowed)
+data orderCommits[](hash, block)
+# orderID is index
+data orders[](id, type, market, amount, price, owner, block, outcome, sharesEscrowed, moneyEscrowed)
 
-event logAddTx(market:indexed, sender:indexed, type, fxpPrice, fxpAmount, outcome, tradeid)
+event logAddTx(market:indexed, sender:indexed, type, fxpPrice, fxpAmount, outcome, orderID)
 
-def makeTradeHash(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
+def makeOrderHash(fxpMaxValue, fxpMaxAmount, orderIDs: arr):
     refund()
     i = 0
-    trades = 0
-    while(i < len(tradeIDs)):
-        trades += tradeIDs[i]
+    orders = 0
+    while(i < len(orderIDs)):
+        orders += orderIDs[i]
         i += 1
-    tradeInfo = array(3)
-    tradeInfo[0] = trades
-    tradeInfo[1] = fxpMaxAmount
-    tradeInfo[2] = fxpMaxValue
-    tradeHash = sha3(tradeInfo, items = 3)
-    return(tradeHash)
+    orderInfo = array(3)
+    orderInfo[0] = orders
+    orderInfo[1] = fxpMaxAmount
+    orderInfo[2] = fxpMaxValue
+    orderHash = sha3(orderInfo, items = 3)
+    return(orderHash)
 
-def commitTrade(hash):
+def commitOrder(hash):
     refund()
-    self.tradeCommits[msg.sender].hash = hash
-    self.tradeCommits[msg.sender].block = block.number
+    self.orderCommits[msg.sender].hash = hash
+    self.orderCommits[msg.sender].block = block.number
     return(1)
 
-def checkHash(tradeHash, sender):
-    if(self.tradeCommits[sender].hash != tradeHash or block.number <= self.tradeCommits[sender].block):
+def checkHash(orderHash, sender):
+    if(self.orderCommits[sender].hash != orderHash or block.number <= self.orderCommits[sender].block):
         return(-1)
     else:
         return(1)
 
-def saveTrade(tradeID, type, market, amount, price, sender, outcome, money, shares):
-    self.trades[tradeID].id = tradeID
-    self.trades[tradeID].type = type
-    self.trades[tradeID].market = market
-    self.trades[tradeID].amount = amount
-    self.trades[tradeID].price = price
-    self.trades[tradeID].owner = sender
-    self.trades[tradeID].block = block.number
-    self.trades[tradeID].outcome = outcome
-    self.trades[tradeID].moneyEscrowed = money
-    self.trades[tradeID].sharesEscrowed = shares
+def saveOrder(orderID, type, market, amount, price, sender, outcome, money, shares):
+    self.orders[orderID].id = orderID
+    self.orders[orderID].type = type
+    self.orders[orderID].market = market
+    self.orders[orderID].amount = amount
+    self.orders[orderID].price = price
+    self.orders[orderID].owner = sender
+    self.orders[orderID].block = block.number
+    self.orders[orderID].outcome = outcome
+    self.orders[orderID].moneyEscrowed = money
+    self.orders[orderID].sharesEscrowed = shares
     return(1)
 
-def getTrade(id):
-    trade = array(10)
-    trade[0] = self.trades[id].id
-    trade[1] = self.trades[id].type
-    trade[2] = self.trades[id].market
-    trade[3] = self.trades[id].amount
-    trade[4] = self.trades[id].price
-    trade[5] = self.trades[id].owner
-    trade[6] = self.trades[id].block
-    trade[7] = self.trades[id].outcome
-    trade[8] = self.trades[id].moneyEscrowed
-    trade[9] = self.trades[id].sharesEscrowed
-    if(trade):
-        return(trade: arr)
+def getOrder(id):
+    order = array(10)
+    order[0] = self.orders[id].id
+    order[1] = self.orders[id].type
+    order[2] = self.orders[id].market
+    order[3] = self.orders[id].amount
+    order[4] = self.orders[id].price
+    order[5] = self.orders[id].owner
+    order[6] = self.orders[id].block
+    order[7] = self.orders[id].outcome
+    order[8] = self.orders[id].moneyEscrowed
+    order[9] = self.orders[id].sharesEscrowed
+    if(order):
+        return(order: arr)
     return([0]: arr)
 
-def removeTrade(id):
-    self.trades[id].id = 0
-    self.trades[id].type = 0
-    self.trades[id].market = 0
-    self.trades[id].amount = 0
-    self.trades[id].price = 0
-    self.trades[id].owner = 0
-    self.trades[id].block = 0
-    self.trades[id].outcome = 0
-    self.trades[id].moneyEscrowed = 0
-    self.trades[id].sharesEscrowed = 0
+def removeOrder(id):
+    self.orders[id].id = 0
+    self.orders[id].type = 0
+    self.orders[id].market = 0
+    self.orders[id].amount = 0
+    self.orders[id].price = 0
+    self.orders[id].owner = 0
+    self.orders[id].block = 0
+    self.orders[id].outcome = 0
+    self.orders[id].moneyEscrowed = 0
+    self.orders[id].sharesEscrowed = 0
     return(1)
 
-def fillTrade(tradeID, fill, money, shares):
-    if(fill > self.trades[tradeID].amount or money > self.trades[tradeID].moneyEscrowed or shares > self.trades[tradeID].sharesEscrowed):
+def fillOrder(orderID, fill, money, shares):
+    if(fill > self.orders[orderID].amount or money > self.orders[orderID].moneyEscrowed or shares > self.orders[orderID].sharesEscrowed):
         throw()
-    self.trades[tradeID].amount -= fill
-    self.trades[tradeID].moneyEscrowed -= money
-    self.trades[tradeID].sharesEscrowed -= shares
+    self.orders[orderID].amount -= fill
+    self.orders[orderID].moneyEscrowed -= money
+    self.orders[orderID].sharesEscrowed -= shares
     return(1)
 
 # @return fxp
 def getAmount(id):
-    return(self.trades[id].amount)
+    return(self.orders[id].amount)
 
-def getID(tradeID):
-    return(self.trades[tradeID].id)
+def getID(orderID):
+    return(self.orders[orderID].id)
 
 # @return fxp
 def getPrice(id):
-    return(self.trades[id].price)
+    return(self.orders[id].price)

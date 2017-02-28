@@ -38,9 +38,9 @@ inset('refund.se')
     # pushing forward is whether a market has been pushed forward to attempt early resolution
     # bondsman is the person/address who/that posted the early resolution bond
     # originalPeriod is the original period the market's event would resolve in
-    # tradeIDs stores trades for a given market
-    # lastTrade is the last trade that happened in a given market
-    # totalTrades is the total number of trades in a give market
+    # orderIDs stores orders for a given market
+    # lastOrder is the last order that was placed in a given market
+    # totalOrders is the total number of orders ever placed in a given market
     # tags are the subject tags / categories / keywords for a given market
     # extraInfo is any extra info that didn't fit well in the regular description
     # sharesValue is the value of the shares traded in a given market
@@ -49,7 +49,7 @@ inset('refund.se')
     # lastExpDate is when the market's last event expires
     # prices keeps track of the latest traded fxpPrice for a given outcome in a market
     # shareContracts stores the erc-20 token contract address for each outcome in the market
-data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, tradeIDs[](id, nextID, prevID), lastTrade, totalTrades, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[], shareContracts[])
+data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, orderIDs[](id, nextID, prevID), lastOrder, totalOrders, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[], shareContracts[])
 
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
@@ -227,48 +227,48 @@ def modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
         self.Markets[market].volume += fxpAmount
     return(1)
 
-def addTrade(market, tradeID):
-    self.Markets[market].tradeIDs[lastID].nextID = tradeID
-    self.Markets[market].tradeIDs[tradeID].prevID = self.Markets[market].lastTrade
-    self.Markets[market].tradeIDs[tradeID].id = tradeID
-    self.Markets[market].lastTrade = tradeID
-    self.Markets[market].totalTrades += 1
+def addOrder(market, orderID):
+    self.Markets[market].orderIDs[lastID].nextID = orderID
+    self.Markets[market].orderIDs[orderID].prevID = self.Markets[market].lastOrder
+    self.Markets[market].orderIDs[orderID].id = orderID
+    self.Markets[market].lastOrder = orderID
+    self.Markets[market].totalOrders += 1
     return(1)
 
-def removeTradeFromMarket(marketID, tradeID):
-    prevID = self.Markets[marketID].tradeIDs[tradeID].prevID
-    nextID = self.Markets[marketID].tradeIDs[tradeID].nextID
-    # if the trade had a previous and next trade it connects them directly, remove this tradeID from the sequence/middle
+def removeOrderFromMarket(marketID, orderID):
+    prevID = self.Markets[marketID].orderIDs[orderID].prevID
+    nextID = self.Markets[marketID].orderIDs[orderID].nextID
+    # if the order had a previous and next order it connects them directly, remove this orderID from the sequence/middle
     if(prevID and nextID):
-        self.Markets[marketID].tradeIDs[prevID].nextID = nextID
-        self.Markets[marketID].tradeIDs[nextID].prevID = prevID
-    # if it's the most recent trade, update the previous trade to be the most recent one
+        self.Markets[marketID].orderIDs[prevID].nextID = nextID
+        self.Markets[marketID].orderIDs[nextID].prevID = prevID
+    # if it's the most recent order, update the previous order to be the most recent one
     elif(prevID):
-        self.Markets[marketID].lastTrade = prevID
-        self.Markets[marketID].tradeIDs[prevID].nextID = 0
+        self.Markets[marketID].lastOrder = prevID
+        self.Markets[marketID].orderIDs[prevID].nextID = 0
     
-    # if the trade had a trade following it, 0 out that slot
+    # if the order had a order following it, 0 out that slot
     if(nextID):
-        self.Markets[marketID].tradeIDs[tradeID].nextID = 0
-    # if the trade had a trade before it, 0 out that slot
+        self.Markets[marketID].orderIDs[orderID].nextID = 0
+    # if the order had a order before it, 0 out that slot
     if(prevID):
-        self.Markets[marketID].tradeIDs[tradeID].prevID = 0
-    self.Markets[marketID].tradeIDs[tradeID].id = 0
-    self.Markets[marketID].totalTrades -= 1
+        self.Markets[marketID].orderIDs[orderID].prevID = 0
+    self.Markets[marketID].orderIDs[orderID].id = 0
+    self.Markets[marketID].totalOrders -= 1
     return(1)
 
-def getTradeIDs(marketID):
-    tradesCount = self.Markets[marketID].totalTrades
-    tradeID = self.Markets[marketID].lastTrade
-    tradeIDs = array(tradesCount)
+def getOrderIDs(marketID):
+    ordersCount = self.Markets[marketID].totalOrders
+    orderID = self.Markets[marketID].lastOrder
+    orderIDs = array(ordersCount)
     i = 0
-    while(i < tradesCount):
-        tradeIDs[i] = self.Markets[marketID].tradeIDs[tradeID].id
-        tradeID = self.Markets[marketID].tradeIDs[tradeID].prevID
+    while(i < ordersCount):
+        orderIDs[i] = self.Markets[marketID].orderIDs[orderID].id
+        orderID = self.Markets[marketID].orderIDs[orderID].prevID
         i += 1
 
-    if(tradeIDs):
-        return(tradeIDs: arr)
+    if(orderIDs):
+        return(orderIDs: arr)
     return([FAILURE]: arr)
 
 def setWinningOutcomes(market, outcomes: arr):
@@ -309,14 +309,14 @@ def getPushedForward(market):
 def getBondsMan(market):
     return(self.Markets[market].bondsMan)
 
-def getLastTrade(market):
-    return(self.Markets[market].lastTrade)
+def getLastOrder(market):
+    return(self.Markets[market].lastOrder)
 
-def getPrevID(market, trade):
-    return(self.Markets[market].tradeIDs[trade].prevID)
+def getPrevID(market, order):
+    return(self.Markets[market].orderIDs[order].prevID)
 
-def getTotalTrades(marketID):
-    return(self.Markets[marketID].totalTrades)
+def getTotalOrders(marketID):
+    return(self.Markets[marketID].totalOrders)
 
 def getSender():
     return(msg.sender)
