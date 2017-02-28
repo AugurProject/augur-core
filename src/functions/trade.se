@@ -103,13 +103,6 @@ def trade(orderID, amountTakerWants):
     if(amountTakerWants <= 0):
         throw()
 
-    orderInfo = array(2)
-    orderInfo[0] = orderID
-    orderInfo[1] = amountTakerWants
-    orderHash = sha3(orderInfo, items = 2)
-    if(ORDERS.checkHash(orderHash, msg.sender) == -1):
-        MUTEX.unsetMutex()
-        logArrayReturn([-1])
     # Get order
     order = array(ORDER_FIELDS)
     order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
@@ -128,6 +121,17 @@ def trade(orderID, amountTakerWants):
     checkTradePreconditions()
     branch = MARKETS.getBranch(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
+
+    orderInfo = array(4)
+    orderInfo[0] = market
+    orderInfo[1] = outcome
+    orderInfo[2] = type
+    orderInfo[3] = msg.sender
+    orderHash = sha3(orderInfo, items = 4)
+    if(ORDERS.checkHash(orderHash, msg.sender) == -1):
+        MUTEX.unsetMutex()
+        logArrayReturn([-1])
+
     maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent(market, 0))
     minValue = 0
     if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent(market, 0)) > 2):

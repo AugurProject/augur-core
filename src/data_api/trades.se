@@ -9,18 +9,14 @@ data orders[](id, type, market, amount, price, owner, block, outcome, sharesEscr
 
 event logAddTx(market:indexed, sender:indexed, type, fxpPrice, fxpAmount, outcome, orderID)
 
-def makeOrderHash(fxpMaxValue, fxpMaxAmount, orderIDs: arr):
+def makeOrderHash(market, outcome, direction):
     refund()
-    i = 0
-    orders = 0
-    while(i < len(orderIDs)):
-        orders += orderIDs[i]
-        i += 1
-    orderInfo = array(3)
-    orderInfo[0] = orders
-    orderInfo[1] = fxpMaxAmount
-    orderInfo[2] = fxpMaxValue
-    orderHash = sha3(orderInfo, items = 3)
+    orderInfo = array(4)
+    orderInfo[0] = market
+    orderInfo[1] = outcome
+    orderInfo[2] = direction
+    orderInfo[3] = msg.sender
+    orderHash = sha3(orderInfo, items = 4)
     return(orderHash)
 
 def commitOrder(hash):
