@@ -1,6 +1,3 @@
-#    todo so if user hasn't claimed rep on the branch yet and it's a fork scenario, don't allow sending rep on the parent branch until they [receiver] claim
-#    should also perhaps make sender claim too
-
 # This software (Augur) allows buying and selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
 #    This program is free software; you can redistribute it and/or modify
@@ -42,6 +39,7 @@ event Transfer(from:indexed, to:indexed, value)
 event Approval(owner:indexed, spender:indexed, branch:indexed, value)
 
 macro 48_HOURS: 172800
+macro ONE_MONTH: 2592000
 
 # send active reputation
 # @return fxpValue of reputation sent
@@ -188,7 +186,6 @@ macro checkInvariants($account):
     refund()
     # auto increment vote period if needed
     INCREMENTPERIOD.incrementPeriodAfterReporting(branch)
-    # need to check all this for the person it's being sent to as well
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = BRANCHES.getVotePeriod(branch)
     lastPeriod = votePeriod - 1
@@ -205,22 +202,43 @@ macro checkInvariants($account):
             MUTEX.unsetMutex()
         return(0)
 
+macro checkConversionDuringForkInvariants():
+	child = BRANCHES.getMostRecentChild(branch)
+    tooLateForChild = block.timestamp > (BRANCHES.getCreationDate(child) + ONE_MONTH)
+    # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the sender claims it
+    if(!tooLateForChild && child && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, from)) != from):
+        if(!FAUCETS.claimInitialRep(branch, child, call = delegate)):
+            throw()
+
 macro checkSendRepInvariants():
     refund()
-    if(REPORTING.getReporterID(branch, senderIndex) != from and from == msg.sender):
+    tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
+    child = BRANCHES.getMostRecentChild(branch)
+    tooLateForChild = block.timestamp > (BRANCHES.getCreationDate(child) + ONE_MONTH)
+    # if the sender's rep. account doesn't exist, make one
+    if(REPORTING.getReporterID(branch, senderIndex) != from):
         CONSENSUS.setPenalizedUpTo(branch, from, (votePeriod - 1))
-        # have 1 month to claim, make so cant make a new acc on a new branch w/o at least trying to claim rep if it's a forked branch if it's a fork one and reporter was in old branch todo
-        BRANCHES.getParent(branch)
-    	tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
-
-        REPORTING.addReporter(branch, from)
+        # if it's a forked or new branch have 1 month to claim, so a user cant make a new account on a new branch without at least trying to claim rep if this is a fork and the reporter was in the old branch [but hasn't claimed rep on the new child branch yet]
+        parent = BRANCHES.getParent(branch)
+        reporterWasInOldBranch = REPORTING.getReporterID(parent, REPORTING.repIDToIndex(parent, from))
+        if(parent && !tooLate && reporterWasInOldBranch):
+            if(!FAUCETS.claimInitialRep(parent, branch, call = delegate)):
+                throw()
+        else:
+            REPORTING.addReporter(branch, from)
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
-    if(REPORTING.getReporterID(branch, receiverIndex) != receiver):
+    # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the receiver claims it
+    if(REPORTING.getReporterID(branch, receiverIndex) != receiver or (child && !tooLateForChild && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, receiver)) != receiver)):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-3)
+    # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the sender claims it
+    if(!tooLateForChild && child && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, from)) != from):
+        if(!FAUCETS.claimInitialRep(branch, child, call = delegate)):
+            throw()
+
     if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from == msg.sender)):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
@@ -231,9 +249,18 @@ macro checkSendRepInvariants():
 macro checkRepConversionInvariants():
     # if the sender's rep. account doesn't exist, make one
     if(REPORTING.getReporterID(branch, senderIndex) != msg.sender):
-        REPORTING.addReporter(branch, msg.sender)
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, (votePeriod - 1))
-        MUTEX.unsetMutex()
+        # if it's a forked branch have 1 month to claim, so a user cant make a new account on a new branch without at least trying to claim rep if this is a fork and the reporter was in the old branch [but hasn't claimed rep on the new branch yet]
+        parent = BRANCHES.getParent(branch)
+        tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
+        reporterWasInOldBranch = REPORTING.getReporterID(parent, REPORTING.repIDToIndex(parent, msg.sender))
+        if(parent && !tooLate && reporterWasInOldBranch):
+            if(!FAUCETS.claimInitialRep(parent, branch, call = delegate)):
+                throw()
+        else:
+            REPORTING.addReporter(branch, msg.sender)
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
         return(-1)
     if(senderBalance < fxpValue or fxpValue <= 0):
         MUTEX.unsetMutex()

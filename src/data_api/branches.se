@@ -46,7 +46,8 @@ extern rateContract: [rateFunction:[]:int256]
 # numCurrencies is the number of currencies a branch has
 # currencies[] is a 0 indexed list of the n currencies a branch allows with contract being the currency itself, rate being a fixed exchange rate, and rateContract being a contract w/ rates for the currency from currency to eth in wei
 # currencyToIndex is a reverse mapping from currencies to their indices
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[](rate, rateContract, contract), currencyToIndex[])
+# mostRecentChild is the most recent child of a branch
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[](rate, rateContract, contract), currencyToIndex[], mostRecentChild)
 
 # keeps track of a list of all branches
 data branchList[]
@@ -222,9 +223,16 @@ def getBranchByNum(branchNumber):
 
 def getCreationDate(ID):
     return(self.Branches[ID].creationDate)
-
+    
+def getMostRecentChild(ID):
+    return(self.Branches[ID].mostRecentChild)
+    
+def setMostRecentChild(parent, child):
+    self.Branches[parent].mostRecentChild = child
+    return(1)
+    
 # check that msg.sender is one of our function contracts
-def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, contract, wallet):
+def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, contract, wallet, mostRecentChild):
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
     if(!self.Branches[ID].periodLength):
@@ -239,6 +247,7 @@ def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, orac
         self.Branches[ID].parent = parent
         self.Branches[ID].baseReporters = self.Branches[parent].baseReporters
         self.Branches[ID].contract[contract] = wallet
+        self.Branches[ID].mostRecentChild = mostRecentChild
         return(1)
     else:
         return(0)
