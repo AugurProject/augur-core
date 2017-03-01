@@ -252,7 +252,7 @@ macro coverGasCostIfPossible():
     ableToPayForMore = reportsNum - paidBack
     if(ableToPayForMore):
         EVENTS.addReportersPaidSoFar(event)
-        # todo fix this coming from branch b/c it'll get redistributed in collectfees and thus cause issues
+        # todo fix this coming from branch b/c it'll get redistributed in collectfees and thus cause issues as well as diff tx.gasprice issue
         if(!BRANCHES.getWallet(branch, ETHCONTRACT).transfer(msg.sender, safeFxpDiv(GAS_SUBSIDY*tx.gasprice, WEI_TO_ETH)):
             throw()
 

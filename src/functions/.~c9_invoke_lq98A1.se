@@ -1,5 +1,6 @@
 #    todo so if user hasn't claimed rep on the branch yet and it's a fork scenario, don't allow sending rep on the parent branch until they [receiver] claim
 #    should also perhaps make sender claim too
+#    check overflows and underflows
 
 # This software (Augur) allows buying and selling event outcomes in ethereum
 # Copyright (C) 2015 Forecast Foundation OU
@@ -148,7 +149,7 @@ def convertToActiveRep(branch, fxpValue):
     senderActiveBalance = REPORTING.getRepBalance(branch, msg.sender)
     checkRepConversionInvariants()
 
-    if(!safeToSubtract(senderBalance, fxpValue) or !safeToAdd(senderActiveBalance, fxpValue) or !REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, senderIndex, fxpValue)):
+    if(!safeToSubtract()!REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, senderIndex, fxpValue)):
         throw()
     REPORTING.adjustActiveRep(branch, fxpValue)
     MUTEX.unsetMutex()

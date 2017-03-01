@@ -35,7 +35,8 @@ macro POINT_ZERO_ONE: 10000000000000000
     # no rep redistribution on this period besides for event forked over on original. parent but don't actually resolve the event until later per below - done
     # fork users get a free pass for not reporting on this period - done
 # Period after fork where we need to do nothing while waiting for fork to resolve
-    # free pass for not reporting during this period in og branch - done, UI needs to call penalizeWrong with a 0 as event param or todo do this contract side after doing penalize wrong
+    # free pass for not reporting during this period in og branch - done
+    # UI needs to call penalizeWrong with a 0 as event param per usual when no events in a period
     # no reporting or rep redistribution in this period except for on fork branch we re-report on the forked market and that's it, so no free pass on fork for that one event - done
 # Period after fork is resolved
     # markets can't be moved until now - done
@@ -77,7 +78,7 @@ def resolveFork(branch):
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
     
-    # do whitelist to only allow call w/ move event - but what if only 1 event and that's the one we fork over, in that case need the ability to call resolve fork manually if it hasn't been done yet within the time parameters which allows a fork to be resolved [2 periods after the start]
+    # do whitelist to only allow call w/ move event - but what if only 1 event and that's the one we fork over, in that case need the ability to call resolve fork manually if it hasn't been done yet within the time parameters which allows a fork to be resolved [2 periods after the start] todo
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     origCap = self.exchangeRate(branch)
