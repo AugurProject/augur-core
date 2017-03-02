@@ -313,7 +313,6 @@ def pushMarketForward(branch, market):
         return(-3)
     # push into next vote period
     period = block.timestamp / periodLength
-    # figure out what's going on with event gas / reporting subsidy system here todo
     EXPEVENTS.addEvent(branch, period, event, 0)
     # set event expiration date to be after the current reporting period ends
     EVENTS.setExpiration(event, block.timestamp)

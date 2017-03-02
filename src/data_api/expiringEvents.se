@@ -281,7 +281,7 @@ def moveEvent(branch, event):
         # add to next expiration period
         self.addEvent(branch, block.timestamp / BRANCHES.getPeriodLength(branch), event)
         EVENTS.setExpiration(event, block.timestamp)
-        EVENTS.setThreshold(event, MAX_THRESHOLD)
+        EVENTS.rreshold(event, MAX_THRESHOLD)
         return(1)
     else:
         return(0)
