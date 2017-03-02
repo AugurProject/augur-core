@@ -38,25 +38,24 @@ event closeMarketLogReturn(returnValue)
 # @return 0 if fail/trading not over yet/event not expired or closed already, if success 1
 # Error messages otherwise
     # 0: hasn't been reported on yet or already resolved
-    # -1: Market has no cash anyway / already closed
+    # -1: Market already closed
     # -2: 0 outcome / not reported on yet
     # -3: not final round 2 event
     # -4: Event forked and not final yet
     # -5: bonded pushed forward market not ready to be resolved
-# if market's events have moved due to a fork branch param passed should be the new fork [todo check to make sure it handles the wrong branch param properly here]
 def closeMarket(market, sender):
     refund()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
-    branch = MARKETS.getBranch(market)
-    tradingPeriod = MARKETS.getTradingPeriod(market)
-    period = BRANCHES.getVotePeriod(branch)
     event = MARKETS.getMarketEvent(market, 0)
+    branch = EVENTS.getEventBranch(event)
+    expirationPeriod = EVENTS.getExpiration(event)
+    period = BRANCHES.getVotePeriod(branch)
     fxpOutcome = EVENTS.getOutcome(event)
     resolution = 1
-    forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
+    forkPeriod = BRANCHES.getForkPeriod(branch)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     checkCloseMarketPreconditions()
     
@@ -71,9 +70,7 @@ def closeMarket(market, sender):
     logReturn(closeMarketLogReturn, 1)
 
 macro checkCloseMarketPreconditions():
-    # what if we forked or round 2 won't it be resolved and thus market never gets resolved todo
-    # fix for early res
-    if((period <= tradingPeriod) or fxpOutcome):
+    if((period <= expirationPeriod)):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         logReturn(closeMarketLogReturn, 0)

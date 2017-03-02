@@ -108,6 +108,8 @@ def transferFrom(branch, from, receiver, fxpValue):
     # -4: couldn't catchup automatically
     # -5: not enough rep / fxpValue too small
 # if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event todo
+say you lost rep in round 1, if it was a valid round 2 you have incentive to not convert to dormant or send rep b/c you want to get it back
+say you gained rep in round 1, if it was a valid round 2 you have incentive _to_ convert to dormant
 # unless this just happened to them last period and they reported correctly then
 def convertToDormantRep(branch, fxpValue):
     if(MUTEX.getMutex()):

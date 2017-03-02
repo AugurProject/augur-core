@@ -281,22 +281,23 @@ def updateTradingFee(market, fxpTradingFee):
 # In the event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
     # and market remains with old expiration dateevent
 # In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
-# todo add comments re return values and test again
-# test this w/ new early first resolver thing too
+# Errors:
+    # 0: invalid branch
+    # -1: in a fork period
+    # -2: market already closed or already pushed forward
+    # -3: event has already been pushed forward, is being reported on now, or has an outcome already
 def pushMarketForward(branch, market):
     refund()
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()
 
-    # can't do while forking
     forkPeriod = BRANCHES.getForkPeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
     currentPeriod = block.timestamp / periodLength
     if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod + 1)):
         MUTEX.unsetMutex()
         return(-1)
-    # if market closed or already pushed forward, return 0
     if(MARKETS.getOneWinningOutcome(market, 0) or MARKETS.getPushedForward(market)):
         MUTEX.unsetMutex()
         return(-2)
@@ -312,15 +313,16 @@ def pushMarketForward(branch, market):
         return(-3)
     # push into next vote period
     period = block.timestamp / periodLength
-    # figure out what's going on with subsidy system here todo
+    # figure out what's going on with event gas / reporting subsidy system here todo
     EXPEVENTS.addEvent(branch, period, event, 0)
     # set event expiration date to be after the current reporting period ends
     EVENTS.setExpiration(event, block.timestamp)
     MARKETS.setTradingPeriod(market, period)
     MARKETS.setPushedForward(market, 1, msg.sender)
     EVENTS.setEventPushedUp(event, 1)
-    payEarlyResolutionBond = INFO.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), safeFxpMul(MARKETS.getTradingFee(market), MARKETS.getTotalSharesPurchased(market)) / 2)
-    if(!payEarlyResolutionBond):
+    bond = safeFxpMul(MARKETS.getTradingFee(market), MARKETS.getTotalSharesPurchased(market)) / 2
+    payEarlyResolutionBond = INFO.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), bond)
+    if(!payEarlyResolutionBond or !EVENTS.setEarlyResolutionBond(event, bond)):
         throw()
     MUTEX.unsetMutex()
     return(1)

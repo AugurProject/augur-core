@@ -60,6 +60,7 @@ def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch
     ethical = ethicCatch(ethics)
     ethicOutcome = safeFxpMul(ONE_HALF, fxpScaledMax - fxpScaledMin) + fxpScaledMin
     # outcome of 1 is 1/10**18 or basically 0, but allows us to still check if outcome is 0 or not to see if an outcome has been set
+
     if(ethicOutcome == 0):
         ethicOutcome = 1
     EVENTS.setEthics(event, ethical)
@@ -95,7 +96,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
     if($indeterminateNotReadyToResolveEarlyEvent):
         if(MARKETS.getPushedForward($market)):
             # look @ total shares purchase cutoff times for early resolution bonds
-            amount = safeFxpDiv(safeFxpMul(MARKETS.getTradingFee($market), MARKETS.getTotalSharesPurchased($market)), (2 * ONE))
+            amount = EVENTS.getEarlyResolutionBond($event)
             branchWallet = BRANCHES.getWallet($branch, INFO.getCurrency($market))
             if(amount && !INFO.getWallet($market).transfer(branchWallet, amount)):
                 throw()
@@ -133,7 +134,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         if(!INFO.getWallet($event).transfer(INFO.getCreator($event), EVENTS.getBond($event))):
             throw()
         if(MARKETS.getPushedForward($market)):
-            amount = safeFxpDiv(safeFxpMul(MARKETS.getTradingFee($market), MARKETS.getTotalSharesPurchased($market)), (2 * ONE))
+            amount = EVENTS.getEarlyResolutionBond($event)
             if(amount && !INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), amount)):
                 throw()
         if(EVENTS.getEventPushedUp($event)):

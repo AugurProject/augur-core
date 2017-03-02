@@ -44,7 +44,8 @@ import info as INFO
 # firstPreliminaryOutcome is the outcome submitted by the resolutionAddress
 # challenged is whether an event has been challenged already
 # resolveBondPoster is the address which posted the rep bond for the first resolution period
-data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent, resolutionAddress, extraBond, firstPreliminaryOutcome, challenged, resolveBondPoster)
+# earlyResolutionBond is the bond paid for early resolution of an event
+data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent, resolutionAddress, extraBond, firstPreliminaryOutcome, challenged, resolveBondPoster, earlyResolutionBond)
 
 # Keeps track of number of events created in the past 24 hours
 data past24Hours[]
@@ -222,6 +223,13 @@ def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOut
 
 def setBond(event, bond):
     self.Events[event].bond = bond
+    return(1)
+
+def getEarlyResolutionBond(event):
+    return(self.Events[event].earlyResolutionBond)
+    
+def setEarlyResolutionBond(event, bond):
+    self.Events[event].earlyResolutionBond = bond
     return(1)
 
 def addMarket(event, market):
