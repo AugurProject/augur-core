@@ -76,7 +76,7 @@ def getEventsToReportOn(branch, period, sender, start):
             shaHash = sha3(sender + thisEvent)
             shaHash = abs(shaHash) / 115792089237316195423571
             if((shaHash < reportingThreshold || EXPEVENTS.getRequired(thisEvent)) && !EVENTS.getOutcome(thisEvent)):
-                events[i] = thisEvent
+                events[numEventsToReportOn] = thisEvent
                 numEventsToReportOn += 1
         i += 1
     return(slice(events, items=0, items=numEventsToReportOn): arr)
