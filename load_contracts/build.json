@@ -8732,7 +8732,7 @@
         "sig": "extern forkPenalize: [penalizeOnForkedEvent:[int256,int256]:int256, proportionCorrectForkEvent:[int256]:int256, test_callstack:[]:int256]"
     }, 
     "forking": {
-        "address": "0x2e5a882aa53805f1a9da3cf18f73673bca98fa0f", 
+        "address": "0xdc2ee03ac61c4aa4302a766a300ea8130aeca7e5", 
         "code": [
             "extern refund.se: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256, test_callstack:[]:int256]", 
             "INFO = 0x8a4e2993a9972ee035453bb5674816fc3a698718", 
@@ -8749,9 +8749,9 @@
             "extern refund.se: [adjForkBondPaid:[int256,int256]:int256, doRoundTwoRefund:[int256,int256]:int256, getBondAmount:[int256]:int256, getBondPaid:[int256]:int256, getBondPoster:[int256]:int256, getBondReturned:[int256]:int256, getFinal:[int256]:int256, getForkBondPaid:[int256]:int256, getForkBondPoster:[int256]:int256, getForkedOverEthicality:[int256]:int256, getMoved:[int256]:int256, getOriginalBranch:[int256]:int256, getOriginalEthicality:[int256]:int256, getOriginalOutcome:[int256]:int256, getOriginalVotePeriod:[int256]:int256, getResolved:[int256,int256]:int256, getRoundTwo:[int256]:int256, increaseBondPaid:[int256,int256]:int256, setBondAmount:[int256,int256]:int256, setBondPoster:[int256,int256]:int256, setBondReturned:[int256]:int256, setFinal:[int256]:int256, setForkBondPoster:[int256,int256]:int256, setForkedOverEthicality:[int256]:int256, setMoved:[int256]:int256, setOriginalBranch:[int256,int256]:int256, setOriginalEthicality:[int256,int256]:int256, setOriginalOutcome:[int256,int256]:int256, setOriginalVotePeriod:[int256,int256]:int256, setResolved:[int256,int256,int256]:int256, setRoundTwo:[int256,int256]:int256, setRoundTwoRefund:[int256,int256]:int256, test_callstack:[]:int256]", 
             "BACKSTOPS = 0x708fdfe18bf28afe861a69e95419d183ace003eb", 
             "extern sendReputation: [allowance:[int256,int256]:int256, approve:[int256,int256,int256]:int256, convertToActiveRep:[int256,int256]:int256, convertToDormantRep:[int256,int256]:int256, sendReputation:[int256,int256,int256]:int256, test_callstack:[]:int256, transfer:[int256,int256,int256]:int256, transferFrom:[int256,int256,int256,int256]:int256]", 
-            "SENDREP = 0x9308cf21b5a11f182f9707ca284bbb71bb84f893", 
+            "SENDREP = 0xfa52a66a44aa0b4470d08a0e357a99e93fb5d4b8", 
             "extern roundTwo: [resolve:[int256,int256]:int256, roundTwoPostBond:[int256,int256,int256,int256]:int256, roundTwoResolve:[int256,int256,int256,int256]:int256, test_callstack:[]:int256]", 
-            "ROUNDTWO = 0x7d4b581a0868204b7481c316b430a97fd292a2fb", 
+            "ROUNDTWO = 0xbb1e0f685bd3f2c8a03eeae2da5f61808de4886a", 
             "extern expiringEvents: [addEvent:[int256,int256,int256,int256]:int256, addRepEvent:[int256,int256,int256,int256]:int256, addReportToEvent:[int256,int256,int256,int256]:int256, addReportersPaidSoFar:[int256,int256]:int256, addRoundTwo:[int256,int256]:int256, addToWeightOfReport:[int256,int256,int256,int256]:int256, adjustPeriodShareValueOutstanding:[int256,int256,int256]:int256, deleteEvent:[int256,int256,int256]:int256, getAfterRep:[int256,int256,int256]:int256, getBeforeRep:[int256,int256,int256]:int256, getCurrentMode:[int256,int256]:int256, getCurrentModeItems:[int256,int256]:int256, getEncryptedReport:[int256,int256,int256,int256]:int256[], getEthicReport:[int256,int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256]:int256, getEvents:[int256,int256]:int256[], getEventsRange:[int256,int256,int256,int256]:int256[], getLesserReportNum:[int256,int256,int256]:int256, getNumEventsToReportOn:[int256,int256]:int256, getNumRemoved:[int256,int256]:int256, getNumReportsActual:[int256,int256,int256]:int256, getNumReportsEvent:[int256,int256,int256]:int256, getNumRequired:[int256,int256]:int256, getNumRoundTwo:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodDormantRep:[int256,int256,int256]:int256, getPeriodRepConstant:[int256,int256,int256]:int256, getRepEvent:[int256,int256,int256]:int256, getReport:[int256,int256,int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getReportersPaidSoFar:[int256,int256]:int256, getRequired:[int256]:int256, getShareValue:[int256,int256]:int256, getSubsidy:[int256,int256,int256]:int256, getWeightOfReport:[int256,int256,int256]:int256, moveEvent:[int256,int256]:int256, refundCost:[int256,int256]:int256, removeEvent:[int256,int256]:int256, setAfterRep:[int256,int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256,int256]:int256, setCurrentMode:[int256,int256,int256]:int256, setCurrentModeItems:[int256,int256,int256]:int256, setEncryptedReport:[int256,int256,int256,int256,int256,int256,int256]:int256, setEthicReport:[int256,int256,int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setLesserReportNum:[int256,int256,int256,int256]:int256, setNumEventsToReportOn:[int256]:int256, setNumReportsEvent:[int256,int256,int256,int256]:int256, setPeriodDormantRep:[int256,int256,int256,int256]:int256, setPeriodRepConstant:[int256,int256,int256,int256]:int256, setReport:[int256,int256,int256,int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256]", 
             "EXPEVENTS = 0xe4714fcbdcdba49629bc408183ef40d120700b8d", 
             "extern createBranch: [createSubbranch:[bytes,int256,int256,int256,int256]:int256, test_callstack:[]:int256]", 
@@ -9545,7 +9545,7 @@
         "sig": "extern refund.se: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "makeReports": {
-        "address": "0x70a893eb9569041e97a3787f0c76a1eb6378d8b2", 
+        "address": "0x758d0c47d4bd19cef7c2a389c3992351cc777ac1", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -9587,7 +9587,7 @@
             "extern penalizationCatchup: [penalizationCatchup:[int256,int256]:int256, test_callstack:[]:int256]", 
             "CATCHUP = 0xabe47f122a496a732d6c4b38b3ca376d597d75dd", 
             "extern reportingThreshold: [calculateReportTargetForEvent:[int256,int256,int256,int256]:int256, calculateReportingThreshold:[int256,int256,int256,int256]:int256, getEventCanReportOn:[int256,int256,int256,int256]:int256, getEventsToReportOn:[int256,int256,int256,int256]:int256[], setReportingThreshold:[int256]:int256, test_callstack:[]:int256]", 
-            "THRESHOLD = 0x5f67ab9ff79be97b27ac8f26ef9f4b429b82e2df", 
+            "THRESHOLD = 0x37fef72e3020d791b350f3a1d30657b63dce3bff", 
             "inset('refund.se')", 
             "inset('logReturn.se')", 
             "", 
@@ -11695,7 +11695,7 @@
         "sig": "extern penalizationCatchup: [penalizationCatchup:[int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "penalizeNotEnoughReports": {
-        "address": "0x8c19616de17acdfbc933b99d9f529a689d22098f", 
+        "address": "0xa30e071836c627fd92455c00c0ea907d21bb4ada", 
         "code": [
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256, test_callstack:[]:int256]", 
             "BRANCHES = 0x482c57abdce592b39434e3f619ffc3db62ab6d01", 
@@ -11706,7 +11706,7 @@
             "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOf:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getFork:[int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setFork:[int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, test_callstack:[]:int256, totalSupply:[int256]:int256]", 
             "REPORTING = 0x77c424f86a1b80f1e303d1c2651acd6aba653cb6", 
             "extern reportingThreshold: [calculateReportTargetForEvent:[int256,int256,int256,int256]:int256, calculateReportingThreshold:[int256,int256,int256,int256]:int256, getEventCanReportOn:[int256,int256,int256,int256]:int256, getEventsToReportOn:[int256,int256,int256,int256]:int256[], setReportingThreshold:[int256]:int256, test_callstack:[]:int256]", 
-            "THRESHOLD = 0x5f67ab9ff79be97b27ac8f26ef9f4b429b82e2df", 
+            "THRESHOLD = 0x37fef72e3020d791b350f3a1d30657b63dce3bff", 
             "extern refund.se: [fx_exp:[int256]:int256, fx_log:[int256]:int256, sqrt:[int256]:int256, test_callstack:[]:int256]", 
             "FXP = 0xe5b327630cfa7f4b2324f9066c897dceecfd88a3", 
             "inset('refund.se')", 
@@ -12763,7 +12763,7 @@
         "sig": "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOf:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getFork:[int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setFork:[int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, test_callstack:[]:int256, totalSupply:[int256]:int256]"
     }, 
     "reportingThreshold": {
-        "address": "0x5f67ab9ff79be97b27ac8f26ef9f4b429b82e2df", 
+        "address": "0x37fef72e3020d791b350f3a1d30657b63dce3bff", 
         "code": [
             "extern branches: [addMarketToBranch:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getCreationDate:[int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getInitialBalance:[int256,int256]:int256, getMarketsInBranch:[int256]:int256[], getMinTradingFee:[int256]:int256, getNumBranches:[]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getSomeMarketsInBranch:[int256,int256,int256]:int256[], getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initDefaultBranch:[]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256]:int256, test_callstack:[]:int256]", 
             "BRANCHES = 0x482c57abdce592b39434e3f619ffc3db62ab6d01", 
@@ -12849,7 +12849,7 @@
             "            shaHash = sha3(sender + thisEvent)", 
             "            shaHash = abs(shaHash) / 115792089237316195423571", 
             "            if((shaHash < reportingThreshold || EXPEVENTS.getRequired(thisEvent)) && !EVENTS.getOutcome(thisEvent)):", 
-            "                events[i] = thisEvent", 
+            "                events[numEventsToReportOn] = thisEvent", 
             "                numEventsToReportOn += 1", 
             "        i += 1", 
             "    return(slice(events, items=0, items=numEventsToReportOn): arr)", 
@@ -13035,7 +13035,7 @@
         "sig": "extern reportingThreshold: [calculateReportTargetForEvent:[int256,int256,int256,int256]:int256, calculateReportingThreshold:[int256,int256,int256,int256]:int256, getEventCanReportOn:[int256,int256,int256,int256]:int256, getEventsToReportOn:[int256,int256,int256,int256]:int256[], setReportingThreshold:[int256]:int256, test_callstack:[]:int256]"
     }, 
     "roundTwo": {
-        "address": "0x7d4b581a0868204b7481c316b430a97fd292a2fb", 
+        "address": "0xbb1e0f685bd3f2c8a03eeae2da5f61808de4886a", 
         "code": [
             "extern refund.se: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, setInfo:[int256,bytes,int256,int256]:int256, test_callstack:[]:int256]", 
             "INFO = 0x8a4e2993a9972ee035453bb5674816fc3a698718", 
@@ -13054,7 +13054,7 @@
             "extern refund.se: [adjForkBondPaid:[int256,int256]:int256, doRoundTwoRefund:[int256,int256]:int256, getBondAmount:[int256]:int256, getBondPaid:[int256]:int256, getBondPoster:[int256]:int256, getBondReturned:[int256]:int256, getFinal:[int256]:int256, getForkBondPaid:[int256]:int256, getForkBondPoster:[int256]:int256, getForkedOverEthicality:[int256]:int256, getMoved:[int256]:int256, getOriginalBranch:[int256]:int256, getOriginalEthicality:[int256]:int256, getOriginalOutcome:[int256]:int256, getOriginalVotePeriod:[int256]:int256, getResolved:[int256,int256]:int256, getRoundTwo:[int256]:int256, increaseBondPaid:[int256,int256]:int256, setBondAmount:[int256,int256]:int256, setBondPoster:[int256,int256]:int256, setBondReturned:[int256]:int256, setFinal:[int256]:int256, setForkBondPoster:[int256,int256]:int256, setForkedOverEthicality:[int256]:int256, setMoved:[int256]:int256, setOriginalBranch:[int256,int256]:int256, setOriginalEthicality:[int256,int256]:int256, setOriginalOutcome:[int256,int256]:int256, setOriginalVotePeriod:[int256,int256]:int256, setResolved:[int256,int256,int256]:int256, setRoundTwo:[int256,int256]:int256, setRoundTwoRefund:[int256,int256]:int256, test_callstack:[]:int256]", 
             "BACKSTOPS = 0x708fdfe18bf28afe861a69e95419d183ace003eb", 
             "extern sendReputation: [allowance:[int256,int256]:int256, approve:[int256,int256,int256]:int256, convertToActiveRep:[int256,int256]:int256, convertToDormantRep:[int256,int256]:int256, sendReputation:[int256,int256,int256]:int256, test_callstack:[]:int256, transfer:[int256,int256,int256]:int256, transferFrom:[int256,int256,int256,int256]:int256]", 
-            "SENDREP = 0x9308cf21b5a11f182f9707ca284bbb71bb84f893", 
+            "SENDREP = 0xfa52a66a44aa0b4470d08a0e357a99e93fb5d4b8", 
             "inset('refund.se')", 
             "", 
             "macro POINTZEROONE: 10000000000000000", 
@@ -13364,7 +13364,7 @@
         "sig": "extern roundTwo: [resolve:[int256,int256]:int256, roundTwoPostBond:[int256,int256,int256,int256]:int256, roundTwoResolve:[int256,int256,int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "roundTwoPenalize": {
-        "address": "0xcd6c7bc634257f82903b182142aae7156d72a200", 
+        "address": "0x2ec40803caf9b49cc5de237ce341d486245145fd", 
         "code": [
             "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOf:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getFork:[int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setFork:[int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, test_callstack:[]:int256, totalSupply:[int256]:int256]", 
             "REPORTING = 0x77c424f86a1b80f1e303d1c2651acd6aba653cb6", 
@@ -13383,7 +13383,7 @@
             "extern consensusData: [doRefund:[int256,int256]:int256, getBaseReportersLastPeriod:[int256]:int256, getDenominator:[int256,int256]:int256, getFeeFirst:[int256,int256]:int256, getFeesCollected:[int256,int256,int256]:int256, getNotEnoughPenalized:[int256,int256,int256]:int256, getPenalized:[int256,int256,int256,int256]:int256, getPenalizedNum:[int256,int256,int256]:int256, getPenalizedUpTo:[int256,int256]:int256, getPeriodBalance:[int256,int256]:int256, getRepRedistributionDone:[int256,int256]:int256, getSlashed:[int256,int256,int256]:int256, increaseDenominator:[int256,int256,int256]:int256, increasePenalizedNum:[int256,int256,int256,int256]:int256, setBaseReportersLastPeriod:[int256,int256]:int256, setFeeFirst:[int256,int256,int256]:int256, setFeesCollected:[int256,int256,int256]:int256, setNotEnoughPenalized:[int256,int256,int256]:int256, setPenalized:[int256,int256,int256,int256]:int256, setPenalizedUpTo:[int256,int256,int256]:int256, setPeriodBalance:[int256,int256,int256]:_, setRefund:[int256,int256]:int256, setSlashed:[int256,int256,int256]:int256, test_callstack:[]:int256]", 
             "CONSENSUS = 0x4a61f3db785f1e2a23ffefeafaceeef2df551667", 
             "extern roundTwo: [resolve:[int256,int256]:int256, roundTwoPostBond:[int256,int256,int256,int256]:int256, roundTwoResolve:[int256,int256,int256,int256]:int256, test_callstack:[]:int256]", 
-            "ROUNDTWO = 0x7d4b581a0868204b7481c316b430a97fd292a2fb", 
+            "ROUNDTWO = 0xbb1e0f685bd3f2c8a03eeae2da5f61808de4886a", 
             "", 
             "inset('refund.se')", 
             "", 
@@ -13632,7 +13632,7 @@
         "sig": "extern roundTwoPenalize: [penalizeRoundTwoWrong:[int256,int256]:int256, test_callstack:[]:int256]"
     }, 
     "sendReputation": {
-        "address": "0x9308cf21b5a11f182f9707ca284bbb71bb84f893", 
+        "address": "0xfa52a66a44aa0b4470d08a0e357a99e93fb5d4b8", 
         "code": [
             "# This software (Augur) allows buying && selling event outcomes in ethereum", 
             "# Copyright (C) 2015 Forecast Foundation OU", 
@@ -13662,7 +13662,7 @@
             "extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOf:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getFork:[int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setFork:[int256]:int256, setInitialReporters:[int256,int256]:int256, setRep:[int256,int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, test_callstack:[]:int256, totalSupply:[int256]:int256]", 
             "REPORTING = 0x77c424f86a1b80f1e303d1c2651acd6aba653cb6", 
             "extern makeReports: [makeHash:[int256,int256,int256,int256]:int256, submitReport:[int256,int256,int256,int256]:_, submitReportHash:[int256,int256,int256,int256,int256]:int256, test_callstack:[]:int256, validateReport:[int256,int256,int256,int256,int256,int256,int256,int256]:int256]", 
-            "REPORTS = 0x70a893eb9569041e97a3787f0c76a1eb6378d8b2", 
+            "REPORTS = 0x758d0c47d4bd19cef7c2a389c3992351cc777ac1", 
             "extern penalizationCatchup: [penalizationCatchup:[int256,int256]:int256, test_callstack:[]:int256]", 
             "CATCHUP = 0xabe47f122a496a732d6c4b38b3ca376d597d75dd", 
             "extern consensusData: [doRefund:[int256,int256]:int256, getBaseReportersLastPeriod:[int256]:int256, getDenominator:[int256,int256]:int256, getFeeFirst:[int256,int256]:int256, getFeesCollected:[int256,int256,int256]:int256, getNotEnoughPenalized:[int256,int256,int256]:int256, getPenalized:[int256,int256,int256,int256]:int256, getPenalizedNum:[int256,int256,int256]:int256, getPenalizedUpTo:[int256,int256]:int256, getPeriodBalance:[int256,int256]:int256, getRepRedistributionDone:[int256,int256]:int256, getSlashed:[int256,int256,int256]:int256, increaseDenominator:[int256,int256,int256]:int256, increasePenalizedNum:[int256,int256,int256,int256]:int256, setBaseReportersLastPeriod:[int256,int256]:int256, setFeeFirst:[int256,int256,int256]:int256, setFeesCollected:[int256,int256,int256]:int256, setNotEnoughPenalized:[int256,int256,int256]:int256, setPenalized:[int256,int256,int256,int256]:int256, setPenalizedUpTo:[int256,int256,int256]:int256, setPeriodBalance:[int256,int256,int256]:_, setRefund:[int256,int256]:int256, setSlashed:[int256,int256,int256]:int256, test_callstack:[]:int256]", 
