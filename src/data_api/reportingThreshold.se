@@ -53,7 +53,7 @@ def getEventsToReportOn(branch, period, sender, start, end):
             notResolvedYet = !EVENTS.getOutcome(thisEvent)
             ableToReportOn = (shaHash < reportingThreshold or EXPEVENTS.getRequired(thisEvent, period, branch)) and notResolvedYet
             if(ableToReportOn):
-                events[i] = thisEvent
+                events[numEventsToReportOn] = thisEvent
                 numEventsToReportOn += 1
         i += 1
     return(slice(events, items = 0, items = numEventsToReportOn): arr)
