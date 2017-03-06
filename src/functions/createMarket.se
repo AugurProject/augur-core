@@ -28,6 +28,7 @@ import reporting as REPORTING
 import events as EVENTS
 import expiringEvents as EXPEVENTS
 import mutex as MUTEX
+import fxpFunctions as FXP
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
 inset('../data_api/float.se')
@@ -41,6 +42,8 @@ macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 macro MAX_FEE: 2 ** 62
 macro THREE_DAYS: 259200
 macro FIRST_RESOLVE_BOND: 10 * ONE
+macro SECONDS_PER_YEAR: 31557600
+macro 10_PERCENT_RATE: 100000000000000000
 
 macro checkSubcurrencyIsValid(contract):
     allowance = $contract.allowance(msg.sender, self)
@@ -108,6 +111,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
 
     firstResolveBondPaid = 0
     firstResolveBondPoster = 0
+    # todo fix
     resolverPaid = REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, resolutionAddress), FIRST_RESOLVE_BOND) && REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, event), FIRST_RESOLVE_BOND)
     if(resolverPaid)
         firstResolveBondPaid = 1
@@ -219,7 +223,7 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     return(market)
     
 # initialize market and send money to pay for resolution
-# todo fix something off with paying for resolution here and event adding and what if event already added then -500k issue and what if user doesn't send enough to resolve where is check for that
+# todo fix something off with paying for resolution here and what if event already added then -500k issue and what if user doesn't send enough to resolve where is check for that
 macro makeMarket():
     $payCosts = currency.transferFrom(msg.sender, INFO.getWallet(branch), creationFee)
     $infoSet = INFO.setInfo(market, description, msg.sender, creationFee, currency, wallet)
@@ -231,11 +235,14 @@ macro makeMarket():
     $initializedMarket = MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, msg.value - COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, creationFee, expirationDate, shareContracts, value = (msg.value - COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice))
     $makeBranchAndEventAwareOfNewMarket = BRANCHES.addMarketToBranch(branch, market) and EVENTS.addMarket(event, market)
 
-    # todo event creation bond pay w/ markets per clubhouse issue
+    # event creation bond pay w/ markets
         # A = P*e^rt
         # so A - P gives us amount to return to person
-    $bondPrincipal = $EVENTS.getBond(events[0])
-    $paidEventBondPoster = 
+    currency = INFO.getCurrency(events[0])
+    $bondPrincipal = EVENTS.getBond(events[0])
+    $time = (expirationDate - block.timestamp) * ONE / SECONDS_PER_YEAR
+    $amountToPay = $bondPrincipal*FXP.fxExp(safeFxpMul($time, 10_PERCENT_RATE)) - $bondPrincipal
+    $paidEventBondPoster = currency.transferFrom(msg.sender, INFO.getCreator(events[0]), $amountToPay)
     if($payCosts and $infoSet and $initializedMarket and $makeBranchAndEventAwareOfNewMarket and $paidEventBondPoster):
         1
     else:
