@@ -31,7 +31,7 @@ inset('refund.se')
 macro TRADE_FIELDS: 8
 macro EVENTS_FIELDS: 9
 macro OUTCOMES_FIELDS: 3
-macro BASE_FIELDS: 14
+macro BASE_FIELDS: 15
 macro BASE_CACHE_FIELDS: 10
 
 def getOrderBook(marketID, offset, numTradesToLoad):
@@ -94,13 +94,15 @@ def getMarketInfo(marketID, account):
     marketInfo[5] = MARKETS.getBranchID(marketID)
     marketInfo[6] = MARKETS.getCumScale(marketID)
     marketInfo[7] = MARKETS.getCreationTime(marketID)
-    marketInfo[8] = MARKETS.getVolume(marketID)
-    marketInfo[9] = INFO.getCreationFee(marketID)
-    marketInfo[10] = INFO.getCreator(marketID)
+    marketInfo[8] = MARKETS.getCreationBlock(marketID)
+
+    marketInfo[9] = MARKETS.getVolume(marketID)
+    marketInfo[10] = INFO.getCreationFee(marketID)
+    marketInfo[11] = INFO.getCreator(marketID)
     tags = MARKETS.returnTags(marketID, outitems=3)
-    marketInfo[11] = tags[0]
-    marketInfo[12] = tags[1]
-    marketInfo[13] = tags[2]
+    marketInfo[12] = tags[0]
+    marketInfo[13] = tags[1]
+    marketInfo[14] = tags[2]
 
     # gather event(s) info:
     # [eventID, expirationDate, outcome, minValue, maxValue, numOutcomes]

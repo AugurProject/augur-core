@@ -136,3 +136,6 @@ def fill_trade(id, fill):
     refund()
     self.trades[id].amount -= fill
     return(1)
+
+def getSender():
+    return(msg.sender)

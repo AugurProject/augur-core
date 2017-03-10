@@ -51,7 +51,7 @@ inset('refund.se')
     # fees is total amount of fees a market has paid to a branch [the reporters]
     # lastExpDate is when the market's last event expires
     # prices keeps track of the latest traded price for a given outcome in a market
-data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationTime, lastExpDate, prices[])
+data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, tradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, trade_ids[](id, next_id, prev_id), last_trade, total_trades, tag1, tag2, tag3, makerFees, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, creationBlock, creationTime, lastExpDate, prices[])
 
 def addFees(market, amount):
     self.Markets[market].fees += amount
@@ -109,6 +109,9 @@ def getMarketEvent(market, index):
 
 def getCreationTime(market):
     return(self.Markets[market].creationTime)
+
+def getCreationBlock(market):
+    return(self.Markets[market].creationBlock)
 
 def getMarketEvents(market):
     refund()
@@ -202,6 +205,7 @@ def initializeMarket(marketID, events: arr, tradingPeriod, tradingFee, branch, t
     self.Markets[marketID].makerFees = makerFees
     self.Markets[marketID].fees = creationFee
     self.Markets[marketID].creationTime = block.timestamp
+    self.Markets[marketID].creationBlock = block.number
     self.Markets[marketID].lastExpDate = lastExpDate
     return(1)
 
@@ -334,6 +338,3 @@ def get_trade_ids(market_id, offset, numTradesToLoad):
 def get_total_trades(market_id):
     refund()
     return(self.Markets[market_id].total_trades)
-
-def getSender():
-	return(msg.sender)
