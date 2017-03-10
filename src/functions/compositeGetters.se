@@ -95,7 +95,6 @@ def getMarketInfo(marketID, account):
     marketInfo[6] = MARKETS.getCumScale(marketID)
     marketInfo[7] = MARKETS.getCreationTime(marketID)
     marketInfo[8] = MARKETS.getCreationBlock(marketID)
-
     marketInfo[9] = MARKETS.getVolume(marketID)
     marketInfo[10] = INFO.getCreationFee(marketID)
     marketInfo[11] = INFO.getCreator(marketID)
