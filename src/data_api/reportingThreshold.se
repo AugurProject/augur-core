@@ -125,9 +125,6 @@ def calculateNumberOfEventsAReporterHasToReportOnAtMinimum(branch, reporter, per
     repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(originalRep) / ONE) * ONE / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
     numRequiredEvents = EXPEVENTS.getNumRequired(branch, period)
     expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn + numRequiredEvents * ONE
-    # in period just after fork period no reports required
-    if(periodAfterForkPeriod):
-        return(0)
     dealWithWhaleReporters()
     return(expectedEventsForReporterIncludingRequired / 2)
 

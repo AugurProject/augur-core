@@ -44,6 +44,8 @@ macro THREE_DAYS: 259200
 macro FIRST_RESOLVE_BOND: 10 * ONE
 macro SECONDS_PER_YEAR: 31557600
 macro 10_PERCENT_RATE: 100000000000000000
+# may want to reconfirm this again
+macro COST_FOR_MARKET_RESOLUTION: 1000000
 
 macro checkSubcurrencyIsValid(contract):
     allowance = $contract.allowance(msg.sender, self)
@@ -73,7 +75,7 @@ macro checkSubcurrencyIsValid(contract):
     # -1: we're either already past that date, branch doesn't exist, or description or resolver address is bad
     # -2: max value < min value or range < 1
     # -3: invalid number of outcomes
-    # -4: would expire during non-reporting fork period
+    # -5: currency isn't an approved branch currency
 # .025 eth to create
 # descriptionWithoutOutcomeLabels + "~|>" + outcome1label + "|"  + outcome2label + "|" + outcome3label is format for a description
 # with a categorical user can set min and max to whatever, for reporting 1 is the min and max is the max then reports should be scaled between that range, for payouts it's 1 to the winning outcome or equal for all outcomes if indeterminate, you cannot trade by paying more than 1 for a share as that makes no sense
@@ -85,7 +87,6 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
         MUTEX.setMutex()
 
     periodLength = BRANCHES.getPeriodLength(branch)
-    forkPeriod = BRANCHES.getForkPeriod(branch)
     checkEventCreationPreconditions()
 
     eventinfo = string(8 * 32 + len(description))
@@ -146,8 +147,9 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
 # error messages otherwise
     # -1: bad input or event doesn't exist
     # -2: event already expired
-    # -3: would expire during non-reporting fork period
     # -4: market already exists
+    # -5: currency isn't an approved branch currency
+    # -6: didn't pay enough for market resolution gas cost
     # throw()s if not enough money to create the market and place event in the appropriate reporting period
 # .05 eth to create
 # need at least 1.2M gas @ gas price to cover resolution & 500k per event to calc. num reports for it - this is passed as value to this function
@@ -172,7 +174,6 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     # market's trading period is the same as the last expiring event in the market
     expirationDate = EVENTS.getExpiration(event)
     futurePeriod = expirationDate / periodLength
-    forkPeriod = BRANCHES.getForkPeriod(branch)
     checkMarketCreationPreconditions()
 
     # scalars
@@ -205,7 +206,6 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     events = array(1)
     events[0] = event
     checkSubcurrencyIsValid(currency)
-    # todo if wallet contract doesn't exist for a branch for a given currency need to make it or should we have an approval process for adding a token to a branch and otherwise don't allow if not in the allowed list? if currency rate is 0 then that's one
     wallet = create('wallet.se')
     #winningOutcomeAddress = getOneWinningOutcomeContractAddr if 1 and getTwoWinningOutcomeContractAddrFromWhitelist if 2
     if(!wallet.setWinningOutcomeContractAddressInitialize(currency, winningOutcomeAddress)):
@@ -218,7 +218,6 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     return(market)
     
 # initialize market and send money to pay for resolution
-# todo fix something off with paying for resolution here and what if event already added then -500k issue and what if user doesn't send enough to resolve where is check for that
 macro makeMarket():
     $payCosts = currency.transferFrom(msg.sender, INFO.getWallet(branch), creationFee)
     $infoSet = INFO.setInfo(market, description, msg.sender, creationFee, currency, wallet)
@@ -227,7 +226,7 @@ macro makeMarket():
     while $i < numOutcomes:
         $shareContracts[$i] = create('shareTokens.se')
         $i += 1
-    $initializedMarket = MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, msg.value - COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, creationFee, expirationDate, shareContracts, value = (msg.value - COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice))
+    $initializedMarket = MARKETS.initializeMarket(market, events, futurePeriod, fxpTradingFee, branch, tag1, tag2, tag3, cumulativeScale, numOutcomes, extraInfo, msg.value, creationFee, expirationDate, shareContracts, value = msg.value)
     $makeBranchAndEventAwareOfNewMarket = BRANCHES.addMarketToBranch(branch, market) and EVENTS.addMarket(event, market)
 
     # event creation bond pay w/ markets
@@ -286,7 +285,6 @@ def updateTradingFee(market, fxpTradingFee):
 # In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
 # Errors:
     # 0: invalid branch
-    # -1: in a fork period
     # -2: market already closed or already pushed forward
     # -3: event has already been pushed forward, is being reported on now, or has an outcome already
 def pushMarketForward(branch, market):
@@ -295,12 +293,8 @@ def pushMarketForward(branch, market):
         throw()
     MUTEX.setMutex()
 
-    forkPeriod = BRANCHES.getForkPeriod(branch)
     periodLength = BRANCHES.getPeriodLength(branch)
     currentPeriod = block.timestamp / periodLength
-    if(forkPeriod == currentPeriod or currentPeriod == (forkPeriod + 1)):
-        MUTEX.unsetMutex()
-        return(-1)
     if(MARKETS.getOneWinningOutcome(market, 0) or MARKETS.getPushedForward(market)):
         MUTEX.unsetMutex()
         return(-2)
@@ -342,11 +336,8 @@ macro checkEventCreationPreconditions():
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-3)
-    # fix to allow event and market creation during forks at own risk
-    if(forkPeriod and ((expDate / periodLength) == forkPeriod or (expDate / periodLength) == (forkPeriod + 1))):
-        if(!mutexWhitelisted()):
-            MUTEX.unsetMutex()
-        return(-4)
+    if(!BRANCHES.getCurrencyActive(branch, currency)):
+        return(-5)
 
 macro checkMarketCreationPreconditions():
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
@@ -358,11 +349,10 @@ macro checkMarketCreationPreconditions():
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-2)
-    # todo examine why - perhaps should or shouldn't allow on fork but on regular branch
-    if(forkPeriod and (futurePeriod == forkPeriod or futurePeriod == (forkPeriod + 1))):
-        if(!mutexWhitelisted()):
-            MUTEX.unsetMutex()
-        return(-3)
+    if(!BRANCHES.getCurrencyActive(branch, currency)):
+        return(-5)
+    if(msg.value < safeMul(COST_FOR_MARKET_RESOLUTION, tx.gasprice)):
+        return(-6)
 
 def putEventIntoReportingPeriod(event):
     if(MUTEX.getMutex() && !mutexWhitelisted()):

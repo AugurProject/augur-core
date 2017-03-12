@@ -42,12 +42,13 @@ extern rateContract: [rateFunction:[]:int256]
         # Rep market cap >> outstanding shares value at all times
 # min can be no lower than ~0.0000001 or so otherwise can run into underflow issues
 # balance[][] takes a branch and currency and gives current balance of it at start of a fee distribution period
-# contract[] is a mapping from currency -> wallet contract addr
+# contract[] is a mapping from currency -> wallet contract addr for that currency
 # numCurrencies is the number of currencies a branch has
 # currencies[] is a 0 indexed list of the n currencies a branch allows with contract being the currency itself, rate being a fixed exchange rate, and rateContract being a contract w/ rates for the currency from currency to eth in wei
 # currencyToIndex is a reverse mapping from currencies to their indices
 # mostRecentChild is the most recent child of a branch
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[](rate, rateContract, contract), currencyToIndex[], mostRecentChild)
+# currencyActive is whether new markets can be made in that currency
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[](rate, rateContract, contract), currencyToIndex[], mostRecentChild, currencyActive[])
 
 # keeps track of a list of all branches
 data branchList[]
@@ -79,30 +80,47 @@ def updateNumCurrencies(branch, num):
     self.Branches[branch].numCurrencies = num
     
 # whitelist updates
-# rateContract and rateFunction _or_ rate should be given
-def addCurrency(branch, currency, rate, rateContract, rateFunction):
+# rateContract _or_ rate should be given
+def addCurrency(branch, currency, rate, rateContract):
     checkSubcurrencyIsValid(currency)
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract = currency
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rate = rate
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rateContract = rateContract
     self.Branches[branch].currencyToIndex[currency] = self.Branches[branch].numCurrencies
+    self.Branches[branch].currencyActive[currency] = 1
     self.Branches[branch].numCurrencies += 1
-    wallet = create('wallet.se')
-    wallet.initialize(currency)
-    self.Branches[branch].contract[currency] = wallet
+    noWalletExists = !self.Branches[branch].contract[currency]
+    if(noWalletExists):
+        wallet = create('wallet.se')
+        wallet.initialize(currency)
+        self.Branches[branch].contract[currency] = wallet
     return(1)
-  
+
+# disables a given currency for new market / event creation
+def disableCurrency(branch, currency):
+    self.Branches[branch].currencyActive[currency] = 0
+    return(1)
+
+# enables a given currency for new market / event creation
+def reactivateCurrency(branch, currency)
+    self.Branches[branch].currencyActive[currency] = 1
+    return(1)
+
 # whitelist updates
-def replaceCurrency(branch, oldCurrencyIndex, newCurrency, newRate, newRateContract, newRateFunction):
+def replaceCurrency(branch, oldCurrencyIndex, newCurrency, newRate, newRateContract):
     checkSubcurrencyIsValid(newCurrency)
+    self.Branches[branch].currencyActive[self.Branches[branch].currencies[oldCurrencyIndex].contract] = 0
     self.Branches[branch].currencyToIndex[self.Branches[branch].currencies[oldCurrencyIndex].contract] = 0
     self.Branches[branch].currencies[oldCurrencyIndex].contract = newCurrency
     self.Branches[branch].currencies[oldCurrencyIndex].rate = newRate
     self.Branches[branch].currencies[oldCurrencyIndex].rateContract = newRateContract
+    self.Branches[branch].currencyActive[newCurrency] = 1
     self.Branches[branch].currencyToIndex[newCurrency] = oldCurrencyIndex
-    wallet = create('wallet.se')
-    wallet.initialize(newCurrency)
-    self.Branches[branch].contract[newCurrency] = wallet
+    noWalletExists = !self.Branches[branch].contract[newCurrency]
+    if(noWalletExists):
+        wallet = create('wallet.se')
+        wallet.initialize(newCurrency)
+        self.Branches[branch].contract[newCurrency] = wallet
     return(1)
 
 # whitelist updates
@@ -112,6 +130,7 @@ def removeLastCurrency(branch):
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract = 0
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rate = 0
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rateContract = 0
+    self.Branches[branch].currencyActive[self.Branches[branch].numCurrencies] = 0
     self.Branches[branch].numCurrencies -= 1
     return(1)
 
@@ -135,12 +154,18 @@ def getCurrencyRate(branch, currency):
 
 def getCurrency(branch, index):
     return(self.Branches[branch].currencies[index].contract)
+    
+def getCurrencyByContract(branch, currency):
+    return(self.Branches[branch].currencyToIndex[currency])
 
 def getWallet(branch, currency):
     return(self.Branches[branch].contract[currency])
     
 def getNumCurrencies(branch):
     return(self.Branches[branch].numCurrencies)
+    
+def getCurrencyActive(branch, currency):
+    return(self.Branches[branch].currencyActive[currency])
 
 # event a branch was most recently forked over
 def getEventForkedOver(branch):
@@ -270,6 +295,7 @@ def addMarketToBranch(branch, market):
     self.Branches[branch].numMarkets += 1
     return(1)
 
+# forkperiod is the vote period in which a branch was forked
 def setForkPeriod(branch):
     self.Branches[branch].forkPeriod = self.Branches[branch].currentVotePeriod
     return(1)

@@ -116,8 +116,8 @@ macro collectTradeFees():
 
 macro prepareInfoForConsensus():
     CONSENSUS.setRepCollected(branch, sender, lastPeriod)
-    # return not reported enough bond if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees
-    if(!CONSENSUS.getNotEnoughPenalized(branch, sender, lastPeriod) or safeAdd(BRANCHES.getForkPeriod(branch), 1) == lastPeriod):
+    # return not reported enough bond if not enough penalized is 0
+    if(!CONSENSUS.getNotEnoughPenalized(branch, sender, lastPeriod)):
         CONSENSUS.doRefund(sender, sender)
     # need to pay not reporting bond
     if(msg.value <= safeMul(500000, tx.gasprice)):
