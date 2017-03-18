@@ -222,6 +222,7 @@ def setNumEventsToReportOn(branch):
     eventsInPeriod = self.periodEventInfo[branch][period].numberEvents
     numberOfRequiredEvents = self.periodEventInfo[branch][period].numReqEvents
     numberOfRemovedEvents = self.periodEventInfo[branch][period].numberRemoved
+    # todo only count events made after fork
     self.periodEventInfo[branch][period].numEventsToReportOn = (eventsInPeriod - numberOfRequiredEvents - numberOfRemovedEvents) * BRANCHES.getBaseReporters(branch)
     return(1)
 
@@ -276,6 +277,7 @@ def setReportHash(branch, period, reporter, reportHash, event):
     return(1)
 
 # called in case an event doesn't get reported on at all in a period
+# todo don't allow for events created pre fork expiring in fork period, fork period + 1, or fork period + 2
 def moveEvent(branch, event):
     if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch) and !EVENTS.getUncaughtOutcome(event)):
         # add to next expiration period

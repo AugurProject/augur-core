@@ -87,8 +87,8 @@ macro checkCloseMarketPreconditions():
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         logReturn(closeMarketLogReturn, -3)
-    # why can't resolve in period after a fork period todo examine
-    if((EVENTS.getForked(event) and !EVENTS.getForkedDone(event)) or (currentPeriod <= (forkPeriod + 1))):
+    # if an event is one from before a fork and hasn't been moved yet don't resolve it
+    if((EVENTS.getForked(event) and !EVENTS.getForkedDone(event)) or eventCreatedPriorToFork(eventID)):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         logReturn(closeMarketLogReturn, -4)

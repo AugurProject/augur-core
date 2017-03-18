@@ -48,7 +48,8 @@ extern rateContract: [rateFunction:[]:int256]
 # currencyToIndex is a reverse mapping from currencies to their indices
 # mostRecentChild is the most recent child of a branch
 # currencyActive is whether new markets can be made in that currency
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[](rate, rateContract, contract), currencyToIndex[], mostRecentChild, currencyActive[])
+# forkTime is the block timestamp when a fork of this branch was last created
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[](rate, rateContract, contract), currencyToIndex[], mostRecentChild, currencyActive[], forkTime)
 
 # keeps track of a list of all branches
 data branchList[]
@@ -298,8 +299,13 @@ def addMarketToBranch(branch, market):
 # forkperiod is the vote period in which a branch was forked
 def setForkPeriod(branch):
     self.Branches[branch].forkPeriod = self.Branches[branch].currentVotePeriod
+    self.Branches[branch].forkTime = block.timestamp
     return(1)
 
 # gets the period in which a branch was most recently forked
 def getForkPeriod(branch):
     return(self.Branches[branch].forkPeriod)
+
+# gets the time which a branch was most recently forked
+def getForkTime(branch):
+    return(self.Branches[branch].forkTime)

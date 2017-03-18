@@ -259,7 +259,8 @@ macro coverGasCostIfPossible():
 macro calculateReportingThreshold():
     threshold = 0
     # if required or threshold has been set b/c wasn't reported on yet
-    if(EXPEVENTS.getRequired(event, votePeriod, branch) or EVENTS.getReportingThreshold(event)):
+    # todo afterfork
+    if(EXPEVENTS.getRequired(event, votePeriod, branch) or EVENTS.getReportingThreshold(event) and afterFork):
         threshold = MAX_REPORT_THRESHOLD
     # if number of reports event should have hasn't been calculated yet do it
     if(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
@@ -267,6 +268,8 @@ macro calculateReportingThreshold():
         threshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
     else:
         threshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
+    if(!afterFork):
+        threshold = 0
     threshold
 
 macro validateReportAndUpdateBinaryEvent():

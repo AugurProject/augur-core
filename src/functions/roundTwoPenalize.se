@@ -35,7 +35,6 @@ macro MIN_BOND: 200 * ONE
     # -1: vote period needs incrementing
     # -2: not in 1st half of vote period
     # -3: not resolved yet and resolution attempt failed
-    # -4: in fork period only thing that rep redistribution is done on is the round 2 event in the original branch via round 2 penalize
     # -5: already done for all events in this period
     # -6: needed to collect fees last period which sets the before/after rep
     # -7: event isn't in the branch given
@@ -82,6 +81,9 @@ def penalizeRoundTwoWrong(branch, event):
     roundTwo = BACKSTOPS.getRoundTwo(event)
     penalizedOnEvent = CONSENSUS.getPenalized(branch, lastPeriodVotedOn, msg.sender, event)
     reported = (reportValue or oldReport)
+    if(final and roundTwo and eventCreatedPriorToFork(event) && event != forkEvent && !penalizedOnEvent && reported):
+        CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
+        CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
     if(final and (roundTwo or event == forkEvent) and !penalizedOnEvent and reported):
         # Do the first rep redistribution based on first report and final outcome if reported first time
         # 0 outcome issue
@@ -97,9 +99,6 @@ def penalizeRoundTwoWrong(branch, event):
     else:
         MUTEX.unsetMutex()
         return(-8)
-    # if a fork event in original branch, only event needed to report on in this period is that one [b/c the original branch resolves it as a regular round 2 event, fork reports again]
-    if(event == forkEvent):
-        CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, (numReportedOn - 1))
     # penalization on a regular event if not already penalized, it has outcome, and user reported on it
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriodVotedOn, msg.sender)):
@@ -123,9 +122,6 @@ macro checkPenalizeWrongRoundTwoPreconditions():
     if(!EVENTS.getOutcome(event) and !ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriodVotedOn, event), msg.sender)):
         MUTEX.unsetMutex()
         return(-3)
-    if(BRANCHES.getForkPeriod(branch) == lastPeriodVotedOn and event != forkEvent):
-        MUTEX.unsetMutex()
-        return(-4)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriodVotedOn):
         MUTEX.unsetMutex()
         return(-5)

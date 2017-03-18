@@ -287,6 +287,7 @@ def updateTradingFee(market, fxpTradingFee):
     # 0: invalid branch
     # -2: market already closed or already pushed forward
     # -3: event has already been pushed forward, is being reported on now, or has an outcome already
+# todo shouldn't allow during fork periods what if already done for old events
 def pushMarketForward(branch, market):
     refund()
     if(MUTEX.getMutex()):
@@ -354,6 +355,7 @@ macro checkMarketCreationPreconditions():
     if(msg.value < safeMul(COST_FOR_MARKET_RESOLUTION, tx.gasprice)):
         return(-6)
 
+# todo shouldn't allow during fork periods what if already done for old events
 def putEventIntoReportingPeriod(event):
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
@@ -382,6 +384,7 @@ def putEventIntoReportingPeriod(event):
             MUTEX.unsetMutex()
         return(0)
 
+# todo shouldn't allow during fork periods what if already done for old events
 def challengeInitialResolution(event):
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()

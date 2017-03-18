@@ -45,12 +45,20 @@ import info as INFO
 # challenged is whether an event has been challenged already
 # resolveBondPoster is the address which posted the rep bond for the first resolution period
 # earlyResolutionBond is the bond paid for early resolution of an event
-data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent, resolutionAddress, extraBond, firstPreliminaryOutcome, challenged, resolveBondPoster, earlyResolutionBond)
+# creationTime is the block timestamp when a given event is created
+data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent, resolutionAddress, extraBond, firstPreliminaryOutcome, challenged, resolveBondPoster, earlyResolutionBond, creationTime)
 
 # Keeps track of number of events created in the past 24 hours
 data past24Hours[]
 
 event logOutcome(event:indexed, outcome)
+
+def getCreationTime(event):
+    return(self.Events[event].creationTime)
+    
+def setCreationTime(event):
+    self.Events[event].creationTime = block.timestamp
+    return(1)
 
 def getResolveBondPoster(event):
     return(self.Events[event].resolveBondPoster)
@@ -217,6 +225,7 @@ def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOut
         resolutionSourceLength = len(resolution)
         self.Events[ID].resolutionSourceLength = resolutionSourceLength
         save(self.Events[ID].resolutionSource[0], resolution, chars=resolutionSourceLength)
+        self.Events[ID].creationTime = block.timestamp
         return(1)
     else:
         return(0)

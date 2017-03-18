@@ -113,7 +113,6 @@ def claimInitialRep(parent, branch):
 
 macro checkRepClaimPreconditions():
 	branchDoesntExist = (!parent or !branch)
-	# simplify
 	if((BRANCHES.getParent(branch) != parent && parent && branch) or branchDoesntExist):
 		MUTEX.unsetMutex()
 		return(-1)

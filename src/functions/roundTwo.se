@@ -116,9 +116,9 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     forkPeriod = BRANCHES.getForkPeriod(branch)
     # if forking and this isn't the fork event
     roundTwoEventWithBondNotReturned = (!BACKSTOPS.getBondReturned(event) and BACKSTOPS.getRoundTwo(event) and validEvent)
-    inForkPhases = forkPeriod == votePeriod or votePeriod == (forkPeriod + 1)
+    inForkPhases = forkPeriod == votePeriod or votePeriod == (forkPeriod + 1) or votePeriod == (forkPeriod + 2)
     
-    if(inForkPhases and !forked and roundTwoEventWithBondNotReturned):
+    if(inForkPhases and !forked and roundTwoEventWithBondNotReturned and eventCreatedPriorToFork(eventID)):
         returnRoundTwoBondInForkScenario()
     # overruled and bond poster was right
     elif(overruled and votedOnAgain and !forked and roundTwoEventWithBondNotReturned):
@@ -161,8 +161,7 @@ roundTwoBondCheckPreconditions():
         return(-1)
     market = EVENTS.getMarket(event, 0)
     forkPeriod = BRANCHES.getForkPeriod(branch)
-    # not doing this in the middle of a fork makes sense, the same for market/event creation otoh does not...
-    if(forkPeriod == votePeriod or (forkPeriod + 1) == votePeriod):
+    if(!eventCreatedPriorToFork(eventID):
         MUTEX.unsetMutex()
         return(-2)
     if(noVotes()):

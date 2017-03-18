@@ -1,7 +1,7 @@
 inset('refund.se')
 
 # Keeps track of data for round two backstop [where everyone reports on something] using event as the index
-    # final is whether an event is final
+    # final is whether an event is final for the round 2 backstop
     # bondReturned is whether the bond principle has been returned
     # bondPaid is how much on top of the bond principle has been paid to the bond poster
     # refund is subsidy to pay for round 2 event resolution function call

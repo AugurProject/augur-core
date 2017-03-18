@@ -20,7 +20,6 @@ inset('../data_api/float.se')
         # after this window, any unclaimed rep is pushed to the next period's redistrib. pool via the first make report submission
     # -3: rep not collected yet
 # 2 means no errors but didnt report last period
-
 def collectRep(branch, sender):
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()

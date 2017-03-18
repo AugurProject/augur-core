@@ -40,3 +40,12 @@ macro round($x):
         ($x + ONE_HALF) / ONE * ONE
     else:
         $x / ONE * ONE
+
+# this includes all events created before the fork started
+macro eventCreatedPriorToFork($event):
+    $branch = EVENTS.getEventBranch($event)
+    if(EVENTS.getCreationTime($event) <= BRANCHES.getForkTime($branch)):
+        1
+    else:
+        0
+ 

@@ -70,7 +70,7 @@ def getEventCanReportOn(branch, period, reporter, event):
     # do abs then mult by 2 to ensure it's positive and between 0 and 1
     shaHash = (abs(sha3(reporter + event)) / ONE) * 2
     shaHash = shaHash / 57896044618658097711785L * ONE
-    wasAbleToReportOn = shaHash < reportingThreshold or EXPEVENTS.getRequired(event, period, branch)
+    wasAbleToReportOn = (shaHash < reportingThreshold or EXPEVENTS.getRequired(event, period, branch)) and afterForks
     if(!wasAbleToReportOn):
         return(0)
     return(1)
@@ -79,6 +79,7 @@ def getEventCanReportOn(branch, period, reporter, event):
 # Returns 1 if the event's reporting threshold has been set
 # Errors: 0 if the event can't be reported on
 def setReportingThreshold(event):
+    # todo don't allow for events created pre fork expiring in fork period, fork period + 1, or fork period + 2
     # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
     # final check is if no reports [commits] on event
     # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this half
@@ -115,6 +116,7 @@ macro abs($a):
 
 # simply a helper function / useful to know
 # @return fxp
+# todo shouldn't include events created pre fork expiring in fork period + 1, or fork period + 2
 def calculateNumberOfEventsAReporterHasToReportOnAtMinimum(branch, reporter, period):
     originalRep = EXPEVENTS.getBeforeRep(branch, period, reporter)
     # this includes the baseReporters * numEventsAvailable

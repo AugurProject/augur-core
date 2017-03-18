@@ -25,14 +25,13 @@ macro MIN_EVENTS_FOR_WHALE: 30
 # Prove both that a reporter voted on less than he/she actually could have and it was <.5 of what they should have reported on using an example event
 # The rep lost here is then sent to the branch's rep account and distributed like other redistributed rep.
 # Note:
-    # Reporters pay an eth bond for this on their first report --- if never called then during collect fees they get it back else it goes back to pay someone who correctly calls this function, so the bond is returned to the poster if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees [which means it's the first period after a fork is initiated]
+    # Reporters pay an eth bond for this on their first report --- if never called then during collect fees they get it back else it goes back to pay someone who correctly calls this function, so the bond is returned to the poster if not enough penalized is 0
 # Returns 1 if successful penalization
 # Errors:
     # 0: branch or event example don't exist
     # -1: already done
     # -2: not in right part of period
     # -3: event isn't in branch
-    # -4: fork period exemption
     # -5: reported on enough
     # Returns 2 if didn't need to be penalized and thus wasn't
 def proveReporterDidntReportEnough(branch, reporter, eventExample):
@@ -45,7 +44,6 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         MUTEX.unsetMutex()
         return(0)
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
-    periodAfterForkPeriod = BRANCHES.getForkPeriod(branch) + 1 == lastPeriod
     periodLength = BRANCHES.getPeriodLength(branch)
     originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
     # this includes the baseReporters * numEventsAvailable
@@ -73,10 +71,6 @@ macro checkProveReporterDidntReportEnoughPreconditions():
     if(EVENTS.getEventBranch(eventExample) != branch):
         MUTEX.unsetMutex()
         return(-3)
-    # in period just after fork period no reports required
-    if(periodAfterForkPeriod):
-        MUTEX.unsetMutex()
-        return(-4)
 
 macro ensureReporterCouldveReportedOnMoreButDidnt()
     numReportsSubmitted = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, reporter)
