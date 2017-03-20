@@ -23,6 +23,7 @@ import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import cash as CASH
 import markets as MARKETS
+import topics as TOPICS
 inset('refund.se')
 
 event completeSets_logReturn(sender: indexed, market: indexed, type: indexed, returnValue, numOutcomes, timestamp)
@@ -49,6 +50,10 @@ def buyCompleteSets(market, amount):
         log(type=completeSets_logReturn, msg.sender, market, -2)
         return(-2)
     n = 1
+    # Update topic popularity
+    topic = MARKETS.getTopic(market)
+    if topic:
+        TOPICS.updateTopicPopularity(branch, topic, amount*numOutcomes)
     # send shares of the event to user address and increment the number issued in the market for each outcome
     while n <= numOutcomes:
         MARKETS.modifyShares(market, n, amount)
@@ -85,6 +90,10 @@ def sellCompleteSets(market, amount):
             return(-3)
         n += 1
     n = 1
+    # Update topic popularity
+    topic = MARKETS.getTopic(market)
+    if topic:
+        TOPICS.updateTopicPopularity(branch, topic, -amount*numOutcomes)
     # Takes shares away from participant and decreases the amount issued in the market since we're exchanging complete sets
     while n <= numOutcomes:
         MARKETS.modifyShares(market, n, -amount)

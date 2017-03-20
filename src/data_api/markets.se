@@ -19,7 +19,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-import topics as TOPICS
+# import topics as TOPICS
 
 inset('refund.se')
 
@@ -92,6 +92,9 @@ def returnTags(market):
     tags[1] = self.Markets[market].tag2
     tags[2] = self.Markets[market].tag3
     return(tags: arr)
+
+def getTopic(market):
+    return(self.Markets[market].tag1)
 
 def getTotalSharesPurchased(market):
     refund()
@@ -230,8 +233,6 @@ def modifyParticipantShares(marketID, trader, outcome, amount, cancel):
     if(cancel):
         amount = -1*amount
     self.Markets[marketID].volume += amount
-    if(self.Markets[marketID].tag1):
-        TOPICS.updateTopicPopularity(self.Markets[marketID].branch, self.Markets[marketID].tag1, amount)
     return(1)   
 
 def setWinningOutcomes(market, outcomes: arr):
