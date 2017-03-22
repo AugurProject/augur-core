@@ -31,15 +31,32 @@ macro POINT_ZERO_ONE: 10000000000000000
 # Events created after fork are allowed to go through the process as normal
 
 
+# Parent
+    # Vote period when forked
+        # Events created prior to fork
+            # Don't penalize on or resolve events expiring in this period, these events should be moved to the period after the fork has resolved 
+            # Event forked over on parent should be voted on
+
+    # First vote period after fork [events can also be created that expire in this period, waiting for fork to resolve here]
+        # Events created prior to fork
+            # Don't penalize, report on, or resolve for these events in this period, these events should be moved to the period after the fork has resolved 
+
+    # Vote period after fork resolved
+        # All markets have early exp disabled until this point
+        # Events created prior to fork
+            # Don't penalize, report on, or resolve for these events in this period, these events should be moved to the period after the fork has resolved 
+            # Each event which would've expired in the past 2 periods and this vote period is moved to the winning branch and pushed up into the current period and voted on in the period after this
+            # Each event resolving further in the future is pushed into the respective period on whichever fork wins
 
 # Fork
     # Vote Period where forked
-        # Don't allow events to be created that expire in the last 48 hr of this period [and thus being reported on next period] if a fork was made [this'll allow people to have time to claim rep on the fork, not result in weird issues with calculating events to report on changing due to active rep changing as people claim rep on the new fork, and only make people have to worry about reporting on the forked event next period]
+        # todo Don't allow events to be created that expire in the last 48 hr of this period [and thus being reported on next period] if a fork was made [this'll allow people to have time to claim rep on the fork, not result in weird issues with calculating events to report on changing due to active rep changing as people claim rep on the new fork, and only make people have to worry about reporting on the forked event next period]
     # First vote period after fork [events can also be created that expire in this period and thus are reported on in the next one, we're waiting for fork to resolve here]
         # Events created prior to fork [only 1 since this branch is a new one]
             # Only event that there is here is the forked event and we report on that again here
     # Vote period after fork resolved
         # Things proceed as normal
+# todo shouldn't be put into vote period if it's still in early resolve portion
 def moveEvent(event):
     refund()
     if(MUTEX.getMutex()):
@@ -52,6 +69,7 @@ def moveEvent(event):
     expPeriod = EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch)
     eventIndex = EXPEVENTS.getEventIndex(expPeriod, event)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
+    currentVotePeriod = BRANCHES.getVotePeriod(branch)
     checkMoveEventPreconditions()
     if(event == eventForkedOver):
         MUTEX.unsetMutex()
@@ -64,6 +82,8 @@ def moveEvent(event):
         moveEventToWinningBranch()
     BACKSTOPS.setMoved(event)
     MUTEX.unsetMutex()
+    todo if EVENTS.getEventPushedUp($event)
+        also add event to expevents if it's in winning branch
     return(1)
 
 # parent branch is branch here
@@ -176,7 +196,7 @@ def resolveForkedEvent(branch, event):
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
     # helper function for resolveForkedEvent
 # needs whitelist
-def resolveForkEvent(branch, event):
+macro resolveForkEvent(branch, event):
     refund()
     # whitelist
     bond = EVENTS.getBond(event)
@@ -192,105 +212,6 @@ def resolveForkEvent(branch, event):
     # (should never be reached)
     else:
         return(0)
-
-macro checkForkPreconditions():
-    if(!EVENTS.getRoundTwo(event) or BACKSTOPS.getFinal(event) or EVENTS.getForked(event)):
-        MUTEX.unsetMutex()
-        return(-1)
-    if(forkPeriod == currentVotePeriod or currentVotePeriod == (forkPeriod + 1) or currentVotePeriod == (forkPeriod + 2)):
-        MUTEX.unsetMutex()
-        return(-3)
-    if(EVENTS.getOriginalExpiration(event) != EVENTS.getExpiration(event)):
-        MUTEX.unsetMutex()
-        return(-4)
-    if(EVENTS.getEventBranch(event) != branch or !branch or !event):
-        MUTEX.unsetMutex()
-        return(-5)
-    if(msg.value < 350000 * tx.gasprice):
-        MUTEX.unsetMutex()
-        return(0)
-    CONSENSUSDATA.setRefund(event, msg.value)
-    last48HoursOfPeriod = (block.timestamp / BRANCHES.getPeriodLength(branch) != ((block.timestamp + 2 * TWENTY_FOUR_HR) / BRANCHES.getPeriodLength(branch)))
-    reportedOnInRoundTwo = EVENTS.getUncaughtOutcome(event)
-    if(!last48HoursOfPeriod or !reportedOnInRoundTwo):
-        MUTEX.unsetMutex()
-        return(0)
-
-macro makeFork():
-    newBranch = CREATEBRANCH.createSubbranch(FORK_TEXT, BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), BRANCHES.getOracleOnly(branch), 0)
-    BRANCHES.setMostRecentChild(branch, newBranch)
-    REPORTING.setFork(newBranch)
-    period = BRANCHES.getVotePeriod(newBranch)
-    EXPEVENTS.setEventRequired(newBranch, period + 1, event)
-    EXPEVENTS.addEvent(newBranch, period + 1, event)
-    EVENTS.setExpiration(event, block.timestamp)
-    BACKSTOPS.setOriginalBranch(event, branch)
-    BACKSTOPS.setForkBondPoster(event, msg.sender)
-    EVENTS.setForked(event)
-    BACKSTOPS.setFinal(event)
-    BRANCHES.setForkPeriod(branch)
-    BRANCHES.setForkPeriod(newBranch)
-    BRANCHES.setEventForkedOver(branch, event)
-    if(forkedOverEthicality):
-        BACKSTOPS.setForkedOverEthicality(event)
-
-macro returnRoundTwoBond():
-    market = EVENTS.getMarket(event, 0)
-    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period - 1) / EXPEVENTS.getNumberEvents(branch, period - 1)
-    bond = safeAdd(averageAdjudicationCost, safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2)))
-    minBond = 200 * ONE
-    bond = min(bond, minBond)
-    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
-    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
-    BACKSTOPS.setBondReturned(event)
-
-macro checkMoveEventPreconditions():
-    # should it be != forkPeriod + 2
-    if(!branch or !event or currentPeriod != (forkPeriod + 2) or EVENTS.getOutcome(event) or BACKSTOPS.getMoved(event) or !eventCreatedPriorToFork(event)):
-        MUTEX.unsetMutex()
-        return(0)
-    winner = BACKSTOPS.getResolved(branch, forkPeriod)
-    if(!winner):
-        winner = self.resolveFork(branch)
-
-macro keepEventInOriginalBranch():
-    # set outcomes to 0
-    EVENTS.setOutcome(event, 0)
-    EVENTS.setMode(event, 0)
-    EVENTS.setEthics(event, 0)
-    EVENTS.setUncaughtOutcome(event, 0)
-    EVENTS.setCreationTime(event)
-    # return bond if it's a round 2 event and make it not one anymore hmm what if not a round two event we shouldn't call this
-    if(!ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
-        throw()
-    # if should've resolved in past periods
-    if(expPeriod == forkPeriod or expPeriod == (forkPeriod + 1) or expPeriod == (forkPeriod + 2)):
-        # push it into next [this] period
-        EXPEVENTS.addEvent(branch, currentPeriod, event)
-        EVENTS.setExpiration(event, block.timestamp)
-    # otherwise it's set to expire in the period it would've expired in as normal, no changes needed
-
-macro moveEventToWinningBranch():
-    EVENTS.setBranch(event, winner)
-    # set outcomes to 0
-    EVENTS.setOutcome(event, 0)
-    EVENTS.setMode(event, 0)
-    EVENTS.setEthics(event, 0)
-    EVENTS.setUncaughtOutcome(event, 0)
-    EVENTS.setCreationTime(event)
-    # return bond if it's a round 2 event and make it not one anymore
-    if(!ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
-        throw()
-    # move event to fork
-    # and place it into the next reporting period w/ outcomes to 0
-    if(expPeriod == forkPeriod or expPeriod == (forkPeriod + 1) or expPeriod == (forkPeriod + 2)):
-        # push it into next [this] period
-        EXPEVENTS.addEvent(winner, currentPeriod, event)
-        EVENTS.setExpiration(event, block.timestamp)
-    else:
-        # push into period it wouldve expired in
-        EXPEVENTS.addEvent(winner, expPeriod, event)
-        # expiration time doesnt need to change
 
 macro binaryForkResolve():
     fxpOutcome = 0
@@ -364,3 +285,101 @@ macro scalarOrCategoricalForkResolve():
     EVENTS.setBranch(event, winner)
     BACKSTOPS.setMoved(event)
     return(1)
+
+macro checkForkPreconditions():
+    if(!EVENTS.getRoundTwo(event) or BACKSTOPS.getFinal(event) or EVENTS.getForked(event)):
+        MUTEX.unsetMutex()
+        return(-1)
+    if(forkPeriod == currentVotePeriod or currentVotePeriod == (forkPeriod + 1) or currentVotePeriod == (forkPeriod + 2)):
+        MUTEX.unsetMutex()
+        return(-3)
+    if(EVENTS.getOriginalExpiration(event) != EVENTS.getExpiration(event)):
+        MUTEX.unsetMutex()
+        return(-4)
+    if(EVENTS.getEventBranch(event) != branch or !branch or !event):
+        MUTEX.unsetMutex()
+        return(-5)
+    if(msg.value < 350000 * tx.gasprice):
+        MUTEX.unsetMutex()
+        return(0)
+    CONSENSUSDATA.setRefund(event, msg.value)
+    last48HoursOfPeriod = (block.timestamp / BRANCHES.getPeriodLength(branch) != ((block.timestamp + 2 * TWENTY_FOUR_HR) / BRANCHES.getPeriodLength(branch)))
+    reportedOnInRoundTwo = EVENTS.getUncaughtOutcome(event)
+    if(!last48HoursOfPeriod or !reportedOnInRoundTwo):
+        MUTEX.unsetMutex()
+        return(0)
+
+macro makeFork():
+    newBranch = CREATEBRANCH.createSubbranch(FORK_TEXT, BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), BRANCHES.getOracleOnly(branch), 0)
+    BRANCHES.setMostRecentChild(branch, newBranch)
+    REPORTING.setFork(newBranch)
+    period = BRANCHES.getVotePeriod(newBranch)
+    EXPEVENTS.setEventRequired(newBranch, period + 1, event)
+    EXPEVENTS.addEvent(newBranch, period + 1, event)
+    EVENTS.setExpiration(event, block.timestamp)
+    BACKSTOPS.setOriginalBranch(event, branch)
+    BACKSTOPS.setForkBondPoster(event, msg.sender)
+    EVENTS.setForked(event)
+    BACKSTOPS.setFinal(event)
+    BRANCHES.setForkPeriod(branch)
+    BRANCHES.setForkPeriod(newBranch)
+    BRANCHES.setEventForkedOver(branch, event)
+    if(forkedOverEthicality):
+        BACKSTOPS.setForkedOverEthicality(event)
+
+macro returnRoundTwoBond():
+    market = EVENTS.getMarket(event, 0)
+    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period - 1) / EXPEVENTS.getNumberEvents(branch, period - 1)
+    bond = safeAdd(averageAdjudicationCost, safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2)))
+    minBond = 200 * ONE
+    bond = min(bond, minBond)
+    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
+    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
+    BACKSTOPS.setBondReturned(event)
+
+macro checkMoveEventPreconditions():
+    if(!branch or !event or currentVotePeriod < (forkPeriod + 2) or EVENTS.getOutcome(event) or BACKSTOPS.getMoved(event) or !eventCreatedPriorToFork(event)):
+        MUTEX.unsetMutex()
+        return(0)
+    winner = BACKSTOPS.getResolved(branch, forkPeriod)
+    if(!winner):
+        winner = self.resolveFork(branch)
+
+macro keepEventInOriginalBranch():
+    # set outcomes to 0
+    EVENTS.setOutcome(event, 0)
+    EVENTS.setMode(event, 0)
+    EVENTS.setEthics(event, 0)
+    EVENTS.setUncaughtOutcome(event, 0)
+    EVENTS.setCreationTime(event)
+    # return bond if it's a round 2 event and make it not one anymore hmm what if not a round two event we shouldn't call this todo
+    if(!ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
+        throw()
+    # if should've resolved in past periods
+    if(expPeriod <= currentVotePeriod):
+        # push it into next [this] period
+        EXPEVENTS.addEvent(branch, currentPeriod, event)
+        EVENTS.setExpiration(event, block.timestamp)
+    # otherwise it's set to expire in the period it would've expired in as normal, no changes needed
+
+macro moveEventToWinningBranch():
+    EVENTS.setBranch(event, winner)
+    # set outcomes to 0
+    EVENTS.setOutcome(event, 0)
+    EVENTS.setMode(event, 0)
+    EVENTS.setEthics(event, 0)
+    EVENTS.setUncaughtOutcome(event, 0)
+    EVENTS.setCreationTime(event)
+    # return bond if it's a round 2 event and make it not one anymore
+    if(!ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
+        throw()
+    # move event to fork
+    # and place it into the next reporting period w/ outcomes to 0
+    if(expPeriod <= currentVotePeriod):
+        # push it into next [this] period
+        EXPEVENTS.addEvent(winner, currentPeriod, event)
+        EVENTS.setExpiration(event, block.timestamp)
+    else:
+        # push into period it wouldve expired in
+        EXPEVENTS.addEvent(winner, expPeriod, event)
+        # expiration time doesnt need to change

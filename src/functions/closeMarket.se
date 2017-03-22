@@ -129,5 +129,5 @@ def closeChallengeBond(event):
 
     # outcome is different
     else:
-        returnBond + pay half of validity bond to challenger [but it's already been paid back to event creator by now, todo fixes]
+        returnBond + pay half of validity bond to challenger [but it's already been paid back to event creator by now, todo fixes and also check if bond already returned]
     return(1)

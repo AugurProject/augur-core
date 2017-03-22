@@ -43,6 +43,7 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     if(!branch or !eventExample):
         MUTEX.unsetMutex()
         return(0)
+    expectedEventsForReporterIncludingRequired = 0
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
     periodLength = BRANCHES.getPeriodLength(branch)
     originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
@@ -53,7 +54,14 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     # a**b=exp(b*ln(a))=e**(b*ln(a)).
     repConstant = safeFxpDiv(FXP.fxExp(safeFxpMul(ONE_POINT_TWO, FXP.fxLog(originalRep))), FXP.fxExp(safeFxpMul(ONE_POINT_TWO, FXP.fxLog(REPORTING.getActiveRep(branch)))))
     numRequiredEvents = EXPEVENTS.getNumRequired(branch, lastPeriod)
-    expectedEventsForReporterIncludingRequired = safeMul(repConstant, numEventsAvailableToReportOn) + safeMul(numRequiredEvents, ONE)
+    forkPeriod = BRANCHES.getForkPeriod(branch)
+    period = BRANCHES.getVotePeriod(branch)
+    forkScenario = period == (forkPeriod + 1) or period == (forkPeriod + 2)
+    if(forkScenario):
+        expectedEventsForReporterIncludingRequired = safeMul(repConstant, numEventsAvailableToReportOn)
+    else:
+        # include required events in non fork scenarios
+        expectedEventsForReporterIncludingRequired = safeMul(repConstant, numEventsAvailableToReportOn) + safeMul(numRequiredEvents, ONE)
     dealWithWhaleReporters()
     ensureReporterCouldveReportedOnMoreButDidnt()
     checkProveReporterDidntReportEnoughPreconditions()
@@ -111,7 +119,11 @@ macro redistributeNotEnoughReportsRep():
 macro dealWithWhaleReporters():
     eventsInPeriod = safeSub(EXPEVENTS.getNumberEvents(branch, lastPeriod), EXPEVENTS.getNumRemoved(branch, lastPeriod))
     reporterIsAWhale = repConstant >= POINT_ZERO_ONE
-    if(reporterIsAWhale):
+    if(reporterIsAWhale and forkScenario):
+        minimum = safeAdd(MIN_EVENTS_FOR_WHALE, numEventsAvailableToReportOn)
+        if(expectedEventsForReporterIncludingRequired / ONE < minimum):
+            expectedEventsForReporterIncludingRequired = minimum * ONE
+    elif(reporterIsAWhale):
         minimum = min(safeAdd(MIN_EVENTS_FOR_WHALE, numRequiredEvents), eventsInPeriod)
         if(expectedEventsForReporterIncludingRequired / ONE < minimum):
             expectedEventsForReporterIncludingRequired = minimum * ONE
@@ -119,5 +131,7 @@ macro dealWithWhaleReporters():
     total = safeMul(repConstant, baseReporters)
     # if total is too high [>1] then expectedEventsForReporterIncludingRequired will estimate a higher number than reality, so need to correct for this below
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*baseReporters > 1)
-    if(total > ONE):
+    if(total > ONE and forkScenario):
+        expectedEventsForReporterIncludingRequired = safeMul(safeDiv(numEventsAvailableToReportOn, baseReporters), ONE)
+    elif(total > ONE):
         expectedEventsForReporterIncludingRequired = safeAdd(safeMul(safeDiv(numEventsAvailableToReportOn, baseReporters), ONE), safeMul(numRequiredEvents, ONE))

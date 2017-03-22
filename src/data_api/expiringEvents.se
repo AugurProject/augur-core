@@ -22,6 +22,7 @@ import branches as BRANCHES
 import events as EVENTS
 import info as INFO
 inset('refund.se')
+inset('functions/eventHelpers.se')
 
 ### This contract keeps track of data associated with reporting periods and the events + reports in them
 
@@ -40,7 +41,8 @@ inset('refund.se')
     # numberRemoved is the number of events that no longer have to be reported on in this period [a good example is an event that was resolved early successfully]
     # numEventsToReportOn is the number of events available for reporting on [not including required events] * base number of reporters per event [this is multiplied by a user's periodRepWeight to figure out how many events they should be reporting on in a given period]
     # feeValue is the value of all fees for all markets that have events expiring in this period denominated in wei
-data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], committed[], subsidy[], eventWeight[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, feeValue)
+    # afterFork is the number of events created for a fork period or 2 periods after that provided the events were created after the fork was initiated
+data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], committed[], subsidy[], eventWeight[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, feeValue, afterFork)
 
 # This keeps track of info in a period for the reporters, it takes a branch and votePeriod as params, respectively
     # Before rep is the amount of active rep a user has before any penalizations for reporting incorrectly
@@ -222,8 +224,13 @@ def setNumEventsToReportOn(branch):
     eventsInPeriod = self.periodEventInfo[branch][period].numberEvents
     numberOfRequiredEvents = self.periodEventInfo[branch][period].numReqEvents
     numberOfRemovedEvents = self.periodEventInfo[branch][period].numberRemoved
-    # todo only count events made after fork
-    self.periodEventInfo[branch][period].numEventsToReportOn = (eventsInPeriod - numberOfRequiredEvents - numberOfRemovedEvents) * BRANCHES.getBaseReporters(branch)
+    forkPeriod = BRANCHES.getForkPeriod(branch)
+    forkScenario = period == (forkPeriod + 1) or period == (forkPeriod + 2)
+    if(forkScenario):
+        # only count events made after fork
+        self.periodEventInfo[branch][period].numEventsToReportOn = self.periodEventInfo[branch][period].afterFork * BRANCHES.getBaseReporters(branch)
+    else:
+        self.periodEventInfo[branch][period].numEventsToReportOn = (eventsInPeriod - numberOfRequiredEvents - numberOfRemovedEvents) * BRANCHES.getBaseReporters(branch)
     return(1)
 
 # gets number of available events to report on, not counting required events
@@ -241,7 +248,7 @@ def getEvent(branch, period, eventIndex):
     return(self.periodEventInfo[branch][period].events[eventIndex])
 
 # check that msg.sender is one of our function contracts
-def addEvent(branch, futurePeriod, event, subsidy, currency, wallet):
+def addEvent(branch, futurePeriod, event, subsidy, currency, wallet, afterFork):
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
     numberEvents = self.periodEventInfo[branch][futurePeriod].numberEvents
@@ -249,6 +256,7 @@ def addEvent(branch, futurePeriod, event, subsidy, currency, wallet):
     self.periodEventInfo[branch][futurePeriod].eventToIndex[event] = numberEvents
     self.periodEventInfo[branch][futurePeriod].numberEvents += 1
     self.periodEventInfo[branch][futurePeriod].subsidy[event] += subsidy
+    self.periodEventInfo[branch][futurePeriod].afterFork += afterFork
     INFO.setCurrencyAndWallet(currency, wallet)
     return(1)
 
@@ -277,9 +285,8 @@ def setReportHash(branch, period, reporter, reportHash, event):
     return(1)
 
 # called in case an event doesn't get reported on at all in a period
-# todo don't allow for events created pre fork expiring in fork period, fork period + 1, or fork period + 2
 def moveEvent(branch, event):
-    if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch) and !EVENTS.getUncaughtOutcome(event)):
+    if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch) and !EVENTS.getUncaughtOutcome(event) and !eventCreatedPriorToFork(event)):
         # add to next expiration period
         self.addEvent(branch, block.timestamp / BRANCHES.getPeriodLength(branch), event)
         EVENTS.setExpiration(event, block.timestamp)
@@ -326,3 +333,6 @@ def getActiveReporters(branch, period, from, to):
 
 def getNumActiveReporters(branch, period):
     return(self.reporterPeriodInfo[branch][period].numberOfActiveReporters)
+    
+def getAfterFork(branch, votePeriod):
+    return(self.periodEventInfo[branch][votePeriod].afterFork)

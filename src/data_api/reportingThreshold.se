@@ -8,6 +8,7 @@ import reporting as REPORTING
 # fix circular dependency
 import makeReports as MAKEREPORTS
 inset('refund.se')
+inset('eventHelpers.se')
 
 macro ONE_POINT_TWO: 1200000000000000000
 
@@ -51,7 +52,7 @@ def getEventsToReportOn(branch, period, sender, start, end):
             shaHash = (abs(sha3(sender + thisEvent)) / ONE) * 2
             shaHash = shaHash / 57896044618658097711785L * ONE
             notResolvedYet = !EVENTS.getOutcome(thisEvent)
-            ableToReportOn = (shaHash < reportingThreshold or EXPEVENTS.getRequired(thisEvent, period, branch)) and notResolvedYet
+            ableToReportOn = (shaHash < reportingThreshold or EXPEVENTS.getRequired(thisEvent, period, branch)) and notResolvedYet and !eventCreatedPriorToFork(thisEvent)
             if(ableToReportOn):
                 events[numEventsToReportOn] = thisEvent
                 numEventsToReportOn += 1
@@ -63,14 +64,14 @@ def getEventsToReportOn(branch, period, sender, start, end):
 # Errors: 0 if not
 # whitelist
 def getEventCanReportOn(branch, period, reporter, event):
-    if(!EXPEVENTS.getLesserReportNum(branch, period, events[i])):
-        MAKEREPORTS.calculateReportTargetForEvent(branch, events[i], period, reporter)
+    if(!EXPEVENTS.getLesserReportNum(branch, period, event)):
+        MAKEREPORTS.calculateReportTargetForEvent(branch, event, period, reporter)
     reportingThreshold = self.calculateReportingThreshold(branch, event, period, reporter)
 
     # do abs then mult by 2 to ensure it's positive and between 0 and 1
     shaHash = (abs(sha3(reporter + event)) / ONE) * 2
     shaHash = shaHash / 57896044618658097711785L * ONE
-    wasAbleToReportOn = (shaHash < reportingThreshold or EXPEVENTS.getRequired(event, period, branch)) and afterForks
+    wasAbleToReportOn = (shaHash < reportingThreshold or EXPEVENTS.getRequired(event, period, branch)) and !eventCreatedPriorToFork(event)
     if(!wasAbleToReportOn):
         return(0)
     return(1)
@@ -79,7 +80,6 @@ def getEventCanReportOn(branch, period, reporter, event):
 # Returns 1 if the event's reporting threshold has been set
 # Errors: 0 if the event can't be reported on
 def setReportingThreshold(event):
-    # todo don't allow for events created pre fork expiring in fork period, fork period + 1, or fork period + 2
     # first check is if event expDate is in the current vote period and second is if blockNum is near expiration of commit period (within 24 hr.)
     # final check is if no reports [commits] on event
     # so if in 24 hr we'd be in the next half of the vote period, we're within 24 hr of the end of this half
@@ -89,7 +89,7 @@ def setReportingThreshold(event):
     inCurrentVotePeriod = (currentVotePeriod == EVENTS.getExpiration(event) / periodLength)
     reportsCommitted = EXPEVENTS.getReportsCommitted(branch, currentVotePeriod, event)
     periodHalfEndsInLessThanADay = ((block.timestamp + TWENTY_FOUR_HR) % periodLength) > (periodLength / 2)
-    if(!inCurrentVotePeriod or !periodHalfEndsInLessThanADay or reportsCommitted >= 3):
+    if(!inCurrentVotePeriod or !periodHalfEndsInLessThanADay or reportsCommitted >= 3 or eventCreatedPriorToFork(event)):
         return(0)
     EVENTS.setThreshold(event, MAX_THRESHOLD)
     return(1)
@@ -116,7 +116,6 @@ macro abs($a):
 
 # simply a helper function / useful to know
 # @return fxp
-# todo shouldn't include events created pre fork expiring in fork period + 1, or fork period + 2
 def calculateNumberOfEventsAReporterHasToReportOnAtMinimum(branch, reporter, period):
     originalRep = EXPEVENTS.getBeforeRep(branch, period, reporter)
     # this includes the baseReporters * numEventsAvailable
@@ -126,24 +125,36 @@ def calculateNumberOfEventsAReporterHasToReportOnAtMinimum(branch, reporter, per
     # a**b=exp(b*ln(a))=e**(b*ln(a)).
     repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(originalRep) / ONE) * ONE / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
     numRequiredEvents = EXPEVENTS.getNumRequired(branch, period)
-    expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn + numRequiredEvents * ONE
+    forkPeriod = BRANCHES.getForkPeriod(branch)
+    period = BRANCHES.getVotePeriod(branch)
+    forkScenario = period == (forkPeriod + 1) or period == (forkPeriod + 2)
+    expectedEventsForReporterIncludingRequired = 0
+    if(forkScenario):
+        expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn
+    else:
+        expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn + numRequiredEvents * ONE
     dealWithWhaleReporters()
     return(expectedEventsForReporterIncludingRequired / 2)
 
 macro dealWithWhaleReporters():
-    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, period) - EXPEVENTS.getNumRemoved(branch, period)
+    eventsInPeriod = safeSub(EXPEVENTS.getNumberEvents(branch, lastPeriod), EXPEVENTS.getNumRemoved(branch, lastPeriod))
     reporterIsAWhale = repConstant >= POINT_ZERO_ONE
-    if(reporterIsAWhale):
-        minimum = min(MIN_EVENTS_FOR_WHALE + numRequiredEvents, eventsInPeriod)
+    if(reporterIsAWhale and forkScenario):
+        minimum = safeAdd(MIN_EVENTS_FOR_WHALE, numEventsAvailableToReportOn)
         if(expectedEventsForReporterIncludingRequired / ONE < minimum):
             expectedEventsForReporterIncludingRequired = minimum * ONE
-    baseReporters = CONSENSUS.getBaseReportersperiod(branch)
-    total = repConstant * baseReporters
+    elif(reporterIsAWhale and forkScenario):
+        minimum = min(safeAdd(MIN_EVENTS_FOR_WHALE, numRequiredEvents), eventsInPeriod)
+        if(expectedEventsForReporterIncludingRequired / ONE < minimum):
+            expectedEventsForReporterIncludingRequired = minimum * ONE
+    baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
+    total = safeMul(repConstant, baseReporters)
     # if total is too high [>1] then expectedEventsForReporterIncludingRequired will estimate a higher number than reality, so need to correct for this below
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*baseReporters > 1)
-    if(total > ONE):
-        expectedEventsForReporterIncludingRequired = (numEventsAvailableToReportOn / baseReporters) * ONE + numRequiredEvents * ONE
-
+    if(total > ONE and forkScenario):
+        expectedEventsForReporterIncludingRequired = safeMul(safeDiv(numEventsAvailableToReportOn, baseReporters), ONE)
+    elif(total > ONE):
+        expectedEventsForReporterIncludingRequired = safeAdd(safeMul(safeDiv(numEventsAvailableToReportOn, baseReporters), ONE), safeMul(numRequiredEvents, ONE))
 
 # If anyone w/ 1 rep or more in active rep could've reported in a period but didn't enough they need to be penalized.  
 # Loop through the list of all active reporters in a period and branch and check their expected minimum number of events to report on, if they've reported on less than this then find an example event they could've reported on but didn't, then return those addresses and events
