@@ -210,7 +210,7 @@ def getUncaughtOutcome(event):
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
     return(self.Events[event].uncaughtOutcome)
 
-def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionSource, resolveBondPoster):
+def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, resolveBondPoster):
     # check that msg.sender is one of our function contracts
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
@@ -226,6 +226,7 @@ def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOut
         self.Events[ID].resolutionSourceLength = resolutionSourceLength
         save(self.Events[ID].resolutionSource[0], resolution, chars=resolutionSourceLength)
         self.Events[ID].creationTime = block.timestamp
+        self.Events[ID].resolutionAddress = resolutionAddress
         return(1)
     else:
         return(0)
