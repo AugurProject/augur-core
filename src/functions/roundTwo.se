@@ -1,7 +1,7 @@
 ### Deals with the first backstop wherein everyone reports on a given event
 
 import info as INFO
-import expiringEvents as EXPIRING
+import EXPEVENTSEvents as EXPEVENTS
 import reporting as REPORTING
 import events as EVENTS
 import branches as BRANCHES
@@ -16,7 +16,7 @@ inset('eventHelpers.se')
 inset('../data_api/float.se')
 
 macro POINT_ZERO_ONE: 10000000000000000
-
+macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 macro MIN_BOND: 200 * ONE
 
 # Allows a user to post a bond to enter round two of consensus
@@ -39,12 +39,13 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     votePeriod = BRANCHES.getVotePeriod(branch)
     roundTwoBondCheckPreconditions()
     BACKSTOPS.setRoundTwoRefund(event, msg.value)
-    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod) / EXPIRING.getNumberEvents(branch, votePeriod)
+    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod) / EXPEVENTS.getNumberEvents(branch, votePeriod)
     bond = averageAdjudicationCost + safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2))
     bond = min(bond, MIN_BOND)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
-    currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-    currentPlus48Hr = (block.timestamp + 2 * TWENTY_FOUR_HR) / BRANCHES.getPeriodLength(branch)
+    periodLength = BRANCHES.getPeriodLength(branch)
+    currentPeriod = block.timestamp / periodLength
+    currentPlus48Hr = (block.timestamp + 2 * TWENTY_FOUR_HR) / periodLength
     validEvent = (event != 0 and event == eventID)
     # if so, we're not in the final 48 hours or event isn't in this branch + votePeriod, or it's already been put into a backstop
     if(currentPeriod == currentPlus48Hr or !validEvent or BACKSTOPS.getRoundTwo(event) or EVENTS.getForked(event)):
@@ -58,11 +59,20 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
         throw()
     period = BRANCHES.getVotePeriod(branch)
     # remove from events in # to report on calc for last period
-    EXPIRING.removeEvent(branch, period)
+    EXPEVENTS.removeEvent(branch, period)
     # makes event required reporting in round 2 (the next period) as well
-    EXPIRING.setEventRequired(branch, period + 1, event)
+    EXPEVENTS.setEventRequired(branch, period + 1, event)
     # push event into next period
-    EXPIRING.addEvent(branch, period + 1, event)
+    
+    forkPeriod = BRANCHES.getForkPeriod(branch)
+    afterFork = 0
+    if(period == (forkPeriod + 1) or period == (forkPeriod + 2)):
+        afterFork = 1
+    currency = INFO.getCurrency(event)
+    wallet = INFO.getWallet(event)
+    # add to next expiration period
+    EXPEVENTS.addEvent(branch, period + 1, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+    
     # set event expiration date to be after the current reporting period ends
     EVENTS.setExpiration(event, block.timestamp)
     # set round two to true so can't be done again
@@ -84,8 +94,6 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     return(1)
 
 # Resolves a round 2 event scenario
-# Errors:
-    # 0: returned if not reported on again yet
 def roundTwoResolve(branch, event, eventIndex, sender):
     refund()
     if(MUTEX.getMutex()):
@@ -126,9 +134,6 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     # same as original consensus and bond poster was wrong [or malicious]
     elif(votedOnAgain and !forked and roundTwoEventWithBondNotReturned):
         loseBond()
-    else:
-        MUTEX.unsetMutex()
-        return(0)
     MUTEX.unsetMutex()
     return(1)
 

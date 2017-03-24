@@ -34,7 +34,7 @@ contract Ownable {
  
 // "Some grounds for reformation are of special interest to smart contracts. That includes mutual mistake, which covers the so-called “scrivener’s error,” an “accidental deviation from the parties’ agreement” made while recording the agreement in writing [19]. In smart contracts, the risk of this error is high because of, again, the introduction of code to contracting."
 
-// todo contract modification / updates
+// todoupgrade contract modification / updates
 
 contract Stoppable is Ownable {
   bool public stopped;

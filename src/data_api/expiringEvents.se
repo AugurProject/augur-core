@@ -65,6 +65,7 @@ data reporterPeriodInfo[][](beforeRep[], afterRep[], periodDormantRep[], reportH
 data modeItems[][](reportValue[], currentMode, currentModeItems)
 
 macro MAX_THRESHOLD: 2**192
+macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 
 def getSaltyEncryptedHash(branch, period, reporter, event):
     return(self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event])
@@ -286,9 +287,18 @@ def setReportHash(branch, period, reporter, reportHash, event):
 
 # called in case an event doesn't get reported on at all in a period
 def moveEvent(branch, event):
-    if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch) and !EVENTS.getUncaughtOutcome(event) and !eventCreatedPriorToFork(event)):
+    periodLength = BRANCHES.getPeriodLength(branch)
+    if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event) / periodLength and !EVENTS.getUncaughtOutcome(event) and !eventCreatedPriorToFork(event)):
+        period = block.timestamp / periodLength
+        forkPeriod = BRANCHES.getForkPeriod(branch)
+        afterFork = 0
+        if(period == (forkPeriod + 1) or period == (forkPeriod + 2)):
+            afterFork = 1
+        currency = INFO.getCurrency(event)
+        wallet = INFO.getWallet(event)
         # add to next expiration period
-        self.addEvent(branch, block.timestamp / BRANCHES.getPeriodLength(branch), event)
+        EXPEVENTS.addEvent(branch, period, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+
         EVENTS.setExpiration(event, block.timestamp)
         EVENTS.setThreshold(event, MAX_THRESHOLD)
         return(1)

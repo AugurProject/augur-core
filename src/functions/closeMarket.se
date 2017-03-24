@@ -55,7 +55,6 @@ def closeMarket(market, sender):
     period = BRANCHES.getVotePeriod(branch)
     fxpOutcome = EVENTS.getOutcome(event)
     resolution = 1
-    forkPeriod = BRANCHES.getForkPeriod(branch)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     checkCloseMarketPreconditions()
     

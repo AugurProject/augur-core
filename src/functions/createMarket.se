@@ -75,6 +75,7 @@ macro checkSubcurrencyIsValid(contract):
     # -1: we're either already past that date, branch doesn't exist, or description or resolver address is bad
     # -2: max value < min value or range < 1
     # -3: invalid number of outcomes
+    # -4: don't allow events to be created that expire in the last 48 hr of this current period [and thus being reported on next period] if a fork was made [this'll allow people to have time to claim rep on the fork, not result in weird issues with calculating events to report on changing due to active rep changing as people claim rep on the new fork, and only make people have to worry about reporting on the forked event next period]
     # -5: currency isn't an approved branch currency
 # .025 eth to create
 # descriptionWithoutOutcomeLabels + "~|>" + outcome1label + "|"  + outcome2label + "|" + outcome3label is format for a description
@@ -289,7 +290,7 @@ def updateTradingFee(market, fxpTradingFee):
 # In the event any other option is found to be the consensus the early resolution bond is returned to the poster and then resolution is handled just like any other case.
 # Errors:
     # 0: invalid branch
-    # -1: not allowed for events during a fork scenario that were created before the fork until the fork is over
+    # -1: not allowed for events during a fork scenario for events that were created before the fork until the fork is over
     # -2: market already closed or already pushed forward
     # -3: event has already been pushed forward, is being reported on now, or has an outcome already
     # -4: event isn't in a regular reporting cycle yet
@@ -320,8 +321,13 @@ def pushMarketForward(branch, market):
         return(-4)
     # push into next vote period
     period = block.timestamp / periodLength
-    EXPEVENTS.addEvent(branch, period, event, 0)
-        EXPEVENTS.addEvent(branch, futurePeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+    forkPeriod = BRANCHES.getForkPeriod(branch)
+    afterFork = 0
+    if(period == (forkPeriod + 1) or period == (forkPeriod + 2)):
+        afterFork = 1
+    currency = INFO.getCurrency(event)
+    wallet = INFO.getWallet(event)
+    EXPEVENTS.addEvent(branch, period, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
 
     # set event expiration date to be after the current reporting period ends
     EVENTS.setExpiration(event, block.timestamp)
@@ -335,7 +341,8 @@ def pushMarketForward(branch, market):
     MUTEX.unsetMutex()
     return(1)
 
-# todo shouldn't allow for events created pre fork
+# Errors:
+    # -1: not allowed for events during a fork scenario for events that were created before the fork until the fork is over
 def putEventIntoReportingPeriod(event):
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
@@ -348,6 +355,8 @@ def putEventIntoReportingPeriod(event):
     period = block.timestamp / TWENTY_FOUR_HR
     # want to resolve as soon as possible
     futurePeriod = block.number / periodLength
+    if(eventCreatedPriorToFork(event)):
+        return(-1)
 
     if(!EVENTS.getChallenged(event) && !EVENTS.getFirstPreliminaryOutcome(event) && block.timestamp > (EVENTS.getOriginalExpiration(event) + THREE_DAYS)):
         addEvent()
@@ -360,7 +369,8 @@ def putEventIntoReportingPeriod(event):
             MUTEX.unsetMutex()
         return(0)
 
-# todo shouldn't allow for events created pre fork
+# Errors:
+    # -1: not allowed for events during a fork scenario for events that were created before the fork until the fork is over
 def challengeInitialResolution(event):
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
@@ -375,6 +385,8 @@ def challengeInitialResolution(event):
     period = block.timestamp / TWENTY_FOUR_HR
     # want to resolve as soon as possible
     futurePeriod = block.number / periodLength
+    if(eventCreatedPriorToFork(event)):
+        return(-1)
 
     if(!EVENTS.getChallenged(event) && block.timestamp < (EVENTS.getOriginalExpiration(event) + 2 * THREE_DAYS) && EVENTS.getFirstPreliminaryOutcome(event)):
         addEvent()
@@ -441,6 +453,12 @@ macro checkEventCreationPreconditions():
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-3)
+    parent = BRANCHES.getParent(branch)
+    parentLastForked = BRANCHES.getForkPeriod(parent)
+    fourtyEightHourPeriodWhereNoEventsCanExpireOnNewFork = parentLastForked + 1
+    whenEventExpires = expDate / periodLength
+    if(whenEventExpires == fourtyEightHourPeriodWhereNoEventsCanExpireOnNewFork):
+        return(-4)
     if(!BRANCHES.getCurrencyActive(branch, currency)):
         return(-5)
 
