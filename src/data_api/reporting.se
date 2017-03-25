@@ -25,13 +25,14 @@ inset('refund.se')
 
 # Storage of all data associated with reporters
     # Reporting index is the branch
-    # Reporters index is the rep. address
+    # Reputation index is the rep. address
     # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
     # total rep is all the rep in augur
     # active rep is the fxpAmount which is actually active
     # fork is the child branch of a parent which forked
     # fxpDormant rep stores fxpDormant rep values
-data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), activeRep, fork)
+    # reportedOnNonFinalRoundTwoEvent is the eventID if a person reported on a round 2 event before it was in the second round [i.e. the first reporting backstop], they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event, set this to 0 once the event is final
+data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), activeRep, fork, reportedOnNonFinalRoundTwoEvent)
 
 data whitelists[](addresses[], taken)
 
@@ -47,6 +48,13 @@ def init():
     
 def checkWhitelist(address):
     return(self.whitelists[msg.sender].addresses[address])
+
+def getReportedOnNonFinalRoundTwoEvent(branch):
+    return(self.Reporting[branch].reportedOnNonFinalRoundTwoEvent)
+    
+def setReportedOnNonFinalRoundTwoEvent(branch, event):
+    self.Reporting[branch].reportedOnNonFinalRoundTwoEvent = event
+    return(1)
 
 # @return fxp
 def getActiveRep(branch):

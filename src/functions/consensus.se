@@ -63,7 +63,8 @@ def penalizeWrong(branch, event):
     MUTEX.setMutex()
 
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
-    lastPeriod = BRANCHES.getVotePeriod(branch) - 1
+    currentVotePeriod = BRANCHES.getVotePeriod(branch)
+    lastPeriod = currentVotePeriod - 1
     periodLength = BRANCHES.getPeriodLength(branch)
     newRep = 0
     rejected = EVENTS.getRejected(event)
@@ -86,6 +87,9 @@ def penalizeWrong(branch, event):
         # shouldn't be penalized until the next period resolution is over [since it's a round 2 event]
     if(roundTwo and !penalizedOnEvent and reportValue):
         countAsPenalized()
+        REPORTING.setReportedOnNonFinalRoundTwoEvent(branch, eventID)
+        EXPEVENTS.addReportToReportsSubmitted(branch, currentVotePeriod, msg.sender)
+        
     # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. don't allow rep redistribution until the original period it was supposed to resolve in
     elif(!penalizedOnEvent and reportValue and rejected and EVENTS.getRejectedPeriod(event) == lastPeriod):
         countAsPenalized()

@@ -82,19 +82,21 @@ def penalizeRoundTwoWrong(branch, event):
     penalizedOnEvent = CONSENSUS.getPenalized(branch, lastPeriodVotedOn, msg.sender, event)
     reported = (reportValue or oldReport)
     if(final and roundTwo and eventCreatedPriorToFork(event) && event != forkEvent && !penalizedOnEvent && reported):
-        CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
-        CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
-    if(final and (roundTwo or event == forkEvent) and !penalizedOnEvent and reported):
+        CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
+        CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
+        if(oldReport):
+            CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)        
+    elif(final and (roundTwo or event == forkEvent) and !penalizedOnEvent and reported and outcome !=0):
         # Do the first rep redistribution based on first report and final outcome if reported first time
-        # 0 outcome issue
-        if(oldReport and outcome != 0):
+        CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
+        if(oldReport):
             calculateRepChange(oldReport, POINT_TWO)
             handleEthicsAndBondRepRedistribution(POINT_TWO, oldEthics, numReportedOn)
+            CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
         # Do the second (for each user) based on second report and final outcome
-        if(reportValue and outcome != 0):
+        if(reportValue):
             calculateRepChange(reportValue, POINT_ONE / 4)
             handleEthicsAndBondRepRedistribution(POINT_ONE / 4, ethics, numReportedOn)
-            CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
     else:
         MUTEX.unsetMutex()

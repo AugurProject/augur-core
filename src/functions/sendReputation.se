@@ -27,6 +27,7 @@ import consensusData as CONSENSUS
 # should really factor this out so they don't depend on eachother
 import consensus as INCREMENTPERIOD
 import repContract as REPCONTRACT
+import backstops as BACKSTOPS
 import mutex as MUTEX
 inset('../data_api/refund.se')
 inset('../data_api/periodStage.se')
@@ -50,6 +51,12 @@ macro ONE_MONTH: 2592000
     # -3: "Receiving address doesn't exist"
     # -4: couldn't catchup automatically
     # -5: not enough rep / fxpValue too small or not authorized
+    # -6: if a person reported on a round 2 event before it was in the second round [i.e. the first reporting backstop], they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event
+        # Notes:
+            # say you lost rep in round 1, if it was a valid round 2 you have incentive to not convert to dormant or send rep b/c you want to get it back
+            # say you gained rep in round 1, if it was a valid round 2 you have incentive _to_ convert to dormant
+            # say you lost rep in round 1, if it was an invalid round 2 you have incentive to convert to dormant
+            # say you gained rep in round 1, if it was an invalid round 2 you have incentive _to_ not convert to dormant or send rep b/c you want to keep it
 def sendRepFrom(branch, from, receiver, fxpValue):
     checkInvariants(from)
     if(first48HoursOfPeriod()):
@@ -63,6 +70,9 @@ def sendRepFrom(branch, from, receiver, fxpValue):
     receiverIndex = REPORTING.repIDToIndex(branch, receiver)
     senderBalance = REPORTING.getRepBalance(branch, from)
     receiverBalance = REPORTING.getRepBalance(branch, receiver)
+    reportedOnRoundTwoEvent = REPORTING.getReportedOnNonFinalRoundTwoEvent(branch)
+    if(reportedOnRoundTwoEvent && !BACKSTOPS.getFinal(reportedOnRoundTwoEvent)):
+        throw()
     checkSendRepInvariants()
 
     if(!safeToSubtract(senderBalance, fxpValue) or !REPORTING.subtractRep(branch, senderIndex, fxpValue) or !safeToAdd(receiverBalance, fxpValue) or !REPORTING.addRep(branch, receiverIndex, fxpValue)):
@@ -77,7 +87,7 @@ def sendRepFrom(branch, from, receiver, fxpValue):
 # error messages otherwise
     # -1: "Your reputation account was just created, earn some rep. before you can send to others"
     # -3: "Receiving address doesn't exist"
-    # -5: not enough rep / fxpValue too small or not authorized    # -3: "Receiving address doesn't exist"
+    # -5: not enough rep / fxpValue too small or not authorized
 # fails unless from has authorized sender [either contract which was approved or the from address is the msg.sender]
 def transferFrom(branch, from, receiver, fxpValue):
     refund()
@@ -107,10 +117,12 @@ def transferFrom(branch, from, receiver, fxpValue):
     # -2: not in right part of period
     # -4: couldn't catchup automatically
     # -5: not enough rep / fxpValue too small
-# if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event todo
-say you lost rep in round 1, if it was a valid round 2 you have incentive to not convert to dormant or send rep b/c you want to get it back
-say you gained rep in round 1, if it was a valid round 2 you have incentive _to_ convert to dormant
-# unless this just happened to them last period and they reported correctly then
+    # -6: if a person reported on a round 2 event before it was in the second round [i.e. the first reporting backstop], they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event
+        # Notes:
+            # say you lost rep in round 1, if it was a valid round 2 you have incentive to not convert to dormant or send rep b/c you want to get it back
+            # say you gained rep in round 1, if it was a valid round 2 you have incentive _to_ convert to dormant
+            # say you lost rep in round 1, if it was an invalid round 2 you have incentive to convert to dormant
+            # say you gained rep in round 1, if it was an invalid round 2 you have incentive _to_ not convert to dormant or send rep b/c you want to keep it
 def convertToDormantRep(branch, fxpValue):
     if(MUTEX.getMutex()):
         throw()
@@ -121,6 +133,9 @@ def convertToDormantRep(branch, fxpValue):
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
     senderBalance = REPORTING.getRepBalance(branch, msg.sender)
     senderDormantBalance = REPORTING.balanceOf(branch, msg.sender)
+    reportedOnRoundTwoEvent = REPORTING.getReportedOnNonFinalRoundTwoEvent(branch)
+    if(reportedOnRoundTwoEvent && !BACKSTOPS.getFinal(reportedOnRoundTwoEvent)):
+        throw()
     checkRepConversionInvariants()
 
     if(!safeToSubtract(senderBalance, fxpValue) or !safeToAdd(senderDormantBalance, fxpValue) or !REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, senderIndex, fxpValue)):

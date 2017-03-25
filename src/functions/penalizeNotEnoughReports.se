@@ -33,7 +33,6 @@ macro MIN_EVENTS_FOR_WHALE: 30
     # -2: not in right part of period
     # -3: event isn't in branch
     # -5: reported on enough
-    # Returns 2 if didn't need to be penalized and thus wasn't
 def proveReporterDidntReportEnough(branch, reporter, eventExample):
     refund()
     if(MUTEX.getMutex()):

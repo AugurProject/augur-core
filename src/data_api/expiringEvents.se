@@ -327,6 +327,10 @@ def countReportAsSubmitted(branch, votePeriod, event, sender, weight):
     self.reporterPeriodInfo[branch][votePeriod].numReportsSubmitted[sender] += 1
     return(1)
 
+def addReportToReportsSubmitted(branch, period, user):
+    self.reporterPeriodInfo[branch][period].numReportsSubmitted[user] += 1
+    return(1)
+
 def setLesserReportNum(branch, period, event, num):
     self.periodEventInfo[branch][period].lesserReportNum[event] = num
     return(1)
