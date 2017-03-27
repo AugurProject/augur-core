@@ -30,6 +30,7 @@ import expiringEvents as EXPEVENTS
 import mutex as MUTEX
 import fxpFunctions as FXP
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
+extern forkResolveContract: [resolveFork:[]:int256]
 inset('../data_api/refund.se')
 inset('../data_api/float.se')
 
@@ -47,12 +48,15 @@ macro 10_PERCENT_RATE: 100000000000000000
 # may want to reconfirm this again
 macro COST_FOR_MARKET_RESOLUTION: 1000000
 
-macro checkSubcurrencyIsValid(contract):
+macro checkSubcurrencyIsValid($contract):
     allowance = $contract.allowance(msg.sender, self)
     balance = $contract.balanceOf(self)
     transfer = $contract.transfer(msg.sender, 0)
     transferFrom = $contract.transferFrom(self, msg.sender, 0)
     approve = $contract.approve(self, 0)
+    
+macro checkForkResolveContractIsValid($contract):
+    resolve = $contract.resolveFork()
 
 # def createSingleEventMarket(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution:str, fxpTradingFee, tag1, tag2, tag3, fxpMakerFees, extraInfo:str):
 #     event = self.createEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, call=delegate)
@@ -68,6 +72,7 @@ macro checkSubcurrencyIsValid(contract):
 # @param branch is the branch the event is created in
 # @param expDate is the epoch time in which the event expires
 # @param resolutionAddress is the address that resolves an event in the beginning
+# @param forkResolveAddress is the address for the contract for an event to use to resolve a fork, it's an optional parameter so may be 0 if the event chooses to use the default fork resolution, it should whitelist forking.se
 # @return event if success
 # range between min and max should be 1 [in fxp] or greater
 # error messages otherwise
@@ -80,7 +85,7 @@ macro checkSubcurrencyIsValid(contract):
 # .025 eth to create
 # descriptionWithoutOutcomeLabels + "~|>" + outcome1label + "|"  + outcome2label + "|" + outcome3label is format for a description
 # with a categorical user can set min and max to whatever, for reporting 1 is the min and max is the max then reports should be scaled between that range, for payouts it's 1 to the winning outcome or equal for all outcomes if indeterminate, you cannot trade by paying more than 1 for a share as that makes no sense
-def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency):
+def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
     refund()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
@@ -105,7 +110,8 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
-
+    
+    checkSubcurrencyIsValid(currency)
     wallet = create('wallet.se')
     if(!wallet.initialize(currency)):
         throw()
@@ -117,7 +123,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     if(REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, msg.sender), FIRST_RESOLVE_BOND) && REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, event), FIRST_RESOLVE_BOND))
         firstResolveBondPaid = 1
         firstResolveBondPoster = msg.sender
-    if(INFO.setInfo(event, description, msg.sender, 0, currency, wallet) and EVENTS.initializeEvent(event, branch, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, firstResolveBondPoster) && firstResolveBondPaid):
+    if(INFO.setInfo(event, description, msg.sender, 0, currency, wallet) and EVENTS.initializeEvent(event, branch, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, firstResolveBondPoster, forkResolveAddress) && firstResolveBondPaid):
         if(!EVENTS.getBond(event)):
             # pay validity / indeterminate protection bond
             period = block.timestamp / TWENTY_FOUR_HR
@@ -461,6 +467,7 @@ macro checkEventCreationPreconditions():
         return(-4)
     if(!BRANCHES.getCurrencyActive(branch, currency)):
         return(-5)
+    checkForkResolveContractIsValid(forkResolveAddress)
 
 macro checkMarketCreationPreconditions():
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets

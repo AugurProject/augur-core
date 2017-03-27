@@ -13,6 +13,7 @@ import createBranch as CREATEBRANCH
 import consensusData as CONSENSUSDATA
 import mutex as MUTEX
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
+extern forkResolveContract: [resolveFork:[]:int256]
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
 inset('../data_api/float.se')
@@ -85,7 +86,6 @@ def moveEvent(event):
     return(1)
 
 # parent branch is branch here
-# todo fork use address picked in market creation to resolve it and have a default fork resolve option
 # If there's only 1 event and that's the one we forked over [rare edge case] we can call resolve fork manually if it hasn't been done yet within the time parameters which allows a fork to be resolved [2 periods after the start of the fork]
 def resolveFork(branch):
     if(MUTEX.getMutex() && !mutexWhitelisted()):
@@ -102,14 +102,12 @@ def resolveFork(branch):
         return(0)
 
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
-    currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     origCap = self.exchangeRate(branch)
     fork = REPORTING.getFork(branch)
     forkCap = self.exchangeRate(fork)
+    winner = 0
     if(origCap >= forkCap):
         winner = branch
-        BACKSTOPS.setResolved(branch, forkPeriod, winner)
-        return(winner)
     else:
         winner = fork
     BACKSTOPS.setResolved(branch, forkPeriod, winner)
@@ -201,6 +199,9 @@ macro resolveForkEvent(branch, event):
     winner = BACKSTOPS.getResolved(branch, BRANCHES.getForkPeriod(branch))
     if(!winner):
         return(-5)
+    nonDefaultForkResolution = EVENTS.getForkResolveAddress(event)
+    if(nonDefaultForkResolution):
+        resolveCustomForkResolution()
     # binary
     if(binary(event)):
         binaryForkResolve()
@@ -348,6 +349,9 @@ macro checkMoveEventPreconditions():
     winner = BACKSTOPS.getResolved(branch, forkPeriod)
     if(!winner):
         winner = self.resolveFork(branch)
+    nonDefaultForkResolution = EVENTS.getForkResolveAddress(event)
+    if(nonDefaultForkResolution):
+        resolveCustomForkResolution()
 
 macro keepEventInOriginalBranch():
     # set outcomes to 0
@@ -439,3 +443,7 @@ macro moveEventToWinningBranch():
                 wallet = INFO.getWallet(event)
                 # add to next expiration period
                 EXPEVENTS.addEvent(winner, originalPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+
+# use address picked in event creation to resolve it instead of the default fork resolve option
+macro resolveCustomForkResolution():
+    winner = nonDefaultForkResolution.resolveFork()

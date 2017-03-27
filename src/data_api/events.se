@@ -46,12 +46,16 @@ import info as INFO
 # resolveBondPoster is the address which posted the rep bond for the first resolution period
 # earlyResolutionBond is the bond paid for early resolution of an event
 # creationTime is the block timestamp when a given event is created
-data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent, resolutionAddress, extraBond, firstPreliminaryOutcome, challenged, resolveBondPoster, earlyResolutionBond, creationTime)
+# forkResolveAddress is the address for an event to use to resolve a fork, it's an optional parameter so may be 0 if the event chooses to use the default fork resolution, that contract address should whitelist forking.se
+data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent, resolutionAddress, extraBond, firstPreliminaryOutcome, challenged, resolveBondPoster, earlyResolutionBond, creationTime, forkResolveAddress)
 
 # Keeps track of number of events created in the past 24 hours
 data past24Hours[]
 
 event logOutcome(event:indexed, outcome)
+
+def getForkResolveAddress(event):
+    return(self.Events[event].forkResolveAddress)
 
 def getCreationTime(event):
     return(self.Events[event].creationTime)
@@ -210,7 +214,7 @@ def getUncaughtOutcome(event):
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
     return(self.Events[event].uncaughtOutcome)
 
-def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, resolveBondPoster):
+def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, resolveBondPoster, forkResolveAddress):
     # check that msg.sender is one of our function contracts
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
@@ -227,6 +231,7 @@ def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOut
         save(self.Events[ID].resolutionSource[0], resolution, chars=resolutionSourceLength)
         self.Events[ID].creationTime = block.timestamp
         self.Events[ID].resolutionAddress = resolutionAddress
+        self.Events[ID].forkResolveAddress = forkResolveAddress
         return(1)
     else:
         return(0)

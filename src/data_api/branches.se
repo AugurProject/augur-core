@@ -72,6 +72,7 @@ def init():
     # since only have to report on half this targets 3
     self.Branches[1010101].baseReporters = 6
     ethContract = 0
+    checkSubcurrencyIsValid(ethContract)
     wallet = create('wallet.se')
     wallet.initialize(ethContract)
     self.Branches[1010101].contract[ethContract] = wallet
@@ -92,6 +93,7 @@ def addCurrency(branch, currency, rate, rateContract):
     self.Branches[branch].numCurrencies += 1
     noWalletExists = !self.Branches[branch].contract[currency]
     if(noWalletExists):
+        checkSubcurrencyIsValid(currency)
         wallet = create('wallet.se')
         wallet.initialize(currency)
         self.Branches[branch].contract[currency] = wallet
@@ -119,6 +121,7 @@ def replaceCurrency(branch, oldCurrencyIndex, newCurrency, newRate, newRateContr
     self.Branches[branch].currencyToIndex[newCurrency] = oldCurrencyIndex
     noWalletExists = !self.Branches[branch].contract[newCurrency]
     if(noWalletExists):
+        checkSubcurrencyIsValid(newCurrency)
         wallet = create('wallet.se')
         wallet.initialize(newCurrency)
         self.Branches[branch].contract[newCurrency] = wallet

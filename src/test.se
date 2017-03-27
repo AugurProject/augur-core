@@ -1,6 +1,7 @@
 data foo
-inset('data_api/float.se')
 
 def ok(x):
-    n = floatfy(55)
-    return(unfloat(n))
+    return(blah)
+    
+macro blah(a, b, c):
+    a
