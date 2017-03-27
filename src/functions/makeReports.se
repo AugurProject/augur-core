@@ -65,7 +65,7 @@ def makeHash(salt, fxpReport, event, sender, ethics):
 # Error -2: not in first half of period [commit part]
 # Error -3: not able to fxpReport on this event
 # Error -4: not caught up on penalizations [>1 period behind] and auto catchup failed
-def submitReportHash(event, reportHash, encryptedSaltyHash):
+def submitReportHash(event, reportHash, saltyEncryptedHash):
     refund()
     if(MUTEX.getMutex()):
         throw()
@@ -90,7 +90,7 @@ def submitReportHash(event, reportHash, encryptedSaltyHash):
         MUTEX.unsetMutex()
         logReturn(makeReportsLogReturn, -3)
     EXPEVENTS.setReportHash(branch, votePeriod, msg.sender, reportHash, event)
-    EXPEVENTS.setSaltyEncryptedHash(branch, votePeriod, msg.sender, encryptedSaltyHash, event)
+    EXPEVENTS.setSaltyEncryptedHash(branch, votePeriod, msg.sender, saltyEncryptedHash, event)
     MUTEX.unsetMutex()
     logReturn(makeReportsLogReturn, 1)
 
