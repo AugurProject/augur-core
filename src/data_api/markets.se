@@ -293,11 +293,6 @@ def setTradingFee(market, fee):
     self.Markets[market].fxpTradingFee = fee
     return(fee)
 
-def setMakerFees(market, makerFees):
-    refund()
-    self.Markets[market].makerFees = makerFees
-    return(makerFees)
-
 def setPushedForward(market, bool, sender):
     self.Markets[market].pushingForward = bool
     self.Markets[market].bondsMan = sender
