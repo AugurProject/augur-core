@@ -1,14 +1,15 @@
+import mutex as MUTEX
+extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
+inset('../data_api/refund.se')
+inset('../data_api/float.se')
+
 ### Off-chain trading contract:
     # Maker can create an order by hashing the order details then signing it and broadcasting the order and signed order
     
     # Taker takes a broadcasted order, verifies the signature and that the order info hashes to the order hash and that the seller has approved the contract to be able to withdraw funds for the order amount or whatever is left of it [order size minus getAmountFilled(hash) will give us this info] and that the user has the appropriate amount of funds, then calls trade to pick it up.
 
     # useful info for manipulating sigs / signing things etc https://ethereum.stackexchange.com/questions/710/how-can-i-verify-a-cryptographic-signature-that-was-produced-by-an-ethereum-addr/718#718
-
-import mutex as MUTEX
-extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
-inset('../data_api/refund.se')
-
+    
 event Order(tokenX:address:indexed, orderSize, tokenY:address:indexed, fxpPrice, expiration, user:address:indexed)
 
 event Cancel(tokenX:address:indexed, orderSize, tokenY:address:indexed, fxpPrice, expiration, user:address:indexed, v, r, s)
@@ -36,20 +37,20 @@ def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, 
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
-    if(!checkHasAbilityToSpend(maker, tokenX, orderSize) || !checkHasAbilityToSpend(msg.sender, tokenY, takerAmount * fxpPrice / ONE)):
+    if(!checkHasAbilityToSpend(maker, tokenX, orderSize) || !checkHasAbilityToSpend(msg.sender, tokenY, safeFxpMul(takerAmount, fxpPrice))):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-2)
-    if((self.amountFilled[orderHash] + takerAmount) > orderSize):
+    if(safeAdd(self.amountFilled[orderHash], takerAmount) > orderSize):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-3)
     
-    self.claimed[orderHash] += takerAmount
+    self.amountFilled[orderHash] += takerAmount
     # fxpPrice is in units of y per x
     # amount of x * fxpPrice = amount of y
     # amount of x * y / x = amount of y
-    if(!tokenX.transferFrom(maker, msg.sender, takerAmount) || !tokenY.transferFrom(msg.sender, maker, takerAmount * fxpPrice / ONE)):
+    if(!tokenX.transferFrom(maker, msg.sender, takerAmount) || !tokenY.transferFrom(msg.sender, maker, safeFxpMul(takerAmount, fxpPrice))):
         throw()
     log(type = Trade, maker, msg.sender, tokenX, tokenY, amount, fxpPrice, orderHash)
     if(!mutexWhitelisted()):
@@ -83,9 +84,9 @@ def cancelOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiratio
         MUTEX.unsetMutex()
     return(1)
 
-def getAmountFilled(tradeHash):
+def getAmountFilled(orderHash):
     refund()
-    return(self.amountFilled[tradeHash])
+    return(self.amountFilled[orderHash])
 
 macro checkSig(signer, hash, v, r, s):
     ecrecover(hash, v, r, s) == signer

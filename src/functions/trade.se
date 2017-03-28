@@ -18,31 +18,43 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-### Allows users to take orders off the book and short sell
+### Allows users to take orders off the book (i.e. fill orders)
 
 import branches as BRANCHES
 import info as INFO
 import markets as MARKETS
 import events as EVENTS
-import trades as TRADES
+import orders as ORDERS
 import expiringEvents as EXPEVENTS
 import mutex as MUTEX
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 inset('logReturn.se')
+inset('../data_api/float.se')
 
-<<<<<<< HEAD
-event logPrice(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, tradeid, outcome)
-event logPriceShort(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, tradeid, outcome)
+# Trade scenarios:
+    # Note: all [] scenarios are typical, if a user somehow gets an extra complete set it'll also be sold when doing a order, typically complete sets only sold when closing out a position or closing out a short
+
+    # - Buying and have all but one and bidding, seller doesn't have outcome and is taking [complete set fee charged on buyer b/c selling complete sets].
+
+    # - Buying and have all but one and bidding, seller has outcome and is taking [complete set fee charged on buyer].
+
+    # - Buying and don't own anything and bidding, seller doesn't have outcome and is taking [no complete set fee charged b/c none sold].
+
+    # - Buying and don't own anything and bidding, seller has outcome and is taking [no complete set fee charged b/c none sold].
+
+    # - Buying and have all but one and taking, seller doesn't have outcome and is asking [complete set fee charged on buyer].
+
+    # - Buying and have all but one and taking, seller has outcome and is asking [complete set fee charged on buyer].
+
+    # - Buying and don't own anything and taking, seller doesn't have outcome and is asking [no complete set fee charged].
+
+    # - Buying and don't own anything and taking, seller has outcome and is asking [no complete set fee charged].
+
+event logPrice(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
 
 event tradeLogReturn(returnValue)
 event tradeLogArrayReturn(returnArray: arr)
-=======
-event log_fill_tx(market:indexed, sender:indexed, owner:indexed, type, price, amount, tradeid, outcome, timestamp, takerFee, makerFee, onChainPrice, tradeHash, tradeGroupID)
-event log_short_fill_tx(market:indexed, sender:indexed, owner:indexed, price, amount, tradeid, outcome, timestamp, takerFee, makerFee, numOutcomes, onChainPrice, tradeHash, tradeGroupID)
-event trade_logReturn(returnValue)
-event trade_logArrayReturn(returnArray: arr)
->>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
 
 macro logArrayReturn($a):
     log(type=tradeLogArrayReturn, $a)
@@ -50,462 +62,329 @@ macro logArrayReturn($a):
 
 macro ONE_POINT_FIVE: 1500000000000000000
 
-macro MIN_TRADE_VALUE: 10000000000
+macro MIN_TRADE_VALUE: 10000000000000000
 
-macro MINIMUM_TRADE_SIZE: 10000000000
 macro ONEPOINTFIVE: 1500000000000000000
+
 # Trade types
 macro BID: 1
 macro ASK: 2
-macro SHORT_OFFER: 3
 # Field counts
-macro TRADE_FIELDS: 10
+macro ORDER_FIELDS: 10
 # Boolean success/failure
 macro SUCCESS: 1
 # Error codes
 macro INSUFFICIENT_BALANCE: -4
 macro TRADE_SAME_BLOCK_PROHIBITED: -5
 
-# removes a trade from the book
-macro removeTrade($tradeID, $market):
-    TRADES.removeTrade($tradeID)
-    MARKETS.removeTradeFromMarket($market, $tradeID)
+# removes a order from the book
+macro removeOrder($orderID, $market):
+    ORDERS.removeOrder($orderID)
+    MARKETS.removeOrderFromMarket($market, $orderID)
 
 # 
 # Trade [allows a user to pick up/fill orders off the book]
 # 
 # Errors:
-    # 0: trade doesn't exist
-    # -1: bad trade hash
+    # 0: order doesn't exist
+    # -1: bad order hash
     # -2: must buy at least .00000001 in
-    # -3: can't pick up your own trade
+    # -3: can't pick up your own order
     # -4: insufficient balance
-    # -5: trade in same block prohibited
-# max value is max money to spend to buy filling ask orders
-# max amount is max shares to sell filling bid orders
-# 500k gas cost
+    # -5: order in same block prohibited
+# amountTakerWants is amount of shares the taker wants to fill
 # picks orders off the book
-<<<<<<< HEAD
-# needs to continue if a trade is filled / removed by the time we get here, not return, issues with insufficient balance ending when it should continue filling other order types
 # @return fxp
-def trade(fxpMaxValue, fxpMaxAmount, tradeIDs: arr):
-=======
-def trade(max_value, max_amount, trade_ids:arr, tradeGroupID):
->>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
+def trade(orderID, amountTakerWants):
     refund()
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()
-
-    i = 0
-    trades = 0
-    while(i < len(tradeIDs)):
-        trades += tradeIDs[i]
-        i += 1
-    tradeInfo = array(3)
-    tradeInfo[0] = trades
-    tradeInfo[1] = fxpMaxAmount
-    tradeInfo[2] = fxpMaxValue
-    tradeHash = sha3(tradeInfo, items = 3)
-    if(TRADES.checkHash(tradeHash, msg.sender) == -1):
-        MUTEX.unsetMutex()
-        logArrayReturn([-1])
-    # Try to fulfill each trade passed
-    t = 0
-    while(t < len(tradeIDs)):
-        # Get trade
-        trade = array(TRADE_FIELDS)
-<<<<<<< HEAD
-        trade = TRADES.getTrade(tradeIDs[t], outitems = TRADE_FIELDS)
-        if(!trade[0]):
-            MUTEX.unsetMutex()
-            logArrayReturn([0])
-        type = trade[1]
-        market = trade[2]
-        creator = INFO.getCreator(market)
-        amount = trade[3]
-        price = trade[4]
-        owner = trade[5]
-        outcome = trade[7]
-        fill = 0
-        checkTradePreconditions()
-        branch = MARKETS.getBranch(market)
-        
-        cumulativeScale = MARKETS.getCumulativeScale(market)
-
-        # Fill buy order
-        if(type == BID):
-            fillBid()
-        elif(type == ASK):
-            fillAsk()
-        elif(type == SHORT_OFFER):
-            fillShortOffer()
-        else:
-            throw()
-=======
-        trade = TRADES.get_trade(trade_ids[t], outitems=TRADE_FIELDS)
-        if trade[0] != 0:
-            # Get market
-            type = trade[1]
-            market = trade[2]
-            creator = INFO.getCreator(market)
-            amount = trade[3]
-            price = trade[4]
-            owner = trade[5]
-            outcome = trade[7]
-            eventID = MARKETS.getMarketEvent(market, 0)
-            minValue = EVENTS.getMinValue(eventID)
-            maxValue = EVENTS.getMaxValue(eventID)
-            if ((maxValue != TWO or minValue != ONE) and EVENTS.getNumOutcomes(eventID) == 2):
-                displayPrice = price + minValue
-            else:
-                displayPrice = price
-            if(owner != msg.sender and owner != tx.origin):
-                # Make sure the trade has been mined, obvious HFT prevention
-                if block.number <= trade[6]:
-                    logReturn(trade_logReturn, TRADE_SAME_BLOCK_PROHIBITED)
-                branch = MARKETS.getBranchID(market)
-                fee = fee_percent(MARKETS.getTradingFee(market), price, MARKETS.getCumScale(market))
-                # Fill buy order
-                if type == BID:
-                    # Get available balance of shares
-                    balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)
-                    if balance <= 0:
-                        logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
-                    if max_amount > 0:
-                        makerFeeRate = MARKETS.getMakerFees(market)
-                        # Determine fill amount
-                        fill = min(amount, min(balance, max_amount))
-                        # Calculate value
-                        value = (fill * price)/ONE
-                        # must trade at least 0.00000001 in value
-                        if value >= MINIMUM_TRADE_SIZE:
-                            # Update trade amount or remove
-                            if fill < amount:
-                                TRADES.fill_trade(trade_ids[t], fill)
-                            else:
-                                remove_trade(trade_ids[t], market)
-                            # Update balances
-                            MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 0)
-                            MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
-                            # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
-                            fee = value * fee / ONE
-                            branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*fee / ONE
-                            creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*fee / ONE
-                            takerFeesTotal = branchFees + creatorFees
-                            CASH.addCash(msg.sender, value - takerFeesTotal)
-                            # 75% to branch + .5% more to branch per maker fee 1% decrease
-                            CASH.addCash(branch, branchFees)
-                            # 25% to creator + .5% more to creator per 1% decrease in maker fees
-                            CASH.addCash(creator, creatorFees)
-                            CASH.subtractCash(market, value)
-
-                            # other party [maker] pays their part of the fee here too [they previously escrowed it in the market]
-                            fee = fee * makerFeeRate / ONE
-                            CASH.subtractCash(market, fee)
-                            CASH.addCash(creator, fee/2)
-                            CASH.addCash(branch, fee/2)
-
-                            # needed to keep track of how many fees a market has raised
-                            # only count branch fees here
-                            MARKETS.addFees(market, fee/2+branchFees)
-                            # Update max_amount
-                            max_amount -= fill
-                            # Log transaction
-                            log(type=log_fill_tx, market, msg.sender, owner, ASK, displayPrice, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, fee, price, tradeHash, tradeGroupID)
-                elif type == ASK:
-                    balance = CASH.balance(msg.sender)
-                    if balance <= 0:
-                        logReturn(trade_logReturn, INSUFFICIENT_BALANCE)
-                    makerFeeRate = MARKETS.getMakerFees(market)
-                    takerFee = (ONEPOINTFIVE - makerFeeRate)*fee / ONE
-                    total_trade_cost = amount * price / ONE * (takerFee+ONE) / ONE
-                    # trade value to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilledIncludingFees)
-                    value_to_spend = min(total_trade_cost, min(max_value, balance))
-                    # Determine fill amount
-                    fill = value_to_spend*ONE / price * ONE / (takerFee+ONE)
-                    trade_value_excluding_fees = fill*price/ONE
-                    if(trade_value_excluding_fees >= MINIMUM_TRADE_SIZE):
-                        # Update trade amount or remove filled trade
-                        if fill < amount:
-                            TRADES.fill_trade(trade_ids[t], fill)
-                        else:
-                            remove_trade(trade_ids[t], market)
-                        # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
-                        MARKETS.modifyParticipantShares(market, msg.sender, outcome, fill, 0)
-
-                        branchFees = (THREEFOURTHS+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees/ONE * fee / ONE
-                        creatorFees = (ONEFOURTH+(ONEHALF - makerFeeRate)/2)*trade_value_excluding_fees/ONE * fee / ONE
-                        # Transfer cash from user to person who has ask order and pay fee to branch and market creator
-                        # 75% to branch + .5% more to branch per maker fee 1% decrease 
-                        CASH.addCash(branch, branchFees)
-                        # 25% to creator + .5% more to creator per 1% decrease in maker fees
-                        CASH.addCash(creator, creatorFees)
-                        takerFeesTotal = branchFees + creatorFees
-                        CASH.addCash(owner, value_to_spend - takerFeesTotal)
-                        CASH.subtractCash(msg.sender, value_to_spend)
-
-                        # other party [maker] pay their part of the fee here too
-                        makerFee = trade_value_excluding_fees * makerFeeRate / ONE * fee / ONE
-                        CASH.subtractCash(market, makerFee)
-                        CASH.addCash(creator, makerFee/2)
-                        CASH.addCash(branch, makerFee/2)
-
-                        # only count branch fees here
-                        MARKETS.addFees(market, makerFee/2+branchFees)
-                        # Update max_value
-                        max_value -= value_to_spend
-                        # Log transaction
-                        log(type=log_fill_tx, market, msg.sender, owner, BID, displayPrice, fill, trade_ids[t], outcome, block.timestamp, takerFeesTotal, makerFee, price, tradeHash, tradeGroupID)
->>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
-
-        # Log price, fill amount, type and timestamp
-        MARKETS.setPrice(market, outcome, price)
-        # Next trade
-        t += 1
-    MUTEX.unsetMutex()
-    logArrayReturn([SUCCESS, fxpMaxValue, fxpMaxAmount])
-
-# Allows a user to "short" by buying n complete sets and selling n shares of the unwanted outcome to a bid on the book in one tx
-# Example:
-    # buyer gives up say 20
-    # complete set cost is say 100
-    # market should lose 20 from buyer's escrowed money
-    # market should gain 100 from complete set
-    # person short selling should give the market 80 [complete set cost less shares sold]
-# Errors:
-<<<<<<< HEAD
-    # 0: trade doesn't exist
-    # -1: invalid trade hash/commitment
-    # -2: not a large enough trade
-    # -3: can't pickup your own trade
-    # -4: insufficient balance
-    # -5: trade in same block prohibited
-    # -6: must be a bid, not an ask
-# @return fxp
-def shortSell(buyerTradeIDs: arr, fxpMaxAmount):
-=======
-    # -1: trade doesn't exist
-    # -2: invalid trade hash/commitment
-    # -3: must be a bid, not an ask
-    # -4: market is already resolved
-    # -5: can't pickup your own trade
-    # -6: can't trade on oracle only branch
-    # -7: not a large enough trade
-    # 10: insufficient balance
-    # 22: trade in same block prohibited
-def short_sell(buyer_trade_id, max_amount, tradeGroupID):
->>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
-    refund()
-    if(MUTEX.getMutex()):
+    if(amountTakerWants <= 0):
         throw()
-    MUTEX.setMutex()
-    i = 0
-    trades = 0
-    while(i < len(buyerTradeIDs)):
-        trades += buyerTradeIDs[i]
-        i += 1
-    tradeInfo = array(3)
-    tradeInfo[0] = trades
-    tradeInfo[1] = fxpMaxAmount
-    tradeInfo[2] = 0
-    tradeHash = sha3(tradeInfo, items = 3)
-    if(TRADES.checkHash(tradeHash, msg.sender) == -1):
+
+    # Get order
+    order = array(ORDER_FIELDS)
+    order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
+    if(!order[0]):
+        MUTEX.unsetMutex()
+        logArrayReturn([0])
+    type = order[1]
+    market = order[2]
+    creator = INFO.getCreator(market)
+    amount = order[3]
+    price = order[4]
+    owner = order[5]
+    outcome = order[7]
+    moneyEscrowed = order[8]
+    sharesEscrowed = order[9]
+    checkTradePreconditions()
+    branch = MARKETS.getBranch(market)
+    cumulativeScale = MARKETS.getCumulativeScale(market)
+
+    orderInfo = array(4)
+    orderInfo[0] = market
+    orderInfo[1] = outcome
+    orderInfo[2] = type
+    orderInfo[3] = msg.sender
+    orderHash = sha3(orderInfo, items = 4)
+    if(ORDERS.checkHash(orderHash, msg.sender) == -1):
         MUTEX.unsetMutex()
         logArrayReturn([-1])
-    # Try to fulfill each trade passed
-    t = 0
-    while(t < len(buyerTradeIDs)):
-        # Get trade
-        trade = array(TRADE_FIELDS)
-        trade = TRADES.getTrade(buyerTradeIDs[t], outitems = TRADE_FIELDS)
-        if(!trade[0]):
-            MUTEX.unsetMutex()
-            logArrayReturn([0])
-        # Get market
-        type = trade[1]
-        if(type != BID):
-            MUTEX.unsetMutex()
-            logArrayReturn([-6])
-        market = trade[2]
-        origAmount = trade[3]
-        price = trade[4]
-        owner = trade[5]
-        outcome = trade[7]
-        branch = MARKETS.getBranch(market)
-        checkTradePreconditions()
-        fillShort()
-        MARKETS.setPrice(market, outcome, price)
-        t += 1
+
+    maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent(market, 0))
+    minValue = 0
+    if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent(market, 0)) > 2):
+        minValue = ONE
+    else:
+        minValue = EVENTS.getMinValue(MARKETS.getMarketEvent(market, 0))
+
+    # Fill buy order
+    if(type == BID):
+        fillBid()
+    elif(type == ASK):
+        fillAsk()
+    else:
+        throw()
+    # Log price, fill amount, type and timestamp
+    MARKETS.setPrice(market, outcome, price)
     MUTEX.unsetMutex()
-    logArrayReturn([SUCCESS, fxpMaxAmount, fill, price])
+    logArrayReturn([SUCCESS, amountTakerWants])
 
 macro checkTradePreconditions():
     if(owner == msg.sender):
         MUTEX.unsetMutex()
         logArrayReturn([-3])
-    # Make sure the trade has been mined, obvious HFT prevention
-    if(block.number <= trade[6]):
+    # Make sure the order has been mined, obvious HFT prevention
+    if(block.number <= order[6]):
         MUTEX.unsetMutex()
         logArrayReturn([TRADE_SAME_BLOCK_PROHIBITED])
 
+# Filling a bid [aka selling shares]
+# Users need to have approved markets to spend their money, simulate fill client side to check in case an order is invalid due to someone not having approved
+# Scenarios:
+    # Asker has maxValue - price and expects complete set minus the one theyre selling
+    # Or asker has shares and expects to be paid price - minValue for them
+    # Bidder owns all shares except the one theyre buying and has escrowed them and wants to pay price - minValue for the share and then sell the complete set for range thus getting maxValue - price at the end
+    # Or bidder has escrowed price - minValue for their shares
 macro fillBid():
-    # Get available balance of shares
-    balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)
-    if(balance <= 0 or fxpMaxAmount <= 0):
-        MUTEX.unsetMutex()
-        logArrayReturn([INSUFFICIENT_BALANCE])
-    # Determine fill amount
-    fill = min(amount, min(balance, fxpMaxAmount))
+    sumOfFills = 0
+    # all in shares including the money here
+    askerSharesFilled = 0
+    askerMoneyFilled = 0
+    bidderSharesFilled = 0
+    bidderMoneyFilled = 0
+
+    if(sharesEscrowed):
+        fill = min(sharesEscrowed, amountTakerWants)
+        amountTakerWants = safeSub(amountTakerWants, fill)
+        sumOfFills = safeAdd(sumOfFills, fill)
+        bidderSharesFilled = fill
+        # send shares [amount is fill] escrowed by bidder back to bidder
+        i = 1
+        while i < MARKETS.getNumOutcomes(market):
+            if(i != outcome):
+                MARKETS.modifyParticipantShares(market, owner, i, fill, 0)
+            i += 1
+    if(amountTakerWants && moneyEscrowed):
+        fill = min(safeFxpDiv(moneyEscrowed, safeSub(price, minValue)), amountTakerWants)
+        amountTakerWants = safeSub(amountTakerWants, fill)
+        sumOfFills = safeAdd(sumOfFills, fill)
+        bidderMoneyFilled = fill
+
+    remainderToFill = sumOfFills
     # Calculate value
-    value = (fill * price) / ONE
-    # must trade at least 0.00000001 in value
+    value = safeFxpMul(sumOfFills, price)
+    # must fill at least 0.00000001 in value
+    if(value < MIN_TRADE_VALUE):
+        throw()
+    # Update order amount or remove
+    if(sumOfFills < amount):
+        ORDERS.fillOrder(orderID, sumOfFills, safeFxpMul(bidderMoneyFilled, safeSub(price, minValue)), bidderSharesFilled)
+    else:
+        removeOrder(orderID, market)
+
+    balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)        
+    # msg.sender owns shares of outcome
+    if(balance):
+        fill = min(balance, remainderToFill)
+        askerSharesFilled = fill
+        remainderToFill = safeSub(remainderToFill, fill)
+    if(remainderToFill):
+        # issue asker complete sets for remainder amount and dont charge yet
+        i = 1
+        while i < MARKETS.getNumOutcomes(market):
+            MARKETS.modifyShares(market, i, remainderToFill)
+            MARKETS.modifyParticipantShares(market, msg.sender, i, remainderToFill, 0)
+            i += 1
+        askerMoneyFilled = remainderToFill
+        remainderToFill = safeSub(remainderToFill, remainderToFill)
+        # if still before voting period has started count the share value
+        notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
+        if(notVotingOnYet):
+            MARKETS.modifySharesValue(market, safeFxpMul(askerMoneyFilled, cumulativeScale))
+            fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), askerMoneyFilled), cumulativeScale)
+            feesInWei = safeFxpMul(BRANCHES.getCurrencyRate(branch, INFO.getCurrency(market)), safeDiv(fee, 2))
+            if(!feesInWei):
+                throw()
+            MARKETS.addFees(market, feesInWei)
+            EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
+
+    # send bidder shares from asker
+    MARKETS.modifyParticipantShares(market, msg.sender, outcome, -sumOfFills, 1)
+    MARKETS.modifyParticipantShares(market, owner, outcome, sumOfFills, 0)
+    sellMakersCompleteSets()
+    # transfer (price - minValue) * bidderSharesFilled to market from bidder since market hasnt been paid yet after complete sets selling
+    if(bidderSharesFilled && !INFO.getCurrency(market).transferFrom(owner, market, safeFxpMul(safeSub(price, minValue), bidderSharesFilled))):
+        throw()
+    # Transfer money from person who bid to the person here who is selling/asker [bidder has already sent/escrowed the cash to/with the market when submitting bid so this comes from the market]
+    if(!INFO.getWallet(market).transfer(msg.sender, safeFxpMul(safeSub(price, minValue), sumOfFills))):
+        throw()
+    # transfer range * askerMoneyFilled to the market from asker for the amount of shares in askerMoneyFilled
+    if(askerMoneyFilled && !INFO.getCurrency(market).transferFrom(msg.sender, market, safeFxpMul(cumulativeScale, askerMoneyFilled))):
+        throw()
+    
+    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
+    sharesHeld = MAX_INT
+    i = 1
+    while i < MARKETS.getMarketNumOutcomes(market):
+        sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, msg.sender, i), sharesHeld)
+        i += 1
+    # Sell the asker's [msg.sender] complete sets if they have any
+    if(sharesHeld):
+        COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegate)
+
+    # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
+    log(type = logPrice, market, msg.sender, owner, ASK, price, sumOfFills, block.timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
+
+
+
+# Filling an ask [aka buying shares]
+# Scenarios:
+    # Asker either escrowed maxValue - price and expects complete set minus the one they're selling
+    # Or asker had shares and escrowed them and expects to be paid price - minValue for them
+    # Bidder owns all shares except the one they're buying and will pay price - minValue for the shares they're buying
+    # Or bidder will pay price - minValue for their shares
+macro fillAsk():
+    sumOfFills = 0
+    # all in shares including the money here
+    askerSharesFilled = 0
+    askerMoneyFilled = 0
+    bidderSharesFilled = 0
+    bidderMoneyFilled = 0
+
+    if(sharesEscrowed):
+        fill = min(sharesEscrowed, amountTakerWants)
+        amountTakerWants = safeSub(amountTakerWants, fill)
+        sumOfFills = safeAdd(sumOfFills, fill)
+        askerSharesFilled = fill
+
+    if(amountTakerWants && moneyEscrowed):
+        fill = min(safeFxpDiv(moneyEscrowed, safeSub(maxValue, price)), amountTakerWants)
+        amountTakerWants = safeSub(amountTakerWants, fill)
+        sumOfFills = safeAdd(sumOfFills, fill)
+        askerMoneyFilled = fill
+        # issue asker complete sets for fill amount and dont charge because already paid
+        i = 1
+        while i < MARKETS.getNumOutcomes(market):
+            if(i != outcome):
+                MARKETS.modifyShares(market, i, fill)
+                MARKETS.modifyParticipantShares(market, owner, i, fill, 0)
+            i += 1
+        # if still before voting period has started count the share value
+        notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
+        if(notVotingOnYet):
+            MARKETS.modifySharesValue(market, safeFxpMul(askerMoneyFilled, cumulativeScale))
+            fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), askerMoneyFilled), cumulativeScale)
+            feesInWei = safeFxpMul(BRANCHES.getCurrencyRate(branch, INFO.getCurrency(market)), safeDiv(fee, 2))
+            if(!feesInWei):
+                throw()
+            MARKETS.addFees(market, feesInWei)
+            EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
+
+    remainderToFill = sumOfFills
+    # Calculate value
+    value = safeFxpMul(sumOfFills, price)
+    # must fill at least 0.00000001 in value
     if(value < MIN_TRADE_VALUE):
         MUTEX.unsetMutex()
-        logArrayReturn([-2])
-    # Update trade amount or remove
-    if(fill < amount):
-        TRADES.fillTrade(tradeIDs[t], fill)
-    else:
-        removeTrade(tradeIDs[t], market)
-    # Update balances
-    MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 1)
-    MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
-    # Transfer cash from person who bid to the person here who is selling [bidder has already sent/escrowed the cash to/with the market when submitting bid]
-
-    paySender = INFO.getWallet(market).transfer(msg.sender, value)
-    if(!paySender):
         throw()
-    # Update fxpMaxAmount
-    fxpMaxAmount -= fill
-    # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
-    log(type = logPrice, market, msg.sender, owner, ASK, price, fill, block.timestamp, tradeIDs[t], outcome)
-    
-macro fillAsk():
-    balance = INFO.getCurrency(market).balanceOf(msg.sender)
-    totalTradeCost = amount * price / ONE
-    # trade value to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilled)
-    valueToSpend = min(totalTradeCost, min(fxpMaxValue, balance))
-    # Determine fill amount
-    fill = valueToSpend * ONE / price
-    if(valueToSpend < MIN_TRADE_VALUE):
-        MUTEX.unsetMutex()
-        logArrayReturn([INSUFFICIENT_BALANCE])
-    # Update trade amount or remove filled trade
-    if(fill < amount):
-        TRADES.fillTrade(tradeIDs[t], fill)
+    # Update order amount or remove
+    if(sumOfFills < amount):
+        ORDERS.fillOrder(orderID, sumOfFills, safeFxpMul(askerMoneyFilled, safeSub(maxValue, price)), askerSharesFilled)
     else:
-        removeTrade(tradeIDs[t], market)
-    # Update balances [user asking has already gotten rid of shares in escrow, just need to add them to the buyer]
-    MARKETS.modifyParticipantShares(market, msg.sender, outcome, fill, 1)
+        removeOrder(orderID, market)
 
     # Transfer cash from user to person who has ask order
     payMaker = INFO.getCurrency(market).transferFrom(msg.sender, owner, valueToSpend)
     if(!payMaker):
         throw()
-                
-    # Update fxpMaxValue
-    fxpMaxValue -= valueToSpend
-    # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
-    log(type = logPrice, market, msg.sender, owner, BID, price, fill, block.timestamp, tradeIDs[t], outcome)
-    
-macro fillShort():
-    # calculate cost
-    creator = INFO.getCreator(market)
-    cumulativeScale = MARKETS.getCumulativeScale(market)
-    amount = min(origAmount, fxpMaxAmount)
-    if(amount <= 0):
-        MUTEX.unsetMutex()
-        logArrayReturn([INSUFFICIENT_BALANCE])
 
-    cost = amount * cumulativeScale / ONE - (amount * price / ONE)
-    if(INFO.getCurrency(market).balanceOf(msg.sender) < cost):
-        MUTEX.unsetMutex()
-        logArrayReturn([INSUFFICIENT_BALANCE])
-    if(amount * price / ONE < MIN_TRADE_VALUE):
-        MUTEX.unsetMutex()
-        logArrayReturn([-2])
-    
-    numOutcomes = MARKETS.getMarketNumOutcomes(market)
-
+    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
+    sharesHeld = MAX_INT
     i = 1
-    # send shares of the event to user address, buying complete sets
-    while(i <= numOutcomes):
-        MARKETS.modifyShares(market, i, amount)
-        MARKETS.modifyParticipantShares(market, msg.sender, i, amount, 0)
+    while i < MARKETS.getMarketNumOutcomes(market):
+        if(i != outcome):
+            sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, msg.sender, i), sharesHeld)
         i += 1
-    if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
-        MARKETS.modifySharesValue(market, amount * cumulativeScale / ONE)
-        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount * cumulativeScale / ONE)
-    # send money from user acc. to market address/account
-    # cost for shares
-    payTakerCost = INFO.getCurrency(market).transferFrom(msg.sender, market, cost)
-    if(!payTakerCost):
+    if(sharesHeld):
+        fill = min(sharesOwned, remainderToFill)
+        bidderSharesFilled = fill
+        remainderToFill = safeSub(remainderToFill, fill)
+
+    if(remainderToFill):
+        bidderMoneyFilled = remainderToFill
+        remainderToFill = safeSub(remainderToFill, remainderToFill)
+
+    # send bidder sumOfFills shares by just creating them and giving them to them
+    MARKETS.modifyParticipantShares(market, msg.sender, outcome, sumOfFills, 1)
+
+    
+    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
+    sharesHeld = MAX_INT
+    i = 1
+    while i < MARKETS.getMarketNumOutcomes(market):
+        sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, msg.sender, i), sharesHeld)
+        i += 1
+    # Sell the bidder's [msg.sender] complete sets if they have any
+    if(sharesHeld):
+        COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegate)
+
+    # Transfer (price - minValue) * (bidderSharesFilled + bidderMoneyFilled) to market from bidder since market hasnt been paid yet
+    if((bidderMoneyFilled or bidderSharesFilled) and !INFO.getCurrency(market).transferFrom(msg.sender, market, safeFxpMul(safeSub(price, minValue), safeAdd(bidderSharesFilled, bidderMoneyFilled)))):
         throw()
 
-    # Fill buy order [short selling the outcome user doesn't want]
-    # Determine fill amount
-    fill = amount
-    # Update trade amount or remove
-    if(fill < origAmount):
-        TRADES.fillTrade(buyerTradeIDs[t], fill)
-    else:
-        removeTrade(buyerTradeIDs[t], market)
-    # Update balances
-    MARKETS.modifyParticipantShares(market, msg.sender, outcome, -fill, 1)
-    MARKETS.modifyParticipantShares(market, owner, outcome, fill, 0)
-
-    fxpMaxAmount -= fill
-    # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
-    log(type = logPriceShort, market, msg.sender, owner, ASK, price, fill, block.timestamp, buyerTradeIDs[t], outcome)
-
-macro fillShortOrder():
-    balance = INFO.getCurrency(market).balanceOf(msg.sender)
-    totalTradeCost = amount * price / ONE
-    # trade value to spend is equal to min(moneyUserOwns, moneyUserWantsToSpend, valueOfTradeThatIsUnfilled)
-    valueToSpend = min(totalTradeCost, min(fxpMaxValue, balance))
-    # Determine fill amount
-    fill = valueToSpend * ONE / price
-    if(valueToSpend < MIN_TRADE_VALUE):
-        MUTEX.unsetMutex()
-        logArrayReturn([INSUFFICIENT_BALANCE])
-    # Update trade amount or remove filled trade
-    if(fill < amount):
-        TRADES.fillTrade(tradeIDs[t], fill)
-    else:
-<<<<<<< HEAD
-        removeTrade(tradeIDs[t], market)
-
-    # Transfer cash from user to market - purchaser sends price*amount to the market and gets outcome n
-    payMaker = INFO.getCurrency(market).transferFrom(msg.sender, market, valueToSpend)
-    if(!payMaker):
+    # Transfer (price - minValue) * askerSharesFilled from the market to the asker, dont need to send for askerMoneyFilled because asker only escrowed maxValue - price and thus has "already been paid" for those shares.  Note: bidder has already sent their money to the market so this money comes from the market    
+    if(askerSharesFilled and !INFO.getWallet(market).transfer(owner, safeFxpMul(safeSub(price, minValue), askerSharesFilled))):
         throw()
-    # Update balances
-    MARKETS.modifyParticipantShares(market, msg.sender, outcome, fill, 1)
 
-    
-	# account for fees here even though paid upon selling complete sets / resolution so we can assign reporters appropriately [since we're issuing a complete set here to fulfill this trade]
-    fee = MARKETS.getTradingFee(market) * fxpAmount / ONE * cumulativeScale / ONE
-    MARKETS.addFees(market, fee / 2)
-    numOutcomes = MARKETS.getMarketNumOutcomes(market)
-    i = 1
-    # send shares of the event to user address, buying complete sets - person who placed the order gets amount shares of n-1 outcomes
-    while(i <= numOutcomes):
-    	if(i != outcome):
-	        MARKETS.modifyShares(market, i, fill)
-    	    MARKETS.modifyParticipantShares(market, msg.sender, i, fill, 0)
-        i += 1
-    if(BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)):
-        MARKETS.modifySharesValue(market, amount * cumulativeScale / ONE)
-        EXPEVENTS.adjustPeriodShareValueOutstanding(branch, MARKETS.getTradingPeriod(market), amount * cumulativeScale / ONE)
+    sellMakersCompleteSets()
 
-    # Update fxpMaxValue
-    fxpMaxValue -= valueToSpend
     # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
-    log(type = logPrice, market, msg.sender, owner, BID, price, fill, block.timestamp, tradeIDs[t], outcome)
-=======
-        displayPrice = price
-    log(type=log_short_fill_tx, market, msg.sender, owner, displayPrice, fill, buyer_trade_id, outcome, block.timestamp, takerFeesTotal, fee, numOutcomes, price, tradeHash, tradeGroupID)
-    MARKETS.setPrice(market, outcome, displayPrice)
-    logArrayReturn([SUCCESS, max_amount, fill, price])
->>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
+    log(type = logPrice, market, msg.sender, owner, BID, price, sumOfFills, block.timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
+
+
+macro sellMakersCompleteSets():
+    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
+    sharesHeld = MAX_INT
+    i = 1
+    while i < MARKETS.getMarketNumOutcomes(market):
+        sharesHeld = min(MARKETS.getParticipantSharesPurchased(market, owner, i), sharesHeld)
+        i += 1
+    if(sharesHeld):
+        i = 1
+        while i < MARKETS.getMarketNumOutcomes(market):
+            MARKETS.modifyShares(market, i, -sharesHeld)
+            MARKETS.modifyParticipantShares(market, owner, i, -sharesHeld, 0)
+        cost = safeFxpMul(sharesHeld, cumulativeScale)
+        # send funds from the market to the user acc.
+        fee = safeFxpMul(safeFxpMul(MARKETS.getTradingFee(market), sharesHeld), cumulativeScale)
+        if(!INFO.getWallet(market).transfer(owner, safeSub(cost, fee))):
+            throw()
+        # if still before voting period has started count it in the share value for the period and market to target # of reporters to be higher in markets w/ more outstanding value
+        notVotingOnYet = BRANCHES.getVotePeriod(branch) < MARKETS.getTradingPeriod(market)
+        if(notVotingOnYet):
+            MARKETS.modifySharesValue(market, safeFxpMul(-sharesHeld, cumulativeScale))
+        currency = INFO.getCurrency(market)
+        if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+            throw()

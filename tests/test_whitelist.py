@@ -99,7 +99,7 @@ def test_whitelist():
         
         print 'account', account, 'added as reporter'
         index = contract.repIDToIndex(1010101, int(account, 16), call=True)
-        contract.setRep(1010101, index, 10000*2**64, send=True, sender=account, receipt=True)
+        contract.setRep(1010101, index, 10000*10**18, send=True, sender=account, receipt=True)
         
     contract.setWhitelist(2, [1,3,4,5], send=True, receipt=True)
     ballot_hash = contract.propose_replacement(5, 6, call=True)

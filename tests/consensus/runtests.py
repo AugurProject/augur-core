@@ -23,7 +23,7 @@ resolve
 payout
 
 Final results (event outcomes and updated reputation values) are returned
-as fixed-point (base 2^64) values from the payout function.
+as fixed-point (base 10^18) values from the payout function.
 
 """
 from __future__ import division
@@ -159,7 +159,7 @@ def display(arr, description=None, show_all=None, refold=False):
             print(pd.DataFrame({
                 'result': arr,
                 'base 16': map(hex, arr),
-                'base 2^64': map(unfix, arr),
+                'base 10^18': map(unfix, arr),
             }))
         else:
             print(json.dumps(map(unfix, arr), indent=3, sort_keys=True))

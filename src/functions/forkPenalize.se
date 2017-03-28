@@ -14,7 +14,7 @@ inset('redistributeRep.se')
 inset('proportionCorrect.se')
 inset('repChange.se')
 inset('../data_api/periodStage.se')
-
+inset('../data_api/float.se')
 macro POINT_ZERO_ONE: 184467440737095520
 macro MIN_BOND: 200 * ONE
 
@@ -25,8 +25,6 @@ macro MIN_BOND: 200 * ONE
     # some rep from this goes to bond poster
     # branch is the fork, not the parent
     # fork event needs to be resolved first before this can be called
-# perhaps prevent people from calling this on parent [to prevent user error]
-# todo should check for no report here or not
 # Errors:
     #  0: not enough rep to report/penalize
     # -1: period shouldve been incremented
@@ -34,14 +32,12 @@ macro MIN_BOND: 200 * ONE
     # -3: fork event isn't resolved yet
     # -4: already done for all events in this period
     # -5: needed to collect fees last period which sets the before/after rep
-    # -6: event branch is invalid/doesn't match
+    # -6: only should be called on fork child branch, not the parent
 def penalizeOnForkedEvent(branch, event):
     refund()
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()
-
-    # todo perhaps increment period by default if not done
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriodVotedOn = BRANCHES.getVotePeriod(branch) - 1
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -71,7 +67,6 @@ macro checkForkPenalizationPreconditions():
         MUTEX.unsetMutex()
         return(0)
     if((block.timestamp / periodLength - 2) != lastPeriodVotedOn):
-        # todo why not auto increment period
         MUTEX.unsetMutex()
         return(-1)
     atFirstHalfOfPeriod()
@@ -82,10 +77,11 @@ macro checkForkPenalizationPreconditions():
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriodVotedOn):
         MUTEX.unsetMutex()
         return(-4)
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriodVotedOn - 1)):
+    if(!CONSENSUS.getRepCollected(branch, msg.sender, lastPeriodVotedOn - 1)):
         MUTEX.unsetMutex()
         return(-5)
-    if(EVENTS.getEventBranch(event) != branch):
+    branchIsParent = BRANCHES.getEventForkedOver(branch) == event
+    if(branchIsParent):
         MUTEX.unsetMutex()
         return(-6)
 
@@ -105,20 +101,30 @@ macro handleEthicsAndBondRepRedistribution($numReportedOn):
         if($numReportedOn < 10):
             # allows max penalty to be 10% per event
             $penalty = -ONE / 10
-            repChange = $penalty * repBalance / ONE
+            repChange = safeFxpMul($penalty, repBalance)
         else:
             $penalty = -ONE / $numReportedOn
-            repChange = $penalty * repBalance / ONE
+            repChange = safeFxpMul($penalty, repBalance)
     # can only lose max of current balance
     if(repBalance + repChange <= 0):
         repChange = -1 * repBalance
-    # todo fix for this can go over 2x bond, not supposed to: we don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
+    # We don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
     if(BACKSTOPS.getForkBondPaid(event) < BACKSTOPS.getBondAmount(event) * 2 and repChange < 0):
-        # done instead of sending to redistrib. pool
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
-        # sends that rep to the bonded challenger
-        REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(event)), -repChange)
-        BACKSTOPS.adjForkBondPaid(event, -1 * repChange)
+        amountLeftToPayBonder = 2 * BACKSTOPS.getBondAmount(event) - BACKSTOPS.getForkBondPaid(event)
+        if(-repChange < amountLeftToPayBonder):
+            # done instead of sending to redistrib. pool
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
+            # sends that rep to the bonded challenger
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(event)), -repChange)
+            BACKSTOPS.adjForkBondPaid(event, (-repChange))
+        elif(amountLeftToPayBonder > 0):
+            # done instead of sending to redistrib. pool
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), -amountLeftToPayBonder)
+            # sends that rep to the bonded challenger
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(event)), amountLeftToPayBonder)
+            BACKSTOPS.adjForkBondPaid(event, amountLeftToPayBonder)
+            newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + -(-repChange - amountLeftToPayBonder)
+            EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
     # no need to pay bond poster
     else:
         newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + repChange

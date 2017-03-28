@@ -25,13 +25,14 @@ inset('refund.se')
 
 # Storage of all data associated with reporters
     # Reporting index is the branch
-    # Reporters index is the rep. address
+    # Reputation index is the rep. address
     # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
     # total rep is all the rep in augur
     # active rep is the fxpAmount which is actually active
     # fork is the child branch of a parent which forked
     # fxpDormant rep stores fxpDormant rep values
-data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), activeRep, fork)
+    # reportedOnNonFinalRoundTwoEvent is the eventID if a person reported on a round 2 event before it was in the second round [i.e. the first reporting backstop], they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event, set this to 0 once the event is final
+data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), activeRep, fork, reportedOnNonFinalRoundTwoEvent)
 
 data whitelists[](addresses[], taken)
 
@@ -46,30 +47,31 @@ def init():
     self.Reporting[1010101].reputation[1].reporterID = msg.sender
     
 def checkWhitelist(address):
-    callstackCheck()
     return(self.whitelists[msg.sender].addresses[address])
+
+def getReportedOnNonFinalRoundTwoEvent(branch):
+    return(self.Reporting[branch].reportedOnNonFinalRoundTwoEvent)
+    
+def setReportedOnNonFinalRoundTwoEvent(branch, event):
+    self.Reporting[branch].reportedOnNonFinalRoundTwoEvent = event
+    return(1)
 
 # @return fxp
 def getActiveRep(branch):
-    callstackCheck()
     return(self.Reporting[branch].activeRep)
 
 def adjustActiveRep(branch, fxpAmount):
-    callstackCheck()
     self.Reporting[branch].activeRep += fxpAmount
     return(1)
 
 def setFork(branch):
-    callstackCheck()
     self.Reporting[branch].fork = branch
     return(1)
 
 def getFork(branch):
-    callstackCheck()
     return(self.Reporting[branch].fork)
 
 def checkContractWhitelist(contract, address):
-    callstackCheck()
     return(self.whitelists[contract].addresses[address])
 
 def setWhitelist(contract, addresses: arr):
@@ -87,25 +89,21 @@ def setWhitelist(contract, addresses: arr):
 
 # @return fxp
 def getRepByIndex(branch, repIndex):
-    callstackCheck()
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
 # @return fxp
 def getRepBalance(branch, address):
-    callstackCheck()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
     if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID != address):
         throw()
     return(self.Reporting[branch].reputation[repIndex].repValue)
 
 def getDormantRepByIndex(branch, repIndex):
-    callstackCheck()
     return(self.Reporting[branch].dormantRep[repIndex].repValue)
 
 # getDormantRepBalance
 # @return fxp
 def balanceOf(branch, address):
-    callstackCheck()
     repIndex = self.Reporting[branch].repIDtoIndex[address]
     if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID != address):
         return(0)
@@ -114,21 +112,17 @@ def balanceOf(branch, address):
 # return total supply of fxpDormant rep
 # @return fxp
 def totalSupply(branch):
-    callstackCheck()
     return((self.Reporting[branch].totalRep - self.Reporting[branch].activeRep))
 
 def getReporterID(branch, index):
-    callstackCheck()
     return(self.Reporting[branch].reputation[index].reporterID)
 
 def getTotalRep(branch):
-    callstackCheck()
     return(self.Reporting[branch].totalRep)
 
 # will return 0s for array values after it's looped through all the ones you
 # have an actual balance in
 def getReputation(address):
-    callstackCheck()
     branchListCount = BRANCHES.getNumBranches()
     if(address):
         branches = array(2 * branchListCount)
@@ -162,11 +156,9 @@ def getReputation(address):
     return(branches: arr)
 
 def getNumberReporters(branch):
-    callstackCheck()
     return(self.Reporting[branch].numberReporters)
 
 def repIDToIndex(branch, repID):
-    callstackCheck()
     repIndex = self.Reporting[branch].repIDtoIndex[repID]
     # means repID didn't matchup with 0 index reporterID
     if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID != repID):
@@ -178,7 +170,6 @@ def setInitialReporters(branch):
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
     # add branch as a "reporter"
-    callstackCheck()
     self.Reporting[branch].numberReporters = 1
     self.Reporting[branch].repIDtoIndex[branch] = 0
     self.Reporting[branch].reputation[0].repValue = 0
@@ -188,7 +179,6 @@ def setInitialReporters(branch):
 def addReporter(branch, sender, fxpAmount, fxpDormant, fxpRepToBonderOrBranch):
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
-    callstackCheck()
     reporterIndex = self.Reporting[branch].numberReporters
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
     self.Reporting[branch].reputation[reporterIndex].repValue = fxpAmount
@@ -201,27 +191,21 @@ def addReporter(branch, sender, fxpAmount, fxpDormant, fxpRepToBonderOrBranch):
     return(1)
 
 def addRep(branch, index, fxpValue):
-    # if(!self.whitelist.check(msg.sender)):
+    # if(!self.whitelist.check(msg.sender) or megakeywhitelistinearlydays):
     #   throw()
-    callstackCheck()
-    if(safeToAdd(self.Reporting[branch].reputation[index].repValue, fxpValue)):
-        self.Reporting[branch].reputation[index].repValue += fxpValue
-        return(1)
-    else:
-        return(0)
+    self.Reporting[branch].reputation[index].repValue += fxpValue
+    return(1)
 
 def subtractRep(branch, index, fxpValue):
-    # if(!self.whitelist.check(msg.sender)):
+    # if(!self.whitelist.check(msg.sender) or megakeywhitelistinearlydays):
     #   throw()
-    callstackCheck()
-    if(safeToSubtract(self.Reporting[branch].reputation[index].repValue, fxpValue)):
-        self.Reporting[branch].reputation[index].repValue -= fxpValue
-        return(1)
-    else:
-        return(0)
-
+    self.Reporting[branch].reputation[index].repValue -= fxpValue
+    return(1)
+    
 # safe adders idea pulled from piper merriam's btcrelay audit
 macro safeToAdd($a, $b):
+    $c = $a + $b
+    ($c >= $a && $c >= $b)
     (($a + $b) >= $a)
 
 macro safeToSubtract($a, $b):
@@ -231,7 +215,6 @@ macro safeToSubtract($a, $b):
 def setRep(branch, index, fxpNewRep):
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
-    callstackCheck()
     oldRep = self.Reporting[branch].reputation[index].repValue
     self.Reporting[branch].reputation[index].repValue = fxpNewRep
     self.Reporting[branch].activeRep += fxpNewRep - oldRep
@@ -239,16 +222,16 @@ def setRep(branch, index, fxpNewRep):
     return(1)
 
 def addDormantRep(branch, index, fxpValue):
-    # if(!self.whitelist.check(msg.sender)):
+    # if(!self.whitelist.check(msg.sender) or megakeywhitelistinearlydays):
     #   throw()
-    callstackCheck()
     self.Reporting[branch].dormantRep[index].repValue += fxpValue
     return(1)
 
 def subtractDormantRep(branch, index, fxpValue):
-    # if(!self.whitelist.check(msg.sender)):
+    # if(!self.whitelist.check(msg.sender) or megakeywhitelistinearlydays):
     #   throw()
-    callstackCheck()
+    if(fxpValue > self.Reporting[branch].dormantRep[index].repValue):
+        throw()
     self.Reporting[branch].dormantRep[index].repValue -= fxpValue
     return(1)
 
@@ -257,7 +240,6 @@ def subtractDormantRep(branch, index, fxpValue):
 def setSaleDistribution(addresses: arr, balances: arr, branch):
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
-    callstackCheck()
     i = 0
     while(i < len(addresses)):
         self.Reporting[branch].reputation[self.Reporting[branch].numberReporters].reporterID = addresses[i]
@@ -274,7 +256,6 @@ def claimInitialRep():
     branch = 1010101
     sender = msg.sender
     dormantRep = REPCONTRACT.balanceOf(sender)
-    callstackCheck()
     if(!dormantRep):
         throw()
     if(dormantRep != REPCONTRACT.allowance(sender, self)):

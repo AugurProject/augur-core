@@ -22,18 +22,18 @@
 #
 # If you have questions, please contact Jack Peterson (jack@augur.net).
 
-# Convert to fixed-point (base 2^64)
+# Convert to fixed-point (base 10^18)
 macro fix($x):
-    2^64 * $x
+    10^18 * $x
 
 # Revert from fixed-point
 macro unfix($x):
-    $x / 2^64
+    $x / 10^18
 
 # Fixed-point multiplication
 macro fixed_multiply($x, $y):
-    $x * $y / 2^64
+    $x * $y / 10^18
 
 # Fixed-point division
 macro fixed_divide($x, $y):
-    $x * 2^64 / $y
+    $x * 10^18 / $y

@@ -20,8 +20,8 @@
 
 ### Token wrapper for shares
 
-inset('../data_api/refund.se')
 import mutex as MUTEX
+inset('../data_api/refund.se')
 
 data accounts[2**160](balance, spenders[2**160](maxValue))
 
@@ -100,29 +100,23 @@ def approve(spender: address, value: uint256):
 # Returns amount spender can withdraw from owner
 # @return fxp
 def allowance(owner: address, spender: address):
-    checkCallstack()
     return(self.accounts[address].spenders[spender].maxValue)
 
 # @return fxp
 def totalSupply():
-    checkCallstack()
     return(self.totalSupply)
 
 # @return fxp
 def balanceOf(address: address):
-    checkCallstack()
     return(self.accounts[address].balance)
 
 def getName():
-    checkCallstack()
     return(self.name)
     
 def getDecimals():
-    checkCallstack()
     return(self.decimals)
     
 def getSymbol():
-    checkCallstack()
     return(self.symbol)
 
 # safe adders idea pulled from piper merriam's btcrelay audit
@@ -134,6 +128,8 @@ macro safeToSubtract($a, $b):
 
 def changeTokens(trader, amount):
     # whitelist sender to be markets
+    if(self.accounts[trader].balance + amount < 0):
+        throw()
     self.accounts[trader].balance += amount
     return(1)
 

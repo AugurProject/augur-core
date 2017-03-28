@@ -45,11 +45,7 @@ event Approval(owner:address:indexed, spender:address:indexed, fxpValue:uint256)
 
 # 18 decimals
 macro ONE:
-<<<<<<< HEAD
-    10**18
-=======
     10 ** 18
->>>>>>> develop
 
 macro refund():
     if(msg.value > 0):

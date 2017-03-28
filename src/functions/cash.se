@@ -20,8 +20,8 @@
 
 ### Token wrapper for eth, which allows eth deposits and faucet usage for testing
 
-inset('../data_api/refund.se')
 import mutex as MUTEX
+inset('../data_api/refund.se')
 
 data accounts[2**160](balance, spenders[2**160](maxValue))
 
@@ -109,7 +109,6 @@ def setCash(address: address, balance: uint256):
     return(1)
 
 def depositEther():
-    checkCallstack()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
     if(!mutexWhitelisted()):
@@ -149,30 +148,29 @@ def withdrawEther(to: address, value: uint256):
 # Returns amount spender can withdraw from owner
 # @return fxp
 def allowance(owner: address, spender: address):
-    checkCallstack()
     return(self.accounts[address].spenders[spender].maxValue)
 
 # @return fxp
 def totalSupply():
-    checkCallstack()
     return(self.totalSupply)
 
 # @return fxpValue
 def balanceOf(address: address):
-    checkCallstack()
     return(self.accounts[address].balance)
 
 def getName():
-    checkCallstack()
     return(self.name)
     
 def getDecimals():
-    checkCallstack()
     return(self.decimals)
     
 def getSymbol():
-    checkCallstack()
     return(self.symbol)
+
+def commitSuicide():
+    if(msg.sender == '0xsuicideaddr'):
+        suicide(msg.sender)
+    return(1)
 
 # safe adders idea pulled from piper merriam's btcrelay audit
 macro safeToAdd($a, $b):

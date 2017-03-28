@@ -6,12 +6,12 @@ import info as INFO
 import branches as BRANCHES
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
+inset('../data_api/float.se')
 
 # Payout traders in markets with number of winningOutcomes of 2 [one scalar with any combination of binary + categorical for the other 2 dimensions, or just 1D with a scalar]
 # whitelist
 # refactor
 def twoOutcomes(market, winningOutcome: arr, event, sender):
-    callstackCheck()
     # fetch outcome and min/max values for the scalar
     outcome = EVENTS.getOutcome(event)
     minValue = EVENTS.getMinValue(event)
@@ -20,11 +20,11 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
     branch = MARKETS.getBranch(market)
     # price is in fixed point
     # share two goes with the high/long side
-    pricePerShare2 = ONE * (outcome - minValue) / (maxValue - minValue)
+    pricePerShare2 = safeFxpDiv(safeSub(outcome, minValue), safeSub(maxValue, minValue))
     # share one goes with the low/short side of the calc
-    pricePerShare1 = ONE - pricePerShare2
+    pricePerShare1 = safeSub(ONE, pricePerShare2)
     # normalize if not exactly 100%
-    if((pricePerShare1 + pricePerShare2) != ONE):
+    if(safeAdd(pricePerShare1, pricePerShare2) != ONE):
         normalizePrices()
     # for each winning outcome get rid of shares and send money to the trader
     n = 0
@@ -34,21 +34,21 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
         MARKETS.modifyParticipantShares(market, sender, winningOutcome[n], -sharesOwned, 0)
         # low side
         if(n == 0):
-            shareValue = sharesOwned * cumulativeScale / ONE * pricePerShare1 / ONE
-            fee = MARKETS.getTradingFee(market) * shareValue / ONE
+            shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare1)
+            fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
             if(shareValue != 0 && fee != 0):
-                if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
+                if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2)):
                     throw()
-                if(!INFO.getWallet(market).transfer(sender, shareValue - fee)):
+                if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee)):
                     throw()
         # high side (of the scalar part)
         elif(n == 1):
-            shareValue = sharesOwned * cumulativeScale / ONE * pricePerShare2 / ONE
-            fee = MARKETS.getTradingFee(market) * shareValue / ONE
+            shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare2)
+            fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
             if(shareValue != 0 && fee != 0):
-                if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), fee / 2) or !INFO.getWallet(market).transfer(INFO.getCreator(market), fee / 2)):
+                if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
                     throw()
-                if(!INFO.getWallet(market).transfer(sender, shareValue - fee)):
+                if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
                     throw()
         else:
             throw()
@@ -56,6 +56,6 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
     return(1)
 
 macro normalizePrices():
-    denominator = pricePerShare1 + pricePerShare1
-    pricePerShare1 = pricePerShare1 / denominator
-    pricePerShare2 = pricePerShare2 / denominator
+    denominator = safeAdd(pricePerShare1, pricePerShare1)
+    pricePerShare1 = safeFxpDiv(pricePerShare1, denominator)
+    pricePerShare2 = safeFxpDiv(pricePerShare2, denominator)

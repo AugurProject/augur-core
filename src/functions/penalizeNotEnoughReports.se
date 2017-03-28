@@ -10,6 +10,7 @@ import mutex as MUTEX
 
 inset('../data_api/refund.se')
 inset('../data_api/periodStage.se')
+inset('../data_api/float.se')
 
 macro ONE_POINT_TWO: 1200000000000000000
 
@@ -24,16 +25,14 @@ macro MIN_EVENTS_FOR_WHALE: 30
 # Prove both that a reporter voted on less than he/she actually could have and it was <.5 of what they should have reported on using an example event
 # The rep lost here is then sent to the branch's rep account and distributed like other redistributed rep.
 # Note:
-    # Reporters pay an eth bond for this on their first report --- if never called then during collect fees they get it back else it goes back to pay someone who correctly calls this function, so the bond is returned to the poster if not enough penalized is 0 or BRANCHES.getForkPeriod(branch)+1 == lastPeriod during collect fees [which means it's the first period after a fork is initiated]
+    # Reporters pay an eth bond for this on their first report --- if never called then during collect fees they get it back else it goes back to pay someone who correctly calls this function, so the bond is returned to the poster if not enough penalized is 0
 # Returns 1 if successful penalization
 # Errors:
     # 0: branch or event example don't exist
     # -1: already done
     # -2: not in right part of period
     # -3: event isn't in branch
-    # -4: fork period exemption
     # -5: reported on enough
-    # Returns 2 if didn't need to be penalized and thus wasn't
 def proveReporterDidntReportEnough(branch, reporter, eventExample):
     refund()
     if(MUTEX.getMutex()):
@@ -43,8 +42,8 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     if(!branch or !eventExample):
         MUTEX.unsetMutex()
         return(0)
+    expectedEventsForReporterIncludingRequired = 0
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
-    periodAfterForkPeriod = BRANCHES.getForkPeriod(branch) + 1 == lastPeriod
     periodLength = BRANCHES.getPeriodLength(branch)
     originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
     # this includes the baseReporters * numEventsAvailable
@@ -52,9 +51,16 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
     # events a user should be reporting on
     # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
     # a**b=exp(b*ln(a))=e**(b*ln(a)).
-    repConstant = FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(originalRep) / ONE) * ONE / FXP.fxExp(ONE_POINT_TWO * FXP.fxLog(REPORTING.getActiveRep(branch)) / ONE)
+    repConstant = safeFxpDiv(FXP.fxExp(safeFxpMul(ONE_POINT_TWO, FXP.fxLog(originalRep))), FXP.fxExp(safeFxpMul(ONE_POINT_TWO, FXP.fxLog(REPORTING.getActiveRep(branch)))))
     numRequiredEvents = EXPEVENTS.getNumRequired(branch, lastPeriod)
-    expectedEventsForReporterIncludingRequired = repConstant * numEventsAvailableToReportOn + numRequiredEvents * ONE
+    forkPeriod = BRANCHES.getForkPeriod(branch)
+    period = BRANCHES.getVotePeriod(branch)
+    forkScenario = period == (forkPeriod + 1) or period == (forkPeriod + 2)
+    if(forkScenario):
+        expectedEventsForReporterIncludingRequired = safeMul(repConstant, numEventsAvailableToReportOn)
+    else:
+        # include required events in non fork scenarios
+        expectedEventsForReporterIncludingRequired = safeMul(repConstant, numEventsAvailableToReportOn) + safeMul(numRequiredEvents, ONE)
     dealWithWhaleReporters()
     ensureReporterCouldveReportedOnMoreButDidnt()
     checkProveReporterDidntReportEnoughPreconditions()
@@ -72,55 +78,59 @@ macro checkProveReporterDidntReportEnoughPreconditions():
     if(EVENTS.getEventBranch(eventExample) != branch):
         MUTEX.unsetMutex()
         return(-3)
-    # in period just after fork period no reports required
-    if(periodAfterForkPeriod):
-        MUTEX.unsetMutex()
-        return(-4)
 
 macro ensureReporterCouldveReportedOnMoreButDidnt()
     numReportsSubmitted = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
     couldveReported = THRESHOLD.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)
-    reportedOnLessThanShouldve = expectedEventsForReporterIncludingRequired / 2 > numReportsSubmitted * ONE and couldveReported
+    reportedOnLessThanShouldve = expectedEventsForReporterIncludingRequired / 2 > safeMul(numReportsSubmitted, ONE) and couldveReported
     if(!reportedOnLessThanShouldve):
         MUTEX.unsetMutex()
         return(-5)
 
 macro redistributeNotEnoughReportsRep():
     # penalize people
-    newRep = POINT_ONE * numReportsSubmitted * originalRep / (expectedEventsForReporterIncludingRequired / 2)
-    oldRep = originalRep * POINT_NINE / ONE
-    repChange = (oldRep + newRep) - originalRep
+    newRep = safeDiv(safeMul(safeMul(POINT_ONE, numReportsSubmitted), originalRep), (expectedEventsForReporterIncludingRequired / 2))
+    oldRep = safeFxpMul(originalRep, POINT_NINE)
+    repChange = safeAdd(oldRep, newRep) - originalRep
     if(repChange > 0):
         MUTEX.unsetMutex()
         return(1)
-    # todo fix issues here w/ withdrawing too much rep and redistribution before/after/etc
+    repBalance = REPORTING.getRepBalance(branch, reporter)
+    if(repBalance + repChange <= 0):
+        repChange = -1 * repBalance
     # removes rep from reporter who lost it
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, reporter), repChange)
     # sends that rep to the branch rep pool
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -repChange)
-    EXPEVENTS.setBeforeRep(branch, lastPeriod, oldRep + newRep, reporter)
+    EXPEVENTS.setBeforeRep(branch, lastPeriod, safeAdd(oldRep, newRep), reporter)
     afterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, reporter)
-    newAfterRep = afterRep + repChange
+    newAfterRep = safeAdd(afterRep, repChange)
     if(newAfterRep <= 0):
         newAfterRep = 0
     # decrease denominator by rep person lost here if they've already done the penalizations / redistributions in consensus
     if(CONSENSUS.getRepRedistributionDone(branch, reporter)):
-        diff = afterRep - newAfterRep
+        diff = safeSub(afterRep, newAfterRep)
         CONSENSUS.decreaseDenominator(branch, lastPeriod, diff)
     EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, reporter)
     CONSENSUS.setNotEnoughPenalized(branch, reporter, lastPeriod)
 
 macro dealWithWhaleReporters():
-    eventsInPeriod = EXPEVENTS.getNumberEvents(branch, lastPeriod) - EXPEVENTS.getNumRemoved(branch, lastPeriod)
+    eventsInPeriod = safeSub(EXPEVENTS.getNumberEvents(branch, lastPeriod), EXPEVENTS.getNumRemoved(branch, lastPeriod))
     reporterIsAWhale = repConstant >= POINT_ZERO_ONE
-    if(reporterIsAWhale):
-        minimum = min(MIN_EVENTS_FOR_WHALE + numRequiredEvents, eventsInPeriod)
+    if(reporterIsAWhale and forkScenario):
+        minimum = safeAdd(MIN_EVENTS_FOR_WHALE, numEventsAvailableToReportOn)
+        if(expectedEventsForReporterIncludingRequired / ONE < minimum):
+            expectedEventsForReporterIncludingRequired = minimum * ONE
+    elif(reporterIsAWhale):
+        minimum = min(safeAdd(MIN_EVENTS_FOR_WHALE, numRequiredEvents), eventsInPeriod)
         if(expectedEventsForReporterIncludingRequired / ONE < minimum):
             expectedEventsForReporterIncludingRequired = minimum * ONE
     baseReporters = CONSENSUS.getBaseReportersLastPeriod(branch)
-    total = repConstant * baseReporters
+    total = safeMul(repConstant, baseReporters)
     # if total is too high [>1] then expectedEventsForReporterIncludingRequired will estimate a higher number than reality, so need to correct for this below
     # correction for if people have more than x [4.6% of at 40 min reporters] rep in one account - they report on everything (hence incentive to divy rep into mult. accounts and not pool) i.e. if((exp(ln(rep%)*1.2)+0.001)*baseReporters > 1)
-    if(total > ONE):
-        expectedEventsForReporterIncludingRequired = (numEventsAvailableToReportOn / baseReporters) * ONE + numRequiredEvents * ONE
+    if(total > ONE and forkScenario):
+        expectedEventsForReporterIncludingRequired = safeMul(safeDiv(numEventsAvailableToReportOn, baseReporters), ONE)
+    elif(total > ONE):
+        expectedEventsForReporterIncludingRequired = safeAdd(safeMul(safeDiv(numEventsAvailableToReportOn, baseReporters), ONE), safeMul(numRequiredEvents, ONE))

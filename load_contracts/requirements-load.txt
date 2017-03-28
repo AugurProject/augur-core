@@ -2,3 +2,4 @@ colorama
 ethereum
 progress
 requests
+https://github.com/ethereum/serpent/tarball/develop

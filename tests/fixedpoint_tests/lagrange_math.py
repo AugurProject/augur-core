@@ -5,35 +5,35 @@ import numpy as np
 import scipy
 import scipy.interpolate
 
-LN2 = hex(int(gmpy2.log(2.0)*2**64)).strip('L')
-LOG2E = hex(int(gmpy2.log2(gmpy2.exp(1))*2**64)).strip('L')
+LN2 = hex(int(gmpy2.log(2.0)*10**18)).strip('L')
+LOG2E = hex(int(gmpy2.log2(gmpy2.exp(1))*10**18)).strip('L')
 
 def log_interp(n):
     xs = np.linspace(1, 2, n+2)
     p = scipy.interpolate.lagrange(xs, map(gmpy2.log2, xs))
-    coeffs = [hex(int(a_i*2**64)).strip('L') for a_i in list(reversed(p.coeffs))]
+    coeffs = [hex(int(a_i*10**18)).strip('L') for a_i in list(reversed(p.coeffs))]
     code = '''
 def log{0}(x):
     y = ilog2(x)
     z = x / 2^y
-    return((y*2^64 + log2_{0}(z))*2^64/{1})
+    return((y*10^18 + log2_{0}(z))*10^18/{1})
 
 macro log2_{0}($x):
-    with $xpow = 2^64:
+    with $xpow = 10^18:
         with $result = 0:
 '''
     code = code.format(n, LOG2E)
     T = ' '*12
     for a_i in coeffs[:-1]:
-        code += T + '$result += %s*$xpow/2^64\n'%a_i
-        code += T + '$xpow = $xpow*$x/2^64\n'
-    code += T + '$result + %s*$xpow/2^64\n'%coeffs[-1]
+        code += T + '$result += %s*$xpow/10^18\n'%a_i
+        code += T + '$xpow = $xpow*$x/10^18\n'
+    code += T + '$result + %s*$xpow/10^18\n'%coeffs[-1]
     return code
 
 def log_test_code(max_n):
     ilog2 = '''
 macro ilog2($x):
-    with $y = $x / 2^64:
+    with $y = $x / 10^18:
         with $lo = 0:
             with $hi = 191:
                 with $mid = ($lo + $hi)/2:
@@ -50,23 +50,23 @@ macro ilog2($x):
 def exp_interp(n):
     xs = np.linspace(0, 1, n+2)
     p = scipy.interpolate.lagrange(xs, map(gmpy2.exp2, xs))
-    coeffs = [hex(int(a_i*2**64)).strip('L') for a_i in list(reversed(p.coeffs))[1:]]
+    coeffs = [hex(int(a_i*10**18)).strip('L') for a_i in list(reversed(p.coeffs))[1:]]
     code = '''
 def exp{0}(x):
-    y = x * 2^64 / {1}
-    z = y % 2^64
-    return(2^(y / 2^64)*lpow2_{0}(z))
+    y = x * 10^18 / {1}
+    z = y % 10^18
+    return(2^(y / 10^18)*lpow2_{0}(z))
 
 macro lpow2_{0}($x):
     with $xpow = $x:
-        with $result = 2^64:
+        with $result = 10^18:
 '''
     code = code.format(n, LN2)
     T = ' '*12
     for a_i in coeffs[:-1]:
-        code += T + '$result += %s*$xpow/2^64\n'%a_i
-        code += T + '$xpow = $xpow*$x/2^64\n'
-    code += T + '$result + %s*$xpow/2^64\n' % coeffs[-1]
+        code += T + '$result += %s*$xpow/10^18\n'%a_i
+        code += T + '$xpow = $xpow*$x/10^18\n'
+    code += T + '$result + %s*$xpow/10^18\n' % coeffs[-1]
     return code
 
 def exp_test_code(max_n):

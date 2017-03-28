@@ -1,13 +1,7 @@
-data foo: uint256
+data foo
 
-def ok(x, y, z):
-    n = sha3([x,y,z], items=3)
-    return(n)
+def ok(x):
+    return(blah)
     
-def okk(y):
-    x = self.foo
-    valueToSpend = min(x, y)
-    if(x < y):
-        return(1)
-        
-    return(valueToSpend: uint256)
+macro blah(a, b, c):
+    a

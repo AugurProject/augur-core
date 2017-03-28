@@ -103,7 +103,7 @@ def test_compile_imports():
         prefix = sha3.sha3_256(func1.encode('ascii')).hexdigest()[:8]
         arg = 8
         expected = round((2 * 8**0.5) / (8**0.5 - 1), 6)
-        encoded_arg = hex(arg*2**64)[2:].strip('L').rjust(64, '0')
+        encoded_arg = hex(arg*10**18)[2:].strip('L').rjust(64, '0')
         result = rpc.eth_call(sender=coinbase,
                               to=db['foo']['address'],
                               data=('0x' + prefix + encoded_arg),
@@ -116,7 +116,7 @@ def test_compile_imports():
         #the different internal representations
         #used in the calculations lead to some difference,
         #but the answers should be approximately the same.
-        result = round(float(result)/2**64, 6)
+        result = round(float(result)/10**18, 6)
 
         if result == expected:
             print 'TEST PASSED'

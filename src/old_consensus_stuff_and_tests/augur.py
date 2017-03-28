@@ -26,7 +26,7 @@ def initiate(numEvents, numReporters):
     eventsExpected = []
     totalRep = 0
     eventsActually = []
-    maxRep = 11000000*2**64
+    maxRep = 11000000*10**18
     for n in range(0, numReporters):
         rep = random.randint(0, maxRep)
         reporterList.append(rep)

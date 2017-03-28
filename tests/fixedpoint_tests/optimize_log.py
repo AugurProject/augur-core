@@ -11,7 +11,7 @@ import time
 
 gmpy2.get_context().precision = 256
 
-LOG2E = int(gmpy2.log2(gmpy2.exp(1))*2**64)
+LOG2E = int(gmpy2.log2(gmpy2.exp(1))*10**18)
 
 def fxp_ilog2(x):
     y = x >> 64
@@ -44,8 +44,8 @@ def avg_error(coeffs, trials, max):
     total_error = 0
     for i in range(trials):
         x = random.random()*max
-        expected = gmpy2.log(x) * 2**64
-        result = fxp_ln(int(x*2**64), coeffs)
+        expected = gmpy2.log(x) * 10**18
+        result = fxp_ln(int(x*10**18), coeffs)
         total_error += abs(result - expected)/expected
     return total_error/trials
  
@@ -53,7 +53,7 @@ def worker(xs, results, updates, trials, max):
     gmpy2.get_context().precision = 256
     ys = (map(gmpy2.log2, x) for x in xs)
     polys = (scipy.interpolate.lagrange(x, y) for x, y in itertools.izip(xs, ys))
-    coeffs = [[int(a_i*2**64) for a_i in reversed(p.coeffs)] for p in polys]
+    coeffs = [[int(a_i*10**18) for a_i in reversed(p.coeffs)] for p in polys]
     updates.put("Generated %d polynomials to test." % len(coeffs))
     min_err = float('inf')
     min_cs = None

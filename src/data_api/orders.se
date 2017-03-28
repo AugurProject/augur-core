@@ -1,0 +1,115 @@
+inset('refund.se')
+
+### Storage of all data associated with orders
+
+# traderID is index
+data orderCommits[](hash, block)
+# orderID is index
+data orders[](id, type, market, amount, price, owner, block, outcome, sharesEscrowed, moneyEscrowed)
+# indices are marketID and outcomeID
+data bestOrder[][](bid, ask)
+
+event logAddTx(market:indexed, sender:indexed, type, fxpPrice, fxpAmount, outcome, orderID)
+
+def makeOrderHash(market, outcome, direction):
+    refund()
+    orderInfo = array(4)
+    orderInfo[0] = market
+    orderInfo[1] = outcome
+    orderInfo[2] = direction
+    orderInfo[3] = msg.sender
+    orderHash = sha3(orderInfo, items = 4)
+    return(orderHash)
+
+def commitOrder(hash):
+    refund()
+    self.orderCommits[msg.sender].hash = hash
+    self.orderCommits[msg.sender].block = block.number
+    return(1)
+
+def checkHash(orderHash, sender):
+    if(self.orderCommits[sender].hash != orderHash or block.number <= self.orderCommits[sender].block):
+        return(-1)
+    else:
+        return(1)
+
+def getBestBid(market, outcome):
+    return(self.bestOrder[market][outcome].bid)
+
+def getBestAsk(market, outcome):
+    return(self.bestOrder[market][outcome].ask)
+
+def saveOrder(orderID, type, market, amount, price, sender, outcome, money, shares):
+    self.orders[orderID].id = orderID
+    self.orders[orderID].type = type
+    self.orders[orderID].market = market
+    self.orders[orderID].amount = amount
+    self.orders[orderID].price = price
+    self.orders[orderID].owner = sender
+    self.orders[orderID].block = block.number
+    self.orders[orderID].outcome = outcome
+    self.orders[orderID].moneyEscrowed = money
+    self.orders[orderID].sharesEscrowed = shares
+
+    # Update best bid and ask trade IDs:
+    #  - if this outcome's best trade is set, but this trade price is better,
+    #    then this trade ID is the new best trade
+    #  - if this outcome's best trade is unset, then this trade ID is the new
+    #    best trade
+    if type == 1:
+        bestBidPrice = self.orders[self.bestTrade[market][outcome].bid].price
+        if bestBidPrice == 0 or price > bestBidPrice:
+            self.bestOrder[market][outcome].bid = orderID
+    else:
+        bestAskPrice = self.orders[self.bestTrade[market][outcome].ask].price
+        if bestAskPrice == 0 or price > bestAskPrice:
+            self.bestOrder[market][outcome].ask = orderID
+    return(1)
+
+def getOrder(id):
+    order = array(10)
+    order[0] = self.orders[id].id
+    order[1] = self.orders[id].type
+    order[2] = self.orders[id].market
+    order[3] = self.orders[id].amount
+    order[4] = self.orders[id].price
+    order[5] = self.orders[id].owner
+    order[6] = self.orders[id].block
+    order[7] = self.orders[id].outcome
+    order[8] = self.orders[id].moneyEscrowed
+    order[9] = self.orders[id].sharesEscrowed
+    if(order):
+        return(order: arr)
+    return([0]: arr)
+
+def removeOrder(id):
+    self.orders[id].id = 0
+    self.orders[id].type = 0
+    self.orders[id].market = 0
+    self.orders[id].amount = 0
+    self.orders[id].price = 0
+    self.orders[id].owner = 0
+    self.orders[id].block = 0
+    self.orders[id].outcome = 0
+    self.orders[id].moneyEscrowed = 0
+    self.orders[id].sharesEscrowed = 0
+    return(1)
+
+def fillOrder(orderID, fill, money, shares):
+    if(fill > self.orders[orderID].amount or money > self.orders[orderID].moneyEscrowed or shares > self.orders[orderID].sharesEscrowed):
+        throw()
+    self.orders[orderID].amount -= fill
+    self.orders[orderID].moneyEscrowed -= money
+    self.orders[orderID].sharesEscrowed -= shares
+    return(1)
+
+# @return fxp
+def getAmount(id):
+    return(self.orders[id].amount)
+
+def getID(orderID):
+    return(self.orders[orderID].id)
+
+# @return fxp
+def getPrice(id):
+    return(self.orders[id].price)

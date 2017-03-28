@@ -19,6 +19,8 @@
 # Any questions please contact joey@augur.net
 
 inset('refund.se')
+extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
+extern rateContract: [rateFunction:[]:int256]
 
 # Branches keeps track of data associated with branches in augur
 # Branches' index is the hash of the branch (aka branch)
@@ -39,12 +41,26 @@ inset('refund.se')
     # Want:
         # Rep market cap >> outstanding shares value at all times
 # min can be no lower than ~0.0000001 or so otherwise can run into underflow issues
-# contract[] is a mapping from currency -> wallet contract addr
-data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[])
+# balance[][] takes a branch and currency and gives current balance of it at start of a fee distribution period
+# contract[] is a mapping from currency -> wallet contract addr for that currency
+# numCurrencies is the number of currencies a branch has
+# currencies[] is a 0 indexed list of the n currencies a branch allows with contract being the currency itself, rate being a fixed exchange rate, and rateContract being a contract w/ rates for the currency from currency to eth in wei
+# currencyToIndex is a reverse mapping from currencies to their indices
+# mostRecentChild is the most recent child of a branch
+# currencyActive is whether new markets can be made in that currency
+# forkTime is the block timestamp when a fork of this branch was last created
+data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTradingFee, balance[][], creationDate, oracleOnly, parentPeriod, baseReporters, forkPeriod, eventForkedOver, parent, contract[], numCurrencies, currencies[](rate, rateContract, contract), currencyToIndex[], mostRecentChild, currencyActive[], forkTime)
 
 # keeps track of a list of all branches
 data branchList[]
 data branchListCount
+
+macro checkSubcurrencyIsValid(contract):
+    allowance = $contract.allowance(msg.sender, self)
+    balance = $contract.balanceOf(self)
+    transfer = $contract.transfer(msg.sender, 0)
+    transferFrom = $contract.transferFrom(self, msg.sender, 0)
+    approve = $contract.approve(self, 0)
 
 def init():
     self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
@@ -55,66 +71,145 @@ def init():
     self.branchList[0] = 1010101
     # since only have to report on half this targets 3
     self.Branches[1010101].baseReporters = 6
-    ethContract = 5
+    ethContract = 0
+    checkSubcurrencyIsValid(ethContract)
     wallet = create('wallet.se')
     wallet.initialize(ethContract)
     self.Branches[1010101].contract[ethContract] = wallet
     
+# whitelist updates
+def updateNumCurrencies(branch, num):
+    self.Branches[branch].numCurrencies = num
+    
+# whitelist updates
+# rateContract _or_ rate should be given
+def addCurrency(branch, currency, rate, rateContract):
+    checkSubcurrencyIsValid(currency)
+    self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract = currency
+    self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rate = rate
+    self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rateContract = rateContract
+    self.Branches[branch].currencyToIndex[currency] = self.Branches[branch].numCurrencies
+    self.Branches[branch].currencyActive[currency] = 1
+    self.Branches[branch].numCurrencies += 1
+    noWalletExists = !self.Branches[branch].contract[currency]
+    if(noWalletExists):
+        checkSubcurrencyIsValid(currency)
+        wallet = create('wallet.se')
+        wallet.initialize(currency)
+        self.Branches[branch].contract[currency] = wallet
+    return(1)
+
+# disables a given currency for new market / event creation
+def disableCurrency(branch, currency):
+    self.Branches[branch].currencyActive[currency] = 0
+    return(1)
+
+# enables a given currency for new market / event creation
+def reactivateCurrency(branch, currency)
+    self.Branches[branch].currencyActive[currency] = 1
+    return(1)
+
+# whitelist updates
+def replaceCurrency(branch, oldCurrencyIndex, newCurrency, newRate, newRateContract):
+    checkSubcurrencyIsValid(newCurrency)
+    self.Branches[branch].currencyActive[self.Branches[branch].currencies[oldCurrencyIndex].contract] = 0
+    self.Branches[branch].currencyToIndex[self.Branches[branch].currencies[oldCurrencyIndex].contract] = 0
+    self.Branches[branch].currencies[oldCurrencyIndex].contract = newCurrency
+    self.Branches[branch].currencies[oldCurrencyIndex].rate = newRate
+    self.Branches[branch].currencies[oldCurrencyIndex].rateContract = newRateContract
+    self.Branches[branch].currencyActive[newCurrency] = 1
+    self.Branches[branch].currencyToIndex[newCurrency] = oldCurrencyIndex
+    noWalletExists = !self.Branches[branch].contract[newCurrency]
+    if(noWalletExists):
+        checkSubcurrencyIsValid(newCurrency)
+        wallet = create('wallet.se')
+        wallet.initialize(newCurrency)
+        self.Branches[branch].contract[newCurrency] = wallet
+    return(1)
+
+# whitelist updates
+def removeLastCurrency(branch):
+    self.Branches[branch].currencyToIndex[self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract] = 0
+    self.Branches[branch].contract[self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract] = 0
+    self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract = 0
+    self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rate = 0
+    self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rateContract = 0
+    self.Branches[branch].currencyActive[self.Branches[branch].numCurrencies] = 0
+    self.Branches[branch].numCurrencies -= 1
+    return(1)
+
+# whitelist updates
+def updateCurrencyRate(branch, currency, rate, rateContract):
+    if(rate == 0 && !rateContract):
+        throw()
+    self.Branches[branch].currencies[self.Branches[branch].currencyToIndex[currency]].rate = rate
+    self.Branches[branch].currencies[self.Branches[branch].currencyToIndex[currency]].rateContract = rateContract
+    return(1)
+
+# whitelist updates
+# currency rate should be a number in fixed point 10**18
+def getCurrencyRate(branch, currency):
+    currencyIndex = self.Branches[branch].currencyToIndex[currency]
+    rate = self.Branches[branch].currencies[currencyIndex].rate
+    if(rate):
+        return(self.Branches[branch].currencies[currencyIndex].rate)
+    else:
+        return(self.Branches[branch].currencies[currencyIndex].rateContract.rateFunction())
+
+def getCurrency(branch, index):
+    return(self.Branches[branch].currencies[index].contract)
+    
+def getCurrencyByContract(branch, currency):
+    return(self.Branches[branch].currencyToIndex[currency])
+
 def getWallet(branch, currency):
-    checkCallstack()
     return(self.Branches[branch].contract[currency])
+    
+def getNumCurrencies(branch):
+    return(self.Branches[branch].numCurrencies)
+    
+def getCurrencyActive(branch, currency):
+    return(self.Branches[branch].currencyActive[currency])
 
 # event a branch was most recently forked over
 def getEventForkedOver(branch):
-    checkCallstack()
     return(self.Branches[branch].eventForkedOver)
 
 def setEventForkedOver(branch, event):
-    checkCallstack()
     self.Branches[branch].eventForkedOver = event
     return(1)
 
 def getBaseReporters(branch):
-    checkCallstack()
     return(self.Branches[branch].baseReporters)
 
 def setBaseReporters(branch, num):
-    checkCallstack()
     self.Branches[branch].baseReporters = num
     return(1)
 
 def getOracleOnly(branch):
-    checkCallstack()
     return(self.Branches[branch].oracleOnly)
 
 def getVotePeriod(branch):
-    checkCallstack()
     return(self.Branches[branch].currentVotePeriod)
 
 def getPeriodLength(branch):
-    checkCallstack()
     return(self.Branches[branch].periodLength)
 
-# branch currency balance at start of period
-# currency index 0 is ETH
+# branch currency balance at start of the fee distribution period
 # @return fxp
 def setInitialBalance(branch, period, balance, currency):
-    checkCallstack()
     self.Branches[branch].balance[period][currency] = balance
     return(balance)
 
 # @return fxp
-def getInitialBalance(branch, period):
-    checkCallstack()
-    return(self.Branches[branch].balance[period])
+def getInitialBalance(branch, period, currency):
+    return(self.Branches[branch].balance[period][currency])
 
 def getParent(branch):
-    checkCallstack()
     return(self.Branches[branch].parent)
 
 # @return markets in a branch from initial to last
 def getMarketIDsInBranch(branch, initial, last):
-    checkCallstack()
     numMarkets = last - initial
     markets = array(numMarkets)
     i = 0
@@ -124,17 +219,14 @@ def getMarketIDsInBranch(branch, initial, last):
     return(markets: arr)
 
 def getNumMarketsBranch(branch):
-    checkCallstack()
     return(self.Branches[branch].numMarkets)
 
 # @return fxp
 def getMinTradingFee(branch):
-    checkCallstack()
     return(self.Branches[branch].fxpMinTradingFee)
 
 # @return all branches
 def getBranches():
-    checkCallstack()
     b = 0
     numBranches = self.branchListCount
     branches = array(numBranches)
@@ -144,7 +236,6 @@ def getBranches():
     return(branches: arr)
     
 def getBranchesStartingAt(index):
-    checkCallstack()
     b = index
     numBranches = self.branchListCount
     branches = array(numBranches)
@@ -154,22 +245,25 @@ def getBranchesStartingAt(index):
     return(branches: arr)
 
 def getNumBranches():
-    checkCallstack()
     return(self.branchListCount)
 
 def getBranchByNum(branchNumber):
-    checkCallstack()
     return(self.branchList[branchNumber])
 
 def getCreationDate(ID):
-    checkCallstack()
     return(self.Branches[ID].creationDate)
-
+    
+def getMostRecentChild(ID):
+    return(self.Branches[ID].mostRecentChild)
+    
+def setMostRecentChild(parent, child):
+    self.Branches[parent].mostRecentChild = child
+    return(1)
+    
 # check that msg.sender is one of our function contracts
-def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, contract, wallet):
+def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, contract, wallet, mostRecentChild):
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
-    checkCallstack()
     if(!self.Branches[ID].periodLength):
         self.Branches[ID].currentVotePeriod = currentVotePeriod
         self.Branches[ID].periodLength = periodLength
@@ -182,16 +276,15 @@ def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, orac
         self.Branches[ID].parent = parent
         self.Branches[ID].baseReporters = self.Branches[parent].baseReporters
         self.Branches[ID].contract[contract] = wallet
+        self.Branches[ID].mostRecentChild = mostRecentChild
         return(1)
     else:
         return(0)
 
 def getParentPeriod(branch):
-    checkCallstack()
     return(self.Branches[branch].parentPeriod)
 
 def incrementPeriod(branch):
-    checkCallstack()
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
     self.Branches[branch].currentVotePeriod += 1
@@ -199,7 +292,6 @@ def incrementPeriod(branch):
 
 # check that msg.sender is one of our function contracts
 def addMarketToBranch(branch, market):
-    checkCallstack()
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
     numMarkets = self.Branches[branch].numMarkets
@@ -207,12 +299,16 @@ def addMarketToBranch(branch, market):
     self.Branches[branch].numMarkets += 1
     return(1)
 
+# forkperiod is the vote period in which a branch was forked
 def setForkPeriod(branch):
-    checkCallstack()
     self.Branches[branch].forkPeriod = self.Branches[branch].currentVotePeriod
+    self.Branches[branch].forkTime = block.timestamp
     return(1)
 
 # gets the period in which a branch was most recently forked
 def getForkPeriod(branch):
-    checkCallstack()
     return(self.Branches[branch].forkPeriod)
+
+# gets the time which a branch was most recently forked
+def getForkTime(branch):
+    return(self.Branches[branch].forkTime)

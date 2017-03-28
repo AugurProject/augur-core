@@ -98,5 +98,4 @@ def fxExp(x):
 
 # Calculates the natural log function given a fixed point [base 10^18] number, so ln(x)
 def fxLog(x):
-    callstackCheck()
     return(fxLog(x))

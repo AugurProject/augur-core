@@ -4,16 +4,16 @@
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
-# 
+#
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-# 
+#
 #    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-# 
+#
 #    You should have receive a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
@@ -22,6 +22,7 @@ import branches as BRANCHES
 import events as EVENTS
 import info as INFO
 inset('refund.se')
+inset('functions/eventHelpers.se')
 
 ### This contract keeps track of data associated with reporting periods and the events + reports in them
 
@@ -39,8 +40,9 @@ inset('refund.se')
     # numReqEvents is the number of events that are required to be reported on in a given reporting period
     # numberRemoved is the number of events that no longer have to be reported on in this period [a good example is an event that was resolved early successfully]
     # numEventsToReportOn is the number of events available for reporting on [not including required events] * base number of reporters per event [this is multiplied by a user's periodRepWeight to figure out how many events they should be reporting on in a given period]
-    # shareValue is the value of all the outstanding shares from markets that have events expiring in this period
-data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], committed[], subsidy[], eventWeight[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, shareValue)
+    # feeValue is the value of all fees for all markets that have events expiring in this period denominated in wei
+    # afterFork is the number of events created for a fork period or 2 periods after that provided the events were created after the fork was initiated
+data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], committed[], subsidy[], eventWeight[], lesserReportNum[], numberEvents, roundTwoNumEvents, numReqEvents, numberRemoved, numEventsToReportOn, feeValue, afterFork)
 
 # This keeps track of info in a period for the reporters, it takes a branch and votePeriod as params, respectively
     # Before rep is the amount of active rep a user has before any penalizations for reporting incorrectly
@@ -52,7 +54,9 @@ data periodEventInfo[][](events[], eventToIndex[], requiredEvents[], committed[]
     # Ethics is the ethicality a reporter submitted for a given event [takes reporter, event as params]
     # numReportsSubmitted is the number of a reports a reporter has submitted for this period
     # periodRepWeight is a weighting used to calculate how many events a reporter should report on in a given period
-data reporterPeriodInfo[][](beforeRep[], afterRep[], periodDormantRep[], reportHash[][], saltyEncryptedHash[][], report[][], ethics[][], numReportsSubmitted[], periodRepWeight[])
+    # numberOfActiveReporters is number of reporters active in this reporting period who are able to claim fees for reporting
+    # reporters is a 0 indexed array of the active reporters
+data reporterPeriodInfo[][](beforeRep[], afterRep[], periodDormantRep[], reportHash[][], saltyEncryptedHash[][], report[][], ethics[][], numReportsSubmitted[], periodRepWeight[], numberOfActiveReporters, reporters[])
 
 # This takes a period and event as params (e.g self.modeItems[period][event]) and stores mode data for categorical & scalar event reports
     # reportValue takes a possible reported value [say .72 in fixed point] as a key and the value is how many reports that event has, or in the case of a backstop, how much rep has reported on that event
@@ -61,13 +65,12 @@ data reporterPeriodInfo[][](beforeRep[], afterRep[], periodDormantRep[], reportH
 data modeItems[][](reportValue[], currentMode, currentModeItems)
 
 macro MAX_THRESHOLD: 2**192
+macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 
 def getSaltyEncryptedHash(branch, period, reporter, event):
-    callstackCheck()
     return(self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event])
 
 def setSaltyEncryptedHash(branch, period, reporter, saltyEncryptedHash, event):
-    callstackCheck()
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
     self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event] = saltyEncryptedHash
@@ -75,134 +78,110 @@ def setSaltyEncryptedHash(branch, period, reporter, saltyEncryptedHash, event):
 
 # Refunds cost to calculate number of reports for an event
 def refundCost(to, branch, period, event):
-    callstackCheck()
     if(!send(to, self.periodEventInfo[branch][period].subsidy[event])):
         throw()
     return(1)
 
 # @return fxp
 def getSubsidy(branch, period, event):
-    callstackCheck()
     return(self.periodEventInfo[branch][period].subsidy[event])
 
 # @return fxp
 def getPeriodRepWeight(branch, votePeriod, sender):
-    callstackCheck()
     return(self.reporterPeriodInfo[branch][votePeriod].periodRepWeight[sender])
 
 def setPeriodRepWeight(branch, votePeriod, sender, value):
-    callstackCheck()
     self.reporterPeriodInfo[branch][votePeriod].periodRepWeight[sender] = value
     return(1)
 
 def getReportHash(branch, period, reporter, event):
-    callstackCheck()
     return(self.reporterPeriodInfo[branch][period].reportHash[reporter][event])
 
 def setEthicReport(branch, period, event, ethics, sender):
-    callstackCheck()
     self.reporterPeriodInfo[branch][period].ethics[sender][event] = ethics
     return(1)
 
 def setReport(branch, period, event, report, sender):
-    callstackCheck()
     self.reporterPeriodInfo[branch][period].report[sender][event] = report
     return(1)
 
 # @return fxp
 def setBeforeRep(branch, period, rep, sender):
-    callstackCheck()
     self.reporterPeriodInfo[branch][period].beforeRep[sender] = rep
+    self.reporterPeriodInfo[branch][period].reporters[self.reporterPeriodInfo[branch][period].numberOfActiveReporters] = sender
+    self.reporterPeriodInfo[branch][period].numberOfActiveReporters += 1
     return(rep)
 
 # @return fxp
 def setAfterRep(branch, period, rep, sender):
-    callstackCheck()
     self.reporterPeriodInfo[branch][period].afterRep[sender] = rep
     return(rep)
 
 # @return fxp
 def setPeriodDormantRep(branch, period, rep, sender):
-    callstackCheck()
     self.reporterPeriodInfo[branch][period].periodDormantRep[sender] = rep
     return(rep)
 
 # @return fxp
 def getLesserReportNum(branch, period, event):
-    callstackCheck()
     return(self.periodEventInfo[branch][period].lesserReportNum[event])
 
 def getCurrentModeItems(period, event):
-    callstackCheck()
     return(self.modeItems[period][event].currentModeItems)
 
 # @return fxp
 def getCurrentMode(period, event):
-    callstackCheck()
     return(self.modeItems[period][event].currentMode)
 
 # returns weight of a report value for the mode
 # @return fxp
 def getWeightOfReport(period, event, report):
-    callstackCheck()
     return(self.modeItems[period][event].reportValue[report])
 
 # @return fxp
 def getEthicReport(branch, period, event, sender):
-    callstackCheck()
     return(self.reporterPeriodInfo[branch][period].ethics[sender][event])
 
 # @return fxp
 def getReport(branch, period, event, sender):
-    callstackCheck()
     # if(!self.whitelist.check(msg.sender)):
         #   throw()
     return(self.reporterPeriodInfo[branch][period].report[sender][event])
 
 # @return fxp
 def getBeforeRep(branch, period, sender):
-    callstackCheck()
     return(self.reporterPeriodInfo[branch][period].beforeRep[sender])
 
 # @return fxp
 def getAfterRep(branch, period, sender):
-    callstackCheck()
     return(self.reporterPeriodInfo[branch][period].afterRep[sender])
 
 # @return fxp
 def getPeriodDormantRep(branch, period, sender):
-    callstackCheck()
     return(self.reporterPeriodInfo[branch][period].periodDormantRep[sender])
 
 def getNumReportsSubmitted(branch, votePeriod, sender):
-    callstackCheck()
     return(self.reporterPeriodInfo[branch][votePeriod].numReportsSubmitted[sender])
 
 # @return fxp
 def getEventWeight(branch, votePeriod, event):
-    callstackCheck()
     return(self.periodEventInfo[branch][votePeriod].eventWeight[event])
 
 def getNumRoundTwo(branch, period):
-    callstackCheck()
     return(self.periodEventInfo[branch][period].roundTwoNumEvents)
 
 def addRoundTwo(branch, period):
-    callstackCheck()
     self.periodEventInfo[branch][period].roundTwoNumEvents += 1
     return(1)
 
 def getRequired(event, period, branch):
-    callstackCheck()
     return(self.periodEventInfo[branch][period].requiredEvents[event])
 
 def getNumRequired(branch, period):
-    callstackCheck()
     return(self.periodEventInfo[branch][period].numReqEvents)
 
 # Return 0 means already required
 def setEventRequired(branch, period, event):
-    callstackCheck()
     if(!self.periodEventInfo[branch][period].requiredEvents[event]):
         self.periodEventInfo[branch][period].requiredEvents[event] = 1
         self.periodEventInfo[branch][period].numReqEvents += 1
@@ -213,7 +192,6 @@ def setEventRequired(branch, period, event):
 # With this function you can get the events and report on outcomes
 # @return all events in a branch and expiration period
 def getEvents(branch, period):
-    callstackCheck()
     numEvents = self.periodEventInfo[branch][period].numberEvents
     events = array(numEvents)
     i = 0
@@ -223,7 +201,6 @@ def getEvents(branch, period):
     return(events: arr)
 
 def getEventsRange(branch, period, start, end):
-    callstackCheck()
     numEvents = end - start
     events = array(numEvents)
     i = start
@@ -235,79 +212,73 @@ def getEventsRange(branch, period, start, end):
     return(events: arr)
 
 def getReportsCommitted(branch, period, event):
-    callstackCheck()
     return(self.periodEventInfo[branch][period].committed[event])
 
 def getEventIndex(branch, period, event):
-    callstackCheck()
     return(self.periodEventInfo[branch][period].eventToIndex[event])
 
 # gets number of available events to report on multiplied by base reporters per event as a minimum, not counting required or removed events
 # -1: voting not started
 def setNumEventsToReportOn(branch):
     # whitelist to only makeReports
-    callstackCheck()
     period = BRANCHES.getVotePeriod(branch)
     eventsInPeriod = self.periodEventInfo[branch][period].numberEvents
     numberOfRequiredEvents = self.periodEventInfo[branch][period].numReqEvents
     numberOfRemovedEvents = self.periodEventInfo[branch][period].numberRemoved
-    self.periodEventInfo[branch][period].numEventsToReportOn = (eventsInPeriod - numberOfRequiredEvents - numberOfRemovedEvents)*BRANCHES.getBaseReporters(branch)
+    forkPeriod = BRANCHES.getForkPeriod(branch)
+    forkScenario = period == (forkPeriod + 1) or period == (forkPeriod + 2)
+    if(forkScenario):
+        # only count events made after fork
+        self.periodEventInfo[branch][period].numEventsToReportOn = self.periodEventInfo[branch][period].afterFork * BRANCHES.getBaseReporters(branch)
+    else:
+        self.periodEventInfo[branch][period].numEventsToReportOn = (eventsInPeriod - numberOfRequiredEvents - numberOfRemovedEvents) * BRANCHES.getBaseReporters(branch)
     return(1)
 
 # gets number of available events to report on, not counting required events
 def getNumEventsToReportOn(branch, period):
-    callstackCheck()
     return(self.periodEventInfo[branch][period].numEventsToReportOn)
 
-# @return fxp
-def getShareValue(branch, expIndex):
-    callstackCheck()
-    return(self.periodEventInfo[branch][expIndex].shareValue)
+# @return wei
+def getFeeValue(branch, expIndex):
+    return(self.periodEventInfo[branch][expIndex].feeValue)
 
 def getNumberEvents(branch, period):
-    callstackCheck()
     return(self.periodEventInfo[branch][period].numberEvents)
 
 def getEvent(branch, period, eventIndex):
-    callstackCheck()
     return(self.periodEventInfo[branch][period].events[eventIndex])
 
 # check that msg.sender is one of our function contracts
-def addEvent(branch, futurePeriod, event, subsidy, currency, wallet):
+def addEvent(branch, futurePeriod, event, subsidy, currency, wallet, afterFork):
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
-    callstackCheck()
     numberEvents = self.periodEventInfo[branch][futurePeriod].numberEvents
     self.periodEventInfo[branch][futurePeriod].events[numberEvents] = event
     self.periodEventInfo[branch][futurePeriod].eventToIndex[event] = numberEvents
     self.periodEventInfo[branch][futurePeriod].numberEvents += 1
     self.periodEventInfo[branch][futurePeriod].subsidy[event] += subsidy
+    self.periodEventInfo[branch][futurePeriod].afterFork += afterFork
     INFO.setCurrencyAndWallet(currency, wallet)
     return(1)
 
 def deleteEvent(branch, period, event):
-    callstackCheck()
     i = self.periodEventInfo[branch][period].eventToIndex[event]
     self.periodEventInfo[branch][period].events[i] = 0
     self.periodEventInfo[branch][period].eventToIndex[event] = 0
     return(1)
 
 def removeEvent(branch, period):
-    callstackCheck()
     self.periodEventInfo[branch][period].numberRemoved += 1
     return(1)
 
 def getNumRemoved(branch, period):
-    callstackCheck()
     return(self.periodEventInfo[branch][period].numberRemoved)
 
-def adjustPeriodShareValueOutstanding(branch, expIndex, amount):
-    callstackCheck()
-    self.periodEventInfo[branch][expIndex].shareValue += amount
+def adjustPeriodFeeValue(branch, expIndex, amount):
+    self.periodEventInfo[branch][expIndex].feeValue += amount
     return(1)
 
 def setReportHash(branch, period, reporter, reportHash, event):
-    callstackCheck()
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
     self.reporterPeriodInfo[branch][period].reportHash[reporter][event] = reportHash
@@ -316,17 +287,18 @@ def setReportHash(branch, period, reporter, reportHash, event):
 
 # called in case an event doesn't get reported on at all in a period
 def moveEvent(branch, event):
-<<<<<<< HEAD
-    callstackCheck()
-    if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event)/BRANCHES.getPeriodLength(branch) and !EVENTS.getUncaughtOutcome(event)):
-=======
-    period = EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch)
-    if(BRANCHES.getVotePeriod(branch) > period && !EVENTS.getUncaughtOutcome(event)):
-        self.deleteEvent(branch, period, event)
-        self.removeEvent(branch, period)
->>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
+    periodLength = BRANCHES.getPeriodLength(branch)
+    if(BRANCHES.getVotePeriod(branch) > EVENTS.getExpiration(event) / periodLength and !EVENTS.getUncaughtOutcome(event) and !eventCreatedPriorToFork(event)):
+        period = block.timestamp / periodLength
+        forkPeriod = BRANCHES.getForkPeriod(branch)
+        afterFork = 0
+        if(period == (forkPeriod + 1) or period == (forkPeriod + 2)):
+            afterFork = 1
+        currency = INFO.getCurrency(event)
+        wallet = INFO.getWallet(event)
         # add to next expiration period
-        self.addEvent(branch, block.timestamp/BRANCHES.getPeriodLength(branch), event)
+        EXPEVENTS.addEvent(branch, period, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+
         EVENTS.setExpiration(event, block.timestamp)
         EVENTS.setThreshold(event, MAX_THRESHOLD)
         return(1)
@@ -334,33 +306,47 @@ def moveEvent(branch, event):
         return(0)
 
 def addToWeightOfReport(period, event, report, amount):
-    callstackCheck()
     self.modeItems[period][event].reportValue[report] += amount
     return(1)
 
 def setCurrentMode(period, event, mode):
-    callstackCheck()
     self.modeItems[period][event].currentMode = mode
     return(1)
 
 # basically setting current mode's weight
 def setCurrentModeItems(period, event, modeReport):
-    callstackCheck()
     self.modeItems[period][event].currentModeItems = self.modeItems[period][event].reportValue[modeReport]
     return(1)
 
 def setEventWeight(branch, votePeriod, event, num):
-    callstackCheck()
     self.periodEventInfo[branch][votePeriod].eventWeight[event] = num
     return(1)
 
 def countReportAsSubmitted(branch, votePeriod, event, sender, weight):
-    callstackCheck()
     self.periodEventInfo[branch][votePeriod].eventWeight[event] += weight
     self.reporterPeriodInfo[branch][votePeriod].numReportsSubmitted[sender] += 1
     return(1)
 
+def addReportToReportsSubmitted(branch, period, user):
+    self.reporterPeriodInfo[branch][period].numReportsSubmitted[user] += 1
+    return(1)
+
 def setLesserReportNum(branch, period, event, num):
-    callstackCheck()
     self.periodEventInfo[branch][period].lesserReportNum[event] = num
     return(1)
+
+def getActiveReporters(branch, period, from, to):
+        if(to == 0):
+            to = self.reporterPeriodInfo[branch][period].numberOfActiveReporters
+        i = from
+        reporters = array((to - from))
+        while i < to:
+            reporters[i] = self.reporterPeriodInfo[branch][period].reporters[i]
+            i += 1
+        return(reporters: arr)
+
+def getNumActiveReporters(branch, period):
+    return(self.reporterPeriodInfo[branch][period].numberOfActiveReporters)
+    
+def getAfterFork(branch, votePeriod):
+    return(self.periodEventInfo[branch][votePeriod].afterFork)

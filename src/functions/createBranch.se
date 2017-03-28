@@ -26,6 +26,7 @@ import reporting as REPORTING
 import mutex as MUTEX
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 inset('../data_api/refund.se')
+inset('../data_api/float.se')
 
 data ethContract
 
@@ -40,7 +41,7 @@ macro checkSubcurrencyIsValid(contract):
 
 def init():
     # whatever the eth subcurrency contract is goes here
-    self.ethContract = 5
+    self.ethContract = 0
 
 # Create a new branch given a parent branch - a branch is essentially a fork of rep where new markets can be created
 # period length is given in seconds
@@ -48,7 +49,8 @@ def init():
 # error messages otherwise
     # -1: bad input or parent doesn't exist
     # -2: branch already exists
-def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, oracleOnly):
+# most recent child is 0 for user created branches
+def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, oracleOnly, mostRecentChildBranch):
     refund()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
@@ -83,7 +85,7 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
     wallet = create('wallet.se')
     if(!wallet.initialize(self.ethContract)):
         throw()
-    BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, 47 * ONE, self.ethContract, wallet)
+    BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, 47 * ONE, self.ethContract, wallet, mostRecentChildBranch)
     # pay creation fee, initialize branch info
     feePaid = self.ethContract.transferFrom(msg.sender, BRANCHES.getWallet(parent, self.ethContract), 47 * ONE)
     if(!feePaid or !INFO.setInfo(branch, description, msg.sender, 47 * ONE, 0, 0) or !REPORTING.setInitialReporters(branch)):

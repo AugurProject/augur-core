@@ -14,6 +14,7 @@ inset('eventHelpers.se')
 inset('redistributeRep.se')
 inset('proportionCorrect.se')
 inset('repChange.se')
+inset('../data_api/float.se')
 inset('logReturn.se')
 inset('../data_api/periodStage.se')
 
@@ -54,23 +55,22 @@ macro POINT_ONE: 100000000000000000
     #  0: user has <1 rep
     # -1: need to penalize in round 2 penalize function
     # -2: already past first half of new period and needed to penalize before then
-    # -3: in fork period only thing that rep redistribution is done on is the round 2 event in the original branch via round 2 penalize
     # -4: already done for all events in this period
     # -5: forked events should be penalized using the fork penalization function
     # -6: no outcome
-    # -7: needed to collect fees last period [but didn't] which sets the before/after rep so now have to call penalizationCatchup - todo fix this, maybe call pencatchup or let anyone call pencatchup
+    # -7: needed to collect fees last period [but didn't] which sets the before/after rep so now have to call penalizationCatchup
     # -8: invalid branch
 # force event to be resolved first if it can be
-# call with branch, 0 if no events
+# call with branch and 0 for the event if no events in a given period [otherwise user won't be "penalized up to" for this period]
 def penalizeWrong(branch, event):
     refund()
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()
 
-    # todo perhaps increment period by default if not done
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
-    lastPeriod = BRANCHES.getVotePeriod(branch) - 1
+    currentVotePeriod = BRANCHES.getVotePeriod(branch)
+    lastPeriod = currentVotePeriod - 1
     periodLength = BRANCHES.getPeriodLength(branch)
     newRep = 0
     rejected = EVENTS.getRejected(event)
@@ -97,26 +97,31 @@ def penalizeWrong(branch, event):
 
 >>>>>>> 9e986d104e7a1392a43310b2414fe0073bffbf60
     outcome = catch(uncaught)
+    if(scalar(event) or categorical(event)):
+        outcome = uncaught
     checkPenalizeWrongPreconditions()
 
     repChange = 0
     reportValue = EXPEVENTS.getReport(branch, lastPeriod, event, msg.sender)
     numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, msg.sender)
     penalizedOnEvent = CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event)
+    if(eventCreatedPriorToFork(eventID) and !penalizedOnEvent and reportValue):
+        countAsPenalized()
     # lastperiod is where people who originally voted on a round 2 event voted the first time - want num events penalized to go up but not to actually be penalized for it yet
         # shouldn't be penalized until the next period resolution is over [since it's a round 2 event]
-    # if a person reported on a round 2 event, they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event todo
-    # unless this just happened to them last period and they reported correctly then - todo clarify / fix this if statement b/c it's not actually right
     if(roundTwo and !penalizedOnEvent and reportValue):
         countAsPenalized()
-    # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. don't allow rep redistribution until the original period it was supposed to resolve in - todo clarify / fix this if statement
+        REPORTING.setReportedOnNonFinalRoundTwoEvent(branch, eventID)
+        EXPEVENTS.addReportToReportsSubmitted(branch, currentVotePeriod, msg.sender)
+        
+    # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. don't allow rep redistribution until the original period it was supposed to resolve in
     elif(!penalizedOnEvent and reportValue and rejected and EVENTS.getRejectedPeriod(event) == lastPeriod):
         countAsPenalized()
     # penalization on a regular event if not already penalized, it has outcome, and user reported on it
 <<<<<<< HEAD
     elif(!penalizedOnEvent and reportValue and outcome != 0):
         # .25% per event / 2.5% max
-        calculateRepChange(reportValue, POINT_ONE/4)
+        calculateRepChange(reportValue, POINT_ONE / 4)
         updateAfterRep()
         countAsPenalized()
         log(type = penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue)
@@ -155,7 +160,6 @@ def penalizeWrong(branch, event):
 
 # Increments the period after reporting
 # ui has to call this to stay cheap / not check it elsewhere
-# factor out todo
 def incrementPeriodAfterReporting(branch):
     refund()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
@@ -170,13 +174,13 @@ def incrementPeriodAfterReporting(branch):
         return(0)
     periodVotingOnNow = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
     lastPeriod = periodVotingOnNow - 1
-    amountAppealedThisPeriod = EXPEVENTS.getNumRoundTwo(branch, periodVotingOnNow) * ONE / EXPEVENTS.getNumberEvents(branch, periodVotingOnNow)
-    amountAppealedLastPeriod = EXPEVENTS.getNumRoundTwo(branch, lastPeriod) * ONE / EXPEVENTS.getNumberEvents(branch, lastPeriod)
-    percentAppealed = (amountAppealedThisPeriod + amountAppealedLastPeriod) / 2
+    amountAppealedThisPeriod = safeFxpDiv(EXPEVENTS.getNumRoundTwo(branch, periodVotingOnNow), EXPEVENTS.getNumberEvents(branch, periodVotingOnNow))
+    amountAppealedLastPeriod = safeFxpDiv(EXPEVENTS.getNumRoundTwo(branch, lastPeriod), EXPEVENTS.getNumberEvents(branch, lastPeriod))
+    percentAppealed = safeAdd(amountAppealedThisPeriod, amountAppealedLastPeriod) / 2
     BRANCHES.incrementPeriod(branch)
     # mult. by 2 b/c reporters only have to report on half the things they're selected to report on
     # clarify
-    baseReporterQuantity = 2 * (3 * ONE + ((333 * ONE * percentAppealed / ONE) ** 3 / 2 ** 128)) / ONE
+    baseReporterQuantity = 2 * (3 * ONE + ((333 * percentAppealed)^3 / ONE^2)) / ONE
     CONSENSUS.setBaseReportersLastPeriod(branch, BRANCHES.getBaseReporters(branch))
     BRANCHES.setBaseReporters(branch, baseReporterQuantity)
     if(!mutexWhitelisted()):
@@ -190,10 +194,7 @@ macro checkPenalizeWrongPreconditions():
     if(repBalance < ONE):
         MUTEX.unsetMutex()
         logReturn(consensusLogReturn, 0)
-    if(scalar(event) or categorical(event)):
-        outcome = uncaught
     p = proportionCorrect(event, 0)
-    # todo fix
     if(roundTwo and outcome != 0):
         MUTEX.unsetMutex()
         logReturn(consensusLogReturn, -1)
@@ -202,11 +203,6 @@ macro checkPenalizeWrongPreconditions():
     if(tooLateToPenalize):
         MUTEX.unsetMutex()
         logReturn(consensusLogReturn, -2)
-    justForked = BRANCHES.getForkPeriod(branch) == lastPeriod
-    # todo examine ramifications of allowing events to be made during forks on what we do here with just forked
-    if(justForked):
-        MUTEX.unsetMutex()
-        logReturn(consensusLogReturn, -3)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriod):
         MUTEX.unsetMutex()
         logReturn(consensusLogReturn, -4)
@@ -214,12 +210,11 @@ macro checkPenalizeWrongPreconditions():
         MUTEX.unsetMutex()
         logReturn(consensusLogReturn, -5)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
-    # todo fix getoutcome
     eventNotResolvedAndNeedsToBe = !EVENTS.getOutcome(event) and !(rejected and EVENTS.getRejectedPeriod(event) == lastPeriod)
     if(eventNotResolvedAndNeedsToBe and CLOSEMARKET.closeMarket(EVENTS.getMarket(event, 0), msg.sender) != 1):
         MUTEX.unsetMutex()
         logReturn(consensusLogReturn, -6)
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod - 1)):
+    if(!CONSENSUS.getRepCollected(branch, msg.sender, lastPeriod - 1)):
         MUTEX.unsetMutex()
         logReturn(consensusLogReturn, -7)
 
