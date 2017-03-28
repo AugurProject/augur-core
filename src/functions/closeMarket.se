@@ -65,8 +65,10 @@ def closeMarket(market, sender):
     # refunds closing cost
     MARKETS.refundClosing(market, sender)
     # send fees in market to branch
-    INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, INFO.getCurrency(market)), safeDiv(fee, 2))
-    # remove fees paid in makereports + value of outstanding shares in calc here
+    marketCurrency = INFO.getCurrency(market)
+    marketWallet = INFO.getWallet(market)
+    marketWallet.transfer(BRANCHES.getWallet(branch, marketCurrency), marketCurrency.balance(marketWallet) - safeFxpMul(MARKETS.getSharesPurchased(market, 1), MARKETS.getCumulativeScale(market)))
+
     if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     logReturn(closeMarketLogReturn, 1)
