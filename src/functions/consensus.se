@@ -171,7 +171,7 @@ macro countAsPenalized():
     CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
 
 macro updateAfterRep():
-    newAfterRep = safeAdd(EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender), repChange)
+    newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
     EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
 
 macro periodOver($branch):

@@ -5,8 +5,8 @@ import events as EVENTS
 import expiringEvents as EXPEVENTS
 import fxpFunctions as FXP
 import reporting as REPORTING
-# fix circular dependency
 import makeReports as MAKEREPORTS
+# fix circular dependency ^
 inset('refund.se')
 inset('eventHelpers.se')
 

@@ -16,7 +16,6 @@ inset('redistributeRep.se')
 inset('proportionCorrect.se')
 inset('repChange.se')
 inset('../data_api/float.se')
-
 inset('../data_api/periodStage.se')
 
 # event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
@@ -158,12 +157,12 @@ macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn)
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), amountLeftToPayBonder)
             BACKSTOPS.increaseBondPaid(event, amountLeftToPayBonder)
     
-            newAfterRep = safeAdd(EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender), -(-repChange - amountLeftToPayBonder)
+            newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + -(-repChange - amountLeftToPayBonder)
             EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
 
     # if rep isn't redistributed immediately to bond poster [if they're already paid back] then we adjust the after rep as normal and do it all at the end: we want the rep to go to the branch here
     else:
-        newAfterRep = safeAdd(EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender), repChange)
+        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + repChange
         EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
 

@@ -123,10 +123,10 @@ macro handleEthicsAndBondRepRedistribution($numReportedOn):
             # sends that rep to the bonded challenger
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getForkBondPoster(event)), amountLeftToPayBonder)
             BACKSTOPS.adjForkBondPaid(event, amountLeftToPayBonder)
-            newAfterRep = safeAdd(EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender), -(-repChange - amountLeftToPayBonder)
+            newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + -(-repChange - amountLeftToPayBonder)
             EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
     # no need to pay bond poster
     else:
-        newAfterRep = safeAdd(EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender), repChange)
+        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + repChange
         EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
     repBalance = REPORTING.getRepBalance(branch, msg.sender)

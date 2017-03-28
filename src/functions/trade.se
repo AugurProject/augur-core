@@ -20,6 +20,18 @@
 
 ### Allows users to take orders off the book (i.e. fill orders)
 
+import branches as BRANCHES
+import info as INFO
+import markets as MARKETS
+import events as EVENTS
+import orders as ORDERS
+import expiringEvents as EXPEVENTS
+import mutex as MUTEX
+extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
+inset('../data_api/refund.se')
+inset('logReturn.se')
+inset('../data_api/float.se')
+
 # Trade scenarios:
     # Note: all [] scenarios are typical, if a user somehow gets an extra complete set it'll also be sold when doing a order, typically complete sets only sold when closing out a position or closing out a short
 
@@ -38,18 +50,6 @@
     # - Buying and don't own anything and taking, seller doesn't have outcome and is asking [no complete set fee charged].
 
     # - Buying and don't own anything and taking, seller has outcome and is asking [no complete set fee charged].
-
-import branches as BRANCHES
-import info as INFO
-import markets as MARKETS
-import events as EVENTS
-import orders as ORDERS
-import expiringEvents as EXPEVENTS
-import mutex as MUTEX
-extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
-inset('../data_api/refund.se')
-inset('logReturn.se')
-inset('../data_api/float.se')
 
 event logPrice(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
 

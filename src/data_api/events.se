@@ -18,8 +18,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-inset('refund.se')
 import info as INFO
+inset('refund.se')
 
 # Keeps track of data about events in augur
 # Events' index is the event

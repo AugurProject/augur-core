@@ -24,11 +24,11 @@ import branches as BRANCHES
 import reporting as REPORTING
 import penalizationCatchup as CATCHUP
 import consensusData as CONSENSUS
-# should really factor this out so they don't depend on eachother
 import consensus as INCREMENTPERIOD
 import repContract as REPCONTRACT
 import backstops as BACKSTOPS
 import mutex as MUTEX
+# circular dep issue here too
 inset('../data_api/refund.se')
 inset('../data_api/periodStage.se')
 inset('../data_api/float.se')
