@@ -28,7 +28,7 @@ macro payoutIndeterminateCategorical():
     value = safeDiv(sharesOwned, numOutcomes)
     fee = safeFxpMul(MARKETS.getTradingFee(market), value)
     if(value != 0 && fee != 0):
-        if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+        if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
             throw()
         if(!INFO.getWallet(market).transfer(sender, safeSub(value, fee))):
             throw()

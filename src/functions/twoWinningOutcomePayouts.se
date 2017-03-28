@@ -37,7 +37,7 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
             shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare1)
             fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
             if(shareValue != 0 && fee != 0):
-                if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2)):
+                if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2)):
                     throw()
                 if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee)):
                     throw()
@@ -46,7 +46,7 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
             shareValue = safeFxpMul(safeFxpMul(sharesOwned, cumulativeScale), pricePerShare2)
             fee = safeFxpMul(MARKETS.getTradingFee(market), shareValue)
             if(shareValue != 0 && fee != 0):
-                if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+                if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
                     throw()
                 if(!INFO.getWallet(market).transfer(sender, safeSub(shareValue, fee))):
                     throw()

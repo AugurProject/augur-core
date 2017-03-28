@@ -101,7 +101,7 @@ def sellCompleteSets(market, fxpAmount):
     if(notVotingOnYet):
         MARKETS.modifySharesValue(market, safeFxpMul(-fxpAmount, cumulativeScale))
     currency = INFO.getCurrency(market)
-    if(!INFO.getWallet(market).transfer(BRANCHES.getWallet(branch, currency), safeDiv(fee, 2)) or !INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
+    if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
         throw()
     MUTEX.unsetMutex()
     logReturn(completeSetsLogReturn, 1)

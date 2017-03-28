@@ -26,7 +26,7 @@ inset('refund.se')
         # [1, event, event, 2, event, 3, event, event, event]
         # 1 means dimension 1, 2 is events in dimension 2, 3 is the dimension 3 events
     # Sharespurchased keeps track of the number of shares purchased for each outcome
-        # sharesPurchased states starts at 1 - (same for participants[].shares[] array)
+        # sharesPurchased index states starts at 1 - (same for participants[].shares[] array)
     # Participants is an array of participants, their addresses as keys and the shares in each outcome they've purchased of an event as the values
         # e.g. participants[addr].shares[1]
     # currentParticipant is the number of participants [traders] in the market
