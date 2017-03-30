@@ -22,7 +22,7 @@ import branches as BRANCHES
 import events as EVENTS
 import info as INFO
 inset('refund.se')
-inset('functions/eventHelpers.se')
+inset('../functions/eventHelpers.se')
 
 ### This contract keeps track of data associated with reporting periods and the events + reports in them
 

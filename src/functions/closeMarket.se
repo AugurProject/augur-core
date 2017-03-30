@@ -111,25 +111,25 @@ macro resolveEventsInMarket():
             MUTEX.unsetMutex()
         logReturn(closeMarketLogReturn, -5)
 
-def closeChallengeBond(event):
-    extraBond = EVENTS.getExtraBond(event)
-    branch = EVENTS.getEventBranch(event)
-    if(!EVENTS.getChallenged(event)):
-        throw()
-    periodLength = BRANCHES.getPeriodLength(branch)
-    votePeriod = EVENTS.getExpiration(event) / periodLength
-    if(BRANCHES.getVotePeriod(branch) <= votePeriod):
-        throw()
-    forkPeriod = BRANCHES.getForkPeriod(branch)
-    forking = forkPeriod == votePeriod or votePeriod == (forkPeriod + 1)
-    if(BACKSTOPS.getRoundTwo(event) or forking):
-        returnBond() from event wallet
-    if(!EVENTS.getOutcome(event)):
-        throw()
-    if(EVENTS.getFirstPreliminaryOutcome(event) == EVENTS.getOutcome(event)):
-        loseBond
+# def closeChallengeBond(event):
+    # extraBond = EVENTS.getExtraBond(event)
+    # branch = EVENTS.getEventBranch(event)
+    # if(!EVENTS.getChallenged(event)):
+    #     throw()
+    # periodLength = BRANCHES.getPeriodLength(branch)
+    # votePeriod = EVENTS.getExpiration(event) / periodLength
+    # if(BRANCHES.getVotePeriod(branch) <= votePeriod):
+    #     throw()
+    # forkPeriod = BRANCHES.getForkPeriod(branch)
+    # forking = forkPeriod == votePeriod or votePeriod == (forkPeriod + 1)
+    # if(BACKSTOPS.getRoundTwo(event) or forking):
+    #     returnBond() from event wallet
+    # if(!EVENTS.getOutcome(event)):
+    #     throw()
+    # if(EVENTS.getFirstPreliminaryOutcome(event) == EVENTS.getOutcome(event)):
+    #     loseBond
 
-    # outcome is different
-    else:
-        returnBond + pay half of validity bond to challenger [but it's already been paid back to event creator by now, todo fixes and also check if bond already returned]
-    return(1)
+    # # outcome is different
+    # else:
+    #     returnBond + pay half of validity bond to challenger [but it's already been paid back to event creator by now, todo fixes and also check if bond already returned]
+    # return(1)

@@ -120,7 +120,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     firstResolveBondPaid = 0
     firstResolveBondPoster = 0
     # sender / event creator paid
-    if(REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, msg.sender), FIRST_RESOLVE_BOND) && REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, event), FIRST_RESOLVE_BOND))
+    if(REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, msg.sender), FIRST_RESOLVE_BOND) && REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, event), FIRST_RESOLVE_BOND)):
         firstResolveBondPaid = 1
         firstResolveBondPoster = msg.sender
     if(INFO.setInfo(event, description, msg.sender, 0, currency, wallet) and EVENTS.initializeEvent(event, branch, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, resolutionAddress, firstResolveBondPoster, forkResolveAddress) && firstResolveBondPaid):

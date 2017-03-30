@@ -14,7 +14,7 @@ event Order(tokenX:address:indexed, orderSize, tokenY:address:indexed, fxpPrice,
 
 event Cancel(tokenX:address:indexed, orderSize, tokenY:address:indexed, fxpPrice, expiration, user:address:indexed, v, r, s)
 
-event Trade(maker:address:indexed, taker:address:indexed, tokenX:address:indexed, tokenY:address:indexed, amount, fxpPrice, tradeHash)
+event Trade(maker:address:indexed, taker:address, tokenX:address:indexed, tokenY:address:indexed, amount, fxpPrice, tradeHash)
 
 data amountFilled[]
 

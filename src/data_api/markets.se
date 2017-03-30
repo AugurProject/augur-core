@@ -18,7 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, ]:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256, changeTokens:[int256, int256]:int256, modifySupply:[int256]:int256]
+extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('refund.se')
 
 # Markets' index is the market, markets stores data about markets [which are able to be traded on] in augur
@@ -65,7 +65,7 @@ def addToMarketsHash(branch, newHash):
     return(1)
 
 def addFees(market, fxpAmount):
-    if(self.Markets[market].fees + fxpAmount) > self.Markets[market].fees):
+    if(self.Markets[market].fees + fxpAmount > self.Markets[market].fees):
         self.Markets[market].fees += fxpAmount
     return(1)
 

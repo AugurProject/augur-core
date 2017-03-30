@@ -78,7 +78,7 @@ macro checkProveReporterDidntReportEnoughPreconditions():
         MUTEX.unsetMutex()
         return(-3)
 
-macro ensureReporterCouldveReportedOnMoreButDidnt()
+macro ensureReporterCouldveReportedOnMoreButDidnt():
     numReportsSubmitted = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, reporter)
     # reporter couldve reported on event example but didnt
     couldveReported = THRESHOLD.getEventCanReportOn(branch, lastPeriod, reporter, eventExample)

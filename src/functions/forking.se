@@ -426,7 +426,7 @@ macro moveEventToWinningBranch():
             # expiration time doesnt need to change
             forkPeriod = BRANCHES.getForkPeriod(winner)
             afterFork = 0
-            if(expPeriod == (forkPeriod + 1) or  == (forkPeriod + 2)):
+            if(expPeriod == (forkPeriod + 1) or expPeriod == (forkPeriod + 2)):
                 afterFork = 1
             currency = INFO.getCurrency(event)
             wallet = INFO.getWallet(event)
