@@ -42,8 +42,6 @@ inset('../data_api/float.se')
 
 event makeReportsLogReturn(returnValue)
 
-ETHCONTRACT = 0
-
 macro GAS_SUBSIDY: 3500000
 macro MAX_REPORT_THRESHOLD: 10^54
 # used for gas limit reasons to ensure terminating loop

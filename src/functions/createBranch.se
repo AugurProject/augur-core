@@ -83,6 +83,7 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
         return(-2)
     checkSubcurrencyIsValid(self.ethContract)
     wallet = create('wallet.se')
+    # todo here switch self.ethContract to be a call to whitelist to get this contract
     if(!wallet.initialize(self.ethContract)):
         throw()
     BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, 47 * ONE, self.ethContract, wallet, mostRecentChildBranch)
