@@ -18,14 +18,8 @@ inset('../data_api/float.se')
 inset('logReturn.se')
 inset('../data_api/periodStage.se')
 
-# p: proportion correct
-<<<<<<< HEAD
 event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
 event consensusLogReturn(returnValue)
-=======
-event penalize(sender: indexed, branch: indexed, event: indexed, outcome, oldrep, repchange, p, reportValue, penalizedUpTo, timestamp)
-event consensus_logReturn(returnValue)
->>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
 
 macro POINT_ZERO_ONE: 10000000000000000
 macro POINT_ONE: 100000000000000000
@@ -78,24 +72,6 @@ def penalizeWrong(branch, event):
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, msg.sender)
     roundTwo = BACKSTOPS.getRoundTwo(event)
     uncaught = EVENTS.getUncaughtOutcome(event)
-<<<<<<< HEAD
-=======
-    if(!CONSENSUS.getFeesCollected(branch, msg.sender, lastPeriod-1)):
-        logReturn(consensus_logReturn, -8)
-    if(repBalance < ONE):
-        logReturn(consensus_logReturn, 0)
-    if(CONSENSUS.getPenalizedUpTo(branch, msg.sender)==lastPeriod):
-        logReturn(consensus_logReturn, -5)
-    if(BRANCHES.getForkPeriod(branch) == lastPeriod):
-        logReturn(consensus_logReturn, -4)
-    elif(EVENTS.getForked(event)):
-        logReturn(consensus_logReturn, -6)
-    # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
-    elif(!uncaught && EVENTS.getEventBranch(event) == branch && !(rejected && EVENTS.getRejectedPeriod(event)==lastPeriod)):
-        if(CLOSEMARKET.closeMarket(branch, EVENTS.getMarket(event, 0), msg.sender)!=1):
-            logReturn(consensus_logReturn, -7)
-
->>>>>>> 9e986d104e7a1392a43310b2414fe0073bffbf60
     outcome = catch(uncaught)
     if(scalar(event) or categorical(event)):
         outcome = uncaught
@@ -118,40 +94,12 @@ def penalizeWrong(branch, event):
     elif(!penalizedOnEvent and reportValue and rejected and EVENTS.getRejectedPeriod(event) == lastPeriod):
         countAsPenalized()
     # penalization on a regular event if not already penalized, it has outcome, and user reported on it
-<<<<<<< HEAD
     elif(!penalizedOnEvent and reportValue and outcome != 0):
         # .25% per event / 2.5% max
         calculateRepChange(reportValue, POINT_ONE / 4)
         updateAfterRep()
         countAsPenalized()
         log(type = penalize, msg.sender, outcome, oldRep, repChange, newAfterRep, p, reportValue)
-=======
-    elif(!CONSENSUS.getPenalized(branch, lastPeriod, msg.sender, event) && reportValue && outcome!=0):
-        # wrong
-        if(reportValue > outcome+POINTZEROONE or reportValue < outcome-POINTZEROONE):
-            if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
-                diff = reportValue - outcome
-                p = -(abs(diff)/2) + ONE
-            newRep = oldRep*(2*p - ONE)/ONE
-        # right
-        else:
-            if(scalar(event) or categorical(event) or outcome==3*ONEHALF):
-                diff = reportValue - outcome
-                # perhaps for right we should do diff todo so adds to more than 1 --- can actually do proportion correct for this i think now
-                p = -(abs(diff)/2) + ONE
-            newRep = oldRep*(2*(ONE-p)**2 / p + ONE)/ONE
-        # (1-k) * old rep + k * new rep where k = 0.2 / (number of events you reported on last period) for penalization and pen. rate for forking and backstop 1
-        # use .02 as a max penalty per event
-        if(numReportedOn<10):
-            repChange = oldRep * (ONE - POINTTWO/10)/ONE + newRep*(POINTTWO/10)/ONE - oldRep
-        else:
-            repChange = oldRep * (ONE - POINTTWO/numReportedOn)/ONE + newRep*(POINTTWO/numReportedOn)/ONE - oldRep
-        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
-        log(type=penalize, msg.sender, branch, event, outcome, oldRep, repChange, p, reportValue, lastPeriod, block.timestamp)
-        EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
-        CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
-        CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
->>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
     # once penalized for all events actually get rid of net rep lost and send it to the branch for redistribution
     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriod, msg.sender)):
         sendRedistributedRepToBranch()
@@ -234,38 +182,3 @@ macro periodOver($branch):
         1
     else:
         0
-<<<<<<< HEAD
-=======
-        
-# Bins values to 1, 1.5, 2
-macro catch($x):
-    if($x < (BAD - CATCH_TOLERANCE)):
-        NO
-    elif($x > (BAD + CATCH_TOLERANCE)):
-        YES
-    else:
-        BAD
-
-macro ethic_catch($x):
-    if($x < ONEHALF):
-        0
-    else:
-        ONE
-
-macro scalar($event):
-    ((EVENTS.getMaxValue($event)!=TWO || EVENTS.getMinValue($event)!=ONE) && EVENTS.getNumOutcomes($event)==2)
-
-macro categorical($event):
-    (EVENTS.getNumOutcomes($event)>2)
-
-macro abs($a):
-    if($a<0):
-        $a = -$a
-    $a
-
-macro ethic_catch($x):
-    if($x < ONEHALF):
-        0
-    else:
-        ONE
->>>>>>> 9e986d104e7a1392a43310b2414fe0073bffbf60
