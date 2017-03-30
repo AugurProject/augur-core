@@ -1,5 +1,9 @@
 # Calculates the amount of rep to be redistributed
 # clarify ones w/ a new type system
+
+macro Controller: 0xC001D00D
+extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
 macro calculateRepChange($report, $maxPenalty):
     indeterminate = outcome == 1500000000000000000
     adjustForNonBinaryResolution()

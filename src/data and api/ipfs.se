@@ -1,8 +1,0 @@
-data hashes[]
-
-def setHash(name, hash):
-    self.hashes[name] = hash
-    return(1)
-
-def getHash(name):
-    return(self.hashes[name])

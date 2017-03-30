@@ -1,4 +1,8 @@
 ### Helper functions:
+
+macro Controller: 0xC001D00D
+extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
 macro YES: TWO
 macro NO: ONE
 macro BAD: 3 * ONE_HALF
@@ -48,4 +52,4 @@ macro eventCreatedPriorToFork($event):
         1
     else:
         0
- 
+

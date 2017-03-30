@@ -4,23 +4,29 @@
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
-# 
+#
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-# 
+#
 #    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-# 
+#
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+macro Controller: 0xC001D00D
+extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+MUTEX = Controller.lookup('mutex')
+extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
+
+
 ### Token wrapper for eth, which allows eth deposits and faucet usage for testing
 
-import mutex as MUTEX
 inset('../data_api/refund.se')
 
 data accounts[2**160](balance, spenders[2**160](maxValue))
@@ -160,10 +166,10 @@ def balanceOf(address: address):
 
 def getName():
     return(self.name)
-    
+
 def getDecimals():
     return(self.decimals)
-    
+
 def getSymbol():
     return(self.symbol)
 

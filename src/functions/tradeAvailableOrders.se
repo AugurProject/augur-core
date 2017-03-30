@@ -1,5 +1,13 @@
-import orders as ORDERS
-import trade as TRADE
+
+macro Controller: 0xC001D00D
+extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+ORDERS = Controller.lookup('orders')
+extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getBestAsk:[int256,int256]:int256, getBestBid:[int256,int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getPrice:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256]
+
+TRADE = Controller.lookup('trade')
+extern trade: [trade:[int256,int256]:_]
+
 
 event tradeAvailableOrdersLogArrayReturn(returnArray: arr)
 

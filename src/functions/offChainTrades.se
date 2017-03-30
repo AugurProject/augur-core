@@ -1,15 +1,21 @@
-import mutex as MUTEX
+
+macro Controller: 0xC001D00D
+extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+MUTEX = Controller.lookup('mutex')
+extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
+
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('../data_api/refund.se')
 inset('../data_api/float.se')
 
 ### Off-chain trading contract:
     # Maker can create an order by hashing the order details then signing it and broadcasting the order and signed order
-    
+
     # Taker takes a broadcasted order, verifies the signature and that the order info hashes to the order hash and that the seller has approved the contract to be able to withdraw funds for the order amount or whatever is left of it [order size minus getAmountFilled(hash) will give us this info] and that the user has the appropriate amount of funds, then calls trade to pick it up.
 
     # useful info for manipulating sigs / signing things etc https://ethereum.stackexchange.com/questions/710/how-can-i-verify-a-cryptographic-signature-that-was-produced-by-an-ethereum-addr/718#718
-    
+
 event Order(tokenX:address:indexed, orderSize, tokenY:address:indexed, fxpPrice, expiration, user:address:indexed)
 
 event Cancel(tokenX:address:indexed, orderSize, tokenY:address:indexed, fxpPrice, expiration, user:address:indexed, v, r, s)
@@ -45,7 +51,7 @@ def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, 
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-3)
-    
+
     self.amountFilled[orderHash] += takerAmount
     # fxpPrice is in units of y per x
     # amount of x * fxpPrice = amount of y
@@ -73,7 +79,7 @@ def cancelOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiratio
         throw()
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
-    
+
     orderHash = sha3([msg.sender, tokenX, tokenY, orderSize, fxpPrice, expiration], items = 6)
     if(ecrecover(orderHash, v, r, s) != msg.sender):
         throw()

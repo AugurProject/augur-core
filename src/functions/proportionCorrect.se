@@ -1,5 +1,9 @@
 # Returns the proportion of reporters who reported correctly on a given binary $event
 # Returns 0 if no outcome
+
+macro Controller: 0xC001D00D
+extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
 macro proportionCorrect($event, $forkEvent):
     p = 0
     uncaught = 0
