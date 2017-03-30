@@ -64,7 +64,7 @@ data reporterPeriodInfo[][](beforeRep[], afterRep[], periodDormantRep[], reportH
     # currentModeItems is how many reports or rep reported the current mode has, which is used in determining whether there's a new mode
 data modeItems[][](reportValue[], currentMode, currentModeItems)
 
-macro MAX_THRESHOLD: 2**192
+macro MAX_THRESHOLD: 10 ** 54
 macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 
 def getSaltyEncryptedHash(branch, period, reporter, event):

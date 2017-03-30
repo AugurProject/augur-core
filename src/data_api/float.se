@@ -1,32 +1,32 @@
 macro safeAdd($x, $y):
-    if(!safeToAdd($x, $y)):
-        ~invalid()
-    $x + $y
-    
+	if(!safeToAdd($x, $y)):
+		~invalid()
+	$x + $y
+
 macro safeSub($x, $y):
-    if(!safeToSubtract($x, $y)):
-        ~invalid()
-    $x - $y
+	if(!safeToSubtract($x, $y)):
+		~invalid()
+	$x - $y
 
 macro safeMul($x, $y):
-    if(!safeToMultiply($x, $y)):
-        ~invalid()
-    $x * $y
+	if(!safeToMultiply($x, $y)):
+		~invalid()
+	$x * $y
 
 macro safeFxpMul($x, $y):
-    if(!safeToMultiply($x, $y)):
-        ~invalid()
-    $x * $y / 10 ** 18
+	if(!safeToMultiply($x, $y)):
+		~invalid()
+	$x * $y / 10 ** 18
 
 macro safeDiv($x, $y):
-    if($y == 0):
-	    ~invalid()
-    $x / $y
+	if($y == 0):
+		~invalid()
+	$x / $y
 
 macro safeFxpDiv($x, $y):
-    if($y == 0):
-	    ~invalid()
-    $x * 10 ** 18 / $y
+	if($y == 0):
+		~invalid()
+	$x * 10 ** 18 / $y
 
 macro unfix($x):
 	$x / 10 ** 18
@@ -39,7 +39,7 @@ macro safeToAdd($a, $b):
 	($c >= $a && $c >= $b)
 
 macro safeToSubtract($a, $b):
-    ($b <= $a && (($a - $b) <= $a))
+	($b <= $a && (($a - $b) <= $a))
 
 macro safeToMultiply($a, $b):
 	$c = $a * $b

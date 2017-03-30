@@ -30,7 +30,7 @@ inset('../data_api/float.se')
 
 data ethContract
 
-macro MAX_FEE: 2 ** 62
+macro MAX_FEE: 10**17
 
 macro checkSubcurrencyIsValid(contract):
     allowance = $contract.allowance(msg.sender, self)

@@ -76,7 +76,7 @@ def checkContractWhitelist(contract, address):
 
 def setWhitelist(contract, addresses: arr):
     if self.whitelists[contract].taken:
-        return(text("ERROR: you have to vote to change a whitelist"):str)
+        return(text("ERROR: you have to vote to change a whitelist"): str)
     else:
         self.whitelists[contract].taken = 1
         i = 0
@@ -85,7 +85,7 @@ def setWhitelist(contract, addresses: arr):
             address = addresses[numAddr]
             self.whitelists[contract].addresses[addresses] = 1
             i += 1
-        return(text("SUCCESS"):str)
+        return(text("SUCCESS"): str)
 
 # @return fxp
 def getRepByIndex(branch, repIndex):

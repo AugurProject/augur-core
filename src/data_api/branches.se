@@ -73,7 +73,7 @@ def init():
     self.Branches[1010101].baseReporters = 6
     ethContract = 0
     checkSubcurrencyIsValid(ethContract)
-    wallet = create('wallet.se')
+    wallet = create('../functions/wallet.se')
     wallet.initialize(ethContract)
     self.Branches[1010101].contract[ethContract] = wallet
     
@@ -105,7 +105,7 @@ def disableCurrency(branch, currency):
     return(1)
 
 # enables a given currency for new market / event creation
-def reactivateCurrency(branch, currency)
+def reactivateCurrency(branch, currency):
     self.Branches[branch].currencyActive[currency] = 1
     return(1)
 

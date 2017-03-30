@@ -10,7 +10,7 @@ macro throw():
 
 def test_callstack(): return(1)
 
-macro ONE: 10^18
+macro ONE: 10**18
 
 macro THREEFOURTHS: 750000000000000000
 

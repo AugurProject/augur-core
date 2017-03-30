@@ -44,7 +44,6 @@ def proveReporterDidntReportEnough(branch, reporter, eventExample):
         return(0)
     expectedEventsForReporterIncludingRequired = 0
     lastPeriod = BRANCHES.getVotePeriod(branch) - 1
-    periodLength = BRANCHES.getPeriodLength(branch)
     originalRep = EXPEVENTS.getBeforeRep(branch, lastPeriod, reporter)
     # this includes the baseReporters * numEventsAvailable
     numEventsAvailableToReportOn = EXPEVENTS.getNumEventsToReportOn(branch, lastPeriod)
