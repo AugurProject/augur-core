@@ -133,17 +133,17 @@ def getEventResolution(event):
     resLen = self.Events[event].resolutionSourceLength
     return(load(self.Events[event].resolutionSource[0], chars = resLen): str)
 
-def getEventInfo(event):
-    eventinfo = array(8)
-    eventinfo[0] = self.Events[event].branch
-    eventinfo[1] = self.Events[event].expirationDate
-    eventinfo[2] = self.Events[event].outcome
-    eventinfo[3] = self.Events[event].fxpMinValue
-    eventinfo[4] = self.Events[event].fxpMaxValue
-    eventinfo[5] = self.Events[event].numOutcomes
-    eventinfo[6] = self.Events[event].bond
-    eventinfo[7] = self.Events[event].resolutionAddress
-    return(eventinfo: arr)
+def geteventInfo(event):
+    eventInfo = array(8)
+    eventInfo[0] = self.Events[event].branch
+    eventInfo[1] = self.Events[event].expirationDate
+    eventInfo[2] = self.Events[event].outcome
+    eventInfo[3] = self.Events[event].fxpMinValue
+    eventInfo[4] = self.Events[event].fxpMaxValue
+    eventInfo[5] = self.Events[event].numOutcomes
+    eventInfo[6] = self.Events[event].bond
+    eventInfo[7] = self.Events[event].resolutionAddress
+    return(eventInfo: arr)
 
 def getResolutionLength(event):
     return(self.Events[event].resolutionSourceLength)

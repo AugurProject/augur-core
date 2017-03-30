@@ -51,28 +51,28 @@ def cashFaucet():
 	return(1)
 
 def reputationFaucet(branch):
-    refund()
-    if REPORTING.repIDToIndex(branch, msg.sender) != 0 or REPORTING.getReporterID(branch, 0) == msg.sender:
-        index = REPORTING.repIDToIndex(branch, msg.sender)
-    else:
-        index = REPORTING.getNumberReporters(branch)
-        REPORTING.addReporter(branch, msg.sender, 0, 0, 0)
-    REPORTING.setRep(branch, index, 47*ONE)
-    periodLength = BRANCHES.getPeriodLength(branch)
-    if block.timestamp % periodLength <= periodLength / 2:
-        penalizedUpTo = BRANCHES.getVotePeriod(branch) - 1
-    else:
-        penalizedUpTo = BRANCHES.getVotePeriod(branch)
-    CONSENSUS.setPenalizedUpTo(branch, msg.sender, penalizedUpTo)
-    CONSENSUS.setRepCollected(branch, msg.sender, penalizedUpTo)
-    return(1)
+	refund()
+	if REPORTING.repIDToIndex(branch, msg.sender) != 0 or REPORTING.getReporterID(branch, 0) == msg.sender:
+		index = REPORTING.repIDToIndex(branch, msg.sender)
+	else:
+		index = REPORTING.getNumberReporters(branch)
+		REPORTING.addReporter(branch, msg.sender, 0, 0, 0)
+	REPORTING.setRep(branch, index, 47*ONE)
+	periodLength = BRANCHES.getPeriodLength(branch)
+	if block.timestamp % periodLength <= periodLength / 2:
+		penalizedUpTo = BRANCHES.getVotePeriod(branch) - 1
+	else:
+		penalizedUpTo = BRANCHES.getVotePeriod(branch)
+	CONSENSUS.setPenalizedUpTo(branch, msg.sender, penalizedUpTo)
+	CONSENSUS.setRepCollected(branch, msg.sender, penalizedUpTo)
+	return(1)
 
 def fundNewAccount(branch):
-    CASH.send(self, 0)
-    self.reputationFaucet(branch, call=delegate)
-    CASH.setCash(msg.sender, 10000*ONE)
-    log(type=fundedAccount, branch, msg.sender, 10000*ONE, 47*ONE, block.timestamp)
-    return(1)
+	CASH.send(self, 0)
+	self.reputationFaucet(branch, call=delegate)
+	CASH.setCash(msg.sender, 10000*ONE)
+	log(type=fundedAccount, branch, msg.sender, 10000*ONE, 47*ONE, block.timestamp)
+	return(1)
 
 # Used to claim rep on a fork or on a new branch
 # Returns 1 if successful, 0 if already claimed/too late
@@ -109,7 +109,7 @@ def claimInitialRep(parent, branch):
 		rep = REPORTING.getRepBalance(parent, msg.sender)
 	repDecrease = 0
 	# if forked and (reported with original consensus or didn't report or (reported with original ethicality and forked over ethicality))
-	reportedWithOriginalConsensus = (report >= (outcome - POINT_ZERO_ONE) and report <= (outcome + POINT_ZERO_ONE))
+	reportedWithOriginalConsensus = ((outcome - POINT_ZERO_ONE) <= report <= (outcome + POINT_ZERO_ONE))
 	reportedWrongEthicality = (BACKSTOPS.getForkedOverEthicality(forkEvent) and ethical == ethicReport)
 	reportedWrongly = (reportedWithOriginalConsensus or !report or reportedWrongEthicality)
 	if(fork and reportedWrongly):

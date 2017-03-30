@@ -86,7 +86,8 @@ def sellCompleteSets(market, fxpAmount):
     cumulativeScale = MARKETS.getCumulativeScale(market)
     cost = safeFxpMul(fxpAmount, cumulativeScale)
     checkSellCompleteSetsPreconditions()
-    
+
+    n = 1
     # Takes shares away from participant and decreases the fxpAmount issued in the market since we're exchanging complete sets
     while(n <= numOutcomes):
         MARKETS.modifyShares(market, n, -fxpAmount)

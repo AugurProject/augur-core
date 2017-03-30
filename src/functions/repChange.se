@@ -4,6 +4,7 @@ macro calculateRepChange($report, $maxPenalty):
     indeterminate = outcome == 1500000000000000000
     adjustForNonBinaryResolution()
     $wrong = $report > safeAdd(outcome, POINT_ZERO_ONE) or $report < (outcome - POINT_ZERO_ONE)
+    k = 0
     if($wrong):
         newRep = safeFxpMul(oldRep, safeSub(safeMul(2, p), ONE))
     # right/reported correctly

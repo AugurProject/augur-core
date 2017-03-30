@@ -1,6 +1,5 @@
 ### Used to allow users to collect fees from reporting
 
-import cash as CASH
 import branches as BRANCHES
 import expiringEvents as EXPEVENTS
 import consensusData as CONSENSUS

@@ -10,14 +10,8 @@ inset('../data_api/refund.se')
 inset('../data_api/periodStage.se')
 inset('../data_api/float.se')
 
-<<<<<<< HEAD
 macro MAX_DELTA: 22
 macro POINT_NINE: 900000000000000000
-=======
-event penalizationCaughtUp(branch: indexed, sender: indexed, penalizedFrom, penalizedUpTo, repLost, newRepBalance, timestamp)
-
-macro POINTNINE: 900000000000000000
->>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26
 
 # Call when a user who hasn't reported for a while [and had their rep active] and wants to start again and needs to catch up on penalizations
 # Errors:
@@ -81,9 +75,3 @@ macro redistributeRepFromNotReporting():
     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, sender), repChange)
     # sends that rep to the branch rep pool
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), repChange)
-<<<<<<< HEAD
-=======
-    CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
-    log(type=penalizationCaughtUp, branch, sender, lastPeriodPenalized, lastPeriod, repChange, smoothedRep, block.timestamp)
-    return(1)
->>>>>>> 5a7a3702aa69dcedc74646eb7243e9d11cacee26

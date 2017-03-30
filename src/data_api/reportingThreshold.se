@@ -177,7 +177,7 @@ def findLazyReportersAndLeechers(branch, votePeriod, reporterStart, reporterEnd,
             events = EXPEVENTS.getEventsRange(branch, votePeriod, eventStart, eventEnd, outitems = numberEventsChecking)
             eventIndex = 0
             while(eventIndex < numberEventsChecking):
-                if(self.getEventCanReportOn(branch, votePeriod, reporter, events[e])
+                if(self.getEventCanReportOn(branch, votePeriod, reporter, events[eventIndex])
                     lazyReportersAndExampleEventsTheyCouldveReportedOn[leecherIndex] = reporter
                     lazyReportersAndExampleEventsTheyCouldveReportedOn[leecherIndex+1] = events[e]
                     leecherIndex += 2

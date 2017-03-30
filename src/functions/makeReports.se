@@ -155,7 +155,7 @@ def calculateReportTargetForEvent(branch, event, votePeriod, sender):
         numMarkets = MAREKTS_COUNTING_TOWARDS_SHARE_VALUE
     markets = array(numMarkets)
     markets = EVENTS.getMarkets(event, outitems=numMarkets)
-    totalFees = 0
+    totalFeesInWei = 0
     shareValue = 0
     i = 0
     while(i < numMarkets):

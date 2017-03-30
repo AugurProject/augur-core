@@ -15,7 +15,7 @@ inset('proportionCorrect.se')
 inset('repChange.se')
 inset('../data_api/periodStage.se')
 inset('../data_api/float.se')
-macro POINT_ZERO_ONE: 184467440737095520
+macro POINT_ZERO_ONE: 10**16
 macro MIN_BOND: 200 * ONE
 
 # Penalizes a reporter for reporting wrongly on a forked event / backstop 2

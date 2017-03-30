@@ -45,249 +45,249 @@ macro ONE_MONTH: 2592000
 # send active reputation
 # @return fxpValue of reputation sent
 # error messages otherwise
-    # 0: only one period behind, need to do penalizations for it
-    # -1: "Your reputation account was just created, earn some rep. before you can send to others"
-    # -2: not in right part of period
-    # -3: "Receiving address doesn't exist"
-    # -4: couldn't catchup automatically
-    # -5: not enough rep / fxpValue too small or not authorized
-    # -6: if a person reported on a round 2 event before it was in the second round [i.e. the first reporting backstop], they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event
-        # Notes:
-            # say you lost rep in round 1, if it was a valid round 2 you have incentive to not convert to dormant or send rep b/c you want to get it back
-            # say you gained rep in round 1, if it was a valid round 2 you have incentive _to_ convert to dormant
-            # say you lost rep in round 1, if it was an invalid round 2 you have incentive to convert to dormant
-            # say you gained rep in round 1, if it was an invalid round 2 you have incentive _to_ not convert to dormant or send rep b/c you want to keep it
+	# 0: only one period behind, need to do penalizations for it
+	# -1: "Your reputation account was just created, earn some rep. before you can send to others"
+	# -2: not in right part of period
+	# -3: "Receiving address doesn't exist"
+	# -4: couldn't catchup automatically
+	# -5: not enough rep / fxpValue too small or not authorized
+	# -6: if a person reported on a round 2 event before it was in the second round [i.e. the first reporting backstop], they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event
+		# Notes:
+			# say you lost rep in round 1, if it was a valid round 2 you have incentive to not convert to dormant or send rep b/c you want to get it back
+			# say you gained rep in round 1, if it was a valid round 2 you have incentive _to_ convert to dormant
+			# say you lost rep in round 1, if it was an invalid round 2 you have incentive to convert to dormant
+			# say you gained rep in round 1, if it was an invalid round 2 you have incentive _to_ not convert to dormant or send rep b/c you want to keep it
 def sendRepFrom(branch, from, receiver, fxpValue):
-    checkInvariants(from)
-    if(first48HoursOfPeriod()):
-        throw()
-    if(MUTEX.getMutex() && !mutexWhitelisted()):
-        throw()
-    if(!mutexWhitelisted()):
-        MUTEX.setMutex()
-    
-    senderIndex = REPORTING.repIDToIndex(branch, from)
-    receiverIndex = REPORTING.repIDToIndex(branch, receiver)
-    senderBalance = REPORTING.getRepBalance(branch, from)
-    receiverBalance = REPORTING.getRepBalance(branch, receiver)
-    reportedOnRoundTwoEvent = REPORTING.getReportedOnNonFinalRoundTwoEvent(branch)
-    if(reportedOnRoundTwoEvent && !BACKSTOPS.getFinal(reportedOnRoundTwoEvent)):
-        throw()
-    checkSendRepInvariants()
+	checkInvariants(from)
+	if(first48HoursOfPeriod()):
+		throw()
+	if(MUTEX.getMutex() && !mutexWhitelisted()):
+		throw()
+	if(!mutexWhitelisted()):
+		MUTEX.setMutex()
 
-    if(!safeToSubtract(senderBalance, fxpValue) or !REPORTING.subtractRep(branch, senderIndex, fxpValue) or !safeToAdd(receiverBalance, fxpValue) or !REPORTING.addRep(branch, receiverIndex, fxpValue)):
-        throw()
-    log(type = Transfer, from, receiver, fxpValue)
-    if(!mutexWhitelisted()):
-        MUTEX.unsetMutex()
-    return(1)
+	senderIndex = REPORTING.repIDToIndex(branch, from)
+	receiverIndex = REPORTING.repIDToIndex(branch, receiver)
+	senderBalance = REPORTING.getRepBalance(branch, from)
+	receiverBalance = REPORTING.getRepBalance(branch, receiver)
+	reportedOnRoundTwoEvent = REPORTING.getReportedOnNonFinalRoundTwoEvent(branch)
+	if(reportedOnRoundTwoEvent && !BACKSTOPS.getFinal(reportedOnRoundTwoEvent)):
+		throw()
+	checkSendRepInvariants()
+
+	if(!safeToSubtract(senderBalance, fxpValue) or !REPORTING.subtractRep(branch, senderIndex, fxpValue) or !safeToAdd(receiverBalance, fxpValue) or !REPORTING.addRep(branch, receiverIndex, fxpValue)):
+		throw()
+	log(type = Transfer, from, receiver, fxpValue)
+	if(!mutexWhitelisted()):
+		MUTEX.unsetMutex()
+	return(1)
 
 # Transfer dormant rep
 # @return fxpValue of reputation sent, 0 if not enough reputation
 # error messages otherwise
-    # -1: "Your reputation account was just created, earn some rep. before you can send to others"
-    # -3: "Receiving address doesn't exist"
-    # -5: not enough rep / fxpValue too small or not authorized
+	# -1: "Your reputation account was just created, earn some rep. before you can send to others"
+	# -3: "Receiving address doesn't exist"
+	# -5: not enough rep / fxpValue too small or not authorized
 # fails unless from has authorized sender [either contract which was approved or the from address is the msg.sender]
 def transferFrom(branch, from, receiver, fxpValue):
-    refund()
-    if(MUTEX.getMutex() && !mutexWhitelisted()):
-        throw()
-    if(!mutexWhitelisted()):
-        MUTEX.setMutex()
+	refund()
+	if(MUTEX.getMutex() && !mutexWhitelisted()):
+		throw()
+	if(!mutexWhitelisted()):
+		MUTEX.setMutex()
 
-    votePeriod = BRANCHES.getVotePeriod(branch)
-    senderIndex = REPORTING.repIDToIndex(branch, from)
-    receiverIndex = REPORTING.repIDToIndex(branch, receiver)
-    senderBalance = REPORTING.balanceOf(branch, from)
-    receiverBalance = REPORTING.balanceOf(branch, receiver)
-    checkSendRepInvariants()
+	votePeriod = BRANCHES.getVotePeriod(branch)
+	senderIndex = REPORTING.repIDToIndex(branch, from)
+	receiverIndex = REPORTING.repIDToIndex(branch, receiver)
+	senderBalance = REPORTING.balanceOf(branch, from)
+	receiverBalance = REPORTING.balanceOf(branch, receiver)
+	checkSendRepInvariants()
 
-    if(!safeToSubtract(senderBalance, fxpValue) or !REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !safeToAdd(receiverBalance, fxpValue) or !REPORTING.addDormantRep(branch, receiverIndex, fxpValue)):
-       throw()
-    log(type=Transfer, from, receiver, fxpValue)
-    if(!mutexWhitelisted()):
-        MUTEX.unsetMutex()
-    return(1)
+	if(!safeToSubtract(senderBalance, fxpValue) or !REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !safeToAdd(receiverBalance, fxpValue) or !REPORTING.addDormantRep(branch, receiverIndex, fxpValue)):
+	   throw()
+	log(type=Transfer, from, receiver, fxpValue)
+	if(!mutexWhitelisted()):
+		MUTEX.unsetMutex()
+	return(1)
 
 # Convert active rep to dormant rep
 # error messages
-    #  0: only one period behind, need to do penalizations for it
-    # -1: sender's rep account didn't exist, just made one
-    # -2: not in right part of period
-    # -4: couldn't catchup automatically
-    # -5: not enough rep / fxpValue too small
-    # -6: if a person reported on a round 2 event before it was in the second round [i.e. the first reporting backstop], they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event
-        # Notes:
-            # say you lost rep in round 1, if it was a valid round 2 you have incentive to not convert to dormant or send rep b/c you want to get it back
-            # say you gained rep in round 1, if it was a valid round 2 you have incentive _to_ convert to dormant
-            # say you lost rep in round 1, if it was an invalid round 2 you have incentive to convert to dormant
-            # say you gained rep in round 1, if it was an invalid round 2 you have incentive _to_ not convert to dormant or send rep b/c you want to keep it
+	#  0: only one period behind, need to do penalizations for it
+	# -1: sender's rep account didn't exist, just made one
+	# -2: not in right part of period
+	# -4: couldn't catchup automatically
+	# -5: not enough rep / fxpValue too small
+	# -6: if a person reported on a round 2 event before it was in the second round [i.e. the first reporting backstop], they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event
+		# Notes:
+			# say you lost rep in round 1, if it was a valid round 2 you have incentive to not convert to dormant or send rep b/c you want to get it back
+			# say you gained rep in round 1, if it was a valid round 2 you have incentive _to_ convert to dormant
+			# say you lost rep in round 1, if it was an invalid round 2 you have incentive to convert to dormant
+			# say you gained rep in round 1, if it was an invalid round 2 you have incentive _to_ not convert to dormant or send rep b/c you want to keep it
 def convertToDormantRep(branch, fxpValue):
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
-    checkInvariants(msg.sender)
-    if(first48HoursOfPeriod()):
-        throw()
-    senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
-    senderBalance = REPORTING.getRepBalance(branch, msg.sender)
-    senderDormantBalance = REPORTING.balanceOf(branch, msg.sender)
-    reportedOnRoundTwoEvent = REPORTING.getReportedOnNonFinalRoundTwoEvent(branch)
-    if(reportedOnRoundTwoEvent && !BACKSTOPS.getFinal(reportedOnRoundTwoEvent)):
-        throw()
-    checkRepConversionInvariants()
+	if(MUTEX.getMutex()):
+		throw()
+	MUTEX.setMutex()
+	checkInvariants(msg.sender)
+	if(first48HoursOfPeriod()):
+		throw()
+	senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
+	senderBalance = REPORTING.getRepBalance(branch, msg.sender)
+	senderDormantBalance = REPORTING.balanceOf(branch, msg.sender)
+	reportedOnRoundTwoEvent = REPORTING.getReportedOnNonFinalRoundTwoEvent(branch)
+	if(reportedOnRoundTwoEvent && !BACKSTOPS.getFinal(reportedOnRoundTwoEvent)):
+		throw()
+	checkRepConversionInvariants()
 
-    if(!safeToSubtract(senderBalance, fxpValue) or !safeToAdd(senderDormantBalance, fxpValue) or !REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, senderIndex, fxpValue)):
-        throw()
-    REPORTING.adjustActiveRep(branch, -fxpValue)
-    MUTEX.unsetMutex()
-    return(1)
+	if(!safeToSubtract(senderBalance, fxpValue) or !safeToAdd(senderDormantBalance, fxpValue) or !REPORTING.subtractRep(branch, senderIndex, fxpValue) or !REPORTING.addDormantRep(branch, senderIndex, fxpValue)):
+		throw()
+	REPORTING.adjustActiveRep(branch, -fxpValue)
+	MUTEX.unsetMutex()
+	return(1)
 
 # Convert dormant rep to active rep
 # error messages
-    #  0: only one period behind, need to do penalizations for it
-    # -1: sender's rep account didn't exist, just made one
-    # -2: not in right part of period
-    # -4: couldn't catchup automatically
-    # -5: not enough rep
+	#  0: only one period behind, need to do penalizations for it
+	# -1: sender's rep account didn't exist, just made one
+	# -2: not in right part of period
+	# -4: couldn't catchup automatically
+	# -5: not enough rep
 def convertToActiveRep(branch, fxpValue):
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
-    checkInvariants(msg.sender)
-    if(first48HoursOfPeriod()):
-        throw()
-    senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
-    senderBalance = REPORTING.balanceOf(branch, msg.sender)
-    senderActiveBalance = REPORTING.getRepBalance(branch, msg.sender)
-    checkRepConversionInvariants()
+	if(MUTEX.getMutex()):
+		throw()
+	MUTEX.setMutex()
+	checkInvariants(msg.sender)
+	if(first48HoursOfPeriod()):
+		throw()
+	senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
+	senderBalance = REPORTING.balanceOf(branch, msg.sender)
+	senderActiveBalance = REPORTING.getRepBalance(branch, msg.sender)
+	checkRepConversionInvariants()
 
-    if(!safeToSubtract(senderBalance, fxpValue) or !safeToAdd(senderActiveBalance, fxpValue) or !REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, senderIndex, fxpValue)):
-        throw()
-    REPORTING.adjustActiveRep(branch, fxpValue)
-    MUTEX.unsetMutex()
-    return(1)
+	if(!safeToSubtract(senderBalance, fxpValue) or !safeToAdd(senderActiveBalance, fxpValue) or !REPORTING.subtractDormantRep(branch, senderIndex, fxpValue) or !REPORTING.addRep(branch, senderIndex, fxpValue)):
+		throw()
+	REPORTING.adjustActiveRep(branch, fxpValue)
+	MUTEX.unsetMutex()
+	return(1)
 
 def claimRep():
-    if(MUTEX.getMutex() && !mutexWhitelisted()):
-        throw()
-    if(!mutexWhitelisted()):
-        MUTEX.setMutex()
-    balance = REPCONTRACT.balanceOf(msg.sender)
-    if(!REPCONTRACT.transferFrom(msg.sender, 0, balance) or !REPORTING.addReporter(1010101, msg.sender, 0, balance, 0)):
-        throw()
-    if(!mutexWhitelisted()):
-        MUTEX.unsetMutex()
-    return(1)
+	if(MUTEX.getMutex() && !mutexWhitelisted()):
+		throw()
+	if(!mutexWhitelisted()):
+		MUTEX.setMutex()
+	balance = REPCONTRACT.balanceOf(msg.sender)
+	if(!REPCONTRACT.transferFrom(msg.sender, 0, balance) or !REPORTING.addReporter(1010101, msg.sender, 0, balance, 0)):
+		throw()
+	if(!mutexWhitelisted()):
+		MUTEX.unsetMutex()
+	return(1)
 
 # Allows spender to withdraw from your dormant rep account
 def approve(branch, spender, fxpValue):
-    if(MUTEX.getMutex() && !mutexWhitelisted()):
-        throw()
-    if(!mutexWhitelisted()):
-        MUTEX.setMutex()
+	if(MUTEX.getMutex() && !mutexWhitelisted()):
+		throw()
+	if(!mutexWhitelisted()):
+		MUTEX.setMutex()
 
-    self.amountCanSpend[msg.sender][spender].branch[branch] = fxpValue
-    log(type = Approval, msg.sender, spender, branch, fxpValue)
-    if(!mutexWhitelisted()):
-        MUTEX.unsetMutex()
-    return(1)
+	self.amountCanSpend[msg.sender][spender].branch[branch] = fxpValue
+	log(type = Approval, msg.sender, spender, branch, fxpValue)
+	if(!mutexWhitelisted()):
+		MUTEX.unsetMutex()
+	return(1)
 
 # Returns amount spender can withdraw from owner
 # @return fxp
 def allowance(branch, owner, spender):
-    return(self.amountCanSpend[owner][spender].branch[branch])
+	return(self.amountCanSpend[owner][spender].branch[branch])
 
 macro checkInvariants($account):
-    refund()
-    # auto increment vote period if needed
-    INCREMENTPERIOD.incrementPeriodAfterReporting(branch)
-    periodLength = BRANCHES.getPeriodLength(branch)
-    votePeriod = BRANCHES.getVotePeriod(branch)
-    lastPeriod = votePeriod - 1
-    lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, $account)
-    delta = lastPeriod - lastPeriodPenalized
-    # Rep cannot be simultaneously spent (transferred) and used to vote
-    atFirstHalfOfPeriod()
-    if(delta > 1 and CATCHUP.penalizationCatchup(branch, $account) != 1):
-        if(!mutexWhitelisted()):
-            MUTEX.unsetMutex()
-        return(-4)
-    if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
-        if(!mutexWhitelisted()):
-            MUTEX.unsetMutex()
-        return(0)
+	refund()
+	# auto increment vote period if needed
+	INCREMENTPERIOD.incrementPeriodAfterReporting(branch)
+	periodLength = BRANCHES.getPeriodLength(branch)
+	votePeriod = BRANCHES.getVotePeriod(branch)
+	lastPeriod = votePeriod - 1
+	lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, $account)
+	delta = lastPeriod - lastPeriodPenalized
+	# Rep cannot be simultaneously spent (transferred) and used to vote
+	atFirstHalfOfPeriod()
+	if(delta > 1 and CATCHUP.penalizationCatchup(branch, $account) != 1):
+		if(!mutexWhitelisted()):
+			MUTEX.unsetMutex()
+		return(-4)
+	if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
+		if(!mutexWhitelisted()):
+			MUTEX.unsetMutex()
+		return(0)
 
 macro checkConversionDuringForkInvariants():
 	child = BRANCHES.getMostRecentChild(branch)
-    tooLateForChild = block.timestamp > (BRANCHES.getCreationDate(child) + ONE_MONTH)
-    # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the sender claims it
-    if(!tooLateForChild && child && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, from)) != from):
-        if(!FAUCETS.claimInitialRep(branch, child, call = delegate)):
-            throw()
+	tooLateForChild = block.timestamp > (BRANCHES.getCreationDate(child) + ONE_MONTH)
+	# If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the sender claims it
+	if(!tooLateForChild && child && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, from)) != from):
+		if(!FAUCETS.claimInitialRep(branch, child, call = delegate)):
+			throw()
 
 macro checkSendRepInvariants():
-    refund()
-    tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
-    child = BRANCHES.getMostRecentChild(branch)
-    tooLateForChild = block.timestamp > (BRANCHES.getCreationDate(child) + ONE_MONTH)
-    # if the sender's rep. account doesn't exist, make one
-    if(REPORTING.getReporterID(branch, senderIndex) != from):
-        CONSENSUS.setPenalizedUpTo(branch, from, (votePeriod - 1))
-        # if it's a forked or new branch have 1 month to claim, so a user cant make a new account on a new branch without at least trying to claim rep if this is a fork and the reporter was in the old branch [but hasn't claimed rep on the new child branch yet]
-        parent = BRANCHES.getParent(branch)
-        reporterWasInOldBranch = REPORTING.getReporterID(parent, REPORTING.repIDToIndex(parent, from))
-        if(parent && !tooLate && reporterWasInOldBranch):
-            if(!FAUCETS.claimInitialRep(parent, branch, call = delegate)):
-                throw()
-        else:
-            REPORTING.addReporter(branch, from)
-        if(!mutexWhitelisted()):
-            MUTEX.unsetMutex()
-        return(-1)
-    # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the receiver claims it
-    if(REPORTING.getReporterID(branch, receiverIndex) != receiver or (child && !tooLateForChild && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, receiver)) != receiver)):
-        if(!mutexWhitelisted()):
-            MUTEX.unsetMutex()
-        return(-3)
-    # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the sender claims it
-    if(!tooLateForChild && child && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, from)) != from):
-        if(!FAUCETS.claimInitialRep(branch, child, call = delegate)):
-            throw()
+	refund()
+	tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
+	child = BRANCHES.getMostRecentChild(branch)
+	tooLateForChild = block.timestamp > (BRANCHES.getCreationDate(child) + ONE_MONTH)
+	# if the sender's rep. account doesn't exist, make one
+	if(REPORTING.getReporterID(branch, senderIndex) != from):
+		CONSENSUS.setPenalizedUpTo(branch, from, (votePeriod - 1))
+		# if it's a forked or new branch have 1 month to claim, so a user cant make a new account on a new branch without at least trying to claim rep if this is a fork and the reporter was in the old branch [but hasn't claimed rep on the new child branch yet]
+		parent = BRANCHES.getParent(branch)
+		reporterWasInOldBranch = REPORTING.getReporterID(parent, REPORTING.repIDToIndex(parent, from))
+		if(parent && !tooLate && reporterWasInOldBranch):
+			if(!FAUCETS.claimInitialRep(parent, branch, call = delegate)):
+				throw()
+		else:
+			REPORTING.addReporter(branch, from)
+		if(!mutexWhitelisted()):
+			MUTEX.unsetMutex()
+		return(-1)
+	# If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the receiver claims it
+	if(REPORTING.getReporterID(branch, receiverIndex) != receiver or (child && !tooLateForChild && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, receiver)) != receiver)):
+		if(!mutexWhitelisted()):
+			MUTEX.unsetMutex()
+		return(-3)
+	# If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the sender claims it
+	if(!tooLateForChild && child && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, from)) != from):
+		if(!FAUCETS.claimInitialRep(branch, child, call = delegate)):
+			throw()
 
-    if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from == msg.sender)):
-        if(!mutexWhitelisted()):
-            MUTEX.unsetMutex()
-        return(-5)
-    if(from != msg.sender):
-        self.amountCanSpend[from][msg.sender].branch[branch] -= fxpValue
+	if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from == msg.sender)):
+		if(!mutexWhitelisted()):
+			MUTEX.unsetMutex()
+		return(-5)
+	if(from != msg.sender):
+		self.amountCanSpend[from][msg.sender].branch[branch] -= fxpValue
 
 macro checkRepConversionInvariants():
-    # if the sender's rep. account doesn't exist, make one
-    if(REPORTING.getReporterID(branch, senderIndex) != msg.sender):
-        CONSENSUS.setPenalizedUpTo(branch, msg.sender, (votePeriod - 1))
-        # if it's a forked branch have 1 month to claim, so a user cant make a new account on a new branch without at least trying to claim rep if this is a fork and the reporter was in the old branch [but hasn't claimed rep on the new branch yet]
-        parent = BRANCHES.getParent(branch)
-        tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
-        reporterWasInOldBranch = REPORTING.getReporterID(parent, REPORTING.repIDToIndex(parent, msg.sender))
-        if(parent && !tooLate && reporterWasInOldBranch):
-            if(!FAUCETS.claimInitialRep(parent, branch, call = delegate)):
-                throw()
-        else:
-            REPORTING.addReporter(branch, msg.sender)
-        if(!mutexWhitelisted()):
-            MUTEX.unsetMutex()
-        return(-1)
-    if(senderBalance < fxpValue or fxpValue <= 0):
-        MUTEX.unsetMutex()
-        return(-5)
+	# if the sender's rep. account doesn't exist, make one
+	if(REPORTING.getReporterID(branch, senderIndex) != msg.sender):
+		CONSENSUS.setPenalizedUpTo(branch, msg.sender, (votePeriod - 1))
+		# if it's a forked branch have 1 month to claim, so a user cant make a new account on a new branch without at least trying to claim rep if this is a fork and the reporter was in the old branch [but hasn't claimed rep on the new branch yet]
+		parent = BRANCHES.getParent(branch)
+		tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
+		reporterWasInOldBranch = REPORTING.getReporterID(parent, REPORTING.repIDToIndex(parent, msg.sender))
+		if(parent && !tooLate && reporterWasInOldBranch):
+			if(!FAUCETS.claimInitialRep(parent, branch, call = delegate)):
+				throw()
+		else:
+			REPORTING.addReporter(branch, msg.sender)
+		if(!mutexWhitelisted()):
+			MUTEX.unsetMutex()
+		return(-1)
+	if(senderBalance < fxpValue or fxpValue <= 0):
+		MUTEX.unsetMutex()
+		return(-5)
 
 macro first48HoursOfPeriod():
-    residual = block.timestamp % periodLength
-    currentPeriod = block.timestamp / periodLength
-    currentMinus48Hours = (block.timestamp - 48_HOURS) / periodLength
-    if(currentPeriod != currentMinus48Hours):
-        1
-    else:
-        0
+	residual = block.timestamp % periodLength
+	currentPeriod = block.timestamp / periodLength
+	currentMinus48Hours = (block.timestamp - 48_HOURS) / periodLength
+	if(currentPeriod != currentMinus48Hours):
+		1
+	else:
+		0
