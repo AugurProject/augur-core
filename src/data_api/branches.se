@@ -4,19 +4,23 @@
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
-# 
+#
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-# 
+#
 #    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-# 
+#
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
+
+macro Controller: 0xC001D00D
+extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
 
 inset('refund.se')
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
@@ -76,11 +80,11 @@ def init():
     wallet = create('../functions/wallet.se')
     wallet.initialize(ethContract)
     self.Branches[1010101].contract[ethContract] = wallet
-    
+
 # whitelist updates
 def updateNumCurrencies(branch, num):
     self.Branches[branch].numCurrencies = num
-    
+
 # whitelist updates
 # rateContract _or_ rate should be given
 def addCurrency(branch, currency, rate, rateContract):
@@ -158,16 +162,16 @@ def getCurrencyRate(branch, currency):
 
 def getCurrency(branch, index):
     return(self.Branches[branch].currencies[index].contract)
-    
+
 def getCurrencyByContract(branch, currency):
     return(self.Branches[branch].currencyToIndex[currency])
 
 def getWallet(branch, currency):
     return(self.Branches[branch].contract[currency])
-    
+
 def getNumCurrencies(branch):
     return(self.Branches[branch].numCurrencies)
-    
+
 def getCurrencyActive(branch, currency):
     return(self.Branches[branch].currencyActive[currency])
 
@@ -234,7 +238,7 @@ def getBranches():
         branches[b] = self.branchList[b]
         b += 1
     return(branches: arr)
-    
+
 def getBranchesStartingAt(index):
     b = index
     numBranches = self.branchListCount
@@ -252,14 +256,14 @@ def getBranchByNum(branchNumber):
 
 def getCreationDate(ID):
     return(self.Branches[ID].creationDate)
-    
+
 def getMostRecentChild(ID):
     return(self.Branches[ID].mostRecentChild)
-    
+
 def setMostRecentChild(parent, child):
     self.Branches[parent].mostRecentChild = child
     return(1)
-    
+
 # check that msg.sender is one of our function contracts
 def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, contract, wallet, mostRecentChild):
     # if(!self.whitelist.check(msg.sender)):

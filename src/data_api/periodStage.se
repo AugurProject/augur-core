@@ -1,3 +1,7 @@
+
+macro Controller: 0xC001D00D
+extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
 macro atSecondHalfOfPeriod():
     residual = block.timestamp % periodLength
     if(residual <= periodLength / 2):

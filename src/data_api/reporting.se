@@ -4,21 +4,27 @@
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
-# 
+#
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-# 
+#
 #    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-# 
+#
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-import branches as BRANCHES
+macro Controller: 0xC001D00D
+extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+BRANCHES = Controller.lookup('branches')
+extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToBranch:[int256,int256]:int256, disableCurrency:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getBranchesStartingAt:[int256]:int256[], getCreationDate:[int256]:int256, getCurrency:[int256,int256]:int256, getCurrencyActive:[int256,int256]:int256, getCurrencyByContract:[int256,int256]:int256, getCurrencyRate:[int256,int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getForkTime:[int256]:int256, getInitialBalance:[int256,int256,int256]:int256, getMarketIDsInBranch:[int256,int256,int256]:int256[], getMinTradingFee:[int256]:int256, getMostRecentChild:[int256]:int256, getNumBranches:[]:int256, getNumCurrencies:[int256]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, getWallet:[int256,int256]:int256, incrementPeriod:[int256]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, reactivateCurrency:[int256,int256]:int256, removeLastCurrency:[int256]:int256, replaceCurrency:[int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256,int256]:int256, setMostRecentChild:[int256,int256]:int256, updateCurrencyRate:[int256,int256,int256,int256]:int256, updateNumCurrencies:[int256,int256]:_]
+
+
 extern repContract.se: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, getRidOfDustForLaunch:[]:int256, getSeeded:[]:uint256, name:[]:uint256, setSaleDistribution:[address[],uint256[]]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 REPCONTRACT = 0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5
 inset('refund.se')
@@ -45,13 +51,13 @@ def init():
     self.Reporting[1010101].repIDtoIndex[msg.sender] = 1
     self.Reporting[1010101].reputation[1].repValue = 0
     self.Reporting[1010101].reputation[1].reporterID = msg.sender
-    
+
 def checkWhitelist(address):
     return(self.whitelists[msg.sender].addresses[address])
 
 def getReportedOnNonFinalRoundTwoEvent(branch):
     return(self.Reporting[branch].reportedOnNonFinalRoundTwoEvent)
-    
+
 def setReportedOnNonFinalRoundTwoEvent(branch, event):
     self.Reporting[branch].reportedOnNonFinalRoundTwoEvent = event
     return(1)
@@ -103,7 +109,7 @@ def getDormantRepByIndex(branch, repIndex):
 
 # getDormantRepBalance
 # @return fxp
-def balanceOf(branch, address):
+def balanceOfReporter(branch, address):
     repIndex = self.Reporting[branch].repIDtoIndex[address]
     if(!repIndex and self.Reporting[branch].reputation[repIndex].reporterID != address):
         return(0)
@@ -201,7 +207,7 @@ def subtractRep(branch, index, fxpValue):
     #   throw()
     self.Reporting[branch].reputation[index].repValue -= fxpValue
     return(1)
-    
+
 # safe adders idea pulled from piper merriam's btcrelay audit
 macro safeToAdd($a, $b):
     $c = $a + $b

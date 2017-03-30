@@ -18,6 +18,10 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+macro Controller: 0xC001D00D
+extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+
 extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
 inset('refund.se')
 
@@ -120,7 +124,7 @@ def getMarketEvent(market, index):
 
 def getMarketEvents(market):
     return(load(self.Markets[market].events[0], items = self.Markets[market].lenEvents): arr)
-    
+
 def getMarketShareContracts(market):
     return(load(self.Markets[market].shareContracts[0], items = self.Markets[market].numOutcomes): arr)
 
@@ -246,7 +250,7 @@ def removeOrderFromMarket(marketID, orderID):
     elif(prevID):
         self.Markets[marketID].lastOrder = prevID
         self.Markets[marketID].orderIDs[prevID].nextID = 0
-    
+
     # if the order had a order following it, 0 out that slot
     if(nextID):
         self.Markets[marketID].orderIDs[orderID].nextID = 0

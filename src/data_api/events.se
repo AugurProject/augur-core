@@ -4,21 +4,27 @@
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
 #    (at your option) any later version.
-# 
+#
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-# 
+#
 #    This program is distributed in the hope that it will be useful, #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-# 
+#
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-import info as INFO
+macro Controller: 0xC001D00D
+extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+INFO = Controller.lookup('info')
+extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256]
+
+
 inset('refund.se')
 
 # Keeps track of data about events in augur
@@ -59,7 +65,7 @@ def getForkResolveAddress(event):
 
 def getCreationTime(event):
     return(self.Events[event].creationTime)
-    
+
 def setCreationTime(event):
     self.Events[event].creationTime = block.timestamp
     return(1)
@@ -69,15 +75,15 @@ def getResolveBondPoster(event):
 
 def getChallenged(event):
     return(self.Events[event].challenged)
-    
+
 def setChallenged(event):
     self.Events[event].challenged = 1
     return(1)
-    
+
 # @return fxp
 def getFirstPreliminaryOutcome(event):
     return(self.Events[event].firstPreliminaryOutcome)
-    
+
 def setFirstPreliminaryOutcome(event, outcome):
     self.Events[event].firstPreliminaryOutcome = outcome
     return(1)
@@ -242,7 +248,7 @@ def setBond(event, bond):
 
 def getEarlyResolutionBond(event):
     return(self.Events[event].earlyResolutionBond)
-    
+
 def setEarlyResolutionBond(event, bond):
     self.Events[event].earlyResolutionBond = bond
     return(1)
