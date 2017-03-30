@@ -94,7 +94,7 @@ def addCurrency(branch, currency, rate, rateContract):
     noWalletExists = !self.Branches[branch].contract[currency]
     if(noWalletExists):
         checkSubcurrencyIsValid(currency)
-        wallet = create('wallet.se')
+        wallet = create('../functions/wallet.se')
         wallet.initialize(currency)
         self.Branches[branch].contract[currency] = wallet
     return(1)
@@ -122,7 +122,7 @@ def replaceCurrency(branch, oldCurrencyIndex, newCurrency, newRate, newRateContr
     noWalletExists = !self.Branches[branch].contract[newCurrency]
     if(noWalletExists):
         checkSubcurrencyIsValid(newCurrency)
-        wallet = create('wallet.se')
+        wallet = create('../functions/wallet.se')
         wallet.initialize(newCurrency)
         self.Branches[branch].contract[newCurrency] = wallet
     return(1)

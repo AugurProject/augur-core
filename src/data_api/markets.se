@@ -23,298 +23,298 @@ extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:i
 inset('refund.se')
 
 # Markets' index is the market, markets stores data about markets [which are able to be traded on] in augur
-	# Events is a 0 indexed array of events in the market in the format of
-		# [1, event, event, 2, event, 3, event, event, event]
-		# 1 means dimension 1, 2 is events in dimension 2, 3 is the dimension 3 events
-	# Sharespurchased keeps track of the number of shares purchased for each outcome
-		# sharesPurchased index states starts at 1 - (same for participants[].shares[] array)
-	# Participants is an array of participants, their addresses as keys and the shares in each outcome they've purchased of an event as the values
-		# e.g. participants[addr].shares[1]
-	# currentParticipant is the number of participants [traders] in the market
-	# cumulativeScale == range of the market for scalars
-	# numOutcomes is the number of outcomes in a market [up to 8 for now]
-	# a binary outcome state 1 is no, 2 is true, 0 if not done, 1.5 if indeterminate
-	# fxpTradingFee is a percent in fixedPoint and the base trading fee for a market
-	# tradingPeriod is which eventExpPeriod market expires in
-	# pushing forward is whether a market has been pushed forward to attempt early resolution
-	# bondsman is the person/address who/that posted the early resolution bond
-	# originalPeriod is the original period the market's event would resolve in
-	# orderIDs stores orders for a given market
-	# lastOrder is the last order that was placed in a given market
-	# totalOrders is the total number of orders ever placed in a given market
-	# tags are the subject tags / categories / keywords for a given market
-	# extraInfo is any extra info that didn't fit well in the regular description
-	# sharesValue is the value of the shares traded in a given market
-	# gasSubsidy is paid by the creator to pay for closing the market [closing is just setting the winning outcomes and allowing people to withdraw funds if they own winning shares]
-	# fees is total amount of fees a market has paid to a branch [the reporters] denominated in wei
-	# lastExpDate is when the market's last event expires
-	# prices keeps track of the latest traded fxpPrice for a given outcome in a market
-	# shareContracts stores the erc-20 token contract address for each outcome in the market
+    # Events is a 0 indexed array of events in the market in the format of
+        # [1, event, event, 2, event, 3, event, event, event]
+        # 1 means dimension 1, 2 is events in dimension 2, 3 is the dimension 3 events
+    # Sharespurchased keeps track of the number of shares purchased for each outcome
+        # sharesPurchased index states starts at 1 - (same for participants[].shares[] array)
+    # Participants is an array of participants, their addresses as keys and the shares in each outcome they've purchased of an event as the values
+        # e.g. participants[addr].shares[1]
+    # currentParticipant is the number of participants [traders] in the market
+    # cumulativeScale == range of the market for scalars
+    # numOutcomes is the number of outcomes in a market [up to 8 for now]
+    # a binary outcome state 1 is no, 2 is true, 0 if not done, 1.5 if indeterminate
+    # fxpTradingFee is a percent in fixedPoint and the base trading fee for a market
+    # tradingPeriod is which eventExpPeriod market expires in
+    # pushing forward is whether a market has been pushed forward to attempt early resolution
+    # bondsman is the person/address who/that posted the early resolution bond
+    # originalPeriod is the original period the market's event would resolve in
+    # orderIDs stores orders for a given market
+    # lastOrder is the last order that was placed in a given market
+    # totalOrders is the total number of orders ever placed in a given market
+    # tags are the subject tags / categories / keywords for a given market
+    # extraInfo is any extra info that didn't fit well in the regular description
+    # sharesValue is the value of the shares traded in a given market
+    # gasSubsidy is paid by the creator to pay for closing the market [closing is just setting the winning outcomes and allowing people to withdraw funds if they own winning shares]
+    # fees is total amount of fees a market has paid to a branch [the reporters] denominated in wei
+    # lastExpDate is when the market's last event expires
+    # prices keeps track of the latest traded fxpPrice for a given outcome in a market
+    # shareContracts stores the erc-20 token contract address for each outcome in the market
 data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]), winningOutcomes[], cumulativeScale, numOutcomes, tradingPeriod, fxpTradingFee, branch, volume, pushingForward, bondsMan, originalPeriod, orderIDs[](id, nextID, prevID), lastOrder, totalOrders, tag1, tag2, tag3, extraInfo[], extraInfoLen, sharesValue, gasSubsidy, fees, lastExpDate, prices[], shareContracts[])
 
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
 
 def getMarketsHash(branch):
-	return(self.marketsHash[branch])
+    return(self.marketsHash[branch])
 
 def addToMarketsHash(branch, newHash):
-	x = array(2)
-	x[0] = self.marketsHash[branch]
-	x[1] = newHash
-	self.marketsHash[branch] = sha3(x, items = 2)
-	return(1)
+    x = array(2)
+    x[0] = self.marketsHash[branch]
+    x[1] = newHash
+    self.marketsHash[branch] = sha3(x, items = 2)
+    return(1)
 
 def addFees(market, fxpAmount):
-	if(self.Markets[market].fees + fxpAmount) > self.Markets[market].fees):
-		self.Markets[market].fees += fxpAmount
-	return(1)
+    if(self.Markets[market].fees + fxpAmount) > self.Markets[market].fees):
+        self.Markets[market].fees += fxpAmount
+    return(1)
 
 def setPrice(market, outcome, fxpPrice):
-	self.Markets[market].prices[outcome] = fxpPrice
-	return(1)
+    self.Markets[market].prices[outcome] = fxpPrice
+    return(1)
 
 # refund closing cost for a market
 def refundClosing(market, to):
-	subsidy = self.Markets[market].gasSubsidy
-	self.Markets[market].gasSubsidy -= subsidy
-	if(!send(to, subsidy)):
-		throw()
-	return(1)
+    subsidy = self.Markets[market].gasSubsidy
+    self.Markets[market].gasSubsidy -= subsidy
+    if(!send(to, subsidy)):
+        throw()
+    return(1)
 
 def getLastExpDate(market):
-	return(self.Markets[market].lastExpDate)
+    return(self.Markets[market].lastExpDate)
 
 # @return fxp
 def getLastOutcomePrice(market, outcome):
-	return(self.Markets[market].prices[outcome])
+    return(self.Markets[market].prices[outcome])
 
 def getFees(market):
-	return(self.Markets[market].fees)
+    return(self.Markets[market].fees)
 
 def getGasSubsidy(market):
-	return(self.Markets[market].gasSubsidy)
+    return(self.Markets[market].gasSubsidy)
 
 # @return fxp
 def getSharesValue(market):
-	return(self.Markets[market].sharesValue)
+    return(self.Markets[market].sharesValue)
 
 def returnTags(market):
-	tags = array(3)
-	tags[0] = self.Markets[market].tag1
-	tags[1] = self.Markets[market].tag2
-	tags[2] = self.Markets[market].tag3
-	return(tags: arr)
+    tags = array(3)
+    tags[0] = self.Markets[market].tag1
+    tags[1] = self.Markets[market].tag2
+    tags[2] = self.Markets[market].tag3
+    return(tags: arr)
 
 # @return fxp
 def getTotalSharesPurchased(market):
-	total = 0
-	n = self.Markets[market].numOutcomes
-	i = 1
-	while(i <= n):
-		total += self.Markets[market].sharesPurchased[i]
-		i += 1
-	return(total)
+    total = 0
+    n = self.Markets[market].numOutcomes
+    i = 1
+    while(i <= n):
+        total += self.Markets[market].sharesPurchased[i]
+        i += 1
+    return(total)
 
 def getMarketEvent(market, index):
-	return(self.Markets[market].events[index])
+    return(self.Markets[market].events[index])
 
 def getMarketEvents(market):
-	return(load(self.Markets[market].events[0], items = self.Markets[market].lenEvents): arr)
+    return(load(self.Markets[market].events[0], items = self.Markets[market].lenEvents): arr)
 
 def getMarketShareContracts(market):
-	return(load(self.Markets[market].shareContracts[0], items = self.Markets[market].numOutcomes): arr)
+    return(load(self.Markets[market].shareContracts[0], items = self.Markets[market].numOutcomes): arr)
 
 # @return fxp
 def getSharesPurchased(market, outcome):
-	return(self.Markets[market].sharesPurchased[outcome])
+    return(self.Markets[market].sharesPurchased[outcome])
 
 def getExtraInfoLength(market):
-	return(self.Markets[market].extraInfoLen)
+    return(self.Markets[market].extraInfoLen)
 
 def getExtraInfo(market):
-	length = self.Markets[market].extraInfoLen
-	return(load(self.Markets[market].extraInfo[0], chars = length): str)
+    length = self.Markets[market].extraInfoLen
+    return(load(self.Markets[market].extraInfo[0], chars = length): str)
 
 # @return fxp
 def getVolume(market):
-	return(self.Markets[market].volume)
+    return(self.Markets[market].volume)
 
 # @return fxp
 def getParticipantSharesPurchased(market, trader, outcome):
-	return(self.Markets[market].shareContracts[outcome].balanceOf(trader))
+    return(self.Markets[market].shareContracts[outcome].balanceOf(trader))
 
 def getNumEvents(market):
-	return(self.Markets[market].lenEvents)
+    return(self.Markets[market].lenEvents)
 
 # @return fxp
 def getCumulativeScale(market):
-	return(self.Markets[market].cumulativeScale)
+    return(self.Markets[market].cumulativeScale)
 
 def getMarketNumOutcomes(market):
-	return(self.Markets[market].numOutcomes)
+    return(self.Markets[market].numOutcomes)
 
 def getTradingPeriod(market):
-	return(self.Markets[market].tradingPeriod)
+    return(self.Markets[market].tradingPeriod)
 
 def getOriginalTradingPeriod(market):
-	return(self.Markets[market].originalPeriod)
+    return(self.Markets[market].originalPeriod)
 
 def setTradingPeriod(market, period):
-	self.Markets[market].tradingPeriod = period
-	return(1)
+    self.Markets[market].tradingPeriod = period
+    return(1)
 
 def getTradingFee(market):
-	return(self.Markets[market].fxpTradingFee)
+    return(self.Markets[market].fxpTradingFee)
 
 def getBranch(market):
-	return(self.Markets[market].branch)
+    return(self.Markets[market].branch)
 
 macro market($market):
-	self.Markets[$market]
+    self.Markets[$market]
 
 macro fxpcumulativeScale($market):
-	market($market).cumulativeScale
+    market($market).cumulativeScale
 
 macro numOutcomes($market):
-	market($market).numOutcomes
+    market($market).numOutcomes
 
 macro sharesPurchased($market):
-	market($market).sharesPurchased
+    market($market).sharesPurchased
 
 # check that msg.sender is one of our function contracts
 def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpcumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr):
-	#if(!self.whitelist.check(msg.sender)):
-	#    return(-1)
-	# add event list to the market
-	save(self.Markets[market].events[0], events, items = len(events))
-	save(self.Markets[market].shareContracts[0], shareContracts, items = numOutcomes)
-	self.Markets[market].lenEvents = len(events)
-	save(self.Markets[market].extraInfo[0], extraInfo, chars = len(extraInfo))
-	self.Markets[market].extraInfoLen = len(extraInfo)
-	self.Markets[market].tradingPeriod = tradingPeriod
-	self.Markets[market].originalPeriod = tradingPeriod
-	self.Markets[market].fxpTradingFee = fxpTradingFee
-	self.Markets[market].branch = branch
-	self.Markets[market].cumulativeScale = fxpcumulativeScale
-	self.Markets[market].numOutcomes = numOutcomes
-	self.Markets[market].tag1 = tag1
-	self.Markets[market].tag2 = tag2
-	self.Markets[market].gasSubsidy = gasSubsidy
-	self.Markets[market].tag3 = tag3
-	self.Markets[market].fees = fxpCreationFee
-	self.Markets[market].lastExpDate = lastExpDate
-	self.addToMarketsHash(branch, market)
-	return(1)
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    # add event list to the market
+    save(self.Markets[market].events[0], events, items = len(events))
+    save(self.Markets[market].shareContracts[0], shareContracts, items = numOutcomes)
+    self.Markets[market].lenEvents = len(events)
+    save(self.Markets[market].extraInfo[0], extraInfo, chars = len(extraInfo))
+    self.Markets[market].extraInfoLen = len(extraInfo)
+    self.Markets[market].tradingPeriod = tradingPeriod
+    self.Markets[market].originalPeriod = tradingPeriod
+    self.Markets[market].fxpTradingFee = fxpTradingFee
+    self.Markets[market].branch = branch
+    self.Markets[market].cumulativeScale = fxpcumulativeScale
+    self.Markets[market].numOutcomes = numOutcomes
+    self.Markets[market].tag1 = tag1
+    self.Markets[market].tag2 = tag2
+    self.Markets[market].gasSubsidy = gasSubsidy
+    self.Markets[market].tag3 = tag3
+    self.Markets[market].fees = fxpCreationFee
+    self.Markets[market].lastExpDate = lastExpDate
+    self.addToMarketsHash(branch, market)
+    return(1)
 
 def modifyShares(market, outcome, fxpAmount):
-	#if(!self.whitelist.check(msg.sender)):
-	#    return(-1)
-	sharesPurchased(market)[outcome] += fxpAmount
-	self.Markets[market].shareContracts[outcome].modifySupply(fxpAmount)
-	return(1)
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    sharesPurchased(market)[outcome] += fxpAmount
+    self.Markets[market].shareContracts[outcome].modifySupply(fxpAmount)
+    return(1)
 
 def modifySharesValue(market, fxpAmount):
-	self.Markets[market].sharesValue += fxpAmount
-	return(1)
+    self.Markets[market].sharesValue += fxpAmount
+    return(1)
 
 def modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
-	#if(!self.whitelist.check(msg.sender)):
-	#    return(-1)
-	self.Markets[market].shareContracts[outcome].changeTokens(trader, fxpAmount)
-	if(fxpAmount < 0):
-		fxpAmount = fxpAmount * -1
-	if(actualTrade):
-		self.Markets[market].volume += fxpAmount
-	if(self.Markets[marketID].tag1):
-			TOPICS.updateTopicPopularity(self.Markets[marketID].branch, self.Markets[marketID].tag1, fxpAmount)
-	return(1)
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    self.Markets[market].shareContracts[outcome].changeTokens(trader, fxpAmount)
+    if(fxpAmount < 0):
+        fxpAmount = fxpAmount * -1
+    if(actualTrade):
+        self.Markets[market].volume += fxpAmount
+    if(self.Markets[marketID].tag1):
+            TOPICS.updateTopicPopularity(self.Markets[marketID].branch, self.Markets[marketID].tag1, fxpAmount)
+    return(1)
 
 def addOrder(market, orderID):
-	self.Markets[market].orderIDs[lastID].nextID = orderID
-	self.Markets[market].orderIDs[orderID].prevID = self.Markets[market].lastOrder
-	self.Markets[market].orderIDs[orderID].id = orderID
-	self.Markets[market].lastOrder = orderID
-	self.Markets[market].totalOrders += 1
-	return(1)
+    self.Markets[market].orderIDs[lastID].nextID = orderID
+    self.Markets[market].orderIDs[orderID].prevID = self.Markets[market].lastOrder
+    self.Markets[market].orderIDs[orderID].id = orderID
+    self.Markets[market].lastOrder = orderID
+    self.Markets[market].totalOrders += 1
+    return(1)
 
 def removeOrderFromMarket(marketID, orderID):
-	prevID = self.Markets[marketID].orderIDs[orderID].prevID
-	nextID = self.Markets[marketID].orderIDs[orderID].nextID
-	# if the order had a previous and next order it connects them directly, remove this orderID from the sequence/middle
-	if(prevID and nextID):
-		self.Markets[marketID].orderIDs[prevID].nextID = nextID
-		self.Markets[marketID].orderIDs[nextID].prevID = prevID
-	# if it's the most recent order, update the previous order to be the most recent one
-	elif(prevID):
-		self.Markets[marketID].lastOrder = prevID
-		self.Markets[marketID].orderIDs[prevID].nextID = 0
+    prevID = self.Markets[marketID].orderIDs[orderID].prevID
+    nextID = self.Markets[marketID].orderIDs[orderID].nextID
+    # if the order had a previous and next order it connects them directly, remove this orderID from the sequence/middle
+    if(prevID and nextID):
+        self.Markets[marketID].orderIDs[prevID].nextID = nextID
+        self.Markets[marketID].orderIDs[nextID].prevID = prevID
+    # if it's the most recent order, update the previous order to be the most recent one
+    elif(prevID):
+        self.Markets[marketID].lastOrder = prevID
+        self.Markets[marketID].orderIDs[prevID].nextID = 0
 
-	# if the order had a order following it, 0 out that slot
-	if(nextID):
-		self.Markets[marketID].orderIDs[orderID].nextID = 0
-	# if the order had a order before it, 0 out that slot
-	if(prevID):
-		self.Markets[marketID].orderIDs[orderID].prevID = 0
-	self.Markets[marketID].orderIDs[orderID].id = 0
-	self.Markets[marketID].totalOrders -= 1
-	return(1)
+    # if the order had a order following it, 0 out that slot
+    if(nextID):
+        self.Markets[marketID].orderIDs[orderID].nextID = 0
+    # if the order had a order before it, 0 out that slot
+    if(prevID):
+        self.Markets[marketID].orderIDs[orderID].prevID = 0
+    self.Markets[marketID].orderIDs[orderID].id = 0
+    self.Markets[marketID].totalOrders -= 1
+    return(1)
 
 def getOrderIDs(marketID):
-	ordersCount = self.Markets[marketID].totalOrders
-	orderID = self.Markets[marketID].lastOrder
-	orderIDs = array(ordersCount)
-	i = 0
-	while(i < ordersCount):
-		orderIDs[i] = self.Markets[marketID].orderIDs[orderID].id
-		orderID = self.Markets[marketID].orderIDs[orderID].prevID
-		i += 1
+    ordersCount = self.Markets[marketID].totalOrders
+    orderID = self.Markets[marketID].lastOrder
+    orderIDs = array(ordersCount)
+    i = 0
+    while(i < ordersCount):
+        orderIDs[i] = self.Markets[marketID].orderIDs[orderID].id
+        orderID = self.Markets[marketID].orderIDs[orderID].prevID
+        i += 1
 
-	if(orderIDs):
-		return(orderIDs: arr)
-	return([FAILURE]: arr)
+    if(orderIDs):
+        return(orderIDs: arr)
+    return([FAILURE]: arr)
 
 def setWinningOutcomes(market, outcomes: arr):
-	#if(!self.whitelist.check(msg.sender)):
-	#    return(-1)
-	# largest # of winning outcomes is 8
-	save(self.Markets[market].winningOutcomes[0], outcomes, items = len(outcomes))
-	return(1)
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    # largest # of winning outcomes is 8
+    save(self.Markets[market].winningOutcomes[0], outcomes, items = len(outcomes))
+    return(1)
 
 def getWinningOutcomes(market):
-	# do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
-	#if(!self.whitelist.check(msg.sender)):
-	#    return(-1)
-	# largest # of winning outcomes is 8
-	return(load(self.Markets[market].winningOutcomes[0], items = 8): arr)
+    # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good, if not, log
+    #if(!self.whitelist.check(msg.sender)):
+    #    return(-1)
+    # largest # of winning outcomes is 8
+    return(load(self.Markets[market].winningOutcomes[0], items = 8): arr)
 
 def getOneWinningOutcome(market, num):
-	# whitelist
-	return(self.Markets[market].winningOutcomes[num])
+    # whitelist
+    return(self.Markets[market].winningOutcomes[num])
 
 def setTradingFee(market, fee):
-	self.Markets[market].fxpTradingFee = fee
-	return(fee)
+    self.Markets[market].fxpTradingFee = fee
+    return(fee)
 
 def setPushedForward(market, bool, sender):
-	self.Markets[market].pushingForward = bool
-	self.Markets[market].bondsMan = sender
-	return(1)
+    self.Markets[market].pushingForward = bool
+    self.Markets[market].bondsMan = sender
+    return(1)
 
 def getPushedForward(market):
-	return(self.Markets[market].pushingForward)
+    return(self.Markets[market].pushingForward)
 
 def getBondsMan(market):
-	return(self.Markets[market].bondsMan)
+    return(self.Markets[market].bondsMan)
 
 def getLastOrder(market):
-	return(self.Markets[market].lastOrder)
+    return(self.Markets[market].lastOrder)
 
 def getPrevID(market, order):
-	return(self.Markets[market].orderIDs[order].prevID)
+    return(self.Markets[market].orderIDs[order].prevID)
 
 def getTotalOrders(market):
-	return(self.Markets[market].totalOrders)
+    return(self.Markets[market].totalOrders)
 
 def getSender():
-	return(msg.sender)
+    return(msg.sender)
