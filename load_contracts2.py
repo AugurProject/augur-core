@@ -150,6 +150,10 @@ def main():
 		imports_to_externs(args.srcdir, args.builddir)
 	elif args.update:
 		update_externs(args.srcdir)
+	else:
+		return 1
+
+	return 0
 
 if __name__ == '__main__':
 	sys.exit(main())
