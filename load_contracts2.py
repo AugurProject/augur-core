@@ -27,6 +27,8 @@ import binascii
 import json
 import shutil
 import sys
+import multiprocessing
+import requests
 
 if (3, 0) <= sys.version_info:
     _old_mk_signature = serpent.mk_signature
@@ -34,8 +36,11 @@ if (3, 0) <= sys.version_info:
         return _old_mk_signature(code).decode()
     serpent.mk_signature = mk_signature
 
+WORKER_POOL_SIZE = 2
+
 PYNAME = '[A-Za-z_][A-Za-z0-9_]*'
 IMPORT = re.compile('import ({0}) as ({0})'.format(PYNAME))
+EXTERN = re.compile('extern ({}): .+'.format(PYNAME))
 
 DEFAULT_RPCADDR = 'http://localhost:8545'
 DEFAULT_SRCDIR = './src'
@@ -140,7 +145,38 @@ def imports_to_externs(source_dir, new_dir):
 
 
 def update_externs(source_dir):
-    pass
+    """Updates all externs in source_dir."""
+    source_dir = os.path.abspath(source_dir)
+    serpent_files = find_files(source_dir, SERPENT_EXT)
+    extern_map = {}
+
+    for path in serpent_files:
+        name = os.path.basename(path).replace(SERPENT_EXT, '')
+        extern_name = 'extern {}:'.format(name)
+        signature = serpent.mk_signature(path)
+        name_end = signature.find(':') + 1
+        signature = extern_name + signature[name_end:]
+        extern_map[name] = signature
+
+    for path in serpent_files:
+        with open(path) as f:
+            code = f.read().split('\n')
+
+        for i in range(len(code)):
+            m = EXTERN.match(code[i])
+
+            if code[i].startswith('extern') and m is None:
+                print('Weird extern at', path, 'line', i)
+                sys.exit(1)
+            if m and m.group(1) not in extern_map:
+                print('Weird extern at', path, 'line', i)
+                sys.exit(1)
+            
+            if m:
+                code[i] = extern_map[m.group(1)]
+
+        with open(path, 'w') as f:
+            f.write('\n'.join(code))
 
 
 def main():
