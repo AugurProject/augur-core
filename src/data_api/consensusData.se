@@ -69,12 +69,12 @@ def getDenominator(branch, period):
     return(self.branch[branch].period[period].denominator)
 
 def increaseDenominator(branch, period, amount):
-    if(self.branch[branch].period[period].denominator + amount) >= self.branch[branch].period[period].denominator):
+    if(self.branch[branch].period[period].denominator + amount >= self.branch[branch].period[period].denominator):
         self.branch[branch].period[period].denominator += amount
     return(1)
 
 def decreaseDenominator(branch, period, amount):
-    if(self.branch[branch].period[period].denominator - amount) <= self.branch[branch].period[period].denominator):
+    if(self.branch[branch].period[period].denominator - amount <= self.branch[branch].period[period].denominator):
         self.branch[branch].period[period].denominator -= amount
     return(1)
 
