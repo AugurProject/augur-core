@@ -1,6 +1,0 @@
-src/data and api/branches.se
-src/data and api/reporting.se
-src/data and api/info.se
-src/data and api/events.se
-src/data and api/markets.se
-src/data and api/expiringEvents.se
