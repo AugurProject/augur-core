@@ -55,6 +55,7 @@ STANDARD_EXTERNS = {
 }
 
 DEFAULT_RPCADDR = 'http://localhost:8545'
+DEFAULT_CONTROLLER = 'macro Controller: 0xC001D00D'
 
 SERPENT_EXT = '.se'
 MACRO_EXT = '.sem'
@@ -182,12 +183,13 @@ def imports_to_externs(source_dir, target_dir):
         lookup_fmt = '{} = Controller.lookup(\'{}\')'
         for name in source_map:
             info = source_map[name]
-            signatures = ['macro Controller: 0xC001D00D', 'extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]']
+            signatures = [DEFAULT_CONTROLLER, # a place holder that needs to be updated before compiling
+                          STANDARD_EXTERNS['Controller']]
             for oname, alias in info['dependencies']:
                 signatures.append('')
                 signatures.append(lookup_fmt.format(alias, oname))
                 signatures.append(source_map[oname]['signature'])
-            signatures.append(''). # blank line between signatures section and rest of code
+            signatures.append('') # blank line between signatures section and rest of code
             new_code = '\n'.join([info['crud']] + signatures + [info['stripped_code']])
             path = info['path']
 
@@ -227,25 +229,33 @@ def update_externs(source_dir, controller):
             with open(path) as f:
                 code = f.read().split('\n')
 
+            crud, code = split_crud(code)
+            saw_controller = False
+
             for i in range(len(code)):
 
                 m = EXTERN.match(code[i])
 
                 if code[i].startswith('extern') and m is None:
-                    msg = EXTERN_ERROR_MSG.format(path=path, line=i, eg=code[i])
+                    msg = EXTERN_ERROR_MSG.format(path=path, line=(i + len(crud)), eg=code[i])
                     raise ContractError(msg)
                 if m and m.group(1) not in extern_map:
-                    msg = EXTERN_ERROR_MSG.format(path=path, line=i, eg=code[i])
+                    msg = EXTERN_ERROR_MSG.format(path=path, line=(i + len(crud)), eg=code[i])
                     raise ContractError(msg)
 
                 if m:
                     code[i] = extern_map[m.group(1)]
-                elif code[i].startswith('macro Controller:') and controller:
-                    code[i] = new_controller
+                elif code[i].startswith('macro Controller:'):
+                    saw_controller = True
+                    if controller:
+                        code[i] = new_controller
 
+            if not saw_controller:
+                crud.append(DEFAULT_CONTROLLER)
 
+            code = '\n'.join(crud + code)
             with open(path, 'w') as f:
-                f.write('\n'.join(code))
+                f.write(code)
     except Exception:
         raise
     else:
