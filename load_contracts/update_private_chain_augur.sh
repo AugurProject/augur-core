@@ -1,7 +1,3 @@
 #!/bin/bash
 
-ssh jack@45.33.62.72 sudo service augur stop
-ssh jack@45.33.62.72 rm -Rf /home/jack/augur/build
-scp -rp $HOME/src/augur/build jack@45.33.62.72:/home/jack/augur/build
-ssh jack@45.33.62.72 cp /home/jack/augur/src/env-9000.json /home/jack/augur/build/config/env.json
-ssh jack@45.33.62.72 sudo service augur start
+ssh jack@45.33.62.72 -t "cd /home/jack/augur && /home/jack/augur/update-local.sh && cp /home/jack/augur/src/env-9000.json /home/jack/augur/build/config/env.json && sudo service augur restart"
