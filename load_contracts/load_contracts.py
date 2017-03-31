@@ -385,6 +385,7 @@ def process_imports(fullname, local=False):
                 new_code.append(sub + " = create('" + localpath + "')")
             else:
                 new_code.append(sub + ' = ' + info['address'])
+                # new_code.append("macro " + sub + ": " + info["address"])
         else:
             new_code.append(line)
     return '\n'.join(new_code)
@@ -404,6 +405,7 @@ def process_externs(fullname):
         elif i == last_extern + 1:
             sub = line.split(' ')[0]
             new_code.append(sub + ' = ' + info['address'])
+            # new_code.append("macro " + sub + ": " + info["address"])
         else:
             new_code.append(line)
     return '\n'.join(new_code)
@@ -481,9 +483,7 @@ def compile(fullname):
     shortname = get_shortname(fullname)
 
     if 'WHITELIST' in code:
-        print "SHITS GETTING WHITELISTED BITCH"
-        whitelist_line = code.find('\n',
-                                   code.find('WHITELIST'))
+        whitelist_line = code.find('\n', code.find('WHITELIST'))
         prefixes = get_prefixes(fullname, fullsig)
         whitelist_code = WHITELIST_CODE.format(prefixes=prefixes)
         code = code[:whitelist_line+1] + whitelist_code + code[whitelist_line+1:]
