@@ -45,13 +45,20 @@ extern expiringEvents: [addEvent:[int256,int256,int256,int256,int256,int256,int2
 BACKSTOPS = Controller.lookup('backstops')
 extern backstops: [adjForkBondPaid:[int256,int256]:int256, doRoundTwoRefund:[int256,int256]:int256, getBondAmount:[int256]:int256, getBondPaid:[int256]:int256, getBondPoster:[int256]:int256, getBondReturned:[int256]:int256, getDisputedOverEthics:[int256]:int256, getFinal:[int256]:int256, getForkBondPaid:[int256]:int256, getForkBondPoster:[int256]:int256, getForkedOverEthicality:[int256]:int256, getMoved:[int256]:int256, getOriginalBranch:[int256]:int256, getOriginalEthicality:[int256]:int256, getOriginalOutcome:[int256]:int256, getOriginalVotePeriod:[int256]:int256, getResolved:[int256,int256]:int256, getRoundTwo:[int256]:int256, increaseBondPaid:[int256,int256]:int256, setBondAmount:[int256,int256]:int256, setBondPoster:[int256,int256]:int256, setBondReturned:[int256]:int256, setDisputedOverEthics:[int256]:int256, setFinal:[int256]:int256, setForkBondPoster:[int256,int256]:int256, setForkedOverEthicality:[int256]:int256, setMoved:[int256]:int256, setOriginalBranch:[int256,int256]:int256, setOriginalEthicality:[int256,int256]:int256, setOriginalOutcome:[int256,int256]:int256, setOriginalVotePeriod:[int256,int256]:int256, setResolved:[int256,int256,int256]:int256, setRoundTwo:[int256,int256]:int256, setRoundTwoRefund:[int256,int256]:int256]
 
+CONSENSUSFUNCTIONS = Controller.lookup('consensus')
+extern consensus.se: [incrementPeriodAfterReporting:[int256]:int256, penalizeWrong:[int256,int256]:_]
+
+CATCHUP = Controller.lookup('penalizationCatchup')
+extern penalizationCatchup.se: [penalizationCatchup:[int256,int256]:int256]
+
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 
 ### Faucets - get ~free rep + cash!
 
-extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]
+extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
+
 inset('../data_api/refund.se')
 
 inset('eventHelpers.se')
@@ -88,7 +95,6 @@ def reputationFaucet(branch):
     return(1)
 
 def fundNewAccount(branch):
-    CASH.send(self, 0)
     self.reputationFaucet(branch, call=delegate)
     CASH.setCash(msg.sender, 10000*ONE)
     log(type=fundedAccount, branch, msg.sender, 10000*ONE, 47*ONE, block.timestamp)
@@ -106,7 +112,7 @@ def claimInitialRep(parent, branch):
         throw()
     MUTEX.setMutex()
     # auto increment vote period if needed
-    INCREMENTPERIOD.incrementPeriodAfterReporting(parent)
+    CONSENSUSFUNCTIONS.incrementPeriodAfterReporting(parent)
     parentPeriod = BRANCHES.getParentPeriod(branch)
     forkPeriod = BRANCHES.getForkPeriod(parent)
     fork = REPORTING.getFork(parent)
