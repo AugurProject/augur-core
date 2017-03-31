@@ -46,13 +46,16 @@ EXTERN = re.compile('extern ({}): .+'.format(PYNAME))
 EXTERN_ERROR_MSG = 'Weird extern in {path} at line {line}: {eg}'
 IMPORT_ERROR_MSG = 'Weird import in {path} at line {line}: {eg}'
 
+# these are standard contracts that don't have a specific / unique controller address
 STANDARD_EXTERNS = {
     'Controller': 'extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]',
 
     # ERC20 and aliases used in Augur code
     'ERC20': 'extern ERC20: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]',
     'subcurrency': 'extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]',
-    'wallet': 'extern wallet.se: [initialize:[int256]:int256, setWinningOutcomeContractAddressInitialize:[int256,int256]:int256, transfer:[int256,int256]:int256]',
+    'wallet': 'extern wallet: [initialize:[int256]:int256, setWinningOutcomeContractAddressInitialize:[int256,int256]:int256, transfer:[int256,int256]:int256]',
+    'rateContract': 'extern rateContract: [rateFunction:[]:int256]',
+    'forkResolveContract': 'extern forkResolveContract: [resolveFork:[]:int256]',
 }
 
 DEFAULT_RPCADDR = 'http://localhost:8545'
@@ -63,7 +66,7 @@ MACRO_EXT = '.sem'
 
 parser = argparse.ArgumentParser(description='Compiles collections of serpent contracts.',
                                  epilog='Try a command followed by -h to see it\'s help info.')
-parser.set_defaults(command='help')
+#parser.set_defaults(command='help')
 
 commands = parser.add_subparsers(title='commands')
 
