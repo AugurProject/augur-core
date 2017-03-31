@@ -26,6 +26,8 @@ inset('refund.se')
 extern subcurrency: [allowance:[int256,int256]:int256, approve:[int256,int256]:int256, balance:[]:int256, balanceOf:[int256]:int256, transfer:[int256,int256]:int256, transferFrom:[int256,int256,int256]:int256]
 extern rateContract: [rateFunction:[]:int256]
 
+extern wallet.se: [initialize:[int256]:int256, setWinningOutcomeContractAddressInitialize:[int256,int256]:int256, transfer:[int256,int256]:int256]
+
 # Branches keeps track of data associated with branches in augur
 # Branches' index is the hash of the branch (aka branch)
 # currentVotePeriod is the current index in eventsExpDates and tells us which bucket of events are up to be
@@ -59,12 +61,15 @@ data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTr
 data branchList[]
 data branchListCount
 
-macro checkSubcurrencyIsValid(contract):
+macro checkSubcurrencyIsValid($contract):
     allowance = $contract.allowance(msg.sender, self)
     balance = $contract.balanceOf(self)
     transfer = $contract.transfer(msg.sender, 0)
     transferFrom = $contract.transferFrom(self, msg.sender, 0)
     approve = $contract.approve(self, 0)
+
+macro dance():
+    5
 
 def init():
     self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
@@ -76,6 +81,7 @@ def init():
     # since only have to report on half this targets 3
     self.Branches[1010101].baseReporters = 6
     ethContract = 0
+    dance()
     checkSubcurrencyIsValid(ethContract)
     wallet = create('../functions/wallet.se')
     wallet.initialize(ethContract)
@@ -84,6 +90,7 @@ def init():
 # whitelist updates
 def updateNumCurrencies(branch, num):
     self.Branches[branch].numCurrencies = num
+    return(1)
 
 # whitelist updates
 # rateContract _or_ rate should be given
@@ -160,13 +167,13 @@ def getCurrencyRate(branch, currency):
     else:
         return(self.Branches[branch].currencies[currencyIndex].rateContract.rateFunction())
 
-def getCurrency(branch, index):
+def getBranchCurrency(branch, index):
     return(self.Branches[branch].currencies[index].contract)
 
 def getCurrencyByContract(branch, currency):
     return(self.Branches[branch].currencyToIndex[currency])
 
-def getWallet(branch, currency):
+def getBranchWallet(branch, currency):
     return(self.Branches[branch].contract[currency])
 
 def getNumCurrencies(branch):

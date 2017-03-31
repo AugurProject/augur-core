@@ -61,11 +61,11 @@ def saveOrder(orderID, type, market, amount, price, sender, outcome, money, shar
     #  - if this outcome's best trade is unset, then this trade ID is the new
     #    best trade
     if type == 1:
-        bestBidPrice = self.orders[self.bestTrade[market][outcome].bid].price
+        bestBidPrice = self.orders[self.bestOrder[market][outcome].bid].price
         if bestBidPrice == 0 or price > bestBidPrice:
             self.bestOrder[market][outcome].bid = orderID
     else:
-        bestAskPrice = self.orders[self.bestTrade[market][outcome].ask].price
+        bestAskPrice = self.orders[self.bestOrder[market][outcome].ask].price
         if bestAskPrice == 0 or price > bestAskPrice:
             self.bestOrder[market][outcome].ask = orderID
     return(1)
@@ -117,3 +117,6 @@ def getID(orderID):
 # @return fxp
 def getPrice(id):
     return(self.orders[id].price)
+
+def getOrderOwner(id):
+    return(self.orders[id].owner)

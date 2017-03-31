@@ -139,7 +139,7 @@ def getEventResolution(event):
     resLen = self.Events[event].resolutionSourceLength
     return(load(self.Events[event].resolutionSource[0], chars = resLen): str)
 
-def geteventInfo(event):
+def getEventInfo(event):
     eventInfo = array(8)
     eventInfo[0] = self.Events[event].branch
     eventInfo[1] = self.Events[event].expirationDate

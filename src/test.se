@@ -1,7 +1,7 @@
 data foo
 
 def ok(x):
-    return(blah)
+    return(1)
     
 macro blah(a, b, c):
     a
