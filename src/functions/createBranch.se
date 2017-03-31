@@ -22,7 +22,7 @@ macro Controller: 0xC001D00D
 extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
 BRANCHES = Controller.lookup('branches')
-extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToBranch:[int256,int256]:int256, disableCurrency:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getBranchesStartingAt:[int256]:int256[], getCreationDate:[int256]:int256, getCurrency:[int256,int256]:int256, getCurrencyActive:[int256,int256]:int256, getCurrencyByContract:[int256,int256]:int256, getCurrencyRate:[int256,int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getForkTime:[int256]:int256, getInitialBalance:[int256,int256,int256]:int256, getMarketIDsInBranch:[int256,int256,int256]:int256[], getMinTradingFee:[int256]:int256, getMostRecentChild:[int256]:int256, getNumBranches:[]:int256, getNumCurrencies:[int256]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, getWallet:[int256,int256]:int256, incrementPeriod:[int256]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, reactivateCurrency:[int256,int256]:int256, removeLastCurrency:[int256]:int256, replaceCurrency:[int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256,int256]:int256, setMostRecentChild:[int256,int256]:int256, updateCurrencyRate:[int256,int256,int256,int256]:int256, updateNumCurrencies:[int256,int256]:_]
+extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToBranch:[int256,int256]:int256, disableCurrency:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranches:[]:int256[], getBranchesStartingAt:[int256]:int256[], getCreationDate:[int256]:int256, getBranchCurrency:[int256,int256]:int256, getCurrencyActive:[int256,int256]:int256, getCurrencyByContract:[int256,int256]:int256, getCurrencyRate:[int256,int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getForkTime:[int256]:int256, getInitialBalance:[int256,int256,int256]:int256, getMarketIDsInBranch:[int256,int256,int256]:int256[], getMinTradingFee:[int256]:int256, getMostRecentChild:[int256]:int256, getNumBranches:[]:int256, getNumCurrencies:[int256]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, getBranchWallet:[int256,int256]:int256, incrementPeriod:[int256]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, reactivateCurrency:[int256,int256]:int256, removeLastCurrency:[int256]:int256, replaceCurrency:[int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256,int256]:int256, setMostRecentChild:[int256,int256]:int256, updateCurrencyRate:[int256,int256,int256,int256]:int256, updateNumCurrencies:[int256,int256]:_]
 
 INFO = Controller.lookup('info')
 extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256]
@@ -33,6 +33,7 @@ extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,i
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
+extern wallet.se: [initialize:[int256]:int256, setWinningOutcomeContractAddressInitialize:[int256,int256]:int256, transfer:[int256,int256]:int256]
 
 ### Allows creation of a new branch
 
@@ -44,7 +45,7 @@ data ethContract
 
 macro MAX_FEE: 10**17
 
-macro checkSubcurrencyIsValid(contract):
+macro checkSubcurrencyIsValid($contract):
     allowance = $contract.allowance(msg.sender, self)
     balance = $contract.balanceOf(self)
     transfer = $contract.transfer(msg.sender, 0)
@@ -98,9 +99,9 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
     # todo here switch self.ethContract to be a call to whitelist to get this contract
     if(!wallet.initialize(self.ethContract)):
         throw()
-    BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, 47 * ONE, self.ethContract, wallet, mostRecentChildBranch)
+    BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, self.ethContract, wallet, mostRecentChildBranch)
     # pay creation fee, initialize branch info
-    feePaid = self.ethContract.transferFrom(msg.sender, BRANCHES.getWallet(parent, self.ethContract), 47 * ONE)
+    feePaid = self.ethContract.transferFrom(msg.sender, BRANCHES.getBranchWallet(parent, self.ethContract), 47 * ONE)
     if(!feePaid or !INFO.setInfo(branch, description, msg.sender, 47 * ONE, 0, 0) or !REPORTING.setInitialReporters(branch)):
         throw()
     if(!mutexWhitelisted()):

@@ -3,7 +3,7 @@ macro Controller: 0xC001D00D
 extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
 ORDERS = Controller.lookup('orders')
-extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getBestAsk:[int256,int256]:int256, getBestBid:[int256,int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getPrice:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256]
+extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getBestAsk:[int256,int256]:int256, getBestBid:[int256,int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256]
 
 TRADE = Controller.lookup('trade')
 extern trade: [trade:[int256,int256]:_]
@@ -30,7 +30,7 @@ def tradeAvailableOrders(orderIDs: arr, amountTakerWants, fxpMinimumOrderBalance
     numOrders = len(orderIDs)
     originalBalance = fxpMinimumOrderBalance
     i = 0
-    while (i < numOrders and tx.gas > MINIMUM_GAS_NEEDED_TO_TRADE and fxpMinimumOrderBalance):
+    while (i < numOrders and msg.gas > MINIMUM_GAS_NEEDED_TO_TRADE and fxpMinimumOrderBalance):
         if(ORDERS.getAmount(orderIDs[i]) > fxpMinimumOrderBalance):
             tradeReturn = array(2)
             tradeReturn = TRADE.trade(orderIDs[i], amountTakerWants, call = delegate, outitems = 2)
