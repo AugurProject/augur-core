@@ -49,6 +49,7 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 inset('../data_api/refund.se')
 inset('eventHelpers.se')
 inset('logReturn.se')
+inset('../data_api/float.se')
 
 event closeMarketLogReturn(returnValue)
 
@@ -83,7 +84,7 @@ def closeMarket(market, sender):
     # send fees in market to branch
     marketCurrency = INFO.getCurrency(market)
     marketWallet = INFO.getWallet(market)
-    marketWallet.transfer(BRANCHES.getBranchWallet(branch, marketCurrency), marketCurrency.balance(marketWallet) - safeFxpMul(MARKETS.getSharesPurchased(market, 1), MARKETS.getCumulativeScale(market)))
+    marketWallet.transfer(BRANCHES.getBranchWallet(branch, marketCurrency), marketCurrency.balanceOf(marketWallet) - safeFxpMul(MARKETS.getSharesPurchased(market, 1), MARKETS.getCumulativeScale(market)))
 
     if(!mutexWhitelisted()):
         MUTEX.unsetMutex()

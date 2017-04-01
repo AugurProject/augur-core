@@ -125,12 +125,12 @@ def getDecimals():
 def getSymbol():
     return(self.symbol)
 
-# safe adders idea pulled from piper merriam's btcrelay audit
 macro safeToAdd($a, $b):
-    (($a + $b) >= $a)
+    $c = $a + $b
+    ($c >= $a && $c >= $b)
 
 macro safeToSubtract($a, $b):
-    ($b <= $a)
+    ($b <= $a && (($a - $b) <= $a))
 
 def changeTokens(trader, amount):
     # whitelist sender to be markets

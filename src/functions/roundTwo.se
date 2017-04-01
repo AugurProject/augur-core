@@ -183,14 +183,14 @@ def resolve(branch, event):
     else:
         return(0)
 
-roundTwoBondCheckPreconditions():
+macro roundTwoBondCheckPreconditions():
     # if pushed forward don't allow until no longer pushed fwd
     if(EVENTS.getOriginalExpiration(event) != EVENTS.getExpiration(event)):
         MUTEX.unsetMutex()
         return(-1)
     market = EVENTS.getMarket(event, 0)
     forkPeriod = BRANCHES.getForkPeriod(branch)
-    if(!eventCreatedPriorToFork(eventID):
+    if(!eventCreatedPriorToFork(eventID)):
         MUTEX.unsetMutex()
         return(-2)
     if(noVotes()):

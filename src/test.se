@@ -2,7 +2,19 @@ macro Controller: 0xC001D00D
 data foo
 
 def ok(x):
-    return(1)
+    y = array(3)
+    blah()
+    n = create('functions/shareTokens.se')
+    return(y[2])
     
-macro blah(a, b, c):
-    a
+macro blah():
+    $x = array(5)
+    $i = 0
+    $x[$i] = 3
+
+macro safeToSubtract($a, $b):
+    ($b <= $a && (($a - $b) <= $a))
+
+
+macro safeToSubtract($a, $b):
+    ($b <= $a && (($a - $b) <= $a))

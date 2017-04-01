@@ -21,13 +21,12 @@
 macro Controller: 0xC001D00D
 extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
-
 inset('refund.se')
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 extern rateContract: [rateFunction:[]:int256]
 
-extern wallet: [initialize:[int256]:int256, setWinningOutcomeContractAddressInitialize:[int256,int256]:int256, transfer:[int256,int256]:int256]
+extern wallet: [initialize:[int256]:int256, setWinningOutcomeContractAddressInitialize:[int256,int256]:int256, transfer:[address,uint256]:int256]
 
 # Branches keeps track of data associated with branches in augur
 # Branches' index is the hash of the branch (aka branch)
@@ -69,9 +68,6 @@ macro checkSubcurrencyIsValid($contract):
     transferFrom = $contract.transferFrom(self, msg.sender, 0)
     approve = $contract.approve(self, 0)
 
-macro dance():
-    5
-
 def init():
     self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
     self.Branches[1010101].periodLength = 15 # 2 hours
@@ -82,7 +78,6 @@ def init():
     # since only have to report on half this targets 3
     self.Branches[1010101].baseReporters = 6
     ethContract = 0
-    dance()
     checkSubcurrencyIsValid(ethContract)
     wallet = create('../functions/wallet.se')
     wallet.initialize(ethContract)

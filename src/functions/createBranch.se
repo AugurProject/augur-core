@@ -33,7 +33,7 @@ extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,i
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
-extern wallet: [initialize:[int256]:int256, setWinningOutcomeContractAddressInitialize:[int256,int256]:int256, transfer:[int256,int256]:int256]
+extern wallet: [initialize:[int256]:int256, setWinningOutcomeContractAddressInitialize:[int256,int256]:int256, transfer:[address,uint256]:int256]
 
 ### Allows creation of a new branch
 

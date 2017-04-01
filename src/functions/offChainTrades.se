@@ -94,9 +94,9 @@ def getAmountFilled(orderHash):
     refund()
     return(self.amountFilled[orderHash])
 
-macro checkSig(signer, hash, v, r, s):
-    ecrecover(hash, v, r, s) == signer
+macro checkSig($signer, $hash, $v, $r, $s):
+    ecrecover($hash, $v, $r, $s) == $signer
 
 # maker should call approve first [taker also needs to preapprove fund withdrawals]
-macro checkHasAbilityToSpend(owner, token, amount):
-    token.allowance(owner, self) >= amount
+macro checkHasAbilityToSpend($owner, $token, $amount):
+    token.allowance($owner, $self) >= $amount

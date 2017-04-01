@@ -206,7 +206,8 @@ def resolveForkedEvent(branch, event):
     if(!EVENTS.getForked(event)):
         MUTEX.unsetMutex()
         return(-1)
-    if(self.resolveForkEvent(branch, event)):
+    forkResolved = self.resolveForkEvent(branch, event)
+    if(forkResolved):
         EVENTS.setForkDone(event)
         EVENTS.setCreationTime(event)
         CONSENSUSDATA.doRefund(msg.sender, event)
@@ -220,7 +221,7 @@ def resolveForkedEvent(branch, event):
 # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
     # helper function for resolveForkedEvent
 # needs whitelist
-macro resolveForkEvent(branch, event):
+def resolveForkEvent(branch, event):
     refund()
     # whitelist
     bond = EVENTS.getBond(event)
@@ -475,3 +476,7 @@ macro moveEventToWinningBranch():
 # use address picked in event creation to resolve it instead of the default fork resolve option
 macro resolveCustomForkResolution():
     winner = nonDefaultForkResolution.resolveFork()
+    if(winner):
+        return(1)
+    else:
+        return(0)

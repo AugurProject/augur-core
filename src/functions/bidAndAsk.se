@@ -145,7 +145,7 @@ macro refundOrder():
         # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
         if(sharesEscrowed):
             i = 1
-            while i < MARKETS.getNumOutcomes($market):
+            while i < MARKETS.getMarketNumOutcomes($market):
                 if(i != outcome):
                     MARKETS.modifyParticipantShares($market, msg.sender, $outcome, sharesEscrowed, 0)
                 i += 1
@@ -194,7 +194,7 @@ macro placeAsk():
     bestBidID = ORDERS.getBestBid($market, $outcome)
     bestBidPrice = ORDERS.getPrice(bestBidID)
     if bestBidID != 0 and $fxpPrice <= bestBidPrice and ORDERS.getAmount(bestBidID) >= safeFxpDiv(MIN_ORDER_VALUE, bestBidPrice):
-        logReturn(bidAndAsk_logReturn, -5)
+        logReturn(bidAndAskLogReturn, -5)
 
     # Take shares in escrow if user has shares
     sharesHeld = MARKETS.getParticipantSharesPurchased($market, msg.sender, $outcome)
@@ -237,10 +237,10 @@ macro placeBid():
     bestAskID = ORDERS.getBestAsk($market, $outcome)
     bestAskPrice = ORDERS.getPrice(bestAskID)
     if bestAskID != 0 and $fxpPrice >= bestAskPrice and ORDERS.getAmount(bestAskID) >= safeFxpDiv(MIN_ORDER_VALUE, bestAskPrice):
-        logReturn(bidAndAsk_logReturn, -5)
+        logReturn(bidAndAskLogReturn, -5)
 
     # If user owns n minus the one outcome we're buying escrow no money but escrow their shares in all the other outcomes.
-    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
+    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792L
     sharesHeld = MAX_INT
     i = 1
     while i < MARKETS.getMarketNumOutcomes($market):
@@ -262,7 +262,7 @@ macro placeBid():
         $fxpAmount -= fill
         $sharesEscrowed += fill
         i = 1
-        while i < MARKETS.getNumOutcomes($market):
+        while i < MARKETS.getMarketNumOutcomes($market):
             if(i != $outcome):
                 MARKETS.modifyParticipantShares($market, msg.sender, i, -fill, 0)
             i += 1

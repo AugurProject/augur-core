@@ -121,7 +121,7 @@ def sellCompleteSets(market, fxpAmount):
     logReturn(completeSetsLogReturn, 1)
 
 macro checkBuyCompleteSetsPreconditions():
-    if(!MARKETS.getNumOutcomes(market)):
+    if(!MARKETS.getMarketNumOutcomes(market)):
         MUTEX.unsetMutex()
         logReturn(completeSetsLogReturn, 0)
     if(BRANCHES.getOracleOnly(branch)):

@@ -39,6 +39,9 @@ extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, f
 EXPEVENTS = Controller.lookup('expiringEvents')
 extern expiringEvents: [addEvent:[int256,int256,int256,int256,int256,int256,int256]:int256, addReportToReportsSubmitted:[int256,int256,int256]:int256, addRoundTwo:[int256,int256]:int256, addToWeightOfReport:[int256,int256,int256,int256]:int256, adjustPeriodFeeValue:[int256,int256,int256]:int256, countReportAsSubmitted:[int256,int256,int256,int256,int256]:int256, deleteEvent:[int256,int256,int256]:int256, getActiveReporters:[int256,int256,int256,int256]:int256[], getAfterFork:[int256,int256]:int256, getAfterRep:[int256,int256,int256]:int256, getBeforeRep:[int256,int256,int256]:int256, getCurrentMode:[int256,int256]:int256, getCurrentModeItems:[int256,int256]:int256, getEthicReport:[int256,int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256,int256]:int256, getEventWeight:[int256,int256,int256]:int256, getEvents:[int256,int256]:int256[], getEventsRange:[int256,int256,int256,int256]:int256[], getFeeValue:[int256,int256]:int256, getLesserReportNum:[int256,int256,int256]:int256, getNumActiveReporters:[int256,int256]:int256, getNumEventsToReportOn:[int256,int256]:int256, getNumRemoved:[int256,int256]:int256, getNumReportsSubmitted:[int256,int256,int256]:int256, getNumRequired:[int256,int256]:int256, getNumRoundTwo:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodDormantRep:[int256,int256,int256]:int256, getPeriodRepWeight:[int256,int256,int256]:int256, getReport:[int256,int256,int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getReportsCommitted:[int256,int256,int256]:int256, getRequired:[int256,int256,int256]:int256, getSaltyEncryptedHash:[int256,int256,int256,int256]:int256, getSubsidy:[int256,int256,int256]:int256, getWeightOfReport:[int256,int256,int256]:int256, moveEvent:[int256,int256]:int256, refundCost:[int256,int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setAfterRep:[int256,int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256,int256]:int256, setCurrentMode:[int256,int256,int256]:int256, setCurrentModeItems:[int256,int256,int256]:int256, setEthicReport:[int256,int256,int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setEventWeight:[int256,int256,int256,int256]:int256, setLesserReportNum:[int256,int256,int256,int256]:int256, setNumEventsToReportOn:[int256]:int256, setPeriodDormantRep:[int256,int256,int256,int256]:int256, setPeriodRepWeight:[int256,int256,int256,int256]:int256, setReport:[int256,int256,int256,int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setSaltyEncryptedHash:[int256,int256,int256,int256,int256]:int256]
 
+COMPLETESETS = Controller.lookup('completeSets')
+extern completeSets: [buyCompleteSets:[int256,int256]:_, sellCompleteSets:[int256,int256]:_]
+
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
@@ -200,7 +203,7 @@ macro fillBid():
         bidderSharesFilled = fill
         # send shares [amount is fill] escrowed by bidder back to bidder
         i = 1
-        while i < MARKETS.getNumOutcomes(market):
+        while i < MARKETS.getMarketNumOutcomes(market):
             if(i != outcome):
                 MARKETS.modifyParticipantShares(market, owner, i, fill, 0)
             i += 1
@@ -231,7 +234,7 @@ macro fillBid():
     if(remainderToFill):
         # issue asker complete sets for remainder amount and dont charge yet
         i = 1
-        while i < MARKETS.getNumOutcomes(market):
+        while i < MARKETS.getMarketNumOutcomes(market):
             MARKETS.modifyShares(market, i, remainderToFill)
             MARKETS.modifyParticipantShares(market, msg.sender, i, remainderToFill, 0)
             i += 1
@@ -262,7 +265,7 @@ macro fillBid():
     if(askerMoneyFilled && !INFO.getCurrency(market).transferFrom(msg.sender, market, safeFxpMul(cumulativeScale, askerMoneyFilled))):
         throw()
 
-    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
+    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819L
     sharesHeld = MAX_INT
     i = 1
     while i < MARKETS.getMarketNumOutcomes(market):
@@ -270,7 +273,8 @@ macro fillBid():
         i += 1
     # Sell the asker's [msg.sender] complete sets if they have any
     if(sharesHeld):
-        COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegate)
+        if(!COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegate)):
+            throw()
 
     # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
     log(type = logPrice, market, msg.sender, owner, ASK, price, sumOfFills, block.timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
@@ -304,7 +308,7 @@ macro fillAsk():
         askerMoneyFilled = fill
         # issue asker complete sets for fill amount and dont charge because already paid
         i = 1
-        while i < MARKETS.getNumOutcomes(market):
+        while i < MARKETS.getMarketNumOutcomes(market):
             if(i != outcome):
                 MARKETS.modifyShares(market, i, fill)
                 MARKETS.modifyParticipantShares(market, owner, i, fill, 0)
@@ -338,7 +342,7 @@ macro fillAsk():
     if(!payMaker):
         throw()
 
-    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
+    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819L
     sharesHeld = MAX_INT
     i = 1
     while i < MARKETS.getMarketNumOutcomes(market):
@@ -358,7 +362,7 @@ macro fillAsk():
     MARKETS.modifyParticipantShares(market, msg.sender, outcome, sumOfFills, 1)
 
 
-    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
+    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819L
     sharesHeld = MAX_INT
     i = 1
     while i < MARKETS.getMarketNumOutcomes(market):
@@ -383,7 +387,7 @@ macro fillAsk():
 
 
 macro sellMakersCompleteSets():
-    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819967L
+    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792003956564819L
     sharesHeld = MAX_INT
     i = 1
     while i < MARKETS.getMarketNumOutcomes(market):
