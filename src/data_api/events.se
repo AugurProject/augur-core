@@ -25,7 +25,7 @@ INFO = Controller.lookup('info')
 extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256]
 
 
-inset('refund.se')
+inset('../macros/refund.sem')
 
 # Keeps track of data about events in augur
 # Events' index is the event

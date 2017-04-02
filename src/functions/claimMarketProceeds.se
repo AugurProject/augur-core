@@ -43,8 +43,8 @@ extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 ### This allows users to claim their money from a market by exchanging their shares which hold value
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
-inset('../data_api/refund.se')
-inset('../data_api/float.se')
+inset('../macros/refund.sem')
+inset('../macros/float.sem')
 
 macro MAX_WINNING_OUTCOMES: 8
 macro THREE_DAYS: 259200

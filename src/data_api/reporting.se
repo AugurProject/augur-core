@@ -28,7 +28,7 @@ extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToB
 extern repContract: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, getRidOfDustForLaunch:[]:int256, getSeeded:[]:uint256, name:[]:uint256, setSaleDistribution:[address[],uint256[]]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 REPCONTRACT = 0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5
-inset('refund.se')
+inset('../macros/refund.sem')
 
 # Storage of all data associated with reporters
     # Reporting index is the branch

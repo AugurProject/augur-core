@@ -1,7 +1,3 @@
-
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
-
 macro safeAdd($x, $y):
     if(!safeToAdd($x, $y)):
         ~invalid()

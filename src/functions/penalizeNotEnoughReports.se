@@ -29,9 +29,9 @@ extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 
 
-inset('../data_api/refund.se')
-inset('../data_api/periodStage.se')
-inset('../data_api/float.se')
+inset('../macros/refund.sem')
+inset('../macros/periodStage.sem')
+inset('../macros/float.sem')
 
 macro ONE_POINT_TWO: 1200000000000000000
 

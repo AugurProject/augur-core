@@ -1,7 +1,3 @@
-
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
-
 macro ONE: 10^18
 
 macro THREE_FOURTHS: 750000000000000000

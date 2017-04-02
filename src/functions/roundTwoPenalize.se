@@ -32,13 +32,13 @@ extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 
 
-inset('../data_api/refund.se')
-inset('eventHelpers.se')
-inset('redistributeRep.se')
-inset('proportionCorrect.se')
-inset('repChange.se')
-inset('../data_api/float.se')
-inset('../data_api/periodStage.se')
+inset('../macros/refund.sem')
+inset('../macros/eventHelpers.sem')
+inset('redistributeRep.sem')
+inset('proportionCorrect.sem')
+inset('../macros/repChange.sem')
+inset('../macros/float.sem')
+inset('../macros/periodStage.sem')
 
 # event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
 

@@ -42,9 +42,9 @@ extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 extern forkResolveContract: [resolveFork:[]:int256]
-inset('../data_api/refund.se')
-inset('eventHelpers.se')
-inset('../data_api/float.se')
+inset('../macros/refund.sem')
+inset('../macros/eventHelpers.sem')
+inset('../macros/float.sem')
 
 macro FORK_TEXT: text("fork")
 macro POINT_ZERO_ONE: 10000000000000000

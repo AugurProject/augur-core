@@ -26,9 +26,9 @@ extern makeReports: [calculateReportTargetForEvent:[int256,int256,int256,int256]
 
 
 # fix circular dependency ^
-inset('refund.se')
-inset('float.se')
-inset('../functions/eventHelpers.se')
+inset('../macros/refund.sem')
+inset('macrosfloat.se')
+inset('../macros/eventHelpers.sem')
 
 macro ONE_POINT_TWO: 1200000000000000000
 

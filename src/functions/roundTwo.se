@@ -35,9 +35,9 @@ extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 
 
-inset('../data_api/refund.se')
-inset('eventHelpers.se')
-inset('../data_api/float.se')
+inset('../macros/refund.sem')
+inset('../macros/eventHelpers.sem')
+inset('../macros/float.sem')
 
 macro POINT_ZERO_ONE: 10000000000000000
 macro COST_FOR_EVENT_REPORT_CALCULATION: 500000

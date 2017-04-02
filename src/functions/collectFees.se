@@ -21,9 +21,9 @@ extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
-inset('../data_api/refund.se')
-inset('../data_api/periodStage.se')
-inset('../data_api/float.se')
+inset('../macros/refund.sem')
+inset('../macros/periodStage.sem')
+inset('../macros/float.sem')
 
 # Allows a user to collect both redistributed rep and trading fees earned at the end of a period
 # Errors:

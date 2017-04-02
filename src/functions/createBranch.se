@@ -38,8 +38,8 @@ extern wallet: [initialize:[int256]:int256, setWinningOutcomeContractAddressInit
 ### Allows creation of a new branch
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
-inset('../data_api/refund.se')
-inset('../data_api/float.se')
+inset('../macros/refund.sem')
+inset('../macros/float.sem')
 
 data ethContract
 

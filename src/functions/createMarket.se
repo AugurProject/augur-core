@@ -57,9 +57,9 @@ extern forkResolveContract: [resolveFork:[]:int256]
 
 extern wallet: [initialize:[int256]:int256, setWinningOutcomeContractAddressInitialize:[int256,int256]:int256, transfer:[address,uint256]:int256]
 
-inset('../data_api/refund.se')
-inset('../data_api/float.se')
-inset('eventHelpers.se')
+inset('../macros/refund.sem')
+inset('../macros/float.sem')
+inset('../macros/eventHelpers.sem')
 
 event marketCreated(market)
 event tradingFeeUpdated(market, fxpTradingFee)

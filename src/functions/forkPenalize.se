@@ -26,13 +26,13 @@ extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 
 
-inset('../data_api/refund.se')
-inset('eventHelpers.se')
-inset('redistributeRep.se')
-inset('proportionCorrect.se')
-inset('repChange.se')
-inset('../data_api/periodStage.se')
-inset('../data_api/float.se')
+inset('../macros/refund.sem')
+inset('../macros/eventHelpers.sem')
+inset('redistributeRep.sem')
+inset('proportionCorrect.sem')
+inset('../macros/repChange.sem')
+inset('../macros/periodStage.sem')
+inset('../macros/float.sem')
 macro POINT_ZERO_ONE: 10**16
 macro MIN_BOND: 200 * ONE
 

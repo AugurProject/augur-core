@@ -21,9 +21,9 @@ extern events: [addMarket:[int256,int256]:int256, addPast24:[int256]:int256, add
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
-inset('../data_api/refund.se')
-inset('../data_api/periodStage.se')
-inset('../data_api/float.se')
+inset('../macros/refund.sem')
+inset('../macros/periodStage.sem')
+inset('../macros/float.sem')
 
 event slashedRep(branch: indexed, sender: indexed, reporter: indexed, event, repSlashed, slasherBalance, timestamp)
 

@@ -49,9 +49,9 @@ extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 ### Allows users to take orders off the book (i.e. fill orders)
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
-inset('../data_api/refund.se')
+inset('../macros/refund.sem')
 inset('logReturn.se')
-inset('../data_api/float.se')
+inset('../macros/float.sem')
 
 # Trade scenarios:
     # Note: all [] scenarios are typical, if a user somehow gets an extra complete set it'll also be sold when doing a order, typically complete sets only sold when closing out a position or closing out a short

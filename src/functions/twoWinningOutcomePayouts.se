@@ -17,8 +17,8 @@ extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToB
 
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
-inset('../data_api/refund.se')
-inset('../data_api/float.se')
+inset('../macros/refund.sem')
+inset('../macros/float.sem')
 
 # Payout traders in markets with number of winningOutcomes of 2 [one scalar with any combination of binary + categorical for the other 2 dimensions, or just 1D with a scalar]
 # whitelist
