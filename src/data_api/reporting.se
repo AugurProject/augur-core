@@ -32,8 +32,8 @@ inset('../macros/refund.sem')
 
 # Storage of all data associated with reporters
     # Reporting index is the branch
-    # Reputation index is the rep. address
-    # RepIDtoIndex returns a reporter's reporters[] index given their reputationID as the key
+    # Reputation index is the index of the reporter
+    # RepIDtoIndex returns a reporter's reputation[] index given their reputationID as the key
     # total rep is all the rep in augur
     # active rep is the fxpAmount which is actually active
     # fork is the child branch of a parent which forked

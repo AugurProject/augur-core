@@ -173,20 +173,8 @@ def getTradingFee(market):
 def getBranch(market):
     return(self.Markets[market].branch)
 
-macro market($market):
-    self.Markets[$market]
-
-macro fxpcumulativeScale($market):
-    market($market).cumulativeScale
-
-macro numOutcomes($market):
-    market($market).numOutcomes
-
-macro sharesPurchased($market):
-    market($market).sharesPurchased
-
 # check that msg.sender is one of our function contracts
-def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpcumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr):
+def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpCumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
     # add event list to the market
@@ -199,7 +187,7 @@ def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, 
     self.Markets[market].originalPeriod = tradingPeriod
     self.Markets[market].fxpTradingFee = fxpTradingFee
     self.Markets[market].branch = branch
-    self.Markets[market].cumulativeScale = fxpcumulativeScale
+    self.Markets[market].cumulativeScale = fxpCumulativeScale
     self.Markets[market].numOutcomes = numOutcomes
     self.Markets[market].tag1 = tag1
     self.Markets[market].tag2 = tag2
@@ -213,7 +201,7 @@ def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, 
 def modifyShares(market, outcome, fxpAmount):
     #if(!self.whitelist.check(msg.sender)):
     #    return(-1)
-    sharesPurchased(market)[outcome] += fxpAmount
+    self.Markets[market].sharesPurchased[outcome] += fxpAmount
     self.Markets[market].shareContracts[outcome].modifySupply(fxpAmount)
     return(1)
 
@@ -232,6 +220,7 @@ def modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
     return(1)
 
 def addOrder(market, orderID):
+    lastID = self.Markets[market].lastOrder
     self.Markets[market].orderIDs[lastID].nextID = orderID
     self.Markets[market].orderIDs[orderID].prevID = self.Markets[market].lastOrder
     self.Markets[market].orderIDs[orderID].id = orderID

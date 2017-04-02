@@ -13,8 +13,6 @@ data orders[](id, type, market, amount, price, owner, block, outcome, sharesEscr
 # indices are marketID and outcomeID
 data bestOrder[][](bid, ask)
 
-event logAddTx(market:indexed, sender:indexed, type, fxpPrice, fxpAmount, outcome, orderID)
-
 def makeOrderHash(market, outcome, direction):
     refund()
     orderInfo = array(4)

@@ -120,7 +120,7 @@ def depositEther():
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
 
-    amount = msg.value * ONE / WEI_TO_ETH
+    amount = msg.value
     if(!safeToAdd(amount, self.accounts[msg.sender].balance) or !safeToAdd(amount, self.totalSupply)):
         throw()
     self.accounts[msg.sender].balance += amount
