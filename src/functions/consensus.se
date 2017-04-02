@@ -35,7 +35,7 @@ inset('redistributeRep.sem')
 inset('proportionCorrect.sem')
 inset('../macros/repChange.sem')
 inset('../macros/float.sem')
-inset('logReturn.se')
+inset('../macros/logReturn.sem')
 inset('../macros/periodStage.sem')
 
 event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)

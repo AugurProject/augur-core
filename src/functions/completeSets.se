@@ -42,7 +42,7 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 ### Allows users to buy/sell sets of every outcome, so 500 complete sets in a 3 outcome market is 500 of outcome 1, 2, and 3 each respectively
 
 inset('../macros/refund.sem')
-inset('logReturn.se')
+inset('../macros/logReturn.sem')
 inset('../macros/float.sem')
 
 event completeSetsLogReturn(sender: indexed, market: indexed, type: indexed, returnValue, numOutcomes)

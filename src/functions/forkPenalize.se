@@ -24,8 +24,6 @@ extern consensusData: [decreaseDenominator:[int256,int256,int256]:int256, doRefu
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
-
-
 inset('../macros/refund.sem')
 inset('../macros/eventHelpers.sem')
 inset('redistributeRep.sem')

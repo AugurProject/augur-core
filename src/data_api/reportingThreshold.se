@@ -21,14 +21,13 @@ extern fxpFunctions: [fxExp:[int256]:int256, fxLog:[int256]:int256]
 REPORTING = Controller.lookup('reporting')
 extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOfReporter:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, claimInitialRepFromRepContract:[]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getFork:[int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReportedOnNonFinalRoundTwoEvent:[int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setFork:[int256]:int256, setInitialReporters:[int256]:int256, setRep:[int256,int256,int256]:int256, setReportedOnNonFinalRoundTwoEvent:[int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, totalSupply:[int256]:int256]
 
-MAKEREPORTS = Controller.lookup('makeReports')
-extern makeReports: [calculateReportTargetForEvent:[int256,int256,int256,int256]:int256, makeHash:[int256,int256,int256,int256,int256]:int256, submitReport:[int256,int256,int256,int256]:_, submitReportHash:[int256,int256,int256]:_, validateReport:[int256,int256,int256,int256,int256,int256,int256]:int256]
+MARKETS = Controller.lookup('markets')
+extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getNumEvents:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSender:[]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initializeMarket:[int256,int256[],int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[]]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, returnTags:[int256]:int256[], setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]
 
-
-# fix circular dependency ^
 inset('../macros/refund.sem')
 inset('macrosfloat.se')
 inset('../macros/eventHelpers.sem')
+inset('../macros/float.sem')
 
 macro ONE_POINT_TWO: 1200000000000000000
 
@@ -37,6 +36,10 @@ macro POINT_ZERO_ONE: 10000000000000000
 macro MAX_THRESHOLD: 10 ** 54
 
 macro MIN_EVENTS_FOR_WHALE_TO_REPORT_ON: 30
+
+macro MARKETS_COUNTING_TOWARDS_SHARE_VALUE: 20
+
+macro GAS_SUBSIDY: 3500000
 
 # Calculates what a reporter should have to get below as a target to report on any given event
 # eventsExpected == (numberReportEstimate*((reporterList[n]/totalRep)**1.2))
@@ -67,7 +70,7 @@ def getEventsToReportOn(branch, period, sender, start, end):
         if thisEvent != 0:
             # calculate report target for event here if not done for purposes of computing this
             if(!EXPEVENTS.getLesserReportNum(branch, period, thisEvent)):
-                MAKEREPORTS.calculateReportTargetForEvent(branch, thisEvent, period, msg.sender)
+                self.calculateReportTargetForEvent(branch, thisEvent, period, msg.sender)
             reportingThreshold = self.calculateReportingThreshold(branch, thisEvent, period, sender)
             hash = sha3([sender, thisEvent], items = 2)
             shaHash = abs(hash) / ONE * 2
@@ -86,7 +89,7 @@ def getEventsToReportOn(branch, period, sender, start, end):
 # whitelist
 def getEventCanReportOn(branch, period, reporter, event):
     if(!EXPEVENTS.getLesserReportNum(branch, period, event)):
-        MAKEREPORTS.calculateReportTargetForEvent(branch, event, period, reporter)
+        self.calculateReportTargetForEvent(branch, event, period, reporter)
     reportingThreshold = self.calculateReportingThreshold(branch, event, period, reporter)
 
     # do abs then mult by 2 to ensure it's positive and between 0 and 1
@@ -208,3 +211,29 @@ def findLazyReportersAndLeechers(branch, votePeriod, reporterStart, reporterEnd,
                     eventIndex += 1
         reporterIndex += 1
     return(slice(lazyReportersAndExampleEventsTheyCouldveReportedOn, items=0, items=leecherIndex): arr)
+
+# calculates how many reports should be on a given event
+# whitelist
+# @return fxp
+def calculateReportTargetForEvent(branch, event, votePeriod, sender):
+    numMarkets = EVENTS.getNumMarkets(event)
+    # todo we should prob switch this to when we send fees don't add to a market but rather the event associated w/ the market, then assign reporters based on fees on event / total fees for all events, this'll save cost and be more appropriate for what we actually want
+    if(numMarkets > MARKETS_COUNTING_TOWARDS_SHARE_VALUE):
+        numMarkets = MAREKTS_COUNTING_TOWARDS_SHARE_VALUE
+    markets = array(numMarkets)
+    markets = EVENTS.getMarkets(event, outitems=numMarkets)
+    totalFeesInWei = 0
+    shareValue = 0
+    i = 0
+    while(i < numMarkets):
+        totalFeesInWei += MARKETS.getFees(markets[i])
+        i += 1
+    allFeesForAllMarkets = EXPEVENTS.getFeeValue(branch, votePeriod)
+    feeFraction = safeFxpDiv(totalFeesInWei, allFeesForAllMarkets)
+    numReportersOnMarket = BRANCHES.getBaseReporters(branch) * (safeMul(-267, safeFxpMul(feeFraction, feeFraction))/2 + safeMul(533, feeFraction)/2 + ONE)
+    canPayForThisManyReporters = totalFeesInWei / (GAS_SUBSIDY * tx.gasprice)
+    lesser = min(canPayForThisManyReporters * ONE, numReportersOnMarket)
+    if(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
+        EXPEVENTS.refundCost(sender, branch, votePeriod, event)
+        EXPEVENTS.setLesserReportNum(branch, votePeriod, event, lesser)
+    return(lesser)

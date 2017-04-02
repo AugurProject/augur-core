@@ -65,15 +65,13 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 inset('../macros/refund.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/periodStage.sem')
-inset('logReturn.se')
+inset('../macros/logReturn.sem')
 inset('../macros/float.sem')
 
 event makeReportsLogReturn(returnValue)
 
 macro GAS_SUBSIDY: 3500000
 macro MAX_REPORT_THRESHOLD: 10^54
-# used for gas limit reasons to ensure terminating loop
-macro MARKETS_COUNTING_TOWARDS_SHARE_VALUE: 20
 
 def makeHash(salt, fxpReport, event, sender, ethics):
     hashInfo = array(5)
@@ -172,31 +170,6 @@ def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, f
     return(fxpReport)
 
 ### Helper functions:
-# calculates how many reports should be on a given event
-# whitelist
-# @return fxp
-def calculateReportTargetForEvent(branch, event, votePeriod, sender):
-    numMarkets = EVENTS.getNumMarkets(event)
-    # todo we should prob switch this to when we send fees don't add to a market but rather the event associated w/ the market, then assign reporters based on fees on event / total fees for all events, this'll save cost and be more appropriate for what we actually want and maybe move this fun to threshold
-    if(numMarkets > MARKETS_COUNTING_TOWARDS_SHARE_VALUE):
-        numMarkets = MAREKTS_COUNTING_TOWARDS_SHARE_VALUE
-    markets = array(numMarkets)
-    markets = EVENTS.getMarkets(event, outitems=numMarkets)
-    totalFeesInWei = 0
-    shareValue = 0
-    i = 0
-    while(i < numMarkets):
-        totalFeesInWei += MARKETS.getFees(markets[i])
-        i += 1
-    allFeesForAllMarkets = EXPEVENTS.getFeeValue(branch, votePeriod)
-    feeFraction = safeFxpDiv(totalFeesInWei, allFeesForAllMarkets)
-    numReportersOnMarket = BRANCHES.getBaseReporters(branch) * (safeMul(-267, safeFxpMul(feeFraction, feeFraction))/2 + safeMul(533, feeFraction)/2 + ONE)
-    canPayForThisManyReporters = totalFeesInWei / (GAS_SUBSIDY * tx.gasprice)
-    lesser = min(canPayForThisManyReporters * ONE, numReportersOnMarket)
-    if(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
-        EXPEVENTS.refundCost(sender, branch, votePeriod, event)
-        EXPEVENTS.setLesserReportNum(branch, votePeriod, event, lesser)
-    return(lesser)
 
 macro checkSubmitReportHashPreconditions():
     if(!eventIndex and (!event or event != event)):
@@ -291,7 +264,7 @@ macro calculateReportingThreshold():
         threshold = MAX_REPORT_THRESHOLD
     # if number of reports event should have hasn't been calculated yet do it
     elif(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
-        self.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
+        THRESHOLD.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
         threshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
     else:
         threshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)

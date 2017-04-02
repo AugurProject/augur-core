@@ -24,7 +24,6 @@ extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
-
 ### Token wrapper for shares
 
 inset('../macros/refund.sem')

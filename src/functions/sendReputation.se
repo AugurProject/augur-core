@@ -50,7 +50,6 @@ extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 ### Allows sending of rep and conversion between dormant and active rep
 
-# circular dep issue here too
 inset('../macros/refund.sem')
 inset('../macros/periodStage.sem')
 inset('../macros/float.sem')
