@@ -53,7 +53,8 @@ inset('../macros/refund.sem')
 # earlyResolutionBond is the bond paid for early resolution of an event
 # creationTime is the block timestamp when a given event is created
 # forkResolveAddress is the address for an event to use to resolve a fork, it's an optional parameter so may be 0 if the event chooses to use the default fork resolution, that contract address should whitelist forking.se
-data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent, resolutionAddress, extraBond, firstPreliminaryOutcome, challenged, resolveBondPoster, earlyResolutionBond, creationTime, forkResolveAddress)
+# extraBondPoster is the address that posted the extra bond for challenging the first wave of resolution
+data Events[](branch, expirationDate, outcome, fxpMinValue, fxpMaxValue, numOutcomes, markets[], numMarkets, threshold, mode, uncaughtOutcome, ethical, originalExp, rejected, rejectedPeriod, bond, forked, forkOver, forkOutcome, forkEthicality, resolutionSource[], resolutionSourceLength, pushedUp, reportersPaidSoFarForEvent, resolutionAddress, extraBond, firstPreliminaryOutcome, challenged, resolveBondPoster, earlyResolutionBond, creationTime, forkResolveAddress, extraBondPoster)
 
 # Keeps track of number of events created in the past 24 hours
 data past24Hours[]
@@ -317,3 +318,10 @@ def getRejected(event):
 
 def getRejectedPeriod(event):
     return(self.Events[event].rejectedPeriod)
+
+def setExtraBondPoster(event, poster):
+    self.Events[event].extraBondPoster = poster
+    return(1)
+
+def getExtraBondPoster(event):
+    return(self.Events[event].extraBondPoster)
