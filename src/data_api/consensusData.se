@@ -28,14 +28,17 @@ def init():
 def getSlashed(branch, votePeriod, reporter):
     return(self.slashed[branch][votePeriod].reporter[reporter])
 
+# whitelist
 def setSlashed(branch, votePeriod, reporter):
     self.slashed[branch][votePeriod].reporter[reporter] = 1
     return(1)
 
+# whitelist
 def setRefund(refunder, amt):
     self.refunds[refunder] = amt
     return(1)
 
+# whitelist
 def doRefund(sender, refunder):
     if(!send(sender, self.refunds[refunder])):
         throw()
@@ -52,6 +55,7 @@ def setBaseReportersLastPeriod(branch, amount):
 def getFeeFirst(branch, period):
     return(self.branch[branch].period[period].feeFirst)
 
+# whitelist
 def setFeeFirst(branch, period, val):
     self.branch[branch].period[period].feeFirst = val
     return(1)
@@ -59,6 +63,7 @@ def setFeeFirst(branch, period, val):
 def getPeriodBalance(branch, period):
     return(self.branch[branch].period[period].periodBalance)
 
+# whitelist
 def setPeriodBalance(branch, period, balance):
     self.branch[branch].period[period].periodBalance = balance
     return(1)
@@ -66,6 +71,7 @@ def setPeriodBalance(branch, period, balance):
 def getPenalizedUpTo(branch, sender):
     return(self.branch[branch].penalizedUpTo[sender])
 
+# whitelist
 def setPenalizedUpTo(branch, sender, period):
     self.branch[branch].penalizedUpTo[sender] = period
     return(1)
@@ -74,11 +80,13 @@ def setPenalizedUpTo(branch, sender, period):
 def getDenominator(branch, period):
     return(self.branch[branch].period[period].denominator)
 
+# whitelist
 def increaseDenominator(branch, period, amount):
     if(self.branch[branch].period[period].denominator + amount >= self.branch[branch].period[period].denominator):
         self.branch[branch].period[period].denominator += amount
     return(1)
 
+# whitelist
 def decreaseDenominator(branch, period, amount):
     if(self.branch[branch].period[period].denominator - amount <= self.branch[branch].period[period].denominator):
         self.branch[branch].period[period].denominator -= amount
@@ -88,6 +96,7 @@ def decreaseDenominator(branch, period, amount):
 def getFeesCollected(branch, address, period, currency):
     return(self.branch[branch].period[period].feesCollected[currency][address])
 
+# whitelist
 def setFeesCollected(branch, address, period, currency):
     self.branch[branch].period[period].feesCollected[currency][address] = 1
     return(1)
@@ -96,6 +105,7 @@ def setFeesCollected(branch, address, period, currency):
 def getRepCollected(branch, address, period):
     return(self.branch[branch].period[period].repCollected[address])
 
+# whitelist
 def setRepCollected(branch, address, period):
     self.branch[branch].period[period].repCollected[address] = 1
     return(1)
@@ -103,6 +113,7 @@ def setRepCollected(branch, address, period):
 def getPenalized(branch, period, sender, event):
     return(self.branch[branch].period[period].penalized[sender].event[event])
 
+# whitelist
 def setPenalized(branch, period, sender, event):
     self.branch[branch].period[period].penalized[sender].event[event] = 1
     return(1)
@@ -110,10 +121,12 @@ def setPenalized(branch, period, sender, event):
 def getPenalizedNum(branch, period, sender):
     return(self.branch[branch].period[period].penalized[sender].num)
 
+# whitelist
 def increasePenalizedNum(branch, period, sender, amount):
     self.branch[branch].period[period].penalized[sender].num += amount
     return(1)
 
+# whitelist
 def setNotEnoughPenalized(branch, address, period):
     self.branch[branch].period[period].penalized[address].notEnoughReportsPenalized = 1
     return(1)

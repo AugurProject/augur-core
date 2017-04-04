@@ -21,7 +21,6 @@
 macro Controller: 0xC001D00D
 extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
-
 inset('../macros/refund.sem')
 
 # Every entity in our contract has similar metadata.
@@ -56,6 +55,7 @@ def getCurrency(ID):
 def getWallet(ID):
     return(self.Info[ID].wallet)
 
+# whitelist
 def setCurrencyAndWallet(ID, currency, wallet):
     self.Info[ID].currency = currency
     self.Info[ID].wallet = wallet

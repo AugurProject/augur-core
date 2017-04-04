@@ -1,7 +1,3 @@
-
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
-
 inset('../macros/refund.sem')
 
 event registration(sender: indexed, timestamp)

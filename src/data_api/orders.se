@@ -41,6 +41,7 @@ def getBestBid(market, outcome):
 def getBestAsk(market, outcome):
     return(self.bestOrder[market][outcome].ask)
 
+# whitelist
 def saveOrder(orderID, type, market, amount, price, sender, outcome, money, shares):
     self.orders[orderID].id = orderID
     self.orders[orderID].type = type
@@ -84,6 +85,7 @@ def getOrder(id):
         return(order: arr)
     return([0]: arr)
 
+# whitelist
 def removeOrder(id):
     self.orders[id].id = 0
     self.orders[id].type = 0
@@ -97,6 +99,7 @@ def removeOrder(id):
     self.orders[id].sharesEscrowed = 0
     return(1)
 
+# whitelist
 def fillOrder(orderID, fill, money, shares):
     if(fill > self.orders[orderID].amount or money > self.orders[orderID].moneyEscrowed or shares > self.orders[orderID].sharesEscrowed):
         throw()

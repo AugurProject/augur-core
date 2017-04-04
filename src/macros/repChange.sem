@@ -7,10 +7,12 @@ macro calculateRepChange($report, $maxPenalty):
     $wrong = $report > safeAdd(outcome, POINT_ZERO_ONE) or $report < (outcome - POINT_ZERO_ONE)
     k = 0
     if($wrong):
+        # if wrong newrep is oldrep * (2p - 1)
         newRep = safeFxpMul(oldRep, safeSub(safeMul(2, p), ONE))
     # right/reported correctly
     else:
         percentWrong = safeSub(ONE, p)
+        # if right newrep is oldRep * (1 + (2(1-p)^2 / p))
         newRep = safeFxpMul(oldRep, safeAdd(safeFxpDiv(safeMul(2, safeFxpMul(percentWrong, percentWrong)), p), ONE))
     # (1-k) * old rep + k * new rep is the weighted new rep value where k = maxPenalty [max of 1] / (number of events you reported on last period) for penalization rate for backstop 1 and round 1 / regular randomized reporting
     # So if max penalty is 20% for a given period, the max per event is 2%
@@ -29,5 +31,5 @@ macro calculateRepChange($report, $maxPenalty):
 
 macro adjustForNonBinaryResolution():
     if(scalar(event) or categorical(event) or indeterminate):
-        diff = $report - outcome
+        difference = $report - outcome
         p = safeSub(ONE, safeDiv(abs(diff), 2))

@@ -27,6 +27,7 @@ extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256
 inset('../macros/refund.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/float.sem')
+inset('../macros/periodStage.sem')
 
 macro ONE_POINT_TWO: 1200000000000000000
 
@@ -72,8 +73,9 @@ def getEventsToReportOn(branch, period, sender, start, end):
                 self.calculateReportTargetForEvent(branch, thisEvent, period, msg.sender)
             reportingThreshold = self.calculateReportingThreshold(branch, thisEvent, period, sender)
             hash = sha3([sender, thisEvent], items = 2)
-            shaHash = abs(hash) / ONE * 2
-            shaHash = shaHash / 57896044618658097711785L * ONE
+            shaHash = abs(hash)
+            # dividing by 57896044618658091106304 gets it normalized to 10**54 as the max for shaHash, so 2**255 -1 / x = 10**54, x is 57896044618658091106304
+            shaHash = shaHash / 57896044618658091106304
             notResolvedYet = !EVENTS.getOutcome(thisEvent)
             ableToReportOn = (shaHash < reportingThreshold or EXPEVENTS.getRequired(thisEvent, period, branch)) and notResolvedYet and !eventCreatedPriorToFork(thisEvent)
             if(ableToReportOn):
@@ -85,16 +87,15 @@ def getEventsToReportOn(branch, period, sender, start, end):
 # Gets whether a reporter is able to report on a given event or not
 # Returns 1 if able
 # Errors: 0 if not
-# whitelist
-def getEventCanReportOn(branch, period, reporter, event):
+def getEventCouldveReportedOn(branch, period, reporter, event):
     if(!EXPEVENTS.getLesserReportNum(branch, period, event)):
         self.calculateReportTargetForEvent(branch, event, period, reporter)
     reportingThreshold = self.calculateReportingThreshold(branch, event, period, reporter)
 
-    # do abs then mult by 2 to ensure it's positive and between 0 and 1
+    # do abs to ensure it's positive and between 0 and 1
     hash = sha3([reporter, event], items = 2)
-    shaHash = (abs(hash) / ONE) * 2
-    shaHash = shaHash / 57896044618658097711785L * ONE
+    shaHash = abs(hash) / ONE
+    shaHash = shaHash / 57896044618658091106304 * ONE
     wasAbleToReportOn = (shaHash < reportingThreshold or EXPEVENTS.getRequired(event, period, branch)) and !eventCreatedPriorToFork(event)
     if(!wasAbleToReportOn):
         return(0)
@@ -201,7 +202,7 @@ def findLazyReportersAndLeechers(branch, votePeriod, reporterStart, reporterEnd,
             events = EXPEVENTS.getEventsRange(branch, votePeriod, eventStart, eventEnd, outitems = numberEventsChecking)
             eventIndex = 0
             while(eventIndex < numberEventsChecking):
-                if(self.getEventCanReportOn(branch, votePeriod, reporter, events[eventIndex])):
+                if(self.getEventCouldveReportedOn(branch, votePeriod, reporter, events[eventIndex])):
                     lazyReportersAndExampleEventsTheyCouldveReportedOn[leecherIndex] = reporter
                     lazyReportersAndExampleEventsTheyCouldveReportedOn[leecherIndex+1] = events[e]
                     leecherIndex += 2
@@ -212,13 +213,19 @@ def findLazyReportersAndLeechers(branch, votePeriod, reporterStart, reporterEnd,
     return(slice(lazyReportersAndExampleEventsTheyCouldveReportedOn, items=0, items=leecherIndex): arr)
 
 # calculates how many reports should be on a given event
-# whitelist
 # @return fxp
 def calculateReportTargetForEvent(branch, event, votePeriod, sender):
     numMarkets = EVENTS.getNumMarkets(event)
+    currentVotePeriod = BRANCHES.getVotePeriod(branch)
+    eventIndex = EXPEVENTS.getEventIndex(branch, currentVotePeriod, event)
+    eventID = EXPEVENTS.getEvent(branch, currentVotePeriod, eventIndex)
+    if(!eventIndex and (!event or eventID != event)):
+        return(0)
+    atFirstHalfOfPeriod()
+
     # todo we should prob switch this to when we send fees don't add to a market but rather the event associated w/ the market, then assign reporters based on fees on event / total fees for all events, this'll save cost and be more appropriate for what we actually want
     if(numMarkets > MARKETS_COUNTING_TOWARDS_SHARE_VALUE):
-        numMarkets = MAREKTS_COUNTING_TOWARDS_SHARE_VALUE
+        numMarkets = MARKETS_COUNTING_TOWARDS_SHARE_VALUE
     markets = array(numMarkets)
     markets = EVENTS.getMarkets(event, outitems=numMarkets)
     totalFeesInWei = 0

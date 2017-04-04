@@ -41,8 +41,6 @@ inset('../macros/refund.sem')
     # reportedOnNonFinalRoundTwoEvent is the eventID if a person reported on a round 2 event before it was in the second round [i.e. the first reporting backstop], they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event, set this to 0 once the event is final
 data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), activeRep, fork, reportedOnNonFinalRoundTwoEvent)
 
-data whitelists[](addresses[], taken)
-
 def init():
     self.Reporting[1010101].repIDtoIndex[1010101] = 0
     # repValue should be == rep in 0x0 address from rep contract for initial redistribution
@@ -53,12 +51,10 @@ def init():
     self.Reporting[1010101].reputation[1].repValue = 0
     self.Reporting[1010101].reputation[1].reporterID = msg.sender
 
-def checkWhitelist(address):
-    return(self.whitelists[msg.sender].addresses[address])
-
 def getReportedOnNonFinalRoundTwoEvent(branch):
     return(self.Reporting[branch].reportedOnNonFinalRoundTwoEvent)
 
+# whitelist
 def setReportedOnNonFinalRoundTwoEvent(branch, event):
     self.Reporting[branch].reportedOnNonFinalRoundTwoEvent = event
     return(1)
@@ -67,32 +63,18 @@ def setReportedOnNonFinalRoundTwoEvent(branch, event):
 def getActiveRep(branch):
     return(self.Reporting[branch].activeRep)
 
+# whitelist
 def adjustActiveRep(branch, fxpAmount):
     self.Reporting[branch].activeRep += fxpAmount
     return(1)
 
+# whitelist
 def setFork(branch):
     self.Reporting[branch].fork = branch
     return(1)
 
 def getFork(branch):
     return(self.Reporting[branch].fork)
-
-def checkContractWhitelist(contract, address):
-    return(self.whitelists[contract].addresses[address])
-
-def setWhitelist(contract, addresses: arr):
-    if self.whitelists[contract].taken:
-        return(text("ERROR: you have to vote to change a whitelist"): str)
-    else:
-        self.whitelists[contract].taken = 1
-        i = 0
-        numAddr = len(addresses)
-        while(i < numAddr):
-            address = addresses[numAddr]
-            self.whitelists[contract].addresses[addresses] = 1
-            i += 1
-        return(text("SUCCESS"): str)
 
 # @return fxp
 def getRepByIndex(branch, repIndex):
@@ -209,16 +191,7 @@ def subtractRep(branch, index, fxpValue):
     self.Reporting[branch].reputation[index].repValue -= fxpValue
     return(1)
 
-# safe adders idea pulled from piper merriam's btcrelay audit
-macro safeToAdd($a, $b):
-    $c = $a + $b
-    ($c >= $a && $c >= $b)
-    (($a + $b) >= $a)
-
-macro safeToSubtract($a, $b):
-    ($b <= $a)
-
-### Test Faucet Functions that need to be removed at launch
+### Test Faucet Function that need to be removed at launch
 def setRep(branch, index, fxpNewRep):
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
@@ -242,21 +215,6 @@ def subtractDormantRep(branch, index, fxpValue):
     self.Reporting[branch].dormantRep[index].repValue -= fxpValue
     return(1)
 
-# check that msg.sender is one of our function contracts
-# Sets the initial distribution of rep
-def setSaleDistribution(addresses: arr, balances: arr, branch):
-    # if(!self.whitelist.check(msg.sender)):
-    #   throw()
-    i = 0
-    while(i < len(addresses)):
-        self.Reporting[branch].reputation[self.Reporting[branch].numberReporters].reporterID = addresses[i]
-        self.Reporting[branch].reputation[self.Reporting[branch].numberReporters].repValue = balances[i]
-        self.Reporting[branch].dormantRep[self.Reporting[branch].numberReporters].reporterID = addresses[i]
-        self.Reporting[branch].repIDtoIndex[addresses[i]] = self.Reporting[branch].numberReporters
-        self.Reporting[branch].numberReporters += 1
-        i += 1
-    return(1)
-
 def claimInitialRepFromRepContract():
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
@@ -277,3 +235,10 @@ def claimInitialRepFromRepContract():
     self.Reporting[branch].totalRep += dormantRep
     self.Reporting[branch].numberReporters += 1
     return(1)
+
+macro safeToAdd($a, $b):
+    $c = $a + $b
+    ($c >= $a && $c >= $b)
+
+macro safeToSubtract($a, $b):
+    ($b <= $a && (($a - $b) <= $a))

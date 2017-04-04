@@ -24,7 +24,6 @@ extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 INFO = Controller.lookup('info')
 extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256]
 
-
 inset('../macros/refund.sem')
 
 # Keeps track of data about events in augur
@@ -67,6 +66,7 @@ def getForkResolveAddress(event):
 def getCreationTime(event):
     return(self.Events[event].creationTime)
 
+# whitelist
 def setCreationTime(event):
     self.Events[event].creationTime = block.timestamp
     return(1)
@@ -77,6 +77,7 @@ def getResolveBondPoster(event):
 def getChallenged(event):
     return(self.Events[event].challenged)
 
+# whitelist
 def setChallenged(event):
     self.Events[event].challenged = 1
     return(1)
@@ -85,6 +86,7 @@ def setChallenged(event):
 def getFirstPreliminaryOutcome(event):
     return(self.Events[event].firstPreliminaryOutcome)
 
+# whitelist
 def setFirstPreliminaryOutcome(event, outcome):
     self.Events[event].firstPreliminaryOutcome = outcome
     return(1)
@@ -92,6 +94,7 @@ def setFirstPreliminaryOutcome(event, outcome):
 def getReportersPaidSoFar(event):
     return(self.Events[event].reportersPaidSoFarForEvent)
 
+# whitelist
 def addReportersPaidSoFar(event):
     self.Events[event].reportersPaidSoFarForEvent += 1
     return(1)
@@ -102,6 +105,7 @@ def getEventPushedUp(event):
 def getResolutionAddress(event):
     return(self.Events[event].resolutionAddress)
 
+# whitelist
 def setEventPushedUp(event, val):
     self.Events[event].pushedUp = val
     return(1)
@@ -110,6 +114,7 @@ def setEventPushedUp(event, val):
 def getForkOutcome(event):
     return(self.Events[event].forkOutcome)
 
+# whitelist
 def setForkOutcome(event, value):
     self.Events[event].forkOutcome = value
     return(1)
@@ -118,6 +123,7 @@ def setForkOutcome(event, value):
 def getForkEthicality(event):
     return(self.Events[event].forkEthicality)
 
+# whitelist
 def setForkEthicality(event, value):
     self.Events[event].forkEthicality = value
     return(1)
@@ -125,10 +131,12 @@ def setForkEthicality(event, value):
 def getForked(event):
     return(self.Events[event].forked)
 
+# whitelist
 def setForked(event):
     self.Events[event].forked = 1
     return(1)
 
+# whitelist
 def setForkDone(event):
     self.Events[event].forkOver = 1
     return(1)
@@ -158,6 +166,7 @@ def getResolutionLength(event):
 def getPast24(period):
     return(self.past24Hours[period])
 
+# whitelist
 def addPast24(period):
     self.past24Hours[period] += 1
     return(1)
@@ -168,18 +177,22 @@ def getExpiration(event):
 def getOriginalExpiration(event):
     return(self.Events[event].originalExp)
 
+# whitelist
 def setOriginalExpiration(event, date):
     self.Events[event].originalExp = date
     return(1)
 
+# whitelist
 def setExpiration(event, date):
     self.Events[event].expirationDate = date
     return(1)
 
+# whitelist
 def setBranch(event, branch):
     self.Events[event].branch = branch
     return(1)
 
+# whitelist
 def setExtraBond(event, extraBond):
     self.Events[event].extraBond = extraBond
     return(1)
@@ -197,6 +210,7 @@ def getOutcome(event):
 def getEthics(event):
     return(self.Events[event].ethical)
 
+# whitelist
 def setEthics(event, ethicality):
     self.Events[event].ethical = ethicality
     return(ethicality)
@@ -212,6 +226,7 @@ def getMaxValue(event):
 def getNumOutcomes(event):
     return(self.Events[event].numOutcomes)
 
+# whitelist
 def setUncaughtOutcome(event, outcome):
     self.Events[event].uncaughtOutcome = outcome
     return(1)
@@ -243,6 +258,7 @@ def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOut
     else:
         return(0)
 
+# whitelist
 def setBond(event, bond):
     self.Events[event].bond = bond
     return(1)
@@ -250,10 +266,12 @@ def setBond(event, bond):
 def getEarlyResolutionBond(event):
     return(self.Events[event].earlyResolutionBond)
 
+# whitelist
 def setEarlyResolutionBond(event, bond):
     self.Events[event].earlyResolutionBond = bond
     return(1)
 
+# whitelist
 def addMarket(event, market):
     self.Events[event].markets[self.Events[event].numMarkets] = market
     self.Events[event].numMarkets += 1
@@ -284,6 +302,7 @@ def getMarket(event, marketIndex):
 def getNumMarkets(event):
     return(self.Events[event].numMarkets)
 
+# whitelist
 def setOutcome(ID, outcome):
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
@@ -294,6 +313,7 @@ def setOutcome(ID, outcome):
 def getReportingThreshold(event):
     return(self.Events[event].threshold)
 
+# whitelist
 def setThreshold(event, threshold):
     # do whitelist
     self.Events[event].threshold = threshold
@@ -304,10 +324,12 @@ def getMode(event):
     # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
     return(self.Events[event].mode)
 
+# whitelist
 def setMode(event, mode):
     self.Events[event].mode = mode
     return(1)
 
+# whitelist
 def setRejected(event, period):
     self.Events[event].rejected = 1
     self.Events[event].rejectedPeriod = period
@@ -319,6 +341,7 @@ def getRejected(event):
 def getRejectedPeriod(event):
     return(self.Events[event].rejectedPeriod)
 
+# whitelist
 def setExtraBondPoster(event, poster):
     self.Events[event].extraBondPoster = poster
     return(1)

@@ -107,10 +107,12 @@ def addCurrency(branch, currency, rate, rateContract):
     return(1)
 
 # disables a given currency for new market / event creation
+# whitelist
 def disableCurrency(branch, currency):
     self.Branches[branch].currencyActive[currency] = 0
     return(1)
 
+# whitelist
 # enables a given currency for new market / event creation
 def reactivateCurrency(branch, currency):
     self.Branches[branch].currencyActive[currency] = 1
@@ -153,7 +155,6 @@ def updateCurrencyRate(branch, currency, rate, rateContract):
     self.Branches[branch].currencies[self.Branches[branch].currencyToIndex[currency]].rateContract = rateContract
     return(1)
 
-# whitelist updates
 # currency rate should be a number in fixed point 10**18
 def getCurrencyRate(branch, currency):
     currencyIndex = self.Branches[branch].currencyToIndex[currency]
@@ -182,6 +183,7 @@ def getCurrencyActive(branch, currency):
 def getEventForkedOver(branch):
     return(self.Branches[branch].eventForkedOver)
 
+# whitelist
 def setEventForkedOver(branch, event):
     self.Branches[branch].eventForkedOver = event
     return(1)
@@ -189,6 +191,7 @@ def setEventForkedOver(branch, event):
 def getBaseReporters(branch):
     return(self.Branches[branch].baseReporters)
 
+# whitelist
 def setBaseReporters(branch, num):
     self.Branches[branch].baseReporters = num
     return(1)
@@ -203,6 +206,7 @@ def getPeriodLength(branch):
     return(self.Branches[branch].periodLength)
 
 # branch currency balance at start of the fee distribution period
+# whitelist
 # @return fxp
 def setInitialBalance(branch, period, balance, currency):
     self.Branches[branch].balance[period][currency] = balance
@@ -263,11 +267,13 @@ def getCreationDate(ID):
 def getMostRecentChild(ID):
     return(self.Branches[ID].mostRecentChild)
 
+# whitelist
 def setMostRecentChild(parent, child):
     self.Branches[parent].mostRecentChild = child
     return(1)
 
 # check that msg.sender is one of our function contracts
+# whitelist
 def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, contract, wallet, mostRecentChild):
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
@@ -291,6 +297,7 @@ def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, orac
 def getParentPeriod(branch):
     return(self.Branches[branch].parentPeriod)
 
+# whitelist
 def incrementPeriod(branch):
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
@@ -307,6 +314,7 @@ def addMarketToBranch(branch, market):
     return(1)
 
 # forkperiod is the vote period in which a branch was forked
+# whitelist
 def setForkPeriod(branch):
     self.Branches[branch].forkPeriod = self.Branches[branch].currentVotePeriod
     self.Branches[branch].forkTime = block.timestamp

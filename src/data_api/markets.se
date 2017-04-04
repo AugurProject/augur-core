@@ -21,7 +21,11 @@
 macro Controller: 0xC001D00D
 extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
+macro TOPICS = Controller.lookup('topics')
+extern topics.se: [getNumTopicsInBranch:[int256]:int256, getTopicPopularity:[int256,int256]:int256, getTopicsInBranch:[int256,int256,int256]:int256[], getTopicsInfo:[int256,int256,int256]:int256[], updateTopicPopularity:[int256,int256,int256]:int256]
+
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
+
 inset('../macros/refund.sem')
 
 # Markets' index is the market, markets stores data about markets [which are able to be traded on] in augur
@@ -216,6 +220,7 @@ def modifyParticipantShares(market, trader, outcome, fxpAmount, actualTrade):
         if(fxpAmount < 0):
             fxpAmount = fxpAmount * -1
         self.Markets[market].volume += fxpAmount
+    TOPICS.updateTopicPopularity(self.Markets[market].branch, self.Markets[market].tag1, fxpAmount)
     return(1)
 
 def addOrder(market, orderID):
@@ -285,6 +290,7 @@ def setTradingFee(market, fee):
     self.Markets[market].fxpTradingFee = fee
     return(fee)
 
+# whitelist
 def setPushedForward(market, bool, sender):
     self.Markets[market].pushingForward = bool
     self.Markets[market].bondsMan = sender

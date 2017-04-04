@@ -132,7 +132,7 @@ def getMarketInfo(marketID, account):
 
     # gather outcomes info: [sharesPurchased, price]
     # (price of outcome = last trade)
-    k = 0x
+    k = 0
     while k < numOutcomes:
         marketInfo[index + k*OUTCOMES_FIELDS] = MARKETS.getSharesPurchased(marketID, k + 1)
         marketInfo[index + k*OUTCOMES_FIELDS + 1] = MARKETS.getLastOutcomePrice(marketID, k + 1)

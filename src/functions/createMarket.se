@@ -69,7 +69,7 @@ macro COST_PER_REPORTER: 3500000
 macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 macro MAX_FEE: 10 ** 17
 macro THREE_DAYS: 259200
-macro FIRST_RESOLVE_BOND: 10 * ONE
+macro FIRST_RESOLVE_BOND: 11 * ONE
 macro SECONDS_PER_YEAR: 31557600
 macro 10_PERCENT_RATE: 100000000000000000
 # may want to reconfirm this again
@@ -111,7 +111,8 @@ macro checkForkResolveContractIsValid($contract):
     # -5: currency isn't an approved branch currency
 # .025 eth to create
 # descriptionWithoutOutcomeLabels + "~|>" + outcome1label + "|"  + outcome2label + "|" + outcome3label is format for a description
-# with a categorical user can set min and max to whatever, for reporting 1 is the min and max is the max then reports should be scaled between that range, for payouts it's 1 to the winning outcome or equal for all outcomes if indeterminate, you cannot trade by paying more than 1 for a share as that makes no sense
+# with a categorical user can set min and max to whatever, for reporting 1 is the min and max is the max then reports should be scaled between that range from 0-2, for payouts it's 1 to the winning outcome or equal for all outcomes if indeterminate, you cannot trade by paying more than 1 for a share as that makes no sense
+# for binary it's 1 as min and 2 as max
 def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
     refund()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
@@ -147,6 +148,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     firstResolveBondPaid = 0
     firstResolveBondPoster = 0
     # sender / event creator paid
+    # todo add if no resolution address just put in regular vote period as normal
     if(REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, msg.sender), FIRST_RESOLVE_BOND) && REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, event), FIRST_RESOLVE_BOND)):
         firstResolveBondPaid = 1
         firstResolveBondPoster = msg.sender
@@ -456,7 +458,7 @@ def resolveEarly(event, outcome):
         return(0)
 
 # Allows a user to directly add fees / effectively pay for oracle usage w/o having to trade using the default contracts
-# should make this be to an event directly, so every addFees and getFees call will be effected by fixing this
+# should make this be to an event directly, so every addFees and getFees call will be effected by fixing this todo
 # Returns 1 if successful, 0 if too late to send additional fees
 def addFees(market, fxpAmount):
     branch = MARKETS.getBranch(market)

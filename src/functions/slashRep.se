@@ -25,8 +25,6 @@ inset('../macros/refund.sem')
 inset('../macros/periodStage.sem')
 inset('../macros/float.sem')
 
-event slashedRep(branch: indexed, sender: indexed, reporter: indexed, event, repSlashed, slasherBalance, timestamp)
-
 # Anti cheat/collusion mechanism: provide ballot and random salt to steal rep from a colluder
 # Returns 1 on success
 # Errors:

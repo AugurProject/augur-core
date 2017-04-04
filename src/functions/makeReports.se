@@ -52,7 +52,7 @@ CATCHUP = Controller.lookup('penalizationCatchup')
 extern penalizationCatchup: [penalizationCatchup:[int256,int256]:int256]
 
 THRESHOLD = Controller.lookup('reportingThreshold')
-extern reportingThreshold: [calculateNumberOfEventsAReporterHasToReportOnAtMinimum:[int256,int256,int256]:int256, calculateReportTargetForEvent:[int256,int256,int256,int256]:int256, calculateReportingThreshold:[int256,int256,int256,int256]:int256, findLazyReportersAndLeechers:[int256,int256,int256,int256,int256,int256]:int256[], getEventCanReportOn:[int256,int256,int256,int256]:int256, getEventsToReportOn:[int256,int256,int256,int256,int256]:int256[], setReportingThreshold:[int256]:int256]
+extern reportingThreshold: [calculateNumberOfEventsAReporterHasToReportOnAtMinimum:[int256,int256,int256]:int256, calculateReportTargetForEvent:[int256,int256,int256,int256]:int256, calculateReportingThreshold:[int256,int256,int256,int256]:int256, findLazyReportersAndLeechers:[int256,int256,int256,int256,int256,int256]:int256[], getEventCouldveReportedOn:[int256,int256,int256,int256]:int256, getEventsToReportOn:[int256,int256,int256,int256,int256]:int256[], setReportingThreshold:[int256]:int256]
 
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
@@ -101,15 +101,15 @@ def submitReportHash(event, reportHash, saltyEncryptedHash):
     lastPeriod = votePeriod - 1
     delta = lastPeriod - lastPeriodPenalized
     eventIndex = EXPEVENTS.getEventIndex(branch, votePeriod, event)
-    event = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
+    eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
     checkSubmitReportHashPreconditions()
 
     reportingThresholdForUser = calculateReportingThreshold()
-    # do abs then mult by 2 to ensure pos. and between 0 and 1
+    # do abs to ensure pos. and between 0 and 1
     hash = sha3([msg.sender, event], items = 2)
-    shaHash = (abs(hash) / ONE) * 2
+    shaHash = (abs(hash) / ONE)
     # max value 10^54
-    shaHash = shaHash / 57896044618658097711785L * ONE
+    shaHash = shaHash / 57896044618658091106304 * ONE
     # shaHash must be <= to the threshold for that user to be able to fxpReport on the given event
     if(shaHash > reportingThresholdForUser):
         MUTEX.unsetMutex()
@@ -172,7 +172,7 @@ def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, f
 ### Helper functions:
 
 macro checkSubmitReportHashPreconditions():
-    if(!eventIndex and (!event or event != event)):
+    if(!eventIndex and (!event or eventID != event)):
         MUTEX.unsetMutex()
         logReturn(makeReportsLogReturn, -1)
     atFirstHalfOfPeriod()

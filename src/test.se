@@ -6,7 +6,7 @@ def ok(x):
     if(block.timestamp < 5055):
         return(2)
     self.hmm()
-    return(3)
+    return(-57896044618658097711785492504343953926634992332820282019728792003956564819968)
 
 def hmm():
     return(5)
@@ -17,3 +17,5 @@ macro safeToSubtract($a, $b):
 
 macro safeToSubtract($a, $b):
     ($b <= $a && (($a - $b) <= $a))
+
+goes from -2**255 to 2**255 - 1

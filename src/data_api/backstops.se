@@ -29,68 +29,26 @@ data resolved[][]
 def getDisputedOverEthics(event):
     return(self.roundTwo[event].disputedOverEthics)
 
-def setDisputedOverEthics(event):
-    self.roundTwo[event].disputedOverEthics = 1
-    return(1)
-
-def setRoundTwoRefund(event, amt):
-    self.roundTwo[event].refund = amt
-    return(1)
-
-def doRoundTwoRefund(sender, event):
-    if(!send(sender, self.roundTwo[event].refund)):
-        throw()
-    return(1)
-
-def setForkBondPoster(event, poster):
-    self.forking[event].bondPoster = poster
-    return(1)
-
 def getForkBondPoster(event):
     return(self.forking[event].bondPoster)
-
-def setForkedOverEthicality(event):
-    self.forking[event].forkedOverEthicality = 1
-    return(1)
 
 def getForkedOverEthicality(event):
     return(self.forking[event].forkedOverEthicality)
 
-def adjForkBondPaid(event, amount):
-    self.forking[event].bondPaid += amount
-    return(1)
-
 # @return fxp
 def getForkBondPaid(event):
     return(self.forking[event].bondPaid)
-
-# sets bond amount for a fork bond
-def setBondAmount(event, amount):
-    self.forking[event].bondAmount = amount
-    return(1)
 
 # gets bond amount for a fork bond
 # @return fxp
 def getBondAmount(event):
     return(self.forking[event].bondAmount)
 
-def setOriginalBranch(event, branch):
-    self.forking[event].originalBranch = branch
-    return(1)
-
 def getOriginalBranch(event):
     return(self.forking[event].originalBranch)
 
-def setMoved(event):
-    self.forking[event].moved = 1
-    return(1)
-
 def getMoved(event):
     return(self.forking[event].moved)
-
-def setResolved(branch, forkPeriod, winner):
-    self.resolved[branch][forkPeriod] = winner
-    return(1)
 
 def getResolved(branch, forkPeriod):
     return(self.resolved[branch][forkPeriod])
@@ -100,61 +58,121 @@ def getResolved(branch, forkPeriod):
 def getBondPaid(event):
     return(self.roundTwo[event].bondPaid)
 
+def getBondPoster(event):
+    return(self.roundTwo[event].bondPoster)
+
+# whether a round 2 event is final
+def getFinal(event):
+    return(self.roundTwo[event].final)
+
+def getOriginalOutcome(event):
+    return(self.roundTwo[event].originalOutcome)
+
+def getOriginalEthicality(event):
+    return(self.roundTwo[event].originalEthicality)
+
+def getOriginalVotePeriod(event):
+    return(self.roundTwo[event].originalVotePeriod)
+
+# whether a round 2 bond's principle has been returned
+def getBondReturned(event):
+    return(self.roundTwo[event].bondReturned)
+
+def getRoundTwo(event):
+    refund()
+    return(self.roundTwo[event].roundTwo)
+
+# whitelist
+def setOriginalEthicality(event, ethicality):
+    self.roundTwo[event].originalEthicality = ethicality
+    return(1)
+
 # increases how much of round 2 bond has been paid back
+# whitelist
 def increaseBondPaid(event, amount):
     if(amount + self.roundTwo[event].bondPaid < self.roundTwo[event].bondPaid):
         throw()
     self.roundTwo[event].bondPaid += amount
     return(1)
 
-# whether a round 2 bond's principle has been returned
-def getBondReturned(event):
-    return(self.roundTwo[event].bondReturned)
-
-def setBondReturned(event):
-    self.roundTwo[event].bondReturned = 1
+# whitelist
+def setResolved(branch, forkPeriod, winner):
+    self.resolved[branch][forkPeriod] = winner
+    return(1)
+    
+# sets bond amount for a fork bond
+# whitelist
+def setBondAmount(event, amount):
+    self.forking[event].bondAmount = amount
     return(1)
 
-def getRoundTwo(event):
-    refund()
-    return(self.roundTwo[event].roundTwo)
-
-def setRoundTwo(event, roundTwo):
-    self.roundTwo[event].roundTwo = roundTwo
-    return(1)
-
-def getBondPoster(event):
-    return(self.roundTwo[event].bondPoster)
-
+# whitelist
 def setBondPoster(event, bondPoster):
     self.roundTwo[event].bondPoster = bondPoster
     return(1)
 
-# whether a round 2 event is final
-def getFinal(event):
-    return(self.roundTwo[event].final)
-
+# whitelist
 def setFinal(event):
     self.roundTwo[event].final = 1
     return(1)
 
-def getOriginalOutcome(event):
-    return(self.roundTwo[event].originalOutcome)
-
+# whitelist
 def setOriginalOutcome(event, originalOutcome):
     self.roundTwo[event].originalOutcome = originalOutcome
     return(1)
 
-def getOriginalEthicality(event):
-    return(self.roundTwo[event].originalEthicality)
-
-def setOriginalEthicality(event, ethicality):
-    self.roundTwo[event].originalEthicality = ethicality
+# whitelist
+def setOriginalBranch(event, branch):
+    self.forking[event].originalBranch = branch
     return(1)
 
-def getOriginalVotePeriod(event):
-    return(self.roundTwo[event].originalVotePeriod)
+# whitelist
+def setMoved(event):
+    self.forking[event].moved = 1
+    return(1)
 
+# whitelist
+def setBondReturned(event):
+    self.roundTwo[event].bondReturned = 1
+    return(1)
+
+# whitelist
+def setRoundTwo(event, roundTwo):
+    self.roundTwo[event].roundTwo = roundTwo
+    return(1)
+
+# whitelist   
 def setOriginalVotePeriod(event, period):
     self.roundTwo[event].originalVotePeriod = period
+    return(1)
+
+# whitelist
+def setForkedOverEthicality(event):
+    self.forking[event].forkedOverEthicality = 1
+    return(1)
+
+# whitelist
+def adjForkBondPaid(event, amount):
+    self.forking[event].bondPaid += amount
+    return(1)
+
+# whitelist
+def setDisputedOverEthics(event):
+    self.roundTwo[event].disputedOverEthics = 1
+    return(1)
+
+# whitelist
+def setRoundTwoRefund(event, amt):
+    self.roundTwo[event].refund = amt
+    return(1)
+
+# whitelist
+def doRoundTwoRefund(sender, event):
+    if(!send(sender, self.roundTwo[event].refund)):
+        throw()
+    return(1)
+
+# whitelist
+def setForkBondPoster(event, poster):
+    self.forking[event].bondPoster = poster
     return(1)

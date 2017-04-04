@@ -2,18 +2,18 @@
 
 macro YES: TWO
 macro NO: ONE
-macro BAD: 3 * ONE_HALF
+macro INDETERMINATE: 3 * ONE_HALF
 macro CATCH_TOLERANCE: ONE / 10
 macro POINT_FOUR: 400000000000000000
 
 # Bins values to 1, 1.5, 2
 macro catch($x):
-    if($x < (BAD - CATCH_TOLERANCE)):
+    if($x < (INDETERMINATE - CATCH_TOLERANCE)):
         NO
-    elif($x > (BAD + CATCH_TOLERANCE)):
+    elif($x > (INDETERMINATE + CATCH_TOLERANCE)):
         YES
     else:
-        BAD
+        INDETERMINATE
 
 # If greater than 60% of reporters report a market as unethical (0), the market is considered unethical.
 macro ethicCatch($x):
