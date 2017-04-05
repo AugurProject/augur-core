@@ -1,5 +1,7 @@
 ### Controller - A contract for updating Augur via a REP weighted vote and storing a whitelist of contract addresses
 
+inset('../macros/refund.sem')
+
 # TODO:
     # updating controller
     # emergency stops?
