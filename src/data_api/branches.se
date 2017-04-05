@@ -77,8 +77,7 @@ def init():
     self.branchList[0] = 1010101
     # since only have to report on half this targets 3
     self.Branches[1010101].baseReporters = 6
-    # switch to use controller todo
-    ethContract = 0
+    ethContract = Controller.lookup("cash")
     checkSubcurrencyIsValid(ethContract)
     wallet = create('../functions/wallet.se')
     wallet.initialize(ethContract)
