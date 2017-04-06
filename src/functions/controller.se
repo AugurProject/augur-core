@@ -13,7 +13,7 @@ inset('../macros/refund.sem')
     # Then once it is updated suicide the old controller
 
 # TODO:
-    # should controller have ability to suicide any contract?
+    # should controller have ability to suicide any contract and itself?
     # Some of the contracts have internal state that shouldn't be modified by code or users, besides the official Augur contracts. A rep-weighted voting system is used to choose among proposed changes, proposals that receive a majority of rep during the current voting period are executed at the start of the next voting period. - done
     # 	Dev mode: a developer address which can do an update without a vote - done
     #	Vote to switch to hybrid mode: Dev address can propose changes and voters may veto within time limit - done

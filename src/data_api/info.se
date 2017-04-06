@@ -18,8 +18,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+
 
 inset('../macros/refund.sem')
 
@@ -27,6 +27,8 @@ inset('../macros/refund.sem')
 # Instead of putting it in each entity, we put all the metadata here.
 # Info's index is the hash of the item we're getting info on
 data Info[](description[2048], descriptionLength, creator, creationFee, wallet, currency)
+
+data controller
 
 def init():
     description = text("Root branch")

@@ -1,5 +1,5 @@
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+
 
 inset('../macros/refund.sem')
 
@@ -10,6 +10,8 @@ inset('../macros/refund.sem')
 #       (Volume is a crude popularity metric which will be refined by testing.)
 # Note: sorting and/or ranking must be done by the client!
 data Topics[](numTopics, topics[], popularity[])
+
+data controller
 
 def getTopicsInBranch(branch, offset, numTopicsToLoad):
     numTopics = self.Topics[branch].numTopics

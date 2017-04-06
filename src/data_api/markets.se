@@ -18,13 +18,15 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
-macro TOPICS = Controller.lookup('topics')
+
+
+macro TOPICS: Controller.lookup('topics')
 extern topics.se: [getNumTopicsInBranch:[int256]:int256, getTopicPopularity:[int256,int256]:int256, getTopicsInBranch:[int256,int256,int256]:int256[], getTopicsInfo:[int256,int256,int256]:int256[], updateTopicPopularity:[int256,int256,int256]:int256]
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
+
+# todo need to extern share token contract
 
 inset('../macros/refund.sem')
 
@@ -60,6 +62,8 @@ data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]),
 
 # takes branch as param, composite hash of all markets in the system
 data marketsHash[]
+
+data controller
 
 def getMarketsHash(branch):
     return(self.marketsHash[branch])

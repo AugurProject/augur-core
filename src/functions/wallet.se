@@ -1,7 +1,7 @@
 ### Contract which holds funds for things like markets, events, and branches in various subcurrencies
 
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+
 
 inset('../macros/refund.sem')
 
@@ -10,6 +10,8 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 
 data currency
 data winningOutcomeContract
+
+data controller
 
 def initialize(currency):
     if(!self.currency):

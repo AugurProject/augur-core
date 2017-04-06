@@ -48,7 +48,7 @@ IMPORT_ERROR_MSG = 'Weird import in {path} at line {line}: {eg}'
 
 # these are standard contracts that don't have a specific / unique controller address
 STANDARD_EXTERNS = {
-    'Controller': 'extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]',
+    'Controller': '',
 
     # ERC20 and aliases used in Augur code
     'ERC20': 'extern ERC20: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]',
@@ -59,7 +59,7 @@ STANDARD_EXTERNS = {
 }
 
 DEFAULT_RPCADDR = 'http://localhost:8545'
-DEFAULT_CONTROLLER = 'macro Controller: 0xC001D00D'
+DEFAULT_CONTROLLER = ''
 
 SERPENT_EXT = '.se'
 MACRO_EXT = '.sem'

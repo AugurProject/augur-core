@@ -1,6 +1,6 @@
 
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+
 
 inset('../macros/refund.sem')
 
@@ -25,6 +25,8 @@ data forking[](bondPoster, bondAmount, forkedOverEthicality, bondPaid, originalB
 
 # Given a branch and a forkPeriod it states which fork the winner was
 data resolved[][]
+
+data controller
 
 def getDisputedOverEthics(event):
     return(self.roundTwo[event].disputedOverEthics)
@@ -176,3 +178,7 @@ def doRoundTwoRefund(sender, event):
 def setForkBondPoster(event, poster):
     self.forking[event].bondPoster = poster
     return(1)
+
+# todo add to all contracts with checks that whoever calling it is appropriate
+#def setController(newController):
+    

@@ -18,9 +18,6 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
-
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
@@ -38,6 +35,8 @@ data name
 data symbol
 # amount of decimals per unit of rep
 data decimals
+
+data controller
 
 event Transfer(from:indexed, to:indexed, value)
 event Approval(owner:indexed, spender:indexed, value)

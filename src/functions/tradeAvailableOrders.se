@@ -1,6 +1,6 @@
 
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+
 
 ORDERS = Controller.lookup('orders')
 extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getBestAsk:[int256,int256]:int256, getBestBid:[int256,int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256]
@@ -18,6 +18,8 @@ macro logArrayReturn($a):
 # Minimum gas needed to execute the trade function.
 # TODO update with profiled value from the new trade function
 macro MINIMUM_GAS_NEEDED_TO_TRADE: 787421
+
+data controller
 
 # tradeAvailableOrders [fills the orderIDs in the orderIDs array with a balance at or above fxpMinimumOrderBalance]
 # Errors:

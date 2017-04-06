@@ -18,8 +18,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+
 
 inset('../macros/refund.sem')
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
@@ -60,6 +60,8 @@ data Branches[](currentVotePeriod, periodLength, markets[], numMarkets, fxpMinTr
 # keeps track of a list of all branches
 data branchList[]
 data branchListCount
+
+data controller
 
 macro checkSubcurrencyIsValid($contract):
     allowance = $contract.allowance(msg.sender, self)
