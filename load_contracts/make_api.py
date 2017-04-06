@@ -52,7 +52,7 @@ def get_contract_paths(path):
     for directory, subdirs, files in os.walk(path):
         for f in files:
             if directory.endswith("data_api") or directory.endswith("functions"):
-                if f.endswith(".se") and f not in ["output.se", "refund.se"] and not f.startswith(".~"):
+                if f.endswith(".se") and f not in ["output.se", "../macros/refund.sem"] and not f.startswith(".~"):
                     contract_name = f[0].upper() + f[1:-3]
                     if contract_name == "Buy&sellShares": contract_name = "BuyAndSellShares"
                     contract_paths[contract_name] = os.path.join(directory, f)

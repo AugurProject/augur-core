@@ -1,21 +1,14 @@
-macro Controller: 0xC001D00D
-data foo
+Controller = 0xC001D00D
 
-def ok(x):
-    send(0, 5)
-    if(block.timestamp < 5055):
-        return(2)
-    self.hmm()
-    return(-57896044618658097711785492504343953926634992332820282019728792003956564819968)
+event logit(returnValue)
 
-def hmm():
-    return(5)
-
-macro safeToSubtract($a, $b):
-    ($b <= $a && (($a - $b) <= $a))
-
-
-macro safeToSubtract($a, $b):
-    ($b <= $a && (($a - $b) <= $a))
-
-goes from -2**255 to 2**255 - 1
+def init():
+    self
+    log(type = logit, Controller)
+    
+def ok(y, b):
+    size = ~calldatasize()
+    # a = alloc(size + 28)
+    a = array((size + 28)/32)
+    ~calldatacopy(a + 28, 0, size)
+    return(a, items=(size + 28)/32)

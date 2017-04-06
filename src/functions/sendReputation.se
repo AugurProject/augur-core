@@ -80,8 +80,6 @@ macro ONE_MONTH: 2592000
             # say you gained rep in round 1, if it was an invalid round 2 you have incentive _to_ not convert to dormant or send rep b/c you want to keep it
 def sendRepFrom(branch, from, receiver, fxpValue):
     checkInvariants(from)
-    if(first48HoursOfPeriod()):
-        throw()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
     if(!mutexWhitelisted()):
@@ -149,8 +147,6 @@ def convertToDormantRep(branch, fxpValue):
         throw()
     MUTEX.setMutex()
     checkInvariants(msg.sender)
-    if(first48HoursOfPeriod()):
-        throw()
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
     senderBalance = REPORTING.getRepBalance(branch, msg.sender)
     senderDormantBalance = REPORTING.balanceOfReporter(branch, msg.sender)
@@ -177,8 +173,6 @@ def convertToActiveRep(branch, fxpValue):
         throw()
     MUTEX.setMutex()
     checkInvariants(msg.sender)
-    if(first48HoursOfPeriod()):
-        throw()
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
     senderBalance = REPORTING.balanceOfReporter(branch, msg.sender)
     senderActiveBalance = REPORTING.getRepBalance(branch, msg.sender)
@@ -303,12 +297,3 @@ macro checkRepConversionInvariants():
     if(senderBalance < fxpValue or fxpValue <= 0):
         MUTEX.unsetMutex()
         return(-5)
-
-macro first48HoursOfPeriod():
-    residual = block.timestamp % periodLength
-    currentPeriod = block.timestamp / periodLength
-    currentMinus48Hours = (block.timestamp - 48_HOURS) / periodLength
-    if(currentPeriod != currentMinus48Hours):
-        1
-    else:
-        0

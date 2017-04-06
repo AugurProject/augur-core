@@ -2,20 +2,35 @@
 
 inset('../macros/refund.sem')
 
+# Initializing the controller
+    # First call the functions to set the registry values and whitelists and mode
+    # Set first call used to 1
+
+# Upgrading the controller/upgrader
+    # First emergency stop everything
+    # Set new controller in each contract and make sure the caller is the existing controller
+    # Then new controller needs to populate its registry and whitelist
+    # Then once it is updated suicide the old controller
+
 # TODO:
-    # updating controller
-    # emergency stops?
-    # Some of the contracts have internal state that shouldn't be modified by code or users, besides the official Augur contracts. The method joey and I designed uses three primitives to alter the contracts' whitelists; replace, add and delete. A rep-weighted voting system is used to choose among proposed changes, proposals that recieve a majority of rep during the current voting period are executed at the start of the next voting period. If a rep holder has voted, they must not be allowed to send their rep to other accounts, so methods are provided for checking whether of not a voter has voted. Other method are provided to get various metadata including details about how an address voted at a certain period.
-    # 	Min of 100 REP to vote/propose changes
-    # 	prospoals and votes happen in 60 day cycle, first 30 days for proposals and next 30 days for votes.
+    # should controller have ability to suicide any contract?
+    # Some of the contracts have internal state that shouldn't be modified by code or users, besides the official Augur contracts. A rep-weighted voting system is used to choose among proposed changes, proposals that receive a majority of rep during the current voting period are executed at the start of the next voting period. - done
     # 	Dev mode: a developer address which can do an update without a vote - done
-    #	Vote to switch to hybrid mode: Dev address can propose changes and voters may veto within time limit
-    # 	Vote to switch to full decentralized mode: every proposal must be made by address with min rep, must have a majority of rep voted for it to pass
-    # 	Proposal structure: an array of arguments which change can replace a contract with a new one, delete a contract, or add a contract
-    #   Proposal hash stored onchain along with short description.
-    # 	vote to suicide and transfer control of whitelist and reg to new updater
+    #	Vote to switch to hybrid mode: Dev address can propose changes and voters may veto within time limit - done
+    # 	Vote to switch to full decentralized mode: every proposal must be made by address with min rep, must have a majority of rep voted for it to pass - done
+    # 	Proposal structure: an array of arguments which is the msg.data then hashed is what people vote on, can call setValue for the registry, transferOwnership, addToWhitelist, removeFromWhitelist, replaceOnWhitelist, changeMode - done
+    #   Proposal hash stored onchain along with short description - done
+    # 	vote to transfer control of whitelist and reg to new updater
+
+data proposedChanges[](proposalExpirationTime, repVoted, repInFavor, updateDataHash)
+data numberOfProposedChanges
 
 data owner
+data ownerBranch
+
+data mode
+
+data hasReported[]
 
 # Registry keys have a 32 char limit and the contract address is the value, index is the contract name
 data registry[](value)
@@ -23,49 +38,145 @@ data registry[](value)
 # takes contract address as index, value is whether it's in the whitelist or not
 data whitelist[]
 
+data firstCallUsed
+
 def init():
     self.owner = msg.sender
+    self.ownerBranch = 1010101
+    self.mode = "dev"
 
-def transferOwnership(key, newOwner):
-    if(self.owner == msg.sender):
-        self.owner = newOwner
+def transferOwnership(key, newOwner, ownerBranch, proposalID):
+    self.owner = newOwner
+    self.ownerBranch = ownerBranch
     return(1)
 
-def setValue(key, newValue, inWhitelist, removeOldFromWhitelist):
-    if(self.owner == msg.sender):
-        self.whitelist[newValue] = inWhitelist
-        if(removeOldFromWhitelist):
-            self.whitelist[self.registry[key].value] = 0
-        self.registry[key].value = newValue
-        return(1)
-    else:
-        return(0)
+def setValue(key, newValue, inWhitelist, removeOldFromWhitelist, proposalID):
+    self.whitelist[newValue] = inWhitelist
+    if(removeOldFromWhitelist):
+        self.whitelist[self.registry[key].value] = 0
+    self.registry[key].value = newValue
+    return(1)
 
-def lookup(key):
-    return(self.registry[key].value)
-
-def getOwner(key):
-    return(self.owner)
-
-def addToWhitelist(address):
+def addToWhitelist(address, proposalID):
     if(self.owner == msg.sender):
         self.whitelist[address] = 1
         return(1)
     else:
         return(0)
 
-def removeFromWhitelist(address):
+def removeFromWhitelist(address, proposalID):
     if(self.owner == msg.sender):
         self.whitelist[address] = 0
         return(1)
     else:
         return(0)
         
-def replaceOnWhitelist(original, new):
+def replaceOnWhitelist(original, new, proposalID):
     if(self.removeFromWhitelist(original) && self.addToWhitelist(new)):
         return(1)
     else:
         throw()
 
+def proposeUpdate(updateDataHash, expirationTime):
+    if(repBalance(msg.sender) < 100):
+        throw()
+    proposalID = self.numberOfProposedChanges
+    self.proposedChanges[proposalID].updateDataHash = updateDataHash
+    if(block.timestamp < expirationTime):
+        throw()
+    self.proposedChanges[proposalID].proposalExpirationDate = expirationTime
+    self.numberOfProposedChanges += 1
+    return(proposalID)
+
+def changeMode(newMode, proposalID):
+    self.mode = newMode
+    return(1)
+    
+def submitVote(proposalID, yay):
+    votePeriod = BRANCHES.getVotePeriod(branch)
+    periodLength = BRANCHES.getPeriodLength(branch)
+    if(votePeriod != proposalExpirationTime / periodlength) throw
+    atSecondHalfOfPeriod()
+    add to rep voted
+    add to in favor if it's in favor
+    balance = REPORTING.getRepBalance(branch, msg.sender)
+    hasreported = 1
+    if(hasreported) throw
+    if(!CONSENSUS.getRepCollected(branch, msg.sender, votePeriod - 1)):
+    if(COLLECTFEES.collectRep(branch, msg.sender, value = msg.value) < 0):
+        MUTEX.unsetMutex()
+        logReturn(makeReportsLogReturn, -8)
+        
+def getProposals(start, end):
+    proposals = array(4*(end - start))
+    i = 0
+    while start < end:
+        proposals[i] = self.proposedChanges[start].proposalExpirationDate
+        proposals[i + 1] = self.proposedChanges[start].repVoted
+        proposals[i + 2] = self.proposedChanges[start].repInFavor
+        proposals[i + 3] = self.proposedChanges[start].updateDataHash
+        start += 1
+        i += 4
+    return(proposals: arr)
+
+def getProposal(index):
+    return([self.proposedChanges[index].proposalExpirationDate, self.proposedChanges[index].repVoted, self.proposedChanges[index].repInFavor, self.proposedChanges[index].updateDataHash]: arr)
+
+def getNumberOfProposedChanges():
+    return(self.numberOfProposedChanges)
+
+def getHasReported(reporter):
+    return(self.hasReported[reporter])
+
 def checkWhitelist(address):
     return(self.whitelist[address])
+
+def lookup(key):
+    return(self.registry[key].value)
+
+def getOwner():
+    return(self.owner)
+
+def getOwnerBranch():
+    return(self.ownerBranch)
+
+def getMode():
+    return(self.mode)
+
+macro checkValidVoteUpdate(committedVoteIndex):
+    size = ~calldatasize()
+    arraySize = (size + 28)/32
+    msgData = array(arraySize)
+    ~calldatacopy(msgData + 28, 0, size)
+    dataHash = sha3(msgData, items = arraySize)
+    if(dataHash != self.committedVotes[committedVoteIndex]):
+        throw()
+
+macro confirmValidPermissions():
+    if(!self.firstCallUsed && msg.sender == owner):
+        1
+    else:
+        if(mode == "full version"):
+            if(safeFxpDiv(self.proposedChanges[proposalID].repInFavor, self.proposedChanges[proposalID].repVoted) < POINT_SIX):
+                throw()
+        elif(mode == "hybrid"):
+            # in hybrid mode if < 1/4th of rep is in favor of an update it is vetoed
+            if(msg.sender != owner or safeFxpDiv(self.proposedChanges[proposalID].repInFavor, self.proposedChanges[proposalID].repVoted) < ONE_FOURTH):
+                throw()
+        elif(mode == "dev"):
+            if(msg.sender != owner):
+                throw()
+        else:
+            throw()
+        1
+        
+macro confirmNotTooEarly():
+    if(votePeriod <= proposalExpirationTime / periodlength) throw
+
+def setFirstCallUsed():
+    if(msg.sender == self.owner):
+        self.firstCallUsed = 1
+    return(1)
+    
+def getFirstCallUsed():
+    return(self.firstCallUsed)
