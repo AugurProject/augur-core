@@ -242,8 +242,7 @@ macro placeBid():
         logReturn(bidAndAskLogReturn, -5)
 
     # If user owns n minus the one outcome we're buying escrow no money but escrow their shares in all the other outcomes.
-    MAX_INT = 57896044618658097711785492504343953926634992332820282019728792L
-    sharesHeld = MAX_INT
+    sharesHeld = -1
     i = 1
     while i < MARKETS.getMarketNumOutcomes($market):
         if(i != $outcome):

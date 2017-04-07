@@ -181,4 +181,8 @@ def setForkBondPoster(event, poster):
 
 # todo add to all contracts with checks that whoever calling it is appropriate
 #def setController(newController):
-    
+
+# todo add to all contracts with checks that whoever calling it is appropriate
+#def suicideFunds(to):
+    # suicide(to, self.balance)
+

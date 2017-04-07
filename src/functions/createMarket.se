@@ -150,7 +150,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     firstResolveBondPaid = 0
     firstResolveBondPoster = 0
     # sender / event creator paid
-    # todo add if no resolution address just put in regular vote period as normal
+    # todo add if no resolution address just put in regular vote period as normal but charge extra
     if(REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, msg.sender), FIRST_RESOLVE_BOND) && REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, event), FIRST_RESOLVE_BOND)):
         firstResolveBondPaid = 1
         firstResolveBondPoster = msg.sender
@@ -393,12 +393,13 @@ def putEventIntoReportingPeriod(event):
     periodLength = BRANCHES.getPeriodLength(branch)
     baseReporters = BRANCHES.getBaseReporters(branch)
     # want to resolve as soon as possible
-    futurePeriod = block.number / periodLength
+    futurePeriod = block.timestamp / periodLength
     if(eventCreatedPriorToFork(event)):
         return(-1)
 
-    if(!EVENTS.getChallenged(event) && !EVENTS.getFirstPreliminaryOutcome(event) && block.timestamp > (EVENTS.getOriginalExpiration(event) + THREE_DAYS)):
+    if(!EVENTS.getChallenged(event) && !EVENTS.getFirstPreliminaryOutcome(event) && block.timestamp > (EVENTS.getExpiration(event) + THREE_DAYS)):
         addEvent()
+        EVENTS.setExpiration(event, block.timestamp)
         EVENTS.setChallenged(event)
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
@@ -422,12 +423,13 @@ def challengeInitialResolution(event):
     baseReporters = BRANCHES.getBaseReporters(branch)
 
     # want to resolve as soon as possible
-    futurePeriod = block.number / periodLength
+    futurePeriod = block.timestamp / periodLength
     if(eventCreatedPriorToFork(event)):
         return(-1)
 
-    if(!EVENTS.getChallenged(event) && block.timestamp < (EVENTS.getOriginalExpiration(event) + 2 * THREE_DAYS) && EVENTS.getFirstPreliminaryOutcome(event)):
+    if(!EVENTS.getChallenged(event) && block.timestamp < (EVENTS.getExpiration(event) + 2 * THREE_DAYS) && EVENTS.getFirstPreliminaryOutcome(event)):
         addEvent()
+        EVENTS.setExpiration(event, block.timestamp)
         EVENTS.setChallenged(event)
         payExtraBond()
         if(!mutexWhitelisted()):
@@ -446,7 +448,7 @@ def resolveEarly(event, outcome):
         throw()
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
-    if(msg.sender == EVENTS.getResolutionAddress(event) && block.timestamp > EVENTS.getExpiration(event) && block.timestamp < (EVENTS.getExpiration(event) + 86400*3)):
+    if(msg.sender == EVENTS.getResolutionAddress(event) && block.timestamp > EVENTS.getExpiration(event) && block.timestamp < (EVENTS.getExpiration(event) + THREE_DAYS)):
         # outcome of 1 is 1/10**18 or basically 0, but allows us to still check if outcome is 0 or not to see if an outcome has been set
         if(outcome == 0):
             outcome = 1

@@ -81,9 +81,17 @@ def init():
     self.Branches[1010101].baseReporters = 6
     ethContract = Controller.lookup("cash")
     checkSubcurrencyIsValid(ethContract)
-    wallet = create('../functions/wallet.se')
-    wallet.initialize(ethContract)
-    self.Branches[1010101].contract[ethContract] = wallet
+    self.Branches[1010101].currencies[self.Branches[branch].numCurrencies].contract = ethContract
+    self.Branches[1010101].currencies[self.Branches[branch].numCurrencies].rate = ONE
+    self.Branches[1010101].currencyToIndex[ethContract] = self.Branches[branch].numCurrencies
+    self.Branches[1010101].currencyActive[ethContract] = 1
+    self.Branches[1010101].numCurrencies += 1
+    noWalletExists = !self.Branches[branch].contract[ethContract]
+    if(noWalletExists):
+        wallet = create('../functions/wallet.se')
+        wallet.initialize(ethContract)
+        self.Branches[1010101].contract[ethContract] = wallet
+    
 
 # whitelist updates
 def updateNumCurrencies(branch, num):
@@ -276,7 +284,7 @@ def setMostRecentChild(parent, child):
 
 # check that msg.sender is one of our function contracts
 # whitelist
-def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, contract, wallet, mostRecentChild):
+def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, ethContract, mostRecentChild):
     # if(!self.whitelist.check(msg.sender)):
     #   throw()
     if(!self.Branches[ID].periodLength):
@@ -290,8 +298,18 @@ def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, orac
         self.Branches[ID].oracleOnly = oracleOnly
         self.Branches[ID].parent = parent
         self.Branches[ID].baseReporters = self.Branches[parent].baseReporters
-        self.Branches[ID].contract[contract] = wallet
         self.Branches[ID].mostRecentChild = mostRecentChild
+        checkSubcurrencyIsValid(ethContract)
+        self.Branches[ID].currencies[self.Branches[ID].numCurrencies].contract = ethContract
+        self.Branches[ID].currencies[self.Branches[ID].numCurrencies].rate = ONE
+        self.Branches[ID].currencyToIndex[ethContract] = self.Branches[ID].numCurrencies
+        self.Branches[ID].currencyActive[ethContract] = 1
+        self.Branches[ID].numCurrencies += 1
+        noWalletExists = !self.Branches[ID].contract[ethContract]
+        if(noWalletExists):
+            wallet = create('../functions/wallet.se')
+            wallet.initialize(ethContract)
+            self.Branches[ID].contract[ethContract] = wallet
         return(1)
     else:
         return(0)

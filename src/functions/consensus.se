@@ -42,6 +42,8 @@ event consensusLogReturn(returnValue)
 macro POINT_ZERO_ONE: 10000000000000000
 macro POINT_ONE: 100000000000000000
 
+macro FIVE_PERCENT: 50000000000000000
+
 data controller
 
 # Penalizes a reporter for reporting wrongly on an event
@@ -145,6 +147,7 @@ def incrementPeriodAfterReporting(branch):
     amountAppealedThisPeriod = safeFxpDiv(EXPEVENTS.getNumRoundTwo(branch, periodVotingOnNow), EXPEVENTS.getNumberEvents(branch, periodVotingOnNow))
     amountAppealedLastPeriod = safeFxpDiv(EXPEVENTS.getNumRoundTwo(branch, lastPeriod), EXPEVENTS.getNumberEvents(branch, lastPeriod))
     percentAppealed = safeAdd(amountAppealedThisPeriod, amountAppealedLastPeriod) / 2
+    percentAppealed = min(percentAppealed, FIVE_PERCENT)
     BRANCHES.incrementPeriod(branch)
     # mult. by 2 b/c reporters only have to report on half the things they're selected to report on
     # clarify
