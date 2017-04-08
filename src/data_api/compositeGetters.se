@@ -39,6 +39,7 @@ extern expiringEvents: [addEvent:[int256,int256,int256,int256,int256,int256,int2
 
 inset('../macros/refund.sem')
 inset('../macros/proportionCorrect.sem')
+inset('../macros/eventHelpers.sem')
 
 macro ORDER_FIELDS: 10
 macro EVENTS_FIELDS: 7

@@ -1,15 +1,14 @@
-
-
-
 data mutex
+
 data controller
 
-# whitelist these
 def setMutex():
+    self.controller.checkWhitelist(msg.sender)
     self.mutex = 1
     return(1)
 
 def unsetMutex():
+    self.controller.checkWhitelist(msg.sender)
     self.mutex = 0
     return(1)
 

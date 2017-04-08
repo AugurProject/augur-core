@@ -1,7 +1,3 @@
-
-
-
-
 inset('../macros/refund.sem')
 
 # Keeps track of data for round two backstop [where everyone reports on something] using event as the index
