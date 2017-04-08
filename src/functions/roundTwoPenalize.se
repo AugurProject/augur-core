@@ -61,7 +61,7 @@ data controller
     # -5: already done for all events in this period
     # -6: needed to collect fees last period which sets the before/after rep
     # -7: event isn't in the branch given
-    # -8: not able to be reported on
+    # -8: not able to be penalized on yet b/c round 2 event isn't final
 # force event to be resolved first if it can be
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized
 def penalizeRoundTwoWrong(branch, event):
@@ -98,15 +98,25 @@ def penalizeRoundTwoWrong(branch, event):
 
     numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriodVotedOn, msg.sender)
     repChange = 0
+    
     # penalization on a round 2 event if not already penalized, it has outcome, and user reported on it
     # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period
     final = BACKSTOPS.getFinal(event)
     roundTwo = BACKSTOPS.getRoundTwo(event)
     penalizedOnEvent = CONSENSUS.getPenalized(branch, lastPeriodVotedOn, msg.sender, event)
     reported = (reportValue or oldReport)
+    rejected = EVENTS.getRejected(event)
+    # if this event was a pushed forward event that got rejected, don't penalize on it, only penalize on the final reporting, i.e. don't allow rep redistribution until the original period it was supposed to resolve in
+    if(final and !penalizedOnEvent and reported and rejected and EVENTS.getRejectedPeriod(event) == lastPeriodVotedOn):
+        CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
+        if(reportValue):
+            CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
+        if(oldReport):
+            CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
     if(final and roundTwo and eventCreatedPriorToFork(event) && event != forkEvent && !penalizedOnEvent && reported):
         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
-        CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
+        if(reportValue):
+            CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
         if(oldReport):
             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
     elif(final and (roundTwo or event == forkEvent) and !penalizedOnEvent and reported and outcome !=0):

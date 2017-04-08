@@ -64,6 +64,7 @@ def penalizeOnForkedEvent(branch, event):
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriodVotedOn, msg.sender)
     forkOutcome = EVENTS.getForkOutcome(event)
     outcome = catch(forkOutcome)
+    rejected = EVENTS.getRejected(event)
     if(scalar(event) or categorical(event)):
         outcome = forkOutcome
     p = proportionCorrect(event, 1)
@@ -107,7 +108,11 @@ macro penalizeOrRewardReporter():
     # penalization on a forked event
     # if didn't report [reportValue of 0] then it's a bad report here
     # Do (for each user) based on forking report and final outcome
-    if(!CONSENSUS.getPenalized(branch, lastPeriodVotedOn, msg.sender, event) and outcome != 0):
+    penalizedOnEvent = CONSENSUS.getPenalized(branch, lastPeriodVotedOn, msg.sender, event)
+    if(!penalizedOnEvent and reportValue and rejected and EVENTS.getRejectedPeriod(event) == lastPeriodVotedOn):
+        CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
+        CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
+    if(!penalizedOnEvent and reportValue and outcome != 0):
         calculateRepChange(reportValue, ONE)
         handleEthicsAndBondRepRedistribution(numReportedOn)
         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)

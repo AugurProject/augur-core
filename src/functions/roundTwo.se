@@ -53,7 +53,6 @@ data controller
 # Returns 1 upon success
 # Errors:
     #  0: invalid votePeriod/branch
-    # -1: Pushed forward event, bonding not allowed during this
     # -2: branch is in the middle of a fork
     # -3: not enough money
     # -4: event has no votes so far
@@ -186,10 +185,6 @@ def resolve(branch, event):
         return(0)
 
 macro roundTwoBondCheckPreconditions():
-    # if pushed forward don't allow until no longer pushed fwd
-    if(EVENTS.getOriginalExpiration(event) != EVENTS.getExpiration(event)):
-        MUTEX.unsetMutex()
-        return(-1)
     market = EVENTS.getMarket(event, 0)
     forkPeriod = BRANCHES.getForkPeriod(branch)
     if(!eventCreatedPriorToFork(eventID)):

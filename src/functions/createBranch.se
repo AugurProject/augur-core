@@ -93,9 +93,8 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
         MUTEX.unsetMutex()
     return(branch)
 
-# make minimum period len 24 hr
 macro checkBranchCreationPreconditions():
-    if(periodLength <= 0 or !BRANCHES.getPeriodLength(parent) or !len(description)):
+    if(periodLength <= 86400 or !BRANCHES.getPeriodLength(parent) or !len(description)):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
