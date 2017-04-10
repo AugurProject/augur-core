@@ -40,6 +40,9 @@ data whitelist[]
 
 data firstCallUsed
 
+macro ONE_FOURTH: 250000000000000000
+macro POINT_SIX: 600000000000000000
+
 def init():
     self.owner = msg.sender
     self.ownerBranch = 1010101
@@ -129,7 +132,10 @@ def getHasReported(reporter):
     return(self.hasReported[reporter])
 
 def checkWhitelist(address):
-    return(self.whitelist[address])
+    if(self.whitelist[address] or msg.sender == self.owner):
+        return(1)
+    else:
+        throw()
 
 def lookup(key):
     return(self.registry[key].value)

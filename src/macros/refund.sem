@@ -1,28 +1,19 @@
-macro ONE: 10^18
-
-macro THREE_FOURTHS: 750000000000000000
-
-macro ONE_FOURTH: 250000000000000000
+macro ONE: 10**18
 
 macro ONE_HALF: 500000000000000000
 
-macro POINT_SIX: 600000000000000000
-
 macro TWO: 2000000000000000000
 
-macro TWENTYFOURHR: 86400
+macro TWENTY_FOUR_HR: 86400
 
 macro WEI_TO_ETH: 10 ** 18
 
 macro throw():
-    i = 0
-    while(1):
-        i += 1
+    jump(-2**256)
 
 macro refund():
-    if(msg.value > 0):
-        if(!send(msg.sender, msg.value)):
-            throw()
+    if(msg.value > 0 and !send(msg.sender, msg.value)):
+        throw()
 
 macro mutexWhitelisted():
     # for testing

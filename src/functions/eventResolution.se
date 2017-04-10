@@ -1,7 +1,3 @@
-
-
-
-
 BRANCHES = Controller.lookup('branches')
 extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToBranch:[int256,int256]:int256, disableCurrency:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranchCurrency:[int256,int256]:int256, getBranchWallet:[int256,int256]:int256, getBranches:[]:int256[], getBranchesStartingAt:[int256]:int256[], getCreationDate:[int256]:int256, getCurrencyActive:[int256,int256]:int256, getCurrencyByContract:[int256,int256]:int256, getCurrencyRate:[int256,int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getForkTime:[int256]:int256, getInitialBalance:[int256,int256,int256]:int256, getMarketIDsInBranch:[int256,int256,int256]:int256[], getMinTradingFee:[int256]:int256, getMostRecentChild:[int256]:int256, getNumBranches:[]:int256, getNumCurrencies:[int256]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, reactivateCurrency:[int256,int256]:int256, removeLastCurrency:[int256]:int256, replaceCurrency:[int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256,int256]:int256, setMostRecentChild:[int256,int256]:int256, updateCurrencyRate:[int256,int256,int256,int256]:int256, updateNumCurrencies:[int256,int256]:int256]
 
@@ -24,15 +20,15 @@ REPORTING = Controller.lookup('reporting')
 extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOfReporter:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, claimInitialRepFromRepContract:[]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getFork:[int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReportedOnNonFinalRoundTwoEvent:[int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setFork:[int256]:int256, setInitialReporters:[int256]:int256, setRep:[int256,int256,int256]:int256, setReportedOnNonFinalRoundTwoEvent:[int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, totalSupply:[int256]:int256]
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
-inset('../macros/refund.sem')
 
+inset('../macros/refund.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/float.sem')
 
+data controller
+
 macro FIRST_RESOLVE_BOND: 10 * ONE
 macro INDETERMINATE: 1500000000000000000
-
-data controller
 
 ### Serves to resolve events
 
@@ -138,7 +134,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         # set $event expiration to be the old date
         EVENTS.setExpiration($event, EVENTS.getOriginalExpiration($event))
         handleFirstResolverBond()
-        -6
+        -1
     elif($indeterminateAndReadyToResolve or !ethical):
         # not $ethical is same as .5 outcome
         if($scalarorcat):

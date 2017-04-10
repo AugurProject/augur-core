@@ -1,8 +1,4 @@
 ### Used to allow users to collect fees from reporting
-
-
-
-
 BRANCHES = Controller.lookup('branches')
 extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToBranch:[int256,int256]:int256, disableCurrency:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranchCurrency:[int256,int256]:int256, getBranchWallet:[int256,int256]:int256, getBranches:[]:int256[], getBranchesStartingAt:[int256]:int256[], getCreationDate:[int256]:int256, getCurrencyActive:[int256,int256]:int256, getCurrencyByContract:[int256,int256]:int256, getCurrencyRate:[int256,int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getForkTime:[int256]:int256, getInitialBalance:[int256,int256,int256]:int256, getMarketIDsInBranch:[int256,int256,int256]:int256[], getMinTradingFee:[int256]:int256, getMostRecentChild:[int256]:int256, getNumBranches:[]:int256, getNumCurrencies:[int256]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, reactivateCurrency:[int256,int256]:int256, removeLastCurrency:[int256]:int256, replaceCurrency:[int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256,int256]:int256, setMostRecentChild:[int256,int256]:int256, updateCurrencyRate:[int256,int256,int256,int256]:int256, updateNumCurrencies:[int256,int256]:int256]
 
@@ -19,19 +15,18 @@ MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
+
 inset('../macros/refund.sem')
 inset('../macros/periodStage.sem')
 inset('../macros/float.sem')
 
 data controller
 
-# Allows a user to collect both redistributed rep and trading fees earned at the end of a period
+# Allows a user to collect redistributed rep earned at the end of a period
 # Errors:
-    #  0: rep or fees already collected
+    #  0: rep already collected
     # -1: rep redistribution/rewards/penalizations in consensus not done yet
     # -2: needs to be second half of reporting period to claim rep [1st half is when redistribution is done]
-        # after this window, any unclaimed rep is pushed to the next period's redistrib. pool via the first make report submission
-    # -3: rep not collected yet
 # 2 means no errors but didnt report last period
 def collectRep(branch, sender):
     if(MUTEX.getMutex() && !mutexWhitelisted()):
@@ -56,6 +51,13 @@ def collectRep(branch, sender):
         MUTEX.unsetMutex()
     return(1)
 
+# Allows a user to collect trading fees earned at the end of a period
+# Errors:
+    #  0: fees already collected
+    # -1: rep redistribution/rewards/penalizations in consensus not done yet
+    # -2: needs to be second half of reporting period to claim fees [1st half is when redistribution is done]
+    # -3: rep not collected yet
+# 2 means no errors but didnt report last period
 def collectFees(branch, sender, currency):
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
@@ -109,7 +111,7 @@ macro collectRedistributedRep():
     if(!CONSENSUS.getFeeFirst(branch, lastPeriod)):
         CONSENSUS.setFeeFirst(branch, lastPeriod, 1)
         CONSENSUS.setPeriodBalance(branch, lastPeriod, REPORTING.getRepBalance(branch, branch))
-    gainedRep = safeFxpDiv(safeMul(newRep, CONSENSUS.getPeriodBalance(branch, lastPeriod)), denominator)
+    gainedRep = safeFxpDiv(safeFxpMul(newRep, CONSENSUS.getPeriodBalance(branch, lastPeriod)), denominator)
     # if a user lost rep their newRep should be == EXPEVENTS.getAfterRep(branch, period, sender) + gainedRep
     # if gained rep overall their newRep should be == EXPEVENTS.getBeforeRep(branch, period, sender) + gainedRep
     # give a reporter their portion of redistributed rep
@@ -121,7 +123,7 @@ macro collectTradeFees():
     if(!initialBalance):
         # set amount of fees to be distributed in this period from the branch
         BRANCHES.setInitialBalance(branch, lastPeriod, currency.balanceOf(BRANCHES.getBranchWallet(branch, currency)), currency)
-    fees = safeFxpDiv(safeFxpMul(initialBalance, newRep), denominator)
+    fees = safeFxpDiv(safeFxpMul(newRep, initialBalance), denominator)
     # give a reporter their portion of the trading fees
     BRANCHES.getBranchWallet(branch, currency).transfer(sender, fees)
     CONSENSUS.setFeesCollected(branch, sender, lastPeriod, currency)

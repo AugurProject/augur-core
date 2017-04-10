@@ -21,7 +21,6 @@
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
-
 ### Token wrapper for eth, which allows eth deposits and faucet usage for testing
 
 inset('../macros/refund.sem')
@@ -35,15 +34,12 @@ data name
 data symbol
 # amount of decimals per unit of rep
 data decimals
-
+# timestamp when withdraw was initiated
+data initiated[]
 data controller
 
 event Transfer(from:indexed, to:indexed, value)
 event Approval(owner:indexed, spender:indexed, value)
-
-# 18 decimals
-macro ONE:
-    10 ** 18
 
 def init():
     self.accounts[msg.sender].balance = 100000 * 10 ** 20
@@ -106,8 +102,7 @@ def approve(spender: address, value: uint256):
 # used for faucets
 def setCash(address: address, balance: uint256):
     refund()
-    # if !self.whitelist.check(msg.sender):
-    #    return(-1)
+    self.controller.checkWhitelist(msg.sender)
     delta = balance - self.accounts[address].balance
     self.accounts[address].balance = balance
     self.totalSupply += delta
@@ -138,15 +133,22 @@ def withdrawEther(to: address, value: uint256):
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()
-
+    
+    initiatedTimestamp = self.initiated[msg.sender]
     if(self.accounts[msg.sender].balance < value):
         return(0)
     if(!safeToSubtract(self.accounts[msg.sender].balance, value) or !safeToSubtract(self.totalSupply, value)):
+        throw()
+    if(!initiatedTimestamp):
+        self.initiated[msg.sender] = block.timestamp
+        return(2)
+    if((self.initiated[msg.sender] + 3 * TWENTY_FOUR_HR) < block.timestamp):
         throw()
     self.accounts[msg.sender].balance -= value
     self.totalSupply -= value
     if(!send(to, value)):
         throw()
+    self.initiated[msg.sender] = 0
     MUTEX.unsetMutex()
     return(1)
 
@@ -171,15 +173,18 @@ def getDecimals():
 
 def getSymbol():
     return(self.symbol)
+    
+def getInitiated():
+    return(self.initiated[msg.sender])
 
 def commitSuicide():
-    if(msg.sender == '0xsuicideaddr'):
-        suicide(msg.sender)
+    self.controller.checkWhitelist(msg.sender)
+    suicide(msg.sender)
     return(1)
 
-# safe adders idea pulled from piper merriam's btcrelay audit
 macro safeToAdd($a, $b):
-    (($a + $b) >= $a)
+    $c = $a + $b
+    ($c >= $a && $c >= $b)
 
 macro safeToSubtract($a, $b):
-    ($b <= $a)
+    ($b <= $a && (($a - $b) <= $a))

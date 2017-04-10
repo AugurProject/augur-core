@@ -135,7 +135,7 @@ def resolveFork(branch):
 
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     origCap = self.exchangeRate(branch)
-    fork = REPORTING.getFork(branch)
+    fork = BRANCHES.getMostRecentChild(branch)
     forkCap = self.exchangeRate(fork)
     winner = 0
     if(origCap >= forkCap):
@@ -466,7 +466,6 @@ macro checkForkPreconditions():
 macro makeFork():
     newBranch = CREATEBRANCH.createSubbranch(FORK_TEXT, BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), BRANCHES.getOracleOnly(branch), 0)
     BRANCHES.setMostRecentChild(branch, newBranch)
-    REPORTING.setFork(newBranch)
     period = BRANCHES.getVotePeriod(newBranch)
     EXPEVENTS.setEventRequired(newBranch, period + 1, event)
     forkPeriod = BRANCHES.getForkPeriod(branch)

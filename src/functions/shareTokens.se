@@ -18,9 +18,6 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-
-
-
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
@@ -43,10 +40,6 @@ data decimals
 event Transfer(from:indexed, to:indexed, value)
 event Approval(owner:indexed, spender:indexed, value)
 
-# 18 decimals
-macro ONE:
-    10 ** 18
-
 def init():
     self.name = "Shares"
     self.symbol = "SHARE"
@@ -58,6 +51,7 @@ def transfer(to: address, value: uint256):
         throw()
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
+    self.controller.checkWhitelist(msg.sender)
     senderBalance = self.accounts[msg.sender].balance
     if(senderBalance < value):
         throw()
@@ -77,6 +71,7 @@ def transferFrom(from: address, to: address, value: uint256):
         throw()
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
+    self.controller.checkWhitelist(msg.sender)
     senderBalance = self.accounts[from].balance
     if(senderBalance < value or value > self.accounts[from].spenders[msg.sender].maxValue):
         throw()
@@ -126,21 +121,21 @@ def getDecimals():
 def getSymbol():
     return(self.symbol)
 
-macro safeToAdd($a, $b):
-    $c = $a + $b
-    ($c >= $a && $c >= $b)
-
-macro safeToSubtract($a, $b):
-    ($b <= $a && (($a - $b) <= $a))
-
 def changeTokens(trader, amount):
-    # whitelist sender to be markets
+    self.controller.checkWhitelist(msg.sender)
     if(self.accounts[trader].balance + amount < 0):
         throw()
     self.accounts[trader].balance += amount
     return(1)
 
 def modifySupply(amount):
-    # whitelist sender to be markets.se
+    self.controller.checkWhitelist(msg.sender)
     self.totalSupply += amount
     return(1)
+
+macro safeToAdd($a, $b):
+    $c = $a + $b
+    ($c >= $a && $c >= $b)
+
+macro safeToSubtract($a, $b):
+    ($b <= $a && (($a - $b) <= $a))

@@ -1,8 +1,5 @@
 ### Handles reporter penalization for the first backstop
 
-
-
-
 REPORTING = Controller.lookup('reporting')
 extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOfReporter:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, claimInitialRepFromRepContract:[]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getFork:[int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReportedOnNonFinalRoundTwoEvent:[int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setFork:[int256]:int256, setInitialReporters:[int256]:int256, setRep:[int256,int256,int256]:int256, setReportedOnNonFinalRoundTwoEvent:[int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, totalSupply:[int256]:int256]
 

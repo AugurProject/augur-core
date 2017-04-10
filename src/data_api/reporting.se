@@ -21,10 +21,9 @@
 BRANCHES = Controller.lookup('branches')
 extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToBranch:[int256,int256]:int256, disableCurrency:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranchCurrency:[int256,int256]:int256, getBranchWallet:[int256,int256]:int256, getBranches:[]:int256[], getBranchesStartingAt:[int256]:int256[], getCreationDate:[int256]:int256, getCurrencyActive:[int256,int256]:int256, getCurrencyByContract:[int256,int256]:int256, getCurrencyRate:[int256,int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getForkTime:[int256]:int256, getInitialBalance:[int256,int256,int256]:int256, getMarketIDsInBranch:[int256,int256,int256]:int256[], getMinTradingFee:[int256]:int256, getMostRecentChild:[int256]:int256, getNumBranches:[]:int256, getNumCurrencies:[int256]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, reactivateCurrency:[int256,int256]:int256, removeLastCurrency:[int256]:int256, replaceCurrency:[int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256,int256]:int256, setMostRecentChild:[int256,int256]:int256, updateCurrencyRate:[int256,int256,int256,int256]:int256, updateNumCurrencies:[int256,int256]:int256]
 
-
+REPCONTRACT = 0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5
 extern repContract: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, getRidOfDustForLaunch:[]:int256, getSeeded:[]:uint256, name:[]:uint256, setSaleDistribution:[address[],uint256[]]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-REPCONTRACT = 0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5
 inset('../macros/refund.sem')
 
 # Storage of all data associated with reporters
@@ -36,44 +35,41 @@ inset('../macros/refund.sem')
     # fork is the child branch of a parent which forked
     # fxpDormant rep stores fxpDormant rep values
     # reportedOnNonFinalRoundTwoEvent is the eventID if a person reported on a round 2 event before it was in the second round [i.e. the first reporting backstop], they cannot convert their rep to dormant or send rep until they've finished the resolution process for that round 2 event, set this to 0 once the event is final
-data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), activeRep, fork, reportedOnNonFinalRoundTwoEvent)
+data Reporting[](reputation[](repValue, reporterID), numberReporters, repIDtoIndex[], totalRep, dormantRep[](repValue, reporterID), activeRep, reportedOnNonFinalRoundTwoEvent[])
 
 data controller
 
 def init():
     self.Reporting[1010101].repIDtoIndex[1010101] = 0
-    # repValue should be == rep in 0x0 address from rep contract for initial redistribution
-    self.Reporting[1010101].reputation[0].repValue = 0
+    redistributionRep = REPCONTRACT.balanceOf(0x0000000000000000000000000000000000000000)
+    self.Reporting[1010101].reputation[0].repValue = redistributionRep
     self.Reporting[1010101].reputation[0].reporterID = 1010101
+    self.Reporting[1010101].dormantRep[0].reporterID = 1010101
     self.Reporting[1010101].numberReporters = 2
     self.Reporting[1010101].repIDtoIndex[msg.sender] = 1
     self.Reporting[1010101].reputation[1].repValue = 0
     self.Reporting[1010101].reputation[1].reporterID = msg.sender
+    self.Reporting[1010101].dormantRep[1].reporterID = msg.sender
+    self.Reporting[1010101].repIDtoIndex[msg.sender] = 1
+    self.Reporting[1010101].activeRep += redistributionRep
+    self.Reporting[1010101].totalRep += redistributionRep
 
-def getReportedOnNonFinalRoundTwoEvent(branch):
-    return(self.Reporting[branch].reportedOnNonFinalRoundTwoEvent)
+def getReportedOnNonFinalRoundTwoEvent(branch, reporter):
+    return(self.Reporting[branch].reportedOnNonFinalRoundTwoEvent[reporter])
 
-# whitelist
-def setReportedOnNonFinalRoundTwoEvent(branch, event):
-    self.Reporting[branch].reportedOnNonFinalRoundTwoEvent = event
+def setReportedOnNonFinalRoundTwoEvent(branch, event, reporter):
+    self.controller.checkWhitelist(msg.sender)
+    self.Reporting[branch].reportedOnNonFinalRoundTwoEvent[reporter] = event
     return(1)
 
 # @return fxp
 def getActiveRep(branch):
     return(self.Reporting[branch].activeRep)
 
-# whitelist
 def adjustActiveRep(branch, fxpAmount):
+    self.controller.checkWhitelist(msg.sender)
     self.Reporting[branch].activeRep += fxpAmount
     return(1)
-
-# whitelist
-def setFork(branch):
-    self.Reporting[branch].fork = branch
-    return(1)
-
-def getFork(branch):
-    return(self.Reporting[branch].fork)
 
 # @return fxp
 def getRepByIndex(branch, repIndex):
@@ -100,7 +96,7 @@ def balanceOfReporter(branch, address):
 # return total supply of fxpDormant rep
 # @return fxp
 def totalSupply(branch):
-    return((self.Reporting[branch].totalRep - self.Reporting[branch].activeRep))
+    return(self.Reporting[branch].totalRep - self.Reporting[branch].activeRep)
 
 def getReporterID(branch, index):
     return(self.Reporting[branch].reputation[index].reporterID)
@@ -153,20 +149,18 @@ def repIDToIndex(branch, repID):
         throw()
     return(repIndex)
 
-# check that msg.sender is one of our function contracts
 def setInitialReporters(branch):
-    # if(!self.whitelist.check(msg.sender)):
-    #   throw()
+    self.controller.checkWhitelist(msg.sender)
     # add branch as a "reporter"
     self.Reporting[branch].numberReporters = 1
     self.Reporting[branch].repIDtoIndex[branch] = 0
     self.Reporting[branch].reputation[0].repValue = 0
     self.Reporting[branch].reputation[0].reporterID = branch
+    self.Reporting[branch].dormantRep[0].reporterID = branch
     return(1)
 
 def addReporter(branch, sender, fxpAmount, fxpDormant, fxpRepToBonderOrBranch):
-    # if(!self.whitelist.check(msg.sender)):
-    #   throw()
+    self.controller.checkWhitelist(msg.sender)
     reporterIndex = self.Reporting[branch].numberReporters
     self.Reporting[branch].repIDtoIndex[sender] = reporterIndex
     self.Reporting[branch].reputation[reporterIndex].repValue = fxpAmount
@@ -179,21 +173,18 @@ def addReporter(branch, sender, fxpAmount, fxpDormant, fxpRepToBonderOrBranch):
     return(1)
 
 def addRep(branch, index, fxpValue):
-    # if(!self.whitelist.check(msg.sender) or megakeywhitelistinearlydays):
-    #   throw()
+    self.controller.checkWhitelist(msg.sender)
     self.Reporting[branch].reputation[index].repValue += fxpValue
     return(1)
 
 def subtractRep(branch, index, fxpValue):
-    # if(!self.whitelist.check(msg.sender) or megakeywhitelistinearlydays):
-    #   throw()
+    self.controller.checkWhitelist(msg.sender)
     self.Reporting[branch].reputation[index].repValue -= fxpValue
     return(1)
 
-### Test Faucet Function that need to be removed at launch
+### Test Faucet Function that needs to be removed at launch TODO
 def setRep(branch, index, fxpNewRep):
-    # if(!self.whitelist.check(msg.sender)):
-    #   throw()
+    self.controller.checkWhitelist(msg.sender)
     oldRep = self.Reporting[branch].reputation[index].repValue
     self.Reporting[branch].reputation[index].repValue = fxpNewRep
     self.Reporting[branch].activeRep += fxpNewRep - oldRep
@@ -201,22 +192,16 @@ def setRep(branch, index, fxpNewRep):
     return(1)
 
 def addDormantRep(branch, index, fxpValue):
-    # if(!self.whitelist.check(msg.sender) or megakeywhitelistinearlydays):
-    #   throw()
+    self.controller.checkWhitelist(msg.sender)
     self.Reporting[branch].dormantRep[index].repValue += fxpValue
     return(1)
 
 def subtractDormantRep(branch, index, fxpValue):
-    # if(!self.whitelist.check(msg.sender) or megakeywhitelistinearlydays):
-    #   throw()
-    if(fxpValue > self.Reporting[branch].dormantRep[index].repValue):
-        throw()
+    self.controller.checkWhitelist(msg.sender)
     self.Reporting[branch].dormantRep[index].repValue -= fxpValue
     return(1)
 
 def claimInitialRepFromRepContract():
-    # if(!self.whitelist.check(msg.sender)):
-    #   throw()
     branch = 1010101
     sender = msg.sender
     dormantRep = REPCONTRACT.balanceOf(sender)
@@ -234,10 +219,3 @@ def claimInitialRepFromRepContract():
     self.Reporting[branch].totalRep += dormantRep
     self.Reporting[branch].numberReporters += 1
     return(1)
-
-macro safeToAdd($a, $b):
-    $c = $a + $b
-    ($c >= $a && $c >= $b)
-
-macro safeToSubtract($a, $b):
-    ($b <= $a && (($a - $b) <= $a))

@@ -4,7 +4,6 @@ macro YES: TWO
 macro NO: ONE
 macro INDETERMINATE: 3 * ONE_HALF
 macro CATCH_TOLERANCE: ONE / 10
-macro POINT_FOUR: 400000000000000000
 
 # Bins values to 1, 1.5, 2
 macro catch($x):
@@ -15,9 +14,16 @@ macro catch($x):
     else:
         INDETERMINATE
 
+macro round($x):
+    if(($x + ONE_HALF) / ONE != ($x / ONE)):
+        ($x + ONE_HALF) / ONE * ONE
+    else:
+        $x / ONE * ONE
+
 # If greater than 60% of reporters report a market as unethical (0), the market is considered unethical.
 macro ethicCatch($x):
-    if($x < POINT_FOUR):
+    $point_four = 400000000000000000
+    if($x < point_four):
         0
     else:
         ONE
@@ -35,12 +41,6 @@ macro abs($a):
     if($a < 0):
         $a = -$a
     $a
-
-macro round($x):
-    if(($x + ONE_HALF) / ONE != ($x / ONE)):
-        ($x + ONE_HALF) / ONE * ONE
-    else:
-        $x / ONE * ONE
 
 # this includes all events created before the fork started
 macro eventCreatedPriorToFork($event):

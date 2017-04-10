@@ -1,8 +1,5 @@
 ### Allows a user who's had active rep but hasn't reported get caught up on penalizations
 
-
-
-
 BRANCHES = Controller.lookup('branches')
 extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToBranch:[int256,int256]:int256, disableCurrency:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranchCurrency:[int256,int256]:int256, getBranchWallet:[int256,int256]:int256, getBranches:[]:int256[], getBranchesStartingAt:[int256]:int256[], getCreationDate:[int256]:int256, getCurrencyActive:[int256,int256]:int256, getCurrencyByContract:[int256,int256]:int256, getCurrencyRate:[int256,int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getForkTime:[int256]:int256, getInitialBalance:[int256,int256,int256]:int256, getMarketIDsInBranch:[int256,int256,int256]:int256[], getMinTradingFee:[int256]:int256, getMostRecentChild:[int256]:int256, getNumBranches:[]:int256, getNumCurrencies:[int256]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, reactivateCurrency:[int256,int256]:int256, removeLastCurrency:[int256]:int256, replaceCurrency:[int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256,int256]:int256, setMostRecentChild:[int256,int256]:int256, updateCurrencyRate:[int256,int256,int256,int256]:int256, updateNumCurrencies:[int256,int256]:int256]
 
@@ -18,11 +15,11 @@ extern consensusData: [decreaseDenominator:[int256,int256,int256]:int256, doRefu
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
-data controller
-
 inset('../macros/refund.sem')
 inset('../macros/periodStage.sem')
 inset('../macros/float.sem')
+
+data controller
 
 macro MAX_DELTA: 22
 macro POINT_NINE: 900000000000000000
@@ -32,13 +29,14 @@ macro POINT_NINE: 900000000000000000
     # -1: doesn't need to be penalized/caught up
     # -2: not in first half of reporting period
     # -3: user isn't behind or reported in the last period [and should thus use the penalization functions in consensus.se]
-# whitelist this [calling if only 1 period behind for someone else can be bad, so only call when auto/necessary, can also call for ones self]
 def penalizationCatchup(branch, sender):
     refund()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
+    if(sender != msg.sender):
+        self.controller.checkWhitelist(msg.sender)
 
     # find delta between this last period and the last one a reporter was penalized up to
     lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(branch, sender)
@@ -46,7 +44,6 @@ def penalizationCatchup(branch, sender):
     delta = lastPeriod - lastPeriodPenalized
     oldRep = REPORTING.getRepBalance(branch, sender)
     checkPenalizationCatchupPreconditions()
-
     redistributeRepFromNotReporting()
     CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
     if(!mutexWhitelisted()):
@@ -73,14 +70,12 @@ macro checkPenalizationCatchupPreconditions():
         return(-3)
 
 macro redistributeRepFromNotReporting():
-    # dock 10% for each period they didn't penalize on
-    smoothedRep = safeFxpMul(oldRep, POINT_NINE)
-    i = 1
-    # if delta >22, max is 23 [1 above, 1 below, and 21 in while loop] penalizations simply so we don't run into out of gas issues
-    if(delta > MAX_DELTA):
-        smoothedRep = safeFxpMul(smoothedRep, POINT_NINE)
-        delta = MAX_DELTA
+    smoothedRep = oldRep
+    # if delta > 22, max is 22 penalizations simply so we don't run into out of gas issues
+    delta = min(delta, MAX_DELTA)
+    i = 0
     while(i < delta):
+        # dock 10% for each period they didn't penalize on
         smoothedRep = safeFxpMul(smoothedRep, POINT_NINE)
         i += 1
     # and send it to branch for penalty rep collection

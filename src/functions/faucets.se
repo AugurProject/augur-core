@@ -117,7 +117,7 @@ def claimInitialRep(parent, branch):
     CONSENSUSFUNCTIONS.incrementPeriodAfterReporting(parent)
     parentPeriod = BRANCHES.getParentPeriod(branch)
     forkPeriod = BRANCHES.getForkPeriod(parent)
-    fork = REPORTING.getFork(parent)
+    fork = BRANCHES.getMostRecentChild(parent)
     forkEvent = BRANCHES.getEventForkedOver(parent)
     outcome = EVENTS.getUncaughtOutcome(forkEvent)
     if(binary(forkEvent)):

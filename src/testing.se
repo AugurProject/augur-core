@@ -1,0 +1,3 @@
+def hmm():
+   jump(-2**256)
+   return(1)
