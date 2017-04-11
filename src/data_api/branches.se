@@ -18,15 +18,13 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-
-
-
-inset('../macros/refund.sem')
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 extern rateContract: [rateFunction:[]:int256]
 
 extern wallet: [initialize:[int256]:int256, setWinningOutcomeContractAddressInitialize:[int256,int256]:int256, transfer:[address,uint256]:int256]
+
+inset('../macros/refund.sem')
 
 # Branches keeps track of data associated with branches in augur
 # Branches' index is the hash of the branch (aka branch)
@@ -72,9 +70,9 @@ macro checkSubcurrencyIsValid($contract):
 
 def init():
     self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
-    self.Branches[1010101].periodLength = 15 # 2 hours
-    # .5%
-    self.Branches[1010101].fxpMinTradingFee = 92233720368547760
+    self.Branches[1010101].periodLength = 15
+    # .2%
+    self.Branches[1010101].fxpMinTradingFee = 200000000000000000
     self.branchListCount = 1
     self.branchList[0] = 1010101
     # since only have to report on half this targets 3
@@ -91,16 +89,15 @@ def init():
         wallet = create('../functions/wallet.se')
         wallet.initialize(ethContract)
         self.Branches[1010101].contract[ethContract] = wallet
-    
 
-# whitelist updates
 def updateNumCurrencies(branch, num):
+    self.controller.checkWhitelist(msg.sender)
     self.Branches[branch].numCurrencies = num
     return(1)
 
-# whitelist updates
 # rateContract _or_ rate should be given
 def addCurrency(branch, currency, rate, rateContract):
+    self.controller.checkWhitelist(msg.sender)
     checkSubcurrencyIsValid(currency)
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract = currency
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].rate = rate
@@ -117,19 +114,19 @@ def addCurrency(branch, currency, rate, rateContract):
     return(1)
 
 # disables a given currency for new market / event creation
-# whitelist
 def disableCurrency(branch, currency):
+    self.controller.checkWhitelist(msg.sender)
     self.Branches[branch].currencyActive[currency] = 0
     return(1)
 
-# whitelist
 # enables a given currency for new market / event creation
 def reactivateCurrency(branch, currency):
+    self.controller.checkWhitelist(msg.sender)
     self.Branches[branch].currencyActive[currency] = 1
     return(1)
 
-# whitelist updates
 def replaceCurrency(branch, oldCurrencyIndex, newCurrency, newRate, newRateContract):
+    self.controller.checkWhitelist(msg.sender)
     checkSubcurrencyIsValid(newCurrency)
     self.Branches[branch].currencyActive[self.Branches[branch].currencies[oldCurrencyIndex].contract] = 0
     self.Branches[branch].currencyToIndex[self.Branches[branch].currencies[oldCurrencyIndex].contract] = 0
@@ -146,8 +143,8 @@ def replaceCurrency(branch, oldCurrencyIndex, newCurrency, newRate, newRateContr
         self.Branches[branch].contract[newCurrency] = wallet
     return(1)
 
-# whitelist updates
 def removeLastCurrency(branch):
+    self.controller.checkWhitelist(msg.sender)
     self.Branches[branch].currencyToIndex[self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract] = 0
     self.Branches[branch].contract[self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract] = 0
     self.Branches[branch].currencies[self.Branches[branch].numCurrencies].contract = 0
@@ -157,8 +154,8 @@ def removeLastCurrency(branch):
     self.Branches[branch].numCurrencies -= 1
     return(1)
 
-# whitelist updates
 def updateCurrencyRate(branch, currency, rate, rateContract):
+    self.controller.checkWhitelist(msg.sender)
     if(rate == 0 && !rateContract):
         throw()
     self.Branches[branch].currencies[self.Branches[branch].currencyToIndex[currency]].rate = rate
@@ -193,16 +190,16 @@ def getCurrencyActive(branch, currency):
 def getEventForkedOver(branch):
     return(self.Branches[branch].eventForkedOver)
 
-# whitelist
 def setEventForkedOver(branch, event):
+    self.controller.checkWhitelist(msg.sender)
     self.Branches[branch].eventForkedOver = event
     return(1)
 
 def getBaseReporters(branch):
     return(self.Branches[branch].baseReporters)
 
-# whitelist
 def setBaseReporters(branch, num):
+    self.controller.checkWhitelist(msg.sender)
     self.Branches[branch].baseReporters = num
     return(1)
 
@@ -216,9 +213,9 @@ def getPeriodLength(branch):
     return(self.Branches[branch].periodLength)
 
 # branch currency balance at start of the fee distribution period
-# whitelist
 # @return fxp
 def setInitialBalance(branch, period, balance, currency):
+    self.controller.checkWhitelist(msg.sender)
     self.Branches[branch].balance[period][currency] = balance
     return(balance)
 
@@ -277,16 +274,14 @@ def getCreationDate(ID):
 def getMostRecentChild(ID):
     return(self.Branches[ID].mostRecentChild)
 
-# whitelist
 def setMostRecentChild(parent, child):
+    self.controller.checkWhitelist(msg.sender)
     self.Branches[parent].mostRecentChild = child
     return(1)
 
 # check that msg.sender is one of our function contracts
-# whitelist
 def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, ethContract, mostRecentChild):
-    # if(!self.whitelist.check(msg.sender)):
-    #   throw()
+    self.controller.checkWhitelist(msg.sender)
     if(!self.Branches[ID].periodLength):
         self.Branches[ID].currentVotePeriod = currentVotePeriod
         self.Branches[ID].periodLength = periodLength
@@ -317,25 +312,22 @@ def initializeBranch(ID, currentVotePeriod, periodLength, fxpMinTradingFee, orac
 def getParentPeriod(branch):
     return(self.Branches[branch].parentPeriod)
 
-# whitelist
 def incrementPeriod(branch):
-    # if(!self.whitelist.check(msg.sender)):
-    #   throw()
+    self.controller.checkWhitelist(msg.sender)
     self.Branches[branch].currentVotePeriod += 1
     return(1)
 
 # check that msg.sender is one of our function contracts
 def addMarketToBranch(branch, market):
-    # if(!self.whitelist.check(msg.sender)):
-    #   throw()
+    self.controller.checkWhitelist(msg.sender)
     numMarkets = self.Branches[branch].numMarkets
     self.Branches[branch].markets[numMarkets] = market
     self.Branches[branch].numMarkets += 1
     return(1)
 
 # forkperiod is the vote period in which a branch was forked
-# whitelist
 def setForkPeriod(branch):
+    self.controller.checkWhitelist(msg.sender)
     self.Branches[branch].forkPeriod = self.Branches[branch].currentVotePeriod
     self.Branches[branch].forkTime = block.timestamp
     return(1)

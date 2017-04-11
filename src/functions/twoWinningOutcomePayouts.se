@@ -1,8 +1,3 @@
-### This pays out on binary or categorical markets
-
-
-
-
 MARKETS = Controller.lookup('markets')
 extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getNumEvents:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSender:[]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initializeMarket:[int256,int256[],int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[]]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, returnTags:[int256]:int256[], setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]
 
@@ -23,9 +18,8 @@ inset('../macros/float.sem')
 data controller
 
 # Payout traders in markets with number of winningOutcomes of 2 [one scalar with any combination of binary + categorical for the other 2 dimensions, or just 1D with a scalar]
-# whitelist
-# refactor
 def twoOutcomes(market, winningOutcome: arr, event, sender):
+    self.controller.checkWhitelist(msg.sender)
     # fetch outcome and min/max values for the scalar
     outcome = EVENTS.getOutcome(event)
     minValue = EVENTS.getMinValue(event)
@@ -34,7 +28,7 @@ def twoOutcomes(market, winningOutcome: arr, event, sender):
     branch = MARKETS.getBranch(market)
     # price is in fixed point
     # share two goes with the high/long side
-    pricePerShare2 = safeFxpDiv(safeSub(outcome, minValue), safeSub(maxValue, minValue))
+    pricePerShare2 = safeFxpDiv(outcome - minValue, maxValue - minValue)
     # share one goes with the low/short side of the calc
     pricePerShare1 = safeSub(ONE, pricePerShare2)
     # normalize if not exactly 100%
