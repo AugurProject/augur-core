@@ -18,6 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+
 INFO = Controller.lookup('info')
 extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256]
 
@@ -65,8 +66,8 @@ def getForkResolveAddress(event):
 def getCreationTime(event):
     return(self.Events[event].creationTime)
 
-# whitelist
 def setCreationTime(event):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].creationTime = block.timestamp
     return(1)
 
@@ -76,8 +77,8 @@ def getResolveBondPoster(event):
 def getChallenged(event):
     return(self.Events[event].challenged)
 
-# whitelist
 def setChallenged(event):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].challenged = 1
     return(1)
 
@@ -85,16 +86,16 @@ def setChallenged(event):
 def getFirstPreliminaryOutcome(event):
     return(self.Events[event].firstPreliminaryOutcome)
 
-# whitelist
 def setFirstPreliminaryOutcome(event, outcome):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].firstPreliminaryOutcome = outcome
     return(1)
 
 def getReportersPaidSoFar(event):
     return(self.Events[event].reportersPaidSoFarForEvent)
 
-# whitelist
 def addReportersPaidSoFar(event):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].reportersPaidSoFarForEvent += 1
     return(1)
 
@@ -104,17 +105,20 @@ def getEventPushedUp(event):
 def getResolutionAddress(event):
     return(self.Events[event].resolutionAddress)
 
-# whitelist
 def setEventPushedUp(event, val):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].pushedUp = val
     return(1)
 
 # @return fxp
 def getForkOutcome(event):
+    whitelist = self.controller.checkWhitelist(msg.sender)
+    if(msg.sender == INFO.getCreator(event) or whitelist):
+        return(self.Events[event].forkOutcome)
     return(self.Events[event].forkOutcome)
 
-# whitelist
 def setForkOutcome(event, value):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].forkOutcome = value
     return(1)
 
@@ -122,21 +126,21 @@ def setForkOutcome(event, value):
 def getForkEthicality(event):
     return(self.Events[event].forkEthicality)
 
-# whitelist
 def setForkEthicality(event, value):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].forkEthicality = value
     return(1)
 
 def getForked(event):
     return(self.Events[event].forked)
 
-# whitelist
 def setForked(event):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].forked = 1
     return(1)
 
-# whitelist
 def setForkDone(event):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].forkOver = 1
     return(1)
 
@@ -165,8 +169,8 @@ def getResolutionLength(event):
 def getPast24(period):
     return(self.past24Hours[period])
 
-# whitelist
 def addPast24(period):
+    self.controller.checkWhitelist(msg.sender)
     self.past24Hours[period] += 1
     return(1)
 
@@ -176,30 +180,29 @@ def getExpiration(event):
 def getOriginalExpiration(event):
     return(self.Events[event].originalExp)
 
-# whitelist
 def setOriginalExpiration(event, date):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].originalExp = date
     return(1)
 
-# whitelist
 def setExpiration(event, date):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].expirationDate = date
     return(1)
 
-# whitelist
 def setBranch(event, branch):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].branch = branch
     return(1)
 
-# whitelist
 def setExtraBond(event, extraBond):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].extraBond = extraBond
     return(1)
 
 # @return fxp
 def getOutcome(event):
-    # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good and for mode etc
-    whitelist = 1
+    whitelist = self.controller.checkWhitelist(msg.sender)
     if(msg.sender == INFO.getCreator(event) or whitelist):
         return(self.Events[event].outcome)
     else:
@@ -209,8 +212,8 @@ def getOutcome(event):
 def getEthics(event):
     return(self.Events[event].ethical)
 
-# whitelist
 def setEthics(event, ethicality):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].ethical = ethicality
     return(ethicality)
 
@@ -225,20 +228,18 @@ def getMaxValue(event):
 def getNumOutcomes(event):
     return(self.Events[event].numOutcomes)
 
-# whitelist
 def setUncaughtOutcome(event, outcome):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].uncaughtOutcome = outcome
     return(1)
 
 # @return fxp
 def getUncaughtOutcome(event):
-    # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
+    self.controller.checkWhitelist(msg.sender)
     return(self.Events[event].uncaughtOutcome)
 
 def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, resolveBondPoster, forkResolveAddress):
-    # check that msg.sender is one of our function contracts
-    # if(!self.whitelist.check(msg.sender)):
-    #   throw()
+    self.controller.checkWhitelist(msg.sender)
     if(!self.Events[ID].expirationDate):
         self.Events[ID].branch = branch
         self.Events[ID].expirationDate = expirationDate
@@ -257,21 +258,21 @@ def initializeEvent(ID, branch, expirationDate, fxpMinValue, fxpMaxValue, numOut
     else:
         return(0)
 
-# whitelist
 def setBond(event, bond):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].bond = bond
     return(1)
 
 def getEarlyResolutionBond(event):
     return(self.Events[event].earlyResolutionBond)
 
-# whitelist
 def setEarlyResolutionBond(event, bond):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].earlyResolutionBond = bond
     return(1)
 
-# whitelist
 def addMarket(event, market):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].markets[self.Events[event].numMarkets] = market
     self.Events[event].numMarkets += 1
     return(1)
@@ -301,10 +302,8 @@ def getMarket(event, marketIndex):
 def getNumMarkets(event):
     return(self.Events[event].numMarkets)
 
-# whitelist
 def setOutcome(ID, outcome):
-    # if(!self.whitelist.check(msg.sender)):
-    #   throw()
+    self.controller.checkWhitelist(msg.sender)
     self.Events[ID].outcome = outcome
     return(1)
 
@@ -312,24 +311,24 @@ def setOutcome(ID, outcome):
 def getReportingThreshold(event):
     return(self.Events[event].threshold)
 
-# whitelist
 def setThreshold(event, threshold):
-    # do whitelist
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].threshold = threshold
     return(1)
 
 # @return fxp
 def getMode(event):
-    # do whitelist, if oracle system branch, always return outcome, if in whitelist it's good
-    return(self.Events[event].mode)
+    whitelist = self.controller.checkWhitelist(msg.sender)
+    if(msg.sender == INFO.getCreator(event) or whitelist):
+        return(self.Events[event].mode)
 
-# whitelist
 def setMode(event, mode):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].mode = mode
     return(1)
 
-# whitelist
 def setRejected(event, period):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].rejected = 1
     self.Events[event].rejectedPeriod = period
     return(1)
@@ -340,8 +339,8 @@ def getRejected(event):
 def getRejectedPeriod(event):
     return(self.Events[event].rejectedPeriod)
 
-# whitelist
 def setExtraBondPoster(event, poster):
+    self.controller.checkWhitelist(msg.sender)
     self.Events[event].extraBondPoster = poster
     return(1)
 
