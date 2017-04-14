@@ -1,14 +1,14 @@
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
-
 data mutex
 
-# whitelist these
+data controller
+
 def setMutex():
+    self.controller.checkWhitelist(msg.sender)
     self.mutex = 1
     return(1)
 
 def unsetMutex():
+    self.controller.checkWhitelist(msg.sender)
     self.mutex = 0
     return(1)
 

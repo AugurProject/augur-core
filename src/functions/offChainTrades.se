@@ -1,11 +1,8 @@
-
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
-
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
+
 inset('../macros/refund.sem')
 inset('../macros/float.sem')
 
@@ -16,13 +13,15 @@ inset('../macros/float.sem')
 
     # useful info for manipulating sigs / signing things etc https://ethereum.stackexchange.com/questions/710/how-can-i-verify-a-cryptographic-signature-that-was-produced-by-an-ethereum-addr/718#718
 
+data amountFilled[]
+
+data controller
+
 event Order(tokenX:address:indexed, orderSize, tokenY:address:indexed, fxpPrice, expiration, user:address:indexed)
 
 event Cancel(tokenX:address:indexed, orderSize, tokenY:address:indexed, fxpPrice, expiration, user:address:indexed, v, r, s)
 
 event Trade(maker:address:indexed, taker:address, tokenX:address:indexed, tokenY:address:indexed, amount, fxpPrice, tradeHash)
-
-data amountFilled[]
 
 # This is used to take an order off the book, it has the order params + amount of the offer you're taking / picking up
 # amounts are in the tokens, fxpPrice is in fixed point out of 10**18
@@ -34,7 +33,6 @@ def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, 
         MUTEX.setMutex()
 
     orderHash = sha3([maker, tokenX, tokenY, orderSize, fxpPrice, expiration], items = 6)
-
     if(!checkSig(maker, orderHash, v, r, s)):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()

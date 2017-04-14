@@ -69,6 +69,7 @@ DEFAULT_CONTROLLER = '0xDEADBEEF'
 CONTROLLER_PATTERN = re.compile('^\s{4}self.controller\s?=\s?(0x[0-9a-fA-F]+)$')
 ADDRESS_HEX = re.compile('^0x([0-9A-F]{1,40}|[0-9a-f]{1,40})$')
 
+
 SERPENT_EXT = '.se'
 MACRO_EXT = '.sem'
 

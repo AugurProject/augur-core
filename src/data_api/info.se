@@ -18,21 +18,20 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
-
 inset('../macros/refund.sem')
 
 # Every entity in our contract has similar metadata.
 # Instead of putting it in each entity, we put all the metadata here.
 # Info's index is the hash of the item we're getting info on
-data Info[](description[2048], descriptionLength, creator, creationFee, wallet, currency)
+data Info[](description[], descriptionLength, creator, creationFee, wallet, currency)
+
+data controller
 
 def init():
     description = text("Root branch")
     save(self.Info[1010101].description[0], description, chars = len(description))
-    self.Info[1010101].creator = 0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826
-    self.Info[1010101].creationFee = 10
+    self.Info[1010101].creator = msg.sender
+    self.Info[1010101].creationFee = 10 * ONE
     self.Info[1010101].descriptionLength = len(description)
 
 def getDescription(ID):
@@ -55,17 +54,15 @@ def getCurrency(ID):
 def getWallet(ID):
     return(self.Info[ID].wallet)
 
-# whitelist
 def setCurrencyAndWallet(ID, currency, wallet):
+    self.controller.checkWhitelist(msg.sender)
     self.Info[ID].currency = currency
     self.Info[ID].wallet = wallet
     return(1)
 
 # @return 1 if success, 0 if creator already exists
 def setInfo(ID, description: str, creator, fxpFee, currency, wallet):
-    # if(!self.whitelist.check(msg.sender)):
-    #   throw()
-    # check that msg.sender is one of our function contracts
+    self.controller.checkWhitelist(msg.sender)
     if(!self.Info[ID].creator):
         save(self.Info[ID].description[0], description, chars = len(description))
         self.Info[ID].descriptionLength = len(description)

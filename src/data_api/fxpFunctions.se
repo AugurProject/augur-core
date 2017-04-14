@@ -1,7 +1,3 @@
-
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
-
 inset('../macros/refund.sem')
 
 macro fxExp2Small($x):
@@ -102,4 +98,5 @@ def fxExp(x):
 
 # Calculates the natural log function given a fixed point [base 10^18] number, so ln(x)
 def fxLog(x):
+    refund()
     return(fxLog(x))

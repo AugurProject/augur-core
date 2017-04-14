@@ -1,6 +1,3 @@
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
-
 inset('../macros/refund.sem')
 
 # Topics[] is indexed by branch ID
@@ -11,31 +8,42 @@ inset('../macros/refund.sem')
 # Note: sorting and/or ranking must be done by the client!
 data Topics[](numTopics, topics[], popularity[])
 
+data controller
+
+def updateTopicPopularity(branch, topic, fxpAmount):
+    refund()
+    self.controller.checkWhitelist(msg.sender)
+    if(self.Topics[branch].popularity[topic] == 0):
+        self.Topics[branch].topics[self.Topics[branch].numTopics] = topic
+        self.Topics[branch].numTopics += 1
+    self.Topics[branch].popularity[topic] += fxpAmount
+    return(1)
+
 def getTopicsInBranch(branch, offset, numTopicsToLoad):
     numTopics = self.Topics[branch].numTopics
-    if offset > numTopics or numTopics == 0:
+    if(offset > numTopics or numTopics == 0):
         return([]: arr)
-    if numTopicsToLoad == 0:
+    if(numTopicsToLoad == 0):
         numTopicsToLoad = numTopics
     numTopicsToLoad = min(numTopicsToLoad, numTopics - offset)
     topicsInBranch = array(numTopicsToLoad)
     i = 0
-    while i < numTopicsToLoad:
+    while(i < numTopicsToLoad):
         topicsInBranch[i] = self.Topics[branch].topics[i + offset]
         i += 1
     return(topicsInBranch: arr)
 
 def getTopicsInfo(branch, offset, numTopicsToLoad):
     numTopics = self.Topics[branch].numTopics
-    if offset > numTopics or numTopics == 0:
+    if(offset > numTopics or numTopics == 0):
         return([]: arr)
-    if numTopicsToLoad == 0:
+    if(numTopicsToLoad == 0):
         numTopicsToLoad = numTopics
     numTopicsToLoad = min(numTopicsToLoad, numTopics - offset)
     topicsInfo = array(numTopicsToLoad * 2)
     i = 0
     j = 0
-    while i < numTopicsToLoad:
+    while(i < numTopicsToLoad):
         topic = self.Topics[branch].topics[i + offset]
         topicsInfo[j] = topic
         topicsInfo[j + 1] = self.Topics[branch].popularity[topic]
@@ -49,13 +57,3 @@ def getTopicPopularity(branch, topic):
 
 def getNumTopicsInBranch(branch):
     return(self.Topics[branch].numTopics)
-
-def updateTopicPopularity(branch, topic, fxpAmount):
-    refund()
-    # if(!self.whitelist.check(msg.sender)):
-    #    return(-1)
-    if self.Topics[branch].popularity[topic] == 0:
-        self.Topics[branch].topics[self.Topics[branch].numTopics] = topic
-        self.Topics[branch].numTopics += 1
-    self.Topics[branch].popularity[topic] += fxpAmount
-    return(1)

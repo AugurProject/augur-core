@@ -1,15 +1,14 @@
 ### Contract which holds funds for things like markets, events, and branches in various subcurrencies
 
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
 
-extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
-#extern whitelistStuff: [functions:[blam, blam!]]
-
 data currency
+
 data winningOutcomeContract
+
+data controller
 
 def initialize(currency):
     if(!self.currency):
@@ -23,9 +22,8 @@ def setWinningOutcomeContractAddressInitialize(currency, addr):
     return(1)
 
 def transfer(receiver: address, value: uint256):
-    # todoupgrade need to have market + branch + event $ + suicide addr + oneWinningandTwoWinningOutcome [hardcode these on per market basis and don't store in main whitelist] support all the relevant contract keys in the namereg in the whitelist to allow them to send money from them - so in whitelist add each branch/market contract and then make them support all namereg keys necessary, should perhaps hardcode closemarket, closemarketone and closemarkettwo to prevent manipulation
-    #if(!whitelistStuff.checkIfSenderInList(msg.sender) and msg.sender != self.winningOutcomeContract):
-    #    throw()
+    if(msg.sender != self.winningOutcomeContract):
+        self.controller.checkWhitelist(msg.sender)
     if(receiver == 0 or value <= 0):
         throw()
     if(!self.currency.transfer(receiver, value)):

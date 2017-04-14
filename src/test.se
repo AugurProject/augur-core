@@ -1,21 +1,15 @@
-macro Controller: 0xC001D00D
-data foo
+Controller = 0xC001D00D
 
-def ok(x):
-    send(0, 5)
-    if(block.timestamp < 5055):
-        return(2)
-    self.hmm()
-    return(-57896044618658097711785492504343953926634992332820282019728792003956564819968)
+TESTING = 0x9026ba40f8e165ead2c7a348273abe19403e4bb0
 
-def hmm():
-    return(5)
+extern testing.se: [hmm:[]:int256]
 
-macro safeToSubtract($a, $b):
-    ($b <= $a && (($a - $b) <= $a))
+event logit(returnValue)
 
-
-macro safeToSubtract($a, $b):
-    ($b <= $a && (($a - $b) <= $a))
-
-goes from -2**255 to 2**255 - 1
+def ok(y, b):
+    size = ~calldatasize()
+    # a = alloc(size + 28)
+    TESTING.hmm()
+    a = array((size + 28)/32)
+    ~calldatacopy(a + 28, 0, size)
+    return(a, items=(size + 28)/32)

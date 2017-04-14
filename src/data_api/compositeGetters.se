@@ -19,9 +19,6 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
-
 INFO = Controller.lookup('info')
 extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256]
 
@@ -42,12 +39,15 @@ extern expiringEvents: [addEvent:[int256,int256,int256,int256,int256,int256,int2
 
 inset('../macros/refund.sem')
 inset('../macros/proportionCorrect.sem')
+inset('../macros/eventHelpers.sem')
 
 macro ORDER_FIELDS: 10
 macro EVENTS_FIELDS: 7
 macro OUTCOMES_FIELDS: 3
 macro BASE_FIELDS: 15
 macro BASE_CACHE_FIELDS: 10
+
+data controller
 
 def getOrderBook(marketID, offset, numOrdersToLoad):
     refund()

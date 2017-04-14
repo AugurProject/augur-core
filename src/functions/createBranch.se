@@ -17,9 +17,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
-
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+### Allows creation of a new branch
 
 BRANCHES = Controller.lookup('branches')
 extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToBranch:[int256,int256]:int256, disableCurrency:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranchCurrency:[int256,int256]:int256, getBranchWallet:[int256,int256]:int256, getBranches:[]:int256[], getBranchesStartingAt:[int256]:int256[], getCreationDate:[int256]:int256, getCurrencyActive:[int256,int256]:int256, getCurrencyByContract:[int256,int256]:int256, getCurrencyRate:[int256,int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getForkTime:[int256]:int256, getInitialBalance:[int256,int256,int256]:int256, getMarketIDsInBranch:[int256,int256,int256]:int256[], getMinTradingFee:[int256]:int256, getMostRecentChild:[int256]:int256, getNumBranches:[]:int256, getNumCurrencies:[int256]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, reactivateCurrency:[int256,int256]:int256, removeLastCurrency:[int256]:int256, replaceCurrency:[int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256,int256]:int256, setMostRecentChild:[int256,int256]:int256, updateCurrencyRate:[int256,int256,int256,int256]:int256, updateNumCurrencies:[int256,int256]:int256]
@@ -33,28 +31,15 @@ extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,i
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
-extern wallet: [initialize:[int256]:int256, setWinningOutcomeContractAddressInitialize:[int256,int256]:int256, transfer:[address,uint256]:int256]
-
-### Allows creation of a new branch
-
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
+
 inset('../macros/refund.sem')
+
 inset('../macros/float.sem')
 
-data ethContract
+data controller
 
 macro MAX_FEE: 10**17
-
-macro checkSubcurrencyIsValid($contract):
-    allowance = $contract.allowance(msg.sender, self)
-    balance = $contract.balanceOf(self)
-    transfer = $contract.transfer(msg.sender, 0)
-    transferFrom = $contract.transferFrom(self, msg.sender, 0)
-    approve = $contract.approve(self, 0)
-
-def init():
-    # whatever the eth subcurrency contract is goes here
-    self.ethContract = 0
 
 # Create a new branch given a parent branch - a branch is essentially a fork of rep where new markets can be created
 # period length is given in seconds
@@ -67,7 +52,6 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
     refund()
     if(MUTEX.getMutex() && !mutexWhitelisted()):
         throw()
-
     if(!mutexWhitelisted()):
         MUTEX.setMutex()
 
@@ -84,33 +68,27 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
     branchInfo[5] = fxpMinTradingFee
     branchInfo[6] = oracleOnly
     mcopy(branchInfo + 7 * 32, description, len(description))
-    # people can check that these characteristics hash to the ID if they want
     # people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
     branch = ripemd160(branchInfo, chars = len(branchInfo))
     currentVotePeriod = (block.timestamp / periodLength) - 1
-    # provided event doesn't already exist, create it
-    wallet = 0
-    if(INFO.getCreator(branch)):
-        if(!mutexWhitelisted()):
-            MUTEX.unsetMutex()
-        return(-2)
-    checkSubcurrencyIsValid(self.ethContract)
-    wallet = create('wallet.se')
-    # todo here switch self.ethContract to be a call to whitelist to get this contract
-    if(!wallet.initialize(self.ethContract)):
-        throw()
-    BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, self.ethContract, wallet, mostRecentChildBranch)
+    ethContract = Controller.lookup("cash")
+    BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, ethContract, mostRecentChildBranch)
     # pay creation fee, initialize branch info
-    feePaid = self.ethContract.transferFrom(msg.sender, BRANCHES.getBranchWallet(parent, self.ethContract), 47 * ONE)
+    parentEthContract = BRANCHES.getBranchCurrency(parent, 0)
+    feePaid = parentEthContract.transferFrom(msg.sender, BRANCHES.getBranchWallet(parent, parentEthContract), 47 * ONE)
     if(!feePaid or !INFO.setInfo(branch, description, msg.sender, 47 * ONE, 0, 0) or !REPORTING.setInitialReporters(branch)):
         throw()
     if(!mutexWhitelisted()):
         MUTEX.unsetMutex()
     return(branch)
 
-# make minimum period len 24 hr
 macro checkBranchCreationPreconditions():
-    if(periodLength <= 0 or !BRANCHES.getPeriodLength(parent) or !len(description)):
+    # provided branch doesn't already exist, create it
+    if(INFO.getCreator(branch)):
+        if(!mutexWhitelisted()):
+            MUTEX.unsetMutex()
+        return(-2)
+    if(periodLength <= TWENTY_FOUR_HR or !BRANCHES.getPeriodLength(parent) or !len(description)):
         if(!mutexWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)

@@ -12,3 +12,4 @@ macro sendRedistributedRepToBranch():
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), totalRepDifference)
         # sends that rep to the branch
         REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), -totalRepDifference)
+        

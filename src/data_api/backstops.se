@@ -1,7 +1,3 @@
-
-macro Controller: 0xC001D00D
-extern Controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
-
 inset('../macros/refund.sem')
 
 # Keeps track of data for round two backstop [where everyone reports on something] using event as the index
@@ -23,8 +19,10 @@ data roundTwo[](roundTwo, originalVotePeriod, originalOutcome, originalEthicalit
     # originalBranch is the branch the event was originally on
 data forking[](bondPoster, bondAmount, forkedOverEthicality, bondPaid, originalBranch, moved)
 
-# Given a branch and a forkPeriod it states which fork the winner was
+# Given a branch and a forkPeriod it states which fork the winner was according to the default fork resolution metric
 data resolved[][]
+
+data controller
 
 def getDisputedOverEthics(event):
     return(self.roundTwo[event].disputedOverEthics)
@@ -82,97 +80,104 @@ def getRoundTwo(event):
     refund()
     return(self.roundTwo[event].roundTwo)
 
-# whitelist
 def setOriginalEthicality(event, ethicality):
+    self.controller.checkWhitelist(msg.sender)
     self.roundTwo[event].originalEthicality = ethicality
     return(1)
 
 # increases how much of round 2 bond has been paid back
-# whitelist
 def increaseBondPaid(event, amount):
+    self.controller.checkWhitelist(msg.sender)
     if(amount + self.roundTwo[event].bondPaid < self.roundTwo[event].bondPaid):
         throw()
     self.roundTwo[event].bondPaid += amount
     return(1)
 
-# whitelist
 def setResolved(branch, forkPeriod, winner):
+    self.controller.checkWhitelist(msg.sender)
     self.resolved[branch][forkPeriod] = winner
     return(1)
     
 # sets bond amount for a fork bond
-# whitelist
 def setBondAmount(event, amount):
+    self.controller.checkWhitelist(msg.sender)
     self.forking[event].bondAmount = amount
     return(1)
 
-# whitelist
 def setBondPoster(event, bondPoster):
+    self.controller.checkWhitelist(msg.sender)
     self.roundTwo[event].bondPoster = bondPoster
     return(1)
 
-# whitelist
 def setFinal(event):
+    self.controller.checkWhitelist(msg.sender)
     self.roundTwo[event].final = 1
     return(1)
 
-# whitelist
 def setOriginalOutcome(event, originalOutcome):
+    self.controller.checkWhitelist(msg.sender)
     self.roundTwo[event].originalOutcome = originalOutcome
     return(1)
 
-# whitelist
 def setOriginalBranch(event, branch):
+    self.controller.checkWhitelist(msg.sender)
     self.forking[event].originalBranch = branch
     return(1)
 
-# whitelist
 def setMoved(event):
+    self.controller.checkWhitelist(msg.sender)
     self.forking[event].moved = 1
     return(1)
 
-# whitelist
 def setBondReturned(event):
+    self.controller.checkWhitelist(msg.sender)
     self.roundTwo[event].bondReturned = 1
     return(1)
 
-# whitelist
 def setRoundTwo(event, roundTwo):
+    self.controller.checkWhitelist(msg.sender)
     self.roundTwo[event].roundTwo = roundTwo
     return(1)
 
-# whitelist   
 def setOriginalVotePeriod(event, period):
+    self.controller.checkWhitelist(msg.sender)
     self.roundTwo[event].originalVotePeriod = period
     return(1)
 
-# whitelist
 def setForkedOverEthicality(event):
+    self.controller.checkWhitelist(msg.sender)
     self.forking[event].forkedOverEthicality = 1
     return(1)
 
-# whitelist
 def adjForkBondPaid(event, amount):
+    self.controller.checkWhitelist(msg.sender)
     self.forking[event].bondPaid += amount
     return(1)
 
-# whitelist
 def setDisputedOverEthics(event):
+    self.controller.checkWhitelist(msg.sender)
     self.roundTwo[event].disputedOverEthics = 1
     return(1)
 
-# whitelist
-def setRoundTwoRefund(event, amt):
-    self.roundTwo[event].refund = amt
+def setRoundTwoRefund(event, amount):
+    self.controller.checkWhitelist(msg.sender)
+    self.roundTwo[event].refund = amount
     return(1)
 
-# whitelist
 def doRoundTwoRefund(sender, event):
+    self.controller.checkWhitelist(msg.sender)
     if(!send(sender, self.roundTwo[event].refund)):
         throw()
     return(1)
 
-# whitelist
 def setForkBondPoster(event, poster):
+    self.controller.checkWhitelist(msg.sender)
     self.forking[event].bondPoster = poster
     return(1)
+
+# todo add to all contracts with checks that whoever calling it is appropriate
+#def setController(newController):
+
+# todo add to all contracts with checks that whoever calling it is appropriate
+#def suicideFunds(to):
+    # suicide(to, self.balance)
