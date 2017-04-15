@@ -1,6 +1,15 @@
 # Serpent Style Guide
 
-All Serpent contract files should have the extension `.se`, and all Serpent macros should be in their own files, with the filename `.sem`.
+This is a collection of rules to make large Serpent projects easier to work with.
+
+## Source File Organization
+
+* All Serpent contract files should have the extension `.se`, and all Serpent macros should be in their own files with the extension `.sem`.
+* The Serpent source tree should contain nothing but Serpent contract and macro files.
+* All indentation should be multiples of 4 spaces, not tabs or any other size spaces.
+
+## Code Sections
+
 All Serpent contracts should be organized into the following sections in the following order, whenever each section is neccessary:
 
 1. The license.
@@ -10,7 +19,6 @@ All Serpent contracts should be organized into the following sections in the fol
 5. global variables
 6. functions
 
-## Sections
 Each section should be separated by two blanks lines.
 
 ### The License
