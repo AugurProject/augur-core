@@ -1,5 +1,3 @@
-### Deals with the first backstop wherein everyone reports on a given event
-
 INFO = Controller.lookup('info')
 extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256]
 
@@ -30,17 +28,17 @@ extern eventResolution: [determineWinningOutcomes:[int256]:int256[], resolveBina
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
-
-
 inset('../macros/refund.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/float.sem')
+
+data controller
 
 macro POINT_ZERO_ONE: 10000000000000000
 macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 macro MIN_BOND: 200 * ONE
 
-data controller
+### Deals with the first backstop wherein everyone reports on a given event
 
 # Allows a user to post a bond to enter round two of consensus
 # appealBond = marketValue * (0.01 + marketFee / 2) + averageAdjudicationCost

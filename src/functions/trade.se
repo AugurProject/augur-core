@@ -130,7 +130,6 @@ def trade(orderID, amountTakerWants):
     checkTradePreconditions()
     branch = MARKETS.getBranch(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
-
     orderInfo = array(4)
     orderInfo[0] = market
     orderInfo[1] = outcome
@@ -140,9 +139,9 @@ def trade(orderID, amountTakerWants):
     if(ORDERS.checkHash(orderHash, msg.sender) == -1):
         MUTEX.unsetMutex()
         logArrayReturn([-1])
-
     maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent(market, 0))
     minValue = 0
+    # for categorical events the min is one
     if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent(market, 0)) > 2):
         minValue = ONE
     else:
@@ -183,7 +182,6 @@ macro fillBid():
     askerMoneyFilled = 0
     bidderSharesFilled = 0
     bidderMoneyFilled = 0
-
     if(sharesEscrowed):
         fill = min(sharesEscrowed, amountTakerWants)
         amountTakerWants = safeSub(amountTakerWants, fill)
@@ -200,7 +198,6 @@ macro fillBid():
         amountTakerWants = safeSub(amountTakerWants, fill)
         sumOfFills = safeAdd(sumOfFills, fill)
         bidderMoneyFilled = fill
-
     remainderToFill = sumOfFills
     # Calculate value
     value = safeFxpMul(sumOfFills, price)
@@ -212,7 +209,6 @@ macro fillBid():
         ORDERS.fillOrder(orderID, sumOfFills, safeFxpMul(bidderMoneyFilled, safeSub(price, minValue)), bidderSharesFilled)
     else:
         removeOrder(orderID, market)
-
     balance = MARKETS.getParticipantSharesPurchased(market, msg.sender, outcome)
     # msg.sender owns shares of outcome
     if(balance):
@@ -238,7 +234,6 @@ macro fillBid():
                 throw()
             MARKETS.addFees(market, feesInWei)
             EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
-
     # send bidder shares from asker
     MARKETS.modifyParticipantShares(market, msg.sender, outcome, -sumOfFills, 1)
     MARKETS.modifyParticipantShares(market, owner, outcome, sumOfFills, 0)
@@ -252,7 +247,6 @@ macro fillBid():
     # transfer range * askerMoneyFilled to the market from asker for the amount of shares in askerMoneyFilled
     if(askerMoneyFilled && !INFO.getCurrency(market).transferFrom(msg.sender, market, safeFxpMul(cumulativeScale, askerMoneyFilled))):
         throw()
-
     sharesHeld = -1
     i = 1
     while i < MARKETS.getMarketNumOutcomes(market):
@@ -262,11 +256,8 @@ macro fillBid():
     if(sharesHeld):
         if(!COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegate)):
             throw()
-
     # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
     log(type = logPrice, market, msg.sender, owner, ASK, price, sumOfFills, block.timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
-
-
 
 # Filling an ask [aka buying shares]
 # Scenarios:
@@ -281,13 +272,11 @@ macro fillAsk():
     askerMoneyFilled = 0
     bidderSharesFilled = 0
     bidderMoneyFilled = 0
-
     if(sharesEscrowed):
         fill = min(sharesEscrowed, amountTakerWants)
         amountTakerWants = safeSub(amountTakerWants, fill)
         sumOfFills = safeAdd(sumOfFills, fill)
         askerSharesFilled = fill
-
     if(amountTakerWants && moneyEscrowed):
         fill = min(safeFxpDiv(moneyEscrowed, safeSub(maxValue, price)), amountTakerWants)
         amountTakerWants = safeSub(amountTakerWants, fill)
@@ -310,7 +299,6 @@ macro fillAsk():
                 throw()
             MARKETS.addFees(market, feesInWei)
             EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
-
     remainderToFill = sumOfFills
     # Calculate value
     value = safeFxpMul(sumOfFills, price)
@@ -323,12 +311,10 @@ macro fillAsk():
         ORDERS.fillOrder(orderID, sumOfFills, safeFxpMul(askerMoneyFilled, safeSub(maxValue, price)), askerSharesFilled)
     else:
         removeOrder(orderID, market)
-
     # Transfer cash from user to person who has ask order
     payMaker = INFO.getCurrency(market).transferFrom(msg.sender, owner, valueToSpend)
     if(!payMaker):
         throw()
-
     sharesHeld = -1
     i = 1
     while i < MARKETS.getMarketNumOutcomes(market):
@@ -339,14 +325,11 @@ macro fillAsk():
         fill = min(sharesOwned, remainderToFill)
         bidderSharesFilled = fill
         remainderToFill = safeSub(remainderToFill, fill)
-
     if(remainderToFill):
         bidderMoneyFilled = remainderToFill
         remainderToFill = safeSub(remainderToFill, remainderToFill)
-
     # send bidder sumOfFills shares by just creating them and giving them to them
     MARKETS.modifyParticipantShares(market, msg.sender, outcome, sumOfFills, 1)
-
     sharesHeld = -1
     i = 1
     while i < MARKETS.getMarketNumOutcomes(market):
@@ -355,20 +338,15 @@ macro fillAsk():
     # Sell the bidder's [msg.sender] complete sets if they have any
     if(sharesHeld):
         COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegate)
-
     # Transfer (price - minValue) * (bidderSharesFilled + bidderMoneyFilled) to market from bidder since market hasnt been paid yet
     if((bidderMoneyFilled or bidderSharesFilled) and !INFO.getCurrency(market).transferFrom(msg.sender, market, safeFxpMul(safeSub(price, minValue), safeAdd(bidderSharesFilled, bidderMoneyFilled)))):
         throw()
-
     # Transfer (price - minValue) * askerSharesFilled from the market to the asker, dont need to send for askerMoneyFilled because asker only escrowed maxValue - price and thus has "already been paid" for those shares.  Note: bidder has already sent their money to the market so this money comes from the market
     if(askerSharesFilled and !INFO.getWallet(market).transfer(owner, safeFxpMul(safeSub(price, minValue), askerSharesFilled))):
         throw()
-
     sellMakersCompleteSets()
-
     # Log transaction [BID b/c it's filling an ask so from trader's perspective they're bidding]
     log(type = logPrice, market, msg.sender, owner, BID, price, sumOfFills, block.timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
-
 
 macro sellMakersCompleteSets():
     sharesHeld = -1
