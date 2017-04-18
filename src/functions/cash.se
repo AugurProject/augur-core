@@ -133,7 +133,7 @@ def withdrawEther(to: address, value: uint256):
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()
-    
+
     initiatedTimestamp = self.initiated[msg.sender]
     if(self.accounts[msg.sender].balance < value):
         return(0)
@@ -155,29 +155,37 @@ def withdrawEther(to: address, value: uint256):
 # Returns amount spender can withdraw from owner
 # @return fxp
 def allowance(owner: address, spender: address):
+    refund()
     return(self.accounts[address].spenders[spender].maxValue)
 
 # @return fxp
 def totalSupply():
+    refund()
     return(self.totalSupply)
 
 # @return fxpValue
 def balanceOf(address: address):
+    refund()
     return(self.accounts[address].balance)
 
 def getName():
+    refund()
     return(self.name)
 
 def getDecimals():
+    refund()
     return(self.decimals)
 
 def getSymbol():
+    refund()
     return(self.symbol)
-    
+
 def getInitiated():
+    refund()
     return(self.initiated[msg.sender])
 
 def commitSuicide():
+    refund()
     self.controller.checkWhitelist(msg.sender)
     suicide(msg.sender)
     return(1)
