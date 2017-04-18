@@ -1,8 +1,3 @@
-### Deals with forking over events
-
-
-
-
 INFO = Controller.lookup('info')
 extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256]
 
@@ -39,18 +34,21 @@ extern consensusData: [decreaseDenominator:[int256,int256,int256]:int256, doRefu
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
-
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
+
 extern forkResolveContract: [resolveFork:[]:int256]
+
 inset('../macros/refund.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/float.sem')
+
+data controller
 
 macro FORK_TEXT: text("fork")
 macro POINT_ZERO_ONE: 10000000000000000
 macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 
-data controller
+### Deals with forking over events
 
 # UI has to handle function calls for these
 
@@ -229,7 +227,7 @@ def resolveForkedEvent(branch, event):
 # needs whitelist
 def resolveForkEvent(branch, event):
     refund()
-    # whitelist
+    self.controller.checkWhitelist(msg.sender)
     bond = EVENTS.getBond(event)
     periodLength = BRANCHES.getPeriodLength(branch)
     votingPeriodEvent = EVENTS.getExpiration(event) / periodLength

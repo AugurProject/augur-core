@@ -27,8 +27,6 @@ extern roundTwo: [resolve:[int256,int256]:int256, roundTwoPostBond:[int256,int25
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
-
-
 inset('../macros/refund.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/redistributeRep.sem')
@@ -37,14 +35,12 @@ inset('../macros/repChange.sem')
 inset('../macros/float.sem')
 inset('../macros/periodStage.sem')
 
-# event penalize(user:indexed, outcome, oldrep, repchange, newafterrep, p, reportValue)
+data controller
 
 macro POINT_ZERO_ONE: 10000000000000000
 macro POINT_ONE: 100000000000000000
 macro POINT_TWO: 200000000000000000
 macro MIN_BOND: 200 * ONE
-
-data controller
 
 # Penalizes a reporter for reporting wrongly on a round 2 reporting / backstop 1 event
 # So we want to do the rep redistribution for both period 1 and period 2 at this time

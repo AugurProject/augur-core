@@ -25,15 +25,17 @@ macro MINIMUM_GAS_NEEDED_TO_TRADE: 787421
 # @return array [error code] or [response code, unfilled value, unfilled amount]
 def tradeAvailableOrders(orderIDs: arr, amountTakerWants, fxpMinimumOrderBalance):
     numOrders = len(orderIDs)
-    originalBalance = fxpMinimumOrderBalance
+    originalBalance = amountTakerWants
+    amountTakerWants = amountTakerWants
     i = 0
-    while (i < numOrders and msg.gas > MINIMUM_GAS_NEEDED_TO_TRADE and fxpMinimumOrderBalance):
+    # problem exists here where amounttakerwants can get too low resulting in a throw
+    while(i < numOrders and msg.gas > MINIMUM_GAS_NEEDED_TO_TRADE and amountTakerWants):
         if(ORDERS.getAmount(orderIDs[i]) > fxpMinimumOrderBalance):
             tradeReturn = array(2)
             tradeReturn = TRADE.trade(orderIDs[i], amountTakerWants, call = delegate, outitems = 2)
-            fxpMinimumOrderBalance = tradeReturn[1]
+            amountTakerWants = tradeReturn[1]
         i += 1
-    if(originalBalance == fxpMinimumOrderBalance):
+    if(originalBalance == amountTakerWants):
         logArrayReturn([-6])
     else:
         logArrayReturn([1, fxpMinimumOrderBalance])

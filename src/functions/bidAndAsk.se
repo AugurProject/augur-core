@@ -40,9 +40,12 @@ extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 # Warning: subcurrencies/tokens are untrusted contracts
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
+
 inset('../macros/refund.sem')
 inset('../macros/logReturn.sem')
 inset('../macros/float.sem')
+
+data controller
 
 event logAddTx(market:indexed, sender:indexed, type, fxpPrice, fxpAmount, outcome, orderID, moneyEscrowed, sharesEscrowed)
 event logCancel(market:indexed, sender:indexed, fxpPrice, fxpAmount, orderID, outcome, type, money, shares)
@@ -60,8 +63,6 @@ macro SUCCESS: 1
 macro MIN_ORDER_VALUE: 10000000000000000
 macro MAX_ORDER_VALUE: 1569275433846670190958947355801916604025L
 
-data controller
-
 #
 # Buy / Sell actions: puts orders on the book
 # Errors:
@@ -71,6 +72,7 @@ data controller
 #
 # costs 532k gas
 # price is always in 10**18 fxp, amount is in the market's currency # of decimals, e.g. for 9 10**9 is 1 share [so buy 10**9 complete sets and it'll cost you 1 full unit of that currency or buy 10**9 at a fxpPrice of 10**18 it'll cost you 1 full unit of the currency]
+# price is the exact price you want to buy/sell at [which may not be the cost, for example to short a binary market it'll cost 1-price, to go long it'll cost price]
 # smallest order value is 0.00000001
 def placeOrder(type, fxpAmount, fxpPrice, market, outcome):
     refund()
@@ -110,8 +112,8 @@ def cancel(orderID):
     logReturn(bidAndAskLogReturn, SUCCESS)
 
 macro saveOrder($type, $fxpAmount, $fxpPrice, $market, $outcome, $sender):
-    $cumulativeScale = MARKETS.getCumulativeScale(market)
-    $branch = MARKETS.getBranch(market)
+    $cumulativeScale = MARKETS.getCumulativeScale($market)
+    $branch = MARKETS.getBranch($market)
     checkOrderPreconditions()
 
     $moneyEscrowed = 0
@@ -126,31 +128,29 @@ macro saveOrder($type, $fxpAmount, $fxpPrice, $market, $outcome, $sender):
         throw()
 
     order = [$type, $market, $initialAmount, $fxpPrice, $sender, block.number, $outcome, $moneyEscrowed, $sharesEscrowed]
-    orderID = sha3(order, items = 9)
-    if(ORDERS.getID(orderID)):
+    $orderID = sha3(order, items = 9)
+    if(ORDERS.getID($orderID)):
         throw()
-    ORDERS.saveOrder(orderID, $type, $market, $initialAmount, $fxpPrice, $sender, $outcome, $moneyEscrowed, $sharesEscrowed)
+    ORDERS.saveOrder($orderID, $type, $market, $initialAmount, $fxpPrice, $sender, $outcome, $moneyEscrowed, $sharesEscrowed)
     # Update market
-    MARKETS.addOrder($market, orderID)
+    MARKETS.addOrder($market, $orderID)
 
-    log(type = logAddTx, $market, $sender, $type, $fxpPrice, $initialAmount, $outcome, orderID, $moneyEscrowed, $sharesEscrowed)
+    log(type = logAddTx, $market, $sender, $type, $fxpPrice, $initialAmount, $outcome, $orderID, $moneyEscrowed, $sharesEscrowed)
     MUTEX.unsetMutex()
-    logReturn(bidAndAskLogReturn, orderID)
+    logReturn(bidAndAskLogReturn, $orderID)
 
 macro refundOrder():
     # Issue refunds
-    if(type == BID):
-        # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
-        if(sharesEscrowed):
-            i = 1
-            while i < MARKETS.getMarketNumOutcomes($market):
-                if(i != outcome):
-                    MARKETS.modifyParticipantShares($market, msg.sender, $outcome, sharesEscrowed, 0)
-                i += 1
-    elif(type == ASK):
-        # shares refund if has shares escrowed for this outcome
-        if(sharesEscrowed):
-            MARKETS.modifyParticipantShares(market, msg.sender, outcome, sharesEscrowed, 0)
+    # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
+    if(type == BID and sharesEscrowed):
+        i = 1
+        while(i < MARKETS.getMarketNumOutcomes(market)):
+            if(i != outcome):
+                MARKETS.modifyParticipantShares(market, msg.sender, outcome, sharesEscrowed, 0)
+            i += 1
+    # shares refund if has shares escrowed for this outcome
+    elif(type == ASK and sharesEscrowed):
+        MARKETS.modifyParticipantShares(market, msg.sender, outcome, sharesEscrowed, 0)
     else:
         throw()
     # Return to user moneyEscrowed that wasn't filled yet
@@ -189,94 +189,96 @@ macro checkOrderPreconditions():
 macro placeAsk():
     # Check if there are any "crossed orders" (i.e., bid orders
     # at a price greater than or equal to the sell price).
-    bestBidID = ORDERS.getBestBid($market, $outcome)
-    bestBidPrice = ORDERS.getPrice(bestBidID)
-    if bestBidID != 0 and $fxpPrice <= bestBidPrice and ORDERS.getAmount(bestBidID) >= safeFxpDiv(MIN_ORDER_VALUE, bestBidPrice):
+    $bestBidID = ORDERS.getBestBid($market, $outcome)
+    $bestBidPrice = ORDERS.getPrice($bestBidID)
+    if($bestBidID and $fxpPrice <= $bestBidPrice and ORDERS.getAmount($bestBidID) >= safeFxpDiv(MIN_ORDER_VALUE, $bestBidPrice):
         logReturn(bidAndAskLogReturn, -5)
 
+    $event = MARKETS.getMarketEvent($market, 0)
     # Take shares in escrow if user has shares
-    sharesHeld = MARKETS.getParticipantSharesPurchased($market, msg.sender, $outcome)
-    if(sharesHeld):
+    $sharesHeld = MARKETS.getParticipantSharesPurchased($market, msg.sender, $outcome)
+    if($sharesHeld):
         $minValue = 0
-        if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent($market, 0)) > 2):
+        if(EVENTS.getNumOutcomes($event) > 2):
             $minValue = ONE
         else:
-            $minValue = EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0))
-        price = $fxpPrice - $minValue
-        cost = safeFxpMul($fxpAmount, price)
-        if(price > cumulativeScale or cost < MIN_ORDER_VALUE or cost >= MAX_ORDER_VALUE):
+            $minValue = EVENTS.getMinValue($event)
+        $price = $fxpPrice - $minValue
+        $cost = safeFxpMul($fxpAmount, $price)
+        if($price > $cumulativeScale or $cost < MIN_ORDER_VALUE or $cost >= MAX_ORDER_VALUE):
             MUTEX.unsetMutex()
             return(-1)
-        fill = min(sharesHeld, $fxpAmount)
-        $fxpAmount -= fill
-        $sharesEscrowed += fill
-        MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -fill, 0)
+        $fill = min($sharesHeld, $fxpAmount)
+        $fxpAmount -= $fill
+        $sharesEscrowed += $fill
+        MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$fill, 0)
 
     # Take max minus price they want to sell at for the remainder of the amount that wasn't able to be used up above
     if($fxpAmount):
         $maxValue = 0
-        if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent($market, 0)) > 2):
+        if(EVENTS.getNumOutcomes($event) > 2):
             $maxValue = ONE
         else:
-            $maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent($market, 0))
-        costPerShareShorting = $maxValue - $fxpPrice
-        orderCost = safeFxpMul($fxpAmount, costPerShareShorting)
-        if(costPerShareShorting > cumulativeScale or orderCost < MIN_ORDER_VALUE or orderCost >= MAX_ORDER_VALUE):
+            $maxValue = EVENTS.getMaxValue($event)
+        $costPerShareShorting = $maxValue - $fxpPrice
+        $orderCost = safeFxpMul($fxpAmount, $costPerShareShorting)
+        if($costPerShareShorting > $cumulativeScale or $orderCost < MIN_ORDER_VALUE or $orderCost >= MAX_ORDER_VALUE):
             MUTEX.unsetMutex()
             return(-1)
-        $moneyEscrowed += orderCost
-        $paidOrderCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), orderCost)
+        $moneyEscrowed += $orderCost
+        $paidOrderCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $orderCost)
         if(!paidOrderCost):
             throw()
 
 macro placeBid():
     # Check if there are any "crossed orders" (i.e., ask orders
     # at a price less than or equal to the buy price).
-    bestAskID = ORDERS.getBestAsk($market, $outcome)
-    bestAskPrice = ORDERS.getPrice(bestAskID)
-    if bestAskID != 0 and $fxpPrice >= bestAskPrice and ORDERS.getAmount(bestAskID) >= safeFxpDiv(MIN_ORDER_VALUE, bestAskPrice):
+    $bestAskID = ORDERS.getBestAsk($market, $outcome)
+    $bestAskPrice = ORDERS.getPrice($bestAskID)
+    if($bestAskID != 0 and $fxpPrice >= $bestAskPrice and ORDERS.getAmount($bestAskID) >= safeFxpDiv(MIN_ORDER_VALUE, $bestAskPrice)):
         logReturn(bidAndAskLogReturn, -5)
 
+    $event = MARKETS.getMarketEvent($market, 0)
     # If user owns n minus the one outcome we're buying escrow no money but escrow their shares in all the other outcomes.
-    sharesHeld = -1
-    i = 1
-    while i < MARKETS.getMarketNumOutcomes($market):
+    $sharesHeld = -1
+    $i = 1
+    while($i < MARKETS.getMarketNumOutcomes($market)):
         if(i != $outcome):
-            sharesHeld = min(MARKETS.getParticipantSharesPurchased($market, msg.sender, i), sharesHeld)
-        i += 1
-    if(sharesHeld):
+            sharesHeld = min(MARKETS.getParticipantSharesPurchased($market, msg.sender, $i), $sharesHeld)
+        $i += 1
+    if($sharesHeld):
         $minValue = 0
-        if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent($market, 0)) > 2):
+        if(EVENTS.getNumOutcomes($event) > 2):
             $minValue = ONE
         else:
-            $minValue = EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0))
-        price = $fxpPrice - $minValue
-        cost = safeFxpMul($fxpAmount, price)
-        if(price > cumulativeScale or cost < MIN_ORDER_VALUE or cost >= MAX_ORDER_VALUE):
+            $minValue = EVENTS.getMinValue($event)
+        $price = $fxpPrice - $minValue
+        $cost = safeFxpMul($fxpAmount, $price)
+        if($price > $cumulativeScale or $cost < MIN_ORDER_VALUE or $cost >= MAX_ORDER_VALUE):
             MUTEX.unsetMutex()
             return(-1)
-        fill = min(sharesHeld, $fxpAmount)
-        $fxpAmount -= fill
-        $sharesEscrowed += fill
-        i = 1
-        while i < MARKETS.getMarketNumOutcomes($market):
-            if(i != $outcome):
-                MARKETS.modifyParticipantShares($market, msg.sender, i, -fill, 0)
-            i += 1
+        $fill = min($sharesHeld, $fxpAmount)
+        $fxpAmount -= $fill
+        $sharesEscrowed += $fill
+        $i = 1
+        while($i < MARKETS.getMarketNumOutcomes($market)):
+            if($i != $outcome):
+                MARKETS.modifyParticipantShares($market, msg.sender, $i, -$fill, 0)
+            $i += 1
 
     # Take money in escrow for price - min for the remainder of amount that wasn't able to be used up above. Make sure price - min isn't more than range
     if($fxpAmount):
         $minValue = 0
-        if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent($market, 0)) > 2):
+        if(EVENTS.getNumOutcomes($event) > 2):
             $minValue = ONE
         else:
-            $minValue = EVENTS.getMinValue(MARKETS.getMarketEvent($market, 0))
-        price = $fxpPrice - $minValue
-        cost = safeFxpMul($fxpAmount, price)
-        $moneyEscrowed += cost
-        if(price > cumulativeScale or cost < MIN_ORDER_VALUE or cost >= MAX_ORDER_VALUE):
+            $minValue = EVENTS.getMinValue($event)
+        $price = $fxpPrice - $minValue
+        $cost = safeFxpMul($fxpAmount, $price)
+        $moneyEscrowed += $cost
+        if($price > $cumulativeScale or $cost < MIN_ORDER_VALUE or $cost >= MAX_ORDER_VALUE):
             MUTEX.unsetMutex()
             return(-1)
-        $paidOrderCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), cost)
+        $paidOrderCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $cost)
         if(!$paidOrderCost):
             throw()

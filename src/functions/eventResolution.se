@@ -33,33 +33,33 @@ macro INDETERMINATE: 1500000000000000000
 ### Serves to resolve events
 
 # Resolves a binary market
-# whitelist
 def resolveBinary(event, market, branch, votingPeriodEvent):
+    self.controller.checkWhitelist(msg.sender)
+    periodLength = BRANCHES.getPeriodLength(branch)
     fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
     prelimOutcome = EVENTS.getFirstPreliminaryOutcome(event)
-    if(prelimOutcome && !fxpOutcome):
-        fxpOutcome = prelimOutcome
-    periodLength = BRANCHES.getPeriodLength(branch)
     ethics = EVENTS.getEthics(event)
-    if(prelimOutcome && !fxpOutcome && prelimOutcome == INDETERMINATE):
-        ethics = 0
-    elif(prelimOutcome && !fxpOutcome):
-        ethics = ONE
     ethical = ethicCatch(ethics)
-    # outcome is set to the binned version of the raw reported outcome
+    elif(prelimOutcome && !fxpOutcome):
+        # if prelimOutcome is indeterminate, ethics doesn't matter b/c it's the same result [money returned at even odds]
+        ethical = ONE
+        fxpOutcome = prelimOutcome
     EVENTS.setOutcome(event, fxpOutcome)
-    # ethics is set to the binned version of the raw ethicality outcome
     EVENTS.setEthics(event, ethical)
     closeResult = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 0, 0, 0)
     return(closeResult)
 
 # Resolves a categorical or scalar market
-# whitelist
 def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch, votingPeriodEvent):
+    self.controller.checkWhitelist(msg.sender)
     mode = EVENTS.getUncaughtOutcome(event)
     prelimOutcome = EVENTS.getFirstPreliminaryOutcome(event)
+    periodLength = BRANCHES.getPeriodLength(branch)
+    ethics = EVENTS.getEthics(event)
+    ethical = ethicCatch(ethics)
     if(prelimOutcome && !mode):
         mode = prelimOutcome
+        ethical = ONE
     EVENTS.setMode(event, mode)
     fxpOutcome = safeFxpMul(mode, fxpScaledMax - fxpScaledMin) + fxpScaledMin
     # outcome is set to the mode of the reported outcomes
@@ -69,55 +69,27 @@ def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch
     if(fxpOutcome == 0):
         fxpOutcome = 1
     EVENTS.setOutcome(event, fxpOutcome)
-    periodLength = BRANCHES.getPeriodLength(branch)
-    # ethics is set to the binned version of the raw ethicality outcome
-    ethics = EVENTS.getEthics(event)
-    if(prelimOutcome && !mode && prelimOutcome == ONE_HALF):
-        ethics = 0
-    elif(prelimOutcome && !mode):
-        ethics = ONE
-    ethical = ethicCatch(ethics)
     ethicOutcome = safeFxpMul(ONE_HALF, fxpScaledMax - fxpScaledMin) + fxpScaledMin
     # outcome of 1 is 1/10**18 or basically 0, but allows us to still check if outcome is 0 or not to see if an outcome has been set
-
     if(ethicOutcome == 0):
         ethicOutcome = 1
     EVENTS.setEthics(event, ethical)
     closeResult = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 1, mode, ethicOutcome)
     return(closeResult)
 
-# Determines the "winning outcomes" for a given market
-# Easiest to give examples:
-    # 1D Markets:
-        # Binary or Categorical will have 1 winning outcome [1 or 2 for binary, 1 thru numOutcomes for categorical is the poss. value for the winning outcome]
-def determineWinningOutcomes(event):
-    winningOutcomes = array(8)
-    fxpOutcome = EVENTS.getOutcome(event)
-    outcome = fxpOutcome / ONE
-    # scalar or .5
-    if(scalar(event) or fxpOutcome == INDETERMINATE):
-        winningOutcomes[0] = 1
-        winningOutcomes[1] = 2
-    # anything besides scalar or .5
-    # note: this will be the outcome in the middle if a categorical is resolved as indeterminate, it'll still payout 1/n per outcome though
-    else:
-        winningOutcomes[0] += outcome
-    return(winningOutcomes: arr)
-
 ## helper function to close an event for resolution
-macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $periodLength, $ethical, $scalarorcat, $mode, $ethicOutcome):
-    # In the $event 'Market is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
-    # and $market remains with old expiration date
-    # UI needs to call penalizeWrong for ones that are pushed back in both pushed back period and regular period with actual reporting
+macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $periodLength, $ethical, $scalarOrCategorical, $mode, $ethicOutcome):
+    # In the scenario 'event is not ready to resolve' is found to be the consensus, the early resolution bond is paid to the reporters for their labor.
+    # and market remains with old expiration date
+    # UI needs to call penalizeWrong for ones that are pushed forward in both pushed forward period and regular period with actual reporting
     $indeterminate = INDETERMINATE
     $indeterminateAndReadyToResolve = ($fxpOutcome == $indeterminate or $mode == ONE_HALF)
     $indeterminateNotReadyToResolveEarlyEvent = $indeterminateAndReadyToResolve and EVENTS.getEventPushedUp($event)
     if($indeterminateNotReadyToResolveEarlyEvent):
         if(MARKETS.getPushedForward($market)):
-            # look @ total shares purchase cutoff times for early resolution bonds
-            amount = EVENTS.getEarlyResolutionBond($event)
-            branchWallet = BRANCHES.getBranchWallet($branch, INFO.getCurrency($market))
-            if(amount && !INFO.getWallet($market).transfer(branchWallet, amount)):
+            $amount = EVENTS.getEarlyResolutionBond($event)
+            $branchWallet = BRANCHES.getBranchWallet($branch, INFO.getCurrency($market))
+            if($amount && !INFO.getWallet($market).transfer($branchWallet, $amount)):
                 throw()
         MARKETS.setTradingPeriod($market, MARKETS.getOriginalTradingPeriod($market))
         MARKETS.setPushedForward($market, 0, msg.sender)
@@ -136,40 +108,29 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         handleFirstResolverBond()
         -1
     elif($indeterminateAndReadyToResolve or !ethical):
-        # not $ethical is same as .5 outcome
-        if($scalarorcat):
-            # the mode is used to compare for reporting accuracy. so still the same as the reported uncaught outcome/mode, but resolving the market as .5 right in the middle of the range so payouts are done right for an unethical [or indeterminate] market
+        if($scalarOrCategorical):
+            # the mode is used to compare for reporting accuracy. so still the same as the reported uncaught outcome/mode, but resolving the eve nt itself as .5 right in the middle of the range so payouts are done right for an unethical [or indeterminate] market
             EVENTS.setOutcome($event, $ethicOutcome)
         else:
             EVENTS.setOutcome($event, $indeterminate)
-        $bond = EVENTS.getBond($event)
-        if(EVENTS.getChallenged($event) && !BACKSTOPS.getRoundTwo($event) && EVENTS.getFirstPreliminaryOutcome($event) != EVENTS.getOutcome($event)):
-            # pay half of validity bond to challenger
-            if(!INFO.getWallet($event).transfer(EVENTS.getExtraBondPoster($event), $bond / 2)):
-                throw()
-            $bond -= $bond / 2
-        branchWallet = BRANCHES.getBranchWallet($branch, INFO.getCurrency($event))
-        # give $event bond money to reporters
-        if(!INFO.getWallet($event).transfer(branchWallet, $bond)):
+        payHalfOfValidityBondToChallengerIfNeeded()
+        $branchWallet = BRANCHES.getBranchWallet($branch, INFO.getCurrency($event))
+        # give event bond money to reporters
+        if(!INFO.getWallet($event).transfer($branchWallet, $bond)):
             throw()
         handleFirstResolverBond()
         1
     else:
-        $bond = EVENTS.getBond($event)
-        if(EVENTS.getChallenged($event) && !BACKSTOPS.getRoundTwo($event) && EVENTS.getFirstPreliminaryOutcome($event) != EVENTS.getOutcome($event)):
-            # pay half of validity bond to challenger
-            if(!INFO.getWallet($event).transfer(EVENTS.getExtraBondPoster($event), $bond / 2)):
-                throw()
-            $bond -= $bond / 2
+        payHalfOfValidityBondToChallengerIfNeeded()
         # return bond as a normal event resolution
         if(!INFO.getWallet($event).transfer(INFO.getCreator($event), $bond)):
             throw()
         if(MARKETS.getPushedForward($market)):
-            amount = EVENTS.getEarlyResolutionBond($event)
-            if(amount && !INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), amount)):
+            $amount = EVENTS.getEarlyResolutionBond($event)
+            if($amount && !INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), $amount)):
                 throw()
         if(EVENTS.getEventPushedUp($event)):
-            # delete old $event from future events exp
+            # delete old event from future events exp
             $period = safeDiv(EVENTS.getOriginalExpiration($event), $periodLength)
             EXPEVENTS.removeEvent($branch, $period)
             EXPEVENTS.deleteEvent($branch, $period, $event)
@@ -179,9 +140,34 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
 
 macro handleFirstResolverBond():
     $resolverBondPoster = EVENTS.getResolveBondPoster($event)
-
     # if different outcome then first resolver bond goes to reporters, any other normal case it is returned
     if(EVENTS.getFirstPreliminaryOutcome($event) != EVENTS.getOutcome($event)):
         REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) && REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $branch), FIRST_RESOLVE_BOND)
     else:
         REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) && REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $resolverBondPoster), FIRST_RESOLVE_BOND)
+
+macro payValidityBondToChallengerIfNeeded():
+    $bond = EVENTS.getBond($event)
+    if(EVENTS.getChallenged($event) && !BACKSTOPS.getRoundTwo($event) && EVENTS.getFirstPreliminaryOutcome($event) != EVENTS.getOutcome($event)):
+        # pay half of validity bond to challenger
+        if(!INFO.getWallet($event).transfer(EVENTS.getExtraBondPoster($event), $bond / 2)):
+            throw()
+        $bond -= $bond / 2
+
+# Determines the "winning outcomes" for a given market/event
+# Easiest to give examples:
+    # 1D Markets:
+        # Binary or Categorical will have 1 winning outcome [1 or 2 for binary, 1 thru numOutcomes for categorical is the poss. value for the winning outcome]
+def determineWinningOutcomes(event):
+    winningOutcomes = array(8)
+    fxpOutcome = EVENTS.getOutcome(event)
+    outcome = fxpOutcome / ONE
+    # scalar or .5
+    if(scalar(event) or fxpOutcome == INDETERMINATE):
+        winningOutcomes[0] = 1
+        winningOutcomes[1] = 2
+    # anything besides scalar or .5
+    # note: this will be the outcome in the middle if a categorical is resolved as indeterminate, it'll still payout 1/n per outcome though
+    else:
+        winningOutcomes[0] += outcome
+    return(winningOutcomes: arr)

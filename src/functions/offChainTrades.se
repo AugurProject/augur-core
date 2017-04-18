@@ -6,13 +6,6 @@ extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint2
 inset('../macros/refund.sem')
 inset('../macros/float.sem')
 
-### Off-chain trading contract:
-    # Maker can create an order by hashing the order details then signing it and broadcasting the order and signed order
-
-    # Taker takes a broadcasted order, verifies the signature and that the order info hashes to the order hash and that the seller has approved the contract to be able to withdraw funds for the order amount or whatever is left of it [order size minus getAmountFilled(hash) will give us this info] and that the user has the appropriate amount of funds, then calls trade to pick it up.
-
-    # useful info for manipulating sigs / signing things etc https://ethereum.stackexchange.com/questions/710/how-can-i-verify-a-cryptographic-signature-that-was-produced-by-an-ethereum-addr/718#718
-
 data amountFilled[]
 
 data controller
@@ -22,6 +15,13 @@ event Order(tokenX:address:indexed, orderSize, tokenY:address:indexed, fxpPrice,
 event Cancel(tokenX:address:indexed, orderSize, tokenY:address:indexed, fxpPrice, expiration, user:address:indexed, v, r, s)
 
 event Trade(maker:address:indexed, taker:address, tokenX:address:indexed, tokenY:address:indexed, amount, fxpPrice, tradeHash)
+
+### Off-chain trading contract:
+    # Maker can create an order by hashing the order details then signing it and broadcasting the order and signed order
+
+    # Taker takes a broadcasted order, verifies the signature and that the order info hashes to the order hash and that the seller has approved the contract to be able to withdraw funds for the order amount or whatever is left of it [order size minus getAmountFilled(hash) will give us this info] and that the user has the appropriate amount of funds, then calls trade to pick it up.
+
+    # useful info for manipulating sigs / signing things etc https://ethereum.stackexchange.com/questions/710/how-can-i-verify-a-cryptographic-signature-that-was-produced-by-an-ethereum-addr/718#718
 
 # This is used to take an order off the book, it has the order params + amount of the offer you're taking / picking up
 # amounts are in the tokens, fxpPrice is in fixed point out of 10**18

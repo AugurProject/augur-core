@@ -18,9 +18,6 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-
-
-
 BRANCHES = Controller.lookup('branches')
 extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToBranch:[int256,int256]:int256, disableCurrency:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranchCurrency:[int256,int256]:int256, getBranchWallet:[int256,int256]:int256, getBranches:[]:int256[], getBranchesStartingAt:[int256]:int256[], getCreationDate:[int256]:int256, getCurrencyActive:[int256,int256]:int256, getCurrencyByContract:[int256,int256]:int256, getCurrencyRate:[int256,int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getForkTime:[int256]:int256, getInitialBalance:[int256,int256,int256]:int256, getMarketIDsInBranch:[int256,int256,int256]:int256[], getMinTradingFee:[int256]:int256, getMostRecentChild:[int256]:int256, getNumBranches:[]:int256, getNumCurrencies:[int256]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, reactivateCurrency:[int256,int256]:int256, removeLastCurrency:[int256]:int256, replaceCurrency:[int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256,int256]:int256, setMostRecentChild:[int256,int256]:int256, updateCurrencyRate:[int256,int256,int256,int256]:int256, updateNumCurrencies:[int256,int256]:int256]
 
@@ -57,9 +54,6 @@ extern reportingThreshold: [calculateNumberOfEventsAReporterHasToReportOnAtMinim
 MUTEX = Controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
-
-### Deals with the reporting process but not consensus / redistribution
-
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
 inset('../macros/refund.sem')
@@ -68,12 +62,14 @@ inset('../macros/periodStage.sem')
 inset('../macros/logReturn.sem')
 inset('../macros/float.sem')
 
+data controller
+
 event makeReportsLogReturn(returnValue)
 
 macro GAS_SUBSIDY: 3500000
 macro MAX_REPORT_THRESHOLD: 10^54
 
-data controller
+### Deals with the reporting process but not consensus / redistribution
 
 def makeHash(salt, fxpReport, event, sender, ethics):
     hashInfo = array(5)
@@ -86,7 +82,7 @@ def makeHash(salt, fxpReport, event, sender, ethics):
     return(reportHash)
 
 # Allows a user to submit the hash of their fxpReport / commit
-# Error: 0: not caught up on rep redistributions/penalizations so should be done first [only 1 period behind] - if reported last period and called collectfees then call the penalization functions in consensus, if didn't report last period or didn't call collectfees last period then call penalizationCatchup
+# Error: 0: not caught up on rep redistributions/penalizations so should be done first [only 1 period behind] - if reported last period and called collectfees then call the penalization functions in consensus, if didn't report last period or didn't call collectfees last period then call penalizationCatchup [however this should be automatically done, if it fails it'll return -4]
 # Error -1: invalid event
 # Error -2: not in first half of period [commit part]
 # Error -3: not able to fxpReport on this event
@@ -109,7 +105,7 @@ def submitReportHash(event, reportHash, saltyEncryptedHash):
     reportingThresholdForUser = calculateReportingThreshold()
     # do abs to ensure pos. and between 0 and 1
     hash = sha3([msg.sender, event], items = 2)
-    shaHash = (abs(hash) / ONE)
+    shaHash = abs(hash) / ONE
     # max value 10^54
     shaHash = shaHash / 57896044618658091106304 * ONE
     # shaHash must be <= to the threshold for that user to be able to fxpReport on the given event
@@ -154,25 +150,7 @@ def submitReport(event, salt, fxpReport, fxpEthics):
     MUTEX.unsetMutex()
     logReturn(makeReportsLogReturn, 1)
 
-# validates and submits fxpReport
-# weights reports by rep if round 2 and fork
-# Returns -4 if fxpReport is invalid
-    # isn't between 1 and 2 if binary
-    # if same fxpReport as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
-# needs whitelist
-def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight):
-    outcome = 0
-    # binary
-    binary = EVENTS.getNumOutcomes(event) == 2 and EVENTS.getMaxValue(event) == TWO and EVENTS.getMinValue(event) == ONE
-    if(binary):
-        validateReportAndUpdateBinaryEvent()
-    # scalar or categorical
-    else:
-        validateReportAndUpdateScalarOrCategoricalEvent()
-    return(fxpReport)
-
-### Helper functions:
-
+### Helper macros and functions:
 macro checkSubmitReportHashPreconditions():
     if(!eventIndex and (!event or eventID != event)):
         MUTEX.unsetMutex()
@@ -187,6 +165,34 @@ macro checkSubmitReportHashPreconditions():
     # if first fxpReport of period, num events not set
     if(!EXPEVENTS.getNumEventsToReportOn(branch, votePeriod)):
         EXPEVENTS.setNumEventsToReportOn(branch)
+
+macro calculateReportingThreshold():
+    threshold = 0
+    if(eventCreatedPriorToFork(event)):
+        threshold = 0
+    elif(EXPEVENTS.getRequired(event, votePeriod, branch) or EVENTS.getReportingThreshold(event)):
+        threshold = MAX_REPORT_THRESHOLD
+    # if number of reports event should have hasn't been calculated yet do it
+    elif(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
+        THRESHOLD.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
+        threshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
+    else:
+        threshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
+    threshold
+
+# validates the report
+# weights reports by rep if round 2 and fork
+# Returns -4 if fxpReport is invalid
+    # isn't between 1 and 2 if binary
+    # if same fxpReport as original outcome / ethicality if a forked event not forked over ethicality it's also invalid b/c this option was removed as a poss. answer
+def validateReport(event, branch, votePeriod, fxpReport, forkedOverEthicality, forkedOverThisEvent, weight):
+    self.controller.checkWhitelist(msg.sender)
+    outcome = 0
+    if(binary(event)):
+        validateReportAndUpdateBinaryEvent()
+    else:
+        validateReportAndUpdateScalarOrCategoricalEvent()
+    return(fxpReport)
 
 macro checkSubmitReportPreconditions():
     if(BRANCHES.getEventForkedOver(BRANCHES.getParent(branch)) == event):
@@ -254,23 +260,9 @@ macro coverGasCostIfPossible():
     ableToPayForMore = reportsNum - paidBack
     if(ableToPayForMore):
         EVENTS.addReportersPaidSoFar(event)
-        gasCostInWei = safeFxpDiv(GAS_SUBSIDY*tx.gasprice, WEI_TO_ETH)
+        gasCostInWei = safeFxpDiv(GAS_SUBSIDY * tx.gasprice, WEI_TO_ETH)
         gasCostInSubcurrency = safeFxpDiv(gasCostInWei, BRANCHES.getCurrencyRate(branch, INFO.getCurrency(market)))
         INFO.getWallet(market).transfer(msg.sender, gasCostInSubcurrency)
-
-macro calculateReportingThreshold():
-    threshold = 0
-    if(eventCreatedPriorToFork(event)):
-        threshold = 0
-    elif(EXPEVENTS.getRequired(event, votePeriod, branch) or EVENTS.getReportingThreshold(event)):
-        threshold = MAX_REPORT_THRESHOLD
-    # if number of reports event should have hasn't been calculated yet do it
-    elif(!EXPEVENTS.getLesserReportNum(branch, votePeriod, event)):
-        THRESHOLD.calculateReportTargetForEvent(branch, event, votePeriod, msg.sender)
-        threshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
-    else:
-        threshold = THRESHOLD.calculateReportingThreshold(branch, event, votePeriod, msg.sender)
-    threshold
 
 macro validateReportAndUpdateBinaryEvent():
     if(fxpReport > 2 * ONE or fxpReport < ONE or !fxpReport):
