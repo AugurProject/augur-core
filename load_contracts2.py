@@ -52,22 +52,24 @@ else:
         signature = extern_name + ugly_signature[name_end:]
         return signature
 
-PYNAME = '[A-Za-z_][A-Za-z0-9_]*'
-IMPORT = re.compile('import ({0}) as ({0})'.format(PYNAME))
-EXTERN = re.compile('extern ({}): .+'.format(PYNAME))
+IMPORT = re.compile('^import (?P<name>\w+) as (?P<alias>[A-Za-z_][A-Za-z0-9_]*)$')
+EXTERN = re.compile('^extern (?P<name>\w+): \[.+\]$')
+CONTROLLER_V1 = re.compile('^(?P<indent>(?:\s{4})*)(?P<alias>[A-Za-z_][A-Za-z0-9_]*) = Controller.lookup\(\'(?P<name>\w+)\'\)')
+CONTROLLER_V1_MACRO = re.compile('^macro Controller: (?P<address>0x[0-9a-fA-F]{1,40})$')
+CONTROLLER_INIT = re.compile('^(?P<indent>(?:\s{4})*)self.controller = 0x[0-9A-F]{1,40}')
+INDENT = re.compile('^$|^[#\s].*$')
 
 STANDARD_EXTERNS = {
     'controller': 'extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]',
-
     # ERC20 and aliases used in Augur code
-    'ERC20': 'extern ERC20: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]',
-    'subcurrency': 'extern subcurrency: [allowance:[uint256,uint256]:uint256, approve:[uint256,uint256]:uint256, balance:[]:uint256, balanceOf:[uint256]:uint256, transfer:[uint256,uint256]:uint256, transferFrom:[uint256,uint256,uint256]:uint256]',
+    'ERC20': 'extern ERC20: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]',
+    'subcurrency': 'extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]',
+    'rateContract': 'extern rateContract: [rateFunction:[]:int256]',
 }
 
 DEFAULT_RPCADDR = 'http://localhost:8545'
 DEFAULT_CONTROLLER = '0xDEADBEEF'
-CONTROLLER_PATTERN = re.compile('^\s{4}self.controller\s?=\s?(0x[0-9a-fA-F]+)$')
-ADDRESS_HEX = re.compile('^0x([0-9A-F]{1,40}|[0-9a-f]{1,40})$')
+VALID_ADDRESS = re.compile('^0x[0-9A-F]{1,40}$')
 
 
 SERPENT_EXT = '.se'
@@ -174,39 +176,6 @@ def path_to_name(path):
     return os.path.basename(path).replace(SERPENT_EXT, '')
 
 
-def is_not_indented(line):
-    """True if a line starts with a space of tab."""
-    return not (line.startswith(' ') or line.startswith('\t'))
-
-
-def find_init(code_lines):
-    """Finds the line bounds of a Serpent init function."""
-
-    # If there are multiple init functions, the Serpent
-    # compiler will silently drop all but the last, and
-    # only compile the last. That's bad! >:(
-
-    init_bounds = []
-    start = None
-    
-    for i, line in enumerate(code_lines):
-        if line.startswith('def init():'):
-            start = i
-        elif start is not None and is_not_indented(line):
-            init_bounds.append((start, i))
-            start = None
-        else:
-            continue
-
-    if start and not init_bounds:
-        return [(start, -1)]
-
-    if not init_bounds:
-        return [(None, None)]
-
-    return init_bounds
-
-
 def update_controller(code_lines, controller_addr):
     """Updates the controller address in the code.
 
@@ -215,56 +184,46 @@ def update_controller(code_lines, controller_addr):
     the init function, then it is added, and if there is no init
     function, one is added.
     """
-    if not ADDRESS_HEX.match(controller_addr):
-        raise LoadContractsError('Controller address invalid! {}', controller_addr)
-
     code_lines = code_lines[:]
 
-    for i in range(len(code_lines)):
-        line = code_lines[i]
+    first_def = None
+    data_line = None
+    init_def = None
+    for i, line in enumerate(code_lines):
         if line == 'data controller':
-            break
+            data_line = i
+        if line.startswith('def init()'):
+            init_def = i
+        if line.startswith('def') and first_def is None:
+            first_def = i
+
+    if first_def is None:
+        raise LoadContractsError('No functions found! Is this a macro file?')
+
+    controller_init = '    self.controller = {}'.format(controller_addr)
+
+    if init_def is None:
+        # If there's no init function, add it before the first function
+        init_def = first_def
+        code_lines = code_lines[:init_def] + ['def init():', controller_init, ''] + code_lines[init_def:]
     else:
-        code_lines = ['data controller', ''] + code_lines
+        # If there is, add the controller init line to the top of the init function
+        # and remove any other lines in init that set the value of self.controller
+        code_lines.insert(init_def + 1, controller_init)
+        i = init_def + 2
+        while INDENT.match(code_lines[i]):
+            m = CONTROLLER_INIT.match(code_lines[i])
+            if m:
+                del code_lines[i]
+            else:
+                i += 1
 
-    init_bounds = find_init(code_lines)
+    if data_line is None:
+        # If there's no 'data controller' line, add it before the init.
+        code_lines = code_lines[:init_def] + ['data controller', ''] + code_lines[init_def:]
 
-    if len(init_bounds) > 1:
-        raise LoadContractsError('Multiple init functions!')
+    return code_lines
 
-    init_start, init_stop = init_bounds[0]
-
-    controller_line = '    self.controller = {}'.format(controller_addr)
-
-    if init_stop == -1:
-        raise LoadContractsError('Weird init function at line {line}!', line=init_start)
-
-    if init_start is None:
-        # Augur code follows a convention where data declarations are
-        # followed by a comment block describing the declaration's meaning.
-        # The blocks are immediately followed by the declaration. data
-        # declarations may have a blank line afterward.
-        last_data = None
-        for i in range(len(code_lines)):
-            line = code_lines[i]
-            if line.startswith('data'):
-                last_data = i
-            if line.startswith('#') or line == '':
-                continue
-            if i > last_data:
-                break
-
-        return code_lines[:i] + ['def init():', '', controller_line, ''] + code_lines[i:]
-
-    for i in range(init_start, init_stop):
-        line = code_lines[i]
-        m = CONTROLLER_PATTERN.match(line)
-        if m:
-            code_lines[i] = controller_line
-            return code_lines
-    else:
-        code_lines.insert(init_stop, controller_line)
-        return code_lines
 
 def imports_to_externs(source_dir, target_dir):
     """Translates code using import syntax to standard Serpent externs."""
@@ -333,10 +292,16 @@ def update_externs(source_dir, controller):
             with open(path) as f:
                 code_lines = [line.rstrip() for line in f]
 
-            license, code_lines = strip_license(code_lines)
-
             if controller:
-                code_lines = update_controller(code_lines, controller)
+                try:
+                    code_lines = update_controller(code_lines, controller)
+                except Exception as exc:
+                    raise LoadContractsError(
+                        'Caught error while processing {path}: {err}',
+                        path=td.original_path(path),
+                        err=str(exc))
+
+            license, code_lines = strip_license(code_lines)
 
             for i in range(len(code_lines)):
                 line = code_lines[i]
@@ -362,6 +327,41 @@ def update_externs(source_dir, controller):
         td.commit(source_dir)
 
 
+def upgrade_controller(source, controller):
+    """Replaces controller macros with an updateable storage value."""
+    with TempDirCopy(source) as td:
+        serpent_files = td.find_files(SERPENT_EXT)
+
+        for path in serpent_files:
+            with open(path) as f:
+                code_lines = [line.rstrip() for line in f]
+
+            if controller:
+                try:
+                    code_lines = update_controller(code_lines, controller)
+                except LoadContractsError as exc:
+                    raise LoadContractsError('Caught error while processing {path}: {err}',
+                        path=td.original_path(path),
+                        err=exc.message)
+
+            new_code = []
+            for i in range(len(code_lines)):
+                line = code_lines[i]
+                if CONTROLLER_V1_MACRO.match(line):
+                    continue # don't include the macro line in the new code
+                m = CONTROLLER_V1.match(line)
+                if m:
+                    new_code.append('{alias} = self.controller.lookup(\'{name}\')'.format(**m.groupdict()))
+                else:
+                    new_code.append(line)
+
+            with open(path, 'w') as f:
+                f.write('\n'.join(new_code))
+
+        shutil.rmtree(source)
+        td.commit(source)
+
+
 class ContractLoader(object):
     pass
 
@@ -377,7 +377,7 @@ def main():
     translate = commands.add_parser('translate',
                                     help='Translate imports to externs.')
     translate.add_argument('-s', '--source',
-                           help='Directory to search for Serpent code',
+                           help='Directory to search for Serpent code.',
                            required=True)
     translate.add_argument('-t', '--target',
                            help='Directory to save translated code in.',
@@ -387,7 +387,7 @@ def main():
     update = commands.add_parser('update',
                                  help='Updates the externs in --source.')
     update.add_argument('-s', '--source',
-                        help='Directory to search for Serpent code',
+                        help='Directory to search for Serpent code.',
                         required=True)
     update.add_argument('-c', '--controller',
                         help='The address in hex of the Controller contract.',
@@ -397,17 +397,22 @@ def main():
     compile_ = commands.add_parser('compile',
                                    help='Compiles and uploads all the contracts in --source. (TODO)')
     compile_.add_argument('-s', '--source',
-                          help='Directory to search for Serpent code',
+                          help='Directory to search for Serpent code.',
                           required=True)
     compile_.add_argument('-r', '--rpcaddr',
-                          help='Address of RPC server',
+                          help='Address of RPC server.',
                           default=DEFAULT_RPCADDR)
     compile_.add_argument('-o', '--out',
                           help='Filename for address json.')
     compile_.add_argument('-O', '--overwrite',
-                          help='If address json already exists, overwrite',
+                          help='If address json already exists, overwrite.',
                           action='store_true', default=False)
     compile_.set_defaults(command='compile')
+
+    upgrade = commands.add_parser('upgrade', help='Upgrades to the new controller mechanism')
+    upgrade.add_argument('-s', '--source', help='Directory to search for Serpent code.', required=True)
+    upgrade.add_argument('-c', '--controller', help='Sets the controller address', default=None)
+    upgrade.set_defaults(command='upgrade')
 
     args = parser.parse_args()
 
@@ -418,15 +423,12 @@ def main():
             imports_to_externs(args.source, args.target)
         elif args.command ==  'update':
             update_externs(args.source, args.controller)
+        elif args.command == 'upgrade':
+            upgrade_controller(args.source, args.controller)
         else:
             raise LoadContractsError('command not implemented: {cmd}', cmd=args.command)
-    except Exception as exc:
-        if hasattr(exc, 'message'):
-            print(exc.message)
-        elif len(exc.args) == 1:
-            print(exc.args[0])
-        else:
-            print(exc.args)
+    except LoadContractsError as exc:
+        print(exc)
         return 1
     else:
         return 0
