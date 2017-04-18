@@ -20,112 +20,139 @@
 # SOFTWARE.
 from __future__ import print_function
 import argparse
-import serpent
 import os
+import errno
 import re
-import binascii
-import json
+from binascii import hexlify
 import shutil
 import sys
-import multiprocessing
-import requests
+from serpent import mk_signature
 import tempfile
+import warnings
+import ethereum.tester
 
 if (3, 0) <= sys.version_info:
-    _old_mk_signature = serpent.mk_signature
-    def mk_signature(code):
-        return _old_mk_signature(code).decode()
-    serpent.mk_signature = mk_signature
 
-WORKER_POOL_SIZE = 2
+    def pretty_signature(path, name):
+        ugly_signature = mk_signature(path).decode()
+        extern_name = 'extern {}:'.format(name)
+        name_end = ugly_signature.find(':') + 1
+        signature = extern_name + ugly_signature[name_end:]
+        return signature
 
-PYNAME = '[A-Za-z_][A-Za-z0-9_]*'
-IMPORT = re.compile('import ({0}) as ({0})'.format(PYNAME))
-EXTERN = re.compile('extern ({}): .+'.format(PYNAME))
+    _hexlify = hexlify
 
-EXTERN_ERROR_MSG = 'Weird extern in {path} at line {line}: {eg}'
-IMPORT_ERROR_MSG = 'Weird import in {path} at line {line}: {eg}'
+    def hexlify(binary):
+        return _hexlify(binary).decode()
+else:
 
-# these are standard contracts that don't have a specific / unique controller address
+    def pretty_signature(path, name):
+        ugly_signature = mk_signature(path)
+        extern_name = 'extern {}:'.format(name)
+        name_end = ugly_signature.find(':') + 1
+        signature = extern_name + ugly_signature[name_end:]
+        return signature
+
+IMPORT = re.compile('^import (?P<name>\w+) as (?P<alias>[A-Za-z_][A-Za-z0-9_]*)$')
+EXTERN = re.compile('^extern (?P<name>\w+): \[.+\]$')
+CONTROLLER_V1 = re.compile('^(?P<indent>(?:\s{4})*)(?P<alias>[A-Za-z_][A-Za-z0-9_]*) = Controller.lookup\(\'(?P<name>\w+)\'\)')
+CONTROLLER_V1_MACRO = re.compile('^macro Controller: (?P<address>0x[0-9a-fA-F]{1,40})$')
+CONTROLLER_INIT = re.compile('^(?P<indent>(?:\s{4})*)self.controller = 0x[0-9A-F]{1,40}')
+INDENT = re.compile('^$|^[#\s].*$')
+
 STANDARD_EXTERNS = {
-    'Controller': '',
-
+    'controller': 'extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]',
     # ERC20 and aliases used in Augur code
     'ERC20': 'extern ERC20: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]',
     'subcurrency': 'extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]',
-    'wallet': 'extern wallet: [initialize:[int256]:int256, setWinningOutcomeContractAddressInitialize:[int256,int256]:int256, transfer:[address,uint256]:int256]',
     'rateContract': 'extern rateContract: [rateFunction:[]:int256]',
-    'forkResolveContract': 'extern forkResolveContract: [resolveFork:[]:int256]',
 }
 
 DEFAULT_RPCADDR = 'http://localhost:8545'
-DEFAULT_CONTROLLER = ''
+DEFAULT_CONTROLLER = '0xDEADBEEF'
+VALID_ADDRESS = re.compile('^0x[0-9A-F]{1,40}$')
+
 
 SERPENT_EXT = '.se'
 MACRO_EXT = '.sem'
 
-parser = argparse.ArgumentParser(description='Compiles collections of serpent contracts.',
-                                 epilog='Try a command followed by -h to see it\'s help info.')
-#parser.set_defaults(command='help')
 
-commands = parser.add_subparsers(title='commands')
-
-translate = commands.add_parser('translate', help='Translate imports to externs.')
-translate.add_argument('-s', '--source', help='Directory to search for Serpent code', required=True)
-translate.add_argument('-t', '--target', help='Directory to save translated code in.', required=True)
-translate.set_defaults(command='translate')
-
-update = commands.add_parser('update', help='Updates the externs in --source.')
-update.add_argument('-s', '--source', help='Directory to search for Serpent code', required=True)
-update.add_argument('-c', '--controller', help='The address in hex of the Controller contract.', default=None)
-update.set_defaults(command='update')
-
-compile_ = commands.add_parser('compile', help='Compiles and uploads all the contracts in --source. (TODO)')
-compile_.add_argument('-s', '--source', help='Directory to search for Serpent code', required=True)
-compile_.add_argument('-r', '--rpcaddr', help='Address of RPC server', default=DEFAULT_RPCADDR)
-compile_.set_defaults(command='compile')
+class LoadContractsError(Exception):
+    """Error class for all errors while processing Serpent code."""
+    def __init__(self, msg, *format_args, **format_params):
+        super(self.__class__, self).__init__(msg.format(*format_args, **format_params))
+        if not hasattr(self, 'message'):
+            self.message = self.args[0]
 
 
-class ContractError(Exception):
-    """Error class for all errors by load_contracts."""
+class TempDirCopy(object):
+    """Makes a temporary copy of a directory and provides a context manager for automatic cleanup."""
+    def __init__(self, source_dir):
+        self.source_dir = os.path.abspath(source_dir)
+        self.temp_dir = tempfile.mkdtemp()
+        self.temp_source_dir = os.path.join(self.temp_dir,
+                                            os.path.basename(source_dir))
+        shutil.copytree(self.source_dir, self.temp_source_dir)
 
+    def __enter__(self):
+        return self
 
-def find_files(source_dir, extension):
-    """Makes a list of paths in the directory which end in the extenstion."""
-    paths = []
-    for entry in os.listdir(source_dir):
-        entry = os.path.join(source_dir, entry)
-        if os.path.isfile(entry) and entry.endswith(extension):
-            paths.append(entry)
-        elif os.path.isdir(entry):
-            paths.extend(find_files(entry, extension))
+    def __exit__(self, exc_type, exc, traceback):
+        shutil.rmtree(self.temp_dir)
+        if not any((exc_type, exc, traceback)):
+            return True
+        return False
+
+    def find_files(self, extension):
+        """Finds all the files ending with the extension in the directory."""
+        paths = []
+        for directory, subdirs, files in os.walk(self.temp_source_dir):
+            for filename in files:
+                if filename.endswith(extension):
+                    paths.append(os.path.join(directory, filename))
+
+        return paths
+
+    def commit(self, dest_dir):
+        """Copies the contents of the temporary directory to the destination."""
+        if os.path.exists(dest_dir):
+            LoadContractsError(
+                'The target path already exists: {}'.format(
+                    os.path.abspath(dest_dir)))
+
+        shutil.copytree(self.temp_source_dir, dest_dir)
+
+    def cleanup(self):
+        """Deletes the temporary directory."""
+        try:
+            shutil.rmtree(self.temp_dir)
+        except OSError as exc:
+            # If ENOENT it raised then the directory was already removed.
+            # This error is not harmful so it shouldn't be raised.
+            # Anything else is probably bad.
+            if exc.errno == errno.ENOENT:
+                return False
+            else:
+                raise
         else:
-            continue
-    return paths
+            return True
+
+    def original_path(self, path):
+        """Returns the orignal path which the copy points to."""
+        return path.replace(self.temp_source_dir, self.source_dir)
 
 
-def split_crud(code_lines):
-    """Separates comment-crud at the top of the file from everything else."""
-    crud = []
-    noncrud = []
-
+def strip_license(code_lines):
+    """Separates the top-of-the-file license stuff from the rest of the code."""
     for i, line in enumerate(code_lines):
-        if line.startswith('#'):
-            crud.append(line)
-        else:
-            noncrud.extend(code_lines[i:])
-            break
-
-    return crud, noncrud
+        if not line.startswith('#'):
+            return code_lines[:i], code_lines[i:]
+    return [], code_lines
 
 
-def strip_dependencies(serpent_file):
+def strip_imports(code_lines):
     """Separates dependency information from Serpent code in the file."""
-
-    with open(serpent_file) as f:
-        code = f.read().split('\n')
-
-    crud, code = split_crud(code)
+    license, code = strip_license(code_lines)
     dependencies = []
     other_code = []
 
@@ -135,158 +162,348 @@ def strip_dependencies(serpent_file):
             if m:
                 dependencies.append((m.group(1), m.group(2)))
             else:
-                msg = IMPORT_ERROR_MSG.format(
-                    path=serpent_file,
-                    line=(i + len(crud)),
-                    eq=line)
-                raise ContractError(msg)
+                raise LoadContractsError(
+                    'Weird import at {line_num}: {line}',
+                    line_num=i,
+                    line=line)
         else:
             other_code.append(line)
 
-    if other_code[-1]:
-        other_code.append('') # makes sure the file ends with a blank line
+    return license, dependencies, other_code
 
-    crud.append('') # makes sure there is a blank line between crud and dependencies
 
-    return dependencies, '\n'.join(other_code), '\n'.join(crud)
+def path_to_name(path):
+    """Extracts the contract name from the path."""
+    return os.path.basename(path).replace(SERPENT_EXT, '')
+
+
+def update_controller(code_lines, controller_addr):
+    """Updates the controller address in the code.
+
+    If there is no 'data controller' declaration it is added.
+    Similarly, if no controller initialization line is found in
+    the init function, then it is added, and if there is no init
+    function, one is added.
+    """
+    code_lines = code_lines[:]
+
+    first_def = None
+    data_line = None
+    init_def = None
+    for i, line in enumerate(code_lines):
+        if line == 'data controller':
+            data_line = i
+        if line.startswith('def init()'):
+            init_def = i
+        if line.startswith('def') and first_def is None:
+            first_def = i
+
+    if first_def is None:
+        raise LoadContractsError('No functions found! Is this a macro file?')
+
+    controller_init = '    self.controller = {}'.format(controller_addr)
+
+    if init_def is None:
+        # If there's no init function, add it before the first function
+        init_def = first_def
+        code_lines = code_lines[:init_def] + ['def init():', controller_init, ''] + code_lines[init_def:]
+    else:
+        # If there is, add the controller init line to the top of the init function
+        # and remove any other lines in init that set the value of self.controller
+        code_lines.insert(init_def + 1, controller_init)
+        i = init_def + 2
+        while INDENT.match(code_lines[i]):
+            m = CONTROLLER_INIT.match(code_lines[i])
+            if m:
+                del code_lines[i]
+            else:
+                i += 1
+
+    if data_line is None:
+        # If there's no 'data controller' line, add it before the init.
+        code_lines = code_lines[:init_def] + ['data controller', ''] + code_lines[init_def:]
+
+    return code_lines
 
 
 def imports_to_externs(source_dir, target_dir):
     """Translates code using import syntax to standard Serpent externs."""
-    source_dir = os.path.abspath(source_dir)
-    target_dir = os.path.abspath(target_dir)
+    with TempDirCopy(source_dir) as td:
+        serpent_paths = td.find_files(SERPENT_EXT)
 
-    if os.path.exists(target_dir):
-        raise ContractError('The target directory already exists!')
+        contracts = {}
 
-    tempdir = tempfile.mkdtemp()
-    temp_target_copy = os.path.join(tempdir, os.path.basename(target_dir))
-    shutil.copytree(source_dir, temp_target_copy)
+        for path in serpent_paths:
+            # TODO: Something besides hard coding this everywhere!!!
+            if os.path.basename(path) == 'controller.se':
+                continue
 
-    try:
-        serpent_files = find_files(temp_target_copy, SERPENT_EXT)
+            name = path_to_name(path)
 
-        source_map = {}
+            with open(path) as f:
+                code_lines = [line.rstrip() for line in f]
 
-        for path in serpent_files:
-            name = os.path.basename(path).replace(SERPENT_EXT, '')
-            info = {}
-            info['dependencies'], info['stripped_code'], info['crud'] = strip_dependencies(path)
-            
-            with open(path, 'w') as temp:
-                temp.write(info['stripped_code'])
+            try:
+                code_lines = update_controller(code_lines, DEFAULT_CONTROLLER)
+                license, dependencies, other_code = strip_imports(code_lines)
+            except LoadContractsError as exc:
+                raise LoadContractsError(
+                    'Caught error while processing {name}: {error}',
+                    name=name,
+                    error=exc.message)
 
-            extern_name = 'extern {}:'.format(name)
-            signature = serpent.mk_signature(path)
-            name_end = signature.find(':') + 1
-            signature = extern_name + signature[name_end:]
-            info['signature'] = signature
+            info = {'license': license,
+                    'dependencies': dependencies,
+                    'stripped_code': '\n'.join(other_code)}
+
+            # the stripped code is writen back so the serpent module can handle 'inset' properly
+            with open(path, 'w') as f:
+                f.write(info['stripped_code'])
+
+            info['signature'] = pretty_signature(path, name)
             info['path'] = path
-            source_map[name] = info
+            contracts[name] = info
 
-        lookup_fmt = '{} = Controller.lookup(\'{}\')'
-        for name in source_map:
-            info = source_map[name]
-            signatures = [DEFAULT_CONTROLLER, # a place holder that needs to be updated before compiling
-                          STANDARD_EXTERNS['Controller']]
+        lookup_fmt = '{} = self.controller.lookup(\'{}\')'
+        for name in contracts:
+            info = contracts[name]
+            signatures = ['', STANDARD_EXTERNS['controller'], '']
             for oname, alias in info['dependencies']:
                 signatures.append('')
                 signatures.append(lookup_fmt.format(alias, oname))
-                signatures.append(source_map[oname]['signature'])
+                signatures.append(contracts[oname]['signature'])
             signatures.append('') # blank line between signatures section and rest of code
-            new_code = '\n'.join([info['crud']] + signatures + [info['stripped_code']])
+            new_code = '\n'.join(info['license'] + signatures + [info['stripped_code']])
             path = info['path']
 
             with open(path, 'w') as f:
                 f.write(new_code)
-    except Exception:
-        raise
-    else:
-        shutil.copytree(temp_target_copy, target_dir)
-    finally:
-        shutil.rmtree(tempdir)
+
+        td.commit(target_dir)
 
 
 def update_externs(source_dir, controller):
     """Updates all externs in source_dir."""
-    if controller:
-        new_controller = 'macro Controller: {}'.format(controller)
-    source_dir = os.path.abspath(source_dir)
-    tempdir = tempfile.mkdtemp()
-    source_copy = os.path.join(tempdir, os.path.basename(source_dir))
-    shutil.copytree(source_dir, source_copy)
-    extern_map = STANDARD_EXTERNS.copy()
 
-
-    try:
-        serpent_files = find_files(source_copy, SERPENT_EXT)
+    with TempDirCopy(source_dir) as td:
+        extern_map = STANDARD_EXTERNS.copy()
+        serpent_files = td.find_files(SERPENT_EXT)
 
         for path in serpent_files:
-            name = os.path.basename(path).replace(SERPENT_EXT, '')
-            extern_name = 'extern {}:'.format(name)
-            signature = serpent.mk_signature(path)
-            name_end = signature.find(':') + 1
-            signature = extern_name + signature[name_end:]
-            extern_map[name] = signature
+            # TODO: Something besides hard coding this everywhere!!!
+            if os.path.basename(path) == 'controller.se':
+                continue
+
+            name = path_to_name(path)
+            extern_map[name] = pretty_signature(path, name)
 
         for path in serpent_files:
+            # TODO: Something besides hard coding this everywhere!!!
+            if os.path.basename(path) == 'controller.se':
+                continue
+
             with open(path) as f:
-                code = f.read().split('\n')
+                code_lines = [line.rstrip() for line in f]
 
-            crud, code = split_crud(code)
-            saw_controller = False
+            if controller:
+                try:
+                    code_lines = update_controller(code_lines, controller)
+                except Exception as exc:
+                    raise LoadContractsError(
+                        'Caught error while processing {path}: {err}',
+                        path=td.original_path(path),
+                        err=str(exc))
 
-            for i in range(len(code)):
+            license, code_lines = strip_license(code_lines)
 
-                m = EXTERN.match(code[i])
+            for i in range(len(code_lines)):
+                line = code_lines[i]
+                m = EXTERN.match(line)
 
-                if code[i].startswith('extern') and m is None:
-                    msg = EXTERN_ERROR_MSG.format(path=path, line=(i + len(crud)), eg=code[i])
-                    raise ContractError(msg)
-                if m and m.group(1) not in extern_map:
-                    msg = EXTERN_ERROR_MSG.format(path=path, line=(i + len(crud)), eg=code[i])
-                    raise ContractError(msg)
+                if (line.startswith('extern') and m is None or 
+                    m and m.group(1) not in extern_map):
 
-                if m:
-                    code[i] = extern_map[m.group(1)]
-                elif code[i].startswith('macro Controller:'):
-                    saw_controller = True
-                    if controller:
-                        code[i] = new_controller
+                    raise LoadContractsError(
+                        'Weird extern at line {line_num} in file {path}: {line}',
+                        line_num=(len(license) + i + 1),
+                        path=td.original_path(path),
+                        line=line)
+                elif m:
+                    extern_name = m.group(1)
+                    code_lines[i]  = extern_map[extern_name]
 
-            if not saw_controller:
-                crud.append(DEFAULT_CONTROLLER)
-
-            code = '\n'.join(crud + code)
+            code_lines = '\n'.join(license + code_lines)
             with open(path, 'w') as f:
-                f.write(code)
-    except Exception:
-        raise
-    else:
+                f.write(code_lines)
+
         shutil.rmtree(source_dir)
-        shutil.copytree(source_copy, source_dir)
-    finally:
-        shutil.rmtree(tempdir)
+        td.commit(source_dir)
+
+
+def upgrade_controller(source, controller):
+    """Replaces controller macros with an updateable storage value."""
+    with TempDirCopy(source) as td:
+        serpent_files = td.find_files(SERPENT_EXT)
+
+        for path in serpent_files:
+            # TODO: Something besides hard coding this everywhere!!!
+            if os.path.basename(path) == 'controller.se':
+                continue
+
+            with open(path) as f:
+                code_lines = [line.rstrip() for line in f]
+
+            if controller:
+                try:
+                    code_lines = update_controller(code_lines, controller)
+                except LoadContractsError as exc:
+                    raise LoadContractsError('Caught error while processing {path}: {err}',
+                        path=td.original_path(path),
+                        err=exc.message)
+
+            new_code = []
+            for i in range(len(code_lines)):
+                line = code_lines[i]
+                if CONTROLLER_V1_MACRO.match(line):
+                    continue # don't include the macro line in the new code
+                m = CONTROLLER_V1.match(line)
+                if m:
+                    new_code.append('{alias} = self.controller.lookup(\'{name}\')'.format(**m.groupdict()))
+                else:
+                    new_code.append(line)
+
+            with open(path, 'w') as f:
+                f.write('\n'.join(new_code))
+
+        shutil.rmtree(source)
+        td.commit(source)
+
+
+class ContractLoader(object):
+    """A class which updates and compiles Serpent code via ethereum.tester.state.
+
+    Examples:
+    contracts = ContractLoader('src', 'controller.se', ['cash.se'])
+    print(contracts.foo.echo('lol'))
+    print(contracts['bar'].bar())
+    contracts.cleanup()
+    """
+    def __init__(self, source_dir, controller, special):
+        self.__state = ethereum.tester.state()
+        self.__contracts = {}
+        self.__temp_dir = TempDirCopy(source_dir)        
+
+        serpent_files = self.__temp_dir.find_files(SERPENT_EXT)
+
+        for file in serpent_files:
+            if os.path.basename(file) == controller:
+                self.__contracts['controller'] = self.__state.abi_contract(file)
+                controller_addr = '0x' + hexlify(self.__contracts['controller'].address)
+                update_externs(self.__temp_dir.temp_source_dir, controller_addr)
+                break
+        else:
+            raise LoadContractsError('Controller not found! {}', controller)
+
+        for contract in special:
+            for file in serpent_files:
+                if os.path.basename(file) == contract:
+                    self.__contracts = self.__state.abi_contract(file)
+
+        for file in serpent_files:
+            name = path_to_name(file)
+            
+            if name in self.__contracts:
+                continue
+
+            self.__contracts[name] = self.__state.abi_contract(file)
+
+    def __getattr__(self, name):
+        """Use it like a namedtuple!"""
+        if name in self.__contracts:
+            return self.__contracts[name]
+        else:
+            return super(self.__class__, self).__getattr__(name)
+
+    def __getitem__(self, name):
+        """Use it like a dict!"""
+        return self.__contracts[name]
+
+    def cleanup(self):
+        """Deletes temporary files."""
+        self.__temp_dir.cleanup()
+
+    def __del__(self):
+        """ContractLoaders try to clean up after themselves."""
+        self.cleanup()
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description='Compiles collections of serpent contracts.',
+        epilog='Try a command followed by -h to see it\'s help info.')
+    parser.set_defaults(command=None)
+
+    commands = parser.add_subparsers(title='commands')
+
+    translate = commands.add_parser('translate',
+                                    help='Translate imports to externs.')
+    translate.add_argument('-s', '--source',
+                           help='Directory to search for Serpent code.',
+                           required=True)
+    translate.add_argument('-t', '--target',
+                           help='Directory to save translated code in.',
+                           required=True)
+    translate.set_defaults(command='translate')
+
+    update = commands.add_parser('update',
+                                 help='Updates the externs in --source.')
+    update.add_argument('-s', '--source',
+                        help='Directory to search for Serpent code.',
+                        required=True)
+    update.add_argument('-c', '--controller',
+                        help='The address in hex of the Controller contract.',
+                        default=None)
+    update.set_defaults(command='update')
+
+    compile_ = commands.add_parser('compile',
+                                   help='Compiles and uploads all the contracts in --source. (TODO)')
+    compile_.add_argument('-s', '--source',
+                          help='Directory to search for Serpent code.',
+                          required=True)
+    compile_.add_argument('-r', '--rpcaddr',
+                          help='Address of RPC server.',
+                          default=DEFAULT_RPCADDR)
+    compile_.add_argument('-o', '--out',
+                          help='Filename for address json.')
+    compile_.add_argument('-O', '--overwrite',
+                          help='If address json already exists, overwrite.',
+                          action='store_true', default=False)
+    compile_.set_defaults(command='compile')
+
+    upgrade = commands.add_parser('upgrade', help='Upgrades to the new controller mechanism')
+    upgrade.add_argument('-s', '--source', help='Directory to search for Serpent code.', required=True)
+    upgrade.add_argument('-c', '--controller', help='Sets the controller address', default=None)
+    upgrade.set_defaults(command='upgrade')
+
     args = parser.parse_args()
 
     try:
-        if args.command == 'help':
+        if args.command is None:
             parser.print_help()
         elif args.command == 'translate':
             imports_to_externs(args.source, args.target)
         elif args.command ==  'update':
             update_externs(args.source, args.controller)
+        elif args.command == 'upgrade':
+            upgrade_controller(args.source, args.controller)
         else:
-            print('command not implemented:', args.command)
-            return 1
-    except ContractError as exc:
-        print(exc.args[0])
+            raise LoadContractsError('command not implemented: {cmd}', cmd=args.command)
+    except LoadContractsError as exc:
+        print(exc)
         return 1
+    else:
+        return 0
 
-    return 0
 
 if __name__ == '__main__':
     sys.exit(main())
