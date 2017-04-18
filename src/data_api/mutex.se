@@ -14,3 +14,10 @@ def unsetMutex():
 
 def getMutex():
     return(self.mutex)
+
+macro mutexWhitelisted():
+    inMutexWhitelist = self.controller.checkWhitelist(msg.sender)
+    if(inMutexWhitelist):
+        1
+    else:
+        0

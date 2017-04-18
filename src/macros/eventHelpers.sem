@@ -43,6 +43,7 @@ macro abs($a):
     $a
 
 # this includes all events created before the fork started
+# means an event was created prior to a fork and hasn't been moved after the fork yet
 macro eventCreatedPriorToFork($event):
     $branch = EVENTS.getEventBranch($event)
     if(EVENTS.getCreationTime($event) <= BRANCHES.getForkTime($branch)):
