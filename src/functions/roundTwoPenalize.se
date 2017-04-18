@@ -1,5 +1,3 @@
-### Handles reporter penalization for the first backstop
-
 REPORTING = Controller.lookup('reporting')
 extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOfReporter:[int256,int256]:int256, checkContractWhitelist:[int256,int256]:int256, checkWhitelist:[int256]:int256, claimInitialRepFromRepContract:[]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getFork:[int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReportedOnNonFinalRoundTwoEvent:[int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setFork:[int256]:int256, setInitialReporters:[int256]:int256, setRep:[int256,int256,int256]:int256, setReportedOnNonFinalRoundTwoEvent:[int256,int256]:int256, setSaleDistribution:[int256[],int256[],int256]:int256, setWhitelist:[int256,int256[]]:bytes, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, totalSupply:[int256]:int256]
 
@@ -42,29 +40,28 @@ macro POINT_ONE: 100000000000000000
 macro POINT_TWO: 200000000000000000
 macro MIN_BOND: 200 * ONE
 
+### Handles reporter penalization for the first backstop
+
 # Penalizes a reporter for reporting wrongly on a round 2 reporting / backstop 1 event
 # So we want to do the rep redistribution for both period 1 and period 2 at this time
-# essentially penalizeWrong for backstop 1 [where everyone reports on a given event]
-# in a fork this is called on the original branch and event is reported on again on new branch
+    # essentially penalizeWrong for backstop 1 [where everyone reports on a given event]
+    # in a fork this is called on the original branch and event is reported on again on new branch
 # Errors:
-    #  0: event isn't eligible/up for round two penalization
+    #  0: user has <1 rep in branch
     # -1: vote period needs incrementing
     # -2: not in 1st half of vote period
     # -3: not resolved yet and resolution attempt failed
-    # -5: already done for all events in this period
-    # -6: needed to collect fees last period which sets the before/after rep
-    # -7: event isn't in the branch given
-    # -8: not able to be penalized on yet b/c round 2 event isn't final
-# force event to be resolved first if it can be
+    # -4: already done for all events in this period
+    # -5: needed to collect fees last period which sets the before/after rep
+    # -6: event isn't in the branch given
+    # -7: not able to be penalized on yet b/c round 2 event isn't final
+# forces event to be resolved first if it can be
 # roundTwoResolve needs to be called for any event here before can be penalized if it's a backstop 1 event, a la close market for other events before being penalized
 def penalizeRoundTwoWrong(branch, event):
     refund()
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()
-    if(!branch):
-        MUTEX.unsetMutex()
-        return(0)
     lastPeriodVotedOn = BRANCHES.getVotePeriod(branch) - 1
     lastPenalizationPeriod = lastPeriodVotedOn - 1
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -78,11 +75,10 @@ def penalizeRoundTwoWrong(branch, event):
     if(scalar(event) or categorical(event)):
         outcome = uncaught
     reportValue = EXPEVENTS.getReport(branch, lastPeriodVotedOn, event, msg.sender)
-    oldReport = EXPEVENTS.getReport(branch, lastPenalizationPeriod, event, msg.sender)
     ethics = EXPEVENTS.getEthicReport(branch, lastPeriodVotedOn, event, msg.sender)
+    oldReport = EXPEVENTS.getReport(branch, lastPenalizationPeriod, event, msg.sender)
     oldEthics = EXPEVENTS.getEthicReport(branch, lastPenalizationPeriod, event, msg.sender)
-    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, lastPeriodVotedOn) / EXPIRING.getNumberEvents(branch, lastPeriodVotedOn)
-
+    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, lastPeriodVotedOn, BRANCHES.getBranchCurrency(branch, 0)) / EXPIRING.getNumberEvents(branch, lastPeriodVotedOn)
     bond = safeAdd(averageAdjudicationCost, safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2)))
     bond = min(bond, MIN_BOND)
     ethical = EVENTS.getEthics(event)
@@ -91,7 +87,6 @@ def penalizeRoundTwoWrong(branch, event):
 
     numReportedOn = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriodVotedOn, msg.sender)
     repChange = 0
-    
     # penalization on a round 2 event if not already penalized, it has outcome, and user reported on it
     # if it's penalizing in the period it was pushed back to we can do the penalization, should do it for both the first and second period
     final = BACKSTOPS.getFinal(event)
@@ -126,7 +121,7 @@ def penalizeRoundTwoWrong(branch, event):
             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
     else:
         MUTEX.unsetMutex()
-        return(-8)
+        return(-7)
     # penalization on a regular event if not already penalized, it has outcome, and user reported on it
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriodVotedOn, msg.sender)):
@@ -140,7 +135,7 @@ macro checkPenalizeWrongRoundTwoPreconditions():
         return(0)
     if(EVENTS.getEventBranch(event) != branch):
         MUTEX.unsetMutex()
-        return(-7)
+        return(-6)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     atFirstHalfOfPeriod()
     if((block.timestamp / periodLength - 2) != lastPeriodVotedOn):
@@ -152,10 +147,10 @@ macro checkPenalizeWrongRoundTwoPreconditions():
         return(-3)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriodVotedOn):
         MUTEX.unsetMutex()
-        return(-5)
+        return(-4)
     if(!CONSENSUS.getRepCollected(branch, msg.sender, lastPeriodVotedOn - 1)):
         MUTEX.unsetMutex()
-        return(-6)
+        return(-5)
 
 macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn):
     # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max maxPenalty% of their rep respectively

@@ -491,7 +491,7 @@ macro makeFork():
 
 macro returnRoundTwoBond():
     market = EVENTS.getMarket(event, 0)
-    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period - 1) / EXPEVENTS.getNumberEvents(branch, period - 1)
+    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period - 1, BRANCHES.getBranchCurrency(branch, 0)) / EXPEVENTS.getNumberEvents(branch, period - 1)
     bond = safeAdd(averageAdjudicationCost, safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2)))
     minBond = 200 * ONE
     bond = min(bond, minBond)

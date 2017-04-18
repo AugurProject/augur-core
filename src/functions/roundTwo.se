@@ -44,13 +44,13 @@ macro MIN_BOND: 200 * ONE
 # appealBond = marketValue * (0.01 + marketFee / 2) + averageAdjudicationCost
     # averageAdjudicationCost = Total fees paid to reporters for all markets in this reporting round / number of markets in this reporting round.
         # needs an abs min of ~200 rep.
-# Reporting period is 2 months minus 48 hours.  This 48 hours allows for the appeals to take place before the next reporting round begins.
+# Reporting period is 2 months minus 48 hours. This 48 hours allows for the appeals to take place before the next reporting round begins.
 # Returns 1 upon success
 # Errors:
     #  0: invalid votePeriod/branch
-    # -2: branch is in the middle of a fork
-    # -3: not enough money
-    # -4: event has no votes so far
+    # -1: branch is in the middle of a fork
+    # -2: not enough money
+    # -3: event has no votes so far
     # throw()s if not enough msg.value to cover resolution cost or not a large enough bond
 def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     if(MUTEX.getMutex()):
@@ -59,7 +59,7 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     votePeriod = BRANCHES.getVotePeriod(branch)
     roundTwoBondCheckPreconditions()
     BACKSTOPS.setRoundTwoRefund(event, msg.value)
-    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod) / EXPEVENTS.getNumberEvents(branch, votePeriod)
+    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod, BRANCHES.getBranchCurrency(branch, 0)) / EXPEVENTS.getNumberEvents(branch, votePeriod)
     bond = averageAdjudicationCost + safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2))
     bond = min(bond, MIN_BOND)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
@@ -77,21 +77,19 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     # send the bond to the branch
     if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
         throw()
-    period = BRANCHES.getVotePeriod(branch)
     # remove from events in # to report on calc for last period
-    EXPEVENTS.removeEvent(branch, period)
+    EXPEVENTS.removeEvent(branch, votePeriod)
     # makes event required reporting in round 2 (the next period) as well
-    EXPEVENTS.setEventRequired(branch, period + 1, event)
+    EXPEVENTS.setEventRequired(branch, votePeriod + 1, event)
     # push event into next period
-
     forkPeriod = BRANCHES.getForkPeriod(branch)
     afterFork = 0
-    if(period == (forkPeriod + 1) or period == (forkPeriod + 2)):
+    if(votePeriod == (forkPeriod + 1) or votePeriod == (forkPeriod + 2)):
         afterFork = 1
     currency = INFO.getCurrency(event)
     wallet = INFO.getWallet(event)
     # add to next expiration period
-    EXPEVENTS.addEvent(branch, period + 1, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+    EXPEVENTS.addEvent(branch, votePeriod + 1, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
 
     # set event expiration date to be after the current reporting period ends
     EVENTS.setExpiration(event, block.timestamp)
@@ -103,7 +101,7 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     else:
         BACKSTOPS.setOriginalOutcome(event, catch(EVENTS.getUncaughtOutcome(event)))
     BACKSTOPS.setOriginalEthicality(event, ethicCatch(EVENTS.getEthics(event)))
-    EXPEVENTS.addRoundTwo(branch, period)
+    EXPEVENTS.addRoundTwo(branch, votePeriod)
     BACKSTOPS.setBondPoster(event, msg.sender)
     EVENTS.setUncaughtOutcome(event, 0)
     EVENTS.setMode(event, 0)
@@ -124,7 +122,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = EVENTS.getExpiration(event) / periodLength
     market = EVENTS.getMarket(event, 0)
-    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod - 1) / EXPEVENTS.getNumberEvents(branch, votePeriod - 1)
+    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, votePeriod - 1, BRANCHES.getBranchCurrency(branch, 0)) / EXPEVENTS.getNumberEvents(branch, votePeriod - 1)
     bond = averageAdjudicationCost + safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2))
     bond = min(bond, MIN_BOND)
     eventID = EXPEVENTS.getEvent(branch, votePeriod, eventIndex)
@@ -144,9 +142,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     forkPeriod = BRANCHES.getForkPeriod(branch)
     # if forking and this isn't the fork event
     roundTwoEventWithBondNotReturned = (!BACKSTOPS.getBondReturned(event) and BACKSTOPS.getRoundTwo(event) and validEvent)
-    inForkPhases = forkPeriod == votePeriod or votePeriod == (forkPeriod + 1) or votePeriod == (forkPeriod + 2)
-
-    if(inForkPhases and !forked and roundTwoEventWithBondNotReturned and eventCreatedPriorToFork(eventID)):
+    if(!forked and roundTwoEventWithBondNotReturned and eventCreatedPriorToFork(eventID)):
         returnRoundTwoBondInForkScenario()
     # overruled and bond poster was right
     elif(overruled and votedOnAgain and !forked and roundTwoEventWithBondNotReturned):
@@ -160,9 +156,9 @@ def roundTwoResolve(branch, event, eventIndex, sender):
 # Actually sets the outcome for a round 2 event
 # Errors:
     # 0: event isn't binary, categorical, or scalar [hell has frozen over or quantum events have been invented]
-# needs whitelist
 def resolve(branch, event):
     refund()
+    self.controller.checkWhitelist(msg.sender)
     if(binary(event)):
         RESOLVE.resolveBinary(event, EVENTS.getMarket(event, 0), branch, votePeriod)
         return(1)
@@ -182,14 +178,15 @@ def resolve(branch, event):
 macro roundTwoBondCheckPreconditions():
     market = EVENTS.getMarket(event, 0)
     forkPeriod = BRANCHES.getForkPeriod(branch)
+    # means an event was created prior to a fork and hasn't been moved after the fork yet
     if(!eventCreatedPriorToFork(eventID)):
         MUTEX.unsetMutex()
-        return(-2)
+        return(-1)
     if(noVotes()):
-        return(-4)
+        return(-3)
     if(msg.value < 1000000 * tx.gasprice):
         MUTEX.unsetMutex()
-        return(-3)
+        return(-2)
 
 macro loseBond():
     # lose bond
