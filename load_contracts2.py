@@ -383,27 +383,31 @@ class ContractLoader(object):
     """A class which updates and compiles Serpent code via ethereum.tester.state.
 
     Examples:
-    contracts = ContractLoader('src', ['controller.se'])
+    contracts = ContractLoader('src', 'controller.se', ['cash.se'])
     print(contracts.foo.echo('lol'))
     print(contracts['bar'].bar())
     contracts.cleanup()
     """
-    def __init__(self, source_dir, special_contracts):
+    def __init__(self, source_dir, controller, special):
         self.__state = ethereum.tester.state()
         self.__contracts = {}
-        self.__temp_dir = TempDirCopy(source_dir)
+        self.__temp_dir = TempDirCopy(source_dir)        
 
         serpent_files = self.__temp_dir.find_files(SERPENT_EXT)
 
-        for contract in special_contracts:
-            for file in serpent_files:
-                if file.endswith(contract):
-                    self.__contracts[path_to_name(file)] = self.__state.abi_contract(file)
-                    break
+        for file in serpent_files:
+            if os.path.basename(file) == controller:
+                self.__contracts['controller'] = self.__state.abi_contract(file)
+                controller_addr = '0x' + hexlify(self.__contracts['controller'].address)
+                update_externs(self.__temp_dir.temp_source_dir, controller_addr)
+                break
+        else:
+            raise LoadContractsError('Controller not found! {}', controller)
 
-        if 'controller' in self.__contracts:
-            controller_addr = '0x' + hexlify(self.__contracts['controller'].address)
-            update_externs(self.__temp_dir.temp_source_dir, controller_addr)
+        for contract in special:
+            for file in serpent_files:
+                if os.path.basename(file) == contract:
+                    self.__contracts = self.__state.abi_contract(file)
 
         for file in serpent_files:
             name = path_to_name(file)
