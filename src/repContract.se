@@ -19,9 +19,9 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# Storage of all data associated with reporters
-# takes reporterID as key, fxpValue is rep amount
-data reporting[2**160]
+# Storage of all reputation
+# maps reporter public address to reputation they have
+data reputation[2**160]
 
 # owner [account balance is coming from], then spender, e.g. approvedToSpend[owner][spender]
 # returns amount spender can spend
@@ -66,13 +66,13 @@ def any():
 # Transfer rep
 # @return 1 if reputation sent
 def transfer(receiver: address, fxpValue: uint256):
-    senderBalance = self.reporting[msg.sender]
+    senderBalance = self.reputation[msg.sender]
     if(senderBalance < fxpValue or !self.seeded or stillCreating()):
         throw()
-    if(!safeToSubtract(self.reporting[msg.sender], fxpValue) or !safeToAdd(self.reporting[receiver], fxpValue)):
+    if(!safeToSubtract(self.reputation[msg.sender], fxpValue) or !safeToAdd(self.reputation[receiver], fxpValue)):
         throw()
-    self.reporting[msg.sender] -= fxpValue
-    self.reporting[receiver] += fxpValue
+    self.reputation[msg.sender] -= fxpValue
+    self.reputation[receiver] += fxpValue
     log(type = Transfer, msg.sender, receiver, fxpValue)
     return(1: uint256)
 
@@ -80,14 +80,14 @@ def transfer(receiver: address, fxpValue: uint256):
 # fails unless from has authorized sender
 # @return 1 if rep sent
 def transferFrom(from: address, receiver: address, fxpValue: uint256):
-    senderBalance = self.reporting[from]
+    senderBalance = self.reputation[from]
     if(senderBalance < fxpValue or fxpValue > self.approvedToSpend[from][msg.sender] or !self.seeded or stillCreating()):
         throw()
-    if(!safeToSubtract(self.reporting[from], fxpValue) or !safeToAdd(self.reporting[receiver], fxpValue)):
+    if(!safeToSubtract(self.reputation[from], fxpValue) or !safeToAdd(self.reputation[receiver], fxpValue)):
         throw()
     self.approvedToSpend[from][msg.sender] -= fxpValue
-    self.reporting[from] -= fxpValue
-    self.reporting[receiver] += fxpValue
+    self.reputation[from] -= fxpValue
+    self.reputation[receiver] += fxpValue
     log(type = Transfer, from, receiver, fxpValue)
     return(1: uint256)
     
@@ -108,8 +108,8 @@ def setSaleDistribution(addresses: address[], balances: uint256[]):
     if(msg.sender != self.creator):
         throw()
     while(i < numberOfAddresses):
-        if(!self.reporting[addresses[i]] && !self.seeded):
-            self.reporting[addresses[i]] = balances[i]
+        if(!self.reputation[addresses[i]] && !self.seeded):
+            self.reputation[addresses[i]] = balances[i]
             self.totalSupply += balances[i]
             log(type = Transfer, 0, addresses[i], balances[i])
         i += 1
@@ -122,9 +122,9 @@ def setSaleDistribution(addresses: address[], balances: uint256[]):
 def getRidOfDustForLaunch():
     if(msg.sender != 0x668Fc8D2004379275357c8D8e2502E19153AdEEe):
         throw()
-    if(self.reporting[0x0000000000000000000000000000000000000000]):
-        self.totalSupply -= self.reporting[0x0000000000000000000000000000000000000000]
-        self.reporting[0x0000000000000000000000000000000000000000] = 0
+    if(self.reputation[0x0000000000000000000000000000000000000000]):
+        self.totalSupply -= self.reputation[0x0000000000000000000000000000000000000000]
+        self.reputation[0x0000000000000000000000000000000000000000] = 0
         return(1)
     else:
         throw()
@@ -138,7 +138,7 @@ def totalSupply():
 
 # @return reputation fxpValue
 def balanceOf(address: address):
-    return(self.reporting[address]: uint256)
+    return(self.reputation[address]: uint256)
 
 def name():
     return(self.name: uint256)
