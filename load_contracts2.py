@@ -29,6 +29,7 @@ import sys
 from serpent import mk_signature
 import tempfile
 import warnings
+import ethereum.tester
 
 if (3, 0) <= sys.version_info:
 
@@ -91,9 +92,9 @@ class TempDirCopy(object):
         self.temp_dir = tempfile.mkdtemp()
         self.temp_source_dir = os.path.join(self.temp_dir,
                                             os.path.basename(source_dir))
+        shutil.copytree(self.source_dir, self.temp_source_dir)
 
     def __enter__(self):
-        shutil.copytree(self.source_dir, self.temp_source_dir)
         return self
 
     def __exit__(self, exc_type, exc, traceback):
@@ -233,6 +234,10 @@ def imports_to_externs(source_dir, target_dir):
         contracts = {}
 
         for path in serpent_paths:
+            # TODO: Something besides hard coding this everywhere!!!
+            if os.path.basename(path) == 'controller.se':
+                continue
+
             name = path_to_name(path)
 
             with open(path) as f:
@@ -285,10 +290,18 @@ def update_externs(source_dir, controller):
         serpent_files = td.find_files(SERPENT_EXT)
 
         for path in serpent_files:
+            # TODO: Something besides hard coding this everywhere!!!
+            if os.path.basename(path) == 'controller.se':
+                continue
+
             name = path_to_name(path)
             extern_map[name] = pretty_signature(path, name)
 
         for path in serpent_files:
+            # TODO: Something besides hard coding this everywhere!!!
+            if os.path.basename(path) == 'controller.se':
+                continue
+
             with open(path) as f:
                 code_lines = [line.rstrip() for line in f]
 
@@ -312,7 +325,7 @@ def update_externs(source_dir, controller):
 
                     raise LoadContractsError(
                         'Weird extern at line {line_num} in file {path}: {line}',
-                        line_num=(len(license) + i),
+                        line_num=(len(license) + i + 1),
                         path=td.original_path(path),
                         line=line)
                 elif m:
@@ -333,6 +346,10 @@ def upgrade_controller(source, controller):
         serpent_files = td.find_files(SERPENT_EXT)
 
         for path in serpent_files:
+            # TODO: Something besides hard coding this everywhere!!!
+            if os.path.basename(path) == 'controller.se':
+                continue
+
             with open(path) as f:
                 code_lines = [line.rstrip() for line in f]
 
@@ -363,7 +380,57 @@ def upgrade_controller(source, controller):
 
 
 class ContractLoader(object):
-    pass
+    """A class which updates and compiles Serpent code via ethereum.tester.state.
+
+    Examples:
+    contracts = ContractLoader('src', ['controller.se']
+    print(contracts.foo.echo('lol'))
+    print(contracts['bar'].bar())
+    contracts.cleanup()
+    """
+    def __init__(self, source_dir, special_contracts):
+        self.__state = ethereum.tester.state()
+        self.__contracts = {}
+        self.__temp_dir = TempDirCopy(source_dir)
+
+        serpent_files = self.__temp_dir.find_files(SERPENT_EXT)
+
+        for contract in special_contracts:
+            for file in serpent_files:
+                if file.endswith(contract):
+                    self.__contracts[path_to_name(file)] = self.__state.abi_contract(file)
+                    break
+
+        if 'controller' in self.__contracts:
+            controller_addr = '0x' + hexlify(self.__contracts['controller'].address)
+            update_externs(self.__temp_dir.temp_source_dir, controller_addr)
+
+        for file in serpent_files:
+            name = path_to_name(file)
+            
+            if name in self.__contracts:
+                continue
+
+            self.__contracts[name] = self.__state.abi_contract(file)
+
+    def __getattr__(self, name):
+        """Use it like a namedtuple!"""
+        if name in self.__contracts:
+            return self.__contracts[name]
+        else:
+            return super(self.__class__, self).__getattr__(name)
+
+    def __getitem__(self, name):
+        """Use it like a dict!"""
+        return self.__contracts[name]
+
+    def cleanup(self):
+        """Deletes temporary files."""
+        self.__temp_dir.cleanup()
+
+    def __del__(self):
+        """ContractLoaders try to clean up after themselves."""
+        self.cleanup()
 
 
 def main():
