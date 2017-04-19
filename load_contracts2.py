@@ -413,7 +413,7 @@ class ContractLoader(object):
         for contract in special:
             for file in serpent_files:
                 if os.path.basename(file) == contract:
-                    self.__contracts[name] = self.__state.abi_contract(file)
+                    self.__contracts[contract] = self.__state.abi_contract(file)
 
         for file in serpent_files:
             name = path_to_name(file)
