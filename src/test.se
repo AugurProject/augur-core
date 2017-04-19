@@ -8,8 +8,4 @@ def init():
     self.controller = 0xC001D00D
 
 def ok(y, b):
-    size = ~calldatasize()
-    # a = alloc(size + 28)
-    a = array((size + 28)/32)
-    ~calldatacopy(a + 28, 0, size)
-    return(a, items=(size + 28)/32)
+    return(1)

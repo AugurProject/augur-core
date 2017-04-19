@@ -1,3 +1,5 @@
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
 inset('../macros/refund.sem')
 
 # Topics[] is indexed by branch ID

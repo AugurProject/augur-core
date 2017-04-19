@@ -1,3 +1,5 @@
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
 inset('../macros/refund.sem')
 
 # Keeps track of data for round two backstop [where everyone reports on something] using event as the index

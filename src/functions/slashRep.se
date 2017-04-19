@@ -16,6 +16,8 @@ extern events: [addMarket:[int256,int256]:int256, addPast24:[int256]:int256, add
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
 inset('../macros/refund.sem')
 inset('../macros/periodStage.sem')
 inset('../macros/float.sem')

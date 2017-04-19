@@ -48,145 +48,147 @@ def init():
     self.ownerBranch = 1010101
     self.mode = "dev"
 
-def transferOwnership(key, newOwner, ownerBranch, proposalIndex):
-    self.owner = newOwner
-    self.ownerBranch = ownerBranch
+def ok():
     return(1)
+# def transferOwnership(key, newOwner, ownerBranch, proposalIndex):
+#     self.owner = newOwner
+#     self.ownerBranch = ownerBranch
+#     return(1)
 
-def setValue(key, newValue, inWhitelist, removeOldFromWhitelist, suicide, proposalIndex):
-    self.whitelist[newValue] = inWhitelist
-    if(removeOldFromWhitelist):
-        self.whitelist[self.registry[key].value] = 0
-    self.registry[key].value = newValue
-    return(1)
+# def setValue(key, newValue, inWhitelist, removeOldFromWhitelist, suicide, proposalIndex):
+#     self.whitelist[newValue] = inWhitelist
+#     if(removeOldFromWhitelist):
+#         self.whitelist[self.registry[key].value] = 0
+#     self.registry[key].value = newValue
+#     return(1)
 
-def addToWhitelist(address, proposalIndex, suicide):
-    if(self.owner == msg.sender):
-        self.whitelist[address] = 1
-        return(1)
-    else:
-        return(0)
+# def addToWhitelist(address, proposalIndex, suicide):
+#     if(self.owner == msg.sender):
+#         self.whitelist[address] = 1
+#         return(1)
+#     else:
+#         return(0)
 
-def removeFromWhitelist(address, proposalIndex, suicide):
-    if(self.owner == msg.sender):
-        self.whitelist[address] = 0
-        return(1)
-    else:
-        return(0)
-        
-def replaceOnWhitelist(original, new, proposalIndex, suicide):
-    if(self.removeFromWhitelist(original) && self.addToWhitelist(new)):
-        return(1)
-    else:
-        throw()
+# def removeFromWhitelist(address, proposalIndex, suicide):
+#     if(self.owner == msg.sender):
+#         self.whitelist[address] = 0
+#         return(1)
+#     else:
+#         return(0)
 
-def proposeUpdate(updateDataHash, expirationTime):
-    if(repBalance(msg.sender) < 100):
-        throw()
-    proposalIndex = self.numberOfProposedChanges
-    self.proposedChanges[proposalIndex].updateDataHash = updateDataHash
-    if(block.timestamp < expirationTime):
-        throw()
-    self.proposedChanges[proposalIndex].proposalExpirationDate = expirationTime
-    self.numberOfProposedChanges += 1
-    return(proposalIndex)
+# def replaceOnWhitelist(original, new, proposalIndex, suicide):
+#     if(self.removeFromWhitelist(original) && self.addToWhitelist(new)):
+#         return(1)
+#     else:
+#         throw()
 
-def changeMode(newMode, proposalIndex):
-    self.mode = newMode
-    return(1)
-    
-def submitVote(proposalIndex, yay):
-    votePeriod = BRANCHES.getVotePeriod(branch)
-    periodLength = BRANCHES.getPeriodLength(branch)
-    if(votePeriod != proposalExpirationTime / periodlength) throw
-    atSecondHalfOfPeriod()
-    add to rep voted
-    add to in favor if it's in favor
-    balance = REPORTING.getRepBalance(branch, msg.sender)
-    hasreported = 1
-    if(hasreported) throw
-    if(!CONSENSUS.getRepCollected(branch, msg.sender, votePeriod - 1)):
-    if(COLLECTFEES.collectRep(branch, msg.sender, value = msg.value) < 0):
-        MUTEX.unsetMutex()
-        logReturn(makeReportsLogReturn, -8)
-        
-def getProposals(start, end):
-    proposals = array(4*(end - start))
-    i = 0
-    while start < end:
-        proposals[i] = self.proposedChanges[start].proposalExpirationDate
-        proposals[i + 1] = self.proposedChanges[start].repVoted
-        proposals[i + 2] = self.proposedChanges[start].repInFavor
-        proposals[i + 3] = self.proposedChanges[start].updateDataHash
-        start += 1
-        i += 4
-    return(proposals: arr)
+# def proposeUpdate(updateDataHash, expirationTime):
+#     if(repBalance(msg.sender) < 100):
+#         throw()
+#     proposalIndex = self.numberOfProposedChanges
+#     self.proposedChanges[proposalIndex].updateDataHash = updateDataHash
+#     if(block.timestamp < expirationTime):
+#         throw()
+#     self.proposedChanges[proposalIndex].proposalExpirationDate = expirationTime
+#     self.numberOfProposedChanges += 1
+#     return(proposalIndex)
 
-def getProposal(index):
-    return([self.proposedChanges[index].proposalExpirationDate, self.proposedChanges[index].repVoted, self.proposedChanges[index].repInFavor, self.proposedChanges[index].updateDataHash]: arr)
+# def changeMode(newMode, proposalIndex):
+#     self.mode = newMode
+#     return(1)
 
-def getNumberOfProposedChanges():
-    return(self.numberOfProposedChanges)
+# def submitVote(proposalIndex, yay):
+#     votePeriod = BRANCHES.getVotePeriod(branch)
+#     periodLength = BRANCHES.getPeriodLength(branch)
+#     if(votePeriod != proposalExpirationTime / periodlength) throw
+#     atSecondHalfOfPeriod()
+#     add to rep voted
+#     add to in favor if it's in favor
+#     balance = REPORTING.getRepBalance(branch, msg.sender)
+#     hasreported = 1
+#     if(hasreported) throw
+#     if(!CONSENSUS.getRepCollected(branch, msg.sender, votePeriod - 1)):
+#     if(COLLECTFEES.collectRep(branch, msg.sender, value = msg.value) < 0):
+#         MUTEX.unsetMutex()
+#         logReturn(makeReportsLogReturn, -8)
 
-def getHasReported(reporter):
-    return(self.hasReported[reporter])
+# def getProposals(start, end):
+#     proposals = array(4*(end - start))
+#     i = 0
+#     while start < end:
+#         proposals[i] = self.proposedChanges[start].proposalExpirationDate
+#         proposals[i + 1] = self.proposedChanges[start].repVoted
+#         proposals[i + 2] = self.proposedChanges[start].repInFavor
+#         proposals[i + 3] = self.proposedChanges[start].updateDataHash
+#         start += 1
+#         i += 4
+#     return(proposals: arr)
 
-def checkWhitelist(address):
-    if(self.whitelist[address] or msg.sender == self.owner):
-        return(1)
-    else:
-        throw()
+# def getProposal(index):
+#     return([self.proposedChanges[index].proposalExpirationDate, self.proposedChanges[index].repVoted, self.proposedChanges[index].repInFavor, self.proposedChanges[index].updateDataHash]: arr)
 
-def lookup(key):
-    return(self.registry[key].value)
+# def getNumberOfProposedChanges():
+#     return(self.numberOfProposedChanges)
 
-def getOwner():
-    return(self.owner)
+# def getHasReported(reporter):
+#     return(self.hasReported[reporter])
 
-def getOwnerBranch():
-    return(self.ownerBranch)
+# def checkWhitelist(address):
+#     if(self.whitelist[address] or msg.sender == self.owner):
+#         return(1)
+#     else:
+#         throw()
 
-def getMode():
-    return(self.mode)
+# def lookup(key):
+#     return(self.registry[key].value)
 
-macro checkValidVoteUpdate(committedVoteIndex):
-    size = ~calldatasize()
-    arraySize = (size + 28)/32
-    msgData = array(arraySize)
-    ~calldatacopy(msgData + 28, 0, size)
-    dataHash = sha3(msgData, items = arraySize)
-    if(dataHash != self.committedVotes[committedVoteIndex]):
-        throw()
+# def getOwner():
+#     return(self.owner)
 
-macro confirmValidPermissions():
-    if(!self.firstCallUsed && msg.sender == owner):
-        1
-    else:
-        if(mode == "full version"):
-            if(safeFxpDiv(self.proposedChanges[proposalIndex].repInFavor, self.proposedChanges[proposalIndex].repVoted) < POINT_SIX):
-                throw()
-        elif(mode == "hybrid"):
-            # in hybrid mode if < 1/4th of rep is in favor of an update it is vetoed
-            if(msg.sender != owner or safeFxpDiv(self.proposedChanges[proposalIndex].repInFavor, self.proposedChanges[proposalIndex].repVoted) < ONE_FOURTH):
-                throw()
-        elif(mode == "dev"):
-            if(msg.sender != owner):
-                throw()
-        else:
-            throw()
-        1
-        
-macro confirmNotTooEarly():
-    if(votePeriod <= proposalExpirationTime / periodlength) throw
+# def getOwnerBranch():
+#     return(self.ownerBranch)
 
-def setFirstCallUsed():
-    if(msg.sender == self.owner):
-        self.firstCallUsed = 1
-    return(1)
-    
-def getFirstCallUsed():
-    return(self.firstCallUsed)
+# def getMode():
+#     return(self.mode)
 
-def suicide(address, to, proposalIndex):
-    address.suicideFunds(to)
-    return(1)
+# macro checkValidVoteUpdate(committedVoteIndex):
+#     size = ~calldatasize()
+#     arraySize = (size + 28)/32
+#     msgData = array(arraySize)
+#     ~calldatacopy(msgData + 28, 0, size)
+#     dataHash = sha3(msgData, items = arraySize)
+#     if(dataHash != self.committedVotes[committedVoteIndex]):
+#         throw()
+
+# macro confirmValidPermissions():
+#     if(!self.firstCallUsed && msg.sender == owner):
+#         1
+#     else:
+#         if(mode == "full version"):
+#             if(safeFxpDiv(self.proposedChanges[proposalIndex].repInFavor, self.proposedChanges[proposalIndex].repVoted) < POINT_SIX):
+#                 throw()
+#         elif(mode == "hybrid"):
+#             # in hybrid mode if < 1/4th of rep is in favor of an update it is vetoed
+#             if(msg.sender != owner or safeFxpDiv(self.proposedChanges[proposalIndex].repInFavor, self.proposedChanges[proposalIndex].repVoted) < ONE_FOURTH):
+#                 throw()
+#         elif(mode == "dev"):
+#             if(msg.sender != owner):
+#                 throw()
+#         else:
+#             throw()
+#         1
+
+# macro confirmNotTooEarly():
+#     if(votePeriod <= proposalExpirationTime / periodlength) throw
+
+# def setFirstCallUsed():
+#     if(msg.sender == self.owner):
+#         self.firstCallUsed = 1
+#     return(1)
+
+# def getFirstCallUsed():
+#     return(self.firstCallUsed)
+
+# def suicide(address, to, proposalIndex):
+#     address.suicideFunds(to)
+#     return(1)
