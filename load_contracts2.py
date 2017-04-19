@@ -449,6 +449,7 @@ class ContractLoader(object):
             self.controller.setValue(base256(name), self.__contracts[name].address)
             self.controller.addToWhitelist(self.__contracts[name].address)
 
+
     def __getattr__(self, name):
         """Use it like a namedtuple!"""
         if name in self.__contracts:
