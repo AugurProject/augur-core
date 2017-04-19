@@ -389,7 +389,7 @@ class ContractLoader(object):
     """A class which updates and compiles Serpent code via ethereum.tester.state.
 
     Examples:
-    contracts = ContractLoader('src', 'controller.se', ['cash.se'])
+    contracts = ContractLoader('src', 'controller.se', ['mutex.se', 'cash.se'])
     print(contracts.foo.echo('lol'))
     print(contracts['bar'].bar())
     contracts.cleanup()
