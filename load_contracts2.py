@@ -385,15 +385,6 @@ def upgrade_controller(source, controller):
         td.commit(source)
 
 
-def base256(data):
-    data = data.ljust(32)
-    result = 0
-    for char in data:
-        result |= ord(char)
-        result <<= 8
-    return result
-
-
 class ContractLoader(object):
     """A class which updates and compiles Serpent code via ethereum.tester.state.
 
@@ -426,7 +417,7 @@ class ContractLoader(object):
                     name = path_to_name(file)
                     self.__contracts[name] = self.__state.abi_contract(file)
                     address = self.__contracts[name].address
-                    self.controller.setValue(base256(name), address)
+                    self.controller.setValue(name, address)
                     self.controller.addToWhitelist(address)
                     self.__state.mine()
 
@@ -439,14 +430,14 @@ class ContractLoader(object):
             try:
                 self.__contracts[name] = self.__state.abi_contract(file)
             except Exception as exc:
-                file = self.__temp_dir.original_path(file)
-                message = exc.message if hasattr(exc, 'message') else str(exc.args)
+                with open(file) as f:
+                    code = f.read()
                 raise LoadContractsError(
-                    'Error compiling {file}: {message}',
-                    file=file,
-                    message=message)
+                    'Error compiling {name}:\n\n{code}',
+                    name=name,
+                    code=code)
 
-            self.controller.setValue(base256(name), self.__contracts[name].address)
+            self.controller.setValue(name, self.__contracts[name].address)
             self.controller.addToWhitelist(self.__contracts[name].address)
 
 

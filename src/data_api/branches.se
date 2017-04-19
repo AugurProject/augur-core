@@ -81,7 +81,7 @@ def init():
     # since only have to report on half this targets 3
     self.Branches[1010101].baseReporters = 6
     ethContract = self.controller.lookup("cash")
-    checkSubcurrencyIsValid(ethContract)
+    # checkSubcurrencyIsValid(ethContract)
     self.Branches[1010101].currencies[self.Branches[branch].numCurrencies].contract = ethContract
     self.Branches[1010101].currencies[self.Branches[branch].numCurrencies].rate = ONE
     self.Branches[1010101].currencyToIndex[ethContract] = self.Branches[branch].numCurrencies

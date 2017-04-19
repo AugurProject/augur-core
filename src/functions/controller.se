@@ -140,11 +140,8 @@ def addToWhitelist(address):
 # def getHasReported(reporter):
 #     return(self.hasReported[reporter])
 
-# def checkWhitelist(address):
-#     if(self.whitelist[address] or msg.sender == self.owner):
-#         return(1)
-#     else:
-#         throw()
+def checkWhitelist(address):
+    return(self.whitelist[address])
 
 def lookup(key):
     return(self.registry[key].value)
