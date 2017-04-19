@@ -420,8 +420,12 @@ class ContractLoader(object):
             
             if name in self.__contracts:
                 continue
-
-            self.__contracts[name] = self.__state.abi_contract(file)
+                
+            try:
+                self.__contracts[name] = self.__state.abi_contract(file)
+            except Exception as exc:
+                file = self.__temp_dir.original_path(file)
+                raise LoadContractsError('Error compiling {file}: {msg}', file=file, msg=str(exc))
 
     def __getattr__(self, name):
         """Use it like a namedtuple!"""
