@@ -57,7 +57,8 @@ def ok():
 #     return(1)
 
 def setValue(key, newValue):
-    self.registry[key].value = newValue
+    if(self.owner == msg.sender):
+        self.registry[key].value = newValue
     return(1)
 
 # def setValue(key, newValue, inWhitelist, removeOldFromWhitelist, suicide, proposalIndex):
@@ -68,11 +69,12 @@ def setValue(key, newValue):
 #     return(1)
 
 # def addToWhitelist(address, proposalIndex, suicide):
-#     if(self.owner == msg.sender):
-#         self.whitelist[address] = 1
-#         return(1)
-#     else:
-#         return(0)
+def addToWhitelist(address):
+    if(self.owner == msg.sender):
+        self.whitelist[address] = 1
+        return(1)
+    else:
+        return(0)
 
 # def removeFromWhitelist(address, proposalIndex, suicide):
 #     if(self.owner == msg.sender):
