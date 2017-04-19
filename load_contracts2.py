@@ -90,7 +90,7 @@ class LoadContractsError(Exception):
 class TempDirCopy(object):
     """Makes a temporary copy of a directory and provides a context manager for automatic cleanup."""
     def __init__(self, source_dir):
-        self.source_dir = os.path.abspath(source_dir)
+        self.source_dir = os.path.abspath(self.source_dir)
         self.temp_dir = tempfile.mkdtemp()
         self.temp_source_dir = os.path.join(self.temp_dir,
                                             os.path.basename(source_dir))

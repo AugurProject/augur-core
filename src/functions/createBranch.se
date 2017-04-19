@@ -74,7 +74,7 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
     # people can hand a friend their new branch hash and characteristics and say, "don't trust me? check"
     branch = ripemd160(branchInfo, chars = len(branchInfo))
     currentVotePeriod = (block.timestamp / periodLength) - 1
-    ethContract = Controller.lookup("cash")
+    ethContract = self.controller.lookup("cash")
     BRANCHES.initializeBranch(branch, currentVotePeriod, periodLength, fxpMinTradingFee, oracleOnly, parentPeriod, parent, ethContract, mostRecentChildBranch)
     # pay creation fee, initialize branch info
     parentEthContract = BRANCHES.getBranchCurrency(parent, 0)
