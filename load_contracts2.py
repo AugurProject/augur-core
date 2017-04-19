@@ -443,7 +443,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='Compiles collections of serpent contracts.',
         epilog='Try a command followed by -h to see it\'s help info.')
-    parser.set_defaults(command=None)
+    # parser.set_defaults(command=None)
 
     commands = parser.add_subparsers(title='commands')
 

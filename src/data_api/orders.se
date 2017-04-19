@@ -11,6 +11,9 @@ data bestOrder[][](bid, ask)
 
 data controller
 
+def init():
+    self.controller = 0xC001D00D
+
 def makeOrderHash(market, outcome, direction):
     refund()
     orderInfo = array(4)

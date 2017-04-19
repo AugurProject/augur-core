@@ -2,6 +2,9 @@ data mutex
 
 data controller
 
+def init():
+    self.controller = 0xC001D00D
+
 def setMutex():
     self.controller.checkWhitelist(msg.sender)
     self.mutex = 1

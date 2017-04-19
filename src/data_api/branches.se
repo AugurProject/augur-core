@@ -69,6 +69,7 @@ macro checkSubcurrencyIsValid($contract):
     approve = $contract.approve(self, 0)
 
 def init():
+    self.controller = 0xC001D00D
     self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
     self.Branches[1010101].periodLength = 15
     # .2%

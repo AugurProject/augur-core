@@ -62,6 +62,9 @@ data marketsHash[]
 
 data controller
 
+def init():
+    self.controller = 0xC001D00D
+
 def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpCumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr):
     self.controller.checkWhitelist(msg.sender)
     # add event list to the market
@@ -183,7 +186,7 @@ def refundClosing(market, to):
     if(!send(to, subsidy)):
         throw()
     return(1)
-    
+
 def setTradingPeriod(market, period):
     self.Markets[market].tradingPeriod = period
     return(1)
