@@ -1,15 +1,15 @@
 Controller = 0xC001D00D
 
-TESTING = 0x9026ba40f8e165ead2c7a348273abe19403e4bb0
-
-extern testing.se: [hmm:[]:int256]
-
 event logit(returnValue)
+
+data controller
+
+def init():
+    self.controller = 0xC001D00D
 
 def ok(y, b):
     size = ~calldatasize()
     # a = alloc(size + 28)
-    TESTING.hmm()
     a = array((size + 28)/32)
     ~calldatacopy(a + 28, 0, size)
     return(a, items=(size + 28)/32)

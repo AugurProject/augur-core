@@ -24,6 +24,9 @@ data resolved[][]
 
 data controller
 
+def init():
+    self.controller = 0xC001D00D
+
 def getDisputedOverEthics(event):
     return(self.roundTwo[event].disputedOverEthics)
 
@@ -97,7 +100,7 @@ def setResolved(branch, forkPeriod, winner):
     self.controller.checkWhitelist(msg.sender)
     self.resolved[branch][forkPeriod] = winner
     return(1)
-    
+
 # sets bond amount for a fork bond
 def setBondAmount(event, amount):
     self.controller.checkWhitelist(msg.sender)

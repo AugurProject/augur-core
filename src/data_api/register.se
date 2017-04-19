@@ -2,6 +2,11 @@ inset('../macros/refund.sem')
 
 event registration(sender: indexed, timestamp)
 
+data controller
+
+def init():
+    self.controller = 0xC001D00D
+
 def register():
     refund()
     log(type=registration, msg.sender, block.timestamp)

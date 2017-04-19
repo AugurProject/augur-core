@@ -92,6 +92,11 @@ macro fxLog($x):
     fxLog2($x) * 0xDE0B6B3A7640000 / 0x14057B7EF767814F
 
 # Calculates the exponential function given a fixed point [base 10^18] number, so e^x
+data controller
+
+def init():
+    self.controller = 0xC001D00D
+
 def fxExp(x):
     refund()
     return(fxExp(x))

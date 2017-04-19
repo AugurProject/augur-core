@@ -18,7 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-MUTEX = Controller.lookup('mutex')
+MUTEX = self.controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 ### Token wrapper for shares
@@ -41,6 +41,7 @@ event Transfer(from:indexed, to:indexed, value)
 event Approval(owner:indexed, spender:indexed, value)
 
 def init():
+    self.controller = 0xC001D00D
     self.name = "Shares"
     self.symbol = "SHARE"
     self.decimals = 18

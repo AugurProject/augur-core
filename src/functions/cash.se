@@ -18,7 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-MUTEX = Controller.lookup('mutex')
+MUTEX = self.controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 ### Token wrapper for eth, which allows eth deposits and faucet usage for testing
@@ -42,6 +42,7 @@ event Transfer(from:indexed, to:indexed, value)
 event Approval(owner:indexed, spender:indexed, value)
 
 def init():
+    self.controller = 0xC001D00D
     self.accounts[msg.sender].balance = 100000 * 10 ** 20
     self.name = "Cash"
     self.symbol = "CASH"
@@ -133,7 +134,7 @@ def withdrawEther(to: address, value: uint256):
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()
-    
+
     initiatedTimestamp = self.initiated[msg.sender]
     if(self.accounts[msg.sender].balance < value):
         return(0)
@@ -155,29 +156,37 @@ def withdrawEther(to: address, value: uint256):
 # Returns amount spender can withdraw from owner
 # @return fxp
 def allowance(owner: address, spender: address):
+    refund()
     return(self.accounts[address].spenders[spender].maxValue)
 
 # @return fxp
 def totalSupply():
+    refund()
     return(self.totalSupply)
 
 # @return fxpValue
 def balanceOf(address: address):
+    refund()
     return(self.accounts[address].balance)
 
 def getName():
+    refund()
     return(self.name)
 
 def getDecimals():
+    refund()
     return(self.decimals)
 
 def getSymbol():
+    refund()
     return(self.symbol)
-    
+
 def getInitiated():
+    refund()
     return(self.initiated[msg.sender])
 
 def commitSuicide():
+    refund()
     self.controller.checkWhitelist(msg.sender)
     suicide(msg.sender)
     return(1)
