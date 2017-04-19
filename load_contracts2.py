@@ -59,9 +59,9 @@ IPC_SOCK = None
 
 IMPORT = re.compile('^import (?P<name>\w+) as (?P<alias>\w+)$')
 EXTERN = re.compile('^extern (?P<name>\w+): \[.+\]$')
-CONTROLLER_V1 = re.compile('^(?P<indent>\s+)(?P<alias>\w+) = Controller.lookup\([\'"](?P<name>\w+)[\'"]\)')
+CONTROLLER_V1 = re.compile('^(?P<indent>\s*)(?P<alias>\w+) = Controller.lookup\([\'"](?P<name>\w+)[\'"]\)')
 CONTROLLER_V1_MACRO = re.compile('^macro Controller: (?P<address>0x[0-9a-fA-F]{1,40})$')
-CONTROLLER_INIT = re.compile('^(?P<indent>(?:\s{4})*)self.controller = 0x[0-9A-F]{1,40}')
+CONTROLLER_INIT = re.compile('^(?P<indent>\s*)self.controller = 0x[0-9A-F]{1,40}')
 INDENT = re.compile('^$|^[#\s].*$')
 
 STANDARD_EXTERNS = {
