@@ -1,6 +1,13 @@
 inset('../macros/refund.sem')
 
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
 event registration(sender: indexed, timestamp)
+
+data controller
+
+def init():
+    self.controller = 0xC001D00D
 
 def register():
     refund()

@@ -18,7 +18,9 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-MUTEX = Controller.lookup('mutex')
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+MUTEX = self.controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 ### Token wrapper for eth, which allows eth deposits and faucet usage for testing
@@ -42,6 +44,7 @@ event Transfer(from:indexed, to:indexed, value)
 event Approval(owner:indexed, spender:indexed, value)
 
 def init():
+    self.controller = 0xC001D00D
     self.accounts[msg.sender].balance = 100000 * 10 ** 20
     self.name = "Cash"
     self.symbol = "CASH"

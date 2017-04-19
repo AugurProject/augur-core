@@ -1,3 +1,5 @@
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
 inset('../macros/refund.sem')
 
 ### Storage of all data associated with orders
@@ -10,6 +12,9 @@ data orders[](id, type, market, amount, price, owner, block, outcome, sharesEscr
 data bestOrder[][](bid, ask)
 
 data controller
+
+def init():
+    self.controller = 0xC001D00D
 
 def makeOrderHash(market, outcome, direction):
     refund()

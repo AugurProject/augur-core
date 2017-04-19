@@ -93,7 +93,7 @@ class TempDirCopy(object):
         self.source_dir = os.path.abspath(source_dir)
         self.temp_dir = tempfile.mkdtemp()
         self.temp_source_dir = os.path.join(self.temp_dir,
-                                            os.path.basename(source_dir))
+                                            os.path.basename(self.source_dir))
         shutil.copytree(self.source_dir, self.temp_source_dir)
 
     def __enter__(self):
@@ -322,7 +322,7 @@ def update_externs(source_dir, controller):
                 line = code_lines[i]
                 m = EXTERN.match(line)
 
-                if (line.startswith('extern') and m is None or 
+                if (line.startswith('extern') and m is None or
                     m and m.group(1) not in extern_map):
 
                     raise LoadContractsError(
@@ -393,7 +393,7 @@ class ContractLoader(object):
     def __init__(self, source_dir, controller, special):
         self.__state = ethereum.tester.state()
         self.__contracts = {}
-        self.__temp_dir = TempDirCopy(source_dir)        
+        self.__temp_dir = TempDirCopy(source_dir)
 
         serpent_files = self.__temp_dir.find_files(SERPENT_EXT)
 
@@ -413,7 +413,7 @@ class ContractLoader(object):
 
         for file in serpent_files:
             name = path_to_name(file)
-            
+
             if name in self.__contracts:
                 continue
 
@@ -443,7 +443,6 @@ def main():
     parser = argparse.ArgumentParser(
         description='Compiles collections of serpent contracts.',
         epilog='Try a command followed by -h to see it\'s help info.')
-    parser.set_defaults(command=None)
 
     commands = parser.add_subparsers(title='commands')
 
@@ -490,7 +489,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        if args.command is None:
+        if not hasattr(args, 'command'):
             parser.print_help()
         elif args.command == 'translate':
             imports_to_externs(args.source, args.target)

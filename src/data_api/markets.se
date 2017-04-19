@@ -18,8 +18,10 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
-macro TOPICS: Controller.lookup('topics')
-extern topics.se: [getNumTopicsInBranch:[int256]:int256, getTopicPopularity:[int256,int256]:int256, getTopicsInBranch:[int256,int256,int256]:int256[], getTopicsInfo:[int256,int256,int256]:int256[], updateTopicPopularity:[int256,int256,int256]:int256]
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+TOPICS = self.controller.lookup('topics')
+extern topics: [getNumTopicsInBranch:[int256]:int256, getTopicPopularity:[int256,int256]:int256, getTopicsInBranch:[int256,int256,int256]:int256[], getTopicsInfo:[int256,int256,int256]:int256[], updateTopicPopularity:[int256,int256,int256]:int256]
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
@@ -61,6 +63,9 @@ data Markets[](events[], lenEvents, sharesPurchased[], participants[](shares[]),
 data marketsHash[]
 
 data controller
+
+def init():
+    self.controller = 0xC001D00D
 
 def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpCumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr):
     self.controller.checkWhitelist(msg.sender)
@@ -183,7 +188,7 @@ def refundClosing(market, to):
     if(!send(to, subsidy)):
         throw()
     return(1)
-    
+
 def setTradingPeriod(market, period):
     self.Markets[market].tradingPeriod = period
     return(1)

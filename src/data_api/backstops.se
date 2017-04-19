@@ -1,3 +1,5 @@
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
 inset('../macros/refund.sem')
 
 # Keeps track of data for round two backstop [where everyone reports on something] using event as the index
@@ -23,6 +25,9 @@ data forking[](bondPoster, bondAmount, forkedOverEthicality, bondPaid, originalB
 data resolved[][]
 
 data controller
+
+def init():
+    self.controller = 0xC001D00D
 
 def getDisputedOverEthics(event):
     return(self.roundTwo[event].disputedOverEthics)
@@ -97,7 +102,7 @@ def setResolved(branch, forkPeriod, winner):
     self.controller.checkWhitelist(msg.sender)
     self.resolved[branch][forkPeriod] = winner
     return(1)
-    
+
 # sets bond amount for a fork bond
 def setBondAmount(event, amount):
     self.controller.checkWhitelist(msg.sender)

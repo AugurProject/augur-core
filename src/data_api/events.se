@@ -18,8 +18,9 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Any questions please contact joey@augur.net
 
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
-INFO = Controller.lookup('info')
+INFO = self.controller.lookup('info')
 extern info: [getCreationFee:[int256]:int256, getCreator:[int256]:int256, getCurrency:[int256]:int256, getDescription:[int256]:bytes, getDescriptionLength:[int256]:int256, getWallet:[int256]:int256, setCurrencyAndWallet:[int256,int256,int256]:int256, setInfo:[int256,bytes,int256,int256,int256,int256]:int256]
 
 inset('../macros/refund.sem')
@@ -59,6 +60,9 @@ data past24Hours[]
 data controller
 
 event logOutcome(event:indexed, outcome)
+
+def init():
+    self.controller = 0xC001D00D
 
 def getForkResolveAddress(event):
     return(self.Events[event].forkResolveAddress)

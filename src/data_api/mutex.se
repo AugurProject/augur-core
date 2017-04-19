@@ -1,6 +1,11 @@
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
 data mutex
 
 data controller
+
+def init():
+    self.controller = 0xC001D00D
 
 def setMutex():
     self.controller.checkWhitelist(msg.sender)
@@ -14,10 +19,3 @@ def unsetMutex():
 
 def getMutex():
     return(self.mutex)
-
-macro mutexWhitelisted():
-    inMutexWhitelist = self.controller.checkWhitelist(msg.sender)
-    if(inMutexWhitelist):
-        1
-    else:
-        0

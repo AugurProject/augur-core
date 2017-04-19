@@ -53,7 +53,10 @@ macro refund():
         if(!send(msg.sender, msg.value)):
             throw()
 
+data controller
+
 def init():
+    self.controller = 0xC001D00D
     self.name = "Reputation"
     self.symbol = "REP"
     self.decimals = 18
@@ -90,7 +93,7 @@ def transferFrom(from: address, receiver: address, fxpValue: uint256):
     self.reputation[receiver] += fxpValue
     log(type = Transfer, from, receiver, fxpValue)
     return(1: uint256)
-    
+
 # Allows spender to withdraw from your rep account
 def approve(spender: address, amount: uint256):
     self.approvedToSpend[msg.sender][spender] = amount
@@ -118,7 +121,7 @@ def setSaleDistribution(addresses: address[], balances: uint256[]):
     if(self.totalSupply > 11000000 * ONE):
         throw()
     return(1: uint256)
-    
+
 def getRidOfDustForLaunch():
     if(msg.sender != 0x668Fc8D2004379275357c8D8e2502E19153AdEEe):
         throw()
@@ -142,10 +145,10 @@ def balanceOf(address: address):
 
 def name():
     return(self.name: uint256)
-    
+
 def decimals():
     return(self.decimals: uint256)
-    
+
 def symbol():
     return(self.symbol: uint256)
 

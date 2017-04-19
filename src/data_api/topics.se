@@ -1,3 +1,5 @@
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
 inset('../macros/refund.sem')
 
 # Topics[] is indexed by branch ID
@@ -9,6 +11,9 @@ inset('../macros/refund.sem')
 data Topics[](numTopics, topics[], popularity[])
 
 data controller
+
+def init():
+    self.controller = 0xC001D00D
 
 def updateTopicPopularity(branch, topic, fxpAmount):
     refund()
