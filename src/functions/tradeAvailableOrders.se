@@ -4,6 +4,8 @@ extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, f
 TRADE = self.controller.lookup('trade')
 extern trade: [trade:[int256,int256]:_]
 
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
 data controller
 
 event tradeAvailableOrdersLogArrayReturn(returnArray: arr)

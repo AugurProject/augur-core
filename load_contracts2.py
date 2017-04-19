@@ -326,7 +326,7 @@ def update_externs(source_dir, controller):
                 line = code_lines[i]
                 m = EXTERN.match(line)
 
-                if (line.startswith('extern') and m is None or 
+                if (line.startswith('extern') and m is None or
                     m and m.group(1) not in extern_map):
 
                     raise LoadContractsError(
@@ -397,7 +397,7 @@ class ContractLoader(object):
     def __init__(self, source_dir, controller, special):
         self.__state = ethereum.tester.state()
         self.__contracts = {}
-        self.__temp_dir = TempDirCopy(source_dir)        
+        self.__temp_dir = TempDirCopy(source_dir)
 
         serpent_files = self.__temp_dir.find_files(SERPENT_EXT)
 
@@ -417,7 +417,7 @@ class ContractLoader(object):
 
         for file in serpent_files:
             name = path_to_name(file)
-            
+
             if name in self.__contracts:
                 continue
 

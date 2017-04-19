@@ -14,3 +14,10 @@ macro throw():
 macro refund():
     if(msg.value > 0 and !send(msg.sender, msg.value)):
         throw()
+
+macro mutexWhitelisted():
+    inMutexWhitelist = self.controller.checkWhitelist(msg.sender)
+    if(inMutexWhitelist):
+        1
+    else:
+        0
