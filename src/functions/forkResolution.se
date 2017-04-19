@@ -96,10 +96,8 @@ def init():
 # parent branch is branch here
 # If there's only 1 event and that's the one we forked over [rare edge case] we can call resolve fork manually if it hasn't been done yet within the time parameters which allows a fork to be resolved [2 periods after the start of the fork]
 def resolveFork(branch):
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
-        throw()
     if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
+        MUTEX.acquire()
     forkPeriod = BRANCHES.getForkPeriod(branch)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     winner = BACKSTOPS.getResolved(branch, forkPeriod)
@@ -109,7 +107,7 @@ def resolveFork(branch):
         throw()
     if(currentPeriod < (forkPeriod + 2)):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(0)
 
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
@@ -123,7 +121,7 @@ def resolveFork(branch):
         winner = fork
     BACKSTOPS.setResolved(branch, forkPeriod, winner)
     if(!isCallerWhitelisted()):
-        MUTEX.unsetMutex()
+        MUTEX.release()
     return(winner)
 
 # Resolve fork method that gets exchange rate

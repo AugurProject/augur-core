@@ -53,9 +53,7 @@ def init():
 
 def penalizeOnForkedEvent(branch, event):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     lastPeriodVotedOn = BRANCHES.getVotePeriod(branch) - 1
     lastPeriod = lastPeriodVotedOn
@@ -79,30 +77,30 @@ def penalizeOnForkedEvent(branch, event):
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriodVotedOn, msg.sender)):
         sendRedistributedRepToBranch()
-    MUTEX.unsetMutex()
+    MUTEX.release()
     return(1)
 
 macro checkForkPenalizationPreconditions():
     if(repBalance < ONE):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(0)
     if((block.timestamp / periodLength - 2) != lastPeriodVotedOn):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-1)
     atFirstHalfOfPeriod()
     # means event / fork isn't resolved
     if(!EVENTS.getForkedDone(event)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-3)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriodVotedOn):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-4)
     if(!CONSENSUS.getRepCollected(branch, msg.sender, lastPeriodVotedOn - 1)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-5)
     branchIsParent = BRANCHES.getEventForkedOver(branch) == event
     if(branchIsParent):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-6)
 
 macro penalizeOrRewardReporter():

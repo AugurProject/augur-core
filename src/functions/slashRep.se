@@ -38,9 +38,7 @@ def init():
 
 def slashRep(branch, salt, report, ethics, reporter, event):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
 
     periodLength = BRANCHES.getPeriodLength(branch)
     votePeriod = BRANCHES.getVotePeriod(branch)
@@ -70,21 +68,21 @@ def slashRep(branch, salt, report, ethics, reporter, event):
     REPORTING.addRep(branch, trutherIndex, halfOfBalance)
     # other half sent to branch
     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, branch), halfOfBalance)
-    MUTEX.unsetMutex()
+    MUTEX.release()
     return(1)
 
 macro checkSlashRepInvariants():
     if(votePeriodShouldBe != votePeriod):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-1)
     atFirstHalfOfPeriod()
     reporterIndex = REPORTING.repIDToIndex(branch, reporter)
     if(reportHash != realHash):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-3)
     if(EVENTS.getEventBranch(event) != branch):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-4)
     if(alreadySlashed):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-5)

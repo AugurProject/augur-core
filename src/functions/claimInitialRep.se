@@ -77,9 +77,7 @@ def init():
     # -3: only behind one period and not caught up / penalized yet
 def claimInitialRep(parent, branch):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
     # auto increment vote period if needed
     INCREMENTPERIOD.incrementPeriodAfterReporting(parent)
     parentPeriod = BRANCHES.getParentPeriod(branch)
@@ -116,26 +114,26 @@ def claimInitialRep(parent, branch):
         CONSENSUS.setPenalizedUpTo(branch, msg.sender, (BRANCHES.getVotePeriod(branch) - 1))
         CONSENSUS.setRepCollected(branch, msg.sender, (BRANCHES.getVotePeriod(branch) - 1))
     REPORTING.addReporter(branch, msg.sender, rep, dormantRep, repDecrease)
-    MUTEX.unsetMutex()
+    MUTEX.release()
     return(1)
 
 macro checkRepClaimPreconditions():
     if(BRANCHES.getParent(branch) != parent && parent && branch):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-1)
     tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
     alreadyClaimed = REPORTING.repIDToIndex(branch, msg.sender)
     if(alreadyClaimed or tooLate):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(0)
     lastPeriodPenalized = CONSENSUS.getPenalizedUpTo(parent, msg.sender)
     lastPeriod = BRANCHES.getVotePeriod(parent) - 1
     delta = lastPeriod - lastPeriodPenalized
     if(delta > 1 and CATCHUP.penalizationCatchup(parent, msg.sender) != 1):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-2)
     if(!CONSENSUS.getRepRedistributionDone(parent, msg.sender)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-3)
 
 macro removeRepFromThoseWhoReportedWrong():

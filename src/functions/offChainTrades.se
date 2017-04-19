@@ -32,27 +32,25 @@ def init():
 
 def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, takerAmount, fxpPrice, expiration):
     refund()
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
-        throw()
-    if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
+    if (!isCallerWhitelisted()):
+        MUTEX.acquire()
 
     orderHash = sha3([maker, tokenX, tokenY, orderSize, fxpPrice, expiration], items = 6)
     if(!checkSig(maker, orderHash, v, r, s)):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(0)
     if(block.timestamp > expiration):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-1)
     if(!checkHasAbilityToSpend(maker, tokenX, orderSize) || !checkHasAbilityToSpend(msg.sender, tokenY, safeFxpMul(takerAmount, fxpPrice))):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-2)
     if(safeAdd(self.amountFilled[orderHash], takerAmount) > orderSize):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-3)
 
     self.amountFilled[orderHash] += takerAmount
@@ -63,7 +61,7 @@ def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, 
         throw()
     log(type = Trade, maker, msg.sender, tokenX, tokenY, amount, fxpPrice, orderHash)
     if(!isCallerWhitelisted()):
-        MUTEX.unsetMutex()
+        MUTEX.release()
     return(1)
 
 # fxpPrice is tokens of y per token of x
@@ -78,10 +76,8 @@ def onChainOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expirati
 
 def cancelOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiration, v, r, s):
     refund()
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
-        throw()
-    if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
+    if (!isCallerWhitelisted()):
+        MUTEX.acquire()
 
     orderHash = sha3([msg.sender, tokenX, tokenY, orderSize, fxpPrice, expiration], items = 6)
     if(ecrecover(orderHash, v, r, s) != msg.sender):
@@ -90,7 +86,7 @@ def cancelOrder(tokenX: address, orderSize, tokenY: address, fxpPrice, expiratio
     log(type = Cancel, tokenX, orderSize, tokenY, fxpPrice, expiration, msg.sender, v, r, s)
 
     if(!isCallerWhitelisted()):
-        MUTEX.unsetMutex()
+        MUTEX.release()
     return(1)
 
 def getAmountFilled(orderHash):

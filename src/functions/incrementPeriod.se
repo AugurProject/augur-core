@@ -29,14 +29,12 @@ def init():
 # ui has to call this to stay cheap / not check it elsewhere
 def incrementPeriodAfterReporting(branch):
     refund()
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
-        throw()
     if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
+        MUTEX.acquire()
     # do this after reporting is finished
     if(!periodOver(branch)):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(0)
     periodVotingOnNow = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
     lastPeriod = periodVotingOnNow - 1
@@ -50,7 +48,7 @@ def incrementPeriodAfterReporting(branch):
     CONSENSUS.setBaseReportersLastPeriod(branch, BRANCHES.getBaseReporters(branch))
     BRANCHES.setBaseReporters(branch, baseReporterQuantity)
     if(!isCallerWhitelisted()):
-        MUTEX.unsetMutex()
+        MUTEX.release()
     return(1)
 
 macro periodOver($branch):

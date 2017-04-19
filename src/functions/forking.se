@@ -102,9 +102,7 @@ def init():
     # -2: no fork allowed for 1 period after a forking event
     # -3: invalid branch
 def fork(event, branch, forkedOverEthicality):
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
 
     forkPeriod = BRANCHES.getForkPeriod(branch)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
@@ -125,27 +123,27 @@ def fork(event, branch, forkedOverEthicality):
     makeFork()
     # return round 2 bond on orig. branch
     returnRoundTwoBond()
-    MUTEX.unsetMutex()
+    MUTEX.release()
     return(1)
 
 macro checkForkPreconditions():
     if(!EVENTS.getRoundTwo(event) or BACKSTOPS.getFinal(event) or EVENTS.getForked(event)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-1)
     if(forkPeriod == currentVotePeriod or currentVotePeriod == (forkPeriod + 1) or currentVotePeriod == (forkPeriod + 2)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-2)
     if(EVENTS.getEventBranch(event) != branch or !branch or !event):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-3)
     if(msg.value < 350000 * tx.gasprice):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(0)
     CONSENSUSDATA.setRefund(event, msg.value)
     last48HoursOfPeriod = (block.timestamp / BRANCHES.getPeriodLength(branch) != ((block.timestamp + 2 * TWENTY_FOUR_HR) / BRANCHES.getPeriodLength(branch)))
     reportedOnInRoundTwo = EVENTS.getUncaughtOutcome(event)
     if(!last48HoursOfPeriod or !reportedOnInRoundTwo):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(0)
 
 macro makeFork():

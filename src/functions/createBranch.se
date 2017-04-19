@@ -55,10 +55,8 @@ def init():
 
 def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, oracleOnly, mostRecentChildBranch):
     refund()
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
-        throw()
-    if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
+    if (!isCallerWhitelisted()):
+        MUTEX.acquire()
 
     checkBranchCreationPreconditions()
     parentPeriod = BRANCHES.getVotePeriod(parent)
@@ -84,20 +82,20 @@ def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, ora
     if(!feePaid or !INFO.setInfo(branch, description, msg.sender, 47 * ONE, 0, 0) or !REPORTING.setInitialReporters(branch)):
         throw()
     if(!isCallerWhitelisted()):
-        MUTEX.unsetMutex()
+        MUTEX.release()
     return(branch)
 
 macro checkBranchCreationPreconditions():
     # provided branch doesn't already exist, create it
     if(INFO.getCreator(branch)):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-2)
     if(periodLength <= TWENTY_FOUR_HR or !BRANCHES.getPeriodLength(parent) or !len(description)):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-1)
     if(fxpMinTradingFee <= 0 or fxpMinTradingFee > MAX_FEE or (oracleOnly != 0 and oracleOnly != 1)):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-1)
