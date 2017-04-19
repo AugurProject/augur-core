@@ -127,7 +127,6 @@ def penalizeRoundTwoWrong(branch, event):
     else:
         MUTEX.unsetMutex()
         return(-7)
-    # penalization on a regular event if not already penalized, it has outcome, and user reported on it
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriodVotedOn, msg.sender)):
         sendRedistributedRepToBranch()
@@ -158,7 +157,7 @@ macro checkPenalizeWrongRoundTwoPreconditions():
         return(-5)
 
 macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn):
-    # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and max maxPenalty% of their rep respectively
+    # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and maxPenalty percent of their rep respectively
     if($ethics != ethicCatch(ethical) and repChange >= 0 and BACKSTOPS.getDisputedOverEthics(event)):
         if($numReportedOn < 10):
             # ensures max penalty is 10% per event
@@ -168,25 +167,25 @@ macro handleEthicsAndBondRepRedistribution($maxPenalty, $ethics, $numReportedOn)
     if(repBalance + repChange <= 0):
         repChange = -repBalance
     # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process
-    # we don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
     if(overruled() and BACKSTOPS.getBondPaid(event) < 2 * bond and repChange < 0 and event != forkEvent):
         amountLeftToPayBonder = 2*bond - BACKSTOPS.getBondPaid(event)
+        # we don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
         if(-repChange < amountLeftToPayBonder):
             # done instead of sending to redistrib. pool
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
             # sends that rep to the bonded challenger
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), -repChange)
-            BACKSTOPS.increaseBondPaid(event, (-repChange))
+            BACKSTOPS.increaseBondPaid(event, -repChange)
+        # part of rep goes to bond poster, the rest that's lost goes to branch
         elif(amountLeftToPayBonder > 0):
             # done instead of sending to redistrib. pool
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), -amountLeftToPayBonder)
             # sends that rep to the bonded challenger
             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), amountLeftToPayBonder)
             BACKSTOPS.increaseBondPaid(event, amountLeftToPayBonder)
-
-            newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + -(-repChange - amountLeftToPayBonder)
+            repLostAfterPayingBonder = -repChange - amountLeftToPayBonder
+            newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) - repLostAfterPayingBonder
             EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
-
     # if rep isn't redistributed immediately to bond poster [if they're already paid back] then we adjust the after rep as normal and do it all at the end: we want the rep to go to the branch here
     else:
         newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + repChange

@@ -50,10 +50,15 @@ def init():
 
 def ok():
     return(1)
+
 # def transferOwnership(key, newOwner, ownerBranch, proposalIndex):
 #     self.owner = newOwner
 #     self.ownerBranch = ownerBranch
 #     return(1)
+
+def setValue(key, newValue):
+    self.registry[key].value = newValue
+    return(1)
 
 # def setValue(key, newValue, inWhitelist, removeOldFromWhitelist, suicide, proposalIndex):
 #     self.whitelist[newValue] = inWhitelist
@@ -139,8 +144,8 @@ def ok():
 #     else:
 #         throw()
 
-# def lookup(key):
-#     return(self.registry[key].value)
+def lookup(key):
+    return(self.registry[key].value)
 
 # def getOwner():
 #     return(self.owner)

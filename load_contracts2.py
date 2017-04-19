@@ -420,7 +420,7 @@ class ContractLoader(object):
 
             if name in self.__contracts:
                 continue
-
+            print name
             self.__contracts[name] = self.__state.abi_contract(file)
 
     def __getattr__(self, name):
