@@ -385,6 +385,15 @@ def upgrade_controller(source, controller):
         td.commit(source)
 
 
+def base256(data):
+    data = data.ljust(32)
+    result = 0
+    for char in data:
+        result |= ord(char)
+        result <<= 8
+    return result
+
+
 class ContractLoader(object):
     """A class which updates and compiles Serpent code via ethereum.tester.state.
 
@@ -406,6 +415,7 @@ class ContractLoader(object):
                 self.__contracts['controller'] = self.__state.abi_contract(file)
                 controller_addr = '0x' + hexlify(self.__contracts['controller'].address)
                 update_externs(self.__temp_dir.temp_source_dir, controller_addr)
+                self.__state.mine()
                 break
         else:
             raise LoadContractsError('Controller not found! {}', controller)
@@ -413,7 +423,12 @@ class ContractLoader(object):
         for contract in special:
             for file in serpent_files:
                 if os.path.basename(file) == contract:
-                    self.__contracts[contract] = self.__state.abi_contract(file)
+                    name = path_to_name(file)
+                    self.__contracts[name] = self.__state.abi_contract(file)
+                    address = self.__contracts[name].address
+                    self.controller.setValue(base256(name), address)
+                    self.controller.addToWhitelist(address)
+                    self.__state.mine()
 
         for file in serpent_files:
             name = path_to_name(file)
@@ -425,7 +440,14 @@ class ContractLoader(object):
                 self.__contracts[name] = self.__state.abi_contract(file)
             except Exception as exc:
                 file = self.__temp_dir.original_path(file)
-                raise LoadContractsError('Error compiling {file}: {msg}', file=file, msg=str(exc))
+                message = exc.message if hasattr(exc, 'message') else str(exc.args)
+                raise LoadContractsError(
+                    'Error compiling {file}: {message}',
+                    file=file,
+                    message=message)
+
+            self.controller.setValue(base256(name), self.__contracts[name].address)
+            self.controller.addToWhitelist(self.__contracts[name].address)
 
     def __getattr__(self, name):
         """Use it like a namedtuple!"""
