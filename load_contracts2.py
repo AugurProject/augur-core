@@ -406,6 +406,7 @@ class ContractLoader(object):
                 self.__contracts['controller'] = self.__state.abi_contract(file)
                 controller_addr = '0x' + hexlify(self.__contracts['controller'].address)
                 update_externs(self.__temp_dir.temp_source_dir, controller_addr)
+                self.__state.mine()
                 break
         else:
             raise LoadContractsError('Controller not found! {}', controller)
@@ -413,15 +414,32 @@ class ContractLoader(object):
         for contract in special:
             for file in serpent_files:
                 if os.path.basename(file) == contract:
-                    self.__contracts[contract] = self.__state.abi_contract(file)
+                    name = path_to_name(file)
+                    self.__contracts[name] = self.__state.abi_contract(file)
+                    address = self.__contracts[name].address
+                    self.controller.setValue(name, address)
+                    self.controller.addToWhitelist(address)
+                    self.__state.mine()
 
         for file in serpent_files:
             name = path_to_name(file)
 
             if name in self.__contracts:
                 continue
-            print name
-            self.__contracts[name] = self.__state.abi_contract(file)
+                
+            try:
+                self.__contracts[name] = self.__state.abi_contract(file)
+            except Exception as exc:
+                with open(file) as f:
+                    code = f.read()
+                raise LoadContractsError(
+                    'Error compiling {name}:\n\n{code}',
+                    name=name,
+                    code=code)
+
+            self.controller.setValue(name, self.__contracts[name].address)
+            self.controller.addToWhitelist(self.__contracts[name].address)
+
 
     def __getattr__(self, name):
         """Use it like a namedtuple!"""
