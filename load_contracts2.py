@@ -30,6 +30,8 @@ from serpent import mk_signature
 import tempfile
 import warnings
 import ethereum.tester
+import socket
+import select
 
 if (3, 0) <= sys.version_info:
 
@@ -53,9 +55,11 @@ else:
         signature = extern_name + ugly_signature[name_end:]
         return signature
 
-IMPORT = re.compile('^import (?P<name>\w+) as (?P<alias>[A-Za-z_][A-Za-z0-9_]*)$')
+IPC_SOCK = None
+
+IMPORT = re.compile('^import (?P<name>\w+) as (?P<alias>\w+)$')
 EXTERN = re.compile('^extern (?P<name>\w+): \[.+\]$')
-CONTROLLER_V1 = re.compile('^(?P<indent>(?:\s{4})*)(?P<alias>[A-Za-z_][A-Za-z0-9_]*) = Controller.lookup\(\'(?P<name>\w+)\'\)')
+CONTROLLER_V1 = re.compile('^(?P<indent>\s+)(?P<alias>\w+) = Controller.lookup\([\'"](?P<name>\w+)[\'"]\)')
 CONTROLLER_V1_MACRO = re.compile('^macro Controller: (?P<address>0x[0-9a-fA-F]{1,40})$')
 CONTROLLER_INIT = re.compile('^(?P<indent>(?:\s{4})*)self.controller = 0x[0-9A-F]{1,40}')
 INDENT = re.compile('^$|^[#\s].*$')
@@ -91,7 +95,7 @@ class TempDirCopy(object):
         self.source_dir = os.path.abspath(source_dir)
         self.temp_dir = tempfile.mkdtemp()
         self.temp_source_dir = os.path.join(self.temp_dir,
-                                            os.path.basename(source_dir))
+                                            os.path.basename(self.source_dir))
         shutil.copytree(self.source_dir, self.temp_source_dir)
 
     def __enter__(self):
@@ -368,7 +372,7 @@ def upgrade_controller(source, controller):
                     continue # don't include the macro line in the new code
                 m = CONTROLLER_V1.match(line)
                 if m:
-                    new_code.append('{alias} = self.controller.lookup(\'{name}\')'.format(**m.groupdict()))
+                    new_code.append('{indent}{alias} = self.controller.lookup(\'{name}\')'.format(**m.groupdict()))
                 else:
                     new_code.append(line)
 
@@ -436,12 +440,21 @@ class ContractLoader(object):
         """ContractLoaders try to clean up after themselves."""
         self.cleanup()
 
+    def recompile(self, name):
+        for file in self.__temp_dir.find_files(SERPENT_EXT):
+            name_ = path_to_name(file)
+            if name_ == name:
+                self.__contracts[name] = self.__state.abi_contract(file)
+                return self.get_address(name)
+
+    def get_address(self, name):
+        return '0x' + hexlify(self.__contracts[name].address)
+
 
 def main():
     parser = argparse.ArgumentParser(
         description='Compiles collections of serpent contracts.',
         epilog='Try a command followed by -h to see it\'s help info.')
-    parser.set_defaults(command=None)
 
     commands = parser.add_subparsers(title='commands')
 
@@ -488,7 +501,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        if args.command is None:
+        if not hasattr(args, 'command'):
             parser.print_help()
         elif args.command == 'translate':
             imports_to_externs(args.source, args.target)
