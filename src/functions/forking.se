@@ -123,16 +123,16 @@ def moveEvent(event):
 # parent branch is branch here
 # If there's only 1 event and that's the one we forked over [rare edge case] we can call resolve fork manually if it hasn't been done yet within the time parameters which allows a fork to be resolved [2 periods after the start of the fork]
 def resolveFork(branch):
-    if(MUTEX.getMutex() && !mutexWhitelisted()):
+    if(MUTEX.getMutex() && !isCallerWhitelisted()):
         throw()
-    if(!mutexWhitelisted()):
+    if(!isCallerWhitelisted()):
         MUTEX.setMutex()
     forkPeriod = BRANCHES.getForkPeriod(branch)
     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
     if(BACKSTOPS.getResolved(branch, forkPeriod)):
         throw()
     if(currentPeriod < (forkPeriod + 2)):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
 
@@ -146,7 +146,7 @@ def resolveFork(branch):
     else:
         winner = fork
     BACKSTOPS.setResolved(branch, forkPeriod, winner)
-    if(!mutexWhitelisted()):
+    if(!isCallerWhitelisted()):
         MUTEX.unsetMutex()
     return(winner)
 

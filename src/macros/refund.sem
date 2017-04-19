@@ -15,9 +15,9 @@ macro refund():
     if(msg.value > 0 and !send(msg.sender, msg.value)):
         throw()
 
-macro mutexWhitelisted():
-    inMutexWhitelist = self.controller.checkWhitelist(msg.sender)
-    if(inMutexWhitelist):
+macro isCallerWhitelisted():
+    inWhitelist = self.controller.checkWhitelist(msg.sender)
+    if(inWhitelist):
         1
     else:
         0
