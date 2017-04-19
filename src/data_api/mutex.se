@@ -19,3 +19,4 @@ def unsetMutex():
 
 def getMutex():
     return(self.mutex)
+
