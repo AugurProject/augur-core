@@ -450,10 +450,7 @@ class ContractLoader(object):
 
     def __getattr__(self, name):
         """Use it like a namedtuple!"""
-        if name in self.__contracts:
-            return self.__contracts[name]
-        else:
-            return super(self.__class__, self).__getattr__(name)
+        return self.__contracts[name]
 
     def __getitem__(self, name):
         """Use it like a dict!"""
@@ -477,7 +474,7 @@ class ContractLoader(object):
         os.remove(file)
         shutil.copy(og_path, file)
         update_externs(self.__temp_dir.temp_source_dir, self.get_address('controller'))
-        self.__contract[name] = self.__state.abi_contract(file)
+        self.__contracts[name] = self.__state.abi_contract(file)
         self.controller.setValue(name.ljust(32, '\x00'), self.__contracts[name].address)
         self.controller.addToWhitelist(self.__contracts[name].address)        
 
