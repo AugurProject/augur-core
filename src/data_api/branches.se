@@ -64,34 +64,34 @@ data branchListCount
 data controller
 
 macro checkSubcurrencyIsValid($contract):
-    allowance = $contract.allowance(msg.sender, self)
-    balance = $contract.balanceOf(self)
-    transfer = $contract.transfer(msg.sender, 0)
-    transferFrom = $contract.transferFrom(self, msg.sender, 0)
-    approve = $contract.approve(self, 0)
+    allowance = $contract.allowance(msg.sender, self, gas = 30000)
+    balance = $contract.balanceOf(self, gas = 30000)
+    transfer = $contract.transfer(msg.sender, 0, gas = 30000)
+    transferFrom = $contract.transferFrom(self, msg.sender, 0, gas = 30000)
+    approve = $contract.approve(self, 0, gas = 30000)
 
 def init():
     self.controller = 0xC001D00D
-    self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
-    self.Branches[1010101].periodLength = 15
-    # .2%
-    self.Branches[1010101].fxpMinTradingFee = 200000000000000000
-    self.branchListCount = 1
-    self.branchList[0] = 1010101
-    # since only have to report on half this targets 3
-    self.Branches[1010101].baseReporters = 6
-    ethContract = self.controller.lookup("cash")
-    # checkSubcurrencyIsValid(ethContract)
-    self.Branches[1010101].currencies[self.Branches[branch].numCurrencies].contract = ethContract
-    self.Branches[1010101].currencies[self.Branches[branch].numCurrencies].rate = ONE
-    self.Branches[1010101].currencyToIndex[ethContract] = self.Branches[branch].numCurrencies
-    self.Branches[1010101].currencyActive[ethContract] = 1
-    self.Branches[1010101].numCurrencies += 1
-    noWalletExists = !self.Branches[branch].contract[ethContract]
-    if(noWalletExists):
-        wallet = create('../functions/wallet.se')
-        wallet.initialize(ethContract)
-        self.Branches[1010101].contract[ethContract] = wallet
+    # self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
+    # self.Branches[1010101].periodLength = 15
+    # # .2%
+    # self.Branches[1010101].fxpMinTradingFee = 200000000000000000
+    # self.branchListCount = 1
+    # self.branchList[0] = 1010101
+    # # since only have to report on half this targets 3
+    # self.Branches[1010101].baseReporters = 6
+    # ethContract = self.controller.lookup("cash")
+    # # checkSubcurrencyIsValid(ethContract)
+    # # self.Branches[1010101].currencies[self.Branches[1010101].numCurrencies].contract = ethContract
+    # # self.Branches[1010101].currencies[self.Branches[1010101].numCurrencies].rate = ONE
+    # # self.Branches[1010101].currencyToIndex[ethContract] = self.Branches[1010101].numCurrencies
+    # # self.Branches[1010101].currencyActive[ethContract] = 1
+    # # self.Branches[1010101].numCurrencies += 1
+    # noWalletExists = !self.Branches[1010101].contract[ethContract]
+    # if(noWalletExists):
+    #     wallet = create('../functions/wallet.se')
+    #     wallet.initialize(ethContract)
+    #     self.Branches[1010101].contract[ethContract] = wallet
 
 def updateNumCurrencies(branch, num):
     self.controller.checkWhitelist(msg.sender)

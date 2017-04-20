@@ -389,7 +389,7 @@ class ContractLoader(object):
     """A class which updates and compiles Serpent code via ethereum.tester.state.
 
     Examples:
-    contracts = ContractLoader('src', 'controller.se', ['mutex.se', 'cash.se'])
+    contracts = ContractLoader('src', 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
     print(contracts.foo.echo('lol'))
     print(contracts['bar'].bar())
     contracts.cleanup()
@@ -419,6 +419,7 @@ class ContractLoader(object):
             for file in serpent_files:
                 if os.path.basename(file) == contract:
                     name = path_to_name(file)
+                    print(name)
                     self.__contracts[name] = self.__state.abi_contract(file)
                     address = self.__contracts[name].address
                     self.controller.setValue(name.ljust(32, '\x00'), address)
@@ -431,8 +432,9 @@ class ContractLoader(object):
 
             if name in self.__contracts:
                 continue
-                
+
             try:
+                print(name)
                 self.__contracts[name] = self.__state.abi_contract(file)
             except Exception as exc:
                 with open(file) as f:
@@ -446,7 +448,6 @@ class ContractLoader(object):
 
             self.controller.setValue(name.ljust(32, '\x00'), self.__contracts[name].address)
             self.controller.addToWhitelist(self.__contracts[name].address)
-
 
     def __getattr__(self, name):
         """Use it like a namedtuple!"""
@@ -464,7 +465,7 @@ class ContractLoader(object):
         """ContractLoaders try to clean up after themselves."""
         self.cleanup()
 
-    def recompile(self, name):
+    def recompile(self, source_dir, name):
         """Gets the latest copy of the code from the source path, recompiles, and updates controller."""
         for file in self.__temp_dir.find_files(SERPENT_EXT):
             if path_to_name(file) == name:
@@ -476,7 +477,8 @@ class ContractLoader(object):
         update_externs(self.__temp_dir.temp_source_dir, self.get_address('controller'))
         self.__contracts[name] = self.__state.abi_contract(file)
         self.controller.setValue(name.ljust(32, '\x00'), self.__contracts[name].address)
-        self.controller.addToWhitelist(self.__contracts[name].address)        
+        self.controller.addToWhitelist(self.__contracts[name].address)   
+        self.__state.mine()     
 
     def get_address(self, name):
         """Hex-encoded address of the contract."""

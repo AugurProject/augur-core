@@ -112,7 +112,7 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         EVENTS.setExpiration($event, EVENTS.getOriginalExpiration($event))
         handleFirstResolverBond()
         -1
-    elif($indeterminateAndReadyToResolve or !ethical):
+    elif($indeterminateAndReadyToResolve or !$ethical):
         if($scalarOrCategorical):
             # the mode is used to compare for reporting accuracy. so still the same as the reported uncaught outcome/mode, but resolving the eve nt itself as .5 right in the middle of the range so payouts are done right for an unethical [or indeterminate] market
             EVENTS.setOutcome($event, $ethicOutcome)
@@ -126,21 +126,21 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         handleFirstResolverBond()
         1
     else:
-        payHalfOfValidityBondToChallengerIfNeeded()
+        # payHalfOfValidityBondToChallengerIfNeeded()
         # return bond as a normal event resolution
-        if(!INFO.getWallet($event).transfer(INFO.getCreator($event), $bond)):
-            throw()
+        # if(!INFO.getWallet($event).transfer(INFO.getCreator($event), $bond)):
+            # throw()
         if(MARKETS.getPushedForward($market)):
             $amount = EVENTS.getEarlyResolutionBond($event)
             if($amount && !INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), $amount)):
                 throw()
-        if(EVENTS.getEventPushedUp($event)):
-            # delete old event from future events exp
-            $period = safeDiv(EVENTS.getOriginalExpiration($event), $periodLength)
-            EXPEVENTS.removeEvent($branch, $period)
-            EXPEVENTS.deleteEvent($branch, $period, $event)
-            EVENTS.setOriginalExpiration($event, EVENTS.getExpiration($event))
-        handleFirstResolverBond()
+        # if(EVENTS.getEventPushedUp($event)):
+        #     # delete old event from future events exp
+        #     $period = safeDiv(EVENTS.getOriginalExpiration($event), $periodLength)
+        #     EXPEVENTS.removeEvent($branch, $period)
+        #     EXPEVENTS.deleteEvent($branch, $period, $event)
+        #     EVENTS.setOriginalExpiration($event, EVENTS.getExpiration($event))
+        # handleFirstResolverBond()
         1
 
 macro handleFirstResolverBond():
@@ -151,7 +151,7 @@ macro handleFirstResolverBond():
     else:
         REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) && REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $resolverBondPoster), FIRST_RESOLVE_BOND)
 
-macro payValidityBondToChallengerIfNeeded():
+macro payHalfOfValidityBondToChallengerIfNeeded():
     $bond = EVENTS.getBond($event)
     if(EVENTS.getChallenged($event) && !BACKSTOPS.getRoundTwo($event) && EVENTS.getFirstPreliminaryOutcome($event) != EVENTS.getOutcome($event)):
         # pay half of validity bond to challenger
