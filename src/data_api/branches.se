@@ -72,26 +72,26 @@ macro checkSubcurrencyIsValid($contract):
 
 def init():
     self.controller = 0xC001D00D
-    self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
-    self.Branches[1010101].periodLength = 15
-    # .2%
-    self.Branches[1010101].fxpMinTradingFee = 200000000000000000
-    self.branchListCount = 1
-    self.branchList[0] = 1010101
-    # since only have to report on half this targets 3
-    self.Branches[1010101].baseReporters = 6
-    ethContract = self.controller.lookup("cash")
-    # checkSubcurrencyIsValid(ethContract)
-    # self.Branches[1010101].currencies[self.Branches[1010101].numCurrencies].contract = ethContract
-    # self.Branches[1010101].currencies[self.Branches[1010101].numCurrencies].rate = ONE
-    # self.Branches[1010101].currencyToIndex[ethContract] = self.Branches[1010101].numCurrencies
-    # self.Branches[1010101].currencyActive[ethContract] = 1
-    # self.Branches[1010101].numCurrencies += 1
-    noWalletExists = !self.Branches[1010101].contract[ethContract]
-    if(noWalletExists):
-        wallet = create('../functions/wallet.se')
-        wallet.initialize(ethContract)
-        self.Branches[1010101].contract[ethContract] = wallet
+    # self.Branches[1010101].currentVotePeriod = (block.timestamp / 15) - 1
+    # self.Branches[1010101].periodLength = 15
+    # # .2%
+    # self.Branches[1010101].fxpMinTradingFee = 200000000000000000
+    # self.branchListCount = 1
+    # self.branchList[0] = 1010101
+    # # since only have to report on half this targets 3
+    # self.Branches[1010101].baseReporters = 6
+    # ethContract = self.controller.lookup("cash")
+    # # checkSubcurrencyIsValid(ethContract)
+    # # self.Branches[1010101].currencies[self.Branches[1010101].numCurrencies].contract = ethContract
+    # # self.Branches[1010101].currencies[self.Branches[1010101].numCurrencies].rate = ONE
+    # # self.Branches[1010101].currencyToIndex[ethContract] = self.Branches[1010101].numCurrencies
+    # # self.Branches[1010101].currencyActive[ethContract] = 1
+    # # self.Branches[1010101].numCurrencies += 1
+    # noWalletExists = !self.Branches[1010101].contract[ethContract]
+    # if(noWalletExists):
+    #     wallet = create('../functions/wallet.se')
+    #     wallet.initialize(ethContract)
+    #     self.Branches[1010101].contract[ethContract] = wallet
 
 def updateNumCurrencies(branch, num):
     self.controller.checkWhitelist(msg.sender)

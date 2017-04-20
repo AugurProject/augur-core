@@ -150,7 +150,7 @@ def convertToDormantRep(branch, fxpValue):
     if(MUTEX.getMutex()):
         throw()
     MUTEX.setMutex()
-    checkInvariants(msg.sender)
+    # checkInvariants(msg.sender)
     senderIndex = REPORTING.repIDToIndex(branch, msg.sender)
     senderBalance = REPORTING.getRepBalance(branch, msg.sender)
     senderDormantBalance = REPORTING.balanceOfReporter(branch, msg.sender)
@@ -217,6 +217,10 @@ def approve(branch, spender, fxpValue):
 # @return fxp
 def allowance(branch, owner, spender):
     return(self.amountCanSpend[owner][spender].branch[branch])
+
+def test():
+    inWhitelist = self.controller.checkWhitelist(msg.sender)
+    return(inWhitelist)
 
 macro checkInvariants($account):
     refund()
