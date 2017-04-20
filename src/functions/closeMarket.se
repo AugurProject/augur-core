@@ -67,9 +67,9 @@ def init():
 
 def closeMarket(market, sender):
     refund()
-    if(MUTEX.getMutex() && !mutexWhitelisted()):
+    if(MUTEX.getMutex() && !isCallerWhitelisted()):
         throw()
-    if(!mutexWhitelisted()):
+    if(!isCallerWhitelisted()):
         MUTEX.setMutex()
     event = MARKETS.getMarketEvent(market, 0)
     branch = EVENTS.getEventBranch(event)
@@ -91,31 +91,31 @@ def closeMarket(market, sender):
     marketWallet = INFO.getWallet(market)
     marketWallet.transfer(BRANCHES.getBranchWallet(branch, marketCurrency), marketCurrency.balanceOf(marketWallet) - safeFxpMul(MARKETS.getSharesPurchased(market, 1), MARKETS.getCumulativeScale(market)))
 
-    if(!mutexWhitelisted()):
+    if(!isCallerWhitelisted()):
         MUTEX.unsetMutex()
     logReturn(closeMarketLogReturn, 1)
 
 macro checkCloseMarketPreconditions():
     # as long as resolved and not challenged we can then resolve, i.e. if not challenged and > 6 days then can take prelim outcome and make it final outcome
     if(period <= votingPeriodEvent || (!EVENTS.getChallenged(event) && block.timestamp < expiration + SIX_DAYS)):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         logReturn(closeMarketLogReturn, 0)
     if(MARKETS.getOneWinningOutcome(market, 0)):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         logReturn(closeMarketLogReturn, -1)
     if(!EVENTS.getUncaughtOutcome(event) && !EVENTS.getFirstPreliminaryOutcome(event)):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         logReturn(closeMarketLogReturn, -2)
     if(BACKSTOPS.getRoundTwo(event) and !BACKSTOPS.getFinal(event)):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         logReturn(closeMarketLogReturn, -3)
     # if an event is one from before a fork and hasn't been moved yet or it's the event the fork occurred over and it's not over yet don't resolve it
     if((EVENTS.getForked(event) and !EVENTS.getForkedDone(event)) or eventCreatedPriorToFork(eventID)):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         logReturn(closeMarketLogReturn, -4)
 
@@ -131,7 +131,7 @@ macro resolveEventsInMarket():
     else:
         throw()
     if(resolution == -1):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         logReturn(closeMarketLogReturn, -5)
 

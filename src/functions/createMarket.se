@@ -119,9 +119,9 @@ def init():
 
 def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
     refund()
-    if(MUTEX.getMutex() && !mutexWhitelisted()):
+    if(MUTEX.getMutex() && !isCallerWhitelisted()):
         throw()
-    if(!mutexWhitelisted()):
+    if(!isCallerWhitelisted()):
         MUTEX.setMutex()
 
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -139,7 +139,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     mcopy(eventInfo + 8 * 32, description, len(description))
     event = ripemd160(eventInfo, chars = len(eventInfo))
     if(INFO.getCreator(event)):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
 
@@ -170,7 +170,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
             EVENTS.setExpiration(event, block.timestamp)
             EVENTS.setBond(event, validityBond)
             EVENTS.addPast24(period)
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(event)
     else:
@@ -196,9 +196,9 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
 # need at least 1.2M gas @ gas price to cover resolution & 500k per event to calc. num reports for it - this is passed as value to this function
 # need to check that it's an actual subcurrency upon market creation
 def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag3, extraInfo: str, currency):
-    if(MUTEX.getMutex() && !mutexWhitelisted()):
+    if(MUTEX.getMutex() && !isCallerWhitelisted()):
         throw()
-    if(!mutexWhitelisted()):
+    if(!isCallerWhitelisted()):
         MUTEX.setMutex()
 
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -241,7 +241,7 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     market = ripemd160(marketInfo, chars = len(marketInfo))
     # if it's already been created return 0
     if(INFO.getCreator(market)):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(-4)
     events = array(1)
@@ -259,7 +259,7 @@ def createMarket(branch, description: str, fxpTradingFee, event, tag1, tag2, tag
     makeMarket()
 
     log(type = marketCreated, market)
-    if(!mutexWhitelisted()):
+    if(!isCallerWhitelisted()):
         MUTEX.unsetMutex()
     return(market)
 
@@ -386,9 +386,9 @@ def pushMarketForward(branch, market):
 # Errors:
     # -1: not allowed for events during a fork scenario for events that were created before the fork until the fork is over
 def putEventIntoReportingPeriod(event):
-    if(MUTEX.getMutex() && !mutexWhitelisted()):
+    if(MUTEX.getMutex() && !isCallerWhitelisted()):
         throw()
-    if(!mutexWhitelisted()):
+    if(!isCallerWhitelisted()):
         MUTEX.setMutex()
     # add events to the appropriate reporting period
     branch = EVENTS.getEventBranch(event)
@@ -403,20 +403,20 @@ def putEventIntoReportingPeriod(event):
         addEvent()
         EVENTS.setExpiration(event, block.timestamp)
         EVENTS.setChallenged(event)
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(1)
     else:
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
 
 # Errors:
     # -1: not allowed for events during a fork scenario for events that were created before the fork until the fork is over
 def challengeInitialResolution(event):
-    if(MUTEX.getMutex() && !mutexWhitelisted()):
+    if(MUTEX.getMutex() && !isCallerWhitelisted()):
         throw()
-    if(!mutexWhitelisted()):
+    if(!isCallerWhitelisted()):
         MUTEX.setMutex()
     # add events to the appropriate reporting period
     branch = EVENTS.getEventBranch(event)
@@ -434,11 +434,11 @@ def challengeInitialResolution(event):
         EVENTS.setExpiration(event, block.timestamp)
         EVENTS.setChallenged(event)
         payExtraBond()
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(1)
     else:
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
 
@@ -446,20 +446,20 @@ def challengeInitialResolution(event):
 # with oraclize.it do value = parseInt(result, 18) to get it in the proper 10**18 base, then do (value - min) * 10**18 / range to submit the result to augur
 # unethical is just a .5 outcome for scalar/categorical, 1.5 for binary as usual
 def resolveEarly(event, outcome):
-    if(MUTEX.getMutex() && !mutexWhitelisted()):
+    if(MUTEX.getMutex() && !isCallerWhitelisted()):
         throw()
-    if(!mutexWhitelisted()):
+    if(!isCallerWhitelisted()):
         MUTEX.setMutex()
     if(msg.sender == EVENTS.getResolutionAddress(event) && block.timestamp > EVENTS.getExpiration(event) && block.timestamp < (EVENTS.getExpiration(event) + THREE_DAYS)):
         # outcome of 1 is 1/10**18 or basically 0, but allows us to still check if outcome is 0 or not to see if an outcome has been set
         if(outcome == 0):
             outcome = 1
         EVENTS.setFirstPreliminaryOutcome(event, outcome)
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(1)
     else:
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
 
@@ -484,15 +484,15 @@ def addFees(market, fxpAmount):
 
 macro checkEventCreationPreconditions():
     if(!periodLength or !len(description) or !len(resolution) or expDate < block.timestamp or !resolutionAddress):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
     if(fxpMaxValue < fxpMinValue or (fxpMaxValue - fxpMinValue) < ONE or (fxpMaxValue + fxpMinValue) < fxpMaxValue):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(-2)
     if(numOutcomes < 2 or numOutcomes > 8):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(-3)
     parent = BRANCHES.getParent(branch)
@@ -508,11 +508,11 @@ macro checkEventCreationPreconditions():
 macro checkMarketCreationPreconditions():
     # will need to get equivalent value in usd or eth or w/e via etherex exchange for subcurrency markets
     if(!periodLength or !len(description) or fxpTradingFee < BRANCHES.getMinTradingFee(branch) or fxpTradingFee > MAX_FEE or EVENTS.getEventBranch(event) != branch or !INFO.getCreator(event)):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
     if(expirationDate < block.timestamp):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(-2)
     if(!BRANCHES.getCurrencyActive(branch, currency)):
