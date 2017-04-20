@@ -403,9 +403,13 @@ class ContractLoader(object):
 
         for file in serpent_files:
             if os.path.basename(file) == controller:
+                print('Creating controller..')
                 self.__contracts['controller'] = self.__state.abi_contract(file)
                 controller_addr = '0x' + hexlify(self.__contracts['controller'].address)
+                assert len(controller_addr) == 42
+                print('Updating externs...')
                 update_externs(self.__temp_dir.temp_source_dir, controller_addr)
+                print('Finished.')
                 self.__state.mine()
                 break
         else:
@@ -417,9 +421,10 @@ class ContractLoader(object):
                     name = path_to_name(file)
                     self.__contracts[name] = self.__state.abi_contract(file)
                     address = self.__contracts[name].address
-                    self.controller.setValue(name, address)
+                    self.controller.setValue(name.ljust(32, '\x00'), address)
                     self.controller.addToWhitelist(address)
                     self.__state.mine()
+                    print('Contract creation successful:', name)
 
         for file in serpent_files:
             name = path_to_name(file)
@@ -436,8 +441,10 @@ class ContractLoader(object):
                     'Error compiling {name}:\n\n{code}',
                     name=name,
                     code=code)
+            else:
+                print('Contract creation successful:', name)
 
-            self.controller.setValue(name, self.__contracts[name].address)
+            self.controller.setValue(name.ljust(32, '\x00'), self.__contracts[name].address)
             self.controller.addToWhitelist(self.__contracts[name].address)
 
 
@@ -461,13 +468,21 @@ class ContractLoader(object):
         self.cleanup()
 
     def recompile(self, name):
+        """Gets the latest copy of the code from the source path, recompiles, and updates controller."""
         for file in self.__temp_dir.find_files(SERPENT_EXT):
-            name_ = path_to_name(file)
-            if name_ == name:
-                self.__contracts[name] = self.__state.abi_contract(file)
-                return self.get_address(name)
+            if path_to_name(file) == name:
+                break
+
+        og_path = self.__temp_dir.original_path(file)
+        os.remove(file)
+        shutil.copy(og_path, file)
+        update_externs(self.__temp_dir.temp_source_dir, self.get_address('controller'))
+        self.__contract[name] = self.__state.abi_contract(file)
+        self.controller.setValue(name.ljust(32, '\x00'), self.__contracts[name].address)
+        self.controller.addToWhitelist(self.__contracts[name].address)        
 
     def get_address(self, name):
+        """Hex-encoded address of the contract."""
         return '0x' + hexlify(self.__contracts[name].address)
 
 
