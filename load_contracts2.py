@@ -403,9 +403,13 @@ class ContractLoader(object):
 
         for file in serpent_files:
             if os.path.basename(file) == controller:
+                print('Creating controller..')
                 self.__contracts['controller'] = self.__state.abi_contract(file)
                 controller_addr = '0x' + hexlify(self.__contracts['controller'].address)
+                assert len(controller_addr) == 42
+                print('Updating externs...')
                 update_externs(self.__temp_dir.temp_source_dir, controller_addr)
+                print('Finished.')
                 self.__state.mine()
                 break
         else:
@@ -417,9 +421,10 @@ class ContractLoader(object):
                     name = path_to_name(file)
                     self.__contracts[name] = self.__state.abi_contract(file)
                     address = self.__contracts[name].address
-                    self.controller.setValue(name, address)
+                    self.controller.setValue(name.ljust(32, '\x00'), address)
                     self.controller.addToWhitelist(address)
                     self.__state.mine()
+                    print('Contract creation successful:', name)
 
         for file in serpent_files:
             name = path_to_name(file)
@@ -436,8 +441,10 @@ class ContractLoader(object):
                     'Error compiling {name}:\n\n{code}',
                     name=name,
                     code=code)
+            else:
+                print('Contract creation successful:', name)
 
-            self.controller.setValue(name, self.__contracts[name].address)
+            self.controller.setValue(name.ljust(32, '\x00'), self.__contracts[name].address)
             self.controller.addToWhitelist(self.__contracts[name].address)
 
 
