@@ -218,9 +218,9 @@ def approve(branch, spender, fxpValue):
 def allowance(branch, owner, spender):
     return(self.amountCanSpend[owner][spender].branch[branch])
 
-def test():
-    inWhitelist = self.controller.checkWhitelist(msg.sender)
-    return(inWhitelist)
+# def test():
+#     inWhitelist = self.controller.checkWhitelist(msg.sender)
+#     return(inWhitelist)
 
 macro checkInvariants($account):
     refund()
