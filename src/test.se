@@ -1,11 +1,3 @@
-Controller = 0xC001D00D
-
-event logit(returnValue)
-
-data controller
-
-def init():
-    self.controller = 0xC001D00D
-
-def ok(y, b):
-    return(1)
+def ok():
+    x = create('functions/wallet.se')
+    return(x)

@@ -93,532 +93,535 @@ macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 def init():
     self.controller = 0xC001D00D
 
-def moveEvent(event):
-    refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
-
-    forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
-    branch = EVENTS.getEventBranch(event)
-    eventForkedOver = BRANCHES.getEventForkedOver(branch)
-    expPeriod = EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch)
-    eventIndex = EXPEVENTS.getEventIndex(expPeriod, event)
-    currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-    currentVotePeriod = BRANCHES.getVotePeriod(branch)
-    checkMoveEventPreconditions()
-    if(event == eventForkedOver):
-        MUTEX.unsetMutex()
-        return(1)
-    # leave event here in same branch
-    elif(winner == EVENTS.getEventBranch(event)):
-        keepEventInOriginalBranch()
-    # event's branch is changed to winning branch
-    else:
-        moveEventToWinningBranch()
-    BACKSTOPS.setMoved(event)
-    MUTEX.unsetMutex()
+def ok():
     return(1)
 
-# parent branch is branch here
-# If there's only 1 event and that's the one we forked over [rare edge case] we can call resolve fork manually if it hasn't been done yet within the time parameters which allows a fork to be resolved [2 periods after the start of the fork]
-def resolveFork(branch):
-    if(MUTEX.getMutex() && !mutexWhitelisted()):
-        throw()
-    if(!mutexWhitelisted()):
-        MUTEX.setMutex()
-    forkPeriod = BRANCHES.getForkPeriod(branch)
-    currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-    if(BACKSTOPS.getResolved(branch, forkPeriod)):
-        throw()
-    if(currentPeriod < (forkPeriod + 2)):
-        if(!mutexWhitelisted()):
-            MUTEX.unsetMutex()
-        return(0)
+# def moveEvent(event):
+#     refund()
+#     if(MUTEX.getMutex()):
+#         throw()
+#     MUTEX.setMutex()
 
-    forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
-    origCap = self.exchangeRate(branch)
-    fork = BRANCHES.getMostRecentChild(branch)
-    forkCap = self.exchangeRate(fork)
-    winner = 0
-    if(origCap >= forkCap):
-        winner = branch
-    else:
-        winner = fork
-    BACKSTOPS.setResolved(branch, forkPeriod, winner)
-    if(!mutexWhitelisted()):
-        MUTEX.unsetMutex()
-    return(winner)
+#     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
+#     branch = EVENTS.getEventBranch(event)
+#     eventForkedOver = BRANCHES.getEventForkedOver(branch)
+#     expPeriod = EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch)
+#     eventIndex = EXPEVENTS.getEventIndex(expPeriod, event)
+#     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
+#     currentVotePeriod = BRANCHES.getVotePeriod(branch)
+#     checkMoveEventPreconditions()
+#     if(event == eventForkedOver):
+#         MUTEX.unsetMutex()
+#         return(1)
+#     # leave event here in same branch
+#     elif(winner == EVENTS.getEventBranch(event)):
+#         keepEventInOriginalBranch()
+#     # event's branch is changed to winning branch
+#     else:
+#         moveEventToWinningBranch()
+#     BACKSTOPS.setMoved(event)
+#     MUTEX.unsetMutex()
+#     return(1)
 
-# Resolve fork method that gets exchange rate
-# add contract for choosing this to create market
-def exchangeRate(branch):
-    # get rep exchange rate from etherex for (branch)
-    # return(exchangeRate)
-    # for testing we'll just rng the exchange rate :)
-    return(sha3(branch))
+# # parent branch is branch here
+# # If there's only 1 event and that's the one we forked over [rare edge case] we can call resolve fork manually if it hasn't been done yet within the time parameters which allows a fork to be resolved [2 periods after the start of the fork]
+# def resolveFork(branch):
+#     if(MUTEX.getMutex() && !mutexWhitelisted()):
+#         throw()
+#     if(!mutexWhitelisted()):
+#         MUTEX.setMutex()
+#     forkPeriod = BRANCHES.getForkPeriod(branch)
+#     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
+#     if(BACKSTOPS.getResolved(branch, forkPeriod)):
+#         throw()
+#     if(currentPeriod < (forkPeriod + 2)):
+#         if(!mutexWhitelisted()):
+#             MUTEX.unsetMutex()
+#         return(0)
 
-# Forks a contested event
-# In the last 48 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back and a fork commences
-# bond for a fork is 1% of rep
-# Errors:
-    #  0: not in last 48 hr of period
-    # -1: ineligible for forking over, already resolved, forked, or hasn't seen 1st backstop yet
-    # -3: no fork allowed for 1 period after a forking event
-    # -5: invalid branch
-def fork(event, branch, forkedOverEthicality):
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+#     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
+#     origCap = self.exchangeRate(branch)
+#     fork = BRANCHES.getMostRecentChild(branch)
+#     forkCap = self.exchangeRate(fork)
+#     winner = 0
+#     if(origCap >= forkCap):
+#         winner = branch
+#     else:
+#         winner = fork
+#     BACKSTOPS.setResolved(branch, forkPeriod, winner)
+#     if(!mutexWhitelisted()):
+#         MUTEX.unsetMutex()
+#     return(winner)
 
-    forkPeriod = BRANCHES.getForkPeriod(branch)
-    currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-    currentVotePeriod = BRANCHES.getVotePeriod(branch)
-    checkForkPreconditions()
+# # Resolve fork method that gets exchange rate
+# # add contract for choosing this to create market
+# def exchangeRate(branch):
+#     # get rep exchange rate from etherex for (branch)
+#     # return(exchangeRate)
+#     # for testing we'll just rng the exchange rate :)
+#     return(sha3(branch))
 
-    if(!send(CONSENSUSDATA, msg.value)):
-        throw()
-    bond = safeFxpDiv(POINT_ZERO_ONE, REPORTING.getTotalRep(branch))
-    BACKSTOPS.setBondAmount(event, bond)
-    # lose fork bond in branch 1
-    # results same as roundtwobond, let it resolve as that on original network
-    if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
-        throw()
-    # on branch 2 fork bond isn't lost
-    # on fork bond isn't lost, gets paid up to 2x from "liars"
-    # make the fork
-    makeFork()
-    # return round 2 bond on orig. branch
-    returnRoundTwoBond()
-    MUTEX.unsetMutex()
-    return(1)
+# # Forks a contested event
+# # In the last 48 hours during period where a round 2 was pushed back to, can be made to fork instead of just round 2, so round 2 bond poster gets bond back and a fork commences
+# # bond for a fork is 1% of rep
+# # Errors:
+#     #  0: not in last 48 hr of period
+#     # -1: ineligible for forking over, already resolved, forked, or hasn't seen 1st backstop yet
+#     # -3: no fork allowed for 1 period after a forking event
+#     # -5: invalid branch
+# def fork(event, branch, forkedOverEthicality):
+#     if(MUTEX.getMutex()):
+#         throw()
+#     MUTEX.setMutex()
 
-# once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
-# branch is orig. branch
-# Returns 1
-# Errors:
-    # 0 fork not done yet
-    # -1 event not fork event
-    # -2 wrong branch
-    # -3 already resolved
-def resolveForkedEvent(branch, event):
-    refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
-    # checks for orig. branch
-    if(EVENTS.getEventBranch(event) != branch or BRANCHES.getEventForkedOver(branch) != event or !branch or !event):
-        MUTEX.unsetMutex()
-        return(0)
-    if(!EVENTS.getForked(event)):
-        MUTEX.unsetMutex()
-        return(-1)
-    if(EVENTS.getOutcome(event)):
-        return(-3)
-    forkResolved = self.resolveForkEvent(branch, event)
-    if(forkResolved):
-        EVENTS.setForkDone(event)
-        EVENTS.setCreationTime(event)
-        CONSENSUSDATA.doRefund(msg.sender, event)
-        MUTEX.unsetMutex()
-        return(1)
-    # fork not done yet
-    else:
-        MUTEX.unsetMutex()
-        return(0)
+#     forkPeriod = BRANCHES.getForkPeriod(branch)
+#     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
+#     currentVotePeriod = BRANCHES.getVotePeriod(branch)
+#     checkForkPreconditions()
 
-# once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
-    # helper function for resolveForkedEvent
-# needs whitelist
-def resolveForkEvent(branch, event):
-    refund()
-    self.controller.checkWhitelist(msg.sender)
-    bond = EVENTS.getBond(event)
-    periodLength = BRANCHES.getPeriodLength(branch)
-    votingPeriodEvent = EVENTS.getExpiration(event) / periodLength
-    winner = BACKSTOPS.getResolved(branch, BRANCHES.getForkPeriod(branch))
-    if(!winner):
-        return(-5)
-    nonDefaultForkResolution = EVENTS.getForkResolveAddress(event)
-    if(nonDefaultForkResolution):
-        resolveCustomForkResolution()
-    # binary
-    if(binary(event)):
-        binaryForkResolve()
-    # scalar or categorical
-    elif(scalar(event) or categorical(event)):
-        scalarOrCategoricalForkResolve()
-    # (should never be reached)
-    else:
-        return(0)
+#     if(!send(CONSENSUSDATA, msg.value)):
+#         throw()
+#     bond = safeFxpDiv(POINT_ZERO_ONE, REPORTING.getTotalRep(branch))
+#     BACKSTOPS.setBondAmount(event, bond)
+#     # lose fork bond in branch 1
+#     # results same as roundtwobond, let it resolve as that on original network
+#     if(!SENDREP.sendRepFrom(branch, msg.sender, event, bond)):
+#         throw()
+#     # on branch 2 fork bond isn't lost
+#     # on fork bond isn't lost, gets paid up to 2x from "liars"
+#     # make the fork
+#     makeFork()
+#     # return round 2 bond on orig. branch
+#     returnRoundTwoBond()
+#     MUTEX.unsetMutex()
+#     return(1)
 
-macro binaryForkResolve():
-    fxpOutcome = 0
-    ethical = 0
-    # original parent won
-    if(winner == branch):
-        fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
-        ethical = ethicCatch(EVENTS.getEthics(event))
-        # remove event from child if parent was the winning branch
-        if(EVENTS.getEventPushedUp(event)):
-            # delete old event from future events exp
-            child = BRANCHES.getMostRecentChild(branch)
-            period = safeDiv(EVENTS.getOriginalExpiration(event), periodLength)
-            EXPEVENTS.removeEvent(child, period)
-            EXPEVENTS.deleteEvent(child, period, event)
-            EVENTS.setOriginalExpiration(event, EVENTS.getExpiration(event))
-    # fork won
-    else:
-        fxpOutcome = catch(EVENTS.getForkOutcome(event))
-        ethical = ethicCatch(EVENTS.getForkEthicality(event))
-        # remove event from parent if child was the winning branch
-        if(EVENTS.getEventPushedUp(event)):
-            # delete old event from future events exp
-            period = safeDiv(EVENTS.getOriginalExpiration(event), periodLength)
-            EXPEVENTS.removeEvent(branch, period)
-            EXPEVENTS.deleteEvent(branch, period, event)
-            EVENTS.setOriginalExpiration(event, EVENTS.getExpiration(event))
-    branch = winner
-    EVENTS.setOutcome(event, fxpOutcome)
-    EVENTS.setEthics(event, ethical)
-    market = EVENTS.getMarket(event, 0)
-    if(fxpOutcome == 3 * ONE_HALF and EVENTS.getEventPushedUp(event)):
-        if(MARKETS.getPushedForward(market)):
-            # look @ total shares purchase cutoff times for early resolution bonds
-            amount = EVENTS.getEarlyResolutionBond(event)
-            branchWallet = BRANCHES.getBranchWallet(branch, INFO.getCurrency(market))
-            if(amount && !INFO.getWallet(market).transfer(branchWallet, amount)):
-                throw()
-        MARKETS.setTradingPeriod(market, MARKETS.getOriginalTradingPeriod(market))
-        MARKETS.setPushedForward(market, 0, msg.sender)
-        EXPEVENTS.setEventWeight(branch, votingPeriodEvent, event, 0)
-        # set outcome to 0
-        EVENTS.setOutcome(event, 0)
-        EVENTS.setMode(event, 0)
-        EVENTS.setEthics(event, 0)
-        # set uncaughtoutcome to 0
-        EVENTS.setUncaughtOutcome(event, 0)
-        EVENTS.setEventPushedUp(event, 0)
-        # need to store which period it was "rejected" in
-        EVENTS.setRejected(event, votingPeriodEvent)
-        # set $event expiration to be the old date
-        EVENTS.setExpiration(event, EVENTS.getOriginalExpiration(event))
-    elif(fxpOutcome == 3 * ONE_HALF or !ethical):
-        # not ethical is same as .5 outcome
-        fxpOutcome = 3 * ONE_HALF
-        EVENTS.setOutcome(event, fxpOutcome)
+# # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
+# # branch is orig. branch
+# # Returns 1
+# # Errors:
+#     # 0 fork not done yet
+#     # -1 event not fork event
+#     # -2 wrong branch
+#     # -3 already resolved
+# def resolveForkedEvent(branch, event):
+#     refund()
+#     if(MUTEX.getMutex()):
+#         throw()
+#     MUTEX.setMutex()
+#     # checks for orig. branch
+#     if(EVENTS.getEventBranch(event) != branch or BRANCHES.getEventForkedOver(branch) != event or !branch or !event):
+#         MUTEX.unsetMutex()
+#         return(0)
+#     if(!EVENTS.getForked(event)):
+#         MUTEX.unsetMutex()
+#         return(-1)
+#     if(EVENTS.getOutcome(event)):
+#         return(-3)
+#     forkResolved = self.resolveForkEvent(branch, event)
+#     if(forkResolved):
+#         EVENTS.setForkDone(event)
+#         EVENTS.setCreationTime(event)
+#         CONSENSUSDATA.doRefund(msg.sender, event)
+#         MUTEX.unsetMutex()
+#         return(1)
+#     # fork not done yet
+#     else:
+#         MUTEX.unsetMutex()
+#         return(0)
 
-        if(EVENTS.getChallenged(event) && !BACKSTOPS.getRoundTwo(event) && EVENTS.getFirstPreliminaryOutcome(event) != EVENTS.getOutcome(event)):
-            # pay half of validity bond to challenger
-            if(!INFO.getWallet(event).transfer(EVENTS.getExtraBondPoster(event), bond / 2)):
-                throw()
-            bond -= bond / 2
-        branchWallet = BRANCHES.getBranchWallet(branch, INFO.getCurrency(event))
-        # give $event bond money to reporters
-        if(!INFO.getWallet(event).transfer(branchWallet, bond)):
-            throw()
-    else:
-        bond = EVENTS.getBond(event)
-        if(EVENTS.getChallenged(event) && !BACKSTOPS.getRoundTwo(event) && EVENTS.getFirstPreliminaryOutcome(event) != EVENTS.getOutcome(event)):
-            # pay half of validity bond to challenger
-            if(!INFO.getWallet(event).transfer(EVENTS.getExtraBondPoster(event), bond / 2)):
-                throw()
-            bond -= bond / 2
-        # return bond as a normal event resolution
-        if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
-            throw()
-        if(MARKETS.getPushedForward(market)):
-            amount = EVENTS.getEarlyResolutionBond(event)
-            if(amount && !INFO.getWallet(market).transfer(MARKETS.getBondsMan(market), amount)):
-                throw()
-        if(EVENTS.getEventPushedUp(event)):
-            # delete old event from future events exp
-            period = safeDiv(EVENTS.getOriginalExpiration(event), periodLength)
-            EXPEVENTS.removeEvent(branch, period)
-            EXPEVENTS.deleteEvent(branch, period, event)
-            EVENTS.setOriginalExpiration(event, EVENTS.getExpiration(event))
-    handleFirstResolverBond()
-    EVENTS.setExpiration(event, block.timestamp)
-    EVENTS.setBranch(event, winner)
-    BACKSTOPS.setMoved(event)
-    return(1)
+# # once winning fork decided this sets fork done and sets the event outcome to the forkoutcome + ethicality if the fork won, or to the resolved round 2 outcome + ethicality if the original parent won
+#     # helper function for resolveForkedEvent
+# # needs whitelist
+# def resolveForkEvent(branch, event):
+#     refund()
+#     self.controller.checkWhitelist(msg.sender)
+#     bond = EVENTS.getBond(event)
+#     periodLength = BRANCHES.getPeriodLength(branch)
+#     votingPeriodEvent = EVENTS.getExpiration(event) / periodLength
+#     winner = BACKSTOPS.getResolved(branch, BRANCHES.getForkPeriod(branch))
+#     if(!winner):
+#         return(-5)
+#     nonDefaultForkResolution = EVENTS.getForkResolveAddress(event)
+#     if(nonDefaultForkResolution):
+#         resolveCustomForkResolution()
+#     # binary
+#     if(binary(event)):
+#         binaryForkResolve()
+#     # scalar or categorical
+#     elif(scalar(event) or categorical(event)):
+#         scalarOrCategoricalForkResolve()
+#     # (should never be reached)
+#     else:
+#         return(0)
 
-macro scalarOrCategoricalForkResolve():
-    mode = 0
-    ethical = 0
-    # original parent won
-    if(winner == branch):
-        mode = EVENTS.getUncaughtOutcome(event)
-        ethical = ethicCatch(EVENTS.getEthics(event))
-        # remove event from child if parent was the winning branch
-        if(EVENTS.getEventPushedUp(event)):
-            # delete old event from future events exp
-            child = BRANCHES.getMostRecentChild(branch)
-            period = safeDiv(EVENTS.getOriginalExpiration(event), periodLength)
-            EXPEVENTS.removeEvent(child, period)
-            EXPEVENTS.deleteEvent(child, period, event)
-            EVENTS.setOriginalExpiration(event, EVENTS.getExpiration(event))
-    # fork won
-    else:
-        mode = EVENTS.getForkOutcome(event)
-        ethical = ethicCatch(EVENTS.getForkEthicality(event))
-        # remove event from parent if child was the winning branch
-        if(EVENTS.getEventPushedUp(event)):
-            # delete old event from future events exp
-            period = safeDiv(EVENTS.getOriginalExpiration(event), periodLength)
-            EXPEVENTS.removeEvent(branch, period)
-            EXPEVENTS.deleteEvent(branch, period, event)
-            EVENTS.setOriginalExpiration(event, EVENTS.getExpiration(event))
-    branch = winner
-    EVENTS.setMode(event, mode)
-    EVENTS.setEthics(event, ethical)
-    scaledMax = EVENTS.getMaxValue(event)
-    scaledMin = EVENTS.getMinValue(event)
-    if(categorical(event)):
-        scaledMin = ONE
-        scaledMax = ONE * EVENTS.getNumOutcomes(event)
-    fxpOutcome = safeFxpMul(mode, (scaledMax - scaledMin)) + scaledMin
-    if(categorical(event)):
-        fxpOutcome = round(fxpOutcome)
-    ethicOutcome = safeFxpMul(ONE_HALF, (scaledMax - scaledMin)) + scaledMin
-    # outcome of 1 is 1/10**18 or basically 0, but allows us to still check if outcome is 0 or not to see if an outcome has been set
-    if(ethicOutcome == 0):
-        ethicOutcome = 1
-    if(fxpOutcome == 0):
-        fxpOutcome = 1
-    EVENTS.setOutcome(event, fxpOutcome)
-    if(mode == ONE_HALF and EVENTS.getEventPushedUp(event)):
-        if(MARKETS.getPushedForward(market)):
-            # look @ total shares purchase cutoff times for early resolution bonds
-            amount = EVENTS.getEarlyResolutionBond(event)
-            branchWallet = BRANCHES.getBranchWallet(branch, INFO.getCurrency(market))
-            if(amount && !INFO.getWallet(market).transfer(branchWallet, amount)):
-                throw()
-        MARKETS.setTradingPeriod(market, MARKETS.getOriginalTradingPeriod(market))
-        MARKETS.setPushedForward(market, 0, msg.sender)
-        EXPEVENTS.setEventWeight(branch, votingPeriodEvent, event, 0)
-        # set outcome to 0
-        EVENTS.setOutcome(event, 0)
-        EVENTS.setMode(event, 0)
-        EVENTS.setEthics(event, 0)
-        # set uncaughtoutcome to 0
-        EVENTS.setUncaughtOutcome(event, 0)
-        EVENTS.setEventPushedUp(event, 0)
-        # need to store which period it was "rejected" in
-        EVENTS.setRejected(event, votingPeriodEvent)
-        # set $event expiration to be the old date
-        EVENTS.setExpiration(event, EVENTS.getOriginalExpiration(event))
-    elif(mode == ONE_HALF or !ethical):
-        # not ethical is same as .5 outcome
-        EVENTS.setOutcome(event, ethicOutcome)
-        if(EVENTS.getChallenged(event) && !BACKSTOPS.getRoundTwo(event) && EVENTS.getFirstPreliminaryOutcome(event) != EVENTS.getOutcome(event)):
-            # pay half of validity bond to challenger
-            if(!INFO.getWallet(event).transfer(EVENTS.getExtraBondPoster(event), bond / 2)):
-                throw()
-            bond -= bond / 2
-        branchWallet = BRANCHES.getBranchWallet(branch, INFO.getCurrency(event))
-        # give $event bond money to reporters
-        if(!INFO.getWallet(event).transfer(branchWallet, bond)):
-            throw()
-    else:
-        bond = EVENTS.getBond(event)
-        if(EVENTS.getChallenged(event) && !BACKSTOPS.getRoundTwo(event) && EVENTS.getFirstPreliminaryOutcome(event) != EVENTS.getOutcome(event)):
-            # pay half of validity bond to challenger
-            if(!INFO.getWallet(event).transfer(EVENTS.getExtraBondPoster(event), bond / 2)):
-                throw()
-            bond -= bond / 2
-        # return bond as a normal event resolution
-        if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
-            throw()
-        market = EVENTS.getMarket(event, 0)
-        if(MARKETS.getPushedForward(market)):
-            amount = EVENTS.getEarlyResolutionBond(event)
-            if(amount && !INFO.getWallet(market).transfer(MARKETS.getBondsMan(market), amount)):
-                throw()
-        if(EVENTS.getEventPushedUp(event)):
-            # delete old event from future events exp
-            period = safeDiv(EVENTS.getOriginalExpiration(event), periodLength)
-            EXPEVENTS.removeEvent(branch, period)
-            EXPEVENTS.deleteEvent(branch, period, event)
-            EVENTS.setOriginalExpiration(event, EVENTS.getExpiration(event))
-    handleFirstResolverBond()
-    EVENTS.setBranch(event, winner)
-    BACKSTOPS.setMoved(event)
-    return(1)
+# macro binaryForkResolve():
+#     fxpOutcome = 0
+#     ethical = 0
+#     # original parent won
+#     if(winner == branch):
+#         fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
+#         ethical = ethicCatch(EVENTS.getEthics(event))
+#         # remove event from child if parent was the winning branch
+#         if(EVENTS.getEventPushedUp(event)):
+#             # delete old event from future events exp
+#             child = BRANCHES.getMostRecentChild(branch)
+#             period = safeDiv(EVENTS.getOriginalExpiration(event), periodLength)
+#             EXPEVENTS.removeEvent(child, period)
+#             EXPEVENTS.deleteEvent(child, period, event)
+#             EVENTS.setOriginalExpiration(event, EVENTS.getExpiration(event))
+#     # fork won
+#     else:
+#         fxpOutcome = catch(EVENTS.getForkOutcome(event))
+#         ethical = ethicCatch(EVENTS.getForkEthicality(event))
+#         # remove event from parent if child was the winning branch
+#         if(EVENTS.getEventPushedUp(event)):
+#             # delete old event from future events exp
+#             period = safeDiv(EVENTS.getOriginalExpiration(event), periodLength)
+#             EXPEVENTS.removeEvent(branch, period)
+#             EXPEVENTS.deleteEvent(branch, period, event)
+#             EVENTS.setOriginalExpiration(event, EVENTS.getExpiration(event))
+#     branch = winner
+#     EVENTS.setOutcome(event, fxpOutcome)
+#     EVENTS.setEthics(event, ethical)
+#     market = EVENTS.getMarket(event, 0)
+#     if(fxpOutcome == 3 * ONE_HALF and EVENTS.getEventPushedUp(event)):
+#         if(MARKETS.getPushedForward(market)):
+#             # look @ total shares purchase cutoff times for early resolution bonds
+#             amount = EVENTS.getEarlyResolutionBond(event)
+#             branchWallet = BRANCHES.getBranchWallet(branch, INFO.getCurrency(market))
+#             if(amount && !INFO.getWallet(market).transfer(branchWallet, amount)):
+#                 throw()
+#         MARKETS.setTradingPeriod(market, MARKETS.getOriginalTradingPeriod(market))
+#         MARKETS.setPushedForward(market, 0, msg.sender)
+#         EXPEVENTS.setEventWeight(branch, votingPeriodEvent, event, 0)
+#         # set outcome to 0
+#         EVENTS.setOutcome(event, 0)
+#         EVENTS.setMode(event, 0)
+#         EVENTS.setEthics(event, 0)
+#         # set uncaughtoutcome to 0
+#         EVENTS.setUncaughtOutcome(event, 0)
+#         EVENTS.setEventPushedUp(event, 0)
+#         # need to store which period it was "rejected" in
+#         EVENTS.setRejected(event, votingPeriodEvent)
+#         # set $event expiration to be the old date
+#         EVENTS.setExpiration(event, EVENTS.getOriginalExpiration(event))
+#     elif(fxpOutcome == 3 * ONE_HALF or !ethical):
+#         # not ethical is same as .5 outcome
+#         fxpOutcome = 3 * ONE_HALF
+#         EVENTS.setOutcome(event, fxpOutcome)
 
-macro checkForkPreconditions():
-    if(!EVENTS.getRoundTwo(event) or BACKSTOPS.getFinal(event) or EVENTS.getForked(event)):
-        MUTEX.unsetMutex()
-        return(-1)
-    if(forkPeriod == currentVotePeriod or currentVotePeriod == (forkPeriod + 1) or currentVotePeriod == (forkPeriod + 2)):
-        MUTEX.unsetMutex()
-        return(-3)
-    if(EVENTS.getEventBranch(event) != branch or !branch or !event):
-        MUTEX.unsetMutex()
-        return(-5)
-    if(msg.value < 350000 * tx.gasprice):
-        MUTEX.unsetMutex()
-        return(0)
-    CONSENSUSDATA.setRefund(event, msg.value)
-    last48HoursOfPeriod = (block.timestamp / BRANCHES.getPeriodLength(branch) != ((block.timestamp + 2 * TWENTY_FOUR_HR) / BRANCHES.getPeriodLength(branch)))
-    reportedOnInRoundTwo = EVENTS.getUncaughtOutcome(event)
-    if(!last48HoursOfPeriod or !reportedOnInRoundTwo):
-        MUTEX.unsetMutex()
-        return(0)
+#         if(EVENTS.getChallenged(event) && !BACKSTOPS.getRoundTwo(event) && EVENTS.getFirstPreliminaryOutcome(event) != EVENTS.getOutcome(event)):
+#             # pay half of validity bond to challenger
+#             if(!INFO.getWallet(event).transfer(EVENTS.getExtraBondPoster(event), bond / 2)):
+#                 throw()
+#             bond -= bond / 2
+#         branchWallet = BRANCHES.getBranchWallet(branch, INFO.getCurrency(event))
+#         # give $event bond money to reporters
+#         if(!INFO.getWallet(event).transfer(branchWallet, bond)):
+#             throw()
+#     else:
+#         bond = EVENTS.getBond(event)
+#         if(EVENTS.getChallenged(event) && !BACKSTOPS.getRoundTwo(event) && EVENTS.getFirstPreliminaryOutcome(event) != EVENTS.getOutcome(event)):
+#             # pay half of validity bond to challenger
+#             if(!INFO.getWallet(event).transfer(EVENTS.getExtraBondPoster(event), bond / 2)):
+#                 throw()
+#             bond -= bond / 2
+#         # return bond as a normal event resolution
+#         if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
+#             throw()
+#         if(MARKETS.getPushedForward(market)):
+#             amount = EVENTS.getEarlyResolutionBond(event)
+#             if(amount && !INFO.getWallet(market).transfer(MARKETS.getBondsMan(market), amount)):
+#                 throw()
+#         if(EVENTS.getEventPushedUp(event)):
+#             # delete old event from future events exp
+#             period = safeDiv(EVENTS.getOriginalExpiration(event), periodLength)
+#             EXPEVENTS.removeEvent(branch, period)
+#             EXPEVENTS.deleteEvent(branch, period, event)
+#             EVENTS.setOriginalExpiration(event, EVENTS.getExpiration(event))
+#     handleFirstResolverBond()
+#     EVENTS.setExpiration(event, block.timestamp)
+#     EVENTS.setBranch(event, winner)
+#     BACKSTOPS.setMoved(event)
+#     return(1)
 
-macro makeFork():
-    newBranch = CREATEBRANCH.createSubbranch(FORK_TEXT, BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), BRANCHES.getOracleOnly(branch), 0)
-    BRANCHES.setMostRecentChild(branch, newBranch)
-    period = BRANCHES.getVotePeriod(newBranch)
-    EXPEVENTS.setEventRequired(newBranch, period + 1, event)
-    forkPeriod = BRANCHES.getForkPeriod(branch)
-    afterFork = 0
-    if(period == (forkPeriod + 1) or period == (forkPeriod + 2)):
-        afterFork = 1
-    currency = INFO.getCurrency(event)
-    wallet = INFO.getWallet(event)
-    # add to next expiration period
-    EXPEVENTS.addEvent(newBranch, period + 1, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
-    # add event to original exp period per event early push forward res on new branch
-    if(EVENTS.getEventPushedUp(event)):
-        originalPeriod = EVENTS.getOriginalExpiration(event) / BRANCHES.getPeriodLength(newBranch)
-        EXPEVENTS.addEvent(newBranch, originalPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+# macro scalarOrCategoricalForkResolve():
+#     mode = 0
+#     ethical = 0
+#     # original parent won
+#     if(winner == branch):
+#         mode = EVENTS.getUncaughtOutcome(event)
+#         ethical = ethicCatch(EVENTS.getEthics(event))
+#         # remove event from child if parent was the winning branch
+#         if(EVENTS.getEventPushedUp(event)):
+#             # delete old event from future events exp
+#             child = BRANCHES.getMostRecentChild(branch)
+#             period = safeDiv(EVENTS.getOriginalExpiration(event), periodLength)
+#             EXPEVENTS.removeEvent(child, period)
+#             EXPEVENTS.deleteEvent(child, period, event)
+#             EVENTS.setOriginalExpiration(event, EVENTS.getExpiration(event))
+#     # fork won
+#     else:
+#         mode = EVENTS.getForkOutcome(event)
+#         ethical = ethicCatch(EVENTS.getForkEthicality(event))
+#         # remove event from parent if child was the winning branch
+#         if(EVENTS.getEventPushedUp(event)):
+#             # delete old event from future events exp
+#             period = safeDiv(EVENTS.getOriginalExpiration(event), periodLength)
+#             EXPEVENTS.removeEvent(branch, period)
+#             EXPEVENTS.deleteEvent(branch, period, event)
+#             EVENTS.setOriginalExpiration(event, EVENTS.getExpiration(event))
+#     branch = winner
+#     EVENTS.setMode(event, mode)
+#     EVENTS.setEthics(event, ethical)
+#     scaledMax = EVENTS.getMaxValue(event)
+#     scaledMin = EVENTS.getMinValue(event)
+#     if(categorical(event)):
+#         scaledMin = ONE
+#         scaledMax = ONE * EVENTS.getNumOutcomes(event)
+#     fxpOutcome = safeFxpMul(mode, (scaledMax - scaledMin)) + scaledMin
+#     if(categorical(event)):
+#         fxpOutcome = round(fxpOutcome)
+#     ethicOutcome = safeFxpMul(ONE_HALF, (scaledMax - scaledMin)) + scaledMin
+#     # outcome of 1 is 1/10**18 or basically 0, but allows us to still check if outcome is 0 or not to see if an outcome has been set
+#     if(ethicOutcome == 0):
+#         ethicOutcome = 1
+#     if(fxpOutcome == 0):
+#         fxpOutcome = 1
+#     EVENTS.setOutcome(event, fxpOutcome)
+#     if(mode == ONE_HALF and EVENTS.getEventPushedUp(event)):
+#         if(MARKETS.getPushedForward(market)):
+#             # look @ total shares purchase cutoff times for early resolution bonds
+#             amount = EVENTS.getEarlyResolutionBond(event)
+#             branchWallet = BRANCHES.getBranchWallet(branch, INFO.getCurrency(market))
+#             if(amount && !INFO.getWallet(market).transfer(branchWallet, amount)):
+#                 throw()
+#         MARKETS.setTradingPeriod(market, MARKETS.getOriginalTradingPeriod(market))
+#         MARKETS.setPushedForward(market, 0, msg.sender)
+#         EXPEVENTS.setEventWeight(branch, votingPeriodEvent, event, 0)
+#         # set outcome to 0
+#         EVENTS.setOutcome(event, 0)
+#         EVENTS.setMode(event, 0)
+#         EVENTS.setEthics(event, 0)
+#         # set uncaughtoutcome to 0
+#         EVENTS.setUncaughtOutcome(event, 0)
+#         EVENTS.setEventPushedUp(event, 0)
+#         # need to store which period it was "rejected" in
+#         EVENTS.setRejected(event, votingPeriodEvent)
+#         # set $event expiration to be the old date
+#         EVENTS.setExpiration(event, EVENTS.getOriginalExpiration(event))
+#     elif(mode == ONE_HALF or !ethical):
+#         # not ethical is same as .5 outcome
+#         EVENTS.setOutcome(event, ethicOutcome)
+#         if(EVENTS.getChallenged(event) && !BACKSTOPS.getRoundTwo(event) && EVENTS.getFirstPreliminaryOutcome(event) != EVENTS.getOutcome(event)):
+#             # pay half of validity bond to challenger
+#             if(!INFO.getWallet(event).transfer(EVENTS.getExtraBondPoster(event), bond / 2)):
+#                 throw()
+#             bond -= bond / 2
+#         branchWallet = BRANCHES.getBranchWallet(branch, INFO.getCurrency(event))
+#         # give $event bond money to reporters
+#         if(!INFO.getWallet(event).transfer(branchWallet, bond)):
+#             throw()
+#     else:
+#         bond = EVENTS.getBond(event)
+#         if(EVENTS.getChallenged(event) && !BACKSTOPS.getRoundTwo(event) && EVENTS.getFirstPreliminaryOutcome(event) != EVENTS.getOutcome(event)):
+#             # pay half of validity bond to challenger
+#             if(!INFO.getWallet(event).transfer(EVENTS.getExtraBondPoster(event), bond / 2)):
+#                 throw()
+#             bond -= bond / 2
+#         # return bond as a normal event resolution
+#         if(!INFO.getWallet(event).transfer(INFO.getCreator(event), bond)):
+#             throw()
+#         market = EVENTS.getMarket(event, 0)
+#         if(MARKETS.getPushedForward(market)):
+#             amount = EVENTS.getEarlyResolutionBond(event)
+#             if(amount && !INFO.getWallet(market).transfer(MARKETS.getBondsMan(market), amount)):
+#                 throw()
+#         if(EVENTS.getEventPushedUp(event)):
+#             # delete old event from future events exp
+#             period = safeDiv(EVENTS.getOriginalExpiration(event), periodLength)
+#             EXPEVENTS.removeEvent(branch, period)
+#             EXPEVENTS.deleteEvent(branch, period, event)
+#             EVENTS.setOriginalExpiration(event, EVENTS.getExpiration(event))
+#     handleFirstResolverBond()
+#     EVENTS.setBranch(event, winner)
+#     BACKSTOPS.setMoved(event)
+#     return(1)
 
-    EVENTS.setExpiration(event, block.timestamp)
-    BACKSTOPS.setOriginalBranch(event, branch)
-    BACKSTOPS.setForkBondPoster(event, msg.sender)
-    EVENTS.setForked(event)
-    BACKSTOPS.setFinal(event)
-    BRANCHES.setForkPeriod(branch)
-    BRANCHES.setEventForkedOver(branch, event)
-    if(forkedOverEthicality):
-        BACKSTOPS.setForkedOverEthicality(event)
+# macro checkForkPreconditions():
+#     if(!EVENTS.getRoundTwo(event) or BACKSTOPS.getFinal(event) or EVENTS.getForked(event)):
+#         MUTEX.unsetMutex()
+#         return(-1)
+#     if(forkPeriod == currentVotePeriod or currentVotePeriod == (forkPeriod + 1) or currentVotePeriod == (forkPeriod + 2)):
+#         MUTEX.unsetMutex()
+#         return(-3)
+#     if(EVENTS.getEventBranch(event) != branch or !branch or !event):
+#         MUTEX.unsetMutex()
+#         return(-5)
+#     if(msg.value < 350000 * tx.gasprice):
+#         MUTEX.unsetMutex()
+#         return(0)
+#     CONSENSUSDATA.setRefund(event, msg.value)
+#     last48HoursOfPeriod = (block.timestamp / BRANCHES.getPeriodLength(branch) != ((block.timestamp + 2 * TWENTY_FOUR_HR) / BRANCHES.getPeriodLength(branch)))
+#     reportedOnInRoundTwo = EVENTS.getUncaughtOutcome(event)
+#     if(!last48HoursOfPeriod or !reportedOnInRoundTwo):
+#         MUTEX.unsetMutex()
+#         return(0)
 
-macro returnRoundTwoBond():
-    market = EVENTS.getMarket(event, 0)
-    averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period - 1, BRANCHES.getBranchCurrency(branch, 0)) / EXPEVENTS.getNumberEvents(branch, period - 1)
-    bond = safeAdd(averageAdjudicationCost, safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2)))
-    minBond = 200 * ONE
-    bond = min(bond, minBond)
-    REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
-    REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
-    BACKSTOPS.setBondReturned(event)
+# macro makeFork():
+#     newBranch = CREATEBRANCH.createSubbranch(FORK_TEXT, BRANCHES.getPeriodLength(branch), branch, BRANCHES.getMinTradingFee(branch), BRANCHES.getOracleOnly(branch), 0)
+#     BRANCHES.setMostRecentChild(branch, newBranch)
+#     period = BRANCHES.getVotePeriod(newBranch)
+#     EXPEVENTS.setEventRequired(newBranch, period + 1, event)
+#     forkPeriod = BRANCHES.getForkPeriod(branch)
+#     afterFork = 0
+#     if(period == (forkPeriod + 1) or period == (forkPeriod + 2)):
+#         afterFork = 1
+#     currency = INFO.getCurrency(event)
+#     wallet = INFO.getWallet(event)
+#     # add to next expiration period
+#     EXPEVENTS.addEvent(newBranch, period + 1, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+#     # add event to original exp period per event early push forward res on new branch
+#     if(EVENTS.getEventPushedUp(event)):
+#         originalPeriod = EVENTS.getOriginalExpiration(event) / BRANCHES.getPeriodLength(newBranch)
+#         EXPEVENTS.addEvent(newBranch, originalPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
 
-macro checkMoveEventPreconditions():
-    if(!branch or !event or currentVotePeriod < (forkPeriod + 2) or EVENTS.getOutcome(event) or BACKSTOPS.getMoved(event) or !eventCreatedPriorToFork(event)):
-        MUTEX.unsetMutex()
-        return(0)
-    winner = BACKSTOPS.getResolved(branch, forkPeriod)
-    if(!winner):
-        winner = self.resolveFork(branch)
-    nonDefaultForkResolution = EVENTS.getForkResolveAddress(event)
-    if(nonDefaultForkResolution):
-        resolveCustomForkResolution()
+#     EVENTS.setExpiration(event, block.timestamp)
+#     BACKSTOPS.setOriginalBranch(event, branch)
+#     BACKSTOPS.setForkBondPoster(event, msg.sender)
+#     EVENTS.setForked(event)
+#     BACKSTOPS.setFinal(event)
+#     BRANCHES.setForkPeriod(branch)
+#     BRANCHES.setEventForkedOver(branch, event)
+#     if(forkedOverEthicality):
+#         BACKSTOPS.setForkedOverEthicality(event)
 
-macro keepEventInOriginalBranch():
-    # set outcomes to 0
-    EVENTS.setOutcome(event, 0)
-    EVENTS.setMode(event, 0)
-    EVENTS.setEthics(event, 0)
-    EVENTS.setUncaughtOutcome(event, 0)
-    EVENTS.setCreationTime(event)
+# macro returnRoundTwoBond():
+#     market = EVENTS.getMarket(event, 0)
+#     averageAdjudicationCost = BRANCHES.getInitialBalance(branch, period - 1, BRANCHES.getBranchCurrency(branch, 0)) / EXPEVENTS.getNumberEvents(branch, period - 1)
+#     bond = safeAdd(averageAdjudicationCost, safeFxpMul(MARKETS.getSharesValue(market), (POINT_ZERO_ONE + MARKETS.getTradingFee(market) / 2)))
+#     minBond = 200 * ONE
+#     bond = min(bond, minBond)
+#     REPORTING.subtractRep(branch, REPORTING.repIDToIndex(branch, event), bond)
+#     REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), bond)
+#     BACKSTOPS.setBondReturned(event)
 
-    # return bond if it's a round 2 event and make it not one anymore
-    if(BACKSTOPS.getRoundTwo(event) && !ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
-        throw()
-    # if should've resolved in past periods
-    if(expPeriod <= currentVotePeriod):
-        # should only be put into vote period if it's not in early resolve / first wave portion anymore
-        if(EVENTS.getChallenged(event)):
-            # push it into next [this] period
-            forkPeriod = BRANCHES.getForkPeriod(branch)
-            afterFork = 0
-            if(currentPeriod == (forkPeriod + 2)):
-                afterFork = 1
-            currency = INFO.getCurrency(event)
-            wallet = INFO.getWallet(event)
-            # add to next expiration period
-            EXPEVENTS.addEvent(branch, currentPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
-        EVENTS.setExpiration(event, block.timestamp)
-    # otherwise it's set to expire in the period it would've expired in as normal, no changes needed
+# macro checkMoveEventPreconditions():
+#     if(!branch or !event or currentVotePeriod < (forkPeriod + 2) or EVENTS.getOutcome(event) or BACKSTOPS.getMoved(event) or !eventCreatedPriorToFork(event)):
+#         MUTEX.unsetMutex()
+#         return(0)
+#     winner = BACKSTOPS.getResolved(branch, forkPeriod)
+#     if(!winner):
+#         winner = self.resolveFork(branch)
+#     nonDefaultForkResolution = EVENTS.getForkResolveAddress(event)
+#     if(nonDefaultForkResolution):
+#         resolveCustomForkResolution()
 
-macro moveEventToWinningBranch():
-    EVENTS.setBranch(event, winner)
-    # set outcomes to 0
-    EVENTS.setOutcome(event, 0)
-    EVENTS.setMode(event, 0)
-    EVENTS.setEthics(event, 0)
-    EVENTS.setUncaughtOutcome(event, 0)
-    EVENTS.setCreationTime(event)
-    originalPeriod = EVENTS.getOriginalExpiration(event) / BRANCHES.getPeriodLength(branch)
-    # return bond if it's a round 2 event and make it not one anymore
-    if(BACKSTOPS.getRoundTwo(event) && !ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
-        throw()
-    # move event to fork
-    # and place it into the next reporting period w/ outcomes to 0
-    if(expPeriod <= currentVotePeriod):
-        EVENTS.setExpiration(event, block.timestamp)
-        # should only be put into vote period if it's not in early resolve / first wave portion anymore
-        if(EVENTS.getChallenged(event)):
-            # push it into next [this] period
-            forkPeriod = BRANCHES.getForkPeriod(winner)
-            afterFork = 0
-            if(currentPeriod == (forkPeriod + 2)):
-                afterFork = 1
-            currency = INFO.getCurrency(event)
-            wallet = INFO.getWallet(event)
-            # add to next expiration period
-            EXPEVENTS.addEvent(winner, currentPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+# macro keepEventInOriginalBranch():
+#     # set outcomes to 0
+#     EVENTS.setOutcome(event, 0)
+#     EVENTS.setMode(event, 0)
+#     EVENTS.setEthics(event, 0)
+#     EVENTS.setUncaughtOutcome(event, 0)
+#     EVENTS.setCreationTime(event)
 
-            # add event to original exp period per event early push forward res on new branch
-            if(EVENTS.getEventPushedUp(event)):
-                forkPeriod = BRANCHES.getForkPeriod(winner)
-                afterFork = 0
-                if(originalPeriod == (forkPeriod + 1) or originalPeriod == (forkPeriod + 2)):
-                    afterFork = 1
-                currency = INFO.getCurrency(event)
-                wallet = INFO.getWallet(event)
-                # add to next expiration period
-                EXPEVENTS.addEvent(winner, originalPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+#     # return bond if it's a round 2 event and make it not one anymore
+#     if(BACKSTOPS.getRoundTwo(event) && !ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
+#         throw()
+#     # if should've resolved in past periods
+#     if(expPeriod <= currentVotePeriod):
+#         # should only be put into vote period if it's not in early resolve / first wave portion anymore
+#         if(EVENTS.getChallenged(event)):
+#             # push it into next [this] period
+#             forkPeriod = BRANCHES.getForkPeriod(branch)
+#             afterFork = 0
+#             if(currentPeriod == (forkPeriod + 2)):
+#                 afterFork = 1
+#             currency = INFO.getCurrency(event)
+#             wallet = INFO.getWallet(event)
+#             # add to next expiration period
+#             EXPEVENTS.addEvent(branch, currentPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+#         EVENTS.setExpiration(event, block.timestamp)
+#     # otherwise it's set to expire in the period it would've expired in as normal, no changes needed
 
-    else:
-        # should only be put into vote period if it's not in early resolve / first wave portion anymore
-        if(EVENTS.getChallenged(event)):
-            # push into period it wouldve expired in
-            # expiration time doesnt need to change
-            forkPeriod = BRANCHES.getForkPeriod(winner)
-            afterFork = 0
-            if(expPeriod == (forkPeriod + 2)):
-                afterFork = 1
-            currency = INFO.getCurrency(event)
-            wallet = INFO.getWallet(event)
-            # add to next expiration period
-            EXPEVENTS.addEvent(winner, expPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+# macro moveEventToWinningBranch():
+#     EVENTS.setBranch(event, winner)
+#     # set outcomes to 0
+#     EVENTS.setOutcome(event, 0)
+#     EVENTS.setMode(event, 0)
+#     EVENTS.setEthics(event, 0)
+#     EVENTS.setUncaughtOutcome(event, 0)
+#     EVENTS.setCreationTime(event)
+#     originalPeriod = EVENTS.getOriginalExpiration(event) / BRANCHES.getPeriodLength(branch)
+#     # return bond if it's a round 2 event and make it not one anymore
+#     if(BACKSTOPS.getRoundTwo(event) && !ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
+#         throw()
+#     # move event to fork
+#     # and place it into the next reporting period w/ outcomes to 0
+#     if(expPeriod <= currentVotePeriod):
+#         EVENTS.setExpiration(event, block.timestamp)
+#         # should only be put into vote period if it's not in early resolve / first wave portion anymore
+#         if(EVENTS.getChallenged(event)):
+#             # push it into next [this] period
+#             forkPeriod = BRANCHES.getForkPeriod(winner)
+#             afterFork = 0
+#             if(currentPeriod == (forkPeriod + 2)):
+#                 afterFork = 1
+#             currency = INFO.getCurrency(event)
+#             wallet = INFO.getWallet(event)
+#             # add to next expiration period
+#             EXPEVENTS.addEvent(winner, currentPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
 
-            # add event to original exp period per event early push forward res on new branch
-            if(EVENTS.getEventPushedUp(event)):
-                forkPeriod = BRANCHES.getForkPeriod(winner)
-                afterFork = 0
-                if(originalPeriod == (forkPeriod + 2)):
-                    afterFork = 1
-                currency = INFO.getCurrency(event)
-                wallet = INFO.getWallet(event)
-                # add to next expiration period
-                EXPEVENTS.addEvent(winner, originalPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+#             # add event to original exp period per event early push forward res on new branch
+#             if(EVENTS.getEventPushedUp(event)):
+#                 forkPeriod = BRANCHES.getForkPeriod(winner)
+#                 afterFork = 0
+#                 if(originalPeriod == (forkPeriod + 1) or originalPeriod == (forkPeriod + 2)):
+#                     afterFork = 1
+#                 currency = INFO.getCurrency(event)
+#                 wallet = INFO.getWallet(event)
+#                 # add to next expiration period
+#                 EXPEVENTS.addEvent(winner, originalPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
 
-# use address picked in event creation to resolve it instead of the default fork resolve option
-macro resolveCustomForkResolution():
-    winner = nonDefaultForkResolution.resolveFork()
-    if(winner):
-        return(1)
-    else:
-        return(0)
+#     else:
+#         # should only be put into vote period if it's not in early resolve / first wave portion anymore
+#         if(EVENTS.getChallenged(event)):
+#             # push into period it wouldve expired in
+#             # expiration time doesnt need to change
+#             forkPeriod = BRANCHES.getForkPeriod(winner)
+#             afterFork = 0
+#             if(expPeriod == (forkPeriod + 2)):
+#                 afterFork = 1
+#             currency = INFO.getCurrency(event)
+#             wallet = INFO.getWallet(event)
+#             # add to next expiration period
+#             EXPEVENTS.addEvent(winner, expPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
 
-macro handleFirstResolverBond():
-    $resolverBondPoster = EVENTS.getResolveBondPoster(event)
+#             # add event to original exp period per event early push forward res on new branch
+#             if(EVENTS.getEventPushedUp(event)):
+#                 forkPeriod = BRANCHES.getForkPeriod(winner)
+#                 afterFork = 0
+#                 if(originalPeriod == (forkPeriod + 2)):
+#                     afterFork = 1
+#                 currency = INFO.getCurrency(event)
+#                 wallet = INFO.getWallet(event)
+#                 # add to next expiration period
+#                 EXPEVENTS.addEvent(winner, originalPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
 
-    # if different outcome then first resolver bond goes to reporters, any other normal case it is returned
-    if(EVENTS.getFirstPreliminaryOutcome($event) != EVENTS.getOutcome($event)):
-        REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) && REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $branch), FIRST_RESOLVE_BOND)
-    else:
-        REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) && REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $resolverBondPoster), FIRST_RESOLVE_BOND)
+# # use address picked in event creation to resolve it instead of the default fork resolve option
+# macro resolveCustomForkResolution():
+#     winner = nonDefaultForkResolution.resolveFork()
+#     if(winner):
+#         return(1)
+#     else:
+#         return(0)
+
+# macro handleFirstResolverBond():
+#     $resolverBondPoster = EVENTS.getResolveBondPoster(event)
+
+#     # if different outcome then first resolver bond goes to reporters, any other normal case it is returned
+#     if(EVENTS.getFirstPreliminaryOutcome($event) != EVENTS.getOutcome($event)):
+#         REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) && REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $branch), FIRST_RESOLVE_BOND)
+#     else:
+#         REPORTING.subtractRep($branch, REPORTING.repIDToIndex($branch, $event), FIRST_RESOLVE_BOND) && REPORTING.addRep($branch, REPORTING.repIDToIndex($branch, $resolverBondPoster), FIRST_RESOLVE_BOND)

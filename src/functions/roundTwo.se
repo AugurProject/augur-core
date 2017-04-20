@@ -57,6 +57,9 @@ macro MIN_BOND: 200 * ONE
 def init():
     self.controller = 0xC001D00D
 
+def ok():
+    return(2)
+
 def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     if(MUTEX.getMutex()):
         throw()

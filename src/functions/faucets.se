@@ -115,7 +115,7 @@ def claimInitialRep(parent, branch):
         throw()
     MUTEX.setMutex()
     # auto increment vote period if needed
-    CONSENSUSFUNCTIONS.incrementPeriodAfterReporting(parent)
+    # CONSENSUSFUNCTIONS.incrementPeriodAfterReporting(parent)
     parentPeriod = BRANCHES.getParentPeriod(branch)
     forkPeriod = BRANCHES.getForkPeriod(parent)
     fork = BRANCHES.getMostRecentChild(parent)
