@@ -35,7 +35,7 @@ def init():
     self.controller = 0xC001D00D
 
 def collectRep(branch, sender):
-    if(MUTEX.getMutex() && !mutexWhitelisted()):
+    if(MUTEX.getMutex() && !isCallerWhitelisted()):
         throw()
     MUTEX.setMutex()
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -48,12 +48,12 @@ def collectRep(branch, sender):
     # need 1 rep to claim fees
     if(newRep < ONE):
         prepareInfoForConsensus()
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(2)
     collectRedistributedRep()
     prepareInfoForConsensus()
-    if(!mutexWhitelisted()):
+    if(!isCallerWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
 
@@ -65,7 +65,7 @@ def collectRep(branch, sender):
     # -3: rep not collected yet
 # 2 means no errors but didnt report last period
 def collectFees(branch, sender, currency):
-    if(MUTEX.getMutex() && !mutexWhitelisted()):
+    if(MUTEX.getMutex() && !isCallerWhitelisted()):
         throw()
     MUTEX.setMutex()
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -77,11 +77,11 @@ def collectFees(branch, sender, currency):
     checkCollectFeesPreconditions()
     # need 1 rep to claim fees
     if(newRep < ONE):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(2)
     collectTradeFees()
-    if(!mutexWhitelisted()):
+    if(!isCallerWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
 
@@ -89,11 +89,11 @@ macro checkCollectRepPreconditions():
     atSecondHalfOfPeriod()
     if(!CONSENSUS.getRepRedistributionDone(branch, sender)):
         # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
     if(repCollected):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
 
@@ -101,12 +101,12 @@ macro checkCollectFeesPreconditions():
     atSecondHalfOfPeriod()
     if(!CONSENSUS.getRepRedistributionDone(branch, sender)):
         # need to call penalize for all events and penalize for too lazy to report or catchup if necessary
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(-1)
     feesCollected = CONSENSUS.getFeesCollected(branch, sender, lastPeriod, currency)
     if(feesCollected):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
     if(!repCollected):

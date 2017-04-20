@@ -136,13 +136,13 @@ def ok():
 # ui has to call this to stay cheap / not check it elsewhere
 def incrementPeriodAfterReporting(branch):
     refund()
-    if(MUTEX.getMutex() && !mutexWhitelisted()):
+    if(MUTEX.getMutex() && !isCallerWhitelisted()):
         throw()
-    if(!mutexWhitelisted()):
+    if(!isCallerWhitelisted()):
         MUTEX.setMutex()
     # do this after reporting is finished
     if(!periodOver(branch)):
-        if(!mutexWhitelisted()):
+        if(!isCallerWhitelisted()):
             MUTEX.unsetMutex()
         return(0)
     periodVotingOnNow = block.timestamp / BRANCHES.getPeriodLength($branch) - 1
@@ -156,7 +156,7 @@ def incrementPeriodAfterReporting(branch):
     baseReporterQuantity = 2 * (3 * ONE + ((333 * percentAppealed)^3 / ONE^2)) / ONE
     CONSENSUS.setBaseReportersLastPeriod(branch, BRANCHES.getBaseReporters(branch))
     BRANCHES.setBaseReporters(branch, baseReporterQuantity)
-    if(!mutexWhitelisted()):
+    if(!isCallerWhitelisted()):
         MUTEX.unsetMutex()
     return(1)
 

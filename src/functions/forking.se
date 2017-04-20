@@ -96,46 +96,19 @@ def init():
 def ok():
     return(1)
 
-# def moveEvent(event):
-#     refund()
-#     if(MUTEX.getMutex()):
-#         throw()
-#     MUTEX.setMutex()
-
-#     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
-#     branch = EVENTS.getEventBranch(event)
-#     eventForkedOver = BRANCHES.getEventForkedOver(branch)
-#     expPeriod = EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch)
-#     eventIndex = EXPEVENTS.getEventIndex(expPeriod, event)
-#     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-#     currentVotePeriod = BRANCHES.getVotePeriod(branch)
-#     checkMoveEventPreconditions()
-#     if(event == eventForkedOver):
-#         MUTEX.unsetMutex()
-#         return(1)
-#     # leave event here in same branch
-#     elif(winner == EVENTS.getEventBranch(event)):
-#         keepEventInOriginalBranch()
-#     # event's branch is changed to winning branch
-#     else:
-#         moveEventToWinningBranch()
-#     BACKSTOPS.setMoved(event)
-#     MUTEX.unsetMutex()
-#     return(1)
-
 # # parent branch is branch here
 # # If there's only 1 event and that's the one we forked over [rare edge case] we can call resolve fork manually if it hasn't been done yet within the time parameters which allows a fork to be resolved [2 periods after the start of the fork]
 # def resolveFork(branch):
-#     if(MUTEX.getMutex() && !mutexWhitelisted()):
+#     if(MUTEX.getMutex() && !isCallerWhitelisted()):
 #         throw()
-#     if(!mutexWhitelisted()):
+#     if(!isCallerWhitelisted()):
 #         MUTEX.setMutex()
 #     forkPeriod = BRANCHES.getForkPeriod(branch)
 #     currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
 #     if(BACKSTOPS.getResolved(branch, forkPeriod)):
 #         throw()
 #     if(currentPeriod < (forkPeriod + 2)):
-#         if(!mutexWhitelisted()):
+#         if(!isCallerWhitelisted()):
 #             MUTEX.unsetMutex()
 #         return(0)
 
@@ -149,7 +122,7 @@ def ok():
 #     else:
 #         winner = fork
 #     BACKSTOPS.setResolved(branch, forkPeriod, winner)
-#     if(!mutexWhitelisted()):
+#     if(!isCallerWhitelisted()):
 #         MUTEX.unsetMutex()
 #     return(winner)
 
