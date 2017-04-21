@@ -197,8 +197,8 @@ macro placeAsk():
     # at a price greater than or equal to the sell price).
     $bestBidID = ORDERS.getBestBid($market, $outcome)
     $bestBidPrice = ORDERS.getPrice($bestBidID)
-    # if($bestBidID and $fxpPrice <= $bestBidPrice and ORDERS.getAmount($bestBidID) >= safeFxpDiv(MIN_ORDER_VALUE, $bestBidPrice):
-    #     logReturn(bidAndAskLogReturn, -5)
+    if($bestBidID and $fxpPrice <= $bestBidPrice and ORDERS.getAmount($bestBidID) >= safeFxpDiv(MIN_ORDER_VALUE, $bestBidPrice)):
+        logReturn(bidAndAskLogReturn, -5)
 
     $event = MARKETS.getMarketEvent($market, 0)
     # Take shares in escrow if user has shares
@@ -239,10 +239,10 @@ macro placeAsk():
 macro placeBid():
     # Check if there are any "crossed orders" (i.e., ask orders
     # at a price less than or equal to the buy price).
-    # $bestAskID = ORDERS.getBestAsk($market, $outcome)
-    # $bestAskPrice = ORDERS.getPrice($bestAskID)
-    # if($bestAskID != 0 and $fxpPrice >= $bestAskPrice and ORDERS.getAmount($bestAskID) >= safeFxpDiv(MIN_ORDER_VALUE, $bestAskPrice)):
-    #     logReturn(bidAndAskLogReturn, -5)
+    $bestAskID = ORDERS.getBestAsk($market, $outcome)
+    $bestAskPrice = ORDERS.getPrice($bestAskID)
+    if($bestAskID != 0 and $fxpPrice >= $bestAskPrice and ORDERS.getAmount($bestAskID) >= safeFxpDiv(MIN_ORDER_VALUE, $bestAskPrice)):
+        logReturn(bidAndAskLogReturn, -5)
 
     $event = MARKETS.getMarketEvent($market, 0)
     # If user owns n minus the one outcome we're buying escrow no money but escrow their shares in all the other outcomes.
