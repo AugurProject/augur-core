@@ -114,7 +114,7 @@ macro penalizeOrRewardReporter():
         CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
     if(!penalizedOnEvent and reportValue and outcome != 0):
         calculateRepChange(reportValue, ONE)
-        # handleEthicsAndBondRepRedistribution(numReportedOn)
+        handleEthicsAndBondRepRedistribution(numReportedOn)
         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
         CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
 
