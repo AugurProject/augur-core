@@ -80,214 +80,211 @@ macro MAX_ORDER_VALUE: 1569275433846670190958947355801916604025L
 def init():
     self.controller = 0xC001D00D
 
-def ok():
-    return(2)
+def placeOrder(type, fxpAmount, fxpPrice, market, outcome):
+    refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
 
-# def placeOrder(type, fxpAmount, fxpPrice, market, outcome):
-#     refund()
-#     if(MUTEX.getMutex()):
-#         throw()
-#     MUTEX.setMutex()
+    saveOrder(type, fxpAmount, fxpPrice, market, outcome, msg.sender)
+    MUTEX.unsetMutex()
+    logReturn(bidAndAskLogReturn, FAILURE)
 
-#     saveOrder(type, fxpAmount, fxpPrice, market, outcome, msg.sender)
-#     MUTEX.unsetMutex()
-#     logReturn(bidAndAskLogReturn, FAILURE)
+#
+# Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
+# @returns 1 if success, 0 if failure
+#
+# 200k gas
+def cancel(orderID):
+    refund()
+    if(MUTEX.getMutex()):
+        throw()
+    MUTEX.setMutex()
 
-# #
-# # Cancellation: cancels an order, if a bid refunds money, if an ask returns shares
-# # @returns 1 if success, 0 if failure
-# #
-# # 200k gas
-# def cancel(orderID):
-#     refund()
-#     if(MUTEX.getMutex()):
-#         throw()
-#     MUTEX.setMutex()
+    # user can cancel anytime
+    # Get order
+    fetchOrderCancelInfo()
+    # Check the owner
+    if(msg.sender != owner):
+        MUTEX.unsetMutex()
+        logReturn(bidAndAskLogReturn, FAILURE)
 
-#     # user can cancel anytime
-#     # Get order
-#     fetchOrderCancelInfo()
-#     # Check the owner
-#     if(msg.sender != owner):
-#         MUTEX.unsetMutex()
-#         logReturn(bidAndAskLogReturn, FAILURE)
+    # Clear the order first
+    removeOrder(orderID, market)
+    refundOrder()
+    # Log cancellation
+    log(type = logCancel, market, msg.sender, fxpPrice, fxpAmount, orderID, outcome, type, moneyEscrowed, sharesEscrowed)
+    MUTEX.unsetMutex()
+    logReturn(bidAndAskLogReturn, SUCCESS)
 
-#     # Clear the order first
-#     removeOrder(orderID, market)
-#     refundOrder()
-#     # Log cancellation
-#     log(type = logCancel, market, msg.sender, fxpPrice, fxpAmount, orderID, outcome, type, moneyEscrowed, sharesEscrowed)
-#     MUTEX.unsetMutex()
-#     logReturn(bidAndAskLogReturn, SUCCESS)
+macro saveOrder($type, $fxpAmount, $fxpPrice, $market, $outcome, $sender):
+    $cumulativeScale = MARKETS.getCumulativeScale($market)
+    $branch = MARKETS.getBranch($market)
+    checkOrderPreconditions()
 
-# macro saveOrder($type, $fxpAmount, $fxpPrice, $market, $outcome, $sender):
-#     $cumulativeScale = MARKETS.getCumulativeScale($market)
-#     $branch = MARKETS.getBranch($market)
-#     checkOrderPreconditions()
+    $moneyEscrowed = 0
+    $sharesEscrowed = 0
+    $initialAmount = $fxpAmount
 
-#     $moneyEscrowed = 0
-#     $sharesEscrowed = 0
-#     $initialAmount = $fxpAmount
+    if($type == ASK):
+        placeAsk()
+    if($type == BID):
+        placeBid()
+    else:
+        throw()
 
-#     if($type == ASK):
-#         placeAsk()
-#     if($type == BID):
-#         placeBid()
-#     else:
-#         throw()
+    order = [$type, $market, $initialAmount, $fxpPrice, $sender, block.number, $outcome, $moneyEscrowed, $sharesEscrowed]
+    $orderID = sha3(order, items = 9)
+    if(ORDERS.getID($orderID)):
+        throw()
+    ORDERS.saveOrder($orderID, $type, $market, $initialAmount, $fxpPrice, $sender, $outcome, $moneyEscrowed, $sharesEscrowed)
+    # Update market
+    MARKETS.addOrder($market, $orderID)
 
-#     order = [$type, $market, $initialAmount, $fxpPrice, $sender, block.number, $outcome, $moneyEscrowed, $sharesEscrowed]
-#     $orderID = sha3(order, items = 9)
-#     if(ORDERS.getID($orderID)):
-#         throw()
-#     ORDERS.saveOrder($orderID, $type, $market, $initialAmount, $fxpPrice, $sender, $outcome, $moneyEscrowed, $sharesEscrowed)
-#     # Update market
-#     MARKETS.addOrder($market, $orderID)
+    log(type = logAddTx, $market, $sender, $type, $fxpPrice, $initialAmount, $outcome, $orderID, $moneyEscrowed, $sharesEscrowed)
+    MUTEX.unsetMutex()
+    logReturn(bidAndAskLogReturn, $orderID)
 
-#     log(type = logAddTx, $market, $sender, $type, $fxpPrice, $initialAmount, $outcome, $orderID, $moneyEscrowed, $sharesEscrowed)
-#     MUTEX.unsetMutex()
-#     logReturn(bidAndAskLogReturn, $orderID)
+macro refundOrder():
+    # Issue refunds
+    # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
+    if(type == BID and sharesEscrowed):
+        i = 1
+        while(i < MARKETS.getMarketNumOutcomes(market)):
+            if(i != outcome):
+                MARKETS.modifyParticipantShares(market, msg.sender, outcome, sharesEscrowed, 0)
+            i += 1
+    # shares refund if has shares escrowed for this outcome
+    elif(type == ASK and sharesEscrowed):
+        MARKETS.modifyParticipantShares(market, msg.sender, outcome, sharesEscrowed, 0)
+    else:
+        throw()
+    # Return to user moneyEscrowed that wasn't filled yet
+    if(moneyEscrowed):
+        refunded = INFO.getWallet(market).transfer(msg.sender, moneyEscrowed)
+        if(!refunded):
+            throw()
 
-# macro refundOrder():
-#     # Issue refunds
-#     # Return to user sharesEscrowed that weren't filled yet for all outcomes except the order outcome
-#     if(type == BID and sharesEscrowed):
-#         i = 1
-#         while(i < MARKETS.getMarketNumOutcomes(market)):
-#             if(i != outcome):
-#                 MARKETS.modifyParticipantShares(market, msg.sender, outcome, sharesEscrowed, 0)
-#             i += 1
-#     # shares refund if has shares escrowed for this outcome
-#     elif(type == ASK and sharesEscrowed):
-#         MARKETS.modifyParticipantShares(market, msg.sender, outcome, sharesEscrowed, 0)
-#     else:
-#         throw()
-#     # Return to user moneyEscrowed that wasn't filled yet
-#     if(moneyEscrowed):
-#         refunded = INFO.getWallet(market).transfer(msg.sender, moneyEscrowed)
-#         if(!refunded):
-#             throw()
+macro removeOrder($orderID, $market):
+    ORDERS.removeOrder($orderID)
+    MARKETS.removeOrderFromMarket($market, $orderID)
 
-# macro removeOrder($orderID, $market):
-#     ORDERS.removeOrder($orderID)
-#     MARKETS.removeOrderFromMarket($market, $orderID)
+macro fetchOrderCancelInfo():
+    order = array(ORDER_FIELDS)
+    order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
+    if(!order[0]):
+        MUTEX.unsetMutex()
+        return(0)
+    type = order[1]
+    market = order[2]
+    fxpAmount = order[3]
+    fxpPrice = order[4]
+    owner = order[5]
+    outcome = order[7]
+    moneyEscrowed = order[8]
+    sharesEscrowed = order[9]
 
-# macro fetchOrderCancelInfo():
-#     order = array(ORDER_FIELDS)
-#     order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
-#     if(!order[0]):
-#         MUTEX.unsetMutex()
-#         return(0)
-#     type = order[1]
-#     market = order[2]
-#     fxpAmount = order[3]
-#     fxpPrice = order[4]
-#     owner = order[5]
-#     outcome = order[7]
-#     moneyEscrowed = order[8]
-#     sharesEscrowed = order[9]
+macro checkOrderPreconditions():
+    if(!$branch):
+        MUTEX.unsetMutex()
+        return(0)
+    if(BRANCHES.getOracleOnly($branch)):
+        MUTEX.unsetMutex()
+        return(-2)
 
-# macro checkOrderPreconditions():
-#     if(!$branch):
-#         MUTEX.unsetMutex()
-#         return(0)
-#     if(BRANCHES.getOracleOnly($branch)):
-#         MUTEX.unsetMutex()
-#         return(-2)
+macro placeAsk():
+    # Check if there are any "crossed orders" (i.e., bid orders
+    # at a price greater than or equal to the sell price).
+    $bestBidID = ORDERS.getBestBid($market, $outcome)
+    $bestBidPrice = ORDERS.getPrice($bestBidID)
+    # if($bestBidID and $fxpPrice <= $bestBidPrice and ORDERS.getAmount($bestBidID) >= safeFxpDiv(MIN_ORDER_VALUE, $bestBidPrice):
+    #     logReturn(bidAndAskLogReturn, -5)
 
-# macro placeAsk():
-#     # Check if there are any "crossed orders" (i.e., bid orders
-#     # at a price greater than or equal to the sell price).
-#     $bestBidID = ORDERS.getBestBid($market, $outcome)
-#     $bestBidPrice = ORDERS.getPrice($bestBidID)
-#     if($bestBidID and $fxpPrice <= $bestBidPrice and ORDERS.getAmount($bestBidID) >= safeFxpDiv(MIN_ORDER_VALUE, $bestBidPrice):
-#         logReturn(bidAndAskLogReturn, -5)
+    $event = MARKETS.getMarketEvent($market, 0)
+    # Take shares in escrow if user has shares
+    $sharesHeld = MARKETS.getParticipantSharesPurchased($market, msg.sender, $outcome)
+    if($sharesHeld):
+        $minValue = 0
+        if(EVENTS.getNumOutcomes($event) > 2):
+            $minValue = ONE
+        else:
+            $minValue = EVENTS.getMinValue($event)
+        $price = $fxpPrice - $minValue
+        $cost = safeFxpMul($fxpAmount, $price)
+        if($price > $cumulativeScale or $cost < MIN_ORDER_VALUE or $cost >= MAX_ORDER_VALUE):
+            MUTEX.unsetMutex()
+            return(-1)
+        $fill = min($sharesHeld, $fxpAmount)
+        $fxpAmount -= $fill
+        $sharesEscrowed += $fill
+        MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$fill, 0)
 
-#     $event = MARKETS.getMarketEvent($market, 0)
-#     # Take shares in escrow if user has shares
-#     $sharesHeld = MARKETS.getParticipantSharesPurchased($market, msg.sender, $outcome)
-#     if($sharesHeld):
-#         $minValue = 0
-#         if(EVENTS.getNumOutcomes($event) > 2):
-#             $minValue = ONE
-#         else:
-#             $minValue = EVENTS.getMinValue($event)
-#         $price = $fxpPrice - $minValue
-#         $cost = safeFxpMul($fxpAmount, $price)
-#         if($price > $cumulativeScale or $cost < MIN_ORDER_VALUE or $cost >= MAX_ORDER_VALUE):
-#             MUTEX.unsetMutex()
-#             return(-1)
-#         $fill = min($sharesHeld, $fxpAmount)
-#         $fxpAmount -= $fill
-#         $sharesEscrowed += $fill
-#         MARKETS.modifyParticipantShares($market, msg.sender, $outcome, -$fill, 0)
+    # Take max minus price they want to sell at for the remainder of the amount that wasn't able to be used up above
+    if($fxpAmount):
+        $maxValue = 0
+        if(EVENTS.getNumOutcomes($event) > 2):
+            $maxValue = ONE
+        else:
+            $maxValue = EVENTS.getMaxValue($event)
+        $costPerShareShorting = $maxValue - $fxpPrice
+        $orderCost = safeFxpMul($fxpAmount, $costPerShareShorting)
+        if($costPerShareShorting > $cumulativeScale or $orderCost < MIN_ORDER_VALUE or $orderCost >= MAX_ORDER_VALUE):
+            MUTEX.unsetMutex()
+            return(-1)
+        $moneyEscrowed += $orderCost
+        $paidOrderCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $orderCost)
+        if(!paidOrderCost):
+            throw()
 
-#     # Take max minus price they want to sell at for the remainder of the amount that wasn't able to be used up above
-#     if($fxpAmount):
-#         $maxValue = 0
-#         if(EVENTS.getNumOutcomes($event) > 2):
-#             $maxValue = ONE
-#         else:
-#             $maxValue = EVENTS.getMaxValue($event)
-#         $costPerShareShorting = $maxValue - $fxpPrice
-#         $orderCost = safeFxpMul($fxpAmount, $costPerShareShorting)
-#         if($costPerShareShorting > $cumulativeScale or $orderCost < MIN_ORDER_VALUE or $orderCost >= MAX_ORDER_VALUE):
-#             MUTEX.unsetMutex()
-#             return(-1)
-#         $moneyEscrowed += $orderCost
-#         $paidOrderCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $orderCost)
-#         if(!paidOrderCost):
-#             throw()
+macro placeBid():
+    # Check if there are any "crossed orders" (i.e., ask orders
+    # at a price less than or equal to the buy price).
+    # $bestAskID = ORDERS.getBestAsk($market, $outcome)
+    # $bestAskPrice = ORDERS.getPrice($bestAskID)
+    # if($bestAskID != 0 and $fxpPrice >= $bestAskPrice and ORDERS.getAmount($bestAskID) >= safeFxpDiv(MIN_ORDER_VALUE, $bestAskPrice)):
+    #     logReturn(bidAndAskLogReturn, -5)
 
-# macro placeBid():
-#     # Check if there are any "crossed orders" (i.e., ask orders
-#     # at a price less than or equal to the buy price).
-#     $bestAskID = ORDERS.getBestAsk($market, $outcome)
-#     $bestAskPrice = ORDERS.getPrice($bestAskID)
-#     if($bestAskID != 0 and $fxpPrice >= $bestAskPrice and ORDERS.getAmount($bestAskID) >= safeFxpDiv(MIN_ORDER_VALUE, $bestAskPrice)):
-#         logReturn(bidAndAskLogReturn, -5)
+    $event = MARKETS.getMarketEvent($market, 0)
+    # If user owns n minus the one outcome we're buying escrow no money but escrow their shares in all the other outcomes.
+    $sharesHeld = -1
+    $i = 1
+    while($i < MARKETS.getMarketNumOutcomes($market)):
+        if(i != $outcome):
+            sharesHeld = min(MARKETS.getParticipantSharesPurchased($market, msg.sender, $i), $sharesHeld)
+        $i += 1
+    if($sharesHeld):
+        $minValue = 0
+        if(EVENTS.getNumOutcomes($event) > 2):
+            $minValue = ONE
+        else:
+            $minValue = EVENTS.getMinValue($event)
+        $price = $fxpPrice - $minValue
+        $cost = safeFxpMul($fxpAmount, $price)
+        if($price > $cumulativeScale or $cost < MIN_ORDER_VALUE or $cost >= MAX_ORDER_VALUE):
+            MUTEX.unsetMutex()
+            return(-1)
+        $fill = min($sharesHeld, $fxpAmount)
+        $fxpAmount -= $fill
+        $sharesEscrowed += $fill
+        $i = 1
+        while($i < MARKETS.getMarketNumOutcomes($market)):
+            if($i != $outcome):
+                MARKETS.modifyParticipantShares($market, msg.sender, $i, -$fill, 0)
+            $i += 1
 
-#     $event = MARKETS.getMarketEvent($market, 0)
-#     # If user owns n minus the one outcome we're buying escrow no money but escrow their shares in all the other outcomes.
-#     $sharesHeld = -1
-#     $i = 1
-#     while($i < MARKETS.getMarketNumOutcomes($market)):
-#         if(i != $outcome):
-#             sharesHeld = min(MARKETS.getParticipantSharesPurchased($market, msg.sender, $i), $sharesHeld)
-#         $i += 1
-#     if($sharesHeld):
-#         $minValue = 0
-#         if(EVENTS.getNumOutcomes($event) > 2):
-#             $minValue = ONE
-#         else:
-#             $minValue = EVENTS.getMinValue($event)
-#         $price = $fxpPrice - $minValue
-#         $cost = safeFxpMul($fxpAmount, $price)
-#         if($price > $cumulativeScale or $cost < MIN_ORDER_VALUE or $cost >= MAX_ORDER_VALUE):
-#             MUTEX.unsetMutex()
-#             return(-1)
-#         $fill = min($sharesHeld, $fxpAmount)
-#         $fxpAmount -= $fill
-#         $sharesEscrowed += $fill
-#         $i = 1
-#         while($i < MARKETS.getMarketNumOutcomes($market)):
-#             if($i != $outcome):
-#                 MARKETS.modifyParticipantShares($market, msg.sender, $i, -$fill, 0)
-#             $i += 1
-
-#     # Take money in escrow for price - min for the remainder of amount that wasn't able to be used up above. Make sure price - min isn't more than range
-#     if($fxpAmount):
-#         $minValue = 0
-#         if(EVENTS.getNumOutcomes($event) > 2):
-#             $minValue = ONE
-#         else:
-#             $minValue = EVENTS.getMinValue($event)
-#         $price = $fxpPrice - $minValue
-#         $cost = safeFxpMul($fxpAmount, $price)
-#         $moneyEscrowed += $cost
-#         if($price > $cumulativeScale or $cost < MIN_ORDER_VALUE or $cost >= MAX_ORDER_VALUE):
-#             MUTEX.unsetMutex()
-#             return(-1)
-#         $paidOrderCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $cost)
-#         if(!$paidOrderCost):
-#             throw()
+    # Take money in escrow for price - min for the remainder of amount that wasn't able to be used up above. Make sure price - min isn't more than range
+    if($fxpAmount):
+        $minValue = 0
+        if(EVENTS.getNumOutcomes($event) > 2):
+            $minValue = ONE
+        else:
+            $minValue = EVENTS.getMinValue($event)
+        $price = $fxpPrice - $minValue
+        $cost = safeFxpMul($fxpAmount, $price)
+        $moneyEscrowed += $cost
+        if($price > $cumulativeScale or $cost < MIN_ORDER_VALUE or $cost >= MAX_ORDER_VALUE):
+            MUTEX.unsetMutex()
+            return(-1)
+        $paidOrderCost = INFO.getCurrency($market).transferFrom($sender, INFO.getWallet($market), $cost)
+        if(!$paidOrderCost):
+            throw()

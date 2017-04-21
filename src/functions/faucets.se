@@ -44,8 +44,8 @@ extern expiringEvents: [addEvent:[int256,int256,int256,int256,int256,int256,int2
 BACKSTOPS = self.controller.lookup('backstops')
 extern backstops: [adjForkBondPaid:[int256,int256]:int256, doRoundTwoRefund:[int256,int256]:int256, getBondAmount:[int256]:int256, getBondPaid:[int256]:int256, getBondPoster:[int256]:int256, getBondReturned:[int256]:int256, getDisputedOverEthics:[int256]:int256, getFinal:[int256]:int256, getForkBondPaid:[int256]:int256, getForkBondPoster:[int256]:int256, getForkedOverEthicality:[int256]:int256, getMoved:[int256]:int256, getOriginalBranch:[int256]:int256, getOriginalEthicality:[int256]:int256, getOriginalOutcome:[int256]:int256, getOriginalVotePeriod:[int256]:int256, getResolved:[int256,int256]:int256, getRoundTwo:[int256]:int256, increaseBondPaid:[int256,int256]:int256, setBondAmount:[int256,int256]:int256, setBondPoster:[int256,int256]:int256, setBondReturned:[int256]:int256, setDisputedOverEthics:[int256]:int256, setFinal:[int256]:int256, setForkBondPoster:[int256,int256]:int256, setForkedOverEthicality:[int256]:int256, setMoved:[int256]:int256, setOriginalBranch:[int256,int256]:int256, setOriginalEthicality:[int256,int256]:int256, setOriginalOutcome:[int256,int256]:int256, setOriginalVotePeriod:[int256,int256]:int256, setResolved:[int256,int256,int256]:int256, setRoundTwo:[int256,int256]:int256, setRoundTwoRefund:[int256,int256]:int256]
 
-CONSENSUSFUNCTIONS = self.controller.lookup('consensus')
-extern consensus: [incrementPeriodAfterReporting:[int256]:int256, penalizeWrong:[int256,int256]:_]
+INCREMENTPERIOD = self.controller.lookup('incrementPeriod')
+extern incrementPeriod: [incrementPeriodAfterReporting:[int256]:int256]
 
 CATCHUP = self.controller.lookup('penalizationCatchup')
 extern penalizationCatchup: [penalizationCatchup:[int256,int256]:int256]
@@ -115,7 +115,7 @@ def claimInitialRep(parent, branch):
         throw()
     MUTEX.setMutex()
     # auto increment vote period if needed
-    # CONSENSUSFUNCTIONS.incrementPeriodAfterReporting(parent)
+    INCREMENTPERIOD.incrementPeriodAfterReporting(parent)
     parentPeriod = BRANCHES.getParentPeriod(branch)
     forkPeriod = BRANCHES.getForkPeriod(parent)
     fork = BRANCHES.getMostRecentChild(parent)
