@@ -24,8 +24,11 @@ extern backstops: [adjForkBondPaid:[int256,int256]:int256, doRoundTwoRefund:[int
 SENDREP = self.controller.lookup('sendReputation')
 extern sendReputation: [allowance:[int256,int256,int256]:int256, approve:[int256,int256,int256]:int256, claimRep:[]:int256, convertToActiveRep:[int256,int256]:int256, convertToDormantRep:[int256,int256]:int256, sendRepFrom:[int256,int256,int256,int256]:int256, transferFrom:[int256,int256,int256,int256]:int256]
 
-RESOLVE = self.controller.lookup('eventResolution')
-extern eventResolution: [determineWinningOutcomes:[int256]:int256[], resolveBinary:[int256,int256,int256,int256]:int256, resolveCategoricalOrScalar:[int256,int256,int256,int256,int256,int256]:int256]
+BINARYRESOLVE = self.controller.lookup('binaryMarketResolve')
+extern binaryMarketResolve: [resolveBinary:[int256,int256,int256,int256]:int256]
+
+NONBINARYRESOLVE = self.controller.lookup('nonBinaryMarketResolve')
+extern nonBinaryMarketResolve: [resolveCategoricalOrScalar:[int256,int256,int256,int256,int256,int256]:int256]
 
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
@@ -168,7 +171,7 @@ def resolve(branch, event):
     refund()
     self.controller.checkWhitelist(msg.sender)
     if(binary(event)):
-        RESOLVE.resolveBinary(event, EVENTS.getMarket(event, 0), branch, votePeriod)
+        BINARYRESOLVE.resolveBinary(event, EVENTS.getMarket(event, 0), branch, votePeriod)
         return(1)
     # scalar
     elif(scalar(event) or categorical(event)):
@@ -177,7 +180,7 @@ def resolve(branch, event):
         if(categorical(event)):
             fxpScaledMin = ONE
             fxpScaledMax = ONE * EVENTS.getNumOutcomes(event)
-        RESOLVE.resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, EVENTS.getMarket(event, 0), branch, votePeriod)
+        NONBINARYRESOLVE.resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, EVENTS.getMarket(event, 0), branch, votePeriod)
         return(1)
     # (should never be reached)
     else:

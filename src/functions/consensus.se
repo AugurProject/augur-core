@@ -79,9 +79,6 @@ macro FIVE_PERCENT: 50000000000000000
 def init():
     self.controller = 0xC001D00D
 
-def ok():
-    return(1)
-
 # def penalizeWrong(branch, event):
 #     refund()
 #     if(MUTEX.getMutex()):
@@ -191,13 +188,13 @@ def incrementPeriodAfterReporting(branch):
 #         MUTEX.unsetMutex()
 #         logReturn(consensusLogReturn, -6)
 
-# macro countAsPenalized():
-#     CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
-#     CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
+macro countAsPenalized():
+    CONSENSUS.setPenalized(branch, lastPeriod, msg.sender, event)
+    CONSENSUS.increasePenalizedNum(branch, lastPeriod, msg.sender, 1)
 
-# macro updateAfterRep():
-#     newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
-#     EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
+macro updateAfterRep():
+    newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriod, msg.sender) + repChange
+    EXPEVENTS.setAfterRep(branch, lastPeriod, newAfterRep, msg.sender)
 
 macro periodOver($branch):
     # what the current vote period should be
@@ -207,3 +204,6 @@ macro periodOver($branch):
         1
     else:
         0
+
+def ok():
+    return(1)

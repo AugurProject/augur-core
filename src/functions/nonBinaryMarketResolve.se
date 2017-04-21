@@ -38,22 +38,6 @@ macro INDETERMINATE: 1500000000000000000
 def init():
     self.controller = 0xC001D00D
 
-def resolveBinary(event, market, branch, votingPeriodEvent):
-    self.controller.checkWhitelist(msg.sender)
-    periodLength = BRANCHES.getPeriodLength(branch)
-    fxpOutcome = catch(EVENTS.getUncaughtOutcome(event))
-    prelimOutcome = EVENTS.getFirstPreliminaryOutcome(event)
-    ethics = EVENTS.getEthics(event)
-    ethical = ethicCatch(ethics)
-    elif(prelimOutcome && !fxpOutcome):
-        # if prelimOutcome is indeterminate, ethics doesn't matter b/c it's the same result [money returned at even odds]
-        ethical = ONE
-        fxpOutcome = prelimOutcome
-    EVENTS.setOutcome(event, fxpOutcome)
-    EVENTS.setEthics(event, ethical)
-    closeResult = closeOut(event, market, branch, votingPeriodEvent, fxpOutcome, periodLength, ethical, 0, 0, 0)
-    return(closeResult)
-
 # Resolves a categorical or scalar market
 def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch, votingPeriodEvent):
     self.controller.checkWhitelist(msg.sender)
@@ -126,21 +110,21 @@ macro closeOut($event, $market, $branch, $votingPeriodEvent, $fxpOutcome, $perio
         handleFirstResolverBond()
         1
     else:
-        # payHalfOfValidityBondToChallengerIfNeeded()
+        payHalfOfValidityBondToChallengerIfNeeded()
         # return bond as a normal event resolution
-        # if(!INFO.getWallet($event).transfer(INFO.getCreator($event), $bond)):
-            # throw()
+        if(!INFO.getWallet($event).transfer(INFO.getCreator($event), $bond)):
+            throw()
         if(MARKETS.getPushedForward($market)):
             $amount = EVENTS.getEarlyResolutionBond($event)
             if($amount && !INFO.getWallet($market).transfer(MARKETS.getBondsMan($market), $amount)):
                 throw()
-        # if(EVENTS.getEventPushedUp($event)):
-        #     # delete old event from future events exp
-        #     $period = safeDiv(EVENTS.getOriginalExpiration($event), $periodLength)
-        #     EXPEVENTS.removeEvent($branch, $period)
-        #     EXPEVENTS.deleteEvent($branch, $period, $event)
-        #     EVENTS.setOriginalExpiration($event, EVENTS.getExpiration($event))
-        # handleFirstResolverBond()
+        if(EVENTS.getEventPushedUp($event)):
+            # delete old event from future events exp
+            $period = safeDiv(EVENTS.getOriginalExpiration($event), $periodLength)
+            EXPEVENTS.removeEvent($branch, $period)
+            EXPEVENTS.deleteEvent($branch, $period, $event)
+            EVENTS.setOriginalExpiration($event, EVENTS.getExpiration($event))
+        handleFirstResolverBond()
         1
 
 macro handleFirstResolverBond():
@@ -158,21 +142,3 @@ macro payHalfOfValidityBondToChallengerIfNeeded():
         if(!INFO.getWallet($event).transfer(EVENTS.getExtraBondPoster($event), $bond / 2)):
             throw()
         $bond -= $bond / 2
-
-# Determines the "winning outcomes" for a given market/event
-# Easiest to give examples:
-    # 1D Markets:
-        # Binary or Categorical will have 1 winning outcome [1 or 2 for binary, 1 thru numOutcomes for categorical is the poss. value for the winning outcome]
-def determineWinningOutcomes(event):
-    winningOutcomes = array(8)
-    fxpOutcome = EVENTS.getOutcome(event)
-    outcome = fxpOutcome / ONE
-    # scalar or .5
-    if(scalar(event) or fxpOutcome == INDETERMINATE):
-        winningOutcomes[0] = 1
-        winningOutcomes[1] = 2
-    # anything besides scalar or .5
-    # note: this will be the outcome in the middle if a categorical is resolved as indeterminate, it'll still payout 1/n per outcome though
-    else:
-        winningOutcomes[0] += outcome
-    return(winningOutcomes: arr)

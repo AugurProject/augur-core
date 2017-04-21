@@ -398,6 +398,7 @@ class ContractLoader(object):
         self.__state = ethereum.tester.state()
         self.__contracts = {}
         self.__temp_dir = TempDirCopy(source_dir)
+        self.__source_dir = source_dir
 
         serpent_files = self.__temp_dir.find_files(SERPENT_EXT)
 
@@ -467,6 +468,7 @@ class ContractLoader(object):
 
     def recompile(self, name):
         """Gets the latest copy of the code from the source path, recompiles, and updates controller."""
+        self.__temp_dir = TempDirCopy(self.__source_dir)
         for file in self.__temp_dir.find_files(SERPENT_EXT):
             if path_to_name(file) == name:
                 break

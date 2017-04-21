@@ -64,7 +64,6 @@ def init():
 
 def ok():
     return(1)
-
 # def penalizeRoundTwoWrong(branch, event):
 #     refund()
 #     if(MUTEX.getMutex()):
@@ -120,12 +119,12 @@ def ok():
 #         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
 #         if(oldReport):
 #             calculateRepChange(oldReport, POINT_TWO)
-#             # handleEthicsAndBondRepRedistribution(POINT_TWO, oldEthics, numReportedOn)
+#             handleEthicsAndBondRepRedistribution(POINT_TWO, oldEthics, numReportedOn)
 #             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
 #         # Do the second (for each user) based on second report and final outcome
 #         if(reportValue):
 #             calculateRepChange(reportValue, POINT_ONE / 4)
-#             # handleEthicsAndBondRepRedistribution(POINT_ONE / 4, ethics, numReportedOn)
+#             handleEthicsAndBondRepRedistribution(POINT_ONE / 4, ethics, numReportedOn)
 #             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
 #     else:
 #         MUTEX.unsetMutex()
