@@ -64,7 +64,42 @@ def init():
     # Or asker has shares and expects to be paid price - minValue for them
     # Bidder owns all shares except the one theyre buying and has escrowed them and wants to pay price - minValue for the share and then sell the complete set for range thus getting maxValue - price at the end
     # Or bidder has escrowed price - minValue for their shares
-def fillBid():
+def fillBid(orderID, amountTakerWants):
+    self.controller.checkWhitelist(msg.sender)
+    # Get order
+    order = array(ORDER_FIELDS)
+    order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
+    if(!order[0]):
+        MUTEX.unsetMutex()
+        logArrayReturn([0])
+    type = order[1]
+    market = order[2]
+    creator = INFO.getCreator(market)
+    amount = order[3]
+    price = order[4]
+    owner = order[5]
+    outcome = order[7]
+    moneyEscrowed = order[8]
+    sharesEscrowed = order[9]
+    checkTradePreconditions()
+    branch = MARKETS.getBranch(market)
+    cumulativeScale = MARKETS.getCumulativeScale(market)
+    orderInfo = array(4)
+    orderInfo[0] = market
+    orderInfo[1] = outcome
+    orderInfo[2] = type
+    orderInfo[3] = msg.sender
+    orderHash = sha3(orderInfo, items = 4)
+    if(ORDERS.checkHash(orderHash, msg.sender) == -1):
+        MUTEX.unsetMutex()
+        logArrayReturn([-1])
+    maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent(market, 0))
+    minValue = 0
+    # for categorical events the min is one
+    if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent(market, 0)) > 2):
+        minValue = ONE
+    else:
+        minValue = EVENTS.getMinValue(MARKETS.getMarketEvent(market, 0))
     sumOfFills = 0
     # all in shares including the money filled here [money filled means shares that were filled via exchanging money as opposed to shares already owned by either respective party]
     askerSharesFilled = 0
@@ -91,6 +126,8 @@ def fillBid():
     sellTakerCompleteSetsIfAny()
     # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
     log(type = logPrice, market, msg.sender, owner, ASK, price, sumOfFills, block.timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
+    MARKETS.setPrice(market, outcome, price)
+    logArrayReturn([SUCCESS, amountTakerWants])
 
 macro sellMakersCompleteSets():
     sharesHeld = -1
@@ -125,7 +162,7 @@ macro sellTakerCompleteSetsIfAny():
         i += 1
     # Sell the asker's [msg.sender] complete sets if they have any
     if(sharesHeld):
-        if(!COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegate)):
+        if(!COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegatecall)):
             throw()
 
 macro accountForBidderClosingShort():
@@ -190,3 +227,11 @@ macro accountForShortSelling():
             MARKETS.addFees(market, feesInWei)
             EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
 
+macro checkTradePreconditions():
+    if(owner == msg.sender):
+        MUTEX.unsetMutex()
+        logArrayReturn([-3])
+    # Make sure the order has been mined, obvious HFT prevention
+    if(block.number <= order[6]):
+        MUTEX.unsetMutex()
+        logArrayReturn([-2])

@@ -122,59 +122,15 @@ def trade(orderID, amountTakerWants):
     MUTEX.setMutex()
     if(amountTakerWants <= 0):
         throw()
-
-    # Get order
-    order = array(ORDER_FIELDS)
-    order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
-    if(!order[0]):
-        MUTEX.unsetMutex()
-        logArrayReturn([0])
-    type = order[1]
-    market = order[2]
-    creator = INFO.getCreator(market)
-    amount = order[3]
-    price = order[4]
-    owner = order[5]
-    outcome = order[7]
-    moneyEscrowed = order[8]
-    sharesEscrowed = order[9]
-    checkTradePreconditions()
-    branch = MARKETS.getBranch(market)
-    cumulativeScale = MARKETS.getCumulativeScale(market)
-    orderInfo = array(4)
-    orderInfo[0] = market
-    orderInfo[1] = outcome
-    orderInfo[2] = type
-    orderInfo[3] = msg.sender
-    orderHash = sha3(orderInfo, items = 4)
-    if(ORDERS.checkHash(orderHash, msg.sender) == -1):
-        MUTEX.unsetMutex()
-        logArrayReturn([-1])
-    maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent(market, 0))
-    minValue = 0
-    # for categorical events the min is one
-    if(EVENTS.getNumOutcomes(MARKETS.getMarketEvent(market, 0)) > 2):
-        minValue = ONE
-    else:
-        minValue = EVENTS.getMinValue(MARKETS.getMarketEvent(market, 0))
-
-    # Fill buy order
+    type = ORDERS.getType(orderID)
+    returnValue = array(2)
+    # Fill orders
     if(type == BID):
-        FILLBID.fillBid(call = delegate)
+        returnValue = FILLBID.fillBid(orderID, amountTakerWants, call = delegatecall, outitems = 2)
     elif(type == ASK):
-        FILLASK.fillAsk(call = delegate)
+        returnValue = FILLASK.fillAsk(orderID, amountTakerWants, call = delegatecall, outitems = 2)
     else:
         throw()
-    # Log price, fill amount, type and timestamp
-    MARKETS.setPrice(market, outcome, price)
     MUTEX.unsetMutex()
-    logArrayReturn([SUCCESS, amountTakerWants])
+    return(logArrayReturn(returnValue))
 
-macro checkTradePreconditions():
-    if(owner == msg.sender):
-        MUTEX.unsetMutex()
-        logArrayReturn([-3])
-    # Make sure the order has been mined, obvious HFT prevention
-    if(block.number <= order[6]):
-        MUTEX.unsetMutex()
-        logArrayReturn([-2])

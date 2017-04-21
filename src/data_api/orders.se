@@ -124,3 +124,6 @@ def getPrice(id):
 
 def getOrderOwner(id):
     return(self.orders[id].owner)
+
+def getType(id):
+    return(self.orders[id].type)
