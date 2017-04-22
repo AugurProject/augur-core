@@ -38,7 +38,8 @@ extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-extern forkResolveContract: [resolveFork:[]:int256]
+RESOLVEFORK = self.controller.lookup('forkResolution')
+extern forkResolution: [resolveFork:[int256]:int256]
 
 inset('../macros/refund.sem')
 inset('../macros/eventHelpers.sem')
@@ -93,43 +94,139 @@ macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 def init():
     self.controller = 0xC001D00D
 
-# parent branch is branch here
-# If there's only 1 event and that's the one we forked over [rare edge case] we can call resolve fork manually if it hasn't been done yet within the time parameters which allows a fork to be resolved [2 periods after the start of the fork]
-def resolveFork(branch):
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
+def moveEvent(event):
+    refund()
+    if(MUTEX.getMutex()):
         throw()
-    if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
-    forkPeriod = BRANCHES.getForkPeriod(branch)
-    currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
-    winner = BACKSTOPS.getResolved(branch, forkPeriod)
-    if(winner):
-        throw()
-    if(BACKSTOPS.getResolved(branch, forkPeriod)):
-        throw()
-    if(currentPeriod < (forkPeriod + 2)):
-        if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
-        return(0)
+    MUTEX.setMutex()
 
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
-    origCap = self.exchangeRate(branch)
-    fork = BRANCHES.getMostRecentChild(branch)
-    forkCap = self.exchangeRate(fork)
-    winner = 0
-    if(origCap >= forkCap):
-        winner = branch
-    else:
-        winner = fork
-    BACKSTOPS.setResolved(branch, forkPeriod, winner)
-    if(!isCallerWhitelisted()):
+    branch = EVENTS.getEventBranch(event)
+    eventForkedOver = BRANCHES.getEventForkedOver(branch)
+    expPeriod = EVENTS.getExpiration(event) / BRANCHES.getPeriodLength(branch)
+    eventIndex = EXPEVENTS.getEventIndex(expPeriod, event)
+    currentPeriod = block.timestamp / BRANCHES.getPeriodLength(branch)
+    currentVotePeriod = BRANCHES.getVotePeriod(branch)
+    checkMoveEventPreconditions()
+    if(event == eventForkedOver):
         MUTEX.unsetMutex()
-    return(winner)
+        return(1)
+    # leave event here in same branch
+    elif(winner == EVENTS.getEventBranch(event)):
+        keepEventInOriginalBranch()
+    # event's branch is changed to winning branch
+    else:
+        moveEventToWinningBranch()
+    BACKSTOPS.setMoved(event)
+    MUTEX.unsetMutex()
+    return(1)
 
-# Resolve fork method that gets exchange rate
-# add contract for choosing this to create market
-def exchangeRate(branch):
-    # get rep exchange rate from etherex for (branch)
-    # return(exchangeRate)
-    # for testing we'll just rng the exchange rate :)
-    return(sha3(branch))
+macro checkMoveEventPreconditions():
+    if(!branch or !event or currentVotePeriod < (forkPeriod + 2) or EVENTS.getOutcome(event) or BACKSTOPS.getMoved(event) or !eventCreatedPriorToFork(event)):
+        MUTEX.unsetMutex()
+        return(0)
+    winner = BACKSTOPS.getResolved(branch, forkPeriod)
+    if(!winner):
+        winner = RESOLVEFORK.resolveFork(branch)
+    nonDefaultForkResolution = EVENTS.getForkResolveAddress(event)
+    if(nonDefaultForkResolution):
+        resolveCustomForkResolution()
+
+macro keepEventInOriginalBranch():
+    # set outcomes to 0
+    EVENTS.setOutcome(event, 0)
+    EVENTS.setMode(event, 0)
+    EVENTS.setEthics(event, 0)
+    EVENTS.setUncaughtOutcome(event, 0)
+    EVENTS.setCreationTime(event)
+
+    # return bond if it's a round 2 event and make it not one anymore
+    if(BACKSTOPS.getRoundTwo(event) && !ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
+        throw()
+    # if should've resolved in past periods
+    if(expPeriod <= currentVotePeriod):
+        # should only be put into vote period if it's not in early resolve / first wave portion anymore
+        if(EVENTS.getChallenged(event)):
+            # push it into next [this] period
+            forkPeriod = BRANCHES.getForkPeriod(branch)
+            afterFork = 0
+            if(currentPeriod == (forkPeriod + 2)):
+                afterFork = 1
+            currency = INFO.getCurrency(event)
+            wallet = INFO.getWallet(event)
+            # add to next expiration period
+            EXPEVENTS.addEvent(branch, currentPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+        EVENTS.setExpiration(event, block.timestamp)
+    # otherwise it's set to expire in the period it would've expired in as normal, no changes needed
+
+macro moveEventToWinningBranch():
+    EVENTS.setBranch(event, winner)
+    # set outcomes to 0
+    EVENTS.setOutcome(event, 0)
+    EVENTS.setMode(event, 0)
+    EVENTS.setEthics(event, 0)
+    EVENTS.setUncaughtOutcome(event, 0)
+    EVENTS.setCreationTime(event)
+    originalPeriod = EVENTS.getOriginalExpiration(event) / BRANCHES.getPeriodLength(branch)
+    # return bond if it's a round 2 event and make it not one anymore
+    if(BACKSTOPS.getRoundTwo(event) && !ROUNDTWO.roundTwoResolve(branch, event, eventIndex, msg.sender)):
+        throw()
+    # move event to fork
+    # and place it into the next reporting period w/ outcomes to 0
+    if(expPeriod <= currentVotePeriod):
+        EVENTS.setExpiration(event, block.timestamp)
+        # should only be put into vote period if it's not in early resolve / first wave portion anymore
+        if(EVENTS.getChallenged(event)):
+            # push it into next [this] period
+            forkPeriod = BRANCHES.getForkPeriod(winner)
+            afterFork = 0
+            if(currentPeriod == (forkPeriod + 2)):
+                afterFork = 1
+            currency = INFO.getCurrency(event)
+            wallet = INFO.getWallet(event)
+            # add to next expiration period
+            EXPEVENTS.addEvent(winner, currentPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+
+            # add event to original exp period per event early push forward res on new branch
+            if(EVENTS.getEventPushedUp(event)):
+                forkPeriod = BRANCHES.getForkPeriod(winner)
+                afterFork = 0
+                if(originalPeriod == (forkPeriod + 1) or originalPeriod == (forkPeriod + 2)):
+                    afterFork = 1
+                currency = INFO.getCurrency(event)
+                wallet = INFO.getWallet(event)
+                # add to next expiration period
+                EXPEVENTS.addEvent(winner, originalPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+
+    else:
+        # should only be put into vote period if it's not in early resolve / first wave portion anymore
+        if(EVENTS.getChallenged(event)):
+            # push into period it wouldve expired in
+            # expiration time doesnt need to change
+            forkPeriod = BRANCHES.getForkPeriod(winner)
+            afterFork = 0
+            if(expPeriod == (forkPeriod + 2)):
+                afterFork = 1
+            currency = INFO.getCurrency(event)
+            wallet = INFO.getWallet(event)
+            # add to next expiration period
+            EXPEVENTS.addEvent(winner, expPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+
+            # add event to original exp period per event early push forward res on new branch
+            if(EVENTS.getEventPushedUp(event)):
+                forkPeriod = BRANCHES.getForkPeriod(winner)
+                afterFork = 0
+                if(originalPeriod == (forkPeriod + 2)):
+                    afterFork = 1
+                currency = INFO.getCurrency(event)
+                wallet = INFO.getWallet(event)
+                # add to next expiration period
+                EXPEVENTS.addEvent(winner, originalPeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+
+# use address picked in event creation to resolve it instead of the default fork resolve option
+macro resolveCustomForkResolution():
+    winner = nonDefaultForkResolution.resolveFork(branch)
+    if(winner):
+        return(1)
+    else:
+        return(0)

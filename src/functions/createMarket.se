@@ -49,7 +49,7 @@ extern fxpFunctions: [fxExp:[int256]:int256, fxLog:[int256]:int256]
 
 extern subcurrency: [allowance:[address,address]:uint256, approve:[address,uint256]:uint256, balanceOf:[address]:uint256, decimals:[]:uint256, name:[]:uint256, symbol:[]:uint256, totalSupply:[]:uint256, transfer:[address,uint256]:uint256, transferFrom:[address,address,uint256]:uint256]
 
-extern forkResolveContract: [resolveFork:[]:int256]
+extern forkResolveContract: [resolveFork:[int256]:int256]
 
 extern wallet: [initialize:[int256]:int256, setWinningOutcomeContractAddressInitialize:[int256,int256]:int256, transfer:[address,uint256]:int256]
 
@@ -81,7 +81,7 @@ macro checkSubcurrencyIsValid($contract):
     approve = $contract.approve(self, 0)
 
 macro checkForkResolveContractIsValid($contract):
-    resolve = $contract.resolveFork()
+    resolve = $contract.resolveFork(1)
 
 
 ### Allows creation of events and markets and manipulating them

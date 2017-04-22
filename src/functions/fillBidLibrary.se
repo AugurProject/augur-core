@@ -34,11 +34,6 @@ data controller
 
 event logPrice(market:indexed, sender:indexed, owner:indexed, type, price, amount, timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
 event tradeLogReturn(returnValue)
-event tradeLogArrayReturn(returnArray: arr)
-
-macro logArrayReturn($a):
-    log(type=tradeLogArrayReturn, $a)
-    return($a: arr)
 
 macro MIN_TRADE_VALUE: 10000000000000000
 # Trade types
@@ -71,7 +66,7 @@ def fillBid(orderID, amountTakerWants):
     order = ORDERS.getOrder(orderID, outitems = ORDER_FIELDS)
     if(!order[0]):
         MUTEX.unsetMutex()
-        logArrayReturn([0])
+        return([0]: arr)
     type = order[1]
     market = order[2]
     creator = INFO.getCreator(market)
@@ -92,7 +87,7 @@ def fillBid(orderID, amountTakerWants):
     orderHash = sha3(orderInfo, items = 4)
     if(ORDERS.checkHash(orderHash, msg.sender) == -1):
         MUTEX.unsetMutex()
-        logArrayReturn([-1])
+        return([-1]: arr)
     maxValue = EVENTS.getMaxValue(MARKETS.getMarketEvent(market, 0))
     minValue = 0
     # for categorical events the min is one
@@ -127,7 +122,7 @@ def fillBid(orderID, amountTakerWants):
     # Log transaction [ASK b/c it's filling a bid so from trader's perspective they're asking]
     log(type = logPrice, market, msg.sender, owner, ASK, price, sumOfFills, block.timestamp, orderID, outcome, askerSharesFilled, askerMoneyFilled, bidderSharesFilled, bidderMoneyFilled)
     MARKETS.setPrice(market, outcome, price)
-    logArrayReturn([SUCCESS, amountTakerWants])
+    return([SUCCESS, amountTakerWants]: arr)
 
 macro sellMakersCompleteSets():
     sharesHeld = -1
@@ -230,8 +225,8 @@ macro accountForShortSelling():
 macro checkTradePreconditions():
     if(owner == msg.sender):
         MUTEX.unsetMutex()
-        logArrayReturn([-3])
+        return([-3]: arr)
     # Make sure the order has been mined, obvious HFT prevention
     if(block.number <= order[6]):
         MUTEX.unsetMutex()
-        logArrayReturn([-2])
+        return([-2]: arr)

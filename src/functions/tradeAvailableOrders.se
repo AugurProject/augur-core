@@ -43,4 +43,4 @@ def tradeAvailableOrders(orderIDs: arr, amountTakerWants, fxpMinimumOrderBalance
     if(originalBalance == amountTakerWants):
         logArrayReturn([-6])
     else:
-        logArrayReturn([1, fxpMinimumOrderBalance])
+        logArrayReturn([1, amountTakerWants])

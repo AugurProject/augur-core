@@ -81,7 +81,7 @@ macro checkSubcurrencyIsValid($contract):
     approve = $contract.approve(self, 0)
 
 macro checkForkResolveContractIsValid($contract):
-    resolve = $contract.resolveFork()
+    resolve = $contract.resolveFork(1)
 
 
 ### Allows creation of events and markets and manipulating them

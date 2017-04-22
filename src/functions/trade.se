@@ -62,10 +62,6 @@ event logPrice(market:indexed, sender:indexed, owner:indexed, type, price, amoun
 event tradeLogReturn(returnValue)
 event tradeLogArrayReturn(returnArray: arr)
 
-macro logArrayReturn($a):
-    log(type=tradeLogArrayReturn, $a)
-    return($a: arr)
-
 macro MIN_TRADE_VALUE: 10000000000000000
 # Trade types
 macro BID: 1
@@ -132,5 +128,5 @@ def trade(orderID, amountTakerWants):
     else:
         throw()
     MUTEX.unsetMutex()
-    return(logArrayReturn(returnValue))
-
+    log(type=tradeLogArrayReturn, returnValue)
+    return(returnValue: arr)

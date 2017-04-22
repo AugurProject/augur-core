@@ -1,9 +1,5 @@
-extern wallet.se: [hmm:[]:int256]
-
-
 data banana
 
 def ok():
     x = 3
-    a = create('functions/wallet.se')
-    return([x, self.banana]: arr)
+    return([x]: arr)

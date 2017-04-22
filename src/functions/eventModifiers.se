@@ -81,7 +81,7 @@ macro checkSubcurrencyIsValid($contract):
     approve = $contract.approve(self, 0)
 
 macro checkForkResolveContractIsValid($contract):
-    resolve = $contract.resolveFork()
+    resolve = $contract.resolveFork(1)
 
 
 ### Allows creation of events and markets and manipulating them
@@ -224,7 +224,7 @@ macro payExtraBond():
     if(!currency.transferFrom(msg.sender, INFO.getWallet(event), amount)):
         throw()
     EVENTS.setExtraBond(event, amount)
-    EVENTS.setExtraBondPoste(event, msg.sender)
+    EVENTS.setExtraBondPoster(event, msg.sender)
 
 macro addEvent():
     # cost for calculating num. of reports for an event
