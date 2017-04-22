@@ -1,5 +1,4 @@
 # Calculates the amount of rep to be redistributed
-# clarify ones w/ a new type system
 macro calculateRepChange($report, $maxPenalty):
     adjustForNonBinaryResolution()
     $wrong = $report > safeAdd(outcome, POINT_ZERO_ONE) or $report < (outcome - POINT_ZERO_ONE)
@@ -30,4 +29,4 @@ macro calculateRepChange($report, $maxPenalty):
 macro adjustForNonBinaryResolution():
     if(scalar(event) or categorical(event) or outcome == INDETERMINATE):
         difference = $report - outcome
-        p = safeSub(ONE, safeDiv(abs(diff), 2))
+        p = safeSub(ONE, safeDiv(abs(difference), 2))

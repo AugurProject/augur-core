@@ -28,14 +28,12 @@ MUTEX = self.controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
 ROUNDTWOLIBRARY = self.controller.lookup('roundTwoPenalizeLibrary')
-extern roundTwoPenalizeLibrary: [handleEthicsAndBondRepRedistribution:[int256,int256,int256]:_]
-
+extern roundTwoPenalizeLibrary: [calculateRepChange:[int256,int256,int256,int256,int256,int256,int256]:int256, handleEthicsAndBondRepRedistribution:[int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256[]]
 
 inset('../macros/refund.sem')
 inset('../macros/eventHelpers.sem')
 inset('../macros/redistributeRep.sem')
 inset('../macros/proportionCorrect.sem')
-inset('../macros/repChange.sem')
 inset('../macros/float.sem')
 inset('../macros/periodStage.sem')
 
@@ -73,8 +71,8 @@ def penalizeRoundTwoWrong(branch, event):
     MUTEX.setMutex()
     lastPeriodVotedOn = BRANCHES.getVotePeriod(branch) - 1
     lastPenalizationPeriod = lastPeriodVotedOn - 1
+    lastPeriod = lastPeriodVotedOn
     periodLength = BRANCHES.getPeriodLength(branch)
-    newRep = 0
     newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender)
     repBalance = REPORTING.getRepBalance(branch, msg.sender)
     oldRep = EXPEVENTS.getBeforeRep(branch, lastPeriodVotedOn, msg.sender)
@@ -120,13 +118,19 @@ def penalizeRoundTwoWrong(branch, event):
         # Do the first rep redistribution based on first report and final outcome if reported first time
         CONSENSUS.setPenalized(branch, lastPeriodVotedOn, msg.sender, event)
         if(oldReport):
-            calculateRepChange(oldReport, POINT_TWO)
-            ROUNDTWOLIBRARY.handleEthicsAndBondRepRedistribution(POINT_TWO, oldEthics, numReportedOn, call = delegate)
+            repChange = ROUNDTWOLIBRARY.calculateRepChange(oldReport, POINT_TWO, oldRep, p, event, outcome, numReportedOn)
+            x = array(2)
+            x = ROUNDTWOLIBRARY.handleEthicsAndBondRepRedistribution(POINT_TWO, oldEthics, numReportedOn, ethical, repChange, event, repBalance, newAfterRep, bond, forkEvent, branch, lastPeriodVotedOn, call = delegatecall, outitems=2)
+            newAfterRep = x[0]
+            repBalance = x[1]
             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
         # Do the second (for each user) based on second report and final outcome
         if(reportValue):
-            calculateRepChange(reportValue, POINT_ONE / 4)
-            ROUNDTWOLIBRARY.handleEthicsAndBondRepRedistribution(POINT_ONE / 4, ethics, numReportedOn, call = delegate)
+            repChange = ROUNDTWOLIBRARY.calculateRepChange(reportValue, POINT_ONE / 4, oldRep, p, event, outcome, numReportedOn)
+            x = array(2)
+            x = ROUNDTWOLIBRARY.handleEthicsAndBondRepRedistribution(POINT_ONE / 4, ethics, numReportedOn, ethical, repChange, event, repBalance, newAfterRep, bond, forkEvent, branch, lastPeriodVotedOn, call = delegatecall, outitems=2)
+            newAfterRep = x[0]
+            repBalance = x[1]
             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
     else:
         MUTEX.unsetMutex()
@@ -134,6 +138,7 @@ def penalizeRoundTwoWrong(branch, event):
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriodVotedOn, msg.sender)):
         sendRedistributedRepToBranch()
+        return(1)
     MUTEX.unsetMutex()
     return(1)
 
@@ -159,15 +164,3 @@ macro checkPenalizeWrongRoundTwoPreconditions():
     if(!CONSENSUS.getRepCollected(branch, msg.sender, lastPeriodVotedOn - 1)):
         MUTEX.unsetMutex()
         return(-5)
-
-macro overruled():
-    overruled = 0
-    # checks if the event's outcome was overruled or the same as the original reporting cycle
-    sameEthics = (BACKSTOPS.getOriginalEthicality(event) == ethicCatch(EVENTS.getEthics(event)))
-    originalOutcome = BACKSTOPS.getOriginalOutcome(event)
-    uncaughtOutcome = EVENTS.getUncaughtOutcome(event)
-    if(scalar(event) or categorical(event)):
-        overruled = (originalOutcome != uncaughtOutcome or !sameEthics)
-    else:
-        overruled = (originalOutcome != catch(uncaughtOutcome) or !sameEthics)
-    overruled
