@@ -1,3 +1,3 @@
-from load_contracts2 import ContractLoader
+from load_contracts import ContractLoader
 c = ContractLoader('src', 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
-c.reupload('test')
+c.recompile('test')
