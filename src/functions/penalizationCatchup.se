@@ -32,7 +32,7 @@ macro POINT_NINE: 900000000000000000
     # -2: not in first half of reporting period
     # -3: user isn't behind or reported in the last period [and should thus use the penalization functions in consensus.se]
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def penalizationCatchup(branch, sender):
     refund()

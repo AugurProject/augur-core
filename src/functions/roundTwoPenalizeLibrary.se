@@ -22,7 +22,7 @@ CONSENSUS = self.controller.lookup('consensusData')
 extern consensusData: [decreaseDenominator:[int256,int256,int256]:int256, doRefund:[int256,int256]:int256, getBaseReportersLastPeriod:[int256]:int256, getDenominator:[int256,int256]:int256, getFeeFirst:[int256,int256]:int256, getFeesCollected:[int256,int256,int256,int256]:int256, getNotEnoughPenalized:[int256,int256,int256]:int256, getPenalized:[int256,int256,int256,int256]:int256, getPenalizedNum:[int256,int256,int256]:int256, getPenalizedUpTo:[int256,int256]:int256, getPeriodBalance:[int256,int256]:int256, getRepCollected:[int256,int256,int256]:int256, getRepRedistributionDone:[int256,int256]:int256, getSlashed:[int256,int256,int256]:int256, increaseDenominator:[int256,int256,int256]:int256, increasePenalizedNum:[int256,int256,int256,int256]:int256, setBaseReportersLastPeriod:[int256,int256]:int256, setFeeFirst:[int256,int256,int256]:int256, setFeesCollected:[int256,int256,int256,int256]:int256, setNotEnoughPenalized:[int256,int256,int256]:int256, setPenalized:[int256,int256,int256,int256]:int256, setPenalizedUpTo:[int256,int256,int256]:int256, setPeriodBalance:[int256,int256,int256]:int256, setRefund:[int256,int256]:int256, setRepCollected:[int256,int256,int256]:int256, setSlashed:[int256,int256,int256]:int256]
 
 ROUNDTWO = self.controller.lookup('roundTwo')
-extern roundTwo: [resolve:[int256,int256]:int256, roundTwoPostBond:[int256,int256,int256,int256]:int256, roundTwoResolve:[int256,int256,int256,int256]:int256]
+extern roundTwo: [ok:[]:int256, resolve:[int256,int256]:int256, roundTwoPostBond:[int256,int256,int256,int256]:int256, roundTwoResolve:[int256,int256,int256,int256]:int256]
 
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
@@ -38,54 +38,52 @@ inset('../macros/periodStage.sem')
 data controller
 
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
-def ok():
-    return(2)
-# def handleEthicsAndBondRepRedistribution(maxPenalty, ethics, numReportedOn):
-#     # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and maxPenalty percent of their rep respectively
-#     if(ethics != ethicCatch(ethical) and repChange >= 0 and BACKSTOPS.getDisputedOverEthics(event)):
-#         if(numReportedOn < 10):
-#             # ensures max penalty is 10% per event
-#             repChange = safeFxpMul(-maxPenalty / 10, repBalance)
-#         else:
-#             repChange = safeFxpMul(-maxPenalty / numReportedOn, repBalance)
-#     if(repBalance + repChange <= 0):
-#         repChange = -repBalance
-#     # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process
-#     if(overruled() and BACKSTOPS.getBondPaid(event) < 2 * bond and repChange < 0 and event != forkEvent):
-#         amountLeftToPayBonder = 2*bond - BACKSTOPS.getBondPaid(event)
-#         # we don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
-#         if(-repChange < amountLeftToPayBonder):
-#             # done instead of sending to redistrib. pool
-#             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
-#             # sends that rep to the bonded challenger
-#             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), -repChange)
-#             BACKSTOPS.increaseBondPaid(event, -repChange)
-#         # part of rep goes to bond poster, the rest that's lost goes to branch
-#         elif(amountLeftToPayBonder > 0):
-#             # done instead of sending to redistrib. pool
-#             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), -amountLeftToPayBonder)
-#             # sends that rep to the bonded challenger
-#             REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), amountLeftToPayBonder)
-#             BACKSTOPS.increaseBondPaid(event, amountLeftToPayBonder)
-#             repLostAfterPayingBonder = -repChange - amountLeftToPayBonder
-#             newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) - repLostAfterPayingBonder
-#             EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
-#     # if rep isn't redistributed immediately to bond poster [if they're already paid back] then we adjust the after rep as normal and do it all at the end: we want the rep to go to the branch here
-#     else:
-#         newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + repChange
-#         EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
-#     repBalance = REPORTING.getRepBalance(branch, msg.sender)
+def handleEthicsAndBondRepRedistribution(maxPenalty, ethics, numReportedOn):
+    # for ethicality if diff. appeal then pay back the appeal bond from people who reported the wrong ethicality, but don't take rep beyond that and maxPenalty percent of their rep respectively
+    if(ethics != ethicCatch(ethical) and repChange >= 0 and BACKSTOPS.getDisputedOverEthics(event)):
+        if(numReportedOn < 10):
+            # ensures max penalty is 10% per event
+            repChange = safeFxpMul(-maxPenalty / 10, repBalance)
+        else:
+            repChange = safeFxpMul(-maxPenalty / numReportedOn, repBalance)
+    if(repBalance + repChange <= 0):
+        repChange = -repBalance
+    # if overruled: reward the bonded challenger with whatever rep would normally be taken from the liars up to 2x the bond, rest goes to branch as usual later in the process
+    if(overruled() and BACKSTOPS.getBondPaid(event) < 2 * bond and repChange < 0 and event != forkEvent):
+        amountLeftToPayBonder = 2*bond - BACKSTOPS.getBondPaid(event)
+        # we don't want the rep to go to the branch here so don't deduct from after rep [since that gets redistributed to the branch, only want to penalize once / event, not 2x]
+        if(-repChange < amountLeftToPayBonder):
+            # done instead of sending to redistrib. pool
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), repChange)
+            # sends that rep to the bonded challenger
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), -repChange)
+            BACKSTOPS.increaseBondPaid(event, -repChange)
+        # part of rep goes to bond poster, the rest that's lost goes to branch
+        elif(amountLeftToPayBonder > 0):
+            # done instead of sending to redistrib. pool
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, msg.sender), -amountLeftToPayBonder)
+            # sends that rep to the bonded challenger
+            REPORTING.addRep(branch, REPORTING.repIDToIndex(branch, BACKSTOPS.getBondPoster(event)), amountLeftToPayBonder)
+            BACKSTOPS.increaseBondPaid(event, amountLeftToPayBonder)
+            repLostAfterPayingBonder = -repChange - amountLeftToPayBonder
+            newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) - repLostAfterPayingBonder
+            EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
+    # if rep isn't redistributed immediately to bond poster [if they're already paid back] then we adjust the after rep as normal and do it all at the end: we want the rep to go to the branch here
+    else:
+        newAfterRep = EXPEVENTS.getAfterRep(branch, lastPeriodVotedOn, msg.sender) + repChange
+        EXPEVENTS.setAfterRep(branch, lastPeriodVotedOn, newAfterRep, msg.sender)
+    repBalance = REPORTING.getRepBalance(branch, msg.sender)
 
-# macro overruled():
-#     overruled = 0
-#     # checks if the event's outcome was overruled or the same as the original reporting cycle
-#     sameEthics = (BACKSTOPS.getOriginalEthicality(event) == ethicCatch(EVENTS.getEthics(event)))
-#     originalOutcome = BACKSTOPS.getOriginalOutcome(event)
-#     uncaughtOutcome = EVENTS.getUncaughtOutcome(event)
-#     if(scalar(event) or categorical(event)):
-#         overruled = (originalOutcome != uncaughtOutcome or !sameEthics)
-#     else:
-#         overruled = (originalOutcome != catch(uncaughtOutcome) or !sameEthics)
-#     overruled
+macro overruled():
+    overruled = 0
+    # checks if the event's outcome was overruled or the same as the original reporting cycle
+    sameEthics = (BACKSTOPS.getOriginalEthicality(event) == ethicCatch(EVENTS.getEthics(event)))
+    originalOutcome = BACKSTOPS.getOriginalOutcome(event)
+    uncaughtOutcome = EVENTS.getUncaughtOutcome(event)
+    if(scalar(event) or categorical(event)):
+        overruled = (originalOutcome != uncaughtOutcome or !sameEthics)
+    else:
+        overruled = (originalOutcome != catch(uncaughtOutcome) or !sameEthics)
+    overruled

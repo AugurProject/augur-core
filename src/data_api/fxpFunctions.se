@@ -97,7 +97,7 @@ extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 data controller
 
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def fxExp(x):
     refund()

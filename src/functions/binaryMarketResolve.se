@@ -36,7 +36,7 @@ macro INDETERMINATE: 1500000000000000000
 
 # Resolves a binary market
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def resolveBinary(event, market, branch, votingPeriodEvent):
     self.controller.checkWhitelist(msg.sender)

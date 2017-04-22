@@ -23,7 +23,7 @@ data slashed[][](reporter[])
 data controller
 
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
     self.branch[1010101].baseReportersLastPeriod = 6
 
 def getSlashed(branch, votePeriod, reporter):

@@ -1,8 +1,8 @@
 ORDERS = self.controller.lookup('orders')
-extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getBestAsk:[int256,int256]:int256, getBestBid:[int256,int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256]
+extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getBestAsk:[int256,int256]:int256, getBestBid:[int256,int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, getType:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256]
 
 TRADE = self.controller.lookup('trade')
-extern trade: [trade:[]:int256[]]
+extern trade: [trade:[int256,int256]:int256[]]
 
 extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
 
@@ -26,7 +26,7 @@ macro MINIMUM_GAS_NEEDED_TO_TRADE: 787421
 # @param fxpMinimumOrderBalance Fill the first order that has a balance at or above this value.
 # @return array [error code] or [response code, unfilled value, unfilled amount]
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def tradeAvailableOrders(orderIDs: arr, amountTakerWants, fxpMinimumOrderBalance):
     numOrders = len(orderIDs)

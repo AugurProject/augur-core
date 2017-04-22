@@ -71,7 +71,7 @@ macro POINT_SIX: 600000000000000000
 
 # Error -1: Hey, you're not broke!
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def cashFaucet():
     refund()

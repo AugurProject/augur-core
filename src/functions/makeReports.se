@@ -77,7 +77,7 @@ macro MAX_REPORT_THRESHOLD: 10^54
 ### Deals with the reporting process but not consensus / redistribution
 
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 # Submits / reveals a fxpReport for a period
 # @return 1 if success

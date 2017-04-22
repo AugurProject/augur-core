@@ -43,7 +43,7 @@ event Transfer(from:indexed, to:indexed, value)
 event Approval(owner:indexed, spender:indexed, value)
 
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
     self.name = "Shares"
     self.symbol = "SHARE"
     self.decimals = 18

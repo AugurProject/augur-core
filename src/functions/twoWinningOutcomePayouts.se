@@ -20,7 +20,7 @@ data controller
 
 # Payout traders in markets with number of winningOutcomes of 2 [one scalar with any combination of binary + categorical for the other 2 dimensions, or just 1D with a scalar]
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def twoOutcomes(market, winningOutcome: arr, event, sender):
     self.controller.checkWhitelist(msg.sender)

@@ -36,7 +36,7 @@ macro INDETERMINATE: 1500000000000000000
 
 # Resolves a binary market
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 # Resolves a categorical or scalar market
 def resolveCategoricalOrScalar(fxpScaledMin, fxpScaledMax, event, market, branch, votingPeriodEvent):

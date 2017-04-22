@@ -1,5 +1,10 @@
 data banana
 
+data controller
+
+def init():
+    self.controller = 0x0
+
 def ok():
     x = 3
     return([x]: arr)

@@ -17,7 +17,7 @@ macro INDETERMINATE: 1500000000000000000
 
 # Resolves a binary market
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 # Determines the "winning outcomes" for a given market/event
 # Easiest to give examples:

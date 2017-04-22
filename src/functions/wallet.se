@@ -13,7 +13,7 @@ data winningOutcomeContract
 data controller
 
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def initialize(currency):
     if(!self.currency):

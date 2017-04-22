@@ -53,7 +53,7 @@ macro MIN_EVENTS_FOR_WHALE: 30
     # -3: event isn't in branch
     # -4: reported on enough events
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def proveReporterDidntReportEnough(branch, reporter, eventExample):
     refund()

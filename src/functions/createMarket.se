@@ -115,7 +115,7 @@ macro checkForkResolveContractIsValid($contract):
 # with a categorical user can set min and max to whatever, for reporting 1 is the min and max is the max then reports should be scaled between that range from 0-2, for payouts it's 1 to the winning outcome or equal for all outcomes if indeterminate, you cannot trade by paying more than 1 for a share as that makes no sense
 # for binary it's 1 as min and 2 as max
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 # Create a market. Markets are the basic _tradable_ units / questions that are traded on in Augur
 # @param branch is the branch of the market

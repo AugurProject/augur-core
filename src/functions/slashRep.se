@@ -34,7 +34,7 @@ data controller
     # -4: event isn't in the branch
     # -5: already slashed
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def slashRep(branch, salt, report, ethics, reporter, event):
     refund()

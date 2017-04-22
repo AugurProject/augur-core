@@ -51,7 +51,7 @@ macro MAX_FEE: 10**17
     # -2: branch already exists
 # most recent child is 0 for user created branches
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def createSubbranch(description:str, periodLength, parent, fxpMinTradingFee, oracleOnly, mostRecentChildBranch):
     refund()

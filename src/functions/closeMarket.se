@@ -69,7 +69,7 @@ event closeMarketLogReturn(returnValue)
     # -4: Event forked and not final yet
     # -5: bonded pushed forward market not ready to be resolved
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def closeMarket(market, sender):
     refund()

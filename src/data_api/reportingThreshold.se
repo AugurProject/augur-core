@@ -48,7 +48,7 @@ data controller
 # Calculates what a reporter should have to get below as a target to report on any given event
 # @return fxp
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def calculateReportingThreshold(branch, event, period, sender):
     self.controller.checkWhitelist(msg.sender)

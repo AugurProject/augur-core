@@ -65,7 +65,7 @@ data marketsHash[]
 data controller
 
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def initializeMarket(market, events: arr, tradingPeriod, fxpTradingFee, branch, tag1, tag2, tag3, fxpCumulativeScale, numOutcomes, extraInfo: str, gasSubsidy, fxpCreationFee, lastExpDate, shareContracts: arr):
     self.controller.checkWhitelist(msg.sender)

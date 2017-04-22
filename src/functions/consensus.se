@@ -77,7 +77,7 @@ macro FIVE_PERCENT: 50000000000000000
 # force event to be resolved first if it can be
 # call with branch and 0 for the event if no events in a given period [otherwise user won't be "penalized up to" for this period]
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def penalizeWrong(branch, event):
     refund()

@@ -20,7 +20,7 @@ data controller
 
 # Payout a trader in a market with one winning outcome [so not scalar or determinate categoricals]
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def oneOutcome(market, winningOutcome, sender, categoricalPointFive, numOutcomes):
     self.controller.checkWhitelist(msg.sender)

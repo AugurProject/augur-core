@@ -56,7 +56,7 @@ macro refund():
 data controller
 
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
     self.name = "Reputation"
     self.symbol = "REP"
     self.decimals = 18

@@ -89,7 +89,7 @@ macro ONE_MONTH: 2419200
             # say you lost rep in round 1, if it was an invalid round 2 you have incentive to convert to dormant
             # say you gained rep in round 1, if it was an invalid round 2 you have incentive _to_ not convert to dormant or send rep b/c you want to keep it
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def sendRepFrom(branch, from, receiver, fxpValue):
     # checkInvariants(from)

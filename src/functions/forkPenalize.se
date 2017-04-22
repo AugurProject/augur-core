@@ -49,7 +49,7 @@ data controller
     # -5: needed to collect fees last period which sets the before/after rep
     # -6: only should be called on fork child branch, not the parent
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def penalizeOnForkedEvent(branch, event):
     refund()

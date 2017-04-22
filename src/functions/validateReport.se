@@ -74,7 +74,7 @@ macro MAX_REPORT_THRESHOLD: 10^54
 ### Deals with the reporting process but not consensus / redistribution
 
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 # validates the report
 # weights reports by rep if round 2 and fork

@@ -30,7 +30,7 @@ data Info[](description[], descriptionLength, creator, creationFee, wallet, curr
 data controller
 
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
     description = text("Root branch")
     save(self.Info[1010101].description[0], description, chars = len(description))
     self.Info[1010101].creator = msg.sender

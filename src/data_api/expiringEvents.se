@@ -78,7 +78,7 @@ macro MAX_THRESHOLD: 10**54
 macro COST_FOR_EVENT_REPORT_CALCULATION: 500000
 
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def getSaltyEncryptedHash(branch, period, reporter, event):
     return(self.reporterPeriodInfo[branch][period].saltyEncryptedHash[reporter][event])

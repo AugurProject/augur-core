@@ -28,7 +28,7 @@ event Trade(maker:address:indexed, taker:address, tokenX:address:indexed, tokenY
 # This is used to take an order off the book, it has the order params + amount of the offer you're taking / picking up
 # amounts are in the tokens, fxpPrice is in fixed point out of 10**18
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def trade(maker: address, v, r, s, tokenX: address, tokenY: address, orderSize, takerAmount, fxpPrice, expiration):
     refund()

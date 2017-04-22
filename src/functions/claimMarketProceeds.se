@@ -64,7 +64,7 @@ macro categorical($event):
 # Errors:
     # 0: market not resolved
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def claimProceeds(market):
     refund()

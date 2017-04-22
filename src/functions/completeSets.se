@@ -55,7 +55,7 @@ event completeSetsLogReturn(sender: indexed, market: indexed, type: indexed, ret
     # -2: not enough money
     # -3: not a large enough amount
 def init():
-    self.controller = 0xC001D00D
+    self.controller = 0x0
 
 def buyCompleteSets(market, fxpAmount):
     refund()
