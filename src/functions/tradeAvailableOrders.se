@@ -37,7 +37,7 @@ def tradeAvailableOrders(orderIDs: arr, amountTakerWants, fxpMinimumOrderBalance
     while(i < numOrders and msg.gas > MINIMUM_GAS_NEEDED_TO_TRADE and amountTakerWants):
         if(ORDERS.getAmount(orderIDs[i]) > fxpMinimumOrderBalance):
             tradeReturn = array(2)
-            tradeReturn = TRADE.trade(orderIDs[i], amountTakerWants, call = delegatecall, outitems = 2)
+            tradeReturn = TRADE.trade(orderIDs[i], amountTakerWants, call = delegate, outitems = 2)
             amountTakerWants = tradeReturn[1]
         i += 1
     if(originalBalance == amountTakerWants):

@@ -153,7 +153,7 @@ macro sellTakerCompleteSetsIfAny():
         i += 1
     # Sell the asker's [msg.sender] complete sets if they have any
     if(sharesHeld):
-        if(!COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegatecall)):
+        if(!COMPLETESETS.sellCompleteSets(market, sharesHeld, call = delegate)):
             throw()
 
 macro updateAskOrderWithFillInfo():

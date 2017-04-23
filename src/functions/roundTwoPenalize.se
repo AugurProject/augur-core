@@ -120,7 +120,7 @@ def penalizeRoundTwoWrong(branch, event):
         if(oldReport):
             repChange = ROUNDTWOLIBRARY.calculateRepChange(oldReport, POINT_TWO, oldRep, p, event, outcome, numReportedOn)
             x = array(2)
-            x = ROUNDTWOLIBRARY.handleEthicsAndBondRepRedistribution(POINT_TWO, oldEthics, numReportedOn, ethical, repChange, event, repBalance, newAfterRep, bond, forkEvent, branch, lastPeriodVotedOn, call = delegatecall, outitems=2)
+            x = ROUNDTWOLIBRARY.handleEthicsAndBondRepRedistribution(POINT_TWO, oldEthics, numReportedOn, ethical, repChange, event, repBalance, newAfterRep, bond, forkEvent, branch, lastPeriodVotedOn, call = delegate, outitems=2)
             newAfterRep = x[0]
             repBalance = x[1]
             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
@@ -128,7 +128,7 @@ def penalizeRoundTwoWrong(branch, event):
         if(reportValue):
             repChange = ROUNDTWOLIBRARY.calculateRepChange(reportValue, POINT_ONE / 4, oldRep, p, event, outcome, numReportedOn)
             x = array(2)
-            x = ROUNDTWOLIBRARY.handleEthicsAndBondRepRedistribution(POINT_ONE / 4, ethics, numReportedOn, ethical, repChange, event, repBalance, newAfterRep, bond, forkEvent, branch, lastPeriodVotedOn, call = delegatecall, outitems=2)
+            x = ROUNDTWOLIBRARY.handleEthicsAndBondRepRedistribution(POINT_ONE / 4, ethics, numReportedOn, ethical, repChange, event, repBalance, newAfterRep, bond, forkEvent, branch, lastPeriodVotedOn, call = delegate, outitems=2)
             newAfterRep = x[0]
             repBalance = x[1]
             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
