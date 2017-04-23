@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from load_contracts import ContractLoader
 import pickle
 c = ContractLoader('src', 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])

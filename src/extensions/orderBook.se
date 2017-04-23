@@ -1,0 +1,42 @@
+def getOrderBook(marketID, offset, numOrdersToLoad):
+    refund()
+    numOrders = MARKETS.getTotalOrders(marketID)
+    if offset > numOrders:
+        return([]: arr)
+    if numOrdersToLoad == 0:
+        numOrdersToLoad = numOrders
+    totalOrders = min(numOrdersToLoad, numOrders - offset)
+    orders = slice(MARKETS.getOrderIDs(marketID, outitems=numOrders), items=offset, items=offset+numOrdersToLoad)
+    orderBook = array(ORDER_FIELDS*totalOrders)
+    numAvailableOrders = 0
+    i = 0
+    while i < totalOrders:
+        orderInfo = ORDERS.getOrder(orders[i], outitems=ORDER_FIELDS)
+        if orderInfo[0] != 0:
+            j = 0
+            while j < 8:
+                orderBook[8*numAvailableOrders + j] = orderInfo[j]
+                j += 1
+            numAvailableOrders += 1
+        i += 1
+    return(slice(orderBook, items=0, items=ORDER_FIELDS*numAvailableOrders): arr)
+
+def getAccountOrderBook(marketID, account):
+    refund()
+    numOrders = MARKETS.getTotalOrders(marketID)
+    orders = MARKETS.getOrderIDs(marketID, outitems=numOrders)
+    orderBook = array(ORDER_FIELDS*numOrders)
+    numAccountOrders = 0
+    i = 0
+    while i < numOrders:
+        owner = ORDERS.getOrderOwner(orders[i])
+        if owner == account:
+            orderInfo = ORDERS.getOrder(orders[i], outitems=ORDER_FIELDS)
+            if orderInfo[0] != 0:
+                j = 0
+                while j < 8:
+                    orderBook[8*numAccountOrders + j] = orderInfo[j]
+                    j += 1
+                numAccountOrders += 1
+        i += 1
+    return(slice(orderBook, items=0, items=ORDER_FIELDS*numAccountOrders): arr)
