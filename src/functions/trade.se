@@ -122,9 +122,9 @@ def trade(orderID, amountTakerWants):
     returnValue = array(2)
     # Fill orders
     if(type == BID):
-        returnValue = FILLBID.fillBid(orderID, amountTakerWants, call = delegatecall, outitems = 2)
+        returnValue = FILLBID.fillBid(orderID, amountTakerWants, call = delegate, outitems = 2)
     elif(type == ASK):
-        returnValue = FILLASK.fillAsk(orderID, amountTakerWants, call = delegatecall, outitems = 2)
+        returnValue = FILLASK.fillAsk(orderID, amountTakerWants, call = delegate, outitems = 2)
     else:
         throw()
     MUTEX.unsetMutex()

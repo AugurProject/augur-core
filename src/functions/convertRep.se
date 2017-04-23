@@ -194,7 +194,7 @@ macro checkConversionDuringForkInvariants():
     tooLateForChild = block.timestamp > (BRANCHES.getCreationDate(child) + ONE_MONTH)
     # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow converting rep on the parent branch until they claim it
     if(!tooLateForChild && child && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, msg.sender)) != msg.sender):
-        if(!CLAIMINITIALREP.claimInitialRep(branch, child, call = delegatecall)):
+        if(!CLAIMINITIALREP.claimInitialRep(branch, child, call = delegate)):
             throw()
 
 macro checkRepConversionInvariants():
@@ -206,7 +206,7 @@ macro checkRepConversionInvariants():
         tooLate = block.timestamp > (BRANCHES.getCreationDate(branch) + ONE_MONTH)
         reporterWasInOldBranch = REPORTING.getReporterID(parent, REPORTING.repIDToIndex(parent, msg.sender))
         if(parent && !tooLate && reporterWasInOldBranch):
-            if(!CLAIMINITIALREP.claimInitialRep(parent, branch, call = delegatecall)):
+            if(!CLAIMINITIALREP.claimInitialRep(parent, branch, call = delegate)):
                 throw()
         else:
             REPORTING.addReporter(branch, msg.sender)
