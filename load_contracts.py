@@ -453,7 +453,10 @@ class ContractLoader(object):
 
     def __getattr__(self, name):
         """Use it like a namedtuple!"""
-        return self.__contracts[name]
+        try:
+            return self.__contracts[name]
+        except KeyError:
+            raise AttributeError()
 
     def __getitem__(self, name):
         """Use it like a dict!"""
