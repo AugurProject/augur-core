@@ -29,6 +29,7 @@ import sys
 from serpent import mk_signature
 import tempfile
 import warnings
+import dill
 import ethereum.tester
 import socket
 import select
@@ -390,11 +391,12 @@ class ContractLoader(object):
 
     Examples:
     contracts = ContractLoader('src', 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
+    contracts = ContractLoader('src', 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'], '') if you want to save the compiled contracts somewhere
     print(contracts.foo.echo('lol'))
     print(contracts['bar'].bar())
     contracts.cleanup()
     """
-    def __init__(self, source_dir, controller, special):
+    def __init__(self, source_dir, controller, special, compiled_directory=None):
         self.__state = ethereum.tester.state()
         ethereum.tester.gas_limit = 4100000
         self.__contracts = {}
@@ -403,53 +405,64 @@ class ContractLoader(object):
 
         serpent_files = self.__temp_dir.find_files(SERPENT_EXT)
 
-        for file in serpent_files:
-            if os.path.basename(file) == controller:
-                print('Creating controller..')
-                self.__contracts['controller'] = self.__state.abi_contract(file)
-                controller_addr = '0x' + hexlify(self.__contracts['controller'].address)
-                assert len(controller_addr) == 42
-                print('Updating externs...')
-                update_externs(self.__temp_dir.temp_source_dir, controller_addr)
-                print('Finished.')
-                self.__state.mine()
-                break
-        else:
-            raise LoadContractsError('Controller not found! {}', controller)
+        if(compiled_directory != None):
+            dill_file = open(compiled_directory+'data.dill', 'rb')
+            self.__contracts = dill.load(dill_file)
+            dill_file.close()
+            print('Contract loading successful')
 
-        for contract in special:
+        else:
             for file in serpent_files:
-                if os.path.basename(file) == contract:
-                    name = path_to_name(file)
+                if os.path.basename(file) == controller:
+                    print('Creating controller..')
+                    self.__contracts['controller'] = self.__state.abi_contract(file)
+                    controller_addr = '0x' + hexlify(self.__contracts['controller'].address)
+                    assert len(controller_addr) == 42
+                    print('Updating externs...')
+                    update_externs(self.__temp_dir.temp_source_dir, controller_addr)
+                    print('Finished.')
+                    self.__state.mine()
+                    break
+            else:
+                raise LoadContractsError('Controller not found! {}', controller)
+
+            for contract in special:
+                for file in serpent_files:
+                    if os.path.basename(file) == contract:
+                        name = path_to_name(file)
+                        print(name)
+                        self.__contracts[name] = self.__state.abi_contract(file)
+                        address = self.__contracts[name].address
+                        self.controller.setValue(name.ljust(32, '\x00'), address)
+                        self.controller.addToWhitelist(address)
+                        self.__state.mine()
+                        print('Contract creation successful:', name)
+
+            for file in serpent_files:
+                name = path_to_name(file)
+
+                if name in self.__contracts:
+                    continue
+
+                try:
                     print(name)
                     self.__contracts[name] = self.__state.abi_contract(file)
-                    address = self.__contracts[name].address
-                    self.controller.setValue(name.ljust(32, '\x00'), address)
-                    self.controller.addToWhitelist(address)
-                    self.__state.mine()
+                except Exception as exc:
+                    with open(file) as f:
+                        code = f.read()
+                    raise LoadContractsError(
+                        'Error compiling {name}:\n\n{code}',
+                        name=name,
+                        code=code)
+                else:
                     print('Contract creation successful:', name)
 
-        for file in serpent_files:
-            name = path_to_name(file)
+                self.controller.setValue(name.ljust(32, '\x00'), self.__contracts[name].address)
+                self.controller.addToWhitelist(self.__contracts[name].address)
 
-            if name in self.__contracts:
-                continue
-
-            try:
-                print(name)
-                self.__contracts[name] = self.__state.abi_contract(file)
-            except Exception as exc:
-                with open(file) as f:
-                    code = f.read()
-                raise LoadContractsError(
-                    'Error compiling {name}:\n\n{code}',
-                    name=name,
-                    code=code)
-            else:
-                print('Contract creation successful:', name)
-
-            self.controller.setValue(name.ljust(32, '\x00'), self.__contracts[name].address)
-            self.controller.addToWhitelist(self.__contracts[name].address)
+            output = open(compiled_directory+'data.dill', 'wb')
+            dill.dump(self.__contracts, output)
+            output.close()
 
     def __getattr__(self, name):
         """Use it like a namedtuple!"""
