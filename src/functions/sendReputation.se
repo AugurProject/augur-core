@@ -50,8 +50,8 @@ extern repContract: [allowance:[address,address]:uint256, approve:[address,uint2
 BACKSTOPS = self.controller.lookup('backstops')
 extern backstops: [adjForkBondPaid:[int256,int256]:int256, doRoundTwoRefund:[int256,int256]:int256, getBondAmount:[int256]:int256, getBondPaid:[int256]:int256, getBondPoster:[int256]:int256, getBondReturned:[int256]:int256, getDisputedOverEthics:[int256]:int256, getFinal:[int256]:int256, getForkBondPaid:[int256]:int256, getForkBondPoster:[int256]:int256, getForkedOverEthicality:[int256]:int256, getMoved:[int256]:int256, getOriginalBranch:[int256]:int256, getOriginalEthicality:[int256]:int256, getOriginalOutcome:[int256]:int256, getOriginalVotePeriod:[int256]:int256, getResolved:[int256,int256]:int256, getRoundTwo:[int256]:int256, increaseBondPaid:[int256,int256]:int256, setBondAmount:[int256,int256]:int256, setBondPoster:[int256,int256]:int256, setBondReturned:[int256]:int256, setDisputedOverEthics:[int256]:int256, setFinal:[int256]:int256, setForkBondPoster:[int256,int256]:int256, setForkedOverEthicality:[int256]:int256, setMoved:[int256]:int256, setOriginalBranch:[int256,int256]:int256, setOriginalEthicality:[int256,int256]:int256, setOriginalOutcome:[int256,int256]:int256, setOriginalVotePeriod:[int256,int256]:int256, setResolved:[int256,int256,int256]:int256, setRoundTwo:[int256,int256]:int256, setRoundTwoRefund:[int256,int256]:int256]
 
-FAUCETS = self.controller.lookup('faucets')
-extern faucets: [cashFaucet:[]:int256, claimInitialRep:[int256,int256]:int256, fundNewAccount:[int256]:int256, reputationFaucet:[int256]:int256]
+CLAIMINITIALREP = self.controller.lookup('claimInitialRep')
+extern claimInitialRep: [claimInitialRep:[int256,int256]:int256]
 
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
@@ -206,7 +206,7 @@ macro checkSendRepInvariants():
         parent = BRANCHES.getParent(branch)
         reporterWasInOldBranch = REPORTING.getReporterID(parent, REPORTING.repIDToIndex(parent, from))
         if(parent && !tooLate && reporterWasInOldBranch):
-            if(!FAUCETS.claimInitialRep(parent, branch, call = delegatecall)):
+            if(!CLAIMINITIALREP.claimInitialRep(parent, branch, call = delegatecall)):
                 throw()
         else:
             REPORTING.addReporter(branch, from)
@@ -220,7 +220,7 @@ macro checkSendRepInvariants():
         return(-3)
     # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the sender claims it
     if(!tooLateForChild && child && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, from)) != from):
-        if(!FAUCETS.claimInitialRep(branch, child, call = delegatecall)):
+        if(!CLAIMINITIALREP.claimInitialRep(branch, child, call = delegatecall)):
             throw()
 
     if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from == msg.sender)):

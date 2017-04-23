@@ -30,6 +30,7 @@ extern createEvent: [createEvent:[int256,bytes,int256,int256,int256,int256,bytes
 MUTEX = self.controller.lookup('mutex')
 extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
 
+# using isCallerWhitelisted
 inset('../macros/refund.sem')
 
 data controller
@@ -42,6 +43,5 @@ def createSingleEventMarket(branch, description: str, expDate, fxpMinValue, fxpM
         throw()
     if(!isCallerWhitelisted()):
         MUTEX.setMutex()
-    eventID = CREATEEVENT.createEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, call=delegate)
-    marketID = CREATEMARKET.createMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, fxpMakerFees, extraInfo, call=delegate)
-    return(marketID)
+    eventID = CREATEEVENT.createEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, call = delegate)
+    return(CREATEMARKET.createMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, fxpMakerFees, extraInfo, call = delegate))

@@ -1,0 +1,65 @@
+# This software (Augur) allows buying and selling event options in Ethereum.
+#
+# Copyright (c) 2015 Forecast Foundation OU
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, # but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# If you have questions, please contact jack@augur.net or joey@augur.net.
+
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+REPORTING = self.controller.lookup('reporting')
+extern reporting: [addDormantRep:[int256,int256,int256]:int256, addRep:[int256,int256,int256]:int256, addReporter:[int256,int256,int256,int256,int256]:int256, adjustActiveRep:[int256,int256]:int256, balanceOfReporter:[int256,int256]:int256, claimInitialRepFromRepContract:[]:int256, getActiveRep:[int256]:int256, getDormantRepByIndex:[int256,int256]:int256, getNumberReporters:[int256]:int256, getRepBalance:[int256,int256]:int256, getRepByIndex:[int256,int256]:int256, getReportedOnNonFinalRoundTwoEvent:[int256,int256]:int256, getReporterID:[int256,int256]:int256, getReputation:[int256]:int256[], getTotalRep:[int256]:int256, repIDToIndex:[int256,int256]:int256, setInitialReporters:[int256]:int256, setRep:[int256,int256,int256]:int256, setReportedOnNonFinalRoundTwoEvent:[int256,int256,int256]:int256, subtractDormantRep:[int256,int256,int256]:int256, subtractRep:[int256,int256,int256]:int256, totalSupply:[int256]:int256]
+
+CONSENSUSDATA = self.controller.lookup('consensusData')
+extern consensusData: [decreaseDenominator:[int256,int256,int256]:int256, doRefund:[int256,int256]:int256, getBaseReportersLastPeriod:[int256]:int256, getDenominator:[int256,int256]:int256, getFeeFirst:[int256,int256]:int256, getFeesCollected:[int256,int256,int256,int256]:int256, getNotEnoughPenalized:[int256,int256,int256]:int256, getPenalized:[int256,int256,int256,int256]:int256, getPenalizedNum:[int256,int256,int256]:int256, getPenalizedUpTo:[int256,int256]:int256, getPeriodBalance:[int256,int256]:int256, getRepCollected:[int256,int256,int256]:int256, getRepRedistributionDone:[int256,int256]:int256, getSlashed:[int256,int256,int256]:int256, increaseDenominator:[int256,int256,int256]:int256, increasePenalizedNum:[int256,int256,int256,int256]:int256, setBaseReportersLastPeriod:[int256,int256]:int256, setFeeFirst:[int256,int256,int256]:int256, setFeesCollected:[int256,int256,int256,int256]:int256, setNotEnoughPenalized:[int256,int256,int256]:int256, setPenalized:[int256,int256,int256,int256]:int256, setPenalizedUpTo:[int256,int256,int256]:int256, setPeriodBalance:[int256,int256,int256]:int256, setRefund:[int256,int256]:int256, setRepCollected:[int256,int256,int256]:int256, setSlashed:[int256,int256,int256]:int256]
+
+BRANCHES = self.controller.lookup('branches')
+extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToBranch:[int256,int256]:int256, disableCurrency:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranchCurrency:[int256,int256]:int256, getBranchWallet:[int256,int256]:int256, getBranches:[]:int256[], getBranchesStartingAt:[int256]:int256[], getCreationDate:[int256]:int256, getCurrencyActive:[int256,int256]:int256, getCurrencyByContract:[int256,int256]:int256, getCurrencyRate:[int256,int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getForkTime:[int256]:int256, getInitialBalance:[int256,int256,int256]:int256, getMarketIDsInBranch:[int256,int256,int256]:int256[], getMinTradingFee:[int256]:int256, getMostRecentChild:[int256]:int256, getNumBranches:[]:int256, getNumCurrencies:[int256]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, reactivateCurrency:[int256,int256]:int256, removeLastCurrency:[int256]:int256, replaceCurrency:[int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256,int256]:int256, setMostRecentChild:[int256,int256]:int256, updateCurrencyRate:[int256,int256,int256,int256]:int256, updateNumCurrencies:[int256,int256]:int256]
+
+# using refund
+inset('../macros/refund.sem')
+# using fix
+inset('../macros/float.sem')
+
+data controller
+
+event fundedAccount(branch: indexed, sender: indexed, cashBalance, repBalance, timestamp)
+
+### Reputation faucet - get ~free rep!
+
+def init():
+    self.controller = 0x0
+
+def reputationFaucet(branch):
+    refund()
+    if(REPORTING.repIDToIndex(branch, msg.sender) != 0 or REPORTING.getReporterID(branch, 0) == msg.sender):
+        index = REPORTING.repIDToIndex(branch, msg.sender)
+    else:
+        index = REPORTING.getNumberReporters(branch)
+        REPORTING.addReporter(branch, msg.sender, 0, 0, 0)
+    REPORTING.setRep(branch, index, fix(47))
+    periodLength = BRANCHES.getPeriodLength(branch)
+    if(block.timestamp % periodLength <= periodLength / 2):
+        penalizedUpTo = BRANCHES.getVotePeriod(branch) - 1
+    else:
+        penalizedUpTo = BRANCHES.getVotePeriod(branch)
+    CONSENSUSDATA.setPenalizedUpTo(branch, msg.sender, penalizedUpTo)
+    CONSENSUSDATA.setRepCollected(branch, msg.sender, penalizedUpTo)
+    log(type=fundedAccount, branch, msg.sender, fix(10000), fix(47), block.timestamp)
+    return(1)
