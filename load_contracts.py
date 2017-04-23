@@ -390,18 +390,19 @@ class ContractLoader(object):
     """A class which updates and compiles Serpent code via ethereum.tester.state.
 
     Examples:
-    contracts = ContractLoader('src', 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'])
-    contracts = ContractLoader('src', 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'], '') if you want to save the compiled contracts somewhere
+    contracts = ContractLoader('src', 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'], 'path/to/save/compiled/contracts', 0)
+    final parameter in contract loader is whether to recompile the contracts or not
     print(contracts.foo.echo('lol'))
     print(contracts['bar'].bar())
     contracts.cleanup()
     """
-    def __init__(self, source_dir, controller, special, compiled_directory=None):
+    def __init__(self, source_dir, controller, special, compiled_directory=None, recompile=0):
         self.__state = ethereum.tester.state()
         ethereum.tester.gas_limit = 4100000
         self.__contracts = {}
         self.__temp_dir = TempDirCopy(source_dir)
         self.__source_dir = source_dir
+        self.__compiled_directory = compiled_directory
 
         serpent_files = self.__temp_dir.find_files(SERPENT_EXT)
 
@@ -411,7 +412,7 @@ class ContractLoader(object):
             dill_file.close()
             print('Contract loading successful')
 
-        else:
+        if(recompile):
             for file in serpent_files:
                 if os.path.basename(file) == controller:
                     print('Creating controller..')
@@ -460,9 +461,10 @@ class ContractLoader(object):
                 self.controller.setValue(name.ljust(32, '\x00'), self.__contracts[name].address)
                 self.controller.addToWhitelist(self.__contracts[name].address)
 
-            output = open(compiled_directory+'data.dill', 'wb')
-            dill.dump(self.__contracts, output)
-            output.close()
+            if(compiled_directory != None):
+                output = open(compiled_directory+'data.dill', 'wb')
+                dill.dump(self.__contracts, output)
+                output.close()
 
     def __getattr__(self, name):
         """Use it like a namedtuple!"""
@@ -498,6 +500,10 @@ class ContractLoader(object):
         self.controller.setValue(name.ljust(32, '\x00'), self.__contracts[name].address)
         self.controller.addToWhitelist(self.__contracts[name].address)
         self.__state.mine()
+        if(compiled_directory != None):
+            output = open(compiled_directory+'data.dill', 'wb')
+            dill.dump(self.__contracts, output)
+            output.close()
 
     def get_address(self, name):
         """Hex-encoded address of the contract."""
