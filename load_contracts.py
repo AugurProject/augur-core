@@ -442,7 +442,7 @@ class ContractLoader(object):
             for file in serpent_files:
                 name = path_to_name(file)
 
-                if name in self.__contracts:
+                if(name in self.__contracts and recompile == 0):
                     continue
 
                 try:
