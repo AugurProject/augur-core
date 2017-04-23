@@ -500,8 +500,8 @@ class ContractLoader(object):
         self.controller.setValue(name.ljust(32, '\x00'), self.__contracts[name].address)
         self.controller.addToWhitelist(self.__contracts[name].address)
         self.__state.mine()
-        if(compiled_directory != None):
-            output = open(compiled_directory+'data.dill', 'wb')
+        if(self.__compiled_directory != None):
+            output = open(self.__compiled_directory+'data.dill', 'wb')
             dill.dump(self.__contracts, output)
             output.close()
 
