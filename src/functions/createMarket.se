@@ -86,11 +86,6 @@ macro checkForkResolveContractIsValid($contract):
 
 ### Allows creation of events and markets and manipulating them
 
-# def createSingleEventMarket(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution:str, fxpTradingFee, tag1, tag2, tag3, fxpMakerFees, extraInfo:str):
-#     event = self.createEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, call=delegate)
-#     market = self.createMarket(branch, description, fxpTradingFee, [event], tag1, tag2, tag3, fxpMakerFees, extraInfo, call=delegate)
-#     return(market)
-
 # Create an event. Events are the basic units / questions that are reported on in Augur by reporters
 # @param numOutcomes is number of outcomes for this event, e.g. quarter mile times from 10.0 to 11.0 would be 11 outcomes (if incremented by 0.1)
 # @param fxpMinValue should be 10**18 for a binary event, fxpMaxValue should be 2**65 for a binary event

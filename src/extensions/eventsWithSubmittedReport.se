@@ -1,0 +1,47 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation OU
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+EXPEVENTS = self.controller.lookup('expiringEvents')
+extern expiringEvents: [addEvent:[int256,int256,int256,int256,int256,int256,int256]:int256, addReportToReportsSubmitted:[int256,int256,int256]:int256, addRoundTwo:[int256,int256]:int256, addToWeightOfReport:[int256,int256,int256,int256]:int256, adjustPeriodFeeValue:[int256,int256,int256]:int256, countReportAsSubmitted:[int256,int256,int256,int256,int256]:int256, deleteEvent:[int256,int256,int256]:int256, getActiveReporters:[int256,int256,int256,int256]:int256[], getAfterFork:[int256,int256]:int256, getAfterRep:[int256,int256,int256]:int256, getBeforeRep:[int256,int256,int256]:int256, getCurrentMode:[int256,int256]:int256, getCurrentModeItems:[int256,int256]:int256, getEthicReport:[int256,int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256,int256]:int256, getEventWeight:[int256,int256,int256]:int256, getEvents:[int256,int256]:int256[], getEventsRange:[int256,int256,int256,int256]:int256[], getFeeValue:[int256,int256]:int256, getLesserReportNum:[int256,int256,int256]:int256, getNumActiveReporters:[int256,int256]:int256, getNumEventsToReportOn:[int256,int256]:int256, getNumRemoved:[int256,int256]:int256, getNumReportsSubmitted:[int256,int256,int256]:int256, getNumRequired:[int256,int256]:int256, getNumRoundTwo:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodDormantRep:[int256,int256,int256]:int256, getPeriodRepWeight:[int256,int256,int256]:int256, getReport:[int256,int256,int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getReportsCommitted:[int256,int256,int256]:int256, getRequired:[int256,int256,int256]:int256, getSaltyEncryptedHash:[int256,int256,int256,int256]:int256, getSubsidy:[int256,int256,int256]:int256, getWeightOfReport:[int256,int256,int256]:int256, moveEvent:[int256,int256]:int256, refundCost:[int256,int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setAfterRep:[int256,int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256,int256]:int256, setCurrentMode:[int256,int256,int256]:int256, setCurrentModeItems:[int256,int256,int256]:int256, setEthicReport:[int256,int256,int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setEventWeight:[int256,int256,int256,int256]:int256, setLesserReportNum:[int256,int256,int256,int256]:int256, setNumEventsToReportOn:[int256]:int256, setPeriodDormantRep:[int256,int256,int256,int256]:int256, setPeriodRepWeight:[int256,int256,int256,int256]:int256, setReport:[int256,int256,int256,int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setSaltyEncryptedHash:[int256,int256,int256,int256,int256]:int256]
+
+# using refund
+inset('../macros/refund.sem')
+
+data controller
+
+def init():
+    self.controller = 0x0
+
+def getEventsWithSubmittedReport(branch, period, reporter):
+    refund()
+    numEvents = EXPEVENTS.getNumberEvents(branch, period)
+    events = array(numEvents)
+    n = 0
+    i = 0
+    while(i < numEvents):
+        eventID = EXPEVENTS.getEvent(branch, period, i)
+        if(EXPEVENTS.getReport(branch, period, eventID, reporter) != 0):
+            events[n] = eventID
+            n += 1
+        i += 1
+    return(slice(events, items=0, items=n): arr)

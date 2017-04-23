@@ -1,0 +1,47 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation OU
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+CREATEMARKET = self.controller.lookup('createMarket')
+extern createMarket: [createMarket:[int256,bytes,int256,int256,int256,int256,int256,bytes,int256]:int256]
+
+CREATEEVENT = self.controller.lookup('createEvent')
+extern createEvent: [createEvent:[int256,bytes,int256,int256,int256,int256,bytes,int256,int256,int256]:int256]
+
+MUTEX = self.controller.lookup('mutex')
+extern mutex: [getMutex:[]:int256, setMutex:[]:int256, unsetMutex:[]:int256]
+
+# using isCallerWhitelisted
+inset('../macros/refund.sem')
+
+data controller
+
+def init():
+    self.controller = 0x0
+
+def createSingleEventMarket(branch, description: str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, fxpTradingFee, tag1, tag2, tag3, fxpMakerFees, extraInfo: str):
+    if(MUTEX.getMutex() && !isCallerWhitelisted()):
+        throw()
+    if(!isCallerWhitelisted()):
+        MUTEX.setMutex()
+    eventID = CREATEEVENT.createEvent(branch, description, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution, call = delegate)
+    return(CREATEMARKET.createMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, fxpMakerFees, extraInfo, call = delegate))

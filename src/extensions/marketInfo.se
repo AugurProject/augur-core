@@ -30,20 +30,14 @@ extern events: [addMarket:[int256,int256]:int256, addPast24:[int256]:int256, add
 BRANCHES = self.controller.lookup('branches')
 extern branches: [addCurrency:[int256,int256,int256,int256]:int256, addMarketToBranch:[int256,int256]:int256, disableCurrency:[int256,int256]:int256, getBaseReporters:[int256]:int256, getBranchByNum:[int256]:int256, getBranchCurrency:[int256,int256]:int256, getBranchWallet:[int256,int256]:int256, getBranches:[]:int256[], getBranchesStartingAt:[int256]:int256[], getCreationDate:[int256]:int256, getCurrencyActive:[int256,int256]:int256, getCurrencyByContract:[int256,int256]:int256, getCurrencyRate:[int256,int256]:int256, getEventForkedOver:[int256]:int256, getForkPeriod:[int256]:int256, getForkTime:[int256]:int256, getInitialBalance:[int256,int256,int256]:int256, getMarketIDsInBranch:[int256,int256,int256]:int256[], getMinTradingFee:[int256]:int256, getMostRecentChild:[int256]:int256, getNumBranches:[]:int256, getNumCurrencies:[int256]:int256, getNumMarketsBranch:[int256]:int256, getOracleOnly:[int256]:int256, getParent:[int256]:int256, getParentPeriod:[int256]:int256, getPeriodLength:[int256]:int256, getVotePeriod:[int256]:int256, incrementPeriod:[int256]:int256, initializeBranch:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256, reactivateCurrency:[int256,int256]:int256, removeLastCurrency:[int256]:int256, replaceCurrency:[int256,int256,int256,int256,int256]:int256, setBaseReporters:[int256,int256]:int256, setEventForkedOver:[int256,int256]:int256, setForkPeriod:[int256]:int256, setInitialBalance:[int256,int256,int256,int256]:int256, setMostRecentChild:[int256,int256]:int256, updateCurrencyRate:[int256,int256,int256,int256]:int256, updateNumCurrencies:[int256,int256]:int256]
 
-ORDERS = self.controller.lookup('orders')
-extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getBestAsk:[int256,int256]:int256, getBestBid:[int256,int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, getType:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256]
-
 MARKETS = self.controller.lookup('markets')
 extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getNumEvents:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSender:[]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initializeMarket:[int256,int256[],int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[]]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, returnTags:[int256]:int256[], setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]
 
-EXPEVENTS = self.controller.lookup('expiringEvents')
-extern expiringEvents: [addEvent:[int256,int256,int256,int256,int256,int256,int256]:int256, addReportToReportsSubmitted:[int256,int256,int256]:int256, addRoundTwo:[int256,int256]:int256, addToWeightOfReport:[int256,int256,int256,int256]:int256, adjustPeriodFeeValue:[int256,int256,int256]:int256, countReportAsSubmitted:[int256,int256,int256,int256,int256]:int256, deleteEvent:[int256,int256,int256]:int256, getActiveReporters:[int256,int256,int256,int256]:int256[], getAfterFork:[int256,int256]:int256, getAfterRep:[int256,int256,int256]:int256, getBeforeRep:[int256,int256,int256]:int256, getCurrentMode:[int256,int256]:int256, getCurrentModeItems:[int256,int256]:int256, getEthicReport:[int256,int256,int256,int256]:int256, getEvent:[int256,int256,int256]:int256, getEventIndex:[int256,int256,int256]:int256, getEventWeight:[int256,int256,int256]:int256, getEvents:[int256,int256]:int256[], getEventsRange:[int256,int256,int256,int256]:int256[], getFeeValue:[int256,int256]:int256, getLesserReportNum:[int256,int256,int256]:int256, getNumActiveReporters:[int256,int256]:int256, getNumEventsToReportOn:[int256,int256]:int256, getNumRemoved:[int256,int256]:int256, getNumReportsSubmitted:[int256,int256,int256]:int256, getNumRequired:[int256,int256]:int256, getNumRoundTwo:[int256,int256]:int256, getNumberEvents:[int256,int256]:int256, getPeriodDormantRep:[int256,int256,int256]:int256, getPeriodRepWeight:[int256,int256,int256]:int256, getReport:[int256,int256,int256,int256]:int256, getReportHash:[int256,int256,int256,int256]:int256, getReportsCommitted:[int256,int256,int256]:int256, getRequired:[int256,int256,int256]:int256, getSaltyEncryptedHash:[int256,int256,int256,int256]:int256, getSubsidy:[int256,int256,int256]:int256, getWeightOfReport:[int256,int256,int256]:int256, moveEvent:[int256,int256]:int256, refundCost:[int256,int256,int256,int256]:int256, removeEvent:[int256,int256]:int256, setAfterRep:[int256,int256,int256,int256]:int256, setBeforeRep:[int256,int256,int256,int256]:int256, setCurrentMode:[int256,int256,int256]:int256, setCurrentModeItems:[int256,int256,int256]:int256, setEthicReport:[int256,int256,int256,int256,int256]:int256, setEventRequired:[int256,int256,int256]:int256, setEventWeight:[int256,int256,int256,int256]:int256, setLesserReportNum:[int256,int256,int256,int256]:int256, setNumEventsToReportOn:[int256]:int256, setPeriodDormantRep:[int256,int256,int256,int256]:int256, setPeriodRepWeight:[int256,int256,int256,int256]:int256, setReport:[int256,int256,int256,int256,int256]:int256, setReportHash:[int256,int256,int256,int256,int256]:int256, setSaltyEncryptedHash:[int256,int256,int256,int256,int256]:int256]
-
+# using refund
 inset('../macros/refund.sem')
+# using proportionCorrect
 inset('../macros/proportionCorrect.sem')
-inset('../macros/eventHelpers.sem')
 
-macro ORDER_FIELDS: 10
 macro EVENTS_FIELDS: 7
 macro OUTCOMES_FIELDS: 3
 macro BASE_FIELDS: 15
@@ -53,49 +47,6 @@ data controller
 
 def init():
     self.controller = 0x0
-
-def getOrderBook(marketID, offset, numOrdersToLoad):
-    refund()
-    numOrders = MARKETS.getTotalOrders(marketID)
-    if offset > numOrders:
-        return([]: arr)
-    if numOrdersToLoad == 0:
-        numOrdersToLoad = numOrders
-    totalOrders = min(numOrdersToLoad, numOrders - offset)
-    orders = slice(MARKETS.getOrderIDs(marketID, outitems=numOrders), items=offset, items=offset+numOrdersToLoad)
-    orderBook = array(ORDER_FIELDS*totalOrders)
-    numAvailableOrders = 0
-    i = 0
-    while i < totalOrders:
-        orderInfo = ORDERS.getOrder(orders[i], outitems=ORDER_FIELDS)
-        if orderInfo[0] != 0:
-            j = 0
-            while j < 8:
-                orderBook[8*numAvailableOrders + j] = orderInfo[j]
-                j += 1
-            numAvailableOrders += 1
-        i += 1
-    return(slice(orderBook, items=0, items=ORDER_FIELDS*numAvailableOrders): arr)
-
-def getAccountOrderBook(marketID, account):
-    refund()
-    numOrders = MARKETS.getTotalOrders(marketID)
-    orders = MARKETS.getOrderIDs(marketID, outitems=numOrders)
-    orderBook = array(ORDER_FIELDS*numOrders)
-    numAccountOrders = 0
-    i = 0
-    while i < numOrders:
-        owner = ORDERS.getOrderOwner(orders[i])
-        if owner == account:
-            orderInfo = ORDERS.getOrder(orders[i], outitems=ORDER_FIELDS)
-            if orderInfo[0] != 0:
-                j = 0
-                while j < 8:
-                    orderBook[8*numAccountOrders + j] = orderInfo[j]
-                    j += 1
-                numAccountOrders += 1
-        i += 1
-    return(slice(orderBook, items=0, items=ORDER_FIELDS*numAccountOrders): arr)
 
 def getMarketInfo(marketID, account):
     refund()
@@ -132,7 +83,7 @@ def getMarketInfo(marketID, account):
         marketInfo[index + j] = eventInfo[j]
         j += 1
     marketInfo[index + EVENTS_FIELDS - 2] = EVENTS.getEthics(eventID)
-    marketInfo[index + EVENTS_FIELDS - 1] = proportionCorrect(eventID, EVENTS.getForked(eventID))
+    # marketInfo[index + EVENTS_FIELDS - 1] = proportionCorrect(eventID, EVENTS.getForked(eventID))
     index += EVENTS_FIELDS
 
     # gather outcomes info: [sharesPurchased, price]
@@ -206,118 +157,3 @@ def batchGetMarketInfo(marketIDs: arr, account):
         index += marketInfoLength[i]
         i += 1
     return(marketsInfo: arr)
-
-# - if both volumeMin and volumeMax are specified, then
-#   only include markets in the half-open interval: (volumeMin, volumeMax]
-# - if volumeMax = -1 then there is no upper limit
-def getMarketsInfo(branch, offset, numMarketsToLoad, volumeMin, volumeMax):
-    refund()
-    numMarkets = BRANCHES.getNumMarketsBranch(branch)
-    if offset > numMarkets:
-        return([]: arr)
-    if numMarketsToLoad == 0:
-        numMarketsToLoad = numMarkets
-    totalMarkets = min(numMarketsToLoad, numMarkets - offset)
-    marketIDs = BRANCHES.getMarketIDsInBranch(branch, offset, offset + totalMarkets, outitems=totalMarkets)
-
-    if volumeMin < volumeMax or volumeMax == -1:
-        numThresholdedMarkets = 0
-        thresholdedMarketIDs = array(numMarkets)
-        m = 0
-        while m < totalMarkets:
-            marketID = marketIDs[m]
-            volume = MARKETS.getVolume(marketID)
-            if volume > volumeMin and (volumeMax == -1 or volume <= volumeMax):
-                thresholdedMarketIDs[numThresholdedMarkets] = marketID
-                numThresholdedMarkets += 1
-                if numThresholdedMarkets == totalMarkets:
-                    m = totalMarkets - 1
-            m += 1
-        totalMarkets = min(numThresholdedMarkets, totalMarkets)
-        marketIDs = slice(thresholdedMarketIDs, items=0, items=numThresholdedMarkets)
-
-    descriptionLengths = array(totalMarkets)
-    totalLen = totalMarkets*16
-    m = 0
-    while m < totalMarkets:
-        eventID = MARKETS.getMarketEvent(marketIDs[m], 0)
-        descriptionLengths[m] = INFO.getDescriptionLength(eventID)
-        totalLen += descriptionLengths[m]
-        m += 1
-    marketsInfo = array(totalLen + 1)
-    marketsInfo[0] = totalMarkets
-
-    # get basic market info for each market
-    m = 0
-    c = 1
-    while m < totalMarkets:
-        marketID = marketIDs[m]
-        descriptionLength = descriptionLengths[m]
-        marketsInfo[c] = 16 + descriptionLength
-        marketsInfo[c + 1] = marketID
-        marketsInfo[c + 2] = MARKETS.getTradingPeriod(marketID)
-        marketsInfo[c + 3] = MARKETS.getTradingFee(marketID)
-        marketsInfo[c + 4] = MARKETS.getCreationTime(marketID)
-        marketsInfo[c + 5] = MARKETS.getVolume(marketID)
-        tags = MARKETS.returnTags(marketID, outitems=3)
-        marketsInfo[c + 6] = tags[0]
-        marketsInfo[c + 7] = tags[1]
-        marketsInfo[c + 8] = tags[2]
-        marketsInfo[c + 9] = MARKETS.getLastExpDate(marketID)
-        marketsInfo[c + 10] = MARKETS.getFees(marketID)
-        eventID = MARKETS.getMarketEvent(marketID, 0)
-        marketsInfo[c + 11] = eventID
-        marketsInfo[c + 12] = EVENTS.getMinValue(eventID)
-        marketsInfo[c + 13] = EVENTS.getMaxValue(eventID)
-        marketsInfo[c + 14] = EVENTS.getNumOutcomes(eventID)
-        marketsInfo[c + 15] = EVENTS.getOutcome(eventID)
-        description = INFO.getDescription(eventID, outchars=descriptionLength)
-        c += 16
-        d = 0
-        while d < descriptionLength:
-            marketsInfo[c] = getch(description, d)
-            c += 1
-            d += 1
-        m += 1
-    return(marketsInfo: arr)
-
-def getMarketCreatorFeesCollected(market):
-    return((MARKETS.getFees(market) - INFO.getCreationFee(market))/2)
-
-def getEventsWithSubmittedReport(branch, period, reporter):
-    numEvents = EXPEVENTS.getNumberEvents(branch, period)
-    events = array(numEvents)
-    n = 0
-    i = 0
-    while(i < numEvents):
-        eventID = EXPEVENTS.getEvent(branch, period, i)
-        if(EXPEVENTS.getReport(branch, period, eventID, reporter) != 0):
-            events[n] = eventID
-            n += 1
-        i += 1
-    return(slice(events, items=0, items=n): arr)
-
-def getPositionInMarket(market, account):
-    numOutcomes = MARKETS.getMarketNumOutcomes(market)
-    position = array(numOutcomes)
-    i = 0
-    while i < numOutcomes:
-        position[i] = MARKETS.getParticipantSharesPurchased(market, account, i + 1)
-        i += 1
-    return(position: arr)
-
-def getMarketsCreatedByMarketCreator(branch, creator, initial, last):
-    if(last < initial):
-        throw()
-    markets = array(last - initial)
-    marketsByCreator = array(last - initial)
-    markets = BRANCHES.getMarketIDsInBranch(branch, initial, last, outitems = (last - initial))
-    i = 0
-    n = 0
-    while i < len(markets):
-        if(INFO.getCreator(markets[i]) == creator):
-            marketsByCreator[n] = markets[i]
-            n += 1
-        i += 1
-    marketsByCreator = slice(marketsByCreator, items = 0, items = n)
-    return(marketsByCreator: arr)

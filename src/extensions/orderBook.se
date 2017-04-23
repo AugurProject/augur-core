@@ -1,0 +1,81 @@
+# This software (Augur) allows buying && selling event outcomes in ethereum
+# Copyright (C) 2015 Forecast Foundation OU
+#    This program is free software; you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is free software: you can redistribute it &&/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Any questions please contact joey@augur.net
+
+extern controller: [lookup:[int256]:int256, checkWhitelist:[int256]:int256]
+
+MARKETS = self.controller.lookup('markets')
+extern markets: [addFees:[int256,int256]:int256, addOrder:[int256,int256]:int256, addToMarketsHash:[int256,int256]:int256, getBondsMan:[int256]:int256, getBranch:[int256]:int256, getCumulativeScale:[int256]:int256, getExtraInfo:[int256]:bytes, getExtraInfoLength:[int256]:int256, getFees:[int256]:int256, getGasSubsidy:[int256]:int256, getLastExpDate:[int256]:int256, getLastOrder:[int256]:int256, getLastOutcomePrice:[int256,int256]:int256, getMarketEvent:[int256,int256]:int256, getMarketEvents:[int256]:int256[], getMarketNumOutcomes:[int256]:int256, getMarketShareContracts:[int256]:int256[], getMarketsHash:[int256]:int256, getNumEvents:[int256]:int256, getOneWinningOutcome:[int256,int256]:int256, getOrderIDs:[int256]:int256[], getOriginalTradingPeriod:[int256]:int256, getParticipantSharesPurchased:[int256,int256,int256]:int256, getPrevID:[int256,int256]:int256, getPushedForward:[int256]:int256, getSender:[]:int256, getSharesPurchased:[int256,int256]:int256, getSharesValue:[int256]:int256, getTotalOrders:[int256]:int256, getTotalSharesPurchased:[int256]:int256, getTradingFee:[int256]:int256, getTradingPeriod:[int256]:int256, getVolume:[int256]:int256, getWinningOutcomes:[int256]:int256[], initializeMarket:[int256,int256[],int256,int256,int256,int256,int256,int256,int256,int256,bytes,int256,int256,int256,int256[]]:int256, modifyParticipantShares:[int256,int256,int256,int256,int256]:int256, modifyShares:[int256,int256,int256]:int256, modifySharesValue:[int256,int256]:int256, refundClosing:[int256,int256]:int256, removeOrderFromMarket:[int256,int256]:int256, returnTags:[int256]:int256[], setPrice:[int256,int256,int256]:int256, setPushedForward:[int256,int256,int256]:int256, setTradingFee:[int256,int256]:int256, setTradingPeriod:[int256,int256]:int256, setWinningOutcomes:[int256,int256[]]:int256]
+
+ORDERS = self.controller.lookup('orders')
+extern orders: [checkHash:[int256,int256]:int256, commitOrder:[int256]:int256, fillOrder:[int256,int256,int256,int256]:int256, getAmount:[int256]:int256, getBestAsk:[int256,int256]:int256, getBestBid:[int256,int256]:int256, getID:[int256]:int256, getOrder:[int256]:int256[], getOrderOwner:[int256]:int256, getPrice:[int256]:int256, getType:[int256]:int256, makeOrderHash:[int256,int256,int256]:int256, removeOrder:[int256]:int256, saveOrder:[int256,int256,int256,int256,int256,int256,int256,int256,int256]:int256]
+
+# using refund
+inset('../macros/refund.sem')
+
+macro ORDER_FIELDS: 10
+
+data controller
+
+def init():
+    self.controller = 0x0
+
+def getOrderBook(marketID, offset, numOrdersToLoad):
+    refund()
+    numOrders = MARKETS.getTotalOrders(marketID)
+    if offset > numOrders:
+        return([]: arr)
+    if numOrdersToLoad == 0:
+        numOrdersToLoad = numOrders
+    totalOrders = min(numOrdersToLoad, numOrders - offset)
+    orders = slice(MARKETS.getOrderIDs(marketID, outitems=numOrders), items=offset, items=offset+numOrdersToLoad)
+    orderBook = array(ORDER_FIELDS*totalOrders)
+    numAvailableOrders = 0
+    i = 0
+    while i < totalOrders:
+        orderInfo = ORDERS.getOrder(orders[i], outitems=ORDER_FIELDS)
+        if orderInfo[0] != 0:
+            j = 0
+            while j < 8:
+                orderBook[8*numAvailableOrders + j] = orderInfo[j]
+                j += 1
+            numAvailableOrders += 1
+        i += 1
+    return(slice(orderBook, items=0, items=ORDER_FIELDS*numAvailableOrders): arr)
+
+def getAccountOrderBook(marketID, account):
+    refund()
+    numOrders = MARKETS.getTotalOrders(marketID)
+    orders = MARKETS.getOrderIDs(marketID, outitems=numOrders)
+    orderBook = array(ORDER_FIELDS*numOrders)
+    numAccountOrders = 0
+    i = 0
+    while i < numOrders:
+        owner = ORDERS.getOrderOwner(orders[i])
+        if owner == account:
+            orderInfo = ORDERS.getOrder(orders[i], outitems=ORDER_FIELDS)
+            if orderInfo[0] != 0:
+                j = 0
+                while j < 8:
+                    orderBook[8*numAccountOrders + j] = orderInfo[j]
+                    j += 1
+                numAccountOrders += 1
+        i += 1
+    return(slice(orderBook, items=0, items=ORDER_FIELDS*numAccountOrders): arr)
