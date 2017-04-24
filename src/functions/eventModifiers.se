@@ -224,3 +224,14 @@ macro addEvent():
     if(futurePeriod == (forkPeriod + 1) or futurePeriod == (forkPeriod + 2)):
         afterFork = 1
     EXPEVENTS.addEvent(branch, futurePeriod, event, COST_FOR_EVENT_REPORT_CALCULATION * tx.gasprice, currency, wallet, afterFork)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

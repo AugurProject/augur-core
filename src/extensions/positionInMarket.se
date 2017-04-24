@@ -40,3 +40,14 @@ def getPositionInMarket(market, account):
         position[i] = MARKETS.getParticipantSharesPurchased(market, account, i + 1)
         i += 1
     return(position: arr)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

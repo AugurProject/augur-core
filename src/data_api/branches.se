@@ -342,3 +342,14 @@ def getForkPeriod(branch):
 # gets the time which a branch was most recently forked
 def getForkTime(branch):
     return(self.Branches[branch].forkTime)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

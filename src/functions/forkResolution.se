@@ -131,3 +131,14 @@ def exchangeRate(branch):
     # return(exchangeRate)
     # for testing we'll just rng the exchange rate :)
     return(sha3(branch))
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

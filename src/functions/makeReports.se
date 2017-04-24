@@ -188,3 +188,14 @@ macro coverGasCostIfPossible():
         gasCostInWei = safeFxpDiv(GAS_SUBSIDY * tx.gasprice, WEI_TO_ETH)
         gasCostInSubcurrency = safeFxpDiv(gasCostInWei, BRANCHES.getCurrencyRate(branch, INFO.getCurrency(market)))
         INFO.getWallet(market).transfer(msg.sender, gasCostInSubcurrency)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

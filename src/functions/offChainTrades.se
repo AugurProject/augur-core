@@ -103,3 +103,14 @@ macro checkSig($signer, $hash, $v, $r, $s):
 # maker should call approve first [taker also needs to preapprove fund withdrawals]
 macro checkHasAbilityToSpend($owner, $token, $amount):
     token.allowance($owner, $self) >= $amount
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

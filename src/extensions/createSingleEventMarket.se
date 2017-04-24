@@ -46,3 +46,14 @@ def createSingleEventMarket(branch, description: str, expDate, fxpMinValue, fxpM
         MUTEX.release()
     marketReturn = CREATEMARKET.createMarket(branch, fxpTradingFee, eventID, tag1, tag2, tag3, fxpMakerFees, extraInfo, call = delegate)
     return(marketReturn)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

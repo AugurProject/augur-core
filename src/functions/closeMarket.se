@@ -166,3 +166,14 @@ def closeChallengeBond(event):
         if(!INFO.getWallet(event).transfer(EVENTS.getExtraBondPoster(event), bondAmount)):
             throw()
     return(1)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

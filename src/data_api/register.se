@@ -13,3 +13,14 @@ def register():
     refund()
     log(type=registration, msg.sender, block.timestamp)
     return(1)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

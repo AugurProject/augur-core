@@ -229,3 +229,14 @@ macro checkMarketCreationPreconditions():
         return(-5)
     if(msg.value < safeMul(COST_FOR_MARKET_RESOLUTION, tx.gasprice)):
         return(-6)
+
+def setController(newController):
+    if(msg.sender != self.controller):
+        throw()
+    self.controller = newController
+    return(1)
+
+def suicideFunds(to):
+    if(msg.sender != self.controller):
+        throw()
+    suicide(to)

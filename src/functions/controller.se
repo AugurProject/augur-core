@@ -48,6 +48,7 @@ def init():
     self.ownerBranch = 1010101
     self.mode = "dev"
     self.whitelist[self] = 1
+    self.whitelist[msg.sender] = 1
 
 def ok():
     return(1)
