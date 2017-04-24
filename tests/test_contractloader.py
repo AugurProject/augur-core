@@ -1,2 +1,4 @@
+#!/usr/bin/env python
+
 from load_contracts import ContractLoader
-c = ContractLoader('src', 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'], '', 0)
+c = ContractLoader('../src', 'controller.se', ['mutex.se', 'cash.se', 'repContract.se'], '', 0)
