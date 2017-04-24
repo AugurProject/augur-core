@@ -116,10 +116,8 @@ def init():
     # -1: not allowed for events during a fork scenario for events that were created before the fork until the fork is over
 # Called when first resolver hasn't resolved an event within 3 days
 def putEventIntoReportingPeriod(event):
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
-        throw()
     if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
+        MUTEX.acquire()
     # add events to the appropriate reporting period
     branch = EVENTS.getEventBranch(event)
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -134,21 +132,19 @@ def putEventIntoReportingPeriod(event):
         EVENTS.setExpiration(event, block.timestamp)
         EVENTS.setChallenged(event)
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(1)
     else:
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(0)
 
 # Errors:
     # -1: not allowed for events during a fork scenario for events that were created before the fork until the fork is over
 # Used to challenge a first resolution within 3 days after it's been resolved [or more accurately, 3 days after the last point it can be resolved]
 def challengeInitialResolution(event):
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
-        throw()
     if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
+        MUTEX.acquire()
     # add events to the appropriate reporting period
     branch = EVENTS.getEventBranch(event)
     currency = INFO.getCurrency(event)
@@ -166,32 +162,30 @@ def challengeInitialResolution(event):
         EVENTS.setChallenged(event)
         payExtraBond()
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(1)
     else:
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(0)
 
 # could create a contract which is the sender which uses ecrecover to verify a realitykeys signature on a hash + result, 0 goes to 10**18, 1 goes to 2**65
 # with oraclize.it do value = parseInt(result, 18) to get it in the proper 10**18 base, then do (value - min) * 10**18 / range to submit the result to augur
 # unethical is just a .5 outcome for scalar/categorical, 1.5 for binary as usual
 def resolveEarly(event, outcome):
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
-        throw()
     if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
+        MUTEX.acquire()
     if(msg.sender == EVENTS.getResolutionAddress(event) && block.timestamp > EVENTS.getExpiration(event) && block.timestamp < (EVENTS.getExpiration(event) + THREE_DAYS)):
         # outcome of 1 is 1/10**18 or basically 0, but allows us to still check if outcome is 0 or not to see if an outcome has been set
         if(outcome == 0):
             outcome = 1
         EVENTS.setFirstPreliminaryOutcome(event, outcome)
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(1)
     else:
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(0)
 
 # Allows a user to directly add fees / effectively pay for oracle usage w/o having to trade using the default contracts

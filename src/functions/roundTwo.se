@@ -64,9 +64,7 @@ def ok():
     return(2)
 
 def roundTwoPostBond(branch, event, eventIndex, overEthicality):
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
     votePeriod = BRANCHES.getVotePeriod(branch)
     roundTwoBondCheckPreconditions()
     BACKSTOPS.setRoundTwoRefund(event, msg.value)
@@ -80,7 +78,7 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     validEvent = (event != 0 and event == eventID)
     # if so, we're not in the final 48 hours or event isn't in this branch + votePeriod, or it's already been put into a backstop
     if(currentPeriod == currentPlus48Hr or !validEvent or BACKSTOPS.getRoundTwo(event) or EVENTS.getForked(event)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(0)
     # pays money to cover resolution cost
     if(!send(BACKSTOPS, msg.value)):
@@ -119,15 +117,13 @@ def roundTwoPostBond(branch, event, eventIndex, overEthicality):
     EVENTS.setEthics(event, 0)
     if(overEthicality):
         BACKSTOPS.setDisputedOverEthics(event)
-    MUTEX.unsetMutex()
+    MUTEX.release()
     return(1)
 
 # Resolves a round 2 event scenario
 def roundTwoResolve(branch, event, eventIndex, sender):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
     if(!branch):
         throw()
     periodLength = BRANCHES.getPeriodLength(branch)
@@ -161,7 +157,7 @@ def roundTwoResolve(branch, event, eventIndex, sender):
     # same as original consensus and bond poster was wrong [or malicious]
     elif(votedOnAgain and !forked and roundTwoEventWithBondNotReturned):
         loseBond()
-    MUTEX.unsetMutex()
+    MUTEX.release()
     return(1)
 
 # Actually sets the outcome for a round 2 event
@@ -191,12 +187,12 @@ macro roundTwoBondCheckPreconditions():
     forkPeriod = BRANCHES.getForkPeriod(branch)
     # means an event was created prior to a fork and hasn't been moved after the fork yet
     if(!eventCreatedPriorToFork(eventID)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-1)
     if(noVotes()):
         return(-3)
     if(msg.value < 1000000 * tx.gasprice):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-2)
 
 macro loseBond():

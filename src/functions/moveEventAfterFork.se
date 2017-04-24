@@ -96,9 +96,7 @@ def init():
 
 def moveEvent(event):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
 
     forkPeriod = BRANCHES.getForkPeriod(EVENTS.getEventBranch(event))
     branch = EVENTS.getEventBranch(event)
@@ -109,7 +107,7 @@ def moveEvent(event):
     currentVotePeriod = BRANCHES.getVotePeriod(branch)
     checkMoveEventPreconditions()
     if(event == eventForkedOver):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(1)
     # leave event here in same branch
     elif(winner == EVENTS.getEventBranch(event)):
@@ -118,12 +116,12 @@ def moveEvent(event):
     else:
         moveEventToWinningBranch()
     BACKSTOPS.setMoved(event)
-    MUTEX.unsetMutex()
+    MUTEX.release()
     return(1)
 
 macro checkMoveEventPreconditions():
     if(!branch or !event or currentVotePeriod < (forkPeriod + 2) or EVENTS.getOutcome(event) or BACKSTOPS.getMoved(event) or !eventCreatedPriorToFork(event)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(0)
     winner = BACKSTOPS.getResolved(branch, forkPeriod)
     if(!winner):

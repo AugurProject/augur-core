@@ -66,9 +66,7 @@ def init():
 
 def penalizeRoundTwoWrong(branch, event):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
     lastPeriodVotedOn = BRANCHES.getVotePeriod(branch) - 1
     lastPenalizationPeriod = lastPeriodVotedOn - 1
     lastPeriod = lastPeriodVotedOn
@@ -133,34 +131,34 @@ def penalizeRoundTwoWrong(branch, event):
             repBalance = x[1]
             CONSENSUS.increasePenalizedNum(branch, lastPeriodVotedOn, msg.sender, 1)
     else:
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-7)
     # once penalized for all events actually get rid of net rep lost
     if(numReportedOn == CONSENSUS.getPenalizedNum(branch, lastPeriodVotedOn, msg.sender)):
         sendRedistributedRepToBranch()
         return(1)
-    MUTEX.unsetMutex()
+    MUTEX.release()
     return(1)
 
 macro checkPenalizeWrongRoundTwoPreconditions():
     if(repBalance < ONE):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(0)
     if(EVENTS.getEventBranch(event) != branch):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-6)
     # makes sure we're actually still able to report on the last vote period and that we're in 1st half of current period
     atFirstHalfOfPeriod()
     if((block.timestamp / periodLength - 2) != lastPeriodVotedOn):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-1)
     # if no outcome / event not resolved yet, resolve it [as long as it wasn't an event that was pushed fwd and got rejected and thus hasn't actually resolved yet]
     if(!EVENTS.getOutcome(event) and !ROUNDTWO.roundTwoResolve(branch, event, EXPEVENTS.getEventIndex(branch, lastPeriodVotedOn, event), msg.sender)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-3)
     if(CONSENSUS.getPenalizedUpTo(branch, msg.sender) == lastPeriodVotedOn):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-4)
     if(!CONSENSUS.getRepCollected(branch, msg.sender, lastPeriodVotedOn - 1)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-5)

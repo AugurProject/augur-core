@@ -93,10 +93,8 @@ def init():
 
 def sendRepFrom(branch, from, receiver, fxpValue):
     # checkInvariants(from)
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
-        throw()
-    if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
+    if (!isCallerWhitelisted()):
+        MUTEX.acquire()
 
     senderIndex = REPORTING.repIDToIndex(branch, from)
     receiverIndex = REPORTING.repIDToIndex(branch, receiver)
@@ -111,7 +109,7 @@ def sendRepFrom(branch, from, receiver, fxpValue):
         throw()
     log(type = Transfer, from, receiver, fxpValue)
     if(!isCallerWhitelisted()):
-        MUTEX.unsetMutex()
+        MUTEX.release()
     return(1)
 
 # Transfer dormant rep
@@ -123,10 +121,8 @@ def sendRepFrom(branch, from, receiver, fxpValue):
 # fails unless from has authorized sender [either contract which was approved or the from address is the msg.sender]
 def transferFrom(branch, from, receiver, fxpValue):
     refund()
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
-        throw()
-    if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
+    if (!isCallerWhitelisted()):
+        MUTEX.acquire()
 
     votePeriod = BRANCHES.getVotePeriod(branch)
     senderIndex = REPORTING.repIDToIndex(branch, from)
@@ -139,32 +135,28 @@ def transferFrom(branch, from, receiver, fxpValue):
       throw()
     log(type=Transfer, from, receiver, fxpValue)
     if(!isCallerWhitelisted()):
-        MUTEX.unsetMutex()
+        MUTEX.release()
     return(1)
 
 def claimRep():
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
-        throw()
-    if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
+    if (!isCallerWhitelisted()):
+        MUTEX.acquire()
     balance = REPCONTRACT.balanceOf(msg.sender)
     if(!REPCONTRACT.transferFrom(msg.sender, 0, balance) or !REPORTING.addReporter(1010101, msg.sender, 0, balance, 0)):
         throw()
     if(!isCallerWhitelisted()):
-        MUTEX.unsetMutex()
+        MUTEX.release()
     return(1)
 
 # Allows spender to withdraw from your dormant rep account
 def approve(branch, spender, fxpValue):
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
-        throw()
-    if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
+    if (!isCallerWhitelisted()):
+        MUTEX.acquire()
 
     self.amountCanSpend[msg.sender][spender].branch[branch] = fxpValue
     log(type = Approval, msg.sender, spender, branch, fxpValue)
     if(!isCallerWhitelisted()):
-        MUTEX.unsetMutex()
+        MUTEX.release()
     return(1)
 
 # Returns amount spender can withdraw from owner
@@ -187,11 +179,11 @@ macro checkInvariants($account):
 
     if(delta > 1 and CATCHUP.penalizationCatchup(branch, $account) != 1):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-4)
     if(!CONSENSUS.getRepRedistributionDone(branch, $account)):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(0)
 
 macro checkSendRepInvariants():
@@ -211,12 +203,12 @@ macro checkSendRepInvariants():
         else:
             REPORTING.addReporter(branch, from)
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-1)
     # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the receiver claims it
     if(REPORTING.getReporterID(branch, receiverIndex) != receiver or (child && !tooLateForChild && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, receiver)) != receiver)):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-3)
     # If a user hasn't claimed rep on the child branch yet and it's a fork scenario, don't allow sending rep on the parent branch until the sender claims it
     if(!tooLateForChild && child && REPORTING.getReporterID(branch, REPORTING.repIDToIndex(child, from)) != from):
@@ -225,7 +217,7 @@ macro checkSendRepInvariants():
 
     if(senderBalance < fxpValue or fxpValue <= 0 or !(self.amountCanSpend[from][msg.sender].branch[branch] >= fxpValue or from == msg.sender)):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-5)
     if(from != msg.sender):
         self.amountCanSpend[from][msg.sender].branch[branch] -= fxpValue

@@ -68,9 +68,7 @@ def init():
 
 def claimProceeds(market):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
     event = MARKETS.getMarketEvent(market, 0)
     winningOutcomes = array(MAX_WINNING_OUTCOMES)
     winningOutcomes = MARKET.getWinningOutcomes(market, outitems = MAX_WINNING_OUTCOMES)
@@ -80,11 +78,11 @@ def claimProceeds(market):
     expiryPeriod = MARKETS.getLastExpDate(market) / periodLength
     if(currentPeriodMinus3Days <= expiryPeriod):
         # can't withdraw funds until 3 days after market resolves
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(-1)
     # market not resolved
     if(!winningOutcomes[0]):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         return(0)
     scalar = winningOutcomes[1]
     if(scalar):
@@ -97,5 +95,5 @@ def claimProceeds(market):
         # claims winnings for a regular binary or categorical market
         else:
             success = CLOSEONE.oneOutcome(market, winningOutcomes[0], msg.sender, 0, EVENTS.getNumOutcomes(event))
-    MUTEX.unsetMutex()
+    MUTEX.release()
     return(success)

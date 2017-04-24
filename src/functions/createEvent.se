@@ -114,10 +114,8 @@ def init():
 
 def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numOutcomes, resolution: str, resolutionAddress, currency, forkResolveAddress):
     refund()
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
-        throw()
     if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
+        MUTEX.acquire()
 
     periodLength = BRANCHES.getPeriodLength(branch)
     checkEventCreationPreconditions()
@@ -135,7 +133,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
     event = ripemd160(eventInfo, chars = len(eventInfo))
     if(INFO.getCreator(event)):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(0)
 
     checkSubcurrencyIsValid(currency)
@@ -166,7 +164,7 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
             EVENTS.setBond(event, validityBond)
             EVENTS.addPast24(period)
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(event)
     else:
         throw()
@@ -174,15 +172,15 @@ def createEvent(branch, description:str, expDate, fxpMinValue, fxpMaxValue, numO
 macro checkEventCreationPreconditions():
     if(!periodLength or !len(description) or !len(resolution) or expDate < block.timestamp or !resolutionAddress):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-1)
     if(fxpMaxValue < fxpMinValue or (fxpMaxValue - fxpMinValue) < ONE or (fxpMaxValue + fxpMinValue) < fxpMaxValue):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-2)
     if(numOutcomes < 2 or numOutcomes > 8):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-3)
     parent = BRANCHES.getParent(branch)
     parentLastForked = BRANCHES.getForkPeriod(parent)

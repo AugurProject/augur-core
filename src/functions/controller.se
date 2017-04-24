@@ -116,7 +116,7 @@ def addToWhitelist(address):
 #     if(hasreported) throw
 #     if(!CONSENSUS.getRepCollected(branch, msg.sender, votePeriod - 1)):
 #     if(COLLECTFEES.collectRep(branch, msg.sender, value = msg.value) < 0):
-#         MUTEX.unsetMutex()
+#         MUTEX.release()
 #         logReturn(makeReportsLogReturn, -8)
 
 # def getProposals(start, end):

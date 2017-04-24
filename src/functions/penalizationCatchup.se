@@ -36,10 +36,8 @@ def init():
 
 def penalizationCatchup(branch, sender):
     refund()
-    if(MUTEX.getMutex() && !isCallerWhitelisted()):
-        throw()
-    if(!isCallerWhitelisted()):
-        MUTEX.setMutex()
+    if (!isCallerWhitelisted()):
+        MUTEX.acquire()
     if(sender != msg.sender):
         self.controller.checkWhitelist(msg.sender)
 
@@ -52,7 +50,7 @@ def penalizationCatchup(branch, sender):
     redistributeRepFromNotReporting()
     CONSENSUS.setPenalizedUpTo(branch, sender, lastPeriod)
     if(!isCallerWhitelisted()):
-        MUTEX.unsetMutex()
+        MUTEX.release()
     return(1)
 
 macro checkPenalizationCatchupPreconditions():
@@ -64,14 +62,14 @@ macro checkPenalizationCatchupPreconditions():
         delta -= 1
     if(delta <= 0):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-1)
     # provided user is at least one period behind and they didn't report in the last period
     alreadyPenalized = (lastPeriodPenalized == lastPeriod)
     reportedLastPeriod = EXPEVENTS.getNumReportsSubmitted(branch, lastPeriod, sender)
     if(alreadyPenalized or reportedLastPeriod):
         if(!isCallerWhitelisted()):
-            MUTEX.unsetMutex()
+            MUTEX.release()
         return(-3)
 
 macro redistributeRepFromNotReporting():

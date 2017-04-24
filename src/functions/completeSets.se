@@ -59,9 +59,7 @@ def init():
 
 def buyCompleteSets(market, fxpAmount):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
@@ -85,7 +83,7 @@ def buyCompleteSets(market, fxpAmount):
         MARKETS.addFees(market, feesInWei)
         EXPEVENTS.adjustPeriodFeeValue(branch, MARKETS.getTradingPeriod(market), feesInWei)
 
-    MUTEX.unsetMutex()
+    MUTEX.release()
     logReturn(completeSetsLogReturn, 1)
 
 # Sells fxpAmount of every outcome [if user owns it]
@@ -95,9 +93,7 @@ def buyCompleteSets(market, fxpAmount):
     # -2: user hasn't specified a large enough amount
 def sellCompleteSets(market, fxpAmount):
     refund()
-    if(MUTEX.getMutex()):
-        throw()
-    MUTEX.setMutex()
+    MUTEX.acquire()
     branch = MARKETS.getBranch(market)
     numOutcomes = MARKETS.getMarketNumOutcomes(market)
     cumulativeScale = MARKETS.getCumulativeScale(market)
@@ -120,32 +116,32 @@ def sellCompleteSets(market, fxpAmount):
     currency = INFO.getCurrency(market)
     if(!INFO.getWallet(market).transfer(INFO.getCreator(market), safeDiv(fee, 2))):
         throw()
-    MUTEX.unsetMutex()
+    MUTEX.release()
     logReturn(completeSetsLogReturn, 1)
 
 macro checkBuyCompleteSetsPreconditions():
     if(!MARKETS.getMarketNumOutcomes(market)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(completeSetsLogReturn, 0)
     if(BRANCHES.getOracleOnly(branch)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(completeSetsLogReturn, -1)
     if(fxpAmount <= 0):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(completeSetsLogReturn, -3)
     # send money from user acc. to market address/account
     if(!INFO.getCurrency(market).transferFrom(msg.sender, INFO.getWallet(market), cost)):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(completeSetsLogReturn, -2)
 
 macro checkSellCompleteSetsPreconditions():
     if(fxpAmount <= 0):
-        MUTEX.unsetMutex()
+        MUTEX.release()
         logReturn(completeSetsLogReturn, -2)
     n = 1
     while(n <= numOutcomes):
         if(MARKETS.getParticipantSharesPurchased(market, msg.sender, n) < fxpAmount):
-            MUTEX.unsetMutex()
+            MUTEX.release()
             logReturn(completeSetsLogReturn, -1)
         n += 1
     n = 1
